@@ -1,0 +1,5 @@
+{
+  "mutation": "changeGroundInvestigationLevel",
+  "id": "investigation-1",
+  "newGroundLevel": 200.0
+}

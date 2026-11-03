@@ -1,0 +1,6 @@
+{
+  "mutation": "changeShellActionSource",
+  "shellId": "shell-pass",
+  "actionId": "G-shell",
+  "newSource": "external"
+}

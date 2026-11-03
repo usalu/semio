@@ -1,0 +1,6 @@
+{
+  "ChangeDeckLossCreep": {
+    "deckId": "deck-1",
+    "newValue": 1.375
+  }
+}

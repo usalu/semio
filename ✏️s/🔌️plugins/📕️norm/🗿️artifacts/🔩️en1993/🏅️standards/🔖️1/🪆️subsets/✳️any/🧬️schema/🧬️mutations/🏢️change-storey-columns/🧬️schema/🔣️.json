@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-storey-columns/schema.json",
+  "title": "ChangeStoreyColumns",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newColumns"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Storey",
+          "de": "Geschoss"
+        },
+        "description": {
+          "en": "The storey this mutation addresses, by id.",
+          "de": "Das adressierte Element (Geschoss), per Kennung."
+        },
+        "ref": {
+          "kind": "storey"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newColumns": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295,
+      "x-semio-ui": {
+        "label": {
+          "en": "Columns m in the row",
+          "de": "Stützen m in der Reihe"
+        },
+        "widget": "stepper",
+        "step": 1,
+        "precision": 0,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

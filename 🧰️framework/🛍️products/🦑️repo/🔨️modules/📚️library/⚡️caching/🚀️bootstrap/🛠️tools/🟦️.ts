@@ -1,3 +1,4 @@
+import {linuxHostLibcV1} from "../../../🎛️commands/🔧️setup/🟦️.ts";
 import{withRepositoryCompilerStoreV1,requireRepositoryCompilerStoreV1}from"../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
 import{repositoryNativeCompilerConfigurationV1}from"../../💾️storage/🔒️enforcement/🏗️compiler/🛠️native-compiler/🟦️.ts";
 import{requireRepositoryCacheStoreReadCustodyV1}from"../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
@@ -156,8 +157,7 @@ async function captureNxToolingInputsV1(workspace:string,signal:AbortSignal){
   files.set(".semio-authorizer-source.json",Buffer.from(JSON.stringify(authorizer.manifest)+"\n"));
   const compiler=await captureNxAuthorizerSourcesV1(root,RECIPE+"/🔏️authorizers/📜️script.ts",signal);
   files.set(".semio-authorizer-compiler.json",Buffer.from(JSON.stringify({version:1,mode:"release",bun:manifest.packageManager,physicalSourceRoot:root,entryRole:"program",runtimeEntryRole:"module",resolutions:compiler.manifest.resolutions,sources:compiler.manifest.sources})+"\n"));
-  const report = process.platform === "linux" ? process.report?.getReport?.() as { header?: { glibcVersionRuntime?: string } } : undefined;
-  const libc = process.platform === "linux" ? report?.header?.glibcVersionRuntime ? "gnu" : "musl" : "";
+  const libc = process.platform === "linux" ? linuxHostLibcV1() : "";
   const environment={platform:process.platform,architecture:process.arch,libc},sdkDigest=nxSdkSnapshotIdentityV1(environment,dependencyFiles);
   return{root,files,manifest,dependencyFiles,authorizer,compiler,environment,sdkDigest};
 }

@@ -1,0 +1,5 @@
+type ChangeSectionPointY {
+  memberId: String!
+  sectionPointId: String!
+  newY: Float!
+}

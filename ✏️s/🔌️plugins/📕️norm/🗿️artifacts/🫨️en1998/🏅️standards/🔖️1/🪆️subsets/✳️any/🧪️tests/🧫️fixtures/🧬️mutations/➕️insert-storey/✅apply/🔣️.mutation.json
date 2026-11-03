@@ -1,0 +1,27 @@
+{
+  "mutation": "insertStorey",
+  "buildingId": "bldg-office",
+  "index": 1,
+  "storey": {
+    "id": "s1-2",
+    "heightM": 3.5,
+    "permanentGkN": 2334780.0,
+    "correlatedOccupancy": true,
+    "variables": [
+      {
+        "id": "s1-q",
+        "category": "b",
+        "qkN": 1716750.0
+      }
+    ],
+    "stiffnessX": 180000000.0,
+    "stiffnessY": 180000000.0,
+    "centreOfMassXM": 12.0,
+    "centreOfMassYM": 8.0,
+    "centreOfStiffnessXM": 12.0,
+    "centreOfStiffnessYM": 8.0,
+    "driftXM": 0.008,
+    "driftYM": 0.008,
+    "shearResistanceN": 400000.0
+  }
+}

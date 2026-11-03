@@ -29,7 +29,7 @@ impl NormRetainedDispositionOracle for SerdeJsonNormRetainedDispositionOracle {
                 return Err(format!("invalid route disposition for {expected_id}"));
             }
         }
-        let expected_lanes: &[&[&str]] = &[&[], &["window-config"], &["artifact"], &["artifact"], &["artifact"], &["artifact"]];
+        let expected_lanes: &[&[&str]] = &[&["window-config"], &["artifact"], &["artifact"], &["artifact"], &["artifact"]];
         for (route, lanes) in routes.iter().zip(expected_lanes) {
             if route["emittedLanes"] != serde_json::json!(lanes) {
                 return Err(format!("route lane audit does not match the command bodies for {}", route["id"]));
@@ -56,8 +56,8 @@ impl NormRetainedDispositionOracle for SerdeJsonNormRetainedDispositionOracle {
             batch_only_count: value["expected"]["batchOnlyPendingRewrite"].as_u64().ok_or("batchOnlyPendingRewrite must be an integer")?,
             publication_contract_count: publication_contracts.len(),
         };
-        if summary.app_count != 15 || summary.retained_count != 90 || summary.batch_only_count != 0 || summary.publication_contract_count != 6 {
-            return Err("cohort totals or publication contracts are not fully migrated".into());
+        if summary.app_count != 15 || summary.retained_count != 75 || summary.batch_only_count != 0 || summary.publication_contract_count != 5 {
+            return Err("cohort totals or publication contracts do not match the retained cohort".into());
         }
         Ok(summary)
     }
@@ -68,7 +68,7 @@ pub fn assert_fixture(variant: &str) {
     let source = include_str!("../../../🧪️tests/🧫️fixtures/🧫️retained-command-dispositions/🔣️.json");
     let oracle = SerdeJsonNormRetainedDispositionOracle;
     let summary = oracle.summarize(source).expect("canonical Norm retained disposition fixture");
-    assert_eq!(summary, NormRetainedDispositionSummary { app_count: 15, route_count: 6, retained_count: 90, batch_only_count: 0, publication_contract_count: 6 });
+    assert_eq!(summary, NormRetainedDispositionSummary { app_count: 15, route_count: 5, retained_count: 75, batch_only_count: 0, publication_contract_count: 5 });
     let canonical: serde_json::Value = serde_json::from_str(source).expect("canonical fixture JSON");
     assert!(canonical["apps"].as_array().expect("apps").iter().any(|app| app["variant"] == variant), "missing Norm app fixture row for {variant}");
 
@@ -76,7 +76,7 @@ pub fn assert_fixture(variant: &str) {
     forged_admission["routes"][0]["admission"] = serde_json::json!("batchOnlyPendingRewrite");
     assert!(oracle.summarize(&forged_admission.to_string()).is_err());
     let mut forged_lane = canonical.clone();
-    forged_lane["routes"][2]["emittedLanes"] = serde_json::json!(["host"]);
+    forged_lane["routes"][1]["emittedLanes"] = serde_json::json!(["host"]);
     assert!(oracle.summarize(&forged_lane.to_string()).is_err());
     let mut forged_publication = canonical.clone();
     forged_publication["publicationContracts"][1]["lanes"] = serde_json::json!(["Artifact"]);
@@ -84,4 +84,21 @@ pub fn assert_fixture(variant: &str) {
     let mut forged_factory = canonical;
     forged_factory["factory"]["payloadSchema"] = serde_json::json!("norm.tool-command.v2");
     assert!(oracle.summarize(&forged_factory.to_string()).is_err());
+}
+
+/// 🧪️ Pins the live-editing routes of the ten Eurocode editors: the fixture rows equal the declared editor tool ids and publication contracts, and `variant` is one of the live apps.
+pub fn assert_live_fixture(variant: &str) {
+    let source = include_str!("../../../🧪️tests/🧫️fixtures/🧫️retained-command-dispositions/🔣️.json");
+    let canonical: serde_json::Value = serde_json::from_str(source).expect("canonical fixture JSON");
+    let live = &canonical["live"];
+    assert!(live["apps"].as_array().expect("live apps").iter().any(|app| app == variant), "{variant} is not a live app in the fixture");
+    let routes = live["routes"].as_array().expect("live routes");
+    assert_eq!(routes.len(), crate::NORM_LIVE_TOOL_IDS.len());
+    for (route, id) in routes.iter().zip(crate::NORM_LIVE_TOOL_IDS) {
+        assert_eq!(route["id"], *id);
+        let declared = crate::NORM_EDITOR_PUBLICATION_CONTRACTS.iter().find(|contract| contract.tool_id == *id).expect("declared live contract");
+        assert_eq!(route["publicationLanes"], serde_json::json!(declared.lanes.iter().copied().map(crate::publication_lane_id).collect::<Vec<_>>()));
+    }
+    assert_eq!(live["expected"]["routesPerApp"], crate::NORM_EDITOR_TOOL_IDS.len());
+    assert_eq!(live["expected"]["identities"].as_u64(), Some((live["apps"].as_array().expect("live apps").len() * crate::NORM_EDITOR_TOOL_IDS.len()) as u64));
 }

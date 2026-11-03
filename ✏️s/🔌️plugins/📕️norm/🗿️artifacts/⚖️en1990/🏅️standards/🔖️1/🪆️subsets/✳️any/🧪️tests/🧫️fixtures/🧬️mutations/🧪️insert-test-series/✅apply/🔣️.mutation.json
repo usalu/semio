@@ -1,0 +1,17 @@
+{
+  "mutation": "insertTestSeries",
+  "index": 1,
+  "item": {
+    "id": "tes-1-new",
+    "quantity": "normal",
+    "distribution": "normal",
+    "sampleSize": 1,
+    "mean": 1.0,
+    "stdDev": 1.0,
+    "variationKnown": 1.0,
+    "conversionFactor": 1.0,
+    "required": 1.0,
+    "pairs": "",
+    "theoryVariation": 0.0
+  }
+}

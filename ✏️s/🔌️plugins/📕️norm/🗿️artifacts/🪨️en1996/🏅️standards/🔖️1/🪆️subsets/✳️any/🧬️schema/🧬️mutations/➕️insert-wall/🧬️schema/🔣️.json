@@ -43,6 +43,9 @@
         },
         "group": "record",
         "order": 20
+      },
+      "x-semio-rust": {
+        "type": "semio_s_artifact_norm_en1996_model::MasonryWall"
       }
     }
   }

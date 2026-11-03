@@ -1,11 +1,13 @@
-//! ↩️ Inverse for `insert-silo`.
+//! ↩️ `insert-silo` inverse: removes the inserted row again.
+
 use crate::insert_silo::InsertSilo;
+use crate::remove_silo::RemoveSilo;
 use semio_s_artifact_norm_en1998_model::En1998Snapshot;
-use crate::remove_silo;
 
 pub fn inverse<Op>(payload: &InsertSilo, base: &En1998Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::remove_silo::RemoveSilo> {
-    Ok((|| {
-    vec![Op::from(remove_silo::RemoveSilo { index: payload.index.unwrap_or(usize::MAX).min(base.silos.len()) })]
+    Ok(previous(payload, base).map(|restore| vec![Op::from(restore)]).unwrap_or_default())
+}
 
-    })())
+fn previous(payload: &InsertSilo, base: &En1998Snapshot) -> Option<RemoveSilo> {
+    Some(RemoveSilo { id: payload.silo.id.clone() })
 }

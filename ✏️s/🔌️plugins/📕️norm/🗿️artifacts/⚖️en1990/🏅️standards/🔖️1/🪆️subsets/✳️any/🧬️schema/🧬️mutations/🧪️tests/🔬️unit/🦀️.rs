@@ -3,26 +3,19 @@ use semio_s_plugin_norm_compliance::AnnexChoice;
 use protocol::{ColdMutation, Mutation};
 
 fn every_mutation() -> Vec<En1990Mutation> {
-    let base = En1990Snapshot::default();
+    let base = En1990Snapshot::example(AnnexChoice::De);
     vec![
         En1990Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: AnnexChoice::En }),
         En1990Mutation::ChangeProjectId(change_project_id::ChangeProjectId { new_project_id: "office-cc3".into() }),
         En1990Mutation::ChangeAltitudeM(change_altitude_m::ChangeAltitudeM { new_altitude_m: 500.0 }),
         En1990Mutation::ChangeConsequenceClass(change_consequence_class::ChangeConsequenceClass { new_consequence_class: 3 }),
-        En1990Mutation::ChangeReliabilityClass(change_reliability_class::ChangeReliabilityClass { new_reliability_class: 3 }),
+        En1990Mutation::ChangeReliabilityClass(change_reliability_class::ChangeReliabilityClass { new_reliability_class: semio_s_artifact_norm_en1990_model::ReliabilityClass::RC3 }),
         En1990Mutation::ChangeDesignWorkingLifeCategory(change_design_working_life_category::ChangeDesignWorkingLifeCategory { new_design_working_life_category: 5 }),
         En1990Mutation::ChangeDesignWorkingLifeYears(change_design_working_life_years::ChangeDesignWorkingLifeYears { new_design_working_life_years: 100.0 }),
         En1990Mutation::ChangeReferencePeriodYears(change_reference_period_years::ChangeReferencePeriodYears { new_reference_period_years: 100.0 }),
-        En1990Mutation::ChangeSupervisionLevel(change_supervision_level::ChangeSupervisionLevel { new_supervision_level: "DSL".into() }),
-        En1990Mutation::ChangeInspectionLevel(change_inspection_level::ChangeInspectionLevel { new_inspection_level: "IL3".into() }),
+        En1990Mutation::ChangeSupervisionLevel(change_supervision_level::ChangeSupervisionLevel { new_supervision_level: semio_s_artifact_norm_en1990_model::SupervisionLevel::Dsl3 }),
+        En1990Mutation::ChangeInspectionLevel(change_inspection_level::ChangeInspectionLevel { new_inspection_level: semio_s_artifact_norm_en1990_model::InspectionLevel::Il3 }),
         En1990Mutation::ChangeBetaComputed(change_beta_computed::ChangeBetaComputed { new_beta_computed: 4.3 }),
-        En1990Mutation::ChangePermanents(change_permanents::ChangePermanents { new_permanents: base.permanents.clone() }),
-        En1990Mutation::ChangeVariables(change_variables::ChangeVariables { new_variables: vec![] }),
-        En1990Mutation::ChangeAccidentals(change_accidentals::ChangeAccidentals { new_accidentals: vec![] }),
-        En1990Mutation::ChangeSeismics(change_seismics::ChangeSeismics { new_seismics: vec![] }),
-        En1990Mutation::ChangeMembers(change_members::ChangeMembers { new_members: base.members.clone() }),
-        En1990Mutation::ChangeBridgeSls(change_bridge_sls::ChangeBridgeSls { new_bridge_sls: base.bridge_sls.clone() }),
-        En1990Mutation::ChangeEffects(change_effects::ChangeEffects { new_effects: base.effects.clone() }),
         En1990Mutation::RemoveEffect(remove_effect::RemoveEffect { index: 0 }),
         En1990Mutation::RemoveMember(remove_member::RemoveMember { index: 0 }),
         En1990Mutation::RemoveSeismic(remove_seismic::RemoveSeismic { index: 0 }),
@@ -33,8 +26,14 @@ fn every_mutation() -> Vec<En1990Mutation> {
         En1990Mutation::InsertMember(insert_member::InsertMember { index: Some(0), item: base.members[0].clone() }),
         En1990Mutation::InsertSeismic(insert_seismic::InsertSeismic { index: Some(0), item: semio_s_artifact_norm_en1990_model::SeismicAction { id: "A-ek".into(), a_ek: 0.0, importance_class: semio_s_artifact_norm_en1990_model::ImportanceClass::II } }),
         En1990Mutation::InsertAccidental(insert_accidental::InsertAccidental { index: Some(0), item: semio_s_artifact_norm_en1990_model::AccidentalAction { id: "A-d".into(), ad: 0.0 } }),
-        En1990Mutation::InsertVariable(insert_variable::InsertVariable { index: Some(0), item: semio_s_artifact_norm_en1990_model::VariableAction { id: "Q-x".into(), category: "other".into(), qk: 0.0} }),
-        En1990Mutation::InsertPermanent(insert_permanent::InsertPermanent { index: Some(0), item: semio_s_artifact_norm_en1990_model::PermanentAction { id: "G-x".into(), kind: "g_sup".into(), gk: 0.0 } }),
+        En1990Mutation::InsertVariable(insert_variable::InsertVariable { index: Some(0), item: semio_s_artifact_norm_en1990_model::VariableAction { id: "Q-x".into(), category: "other".into(), qk: 0.0, group: String::new() } }),
+        En1990Mutation::InsertPermanent(insert_permanent::InsertPermanent { index: Some(0), item: semio_s_artifact_norm_en1990_model::PermanentAction { id: "G-x".into(), kind: semio_s_artifact_norm_en1990_model::PermanentKind::GSup, gk: 0.0 } }),        En1990Mutation::InsertCase(insert_case::InsertCase { index: 0, case: semio_s_artifact_norm_en1990_model::CaseRow { id: "case-new".into(), label_en: "New".into(), label_de: "Neu".into(), entry_id: "E90.04".into(), numbers: vec![], texts: vec![] } }),
+        En1990Mutation::RemoveCase(remove_case::RemoveCase { id: "case-1".into() }),
+        En1990Mutation::ChangeCaseNumber(change_case_number::ChangeCaseNumber { case_id: base.cases[0].id.clone(), key: "years".into(), value: Some(100.0) }),
+        En1990Mutation::ChangeCaseText(change_case_text::ChangeCaseText { case_id: base.cases[0].id.clone(), key: "category".into(), value: Some("office".into()) }),
+        En1990Mutation::ChangeCaseLabelEn(change_case_label_en::ChangeCaseLabelEn { case_id: base.cases[0].id.clone(), new_value: "Durability (revised)".into() }),
+        En1990Mutation::ChangeCaseLabelDe(change_case_label_de::ChangeCaseLabelDe { case_id: base.cases[0].id.clone(), new_value: "Dauerhaftigkeit (überarbeitet)".into() }),
+        En1990Mutation::ChangeCaseEntryId(change_case_entry_id::ChangeCaseEntryId { case_id: base.cases[0].id.clone(), new_value: "E90.03".into() }),
     ]
 }
 
@@ -60,7 +59,7 @@ async fn every_variant_registers_an_approved_semantic_descriptor() {
 
 #[semio_framework_async_macros::async_test]
 async fn every_variant_round_trips_through_diff_and_inverse() {
-    let base = En1990Snapshot::default();
+    let base = En1990Snapshot::example(AnnexChoice::De);
     for mutation in every_mutation() {
         if matches!(
             mutation,
@@ -74,14 +73,14 @@ async fn every_variant_round_trips_through_diff_and_inverse() {
 
 #[semio_framework_async_macros::async_test]
 async fn change_annex_satisfies_the_inverse_and_absorb_laws() {
-    let base = En1990Snapshot::default();
+    let base = En1990Snapshot::example(AnnexChoice::De);
     let mutation = En1990Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: AnnexChoice::En });
     let _ = round_trip(&base, &mutation);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn change_consequence_class_and_beta_absorb() {
-    let base = En1990Snapshot::default();
+    let base = En1990Snapshot::example(AnnexChoice::De);
     let d1 = En1990Mutation::ChangeConsequenceClass(change_consequence_class::ChangeConsequenceClass { new_consequence_class: 3 }).diff(&base).diff().clone();
     let d2 = En1990Mutation::ChangeBetaComputed(change_beta_computed::ChangeBetaComputed { new_beta_computed: 4.3 }).diff(&base).diff().clone();
     let mut absorbed = d1.clone();
@@ -92,7 +91,7 @@ async fn change_consequence_class_and_beta_absorb() {
 
 #[semio_framework_async_macros::async_test]
 async fn no_op_change_annex_emits_empty_diff() {
-    let base = En1990Snapshot::default();
+    let base = En1990Snapshot::example(AnnexChoice::De);
     let mutation = En1990Mutation::ChangeAnnex(change_annex::ChangeAnnex { new_annex: base.annex });
     let outcome = mutation.diff(&base);
     assert!(outcome.diff().annex.is_none());

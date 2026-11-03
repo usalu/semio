@@ -3,7 +3,7 @@ import { type BrowserBootPhase, FRAME_WORKER_BOOT_LIVENESS_POLICY } from "../../
 import { type TurnLedgerSnapshot, type TurnOutcome, type TurnVerdict, UI_TURN_BUDGET_MS } from "../../⏱️turn-budget/🟦️.ts";
 import type { NativeCatalogV1 } from "@semio-tech/plugin-registry/runtime";
 import type { WgpuPluginModule, WgpuPluginRegistrySelection } from "../../🧩️plugin-modules/🛂️admission/🟦️.ts";
-import type { WgpuBootDescriptor, WgpuHostAppearance, WgpuHostPlatform, WgpuHostStorageSnapshot } from "../../🧭️boot-descriptor/🟦️.ts";
+import type { WgpuBootDescriptor, WgpuHostAppearance, WgpuHostPlatform, WgpuHostPlatformPrefs, WgpuHostStorageSnapshot } from "../../🧭️boot-descriptor/🟦️.ts";
 import type { OriginalBootstrapRequest, OriginalBootstrapResponse } from "@semio-tech/framework-actor/retained-turn/bootstrap/port";
 import type { BrowserMediaCommand, BrowserMediaRelease, BrowserMediaResult, PresentedMediaSlot } from "@semio-tech/framework-os/modules/renderer/engine/media/browser";
 import type { InteractiveJobUiMessage, InteractiveJobWorkerMessage } from "../../🔌️browser-interactive-job-port/🟦️.ts";
@@ -172,6 +172,8 @@ export type BrowserFrameWorkerBoot = {
    * default and correcting it a frame later. Later writes cross the host-io door one at a time. */
   readonly storage: WgpuHostStorageSnapshot;
   readonly introductionSuppressed?: boolean;
+  /** 🎛️ The page realm's accessibility preferences (`../🧭️boot-descriptor/🟦️.ts`), forwarded to the renderer's `semioWgpuSetHostPlatformPrefs`; they travel WITH the boot so the first frame already honours high contrast and reduced motion. Later changes arrive as {@link BrowserFrameHostPlatformPrefs}. */
+  readonly platformPrefs?: WgpuHostPlatformPrefs;
 };
 
 /** 🗄️ One live storage change made OUTSIDE this page — another tab rewrote a shared key, which
@@ -182,6 +184,9 @@ export type BrowserFrameHostStorage = { readonly kind: "host-storage"; readonly 
 
 /** 🎓️ One independently rooted host can suppress its own introduction without affecting peers. */
 export type BrowserFrameHostIntroductionPolicy = { readonly kind: "host-introduction-policy"; readonly lifecycle: number; readonly suppressed: boolean };
+
+/** 🎛️ A live change of the page realm's accessibility preferences (a media query flipped). */
+export type BrowserFrameHostPlatformPrefs = { readonly kind: "host-platform-prefs"; readonly lifecycle: number; readonly platformPrefs: WgpuHostPlatformPrefs };
 
 export type BrowserFrameHostAppearance = { readonly kind: "host-appearance"; readonly lifecycle: number; readonly appearance: WgpuHostAppearance };
 
@@ -241,7 +246,7 @@ export type BrowserFrameHostIoResult = { readonly kind: "host-io-result"; readon
 export type BrowserFrameImageDecodeResult = { readonly kind: "image-decode-result"; readonly lifecycle: number; readonly requestId: number; readonly bitmap: ImageBitmap | null; readonly detail?: string };
 
 export type BrowserFrameUiMessage =
-  | OriginalBootstrapResponse | BrowserMediaRelease | BrowserMediaCommand | BrowserFrameWorkerBoot | BrowserFrameWorkerBatch | BrowserFrameWorkerIntrospect | InteractiveJobUiMessage | BrowserFrameShardPort | BrowserFrameHostIoResult | BrowserFrameImageDecodeResult | BrowserFrameHostAppearance | BrowserFrameHostStorage | BrowserFrameHostAgentBridge | BrowserFrameHostIntroductionPolicy | BrowserFrameHostPageHidden | BrowserFrameHostWindowBlur | { readonly kind: "close"; readonly lifecycle: number };
+  | OriginalBootstrapResponse | BrowserMediaRelease | BrowserMediaCommand | BrowserFrameWorkerBoot | BrowserFrameWorkerBatch | BrowserFrameWorkerIntrospect | InteractiveJobUiMessage | BrowserFrameShardPort | BrowserFrameHostIoResult | BrowserFrameImageDecodeResult | BrowserFrameHostAppearance | BrowserFrameHostPlatformPrefs | BrowserFrameHostStorage | BrowserFrameHostAgentBridge | BrowserFrameHostIntroductionPolicy | BrowserFrameHostPageHidden | BrowserFrameHostWindowBlur | { readonly kind: "close"; readonly lifecycle: number };
 
 /** 🧵️ The frame Worker's own step ledger, as the UI isolate sees it. The Worker prices its steps
  * against `WORKER_STEP_BUDGET_MS` with the same executing-span law the UI isolate uses for its turns

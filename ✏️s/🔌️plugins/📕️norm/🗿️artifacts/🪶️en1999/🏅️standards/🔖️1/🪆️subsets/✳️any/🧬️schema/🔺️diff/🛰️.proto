@@ -1,238 +1,236 @@
 syntax = "proto3";
-package semio.s.norm.en1999.diff;
-
-message En1999MaterialsPatch {
-  optional string designation = 1;
+package semio.s.norm.en1999;
+message En1999Diff {
+  // @state artifact
+  optional string annex = 1;
+  // @state artifact
+  optional En1999MaterialsRows materials = 2;
+  // @state artifact
+  optional En1999SectionsRows sections = 3;
+  // @state artifact
+  optional En1999MembersRows members = 4;
+  // @state artifact
+  optional En1999ConnectionsRows connections = 5;
+  // @state artifact
+  optional En1999FireScenariosRows fire_scenarios = 6;
+  // @state artifact
+  optional En1999FatigueDetailsRows fatigue_details = 7;
+  // @state artifact
+  optional En1999ColdFormedRows cold_formed = 8;
+  // @state artifact
+  optional En1999ShellsRows shells = 9;
+  // @state artifact
+  optional En1999PlacementsRows placements = 10;
+  // @state artifact
+  optional En1999WeldRunsRows weld_runs = 11;
+  // @state artifact
+  optional En1999OutlineVerticesRows outline_vertices = 12;
+  // @state artifact
+  optional En1999FatigueCategoriesRows fatigue_categories = 13;
+  // @state artifact
+  optional En1999PatchLoadsRows patch_loads = 14;
+  // @state artifact
+  optional En1999RingStiffenersRows ring_stiffeners = 15;
+  // @state artifact
+  optional En1999TransverseStiffenersRows transverse_stiffeners = 16;
+  // @state artifact
+  optional string reliability_class = 17;
 }
-
-message En1999MaterialsRemoved {
-  string id = 1;
-  uint64 index = 2;
-}
-
-message En1999MaterialsInserted {
+message En1999ColdFormedActionsInserted {
   uint64 index = 1;
+  MemberAction row = 2;
 }
-
-message En1999MaterialsMoved {
+message En1999ColdFormedActionsModified {
+  string id = 1;
+  En1999ColdFormedActionsPatch patch = 2;
+}
+message En1999ColdFormedActionsMoved {
   string id = 1;
   uint64 from = 2;
   uint64 to = 3;
 }
-
-message En1999MaterialsModified {
-  string id = 1;
-  En1999MaterialsPatch patch = 2;
-}
-
-message En1999MaterialsRows {
-  repeated En1999MaterialsRemoved removed = 1;
-  repeated En1999MaterialsInserted inserted = 2;
-  repeated En1999MaterialsMoved moved = 3;
-  repeated En1999MaterialsModified modified = 4;
-}
-
-message En1999SectionsElementsPatch {
-  optional double thickness = 1;
-}
-
-message En1999SectionsElementsRemoved {
-  string id = 1;
-  uint64 index = 2;
-}
-
-message En1999SectionsElementsInserted {
-  uint64 index = 1;
-}
-
-message En1999SectionsElementsMoved {
-  string id = 1;
-  uint64 from = 2;
-  uint64 to = 3;
-}
-
-message En1999SectionsElementsModified {
-  string id = 1;
-  En1999SectionsElementsPatch patch = 2;
-}
-
-message En1999SectionsElementsRows {
-  repeated En1999SectionsElementsRemoved removed = 1;
-  repeated En1999SectionsElementsInserted inserted = 2;
-  repeated En1999SectionsElementsMoved moved = 3;
-  repeated En1999SectionsElementsModified modified = 4;
-}
-
-message En1999SectionsPatch {
+message En1999ColdFormedActionsPatch {
   optional string kind = 1;
-  optional double height = 2;
+  optional string category = 2;
+  optional string source = 3;
+  optional double g_k_line = 4;
+  optional double q_k_line = 5;
+  optional double n_k = 6;
+  optional double v_y_k = 7;
+  optional double v_z_k = 8;
+  optional double m_y_k = 9;
+  optional double m_z_k = 10;
+  optional double torsion_k = 11;
+  optional double local_load_k = 12;
+}
+message En1999ColdFormedActionsRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
+message En1999ColdFormedActionsRows {
+  repeated En1999ColdFormedActionsRemoved removed = 1;
+  repeated En1999ColdFormedActionsInserted inserted = 2;
+  repeated En1999ColdFormedActionsMoved moved = 3;
+  repeated En1999ColdFormedActionsModified modified = 4;
+}
+message En1999ColdFormedInserted {
+  uint64 index = 1;
+  ColdFormedSheet row = 2;
+}
+message En1999ColdFormedModified {
+  string id = 1;
+  En1999ColdFormedPatch patch = 2;
+}
+message En1999ColdFormedMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+message En1999ColdFormedPatch {
+  optional string material_id = 1;
+  optional double thickness = 2;
   optional double width = 3;
-  optional double flange_thickness = 4;
-  optional double web_thickness = 5;
-  optional double outer_diameter = 6;
-  optional En1999SectionsElementsRows elements = 7;
+  optional double span = 4;
+  optional bool welded = 5;
+  optional En1999ColdFormedActionsRows actions = 6;
 }
-
-message En1999SectionsRemoved {
+message En1999ColdFormedRemoved {
   string id = 1;
   uint64 index = 2;
 }
-
-message En1999SectionsInserted {
-  uint64 index = 1;
+message En1999ColdFormedRows {
+  repeated En1999ColdFormedRemoved removed = 1;
+  repeated En1999ColdFormedInserted inserted = 2;
+  repeated En1999ColdFormedMoved moved = 3;
+  repeated En1999ColdFormedModified modified = 4;
 }
-
-message En1999SectionsMoved {
+message En1999ConnectionsActionsInserted {
+  uint64 index = 1;
+  MemberAction row = 2;
+}
+message En1999ConnectionsActionsModified {
+  string id = 1;
+  En1999ConnectionsActionsPatch patch = 2;
+}
+message En1999ConnectionsActionsMoved {
   string id = 1;
   uint64 from = 2;
   uint64 to = 3;
 }
-
-message En1999SectionsModified {
-  string id = 1;
-  En1999SectionsPatch patch = 2;
+message En1999ConnectionsActionsPatch {
+  optional string kind = 1;
+  optional string category = 2;
+  optional string source = 3;
+  optional double g_k_line = 4;
+  optional double q_k_line = 5;
+  optional double n_k = 6;
+  optional double v_y_k = 7;
+  optional double v_z_k = 8;
+  optional double m_y_k = 9;
+  optional double m_z_k = 10;
+  optional double torsion_k = 11;
+  optional double local_load_k = 12;
 }
-
-message En1999SectionsRows {
-  repeated En1999SectionsRemoved removed = 1;
-  repeated En1999SectionsInserted inserted = 2;
-  repeated En1999SectionsMoved moved = 3;
-  repeated En1999SectionsModified modified = 4;
-}
-
-message En1999MembersActionsPatch {
-  optional double n_k = 1;
-  optional double m_y_k = 2;
-}
-
-message En1999MembersActionsRemoved {
+message En1999ConnectionsActionsRemoved {
   string id = 1;
   uint64 index = 2;
 }
-
-message En1999MembersActionsInserted {
-  uint64 index = 1;
+message En1999ConnectionsActionsRows {
+  repeated En1999ConnectionsActionsRemoved removed = 1;
+  repeated En1999ConnectionsActionsInserted inserted = 2;
+  repeated En1999ConnectionsActionsMoved moved = 3;
+  repeated En1999ConnectionsActionsModified modified = 4;
 }
-
-message En1999MembersActionsMoved {
-  string id = 1;
-  uint64 from = 2;
-  uint64 to = 3;
-}
-
-message En1999MembersActionsModified {
-  string id = 1;
-  En1999MembersActionsPatch patch = 2;
-}
-
-message En1999MembersActionsRows {
-  repeated En1999MembersActionsRemoved removed = 1;
-  repeated En1999MembersActionsInserted inserted = 2;
-  repeated En1999MembersActionsMoved moved = 3;
-  repeated En1999MembersActionsModified modified = 4;
-}
-
-message En1999MembersPatch {
-  optional double buckling_length_y = 1;
-  optional double buckling_length_z = 2;
-  optional double buckling_length_t = 3;
-  optional double ltb_length = 4;
-  optional En1999MembersActionsRows actions = 5;
-}
-
-message En1999MembersRemoved {
-  string id = 1;
-  uint64 index = 2;
-}
-
-message En1999MembersInserted {
-  uint64 index = 1;
-}
-
-message En1999MembersMoved {
-  string id = 1;
-  uint64 from = 2;
-  uint64 to = 3;
-}
-
-message En1999MembersModified {
-  string id = 1;
-  En1999MembersPatch patch = 2;
-}
-
-message En1999MembersRows {
-  repeated En1999MembersRemoved removed = 1;
-  repeated En1999MembersInserted inserted = 2;
-  repeated En1999MembersMoved moved = 3;
-  repeated En1999MembersModified modified = 4;
-}
-
-message En1999ConnectionsPatch {
-  optional double welds_throat = 1;
-  optional uint32 bolts_rows = 2;
-  optional uint32 bolts_bolts_per_row = 3;
-}
-
-message En1999ConnectionsRemoved {
-  string id = 1;
-  uint64 index = 2;
-}
-
 message En1999ConnectionsInserted {
   uint64 index = 1;
+  AluminiumConnection row = 2;
 }
-
+message En1999ConnectionsModified {
+  string id = 1;
+  En1999ConnectionsPatch patch = 2;
+}
 message En1999ConnectionsMoved {
   string id = 1;
   uint64 from = 2;
   uint64 to = 3;
 }
-
-message En1999ConnectionsModified {
-  string id = 1;
-  En1999ConnectionsPatch patch = 2;
+message En1999ConnectionsPatch {
+  optional string member_id = 1;
+  optional string material_id = 2;
+  optional string kind = 3;
+  optional string bolts_material = 4;
+  optional double bolts_diameter = 5;
+  optional uint32 bolts_rows = 6;
+  optional uint32 bolts_bolts_per_row = 7;
+  optional double bolts_edge_distance = 8;
+  optional double bolts_pitch = 9;
+  optional double bolts_gauge = 10;
+  optional double bolts_plate_thickness = 11;
+  optional string welds_filler_alloy = 12;
+  optional double welds_throat = 13;
+  optional double welds_length = 14;
+  optional double welds_beta_w = 15;
+  optional double welds_haz_extent = 16;
+  optional En1999ConnectionsActionsRows actions = 17;
+  optional double load_eccentricity = 18;
+  optional double hole_stagger = 19;
+  optional string force_method = 20;
 }
-
+message En1999ConnectionsRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
 message En1999ConnectionsRows {
   repeated En1999ConnectionsRemoved removed = 1;
   repeated En1999ConnectionsInserted inserted = 2;
   repeated En1999ConnectionsMoved moved = 3;
   repeated En1999ConnectionsModified modified = 4;
 }
-
-message En1999FireScenariosPatch {
-  optional string member_id = 1;
-  optional double theta_a = 2;
-  optional double duration_s = 3;
-}
-
-message En1999FireScenariosRemoved {
-  string id = 1;
-  uint64 index = 2;
-}
-
-message En1999FireScenariosInserted {
+message En1999FatigueCategoriesInserted {
   uint64 index = 1;
+  FatigueCategory row = 2;
 }
-
-message En1999FireScenariosMoved {
+message En1999FatigueCategoriesModified {
+  string id = 1;
+  En1999FatigueCategoriesPatch patch = 2;
+}
+message En1999FatigueCategoriesMoved {
   string id = 1;
   uint64 from = 2;
   uint64 to = 3;
 }
-
-message En1999FireScenariosModified {
+message En1999FatigueCategoriesPatch {
+  optional string member_id = 1;
+  optional string element_id = 2;
+  optional string detail_category = 3;
+  optional string detail_type = 4;
+  optional double location_x = 5;
+  optional double m1 = 6;
+  optional double m2 = 7;
+}
+message En1999FatigueCategoriesRemoved {
   string id = 1;
-  En1999FireScenariosPatch patch = 2;
+  uint64 index = 2;
 }
-
-message En1999FireScenariosRows {
-  repeated En1999FireScenariosRemoved removed = 1;
-  repeated En1999FireScenariosInserted inserted = 2;
-  repeated En1999FireScenariosMoved moved = 3;
-  repeated En1999FireScenariosModified modified = 4;
+message En1999FatigueCategoriesRows {
+  repeated En1999FatigueCategoriesRemoved removed = 1;
+  repeated En1999FatigueCategoriesInserted inserted = 2;
+  repeated En1999FatigueCategoriesMoved moved = 3;
+  repeated En1999FatigueCategoriesModified modified = 4;
 }
-
+message En1999FatigueDetailsInserted {
+  uint64 index = 1;
+  FatigueDetail row = 2;
+}
+message En1999FatigueDetailsModified {
+  string id = 1;
+  En1999FatigueDetailsPatch patch = 2;
+}
+message En1999FatigueDetailsMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
 message En1999FatigueDetailsPatch {
   optional string member_id = 1;
   optional string detail_category = 2;
@@ -242,110 +240,467 @@ message En1999FatigueDetailsPatch {
   optional double m1 = 6;
   optional double m2 = 7;
 }
-
 message En1999FatigueDetailsRemoved {
   string id = 1;
   uint64 index = 2;
 }
-
-message En1999FatigueDetailsInserted {
-  uint64 index = 1;
-}
-
-message En1999FatigueDetailsMoved {
-  string id = 1;
-  uint64 from = 2;
-  uint64 to = 3;
-}
-
-message En1999FatigueDetailsModified {
-  string id = 1;
-  En1999FatigueDetailsPatch patch = 2;
-}
-
 message En1999FatigueDetailsRows {
   repeated En1999FatigueDetailsRemoved removed = 1;
   repeated En1999FatigueDetailsInserted inserted = 2;
   repeated En1999FatigueDetailsMoved moved = 3;
   repeated En1999FatigueDetailsModified modified = 4;
 }
-
-message En1999ColdFormedPatch {
-  optional string material_id = 1;
-  optional double thickness = 2;
-  optional double width = 3;
-  optional double span = 4;
-  optional bool welded = 5;
-}
-
-message En1999ColdFormedRemoved {
-  string id = 1;
-  uint64 index = 2;
-}
-
-message En1999ColdFormedInserted {
+message En1999FireScenariosInserted {
   uint64 index = 1;
+  FireScenario row = 2;
 }
-
-message En1999ColdFormedMoved {
+message En1999FireScenariosModified {
+  string id = 1;
+  En1999FireScenariosPatch patch = 2;
+}
+message En1999FireScenariosMoved {
   string id = 1;
   uint64 from = 2;
   uint64 to = 3;
 }
-
-message En1999ColdFormedModified {
-  string id = 1;
-  En1999ColdFormedPatch patch = 2;
+message En1999FireScenariosPatch {
+  optional string member_id = 1;
+  optional double theta_a = 2;
+  optional double duration_s = 3;
 }
-
-message En1999ColdFormedRows {
-  repeated En1999ColdFormedRemoved removed = 1;
-  repeated En1999ColdFormedInserted inserted = 2;
-  repeated En1999ColdFormedMoved moved = 3;
-  repeated En1999ColdFormedModified modified = 4;
-}
-
-message En1999ShellsPatch {
-  optional string material_id = 1;
-  optional double radius = 2;
-  optional double thickness = 3;
-  optional double length = 4;
-}
-
-message En1999ShellsRemoved {
+message En1999FireScenariosRemoved {
   string id = 1;
   uint64 index = 2;
 }
-
+message En1999FireScenariosRows {
+  repeated En1999FireScenariosRemoved removed = 1;
+  repeated En1999FireScenariosInserted inserted = 2;
+  repeated En1999FireScenariosMoved moved = 3;
+  repeated En1999FireScenariosModified modified = 4;
+}
+message En1999MaterialsInserted {
+  uint64 index = 1;
+  AluminiumMaterial row = 2;
+}
+message En1999MaterialsModified {
+  string id = 1;
+  En1999MaterialsPatch patch = 2;
+}
+message En1999MaterialsMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+message En1999MaterialsPatch {
+  optional string designation = 1;
+  optional string product_form = 2;
+}
+message En1999MaterialsRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
+message En1999MaterialsRows {
+  repeated En1999MaterialsRemoved removed = 1;
+  repeated En1999MaterialsInserted inserted = 2;
+  repeated En1999MaterialsMoved moved = 3;
+  repeated En1999MaterialsModified modified = 4;
+}
+message En1999MembersActionsInserted {
+  uint64 index = 1;
+  MemberAction row = 2;
+}
+message En1999MembersActionsModified {
+  string id = 1;
+  En1999MembersActionsPatch patch = 2;
+}
+message En1999MembersActionsMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+message En1999MembersActionsPatch {
+  optional string kind = 1;
+  optional string category = 2;
+  optional string source = 3;
+  optional double g_k_line = 4;
+  optional double q_k_line = 5;
+  optional double n_k = 6;
+  optional double v_y_k = 7;
+  optional double v_z_k = 8;
+  optional double m_y_k = 9;
+  optional double m_z_k = 10;
+  optional double torsion_k = 11;
+  optional double local_load_k = 12;
+}
+message En1999MembersActionsRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
+message En1999MembersActionsRows {
+  repeated En1999MembersActionsRemoved removed = 1;
+  repeated En1999MembersActionsInserted inserted = 2;
+  repeated En1999MembersActionsMoved moved = 3;
+  repeated En1999MembersActionsModified modified = 4;
+}
+message En1999MembersInserted {
+  uint64 index = 1;
+  AluminiumMember row = 2;
+}
+message En1999MembersModified {
+  string id = 1;
+  En1999MembersPatch patch = 2;
+}
+message En1999MembersMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+message En1999MembersPatch {
+  optional string section_id = 1;
+  optional string material_id = 2;
+  optional double length = 3;
+  optional string support = 4;
+  optional double buckling_length_y = 5;
+  optional double buckling_length_z = 6;
+  optional double buckling_length_t = 7;
+  optional double ltb_length = 8;
+  optional double c1 = 9;
+  optional bool restrained_ltb = 10;
+  optional double bearing_length = 11;
+  optional bool transverse_weld = 12;
+  optional double transverse_weld_offset = 13;
+  optional En1999MembersActionsRows actions = 14;
+}
+message En1999MembersRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
+message En1999MembersRows {
+  repeated En1999MembersRemoved removed = 1;
+  repeated En1999MembersInserted inserted = 2;
+  repeated En1999MembersMoved moved = 3;
+  repeated En1999MembersModified modified = 4;
+}
+message En1999OutlineVerticesInserted {
+  uint64 index = 1;
+  SectionVertex row = 2;
+}
+message En1999OutlineVerticesModified {
+  string id = 1;
+  En1999OutlineVerticesPatch patch = 2;
+}
+message En1999OutlineVerticesMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+message En1999OutlineVerticesPatch {
+  optional string section_id = 1;
+  optional string ring = 2;
+  optional string element_id = 3;
+  optional double y = 4;
+  optional double z = 5;
+}
+message En1999OutlineVerticesRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
+message En1999OutlineVerticesRows {
+  repeated En1999OutlineVerticesRemoved removed = 1;
+  repeated En1999OutlineVerticesInserted inserted = 2;
+  repeated En1999OutlineVerticesMoved moved = 3;
+  repeated En1999OutlineVerticesModified modified = 4;
+}
+message En1999PatchLoadsInserted {
+  uint64 index = 1;
+  PatchLoad row = 2;
+}
+message En1999PatchLoadsModified {
+  string id = 1;
+  En1999PatchLoadsPatch patch = 2;
+}
+message En1999PatchLoadsMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+message En1999PatchLoadsPatch {
+  optional string subject_id = 1;
+  optional string position = 2;
+  optional double x = 3;
+  optional double bearing_length = 4;
+  optional double web_height = 5;
+  optional double web_angle = 6;
+  optional double corner_radius = 7;
+  optional double load = 8;
+}
+message En1999PatchLoadsRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
+message En1999PatchLoadsRows {
+  repeated En1999PatchLoadsRemoved removed = 1;
+  repeated En1999PatchLoadsInserted inserted = 2;
+  repeated En1999PatchLoadsMoved moved = 3;
+  repeated En1999PatchLoadsModified modified = 4;
+}
+message En1999PlacementsInserted {
+  uint64 index = 1;
+  Placement row = 2;
+}
+message En1999PlacementsModified {
+  string id = 1;
+  En1999PlacementsPatch patch = 2;
+}
+message En1999PlacementsMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+message En1999PlacementsPatch {
+  optional double x = 1;
+  optional double y = 2;
+  optional double z = 3;
+  optional double yaw = 4;
+}
+message En1999PlacementsRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
+message En1999PlacementsRows {
+  repeated En1999PlacementsRemoved removed = 1;
+  repeated En1999PlacementsInserted inserted = 2;
+  repeated En1999PlacementsMoved moved = 3;
+  repeated En1999PlacementsModified modified = 4;
+}
+message En1999RingStiffenersInserted {
+  uint64 index = 1;
+  RingStiffener row = 2;
+}
+message En1999RingStiffenersModified {
+  string id = 1;
+  En1999RingStiffenersPatch patch = 2;
+}
+message En1999RingStiffenersMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+message En1999RingStiffenersPatch {
+  optional string shell_id = 1;
+  optional double x = 2;
+  optional double depth = 3;
+  optional double thickness = 4;
+  optional bool internal = 5;
+}
+message En1999RingStiffenersRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
+message En1999RingStiffenersRows {
+  repeated En1999RingStiffenersRemoved removed = 1;
+  repeated En1999RingStiffenersInserted inserted = 2;
+  repeated En1999RingStiffenersMoved moved = 3;
+  repeated En1999RingStiffenersModified modified = 4;
+}
+message En1999SectionsElementsInserted {
+  uint64 index = 1;
+  PlateElement row = 2;
+}
+message En1999SectionsElementsModified {
+  string id = 1;
+  En1999SectionsElementsPatch patch = 2;
+}
+message En1999SectionsElementsMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+message En1999SectionsElementsPatch {
+  optional double width = 1;
+  optional double thickness = 2;
+  optional bool outstand = 3;
+  optional bool welded = 4;
+  optional double weld_position = 5;
+  optional string weld_process = 6;
+  optional bool weld_t_junction = 7;
+  optional string weld_direction = 8;
+  optional double edge_stiffener_depth = 9;
+  optional double edge_stiffener_thickness = 10;
+}
+message En1999SectionsElementsRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
+message En1999SectionsElementsRows {
+  repeated En1999SectionsElementsRemoved removed = 1;
+  repeated En1999SectionsElementsInserted inserted = 2;
+  repeated En1999SectionsElementsMoved moved = 3;
+  repeated En1999SectionsElementsModified modified = 4;
+}
+message En1999SectionsInserted {
+  uint64 index = 1;
+  AluminiumSection row = 2;
+}
+message En1999SectionsModified {
+  string id = 1;
+  En1999SectionsPatch patch = 2;
+}
+message En1999SectionsMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+message En1999SectionsPatch {
+  optional string kind = 1;
+  optional double height = 2;
+  optional double width = 3;
+  optional double flange_thickness = 4;
+  optional double web_thickness = 5;
+  optional double outer_diameter = 6;
+  optional En1999SectionsElementsRows elements = 7;
+}
+message En1999SectionsRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
+message En1999SectionsRows {
+  repeated En1999SectionsRemoved removed = 1;
+  repeated En1999SectionsInserted inserted = 2;
+  repeated En1999SectionsMoved moved = 3;
+  repeated En1999SectionsModified modified = 4;
+}
+message En1999ShellsActionsInserted {
+  uint64 index = 1;
+  MemberAction row = 2;
+}
+message En1999ShellsActionsModified {
+  string id = 1;
+  En1999ShellsActionsPatch patch = 2;
+}
+message En1999ShellsActionsMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+message En1999ShellsActionsPatch {
+  optional string kind = 1;
+  optional string category = 2;
+  optional string source = 3;
+  optional double g_k_line = 4;
+  optional double q_k_line = 5;
+  optional double n_k = 6;
+  optional double v_y_k = 7;
+  optional double v_z_k = 8;
+  optional double m_y_k = 9;
+  optional double m_z_k = 10;
+  optional double torsion_k = 11;
+  optional double local_load_k = 12;
+}
+message En1999ShellsActionsRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
+message En1999ShellsActionsRows {
+  repeated En1999ShellsActionsRemoved removed = 1;
+  repeated En1999ShellsActionsInserted inserted = 2;
+  repeated En1999ShellsActionsMoved moved = 3;
+  repeated En1999ShellsActionsModified modified = 4;
+}
 message En1999ShellsInserted {
   uint64 index = 1;
+  AluminiumShell row = 2;
 }
-
+message En1999ShellsModified {
+  string id = 1;
+  En1999ShellsPatch patch = 2;
+}
 message En1999ShellsMoved {
   string id = 1;
   uint64 from = 2;
   uint64 to = 3;
 }
-
-message En1999ShellsModified {
-  string id = 1;
-  En1999ShellsPatch patch = 2;
+message En1999ShellsPatch {
+  optional string material_id = 1;
+  optional double radius = 2;
+  optional double thickness = 3;
+  optional double length = 4;
+  optional bool welded = 5;
+  optional string fabrication_class = 6;
+  optional En1999ShellsActionsRows actions = 7;
 }
-
+message En1999ShellsRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
 message En1999ShellsRows {
   repeated En1999ShellsRemoved removed = 1;
   repeated En1999ShellsInserted inserted = 2;
   repeated En1999ShellsMoved moved = 3;
   repeated En1999ShellsModified modified = 4;
 }
-
-message En1999Diff {
-  optional En1999MaterialsRows materials = 1;
-  optional En1999SectionsRows sections = 2;
-  optional En1999MembersRows members = 3;
-  optional En1999ConnectionsRows connections = 4;
-  optional En1999FireScenariosRows fire_scenarios = 5;
-  optional En1999FatigueDetailsRows fatigue_details = 6;
-  optional En1999ColdFormedRows cold_formed = 7;
-  optional En1999ShellsRows shells = 8;
+message En1999TransverseStiffenersInserted {
+  uint64 index = 1;
+  TransverseStiffener row = 2;
+}
+message En1999TransverseStiffenersModified {
+  string id = 1;
+  En1999TransverseStiffenersPatch patch = 2;
+}
+message En1999TransverseStiffenersMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+message En1999TransverseStiffenersPatch {
+  optional string girder_id = 1;
+  optional double position = 2;
+  optional double width = 3;
+  optional double thickness = 4;
+  optional string sides = 5;
+}
+message En1999TransverseStiffenersRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
+message En1999TransverseStiffenersRows {
+  repeated En1999TransverseStiffenersRemoved removed = 1;
+  repeated En1999TransverseStiffenersInserted inserted = 2;
+  repeated En1999TransverseStiffenersMoved moved = 3;
+  repeated En1999TransverseStiffenersModified modified = 4;
+}
+message En1999WeldRunsInserted {
+  uint64 index = 1;
+  WeldRun row = 2;
+}
+message En1999WeldRunsModified {
+  string id = 1;
+  En1999WeldRunsPatch patch = 2;
+}
+message En1999WeldRunsMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+message En1999WeldRunsPatch {
+  optional string member_id = 1;
+  optional string element_id = 2;
+  optional double start = 3;
+  optional double length = 4;
+  optional double offset = 5;
+  optional double throat = 6;
+  optional string process = 7;
+  optional bool t_junction = 8;
+  optional string direction = 9;
+  optional double haz_extent = 10;
+}
+message En1999WeldRunsRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
+message En1999WeldRunsRows {
+  repeated En1999WeldRunsRemoved removed = 1;
+  repeated En1999WeldRunsInserted inserted = 2;
+  repeated En1999WeldRunsMoved moved = 3;
+  repeated En1999WeldRunsModified modified = 4;
 }

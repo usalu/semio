@@ -1,0 +1,21 @@
+{
+  "mutation": "insertPier",
+  "index": 1,
+  "pier": {
+    "id": "pier-2",
+    "bridgeId": "br-1",
+    "xM": 22.0,
+    "heightM": 8.0,
+    "sectionBM": 1.2,
+    "sectionHM": 1.2,
+    "modulusMpa": 30000.0,
+    "momentRdNm": 6000000.0,
+    "shearRdN": 1000000.0,
+    "reinforcementRatio": 0.0,
+    "coverM": 0.0,
+    "concreteFckMpa": 0.0,
+    "steelFykMpa": 0.0,
+    "axialLoadN": 0.0,
+    "stiffnessBasis": "declared"
+  }
+}

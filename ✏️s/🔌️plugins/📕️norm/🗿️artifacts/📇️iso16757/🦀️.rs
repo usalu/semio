@@ -22,9 +22,9 @@ use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
 
 /// 🔗️ Internal or external reference.
 #[derive(Clone, Debug, PartialEq, crate::value_derive::ToValue, crate::value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 pub struct CatalogueReference {
     pub uri: String,
     pub label: Option<String>,

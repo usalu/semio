@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-beam-action-stage/schema.json",
+  "title": "ChangeBeamActionStage",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "beamId",
+    "id",
+    "newStage"
+  ],
+  "properties": {
+    "beamId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Composite beam",
+          "de": "Verbundträger"
+        },
+        "description": {
+          "en": "The composite beam this mutation addresses, by id.",
+          "de": "Das adressierte Element (Verbundträger), per Kennung."
+        },
+        "ref": {
+          "kind": "beam"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Action",
+          "de": "Einwirkung"
+        },
+        "description": {
+          "en": "The action this mutation addresses, by id.",
+          "de": "Das adressierte Element (Einwirkung), per Kennung."
+        },
+        "ref": {
+          "kind": "action"
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "newStage": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/ActionStage",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Stage of the beam action",
+          "de": "Bauzustand der Trägereinwirkung"
+        },
+        "group": "actions",
+        "order": 30
+      }
+    }
+  }
+}

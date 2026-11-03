@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-local-fire-assumed-flux/schema.json",
+  "title": "ChangeLocalFireAssumedFlux",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newAssumedFlux"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Localised fire",
+          "de": "Lokaler Brand"
+        },
+        "description": {
+          "en": "The localised fire this mutation addresses, by id.",
+          "de": "Das adressierte Element (Lokaler Brand), per Kennung."
+        },
+        "ref": {
+          "kind": "local-fire"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newAssumedFlux": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Rotation assumed_flux f",
+          "de": "Angesetzter Wärmestrom"
+        },
+        "widget": "stepper",
+        "role": "value",
+        "group": "value",
+        "order": 20,
+        "unit": "W/m²",
+        "displayUnit": "kW/m²",
+        "displayFactor": 0.001,
+        "precision": 1,
+        "step": 1000
+      }
+    }
+  }
+}

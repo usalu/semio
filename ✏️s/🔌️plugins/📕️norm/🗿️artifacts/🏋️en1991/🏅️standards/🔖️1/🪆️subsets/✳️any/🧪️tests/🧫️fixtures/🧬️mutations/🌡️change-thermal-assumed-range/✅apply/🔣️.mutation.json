@@ -1,0 +1,6 @@
+{
+  "ChangeThermalAssumedRange": {
+    "id": "thermal-section-1",
+    "newAssumedRange": 3.0
+  }
+}

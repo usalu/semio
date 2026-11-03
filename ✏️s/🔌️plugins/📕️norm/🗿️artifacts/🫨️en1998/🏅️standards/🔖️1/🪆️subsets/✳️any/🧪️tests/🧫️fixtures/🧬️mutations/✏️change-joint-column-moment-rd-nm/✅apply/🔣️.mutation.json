@@ -1,0 +1,5 @@
+{
+  "mutation": "changeJointColumnMomentRdNm",
+  "id": "joint-1",
+  "newColumnMomentRdNm": 12000000.0
+}

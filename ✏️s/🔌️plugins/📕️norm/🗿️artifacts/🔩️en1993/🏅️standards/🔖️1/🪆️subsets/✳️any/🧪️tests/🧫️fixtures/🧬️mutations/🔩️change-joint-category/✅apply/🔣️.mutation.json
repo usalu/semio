@@ -1,0 +1,6 @@
+{
+  "ChangeJointCategory": {
+    "id": "joint-j1",
+    "newCategory": "A"
+  }
+}

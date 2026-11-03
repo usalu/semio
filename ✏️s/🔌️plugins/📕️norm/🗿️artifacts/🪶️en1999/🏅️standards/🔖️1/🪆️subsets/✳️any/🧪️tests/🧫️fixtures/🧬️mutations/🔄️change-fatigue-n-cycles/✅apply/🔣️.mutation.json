@@ -1,0 +1,5 @@
+{
+  "mutation": "changeFatigueNCycles",
+  "fatigueDetailId": "fat-1",
+  "newNCycles": 12000000.0
+}

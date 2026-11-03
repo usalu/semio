@@ -1,0 +1,6 @@
+{
+  "ChangeBucklingLengthPlane": {
+    "id": "frame-action-1",
+    "newPlane": "NodalMoment"
+  }
+}

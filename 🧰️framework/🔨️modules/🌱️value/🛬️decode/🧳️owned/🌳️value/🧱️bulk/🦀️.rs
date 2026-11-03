@@ -62,7 +62,7 @@ impl<I:NativeValueSource+?Sized,T:NativeTreeValue> NativeReceiver<I,T> for Nativ
   if let Some(error)=self.failed(){return RetainedWorkOutcome{result:Err(error.into()),work:0}}
   let mut work=0;let mut own=RetainedCloneProgress::default();let result:Result<RetainedCloneStep,OriginalReceivingPrimary>=(||{
    let d=self.demands(input,body)?;if !retained_clone_grant_admits(g,d){return Ok(RetainedCloneStep::Progress(Default::default()))}control.checkpoint()?;crate::owned::receiving_capacity(control,d.capacity_bytes)?;
-   if self.binding.is_none(){let turn=input.bind(&mut self.binding,g);let turn=control.receive_retained_work(g,crate::RetainedWorkOutcome{result:turn.result.map(|p|RetainedCloneStep::Progress(p.unwrap_or_default())),work:turn.work});work=turn.work;return turn.result.map_err(Into::into)}
+   if self.binding.is_none(){let turn=input.bind(&mut self.binding,g);let turn=control.receive_retained_work(g,RetainedWorkOutcome{result:turn.result.map(|p|RetainedCloneStep::Progress(p.unwrap_or_default())),work:turn.work});work=turn.work;return turn.result.map_err(Into::into)}
    if self.top().is_none(){self.frames[0]=Some(Frame::new(input.get().as_source()as*const dyn NativeValueSource));work=1;return Ok(RetainedCloneStep::Progress(receipt(fixed(0))))}
    if self.top().unwrap().phase==20{
     work=1;let frame=self.frames[self.depth].as_ref().unwrap();if frame.value.is_none()||frame.text.is_some()||frame.key.is_some()||frame.array.is_some()||frame.object.is_some()||frame.pending.is_some()||self.depth>0&&self.frames[self.depth-1].as_ref().unwrap().pending.is_some(){return Err(invalid().into())}own=receipt(fixed(0));if self.depth==0{let value=self.frames[0].as_mut().unwrap().value.take().ok_or_else(invalid)?;*self.output=Some(value);self.complete=true;return Ok(RetainedCloneStep::Complete(own))}
@@ -107,7 +107,7 @@ impl<I:NativeValueSource+?Sized,T:NativeTreeValue> NativeReceiver<I,T> for Nativ
  }
  fn output_ready(&self)->bool{!self.closing&&self.complete&&self.output.is_some()}
  fn take_demand(&self)->Result<RetirementDemand,ValueError>{if !self.output_ready(){return Err(invalid())}Ok(fixed(0))}
- fn take(&mut self,g:RetainedCloneGrant)->crate::RetainedWorkOutcome<Option<(T,RetainedCloneProgress)>>{let mut work=0;let result=(||{let d=self.take_demand()?;if !retained_clone_grant_admits(g,d){return Ok(None)}work=1;self.taken=true;Ok(Some((self.output.take().ok_or_else(invalid)?,receipt(d))))})();crate::RetainedWorkOutcome{result,work}}
+ fn take(&mut self,g:RetainedCloneGrant)->RetainedWorkOutcome<Option<(T,RetainedCloneProgress)>>{let mut work=0;let result=(||{let d=self.take_demand()?;if !retained_clone_grant_admits(g,d){return Ok(None)}work=1;self.taken=true;Ok(Some((self.output.take().ok_or_else(invalid)?,receipt(d))))})();RetainedWorkOutcome{result,work}}
  fn begin_close(&mut self){self.closing=true;}
  fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.closing{return Err(invalid())}if !self.retirement.is_empty(){return self.retirement.demands(body)}if self.top().is_some(){return self.frame_close(body)}if self.output.is_some(){return self.retirement.next_owner_demands::<T>(true,&None,body)}if self.failure.is_some(){return Ok(fixed(0))}RetainedCloneBinding::close_demand(&self.binding,body)}
  fn close_step(&mut self,g:RetainedCloneGrant)->RetainedWorkOutcome{

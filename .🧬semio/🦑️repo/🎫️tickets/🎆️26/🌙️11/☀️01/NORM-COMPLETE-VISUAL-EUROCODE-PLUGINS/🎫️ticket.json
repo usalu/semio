@@ -1,0 +1,23 @@
+{
+  "title": "Norm-Complete Visual Eurocode Plugins",
+  "emoji": "🏗️",
+  "status": "open",
+  "description": "The current eurocode plugins are extremly adhoc. Make sure they are completly norm complete, absolutely visual (3d whenever possible) with rich, immediate, realime editors, etc. Coordinate a fleet of parallel agents (Sonnet for execution, Haiku for exploration/audits).",
+  "goal": "norm",
+  "sessions": [
+    "465a7869-3ab3-4ca0-9616-5b75cea8cfdb"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-11-01 21:26:45",
+      "author": "",
+      "system": "linux",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "The current eurocode plugins are extremly adhoc. Make sure they are completly norm complete, absolutely visual (3d whenever possible) with rich, immediate, realime editors, etc. Coordinate a fleet of parallel agents (Sonnet for execution, Haiku for exploration/audits).",
+      "llm": "opus-4-7",
+      "effort": "medium"
+    }
+  ]
+}

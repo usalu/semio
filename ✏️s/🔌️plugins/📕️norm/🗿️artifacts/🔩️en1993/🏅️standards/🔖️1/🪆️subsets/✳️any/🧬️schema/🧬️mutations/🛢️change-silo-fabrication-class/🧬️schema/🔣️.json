@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-silo-fabrication-class/schema.json",
+  "title": "ChangeSiloFabricationClass",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newFabricationClass"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Silo shell",
+          "de": "Silo-Schale"
+        },
+        "description": {
+          "en": "The silo shell this mutation addresses, by id.",
+          "de": "Das adressierte Element (Silo-Schale), per Kennung."
+        },
+        "ref": {
+          "kind": "silo"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newFabricationClass": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/FabricationToleranceClass",
+      "x-semio-ui": {
+        "label": {
+          "en": "Fabrication tolerance class",
+          "de": "Fertigungstoleranzklasse"
+        },
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

@@ -1,0 +1,398 @@
+{
+  "artifact": "en1991",
+  "collections": [
+    {
+      "camel": "helicopterLandings",
+      "entity": "HelicopterLanding",
+      "table": "helicopter_landing",
+      "after": "cases",
+      "emoji": "🚁",
+      "doc": "Hard landing of a helicopter on a roof pad by its take-off mass (EN 1991-1-7, 4.7).",
+      "label_en": "Helicopter landings",
+      "label_de": "Hubschrauberlandungen",
+      "id_en": "Helicopter landing id",
+      "id_de": "Hubschrauberlandung-Id",
+      "fields": [
+        {
+          "name": "mass",
+          "ty": "f64",
+          "en": "Take-off mass m",
+          "de": "Startmasse m",
+          "unit": "kg"
+        },
+        {
+          "name": "x",
+          "ty": "f64",
+          "en": "Plan position x",
+          "de": "Position x",
+          "unit": "m",
+          "step": 0.5
+        },
+        {
+          "name": "y",
+          "ty": "f64",
+          "en": "Plan position y",
+          "de": "Position y",
+          "unit": "m",
+          "step": 0.5
+        },
+        {
+          "name": "height",
+          "ty": "f64",
+          "en": "Height of the pad above ground",
+          "de": "Höhe des Landeplatzes über Gelände",
+          "unit": "m",
+          "step": 0.5
+        },
+        {
+          "name": "assumed_force",
+          "ty": "f64",
+          "en": "Assumed equivalent static force",
+          "de": "Angenommene statische Ersatzkraft",
+          "unit": "N"
+        }
+      ],
+      "kit": {
+        "id": "helicopterLanding",
+        "en": "Helicopter landing",
+        "de": "Hubschrauberlandung",
+        "icon": "plane",
+        "scene_kind": "Load"
+      },
+      "kit_after": "cases"
+    },
+    {
+      "camel": "tieRuns",
+      "entity": "TieRun",
+      "table": "tie_run",
+      "after": "helicopterLandings",
+      "emoji": "🪢",
+      "doc": "Horizontal tie of a floor with its spacing, span and loads for the robustness design (EN 1991-1-7, Annex A).",
+      "label_en": "Tie runs",
+      "label_de": "Zugglieder",
+      "id_en": "Tie id",
+      "id_de": "Zugglied-Id",
+      "fields": [
+        {
+          "name": "kind",
+          "ty": "u8",
+          "en": "Tie kind (0 peripheral, 1 internal)",
+          "de": "Zuggliedart (0 Randzugglied, 1 Innenzugglied)"
+        },
+        {
+          "name": "spacing",
+          "ty": "f64",
+          "en": "Tie spacing s",
+          "de": "Zuggliedabstand s",
+          "unit": "m",
+          "step": 0.5
+        },
+        {
+          "name": "span",
+          "ty": "f64",
+          "en": "Tie span L",
+          "de": "Zuggliedlänge L",
+          "unit": "m",
+          "step": 0.5
+        },
+        {
+          "name": "dead_load",
+          "ty": "f64",
+          "en": "Permanent floor load g_k",
+          "de": "Ständige Geschosslast g_k",
+          "unit": "Pa"
+        },
+        {
+          "name": "imposed_load",
+          "ty": "f64",
+          "en": "Variable floor load q_k",
+          "de": "Veränderliche Geschosslast q_k",
+          "unit": "Pa"
+        },
+        {
+          "name": "psi",
+          "ty": "f64",
+          "en": "Combination factor psi (psi_1 or psi_2)",
+          "de": "Kombinationsbeiwert psi (psi_1 oder psi_2)",
+          "step": 0.05,
+          "precision": 2
+        },
+        {
+          "name": "x",
+          "ty": "f64",
+          "en": "Plan position x",
+          "de": "Position x",
+          "unit": "m",
+          "step": 0.5
+        },
+        {
+          "name": "y",
+          "ty": "f64",
+          "en": "Plan position y",
+          "de": "Position y",
+          "unit": "m",
+          "step": 0.5
+        },
+        {
+          "name": "provided_force",
+          "ty": "f64",
+          "en": "Provided tie force T_prov",
+          "de": "Vorhandene Zugkraft T_prov",
+          "unit": "N"
+        }
+      ],
+      "kit": {
+        "id": "tieRun",
+        "en": "Tie run",
+        "de": "Zugglied",
+        "icon": "link",
+        "scene_kind": "Load"
+      },
+      "kit_after": "helicopterLandings"
+    },
+    {
+      "camel": "constructionLoads",
+      "entity": "ConstructionLoad",
+      "table": "construction_load",
+      "after": "tieRuns",
+      "emoji": "🧱",
+      "doc": "Construction load Q_c,i of a construction stage, summed per stage for the combination of EN 1991-1-6 (4.11, Annex A.2).",
+      "label_en": "Construction loads",
+      "label_de": "Bauzustandslasten",
+      "id_en": "Construction load id",
+      "id_de": "Bauzustandslast-Id",
+      "fields": [
+        {
+          "name": "stage",
+          "ty": "String",
+          "en": "Construction stage id",
+          "de": "Bauzustand-Id"
+        },
+        {
+          "name": "kind",
+          "ty": "u8",
+          "en": "Load kind (0 Q_ca, 1 Q_cb, 2 Q_cc, 3 Q_cd, 4 Q_ce, 5 Q_cf)",
+          "de": "Lastart (0 Q_ca, 1 Q_cb, 2 Q_cc, 3 Q_cd, 4 Q_ce, 5 Q_cf)"
+        },
+        {
+          "name": "magnitude",
+          "ty": "f64",
+          "en": "Load Q_c,i as area load",
+          "de": "Last Q_c,i als Flächenlast",
+          "unit": "Pa"
+        }
+      ],
+      "kit": {
+        "id": "constructionLoad",
+        "en": "Construction load",
+        "de": "Bauzustandslast",
+        "icon": "hammer",
+        "scene_kind": "Load"
+      },
+      "kit_after": "tieRuns"
+    },
+    {
+      "camel": "fallingLoads",
+      "entity": "FallingLoad",
+      "table": "falling_load",
+      "after": "constructionLoads",
+      "emoji": "🪨",
+      "doc": "Accidental falling load or crane impact during execution by its mass, drop height and stopping distance (EN 1991-1-6, accidental construction loads).",
+      "label_en": "Falling loads",
+      "label_de": "Herabfallende Lasten",
+      "id_en": "Falling load id",
+      "id_de": "Herabfallende-Last-Id",
+      "fields": [
+        {
+          "name": "mass",
+          "ty": "f64",
+          "en": "Falling mass m",
+          "de": "Fallende Masse m",
+          "unit": "kg"
+        },
+        {
+          "name": "drop_height",
+          "ty": "f64",
+          "en": "Drop height h",
+          "de": "Fallhöhe h",
+          "unit": "m",
+          "step": 0.5
+        },
+        {
+          "name": "stopping_distance",
+          "ty": "f64",
+          "en": "Stopping distance s",
+          "de": "Bremsweg s",
+          "unit": "m",
+          "step": 0.01
+        },
+        {
+          "name": "x",
+          "ty": "f64",
+          "en": "Plan position x",
+          "de": "Position x",
+          "unit": "m",
+          "step": 0.5
+        },
+        {
+          "name": "y",
+          "ty": "f64",
+          "en": "Plan position y",
+          "de": "Position y",
+          "unit": "m",
+          "step": 0.5
+        },
+        {
+          "name": "assumed_force",
+          "ty": "f64",
+          "en": "Assumed equivalent static force",
+          "de": "Angenommene statische Ersatzkraft",
+          "unit": "N"
+        }
+      ],
+      "kit": {
+        "id": "fallingLoad",
+        "en": "Falling load",
+        "de": "Herabfallende Last",
+        "icon": "arrow-down",
+        "scene_kind": "Load"
+      },
+      "kit_after": "constructionLoads"
+    },
+    {
+      "camel": "executionImperfections",
+      "entity": "ExecutionImperfection",
+      "table": "execution_imperfection",
+      "after": "fallingLoads",
+      "emoji": "📐",
+      "doc": "Geometric imperfection of a member during execution as equivalent horizontal force from its tolerance and vertical load (EN 1991-1-6, imperfections).",
+      "label_en": "Execution imperfections",
+      "label_de": "Ausführungsimperfektionen",
+      "id_en": "Imperfection id",
+      "id_de": "Imperfektion-Id",
+      "fields": [
+        {
+          "name": "height",
+          "ty": "f64",
+          "en": "Member height h",
+          "de": "Bauteilhöhe h",
+          "unit": "m",
+          "step": 0.5
+        },
+        {
+          "name": "tolerance",
+          "ty": "f64",
+          "en": "Tolerance Delta",
+          "de": "Toleranz Delta",
+          "unit": "m",
+          "step": 0.005
+        },
+        {
+          "name": "vertical_load",
+          "ty": "f64",
+          "en": "Vertical load N",
+          "de": "Vertikallast N",
+          "unit": "N"
+        },
+        {
+          "name": "x",
+          "ty": "f64",
+          "en": "Plan position x",
+          "de": "Position x",
+          "unit": "m",
+          "step": 0.5
+        },
+        {
+          "name": "y",
+          "ty": "f64",
+          "en": "Plan position y",
+          "de": "Position y",
+          "unit": "m",
+          "step": 0.5
+        },
+        {
+          "name": "assumed_force",
+          "ty": "f64",
+          "en": "Assumed equivalent horizontal force",
+          "de": "Angenommene horizontale Ersatzkraft",
+          "unit": "N"
+        }
+      ],
+      "kit": {
+        "id": "executionImperfection",
+        "en": "Execution imperfection",
+        "de": "Ausführungsimperfektion",
+        "icon": "ruler",
+        "scene_kind": "Load"
+      },
+      "kit_after": "fallingLoads"
+    },
+    {
+      "camel": "derailmentCases",
+      "entity": "DerailmentCase",
+      "table": "derailment_case",
+      "after": "executionImperfections",
+      "emoji": "🚆",
+      "doc": "Derailment design situation next to a track by its distance from the track axis and the design forces F_dx, F_dy entered from the applicable table (EN 1991-1-7, 4.4).",
+      "label_en": "Derailment cases",
+      "label_de": "Entgleisungsfälle",
+      "id_en": "Derailment case id",
+      "id_de": "Entgleisungsfall-Id",
+      "fields": [
+        {
+          "name": "distance",
+          "ty": "f64",
+          "en": "Distance d from the track axis",
+          "de": "Abstand d von der Gleisachse",
+          "unit": "m",
+          "step": 0.5
+        },
+        {
+          "name": "design_force_x",
+          "ty": "f64",
+          "en": "Design force F_dx along the track (entered)",
+          "de": "Bemessungskraft F_dx in Gleisrichtung (eingegeben)",
+          "unit": "N"
+        },
+        {
+          "name": "design_force_y",
+          "ty": "f64",
+          "en": "Design force F_dy across the track (entered)",
+          "de": "Bemessungskraft F_dy quer zum Gleis (eingegeben)",
+          "unit": "N"
+        },
+        {
+          "name": "x",
+          "ty": "f64",
+          "en": "Plan position x",
+          "de": "Position x",
+          "unit": "m",
+          "step": 0.5
+        },
+        {
+          "name": "y",
+          "ty": "f64",
+          "en": "Plan position y",
+          "de": "Position y",
+          "unit": "m",
+          "step": 0.5
+        },
+        {
+          "name": "assumed_force",
+          "ty": "f64",
+          "en": "Assumed resistance in track direction",
+          "de": "Angenommener Widerstand in Gleisrichtung",
+          "unit": "N"
+        }
+      ],
+      "kit": {
+        "id": "derailmentCase",
+        "en": "Derailment case",
+        "de": "Entgleisungsfall",
+        "icon": "train",
+        "scene_kind": "Load"
+      },
+      "kit_after": "executionImperfections"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "ChangeTowerActionForce": {
+    "id": "tw-1",
+    "elementId": "tw-g",
+    "newForce": 160000.0
+  }
+}

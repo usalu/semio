@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-assessment-chord-ult-rad/schema.json",
+  "title": "ChangeAssessmentChordUltRad",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newChordRotationUltimateRad"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeAssessmentChordUltRad"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Assessment",
+          "de": "Bewertung"
+        },
+        "description": {
+          "en": "The assessment this mutation addresses, by id.",
+          "de": "Das adressierte Element (Bewertung), per Kennung."
+        },
+        "ref": {
+          "kind": "assessment"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newChordRotationUltimateRad": {
+      "type": "number",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Ultimate chord rotation θ_um",
+          "de": "Bruch-Sehnendrehwinkel θ_um"
+        },
+        "group": "value",
+        "order": 20,
+        "widget": "stepper",
+        "step": 0.001,
+        "precision": 3
+      }
+    }
+  }
+}

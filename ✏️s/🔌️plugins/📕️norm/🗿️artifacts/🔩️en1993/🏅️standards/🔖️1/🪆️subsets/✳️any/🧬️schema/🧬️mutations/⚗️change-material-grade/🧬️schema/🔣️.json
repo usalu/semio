@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-material-grade/schema.json",
+  "title": "ChangeMaterialGrade",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newGrade"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Material",
+          "de": "Werkstoff"
+        },
+        "description": {
+          "en": "The material this mutation addresses, by id.",
+          "de": "Das adressierte Element (Werkstoff), per Kennung."
+        },
+        "ref": {
+          "kind": "material"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newGrade": {
+      "type": "string",
+      "x-semio-ui": {
+        "label": {
+          "en": "Steel grade",
+          "de": "Stahlsorte"
+        },
+        "widget": "text",
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

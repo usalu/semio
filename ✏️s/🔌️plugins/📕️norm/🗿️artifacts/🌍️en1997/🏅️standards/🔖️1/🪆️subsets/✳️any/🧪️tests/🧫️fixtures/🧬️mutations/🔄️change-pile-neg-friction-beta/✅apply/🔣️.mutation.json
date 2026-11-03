@@ -1,0 +1,5 @@
+{
+  "mutation": "changePileNegFrictionBeta",
+  "id": "pile-P1",
+  "newNegativeFrictionBeta": 1.5
+}

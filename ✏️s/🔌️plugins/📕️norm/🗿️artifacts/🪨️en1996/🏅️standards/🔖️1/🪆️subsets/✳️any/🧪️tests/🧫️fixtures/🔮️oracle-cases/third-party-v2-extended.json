@@ -1,0 +1,320 @@
+{
+  "$schema": "../../../../../../../../../🔮️oracles/🏃️harness/🧬️schema/🔣️.json",
+  "schemaVersion": 1,
+  "artifact": "en1996",
+  "annex": "de",
+  "cases": [
+    {
+      "id": "en1996.G.phi-m-lambda-0.41",
+      "check": "en1996.G.phi-m",
+      "citation": {
+        "standard": "EN 1996-1-1",
+        "edition": "2004",
+        "clause": "Annex G.1 reduction factor Phi_m at mid-height",
+        "annex": "en"
+      },
+      "inputs": {
+        "f_k": 5000000.0,
+        "E": 5000000000.0,
+        "h_ef": 2.6,
+        "t": 0.2,
+        "e_mk": 0.02
+      },
+      "expected": {
+        "lambda": {
+          "value": 0.41109609582188933,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "A_1": {
+          "value": 0.8,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "u": {
+          "value": 0.5678566000357085,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "Phi_m": {
+          "value": 0.6808766564769506,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1996.G.phi-m-eccentric",
+      "check": "en1996.G.phi-m",
+      "citation": {
+        "standard": "EN 1996-1-1",
+        "edition": "2004",
+        "clause": "Annex G.1 reduction factor Phi_m at mid-height",
+        "annex": "en"
+      },
+      "inputs": {
+        "f_k": 5000000.0,
+        "E": 5000000000.0,
+        "h_ef": 2.6,
+        "t": 0.2,
+        "e_mk": 0.05
+      },
+      "expected": {
+        "lambda": {
+          "value": 0.41109609582188933,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "A_1": {
+          "value": 0.5,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "u": {
+          "value": 0.7956482190214613,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "Phi_m": {
+          "value": 0.36433728808301113,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1996.G.phi-m-slender",
+      "check": "en1996.G.phi-m",
+      "citation": {
+        "standard": "EN 1996-1-1",
+        "edition": "2004",
+        "clause": "Annex G.1 reduction factor Phi_m at mid-height",
+        "annex": "en"
+      },
+      "inputs": {
+        "f_k": 5000000.0,
+        "E": 5000000000.0,
+        "h_ef": 4.0,
+        "t": 0.1,
+        "e_mk": 0.01
+      },
+      "expected": {
+        "lambda": {
+          "value": 1.2649110640673518,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "A_1": {
+          "value": 0.8,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "u": {
+          "value": 1.9607032040250436,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "Phi_m": {
+          "value": 0.11703033802341183,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1996.6.2.shear-wall-concentric",
+      "check": "en1996.6.2.shear-wall",
+      "citation": {
+        "standard": "EN 1996-1-1",
+        "edition": "2004",
+        "clause": "3.6.2 Eq. 3.5 f_vk and 6.2 Eq. 6.18 V_Rd = f_vd t l_c with the compressed length of a no-tension wall",
+        "annex": "en"
+      },
+      "inputs": {
+        "l": 3.0,
+        "t": 0.2,
+        "f_vk0": 200000.0,
+        "f_b": 10000000.0,
+        "gamma_M": 1.5,
+        "e": 0.2,
+        "N_Ed": 300000.0
+      },
+      "expected": {
+        "l_c": {
+          "value": 3.0,
+          "unit": "m",
+          "profile": "eurocode-quantities-v1"
+        },
+        "sigma_d": {
+          "value": 499999.99999999994,
+          "unit": "Pa",
+          "profile": "eurocode-quantities-v1"
+        },
+        "f_vk": {
+          "value": 400000.0,
+          "unit": "Pa",
+          "profile": "eurocode-quantities-v1"
+        },
+        "V_Rd": {
+          "value": 160000.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1996.6.2.shear-wall-eccentric-partial-contact",
+      "check": "en1996.6.2.shear-wall",
+      "citation": {
+        "standard": "EN 1996-1-1",
+        "edition": "2004",
+        "clause": "3.6.2 Eq. 3.5 f_vk and 6.2 Eq. 6.18 V_Rd = f_vd t l_c with the compressed length of a no-tension wall",
+        "annex": "en"
+      },
+      "inputs": {
+        "l": 3.0,
+        "t": 0.2,
+        "f_vk0": 200000.0,
+        "f_b": 10000000.0,
+        "gamma_M": 1.5,
+        "e": 0.9,
+        "N_Ed": 300000.0
+      },
+      "expected": {
+        "l_c": {
+          "value": 1.8,
+          "unit": "m",
+          "profile": "eurocode-quantities-v1"
+        },
+        "sigma_d": {
+          "value": 833333.3333333333,
+          "unit": "Pa",
+          "profile": "eurocode-quantities-v1"
+        },
+        "f_vk": {
+          "value": 533333.3333333333,
+          "unit": "Pa",
+          "profile": "eurocode-quantities-v1"
+        },
+        "V_Rd": {
+          "value": 128000.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1996.6.2.shear-wall-limited-by-0.065fb",
+      "check": "en1996.6.2.shear-wall",
+      "citation": {
+        "standard": "EN 1996-1-1",
+        "edition": "2004",
+        "clause": "3.6.2 Eq. 3.5 f_vk and 6.2 Eq. 6.18 V_Rd = f_vd t l_c with the compressed length of a no-tension wall",
+        "annex": "en"
+      },
+      "inputs": {
+        "l": 3.0,
+        "t": 0.2,
+        "f_vk0": 200000.0,
+        "f_b": 10000000.0,
+        "gamma_M": 1.5,
+        "e": 0.2,
+        "N_Ed": 1200000.0
+      },
+      "expected": {
+        "l_c": {
+          "value": 3.0,
+          "unit": "m",
+          "profile": "eurocode-quantities-v1"
+        },
+        "sigma_d": {
+          "value": 1999999.9999999998,
+          "unit": "Pa",
+          "profile": "eurocode-quantities-v1"
+        },
+        "f_vk": {
+          "value": 650000.0,
+          "unit": "Pa",
+          "profile": "eurocode-quantities-v1"
+        },
+        "V_Rd": {
+          "value": 260000.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    }
+  ]
+}

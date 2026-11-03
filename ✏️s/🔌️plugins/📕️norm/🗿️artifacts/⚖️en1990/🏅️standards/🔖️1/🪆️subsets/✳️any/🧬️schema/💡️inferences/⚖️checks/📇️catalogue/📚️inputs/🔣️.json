@@ -1,0 +1,1203 @@
+{
+  "$schema": "https://json.schemas.assets.semio-tech.com/s/norm/compliance/design-case/schema.json",
+  "artifact": "s.norm.en1990",
+  "inputs": [
+    {
+      "key": "structure",
+      "scope": "",
+      "kind": "choice",
+      "en": "Structure type",
+      "de": "Bauwerksart",
+      "confidence": "high",
+      "note": "building or bridge",
+      "choices": [
+        {
+          "value": "building",
+          "en": "Building",
+          "de": "Hochbau"
+        },
+        {
+          "value": "bridge",
+          "en": "Bridge",
+          "de": "Brücke"
+        }
+      ],
+      "example": "building"
+    },
+    {
+      "key": "set",
+      "scope": "",
+      "kind": "choice",
+      "en": "Partial factor set",
+      "de": "Teilsicherheitsbeiwertsatz",
+      "confidence": "high",
+      "note": "A B C as parsed in match",
+      "choices": [
+        {
+          "value": "A",
+          "en": "Set A (EQU)",
+          "de": "Satz A (EQU)"
+        },
+        {
+          "value": "B",
+          "en": "Set B (STR/GEO)",
+          "de": "Satz B (STR/GEO)"
+        },
+        {
+          "value": "C",
+          "en": "Set C (GEO)",
+          "de": "Satz C (GEO)"
+        }
+      ],
+      "example": "B"
+    },
+    {
+      "key": "dist",
+      "scope": "",
+      "kind": "choice",
+      "en": "Distribution",
+      "de": "Verteilung",
+      "confidence": "high",
+      "note": "normal or lognormal",
+      "choices": [
+        {
+          "value": "normal",
+          "en": "Normal",
+          "de": "Normalverteilung"
+        },
+        {
+          "value": "lognormal",
+          "en": "Lognormal",
+          "de": "Lognormalverteilung"
+        }
+      ],
+      "example": "normal"
+    },
+    {
+      "key": "lead_psi",
+      "scope": "",
+      "kind": "choice",
+      "en": "Leading accidental value",
+      "de": "Leitwert der außergewöhnlichen Kombination",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "psi1",
+          "en": "Leading action with ψ₁",
+          "de": "Leiteinwirkung mit ψ₁"
+        },
+        {
+          "value": "psi2",
+          "en": "Leading action with ψ₂",
+          "de": "Leiteinwirkung mit ψ₂"
+        }
+      ],
+      "example": "psi1"
+    },
+    {
+      "key": "track",
+      "scope": "",
+      "kind": "choice",
+      "en": "Track type",
+      "de": "Gleisart",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "ballasted",
+          "en": "Ballasted track",
+          "de": "Schotteroberbau"
+        },
+        {
+          "value": "slab",
+          "en": "Slab track",
+          "de": "Feste Fahrbahn"
+        }
+      ],
+      "example": "ballasted"
+    },
+    {
+      "key": "variation",
+      "scope": "",
+      "kind": "choice",
+      "en": "Variation in time",
+      "de": "Zeitliche Veränderlichkeit",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "permanent",
+          "en": "Permanent",
+          "de": "Ständig"
+        },
+        {
+          "value": "variable",
+          "en": "Variable",
+          "de": "Veränderlich"
+        },
+        {
+          "value": "accidental",
+          "en": "Accidental",
+          "de": "Außergewöhnlich"
+        }
+      ],
+      "example": "permanent"
+    },
+    {
+      "key": "origin",
+      "scope": "",
+      "kind": "choice",
+      "en": "Origin",
+      "de": "Herkunft",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "direct",
+          "en": "Direct",
+          "de": "Direkt"
+        },
+        {
+          "value": "indirect",
+          "en": "Indirect",
+          "de": "Indirekt"
+        }
+      ],
+      "example": "direct"
+    },
+    {
+      "key": "spatial",
+      "scope": "",
+      "kind": "choice",
+      "en": "Spatial variation",
+      "de": "Räumliche Veränderlichkeit",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "fixed",
+          "en": "Fixed",
+          "de": "Ortsfest"
+        },
+        {
+          "value": "free",
+          "en": "Free",
+          "de": "Frei"
+        }
+      ],
+      "example": "fixed"
+    },
+    {
+      "key": "nature",
+      "scope": "",
+      "kind": "choice",
+      "en": "Nature",
+      "de": "Art der Beanspruchung",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "static",
+          "en": "Static",
+          "de": "Statisch"
+        },
+        {
+          "value": "dynamic",
+          "en": "Dynamic",
+          "de": "Dynamisch"
+        }
+      ],
+      "example": "static"
+    },
+    {
+      "key": "effect",
+      "scope": "",
+      "kind": "choice",
+      "en": "Effect",
+      "de": "Wirkung",
+      "confidence": "medium",
+      "note": "favourable assumed on the left",
+      "choices": [
+        {
+          "value": "favourable",
+          "en": "Favourable",
+          "de": "Günstig"
+        },
+        {
+          "value": "unfavourable",
+          "en": "Unfavourable",
+          "de": "Ungünstig"
+        }
+      ],
+      "example": "unfavourable"
+    },
+    {
+      "key": "use",
+      "scope": "",
+      "kind": "text",
+      "en": "Use category of the structure",
+      "de": "Nutzungskategorie",
+      "confidence": "medium",
+      "note": "value set read by a table match"
+    },
+    {
+      "key": "category",
+      "scope": "E90.03",
+      "kind": "number",
+      "en": "Design working life category",
+      "de": "Kategorie der Nutzungsdauer",
+      "confidence": "high",
+      "note": "c.n category as u8",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "category",
+      "scope": "E90.09,E90.22,E90.23,E90.25",
+      "kind": "text",
+      "en": "Action category",
+      "de": "Einwirkungskategorie",
+      "confidence": "medium",
+      "note": "text such as office"
+    },
+    {
+      "key": "material",
+      "scope": "",
+      "kind": "text",
+      "en": "Material",
+      "de": "Werkstoff",
+      "confidence": "medium",
+      "note": "default other"
+    },
+    {
+      "key": "analysis",
+      "scope": "",
+      "kind": "text",
+      "en": "Analysis model flag (1 to 4)",
+      "de": "Berechnungsmodellkennung (1 bis 4)",
+      "confidence": "medium",
+      "note": "c.s parsed"
+    },
+    {
+      "key": "actions",
+      "scope": "",
+      "kind": "text",
+      "en": "Actions list",
+      "de": "Einwirkungsliste",
+      "confidence": "medium",
+      "note": "parsed by Action::parse_list"
+    },
+    {
+      "key": "situations",
+      "scope": "",
+      "kind": "text",
+      "en": "Design situations, comma separated",
+      "de": "Bemessungssituationen, kommagetrennt",
+      "confidence": "high"
+    },
+    {
+      "key": "spectrum",
+      "scope": "",
+      "kind": "text",
+      "en": "Stress range spectrum range:cycles;…",
+      "de": "Spannungsschwingbreitenspektrum Schwingbreite:Zyklen;…",
+      "confidence": "high",
+      "note": "rows range:cycles separated by semicolons"
+    },
+    {
+      "key": "cc",
+      "scope": "",
+      "kind": "number",
+      "en": "Consequence class CC",
+      "de": "Schadensfolgeklasse CC",
+      "confidence": "high",
+      "note": "within 1 to 3",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "rc",
+      "scope": "",
+      "kind": "number",
+      "en": "Reliability class RC",
+      "de": "Zuverlässigkeitsklasse RC",
+      "confidence": "high",
+      "note": "1 to 3",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "dsl",
+      "scope": "",
+      "kind": "number",
+      "en": "Design supervision level DSL",
+      "de": "Entwurfsüberwachungsstufe DSL",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "il",
+      "scope": "",
+      "kind": "number",
+      "en": "Inspection level IL",
+      "de": "Ausführungsüberwachungsstufe IL",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "gamma_f",
+      "scope": "",
+      "kind": "number",
+      "en": "Partial factor γ_F",
+      "de": "Teilsicherheitsbeiwert γ_F",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "gamma_sd",
+      "scope": "",
+      "kind": "number",
+      "en": "Model uncertainty factor γ_Sd",
+      "de": "Modellunsicherheitsbeiwert γ_Sd",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "gamma_rd",
+      "scope": "",
+      "kind": "number",
+      "en": "Model uncertainty factor γ_Rd",
+      "de": "Modellunsicherheitsbeiwert γ_Rd",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "gamma_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Partial factor γ_M",
+      "de": "Teilsicherheitsbeiwert γ_M",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "gamma_mf",
+      "scope": "",
+      "kind": "number",
+      "en": "Fatigue strength factor γ_Mf",
+      "de": "Teilsicherheitsbeiwert Ermüdungsfestigkeit γ_Mf",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "gamma_ff",
+      "scope": "",
+      "kind": "number",
+      "en": "Fatigue load factor γ_Ff",
+      "de": "Teilsicherheitsbeiwert Ermüdungslast γ_Ff",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "k_fi_declared",
+      "scope": "",
+      "kind": "number",
+      "en": "Declared K_FI factor",
+      "de": "Angegebener K_FI-Faktor",
+      "confidence": "medium",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "years",
+      "scope": "",
+      "kind": "number",
+      "en": "Design working life or period",
+      "de": "Nutzungsdauer oder Zeitraum",
+      "confidence": "high",
+      "unit": "a",
+      "unitId": "Year"
+    },
+    {
+      "key": "t_years",
+      "scope": "",
+      "kind": "number",
+      "en": "Reference period in years",
+      "de": "Bezugszeitraum in Jahren",
+      "confidence": "high",
+      "unit": "a",
+      "unitId": "Year"
+    },
+    {
+      "key": "g_mean",
+      "scope": "",
+      "kind": "number",
+      "en": "Mean permanent action G_mean",
+      "de": "Mittelwert der ständigen Einwirkung",
+      "confidence": "medium",
+      "note": "N assumed",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "v_g",
+      "scope": "",
+      "kind": "number",
+      "en": "Coefficient of variation of G",
+      "de": "Variationskoeffizient von G",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "q_mean",
+      "scope": "",
+      "kind": "number",
+      "en": "Mean variable action Q_mean",
+      "de": "Mittelwert der veränderlichen Einwirkung",
+      "confidence": "medium",
+      "note": "N assumed",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "q_cov",
+      "scope": "",
+      "kind": "number",
+      "en": "Coefficient of variation of Q",
+      "de": "Variationskoeffizient von Q",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "altitude",
+      "scope": "",
+      "kind": "number",
+      "en": "Site altitude above sea level",
+      "de": "Höhe über Meeresspiegel",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "psi0",
+      "scope": "",
+      "kind": "number",
+      "en": "Combination factor ψ₀",
+      "de": "Kombinationsbeiwert ψ₀",
+      "confidence": "high",
+      "note": "r0:1",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "psi1",
+      "scope": "",
+      "kind": "number",
+      "en": "Frequent value factor ψ₁",
+      "de": "Beiwert ψ₁ des häufigen Werts",
+      "confidence": "high",
+      "note": "r0:1",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "psi2",
+      "scope": "",
+      "kind": "number",
+      "en": "Quasi-permanent factor ψ₂",
+      "de": "Beiwert ψ₂ des quasi-ständigen Werts",
+      "confidence": "high",
+      "note": "r0:1",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "x_k",
+      "scope": "",
+      "kind": "number",
+      "en": "Characteristic property X_k",
+      "de": "Charakteristische Eigenschaft X_k",
+      "confidence": "medium",
+      "note": "N/mm² for strength assumed",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre"
+    },
+    {
+      "key": "eta",
+      "scope": "",
+      "kind": "number",
+      "en": "Conversion factor η",
+      "de": "Umrechnungsbeiwert η",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "example": 1.0
+    },
+    {
+      "key": "e_d",
+      "scope": "",
+      "kind": "number",
+      "en": "Design value of the action effect",
+      "de": "Bemessungswert der Beanspruchung",
+      "confidence": "low",
+      "note": "unit depends on the effect",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "a_nom",
+      "scope": "",
+      "kind": "number",
+      "en": "Nominal geometric value a_nom",
+      "de": "Nennwert a_nom der Geometrie",
+      "confidence": "medium",
+      "note": "mm assumed",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "delta_a",
+      "scope": "",
+      "kind": "number",
+      "en": "Geometric deviation Δa",
+      "de": "Geometrische Abweichung Δa",
+      "confidence": "medium",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "alpha_cr",
+      "scope": "",
+      "kind": "number",
+      "en": "Elastic critical load factor α_cr",
+      "de": "Verzweigungslastfaktor α_cr",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "n",
+      "scope": "",
+      "kind": "number",
+      "en": "Number of tests",
+      "de": "Anzahl der Versuche",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "mean",
+      "scope": "",
+      "kind": "number",
+      "en": "Sample mean",
+      "de": "Stichprobenmittelwert",
+      "confidence": "low",
+      "note": "unit of the tested property",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "v",
+      "scope": "",
+      "kind": "number",
+      "en": "Coefficient of variation V_x",
+      "de": "Variationskoeffizient V_x",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "v_known",
+      "scope": "",
+      "kind": "number",
+      "en": "Known coefficient of variation",
+      "de": "Bekannter Variationskoeffizient",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "eta_d",
+      "scope": "",
+      "kind": "number",
+      "en": "Conversion factor η_d",
+      "de": "Umrechnungsbeiwert η_d",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "f_rep",
+      "scope": "",
+      "kind": "number",
+      "en": "Representative value F_rep",
+      "de": "Repräsentativer Wert F_rep",
+      "confidence": "low",
+      "note": "unit of the action",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "section",
+      "scope": "",
+      "kind": "number",
+      "en": "Cross-section parameter",
+      "de": "Querschnittsparameter",
+      "confidence": "low",
+      "note": "c.o section",
+      "unit": "1",
+      "unitId": "One",
+      "example": 1.0
+    },
+    {
+      "key": "delta_sigma_c",
+      "scope": "",
+      "kind": "number",
+      "en": "Detail category Δσ_c",
+      "de": "Kerbfallklasse Δσ_c",
+      "confidence": "high",
+      "note": "N/mm²",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre"
+    },
+    {
+      "key": "t_d",
+      "scope": "",
+      "kind": "number",
+      "en": "Design value of the stabilising effect",
+      "de": "Bemessungswert der stabilisierenden Wirkung",
+      "confidence": "low",
+      "note": "moment or force",
+      "unit": "N·m",
+      "unitId": "NewtonMetre"
+    },
+    {
+      "key": "r_d",
+      "scope": "",
+      "kind": "number",
+      "en": "Design resistance R_d",
+      "de": "Bemessungswiderstand R_d",
+      "confidence": "low",
+      "note": "same unit as the effect",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "cd_char",
+      "scope": "",
+      "kind": "number",
+      "en": "Serviceability criterion, characteristic",
+      "de": "Gebrauchstauglichkeitskriterium charakteristisch",
+      "confidence": "medium",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "cd_freq",
+      "scope": "",
+      "kind": "number",
+      "en": "Serviceability criterion, frequent",
+      "de": "Gebrauchstauglichkeitskriterium häufig",
+      "confidence": "medium",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "cd_qp",
+      "scope": "",
+      "kind": "number",
+      "en": "Serviceability criterion, quasi-permanent",
+      "de": "Gebrauchstauglichkeitskriterium quasi-ständig",
+      "confidence": "medium",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "span",
+      "scope": "",
+      "kind": "number",
+      "en": "Span L",
+      "de": "Spannweite L",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "cantilever",
+      "scope": "",
+      "kind": "number",
+      "en": "Cantilever (1) or not (0)",
+      "de": "Kragarm (1) oder nicht (0)",
+      "confidence": "high",
+      "note": "flag > 0.5",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "w_c",
+      "scope": "",
+      "kind": "number",
+      "en": "Pre-camber w_c",
+      "de": "Überhöhung w_c",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "w1",
+      "scope": "",
+      "kind": "number",
+      "en": "Initial deflection w₁",
+      "de": "Anfangsverformung w₁",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "w2",
+      "scope": "",
+      "kind": "number",
+      "en": "Long-term deflection w₂",
+      "de": "Langzeitverformung w₂",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "w3",
+      "scope": "",
+      "kind": "number",
+      "en": "Variable deflection w₃",
+      "de": "Verformung w₃ aus veränderlichen Einwirkungen",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "ratio_net",
+      "scope": "",
+      "kind": "number",
+      "en": "Net deflection limit L/ratio",
+      "de": "Grenzwert L/Faktor der Nettodurchbiegung",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "example": 250.0
+    },
+    {
+      "key": "ratio_w3",
+      "scope": "",
+      "kind": "number",
+      "en": "Variable deflection limit L/ratio",
+      "de": "Grenzwert L/Faktor von w₃",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "example": 300.0
+    },
+    {
+      "key": "f1",
+      "scope": "",
+      "kind": "number",
+      "en": "Natural frequency f₁",
+      "de": "Eigenfrequenz f₁",
+      "confidence": "high",
+      "unit": "Hz",
+      "unitId": "Hertz"
+    },
+    {
+      "key": "f_min",
+      "scope": "",
+      "kind": "number",
+      "en": "Minimum natural frequency",
+      "de": "Mindesteigenfrequenz",
+      "confidence": "high",
+      "unit": "Hz",
+      "unitId": "Hertz"
+    },
+    {
+      "key": "u",
+      "scope": "",
+      "kind": "number",
+      "en": "Horizontal displacement u",
+      "de": "Horizontalverschiebung u",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "height",
+      "scope": "",
+      "kind": "number",
+      "en": "Building height H",
+      "de": "Gebäudehöhe H",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "drift_ratio",
+      "scope": "",
+      "kind": "number",
+      "en": "Drift limit H/ratio",
+      "de": "Grenzwert H/Faktor der Verschiebung",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "example": 500.0
+    },
+    {
+      "key": "u_storey",
+      "scope": "",
+      "kind": "number",
+      "en": "Storey displacement u_i",
+      "de": "Stockwerksverschiebung u_i",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "h_storey",
+      "scope": "",
+      "kind": "number",
+      "en": "Storey height h_i",
+      "de": "Geschosshöhe h_i",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "storey_ratio",
+      "scope": "",
+      "kind": "number",
+      "en": "Storey drift limit h_i/ratio",
+      "de": "Grenzwert h_i/Faktor der Stockwerksverschiebung",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "example": 300.0
+    },
+    {
+      "key": "acc_v",
+      "scope": "",
+      "kind": "number",
+      "en": "Vertical acceleration",
+      "de": "Vertikalbeschleunigung",
+      "confidence": "high",
+      "unit": "m/s²",
+      "unitId": "MetrePerSecondSquared"
+    },
+    {
+      "key": "acc_h",
+      "scope": "",
+      "kind": "number",
+      "en": "Horizontal acceleration",
+      "de": "Horizontalbeschleunigung",
+      "confidence": "high",
+      "unit": "m/s²",
+      "unitId": "MetrePerSecondSquared"
+    },
+    {
+      "key": "acc_v_limit",
+      "scope": "",
+      "kind": "number",
+      "en": "Vertical acceleration limit",
+      "de": "Grenzwert der Vertikalbeschleunigung",
+      "confidence": "high",
+      "unit": "m/s²",
+      "unitId": "MetrePerSecondSquared"
+    },
+    {
+      "key": "acc_h_limit",
+      "scope": "",
+      "kind": "number",
+      "en": "Horizontal acceleration limit",
+      "de": "Grenzwert der Horizontalbeschleunigung",
+      "confidence": "high",
+      "unit": "m/s²",
+      "unitId": "MetrePerSecondSquared"
+    },
+    {
+      "key": "crowd",
+      "scope": "",
+      "kind": "number",
+      "en": "Crowd loading (1) or not (0)",
+      "de": "Menschenansammlung (1) oder nicht (0)",
+      "confidence": "high",
+      "note": "flag > 0.5",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "deck_acc",
+      "scope": "",
+      "kind": "number",
+      "en": "Deck acceleration",
+      "de": "Brückenbeschleunigung",
+      "confidence": "high",
+      "unit": "m/s²",
+      "unitId": "MetrePerSecondSquared"
+    },
+    {
+      "key": "twist",
+      "scope": "",
+      "kind": "number",
+      "en": "Track twist",
+      "de": "Gleisverwindung",
+      "confidence": "medium",
+      "note": "mm over 3 m assumed unitless",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "v_kmh",
+      "scope": "",
+      "kind": "number",
+      "en": "Train speed",
+      "de": "Zuggeschwindigkeit",
+      "confidence": "high",
+      "unit": "km/h",
+      "unitId": "KilometrePerHour"
+    },
+    {
+      "key": "deflection",
+      "scope": "",
+      "kind": "number",
+      "en": "Deck deflection",
+      "de": "Durchbiegung des Überbaus",
+      "confidence": "high",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "deflection_ratio",
+      "scope": "",
+      "kind": "number",
+      "en": "Deflection limit L/ratio",
+      "de": "Grenzwert L/Faktor der Durchbiegung",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "beta",
+      "scope": "",
+      "kind": "number",
+      "en": "Reliability index β",
+      "de": "Zuverlässigkeitsindex β",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "beta_t",
+      "scope": "",
+      "kind": "number",
+      "en": "Target reliability index β_t",
+      "de": "Zielwert β_t des Zuverlässigkeitsindex",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "r_dist",
+      "scope": "",
+      "kind": "choice",
+      "en": "Distribution of the resistance",
+      "de": "Verteilung des Widerstands",
+      "confidence": "high",
+      "note": "normal or lognormal",
+      "choices": [
+        {
+          "value": "normal",
+          "en": "Normal",
+          "de": "Normalverteilung"
+        },
+        {
+          "value": "lognormal",
+          "en": "Lognormal",
+          "de": "Lognormalverteilung"
+        }
+      ],
+      "example": "normal"
+    },
+    {
+      "key": "e_dist",
+      "scope": "",
+      "kind": "choice",
+      "en": "Distribution of the action effect",
+      "de": "Verteilung der Beanspruchung",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "normal",
+          "en": "Normal",
+          "de": "Normalverteilung"
+        },
+        {
+          "value": "lognormal",
+          "en": "Lognormal",
+          "de": "Lognormalverteilung"
+        }
+      ],
+      "example": "normal"
+    },
+    {
+      "key": "r_mean",
+      "scope": "",
+      "kind": "number",
+      "en": "Mean resistance",
+      "de": "Mittelwert des Widerstands",
+      "confidence": "low",
+      "note": "same unit as the effect",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "r_sd",
+      "scope": "",
+      "kind": "number",
+      "en": "Standard deviation of the resistance",
+      "de": "Standardabweichung des Widerstands",
+      "confidence": "low",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "e_mean",
+      "scope": "",
+      "kind": "number",
+      "en": "Mean action effect",
+      "de": "Mittelwert der Beanspruchung",
+      "confidence": "low",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "e_sd",
+      "scope": "",
+      "kind": "number",
+      "en": "Standard deviation of the action effect",
+      "de": "Standardabweichung der Beanspruchung",
+      "confidence": "low",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "r_k",
+      "scope": "",
+      "kind": "number",
+      "en": "Characteristic resistance R_k",
+      "de": "Charakteristischer Widerstand R_k",
+      "confidence": "low",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "e_k",
+      "scope": "",
+      "kind": "number",
+      "en": "Characteristic action effect E_k",
+      "de": "Charakteristische Beanspruchung E_k",
+      "confidence": "low",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "e2_dist",
+      "scope": "E90.29",
+      "kind": "choice",
+      "en": "Distribution of the second action effect",
+      "de": "Verteilung der zweiten Beanspruchung",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "normal",
+          "en": "Normal",
+          "de": "Normalverteilung"
+        },
+        {
+          "value": "lognormal",
+          "en": "Lognormal",
+          "de": "Lognormalverteilung"
+        },
+        {
+          "value": "gumbel",
+          "en": "Gumbel",
+          "de": "Gumbel-Verteilung"
+        },
+        {
+          "value": "weibull",
+          "en": "Weibull",
+          "de": "Weibull-Verteilung"
+        }
+      ],
+      "example": "gumbel"
+    },
+    {
+      "key": "e2_mean",
+      "scope": "",
+      "kind": "number",
+      "en": "Mean second action effect",
+      "de": "Mittelwert der zweiten Beanspruchung",
+      "confidence": "low",
+      "note": "enables g = R − E1 − E2",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "e2_sd",
+      "scope": "",
+      "kind": "number",
+      "en": "Standard deviation of the second action effect",
+      "de": "Standardabweichung der zweiten Beanspruchung",
+      "confidence": "low",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "e2_k",
+      "scope": "",
+      "kind": "number",
+      "en": "Characteristic second action effect E2_k",
+      "de": "Charakteristische zweite Beanspruchung E2_k",
+      "confidence": "low",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "pairs",
+      "scope": "E90.13,E90.30",
+      "kind": "text",
+      "en": "Test results r_e:r_t;… (experimental : theoretical resistance)",
+      "de": "Versuchsergebnisse r_e:r_t;… (Versuch : Rechenwert des Widerstands)",
+      "confidence": "high",
+      "note": "enables the D.7.2 standard evaluation"
+    },
+    {
+      "key": "v_rt",
+      "scope": "",
+      "kind": "number",
+      "en": "Coefficient of variation V_rt of the resistance model",
+      "de": "Variationskoeffizient V_rt des Widerstandsmodells",
+      "confidence": "low",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "g_rt_mean",
+      "scope": "",
+      "kind": "number",
+      "en": "Theoretical resistance g_rt(X_m) at the mean basic variables",
+      "de": "Rechenwert des Widerstands g_rt(X_m) bei Mittelwerten",
+      "confidence": "low",
+      "unit": "1",
+      "unitId": "One"
+    }
+  ]
+}

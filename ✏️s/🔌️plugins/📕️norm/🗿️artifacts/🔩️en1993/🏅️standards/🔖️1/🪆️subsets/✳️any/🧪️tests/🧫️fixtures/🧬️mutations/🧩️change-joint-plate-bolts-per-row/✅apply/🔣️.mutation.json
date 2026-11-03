@@ -1,0 +1,6 @@
+{
+  "ChangeJointPlateBoltsPerRow": {
+    "id": "joint-plate-1",
+    "newBoltsPerRow": 2
+  }
+}

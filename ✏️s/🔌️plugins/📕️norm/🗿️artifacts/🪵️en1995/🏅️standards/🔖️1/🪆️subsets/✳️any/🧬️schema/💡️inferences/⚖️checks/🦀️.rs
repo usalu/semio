@@ -12,4 +12,12 @@ extern crate semio_framework_value_derive as value_derive;
 #[cfg(test)]
 #[path = "../../🧪️tests/⚖️compliance/🦀️.rs"]
 mod compliance_tests;
+
+#[cfg(any(test, feature = "oracle-wiring"))]
+#[path = "🧪️tests/🎯️oracle-wiring/🦀️.rs"]
+pub mod oracle_wiring;
+
+#[cfg(test)]
+#[path = "🧪️tests/🧭️spec-trace/🦀️.rs"]
+mod spec_trace_tests;
 //#endregion 🧪️ComplianceTests

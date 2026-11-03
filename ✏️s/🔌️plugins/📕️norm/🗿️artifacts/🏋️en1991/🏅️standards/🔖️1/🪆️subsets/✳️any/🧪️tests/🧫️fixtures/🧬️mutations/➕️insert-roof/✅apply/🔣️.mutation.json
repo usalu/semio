@@ -1,0 +1,17 @@
+{
+  "InsertRoof": {
+    "index": 1,
+    "item": {
+      "id": "roof-annex",
+      "roofType": "monopitch",
+      "pitchDeg": 10.0,
+      "cE": 1.0,
+      "cT": 1.0,
+      "hasParapet": true,
+      "parapetHeight": 0.8,
+      "driftObstructionHeight": 0.0,
+      "multiSpan": false,
+      "assumedSk": 1200.0
+    }
+  }
+}

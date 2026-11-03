@@ -13,8 +13,6 @@ extern crate semio_framework_value_derive as value_derive;
 pub mod change_member_buckling_length_y;
 #[path = "../↔️change-member-buckling-length-z/🦀️.rs"]
 pub mod change_member_buckling_length_z;
-#[path = "../⚠️change-member-m-crit/🦀️.rs"]
-pub mod change_member_m_crit;
 #[path = "../↔️change-member-restraint-spacing/🦀️.rs"]
 pub mod change_member_restraint_spacing;
 //#endregion 🪢️Mounts

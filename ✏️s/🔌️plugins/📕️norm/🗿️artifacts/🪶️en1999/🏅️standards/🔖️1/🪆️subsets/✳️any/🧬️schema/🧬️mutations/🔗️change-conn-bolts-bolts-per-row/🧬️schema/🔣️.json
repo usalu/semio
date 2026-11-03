@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-conn-bolts-bolts-per-row/schema.json",
+  "title": "ChangeConnBoltsBoltsPerRow",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "connectionId",
+    "newBoltsBoltsPerRow"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeConnBoltsBoltsPerRow"
+    },
+    "connectionId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Connection",
+          "de": "Anschluss"
+        },
+        "description": {
+          "en": "The connection this mutation addresses, by id.",
+          "de": "Das adressierte Element (Anschluss), per Kennung."
+        },
+        "ref": {
+          "kind": "connection"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newBoltsBoltsPerRow": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295,
+      "x-semio-ui": {
+        "label": {
+          "en": "Bolts per row",
+          "de": "Schrauben je Reihe"
+        },
+        "widget": "stepper",
+        "step": 1,
+        "precision": 0,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

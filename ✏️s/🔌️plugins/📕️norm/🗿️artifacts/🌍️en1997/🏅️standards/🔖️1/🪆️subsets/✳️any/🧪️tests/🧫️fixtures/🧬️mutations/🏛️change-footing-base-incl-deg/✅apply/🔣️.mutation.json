@@ -1,0 +1,5 @@
+{
+  "mutation": "changeFootingBaseInclDeg",
+  "id": "footing-F1",
+  "newBaseInclinationDeg": 1.5
+}

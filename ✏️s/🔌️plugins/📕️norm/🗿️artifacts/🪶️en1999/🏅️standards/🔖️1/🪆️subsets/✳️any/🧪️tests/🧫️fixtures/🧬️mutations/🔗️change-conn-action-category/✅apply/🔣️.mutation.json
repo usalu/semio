@@ -1,0 +1,6 @@
+{
+  "mutation": "changeConnActionCategory",
+  "connectionId": "support-weld",
+  "actionId": "G-conn",
+  "newCategory": "selfWeight"
+}

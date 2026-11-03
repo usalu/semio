@@ -1,0 +1,276 @@
+# 🧮️ Mechanics GraphQL twin, mirrors ./🦀️.rs. u64 maps to Int.
+
+type Pair {
+  x: Float!
+  y: Float!
+}
+
+enum LoadFrame {
+  GLOBAL
+  LOCAL
+}
+
+enum MassType {
+  CONSISTENT
+  LUMPED
+}
+
+type Node {
+  id: String!
+  x: Float!
+  y: Float!
+  z: Float!
+}
+
+type Material {
+  id: String!
+  e: Float!
+  g: Float!
+  rho: Float!
+}
+
+type Section {
+  id: String!
+  a: Float!
+  iy: Float!
+  iz: Float!
+  j: Float!
+  iw: Float!
+  asy: Float!
+  asz: Float!
+}
+
+type Member {
+  id: String!
+  nodeI: String!
+  nodeJ: String!
+  material: String!
+  section: String!
+  roll: Float!
+  releaseI: [Boolean!]!
+  releaseJ: [Boolean!]!
+  shearDeformable: Boolean!
+}
+
+type Support {
+  node: String!
+  fixed: [Boolean!]!
+  spring: [Float!]!
+  prescribed: [Float!]!
+}
+
+type NodalLoad {
+  node: String!
+  force: [Float!]!
+}
+
+type DistributedLoad {
+  member: String!
+  frame: LoadFrame!
+  start: [Float!]!
+  end: [Float!]!
+}
+
+type TemperatureLoad {
+  member: String!
+  alpha: Float!
+  uniform: Float!
+  gradientY: Float!
+  gradientZ: Float!
+}
+
+type LoadCase {
+  id: String!
+  nodal: [NodalLoad!]!
+  distributed: [DistributedLoad!]!
+  temperature: [TemperatureLoad!]!
+  acceleration: [Float!]!
+}
+
+type NodalMass {
+  node: String!
+  mass: [Float!]!
+}
+
+type Model {
+  nodes: [Node!]!
+  materials: [Material!]!
+  sections: [Section!]!
+  members: [Member!]!
+  supports: [Support!]!
+  loadCases: [LoadCase!]!
+  masses: [NodalMass!]!
+  selfMass: Boolean!
+}
+
+type NodeDisplacement {
+  node: String!
+  u: [Float!]!
+}
+
+type Reaction {
+  node: String!
+  force: [Float!]!
+}
+
+type DiagramPoint {
+  x: Float!
+  n: Float!
+  vy: Float!
+  vz: Float!
+  t: Float!
+  my: Float!
+  mz: Float!
+}
+
+type MemberForces {
+  member: String!
+  length: Float!
+  endI: [Float!]!
+  endJ: [Float!]!
+  diagram: [DiagramPoint!]!
+}
+
+type StaticResult {
+  case: String!
+  displacements: [NodeDisplacement!]!
+  reactions: [Reaction!]!
+  members: [MemberForces!]!
+}
+
+type BucklingMode {
+  alphaCr: Float!
+  shape: [NodeDisplacement!]!
+}
+
+type BucklingResult {
+  case: String!
+  modes: [BucklingMode!]!
+}
+
+type ModalMode {
+  omega: Float!
+  frequencyHz: Float!
+  participation: [Float!]!
+  effectiveMass: [Float!]!
+  effectiveMassRatio: [Float!]!
+  shape: [NodeDisplacement!]!
+}
+
+type ModalResult {
+  totalMass: [Float!]!
+  modes: [ModalMode!]!
+}
+
+type LtbEnd {
+  lateral: Boolean!
+  twist: Boolean!
+  minorRotation: Boolean!
+  warping: Boolean!
+}
+
+type LtbRestraint {
+  x: Float!
+  lateral: Boolean!
+  twist: Boolean!
+}
+
+type LtbMember {
+  length: Float!
+  e: Float!
+  g: Float!
+  iz: Float!
+  iw: Float!
+  j: Float!
+  polarRadiusSq: Float!
+  wagner: Float!
+  axial: Float!
+  endI: LtbEnd!
+  endJ: LtbEnd!
+  restraints: [LtbRestraint!]!
+  moment: Vec<(f64!
+  lineLoad: Vec<(f64!
+  pointLoads: Vec<(f64!
+  loadHeight: Float!
+  elements: Int!
+}
+
+type LtbShapePoint {
+  x: Float!
+  lateral: Float!
+  twist: Float!
+}
+
+type LtbResult {
+  alphaCr: Float!
+  mcr: Float!
+  shape: [LtbShapePoint!]!
+}
+
+enum SectionMethod {
+  FINITE_ELEMENT
+  THIN_WALLED
+}
+
+type SectionOptions {
+  cellsAcrossWall: Float!
+  maxEdge: Float!
+  maxTriangles: Int!
+}
+
+type ThinWall {
+  y1: Float!
+  z1: Float!
+  y2: Float!
+  z2: Float!
+  thickness: Float!
+}
+
+type SectionConstants {
+  area: Float!
+  centroidY: Float!
+  centroidZ: Float!
+  iy: Float!
+  iz: Float!
+  iyz: Float!
+  iMajor: Float!
+  iMinor: Float!
+  j: Float!
+  iw: Float!
+  shearCentreY: Float!
+  shearCentreZ: Float!
+  aVy: Float!
+  aVz: Float!
+  wElYPos: Float!
+  wElYNeg: Float!
+  wElZPos: Float!
+  wElZNeg: Float!
+  wPlY: Float!
+  wPlZ: Float!
+  poisson: Float!
+  method: SectionMethod!
+  triangles: Int!
+  nodes: Int!
+  maxEdge: Float!
+}
+
+type Progress {
+  stage: String!
+  fraction: Float!
+}
+
+enum MechanicsErrorKind {
+  CANCELLED
+  INVALID
+  SINGULAR
+  UNSTABLE
+  NO_POSITIVE_EIGENVALUE
+  NO_CONVERGENCE
+}
+
+type MechanicsError {
+  kind: MechanicsErrorKind!
+  message: String!
+  node: String!
+  dof: Int!
+}

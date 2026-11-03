@@ -11,6 +11,8 @@ extern crate semio_framework_value_derive as value_derive;
 //#region 🪢️Mounts
 #[path = "../🌍️change-annex/🦀️.rs"]
 pub mod change_annex;
+#[path = "../🎯change-reliability-class/🦀️.rs"]
+pub mod change_reliability_class;
 #[path = "../🔁️change-fatigue-detail/🦀️.rs"]
 pub mod change_fatigue_detail;
 #[path = "../🔥️change-fire-rating/🦀️.rs"]

@@ -1,0 +1,5 @@
+{
+  "mutation": "changePermanentKind",
+  "id": "G-sup",
+  "newKind": "gSup"
+}

@@ -8,7 +8,8 @@
       "ecosystem": "python",
       "package": "",
       "capabilities": [
-        "en1996-1-mutate"
+        "en1996-1-mutate",
+        "en1996-1-round-trip"
       ],
       "comparisonProfiles": [
         "ordered-json-v1"
@@ -55,9 +56,154 @@
           ]
         }
       }
+    },
+    {
+      "id": "en1996-1-compliance-independent",
+      "kind": "cross-semio-implementation",
+      "ecosystem": "python",
+      "package": "",
+      "capabilities": [
+        "en1996-1-evaluate"
+      ],
+      "comparisonProfiles": [
+        "closed-form-v1",
+        "eurocode-quantities-v1",
+        "numerical-v1",
+        "method-spread-v1",
+        "table-exact-v1"
+      ],
+      "license": "AGPL-3.0-only",
+      "testOnly": true,
+      "rationale": "🐍️ Independent-formulation compliance oracle of EN1996: the python compliance script reads its own independently keyed table file (`⚖️compliance/📚️tables.json`) and recomputes the wall utilisations by brute-force enumeration of the EN 1990 combinations. For the catalogue it uses third-party numerics: scipy bilinear interpolation for the EN 772-1 shape factor, shapely facet geometry with scipy minimisation for the Johansen yield-line load of laterally loaded panels (per-line orthotropic rule, not the projection formula of the Rust code), scipy root finding for the three-hinge arching statics and the reinforced-masonry equilibrium, and numpy fibre integration for the M-N diagram. Closed-form entries without a library (f_k, Phi, beta, fire rows) are labelled independent formulation. The oracle exchanges everything through stdin and stdout and writes no file. The shared harness (`✏️s/🔌️plugins/📕️norm/🔮️oracles/🏃️harness`) replays blessed oracle cases against the third-party references claimed in the norm root registry (`norm-eurocode-structuralcodes`, `-concreteproperties`, `-sectionproperties`, `-blue-prints`, `-sympy`, `-groundhog`, scipy numerics). Labelled honestly as independent formulation, not third-party validation, wherever no library covers the clause. Wave 2 doc oracles v2: the document-level oracle `🚦️check-outcome/🐍️.py` wraps the compression, mid-height, slenderness and simplified rows and adds the declared eccentricity 6.1.2.2, shear and sliding 6.2, lateral flexure 6.3 and the concentrated load with its area rule 6.1.3 per load case; `--self-check` validates the wall section modulus against sectionproperties, the wind moment against PyNite and the bearing factor cap against scipy.optimize.",
+      "engine": {
+        "family": "none",
+        "implementation": "in-repository independent formulation",
+        "version": "0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "en1996-1-concreteproperties",
+      "kind": "third-party-library",
+      "ecosystem": "python",
+      "package": "concreteproperties",
+      "version": "0.8.0",
+      "capabilities": [
+        "en1996-1-third-party-cases"
+      ],
+      "comparisonProfiles": [
+        "eurocode-quantities-v1",
+        "numerical-v1",
+        "method-spread-v1",
+        "table-exact-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "homepage": "https://github.com/robbievanleeuwen/concrete-properties",
+      "rationale": "Reference values of the EN1996 oracle case files (`🧪️tests/🧫️fixtures/🔮️oracle-cases/third-party*.json`) for the checks en1996.6.6.1.flexure-reinforced are computed by concreteproperties 0.8.0. The harness adapter `✏️s/🔌️plugins/📕️norm/🔮️oracles/🏃️harness/🔌️adapters/concreteproperties/🐍️.py` is the only importer; values are blessed from the library, never from the Rust. National Annex parameters are inputs of the cases.",
+      "engine": {
+        "family": "concreteproperties",
+        "implementation": "concreteproperties fibre and finite element reinforced concrete section analysis",
+        "version": "0.8.0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "en1996-1-scipy",
+      "kind": "third-party-library",
+      "ecosystem": "python",
+      "package": "scipy",
+      "version": "1.18.0",
+      "capabilities": [
+        "en1996-1-third-party-cases"
+      ],
+      "comparisonProfiles": [
+        "eurocode-quantities-v1",
+        "numerical-v1",
+        "method-spread-v1",
+        "table-exact-v1"
+      ],
+      "license": "BSD-3-Clause",
+      "testOnly": true,
+      "homepage": "https://scipy.org",
+      "rationale": "Independent formulations (numerical integration, root finding, eigenproblems and closed-form derivations that never reuse the rust expression) of the EN1996 oracle case files (`🧪️tests/🧫️fixtures/🔮️oracle-cases/third-party*.json`) for the checks en1996.6.2.shear-wall, en1996.6.6.1.flexure-reinforced, en1996.G.phi-m are computed by scipy 1.18.0. The harness adapter `✏️s/🔌️plugins/📕️norm/🔮️oracles/🏃️harness/🔌️adapters/numerical/🐍️.py` is the only importer; values are blessed from the library, never from the Rust. National Annex parameters are inputs of the cases.",
+      "engine": {
+        "family": "scipy",
+        "implementation": "SciPy quadrature, root finding, constrained minimisation and generalized eigenproblems on NumPy",
+        "version": "1.18.0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "en1996-1-sympy",
+      "kind": "third-party-library",
+      "ecosystem": "python",
+      "package": "sympy",
+      "version": "1.14.0",
+      "capabilities": [
+        "en1996-1-third-party-cases"
+      ],
+      "comparisonProfiles": [
+        "eurocode-quantities-v1",
+        "numerical-v1",
+        "method-spread-v1",
+        "table-exact-v1"
+      ],
+      "license": "BSD-3-Clause",
+      "testOnly": true,
+      "homepage": "https://www.sympy.org",
+      "rationale": "Reference values of the EN1996 oracle case files (`🧪️tests/🧫️fixtures/🔮️oracle-cases/third-party*.json`) for the checks en1996.6.2.shear-wall, en1996.G.phi-m are computed by sympy 1.14.0. The harness adapter `✏️s/🔌️plugins/📕️norm/🔮️oracles/🏃️harness/🔌️adapters/sympy/🐍️.py` is the only importer; values are blessed from the library, never from the Rust. National Annex parameters are inputs of the cases.",
+      "engine": {
+        "family": "sympy",
+        "implementation": "SymPy symbolic algebra",
+        "version": "1.14.0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
     }
   ],
   "noOracleDecisions": [],
+  "subjectHostPackages": [
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-norm-en1996-mutations",
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+      "rationale": "↩️ The mutation round trip applies the production dispatch and its computed inverse."
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-norm-en1996-io",
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust",
+      "rationale": "↩️ The mutation round trip decodes the committed snapshot and mutation JSON with the io crate."
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-norm-en1996-masonry",
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/⚖️masonry/📦️packages/🦀️rust",
+      "rationale": "📇️ The catalogue examples drive the M-nn evaluators the masonry crate owns."
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-s-plugin-norm-compliance",
+      "path": "✏️s/🔌️plugins/📕️norm/⚖️compliance/📦️packages/🦀️rust",
+      "rationale": "🌍️ The catalogue `Case` takes the shared `AnnexChoice` the compliance crate owns.",
+      "features": [
+        "compliance-testing"
+      ]
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-norm-en1996-inferences",
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust",
+      "rationale": "🚦️ The check-outcome case runs the production evaluate of the inferences crate on a committed snapshot.",
+      "features": [
+        "oracle-wiring"
+      ]
+    }
+  ],
   "mutationCatalogs": [
     {
       "id": "en1996-1-any",
@@ -263,6 +409,21 @@
             },
             {
               "id": "change-annex-noop",
+              "directoryName": "🟰noop"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-reliability-class",
+          "sourceMutationDirectoryName": "🎯change-reliability-class",
+          "mutationDirectoryName": "🎯change-reliability-class",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            },
+            {
+              "id": "change-reliability-class-noop",
               "directoryName": "🟰noop"
             }
           ]
@@ -718,6 +879,930 @@
               "directoryName": "✅apply"
             }
           ]
+        },
+        {
+          "mutationId": "change-pier-position",
+          "sourceMutationDirectoryName": "🏛️change-pier-position",
+          "mutationDirectoryName": "🏛️change-pier-position",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-pier-width",
+          "sourceMutationDirectoryName": "🏛️change-pier-width",
+          "mutationDirectoryName": "🏛️change-pier-width",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-pier",
+          "sourceMutationDirectoryName": "➕️insert-pier",
+          "mutationDirectoryName": "➕️insert-pier",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-pier",
+          "sourceMutationDirectoryName": "➖️remove-pier",
+          "mutationDirectoryName": "➖️remove-pier",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-lintel-position",
+          "sourceMutationDirectoryName": "🛤️change-lintel-position",
+          "mutationDirectoryName": "🛤️change-lintel-position",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-lintel-span",
+          "sourceMutationDirectoryName": "🛤️change-lintel-span",
+          "mutationDirectoryName": "🛤️change-lintel-span",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-lintel-depth",
+          "sourceMutationDirectoryName": "🛤️change-lintel-depth",
+          "mutationDirectoryName": "🛤️change-lintel-depth",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-lintel-bearing-length",
+          "sourceMutationDirectoryName": "🛤️change-lintel-bearing-length",
+          "mutationDirectoryName": "🛤️change-lintel-bearing-length",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-lintel",
+          "sourceMutationDirectoryName": "➕️insert-lintel",
+          "mutationDirectoryName": "➕️insert-lintel",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-lintel",
+          "sourceMutationDirectoryName": "➖️remove-lintel",
+          "mutationDirectoryName": "➖️remove-lintel",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-tie-kind",
+          "sourceMutationDirectoryName": "🔗️change-tie-kind",
+          "mutationDirectoryName": "🔗️change-tie-kind",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-tie-position",
+          "sourceMutationDirectoryName": "🔗️change-tie-position",
+          "mutationDirectoryName": "🔗️change-tie-position",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-tie-level",
+          "sourceMutationDirectoryName": "🔗️change-tie-level",
+          "mutationDirectoryName": "🔗️change-tie-level",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-tie-capacity",
+          "sourceMutationDirectoryName": "🔗️change-tie-capacity",
+          "mutationDirectoryName": "🔗️change-tie-capacity",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-tie",
+          "sourceMutationDirectoryName": "➕️insert-tie",
+          "mutationDirectoryName": "➕️insert-tie",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-tie",
+          "sourceMutationDirectoryName": "➖️remove-tie",
+          "mutationDirectoryName": "➖️remove-tie",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-prestress-force",
+          "sourceMutationDirectoryName": "🎻change-prestress-force",
+          "mutationDirectoryName": "🎻change-prestress-force",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-prestress-area",
+          "sourceMutationDirectoryName": "🎻change-prestress-area",
+          "mutationDirectoryName": "🎻change-prestress-area",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-prestress-strength",
+          "sourceMutationDirectoryName": "🎻change-prestress-strength",
+          "mutationDirectoryName": "🎻change-prestress-strength",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-prestress-position",
+          "sourceMutationDirectoryName": "🎻change-prestress-position",
+          "mutationDirectoryName": "🎻change-prestress-position",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-prestress-eccentricity",
+          "sourceMutationDirectoryName": "🎻change-prestress-eccentricity",
+          "mutationDirectoryName": "🎻change-prestress-eccentricity",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-prestress-loss",
+          "sourceMutationDirectoryName": "🎻change-prestress-loss",
+          "mutationDirectoryName": "🎻change-prestress-loss",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-prestress",
+          "sourceMutationDirectoryName": "➕️insert-prestress",
+          "mutationDirectoryName": "➕️insert-prestress",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-prestress",
+          "sourceMutationDirectoryName": "➖️remove-prestress",
+          "mutationDirectoryName": "➖️remove-prestress",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-confined-position",
+          "sourceMutationDirectoryName": "🧰️change-confined-position",
+          "mutationDirectoryName": "🧰️change-confined-position",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-confined-width",
+          "sourceMutationDirectoryName": "🧰️change-confined-width",
+          "mutationDirectoryName": "🧰️change-confined-width",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-confined-depth",
+          "sourceMutationDirectoryName": "🧰️change-confined-depth",
+          "mutationDirectoryName": "🧰️change-confined-depth",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-confined-steel",
+          "sourceMutationDirectoryName": "🧰️change-confined-steel",
+          "mutationDirectoryName": "🧰️change-confined-steel",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-confined",
+          "sourceMutationDirectoryName": "➕️insert-confined",
+          "mutationDirectoryName": "➕️insert-confined",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-confined",
+          "sourceMutationDirectoryName": "➖️remove-confined",
+          "mutationDirectoryName": "➖️remove-confined",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-flange-length",
+          "sourceMutationDirectoryName": "🔲change-flange-length",
+          "mutationDirectoryName": "🔲change-flange-length",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-flange-thickness",
+          "sourceMutationDirectoryName": "🔲change-flange-thickness",
+          "mutationDirectoryName": "🔲change-flange-thickness",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-flange-position",
+          "sourceMutationDirectoryName": "🔲change-flange-position",
+          "mutationDirectoryName": "🔲change-flange-position",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-flange",
+          "sourceMutationDirectoryName": "➕️insert-flange",
+          "mutationDirectoryName": "➕️insert-flange",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-flange",
+          "sourceMutationDirectoryName": "➖️remove-flange",
+          "mutationDirectoryName": "➖️remove-flange",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-bar-kind",
+          "sourceMutationDirectoryName": "🪢️change-bar-kind",
+          "mutationDirectoryName": "🪢️change-bar-kind",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-bar-diameter",
+          "sourceMutationDirectoryName": "🪢️change-bar-diameter",
+          "mutationDirectoryName": "🪢️change-bar-diameter",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-bar-length",
+          "sourceMutationDirectoryName": "🪢️change-bar-length",
+          "mutationDirectoryName": "🪢️change-bar-length",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-bar-spacing",
+          "sourceMutationDirectoryName": "🪢️change-bar-spacing",
+          "mutationDirectoryName": "🪢️change-bar-spacing",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-bar",
+          "sourceMutationDirectoryName": "➕️insert-bar",
+          "mutationDirectoryName": "➕️insert-bar",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-bar",
+          "sourceMutationDirectoryName": "➖️remove-bar",
+          "mutationDirectoryName": "➖️remove-bar",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-frost-class",
+          "sourceMutationDirectoryName": "❄️change-frost-class",
+          "mutationDirectoryName": "❄️change-frost-class",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-cover",
+          "sourceMutationDirectoryName": "🛡️change-cover",
+          "mutationDirectoryName": "🛡️change-cover",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-deflection-limit",
+          "sourceMutationDirectoryName": "📉change-deflection-limit",
+          "mutationDirectoryName": "📉change-deflection-limit",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-soil-height",
+          "sourceMutationDirectoryName": "🏞️change-soil-height",
+          "mutationDirectoryName": "🏞️change-soil-height",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-soil-density",
+          "sourceMutationDirectoryName": "🪨change-soil-density",
+          "mutationDirectoryName": "🪨change-soil-density",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-isotherm-depth",
+          "sourceMutationDirectoryName": "🔥change-isotherm-depth",
+          "mutationDirectoryName": "🔥change-isotherm-depth",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-plan-x",
+          "sourceMutationDirectoryName": "🧭change-plan-x",
+          "mutationDirectoryName": "🧭change-plan-x",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-plan-y",
+          "sourceMutationDirectoryName": "🧭change-plan-y",
+          "mutationDirectoryName": "🧭change-plan-y",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-plan-angle",
+          "sourceMutationDirectoryName": "📐️change-plan-angle",
+          "mutationDirectoryName": "📐️change-plan-angle",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-in-plane-shear",
+          "sourceMutationDirectoryName": "↔️change-in-plane-shear",
+          "mutationDirectoryName": "↔️change-in-plane-shear",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-in-plane-moment",
+          "sourceMutationDirectoryName": "🔄change-in-plane-moment",
+          "mutationDirectoryName": "🔄change-in-plane-moment",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-opening-position",
+          "sourceMutationDirectoryName": "🪟change-opening-position",
+          "mutationDirectoryName": "🪟change-opening-position",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-concentrated-position",
+          "sourceMutationDirectoryName": "📍️change-concentrated-position",
+          "mutationDirectoryName": "📍️change-concentrated-position",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-concentrated-distance-a1",
+          "sourceMutationDirectoryName": "📏change-concentrated-distance-a1",
+          "mutationDirectoryName": "📏change-concentrated-distance-a1",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-placement-x",
+          "sourceMutationDirectoryName": "📍️change-placement-x",
+          "mutationDirectoryName": "📍️change-placement-x",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-placement-y",
+          "sourceMutationDirectoryName": "📍️change-placement-y",
+          "mutationDirectoryName": "📍️change-placement-y",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-placement-z",
+          "sourceMutationDirectoryName": "📍️change-placement-z",
+          "mutationDirectoryName": "📍️change-placement-z",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-placement-yaw",
+          "sourceMutationDirectoryName": "📍️change-placement-yaw",
+          "mutationDirectoryName": "📍️change-placement-yaw",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-placement",
+          "sourceMutationDirectoryName": "📍️insert-placement",
+          "mutationDirectoryName": "📍️insert-placement",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-placement",
+          "sourceMutationDirectoryName": "📍️remove-placement",
+          "mutationDirectoryName": "📍️remove-placement",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-case",
+          "sourceMutationDirectoryName": "➕️insert-case",
+          "mutationDirectoryName": "➕️insert-case",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-case",
+          "sourceMutationDirectoryName": "➖️remove-case",
+          "mutationDirectoryName": "➖️remove-case",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-case-number",
+          "sourceMutationDirectoryName": "🔢️change-case-number",
+          "mutationDirectoryName": "🔢️change-case-number",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-case-text",
+          "sourceMutationDirectoryName": "🔤️change-case-text",
+          "mutationDirectoryName": "🔤️change-case-text",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-case-label-en",
+          "sourceMutationDirectoryName": "🏷️change-case-label-en",
+          "mutationDirectoryName": "🏷️change-case-label-en",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-case-label-de",
+          "sourceMutationDirectoryName": "🏷️change-case-label-de",
+          "mutationDirectoryName": "🏷️change-case-label-de",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-case-entry-id",
+          "sourceMutationDirectoryName": "📇️change-case-entry-id",
+          "mutationDirectoryName": "📇️change-case-entry-id",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-bracing-system",
+          "sourceMutationDirectoryName": "🧷️change-bracing-system",
+          "mutationDirectoryName": "🧷️change-bracing-system",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-diaphragm-stiffness",
+          "sourceMutationDirectoryName": "🧷️change-diaphragm-stiffness",
+          "mutationDirectoryName": "🧷️change-diaphragm-stiffness",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-wall-web-spacing-m",
+          "sourceMutationDirectoryName": "🧷️change-wall-web-spacing-m",
+          "mutationDirectoryName": "🧷️change-wall-web-spacing-m",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-chase-wall",
+          "sourceMutationDirectoryName": "🪚️change-chase-wall",
+          "mutationDirectoryName": "🪚️change-chase-wall",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-chase-kind",
+          "sourceMutationDirectoryName": "🪚️change-chase-kind",
+          "mutationDirectoryName": "🪚️change-chase-kind",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-chase-x",
+          "sourceMutationDirectoryName": "🪚️change-chase-x",
+          "mutationDirectoryName": "🪚️change-chase-x",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-chase-y",
+          "sourceMutationDirectoryName": "🪚️change-chase-y",
+          "mutationDirectoryName": "🪚️change-chase-y",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-chase-width",
+          "sourceMutationDirectoryName": "🪚️change-chase-width",
+          "mutationDirectoryName": "🪚️change-chase-width",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-chase-length",
+          "sourceMutationDirectoryName": "🪚️change-chase-length",
+          "mutationDirectoryName": "🪚️change-chase-length",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-chase-depth",
+          "sourceMutationDirectoryName": "🪚️change-chase-depth",
+          "mutationDirectoryName": "🪚️change-chase-depth",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-chase",
+          "sourceMutationDirectoryName": "🪚️insert-chase",
+          "mutationDirectoryName": "🪚️insert-chase",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-chase",
+          "sourceMutationDirectoryName": "🪚️remove-chase",
+          "mutationDirectoryName": "🪚️remove-chase",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-movement-joint-wall",
+          "sourceMutationDirectoryName": "🧵️change-movement-joint-wall",
+          "mutationDirectoryName": "🧵️change-movement-joint-wall",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-movement-joint-position",
+          "sourceMutationDirectoryName": "🧵️change-movement-joint-position",
+          "mutationDirectoryName": "🧵️change-movement-joint-position",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-movement-joint",
+          "sourceMutationDirectoryName": "🧵️insert-movement-joint",
+          "mutationDirectoryName": "🧵️insert-movement-joint",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-movement-joint",
+          "sourceMutationDirectoryName": "🧵️remove-movement-joint",
+          "mutationDirectoryName": "🧵️remove-movement-joint",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
         }
       ],
       "kinds": [
@@ -739,6 +1824,7 @@
         "remove-opening",
         "remove-wall",
         "change-annex",
+        "change-reliability-class",
         "change-qp-wind",
         "change-design-situation",
         "change-load-case-situation",
@@ -778,7 +1864,91 @@
         "change-opening-height",
         "change-opening-sill",
         "change-opening-width",
-        "change-hk-earth"
+        "change-hk-earth",
+        "change-pier-position",
+        "change-pier-width",
+        "insert-pier",
+        "remove-pier",
+        "change-lintel-position",
+        "change-lintel-span",
+        "change-lintel-depth",
+        "change-lintel-bearing-length",
+        "insert-lintel",
+        "remove-lintel",
+        "change-tie-kind",
+        "change-tie-position",
+        "change-tie-level",
+        "change-tie-capacity",
+        "insert-tie",
+        "remove-tie",
+        "change-prestress-force",
+        "change-prestress-area",
+        "change-prestress-strength",
+        "change-prestress-position",
+        "change-prestress-eccentricity",
+        "change-prestress-loss",
+        "insert-prestress",
+        "remove-prestress",
+        "change-confined-position",
+        "change-confined-width",
+        "change-confined-depth",
+        "change-confined-steel",
+        "insert-confined",
+        "remove-confined",
+        "change-flange-length",
+        "change-flange-thickness",
+        "change-flange-position",
+        "insert-flange",
+        "remove-flange",
+        "change-bar-kind",
+        "change-bar-diameter",
+        "change-bar-length",
+        "change-bar-spacing",
+        "insert-bar",
+        "remove-bar",
+        "change-frost-class",
+        "change-cover",
+        "change-deflection-limit",
+        "change-soil-height",
+        "change-soil-density",
+        "change-isotherm-depth",
+        "change-plan-x",
+        "change-plan-y",
+        "change-plan-angle",
+        "change-in-plane-shear",
+        "change-in-plane-moment",
+        "change-opening-position",
+        "change-concentrated-position",
+        "change-concentrated-distance-a1",
+        "change-placement-x",
+        "change-placement-y",
+        "change-placement-z",
+        "change-placement-yaw",
+        "insert-placement",
+        "remove-placement",
+        "insert-case",
+        "remove-case",
+        "change-case-number",
+        "change-case-text",
+        "change-case-label-en",
+        "change-case-label-de",
+        "change-case-entry-id",
+        "change-bracing-system",
+        "change-diaphragm-stiffness",
+        "change-wall-web-spacing-m",
+        "change-chase-wall",
+        "change-chase-kind",
+        "change-chase-x",
+        "change-chase-y",
+        "change-chase-width",
+        "change-chase-length",
+        "change-chase-depth",
+        "insert-chase",
+        "remove-chase",
+        "change-movement-joint-wall",
+        "change-movement-joint-position",
+        "insert-movement-joint",
+        "remove-movement-joint"
       ]
     }
   ],
@@ -1143,6 +2313,26 @@
             "operation": "change-annex",
             "bridgeVersion": 1,
             "variant": "ChangeAnnex"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-reliability-class",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-reliability-class",
+            "bridgeVersion": 1,
+            "variant": "ChangeReliabilityClass"
           },
           "oracleRequirements": [
             {
@@ -1943,6 +3133,1686 @@
             "operation": "change-hk-earth",
             "bridgeVersion": 1,
             "variant": "ChangeHKEarth"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-pier-position",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-pier-position",
+            "bridgeVersion": 1,
+            "variant": "ChangePierPosition"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-pier-width",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-pier-width",
+            "bridgeVersion": 1,
+            "variant": "ChangePierWidth"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "insert-pier",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "insert-pier",
+            "bridgeVersion": 1,
+            "variant": "InsertPier"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-pier",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-pier",
+            "bridgeVersion": 1,
+            "variant": "RemovePier"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-lintel-position",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-lintel-position",
+            "bridgeVersion": 1,
+            "variant": "ChangeLintelPosition"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-lintel-span",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-lintel-span",
+            "bridgeVersion": 1,
+            "variant": "ChangeLintelSpan"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-lintel-depth",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-lintel-depth",
+            "bridgeVersion": 1,
+            "variant": "ChangeLintelDepth"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-lintel-bearing-length",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-lintel-bearing-length",
+            "bridgeVersion": 1,
+            "variant": "ChangeLintelBearingLength"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "insert-lintel",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "insert-lintel",
+            "bridgeVersion": 1,
+            "variant": "InsertLintel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-lintel",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-lintel",
+            "bridgeVersion": 1,
+            "variant": "RemoveLintel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-tie-kind",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-tie-kind",
+            "bridgeVersion": 1,
+            "variant": "ChangeTieKind"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-tie-position",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-tie-position",
+            "bridgeVersion": 1,
+            "variant": "ChangeTiePosition"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-tie-level",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-tie-level",
+            "bridgeVersion": 1,
+            "variant": "ChangeTieLevel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-tie-capacity",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-tie-capacity",
+            "bridgeVersion": 1,
+            "variant": "ChangeTieCapacity"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "insert-tie",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "insert-tie",
+            "bridgeVersion": 1,
+            "variant": "InsertTie"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-tie",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-tie",
+            "bridgeVersion": 1,
+            "variant": "RemoveTie"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-prestress-force",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-prestress-force",
+            "bridgeVersion": 1,
+            "variant": "ChangePrestressForce"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-prestress-area",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-prestress-area",
+            "bridgeVersion": 1,
+            "variant": "ChangePrestressArea"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-prestress-strength",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-prestress-strength",
+            "bridgeVersion": 1,
+            "variant": "ChangePrestressStrength"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-prestress-position",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-prestress-position",
+            "bridgeVersion": 1,
+            "variant": "ChangePrestressPosition"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-prestress-eccentricity",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-prestress-eccentricity",
+            "bridgeVersion": 1,
+            "variant": "ChangePrestressEccentricity"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-prestress-loss",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-prestress-loss",
+            "bridgeVersion": 1,
+            "variant": "ChangePrestressLoss"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "insert-prestress",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "insert-prestress",
+            "bridgeVersion": 1,
+            "variant": "InsertPrestress"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-prestress",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-prestress",
+            "bridgeVersion": 1,
+            "variant": "RemovePrestress"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-confined-position",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-confined-position",
+            "bridgeVersion": 1,
+            "variant": "ChangeConfinedPosition"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-confined-width",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-confined-width",
+            "bridgeVersion": 1,
+            "variant": "ChangeConfinedWidth"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-confined-depth",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-confined-depth",
+            "bridgeVersion": 1,
+            "variant": "ChangeConfinedDepth"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-confined-steel",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-confined-steel",
+            "bridgeVersion": 1,
+            "variant": "ChangeConfinedSteel"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "insert-confined",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "insert-confined",
+            "bridgeVersion": 1,
+            "variant": "InsertConfined"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-confined",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-confined",
+            "bridgeVersion": 1,
+            "variant": "RemoveConfined"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-flange-length",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-flange-length",
+            "bridgeVersion": 1,
+            "variant": "ChangeFlangeLength"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-flange-thickness",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-flange-thickness",
+            "bridgeVersion": 1,
+            "variant": "ChangeFlangeThickness"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-flange-position",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-flange-position",
+            "bridgeVersion": 1,
+            "variant": "ChangeFlangePosition"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "insert-flange",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "insert-flange",
+            "bridgeVersion": 1,
+            "variant": "InsertFlange"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-flange",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-flange",
+            "bridgeVersion": 1,
+            "variant": "RemoveFlange"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-bar-kind",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-bar-kind",
+            "bridgeVersion": 1,
+            "variant": "ChangeBarKind"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-bar-diameter",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-bar-diameter",
+            "bridgeVersion": 1,
+            "variant": "ChangeBarDiameter"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-bar-length",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-bar-length",
+            "bridgeVersion": 1,
+            "variant": "ChangeBarLength"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-bar-spacing",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-bar-spacing",
+            "bridgeVersion": 1,
+            "variant": "ChangeBarSpacing"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "insert-bar",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "insert-bar",
+            "bridgeVersion": 1,
+            "variant": "InsertBar"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-bar",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-bar",
+            "bridgeVersion": 1,
+            "variant": "RemoveBar"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-frost-class",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-frost-class",
+            "bridgeVersion": 1,
+            "variant": "ChangeFrostClass"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-cover",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-cover",
+            "bridgeVersion": 1,
+            "variant": "ChangeCover"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-deflection-limit",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-deflection-limit",
+            "bridgeVersion": 1,
+            "variant": "ChangeDeflectionLimit"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-soil-height",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-soil-height",
+            "bridgeVersion": 1,
+            "variant": "ChangeSoilHeight"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-soil-density",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-soil-density",
+            "bridgeVersion": 1,
+            "variant": "ChangeSoilDensity"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-isotherm-depth",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-isotherm-depth",
+            "bridgeVersion": 1,
+            "variant": "ChangeIsothermDepth"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-plan-x",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-plan-x",
+            "bridgeVersion": 1,
+            "variant": "ChangePlanX"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-plan-y",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-plan-y",
+            "bridgeVersion": 1,
+            "variant": "ChangePlanY"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-plan-angle",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-plan-angle",
+            "bridgeVersion": 1,
+            "variant": "ChangePlanAngle"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-in-plane-shear",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-in-plane-shear",
+            "bridgeVersion": 1,
+            "variant": "ChangeInPlaneShear"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-in-plane-moment",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-in-plane-moment",
+            "bridgeVersion": 1,
+            "variant": "ChangeInPlaneMoment"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-opening-position",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-opening-position",
+            "bridgeVersion": 1,
+            "variant": "ChangeOpeningPosition"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-concentrated-position",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-concentrated-position",
+            "bridgeVersion": 1,
+            "variant": "ChangeConcentratedPosition"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-concentrated-distance-a1",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-concentrated-distance-a1",
+            "bridgeVersion": 1,
+            "variant": "ChangeConcentratedDistanceA1"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-placement-x",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-placement-x",
+            "bridgeVersion": 1,
+            "variant": "ChangePlacementX"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-placement-y",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-placement-y",
+            "bridgeVersion": 1,
+            "variant": "ChangePlacementY"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-placement-z",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-placement-z",
+            "bridgeVersion": 1,
+            "variant": "ChangePlacementZ"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-placement-yaw",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-placement-yaw",
+            "bridgeVersion": 1,
+            "variant": "ChangePlacementYaw"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "insert-placement",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "insert-placement",
+            "bridgeVersion": 1,
+            "variant": "InsertPlacement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-placement",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-placement",
+            "bridgeVersion": 1,
+            "variant": "RemovePlacement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "insert-case",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "insert-case",
+            "bridgeVersion": 1,
+            "variant": "InsertCase"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-case",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-case",
+            "bridgeVersion": 1,
+            "variant": "RemoveCase"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-case-number",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-case-number",
+            "bridgeVersion": 1,
+            "variant": "ChangeCaseNumber"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-case-text",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-case-text",
+            "bridgeVersion": 1,
+            "variant": "ChangeCaseText"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-case-label-en",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-case-label-en",
+            "bridgeVersion": 1,
+            "variant": "ChangeCaseLabelEn"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-case-label-de",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-case-label-de",
+            "bridgeVersion": 1,
+            "variant": "ChangeCaseLabelDe"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-case-entry-id",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-case-entry-id",
+            "bridgeVersion": 1,
+            "variant": "ChangeCaseEntryId"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-bracing-system",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-bracing-system",
+            "bridgeVersion": 1,
+            "variant": "ChangeBracingSystem"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-diaphragm-stiffness",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-diaphragm-stiffness",
+            "bridgeVersion": 1,
+            "variant": "ChangeDiaphragmStiffness"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-wall-web-spacing-m",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-wall-web-spacing-m",
+            "bridgeVersion": 1,
+            "variant": "ChangeWallWebSpacingM"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-chase-wall",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-chase-wall",
+            "bridgeVersion": 1,
+            "variant": "ChangeChaseWall"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-chase-kind",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-chase-kind",
+            "bridgeVersion": 1,
+            "variant": "ChangeChaseKind"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-chase-x",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-chase-x",
+            "bridgeVersion": 1,
+            "variant": "ChangeChaseX"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-chase-y",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-chase-y",
+            "bridgeVersion": 1,
+            "variant": "ChangeChaseY"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-chase-width",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-chase-width",
+            "bridgeVersion": 1,
+            "variant": "ChangeChaseWidth"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-chase-length",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-chase-length",
+            "bridgeVersion": 1,
+            "variant": "ChangeChaseLength"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-chase-depth",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-chase-depth",
+            "bridgeVersion": 1,
+            "variant": "ChangeChaseDepth"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "insert-chase",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "insert-chase",
+            "bridgeVersion": 1,
+            "variant": "InsertChase"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-chase",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-chase",
+            "bridgeVersion": 1,
+            "variant": "RemoveChase"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-movement-joint-wall",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-movement-joint-wall",
+            "bridgeVersion": 1,
+            "variant": "ChangeMovementJointWall"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-movement-joint-position",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-movement-joint-position",
+            "bridgeVersion": 1,
+            "variant": "ChangeMovementJointPosition"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "insert-movement-joint",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "insert-movement-joint",
+            "bridgeVersion": 1,
+            "variant": "InsertMovementJoint"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1996-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-movement-joint",
+          "capability": "en1996-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "remove-movement-joint",
+            "bridgeVersion": 1,
+            "variant": "RemoveMovementJoint"
           },
           "oracleRequirements": [
             {

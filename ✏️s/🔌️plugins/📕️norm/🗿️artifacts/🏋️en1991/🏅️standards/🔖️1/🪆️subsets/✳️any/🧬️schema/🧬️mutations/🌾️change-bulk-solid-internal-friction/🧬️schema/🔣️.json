@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-bulk-solid-internal-friction/schema.json",
+  "title": "ChangeBulkSolidInternalFriction",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newInternalFriction"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Bulk solid",
+          "de": "Schüttgut"
+        },
+        "description": {
+          "en": "The bulk solid this mutation addresses, by id.",
+          "de": "Das adressierte Element (Schüttgut), per Kennung."
+        },
+        "ref": {
+          "kind": "bulk-solid"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newInternalFriction": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Angle of internal friction φ_i",
+          "de": "Innerer Reibungswinkel φ_i"
+        },
+        "widget": "stepper",
+        "unit": "rad",
+        "displayUnit": "°",
+        "displayFactor": 57.29577951308232,
+        "precision": 1,
+        "step": 0.0174532925,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

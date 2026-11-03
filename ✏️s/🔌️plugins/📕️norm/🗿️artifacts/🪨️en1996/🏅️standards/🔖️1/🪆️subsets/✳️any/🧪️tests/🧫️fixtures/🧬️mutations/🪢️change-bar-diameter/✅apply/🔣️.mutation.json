@@ -1,0 +1,7 @@
+{
+  "ChangeBarDiameter": {
+    "wallId": "wall-north",
+    "id": "bar-1",
+    "newDiameterM": 0.012
+  }
+}

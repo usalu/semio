@@ -1,0 +1,6 @@
+{
+  "ChangePileInterlockStiffFactor": {
+    "id": "pile-1",
+    "newInterlockStiffnessFactor": 1.5
+  }
+}

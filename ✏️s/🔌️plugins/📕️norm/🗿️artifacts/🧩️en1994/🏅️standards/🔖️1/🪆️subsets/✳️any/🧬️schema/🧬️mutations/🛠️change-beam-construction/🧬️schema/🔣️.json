@@ -5,34 +5,33 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "index",
+    "id",
     "newConstruction"
   ],
   "properties": {
-    "index": {
-      "type": "integer",
-      "minimum": 0,
+    "id": {
+      "type": "string",
       "x-semio-ui": {
-        "widget": "stepper",
-        "role": "value",
+        "widget": "reference",
+        "role": "target",
         "label": {
           "en": "Composite beam",
           "de": "Verbundträger"
         },
         "description": {
-          "en": "Zero-based position of the composite beam in its list.",
-          "de": "Nullbasierte Position des Verbundträgers in der Liste."
+          "en": "The composite beam this mutation addresses, by id.",
+          "de": "Das adressierte Element (Verbundträger), per Kennung."
         },
-        "step": 1,
-        "precision": 0,
+        "ref": {
+          "kind": "beam"
+        },
         "group": "target",
         "order": 10
       }
     },
     "newConstruction": {
-      "type": "string",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/ConstructionMethod",
       "x-semio-ui": {
-        "widget": "text",
         "role": "value",
         "label": {
           "en": "Construction method",

@@ -1,0 +1,30 @@
+{
+  "annex": null,
+  "reliabilityClass": null,
+  "title": null,
+  "designWorkingLifeYears": null,
+  "deltaCDev": null,
+  "cementType": null,
+  "concreteGrades": null,
+  "reinforcementGrades": null,
+  "prestressSteels": {
+    "removed": [
+      {
+        "id": "yp1860",
+        "index": 0
+      }
+    ],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "members": null,
+  "anchors": null,
+  "placements": null,
+  "cases": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  }
+}

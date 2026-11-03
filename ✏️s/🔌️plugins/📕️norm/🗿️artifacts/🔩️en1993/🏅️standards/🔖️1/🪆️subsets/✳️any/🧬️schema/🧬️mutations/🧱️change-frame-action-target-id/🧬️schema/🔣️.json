@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-frame-action-target-id/schema.json",
+  "title": "ChangeFrameActionTargetId",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newTargetId"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Frame action",
+          "de": "Rahmeneinwirkung"
+        },
+        "description": {
+          "en": "The frame action this mutation addresses, by id.",
+          "de": "Das adressierte Element (Rahmeneinwirkung), per Kennung."
+        },
+        "ref": {
+          "kind": "frame-action"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newTargetId": {
+      "type": "string",
+      "x-semio-ui": {
+        "label": {
+          "en": "Target",
+          "de": "Ziel"
+        },
+        "widget": "text",
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

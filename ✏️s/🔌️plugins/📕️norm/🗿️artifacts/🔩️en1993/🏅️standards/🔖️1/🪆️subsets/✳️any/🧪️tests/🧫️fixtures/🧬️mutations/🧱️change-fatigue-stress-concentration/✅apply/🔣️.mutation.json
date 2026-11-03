@@ -1,0 +1,6 @@
+{
+  "ChangeFatigueStressConcentration": {
+    "id": "fatigue-stress-1",
+    "newConcentration": 1.5
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-category-m1/schema.json",
+  "title": "ChangeCategoryM1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "fatigueCategoryId",
+    "newM1"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeCategoryM1"
+    },
+    "fatigueCategoryId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Fatigue category",
+          "de": "Ermüdungsdetail-Stelle"
+        },
+        "description": {
+          "en": "The fatigue category this mutation addresses, by id.",
+          "de": "Das adressierte Element (Ermüdungsdetail-Stelle), per Kennung."
+        },
+        "ref": {
+          "kind": "fatigue-category"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newM1": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "S-N slope m1 (0 = from first block)",
+          "de": "Wöhler-Neigung m1 (0 = vom ersten Block)"
+        },
+        "widget": "stepper",
+        "unit": "",
+        "precision": 1,
+        "step": 0.5,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "InsertLintel": {
+    "wallId": "wall-north",
+    "index": 1,
+    "lintel": {
+      "id": "lintel-2",
+      "positionM": 0.6,
+      "spanM": 1.4,
+      "depthM": 0.25,
+      "bearingLengthM": 0.25
+    }
+  }
+}

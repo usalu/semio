@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-assumed-rail-sw0/schema.json",
+  "title": "ChangeAssumedRailSw0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newAssumedRailSw0"
+  ],
+  "properties": {
+    "newAssumedRailSw0": {
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Assumed SW/0 load",
+          "de": "Angesetzte SW/0-Last"
+        },
+        "unit": "N/m",
+        "step": 1,
+        "precision": 1,
+        "group": "bridge",
+        "order": 10,
+        "displayUnit": "kN/m",
+        "displayFactor": 0.001
+      }
+    }
+  }
+}

@@ -3,18 +3,47 @@ cargo-features = [ "trim-paths" ]
 [workspace]
 resolver = "2"
 members = [
+    "🧮️mechanics/🧱️applied/📦️packages/🦀️rust",
+    "⚖️compliance/📜️annex-and-tables/🔖️ndp/📦️packages/🦀️rust",
+    "⚖️compliance/📜️annex-and-tables/🔖️ndp/🗃️table/en1990/📦️packages/🦀️rust",
+    "⚖️compliance/📜️annex-and-tables/🔖️ndp/🗃️table/en1991/📦️packages/🦀️rust",
+    "⚖️compliance/📜️annex-and-tables/🔖️ndp/🗃️table/en1992/📦️packages/🦀️rust",
+    "⚖️compliance/📜️annex-and-tables/🔖️ndp/🗃️table/en1993/📦️packages/🦀️rust",
+    "⚖️compliance/📜️annex-and-tables/🔖️ndp/🗃️table/en1994/📦️packages/🦀️rust",
+    "⚖️compliance/📜️annex-and-tables/🔖️ndp/🗃️table/en1995/📦️packages/🦀️rust",
+    "⚖️compliance/📜️annex-and-tables/🔖️ndp/🗃️table/en1996/📦️packages/🦀️rust",
+    "⚖️compliance/📜️annex-and-tables/🔖️ndp/🗃️table/en1997/📦️packages/🦀️rust",
+    "⚖️compliance/📜️annex-and-tables/🔖️ndp/🗃️table/en1998/📦️packages/🦀️rust",
+    "⚖️compliance/📜️annex-and-tables/🔖️ndp/🗃️table/en1999/📦️packages/🦀️rust",
+    "⚖️compliance/📜️annex-and-tables/🔖️ndp/🧱️model/📦️packages/🦀️rust",
     "⚖️compliance/📦️packages/🦀️rust",
+    "⚖️compliance/🧱️core/📦️packages/🦀️rust",
+    "🎬️structural-scene/📦️packages/🦀️rust",
+    "🎬️structural-scene/🧊️meshing/📦️packages/🦀️rust",
+    "🎬️structural-scene/🧰️projection-kit/🧱️case-kit/📦️packages/🦀️rust",
+    "🎬️structural-scene/🧱️foundation/📦️packages/🦀️rust",
     "📇️registry/🧬️contract/📦️packages/🦀️rust",
+    "📇️registry/🧬️contract/🖥️app-surface/🎛️live-editor/📦️packages/🦀️rust",
     "📇️registry/🧬️contract/🖥️app-surface/📦️packages/🦀️rust",
+    "📇️registry/🧬️contract/🖥️app-surface/🖼️visual-chrome/📦️packages/🦀️rust",
+    "📇️registry/🧬️contract/🖥️app-surface/🧱️foundation/📦️packages/🦀️rust",
+    "📇️registry/🧬️contract/🖥️app-surface/🧲️live-core/📦️packages/🦀️rust",
+    "📇️registry/🧬️contract/🖥️app-surface/🧾️panels/📦️packages/🦀️rust",
+    "📇️registry/🧬️contract/🖥️app-surface/🧾️panels/🔎️inspection/📦️packages/🦀️rust",
+    "📇️registry/🧬️contract/🖥️app-surface/🪟️visual-windows/🧊️viewport3d/📦️packages/🦀️rust",
+    "🧮️mechanics/📦️packages/🦀️rust",
     "🪟️results/🎚️config/📦️packages/🦀️rust",
+    "🪟️viewport/🎚️config/📦️packages/🦀️rust",
 ]
 exclude = [
-  "**/🏅️standards/**",
-  "**/👽️guest/**",
-  "**/🔮️oracles/**",
-  "**/🏭️bridge/**",
-  "🗿️artifacts",
-  "🧩️extensions"
+    "**/🏅️standards/**",
+    "**/🏭️bridge/**",
+    "**/👽️guest/**",
+    "**/🔮️oracles/**",
+    "🗿️artifacts",
+    "🗿️artifacts/**",
+    "🧩️extensions",
+    "🧩️extensions/**",
 ]
 
 [workspace.metadata.semio.repository]
@@ -106,12 +135,38 @@ path = "📇️registry/🧬️contract/📦️packages/🦀️rust"
 [workspace.dependencies.semio-s-plugin-norm-app-surface]
 path = "📇️registry/🧬️contract/🖥️app-surface/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-s-plugin-norm-app-surface-foundation]
+path = "📇️registry/🧬️contract/🖥️app-surface/🧱️foundation/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-norm-app-surface-viewport3d]
+path = "📇️registry/🧬️contract/🖥️app-surface/🪟️visual-windows/🧊️viewport3d/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-norm-app-surface-visual-chrome]
+path = "📇️registry/🧬️contract/🖥️app-surface/🖼️visual-chrome/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-norm-app-surface-live-core]
+path = "📇️registry/🧬️contract/🖥️app-surface/🧲️live-core/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-norm-app-surface-panels]
+path = "📇️registry/🧬️contract/🖥️app-surface/🧾️panels/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-norm-app-surface-live-editor]
+path = "📇️registry/🧬️contract/🖥️app-surface/🎛️live-editor/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-s-plugin-norm-compliance]
 path = "⚖️compliance/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-norm-structural-scene]
+path = "🎬️structural-scene/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-norm-mechanics]
+path = "🧮️mechanics/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-plugin-norm-results-config]
 path = "🪟️results/🎚️config/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-s-plugin-norm-viewport-config]
+path = "🪟️viewport/🎚️config/📦️packages/🦀️rust"
 
 
 
@@ -141,6 +196,10 @@ path = "🪟️results/🎚️config/📦️packages/🦀️rust"
 
 
 
+
+
+[workspace.dependencies.semio-s-plugin-norm-mechanics-applied]
+path = "🧮️mechanics/🧱️applied/📦️packages/🦀️rust"
 
 [workspace.lints.rust]
 unsafe_op_in_unsafe_fn = "warn"
@@ -167,4 +226,3 @@ redundant_clone = "warn"
   [workspace.lints.clippy.all]
   level = "warn"
   priority = -1
-

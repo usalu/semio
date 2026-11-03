@@ -9,14 +9,15 @@ extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
 use semio_s_plugin_norm_compliance::AnnexChoice;
-use semio_s_artifact_norm_en1997_model::{En1997Snapshot, FoundationLoadCase, Pile, RetainingWall, Slope, SoilLayer, SpreadFoundation, UpliftCase};
+use semio_s_artifact_norm_en1997_model::Placement;
+use semio_s_artifact_norm_en1997_model::{Anchor, CaseRow, CharacteristicBasis, EmbeddedWall, En1997Snapshot, FoundationLoadCase, Investigation, LabTest, LayerWater, Pile, PileGroup, RetainingWall, Slope, SoilLayer, SpreadFoundation, UpliftCase};
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
 /// 🧬️ EN 1997 document artifact state (mirrors snapshot).
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.norm.en1997")]
 pub struct En1997Artifact {
@@ -46,13 +47,31 @@ pub struct En1997Artifact {
     pub slopes: Vec<Slope>,
     #[state(artifact)]
     pub uplift_cases: Vec<UpliftCase>,
+    #[state(artifact)]
+    pub anchors: Vec<Anchor>,
+    #[state(artifact)]
+    pub embedded_walls: Vec<EmbeddedWall>,
+    #[state(artifact)]
+    pub pile_groups: Vec<PileGroup>,
+    #[state(artifact)]
+    pub lab_tests: Vec<LabTest>,
+    #[state(artifact)]
+    pub layer_waters: Vec<LayerWater>,
+    #[state(artifact)]
+    pub placements: Vec<Placement>,
+    #[state(artifact)]
+    pub cases: Vec<CaseRow>,
+    #[state(artifact)]
+    pub investigations: Vec<Investigation>,
+    #[state(artifact)]
+    pub characteristic_bases: Vec<CharacteristicBasis>,
 }
 //#endregion 🔖️Artifact
 
 //#region 🔖️Conversions
 impl Default for En1997Artifact {
     fn default() -> Self {
-        Self::from_snapshot(En1997Snapshot::default())
+        Self::from_snapshot(En1997Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De))
     }
 }
 
@@ -78,6 +97,15 @@ impl En1997Artifact {
             retaining_walls: self.retaining_walls.clone(),
             slopes: self.slopes.clone(),
             uplift_cases: self.uplift_cases.clone(),
+            anchors: self.anchors.clone(),
+            embedded_walls: self.embedded_walls.clone(),
+            pile_groups: self.pile_groups.clone(),
+            lab_tests: self.lab_tests.clone(),
+            layer_waters: self.layer_waters.clone(),
+            characteristic_bases: self.characteristic_bases.clone(),
+            investigations: self.investigations.clone(),
+            placements: self.placements.clone(),
+            cases: self.cases.clone(),
         }
     }
 
@@ -96,6 +124,15 @@ impl En1997Artifact {
             retaining_walls: snapshot.retaining_walls,
             slopes: snapshot.slopes,
             uplift_cases: snapshot.uplift_cases,
+            anchors: snapshot.anchors,
+            embedded_walls: snapshot.embedded_walls,
+            pile_groups: snapshot.pile_groups,
+            lab_tests: snapshot.lab_tests,
+            layer_waters: snapshot.layer_waters,
+            characteristic_bases: snapshot.characteristic_bases,
+            investigations: snapshot.investigations,
+            placements: snapshot.placements,
+            cases: snapshot.cases,
         }
     }
 

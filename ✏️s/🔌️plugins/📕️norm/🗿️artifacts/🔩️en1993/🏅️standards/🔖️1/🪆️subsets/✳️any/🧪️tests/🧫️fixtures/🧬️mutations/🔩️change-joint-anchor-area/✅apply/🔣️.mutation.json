@@ -1,0 +1,6 @@
+{
+  "ChangeJointAnchorArea": {
+    "id": "joint-j1",
+    "newAnchorArea": 1.5
+  }
+}

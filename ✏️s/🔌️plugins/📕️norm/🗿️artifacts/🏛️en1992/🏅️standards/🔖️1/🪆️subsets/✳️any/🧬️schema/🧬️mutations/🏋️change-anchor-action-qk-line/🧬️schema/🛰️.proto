@@ -1,0 +1,7 @@
+syntax = "proto3";
+package semio.s.norm.en1992.mutation.change_anchor_action_qk_line;
+message ChangeAnchorActionQKLine {
+  string anchor_id = 1;
+  string action_id = 2;
+  double new_q_k_line = 3;
+}

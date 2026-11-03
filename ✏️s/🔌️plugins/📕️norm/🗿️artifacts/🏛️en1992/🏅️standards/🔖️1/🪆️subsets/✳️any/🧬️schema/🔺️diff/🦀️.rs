@@ -18,433 +18,279 @@ fn missing_target(what: impl std::fmt::Display) -> protocol::MutationApplyError 
     protocol::MutationApplyError::new("mutation.apply.missing-target", format!("{what} does not exist"))
 }
 
-/// 🩹️ Sparse patch of the `concrete_grades` row addressed by its key.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-#[value(rename_all = "camelCase", default)]
-pub struct En1992ConcreteGradesPatch {
-    pub f_ck: Option<f64>,
+/// 🔑️ Key extractors of the foreign model rows (`id`), local markers for `list_delta!`.
+macro_rules! row_key {
+    ($($key:ident for $row:ident;)+) => {$(
+        #[doc = concat!("🔑️ Key extractor of the foreign `", stringify!($row), "` rows (`id`).")]
+        #[derive(Clone, Copy, Debug, PartialEq)]
+        pub struct $key;
+        impl protocol::list_delta::KeyOf<semio_s_artifact_norm_en1992_model::$row> for $key {
+            type Key = String;
+            fn key_of(row: &semio_s_artifact_norm_en1992_model::$row) -> String { row.id.clone() }
+        }
+    )+};
 }
 
-impl protocol::list_delta::RowPatch<semio_s_artifact_norm_en1992_model::ConcreteGrade> for En1992ConcreteGradesPatch {
-    fn commit_into(&self, row: &mut semio_s_artifact_norm_en1992_model::ConcreteGrade, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
-        if let Some(value) = &self.f_ck {
-            row.f_ck = value.clone();
-        }
-        Ok(())
-    }
+row_key! {
+    ConcreteGradeKey for ConcreteGrade;
+    ReinforcementGradeKey for ReinforcementGrade;
+    PrestressSteelKey for PrestressSteel;
+    BarLayerKey for BarLayer;
+    SectionPointKey for SectionPoint;
+    BarPointKey for BarPoint;
+    TendonPointKey for TendonPoint;
+    StudRowKey for StudRow;
+    OpeningKey for Opening;
+    LoadCaseActionsKey for LoadCaseActions;
+    RcMemberKey for RcMember;
+    AnchorKey for Anchor;
+    PlacementKey for Placement;
+}
 
-    fn absorb(&mut self, later: Self) {
-        if later.f_ck.is_some() {
-            self.f_ck = later.f_ck;
-        }
-    }
+/// 🩹️ Sparse scalar patch of one keyed row: the struct, its commit, coalescing, inverse and emptiness.
+macro_rules! scalar_patch {
+    ($(#[$doc:meta])* $name:ident for $row:ty { $($f:ident: $t:ty),+ $(,)? }) => {
+        $(#[$doc])*
+        #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+        #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+        #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
+        #[value(rename_all = "camelCase", default)]
+        pub struct $name { $(pub $f: Option<$t>),+ }
 
-    fn inverse(&self, row: &semio_s_artifact_norm_en1992_model::ConcreteGrade) -> Self {
-        Self {
-            f_ck: self.f_ck.as_ref().map(|_| row.f_ck.clone()),
+        impl protocol::list_delta::RowPatch<$row> for $name {
+            fn commit_into(&self, row: &mut $row, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+                $(if let Some(value) = &self.$f { row.$f = value.clone(); })+
+                Ok(())
+            }
+            fn absorb(&mut self, later: Self) { $(if later.$f.is_some() { self.$f = later.$f; })+ }
+            fn inverse(&self, row: &$row) -> Self { Self { $($f: self.$f.as_ref().map(|_| row.$f.clone())),+ } }
+            fn is_empty(&self) -> bool { true $(&& self.$f.is_none())+ }
         }
-    }
+    };
+}
 
-    fn is_empty(&self) -> bool {
-        self.f_ck.is_none()
-    }
+/// 🩹️ Sparse patch of one keyed row with direct leaves (`set`), leaves behind an optional object (`within`) and owned row lanes (`rows`): the struct, its commit, coalescing, inverse and emptiness.
+macro_rules! nested_patch {
+    ($(#[$doc:meta])* $name:ident for $row:ty { set { $($f:ident: $t:ty),* $(,)? } within { $($w:ident => $obj:ident . $inner:ident : $wt:ty),* $(,)? } optional { $($o:ident : $ot:ty => $oflag:ident),* $(,)? } rows { $($lane:ident : $rows:ty = $label:literal),* $(,)? } }) => {
+        $(#[$doc])*
+        #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+        #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+        #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
+        #[value(rename_all = "camelCase", default)]
+        pub struct $name { $(pub $f: Option<$t>,)* $(pub $w: Option<$wt>,)* $(pub $o: Option<$ot>, pub $oflag: Option<bool>,)* $(pub $lane: Option<$rows>,)* }
+
+        impl protocol::list_delta::RowPatch<$row> for $name {
+            #[allow(unused_variables)]
+            fn commit_into(&self, row: &mut $row, capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
+                $(if let Some(value) = &self.$f { row.$f = value.clone(); })*
+                $(if let Some(value) = &self.$w { row.$obj.as_mut().ok_or_else(|| missing_target(stringify!($obj)))?.$inner = value.clone(); })*
+                $(if self.$oflag == Some(true) { row.$o = None; } else if let Some(value) = &self.$o { row.$o = Some(value.clone()); })*
+                $(if let Some(rows) = &self.$lane { row.$lane = rows.commit_onto(&row.$lane, capability).map_err(|error| error.under([$label]))?; })*
+                Ok(())
+            }
+            fn absorb(&mut self, later: Self) {
+                $(if later.$f.is_some() { self.$f = later.$f; })*
+                $(if later.$w.is_some() { self.$w = later.$w; })*
+                $(if later.$oflag == Some(true) { self.$oflag = Some(true); self.$o = None; } else if later.$o.is_some() { self.$o = later.$o; self.$oflag = None; })*
+                $(if let Some(theirs) = later.$lane {
+                    match self.$lane.as_mut() {
+                        Some(mine) => mine.absorb(theirs),
+                        None => self.$lane = Some(theirs),
+                    }
+                    self.$lane = self.$lane.take().filter(|rows| !rows.is_empty());
+                })*
+            }
+            fn inverse(&self, row: &$row) -> Self {
+                Self {
+                    $($f: self.$f.as_ref().map(|_| row.$f.clone()),)*
+                    $($w: self.$w.as_ref().and_then(|_| (|| Some(row.$obj.as_ref()?.$inner.clone()))()),)*
+                    $($o: if self.$o.is_some() || self.$oflag == Some(true) { row.$o.clone() } else { None }, $oflag: if (self.$o.is_some() || self.$oflag == Some(true)) && row.$o.is_none() { Some(true) } else { None },)*
+                    $($lane: self.$lane.as_ref().map(|rows| rows.inverse(&row.$lane)).filter(|rows| !rows.is_empty()),)*
+                }
+            }
+            fn is_empty(&self) -> bool { true $(&& self.$f.is_none())* $(&& self.$w.is_none())* $(&& self.$o.is_none() && self.$oflag != Some(true))* $(&& self.$lane.as_ref().map_or(true, |rows| rows.is_empty()))* }
+        }
+    };
+}
+
+scalar_patch! {
+    /// 🩹️ Sparse patch of the `concrete_grades` row addressed by its key.
+    En1992ConcreteGradesPatch for semio_s_artifact_norm_en1992_model::ConcreteGrade { name: String, f_ck: f64 }
 }
 
 protocol::list_delta! {
-    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
     /// 📋️ Positional row delta of the `concrete_grades` list (rows keyed by `id`).
-    pub En1992ConcreteGradesRows { removal: En1992ConcreteGradesRemoved, insertion: En1992ConcreteGradesInserted, relocation: En1992ConcreteGradesMoved, modification: En1992ConcreteGradesModified, row: semio_s_artifact_norm_en1992_model::ConcreteGrade, patch: En1992ConcreteGradesPatch, key: id }
+    pub En1992ConcreteGradesRows { removal: En1992ConcreteGradesRemoved, insertion: En1992ConcreteGradesInserted, relocation: En1992ConcreteGradesMoved, modification: En1992ConcreteGradesModified, row: semio_s_artifact_norm_en1992_model::ConcreteGrade, patch: En1992ConcreteGradesPatch, list: Vec<semio_s_artifact_norm_en1992_model::ConcreteGrade>, key: String = by ConcreteGradeKey }
 }
 
-/// 🩹️ Sparse patch of the `reinforcement_grades` row addressed by its key.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-#[value(rename_all = "camelCase", default)]
-pub struct En1992ReinforcementGradesPatch {
-    pub f_yk: Option<f64>,
-}
-
-impl protocol::list_delta::RowPatch<semio_s_artifact_norm_en1992_model::ReinforcementGrade> for En1992ReinforcementGradesPatch {
-    fn commit_into(&self, row: &mut semio_s_artifact_norm_en1992_model::ReinforcementGrade, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
-        if let Some(value) = &self.f_yk {
-            row.f_yk = value.clone();
-        }
-        Ok(())
-    }
-
-    fn absorb(&mut self, later: Self) {
-        if later.f_yk.is_some() {
-            self.f_yk = later.f_yk;
-        }
-    }
-
-    fn inverse(&self, row: &semio_s_artifact_norm_en1992_model::ReinforcementGrade) -> Self {
-        Self {
-            f_yk: self.f_yk.as_ref().map(|_| row.f_yk.clone()),
-        }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.f_yk.is_none()
-    }
+scalar_patch! {
+    /// 🩹️ Sparse patch of the `reinforcement_grades` row addressed by its key.
+    En1992ReinforcementGradesPatch for semio_s_artifact_norm_en1992_model::ReinforcementGrade { name: String, f_yk: f64, e_s: f64, ductility: semio_s_artifact_norm_en1992_model::DuctilityClass, k: f64, eps_uk: f64 }
 }
 
 protocol::list_delta! {
-    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
     /// 📋️ Positional row delta of the `reinforcement_grades` list (rows keyed by `id`).
-    pub En1992ReinforcementGradesRows { removal: En1992ReinforcementGradesRemoved, insertion: En1992ReinforcementGradesInserted, relocation: En1992ReinforcementGradesMoved, modification: En1992ReinforcementGradesModified, row: semio_s_artifact_norm_en1992_model::ReinforcementGrade, patch: En1992ReinforcementGradesPatch, key: id }
+    pub En1992ReinforcementGradesRows { removal: En1992ReinforcementGradesRemoved, insertion: En1992ReinforcementGradesInserted, relocation: En1992ReinforcementGradesMoved, modification: En1992ReinforcementGradesModified, row: semio_s_artifact_norm_en1992_model::ReinforcementGrade, patch: En1992ReinforcementGradesPatch, list: Vec<semio_s_artifact_norm_en1992_model::ReinforcementGrade>, key: String = by ReinforcementGradeKey }
 }
 
-/// 🩹️ Sparse patch of the `prestress_steels` row addressed by its key.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-#[value(rename_all = "camelCase", default)]
-pub struct En1992PrestressSteelsPatch {
-    pub name: Option<String>,
-    pub f_pk: Option<f64>,
-    pub f_p0_1k: Option<f64>,
-}
-
-impl protocol::list_delta::RowPatch<semio_s_artifact_norm_en1992_model::PrestressSteel> for En1992PrestressSteelsPatch {
-    fn commit_into(&self, row: &mut semio_s_artifact_norm_en1992_model::PrestressSteel, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
-        if let Some(value) = &self.name {
-            row.name = value.clone();
-        }
-        if let Some(value) = &self.f_pk {
-            row.f_pk = value.clone();
-        }
-        if let Some(value) = &self.f_p0_1k {
-            row.f_p0_1k = value.clone();
-        }
-        Ok(())
-    }
-
-    fn absorb(&mut self, later: Self) {
-        if later.name.is_some() {
-            self.name = later.name;
-        }
-        if later.f_pk.is_some() {
-            self.f_pk = later.f_pk;
-        }
-        if later.f_p0_1k.is_some() {
-            self.f_p0_1k = later.f_p0_1k;
-        }
-    }
-
-    fn inverse(&self, row: &semio_s_artifact_norm_en1992_model::PrestressSteel) -> Self {
-        Self {
-            name: self.name.as_ref().map(|_| row.name.clone()),
-            f_pk: self.f_pk.as_ref().map(|_| row.f_pk.clone()),
-            f_p0_1k: self.f_p0_1k.as_ref().map(|_| row.f_p0_1k.clone()),
-        }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.name.is_none() && self.f_pk.is_none() && self.f_p0_1k.is_none()
-    }
+scalar_patch! {
+    /// 🩹️ Sparse patch of the `prestress_steels` row addressed by its key.
+    En1992PrestressSteelsPatch for semio_s_artifact_norm_en1992_model::PrestressSteel { name: String, f_pk: f64, f_p0_1k: f64 }
 }
 
 protocol::list_delta! {
-    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
     /// 📋️ Positional row delta of the `prestress_steels` list (rows keyed by `id`).
-    pub En1992PrestressSteelsRows { removal: En1992PrestressSteelsRemoved, insertion: En1992PrestressSteelsInserted, relocation: En1992PrestressSteelsMoved, modification: En1992PrestressSteelsModified, row: semio_s_artifact_norm_en1992_model::PrestressSteel, patch: En1992PrestressSteelsPatch, key: id }
+    pub En1992PrestressSteelsRows { removal: En1992PrestressSteelsRemoved, insertion: En1992PrestressSteelsInserted, relocation: En1992PrestressSteelsMoved, modification: En1992PrestressSteelsModified, row: semio_s_artifact_norm_en1992_model::PrestressSteel, patch: En1992PrestressSteelsPatch, list: Vec<semio_s_artifact_norm_en1992_model::PrestressSteel>, key: String = by PrestressSteelKey }
 }
 
-/// 🩹️ Sparse patch of the `longitudinal` row addressed by its key.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-#[value(rename_all = "camelCase", default)]
-pub struct En1992MembersLongitudinalPatch {
-    pub diameter: Option<f64>,
-    pub count: Option<u32>,
-}
-
-impl protocol::list_delta::RowPatch<semio_s_artifact_norm_en1992_model::BarLayer> for En1992MembersLongitudinalPatch {
-    fn commit_into(&self, row: &mut semio_s_artifact_norm_en1992_model::BarLayer, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
-        if let Some(value) = &self.diameter {
-            row.diameter = value.clone();
-        }
-        if let Some(value) = &self.count {
-            row.count = value.clone();
-        }
-        Ok(())
-    }
-
-    fn absorb(&mut self, later: Self) {
-        if later.diameter.is_some() {
-            self.diameter = later.diameter;
-        }
-        if later.count.is_some() {
-            self.count = later.count;
-        }
-    }
-
-    fn inverse(&self, row: &semio_s_artifact_norm_en1992_model::BarLayer) -> Self {
-        Self {
-            diameter: self.diameter.as_ref().map(|_| row.diameter.clone()),
-            count: self.count.as_ref().map(|_| row.count.clone()),
-        }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.diameter.is_none() && self.count.is_none()
-    }
+scalar_patch! {
+    /// 🩹️ Sparse patch of the `longitudinal` row addressed by its key.
+    En1992MembersLongitudinalPatch for semio_s_artifact_norm_en1992_model::BarLayer { diameter: f64, count: u32, position: semio_s_artifact_norm_en1992_model::BarPosition, anchorage_length: f64, lap_length: f64, bond_condition: semio_s_artifact_norm_en1992_model::BondCondition, aggregate_size: f64, lap_share: f64 }
 }
 
 protocol::list_delta! {
-    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
     /// 📋️ Positional row delta of the `longitudinal` list (rows keyed by `id`).
-    pub En1992MembersLongitudinalRows { removal: En1992MembersLongitudinalRemoved, insertion: En1992MembersLongitudinalInserted, relocation: En1992MembersLongitudinalMoved, modification: En1992MembersLongitudinalModified, row: semio_s_artifact_norm_en1992_model::BarLayer, patch: En1992MembersLongitudinalPatch, key: id }
+    pub En1992MembersLongitudinalRows { removal: En1992MembersLongitudinalRemoved, insertion: En1992MembersLongitudinalInserted, relocation: En1992MembersLongitudinalMoved, modification: En1992MembersLongitudinalModified, row: semio_s_artifact_norm_en1992_model::BarLayer, patch: En1992MembersLongitudinalPatch, list: Vec<semio_s_artifact_norm_en1992_model::BarLayer>, key: String = by BarLayerKey }
 }
 
-/// 🩹️ Sparse patch of the `actions` row addressed by its key.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-#[value(rename_all = "camelCase", default)]
-pub struct En1992MembersActionsPatch {
-    pub m_k: Option<f64>,
-    pub n_k: Option<f64>,
-    pub v_k: Option<f64>,
-}
-
-impl protocol::list_delta::RowPatch<semio_s_artifact_norm_en1992_model::LoadCaseActions> for En1992MembersActionsPatch {
-    fn commit_into(&self, row: &mut semio_s_artifact_norm_en1992_model::LoadCaseActions, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
-        if let Some(value) = &self.m_k {
-            row.m_k = value.clone();
-        }
-        if let Some(value) = &self.n_k {
-            row.n_k = value.clone();
-        }
-        if let Some(value) = &self.v_k {
-            row.v_k = value.clone();
-        }
-        Ok(())
-    }
-
-    fn absorb(&mut self, later: Self) {
-        if later.m_k.is_some() {
-            self.m_k = later.m_k;
-        }
-        if later.n_k.is_some() {
-            self.n_k = later.n_k;
-        }
-        if later.v_k.is_some() {
-            self.v_k = later.v_k;
-        }
-    }
-
-    fn inverse(&self, row: &semio_s_artifact_norm_en1992_model::LoadCaseActions) -> Self {
-        Self {
-            m_k: self.m_k.as_ref().map(|_| row.m_k.clone()),
-            n_k: self.n_k.as_ref().map(|_| row.n_k.clone()),
-            v_k: self.v_k.as_ref().map(|_| row.v_k.clone()),
-        }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.m_k.is_none() && self.n_k.is_none() && self.v_k.is_none()
-    }
+scalar_patch! {
+    /// 🩹️ Sparse patch of the `actions` row addressed by its key.
+    En1992MembersActionsPatch for semio_s_artifact_norm_en1992_model::LoadCaseActions { kind: semio_s_artifact_norm_en1992_model::ActionKind, category: semio_s_artifact_norm_en1992_model::PsiCategory, source: semio_s_artifact_norm_en1992_model::ActionSource, g_k_line: f64, q_k_line: f64, point_force: f64, m_k: f64, n_k: f64, v_k: f64, t_k: f64, v_k_punch: f64 }
 }
 
 protocol::list_delta! {
-    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
     /// 📋️ Positional row delta of the `actions` list (rows keyed by `id`).
-    pub En1992MembersActionsRows { removal: En1992MembersActionsRemoved, insertion: En1992MembersActionsInserted, relocation: En1992MembersActionsMoved, modification: En1992MembersActionsModified, row: semio_s_artifact_norm_en1992_model::LoadCaseActions, patch: En1992MembersActionsPatch, key: id }
+    pub En1992MembersActionsRows { removal: En1992MembersActionsRemoved, insertion: En1992MembersActionsInserted, relocation: En1992MembersActionsMoved, modification: En1992MembersActionsModified, row: semio_s_artifact_norm_en1992_model::LoadCaseActions, patch: En1992MembersActionsPatch, list: Vec<semio_s_artifact_norm_en1992_model::LoadCaseActions>, key: String = by LoadCaseActionsKey }
 }
 
-/// 🩹️ Sparse patch of the `members` row addressed by its key.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-#[value(rename_all = "camelCase", default)]
-pub struct En1992MembersPatch {
-    pub exposure: Option<semio_s_artifact_norm_en1992_model::ExposureClass>,
-    pub width: Option<f64>,
-    pub height: Option<f64>,
-    pub effective_depth: Option<f64>,
-    pub cover: Option<f64>,
-    pub span: Option<f64>,
-    pub fire_rating: Option<semio_s_artifact_norm_en1992_model::FireRating>,
-    pub fire_axis_distance: Option<f64>,
-    pub stirrups_spacing: Option<f64>,
-    pub longitudinal: Option<En1992MembersLongitudinalRows>,
-    pub actions: Option<En1992MembersActionsRows>,
+scalar_patch! {
+    /// 🩹️ Sparse patch of the `section_points` row addressed by its key.
+    En1992MembersSectionPointsPatch for semio_s_artifact_norm_en1992_model::SectionPoint { y: f64, z: f64 }
 }
 
-impl protocol::list_delta::RowPatch<semio_s_artifact_norm_en1992_model::RcMember> for En1992MembersPatch {
-    fn commit_into(&self, row: &mut semio_s_artifact_norm_en1992_model::RcMember, capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
-        if let Some(value) = &self.exposure {
-            row.exposure = value.clone();
-        }
-        if let Some(value) = &self.width {
-            row.width = value.clone();
-        }
-        if let Some(value) = &self.height {
-            row.height = value.clone();
-        }
-        if let Some(value) = &self.effective_depth {
-            row.effective_depth = value.clone();
-        }
-        if let Some(value) = &self.cover {
-            row.cover = value.clone();
-        }
-        if let Some(value) = &self.span {
-            row.span = value.clone();
-        }
-        if let Some(value) = &self.fire_rating {
-            row.fire.as_mut().ok_or_else(|| missing_target("fire"))?.rating = value.clone();
-        }
-        if let Some(value) = &self.fire_axis_distance {
-            row.fire.as_mut().ok_or_else(|| missing_target("fire"))?.axis_distance = value.clone();
-        }
-        if let Some(value) = &self.stirrups_spacing {
-            row.stirrups.as_mut().ok_or_else(|| missing_target("stirrups"))?.spacing = value.clone();
-        }
-        if let Some(rows) = &self.longitudinal {
-            row.longitudinal = rows.commit_onto(&row.longitudinal, capability).map_err(|error| error.under(["longitudinal"]))?;
-        }
-        if let Some(rows) = &self.actions {
-            row.actions = rows.commit_onto(&row.actions, capability).map_err(|error| error.under(["actions"]))?;
-        }
-        Ok(())
-    }
+protocol::list_delta! {
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
+    /// 📋️ Positional row delta of the `section_points` list (rows keyed by `id`).
+    pub En1992MembersSectionPointsRows { removal: En1992MembersSectionPointsRemoved, insertion: En1992MembersSectionPointsInserted, relocation: En1992MembersSectionPointsMoved, modification: En1992MembersSectionPointsModified, row: semio_s_artifact_norm_en1992_model::SectionPoint, patch: En1992MembersSectionPointsPatch, list: Vec<semio_s_artifact_norm_en1992_model::SectionPoint>, key: String = by SectionPointKey }
+}
 
-    fn absorb(&mut self, later: Self) {
-        if later.exposure.is_some() {
-            self.exposure = later.exposure;
-        }
-        if later.width.is_some() {
-            self.width = later.width;
-        }
-        if later.height.is_some() {
-            self.height = later.height;
-        }
-        if later.effective_depth.is_some() {
-            self.effective_depth = later.effective_depth;
-        }
-        if later.cover.is_some() {
-            self.cover = later.cover;
-        }
-        if later.span.is_some() {
-            self.span = later.span;
-        }
-        if later.fire_rating.is_some() {
-            self.fire_rating = later.fire_rating;
-        }
-        if later.fire_axis_distance.is_some() {
-            self.fire_axis_distance = later.fire_axis_distance;
-        }
-        if later.stirrups_spacing.is_some() {
-            self.stirrups_spacing = later.stirrups_spacing;
-        }
-        if let Some(theirs) = later.longitudinal {
-            match self.longitudinal.as_mut() {
-                Some(mine) => mine.absorb(theirs),
-                None => self.longitudinal = Some(theirs),
-            }
-        }
-        if let Some(theirs) = later.actions {
-            match self.actions.as_mut() {
-                Some(mine) => mine.absorb(theirs),
-                None => self.actions = Some(theirs),
-            }
-        }
-        self.longitudinal = self.longitudinal.take().filter(|rows| !rows.is_empty());
-        self.actions = self.actions.take().filter(|rows| !rows.is_empty());
-    }
+scalar_patch! {
+    /// 🩹️ Sparse patch of the `bars` row addressed by its key.
+    En1992MembersBarsPatch for semio_s_artifact_norm_en1992_model::BarPoint { layer_id: String, y: f64, z: f64, diameter: f64, length: f64, bend: semio_s_artifact_norm_en1992_model::BarBend }
+}
 
-    fn inverse(&self, row: &semio_s_artifact_norm_en1992_model::RcMember) -> Self {
-        Self {
-            exposure: self.exposure.as_ref().map(|_| row.exposure.clone()),
-            width: self.width.as_ref().map(|_| row.width.clone()),
-            height: self.height.as_ref().map(|_| row.height.clone()),
-            effective_depth: self.effective_depth.as_ref().map(|_| row.effective_depth.clone()),
-            cover: self.cover.as_ref().map(|_| row.cover.clone()),
-            span: self.span.as_ref().map(|_| row.span.clone()),
-            fire_rating: self.fire_rating.as_ref().and_then(|_| (|| Some(row.fire.as_ref()?.rating.clone()))()),
-            fire_axis_distance: self.fire_axis_distance.as_ref().and_then(|_| (|| Some(row.fire.as_ref()?.axis_distance.clone()))()),
-            stirrups_spacing: self.stirrups_spacing.as_ref().and_then(|_| (|| Some(row.stirrups.as_ref()?.spacing.clone()))()),
-            longitudinal: self.longitudinal.as_ref().map(|rows| rows.inverse(&row.longitudinal)).filter(|rows| !rows.is_empty()),
-            actions: self.actions.as_ref().map(|rows| rows.inverse(&row.actions)).filter(|rows| !rows.is_empty()),
-        }
-    }
+protocol::list_delta! {
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
+    /// 📋️ Positional row delta of the `bars` list (rows keyed by `id`).
+    pub En1992MembersBarsRows { removal: En1992MembersBarsRemoved, insertion: En1992MembersBarsInserted, relocation: En1992MembersBarsMoved, modification: En1992MembersBarsModified, row: semio_s_artifact_norm_en1992_model::BarPoint, patch: En1992MembersBarsPatch, list: Vec<semio_s_artifact_norm_en1992_model::BarPoint>, key: String = by BarPointKey }
+}
 
-    fn is_empty(&self) -> bool {
-        self.exposure.is_none() && self.width.is_none() && self.height.is_none() && self.effective_depth.is_none() && self.cover.is_none() && self.span.is_none() && self.fire_rating.is_none() && self.fire_axis_distance.is_none() && self.stirrups_spacing.is_none() && self.longitudinal.as_ref().map_or(true, |rows| rows.is_empty()) && self.actions.as_ref().map_or(true, |rows| rows.is_empty())
+scalar_patch! {
+    /// 🩹️ Sparse patch of the `tendon_points` row addressed by its key.
+    En1992MembersTendonPointsPatch for semio_s_artifact_norm_en1992_model::TendonPoint { x: f64, y: f64, z: f64 }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
+    /// 📋️ Positional row delta of the `tendon_points` list (rows keyed by `id`).
+    pub En1992MembersTendonPointsRows { removal: En1992MembersTendonPointsRemoved, insertion: En1992MembersTendonPointsInserted, relocation: En1992MembersTendonPointsMoved, modification: En1992MembersTendonPointsModified, row: semio_s_artifact_norm_en1992_model::TendonPoint, patch: En1992MembersTendonPointsPatch, list: Vec<semio_s_artifact_norm_en1992_model::TendonPoint>, key: String = by TendonPointKey }
+}
+
+scalar_patch! {
+    /// 🩹️ Sparse patch of the `stud_rows` row addressed by its key.
+    En1992MembersStudRowsPatch for semio_s_artifact_norm_en1992_model::StudRow { angle: f64, count: u32, spacing_first: f64, spacing_radial: f64, diameter: f64 }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
+    /// 📋️ Positional row delta of the `stud_rows` list (rows keyed by `id`).
+    pub En1992MembersStudRowsRows { removal: En1992MembersStudRowsRemoved, insertion: En1992MembersStudRowsInserted, relocation: En1992MembersStudRowsMoved, modification: En1992MembersStudRowsModified, row: semio_s_artifact_norm_en1992_model::StudRow, patch: En1992MembersStudRowsPatch, list: Vec<semio_s_artifact_norm_en1992_model::StudRow>, key: String = by StudRowKey }
+}
+
+scalar_patch! {
+    /// 🩹️ Sparse patch of the `openings` row addressed by its key.
+    En1992MembersOpeningsPatch for semio_s_artifact_norm_en1992_model::Opening { x: f64, y: f64, width: f64, depth: f64 }
+}
+protocol::list_delta! {
+    /// 📋️ Positional row delta of the `openings` list (rows keyed by `id`).
+    pub En1992MembersOpeningsRows { removal: En1992MembersOpeningsRemoved, insertion: En1992MembersOpeningsInserted, relocation: En1992MembersOpeningsMoved, modification: En1992MembersOpeningsModified, row: semio_s_artifact_norm_en1992_model::Opening, patch: En1992MembersOpeningsPatch, list: Vec<semio_s_artifact_norm_en1992_model::Opening>, key: String = by OpeningKey }
+}
+nested_patch! {
+    /// 🩹️ Sparse patch of the `members` row addressed by its key.
+    En1992MembersPatch for semio_s_artifact_norm_en1992_model::RcMember {
+        set { label_en: String, label_de: String, kind: semio_s_artifact_norm_en1992_model::MemberKind, concrete_grade_id: String, reinforcement_grade_id: String, prestress_steel_id: String, exposure: semio_s_artifact_norm_en1992_model::ExposureClass, width: f64, height: f64, effective_depth: f64, cover: f64, span: f64, support: semio_s_artifact_norm_en1992_model::SupportCondition, buckling_length: f64, use_fem: bool, udl: f64, deflection_sensitive: bool, hd_over_h: f64, liquid_sigma_s: f64, liquid_rho_p_eff: f64, liquid_f_ct_eff: f64, liquid_s_r_max: f64, bridge_sigma_c: f64, bridge_delta_sigma_s: f64, relative_humidity: f64 , bearing_width: f64}
+        within { stirrups_diameter => stirrups.diameter: f64, stirrups_spacing => stirrups.spacing: f64, stirrups_legs => stirrups.legs: u32, punching_column_width => punching.column_width: f64, punching_column_depth => punching.column_depth: f64, punching_column_position => punching.column_position: semio_s_artifact_norm_en1992_model::ColumnPosition, punching_asw => punching.asw: f64, punching_beta_method => punching.beta_method: semio_s_artifact_norm_en1992_model::PunchingBetaMethod, punching_moment_c1 => punching.moment_c1: f64, punching_moment_c2 => punching.moment_c2: f64, prestress_force => prestress.force: f64, prestress_area => prestress.area: f64, prestress_eccentricity => prestress.eccentricity: f64, prestress_loss_ratio => prestress.loss_ratio: f64, fire_rating => fire.rating: semio_s_artifact_norm_en1992_model::FireRating, fire_axis_distance => fire.axis_distance: f64, fire_slab_system => fire.slab_system: semio_s_artifact_norm_en1992_model::SlabFireSystem }
+        optional { tightness: semio_s_artifact_norm_en1992_model::TightnessClass => clear_tightness }
+        rows { longitudinal: En1992MembersLongitudinalRows = "longitudinal", actions: En1992MembersActionsRows = "actions", section_points: En1992MembersSectionPointsRows = "sectionPoints", bars: En1992MembersBarsRows = "bars", tendon_points: En1992MembersTendonPointsRows = "tendonPoints", stud_rows: En1992MembersStudRowsRows = "studRows", openings: En1992MembersOpeningsRows = "openings" }
     }
 }
 
 protocol::list_delta! {
-    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
     /// 📋️ Positional row delta of the `members` list (rows keyed by `id`).
-    pub En1992MembersRows { removal: En1992MembersRemoved, insertion: En1992MembersInserted, relocation: En1992MembersMoved, modification: En1992MembersModified, row: semio_s_artifact_norm_en1992_model::RcMember, patch: En1992MembersPatch, key: id }
+    pub En1992MembersRows { removal: En1992MembersRemoved, insertion: En1992MembersInserted, relocation: En1992MembersMoved, modification: En1992MembersModified, row: semio_s_artifact_norm_en1992_model::RcMember, patch: En1992MembersPatch, list: Vec<semio_s_artifact_norm_en1992_model::RcMember>, key: String = by RcMemberKey }
 }
 
-/// 🩹️ Sparse patch of the `anchors` row addressed by its key.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
-#[value(rename_all = "camelCase", default)]
-pub struct En1992AnchorsPatch {
-    pub h_ef: Option<f64>,
-    pub a_s: Option<f64>,
+scalar_patch! {
+    /// 🩹️ Sparse patch of the `actions` row addressed by its key.
+    En1992AnchorsActionsPatch for semio_s_artifact_norm_en1992_model::LoadCaseActions { kind: semio_s_artifact_norm_en1992_model::ActionKind, category: semio_s_artifact_norm_en1992_model::PsiCategory, source: semio_s_artifact_norm_en1992_model::ActionSource, g_k_line: f64, q_k_line: f64, point_force: f64, m_k: f64, n_k: f64, v_k: f64, t_k: f64, v_k_punch: f64 }
 }
 
-impl protocol::list_delta::RowPatch<semio_s_artifact_norm_en1992_model::Anchor> for En1992AnchorsPatch {
-    fn commit_into(&self, row: &mut semio_s_artifact_norm_en1992_model::Anchor, _capability: protocol::ApplyCapability) -> Result<(), protocol::MutationApplyError> {
-        if let Some(value) = &self.h_ef {
-            row.h_ef = value.clone();
-        }
-        if let Some(value) = &self.a_s {
-            row.a_s = value.clone();
-        }
-        Ok(())
-    }
+protocol::list_delta! {
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
+    /// 📋️ Positional row delta of the `actions` list (rows keyed by `id`).
+    pub En1992AnchorsActionsRows { removal: En1992AnchorsActionsRemoved, insertion: En1992AnchorsActionsInserted, relocation: En1992AnchorsActionsMoved, modification: En1992AnchorsActionsModified, row: semio_s_artifact_norm_en1992_model::LoadCaseActions, patch: En1992AnchorsActionsPatch, list: Vec<semio_s_artifact_norm_en1992_model::LoadCaseActions>, key: String = by LoadCaseActionsKey }
+}
 
-    fn absorb(&mut self, later: Self) {
-        if later.h_ef.is_some() {
-            self.h_ef = later.h_ef;
-        }
-        if later.a_s.is_some() {
-            self.a_s = later.a_s;
-        }
-    }
-
-    fn inverse(&self, row: &semio_s_artifact_norm_en1992_model::Anchor) -> Self {
-        Self {
-            h_ef: self.h_ef.as_ref().map(|_| row.h_ef.clone()),
-            a_s: self.a_s.as_ref().map(|_| row.a_s.clone()),
-        }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.h_ef.is_none() && self.a_s.is_none()
+nested_patch! {
+    /// 🩹️ Sparse patch of the `anchors` row addressed by its key.
+    En1992AnchorsPatch for semio_s_artifact_norm_en1992_model::Anchor {
+        set { h_ef: f64, cracked: bool, f_uk: f64, f_yk: f64, a_s: f64, d: f64, c1: f64, f_ck: f64, head_diameter: f64 }
+        within {  }
+        optional {  }
+        rows { actions: En1992AnchorsActionsRows = "actions" }
     }
 }
 
 protocol::list_delta! {
-    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
     /// 📋️ Positional row delta of the `anchors` list (rows keyed by `id`).
-    pub En1992AnchorsRows { removal: En1992AnchorsRemoved, insertion: En1992AnchorsInserted, relocation: En1992AnchorsMoved, modification: En1992AnchorsModified, row: semio_s_artifact_norm_en1992_model::Anchor, patch: En1992AnchorsPatch, key: id }
+    pub En1992AnchorsRows { removal: En1992AnchorsRemoved, insertion: En1992AnchorsInserted, relocation: En1992AnchorsMoved, modification: En1992AnchorsModified, row: semio_s_artifact_norm_en1992_model::Anchor, patch: En1992AnchorsPatch, list: Vec<semio_s_artifact_norm_en1992_model::Anchor>, key: String = by AnchorKey }
+}
+
+scalar_patch! {
+    /// 🩹️ Sparse patch of the `placements` row addressed by its key.
+    En1992PlacementsPatch for semio_s_artifact_norm_en1992_model::Placement { x: f64, y: f64, z: f64, yaw: f64 }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
+    /// 📋️ Positional row delta of the `placements` list (rows keyed by `id`).
+    pub En1992PlacementsRows { removal: En1992PlacementsRemoved, insertion: En1992PlacementsInserted, relocation: En1992PlacementsMoved, modification: En1992PlacementsModified, row: semio_s_artifact_norm_en1992_model::Placement, patch: En1992PlacementsPatch, list: Vec<semio_s_artifact_norm_en1992_model::Placement>, key: String = by PlacementKey }
 }
 
 /// 🔺️ Keyed sparse diff of the En1992 artifact: scalar setters, keyed row diffs and per-field section patches.
 #[derive(Clone, Debug, Default, PartialEq, framework_schema::ArtifactSchema, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.norm.en1992")]
 pub struct En1992Diff {
@@ -457,7 +303,7 @@ pub struct En1992Diff {
     #[state(artifact)]
     pub delta_c_dev: Option<f64>,
     #[state(artifact)]
-    pub cement_type: Option<String>,
+    pub cement_type: Option<semio_s_artifact_norm_en1992_model::CementClass>,
     #[state(artifact)]
     pub concrete_grades: Option<En1992ConcreteGradesRows>,
     #[state(artifact)]
@@ -468,6 +314,12 @@ pub struct En1992Diff {
     pub members: Option<En1992MembersRows>,
     #[state(artifact)]
     pub anchors: Option<En1992AnchorsRows>,
+    #[state(artifact)]
+    pub placements: Option<En1992PlacementsRows>,
+    #[state(artifact)]
+    pub cases: semio_s_plugin_norm_compliance::design_case::CaseRowDelta,
+    #[state(artifact)]
+    pub reliability_class: Option<semio_s_plugin_norm_compliance::ReliabilityClass>,
 }
 
 impl protocol::MutationDiff<En1992Snapshot> for En1992Diff {}
@@ -476,6 +328,9 @@ impl protocol::ColdMutationDiff<En1992Snapshot> for En1992Diff {
     fn absorb(&mut self, other: Self) {
         if other.annex.is_some() {
             self.annex = other.annex;
+        }
+        if other.reliability_class.is_some() {
+            self.reliability_class = other.reliability_class;
         }
         if other.title.is_some() {
             self.title = other.title;
@@ -524,6 +379,14 @@ impl protocol::ColdMutationDiff<En1992Snapshot> for En1992Diff {
             }
             self.anchors = self.anchors.take().filter(|rows| !rows.is_empty());
         }
+        if let Some(theirs) = other.placements {
+            match self.placements.as_mut() {
+                Some(mine) => mine.absorb(theirs),
+                None => self.placements = Some(theirs),
+            }
+            self.placements = self.placements.take().filter(|rows| !rows.is_empty());
+        }
+        self.cases.absorb(other.cases);
     }
 
     fn apply(&self, unpublished: &mut En1992Snapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
@@ -531,6 +394,9 @@ impl protocol::ColdMutationDiff<En1992Snapshot> for En1992Diff {
         let mut next = base.clone();
         if let Some(value) = &self.annex {
             next.annex = value.clone();
+        }
+        if let Some(value) = &self.reliability_class {
+            next.reliability_class = value.clone();
         }
         if let Some(value) = &self.title {
             next.title = value.clone();
@@ -559,6 +425,10 @@ impl protocol::ColdMutationDiff<En1992Snapshot> for En1992Diff {
         if let Some(rows) = &self.anchors {
             next.anchors = rows.commit_onto(&base.anchors, capability).map_err(|error| error.under(["anchors"]))?;
         }
+        if let Some(rows) = &self.placements {
+            next.placements = rows.commit_onto(&base.placements, capability).map_err(|error| error.under(["placements"]))?;
+        }
+        next.cases = self.cases.commit_onto(&base.cases, capability).map_err(|error| error.under(["cases"]))?;
         *unpublished = next;
         Ok(())
     }
@@ -566,7 +436,7 @@ impl protocol::ColdMutationDiff<En1992Snapshot> for En1992Diff {
 
 impl protocol::DiffAlgebra<En1992Snapshot> for En1992Diff {
     fn is_empty(&self) -> bool {
-        self.annex.is_none() && self.title.is_none() && self.design_working_life_years.is_none() && self.delta_c_dev.is_none() && self.cement_type.is_none() && self.concrete_grades.as_ref().map_or(true, |rows| rows.is_empty()) && self.reinforcement_grades.as_ref().map_or(true, |rows| rows.is_empty()) && self.prestress_steels.as_ref().map_or(true, |rows| rows.is_empty()) && self.members.as_ref().map_or(true, |rows| rows.is_empty()) && self.anchors.as_ref().map_or(true, |rows| rows.is_empty())
+        self.annex.is_none() && self.reliability_class.is_none() && self.title.is_none() && self.design_working_life_years.is_none() && self.delta_c_dev.is_none() && self.cement_type.is_none() && self.concrete_grades.as_ref().map_or(true, |rows| rows.is_empty()) && self.reinforcement_grades.as_ref().map_or(true, |rows| rows.is_empty()) && self.prestress_steels.as_ref().map_or(true, |rows| rows.is_empty()) && self.members.as_ref().map_or(true, |rows| rows.is_empty()) && self.anchors.as_ref().map_or(true, |rows| rows.is_empty()) && self.placements.as_ref().map_or(true, |rows| rows.is_empty()) && self.cases.is_empty()
     }
 }
 
@@ -574,6 +444,7 @@ impl protocol::ColdDiffAlgebra<En1992Snapshot> for En1992Diff {
     fn inverse(&self, base: &En1992Snapshot) -> Self {
         Self {
             annex: self.annex.as_ref().map(|_| base.annex.clone()),
+            reliability_class: self.reliability_class.as_ref().map(|_| base.reliability_class.clone()),
             title: self.title.as_ref().map(|_| base.title.clone()),
             design_working_life_years: self.design_working_life_years.as_ref().map(|_| base.design_working_life_years.clone()),
             delta_c_dev: self.delta_c_dev.as_ref().map(|_| base.delta_c_dev.clone()),
@@ -583,11 +454,13 @@ impl protocol::ColdDiffAlgebra<En1992Snapshot> for En1992Diff {
             prestress_steels: self.prestress_steels.as_ref().map(|rows| rows.inverse(&base.prestress_steels)).filter(|rows| !rows.is_empty()),
             members: self.members.as_ref().map(|rows| rows.inverse(&base.members)).filter(|rows| !rows.is_empty()),
             anchors: self.anchors.as_ref().map(|rows| rows.inverse(&base.anchors)).filter(|rows| !rows.is_empty()),
+            placements: self.placements.as_ref().map(|rows| rows.inverse(&base.placements)).filter(|rows| !rows.is_empty()),
+            cases: self.cases.inverse(&base.cases),
         }
     }
 }
 
 //#region 🍃️FacetLeaves
 /// 🍃️ The five handcrafted leaves of the `diff` schema facet.
-pub const DIFF_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };
+pub const DIFF_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: semio_s_artifact_norm_en1992_diff_typescript::LEAF, graphql: semio_s_artifact_norm_en1992_diff_graphql::LEAF, json_schema: semio_s_artifact_norm_en1992_diff_json_schema::LEAF, proto: semio_s_artifact_norm_en1992_diff_proto::LEAF };
 //#endregion 🍃️FacetLeaves

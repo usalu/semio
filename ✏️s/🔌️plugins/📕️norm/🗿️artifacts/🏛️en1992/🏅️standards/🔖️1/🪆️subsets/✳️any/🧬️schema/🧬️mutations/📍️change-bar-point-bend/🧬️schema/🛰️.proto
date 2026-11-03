@@ -1,0 +1,7 @@
+syntax = "proto3";
+package semio.s.norm.en1992.mutation.change_bar_point_bend;
+message ChangeBarPointBend {
+  string member_id = 1;
+  string bar_id = 2;
+  BarBend new_bend = 3;
+}

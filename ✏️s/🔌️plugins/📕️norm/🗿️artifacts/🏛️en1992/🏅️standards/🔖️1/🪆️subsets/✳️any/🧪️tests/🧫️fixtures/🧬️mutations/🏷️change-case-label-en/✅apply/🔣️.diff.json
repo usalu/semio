@@ -1,0 +1,41 @@
+{
+  "annex": null,
+  "reliabilityClass": null,
+  "title": null,
+  "designWorkingLifeYears": null,
+  "deltaCDev": null,
+  "cementType": null,
+  "concreteGrades": null,
+  "reinforcementGrades": null,
+  "prestressSteels": null,
+  "members": null,
+  "anchors": null,
+  "placements": null,
+  "cases": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "case-m04",
+        "patch": {
+          "labelEn": "Strength development of the frame concrete (revised)",
+          "labelDe": null,
+          "entryId": null,
+          "numbers": {
+            "removed": [],
+            "inserted": [],
+            "moved": [],
+            "modified": []
+          },
+          "texts": {
+            "removed": [],
+            "inserted": [],
+            "moved": [],
+            "modified": []
+          }
+        }
+      }
+    ]
+  }
+}

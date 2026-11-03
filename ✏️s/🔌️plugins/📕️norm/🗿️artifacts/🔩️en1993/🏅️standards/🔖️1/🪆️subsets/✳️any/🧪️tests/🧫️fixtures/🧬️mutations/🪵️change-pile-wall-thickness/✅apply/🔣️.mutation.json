@@ -1,0 +1,6 @@
+{
+  "ChangePileWallThickness": {
+    "id": "pile-1",
+    "newWallThickness": 1.5
+  }
+}

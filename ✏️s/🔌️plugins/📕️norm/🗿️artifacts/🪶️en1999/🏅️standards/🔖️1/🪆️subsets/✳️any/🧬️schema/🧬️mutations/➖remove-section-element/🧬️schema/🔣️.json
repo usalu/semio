@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/remove-section-element/schema.json",
+  "title": "RemoveSectionElement",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "sectionId",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "removeSectionElement"
+    },
+    "sectionId": {
+      "type": "string",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Section",
+          "de": "Querschnitt"
+        },
+        "description": {
+          "en": "The section that owns the row, by id.",
+          "de": "Das Elternelement (Querschnitt), per Kennung."
+        },
+        "group": "target",
+        "order": 10,
+        "widget": "reference",
+        "ref": {
+          "kind": "sections"
+        }
+      }
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Section element",
+          "de": "Querschnittsteil"
+        },
+        "description": {
+          "en": "The section element this mutation removes.",
+          "de": "Entfernt wird: Querschnittsteil."
+        },
+        "group": "target",
+        "order": 20,
+        "widget": "reference",
+        "ref": {
+          "kind": "section-element"
+        }
+      }
+    }
+  }
+}

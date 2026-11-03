@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/remove-shell-action/schema.json",
+  "title": "RemoveShellAction",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "shellId",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "removeShellAction"
+    },
+    "shellId": {
+      "type": "string",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Shell",
+          "de": "Schale"
+        },
+        "description": {
+          "en": "The shell that owns the row, by id.",
+          "de": "Das Elternelement (Schale), per Kennung."
+        },
+        "group": "target",
+        "order": 10,
+        "widget": "reference",
+        "ref": {
+          "kind": "shells"
+        }
+      }
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Shell action",
+          "de": "Schaleneinwirkung"
+        },
+        "description": {
+          "en": "The shell action this mutation removes.",
+          "de": "Entfernt wird: Schaleneinwirkung."
+        },
+        "group": "target",
+        "order": 20,
+        "widget": "reference",
+        "ref": {
+          "kind": "shell-action"
+        }
+      }
+    }
+  }
+}

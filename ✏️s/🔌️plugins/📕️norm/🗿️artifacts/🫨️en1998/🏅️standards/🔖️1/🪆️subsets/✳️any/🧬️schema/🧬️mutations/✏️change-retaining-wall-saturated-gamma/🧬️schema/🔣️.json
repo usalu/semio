@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-retaining-wall-saturated-gamma/schema.json",
+  "title": "ChangeRetainingWallSaturatedGamma",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "index",
+    "newSaturatedGamma"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeRetainingWallSaturatedGamma"
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Retaining wall",
+          "de": "Stützwand"
+        },
+        "description": {
+          "en": "Zero-based position of the retaining wall in its list.",
+          "de": "Nullbasierte Position in der Liste (Stützwand)."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newSaturatedGamma": {
+      "type": "number",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Saturated unit weight γ_sat of the backfill below the water (0 = the soil unit weight γ)",
+          "de": "Wichte unter Wasser γ_sat der Hinterfüllung (0 = Wichte des Bodens γ)"
+        },
+        "group": "value",
+        "order": 20,
+        "widget": "stepper",
+        "step": 0.001,
+        "precision": 3
+      }
+    }
+  }
+}

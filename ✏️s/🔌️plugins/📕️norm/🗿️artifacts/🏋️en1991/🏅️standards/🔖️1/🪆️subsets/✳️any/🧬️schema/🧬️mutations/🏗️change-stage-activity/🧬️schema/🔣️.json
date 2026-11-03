@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-stage-activity/schema.json",
+  "title": "ChangeStageActivity",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newActivity"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Construction stage",
+          "de": "Bauphase"
+        },
+        "description": {
+          "en": "The construction stage this mutation addresses, by id.",
+          "de": "Das adressierte Element (Bauphase), per Kennung."
+        },
+        "ref": {
+          "kind": "construction-stage"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newActivity": {
+      "type": "string",
+      "x-semio-ui": {
+        "label": {
+          "en": "activity",
+          "de": "Tätigkeit"
+        },
+        "widget": "text",
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

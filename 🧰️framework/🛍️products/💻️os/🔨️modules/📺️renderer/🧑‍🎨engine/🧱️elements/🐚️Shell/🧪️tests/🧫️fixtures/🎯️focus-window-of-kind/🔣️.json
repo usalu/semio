@@ -1,0 +1,188 @@
+{
+  "action": "focusWindow",
+  "argument": "windowKindId",
+  "windowKinds": [
+    {
+      "id": "a",
+      "label": {
+        "en": "Outline",
+        "de": "Struktur"
+      }
+    },
+    {
+      "id": "b",
+      "label": {
+        "en": "Properties",
+        "de": "Eigenschaften"
+      }
+    },
+    {
+      "id": "c",
+      "label": {
+        "en": "Model",
+        "de": "Modell"
+      }
+    }
+  ],
+  "initiallyOpen": [
+    "a"
+  ],
+  "announcements": [
+    {
+      "locale": "en",
+      "outcome": "opened",
+      "kind": "b",
+      "code": "shell.window-focus.announced",
+      "message": "Properties window opened and focused"
+    },
+    {
+      "locale": "en",
+      "outcome": "raised",
+      "kind": "b",
+      "code": "shell.window-focus.announced",
+      "message": "Properties window focused"
+    },
+    {
+      "locale": "en",
+      "outcome": "refused",
+      "kind": "b",
+      "code": "shell.window-focus.refused",
+      "message": "The b window cannot be shown here"
+    },
+    {
+      "locale": "de",
+      "outcome": "opened",
+      "kind": "b",
+      "code": "shell.window-focus.announced",
+      "message": "Fenster Eigenschaften geöffnet und fokussiert"
+    },
+    {
+      "locale": "de",
+      "outcome": "raised",
+      "kind": "b",
+      "code": "shell.window-focus.announced",
+      "message": "Fenster Eigenschaften fokussiert"
+    },
+    {
+      "locale": "de",
+      "outcome": "refused",
+      "kind": "b",
+      "code": "shell.window-focus.refused",
+      "message": "Das Fenster b kann hier nicht angezeigt werden"
+    }
+  ],
+  "deviceLayouts": [
+    {
+      "id": "app-desktop",
+      "device": "desktop",
+      "kinds": [
+        "a",
+        "b",
+        "c"
+      ]
+    },
+    {
+      "id": "app-mobile",
+      "device": "mobile",
+      "kinds": [
+        "b",
+        "c"
+      ]
+    },
+    {
+      "id": "app-tablet",
+      "device": "tablet",
+      "kinds": [
+        "b",
+        "c"
+      ]
+    }
+  ],
+  "deviceRows": [
+    {
+      "id": "desktop-holds-requested",
+      "device": "desktop",
+      "requested": "a",
+      "fallback": "c",
+      "target": "a"
+    },
+    {
+      "id": "desktop-ignores-unused-fallback",
+      "device": "desktop",
+      "requested": "b",
+      "target": "b"
+    },
+    {
+      "id": "mobile-maps-to-fallback",
+      "device": "mobile",
+      "requested": "a",
+      "fallback": "c",
+      "target": "c"
+    },
+    {
+      "id": "mobile-holds-requested",
+      "device": "mobile",
+      "requested": "b",
+      "fallback": "c",
+      "target": "b"
+    },
+    {
+      "id": "mobile-refuses-without-fallback",
+      "device": "mobile",
+      "requested": "a",
+      "target": null
+    },
+    {
+      "id": "tablet-maps-to-fallback",
+      "device": "tablet",
+      "requested": "a",
+      "fallback": "c",
+      "target": "c"
+    },
+    {
+      "id": "tablet-refuses-when-fallback-is-absent-too",
+      "device": "tablet",
+      "requested": "a",
+      "fallback": "a",
+      "target": null
+    },
+    {
+      "id": "tablet-without-device-layouts-keeps-everything",
+      "device": "tablet",
+      "withoutDeviceLayouts": true,
+      "requested": "a",
+      "target": "a"
+    }
+  ],
+  "unavailable": [
+    {
+      "locale": "en",
+      "device": "mobile",
+      "kind": "a",
+      "code": "shell.window-focus.refused",
+      "message": "The Outline window is not part of the mobile layout"
+    },
+    {
+      "locale": "en",
+      "device": "tablet",
+      "kind": "a",
+      "code": "shell.window-focus.refused",
+      "message": "The Outline window is not part of the tablet layout"
+    },
+    {
+      "locale": "de",
+      "device": "mobile",
+      "kind": "a",
+      "code": "shell.window-focus.refused",
+      "message": "Das Fenster Struktur gehört nicht zum Layout Mobilgerät"
+    },
+    {
+      "locale": "de",
+      "device": "tablet",
+      "kind": "a",
+      "code": "shell.window-focus.refused",
+      "message": "Das Fenster Struktur gehört nicht zum Layout Tablet"
+    }
+  ],
+  "fallbackArgument": "fallbackWindowKindId"
+}

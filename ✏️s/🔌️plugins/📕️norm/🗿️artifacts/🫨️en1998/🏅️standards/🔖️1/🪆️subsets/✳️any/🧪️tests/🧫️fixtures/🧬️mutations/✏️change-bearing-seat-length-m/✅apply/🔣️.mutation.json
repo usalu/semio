@@ -1,0 +1,5 @@
+{
+  "mutation": "changeBearingSeatLengthM",
+  "id": "bear-1",
+  "newSeatLengthM": 1.2
+}

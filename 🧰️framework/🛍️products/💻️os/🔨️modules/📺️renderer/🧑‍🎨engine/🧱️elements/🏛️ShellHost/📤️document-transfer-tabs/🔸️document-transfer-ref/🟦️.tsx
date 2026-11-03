@@ -1,6 +1,8 @@
 /** 🔸️ The document transfer ref phase of useDocumentTransferAndTabs. */
 import { useCallback, useEffect, useMemo, useRef } from "../../../⚛️react-port/🟦️.ts";
-import { type LocalizedLabel, panelTabKindId, resolveWindowActions, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID } from "@semio-tech/framework";
+import { FOCUS_ROW_CONTROL_ACTION_ID, FOCUS_ROW_CONTROL_ARG_ROW, type LocalizedLabel, panelTabKindId, resolveWindowActions, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID } from "@semio-tech/framework";
+import { focusedRowKeyV1, isFocusRowControlKeyV1 } from "../../🎯️focus-row-control/🟦️.ts";
+import { handleGripFocusKeyV1 } from "../../🎯️grip-focus/🟦️.ts";
 import { KEYBINDING_UNOWNED_CODE, keybindingUnownedTextV1, modeLayoutStacksV1, reservedShellChordsV1, resolveKeybindingTargetWindowV1, type WindowScopeInstanceV1, type WindowScopeKindV1, type WindowScopeLayoutNodeV1 } from "../../⌨️window-scope/🟦️.ts";
 import { SHELL_KEYBINDINGS, formatKeybindingShortcut, useShellKeydown } from "@semio-tech/ui-react";
 import { localDocumentOwnerIdentityForSessionV1 } from "../../../🗣️Interpreter/🧭️local-document-owner/🟦️.ts";
@@ -68,6 +70,18 @@ export function useDocumentTransferRefState({ exportDocumentArchive, importDocum
         const kind = keyApp.windowKinds.find((entry) => entry.id === windowKindId);
         return kind ? resolveWindowActions(keyApp, kind).find((action) => action.id === actionId) : undefined;
       };
+      if (handleGripFocusKeyV1(event)) {
+        event.preventDefault();
+        return;
+      }
+      if (isFocusRowControlKeyV1(event)) {
+        const rowKey = focusedRowKeyV1(event.target);
+        if (rowKey !== null) {
+          event.preventDefault();
+          void onAction({ controllerId: keyApp.controllerId, action: FOCUS_ROW_CONTROL_ACTION_ID, args: { [FOCUS_ROW_CONTROL_ARG_ROW]: rowKey } });
+          return;
+        }
+      }
       if (event.key === "Escape") {
         const windowId = activeWindowIdRef.current;
         if (windowId && activeUtilityByWindowIdRef.current[windowId]) {

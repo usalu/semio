@@ -1,0 +1,5 @@
+{
+  "mutation": "changePierSteelFykMpa",
+  "id": "pier-1",
+  "newSteelFykMpa": 1.5
+}

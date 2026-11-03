@@ -1,0 +1,5 @@
+type ChangeOpeningWidth {
+  memberId: String!
+  openingId: String!
+  newWidth: Float!
+}

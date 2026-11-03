@@ -1,0 +1,5 @@
+{
+  "mutation": "changePileDynamicResMean",
+  "id": "pile-P1",
+  "newDynamicResistanceMean": 1.5
+}

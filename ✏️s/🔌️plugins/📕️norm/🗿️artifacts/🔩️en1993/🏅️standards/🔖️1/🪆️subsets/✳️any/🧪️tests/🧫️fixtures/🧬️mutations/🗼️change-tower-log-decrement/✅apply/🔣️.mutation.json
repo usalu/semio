@@ -1,0 +1,6 @@
+{
+  "ChangeTowerLogDecrement": {
+    "id": "tw-1",
+    "newLogDecrement": 1.5
+  }
+}

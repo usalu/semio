@@ -1,0 +1,6 @@
+{
+  "mutation": "changeSheetActionGKLine",
+  "coldFormedId": "sheet-pass",
+  "actionId": "G-sheet",
+  "newGKLine": 240.0
+}

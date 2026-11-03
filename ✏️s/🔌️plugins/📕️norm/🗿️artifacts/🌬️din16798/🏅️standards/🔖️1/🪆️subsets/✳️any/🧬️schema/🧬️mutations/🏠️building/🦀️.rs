@@ -17,12 +17,6 @@ pub mod change_cellar_area;
 pub mod change_cellar_ventilation;
 #[path = "../🏠️change-envelope-n50/🦀️.rs"]
 pub mod change_envelope_n50;
-#[path = "../📦️change-envelope-volume/🦀️.rs"]
-pub mod change_envelope_volume;
-#[path = "../🌙️change-night-setback/🦀️.rs"]
-pub mod change_night_setback;
-#[path = "../🌫️change-outdoor-co2/🦀️.rs"]
-pub mod change_outdoor_co2;
-#[path = "../🔄️change-theta-rm/🦀️.rs"]
-pub mod change_theta_rm;
 //#endregion 🪢️Mounts
+
+pub use semio_s_artifact_norm_din16798_mut_building_more::{change_envelope_volume, change_night_setback, change_outdoor_co2, change_theta_rm};

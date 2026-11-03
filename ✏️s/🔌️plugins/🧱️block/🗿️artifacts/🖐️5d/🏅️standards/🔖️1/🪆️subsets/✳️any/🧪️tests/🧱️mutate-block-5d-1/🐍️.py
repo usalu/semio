@@ -458,7 +458,7 @@ def identity_handler(ctx):
     with the whole document. This implementation additionally requires, in role, that it really is
     that document: a 2d facet, a 3d facet, and at least one grip placed in BOTH spaces and bound to a
     grip kind the document declares. A codec that dropped one space could not satisfy it."""
-    uri = uri_in(ctx, "⬅️before")
+    uri = uri_in(ctx, "🔣️.before.json")
     committed = ctx.input_bytes(uri)
     document = json.loads(committed.decode("utf-8"))
     validate(document, "identity-round-trip")

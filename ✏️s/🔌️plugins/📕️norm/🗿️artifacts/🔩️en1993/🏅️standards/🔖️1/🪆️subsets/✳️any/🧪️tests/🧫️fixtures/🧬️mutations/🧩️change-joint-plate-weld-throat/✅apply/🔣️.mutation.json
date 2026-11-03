@@ -1,0 +1,6 @@
+{
+  "ChangeJointPlateWeldThroat": {
+    "id": "joint-plate-1",
+    "newWeldThroat": 2.0
+  }
+}

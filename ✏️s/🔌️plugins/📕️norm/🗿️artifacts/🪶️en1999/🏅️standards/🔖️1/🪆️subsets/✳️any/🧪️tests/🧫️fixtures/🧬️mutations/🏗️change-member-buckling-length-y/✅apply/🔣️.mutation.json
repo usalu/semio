@@ -1,0 +1,5 @@
+{
+  "mutation": "changeMemberBucklingLengthY",
+  "memberId": "purlin-1",
+  "newBucklingLengthY": 3.0
+}

@@ -1,0 +1,6 @@
+{
+  "ChangeWindBridgeDeckWidth": {
+    "id": "wind-bridge-1",
+    "newDeckWidth": 3.0
+  }
+}

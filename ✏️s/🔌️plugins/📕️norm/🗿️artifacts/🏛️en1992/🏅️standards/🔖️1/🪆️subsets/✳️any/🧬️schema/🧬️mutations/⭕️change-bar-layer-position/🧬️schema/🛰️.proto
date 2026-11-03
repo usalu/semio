@@ -1,0 +1,7 @@
+syntax = "proto3";
+package semio.s.norm.en1992.mutation.change_bar_layer_position;
+message ChangeBarLayerPosition {
+  string member_id = 1;
+  string layer_id = 2;
+  BarPosition new_position = 3;
+}

@@ -1,0 +1,6 @@
+{
+  "mutation": "changeMemberEffectiveStiffnessRatio",
+  "buildingId": "bldg-office",
+  "id": "col-c1",
+  "newEffectiveStiffnessRatio": 0.5
+}

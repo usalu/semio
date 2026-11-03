@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-joint-col-moment-rd-nm/schema.json",
+  "title": "ChangeJointColMomentRdNm",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "index",
+    "newColumnMomentRdNm"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeJointColMomentRdNm"
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Joint",
+          "de": "Knoten"
+        },
+        "description": {
+          "en": "Zero-based position of the joint in its list.",
+          "de": "Nullbasierte Position in der Liste (Knoten)."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newColumnMomentRdNm": {
+      "type": "number",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Sum of the design flexural resistances of the columns at the joint, ΣM_Rc",
+          "de": "Summe der Bemessungsbiegewiderstände der Stützen am Knoten, ΣM_Rc"
+        },
+        "group": "value",
+        "order": 20,
+        "widget": "stepper",
+        "step": 0.001,
+        "precision": 3
+      }
+    }
+  }
+}

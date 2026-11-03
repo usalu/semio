@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/remove-beam-action/schema.json",
+  "title": "RemoveBeamAction",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "beamId",
+    "id"
+  ],
+  "properties": {
+    "beamId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Beam",
+          "de": "Träger"
+        },
+        "description": {
+          "en": "The beam this mutation addresses, by id.",
+          "de": "Das adressierte Element (Träger), per Kennung."
+        },
+        "ref": {
+          "kind": "beam"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Beam action",
+          "de": "Trägereinwirkung"
+        },
+        "description": {
+          "en": "The beam action this mutation addresses, by id.",
+          "de": "Das adressierte Element (Trägereinwirkung), per Kennung."
+        },
+        "ref": {
+          "kind": "action"
+        },
+        "group": "target",
+        "order": 20
+      }
+    }
+  }
+}

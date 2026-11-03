@@ -1,0 +1,5 @@
+{
+  "mutation": "changeAssessmentCoreWidthM",
+  "id": "as-1",
+  "newCoreWidthM": 1.5
+}

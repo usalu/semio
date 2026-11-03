@@ -1,0 +1,4 @@
+type ChangePlacementYaw {
+  id: String!
+  newYaw: Float!
+}

@@ -21,4 +21,5 @@ pub mod change_bridge_lane;
 pub mod change_bridge_load_group;
 //#endregion 🪢️Mounts
 
-pub use semio_s_artifact_norm_en1991_mut_traffic_2::{change_assumed_bridge_lm2, change_assumed_bridge_lm4, change_assumed_bridge_udl, change_bridge_lane_width, change_bridge_span};
+pub use semio_s_artifact_norm_en1991_mut_rail_load_models::{change_rail_alpha, change_assumed_rail_lm71, change_assumed_rail_lm71_udl, change_assumed_rail_sw0, change_assumed_rail_sw2};
+pub use semio_s_artifact_norm_en1991_mut_traffic_load_models::{change_assumed_bridge_lm2, change_assumed_bridge_lm4, change_assumed_bridge_udl, change_bridge_lane_width, change_bridge_span, change_bridge_tandem_x, change_bridge_curve_radius};

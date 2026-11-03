@@ -1,0 +1,6 @@
+{
+  "ChangeWindBridgeTrafficKind": {
+    "id": "wind-bridge-1",
+    "newTrafficKind": 2
+  }
+}

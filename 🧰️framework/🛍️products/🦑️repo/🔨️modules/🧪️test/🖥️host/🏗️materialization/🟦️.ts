@@ -103,7 +103,7 @@ export function materializeRustHost(repoRoot: string, discovered: DiscoveredCase
       'name = "host"',
       'path = "src/main.rs"',
       "",
-      ...(sut === null ? [] : ["[features]", `sut = [${[sut.name, ...subjectPackages.map((entry) => entry.package)].map((name) => JSON.stringify(`dep:${name}`)).join(", ")}]`, ""]),
+      ...(sut === null ? [] : ["[features]", `sut = [${[...[sut.name, ...subjectPackages.map((entry) => entry.package)].map((name) => `dep:${name}`), ...subjectPackages.flatMap((entry) => (entry.features ?? []).map((feature) => `${entry.package}/${feature}`))].map((name) => JSON.stringify(name)).join(", ")}]`, ""]),
       "[dependencies]",
       `semio-repo-test-host = { path = ${JSON.stringify(join(repoRoot, REPO_TEST_RUST_PACKAGE_REL))} }`,
       ...oraclePackages.map(

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeLabTestConsolTime",
+  "id": "lab-T1",
+  "newConsolidationTime": 240.0
+}

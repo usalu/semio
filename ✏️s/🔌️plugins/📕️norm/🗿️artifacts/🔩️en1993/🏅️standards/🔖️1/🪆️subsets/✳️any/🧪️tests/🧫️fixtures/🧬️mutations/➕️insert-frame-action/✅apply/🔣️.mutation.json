@@ -1,0 +1,16 @@
+{
+  "InsertFrameAction": {
+    "index": 1,
+    "frameAction": {
+      "id": "frame-action-2",
+      "loadCaseId": "g-permanent",
+      "targetId": "node-b",
+      "kind": "NodalForce",
+      "fx": 0.0,
+      "fz": -100000.0,
+      "my": 0.0,
+      "startRatio": 0.0,
+      "endRatio": 1.0
+    }
+  }
+}

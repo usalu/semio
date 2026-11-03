@@ -1,0 +1,20 @@
+{
+  "mutation": "insertConnectionAction",
+  "connectionId": "support-weld",
+  "index": 2,
+  "action": {
+    "id": "G-conn-2",
+    "kind": "permanent",
+    "category": "selfWeight",
+    "source": "external",
+    "gKLine": 800.0,
+    "qKLine": 0.0,
+    "nK": 1500.0,
+    "vYK": 200.0,
+    "vZK": 3500.0,
+    "mYK": 400.0,
+    "mZK": 150.0,
+    "torsionK": 0.0,
+    "localLoadK": 0.0
+  }
+}

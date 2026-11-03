@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-roof-has-parapet/schema.json",
+  "title": "ChangeRoofHasParapet",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newHasParapet"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Roof",
+          "de": "Dach"
+        },
+        "description": {
+          "en": "The roof this mutation addresses, by id.",
+          "de": "Das adressierte Element (Dach), per Kennung."
+        },
+        "ref": {
+          "kind": "roof"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newHasParapet": {
+      "type": "boolean",
+      "x-semio-ui": {
+        "label": {
+          "en": "Has parapet",
+          "de": "Mit Attika"
+        },
+        "widget": "toggle",
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

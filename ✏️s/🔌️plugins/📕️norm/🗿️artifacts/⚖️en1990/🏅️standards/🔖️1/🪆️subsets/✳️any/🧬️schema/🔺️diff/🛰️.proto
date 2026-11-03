@@ -1,232 +1,5 @@
-// 🧬️ En1990 diff
 syntax = "proto3";
-package semio.s.norm.en1990.diff;
-
-message En1990PermanentRemoval {
-  string id = 1;
-  uint32 index = 2;
-}
-
-message En1990PermanentInsertion {
-  uint32 index = 1;
-  bytes row = 2;
-}
-
-message En1990PermanentRelocation {
-  string id = 1;
-  uint32 from = 2;
-  uint32 to = 3;
-}
-
-message En1990PermanentModification {
-  string id = 1;
-  En1990PermanentPatch patch = 2;
-}
-
-message En1990PermanentDelta {
-  repeated En1990PermanentRemoval removed = 1;
-  repeated En1990PermanentInsertion inserted = 2;
-  repeated En1990PermanentRelocation moved = 3;
-  repeated En1990PermanentModification modified = 4;
-}
-
-message En1990PermanentPatch {
-  optional string kind = 1;
-  optional double gk = 2;
-}
-
-message En1990VariableRemoval {
-  string id = 1;
-  uint32 index = 2;
-}
-
-message En1990VariableInsertion {
-  uint32 index = 1;
-  bytes row = 2;
-}
-
-message En1990VariableRelocation {
-  string id = 1;
-  uint32 from = 2;
-  uint32 to = 3;
-}
-
-message En1990VariableModification {
-  string id = 1;
-  En1990VariablePatch patch = 2;
-}
-
-message En1990VariableDelta {
-  repeated En1990VariableRemoval removed = 1;
-  repeated En1990VariableInsertion inserted = 2;
-  repeated En1990VariableRelocation moved = 3;
-  repeated En1990VariableModification modified = 4;
-}
-
-message En1990VariablePatch {
-  optional string category = 1;
-  optional double qk = 2;
-}
-
-message En1990AccidentalRemoval {
-  string id = 1;
-  uint32 index = 2;
-}
-
-message En1990AccidentalInsertion {
-  uint32 index = 1;
-  bytes row = 2;
-}
-
-message En1990AccidentalRelocation {
-  string id = 1;
-  uint32 from = 2;
-  uint32 to = 3;
-}
-
-message En1990AccidentalModification {
-  string id = 1;
-  En1990AccidentalPatch patch = 2;
-}
-
-message En1990AccidentalDelta {
-  repeated En1990AccidentalRemoval removed = 1;
-  repeated En1990AccidentalInsertion inserted = 2;
-  repeated En1990AccidentalRelocation moved = 3;
-  repeated En1990AccidentalModification modified = 4;
-}
-
-message En1990AccidentalPatch {
-  optional double ad = 1;
-}
-
-message En1990SeismicRemoval {
-  string id = 1;
-  uint32 index = 2;
-}
-
-message En1990SeismicInsertion {
-  uint32 index = 1;
-  bytes row = 2;
-}
-
-message En1990SeismicRelocation {
-  string id = 1;
-  uint32 from = 2;
-  uint32 to = 3;
-}
-
-message En1990SeismicModification {
-  string id = 1;
-  En1990SeismicPatch patch = 2;
-}
-
-message En1990SeismicDelta {
-  repeated En1990SeismicRemoval removed = 1;
-  repeated En1990SeismicInsertion inserted = 2;
-  repeated En1990SeismicRelocation moved = 3;
-  repeated En1990SeismicModification modified = 4;
-}
-
-message En1990SeismicPatch {
-  optional double a_ek = 1;
-  optional bytes importance_class = 2;
-}
-
-message En1990MemberRemoval {
-  string id = 1;
-  uint32 index = 2;
-}
-
-message En1990MemberInsertion {
-  uint32 index = 1;
-  bytes row = 2;
-}
-
-message En1990MemberRelocation {
-  string id = 1;
-  uint32 from = 2;
-  uint32 to = 3;
-}
-
-message En1990MemberModification {
-  string id = 1;
-  En1990MemberPatch patch = 2;
-}
-
-message En1990MemberDelta {
-  repeated En1990MemberRemoval removed = 1;
-  repeated En1990MemberInsertion inserted = 2;
-  repeated En1990MemberRelocation moved = 3;
-  repeated En1990MemberModification modified = 4;
-}
-
-message En1990MemberPatch {
-  optional string label_en = 1;
-  optional string label_de = 2;
-  optional double rd_str = 3;
-  optional double rd_geo = 4;
-  optional double rd_equ_stab = 5;
-  optional double rd_equ_destab = 6;
-  optional double rd_fat = 7;
-  optional double span = 8;
-  optional double deflection_w = 9;
-  optional double deflection_limit_ratio = 10;
-  optional double vibration_frequency = 11;
-  optional double vibration_frequency_min = 12;
-}
-
-message En1990BridgeSlsRemoval {
-  string id = 1;
-  uint32 index = 2;
-}
-
-message En1990BridgeSlsInsertion {
-  uint32 index = 1;
-  bytes row = 2;
-}
-
-message En1990BridgeSlsRelocation {
-  string id = 1;
-  uint32 from = 2;
-  uint32 to = 3;
-}
-
-message En1990BridgeSlsModification {
-  string id = 1;
-  En1990BridgeSlsPatch patch = 2;
-}
-
-message En1990BridgeSlsDelta {
-  repeated En1990BridgeSlsRemoval removed = 1;
-  repeated En1990BridgeSlsInsertion inserted = 2;
-  repeated En1990BridgeSlsRelocation moved = 3;
-  repeated En1990BridgeSlsModification modified = 4;
-}
-
-message En1990BridgeSlsPatch {
-  optional string member_id = 1;
-  optional double deck_acceleration = 2;
-  optional double deck_acceleration_limit = 3;
-  optional double deck_twist = 4;
-  optional double deck_twist_limit = 5;
-  optional double bridge_deflection = 6;
-  optional double bridge_deflection_limit = 7;
-}
-
-enum En1990RowOp {
-  EN1990_ROW_OP_INSERT = 0;
-  EN1990_ROW_OP_REMOVE = 1;
-  EN1990_ROW_OP_REPLACE = 2;
-}
-
-message En1990EffectEdit {
-  En1990RowOp op = 1;
-  uint32 index = 2;
-  string id = 3;
-  optional bytes value = 4;
-}
-
+package semio.s.norm.en1990;
 message En1990Diff {
   // @state artifact
   optional string annex = 1;
@@ -239,7 +12,7 @@ message En1990Diff {
   // @state artifact
   optional uint32 consequence_class = 5;
   // @state artifact
-  optional uint32 reliability_class = 6;
+  optional string reliability_class = 6;
   // @state artifact
   optional uint32 design_working_life_category = 7;
   // @state artifact
@@ -251,21 +24,425 @@ message En1990Diff {
   // @state artifact
   optional string inspection_level = 11;
   // @state artifact
-  optional double k_fi_declared = 12;
+  optional double beta_computed = 12;
   // @state artifact
-  optional double beta_computed = 13;
+  bytes permanents = 13;
   // @state artifact
-  En1990PermanentDelta permanents = 14;
+  bytes variables = 14;
   // @state artifact
-  En1990VariableDelta variables = 15;
+  bytes accidentals = 15;
   // @state artifact
-  En1990AccidentalDelta accidentals = 16;
+  bytes seismics = 16;
   // @state artifact
-  En1990SeismicDelta seismics = 17;
+  bytes members = 17;
   // @state artifact
-  En1990MemberDelta members = 18;
+  bytes bridge_sls = 18;
   // @state artifact
-  En1990BridgeSlsDelta bridge_sls = 19;
+  repeated En1990EffectEdit effects = 19;
   // @state artifact
-  repeated En1990EffectEdit effects = 20;
+  bytes fatigue_spectra = 20;
+  // @state artifact
+  bytes reliability_analyses = 21;
+  // @state artifact
+  bytes test_series = 22;
+  // @state artifact
+  bytes placements = 23;
+  // @state artifact
+  CaseRowDelta cases = 24;
+  // @state artifact
+  bytes factor_overrides = 25;
+  // @state artifact
+  bytes traffic_groups = 26;
+}
+message En1990PermanentDelta {
+  repeated En1990PermanentRemoval removed = 1;
+  repeated En1990PermanentInsertion inserted = 2;
+  repeated En1990PermanentRelocation moved = 3;
+  repeated En1990PermanentModification modified = 4;
+}
+message En1990PermanentRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+message En1990PermanentInsertion {
+  uint32 index = 1;
+  PermanentAction row = 2;
+}
+message En1990PermanentRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+message En1990PermanentModification {
+  string id = 1;
+  En1990PermanentPatch patch = 2;
+}
+message En1990PermanentPatch {
+  optional string kind = 1;
+  optional double gk = 2;
+}
+message En1990VariableDelta {
+  repeated En1990VariableRemoval removed = 1;
+  repeated En1990VariableInsertion inserted = 2;
+  repeated En1990VariableRelocation moved = 3;
+  repeated En1990VariableModification modified = 4;
+}
+message En1990VariableRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+message En1990VariableInsertion {
+  uint32 index = 1;
+  VariableAction row = 2;
+}
+message En1990VariableRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+message En1990VariableModification {
+  string id = 1;
+  En1990VariablePatch patch = 2;
+}
+message En1990VariablePatch {
+  optional string category = 1;
+  optional double qk = 2;
+  optional string group = 3;
+}
+message En1990AccidentalDelta {
+  repeated En1990AccidentalRemoval removed = 1;
+  repeated En1990AccidentalInsertion inserted = 2;
+  repeated En1990AccidentalRelocation moved = 3;
+  repeated En1990AccidentalModification modified = 4;
+}
+message En1990AccidentalRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+message En1990AccidentalInsertion {
+  uint32 index = 1;
+  AccidentalAction row = 2;
+}
+message En1990AccidentalRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+message En1990AccidentalModification {
+  string id = 1;
+  En1990AccidentalPatch patch = 2;
+}
+message En1990AccidentalPatch {
+  optional double ad = 1;
+}
+message En1990SeismicDelta {
+  repeated En1990SeismicRemoval removed = 1;
+  repeated En1990SeismicInsertion inserted = 2;
+  repeated En1990SeismicRelocation moved = 3;
+  repeated En1990SeismicModification modified = 4;
+}
+message En1990SeismicRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+message En1990SeismicInsertion {
+  uint32 index = 1;
+  SeismicAction row = 2;
+}
+message En1990SeismicRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+message En1990SeismicModification {
+  string id = 1;
+  En1990SeismicPatch patch = 2;
+}
+message En1990SeismicPatch {
+  optional double a_ek = 1;
+  optional ImportanceClass importance_class = 2;
+}
+message En1990MemberDelta {
+  repeated En1990MemberRemoval removed = 1;
+  repeated En1990MemberInsertion inserted = 2;
+  repeated En1990MemberRelocation moved = 3;
+  repeated En1990MemberModification modified = 4;
+}
+message En1990MemberRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+message En1990MemberInsertion {
+  uint32 index = 1;
+  Member row = 2;
+}
+message En1990MemberRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+message En1990MemberModification {
+  string id = 1;
+  En1990MemberPatch patch = 2;
+}
+message En1990MemberPatch {
+  optional string label_en = 1;
+  optional string label_de = 2;
+  optional double rd_str = 3;
+  optional double rd_geo = 4;
+  optional double rd_equ_stab = 5;
+  optional double rd_equ_destab = 6;
+  optional double rd_fat = 7;
+  optional double span = 8;
+  optional double precamber = 9;
+  optional double deflection_w1 = 10;
+  optional double deflection_w2 = 11;
+  optional double deflection_w3 = 12;
+  optional double deflection_limit_ratio = 13;
+  optional double deflection_limit_ratio_w3 = 14;
+  optional double sls_limit_char = 15;
+  optional double sls_limit_freq = 16;
+  optional double sls_limit_qp = 17;
+  optional double vibration_frequency = 18;
+  optional double vibration_frequency_min = 19;
+  optional double frame_height = 20;
+  optional double frame_drift = 21;
+  optional double storey_height = 22;
+  optional double storey_drift = 23;
+  optional double material_strength_k = 24;
+  optional double material_conversion_factor = 25;
+  optional double material_partial_factor = 26;
+  optional double material_design_strength = 27;
+  optional double nominal_dimension = 28;
+  optional double dimension_tolerance = 29;
+  optional double design_dimension = 30;
+  optional double member_alpha_cr = 31;
+  optional double second_order_analysis = 32;
+}
+message En1990BridgeSlsDelta {
+  repeated En1990BridgeSlsRemoval removed = 1;
+  repeated En1990BridgeSlsInsertion inserted = 2;
+  repeated En1990BridgeSlsRelocation moved = 3;
+  repeated En1990BridgeSlsModification modified = 4;
+}
+message En1990BridgeSlsRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+message En1990BridgeSlsInsertion {
+  uint32 index = 1;
+  BridgeSls row = 2;
+}
+message En1990BridgeSlsRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+message En1990BridgeSlsModification {
+  string id = 1;
+  En1990BridgeSlsPatch patch = 2;
+}
+message En1990BridgeSlsPatch {
+  optional string member_id = 1;
+  optional double deck_acceleration = 2;
+  optional double deck_acceleration_limit = 3;
+  optional double deck_twist = 4;
+  optional double deck_twist_limit = 5;
+  optional double bridge_deflection = 6;
+  optional double bridge_deflection_limit = 7;
+  optional double track_gauge = 8;
+  optional double line_speed = 9;
+  optional double ballast_depth = 10;
+  optional double deck_mass = 11;
+  optional double natural_frequency = 12;
+  optional double end_rotation = 13;
+  optional double basic_wind_speed = 14;
+  optional double damping_ratio = 15;
+}
+message En1990FatigueSpectrumDelta {
+  repeated En1990FatigueSpectrumRemoval removed = 1;
+  repeated En1990FatigueSpectrumInsertion inserted = 2;
+  repeated En1990FatigueSpectrumRelocation moved = 3;
+  repeated En1990FatigueSpectrumModification modified = 4;
+}
+message En1990FatigueSpectrumRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+message En1990FatigueSpectrumInsertion {
+  uint32 index = 1;
+  FatigueSpectrum row = 2;
+}
+message En1990FatigueSpectrumRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+message En1990FatigueSpectrumModification {
+  string id = 1;
+  En1990FatigueSpectrumPatch patch = 2;
+}
+message En1990FatigueSpectrumPatch {
+  optional string member_id = 1;
+  optional double detail_category = 2;
+  optional double stress_range = 3;
+  optional double cycles = 4;
+}
+message En1990ReliabilityAnalysisDelta {
+  repeated En1990ReliabilityAnalysisRemoval removed = 1;
+  repeated En1990ReliabilityAnalysisInsertion inserted = 2;
+  repeated En1990ReliabilityAnalysisRelocation moved = 3;
+  repeated En1990ReliabilityAnalysisModification modified = 4;
+}
+message En1990ReliabilityAnalysisRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+message En1990ReliabilityAnalysisInsertion {
+  uint32 index = 1;
+  ReliabilityAnalysis row = 2;
+}
+message En1990ReliabilityAnalysisRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+message En1990ReliabilityAnalysisModification {
+  string id = 1;
+  En1990ReliabilityAnalysisPatch patch = 2;
+}
+message En1990ReliabilityAnalysisPatch {
+  optional string resistance_distribution = 1;
+  optional double resistance_mean = 2;
+  optional double resistance_sd = 3;
+  optional string action_distribution = 4;
+  optional double action_mean = 5;
+  optional double action_sd = 6;
+}
+message En1990TestSeriesDelta {
+  repeated En1990TestSeriesRemoval removed = 1;
+  repeated En1990TestSeriesInsertion inserted = 2;
+  repeated En1990TestSeriesRelocation moved = 3;
+  repeated En1990TestSeriesModification modified = 4;
+}
+message En1990TestSeriesRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+message En1990TestSeriesInsertion {
+  uint32 index = 1;
+  TestSeries row = 2;
+}
+message En1990TestSeriesRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+message En1990TestSeriesModification {
+  string id = 1;
+  En1990TestSeriesPatch patch = 2;
+}
+message En1990TestSeriesPatch {
+  optional string quantity = 1;
+  optional string distribution = 2;
+  optional uint32 sample_size = 3;
+  optional double mean = 4;
+  optional double std_dev = 5;
+  optional double variation_known = 6;
+  optional double conversion_factor = 7;
+  optional double required = 8;
+}
+message En1990PlacementDelta {
+  repeated En1990PlacementRemoval removed = 1;
+  repeated En1990PlacementInsertion inserted = 2;
+  repeated En1990PlacementRelocation moved = 3;
+  repeated En1990PlacementModification modified = 4;
+}
+message En1990PlacementRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+message En1990PlacementInsertion {
+  uint32 index = 1;
+  Placement row = 2;
+}
+message En1990PlacementRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+message En1990PlacementModification {
+  string id = 1;
+  En1990PlacementPatch patch = 2;
+}
+message En1990PlacementPatch {
+  optional double x = 1;
+  optional double y = 2;
+  optional double z = 3;
+  optional double yaw = 4;
+}
+message En1990FactorOverrideDelta {
+  repeated En1990FactorOverrideRemoval removed = 1;
+  repeated En1990FactorOverrideInsertion inserted = 2;
+  repeated En1990FactorOverrideRelocation moved = 3;
+  repeated En1990FactorOverrideModification modified = 4;
+}
+message En1990FactorOverrideRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+message En1990FactorOverrideInsertion {
+  uint32 index = 1;
+  FactorOverride row = 2;
+}
+message En1990FactorOverrideRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+message En1990FactorOverrideModification {
+  string id = 1;
+  En1990FactorOverridePatch patch = 2;
+}
+message En1990FactorOverridePatch {
+  optional string factor = 1;
+  optional string target = 2;
+  optional double value = 3;
+  optional string justification = 4;
+}
+message En1990TrafficGroupDelta {
+  repeated En1990TrafficGroupRemoval removed = 1;
+  repeated En1990TrafficGroupInsertion inserted = 2;
+  repeated En1990TrafficGroupRelocation moved = 3;
+  repeated En1990TrafficGroupModification modified = 4;
+}
+message En1990TrafficGroupRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+message En1990TrafficGroupInsertion {
+  uint32 index = 1;
+  TrafficGroup row = 2;
+}
+message En1990TrafficGroupRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+message En1990TrafficGroupModification {
+  string id = 1;
+  En1990TrafficGroupPatch patch = 2;
+}
+message En1990TrafficGroupPatch {
+  optional string group = 1;
+  optional string variable_id = 2;
+}
+message En1990RowOp {
+  string value = 1;
+}
+message En1990EffectEdit {
+  En1990RowOp op = 1;
+  uint32 index = 2;
+  string id = 3;
+  optional MemberEffect value = 4;
 }

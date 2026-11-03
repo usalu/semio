@@ -34,7 +34,8 @@ pub const IDENTITY:[f64;6]=[1.0,0.0,0.0,1.0,0.0,0.0];
 #[derive(semio_framework_value::RetireOwned)]
 struct SceneTable<T:RetireOwned>(Vec<(String,T)>);
 impl<T:RetireOwned> Default for SceneTable<T>{fn default()->Self{Self(Vec::new())}}
-pub type RasterSceneError=crate::preparation::DocumentSceneError;
+use crate::error::DocumentSceneError;
+pub type RasterSceneError=DocumentSceneError;
 use semio_framework_value::{work::RetainedWorkLedger,RetirementDemand};
 fn invalid(error:&'static str)->RasterSceneError{RasterSceneError::literal(error)}
 fn pixels(error:semio_framework_pixels::editing::PixelEditError)->RasterSceneError{use semio_framework_pixels::editing::PixelEditError;match error{PixelEditError::Invalid(message)=>invalid(message),PixelEditError::Incomplete=>RasterSceneError::Incomplete,PixelEditError::Cancelled=>RasterSceneError::Cancelled}}
@@ -123,7 +124,3 @@ impl RasterSceneJob{
  pub fn into_retirement(mut self)->(RasterSceneRetirement,Option<RasterImage>){let output=if self.phase=="complete"&&!self.cancelled&&self.failure.is_none(){self.output.take()}else{None};self.cancelled=true;(RasterSceneRetirement::new(self),output)}
 }
 semio_framework_2d::physical_work_retirement!(RasterSceneRetirement,RasterSceneJob);
-
-#[cfg(test)]
-#[path="🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;

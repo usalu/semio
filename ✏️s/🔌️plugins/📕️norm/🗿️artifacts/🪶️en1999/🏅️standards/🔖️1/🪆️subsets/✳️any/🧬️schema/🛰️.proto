@@ -1,25 +1,305 @@
 syntax = "proto3";
-package semio.norm.en1999;
-message En1999Snapshot {
+package semio.s.norm.en1999;
+message En1999Artifact {
+  // @state artifact
   string annex = 1;
+  // @state artifact
   repeated AluminiumMaterial materials = 2;
+  // @state artifact
   repeated AluminiumSection sections = 3;
+  // @state artifact
   repeated AluminiumMember members = 4;
+  // @state artifact
   repeated AluminiumConnection connections = 5;
+  // @state artifact
   repeated FireScenario fire_scenarios = 6;
+  // @state artifact
   repeated FatigueDetail fatigue_details = 7;
+  // @state artifact
   repeated ColdFormedSheet cold_formed = 8;
+  // @state artifact
   repeated AluminiumShell shells = 9;
+  // @state artifact
+  repeated Placement placements = 10;
+  // @state artifact
+  repeated WeldRun weld_runs = 11;
+  // @state artifact
+  repeated SectionVertex outline_vertices = 12;
+  // @state artifact
+  repeated FatigueCategory fatigue_categories = 13;
+  // @state artifact
+  repeated PatchLoad patch_loads = 14;
+  // @state artifact
+  repeated RingStiffener ring_stiffeners = 15;
+  // @state artifact
+  repeated TransverseStiffener transverse_stiffeners = 16;
+  // @state artifact
+  string reliability_class = 17;
 }
-message AluminiumMaterial { string id = 1; string designation = 2; }
-message PlateElement { string id = 1; double width = 2; double thickness = 3; bool outstand = 4; bool welded = 5; double weld_position = 6; }
-message AluminiumSection { string id = 1; string kind = 2; double height = 3; double width = 4; double flange_thickness = 5; double web_thickness = 6; double outer_diameter = 7; repeated PlateElement elements = 8; }
-message MemberAction { string id = 1; string kind = 2; string category = 3; string source = 4; double g_k_line = 5; double q_k_line = 6; double n_k = 7; double v_y_k = 8; double v_z_k = 9; double m_y_k = 10; double m_z_k = 11; }
-message AluminiumMember { string id = 1; string section_id = 2; string material_id = 3; double length = 4; string support = 5; double buckling_length_y = 6; double buckling_length_z = 7; double buckling_length_t = 8; double ltb_length = 9; double c1 = 10; bool restrained_ltb = 11; repeated MemberAction actions = 12; }
-message BoltGroup { string material = 1; double diameter = 2; uint32 rows = 3; uint32 bolts_per_row = 4; double edge_distance = 5; double pitch = 6; double gauge = 7; double plate_thickness = 8; }
-message WeldGroup { string filler_alloy = 1; double throat = 2; double length = 3; double beta_w = 4; double haz_extent = 5; }
-message AluminiumConnection { string id = 1; string member_id = 2; string material_id = 3; string kind = 4; repeated MemberAction actions = 5; BoltGroup bolts = 6; WeldGroup welds = 7; }
-message FireScenario { string id = 1; string member_id = 2; double theta_a = 3; double duration_s = 4; }
-message FatigueDetail { string id = 1; string member_id = 2; string detail_category = 3; double delta_sigma_c = 4; double delta_sigma_ed = 5; double n_cycles = 6; double m1 = 7; double m2 = 8; }
-message ColdFormedSheet { string id = 1; string material_id = 2; double thickness = 3; double width = 4; double span = 5; bool welded = 6; repeated MemberAction actions = 7; }
-message AluminiumShell { string id = 1; string material_id = 2; double radius = 3; double thickness = 4; double length = 5; repeated MemberAction actions = 6; }
+enum ProductForm {
+  PRODUCT_FORM_SHEET = 0;
+  PRODUCT_FORM_EXTRUDED_PROFILE = 1;
+  PRODUCT_FORM_EXTRUDED_TUBE = 2;
+  PRODUCT_FORM_EXTRUDED_BAR = 3;
+  PRODUCT_FORM_DRAWN_TUBE = 4;
+  PRODUCT_FORM_FORGING = 5;
+}
+message AluminiumMaterial {
+  string id = 1;
+  string designation = 2;
+  ProductForm product_form = 3;
+}
+enum SectionKind {
+  SECTION_KIND_EXTRUDED_I = 0;
+  SECTION_KIND_CHANNEL = 1;
+  SECTION_KIND_ANGLE = 2;
+  SECTION_KIND_RHS = 3;
+  SECTION_KIND_BOX = 4;
+  SECTION_KIND_CHS = 5;
+  SECTION_KIND_FREE = 6;
+}
+message AluminiumSection {
+  string id = 1;
+  SectionKind kind = 2;
+  double height = 3;
+  double width = 4;
+  double flange_thickness = 5;
+  double web_thickness = 6;
+  double outer_diameter = 7;
+  repeated PlateElement elements = 8;
+}
+message AluminiumMember {
+  string id = 1;
+  string section_id = 2;
+  string material_id = 3;
+  double length = 4;
+  string support = 5;
+  double buckling_length_y = 6;
+  double buckling_length_z = 7;
+  double buckling_length_t = 8;
+  double ltb_length = 9;
+  double c1 = 10;
+  bool restrained_ltb = 11;
+  double bearing_length = 12;
+  bool transverse_weld = 13;
+  double transverse_weld_offset = 14;
+  repeated MemberAction actions = 15;
+}
+enum ConnectionKind {
+  CONNECTION_KIND_BOLTED = 0;
+  CONNECTION_KIND_WELDED = 1;
+  CONNECTION_KIND_COMBINED = 2;
+  CONNECTION_KIND_PINNED = 3;
+}
+message AluminiumConnection {
+  string id = 1;
+  string member_id = 2;
+  string material_id = 3;
+  ConnectionKind kind = 4;
+  repeated MemberAction actions = 5;
+  BoltGroup bolts = 6;
+  WeldGroup welds = 7;
+  double load_eccentricity = 8;
+  double hole_stagger = 9;
+  FastenerForceMethod force_method = 10;
+}
+message FireScenario {
+  string id = 1;
+  string member_id = 2;
+  double theta_a = 3;
+  double duration_s = 4;
+}
+message FatigueDetail {
+  string id = 1;
+  string member_id = 2;
+  string detail_category = 3;
+  double delta_sigma_c = 4;
+  double delta_sigma_ed = 5;
+  double n_cycles = 6;
+  double m1 = 7;
+  double m2 = 8;
+}
+message ColdFormedSheet {
+  string id = 1;
+  string material_id = 2;
+  double thickness = 3;
+  double width = 4;
+  double span = 5;
+  bool welded = 6;
+  repeated MemberAction actions = 7;
+}
+enum FabricationClass {
+  FABRICATION_CLASS_A = 0;
+  FABRICATION_CLASS_B = 1;
+  FABRICATION_CLASS_C = 2;
+}
+message AluminiumShell {
+  string id = 1;
+  string material_id = 2;
+  double radius = 3;
+  double thickness = 4;
+  double length = 5;
+  bool welded = 6;
+  FabricationClass fabrication_class = 7;
+  repeated MemberAction actions = 8;
+}
+message Placement {
+  string id = 1;
+  double x = 2;
+  double y = 3;
+  double z = 4;
+  double yaw = 5;
+}
+message WeldRun {
+  string id = 1;
+  string member_id = 2;
+  string element_id = 3;
+  double start = 4;
+  double length = 5;
+  double offset = 6;
+  double throat = 7;
+  WeldProcess process = 8;
+  bool t_junction = 9;
+  WeldDirection direction = 10;
+  double haz_extent = 11;
+}
+enum OutlineRing {
+  OUTLINE_RING_OUTER = 0;
+  OUTLINE_RING_HOLE = 1;
+}
+message SectionVertex {
+  string id = 1;
+  string section_id = 2;
+  OutlineRing ring = 3;
+  string element_id = 4;
+  double y = 5;
+  double z = 6;
+}
+enum DetailType {
+  DETAIL_TYPE_PLAIN = 0;
+  DETAIL_TYPE_BUTT_WELD = 1;
+  DETAIL_TYPE_FILLET_WELD = 2;
+  DETAIL_TYPE_BOLTED = 3;
+  DETAIL_TYPE_RIVETED = 4;
+  DETAIL_TYPE_OTHER = 5;
+}
+message FatigueCategory {
+  string id = 1;
+  string member_id = 2;
+  string element_id = 3;
+  string detail_category = 4;
+  DetailType detail_type = 5;
+  double location_x = 6;
+  double m1 = 7;
+  double m2 = 8;
+}
+enum PatchLoadPosition {
+  PATCH_LOAD_POSITION_END = 0;
+  PATCH_LOAD_POSITION_INTERIOR = 1;
+}
+message PatchLoad {
+  string id = 1;
+  string subject_id = 2;
+  PatchLoadPosition position = 3;
+  double x = 4;
+  double bearing_length = 5;
+  double web_height = 6;
+  double web_angle = 7;
+  double corner_radius = 8;
+  double load = 9;
+}
+message RingStiffener {
+  string id = 1;
+  string shell_id = 2;
+  double x = 3;
+  double depth = 4;
+  double thickness = 5;
+  bool internal = 6;
+}
+enum StiffenerSides {
+  STIFFENER_SIDES_ONE = 0;
+  STIFFENER_SIDES_TWO = 1;
+}
+message TransverseStiffener {
+  string id = 1;
+  string girder_id = 2;
+  double position = 3;
+  double width = 4;
+  double thickness = 5;
+  StiffenerSides sides = 6;
+}
+enum ActionKind {
+  ACTION_KIND_PERMANENT = 0;
+  ACTION_KIND_IMPOSED = 1;
+  ACTION_KIND_SNOW = 2;
+  ACTION_KIND_WIND = 3;
+  ACTION_KIND_TEMPERATURE = 4;
+  ACTION_KIND_FIRE = 5;
+}
+enum ActionCategory {
+  ACTION_CATEGORY_SELF_WEIGHT = 0;
+  ACTION_CATEGORY_OFFICE = 1;
+  ACTION_CATEGORY_SNOW = 2;
+  ACTION_CATEGORY_WIND = 3;
+}
+enum ActionSource {
+  ACTION_SOURCE_UDL = 0;
+  ACTION_SOURCE_EXTERNAL = 1;
+}
+message MemberAction {
+  string id = 1;
+  ActionKind kind = 2;
+  ActionCategory category = 3;
+  ActionSource source = 4;
+  double g_k_line = 5;
+  double q_k_line = 6;
+  double n_k = 7;
+  double v_y_k = 8;
+  double v_z_k = 9;
+  double m_y_k = 10;
+  double m_z_k = 11;
+  double torsion_k = 12;
+  double local_load_k = 13;
+}
+message BoltGroup {
+  string material = 1;
+  double diameter = 2;
+  uint32 rows = 3;
+  uint32 bolts_per_row = 4;
+  double edge_distance = 5;
+  double pitch = 6;
+  double gauge = 7;
+  double plate_thickness = 8;
+}
+message WeldGroup {
+  string filler_alloy = 1;
+  double throat = 2;
+  double length = 3;
+  double beta_w = 4;
+  double haz_extent = 5;
+}
+enum WeldProcess {
+  WELD_PROCESS_MIG = 0;
+  WELD_PROCESS_TIG = 1;
+}
+enum WeldDirection {
+  WELD_DIRECTION_LONGITUDINAL = 0;
+  WELD_DIRECTION_TRANSVERSE = 1;
+}
+message PlateElement {
+  string id = 1;
+  double width = 2;
+  double thickness = 3;
+  bool outstand = 4;
+  bool welded = 5;
+  double weld_position = 6;
+  WeldProcess weld_process = 7;
+  bool weld_t_junction = 8;
+  WeldDirection weld_direction = 9;
+  double edge_stiffener_depth = 10;
+  double edge_stiffener_thickness = 11;
+}
+enum FastenerForceMethod {
+  FASTENER_FORCE_METHOD_ELASTIC = 0;
+  FASTENER_FORCE_METHOD_INSTANTANEOUS_CENTRE = 1;
+}

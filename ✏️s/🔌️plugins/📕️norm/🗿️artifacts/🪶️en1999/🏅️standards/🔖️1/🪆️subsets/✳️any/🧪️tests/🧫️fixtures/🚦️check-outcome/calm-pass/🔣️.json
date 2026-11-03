@@ -1,0 +1,363 @@
+{
+  "annex": "De",
+  "reliabilityClass": "RC2",
+  "materials": [
+    {
+      "id": "mat-6082",
+      "designation": "aw6082-t6",
+      "productForm": "extrudedProfile"
+    }
+  ],
+  "sections": [
+    {
+      "id": "sec-i120",
+      "kind": "extrudedI",
+      "height": 0.14,
+      "width": 0.07,
+      "flangeThickness": 0.01,
+      "webThickness": 0.008,
+      "outerDiameter": 0.0,
+      "elements": [
+        {
+          "id": "flange-top",
+          "width": 0.031000000000000003,
+          "thickness": 0.01,
+          "outstand": true,
+          "welded": true,
+          "weldPosition": 0.005,
+          "weldProcess": "mig",
+          "weldTJunction": false,
+          "weldDirection": "longitudinal",
+          "edgeStiffenerDepth": 0.0,
+          "edgeStiffenerThickness": 0.0
+        },
+        {
+          "id": "flange-bot",
+          "width": 0.031000000000000003,
+          "thickness": 0.01,
+          "outstand": true,
+          "welded": true,
+          "weldPosition": 0.005,
+          "weldProcess": "mig",
+          "weldTJunction": false,
+          "weldDirection": "longitudinal",
+          "edgeStiffenerDepth": 0.0,
+          "edgeStiffenerThickness": 0.0
+        },
+        {
+          "id": "web",
+          "width": 0.12000000000000001,
+          "thickness": 0.008,
+          "outstand": false,
+          "welded": true,
+          "weldPosition": 0.005,
+          "weldProcess": "mig",
+          "weldTJunction": false,
+          "weldDirection": "longitudinal",
+          "edgeStiffenerDepth": 0.0,
+          "edgeStiffenerThickness": 0.0
+        }
+      ]
+    },
+    {
+      "id": "sec-chs168",
+      "kind": "chs",
+      "height": 0.0,
+      "width": 0.0,
+      "flangeThickness": 0.0,
+      "webThickness": 0.005,
+      "outerDiameter": 0.1683,
+      "elements": []
+    }
+  ],
+  "members": [
+    {
+      "id": "purlin-1",
+      "sectionId": "sec-i120",
+      "materialId": "mat-6082",
+      "length": 6.0,
+      "support": "simplySupported",
+      "bucklingLengthY": 1.5,
+      "bucklingLengthZ": 1.5,
+      "bucklingLengthT": 1.5,
+      "ltbLength": 1.5,
+      "c1": 1.132,
+      "restrainedLtb": false,
+      "bearingLength": 0.0,
+      "transverseWeld": false,
+      "transverseWeldOffset": 0.0,
+      "actions": [
+        {
+          "id": "G",
+          "kind": "permanent",
+          "category": "selfWeight",
+          "source": "udl",
+          "gKLine": 40.0,
+          "qKLine": 0.0,
+          "nK": -6000.0,
+          "vYK": 0.0,
+          "vZK": 0.0,
+          "mYK": 0.0,
+          "mZK": 0.0,
+          "torsionK": 0.0,
+          "localLoadK": 0.0
+        },
+        {
+          "id": "Q-snow",
+          "kind": "snow",
+          "category": "snow",
+          "source": "udl",
+          "gKLine": 0.0,
+          "qKLine": 90.0,
+          "nK": 0.0,
+          "vYK": 5.0,
+          "vZK": 20.0,
+          "mYK": 10.0,
+          "mZK": 4.0,
+          "torsionK": 0.0,
+          "localLoadK": 4000.0
+        }
+      ]
+    },
+    {
+      "id": "post-chs",
+      "sectionId": "sec-chs168",
+      "materialId": "mat-6082",
+      "length": 3.0,
+      "support": "cantilever",
+      "bucklingLengthY": 3.0,
+      "bucklingLengthZ": 3.0,
+      "bucklingLengthT": 3.0,
+      "ltbLength": 3.0,
+      "c1": 1.0,
+      "restrainedLtb": false,
+      "bearingLength": 0.0,
+      "transverseWeld": false,
+      "transverseWeldOffset": 0.0,
+      "actions": [
+        {
+          "id": "G-post",
+          "kind": "permanent",
+          "category": "selfWeight",
+          "source": "external",
+          "gKLine": 5.0,
+          "qKLine": 0.0,
+          "nK": -800.0,
+          "vYK": 2.0,
+          "vZK": 8.0,
+          "mYK": 12.0,
+          "mZK": 1.5,
+          "torsionK": 0.0,
+          "localLoadK": 0.0
+        },
+        {
+          "id": "Q-post",
+          "kind": "imposed",
+          "category": "office",
+          "source": "external",
+          "gKLine": 0.0,
+          "qKLine": 4.0,
+          "nK": -200.0,
+          "vYK": 1.5,
+          "vZK": 4.0,
+          "mYK": 5.0,
+          "mZK": 1.0,
+          "torsionK": 0.0,
+          "localLoadK": 0.0
+        }
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "support-weld",
+      "memberId": "purlin-1",
+      "materialId": "mat-6082",
+      "kind": "combined",
+      "actions": [
+        {
+          "id": "G-conn",
+          "kind": "permanent",
+          "category": "selfWeight",
+          "source": "external",
+          "gKLine": 80.0,
+          "qKLine": 0.0,
+          "nK": 150.0,
+          "vYK": 20.0,
+          "vZK": 350.0,
+          "mYK": 40.0,
+          "mZK": 15.0,
+          "torsionK": 0.0,
+          "localLoadK": 0.0
+        },
+        {
+          "id": "Q-conn",
+          "kind": "snow",
+          "category": "snow",
+          "source": "external",
+          "gKLine": 0.0,
+          "qKLine": 60.0,
+          "nK": 80.0,
+          "vYK": 15.0,
+          "vZK": 250.0,
+          "mYK": 25.0,
+          "mZK": 10.0,
+          "torsionK": 0.0,
+          "localLoadK": 0.0
+        }
+      ],
+      "bolts": {
+        "material": "8.8",
+        "diameter": 0.012,
+        "rows": 2,
+        "boltsPerRow": 2,
+        "edgeDistance": 0.024,
+        "pitch": 0.036,
+        "gauge": 0.036,
+        "plateThickness": 0.008
+      },
+      "welds": {
+        "fillerAlloy": "4043",
+        "throat": 0.005,
+        "length": 0.16,
+        "betaW": 0.63,
+        "hazExtent": 0.025
+      },
+      "loadEccentricity": 0.0,
+      "holeStagger": 0.0,
+      "forceMethod": "elastic"
+    }
+  ],
+  "fireScenarios": [
+    {
+      "id": "fire-1",
+      "memberId": "purlin-1",
+      "thetaA": 40.0,
+      "durationS": 60.0
+    }
+  ],
+  "fatigueDetails": [
+    {
+      "id": "fat-1",
+      "memberId": "purlin-1",
+      "detailCategory": "71",
+      "deltaSigmaC": 71000000.0,
+      "deltaSigmaEd": 35000000.0,
+      "nCycles": 6000000.0,
+      "m1": 4.3,
+      "m2": 6.3
+    }
+  ],
+  "coldFormed": [
+    {
+      "id": "sheet-pass",
+      "materialId": "mat-6082",
+      "thickness": 0.005,
+      "width": 0.08,
+      "span": 1.0,
+      "welded": false,
+      "actions": [
+        {
+          "id": "G-sheet",
+          "kind": "permanent",
+          "category": "selfWeight",
+          "source": "external",
+          "gKLine": 12.0,
+          "qKLine": 0.0,
+          "nK": 592.6,
+          "vYK": 0.0,
+          "vZK": 0.0,
+          "mYK": 2.9600000000000004,
+          "mZK": 0.0,
+          "torsionK": 0.0,
+          "localLoadK": 0.0
+        }
+      ]
+    }
+  ],
+  "placements": [
+    {
+      "id": "purlin-1",
+      "x": 1.0,
+      "y": 2.0,
+      "z": 0.5,
+      "yaw": 0.25
+    }
+  ],
+  "weldRuns": [],
+  "outlineVertices": [
+    {
+      "id": "v-1",
+      "sectionId": "sec-i120",
+      "ring": "outer",
+      "elementId": "web",
+      "y": 0.0,
+      "z": 0.0
+    },
+    {
+      "id": "v-2",
+      "sectionId": "sec-i120",
+      "ring": "outer",
+      "elementId": "web",
+      "y": 0.06,
+      "z": 0.0
+    },
+    {
+      "id": "v-3",
+      "sectionId": "sec-i120",
+      "ring": "outer",
+      "elementId": "",
+      "y": 0.06,
+      "z": 0.12
+    }
+  ],
+  "fatigueCategories": [],
+  "patchLoads": [],
+  "ringStiffeners": [],
+  "transverseStiffeners": [
+    {
+      "id": "stiffener-1",
+      "girderId": "purlin-1",
+      "position": 2.0,
+      "width": 0.05,
+      "thickness": 0.006,
+      "sides": "two"
+    },
+    {
+      "id": "stiffener-2",
+      "girderId": "purlin-1",
+      "position": 4.0,
+      "width": 0.05,
+      "thickness": 0.006,
+      "sides": "one"
+    }
+  ],
+  "shells": [
+    {
+      "id": "shell-pass",
+      "materialId": "mat-6082",
+      "radius": 0.5,
+      "thickness": 0.01,
+      "length": 2.0,
+      "welded": false,
+      "fabricationClass": "b",
+      "actions": [
+        {
+          "id": "G-shell",
+          "kind": "permanent",
+          "category": "selfWeight",
+          "source": "external",
+          "gKLine": 80.0,
+          "qKLine": 0.0,
+          "nK": 2960000.0,
+          "vYK": 0.0,
+          "vZK": 370000.0,
+          "mYK": 2220000.0,
+          "mZK": 0.0,
+          "torsionK": 0.0,
+          "localLoadK": 0.0
+        }
+      ]
+    }
+  ]
+}

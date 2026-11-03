@@ -1,0 +1,5 @@
+{
+  "mutation": "changeBridgeLineSpeed",
+  "id": "bri-1",
+  "newLineSpeed": 2.0
+}

@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/remove-sheet-action/schema.json",
+  "title": "RemoveSheetAction",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "coldFormedId",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "removeSheetAction"
+    },
+    "coldFormedId": {
+      "type": "string",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Cold-formed sheet",
+          "de": "Kaltgeformtes Blech"
+        },
+        "description": {
+          "en": "The cold-formed sheet that owns the row, by id.",
+          "de": "Das Elternelement (Kaltgeformtes Blech), per Kennung."
+        },
+        "group": "target",
+        "order": 10,
+        "widget": "reference",
+        "ref": {
+          "kind": "cold-formed"
+        }
+      }
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Cold-formed sheet action",
+          "de": "Einwirkung auf kaltgeformtes Blech"
+        },
+        "description": {
+          "en": "The cold-formed sheet action this mutation removes.",
+          "de": "Entfernt wird: Einwirkung auf kaltgeformtes Blech."
+        },
+        "group": "target",
+        "order": 20,
+        "widget": "reference",
+        "ref": {
+          "kind": "sheet-action"
+        }
+      }
+    }
+  }
+}

@@ -39,7 +39,7 @@ impl<A:ArtifactApp> OriginalTypingSettlement<A>{
  }
  fn capture<D>(&mut self,operation:u64,base:&[u8;32],actor:&str,emit:&mut Emit<A::Mutation,A::ConfigMutation,D>,tag_copy_bytes:usize,receive:impl FnOnce()->(TypingTag,HybridLogicalTimestamp),cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   self.validate(cx)?;if self.closing||!self.accepts(operation,base,actor,emit){return Err(invalid().into())}if self.captured{return Ok(true)}
-  if self.caller.is_none(){cx.original_source_parent()?.admit_loan(&mut self.caller,cx)?;return Ok(false)}
+  if self.caller.is_none(){if !cx.original_source_parent()?.admit_loan(&mut *self.caller,cx)?{return Ok(false)}}
   let owners=self.owners.original_mut().ok_or_else(invalid)?;let d=Self::capture_demands(actor,tag_copy_bytes)?;let grant=cx.retained_grant();
   built(cx,&mut owners.request,construction(d),|_|{let mut text=String::with_capacity(actor.len());text.push_str(actor);let text_capacity=text.capacity();let(actor_owner,actor_progress)=semio_framework_value::SharedUtf8::admit(text,grant).result.unwrap_or_else(|_|unreachable!("original typing actor frame was preadmitted"));let actual=text_capacity+actor_progress.retained_capacity_bytes;let(TypingTag{window,tool,buffer},clock)=receive();let request=OriginalTypingEditRequest{window,tool,actor:protocol::ActorId(actor_owner),buffer,leaves:std::mem::take(&mut emit.artifact_mutations),clock};self.backing=backing(emit);self.lengths=lengths(emit);self.captured=true;Ok((request,RetainedCloneProgress{retained_capacity_bytes:actual,..receipt(d)}))})?;Ok(self.captured)
  }

@@ -1,17 +1,21 @@
-//! 📏️ `change-storey-drift-xm` diff — patches the one field of the nested row at the indexes; a missing building or storey is a `mutation.target-missing`.
+//! 📏️ `change-storey-drift-xm` diff: patches `drift_x_m` of the addressed storey row.
 
 use crate::change_storey_drift_xm::ChangeStoreyDriftXM;
 use semio_s_artifact_norm_en1998_diff::{En1998BuildingDelta, En1998BuildingPatch, En1998Diff, En1998StoreyDelta, En1998StoreyPatch};
 use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 
 pub fn diff(payload: &ChangeStoreyDriftXM, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
-    let Some(building) = base.buildings.get(payload.building_index) else {
-        return protocol::MutationOutcome::error("mutation.target-missing", "building", Vec::<String>::new());
+    if !payload.new_drift_x_m.is_finite() {
+        return protocol::MutationOutcome::fatal("mutation.invariant", "The value must be finite.", Vec::<String>::new());
+    }
+    let Some(r0) = base.buildings.iter().find(|row| row.id == payload.building_id) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("building {} does not exist.", payload.building_id), [payload.building_id.clone()]);
     };
-    let Some(row) = building.storeys.get(payload.storey_index) else {
-        return protocol::MutationOutcome::error("mutation.target-missing", "storey", Vec::<String>::new());
+    let Some(r1) = r0.storeys.iter().find(|row| row.id == payload.id) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("storey {} does not exist.", payload.id), [payload.id.clone()]);
     };
-    let nested = En1998StoreyDelta::modification(&row.id, En1998StoreyPatch { drift_x_m: Some(payload.new_drift_x_m), ..Default::default() });
-    let patch = En1998BuildingPatch { storeys: nested, ..Default::default() };
-    protocol::MutationOutcome::new(En1998Diff { buildings: En1998BuildingDelta::modification(&building.id, patch), ..Default::default() })
+    if r1.drift_x_m == payload.new_drift_x_m {
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "The storey already has this value.");
+    }
+    protocol::MutationOutcome::new(En1998Diff { buildings: En1998BuildingDelta::modification(&payload.building_id, En1998BuildingPatch { storeys: En1998StoreyDelta::modification(&payload.id, En1998StoreyPatch { drift_x_m: Some(payload.new_drift_x_m), ..Default::default() }), ..Default::default() }), ..Default::default() })
 }

@@ -6,6 +6,7 @@ use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
 
 /// 📚 Every path a Din18599 editor edit resolves, one rule per kind that sets, inserts or removes through it.
 pub const EDIT_RULES: NormEditRules = NormEditRules {
+    move_item: &[],
     set_field: &[
         SetFieldRule { path: "renewables", kind: "update-renewables", selectors: &[], value: "newRenewables" },
         SetFieldRule { path: "gegQpFactor", kind: "change-geg-qp-factor", selectors: &[], value: "newGegQpFactor" },

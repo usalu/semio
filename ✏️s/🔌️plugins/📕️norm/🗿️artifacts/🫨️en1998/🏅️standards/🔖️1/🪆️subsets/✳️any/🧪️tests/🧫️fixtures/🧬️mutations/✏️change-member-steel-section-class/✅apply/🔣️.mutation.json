@@ -1,0 +1,6 @@
+{
+  "mutation": "changeMemberSteelSectionClass",
+  "buildingId": "bldg-office",
+  "id": "col-c1",
+  "newSteelSectionClass": 1
+}

@@ -1,0 +1,42 @@
+{
+  "annex": null,
+  "structureKind": null,
+  "steelFYPa": null,
+  "beams": null,
+  "columns": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "col-C1",
+        "patch": {
+          "kind": null,
+          "lengthM": null,
+          "outerSizeM": null,
+          "wallThicknessM": null,
+          "steelAM2": null,
+          "steelFYPa": null,
+          "concreteAM2": null,
+          "concreteFCkPa": null,
+          "reinforcementAsM2": null,
+          "reinforcementFYkPa": 625000000.0,
+          "iM4": null,
+          "bucklingCurve": null,
+          "introducedForceN": null,
+          "sectionHeightM": null,
+          "sectionWidthM": null,
+          "sectionTwM": null,
+          "sectionTfM": null,
+          "rebarCoverM": null,
+          "reinforcementProduct": null,
+          "actions": null
+        }
+      }
+    ]
+  },
+  "slabs": null,
+  "fireRating": null,
+  "insulationThicknessM": null,
+  "fatigueDetail": null
+}

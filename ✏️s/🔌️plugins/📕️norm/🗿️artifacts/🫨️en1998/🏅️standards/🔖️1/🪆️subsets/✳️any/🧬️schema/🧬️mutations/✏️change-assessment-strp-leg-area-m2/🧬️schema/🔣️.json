@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-assessment-strp-leg-area-m2/schema.json",
+  "title": "ChangeAssessmentStrpLegAreaM2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newStirrupLegAreaM2"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeAssessmentStrpLegAreaM2"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Assessment",
+          "de": "Bewertung"
+        },
+        "description": {
+          "en": "The assessment this mutation addresses, by id.",
+          "de": "Das adressierte Element (Bewertung), per Kennung."
+        },
+        "ref": {
+          "kind": "assessment"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newStirrupLegAreaM2": {
+      "type": "number",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Stirrup area A_sx in the loading direction per spacing",
+          "de": "Bügelfläche A_sx in Lastrichtung je Abstand"
+        },
+        "group": "value",
+        "order": 20,
+        "widget": "stepper",
+        "step": 0.001,
+        "precision": 3
+      }
+    }
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeBridgeEndRotation",
+  "id": "bri-1",
+  "newEndRotation": 2.0
+}

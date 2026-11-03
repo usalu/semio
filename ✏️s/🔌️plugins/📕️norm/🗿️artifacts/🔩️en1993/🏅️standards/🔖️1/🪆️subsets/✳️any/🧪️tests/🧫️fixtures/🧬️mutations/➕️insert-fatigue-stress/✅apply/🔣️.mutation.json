@@ -1,0 +1,17 @@
+{
+  "InsertFatigueStress": {
+    "index": 1,
+    "fatigueStress": {
+      "id": "fatigue-stress-2",
+      "detailId": "fatigue-1",
+      "maxCaseId": "lm-max",
+      "minCaseId": "lm-min",
+      "fibreZ": 0.1,
+      "fibreY": 0.0,
+      "relief": "AsWelded",
+      "concentration": 0.0,
+      "thickness": 0.0,
+      "cycles": 2000000.0
+    }
+  }
+}

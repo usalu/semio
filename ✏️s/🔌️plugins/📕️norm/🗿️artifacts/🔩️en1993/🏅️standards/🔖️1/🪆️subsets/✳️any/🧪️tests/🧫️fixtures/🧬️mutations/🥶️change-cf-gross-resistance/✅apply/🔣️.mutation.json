@@ -1,0 +1,6 @@
+{
+  "ChangeCfGrossResistance": {
+    "id": "cf-1",
+    "newGrossResistance": 160000.0
+  }
+}

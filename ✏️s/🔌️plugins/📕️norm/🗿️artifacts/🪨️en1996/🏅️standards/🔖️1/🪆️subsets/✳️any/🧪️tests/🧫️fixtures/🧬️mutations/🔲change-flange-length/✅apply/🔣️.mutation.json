@@ -1,0 +1,7 @@
+{
+  "ChangeFlangeLength": {
+    "wallId": "wall-north",
+    "id": "flange-1",
+    "newLengthM": 1.2
+  }
+}

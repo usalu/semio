@@ -2,41 +2,49 @@
 
 #![allow(async_fn_in_trait)]
 
+#[cfg(test)]
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as vcs;
-extern crate semio_framework_schema as schema;
 extern crate semio_framework_value_derive as value_derive;
 
 use protocol::Mutation;
-use semio_framework_dispatch_macros::dyn_enum;
 use std::fmt;
 use store::TextError;
 
-#[path = "📐️quantities-clauses-and-text/🦀️.rs"]
-mod quantities_clauses_and_text;
-pub use quantities_clauses_and_text::*;
-
-#[path = "✅️check-results/🦀️.rs"]
-mod check_results;
-pub use check_results::*;
-
-#[path = "📜️annex-and-tables/🦀️.rs"]
-mod annex_and_tables;
-pub use annex_and_tables::*;
-
-#[path = "🏗️design-situation-and-shared/🦀️.rs"]
-mod design_situation_and_shared;
-pub use design_situation_and_shared::*;
+pub use semio_s_plugin_norm_compliance_core::*;
 
 #[path = "🏛️norm-error-and-family/🦀️.rs"]
 mod norm_error_and_family;
 pub use norm_error_and_family::*;
 
+#[path = "⚡️incremental-evaluation/🦀️.rs"]
+pub mod incremental_evaluation;
+
+#[path = "🧰️design-case/🦀️.rs"]
+pub mod design_case;
+
+#[path = "🧭️spec-trace/🦀️.rs"]
+pub mod spec_trace;
+
+#[path = "🗣️reasons/🦀️.rs"]
+pub mod reasons;
+pub use reasons::{explain_reason, german_check_leaks, german_leaks, looks_english, reason_copy, Reason, ReasonRule, RULES as REASON_RULES, UNMAPPED_REASON};
+
 #[path = "🔤️op-text-and-pack-codec/🦀️.rs"]
 mod op_text_and_pack_codec;
 pub use op_text_and_pack_codec::*;
+
+/// 🎯️ Typed driver that feeds blessed oracle cases to OUR evaluators through per-artifact adapter registries.
+#[cfg(any(test, feature = "compliance-testing"))]
+#[path = "🧪️tests/🎯️oracle-driver/🦀️.rs"]
+pub mod oracle_driver;
+
+/// 🧬️ Shared regeneration of committed assets: the bless switch, DSL and pack rewrite, SQLite contract numbers.
+#[cfg(any(test, feature = "test-support", feature = "compliance-testing"))]
+#[path = "🧪️tests/🧬️regen/🦀️.rs"]
+pub mod regen;
 
 /// 🪪️ Independent Serde oracle for composed child identities; local materialization never enters JSON.
 #[cfg(any(test, feature = "compliance-testing"))]
@@ -114,3 +122,7 @@ fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSql
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🧭️ownership/🦀️.rs"]
+mod ownership_tests;

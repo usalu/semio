@@ -1,0 +1,6 @@
+{
+  "ChangeRestraintLatSpringStiffness": {
+    "id": "restraint-1",
+    "newLateralSpringStiffness": 1.5
+  }
+}

@@ -141,9 +141,9 @@ Feature: Apply every typed block2d node-kind mutation twice — once in Rust, on
   @level-exhaustive
   @mode-differential
   Scenario Outline: Replay the committed <id> specification vector through both implementations
-    Given the committed before-document shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/⬅️before/🔣️.json
-    And the committed mutation shared://🧬️mutations/<dir>/<fixture>/🦠️mutation/🔣️.json
-    And the committed after-document shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/➡️after/🔣️.json
+    Given the committed before-document shared://🧬️mutations/<dir>/<fixture>/🔣️.before.json
+    And the committed mutation shared://🧬️mutations/<dir>/<fixture>/🔣️.mutation.json
+    And the committed after-document shared://🧬️mutations/<dir>/<fixture>/🔣️.after.json
     When the committed mutation is applied to the committed before-document
     Then each implementation lands on the committed after-document in role, only the member this verb writes moved, and the two agree
     Examples:

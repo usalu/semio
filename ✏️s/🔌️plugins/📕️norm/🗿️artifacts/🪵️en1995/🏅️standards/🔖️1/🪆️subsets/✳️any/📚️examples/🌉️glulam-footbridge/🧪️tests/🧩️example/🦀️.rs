@@ -14,8 +14,8 @@ async fn primary_asset_decodes_to_the_compliant_bridge() {
 #[semio_framework_async_macros::async_test]
 async fn decoded_example_complies_with_every_bridge_check() {
     let snap = decoded();
-    let report = evaluate_structure(snap.annex, &snap.members, &snap.connections);
-    assert!(report.complies(), "fails: {:?}", report.failing().map(|c| c.id.clone()).collect::<Vec<_>>());
+    let report = evaluate_structure(&snap);
+    assert!(report.failing().next().is_none(), "fails: {:?}", report.failing().map(|c| c.id.clone()).collect::<Vec<_>>());
     for prefix in ["en1995.2.a.fatigue.bridge-G1", "en1995.2.b.avert.bridge-G1", "en1995.2.b.ahor.bridge-G1", "en1995.2.uls.bending.bridge-G1", "en1995.2.sls.deflection.bridge-G1"] {
         assert!(report.checks.iter().any(|c| c.id.starts_with(prefix)), "missing {prefix}");
     }
@@ -33,5 +33,5 @@ async fn inference_determinism_law() {
 async fn inference_default_law() {
     use semio_s_artifact_norm_en1995_inferences::En1995Inference;
     use protocol::Inference;
-    assert_eq!(En1995Inference::infer(&En1995Snapshot::default()).expect("valid materialized inference fixture"), En1995Inference::default());
+    assert_eq!(En1995Inference::infer(&En1995Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De)).expect("valid materialized inference fixture"), En1995Inference::default());
 }

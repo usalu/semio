@@ -1,0 +1,12 @@
+/** 📍 `change-bar-point-y` wire twin: the leaf payload `ChangeBarPointY`, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
+ * by `repo ./📜️script.ts schema twins generate`; readers judge structure, the schema's bounds stay Ajv's.
+ * @see ./🔣️.json */
+import { normWireNumber, normWireObject, normWireRequired, normWireString, type NormWireReader } from "@semio-tech/norm-js/registry/contract";
+
+export interface ChangeBarPointY {
+  memberId: string;
+  barId: string;
+  newY: number;
+}
+
+export const parseChangeBarPointY: NormWireReader<ChangeBarPointY> = normWireObject<ChangeBarPointY>({ memberId: normWireRequired(normWireString), barId: normWireRequired(normWireString), newY: normWireRequired(normWireNumber) });

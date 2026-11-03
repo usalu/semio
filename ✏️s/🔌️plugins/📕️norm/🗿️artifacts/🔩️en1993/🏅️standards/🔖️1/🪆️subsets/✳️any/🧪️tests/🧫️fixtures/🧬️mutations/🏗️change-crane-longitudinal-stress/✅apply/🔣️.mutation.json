@@ -1,0 +1,6 @@
+{
+  "ChangeCraneLongitudinalStress": {
+    "id": "crane-1",
+    "newLongitudinalStress": 1.5
+  }
+}

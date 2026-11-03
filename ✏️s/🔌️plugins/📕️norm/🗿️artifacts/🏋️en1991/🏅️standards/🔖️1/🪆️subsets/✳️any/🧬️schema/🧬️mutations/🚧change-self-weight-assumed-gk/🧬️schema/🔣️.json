@@ -5,26 +5,26 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "index",
+    "id",
     "newAssumedGk"
   ],
   "properties": {
-    "index": {
-      "type": "integer",
-      "minimum": 0,
+    "id": {
+      "type": "string",
       "x-semio-ui": {
-        "widget": "stepper",
-        "role": "value",
+        "widget": "reference",
+        "role": "target",
         "label": {
           "en": "Self-weight element",
           "de": "Eigenlastbauteil"
         },
         "description": {
-          "en": "Zero-based position of the self-weight element in its list.",
-          "de": "Nullbasierte Position des Eigenlastbauteils in der Liste."
+          "en": "The self-weight element this mutation addresses, by id.",
+          "de": "Das adressierte Element (Eigenlastbauteil), per Kennung."
         },
-        "step": 1,
-        "precision": 0,
+        "ref": {
+          "kind": "self-weight-element"
+        },
         "group": "target",
         "order": 10
       }

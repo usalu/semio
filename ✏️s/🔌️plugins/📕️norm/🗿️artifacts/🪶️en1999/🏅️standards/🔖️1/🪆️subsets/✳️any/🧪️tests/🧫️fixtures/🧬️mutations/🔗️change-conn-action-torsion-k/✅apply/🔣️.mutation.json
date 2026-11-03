@@ -1,0 +1,6 @@
+{
+  "mutation": "changeConnActionTorsionK",
+  "connectionId": "support-weld",
+  "actionId": "G-conn",
+  "newTorsionK": 1.5
+}

@@ -1,0 +1,13 @@
+{
+  "mutation": "insertSoilLayer",
+  "index": 1,
+  "layer": {
+    "id": "sl-2",
+    "foundationId": "fd-1",
+    "thicknessM": 3.0,
+    "unitWeightNM3": 18000.0,
+    "shearWaveVelocityMS": 180.0,
+    "n160": 12.0,
+    "finesPercent": 10.0
+  }
+}

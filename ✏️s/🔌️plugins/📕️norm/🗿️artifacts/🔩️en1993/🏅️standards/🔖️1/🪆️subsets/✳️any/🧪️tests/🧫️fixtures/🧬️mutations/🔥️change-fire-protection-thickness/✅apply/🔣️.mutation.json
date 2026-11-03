@@ -1,0 +1,6 @@
+{
+  "ChangeFireProtectionThickness": {
+    "id": "fire-1",
+    "newProtectionThickness": 0.016
+  }
+}

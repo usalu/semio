@@ -1,0 +1,6 @@
+{
+  "ChangeRestraintLoadDistribution": {
+    "id": "restraint-1",
+    "newLoadDistribution": "Udl"
+  }
+}

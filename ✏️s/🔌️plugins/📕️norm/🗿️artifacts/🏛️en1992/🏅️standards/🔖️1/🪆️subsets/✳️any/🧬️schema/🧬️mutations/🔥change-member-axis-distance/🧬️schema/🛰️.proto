@@ -1,5 +1,6 @@
 syntax = "proto3";
+package semio.s.norm.en1992.mutation.change_member_axis_distance;
 message ChangeMemberAxisDistance {
-  string memberId = 1;
-  double newAxisDistance = 2;
+  string member_id = 1;
+  double new_axis_distance = 2;
 }

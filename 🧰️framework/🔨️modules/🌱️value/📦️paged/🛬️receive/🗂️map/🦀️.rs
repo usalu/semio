@@ -5,7 +5,7 @@ use semio_framework_value_persistent::list::PagedList;
 use semio_framework_value_native_owned::native_decoding::owned::tree::{NativeSequenceReceiver,RecordEntries};
 type Index=PagedList<Option<(u64,usize)>,{usize::MAX}>;
 type Rows<V,const N:usize>=PagedList<(PagedUtf8<{usize::MAX}>,V),N>;
-type Child<I:NativeValueSource+?Sized,V:NativeReceive<dyn NativeValueSource>+Sync,const N:usize>=NativeSequenceReceiver<I,(PagedUtf8<{usize::MAX}>,V),Rows<V,N>,RecordEntries>;
+type Child<I,V,const N:usize>=NativeSequenceReceiver<I,(PagedUtf8<{usize::MAX}>,V),Rows<V,N>,RecordEntries>;
 pub struct PagedMapReceiver<I:NativeValueSource+?Sized,V:NativeReceive<dyn NativeValueSource>+Sync,const N:usize>{binding:Option<RetainedCloneBinding>,index:ManuallyDrop<Option<Index>>,child:ManuallyDrop<Option<Child<I,V,N>>>,entries:ManuallyDrop<Option<Rows<V,N>>>,output:ManuallyDrop<Option<PagedMap<V,N>>>,retirement:RetainedCloneClose,count:usize,slots:usize,item:usize,offset:usize,probe:usize,comparison:usize,hash:u64,phase:u8,closing:bool,fault:bool}
 impl<I:NativeValueSource+?Sized,V:NativeReceive<dyn NativeValueSource>+Sync,const N:usize> PagedMapReceiver<I,V,N>{
  fn rows(&self)->Result<&Index,ValueError>{self.index.as_ref().ok_or_else(invalid)}

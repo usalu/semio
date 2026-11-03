@@ -2,6 +2,7 @@ import type { ScriptInvocation } from "@semio-tech/framework/process/routing";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { runCmd } from "@semio-tech/framework/process/execution";
+import { deleteEntitiesFailuresV1 } from "../🗑️delete-entities/🟦️.ts";
 
 type RetainedRoute = { id: string; emittedLanes: string[]; publicationLanes: string[]; execution: string; admission: string; reducer: string };
 type RetainedContract = { toolId: string; lanes: string[] };
@@ -13,6 +14,7 @@ type RetainedFixture = {
   routes: RetainedRoute[];
   apps: RetainedApp[];
   expected: { apps: number; routesPerApp: number; identities: number; retained: number; batchOnlyPendingRewrite: number };
+  live?: { routes: { id: string; executes?: string }[] };
 };
 type DescriptorAction = { id: string; semantics?: { execution?: { interactiveJob?: string } } };
 type DescriptorApp = { id: string; role: string; windowKinds?: { id: string; actions?: DescriptorAction[] }[] };
@@ -33,7 +35,7 @@ export function runTestScript(context: Readonly<{ root: string; repoRoot: string
   expect(fixture.apps.length === fixture.expected.apps, `fixture declares ${fixture.apps.length} apps, expected ${fixture.expected.apps}`);
   expect(fixture.routes.length === fixture.expected.routesPerApp, `fixture declares ${fixture.routes.length} routes per app, expected ${fixture.expected.routesPerApp}`);
   expect(fixture.expected.identities === fixture.expected.apps * fixture.expected.routesPerApp, "identities must be apps × routesPerApp");
-  expect(fixture.expected.retained === fixture.expected.identities, "every identity must be retained (migrated)");
+  expect(fixture.expected.retained === fixture.expected.identities, "every identity must be retained");
   expect(fixture.expected.batchOnlyPendingRewrite === 0, "no norm identity may remain batchOnlyPendingRewrite");
   expect(fixture.publicationContracts.length === fixture.routes.length, "one publication contract per route");
   for (const [index, route] of fixture.routes.entries()) {
@@ -71,11 +73,15 @@ export function runTestScript(context: Readonly<{ root: string; repoRoot: string
   }
   expect(identities === fixture.expected.identities, `walked ${identities} identities, expected ${fixture.expected.identities}`);
 
+  const deleteRoute = fixture.live?.routes.find((route) => route.id === "deleteEntities");
+  expect(deleteRoute?.executes === "🗑️delete-entities", "the deleteEntities route names the fixture it executes");
+  for (const failure of deleteEntitiesFailuresV1()) failures.push(`deleteEntities executed: ${failure}`);
+
   if (failures.length > 0) {
     for (const failure of failures) console.error(`norm retained cohort: ${failure}`);
     process.exit(1);
   }
-  console.log(`norm retained cohort ok: ${fixture.apps.length} editors × ${fixture.routes.length} migrated routes, ${classified} descriptor rows carried a classification`);
+  console.log(`norm retained cohort ok: ${fixture.apps.length} editors × ${fixture.routes.length} retained routes, ${classified} descriptor rows carried a classification`);
   if (classified === 0) console.warn("norm retained cohort: the committed 🔣️.json predates interactiveJob — re-run describe to make the drift check bite");
   const artifacts = join(plugin, "🗿️artifacts");
   const tests = readdirSync(artifacts, { withFileTypes: true }).filter((entry) => entry.isDirectory()).flatMap((artifact) => {
@@ -83,6 +89,6 @@ export function runTestScript(context: Readonly<{ root: string; repoRoot: string
     const examples = existsSync(join(subset, "📚️examples")) ? readdirSync(join(subset, "📚️examples")).map((example) => join(subset, "📚️examples", example, "🧪️tests/🧩️example/🟦️.ts")) : [];
     return [...examples, join(subset, "✏️editor/📚️examples/🎬️demo-session/🧪️tests/🧩️example/🟦️.ts")].filter((path) => existsSync(path));
   });
-  tests.push(join(plugin, "🧪️tests/🏷️mutation-label-census/🟦️.ts"));
+  tests.push(join(plugin, "🧪️tests/🏷️mutation-label-census/🟦️.ts"), join(plugin, "🧪️tests/🪞️rust-parity/🟦️.ts"));
   runCmd(process.execPath, ["test", ...tests]);
 }

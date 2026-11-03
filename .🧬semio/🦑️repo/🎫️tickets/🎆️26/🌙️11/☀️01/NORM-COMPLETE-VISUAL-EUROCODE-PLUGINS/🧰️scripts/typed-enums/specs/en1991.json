@@ -1,0 +1,7 @@
+{
+  "artifact": "en1991",
+  "conversions": [
+    {"hosts": ["En1991Snapshot.fire_occupancy", "En1991Artifact.fire_occupancy"], "enum": "FireOccupancy", "doc": "🔥 Occupancy class of the fire compartment: the nine rows of the fire load Table E.4 of EN 1991-1-2.", "default": "Office",
+     "variants": [["Dwelling", ["dwelling", "residential"], "Dwelling", "Wohnen"], ["Office", ["office"], "Office", "Büro"], ["Hospital", ["hospital"], "Hospital", "Krankenhaus"], ["School", ["school"], "School", "Schule"], ["Hotel", ["hotel"], "Hotel", "Hotel"], ["Library", ["library"], "Library", "Bibliothek"], ["Shopping", ["shopping", "mall"], "Shopping", "Einkauf"], ["Theatre", ["theatre"], "Theatre", "Theater"], ["Transport", ["transport"], "Transport", "Verkehr"]]}
+  ]
+}

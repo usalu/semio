@@ -1,0 +1,5 @@
+{
+  "mutation": "changeAnchorFixedDiameter",
+  "id": "anchor-A1",
+  "newFixedDiameter": 0.3
+}

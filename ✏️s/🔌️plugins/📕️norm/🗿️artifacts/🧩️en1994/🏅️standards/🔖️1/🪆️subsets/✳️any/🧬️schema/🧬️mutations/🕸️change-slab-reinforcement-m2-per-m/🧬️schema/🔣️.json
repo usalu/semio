@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-slab-reinforcement-m2-per-m/schema.json",
+  "title": "ChangeSlabReinforcementM2PerM",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newAsM2PerM"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Composite slab",
+          "de": "Verbunddecke"
+        },
+        "description": {
+          "en": "The composite slab this mutation addresses, by id.",
+          "de": "Das adressierte Element (Verbunddecke), per Kennung."
+        },
+        "ref": {
+          "kind": "slab"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newAsM2PerM": {
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Slab reinforcement per metre",
+          "de": "Deckenbewehrung je Meter"
+        },
+        "unit": "m2/m",
+        "step": 0.00001,
+        "precision": 6,
+        "group": "slab",
+        "order": 20
+      }
+    }
+  }
+}

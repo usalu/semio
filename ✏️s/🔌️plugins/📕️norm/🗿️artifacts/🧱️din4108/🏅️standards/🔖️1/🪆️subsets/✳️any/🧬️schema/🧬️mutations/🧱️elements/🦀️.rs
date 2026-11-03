@@ -21,4 +21,4 @@ pub mod change_element_inclination_deg;
 pub mod change_element_orientation_deg;
 //#endregion 🪢️Mounts
 
-pub use semio_s_artifact_norm_din4108_mut_elements_2::{change_element_delta_u_f, change_element_delta_u_r, change_element_kind, insert_element, remove_element};
+pub use semio_s_artifact_norm_din4108_mut_elements_rows::{change_element_delta_u_f, change_element_delta_u_r, change_element_kind, insert_element, remove_element};

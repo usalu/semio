@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-dust-explosion-static-opening-pressure/schema.json",
+  "title": "ChangeDustExplosionStaticOpeningPressure",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newStaticOpeningPressure"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Dust explosion",
+          "de": "Staubexplosion"
+        },
+        "description": {
+          "en": "The dust explosion this mutation addresses, by id.",
+          "de": "Das adressierte Element (Staubexplosion), per Kennung."
+        },
+        "ref": {
+          "kind": "dust-explosion"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newStaticOpeningPressure": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Rotation static_opening_pressure f",
+          "de": "Statischer Ansprechdruck p_stat"
+        },
+        "widget": "stepper",
+        "role": "value",
+        "group": "value",
+        "order": 20,
+        "unit": "Pa",
+        "displayUnit": "kN/m²",
+        "displayFactor": 0.001,
+        "precision": 2,
+        "step": 1000
+      }
+    }
+  }
+}

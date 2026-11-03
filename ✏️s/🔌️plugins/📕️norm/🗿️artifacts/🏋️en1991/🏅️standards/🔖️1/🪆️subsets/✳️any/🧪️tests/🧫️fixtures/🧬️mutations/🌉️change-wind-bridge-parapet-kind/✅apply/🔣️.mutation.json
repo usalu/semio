@@ -1,0 +1,6 @@
+{
+  "ChangeWindBridgeParapetKind": {
+    "id": "wind-bridge-1",
+    "newParapetKind": 2
+  }
+}

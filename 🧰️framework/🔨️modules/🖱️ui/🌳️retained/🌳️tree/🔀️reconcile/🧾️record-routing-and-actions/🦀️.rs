@@ -139,6 +139,24 @@ fn action_descriptor(scope: &ui_contract::UiText, name: &ui_contract::UiText, ve
     ActionDescriptor { controller_id: scope.as_str().to_string(), action: if version == 1 { name.as_str().to_string() } else { format!("{}@{}", name.as_str(), version) }, args }
 }
 
+/// 🫳️ The action a tree row declares for a drop on it (its `Trigger::Drop` binding), found by the row's key in the published document; `None` when no row of that key declares one. Bounded by the document's node count.
+pub fn tree_item_drop_action(document: &UiDocumentTree, item_key: &str) -> Option<ActionDescriptor> {
+    let mut pending = vec![document.root_id()];
+    let mut visited = 0usize;
+    while let Some(id) = pending.pop() {
+        visited += 1;
+        if visited > document.node_count() {
+            return None;
+        }
+        let Some(record) = document.record(id) else { continue };
+        if record.key.as_str() == item_key && matches!(record.component, ui_contract::Component::TreeItem(_)) {
+            return record_action(record, ui_contract::Trigger::Drop, "");
+        }
+        pending.extend(record.children.iter().copied());
+    }
+    None
+}
+
 /// 🎯️ The ONE target a tree or table row's verbs fire on.
 fn row_target(record: &UiNodeRecord) -> Option<&ui_contract::RowTarget> {
     match &record.component {

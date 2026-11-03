@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/remove-accidental-case/schema.json",
+  "title": "RemoveAccidentalCase",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Accidental design situation",
+          "de": "Außergewöhnliche Bemessungssituation"
+        },
+        "description": {
+          "en": "The accidental design situation this mutation addresses, by id.",
+          "de": "Das adressierte Element (Außergewöhnliche Bemessungssituation), per Kennung."
+        },
+        "ref": {
+          "kind": "accidental-case"
+        },
+        "group": "target",
+        "order": 10
+      }
+    }
+  }
+}

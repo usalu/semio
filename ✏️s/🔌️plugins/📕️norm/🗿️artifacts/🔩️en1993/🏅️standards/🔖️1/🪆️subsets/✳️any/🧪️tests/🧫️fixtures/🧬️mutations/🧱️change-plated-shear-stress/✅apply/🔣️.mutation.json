@@ -1,0 +1,6 @@
+{
+  "ChangePlatedShearStress": {
+    "id": "pp-1",
+    "newShearStress": 1.5
+  }
+}

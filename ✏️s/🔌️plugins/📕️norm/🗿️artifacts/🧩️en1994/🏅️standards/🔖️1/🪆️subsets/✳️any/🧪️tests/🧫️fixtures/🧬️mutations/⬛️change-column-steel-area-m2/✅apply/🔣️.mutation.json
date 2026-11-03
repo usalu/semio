@@ -1,0 +1,6 @@
+{
+  "ChangeColumnSteelAreaM2": {
+    "id": "col-C1",
+    "newSteelAM2": 0.0105
+  }
+}

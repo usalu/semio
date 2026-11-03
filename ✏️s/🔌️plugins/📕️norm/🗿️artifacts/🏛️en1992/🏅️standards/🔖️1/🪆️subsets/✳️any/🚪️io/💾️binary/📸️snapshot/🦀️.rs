@@ -29,7 +29,7 @@ use crate::binary::snapshot::*;
 use crate::binary::snapshot::*;
 use semio_s_artifact_norm_en1992_model::*;
 use semio_s_plugin_norm_compliance::AnnexChoice;
-use semio_s_artifact_norm_en1992_model::{Anchor, BarLayer, ConcreteGrade, ExposureClass, FireRating, FireSpec, LoadCaseActions, MemberKind, PrestressSpec, PrestressSteel, PunchingSpec, RcMember, ReinforcementGrade, Stirrups, SupportCondition, TightnessClass};
+use semio_s_artifact_norm_en1992_model::{Anchor, BarLayer, ConcreteGrade, ExposureClass, FireRating, FireSpec, LoadCaseActions, MemberKind, PrestressSpec, Placement, PrestressSteel, PunchingSpec, RcMember, ReinforcementGrade, Stirrups, SupportCondition, TightnessClass};
 use framework_schema::ArtifactSchema;
 use crate::text::snapshot::*;
 /// 📦️ Decodes `.pack.semio` envelope.
@@ -42,5 +42,3 @@ pub fn encode_en1992_pack(snapshot: &En1992Snapshot) -> Vec<u8> {
 }
 }
 pub use crate::binary::snapshot::native_snapshot_codec::*;
-
-semio_s_plugin_norm_compliance::impl_norm_artifact_record!(@binary En1992Snapshot, extension="en1992", envelope_id="norm.en1992", sqlite=crate::sqlite::snapshot::codec);

@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-load-case-moment-variable/schema.json",
+  "title": "ChangeLoadCaseMomentVariable",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "footingId",
+    "id",
+    "newMomentVariable"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeLoadCaseMomentVariable"
+    },
+    "footingId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Footing",
+          "de": "Fundament"
+        },
+        "description": {
+          "en": "The footing this mutation addresses, by id.",
+          "de": "Die adressierte Zeile (Fundament), per Kennung."
+        },
+        "ref": {
+          "kind": "spread-foundation"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Footing load case",
+          "de": "Fundament-Lastfall"
+        },
+        "description": {
+          "en": "The footing load case this mutation addresses, by id.",
+          "de": "Die adressierte Zeile (Fundament-Lastfall), per Kennung."
+        },
+        "ref": {
+          "kind": "foundation-load-case"
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "newMomentVariable": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Variable moment M_Q,k",
+          "de": "Veränderliches Moment M_Q,k"
+        },
+        "widget": "stepper",
+        "unit": "N·m",
+        "displayUnit": "kN·m",
+        "displayFactor": 0.001,
+        "precision": 2,
+        "step": 1000,
+        "role": "value",
+        "group": "value",
+        "order": 30
+      }
+    }
+  }
+}

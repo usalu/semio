@@ -1,0 +1,6 @@
+{
+  "ChangeJointJointCoefficient": {
+    "id": "joint-j1",
+    "newJointCoefficient": 1.5
+  }
+}

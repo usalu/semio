@@ -2,18 +2,18 @@
   "bun": "1.4.2",
   "node": "24.15.0",
   "workspaceVolumeTargets": [
-    "/workspaces/semio/.🧬semio/🦑️repo/⚡️cache",
+    "/workspaces/semio/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\u26a1\ufe0fcache",
     "/workspaces/semio/.cache"
   ],
   "locale": "en_US.UTF-8",
   "storage": {
-    "policy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json",
+    "policy": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udcda\ufe0flibrary/\u26a1\ufe0fcaching/\ud83d\udcbe\ufe0fstorage/\ud83d\udd12\ufe0fenforcement/\ud83d\udce6\ufe0fbudget/\ud83d\udd23\ufe0fpolicy.json",
     "workingSetGigabytes": 25,
     "headroomPercent": 20
   },
   "postCreateCommand": [
     "bash",
-    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh",
+    "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udd29\ufe0fnative/\ud83e\udd7e\ufe0fbootstrap/\ud83d\udc1a\ufe0f.sh",
     "setup"
   ],
   "postCreateDependsOn": [
@@ -69,7 +69,7 @@
   "forwardedCommands": [
     {
       "label": "os-hub",
-      "manifest": "🌎️hub/📦️packages/🦀️rust/📋️project.json",
+      "manifest": "\ud83c\udf0e\ufe0fhub/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust/\ud83d\udccb\ufe0fproject.json",
       "target": "dev"
     },
     {
@@ -110,27 +110,27 @@
     },
     {
       "label": "Storybook",
-      "manifest": "📋️project.json",
+      "manifest": "\ud83d\udccb\ufe0fproject.json",
       "target": "dev-storybook"
     },
     {
       "label": "MCP Inspector",
-      "manifest": "📋️project.json",
+      "manifest": "\ud83d\udccb\ufe0fproject.json",
       "tool": "mcp-inspector-os"
     },
     {
       "label": "Course site",
-      "manifest": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript/📋️project.json",
+      "manifest": "\ud83c\udf93\ufe0fteaching/\ud83c\udfdb\ufe0farchitecture/\ud83d\udcda\ufe0fcourse/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript/\ud83d\udccb\ufe0fproject.json",
       "target": "dev"
     },
     {
       "label": "Course proctor",
-      "manifest": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust/📋️project.json",
+      "manifest": "\ud83c\udf93\ufe0fteaching/\ud83d\udec2\ufe0fproctor/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust/\ud83d\udccb\ufe0fproject.json",
       "target": "dev"
     },
     {
       "label": "Projektetage deck",
-      "manifest": "♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/📋️project.json",
+      "manifest": "\u267b\ufe0fmit-bestand/\ud83c\udfa4\ufe0fpr\u00e4sentation/\ud83d\udcc5\ufe0f33.projektetage/\ud83d\udce6\ufe0fpackages/\ud83d\udfe6\ufe0ftypescript/\ud83d\udccb\ufe0fproject.json",
       "target": "dev"
     }
   ],
@@ -159,8 +159,7 @@
         "installer",
         "help",
         "setup",
-        "debugger",
-        "browser"
+        "debugger"
       ]
     },
     {
@@ -172,8 +171,7 @@
         "installer",
         "help",
         "setup",
-        "debugger",
-        "browser"
+        "debugger"
       ]
     },
     {
@@ -210,7 +208,7 @@
       "id": "debugger-refused",
       "nativePresent": false,
       "failAt": "debugger",
-      "expectedStatus": 1,
+      "expectedStatus": 0,
       "expectedCalls": [
         "installer",
         "help",

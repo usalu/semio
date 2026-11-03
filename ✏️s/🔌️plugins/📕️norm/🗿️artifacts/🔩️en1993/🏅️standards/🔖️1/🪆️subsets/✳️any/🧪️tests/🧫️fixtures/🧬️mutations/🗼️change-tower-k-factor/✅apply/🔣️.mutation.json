@@ -1,0 +1,6 @@
+{
+  "ChangeTowerKFactor": {
+    "id": "tw-1",
+    "newKFactor": 1.5
+  }
+}

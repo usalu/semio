@@ -1,0 +1,54 @@
+same    ⚖️en1990 🏢️road-bridge-failing/🏢️road-bridge-failing/🗣️.dsl.semio
+same    ⚖️en1990 🏢️accidental-seismic-failing/🏢️accidental-seismic-failing/🗣️.dsl.semio
+same    ⚖️en1990 🏢️accidental-seismic-compliant/🏢️accidental-seismic-compliant/🗣️.dsl.semio
+same    ⚖️en1990 🏢️fatigue-compliant/🏢️fatigue-compliant/🗣️.dsl.semio
+same    ⚖️en1990 🏢️high-consequence-office/🏢️high-consequence-office/🗣️.dsl.semio
+same    ⚖️en1990 🏢️road-bridge-compliant/🏢️road-bridge-compliant/🗣️.dsl.semio
+same    ⚖️en1990 🏢️fatigue-failing/🏢️fatigue-failing/🗣️.dsl.semio
+same    ⚖️en1990 🏢️default-office/🏢️default-office/🗣️.dsl.semio
+same    🏋️en1991 ⚠️multi-fail-noncompliant/⚠️multi-fail-noncompliant/🗣️.dsl.semio
+same    🏋️en1991 🏢de-office-compliant/🏢de-office-compliant/🗣️.dsl.semio
+same    🏛️en1992 🛢️liquid-retaining-fem-anchor/🛢️liquid-retaining-fem-anchor/🗣️.dsl.semio
+same    🏛️en1992 💥failing-prestressed-beam/💥failing-prestressed-beam/🗣️.dsl.semio
+same    🏛️en1992 🧵compliant-prestressed-beam/🧵compliant-prestressed-beam/🗣️.dsl.semio
+same    🏛️en1992 ❌️failing-under-reinforced/❌️failing-under-reinforced/🗣️.dsl.semio
+same    🏛️en1992 🏢compliant-office-frame/🏢compliant-office-frame/🗣️.dsl.semio
+same    🔩️en1993 ✅️heb240-compliant/✅️heb240-compliant/🗣️.dsl.semio
+same    🔩️en1993 🔩️high-strength-connection/🔩️high-strength-connection/🗣️.dsl.semio
+same    🧩️en1994 🏢composite-floor-beam/🏢composite-floor-beam/🗣️.dsl.semio
+same    🧩️en1994 🏢composite-floor-beam-failing/🏢composite-floor-beam-failing/🗣️.dsl.semio
+same    🧩️en1994 🌉️composite-bridge-girder/🌉️composite-bridge-girder/🗣️.dsl.semio
+same    🪵️en1995 🌉️glulam-footbridge/🌉️glulam-footbridge/🗣️.dsl.semio
+same    🪵️en1995 🏠️glulam-floor-beam/🏠️glulam-floor-beam/🗣️.dsl.semio
+same    🪵️en1995 ❌️multi-fail-timber/❌️multi-fail-timber/🗣️.dsl.semio
+same    🪵️en1995 ⚠️overloaded-footbridge/⚠️overloaded-footbridge/🗣️.dsl.semio
+same    🪨️en1996 ❌️multi-fail-masonry/❌️multi-fail-masonry/🗣️.dsl.semio
+    ! walls[0].load-cases: nested block form left untouched
+same    🪨️en1996 🧱️loadbearing-wall/🧱️loadbearing-wall/🗣️.dsl.semio
+    ! walls[0].load-cases: nested block form left untouched
+same    🌍️en1997 🎬️demo/🗣️.dsl.semio
+same    🌍️en1997 🚨noncompliant/🗣️.dsl.semio
+same    🌍️en1997 🏗️compliant/🗣️.dsl.semio
+same    🫨️en1998 ⚠️seismic-multipart-fail/⚠️seismic-multipart-fail/🗣️.dsl.semio
+    ! buildings[0].storeys: nested block form left untouched
+    ! buildings[0].storeys: nested block form left untouched
+    ! buildings[0].storeys: nested block form left untouched
+    ! buildings[0].storeys: nested block form left untouched
+same    🫨️en1998 🏢️seismic-rc-frame/🏢️seismic-rc-frame/🗣️.dsl.semio
+    ! buildings[0].storeys: nested block form left untouched
+    ! buildings[0].storeys: nested block form left untouched
+    ! buildings[0].storeys: nested block form left untouched
+    ! buildings[0].storeys: nested block form left untouched
+same    🫨️en1998 ⚠️seismic-rc-frame-fail/⚠️seismic-rc-frame-fail/🗣️.dsl.semio
+    ! buildings[0].storeys: nested block form left untouched
+    ! buildings[0].storeys: nested block form left untouched
+    ! buildings[0].storeys: nested block form left untouched
+    ! buildings[0].storeys: nested block form left untouched
+same    🫨️en1998 🏢️seismic-multipart/🏢️seismic-multipart/🗣️.dsl.semio
+    ! buildings[0].storeys: nested block form left untouched
+    ! buildings[0].storeys: nested block form left untouched
+    ! buildings[0].storeys: nested block form left untouched
+    ! buildings[0].storeys: nested block form left untouched
+same    🪶️en1999 🏚️noncompliant-multi-fail/🏚️noncompliant-multi-fail/🗣️.dsl.semio
+same    🪶️en1999 🏠️aluminium-roof-purlin/🏠️aluminium-roof-purlin/🗣️.dsl.semio
+errors 0

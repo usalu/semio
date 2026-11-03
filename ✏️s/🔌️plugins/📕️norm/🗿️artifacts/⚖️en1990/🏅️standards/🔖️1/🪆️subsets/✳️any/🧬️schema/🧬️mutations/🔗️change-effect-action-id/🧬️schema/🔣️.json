@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/mutation/change-effect-action-id/schema.json",
+  "title": "ChangeEffectActionId",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "index",
+    "newActionId"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeEffectActionId"
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "target",
+        "label": {
+          "en": "Member effect",
+          "de": "Bauteilwirkung"
+        },
+        "description": {
+          "en": "Zero-based position of the member effect this mutation addresses.",
+          "de": "Nullbasierte Position des adressierten Elements (Bauteilwirkung)."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newActionId": {
+      "type": "string",
+      "x-semio-ui": {
+        "label": {
+          "en": "Action",
+          "de": "Einwirkung"
+        },
+        "widget": "text",
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

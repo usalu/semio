@@ -1,0 +1,6 @@
+{
+  "ChangeJointColumnWebThickness": {
+    "id": "joint-j1",
+    "newColumnWebThickness": 1.5
+  }
+}

@@ -1,0 +1,4 @@
+{
+  "mutation": "changeSiteEnGroundType",
+  "newEnGroundType": "c"
+}

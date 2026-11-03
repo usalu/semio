@@ -1,8 +1,0 @@
-{
-  "ChangeConcentratedBearingLength": {
-    "wallIndex": 0,
-    "loadCaseIndex": 0,
-    "index": 0,
-    "newBearingLengthM": 0.25
-  }
-}

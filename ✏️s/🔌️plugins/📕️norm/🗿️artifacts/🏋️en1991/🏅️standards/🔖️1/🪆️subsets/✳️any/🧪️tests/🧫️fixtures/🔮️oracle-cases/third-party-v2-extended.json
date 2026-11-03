@@ -1,0 +1,1278 @@
+{
+  "$schema": "../../../../../../../../../🔮️oracles/🏃️harness/🧬️schema/🔣️.json",
+  "schemaVersion": 1,
+  "artifact": "en1991",
+  "annex": "de",
+  "cases": [
+    {
+      "id": "en1991.4.wind-peak-pressure-terrain-ii-10m",
+      "check": "en1991.4.wind-peak-pressure",
+      "citation": {
+        "standard": "EN 1991-1-4",
+        "edition": "2005",
+        "clause": "EN 1991-1-4 4.3.2 Eq. 4.3 to 4.5, 4.4 Eq. 4.7 and 4.5 Eq. 4.8",
+        "annex": "en"
+      },
+      "inputs": {
+        "v_b": 25.0,
+        "z": 10.0,
+        "z0": 0.05,
+        "z_min": 2.0,
+        "rho": 1.25,
+        "c_o": 1.0,
+        "k_I": 1.0
+      },
+      "expected": {
+        "I_v": {
+          "value": 0.18873916581775482,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "c_r": {
+          "value": 1.0066802996441269,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "v_m": {
+          "value": 25.167007491103174,
+          "unit": "m/s",
+          "profile": "eurocode-quantities-v1"
+        },
+        "q_p": {
+          "value": 918.8632907102649,
+          "unit": "Pa",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.4.wind-peak-pressure-terrain-iii-40m",
+      "check": "en1991.4.wind-peak-pressure",
+      "citation": {
+        "standard": "EN 1991-1-4",
+        "edition": "2005",
+        "clause": "EN 1991-1-4 4.3.2 Eq. 4.3 to 4.5, 4.4 Eq. 4.7 and 4.5 Eq. 4.8",
+        "annex": "en"
+      },
+      "inputs": {
+        "v_b": 27.5,
+        "z": 40.0,
+        "z0": 0.3,
+        "z_min": 5.0,
+        "rho": 1.25,
+        "c_o": 1.0,
+        "k_I": 1.0
+      },
+      "expected": {
+        "I_v": {
+          "value": 0.20437976607101938,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "c_r": {
+          "value": 1.0538681773838996,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "v_m": {
+          "value": 28.981374878057238,
+          "unit": "m/s",
+          "profile": "eurocode-quantities-v1"
+        },
+        "q_p": {
+          "value": 1275.9742438477335,
+          "unit": "Pa",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.4.wind-peak-pressure-terrain-iv-below-zmin",
+      "check": "en1991.4.wind-peak-pressure",
+      "citation": {
+        "standard": "EN 1991-1-4",
+        "edition": "2005",
+        "clause": "EN 1991-1-4 4.3.2 Eq. 4.3 to 4.5, 4.4 Eq. 4.7 and 4.5 Eq. 4.8",
+        "annex": "en"
+      },
+      "inputs": {
+        "v_b": 24.0,
+        "z": 6.0,
+        "z0": 1.0,
+        "z_min": 10.0,
+        "rho": 1.25,
+        "c_o": 1.0,
+        "k_I": 1.0
+      },
+      "expected": {
+        "I_v": {
+          "value": 0.4342944819032518,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "c_r": {
+          "value": 0.5395620416750232,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "v_m": {
+          "value": 12.949489000200556,
+          "unit": "m/s",
+          "profile": "eurocode-quantities-v1"
+        },
+        "q_p": {
+          "value": 423.4218273295753,
+          "unit": "Pa",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.7.wind-cpe-zone-a",
+      "check": "en1991.7.wind-cpe",
+      "citation": {
+        "standard": "EN 1991-1-4",
+        "edition": "2005",
+        "clause": "EN 1991-1-4 7.2.2 Table 7.1 vertical walls, interpolation 7.1.2(2)",
+        "table": "7.1",
+        "annex": "en"
+      },
+      "inputs": {
+        "zone": "A",
+        "h_d": 1.0,
+        "area": 10.0
+      },
+      "expected": {
+        "c_pe_10": {
+          "value": -1.2,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "c_pe_1": {
+          "value": -1.4,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "c_pe": {
+          "value": -1.2,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.7.wind-cpe-zone-b-small-area",
+      "check": "en1991.7.wind-cpe",
+      "citation": {
+        "standard": "EN 1991-1-4",
+        "edition": "2005",
+        "clause": "EN 1991-1-4 7.2.2 Table 7.1 vertical walls, interpolation 7.1.2(2)",
+        "table": "7.1",
+        "annex": "en"
+      },
+      "inputs": {
+        "zone": "B",
+        "h_d": 1.0,
+        "area": 1.0
+      },
+      "expected": {
+        "c_pe_10": {
+          "value": -0.8,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "c_pe_1": {
+          "value": -1.1,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "c_pe": {
+          "value": -1.1,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.7.wind-cpe-zone-d-low-building",
+      "check": "en1991.7.wind-cpe",
+      "citation": {
+        "standard": "EN 1991-1-4",
+        "edition": "2005",
+        "clause": "EN 1991-1-4 7.2.2 Table 7.1 vertical walls, interpolation 7.1.2(2)",
+        "table": "7.1",
+        "annex": "en"
+      },
+      "inputs": {
+        "zone": "D",
+        "h_d": 0.1,
+        "area": 10.0
+      },
+      "expected": {
+        "c_pe_10": {
+          "value": 0.7,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "c_pe_1": {
+          "value": 1.0,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "c_pe": {
+          "value": 0.7,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.7.wind-cpe-zone-d-interpolated",
+      "check": "en1991.7.wind-cpe",
+      "citation": {
+        "standard": "EN 1991-1-4",
+        "edition": "2005",
+        "clause": "EN 1991-1-4 7.2.2 Table 7.1 vertical walls, interpolation 7.1.2(2)",
+        "table": "7.1",
+        "annex": "en"
+      },
+      "inputs": {
+        "zone": "D",
+        "h_d": 0.6,
+        "area": 2.5
+      },
+      "expected": {
+        "c_pe_10": {
+          "value": 0.7466666666666667,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "c_pe_1": {
+          "value": 1.0,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "c_pe": {
+          "value": 0.8991885311364172,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.7.wind-cpe-zone-e-tall",
+      "check": "en1991.7.wind-cpe",
+      "citation": {
+        "standard": "EN 1991-1-4",
+        "edition": "2005",
+        "clause": "EN 1991-1-4 7.2.2 Table 7.1 vertical walls, interpolation 7.1.2(2)",
+        "table": "7.1",
+        "annex": "en"
+      },
+      "inputs": {
+        "zone": "E",
+        "h_d": 3.0,
+        "area": 10.0
+      },
+      "expected": {
+        "c_pe_10": {
+          "value": -0.6,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "c_pe_1": {
+          "value": -0.6,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "c_pe": {
+          "value": -0.6,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.snow.shape-mono-pitch-0deg",
+      "check": "en1991.snow.shape-mono-pitch",
+      "citation": {
+        "standard": "EN 1991-1-3",
+        "edition": "2003",
+        "clause": "EN 1991-1-3 5.3.2 Table 5.2 and Eq. 5.1",
+        "table": "5.2",
+        "annex": "en"
+      },
+      "inputs": {
+        "alpha": 0.0,
+        "C_e": 1.0,
+        "C_t": 1.0,
+        "s_k": 1100.0
+      },
+      "expected": {
+        "mu_1": {
+          "value": 0.8,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "mu_2": {
+          "value": 0.8,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "s": {
+          "value": 880.0,
+          "unit": "Pa",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.snow.shape-mono-pitch-20deg",
+      "check": "en1991.snow.shape-mono-pitch",
+      "citation": {
+        "standard": "EN 1991-1-3",
+        "edition": "2003",
+        "clause": "EN 1991-1-3 5.3.2 Table 5.2 and Eq. 5.1",
+        "table": "5.2",
+        "annex": "en"
+      },
+      "inputs": {
+        "alpha": 20.0,
+        "C_e": 1.0,
+        "C_t": 1.0,
+        "s_k": 1100.0
+      },
+      "expected": {
+        "mu_1": {
+          "value": 0.8,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "mu_2": {
+          "value": 1.3333333333333335,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "s": {
+          "value": 880.0,
+          "unit": "Pa",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.snow.shape-mono-pitch-30deg",
+      "check": "en1991.snow.shape-mono-pitch",
+      "citation": {
+        "standard": "EN 1991-1-3",
+        "edition": "2003",
+        "clause": "EN 1991-1-3 5.3.2 Table 5.2 and Eq. 5.1",
+        "table": "5.2",
+        "annex": "en"
+      },
+      "inputs": {
+        "alpha": 30.0,
+        "C_e": 1.0,
+        "C_t": 1.0,
+        "s_k": 1100.0
+      },
+      "expected": {
+        "mu_1": {
+          "value": 0.8,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "mu_2": {
+          "value": 1.6,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "s": {
+          "value": 880.0,
+          "unit": "Pa",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.snow.shape-mono-pitch-45deg",
+      "check": "en1991.snow.shape-mono-pitch",
+      "citation": {
+        "standard": "EN 1991-1-3",
+        "edition": "2003",
+        "clause": "EN 1991-1-3 5.3.2 Table 5.2 and Eq. 5.1",
+        "table": "5.2",
+        "annex": "en"
+      },
+      "inputs": {
+        "alpha": 45.0,
+        "C_e": 1.0,
+        "C_t": 1.0,
+        "s_k": 1100.0
+      },
+      "expected": {
+        "mu_1": {
+          "value": 0.4,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "mu_2": {
+          "value": 1.6,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "s": {
+          "value": 440.0,
+          "unit": "Pa",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.snow.shape-mono-pitch-60deg",
+      "check": "en1991.snow.shape-mono-pitch",
+      "citation": {
+        "standard": "EN 1991-1-3",
+        "edition": "2003",
+        "clause": "EN 1991-1-3 5.3.2 Table 5.2 and Eq. 5.1",
+        "table": "5.2",
+        "annex": "en"
+      },
+      "inputs": {
+        "alpha": 60.0,
+        "C_e": 1.0,
+        "C_t": 1.0,
+        "s_k": 1100.0
+      },
+      "expected": {
+        "mu_1": {
+          "value": 0.0,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "mu_2": {
+          "value": 1.6,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "s": {
+          "value": 0.0,
+          "unit": "Pa",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.snow.shape-mono-pitch-75deg",
+      "check": "en1991.snow.shape-mono-pitch",
+      "citation": {
+        "standard": "EN 1991-1-3",
+        "edition": "2003",
+        "clause": "EN 1991-1-3 5.3.2 Table 5.2 and Eq. 5.1",
+        "table": "5.2",
+        "annex": "en"
+      },
+      "inputs": {
+        "alpha": 75.0,
+        "C_e": 1.0,
+        "C_t": 1.0,
+        "s_k": 1100.0
+      },
+      "expected": {
+        "mu_1": {
+          "value": 0.0,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "mu_2": {
+          "value": 1.6,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "s": {
+          "value": 0.0,
+          "unit": "Pa",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.snow.drift-tall-parapet",
+      "check": "en1991.snow.drift",
+      "citation": {
+        "standard": "EN 1991-1-3",
+        "edition": "2003",
+        "clause": "EN 1991-1-3 5.3.6 and Annex B (obstructions): mu_w, l_s",
+        "annex": "en"
+      },
+      "inputs": {
+        "gamma": 2000.0,
+        "h": 1.5,
+        "b1": 8.0,
+        "b2": 12.0,
+        "s_k": 1100.0
+      },
+      "expected": {
+        "mu_w": {
+          "value": 2.727272727272727,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "l_s": {
+          "value": 5.0,
+          "unit": "m",
+          "profile": "eurocode-quantities-v1"
+        },
+        "s_peak": {
+          "value": 3000.0,
+          "unit": "Pa",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.snow.drift-low-parapet-limited",
+      "check": "en1991.snow.drift",
+      "citation": {
+        "standard": "EN 1991-1-3",
+        "edition": "2003",
+        "clause": "EN 1991-1-3 5.3.6 and Annex B (obstructions): mu_w, l_s",
+        "annex": "en"
+      },
+      "inputs": {
+        "gamma": 2000.0,
+        "h": 0.5,
+        "b1": 2.0,
+        "b2": 3.0,
+        "s_k": 1000.0
+      },
+      "expected": {
+        "mu_w": {
+          "value": 1.0,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "l_s": {
+          "value": 5.0,
+          "unit": "m",
+          "profile": "eurocode-quantities-v1"
+        },
+        "s_peak": {
+          "value": 1000.0,
+          "unit": "Pa",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.snow.drift-minimum",
+      "check": "en1991.snow.drift",
+      "citation": {
+        "standard": "EN 1991-1-3",
+        "edition": "2003",
+        "clause": "EN 1991-1-3 5.3.6 and Annex B (obstructions): mu_w, l_s",
+        "annex": "en"
+      },
+      "inputs": {
+        "gamma": 2000.0,
+        "h": 0.3,
+        "b1": 1.0,
+        "b2": 1.0,
+        "s_k": 1500.0
+      },
+      "expected": {
+        "mu_w": {
+          "value": 0.8,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "l_s": {
+          "value": 5.0,
+          "unit": "m",
+          "profile": "eurocode-quantities-v1"
+        },
+        "s_peak": {
+          "value": 1200.0,
+          "unit": "Pa",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.snow.drift-minimum-gamma-limited",
+      "check": "en1991.snow.drift-gamma-limited",
+      "citation": {
+        "standard": "EN 1991-1-3",
+        "edition": "2003",
+        "clause": "EN 1991-1-3 5.3.6 and Annex B (obstructions): mu_w, l_s (reading 1 of the unverified NDP drift-mu-w-reading: gamma h/s_k caps mu_w below 0.8)",
+        "annex": "en"
+      },
+      "inputs": {
+        "gamma": 2000.0,
+        "h": 0.3,
+        "b1": 1.0,
+        "b2": 1.0,
+        "s_k": 1500.0
+      },
+      "expected": {
+        "mu_w": {
+          "value": 0.4,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "l_s": {
+          "value": 5.0,
+          "unit": "m",
+          "profile": "eurocode-quantities-v1"
+        },
+        "s_peak": {
+          "value": 600.0,
+          "unit": "Pa",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.fire.parametric-heating",
+      "check": "en1991.fire.parametric-curve",
+      "citation": {
+        "standard": "EN 1991-1-2",
+        "edition": "2002",
+        "clause": "EN 1991-1-2 Annex A Eq. A.1 to A.12, ventilation-controlled (t_max > t_lim)",
+        "annex": "en"
+      },
+      "inputs": {
+        "O": 0.04,
+        "b": 1500.0,
+        "q_td": 300000000.0,
+        "t_lim": 1200.0,
+        "t": 1800.0
+      },
+      "expected": {
+        "Gamma": {
+          "value": 0.5980444444444444,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "t_max": {
+          "value": 5400.0,
+          "unit": "s",
+          "profile": "eurocode-quantities-v1"
+        },
+        "theta_max": {
+          "value": 927.3858565671503,
+          "unit": "K",
+          "profile": "eurocode-quantities-v1"
+        },
+        "theta_g": {
+          "value": 775.905628417117,
+          "unit": "K",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.fire.parametric-cooling-mid",
+      "check": "en1991.fire.parametric-curve",
+      "citation": {
+        "standard": "EN 1991-1-2",
+        "edition": "2002",
+        "clause": "EN 1991-1-2 Annex A Eq. A.1 to A.12, ventilation-controlled (t_max > t_lim)",
+        "annex": "en"
+      },
+      "inputs": {
+        "O": 0.04,
+        "b": 1500.0,
+        "q_td": 300000000.0,
+        "t_lim": 1200.0,
+        "t": 10800.0
+      },
+      "expected": {
+        "Gamma": {
+          "value": 0.5980444444444444,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "t_max": {
+          "value": 5400.0,
+          "unit": "s",
+          "profile": "eurocode-quantities-v1"
+        },
+        "theta_max": {
+          "value": 927.3858565671503,
+          "unit": "K",
+          "profile": "eurocode-quantities-v1"
+        },
+        "theta_g": {
+          "value": 455.7680076782615,
+          "unit": "K",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.fire.parametric-cooling-short",
+      "check": "en1991.fire.parametric-curve",
+      "citation": {
+        "standard": "EN 1991-1-2",
+        "edition": "2002",
+        "clause": "EN 1991-1-2 Annex A Eq. A.1 to A.12, ventilation-controlled (t_max > t_lim)",
+        "annex": "en"
+      },
+      "inputs": {
+        "O": 0.02,
+        "b": 2000.0,
+        "q_td": 200000000.0,
+        "t_lim": 1200.0,
+        "t": 28800.0
+      },
+      "expected": {
+        "Gamma": {
+          "value": 0.08410000000000002,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "t_max": {
+          "value": 7200.0,
+          "unit": "s",
+          "profile": "eurocode-quantities-v1"
+        },
+        "theta_max": {
+          "value": 701.2229982466237,
+          "unit": "K",
+          "profile": "eurocode-quantities-v1"
+        },
+        "theta_g": {
+          "value": 385.84799824662355,
+          "unit": "K",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.fire.parametric-cooling-long-fuel",
+      "check": "en1991.fire.parametric-curve",
+      "citation": {
+        "standard": "EN 1991-1-2",
+        "edition": "2002",
+        "clause": "EN 1991-1-2 Annex A Eq. A.1 to A.12, ventilation-controlled (t_max > t_lim)",
+        "annex": "en"
+      },
+      "inputs": {
+        "O": 0.1,
+        "b": 500.0,
+        "q_td": 1000000000.0,
+        "t_lim": 1200.0,
+        "t": 7560.0
+      },
+      "expected": {
+        "Gamma": {
+          "value": 33.64,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "t_max": {
+          "value": 7200.0,
+          "unit": "s",
+          "profile": "eurocode-quantities-v1"
+        },
+        "theta_max": {
+          "value": 1344.9993849727762,
+          "unit": "K",
+          "profile": "eurocode-quantities-v1"
+        },
+        "theta_g": {
+          "value": 503.99938497277503,
+          "unit": "K",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.fire.iso834-5min",
+      "check": "en1991.fire.iso834",
+      "citation": {
+        "standard": "EN 1991-1-2",
+        "edition": "2002",
+        "clause": "EN 1991-1-2 3.2.1 Eq. 3.4 standard temperature-time curve",
+        "annex": "en"
+      },
+      "inputs": {
+        "t_min": 5
+      },
+      "expected": {
+        "theta_g": {
+          "value": 576.4104305683088,
+          "unit": "K",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-published-tables",
+          "adapter": "published",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.fire.iso834-30min",
+      "check": "en1991.fire.iso834",
+      "citation": {
+        "standard": "EN 1991-1-2",
+        "edition": "2002",
+        "clause": "EN 1991-1-2 3.2.1 Eq. 3.4 standard temperature-time curve",
+        "annex": "en"
+      },
+      "inputs": {
+        "t_min": 30
+      },
+      "expected": {
+        "theta_g": {
+          "value": 841.7958796883295,
+          "unit": "K",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-published-tables",
+          "adapter": "published",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.fire.iso834-60min",
+      "check": "en1991.fire.iso834",
+      "citation": {
+        "standard": "EN 1991-1-2",
+        "edition": "2002",
+        "clause": "EN 1991-1-2 3.2.1 Eq. 3.4 standard temperature-time curve",
+        "annex": "en"
+      },
+      "inputs": {
+        "t_min": 60
+      },
+      "expected": {
+        "theta_g": {
+          "value": 945.3400513489719,
+          "unit": "K",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-published-tables",
+          "adapter": "published",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.fire.iso834-90min",
+      "check": "en1991.fire.iso834",
+      "citation": {
+        "standard": "EN 1991-1-2",
+        "edition": "2002",
+        "clause": "EN 1991-1-2 3.2.1 Eq. 3.4 standard temperature-time curve",
+        "annex": "en"
+      },
+      "inputs": {
+        "t_min": 90
+      },
+      "expected": {
+        "theta_g": {
+          "value": 1005.9876663282031,
+          "unit": "K",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-published-tables",
+          "adapter": "published",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.fire.iso834-120min",
+      "check": "en1991.fire.iso834",
+      "citation": {
+        "standard": "EN 1991-1-2",
+        "edition": "2002",
+        "clause": "EN 1991-1-2 3.2.1 Eq. 3.4 standard temperature-time curve",
+        "annex": "en"
+      },
+      "inputs": {
+        "t_min": 120
+      },
+      "expected": {
+        "theta_g": {
+          "value": 1049.039568745648,
+          "unit": "K",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-published-tables",
+          "adapter": "published",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.fire.iso834-180min",
+      "check": "en1991.fire.iso834",
+      "citation": {
+        "standard": "EN 1991-1-2",
+        "edition": "2002",
+        "clause": "EN 1991-1-2 3.2.1 Eq. 3.4 standard temperature-time curve",
+        "annex": "en"
+      },
+      "inputs": {
+        "t_min": 180
+      },
+      "expected": {
+        "theta_g": {
+          "value": 1109.739073380826,
+          "unit": "K",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-published-tables",
+          "adapter": "published",
+          "kind": "independent-formulation"
+        }
+      ]
+    }
+  ]
+}

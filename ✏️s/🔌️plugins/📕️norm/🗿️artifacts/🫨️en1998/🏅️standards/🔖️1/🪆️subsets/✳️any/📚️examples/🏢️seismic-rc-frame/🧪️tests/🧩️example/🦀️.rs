@@ -9,7 +9,7 @@ async fn inference_determinism_law() {
     use semio_s_artifact_norm_en1998_inferences::En1998Inference;
     use semio_s_artifact_norm_en1998_model::En1998Snapshot;
     use protocol::Inference;
-    let snapshot = En1998Snapshot::default();
+    let snapshot = En1998Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De);
     assert_eq!(En1998Inference::infer(&snapshot).expect("valid materialized inference fixture"), En1998Inference::infer(&snapshot).expect("valid materialized inference fixture"));
 }
 
@@ -18,7 +18,7 @@ async fn inference_default_law() {
     use semio_s_artifact_norm_en1998_inferences::En1998Inference;
     use semio_s_artifact_norm_en1998_model::En1998Snapshot;
     use protocol::Inference;
-    assert_eq!(En1998Inference::infer(&En1998Snapshot::default()).expect("valid materialized inference fixture"), En1998Inference::default());
+    assert_eq!(En1998Inference::infer(&En1998Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De)).expect("valid materialized inference fixture"), En1998Inference::default());
 }
 
 /// 🖼️ Every en1998 example asset (what the picker, the descriptor and `setActiveExample` load) decodes to exactly its
@@ -35,4 +35,17 @@ async fn every_example_asset_decodes_to_its_code_built_snapshot() {
         let decoded = semio_s_artifact_norm_en1998_io::text::snapshot::decode_en1998_dsl(text).unwrap_or_else(|error| panic!("{id}: {error}"));
         assert!(decoded == snapshot, "{id}: the committed asset must be the code-built snapshot");
     }
+}
+
+/// 🎒️ The committed binary twin decodes to the code-built snapshot; with `SEMIO_UPDATE_GOLDEN=1` it is rewritten from the committed DSL text first.
+#[semio_framework_async_macros::async_test]
+async fn committed_pack_twin_matches_the_code_built_snapshot() {
+    use semio_s_artifact_norm_en1998_io::binary::snapshot::{decode_en1998_pack, encode_en1998_pack};
+    let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🖼️assets/🏢️seismic-rc-frame/🎒️.pack.semio");
+    if std::env::var_os("SEMIO_UPDATE_GOLDEN").is_some() {
+        let decoded = semio_s_artifact_norm_en1998_io::text::snapshot::decode_en1998_dsl(crate::seismic_rc_frame::PRIMARY_TEXT).expect("committed DSL text");
+        std::fs::write(path, encode_en1998_pack(&decoded)).expect("write committed pack twin");
+    }
+    let bytes = std::fs::read(path).expect("read committed pack twin");
+    assert!(decode_en1998_pack(&bytes).expect("decode committed pack twin") == crate::seismic_rc_frame::snapshot());
 }

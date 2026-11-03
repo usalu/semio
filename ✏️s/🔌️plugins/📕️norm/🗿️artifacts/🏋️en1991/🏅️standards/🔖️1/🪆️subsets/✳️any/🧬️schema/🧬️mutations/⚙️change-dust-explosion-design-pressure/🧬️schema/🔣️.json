@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-dust-explosion-design-pressure/schema.json",
+  "title": "ChangeDustExplosionDesignPressure",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newDesignPressure"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Dust explosion",
+          "de": "Staubexplosion"
+        },
+        "description": {
+          "en": "The dust explosion this mutation addresses, by id.",
+          "de": "Das adressierte Element (Staubexplosion), per Kennung."
+        },
+        "ref": {
+          "kind": "dust-explosion"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newDesignPressure": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Rotation design_pressure f",
+          "de": "Reduzierter Explosionsdruck p_red"
+        },
+        "widget": "stepper",
+        "role": "value",
+        "group": "value",
+        "order": 20,
+        "unit": "Pa",
+        "displayUnit": "kN/m²",
+        "displayFactor": 0.001,
+        "precision": 2,
+        "step": 1000
+      }
+    }
+  }
+}

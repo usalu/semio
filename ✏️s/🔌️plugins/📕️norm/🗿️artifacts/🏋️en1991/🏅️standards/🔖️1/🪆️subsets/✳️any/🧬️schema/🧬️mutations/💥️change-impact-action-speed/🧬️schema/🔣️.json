@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-impact-action-speed/schema.json",
+  "title": "ChangeImpactActionSpeed",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newSpeed"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Impact action",
+          "de": "Anpralleinwirkung"
+        },
+        "description": {
+          "en": "The impact action this mutation addresses, by id.",
+          "de": "Das adressierte Element (Anpralleinwirkung), per Kennung."
+        },
+        "ref": {
+          "kind": "impact-action"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newSpeed": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Impact speed v",
+          "de": "Anprallgeschwindigkeit v"
+        },
+        "widget": "stepper",
+        "unit": "m/s",
+        "precision": 1,
+        "step": 0.5,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

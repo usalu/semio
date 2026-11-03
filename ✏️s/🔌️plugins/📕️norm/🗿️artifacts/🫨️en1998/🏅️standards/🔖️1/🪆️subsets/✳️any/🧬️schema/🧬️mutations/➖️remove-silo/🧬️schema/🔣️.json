@@ -6,28 +6,28 @@
   "additionalProperties": false,
   "required": [
     "mutation",
-    "index"
+    "id"
   ],
   "properties": {
     "mutation": {
       "const": "removeSilo"
     },
-    "index": {
-      "type": "integer",
-      "minimum": 0,
+    "id": {
+      "type": "string",
       "x-semio-ui": {
-        "widget": "stepper",
-        "role": "value",
+        "widget": "reference",
+        "role": "target",
         "label": {
           "en": "Silo",
           "de": "Silo"
         },
         "description": {
-          "en": "Zero-based position of the silo in its list.",
-          "de": "Nullbasierte Position des Silos in der Liste."
+          "en": "The silo this mutation addresses, by id.",
+          "de": "Das adressierte Element (Silo), per Kennung."
         },
-        "step": 1,
-        "precision": 0,
+        "ref": {
+          "kind": "silo"
+        },
         "group": "target",
         "order": 10
       }

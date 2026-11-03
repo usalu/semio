@@ -1,0 +1,65 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/mutation/change-member-defl-limit-ratio-w3/schema.json",
+  "title": "ChangeMemberDeflLimitRatioW3",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newDeflectionLimitRatioW3"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeMemberDeflLimitRatioW3"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Member",
+          "de": "Bauteil"
+        },
+        "description": {
+          "en": "The member this mutation addresses, by id.",
+          "de": "Das adressierte Element (Bauteil), per Kennung."
+        },
+        "ref": {
+          "kind": "member"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newDeflectionLimitRatioW3": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Deflection limit w3 ≤ L/…",
+          "de": "Durchbiegungsgrenze w3 ≤ L/…"
+        },
+        "widget": "stepper",
+        "description": {
+          "en": "Denominator of the admissible deflection of the variable action w3 ≤ L/n.",
+          "de": "Nenner der zulässigen Durchbiegung aus veränderlicher Einwirkung w3 ≤ L/n."
+        },
+        "precision": 0,
+        "step": 50,
+        "snaps": [
+          150,
+          200,
+          250,
+          300,
+          350,
+          400,
+          500
+        ],
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

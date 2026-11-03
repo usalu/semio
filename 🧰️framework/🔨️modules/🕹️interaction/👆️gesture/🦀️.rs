@@ -202,6 +202,93 @@ pub fn apply_pinch_to_camera(camera: Camera2d, step: PinchStep, viewport: [f64; 
     Camera2d { x: world_x - (step.centroid_x - viewport[0] * 0.5) / next_zoom, y: world_y - (step.centroid_y - viewport[1] * 0.5) / next_zoom, zoom: next_zoom }
 }
 
+#[path = "🖐️touch-session/🦀️.rs"]
+mod touch_session;
+pub use touch_session::*;
+
+#[path = "🎯️grip-pick/🦀️.rs"]
+mod grip_pick;
+pub use grip_pick::*;
+
+/// 🗜️ Clamps `zoom` into `bounds`; a non-finite or non-positive input falls back to `bounds.min`. Twin of the TypeScript `clampZoom`.
+pub fn clamp_zoom(zoom: f64, bounds: ZoomBounds) -> f64 {
+    if zoom.is_finite() && zoom > 0.0 { zoom.clamp(bounds.min, bounds.max) } else { bounds.min }
+}
+
+/// 🪐️ An orbit camera pose: eye, look-at target, world up and the orthographic zoom factor (`1` for a perspective camera, which zooms by distance).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct OrbitPose {
+    pub position: [f64; 3],
+    pub target: [f64; 3],
+    pub up: [f64; 3],
+    pub zoom: f64,
+}
+
+/// 🎯️ What one surface pixel is worth at the target: a perspective camera needs its vertical field of view, an orthographic one its unzoomed frustum height.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum OrbitProjection {
+    Perspective { fov_y_radians: f64 },
+    Orthographic { frustum_height: f64 },
+}
+
+/// 📏️ Distance and zoom limits of an orbit rig.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct OrbitBounds {
+    pub distance: ZoomBounds,
+    pub zoom: ZoomBounds,
+}
+
+fn sub3(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
+    [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
+}
+
+fn add3(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
+    [a[0] + b[0], a[1] + b[1], a[2] + b[2]]
+}
+
+fn scale3(a: [f64; 3], k: f64) -> [f64; 3] {
+    [a[0] * k, a[1] * k, a[2] * k]
+}
+
+fn cross3(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
+    [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
+}
+
+fn length3(a: [f64; 3]) -> f64 {
+    a[0].hypot(a[1]).hypot(a[2])
+}
+
+/// 🎥️ Applies one [`PinchStep`] to an orbit camera: spreading the fingers dollies toward the target (perspective) or raises the zoom factor (orthographic), and the centroid's travel pans target and eye together in the camera plane so the scene under the fingers follows them. Twin of the TypeScript `applyPinchToOrbit`, replayed on the shared fixture `🎥️orbit-pinch.json`; a pose whose eye sits on its target, or whose forward is parallel to `up`, is returned unchanged.
+pub fn apply_pinch_to_orbit(pose: OrbitPose, step: PinchStep, projection: OrbitProjection, viewport_height: f64, bounds: OrbitBounds) -> OrbitPose {
+    let offset = sub3(pose.position, pose.target);
+    let distance = length3(offset);
+    if !(distance > 0.0) || !(viewport_height > 0.0) {
+        return pose;
+    }
+    let forward = scale3(offset, -1.0 / distance);
+    let right_raw = cross3(forward, pose.up);
+    let right_length = length3(right_raw);
+    if !(right_length > 0.0) {
+        return pose;
+    }
+    let right = scale3(right_raw, 1.0 / right_length);
+    let camera_up = cross3(right, forward);
+    let scale = if step.scale > 0.0 { step.scale } else { 1.0 };
+    let (next_distance, next_zoom, world_per_pixel) = match projection {
+        OrbitProjection::Perspective { fov_y_radians } => {
+            let next_distance = clamp_zoom(distance / scale, bounds.distance);
+            (next_distance, pose.zoom, 2.0 * next_distance * (fov_y_radians / 2.0).tan() / viewport_height)
+        }
+        OrbitProjection::Orthographic { frustum_height } => {
+            let next_zoom = clamp_zoom(pose.zoom * step.scale, bounds.zoom);
+            (distance, next_zoom, frustum_height / (next_zoom * viewport_height))
+        }
+    };
+    let shift = add3(scale3(right, -step.pan_x * world_per_pixel), scale3(camera_up, step.pan_y * world_per_pixel));
+    let target = add3(pose.target, shift);
+    OrbitPose { position: sub3(target, scale3(forward, next_distance)), target, up: pose.up, zoom: next_zoom }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

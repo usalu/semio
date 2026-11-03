@@ -1,0 +1,514 @@
+{
+ "code": "en1990",
+ "standard": "EN 1990",
+ "spec": "📐️specs/en1990-en1991-target.md",
+ "specIds": [
+  "E90.01",
+  "E90.02",
+  "E90.03",
+  "E90.04",
+  "E90.05",
+  "E90.06",
+  "E90.07",
+  "E90.08",
+  "E90.09",
+  "E90.10",
+  "E90.11",
+  "E90.12",
+  "E90.13",
+  "E90.14",
+  "E90.15",
+  "E90.16",
+  "E90.17",
+  "E90.18",
+  "E90.19",
+  "E90.20",
+  "E90.21",
+  "E90.22",
+  "E90.23",
+  "E90.24",
+  "E90.25",
+  "E90.26",
+  "E90.27",
+  "E90.28",
+  "E90.29",
+  "E90.30"
+ ],
+ "items": [
+  {
+   "id": "E90.01",
+   "clause": "2.1",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1990.members"
+    ]
+   },
+   "description": {
+    "en": "Classification by structure kind and use (2.1) selecting the limit-state families and the applicable Annex A1 or A2, realised as the members check",
+    "de": "Klassifizierung nach Tragwerksart und Nutzung (2.1), die die Grenzzustandsfamilien und den anwendbaren Anhang A1 oder A2 festlegt, umgesetzt als Bauteil-Nachweis"
+   }
+  },
+  {
+   "id": "E90.02",
+   "clause": "2.2 + B Table B1",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1990.annex-b.rc-vs-cc",
+     "en1990.annex-b.kfi-applied"
+    ]
+   },
+   "description": {
+    "en": "Reliability management with consequence classes CC1-CC3 and reliability classes RC1-RC3 (2.2, Table B1), realised as the RC/CC check",
+    "de": "Zuverlässigkeitsmanagement mit Schadensfolgeklassen CC1-CC3 und Zuverlässigkeitsklassen RC1-RC3 (2.2, Tabelle B1), umgesetzt als RC/CC-Nachweis"
+   }
+  },
+  {
+   "id": "E90.03",
+   "clause": "2.3 Table 2.1",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1990.table-2.1.design-working-life",
+     "en1990.table-2.1.category"
+    ]
+   },
+   "description": {
+    "en": "Design working life by category (2.3, Table 2.1), realised as the working-life check",
+    "de": "Entwurfsnutzungsdauer nach Kategorie (2.3, Tabelle 2.1), umgesetzt als Nutzungsdauer-Nachweis"
+   }
+  },
+  {
+   "id": "E90.04",
+   "clause": "2.4",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1990.table-2.1.design-working-life",
+     "en1990.a2.working-life"
+    ]
+   },
+   "description": {
+    "en": "Durability requirements over the design working life (2.4), realised within the working-life check",
+    "de": "Anforderungen an die Dauerhaftigkeit über die Entwurfsnutzungsdauer (2.4), umgesetzt im Nutzungsdauer-Nachweis"
+   }
+  },
+  {
+   "id": "E90.05",
+   "clause": "2.5 + B Tables B4, B5",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1990.annex-b.dsl",
+     "en1990.annex-b.il"
+    ]
+   },
+   "description": {
+    "en": "Quality management with design supervision levels DSL and inspection levels IL (2.5, Tables B4, B5), realised as the DSL check",
+    "de": "Qualitätsmanagement mit Entwurfsüberwachungsstufen DSL und Ausführungsüberwachungsstufen IL (2.5, Tabellen B4, B5), umgesetzt als DSL-Nachweis"
+   }
+  },
+  {
+   "id": "E90.06",
+   "clause": "3.2",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1990.str.",
+     "en1990.a2.transient.",
+     "en1990.6.11b.",
+     "en1990.6.12b."
+    ]
+   },
+   "description": {
+    "en": "Design situations: persistent, transient, accidental and seismic (3.2), realised within the STR combination check",
+    "de": "Bemessungssituationen: ständig, vorübergehend, außergewöhnlich und Erdbeben (3.2), umgesetzt im STR-Kombinationsnachweis"
+   }
+  },
+  {
+   "id": "E90.07",
+   "clause": "4.1.1",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1990.a2.traffic-groups"
+    ]
+   },
+   "description": {
+    "en": "Classification of actions by variation in time and space (4.1.1), realised as the traffic-group check",
+    "de": "Klassifizierung der Einwirkungen nach zeitlicher und räumlicher Veränderlichkeit (4.1.1), umgesetzt als Verkehrsgruppen-Nachweis"
+   }
+  },
+  {
+   "id": "E90.08",
+   "clause": "4.1.2",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1990.sls."
+    ]
+   },
+   "description": {
+    "en": "Characteristic values G_k,sup/G_k,inf = G_m(1 ± 1.64 V_G) of permanent actions and the 98 % fractile of variable actions (4.1.2), realised within the serviceability check family",
+    "de": "Charakteristische Werte G_k,sup/G_k,inf = G_m(1 ± 1,64 V_G) ständiger Einwirkungen und 98-%-Fraktile veränderlicher Einwirkungen (4.1.2), umgesetzt in der Gebrauchstauglichkeits-Nachweisfamilie"
+   }
+  },
+  {
+   "id": "E90.09",
+   "clause": "4.1.3",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1990.sls.",
+     "en1990.str."
+    ]
+   },
+   "description": {
+    "en": "Combination, frequent and quasi-permanent values ψ0 Q_k, ψ1 Q_k, ψ2 Q_k with ψ0 ≥ ψ1 ≥ ψ2 ≥ 0 (4.1.3), realised within the serviceability check family",
+    "de": "Kombinations-, häufige und quasi-ständige Werte ψ0 Q_k, ψ1 Q_k, ψ2 Q_k mit ψ0 ≥ ψ1 ≥ ψ2 ≥ 0 (4.1.3), umgesetzt in der Gebrauchstauglichkeits-Nachweisfamilie"
+   }
+  },
+  {
+   "id": "E90.10",
+   "clause": "4.2",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "E90.10"
+    ]
+   },
+   "description": {
+    "en": "Material properties X_d = η X_k/γ_m (4.2), realised as the material-property check consumed by the material parts",
+    "de": "Baustoffeigenschaften X_d = η X_k/γ_m (4.2), umgesetzt als Baustoffeigenschafts-Nachweis für die Baustoffnormen"
+   }
+  },
+  {
+   "id": "E90.11",
+   "clause": "4.3",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "E90.11"
+    ]
+   },
+   "description": {
+    "en": "Geometrical data a_d = a_nom ± Δa (4.3), realised as the geometry check passing tolerances to the material parts",
+    "de": "Geometrische Größen a_d = a_nom ± Δa (4.3), umgesetzt als Geometrie-Nachweis, der Toleranzen an die Baustoffnormen weitergibt"
+   }
+  },
+  {
+   "id": "E90.12",
+   "clause": "5.1.1-5.1.4",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "E90.12"
+    ]
+   },
+   "description": {
+    "en": "Analysis models for first-order, second-order, plastic and non-linear analysis incl. imperfections (5.1.1-5.1.4), realised as the analysis check",
+    "de": "Berechnungsmodelle für Theorie I. und II. Ordnung, plastische und nichtlineare Berechnung inkl. Imperfektionen (5.1.1-5.1.4), umgesetzt als Berechnungs-Nachweis"
+   }
+  },
+  {
+   "id": "E90.13",
+   "clause": "5.2",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1990.annex-d."
+    ]
+   },
+   "description": {
+    "en": "Design assisted by testing (5.2) is a cross-reference to Annex D (E90.30) and is realised by the same Annex D check",
+    "de": "Versuchsgestützte Bemessung (5.2) verweist auf Anhang D (E90.30) und wird durch denselben Nachweis nach Anhang D umgesetzt"
+   }
+  },
+  {
+   "id": "E90.14",
+   "clause": "-",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1990.equ.stab.",
+     "en1990.str.",
+     "en1990.geo.",
+     "en1990.fat."
+    ]
+   },
+   "description": {
+    "en": "Definition of the limit states EQU, STR, GEO and FAT (6.4.1), realised within the EQU stability check",
+    "de": "Definition der Grenzzustände EQU, STR, GEO und FAT (6.4.1), umgesetzt im EQU-Lagesicherheits-Nachweis"
+   }
+  },
+  {
+   "id": "E90.15",
+   "clause": "6.4.2 (6.5)-(6.8)",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1990.equ.stab.",
+     "en1990.equ.destab."
+    ]
+   },
+   "description": {
+    "en": "Verification of static equilibrium EQU (6.4.2, (6.5)-(6.8)), realised as the EQU stability check",
+    "de": "Nachweis der Lagesicherheit EQU (6.4.2, (6.5)-(6.8)), umgesetzt als EQU-Lagesicherheits-Nachweis"
+   }
+  },
+  {
+   "id": "E90.16",
+   "clause": "6.4.3.1-2 (6.9b)-(6.10)-(6.10b)",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1990.str.",
+     "en1990.geo."
+    ]
+   },
+   "description": {
+    "en": "Fundamental combination for STR/GEO in the ultimate limit state (6.4.3.1-2, (6.10), (6.10a/b)), realised as the STR combination check",
+    "de": "Grundkombination für STR/GEO im Grenzzustand der Tragfähigkeit (6.4.3.1-2, (6.10), (6.10a/b)), umgesetzt als STR-Kombinationsnachweis"
+   }
+  },
+  {
+   "id": "E90.17",
+   "clause": "6.4.3.3 (6.11b)",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "E90.17"
+    ]
+   },
+   "description": {
+    "en": "Accidental combination ΣG_k + P + A_d + (ψ1,1 or ψ2,1) Q_k,1 + Σψ2,i Q_k,i with all γ = 1.0 (6.4.3.3, (6.11b)), realised as the (6.11b) combination check",
+    "de": "Außergewöhnliche Kombination ΣG_k + P + A_d + (ψ1,1 oder ψ2,1) Q_k,1 + Σψ2,i Q_k,i mit allen γ = 1,0 (6.4.3.3, (6.11b)), umgesetzt als Kombinationsnachweis nach (6.11b)"
+   }
+  },
+  {
+   "id": "E90.18",
+   "clause": "6.4.3.4 (6.12b)",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "E90.18"
+    ]
+   },
+   "description": {
+    "en": "Seismic combination ΣG_k,j + P + A_Ed + Σψ2,i Q_k,i (6.4.3.4, (6.12b)), realised as the (6.12b) combination check",
+    "de": "Erdbebenkombination ΣG_k,j + P + A_Ed + Σψ2,i Q_k,i (6.4.3.4, (6.12b)), umgesetzt als Kombinationsnachweis nach (6.12b)"
+   }
+  },
+  {
+   "id": "E90.19",
+   "clause": "6.5.3 (6.14b)-(6.16b)",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1990.sls."
+    ]
+   },
+   "description": {
+    "en": "Serviceability limit state combinations characteristic, frequent and quasi-permanent (6.5.3, (6.14b)-(6.16b)), realised as the serviceability check family",
+    "de": "Kombinationen im Grenzzustand der Gebrauchstauglichkeit: charakteristisch, häufig und quasi-ständig (6.5.3, (6.14b)-(6.16b)), umgesetzt als Gebrauchstauglichkeits-Nachweisfamilie"
+   }
+  },
+  {
+   "id": "E90.20",
+   "clause": "6.3.1-6.3.2",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1990.annex-b.kfi-applied",
+     "en1990.annex-c.partial-factors."
+    ]
+   },
+   "description": {
+    "en": "Partial factors γ_F = γ_f γ_Sd and design values of effects and resistances (6.3.1-6.3.2), realised as the k_FI application check",
+    "de": "Teilsicherheitsbeiwerte γ_F = γ_f γ_Sd und Bemessungswerte von Beanspruchungen und Widerständen (6.3.1-6.3.2), umgesetzt als k_FI-Anwendungsnachweis"
+   }
+  },
+  {
+   "id": "E90.21",
+   "clause": "6.4.5 FAT",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1990.fat.damage.",
+     "en1990.fat."
+    ]
+   },
+   "description": {
+    "en": "Fatigue verification structure E_d,fat ≤ R_d,fat (6.4.5), realised as the fatigue-damage check",
+    "de": "Ermüdungsnachweis-Struktur E_d,fat ≤ R_d,fat (6.4.5), umgesetzt als Ermüdungsschädigungs-Nachweis"
+   }
+  },
+  {
+   "id": "E90.22",
+   "clause": "Table A1.1",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1990.str.",
+     "en1990.sls."
+    ]
+   },
+   "description": {
+    "en": "ψ-factors for buildings (Table A1.1), realised within the STR combination check",
+    "de": "ψ-Beiwerte für Hochbauten (Tabelle A1.1), umgesetzt im STR-Kombinationsnachweis"
+   }
+  },
+  {
+   "id": "E90.23",
+   "clause": "Tables A1.2(A) EQU, A1.2(B) STR/GEO, A1.2(C) GEO + A1.3",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1990.str.",
+     "en1990.equ.stab.",
+     "en1990.geo.",
+     "en1990.override."
+    ]
+   },
+   "description": {
+    "en": "Partial factors for buildings in Tables A1.2(A), A1.2(B), A1.2(C) and A1.3, realised within the STR combination check",
+    "de": "Teilsicherheitsbeiwerte für Hochbauten in den Tabellen A1.2(A), A1.2(B), A1.2(C) und A1.3, umgesetzt im STR-Kombinationsnachweis"
+   }
+  },
+  {
+   "id": "E90.24",
+   "clause": "A1.4",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1990.a14."
+    ]
+   },
+   "description": {
+    "en": "Deflection limits for buildings on w_net,fin = w_tot − w_c with the components w_1, w_2, w_3 (A1.4), realised as the A1.4 check",
+    "de": "Durchbiegungsgrenzen für Hochbauten an w_net,fin = w_tot − w_c mit den Anteilen w_1, w_2, w_3 (A1.4), umgesetzt als Nachweis nach A1.4"
+   }
+  },
+  {
+   "id": "E90.25",
+   "clause": "Tables A2.1, A2.2, A2.3",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1990.a2.traffic-groups",
+     "en1990.str."
+    ]
+   },
+   "description": {
+    "en": "ψ-factors for bridges (Tables A2.1, A2.2, A2.3), realised as the traffic-group check",
+    "de": "ψ-Beiwerte für Brücken (Tabellen A2.1, A2.2, A2.3), umgesetzt als Verkehrsgruppen-Nachweis"
+   }
+  },
+  {
+   "id": "E90.26",
+   "clause": "Table A2.4(A,B,C) + A2.4.4",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1990.a2.transient.",
+     "en1990.a2.traffic-groups"
+    ]
+   },
+   "description": {
+    "en": "Partial factors for bridges: EQU γG,sup 1.05 and γG,inf 0.95, γQ 1.35 for road and pedestrian and 1.45 for rail traffic, STR/GEO set B γG 1.35/1.00 (Table A2.4(A,B,C), A2.4.4), realised as the transient-situation check",
+    "de": "Teilsicherheitsbeiwerte für Brücken: EQU γG,sup 1,05 und γG,inf 0,95, γQ 1,35 für Straßen- und Fußgängerverkehr und 1,45 für Eisenbahnverkehr, STR/GEO Satz B γG 1,35/1,00 (Tabelle A2.4(A,B,C), A2.4.4), umgesetzt als Nachweis der vorübergehenden Situation"
+   }
+  },
+  {
+   "id": "E90.27",
+   "clause": "A2.4.3",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1990.a2.basis.",
+     "en1990.a2.bridge.",
+     "en1990.a2.rail-",
+     "en1990.a2.rail-resonance."
+    ]
+   },
+   "description": {
+    "en": "Serviceability criteria for bridges: footbridge acceleration a_v ≤ 0.7 m/s² and railway deck acceleration and resonance (A2.4.3), realised as the bridge basis check",
+    "de": "Gebrauchstauglichkeitskriterien für Brücken: Beschleunigung a_v ≤ 0,7 m/s² bei Fußgängerbrücken sowie Beschleunigung und Resonanz bei Eisenbahnbrücken (A2.4.3), umgesetzt als Brücken-Grundlagen-Nachweis"
+   }
+  },
+  {
+   "id": "E90.28",
+   "clause": "B",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1990.annex-c.beta"
+    ]
+   },
+   "description": {
+    "en": "Reliability differentiation with recommended minimum reliability index β (Annex B, Table B2), realised as the β check",
+    "de": "Zuverlässigkeitsdifferenzierung mit empfohlenem Mindestwert des Zuverlässigkeitsindex β (Anhang B, Tabelle B2), umgesetzt als β-Nachweis"
+   }
+  },
+  {
+   "id": "E90.29",
+   "clause": "C",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1990.annex-c.form.",
+     "en1990.annex-c.alpha."
+    ]
+   },
+   "description": {
+    "en": "Basis for partial factor design and reliability analysis (Annex C), realised as the FORM check",
+    "de": "Grundlagen für die Teilsicherheitsbeiwerte und die Zuverlässigkeitsanalyse (Anhang C), umgesetzt als FORM-Nachweis"
+   }
+  },
+  {
+   "id": "E90.30",
+   "clause": "D",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1990.annex-d."
+    ]
+   },
+   "description": {
+    "en": "Design assisted by testing (Annex D), realised as the Annex D check",
+    "de": "Versuchsgestützte Bemessung (Anhang D), umgesetzt als Nachweis nach Anhang D"
+   }
+  }
+ ]
+}

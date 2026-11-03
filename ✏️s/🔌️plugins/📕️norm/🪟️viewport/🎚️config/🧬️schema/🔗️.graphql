@@ -1,0 +1,6 @@
+type NormViewportWindowConfig {
+  cameraPreset: String @state(class: WINDOW_CONFIG)
+  hiddenLayers: [String!]! @state(class: WINDOW_CONFIG)
+  colourMap: String @state(class: WINDOW_CONFIG)
+  unitSystem: String @state(class: WINDOW_CONFIG)
+}

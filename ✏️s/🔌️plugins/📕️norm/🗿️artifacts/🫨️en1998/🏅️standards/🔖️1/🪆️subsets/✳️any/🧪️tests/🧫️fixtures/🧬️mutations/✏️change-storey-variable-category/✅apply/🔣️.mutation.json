@@ -1,0 +1,7 @@
+{
+  "mutation": "changeStoreyVariableCategory",
+  "buildingId": "bldg-office",
+  "storeyId": "s1",
+  "id": "s1-q",
+  "newCategory": "c"
+}

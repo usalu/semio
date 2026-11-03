@@ -1,0 +1,6 @@
+{
+  "ChangeTowerMassPerLength": {
+    "id": "tw-1",
+    "newMassPerLength": 1.5
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "InsertBridgeFatigue": {
+    "index": 1,
+    "bridgeFatigueItem": {
+      "id": "br-1-2",
+      "memberId": "member-b1",
+      "lambda": 0.8,
+      "phi2": 1.0,
+      "deltaSigmaP": 40000000.0,
+      "category": 71,
+      "method": "DamageTolerant",
+      "heavyVehicleWeight": 0.0,
+      "referenceWeight": 0.0,
+      "observedTraffic": 0.0,
+      "designLife": 0.0,
+      "secondLaneTraffic": 0.0,
+      "secondLaneWeight": 0.0,
+      "lambda1": 0.0,
+      "lambdaMax": 0.0,
+      "detailId": "",
+      "plateThickness": 0.0,
+      "deckThickness": 0.0,
+      "troughSpacing": 0.0,
+      "troughWidth": 0.0,
+      "troughThickness": 0.0,
+      "crossbeamSpacing": 0.0,
+      "surfacingThickness": 0.0,
+      "wheelLoad": 0.0,
+      "wheelPatch": 0.0,
+      "consequence": "Low"
+    }
+  }
+}

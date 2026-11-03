@@ -1,0 +1,6 @@
+{
+  "ChangeColumnKind": {
+    "id": "col-C1",
+    "newKind": "partiallyEncased"
+  }
+}

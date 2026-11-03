@@ -1,0 +1,6 @@
+{
+  "mutation": "changeMemberDetailing",
+  "buildingId": "bldg-office",
+  "id": "beam-b1",
+  "newDetailingCompatibleWithQ": false
+}

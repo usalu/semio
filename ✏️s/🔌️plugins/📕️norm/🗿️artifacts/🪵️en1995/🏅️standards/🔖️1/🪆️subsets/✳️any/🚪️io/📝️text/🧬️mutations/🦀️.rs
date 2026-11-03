@@ -1,6 +1,6 @@
 //! ⚡️ En1995 mutations — OpText/OpBinary via JSON tokens (hierarchical timber subject).
 
-use semio_s_artifact_norm_en1995_mutations::En1995Mutation;
+use crate::En1995Mutation;
 
 use protocol::{OpText};
 #[cfg(test)] use protocol::{OpBinary};
@@ -29,11 +29,12 @@ mod unit_tests;
 
 #[allow(unused_imports)]
 mod mutations_codec {
-use crate::mutations::*;
-use semio_s_artifact_norm_en1995_mutations::*;
+use crate::text::*;
+use crate::*;
 use semio_s_artifact_norm_en1995_diff::En1995Diff;
 use semio_s_artifact_norm_en1995_model::En1995Snapshot;
 use semio_s_artifact_norm_en1995_mut_members::change_annex;
+use semio_s_artifact_norm_en1995_mut_members::change_reliability_class;
 use semio_s_artifact_norm_en1995_mut_members::insert_member;
 use semio_s_artifact_norm_en1995_mut_members::remove_member;
 use semio_s_artifact_norm_en1995_mut_members::change_member_label_en;
@@ -52,7 +53,6 @@ use semio_s_artifact_norm_en1995_mut_stability::change_member_buckling_length_z;
 use semio_s_artifact_norm_en1995_mut_stability::change_member_restraint_spacing;
 use semio_s_artifact_norm_en1995_mut_geometry::change_member_notch_depth;
 use semio_s_artifact_norm_en1995_mut_geometry::change_member_notch_distance;
-use semio_s_artifact_norm_en1995_mut_stability::change_member_m_crit;
 use semio_s_artifact_norm_en1995_mut_footbridges::change_member_mass_kg_per_m;
 use semio_s_artifact_norm_en1995_mut_footbridges::change_member_mass_kg_per_m2;
 use semio_s_artifact_norm_en1995_mut_footbridges::change_member_damping_xi;
@@ -99,6 +99,14 @@ use semio_s_artifact_norm_en1995_mut_joint_actions::remove_connection_action;
 use semio_s_artifact_norm_en1995_mut_joint_actions::change_connection_action_kind;
 use semio_s_artifact_norm_en1995_mut_joint_actions::change_connection_load_duration;
 use semio_s_artifact_norm_en1995_mut_joint_actions::change_connection_action_fk;
+use semio_s_artifact_norm_en1995_mut_design_cases::change_uls_equation;
+use semio_s_artifact_norm_en1995_mut_design_cases::insert_case;
+use semio_s_artifact_norm_en1995_mut_design_cases::remove_case;
+use semio_s_artifact_norm_en1995_mut_design_cases::change_case_label_en;
+use semio_s_artifact_norm_en1995_mut_design_cases::change_case_label_de;
+use semio_s_artifact_norm_en1995_mut_design_cases::change_case_entry_id;
+use semio_s_artifact_norm_en1995_mut_design_cases::change_case_number;
+use semio_s_artifact_norm_en1995_mut_design_cases::change_case_text;
 
 /// 🌉️ Decodes one mutation from the production JSON codec (the committed `🦠️mutation` vectors).
 pub fn decode_en1995_mutation_json(text: &str) -> Result<En1995Mutation, String> {
@@ -110,7 +118,7 @@ pub fn encode_en1995_mutation_json(mutation: &En1995Mutation) -> String {
     semio_framework_pack_json::to_json_string(mutation)
 }
 }
-pub use crate::mutations::mutations_codec::*;
+pub use crate::text::mutations_codec::*;
 
 /// 📜️ Describes the artifact mutation dialect.
 pub const MUTATION_GRAMMAR_SEMIO: &str = include_str!("📖️mutations.grammar.semio");

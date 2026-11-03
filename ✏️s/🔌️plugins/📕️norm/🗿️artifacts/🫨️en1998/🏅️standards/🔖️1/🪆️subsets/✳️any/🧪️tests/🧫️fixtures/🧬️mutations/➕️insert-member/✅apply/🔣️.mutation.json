@@ -1,0 +1,28 @@
+{
+  "mutation": "insertMember",
+  "buildingId": "bldg-office",
+  "index": 1,
+  "member": {
+    "id": "col-c1-2",
+    "material": "rc",
+    "role": "column",
+    "detailingCompatibleWithQ": true,
+    "minDimensionM": 0.35,
+    "rho": 0.012,
+    "rhoPrime": 0.0,
+    "omegaWd": 0.12,
+    "steelSectionClass": 0,
+    "fastenerDiameterMm": 0.0,
+    "timberThicknessMm": 0.0,
+    "wallThicknessM": 0.0,
+    "wallEffectiveHeightM": 0.0,
+    "wallLengthM": 0.0,
+    "wallDirectionRad": 0.0,
+    "wallStoreyId": "",
+    "wallStartXM": 0.0,
+    "wallStartYM": 0.0,
+    "wallPoissonRatio": 0.25,
+    "effectiveStiffnessBasis": "declared",
+    "effectiveStiffnessRatio": 1.0
+  }
+}

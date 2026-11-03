@@ -4,7 +4,8 @@
 //! state, not compliance content. Declared as a `view_action`, so the registry's kind discipline
 //! actively rejects it if it ever starts emitting document operations.
 
-use semio_s_plugin_norm_results_config::{ChangeSelectedCheckIndex, NormResultsWindowConfigMutation};
+use semio_s_plugin_norm_results_config::mutations::change_selected_check_index::ChangeSelectedCheckIndex;
+use semio_s_plugin_norm_results_config::mutations::NormResultsWindowConfigMutation;
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use semio_s_artifact_norm_en1997_mutations::En1997Mutation;
 use semio_s_artifact_norm_en1997_model::En1997Snapshot;

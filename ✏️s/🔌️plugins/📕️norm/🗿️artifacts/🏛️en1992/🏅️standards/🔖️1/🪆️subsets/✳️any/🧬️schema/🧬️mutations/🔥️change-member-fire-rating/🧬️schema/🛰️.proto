@@ -1,5 +1,6 @@
 syntax = "proto3";
+package semio.s.norm.en1992.mutation.change_member_fire_rating;
 message ChangeMemberFireRating {
-  string memberId = 1;
-  string newRating = 2;
+  string member_id = 1;
+  FireRating new_rating = 2;
 }

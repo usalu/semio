@@ -1,0 +1,10 @@
+{
+  "mutation": "insertGroundInvestigationReading",
+  "investigationId": "investigation-1",
+  "index": 0,
+  "investigationReading": {
+    "id": "investigation-reading-4",
+    "depth": 1.0,
+    "measurement": 2000000.0
+  }
+}

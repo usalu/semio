@@ -110,7 +110,7 @@ fn remedy_law_writing_required_improves_fail() {
 
 #[test]
 fn chi_never_read_from_snapshot() {
-    let json = serde_json::to_value(En1999Snapshot::default()).unwrap();
+    let json = serde_json::to_value(En1999Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De)).unwrap();
     assert!(json.get("chi").is_none());
 }
 
@@ -135,7 +135,7 @@ fn python_oracle_matches_rust_utilizations_within_half_percent() {
     ] {
         let rust = evaluate_structure(&snap);
         let input = serde_json::to_string(&snap).expect("json");
-        let mut child = Command::new("python3")
+        let mut child = semio_s_plugin_norm_compliance::python_oracle::command()
             .arg(oracle_script())
             .arg("--json")
             .stdin(std::process::Stdio::piped())
@@ -155,21 +155,29 @@ fn python_oracle_matches_rust_utilizations_within_half_percent() {
         );
         let py: serde_json::Value = serde_json::from_slice(&output.stdout).expect("oracle json");
         let py_checks = py.get("checks").and_then(|c| c.as_array()).expect("checks array");
-        let mut compared = 0usize;
+        let mut seen = std::collections::BTreeSet::new();
         for pc in py_checks {
-            let id = pc.get("id").and_then(|v| v.as_str()).unwrap_or("");
-            let _ = id;
-            let Some(pu) = pc.get("utilization").and_then(|v| v.as_f64()) else { continue; };
-            let Some(rc) = rust.checks.iter().find(|c| c.id == id) else { continue; };
+            let id = pc.get("id").and_then(|v| v.as_str()).expect("oracle id");
+            let pu = pc.get("utilization").and_then(|v| v.as_f64()).expect("oracle utilization");
+            let rc = rust.checks.iter().find(|c| c.id == id).unwrap_or_else(|| panic!("{label}: oracle check {id} has no Rust counterpart"));
             let denom = pu.abs().max(rc.utilization.abs()).max(1e-9);
             let rel = (pu - rc.utilization).abs() / denom;
-            assert!(
-                rel <= 0.005 || (pu - rc.utilization).abs() <= 0.005,
-                "{label} check {id}: python={pu} rust={} rel={rel}",
-                rc.utilization
-            );
-            compared += 1;
+            assert!(rel <= 0.005 || (pu - rc.utilization).abs() <= 0.005, "{label} check {id}: python={pu} rust={} rel={rel}", rc.utilization);
+            seen.insert(id.to_owned());
         }
-        assert!(compared >= 2, "{label}: expected ≥2 overlapping oracle checks, got {compared}");
+        for c in &rust.checks {
+            let verified = ["en1999.6.", "en1999.7.", "en1999.8.", "en1999.1-"].iter().any(|p| c.id.starts_with(p));
+            if verified && c.status != CheckStatus::NotApplicable && !c.id.ends_with(".empty") {
+                assert!(seen.contains(&c.id), "{label}: Rust check {} is not covered by the oracle", c.id);
+            }
+        }
+        assert!(seen.len() >= 40, "{label}: expected >=40 oracle checks, got {}", seen.len());
     }
+}
+
+/// 🔮️ EN 1999 third-party oracle cases: the shared harness recomputes every blessed case in `🧪️tests/🧫️fixtures/🔮️oracle-cases` with the registered libraries and independent formulations and fails on any mismatch beyond the tolerance profile or between references.
+#[test]
+fn third_party_libraries_reproduce_the_blessed_oracle_cases() {
+    let verified = semio_s_plugin_norm_compliance::python_oracle::verify_cases_above(env!("CARGO_MANIFEST_DIR"));
+    assert!(verified >= 7, "expected at least 7 verified oracle cases, got {verified}");
 }

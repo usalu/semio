@@ -1,0 +1,7 @@
+{
+  "ChangeTensionActionForce": {
+    "id": "ten-1",
+    "elementId": "ten-g",
+    "newForce": 240000.0
+  }
+}

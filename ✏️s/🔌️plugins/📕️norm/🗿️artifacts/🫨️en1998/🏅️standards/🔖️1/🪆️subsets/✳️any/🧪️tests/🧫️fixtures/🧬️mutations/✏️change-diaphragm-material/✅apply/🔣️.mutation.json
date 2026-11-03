@@ -1,0 +1,5 @@
+{
+  "mutation": "changeDiaphragmMaterial",
+  "id": "dia-1",
+  "newMaterial": "steelDeck"
+}

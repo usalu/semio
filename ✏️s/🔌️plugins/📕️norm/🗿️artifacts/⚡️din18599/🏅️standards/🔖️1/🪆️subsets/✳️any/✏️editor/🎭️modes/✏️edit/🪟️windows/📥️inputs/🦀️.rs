@@ -24,13 +24,7 @@ pub fn render(
     controller_id: &'static str,
     windows: &TreeWindows<'_>,
 ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    semio_s_plugin_norm_app_surface::render_document_editor(
-        document,
-        locale,
-        controller_id,
-        Some(crate::modes::edit::field_meta::field_meta),
-        windows,
-    )
+    semio_s_plugin_norm_app_surface::render_inspector_for::<crate::DinV18599Family>(document, locale, controller_id, Some(crate::modes::edit::field_meta::field_meta), windows)
 }
 //#endregion 🔖️Render
 

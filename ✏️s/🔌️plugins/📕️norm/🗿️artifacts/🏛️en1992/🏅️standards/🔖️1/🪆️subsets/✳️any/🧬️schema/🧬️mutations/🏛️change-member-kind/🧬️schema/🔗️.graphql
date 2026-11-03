@@ -1,0 +1,4 @@
+type ChangeMemberKind {
+  memberId: String!
+  newKind: String!
+}

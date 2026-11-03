@@ -1,54 +1,225 @@
 syntax = "proto3";
 package semio.s.norm.en1992;
-enum AnnexChoice { ANNEX_EN = 0; ANNEX_DE = 1; }
-enum DuctilityClass { DUCTILITY_A = 0; DUCTILITY_B = 1; DUCTILITY_C = 2; }
-enum MemberKind { MEMBER_BEAM = 0; MEMBER_SLAB = 1; MEMBER_COLUMN = 2; MEMBER_WALL = 3; MEMBER_FLAT_SLAB = 4; MEMBER_RIBBED_SLAB = 5; MEMBER_TENSION = 6; MEMBER_BRIDGE = 7; MEMBER_LIQUID_RETAINING = 8; }
-enum SupportCondition { SUPPORT_SIMPLY_SUPPORTED = 0; SUPPORT_CONTINUOUS = 1; SUPPORT_CANTILEVER = 2; SUPPORT_FIXED = 3; }
-enum ExposureClass { EXPOSURE_X0 = 0; EXPOSURE_XC1 = 1; EXPOSURE_XC2 = 2; EXPOSURE_XC3 = 3; EXPOSURE_XC4 = 4; EXPOSURE_XD1 = 5; EXPOSURE_XD2 = 6; EXPOSURE_XD3 = 7; EXPOSURE_XS1 = 8; EXPOSURE_XS2 = 9; EXPOSURE_XS3 = 10; EXPOSURE_XF1 = 11; EXPOSURE_XF2 = 12; EXPOSURE_XF3 = 13; EXPOSURE_XF4 = 14; EXPOSURE_XA1 = 15; EXPOSURE_XA2 = 16; EXPOSURE_XA3 = 17; }
-enum FireRating { FIRE_R30 = 0; FIRE_R60 = 1; FIRE_R90 = 2; FIRE_R120 = 3; }
-enum TightnessClass { TIGHTNESS_TC0 = 0; TIGHTNESS_TC1 = 1; TIGHTNESS_TC2 = 2; }
-message ConcreteGrade { string id = 1; string name = 2; double f_ck = 3; }
-message ReinforcementGrade { string id = 1; string name = 2; double f_yk = 3; double e_s = 4; DuctilityClass ductility = 5; double k = 6; double eps_uk = 7; }
-message PrestressSteel { string id = 1; string name = 2; double f_pk = 3; double f_p01k = 4; }
-message BarLayer { string id = 1; double diameter = 2; uint32 count = 3; string position = 4; double anchorage_length = 5; double lap_length = 6; string bond_condition = 7; double aggregate_size = 8; }
-message Stirrups { double diameter = 1; double spacing = 2; uint32 legs = 3; }
-message PunchingSpec { double column_width = 1; double column_depth = 2; string column_position = 3; double asw = 4; }
-message PrestressSpec { double force = 1; double area = 2; double eccentricity = 3; double loss_ratio = 4; }
-message FireSpec { FireRating rating = 1; double axis_distance = 2; string column_method = 3; string slab_system = 4; }
-message LoadCaseActions { string id = 1; string kind = 2; string category = 3; string source = 4; double g_k_line = 5; double q_k_line = 6; double point_force = 7; double m_k = 8; double n_k = 9; double v_k = 10; double t_k = 11; double v_k_punch = 12; }
-message RcMember {
- string id = 1;
- string label_en = 2;
- string label_de = 3;
- MemberKind kind = 4;
- string concrete_grade_id = 5;
- string reinforcement_grade_id = 6;
- string prestress_steel_id = 7;
- ExposureClass exposure = 8;
- double width = 9;
- double height = 10;
- double effective_depth = 11;
- double cover = 12;
- double span = 13;
- SupportCondition support = 14;
- double buckling_length = 15;
- repeated BarLayer longitudinal = 16;
- Stirrups stirrups = 17;
- PunchingSpec punching = 18;
- PrestressSpec prestress = 19;
- FireSpec fire = 20;
- repeated LoadCaseActions actions = 21;
- bool use_fem = 22;
- double udl = 23;
- bool deflection_sensitive = 24;
- optional TightnessClass tightness = 25;
- double hd_over_h = 26;
- double liquid_sigma_s = 27;
- double liquid_rho_p_eff = 28;
- double liquid_f_ct_eff = 29;
- double liquid_s_r_max = 30;
- double bridge_sigma_c = 31;
- double bridge_delta_sigma_s = 32;
+message En1992Artifact {
+  // @state artifact
+  AnnexChoice annex = 1;
+  // @state artifact
+  string title = 2;
+  // @state artifact
+  double design_working_life_years = 3;
+  // @state artifact
+  double delta_c_dev = 4;
+  // @state artifact
+  CementClass cement_type = 5;
+  // @state artifact
+  repeated ConcreteGrade concrete_grades = 6;
+  // @state artifact
+  repeated ReinforcementGrade reinforcement_grades = 7;
+  // @state artifact
+  repeated PrestressSteel prestress_steels = 8;
+  // @state artifact
+  repeated RcMember members = 9;
+  // @state artifact
+  repeated Anchor anchors = 10;
+  // @state artifact
+  repeated Placement placements = 11;
+  // @state artifact
+  repeated CaseRow cases = 12;
+  // @state artifact
+  string reliability_class = 13;
 }
-message Anchor { string id = 1; double h_ef = 2; bool cracked = 3; double f_uk = 4; double f_yk = 5; double a_s = 6; double d = 7; double c1 = 8; double f_ck = 9; repeated LoadCaseActions actions = 10; }
-message En1992Artifact { AnnexChoice annex = 1; string title = 2; double design_working_life_years = 3; double delta_c_dev = 4; string cement_type = 5; repeated ConcreteGrade concrete_grades = 6; repeated ReinforcementGrade reinforcement_grades = 7; repeated PrestressSteel prestress_steels = 8; repeated RcMember members = 9; repeated Anchor anchors = 10; }
+message ConcreteGrade {
+  string id = 1;
+  string name = 2;
+  double f_ck = 3;
+}
+message ReinforcementGrade {
+  string id = 1;
+  string name = 2;
+  double f_yk = 3;
+  double e_s = 4;
+  DuctilityClass ductility = 5;
+  double k = 6;
+  double eps_uk = 7;
+}
+message PrestressSteel {
+  string id = 1;
+  string name = 2;
+  double f_pk = 3;
+  double f_p01k = 4;
+}
+message BarLayer {
+  string id = 1;
+  double diameter = 2;
+  uint32 count = 3;
+  BarPosition position = 4;
+  double anchorage_length = 5;
+  double lap_length = 6;
+  BondCondition bond_condition = 7;
+  double aggregate_size = 8;
+  double lap_share = 9;
+}
+message SectionPoint {
+  string id = 1;
+  double y = 2;
+  double z = 3;
+}
+message BarPoint {
+  string id = 1;
+  string layer_id = 2;
+  double y = 3;
+  double z = 4;
+  double diameter = 5;
+  double length = 6;
+  BarBend bend = 7;
+}
+message TendonPoint {
+  string id = 1;
+  double x = 2;
+  double y = 3;
+  double z = 4;
+}
+message StudRow {
+  string id = 1;
+  double angle = 2;
+  uint32 count = 3;
+  double spacing_first = 4;
+  double spacing_radial = 5;
+  double diameter = 6;
+}
+message Opening {
+  string id = 1;
+  double x = 2;
+  double y = 3;
+  double width = 4;
+  double depth = 5;
+}
+message Stirrups {
+  double diameter = 1;
+  double spacing = 2;
+  uint32 legs = 3;
+}
+enum PunchingBetaMethod {
+  PUNCHING_BETA_METHOD_SIMPLIFIED = 0;
+  PUNCHING_BETA_METHOD_UNBALANCED_MOMENTS = 1;
+}
+message PunchingSpec {
+  double column_width = 1;
+  double column_depth = 2;
+  ColumnPosition column_position = 3;
+  double asw = 4;
+  PunchingBetaMethod beta_method = 5;
+  double moment_c1 = 6;
+  double moment_c2 = 7;
+}
+message PrestressSpec {
+  double force = 1;
+  double area = 2;
+  double eccentricity = 3;
+  double loss_ratio = 4;
+}
+message FireSpec {
+  FireRating rating = 1;
+  double axis_distance = 2;
+  SlabFireSystem slab_system = 3;
+}
+message LoadCaseActions {
+  string id = 1;
+  ActionKind kind = 2;
+  PsiCategory category = 3;
+  ActionSource source = 4;
+  double g_k_line = 5;
+  double q_k_line = 6;
+  double point_force = 7;
+  double m_k = 8;
+  double n_k = 9;
+  double v_k = 10;
+  double t_k = 11;
+  double v_k_punch = 12;
+}
+message RcMember {
+  string id = 1;
+  string label_en = 2;
+  string label_de = 3;
+  MemberKind kind = 4;
+  string concrete_grade_id = 5;
+  string reinforcement_grade_id = 6;
+  string prestress_steel_id = 7;
+  ExposureClass exposure = 8;
+  double width = 9;
+  double height = 10;
+  double effective_depth = 11;
+  double cover = 12;
+  double span = 13;
+  SupportCondition support = 14;
+  double buckling_length = 15;
+  repeated BarLayer longitudinal = 16;
+  optional Stirrups stirrups = 17;
+  optional PunchingSpec punching = 18;
+  optional PrestressSpec prestress = 19;
+  optional FireSpec fire = 20;
+  repeated LoadCaseActions actions = 21;
+  bool use_fem = 22;
+  double udl = 23;
+  bool deflection_sensitive = 24;
+  optional TightnessClass tightness = 25;
+  double hd_over_h = 26;
+  double liquid_sigma_s = 27;
+  double liquid_rho_p_eff = 28;
+  double liquid_f_ct_eff = 29;
+  double liquid_s_r_max = 30;
+  double bridge_sigma_c = 31;
+  double bridge_delta_sigma_s = 32;
+  double relative_humidity = 33;
+  double bearing_width = 34;
+  repeated SectionPoint section_points = 35;
+  repeated BarPoint bars = 36;
+  repeated TendonPoint tendon_points = 37;
+  repeated StudRow stud_rows = 38;
+  repeated Opening openings = 39;
+}
+message Anchor {
+  string id = 1;
+  double h_ef = 2;
+  bool cracked = 3;
+  double f_uk = 4;
+  double f_yk = 5;
+  double a_s = 6;
+  double d = 7;
+  double c1 = 8;
+  double f_ck = 9;
+  repeated LoadCaseActions actions = 10;
+  double head_diameter = 11;
+}
+message Placement {
+  string id = 1;
+  double x = 2;
+  double y = 3;
+  double z = 4;
+  double yaw = 5;
+}
+enum DuctilityClass {
+  DUCTILITY_CLASS_A = 0;
+  DUCTILITY_CLASS_B = 1;
+  DUCTILITY_CLASS_C = 2;
+}
+enum BondCondition {
+  BOND_CONDITION_GOOD = 0;
+  BOND_CONDITION_POOR = 1;
+}
+message CaseNumber {
+  string id = 1;
+  double value = 2;
+}
+message CaseText {
+  string id = 1;
+  string value = 2;
+}
+message CaseRow {
+  string id = 1;
+  string label_en = 2;
+  string label_de = 3;
+  string entry_id = 4;
+  repeated CaseNumber numbers = 5;
+  repeated CaseText texts = 6;
+}

@@ -1,0 +1,4 @@
+type ChangeMemberPunchColumnWidth {
+  memberId: String!
+  newPunchingColumnWidth: Float!
+}

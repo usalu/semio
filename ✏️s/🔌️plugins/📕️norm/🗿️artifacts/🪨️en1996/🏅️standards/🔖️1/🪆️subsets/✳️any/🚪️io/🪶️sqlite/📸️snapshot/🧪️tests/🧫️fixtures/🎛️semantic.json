@@ -1,22 +1,35 @@
 {
-  "schemaBytes": 5683,
+  "schemaBytes": 14116,
   "tableWidths": {
-    "en1996_concentrated_load": 13,
-    "en1996_document": 5,
+    "en1996_bar": 14,
+    "en1996_case": 7,
+    "en1996_case_number": 7,
+    "en1996_case_text": 5,
+    "en1996_chase": 21,
+    "en1996_concentrated_load": 19,
+    "en1996_confined": 16,
+    "en1996_document": 6,
+    "en1996_flange": 13,
+    "en1996_lintel": 16,
     "en1996_load_case": 30,
-    "en1996_opening": 13,
-    "en1996_wall": 70
+    "en1996_movement_joint": 8,
+    "en1996_opening": 16,
+    "en1996_pier": 10,
+    "en1996_placement": 16,
+    "en1996_prestress": 22,
+    "en1996_tie": 14,
+    "en1996_wall": 108
   },
   "cases": [
     {
       "id": "full",
-      "rows": 9,
-      "valueBytes": 1952
+      "rows": 29,
+      "valueBytes": 4829
     },
     {
       "id": "emptyCollections",
       "rows": 1,
-      "valueBytes": 31
+      "valueBytes": 34
     }
   ]
 }

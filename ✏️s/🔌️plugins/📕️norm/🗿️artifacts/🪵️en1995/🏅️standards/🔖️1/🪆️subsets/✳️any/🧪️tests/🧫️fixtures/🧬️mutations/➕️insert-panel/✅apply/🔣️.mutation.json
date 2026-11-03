@@ -1,0 +1,45 @@
+{
+  "InsertPanel": {
+    "index": 0,
+    "panel": {
+      "id": "panel-1",
+      "strengthClass": "c24",
+      "layers": [
+        {
+          "id": "layer-1",
+          "thicknessM": 0.04,
+          "orientation": "longitudinal",
+          "grade": "C24"
+        },
+        {
+          "id": "layer-2",
+          "thicknessM": 0.04,
+          "orientation": "transverse",
+          "grade": "C24"
+        },
+        {
+          "id": "layer-3",
+          "thicknessM": 0.04,
+          "orientation": "longitudinal",
+          "grade": "C24"
+        },
+        {
+          "id": "layer-4",
+          "thicknessM": 0.04,
+          "orientation": "transverse",
+          "grade": "C24"
+        },
+        {
+          "id": "layer-5",
+          "thicknessM": 0.04,
+          "orientation": "longitudinal",
+          "grade": "C24"
+        }
+      ],
+      "spanM": 5.0,
+      "widthM": 1.0,
+      "loadPa": 5000.0,
+      "fireDurationS": 3600.0
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "InsertStud": {
+    "index": 1,
+    "item": {
+      "id": "stud-2",
+      "beamId": "beam-B1",
+      "xM": 0.0,
+      "diameterM": 0.019,
+      "heightM": 0.095,
+      "fUPa": 450000000.0
+    }
+  }
+}

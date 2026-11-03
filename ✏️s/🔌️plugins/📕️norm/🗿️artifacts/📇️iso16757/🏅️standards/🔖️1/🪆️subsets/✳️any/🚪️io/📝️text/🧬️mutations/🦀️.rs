@@ -384,7 +384,7 @@ use semio_s_artifact_norm_iso16757_mut_definitions::introduce_geometry_object;
 use semio_s_artifact_norm_iso16757_mut_definitions::retire_geometry_object;
 
 /// 📥️ Decodes this facet's own internally-tagged (`{"mutation": "<camelCaseVariant>", …}`) JSON
-/// projection — the exact shape the committed `<kind>/🧪️tests/<fixture>/🦠️mutation/🔣️.json`
+/// projection — the exact shape the committed `<kind>/🧪️tests/<fixture>/🔣️.mutation.json`
 /// specification vectors carry — into a real [`Iso16757Mutation`]. The generated test host of
 /// `../../../../../🧪️tests/📇️mutate-iso16757-1` links only this crate, so `serde_json` is unreachable
 /// from that adapter and the bridge belongs here rather than there.

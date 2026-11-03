@@ -10,7 +10,7 @@ use semio_framework_os_renderer_wgpu_shell_directory::{DirectoryState, resolve_i
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_os_renderer_wgpu_shell_directory::{DirectoryHomeProjection, ShellDirectoryHomePublicationOutcome};
 use semio_framework_os_renderer_wgpu_shell_doc_open::{IMPORT_TRANSFER_CANCEL_ACTION, OpeningState, ShellDocumentOpenAnswer, ShellDocumentOpenPhase, ShellDocumentOpenTarget, ShellDocumentOpening, default_persistence_bindings, request_file_open};
-use semio_framework_os_renderer_wgpu_shell_dock::{ShellDockState, save_dock_skeleton_to_store, save_dock_ui_to_store};
+use semio_framework_os_renderer_wgpu_shell_dock::{FocusDevice, ShellDockState, WindowKindFocus, save_dock_skeleton_to_store, save_dock_ui_to_store};
 use semio_framework_os_renderer_wgpu_shell_docs::{DocumentState, FRAMEWORK_SYNC_PANEL_TAB_ID, FRAMEWORK_TASK_MANAGER_PANEL_ID, SHELL_MERGE_POLICY_OPTIONS, note_shell_command_action, shell_command_for_control};
 use semio_framework_os_renderer_wgpu_shell_history::HistoryState;
 use semio_framework_os_renderer_wgpu_shell_input::ShellInputState;

@@ -1,0 +1,6 @@
+{
+  "ChangeEccentricityBottom": {
+    "id": "wall-north",
+    "newEccentricityBottomM": 0.01
+  }
+}

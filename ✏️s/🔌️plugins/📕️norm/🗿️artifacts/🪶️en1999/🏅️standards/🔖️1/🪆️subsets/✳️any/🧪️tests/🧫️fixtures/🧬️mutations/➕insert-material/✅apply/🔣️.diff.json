@@ -1,0 +1,33 @@
+{
+  "annex": null,
+  "reliabilityClass": "RC2",
+  "materials": {
+    "removed": [],
+    "inserted": [
+      {
+        "index": 1,
+        "row": {
+          "id": "mat-6082-2",
+          "designation": "aw6082-t6",
+          "productForm": "extrudedProfile"
+        }
+      }
+    ],
+    "moved": [],
+    "modified": []
+  },
+  "sections": null,
+  "members": null,
+  "connections": null,
+  "fireScenarios": null,
+  "fatigueDetails": null,
+  "coldFormed": null,
+  "shells": null,
+  "placements": null,
+  "weldRuns": null,
+  "outlineVertices": null,
+  "fatigueCategories": null,
+  "patchLoads": null,
+  "ringStiffeners": null,
+  "transverseStiffeners": null
+}

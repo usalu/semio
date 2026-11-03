@@ -12,7 +12,7 @@ async fn de_office_compliant_example_fixture_parses_and_round_trips() {
 
 #[semio_framework_async_macros::async_test]
 async fn default_snapshot_round_trips_dsl() {
-    let document = semio_s_artifact_norm_en1991_model::En1991Snapshot::default();
+    let document = semio_s_artifact_norm_en1991_model::En1991Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De);
     let printed = print_dsl(&document);
     let again = parse_dsl(&printed).expect("default parse");
     assert_eq!(again.altitude, document.altitude);

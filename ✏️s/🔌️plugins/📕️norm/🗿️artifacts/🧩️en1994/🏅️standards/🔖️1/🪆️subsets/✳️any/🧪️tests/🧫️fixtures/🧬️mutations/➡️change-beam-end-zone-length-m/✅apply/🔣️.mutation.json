@@ -1,0 +1,6 @@
+{
+  "ChangeBeamEndZoneLengthM": {
+    "id": "beam-B1",
+    "newEndZoneLengthM": 0.5
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeBearingStiffnessNPerM",
+  "id": "bear-1",
+  "newStiffnessNPerM": 40000000.0
+}

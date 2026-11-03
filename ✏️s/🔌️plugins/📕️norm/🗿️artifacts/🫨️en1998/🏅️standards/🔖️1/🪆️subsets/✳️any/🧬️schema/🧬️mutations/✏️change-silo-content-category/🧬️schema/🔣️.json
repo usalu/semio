@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-silo-content-category/schema.json",
+  "title": "ChangeSiloContentCategory",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newContentCategory"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeSiloContentCategory"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Silo",
+          "de": "Silo"
+        },
+        "description": {
+          "en": "The silo this mutation addresses, by id.",
+          "de": "Das adressierte Element (Silo), per Kennung."
+        },
+        "ref": {
+          "kind": "silo"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newContentCategory": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/snapshot.json#/$defs/ImposedCategory",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Content category",
+          "de": "Füllgutkategorie"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

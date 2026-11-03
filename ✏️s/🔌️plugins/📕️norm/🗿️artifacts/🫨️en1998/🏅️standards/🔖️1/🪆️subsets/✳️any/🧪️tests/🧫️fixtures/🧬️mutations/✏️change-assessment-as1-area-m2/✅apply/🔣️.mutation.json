@@ -1,0 +1,5 @@
+{
+  "mutation": "changeAssessmentAs1AreaM2",
+  "id": "as-1",
+  "newTensionSteelAreaM2": 1.5
+}

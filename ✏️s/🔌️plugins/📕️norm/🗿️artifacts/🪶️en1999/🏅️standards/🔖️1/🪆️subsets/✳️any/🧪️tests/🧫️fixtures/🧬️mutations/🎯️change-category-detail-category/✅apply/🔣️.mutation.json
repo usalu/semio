@@ -1,0 +1,5 @@
+{
+  "mutation": "changeCategoryDetailCategory",
+  "fatigueCategoryId": "site-1",
+  "newDetailCategory": "40-alt"
+}

@@ -1,0 +1,6 @@
+{
+  "ChangeWallType": {
+    "id": "wall-north",
+    "newWallType": "Shear"
+  }
+}

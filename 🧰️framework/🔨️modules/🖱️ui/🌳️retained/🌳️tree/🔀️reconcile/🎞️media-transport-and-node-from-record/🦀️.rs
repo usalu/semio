@@ -144,7 +144,7 @@ pub fn ui_node_from_record(document: &UiDocumentTree, record: &UiNodeRecord, sur
                 presence,
                 menu,
             }),
-            ui_contract::ContainerRole::Plain | ui_contract::ContainerRole::Form | ui_contract::ContainerRole::Toolbar => {
+            ui_contract::ContainerRole::Plain | ui_contract::ContainerRole::Form | ui_contract::ContainerRole::Toolbar | ui_contract::ContainerRole::Sheet => {
                 let (direction, gap, padding) = stack_metrics(&record.layout);
                 UiNode::Stack(UiStackNode {
                     direction,

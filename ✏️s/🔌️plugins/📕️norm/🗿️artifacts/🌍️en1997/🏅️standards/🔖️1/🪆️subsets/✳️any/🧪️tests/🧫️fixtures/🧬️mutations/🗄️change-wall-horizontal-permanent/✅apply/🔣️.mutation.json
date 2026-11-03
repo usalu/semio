@@ -1,0 +1,5 @@
+{
+  "mutation": "changeWallHorizontalPermanent",
+  "id": "wall-W1",
+  "newHorizontalPermanent": 80000.0
+}

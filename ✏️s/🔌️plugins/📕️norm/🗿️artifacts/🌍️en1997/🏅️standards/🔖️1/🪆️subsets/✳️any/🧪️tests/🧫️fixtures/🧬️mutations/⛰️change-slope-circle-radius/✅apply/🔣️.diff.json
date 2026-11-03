@@ -1,0 +1,41 @@
+{
+  "structureId": null,
+  "geotechnicalCategory": null,
+  "designSituation": null,
+  "designApproach": null,
+  "annex": null,
+  "groundwaterLevel": null,
+  "investigationDepth": null,
+  "layers": null,
+  "footings": null,
+  "piles": null,
+  "retainingWalls": null,
+  "slopes": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "slope-S1",
+        "patch": {
+          "circleRadius": 1.5,
+          "width": 0.0
+        }
+      }
+    ]
+  },
+  "upliftCases": null,
+  "anchors": null,
+  "embeddedWalls": null,
+  "pileGroups": null,
+  "labTests": null,
+  "layerWaters": null,
+  "cases": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "investigations": null,
+  "characteristicBases": null
+}

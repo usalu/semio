@@ -1,0 +1,78 @@
+{
+  "cases": {
+    "removed": [],
+    "inserted": [
+      {
+        "index": 1,
+        "row": {
+          "id": "case-c94-10",
+          "labelEn": "Continuous beam LTB",
+          "labelDe": "Biegedrillknicken Durchlaufträger",
+          "entryId": "C94-10",
+          "numbers": [
+            {
+              "id": "sec_h",
+              "value": 0.4
+            },
+            {
+              "id": "sec_b",
+              "value": 0.18
+            },
+            {
+              "id": "sec_tf",
+              "value": 0.0135
+            },
+            {
+              "id": "sec_tw",
+              "value": 0.0086
+            },
+            {
+              "id": "sec_a",
+              "value": 0.0085
+            },
+            {
+              "id": "sec_iy",
+              "value": 0.000231
+            },
+            {
+              "id": "fy",
+              "value": 355000000.0
+            },
+            {
+              "id": "gamma_m1",
+              "value": 1.0
+            },
+            {
+              "id": "m_ed",
+              "value": 100000.0
+            },
+            {
+              "id": "l_ltb",
+              "value": 6.0
+            },
+            {
+              "id": "i2_slab",
+              "value": 4e-05
+            },
+            {
+              "id": "a_beam",
+              "value": 3.0
+            },
+            {
+              "id": "k_alpha",
+              "value": 2.0
+            }
+          ],
+          "texts": [
+            {
+              "id": "steel_kind",
+              "value": "rolled"
+            }
+          ]
+        }
+      }
+    ],
+    "moved": [],
+    "modified": []
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "ChangeWeldShearForce": {
+    "id": "weld-group-1",
+    "newShearForce": 200000.0
+  }
+}

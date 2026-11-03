@@ -49,10 +49,10 @@ Feature: Apply every typed DIN 4108 mutation against an independent Python imple
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to its committed specification vector
-    Given the committed before-snapshot shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/⬅️before/🔣️.json
-    And the committed mutation payload shared://🧬️mutations/<dir>/<fixture>/🦠️mutation/🔣️.json
-    And the committed after-snapshot shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/➡️after/🔣️.json
-    And the committed outcome shared://🧬️mutations/<dir>/<fixture>/🎯️outcome/🔣️.json
+    Given the committed before-snapshot shared://🧬️mutations/<dir>/<fixture>/🔣️.before.json
+    And the committed mutation payload shared://🧬️mutations/<dir>/<fixture>/🔣️.mutation.json
+    And the committed after-snapshot shared://🧬️mutations/<dir>/<fixture>/🔣️.after.json
+    And the committed outcome shared://🧬️mutations/<dir>/<fixture>/🔣️.outcome.json
     When both implementations apply the committed mutation to the committed before-snapshot
     Then each reaches the committed after-snapshot under the committed outcome status and the two agree
     Examples:
@@ -127,10 +127,10 @@ Feature: Apply every typed DIN 4108 mutation against an independent Python imple
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undoing <id> restores its committed before-snapshot
-    Given the committed before-snapshot shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/⬅️before/🔣️.json
-    And the committed mutation payload shared://🧬️mutations/<dir>/<fixture>/🦠️mutation/🔣️.json
-    And the committed after-snapshot shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/➡️after/🔣️.json
-    And the committed outcome shared://🧬️mutations/<dir>/<fixture>/🎯️outcome/🔣️.json
+    Given the committed before-snapshot shared://🧬️mutations/<dir>/<fixture>/🔣️.before.json
+    And the committed mutation payload shared://🧬️mutations/<dir>/<fixture>/🔣️.mutation.json
+    And the committed after-snapshot shared://🧬️mutations/<dir>/<fixture>/🔣️.after.json
+    And the committed outcome shared://🧬️mutations/<dir>/<fixture>/🔣️.outcome.json
     When each implementation applies the committed mutation and then its OWN computed inverse
     Then both restore the before-snapshot and agree on the mutated and the restored document
     Examples:

@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-ground-investigation-kind/schema.json",
+  "title": "ChangeGroundInvestigationKind",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newKind"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeGroundInvestigationKind"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Ground investigation",
+          "de": "Baugrunderkundung"
+        },
+        "description": {
+          "en": "The ground investigation this mutation addresses, by id.",
+          "de": "Die adressierte Zeile (Baugrunderkundung), per Kennung."
+        },
+        "ref": {
+          "kind": "investigation"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newKind": {
+      "type": "string",
+      "enum": [
+        "borehole",
+        "cpt",
+        "spt"
+      ],
+      "x-semio-ui": {
+        "label": {
+          "en": "Kind (borehole | cpt | spt)",
+          "de": "Art (borehole | cpt | spt)"
+        },
+        "widget": "select",
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

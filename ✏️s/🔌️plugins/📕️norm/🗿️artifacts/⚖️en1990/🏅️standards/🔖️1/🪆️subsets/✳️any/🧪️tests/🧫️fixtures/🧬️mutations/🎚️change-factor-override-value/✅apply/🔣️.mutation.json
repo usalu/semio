@@ -1,0 +1,5 @@
+{
+  "mutation": "changeFactorOverrideValue",
+  "id": "fac-1",
+  "newValue": 2.0
+}

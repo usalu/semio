@@ -32,7 +32,7 @@ for(const row of fixture.cases)test("browser provisioning "+row.name,async()=>{
  const {prepareBrowserDependenciesV1}=await import("../🟦️.ts");
  const controller=new AbortController(),reason=Error("canceled"),failure=Error("installer status 7");
  const calls:{command:string;args:string[];env:Record<string,string>}[]=[];
- const base={ORIGINAL:"same"},port={platform:row.platform,root:row.root,resolve:(name:string)=>row.available.includes(name)?"/tools/"+name:null,isFile:()=>row.cli};
+ const base={ORIGINAL:"same"},recorded=row as typeof row & {escalate?:boolean},port={platform:row.platform,root:row.root,escalate:recorded.escalate!==false,resolve:(name:string)=>row.available.includes(name)?"/tools/"+name:null,isFile:()=>row.cli};
  if(row.cancel==="before")controller.abort(reason);
  let error:unknown;
  try{await prepareBrowserDependenciesV1(port,async(command,args,environment)=>{
@@ -71,5 +71,11 @@ test("browser system host port resolves executable files from the caller environ
   expect(port.resolve("missing")).toBeNull();
   expect(port.resolve("manager")).toBe(join(process.platform==="win32"?first:second,"manager"));
   expect(browserSystemPortV1({}).resolve("manager")).toBeNull();
+  writeFileSync(join(second,"sudo"),"#!/bin/sh\nexit 0\n");chmodSync(join(second,"sudo"),0o700);
+  const allowed=browserSystemPortV1({PATH:second});
+  expect(allowed.escalate).toBe(true);
+  writeFileSync(join(second,"sudo"),"#!/bin/sh\nexit 1\n");
+  const denied=browserSystemPortV1({PATH:second});
+  expect(denied.escalate).toBe(process.platform!=="linux"||denied.root);
  }finally{rmSync(root,{recursive:true,force:true});}
 });

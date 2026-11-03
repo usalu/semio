@@ -57,7 +57,7 @@ impl ErasedSnapshotRetirement for ArtifactStoreStringVectorRetirement {
         Ok(usize::from(self.values.is_some()))
     }
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let mut work = 0u64; let result = (|| -> Result<RetainedCloneStep, ValueError> {
         use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep, admit_retained_clone_close};
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
@@ -69,7 +69,7 @@ impl ErasedSnapshotRetirement for ArtifactStoreStringVectorRetirement {
                 return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..empty }));
             }
             let child_grant = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-            let step = active.close_step(child_grant).result?;
+            let turn = active.close_step(child_grant); work += turn.work; let step = turn.result?;
             admit_retained_clone_close(child_grant, step, active.terminal_is_empty(), "Store string history child")?;
             return Ok(match step { RetainedCloneStep::Progress(progress) | RetainedCloneStep::Complete(progress) => RetainedCloneStep::Progress(progress) });
         }
@@ -86,7 +86,7 @@ impl ErasedSnapshotRetirement for ArtifactStoreStringVectorRetirement {
         }
         drop(self.values.take());
         Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..empty }))
-    })(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
+    })(); if work == 0 { work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); } semio_framework_value::RetainedWorkOutcome { result, work } }
 
     fn terminal_is_empty(&self) -> bool {
         self.values.is_none() && self.active.is_none()

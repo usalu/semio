@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-beam-action-category/schema.json",
+  "title": "ChangeBeamActionCategory",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "beamId",
+    "id",
+    "newCategory"
+  ],
+  "properties": {
+    "beamId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Composite beam",
+          "de": "Verbundträger"
+        },
+        "description": {
+          "en": "The composite beam this mutation addresses, by id.",
+          "de": "Das adressierte Element (Verbundträger), per Kennung."
+        },
+        "ref": {
+          "kind": "beam"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Action",
+          "de": "Einwirkung"
+        },
+        "description": {
+          "en": "The action this mutation addresses, by id.",
+          "de": "Das adressierte Element (Einwirkung), per Kennung."
+        },
+        "ref": {
+          "kind": "action"
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "newCategory": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Category of the beam action",
+          "de": "Kategorie der Trägereinwirkung"
+        },
+        "group": "actions",
+        "order": 30
+      }
+    }
+  }
+}

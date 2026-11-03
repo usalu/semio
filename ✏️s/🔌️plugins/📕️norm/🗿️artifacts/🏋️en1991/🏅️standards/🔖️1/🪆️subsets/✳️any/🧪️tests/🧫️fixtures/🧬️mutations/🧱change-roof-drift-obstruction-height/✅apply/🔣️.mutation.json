@@ -1,0 +1,6 @@
+{
+  "ChangeRoofDriftObstructionHeight": {
+    "id": "roof-main",
+    "newDriftObstructionHeight": 1.0
+  }
+}

@@ -1,6 +1,6 @@
 semio norm.en1998.dsl v1
-annex=de site=seismic-zone=zone2 a-gr=0.6m/s2 de-ground-combo=B-R en-ground-type="" en-spectrum-type="" importance-class=II
-buildings [id:TEXT name:TEXT plan-width-m:QTY plan-length-m:QTY systems:TABLE storeys:TABLE members:TABLE plan-regular:BOOL elevation-regular:BOOL t1-method:TEXT t1-given-s:NUM ct:NUM drift-limit-class:TEXT nu:NUM multiple-resisting-systems:BOOL claims-simple-masonry:BOOL masonry-wall-area-ratio:NUM accidental-eccentricity-ratio:NUM] {
+annex=de site=s-ap-r=1.5m/s2 a-gr=0.6m/s2 de-ground-combo=B-R en-ground-type=a en-spectrum-type=type1 importance-class=ii below-alluvium-v-s-m-s=0 alluvium-v-s-m-s=0 alluvium-thickness-m=0 liquefiable-layer=false soft-clay-pi=0 soft-clay-thickness-m=0 c-u-kpa=0 n-spt=0 v-s30-m-s=0
+buildings [id:TEXT name:TEXT plan-width-m:QTY plan-length-m:QTY systems:TABLE storeys:TABLE members:TABLE plan-regular:BOOL elevation-regular:BOOL t1-method:ENUM t1-given-s:NUM ct:NUM drift-limit-class:ENUM nu:NUM multiple-resisting-systems:BOOL claims-simple-masonry:BOOL masonry-wall-area-ratio:NUM accidental-eccentricity-ratio:NUM setback-ratio:NUM plan-envelope-gap-ratio:NUM joint-gap-m:NUM nonstructural-weight-n:NUM nonstructural-height-m:NUM nonstructural-period-s:NUM nonstructural-q:NUM nonstructural-resistance-n:NUM column-moment-sum-nm:NUM beam-moment-sum-nm:NUM overturning-base-x-m:NUM overturning-base-y-m:NUM tie-down-moment-nm:NUM storey-stiffness-basis:ENUM storey-stiffness-ratio:NUM] {
   bldg-office "Office RC frame" 24m 16m [ {id=sys-x direction=x system-type=frame material=rc ductility-class=dch q0=4.5 alpha-u-over-alpha-1=1.3 k-w=1 base-shear-resistance-n=1200000N} {id=sys-y direction=y system-type=frame material=rc ductility-class=dch q0=4.5 alpha-u-over-alpha-1=1.3 k-w=1 base-shear-resistance-n=1200000N} ] [ {id=s1 height-m=3.5m permanent-gk-n=2334780N correlated-occupancy=true stiffness-x=180000000 stiffness-y=180000000 centre-of-mass-x-m=12m centre-of-mass-y-m=8m centre-of-stiffness-x-m=12m centre-of-stiffness-y-m=8m drift-x-m=0.008m drift-y-m=0.008m shear-resistance-n=400000N
   variables [id:TEXT category:TEXT qk-n:QTY] {
     s1-q B 1716750N
@@ -17,19 +17,40 @@ buildings [id:TEXT name:TEXT plan-width-m:QTY plan-length-m:QTY systems:TABLE st
   variables [id:TEXT category:TEXT qk-n:QTY] {
     s4-q B 1177200N
   }
-  } ] [ {id=col-c1 material=rc role=column detailing-compatible-with-q=true min-dimension-m=0.35m rho=0.012 rho-prime=0 omega-wd=0.12 steel-section-class=0} {id=beam-b1 material=rc role=beam detailing-compatible-with-q=true min-dimension-m=0.3m rho=0.01 rho-prime=0.005 omega-wd=0.08 steel-section-class=0} ] true true ct 0 0.075 ductile 0.5 false false 0 0.05
+  } ] [ {id=col-c1 material=rc role=column detailing-compatible-with-q=true min-dimension-m=0.35m rho=0.012 rho-prime=0 omega-wd=0.12 steel-section-class=0 fastener-diameter-mm=0 timber-thickness-mm=0 wall-thickness-m=0 wall-effective-height-m=0 wall-length-m=0 wall-direction-rad=0 wall-storey-id="" wall-start-x-m=0 wall-start-y-m=0 wall-poisson-ratio=0.25 effective-stiffness-basis=declared effective-stiffness-ratio=1} {id=beam-b1 material=rc role=beam detailing-compatible-with-q=true min-dimension-m=0.3m rho=0.01 rho-prime=0.005 omega-wd=0.08 steel-section-class=0 fastener-diameter-mm=0 timber-thickness-mm=0 wall-thickness-m=0 wall-effective-height-m=0 wall-length-m=0 wall-direction-rad=0 wall-storey-id="" wall-start-x-m=0 wall-start-y-m=0 wall-poisson-ratio=0.25 effective-stiffness-basis=declared effective-stiffness-ratio=1} ] true true ct 0 0.075 ductile 0.5 false false 0 0.05 0 0 0 0 0 0 2 0 0 0 0 0 0 declared 1
 }
-bridges [id:TEXT period-ratio:NUM fundamental-period-s:QTY v-rd-n:QTY bearing-d-rd-m:QTY permanent-gk-n:QTY correlated-occupancy:BOOL variables:TABLE] {
+bridges [id:TEXT period-ratio:NUM fundamental-period-s:QTY v-rd-n:QTY bearing-d-rd-m:QTY permanent-gk-n:QTY correlated-occupancy:BOOL variables:TABLE pier-height-m:NUM pier-moment-rd-nm:NUM pier-shear-rd-n:NUM deck-length-m:NUM deck-ei-nm2:NUM importance-class:NUM vertical-period-s:NUM pier-cracked-inertia-ratio:NUM] {
 }
-assessments [id:TEXT knowledge-level:TEXT limit-state:TEXT supported-building-id:TEXT r-k-n:QTY gamma-el:NUM] {
+assessments [id:TEXT knowledge-level:ENUM limit-state:ENUM supported-building-id:TEXT r-k-n:QTY gamma-el:NUM chord-rotation-demand-rad:NUM chord-rotation-yield-rad:NUM chord-rotation-ultimate-rad:NUM section-depth-m:NUM section-width-m:NUM effective-depth-m:NUM shear-span-m:NUM axial-force-n:NUM tension-steel-area-m2:NUM compression-steel-area-m2:NUM bar-diameter-mm:NUM steel-yield-mpa:NUM concrete-strength-mpa:NUM stirrup-leg-area-m2:NUM stirrup-spacing-m:NUM stirrup-yield-mpa:NUM core-width-m:NUM core-depth-m:NUM restrained-bar-count:NUM restrained-bar-spacing-m:NUM diagonal-reinforcement-ratio:NUM shear-cracking-before-yield:NUM shear-force-demand-n:NUM intermediate-steel-area-m2:QTY] {
 }
-silos [id:TEXT height-m:QTY radius-m:QTY permanent-gk-n:QTY content-qk-n:QTY content-category:TEXT filling-ratio:NUM n-rd-n:QTY v-rd-n:QTY q-nominal:NUM] {
+silos [id:TEXT height-m:QTY radius-m:QTY permanent-gk-n:QTY content-qk-n:QTY content-category:ENUM filling-ratio:NUM n-rd-n:QTY v-rd-n:QTY q-nominal:NUM] {
 }
-tanks [id:TEXT height-m:QTY radius-m:QTY permanent-gk-n:QTY content-qk-n:QTY content-category:TEXT filling-ratio:NUM v-rd-n:QTY] {
+tanks [id:TEXT height-m:QTY radius-m:QTY permanent-gk-n:QTY content-qk-n:QTY content-category:ENUM filling-ratio:NUM v-rd-n:QTY shell-strength-mpa:NUM shell-thickness-m:NUM] {
 }
-foundations [id:TEXT supported-building-id:TEXT area-m2:QTY p-rd-pa:QTY h-rd-n:QTY k-foundation:NUM k-soil:NUM] {
+foundations [id:TEXT supported-building-id:TEXT area-m2:QTY p-rd-pa:QTY passive-resistance-n:QTY k-foundation:NUM k-soil:NUM liq-n1-60:NUM liq-fines-percent:NUM liq-depth-m:NUM liq-water-depth-m:NUM liq-unit-weight-n-m3:NUM liq-magnitude:NUM liq-layer-thickness-m:NUM footing-width-m:NUM bearing-axial-n:NUM bearing-shear-n:NUM bearing-moment-nm:NUM bearing-n-max-n:NUM soil-friction-angle-deg:NUM pile-diameter-m:NUM pile-length-m:NUM pile-modulus-pa:NUM pile-subgrade-modulus-n-m3:NUM pile-head-shear-n:NUM pile-head-fixed:NUM pile-interface-depth-m:NUM pile-upper-vs-m-s:NUM pile-lower-vs-m-s:NUM pile-moment-rd-nm:NUM base-friction-angle-deg:NUM base-pore-pressure-pa:NUM] {
 }
-retaining-walls [id:TEXT height-m:QTY phi-deg:NUM soil-gamma:NUM r:NUM h-rd-n-per-m:NUM] {
+retaining-walls [id:TEXT height-m:QTY phi-deg:NUM soil-gamma:NUM r:NUM h-rd-n-per-m:NUM water-height-m:NUM saturated-gamma:NUM permeability-m-s:NUM] {
 }
-towers [id:TEXT height-m:QTY m-rd-nm:NUM is-chimney:BOOL q-nominal:NUM permanent-gk-n:QTY correlated-occupancy:BOOL variables:TABLE] {
+towers [id:TEXT height-m:QTY m-rd-nm:NUM is-chimney:BOOL q-nominal:NUM permanent-gk-n:QTY correlated-occupancy:BOOL variables:TABLE ei-nm2:NUM base-rotational-stiffness-nm:NUM] {
+}
+soil-layers [id:TEXT foundation-id:TEXT thickness-m:QTY unit-weight-n-m3:NUM shear-wave-velocity-m-s:NUM n1-60:NUM fines-percent:NUM] {
+}
+diaphragms [id:TEXT building-id:TEXT storey-id:TEXT material:ENUM thickness-m:QTY span-m:NUM depth-m:NUM opening-width-m:NUM shear-strength-mpa:NUM chord-area-m2:NUM chord-strength-mpa:NUM gamma-d:NUM] {
+}
+accelerograms [id:TEXT building-id:TEXT label:TEXT samples:TEXT dt-s:NUM scale-factor:NUM] {
+}
+piers [id:TEXT bridge-id:TEXT x-m:QTY height-m:QTY section-b-m:NUM section-h-m:NUM modulus-mpa:NUM moment-rd-nm:NUM shear-rd-n:NUM reinforcement-ratio:NUM cover-m:QTY concrete-fck-mpa:NUM steel-fyk-mpa:NUM axial-load-n:QTY stiffness-basis:ENUM] {
+}
+bearings [id:TEXT bridge-id:TEXT pier-id:TEXT device:ENUM x-m:QTY stiffness-n-per-m:NUM d-rd-m:QTY seat-length-m:QTY min-support-length-m:QTY] {
+}
+joints [id:TEXT building-id:TEXT storey-id:TEXT column-id:TEXT beam-id:TEXT x-m:QTY y-m:QTY column-moment-rd-nm:NUM beam-moment-rd-nm:NUM] {
+  joint-1 bldg-office s1 col-c1 beam-b1 6m 4m 9000000 4000000
+  joint-2 bldg-office s2 col-c1 beam-b1 12m 4m 7500000 4000000
+  joint-3 bldg-office s4 col-c1 beam-b1 12m 12m 3500000 4000000
+}
+placements [id:TEXT x:NUM y:NUM z:NUM yaw:NUM] {
+}
+tie-beams [id:TEXT foundation-a-id:TEXT foundation-b-id:TEXT span:QTY width:QTY depth:QTY steel-area:QTY steel-design-strength:QTY relative-displacement:QTY displacement-limit:QTY] {
+}
+slopes [id:TEXT governing-layer-id:TEXT height:QTY angle:QTY friction-angle:QTY cohesion:QTY topographic-amplification:NUM circle-centre-x:QTY circle-centre-z:QTY circle-radius:QTY] {
 }

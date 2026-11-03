@@ -53,13 +53,13 @@ pub trait NativeRecordFields{
 /// 🫴️ The original input remains held until staged output and every alias complete funded transfer or closure.
 pub trait NativeReceiver<I:?Sized,T>:Send+'static{
  fn demands(&self,original:RetainedCloneRef<'_,I>,body:usize)->Result<RetirementDemand,ValueError>;
- fn advance(&mut self,original:RetainedCloneRef<'_,I>,control:&mut NativeDecodeControl<'_>,body:usize,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<RetainedCloneStep,crate::OriginalReceivingPrimary>;
+ fn advance(&mut self,original:RetainedCloneRef<'_,I>,control:&mut NativeDecodeControl<'_>,body:usize,grant:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneStep,OriginalReceivingPrimary>;
  fn output_ready(&self)->bool;
  fn take_demand(&self)->Result<RetirementDemand,ValueError>;
- fn take(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<Option<(T,RetainedCloneProgress)>>;
+ fn take(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<Option<(T,RetainedCloneProgress)>>;
  fn begin_close(&mut self);
  fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>;
- fn close_step(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome;
+ fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome;
  fn terminal_is_empty(&self)->bool;
 }
 
@@ -76,8 +76,8 @@ fn native_receiver_backing_demands<I:?Sized,T,C:NativeReceiver<I,T>>(storage:&se
  if let Some(cursor)=retired.as_ref(){if !cursor.terminal_is_empty(){return Err(tree::invalid())}return Ok(RetirementDemand{release_bytes:std::alloc::Layout::new::<C>().size(),depth:1,..Default::default()})}if let Some(cursor)=storage.get(){if !cursor.terminal_is_empty(){return tree::nested(cursor.close_demands(body)?,0)}return Ok(semio_framework_value_native_storage::NativeOwnedStorage::<C>::move_demand())}Ok(storage.release_demand())
 }
 /// ♻️ Releases only a proven empty cursor's existing allocation and executes no header Drop callbacks.
-fn close_native_receiver_backing<I:?Sized,T,C:NativeReceiver<I,T>>(storage:&mut semio_framework_value_native_storage::NativeOwnedStorage<C>,retired:&mut Option<Box<C>>,g:RetainedCloneGrant)->crate::RetainedWorkOutcome{
- let d=match native_receiver_backing_demands::<I,T,C>(storage,retired,g.maximum_copy_bytes){Ok(d)=>d,Err(error)=>return crate::RetainedWorkOutcome{result:Err(error),work:0}};if !crate::retained_clone::retained_clone_grant_admits(g,d){return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}if retired.is_some(){let layout=std::alloc::Layout::new::<C>();let pointer=Box::into_raw(match retired.take(){Some(v)=>v,None=>return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("retired absent").into()),work:0}});if layout.size()!=0{unsafe{std::alloc::dealloc(pointer.cast(),layout)}}return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:d.release_bytes,..Default::default()})),work:1}}if let Some(cursor)=storage.get_mut(){if !cursor.terminal_is_empty(){let turn=cursor.close_step(tree::child_grant(g,0));return crate::RetainedWorkOutcome{result:turn.result.map(|s|RetainedCloneStep::Progress(s.progress())),work:turn.work}}let turn=storage.take_box(g);let work=turn.work;let result=turn.result.map(|value|if let Some((owner,p))=value{*retired=Some(owner);RetainedCloneStep::Progress(p)}else{RetainedCloneStep::Progress(Default::default())});return crate::RetainedWorkOutcome{result,work}}storage.release(g)
+fn close_native_receiver_backing<I:?Sized,T,C:NativeReceiver<I,T>>(storage:&mut semio_framework_value_native_storage::NativeOwnedStorage<C>,retired:&mut Option<Box<C>>,g:RetainedCloneGrant)->RetainedWorkOutcome{
+ let d=match native_receiver_backing_demands::<I,T,C>(storage,retired,g.maximum_copy_bytes){Ok(d)=>d,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};if !crate::retained_clone::retained_clone_grant_admits(g,d){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}if retired.is_some(){let layout=std::alloc::Layout::new::<C>();let pointer=Box::into_raw(match retired.take(){Some(v)=>v,None=>return RetainedWorkOutcome{result:Err(ValueError::invariant("retired absent").into()),work:0}});if layout.size()!=0{unsafe{std::alloc::dealloc(pointer.cast(),layout)}}return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:d.release_bytes,..Default::default()})),work:1}}if let Some(cursor)=storage.get_mut(){if !cursor.terminal_is_empty(){let turn=cursor.close_step(tree::child_grant(g,0));return RetainedWorkOutcome{result:turn.result.map(|s|RetainedCloneStep::Progress(s.progress())),work:turn.work}}let turn=storage.take_box(g);let work=turn.work;let result=turn.result.map(|value|if let Some((owner,p))=value{*retired=Some(owner);RetainedCloneStep::Progress(p)}else{RetainedCloneStep::Progress(Default::default())});return RetainedWorkOutcome{result,work}}storage.release(g)
 }
 
 #[cfg(test)]#[path="♻️header/🎟️work/🧪️tests/🦀️.rs"]mod header_retirement_tests;

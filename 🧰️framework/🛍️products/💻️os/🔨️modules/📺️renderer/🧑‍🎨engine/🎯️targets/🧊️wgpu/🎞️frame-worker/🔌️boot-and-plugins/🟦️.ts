@@ -136,6 +136,7 @@ export async function boot(message: Extract<BrowserFrameUiMessage, { kind: "boot
       loaded.semioWgpuSetHostStorage?.(JSON.stringify(message.storage));
       loaded.semioWgpuSetHostAppearance?.(message.appearance.preference, message.appearance.systemDark);
       loaded.semioWgpuSetHostPlatform?.(message.platform);
+      if (message.platformPrefs) loaded.semioWgpuSetHostPlatformPrefs?.(message.platformPrefs.forcedColors, message.platformPrefs.prefersContrastMore, message.platformPrefs.prefersDark, message.platformPrefs.prefersReducedMotion);
       loaded.semioWgpuSetHostLocale?.(message.locale);
       loaded.semioWgpuSetHostIntroductionSuppressed?.(message.introductionSuppressed === true);
       if (message.descriptor.hub) loaded.semioWgpuSetHubEnv?.(message.descriptor.hub.hubUrl, message.descriptor.hub.user, message.descriptor.hub.dataDir);

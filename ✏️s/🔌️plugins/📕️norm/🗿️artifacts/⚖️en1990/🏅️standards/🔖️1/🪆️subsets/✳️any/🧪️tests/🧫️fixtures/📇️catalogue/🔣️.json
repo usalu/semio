@@ -1,0 +1,747 @@
+[
+ {
+  "entry": "E90.01",
+  "id": "use-building",
+  "annex": "De",
+  "num": {},
+  "text": {
+   "use": "building"
+  }
+ },
+ {
+  "entry": "E90.01",
+  "id": "use-bridge",
+  "annex": "De",
+  "num": {},
+  "text": {
+   "use": "footbridge"
+  }
+ },
+ {
+  "entry": "E90.02",
+  "id": "kfi-rc3",
+  "annex": "De",
+  "num": {
+   "cc": 3,
+   "gamma_f": 1.5,
+   "k_fi_declared": 1.1
+  },
+  "text": {}
+ },
+ {
+  "entry": "E90.02",
+  "id": "kfi-override",
+  "annex": "De",
+  "num": {
+   "cc": 2,
+   "rc": 3,
+   "k_fi_declared": 1.0
+  },
+  "text": {}
+ },
+ {
+  "entry": "E90.03",
+  "id": "dwl-cat2",
+  "annex": "De",
+  "num": {
+   "category": 2,
+   "years": 40
+  },
+  "text": {}
+ },
+ {
+  "entry": "E90.03",
+  "id": "dwl-cat4",
+  "annex": "De",
+  "num": {
+   "category": 4,
+   "years": 50
+  },
+  "text": {}
+ },
+ {
+  "entry": "E90.04",
+  "id": "durability",
+  "annex": "De",
+  "num": {
+   "years": 50
+  },
+  "text": {}
+ },
+ {
+  "entry": "E90.05",
+  "id": "dsl-il",
+  "annex": "De",
+  "num": {
+   "rc": 3,
+   "dsl": 2,
+   "il": 3
+  },
+  "text": {}
+ },
+ {
+  "entry": "E90.06",
+  "id": "situations",
+  "annex": "De",
+  "num": {},
+  "text": {
+   "situations": "persistent,accidental,seismic,fatigue"
+  }
+ },
+ {
+  "entry": "E90.07",
+  "id": "classes",
+  "annex": "De",
+  "num": {},
+  "text": {
+   "variation": "variable",
+   "origin": "direct",
+   "spatial": "free",
+   "nature": "static",
+   "effect": "unfavourable"
+  }
+ },
+ {
+  "entry": "E90.08",
+  "id": "g-and-q",
+  "annex": "De",
+  "num": {
+   "g_mean": 100,
+   "v_g": 0.1,
+   "q_mean": 2.0,
+   "q_cov": 0.3
+  },
+  "text": {}
+ },
+ {
+  "entry": "E90.08",
+  "id": "g-single",
+  "annex": "De",
+  "num": {
+   "g_mean": 100,
+   "v_g": 0.03
+  },
+  "text": {}
+ },
+ {
+  "entry": "E90.09",
+  "id": "psi-office",
+  "annex": "De",
+  "num": {},
+  "text": {
+   "category": "B"
+  }
+ },
+ {
+  "entry": "E90.09",
+  "id": "psi-snow-high",
+  "annex": "De",
+  "num": {
+   "altitude": 1500
+  },
+  "text": {
+   "category": "snow"
+  }
+ },
+ {
+  "entry": "E90.09",
+  "id": "psi-custom",
+  "annex": "De",
+  "num": {
+   "psi0": 0.7,
+   "psi1": 0.8,
+   "psi2": 0.3
+  },
+  "text": {}
+ },
+ {
+  "entry": "E90.10",
+  "id": "xd-steel",
+  "annex": "De",
+  "num": {
+   "x_k": 355,
+   "eta": 0.9,
+   "e_d": 250
+  },
+  "text": {
+   "material": "steel"
+  }
+ },
+ {
+  "entry": "E90.10",
+  "id": "xd-gm",
+  "annex": "De",
+  "num": {
+   "x_k": 30,
+   "gamma_m": 1.5
+  },
+  "text": {}
+ },
+ {
+  "entry": "E90.11",
+  "id": "geometry",
+  "annex": "De",
+  "num": {
+   "a_nom": 300,
+   "delta_a": -5
+  },
+  "text": {}
+ },
+ {
+  "entry": "E90.12",
+  "id": "analysis",
+  "annex": "De",
+  "num": {
+   "alpha_cr": 8.5
+  },
+  "text": {
+   "analysis": "second-order"
+  }
+ },
+ {
+  "entry": "E90.13",
+  "id": "test-based",
+  "annex": "De",
+  "num": {
+   "n": 5,
+   "mean": 50,
+   "v": 0.1,
+   "v_known": 1
+  },
+  "text": {}
+ },
+ {
+  "entry": "E90.14",
+  "id": "limit-states",
+  "annex": "De",
+  "num": {},
+  "text": {}
+ },
+ {
+  "entry": "E90.15",
+  "id": "equ-worked",
+  "annex": "De",
+  "num": {
+   "t_d": 0
+  },
+  "text": {
+   "actions": "Gs|G|-400;Gd|G|120;Qd|Q|60|office"
+  }
+ },
+ {
+  "entry": "E90.15",
+  "id": "equ-bridge",
+  "annex": "En",
+  "num": {
+   "rc": 3,
+   "t_d": 30
+  },
+  "text": {
+   "actions": "Gs|G|-400;Gd|G|120;Qd|Q|60|road_traffic",
+   "structure": "bridge"
+  }
+ },
+ {
+  "entry": "E90.16",
+  "id": "str-de",
+  "annex": "De",
+  "num": {
+   "r_d": 120
+  },
+  "text": {
+   "actions": "G|G|50;Q1|Q|20|office;W|Q|10|wind;S|Q|8|snow"
+  }
+ },
+ {
+  "entry": "E90.16",
+  "id": "str-en",
+  "annex": "En",
+  "num": {
+   "r_d": 120
+  },
+  "text": {
+   "actions": "G|G|50;Q1|Q|20|office;W|Q|10|wind;S|Q|8|snow"
+  }
+ },
+ {
+  "entry": "E90.16",
+  "id": "str-en-rc3",
+  "annex": "En",
+  "num": {
+   "rc": 3
+  },
+  "text": {
+   "actions": "G|G|50;Q1|Q|20|office;W|Q|10|wind;S|Q|8|snow;P|P|30;Gf|G|-20"
+  }
+ },
+ {
+  "entry": "E90.16",
+  "id": "geo-set-c",
+  "annex": "De",
+  "num": {},
+  "text": {
+   "actions": "G|G|50;Q1|Q|20|office;W|Q|10|wind;S|Q|8|snow",
+   "set": "C"
+  }
+ },
+ {
+  "entry": "E90.16",
+  "id": "str-altitude",
+  "annex": "De",
+  "num": {
+   "altitude": 1500
+  },
+  "text": {
+   "actions": "G|G|50;Q1|Q|20|office;W|Q|10|wind;S|Q|8|snow"
+  }
+ },
+ {
+  "entry": "E90.17",
+  "id": "accidental",
+  "annex": "De",
+  "num": {
+   "r_d": 300
+  },
+  "text": {
+   "actions": "G|G|50;Q1|Q|20|office;W|Q|10|wind;S|Q|8|snow;Ad|A|100"
+  }
+ },
+ {
+  "entry": "E90.17",
+  "id": "accidental-psi2",
+  "annex": "En",
+  "num": {},
+  "text": {
+   "actions": "G|G|50;Q1|Q|20|office;W|Q|10|wind;S|Q|8|snow;Ad|A|100;Ad2|A|60",
+   "lead_psi": "psi2"
+  }
+ },
+ {
+  "entry": "E90.18",
+  "id": "seismic",
+  "annex": "De",
+  "num": {
+   "r_d": 300
+  },
+  "text": {
+   "actions": "G|G|50;Q1|Q|20|office;W|Q|10|wind;S|Q|8|snow;E1|E|40;E2|E|25"
+  }
+ },
+ {
+  "entry": "E90.19",
+  "id": "sls",
+  "annex": "De",
+  "num": {
+   "cd_char": 100,
+   "cd_freq": 80,
+   "cd_qp": 60
+  },
+  "text": {
+   "actions": "G|G|50;Q1|Q|20|office;W|Q|10|wind;S|Q|8|snow"
+  }
+ },
+ {
+  "entry": "E90.20",
+  "id": "partial",
+  "annex": "De",
+  "num": {
+   "gamma_f": 1.35,
+   "gamma_sd": 1.05,
+   "gamma_m": 1.5,
+   "gamma_rd": 1.1,
+   "f_rep": 80,
+   "x_k": 30,
+   "eta": 0.85,
+   "section": 4
+  },
+  "text": {}
+ },
+ {
+  "entry": "E90.21",
+  "id": "fatigue",
+  "annex": "De",
+  "num": {
+   "delta_sigma_c": 71,
+   "gamma_mf": 1.15,
+   "gamma_ff": 1.0
+  },
+  "text": {
+   "spectrum": "90:200000;60:2000000;40:6000000;20:50000000"
+  }
+ },
+ {
+  "entry": "E90.22",
+  "id": "psi-a1",
+  "annex": "De",
+  "num": {},
+  "text": {
+   "category": "G"
+  }
+ },
+ {
+  "entry": "E90.22",
+  "id": "psi-a1-snow",
+  "annex": "De",
+  "num": {
+   "altitude": 1200
+  },
+  "text": {
+   "category": "snow_high"
+  }
+ },
+ {
+  "entry": "E90.23",
+  "id": "sets-building",
+  "annex": "De",
+  "num": {},
+  "text": {
+   "structure": "building"
+  }
+ },
+ {
+  "entry": "E90.23",
+  "id": "sets-bridge",
+  "annex": "De",
+  "num": {},
+  "text": {
+   "structure": "bridge",
+   "category": "rail_traffic"
+  }
+ },
+ {
+  "entry": "E90.24",
+  "id": "sls-a14",
+  "annex": "De",
+  "num": {
+   "span": 6,
+   "w_c": 5,
+   "w1": 6,
+   "w2": 3,
+   "w3": 11.25,
+   "f1": 2.5,
+   "u": 30,
+   "height": 12,
+   "u_storey": 5,
+   "h_storey": 3.2
+  },
+  "text": {}
+ },
+ {
+  "entry": "E90.24",
+  "id": "sls-cantilever",
+  "annex": "De",
+  "num": {
+   "span": 2.5,
+   "cantilever": 1,
+   "w1": 4,
+   "w2": 2,
+   "w3": 10,
+   "ratio_net": 125,
+   "ratio_w3": 150
+  },
+  "text": {}
+ },
+ {
+  "entry": "E90.25",
+  "id": "psi-a2-temperature",
+  "annex": "De",
+  "num": {},
+  "text": {
+   "category": "temperature_bridge"
+  }
+ },
+ {
+  "entry": "E90.25",
+  "id": "psi-a2-temperature-en",
+  "annex": "En",
+  "num": {},
+  "text": {
+   "category": "temperature_bridge"
+  }
+ },
+ {
+  "entry": "E90.25",
+  "id": "psi-rail",
+  "annex": "De",
+  "num": {},
+  "text": {
+   "category": "rail_traffic"
+  }
+ },
+ {
+  "entry": "E90.26",
+  "id": "bridge-groups",
+  "annex": "De",
+  "num": {
+   "r_d": 3000
+  },
+  "text": {
+   "actions": "G|G|1000;TS|Q|300|road_traffic|gr1a;UDL|Q|150|road_udl|gr1a;SA|Q|200|road_single_axle|gr1b;W|Q|80|wind_bridge;T|Q|50|temperature_bridge"
+  }
+ },
+ {
+  "entry": "E90.26",
+  "id": "bridge-groups-en",
+  "annex": "En",
+  "num": {
+   "rc": 3
+  },
+  "text": {
+   "actions": "G|G|1000;TS|Q|300|road_traffic|gr1a;UDL|Q|150|road_udl|gr1a;SA|Q|200|road_single_axle|gr1b;W|Q|80|wind_bridge;T|Q|50|temperature_bridge"
+  }
+ },
+ {
+  "entry": "E90.27",
+  "id": "footbridge",
+  "annex": "De",
+  "num": {
+   "acc_v": 0.5,
+   "acc_h": 0.3,
+   "crowd": 1
+  },
+  "text": {}
+ },
+ {
+  "entry": "E90.27",
+  "id": "rail",
+  "annex": "De",
+  "num": {
+   "deck_acc": 4.0,
+   "twist": 3.5,
+   "v_kmh": 160,
+   "deflection": 12,
+   "span": 10
+  },
+  "text": {
+   "track": "slab"
+  }
+ },
+ {
+  "entry": "E90.28",
+  "id": "beta-rc2",
+  "annex": "De",
+  "num": {
+   "rc": 2,
+   "beta": 3.7
+  },
+  "text": {}
+ },
+ {
+  "entry": "E90.28",
+  "id": "beta-100a",
+  "annex": "De",
+  "num": {
+   "rc": 3,
+   "t_years": 100,
+   "beta": 4.5
+  },
+  "text": {}
+ },
+ {
+  "entry": "E90.28",
+  "id": "beta-1a",
+  "annex": "De",
+  "num": {
+   "rc": 1,
+   "t_years": 1,
+   "beta": 4.0
+  },
+  "text": {}
+ },
+ {
+  "entry": "E90.29",
+  "id": "form-normal",
+  "annex": "De",
+  "num": {
+   "r_mean": 100,
+   "r_sd": 10,
+   "e_mean": 60,
+   "e_sd": 12,
+   "beta_t": 3.8,
+   "r_k": 85,
+   "e_k": 65
+  },
+  "text": {
+   "r_dist": "normal",
+   "e_dist": "normal"
+  }
+ },
+ {
+  "entry": "E90.29",
+  "id": "form-lognormal-gumbel",
+  "annex": "De",
+  "num": {
+   "r_mean": 200,
+   "r_sd": 20,
+   "e_mean": 100,
+   "e_sd": 25,
+   "beta_t": 3.8,
+   "r_k": 170
+  },
+  "text": {
+   "r_dist": "lognormal",
+   "e_dist": "gumbel"
+  }
+ },
+ {
+  "entry": "E90.29",
+  "id": "form-weibull-lognormal",
+  "annex": "De",
+  "num": {
+   "r_mean": 150,
+   "r_sd": 18,
+   "e_mean": 70,
+   "e_sd": 21
+  },
+  "text": {
+   "r_dist": "weibull",
+   "e_dist": "lognormal"
+  }
+ },
+ {
+  "entry": "E90.30",
+  "id": "annex-d-unknown",
+  "annex": "De",
+  "num": {
+   "n": 6,
+   "mean": 100,
+   "v": 0.08,
+   "eta_d": 0.9,
+   "gamma_m": 1.25
+  },
+  "text": {}
+ },
+ {
+  "entry": "E90.30",
+  "id": "annex-d-lognormal",
+  "annex": "De",
+  "num": {
+   "n": 15,
+   "mean": 100,
+   "v": 0.12,
+   "v_known": 1
+  },
+  "text": {
+   "dist": "lognormal"
+  }
+ },
+ {
+  "entry": "E90.30",
+  "id": "annex-d-n3",
+  "annex": "De",
+  "num": {
+   "n": 3,
+   "mean": 80,
+   "v": 0.1
+  },
+  "text": {}
+ },
+ {
+  "entry": "E90.30",
+  "id": "annex-d-n2-known",
+  "annex": "De",
+  "num": {
+   "n": 2,
+   "mean": 90,
+   "v": 0.1,
+   "v_known": 1
+  },
+  "text": {}
+ },
+ {
+  "entry": "E90.16",
+  "id": "bridge-610-only",
+  "annex": "En",
+  "num": {
+   "rc": 2,
+   "r_d": 400
+  },
+  "text": {
+   "actions": "Gs|G|100;Qt|Q|80|road_traffic|gr1a;Qw|Q|30|wind_rail;Qs|Q|20|settlement;Qo|Q|10|variable_other",
+   "structure": "bridge"
+  }
+ },
+ {
+  "entry": "E90.29",
+  "id": "form-two-actions-normal",
+  "annex": "De",
+  "num": {
+   "r_mean": 500,
+   "r_sd": 50,
+   "e_mean": 200,
+   "e_sd": 10,
+   "e2_mean": 100,
+   "e2_sd": 40,
+   "beta_t": 3.8,
+   "r_k": 420,
+   "e_k": 200,
+   "e2_k": 160
+  },
+  "text": {
+   "r_dist": "normal",
+   "e_dist": "normal",
+   "e2_dist": "normal"
+  }
+ },
+ {
+  "entry": "E90.29",
+  "id": "form-two-actions-gumbel",
+  "annex": "En",
+  "num": {
+   "r_mean": 300,
+   "r_sd": 30,
+   "e_mean": 100,
+   "e_sd": 10,
+   "e2_mean": 60,
+   "e2_sd": 18,
+   "beta_t": 3.8,
+   "r_k": 250,
+   "e_k": 100,
+   "e2_k": 110
+  },
+  "text": {
+   "r_dist": "lognormal",
+   "e_dist": "normal",
+   "e2_dist": "gumbel"
+  }
+ },
+ {
+  "entry": "E90.30",
+  "id": "annex-d-standard",
+  "annex": "De",
+  "num": {
+   "v_rt": 0.09,
+   "g_rt_mean": 400,
+   "eta_d": 0.9,
+   "gamma_m": 1.25
+  },
+  "text": {
+   "pairs": "412:400;388:380;455:430;352:360;431:410;398:390;376:370;423:405"
+  }
+ },
+ {
+  "entry": "E90.30",
+  "id": "annex-d-standard-n4",
+  "annex": "En",
+  "num": {
+   "v_rt": 0.0,
+   "g_rt_mean": 250
+  },
+  "text": {
+   "pairs": "260:250;231:240;274:255;244:250"
+  }
+ },
+ {
+  "entry": "E90.30",
+  "id": "annex-d2-known-n10",
+  "annex": "De",
+  "num": {
+   "n": 10,
+   "mean": 100,
+   "v": 0.1,
+   "v_known": 1,
+   "eta_d": 0.9
+  },
+  "text": {}
+ }
+]

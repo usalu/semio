@@ -16,6 +16,6 @@ pub struct ApplyRemedy {
 
 //#region 🔖️Handler
 pub fn handle(payload: &ApplyRemedy, doc: &ArtifactView<'_, En1990Snapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<En1990Mutation, NoConfigMutation>, Fault> {
-    semio_s_plugin_norm_app_surface::dispatch_apply_remedy::<crate::En1990Family, _>(doc.snapshot, &payload.check_id, payload.remedy_index as usize, |document, edit| semio_s_artifact_norm_en1990_mutations::EDIT_RULES.resolve(document, edit))
+    semio_s_plugin_norm_app_surface::dispatch_apply_remedy::<crate::En1990Family, _>(doc.snapshot, &payload.check_id, payload.remedy_index as usize, |document, edit| semio_s_artifact_norm_en1990_mutations::resolve_edit(document, edit))
 }
 //#endregion 🔖️Handler

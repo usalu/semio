@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-anchor-f-yk/schema.json",
+  "title": "ChangeAnchorFYk",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "anchorId",
+    "newFYk"
+  ],
+  "properties": {
+    "anchorId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Anchor",
+          "de": "Dübel"
+        },
+        "description": {
+          "en": "The anchor this mutation addresses, by id.",
+          "de": "Das adressierte Element (Dübel), per Kennung."
+        },
+        "ref": {
+          "kind": "anchor"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newFYk": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Characteristic yield strength f_yk",
+          "de": "Charakteristische Streckgrenze f_yk"
+        },
+        "widget": "stepper",
+        "unit": "Pa",
+        "displayUnit": "N/mm²",
+        "displayFactor": 0.000001,
+        "step": 5000000,
+        "precision": 0,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

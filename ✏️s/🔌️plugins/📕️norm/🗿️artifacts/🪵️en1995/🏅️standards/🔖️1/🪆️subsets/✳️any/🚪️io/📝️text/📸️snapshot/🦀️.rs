@@ -10,7 +10,7 @@ use semio_s_artifact_norm_en1995_model::En1995Snapshot;
 
 /// 🗄️ The glulam-footbridge example fixture in `en1995`'s DSL (`pack::snapshot::ArtifactDsl`): a DE-annex EN 1995-2
 /// glulam pedestrian footbridge girder (role `bridge`, service class 2, Annex A fatigue and Annex B comfort inputs,
-/// no connections) — distinct from `En1995Snapshot::default()`'s floor beam so the bridge branches are exercised.
+/// no connections) — distinct from `En1995Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De)`'s floor beam so the bridge branches are exercised.
 pub const EN1995_GLULAM_FOOTBRIDGE_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🌉️glulam-footbridge/🌉️glulam-footbridge/🗣️.dsl.semio");
 
 /// 📖️ Parses `.en1995` DSL text into a `En1995Snapshot`.
@@ -70,5 +70,3 @@ use framework_schema::ArtifactSchema;
 
 }
 #[cfg(test)] pub use crate::snapshot::snapshot_wire_codec::*;
-
-semio_s_plugin_norm_compliance::impl_norm_artifact_record!(@text En1995Snapshot, extension="en1995", envelope_id="norm.en1995");

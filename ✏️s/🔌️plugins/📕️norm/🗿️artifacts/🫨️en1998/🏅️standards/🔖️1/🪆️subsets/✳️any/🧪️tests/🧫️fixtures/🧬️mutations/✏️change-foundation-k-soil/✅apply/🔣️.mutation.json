@@ -1,0 +1,5 @@
+{
+  "mutation": "changeFoundationKSoil",
+  "id": "fd-1",
+  "newKSoil": 600000.0
+}

@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-chase-kind/schema.json",
+  "title": "ChangeChaseKind",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newKind"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Chase",
+          "de": "Schlitz"
+        },
+        "description": {
+          "en": "The chase this mutation addresses, by id.",
+          "de": "Das adressierte Element (Schlitz), per Kennung."
+        },
+        "ref": {
+          "kind": "chase"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newKind": {
+      "type": "string",
+      "enum": [
+        "Vertical",
+        "Horizontal",
+        "Recess"
+      ],
+      "x-semio-ui": {
+        "label": {
+          "en": "Chase kind",
+          "de": "Schlitzart"
+        },
+        "widget": "select",
+        "role": "value",
+        "group": "value",
+        "order": 20
+      },
+      "x-semio-rust": {
+        "type": "semio_s_artifact_norm_en1996_model::ChaseKind"
+      }
+    }
+  }
+}

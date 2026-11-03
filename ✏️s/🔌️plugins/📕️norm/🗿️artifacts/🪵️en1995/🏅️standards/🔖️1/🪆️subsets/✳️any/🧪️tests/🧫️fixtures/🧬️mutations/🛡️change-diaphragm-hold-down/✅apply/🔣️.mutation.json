@@ -1,0 +1,6 @@
+{
+  "ChangeDiaphragmHoldDown": {
+    "diaphragmId": "diaphragm-1",
+    "newValue": 30001.0
+  }
+}

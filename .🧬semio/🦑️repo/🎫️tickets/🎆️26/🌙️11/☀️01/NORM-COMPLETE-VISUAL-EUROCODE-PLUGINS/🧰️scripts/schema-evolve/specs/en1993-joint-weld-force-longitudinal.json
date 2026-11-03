@@ -1,0 +1,23 @@
+{
+  "artifact": "en1993",
+  "leaf": {
+    "kindSlug": "joint",
+    "default": 0.0,
+    "field": {
+      "name": "weld_force_longitudinal",
+      "type": "f64",
+      "unit": "N",
+      "label": {
+        "en": "Weld force along the weld axis F_w,par,Ed (0 = not given)",
+        "de": "Nahtkraft in Nahtrichtung F_w,par,Ed (0 = nicht angegeben)"
+      },
+      "doc": "🔥 Design force on the fillet weld group of the joint along the weld axis F_w,par,Ed, the source of tau_par in the directional method of EN 1993-1-8 4.5.3.2 (throat stress = force / (a l_w)); 0 = not given, the force then does not enter the weld check and no value is assumed.",
+      "precision": 2,
+      "step": 1000,
+      "range": [
+        -1000000000,
+        1000000000
+      ]
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "artifact": "en1993",
+  "leaf": {
+    "kindSlug": "panel",
+    "default": 0.0,
+    "field": {
+      "name": "design_temperature",
+      "type": "f64",
+      "unit": "°C",
+      "label": {
+        "en": "Reference temperature T_Ed of the plate (1-10)",
+        "de": "Bezugstemperatur T_Ed der Platte (1-10)"
+      },
+      "doc": "🌡 Reference temperature T_Ed of the plate in °C for EN 1993-1-10 2.1 (minimum member temperature with the shifts already applied); used with the plate grade, the stress level is taken as the highest transcribed column 0.75 f_y(t).",
+      "precision": 1,
+      "step": 1,
+      "range": [
+        -60,
+        60
+      ]
+    }
+  }
+}

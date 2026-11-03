@@ -1,0 +1,5 @@
+{
+  "mutation": "changeWaterLayerId",
+  "id": "water-gravel",
+  "newLayerId": "layer-gravel-alt"
+}

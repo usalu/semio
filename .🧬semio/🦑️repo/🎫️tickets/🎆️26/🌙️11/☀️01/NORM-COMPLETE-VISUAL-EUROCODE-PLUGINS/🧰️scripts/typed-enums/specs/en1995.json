@@ -1,0 +1,605 @@
+{
+ "artifact": "en1995",
+ "conversions": [
+  {
+   "hosts": [
+    "En1995Snapshot.uls_equation",
+    "En1995Artifact.uls_equation"
+   ],
+   "enum": "UlsEquation",
+   "doc": "⚖️ ULS combination equation of EN 1990: the single equation 6.10 or the pair 6.10a and 6.10b (xi = 0.85).",
+   "default": "Eq610",
+   "variants": [
+    [
+     "Eq610",
+     [
+      "6.10"
+     ],
+     "Equation 6.10 (EN 1990)",
+     "Gleichung 6.10 (EN 1990)"
+    ],
+    [
+     "Eq610ab",
+     [
+      "6.10ab"
+     ],
+     "Equations 6.10a and 6.10b (EN 1990)",
+     "Gleichungen 6.10a und 6.10b (EN 1990)"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "CharacteristicAction.kind",
+    "ConnectionAction.kind"
+   ],
+   "enum": "ActionKind",
+   "doc": "🏋️ Kind of a characteristic action (EN 1990 4.1.1).",
+   "default": "Imposed",
+   "variants": [
+    [
+     "Permanent",
+     [
+      "permanent"
+     ],
+     "Permanent (G)",
+     "Ständig (G)"
+    ],
+    [
+     "Imposed",
+     [
+      "imposed"
+     ],
+     "Imposed (Q)",
+     "Nutzlast (Q)"
+    ],
+    [
+     "Snow",
+     [
+      "snow"
+     ],
+     "Snow (S)",
+     "Schnee (S)"
+    ],
+    [
+     "Wind",
+     [
+      "wind"
+     ],
+     "Wind (W)",
+     "Wind (W)"
+    ],
+    [
+     "Accidental",
+     [
+      "accidental"
+     ],
+     "Accidental (A)",
+     "Außergewöhnlich (A)"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "CharacteristicAction.category"
+   ],
+   "enum": "ImposedCategory",
+   "doc": "🏢 Category of an action for the combination factors psi (EN 1990 Table A1.1): imposed load categories A to H and the snow row for sites above 1000 m a.s.l.",
+   "default": "NotImposed",
+   "variants": [
+    [
+     "NotImposed",
+     [
+      ""
+     ],
+     "None — not an imposed load",
+     "Keine — keine Nutzlast"
+    ],
+    [
+     "A",
+     [
+      "A"
+     ],
+     "A — domestic and residential",
+     "A — Wohnflächen"
+    ],
+    [
+     "B",
+     [
+      "B"
+     ],
+     "B — offices",
+     "B — Büroflächen"
+    ],
+    [
+     "C",
+     [
+      "C"
+     ],
+     "C — congregation areas",
+     "C — Versammlungsflächen"
+    ],
+    [
+     "D",
+     [
+      "D"
+     ],
+     "D — shopping areas",
+     "D — Verkaufsflächen"
+    ],
+    [
+     "E",
+     [
+      "E"
+     ],
+     "E — storage areas",
+     "E — Lagerflächen"
+    ],
+    [
+     "F",
+     [
+      "F"
+     ],
+     "F — light vehicle traffic",
+     "F — Leichte Fahrzeuge"
+    ],
+    [
+     "G",
+     [
+      "G"
+     ],
+     "G — medium vehicle traffic",
+     "G — Mittelschwere Fahrzeuge"
+    ],
+    [
+     "H",
+     [
+      "H"
+     ],
+     "H — roofs not accessible",
+     "H — Nicht begehbare Dächer"
+    ],
+    [
+     "SnowHigh",
+     [
+      "snowHigh",
+      "snow-high"
+     ],
+     "S — snow above 1000 m a.s.l.",
+     "S — Schnee über 1000 m ü. NN"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "CharacteristicAction.load_duration",
+    "ConnectionAction.load_duration"
+   ],
+   "enum": "LoadDurationClass",
+   "doc": "⏳ Load-duration class of an action (EN 1995-1-1 Table 2.1).",
+   "default": "Medium",
+   "variants": [
+    [
+     "Permanent",
+     [
+      "permanent"
+     ],
+     "Permanent (> 10 years)",
+     "Ständig (> 10 Jahre)"
+    ],
+    [
+     "Long",
+     [
+      "long"
+     ],
+     "Long-term (6 months – 10 years)",
+     "Lang (6 Monate – 10 Jahre)"
+    ],
+    [
+     "Medium",
+     [
+      "medium",
+      ""
+     ],
+     "Medium-term (1 week – 6 months)",
+     "Mittel (1 Woche – 6 Monate)"
+    ],
+    [
+     "Short",
+     [
+      "short"
+     ],
+     "Short-term (< 1 week)",
+     "Kurz (< 1 Woche)"
+    ],
+    [
+     "Instantaneous",
+     [
+      "instantaneous"
+     ],
+     "Instantaneous",
+     "Sehr kurz"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "TimberConnection.fastener_type"
+   ],
+   "enum": "FastenerType",
+   "doc": "🔩 Fastener type of a timber connection (EN 1995-1-1 Section 8).",
+   "default": "Bolt",
+   "variants": [
+    [
+     "Nail",
+     [
+      "nail"
+     ],
+     "Nail",
+     "Nagel"
+    ],
+    [
+     "Screw",
+     [
+      "screw"
+     ],
+     "Screw",
+     "Schraube"
+    ],
+    [
+     "Bolt",
+     [
+      "bolt"
+     ],
+     "Bolt",
+     "Bolzen"
+    ],
+    [
+     "Dowel",
+     [
+      "dowel"
+     ],
+     "Dowel",
+     "Stabdübel"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "TimberMember.strength_class",
+    "TimberConnection.strength_class",
+    "Panel.strength_class"
+   ],
+   "enum": "StrengthClass",
+   "doc": "🌲 Strength class of the timber products (EN 338, EN 14080, EN 14374, CLT).",
+   "default": "C24",
+   "catalogue": "timber-strength-classes",
+   "variants": [
+    [
+     "C14",
+     [
+      "C14",
+      "c14"
+     ],
+     "C14 — softwood strength class",
+     "C14 — Nadelholz-Festigkeitsklasse"
+    ],
+    [
+     "C16",
+     [
+      "C16",
+      "c16"
+     ],
+     "C16 — softwood strength class",
+     "C16 — Nadelholz-Festigkeitsklasse"
+    ],
+    [
+     "C18",
+     [
+      "C18",
+      "c18"
+     ],
+     "C18 — softwood strength class",
+     "C18 — Nadelholz-Festigkeitsklasse"
+    ],
+    [
+     "C20",
+     [
+      "C20",
+      "c20"
+     ],
+     "C20 — softwood strength class",
+     "C20 — Nadelholz-Festigkeitsklasse"
+    ],
+    [
+     "C22",
+     [
+      "C22",
+      "c22"
+     ],
+     "C22 — softwood strength class",
+     "C22 — Nadelholz-Festigkeitsklasse"
+    ],
+    [
+     "C24",
+     [
+      "C24",
+      "c24"
+     ],
+     "C24 — softwood strength class",
+     "C24 — Nadelholz-Festigkeitsklasse"
+    ],
+    [
+     "C27",
+     [
+      "C27",
+      "c27"
+     ],
+     "C27 — softwood strength class",
+     "C27 — Nadelholz-Festigkeitsklasse"
+    ],
+    [
+     "C30",
+     [
+      "C30",
+      "c30"
+     ],
+     "C30 — softwood strength class",
+     "C30 — Nadelholz-Festigkeitsklasse"
+    ],
+    [
+     "C35",
+     [
+      "C35",
+      "c35"
+     ],
+     "C35 — softwood strength class",
+     "C35 — Nadelholz-Festigkeitsklasse"
+    ],
+    [
+     "C40",
+     [
+      "C40",
+      "c40"
+     ],
+     "C40 — softwood strength class",
+     "C40 — Nadelholz-Festigkeitsklasse"
+    ],
+    [
+     "C45",
+     [
+      "C45",
+      "c45"
+     ],
+     "C45 — softwood strength class",
+     "C45 — Nadelholz-Festigkeitsklasse"
+    ],
+    [
+     "C50",
+     [
+      "C50",
+      "c50"
+     ],
+     "C50 — softwood strength class",
+     "C50 — Nadelholz-Festigkeitsklasse"
+    ],
+    [
+     "D18",
+     [
+      "D18",
+      "d18"
+     ],
+     "D18 — hardwood strength class",
+     "D18 — Laubholz-Festigkeitsklasse"
+    ],
+    [
+     "D24",
+     [
+      "D24",
+      "d24"
+     ],
+     "D24 — hardwood strength class",
+     "D24 — Laubholz-Festigkeitsklasse"
+    ],
+    [
+     "D30",
+     [
+      "D30",
+      "d30"
+     ],
+     "D30 — hardwood strength class",
+     "D30 — Laubholz-Festigkeitsklasse"
+    ],
+    [
+     "D35",
+     [
+      "D35",
+      "d35"
+     ],
+     "D35 — hardwood strength class",
+     "D35 — Laubholz-Festigkeitsklasse"
+    ],
+    [
+     "D40",
+     [
+      "D40",
+      "d40"
+     ],
+     "D40 — hardwood strength class",
+     "D40 — Laubholz-Festigkeitsklasse"
+    ],
+    [
+     "D50",
+     [
+      "D50",
+      "d50"
+     ],
+     "D50 — hardwood strength class",
+     "D50 — Laubholz-Festigkeitsklasse"
+    ],
+    [
+     "D60",
+     [
+      "D60",
+      "d60"
+     ],
+     "D60 — hardwood strength class",
+     "D60 — Laubholz-Festigkeitsklasse"
+    ],
+    [
+     "D70",
+     [
+      "D70",
+      "d70"
+     ],
+     "D70 — hardwood strength class",
+     "D70 — Laubholz-Festigkeitsklasse"
+    ],
+    [
+     "Gl20h",
+     [
+      "GL20h",
+      "gl20h"
+     ],
+     "GL20h — glulam homogeneous",
+     "GL20h — Brettschichtholz homogen"
+    ],
+    [
+     "Gl22h",
+     [
+      "GL22h",
+      "gl22h"
+     ],
+     "GL22h — glulam homogeneous",
+     "GL22h — Brettschichtholz homogen"
+    ],
+    [
+     "Gl24h",
+     [
+      "GL24h",
+      "gl24h"
+     ],
+     "GL24h — glulam homogeneous",
+     "GL24h — Brettschichtholz homogen"
+    ],
+    [
+     "Gl26h",
+     [
+      "GL26h",
+      "gl26h"
+     ],
+     "GL26h — glulam homogeneous",
+     "GL26h — Brettschichtholz homogen"
+    ],
+    [
+     "Gl28h",
+     [
+      "GL28h",
+      "gl28h"
+     ],
+     "GL28h — glulam homogeneous",
+     "GL28h — Brettschichtholz homogen"
+    ],
+    [
+     "Gl30h",
+     [
+      "GL30h",
+      "gl30h"
+     ],
+     "GL30h — glulam homogeneous",
+     "GL30h — Brettschichtholz homogen"
+    ],
+    [
+     "Gl32h",
+     [
+      "GL32h",
+      "gl32h"
+     ],
+     "GL32h — glulam homogeneous",
+     "GL32h — Brettschichtholz homogen"
+    ],
+    [
+     "Gl20c",
+     [
+      "GL20c",
+      "gl20c"
+     ],
+     "GL20c — glulam combined",
+     "GL20c — Brettschichtholz kombiniert"
+    ],
+    [
+     "Gl22c",
+     [
+      "GL22c",
+      "gl22c"
+     ],
+     "GL22c — glulam combined",
+     "GL22c — Brettschichtholz kombiniert"
+    ],
+    [
+     "Gl24c",
+     [
+      "GL24c",
+      "gl24c"
+     ],
+     "GL24c — glulam combined",
+     "GL24c — Brettschichtholz kombiniert"
+    ],
+    [
+     "Gl26c",
+     [
+      "GL26c",
+      "gl26c"
+     ],
+     "GL26c — glulam combined",
+     "GL26c — Brettschichtholz kombiniert"
+    ],
+    [
+     "Gl28c",
+     [
+      "GL28c",
+      "gl28c"
+     ],
+     "GL28c — glulam combined",
+     "GL28c — Brettschichtholz kombiniert"
+    ],
+    [
+     "Gl30c",
+     [
+      "GL30c",
+      "gl30c"
+     ],
+     "GL30c — glulam combined",
+     "GL30c — Brettschichtholz kombiniert"
+    ],
+    [
+     "Gl32c",
+     [
+      "GL32c",
+      "gl32c"
+     ],
+     "GL32c — glulam combined",
+     "GL32c — Brettschichtholz kombiniert"
+    ],
+    [
+     "Lvl32",
+     [
+      "LVL32",
+      "lvl32"
+     ],
+     "LVL 32 — laminated veneer lumber",
+     "LVL 32 — Furnierschichtholz"
+    ],
+    [
+     "Clt100",
+     [
+      "CLT100",
+      "clt100"
+     ],
+     "CLT 100 — cross-laminated timber",
+     "BSP 100 — Brettsperrholz"
+    ]
+   ]
+  }
+ ]
+}

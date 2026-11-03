@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-plated-alpha-cr/schema.json",
+  "title": "ChangePlatedAlphaCr",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newAlphaCr"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Plated panel",
+          "de": "Plattenfeld"
+        },
+        "description": {
+          "en": "The plated panel this mutation addresses, by id.",
+          "de": "Das adressierte Element (Plattenfeld), per Kennung."
+        },
+        "ref": {
+          "kind": "plated"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newAlphaCr": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Critical load amplifier α_cr (0 = none)",
+          "de": "Kritischer Laststeigerungsfaktor α_cr (0 = keiner)"
+        },
+        "widget": "stepper",
+        "unit": "1",
+        "precision": 3,
+        "step": 0.01,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

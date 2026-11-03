@@ -1,98 +1,46 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/artifact.json",
-  "title": "En1997Artifact",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "structureId",
-    "geotechnicalCategory",
-    "designSituation",
-    "designApproach",
-    "annex",
-    "groundwaterLevel",
-    "investigationDepth",
-    "layers",
-    "footings",
-    "piles",
-    "retainingWalls",
-    "slopes",
-    "upliftCases"
-  ],
-  "properties": {
-    "structureId": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "geotechnicalCategory": {
-      "type": "integer",
-      "x-semio-state": "artifact"
-    },
-    "designSituation": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "designApproach": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "annex": {
-      "type": "string",
-      "enum": [
-        "En",
-        "De"
-      ],
-      "x-semio-state": "artifact"
-    },
-    "groundwaterLevel": {
-      "type": "number",
-      "x-semio-state": "artifact"
-    },
-    "investigationDepth": {
-      "type": "number",
-      "x-semio-state": "artifact"
-    },
-    "layers": {
-      "type": "array",
-      "items": {
-        "type": "object"
-      },
-      "x-semio-state": "artifact"
-    },
-    "footings": {
-      "type": "array",
-      "items": {
-        "type": "object"
-      },
-      "x-semio-state": "artifact"
-    },
-    "piles": {
-      "type": "array",
-      "items": {
-        "type": "object"
-      },
-      "x-semio-state": "artifact"
-    },
-    "retainingWalls": {
-      "type": "array",
-      "items": {
-        "type": "object"
-      },
-      "x-semio-state": "artifact"
-    },
-    "slopes": {
-      "type": "array",
-      "items": {
-        "type": "object"
-      },
-      "x-semio-state": "artifact"
-    },
-    "upliftCases": {
-      "type": "array",
-      "items": {
-        "type": "object"
-      },
-      "x-semio-state": "artifact"
-    }
-  }
+  "$schema":"http://json-schema.org/draft-07/schema#",
+  "$id":"https://json.schemas.assets.semio-tech.com/s/norm/en1997/artifact.json",
+  "title":"En1997Artifact",
+  "type":"object",
+  "additionalProperties":false,
+  "required":["structureId","geotechnicalCategory","designSituation","designApproach","annex","groundwaterLevel","investigationDepth","layers","footings","piles","retainingWalls","slopes","upliftCases","anchors","embeddedWalls","pileGroups","labTests","layerWaters","placements","cases","investigations","characteristicBases"],
+  "properties":{"structureId":{"type":"string","x-semio-state":"artifact"},"geotechnicalCategory":{"type":"integer","minimum":0,"maximum":255,"x-semio-state":"artifact"},"designSituation":{"type":"string","x-semio-state":"artifact"},"designApproach":{"type":"string","x-semio-state":"artifact"},"annex":{"type":"string","enum":["En","De"],"x-semio-state":"artifact","x-semio-rust":{"type":"AnnexChoice"}},"groundwaterLevel":{"type":"number","x-semio-state":"artifact"},"investigationDepth":{"type":"number","x-semio-state":"artifact"},"layers":{"type":"array","items":{"$ref":"#/$defs/SoilLayer"},"x-semio-state":"artifact"},"footings":{"type":"array","items":{"$ref":"#/$defs/SpreadFoundation"},"x-semio-state":"artifact"},"piles":{"type":"array","items":{"$ref":"#/$defs/Pile"},"x-semio-state":"artifact"},"retainingWalls":{"type":"array","items":{"$ref":"#/$defs/RetainingWall"},"x-semio-state":"artifact"},"slopes":{"type":"array","items":{"$ref":"#/$defs/Slope"},"x-semio-state":"artifact"},"upliftCases":{"type":"array","items":{"$ref":"#/$defs/UpliftCase"},"x-semio-state":"artifact"},"anchors":{"type":"array","items":{"$ref":"#/$defs/Anchor"},"x-semio-state":"artifact"},"embeddedWalls":{"type":"array","items":{"$ref":"#/$defs/EmbeddedWall"},"x-semio-state":"artifact"},"pileGroups":{"type":"array","items":{"$ref":"#/$defs/PileGroup"},"x-semio-state":"artifact"},"labTests":{"type":"array","items":{"$ref":"#/$defs/LabTest"},"x-semio-state":"artifact"},"layerWaters":{"type":"array","items":{"$ref":"#/$defs/LayerWater"},"x-semio-state":"artifact"},"placements":{"type":"array","items":{"$ref":"#/$defs/Placement"},"x-semio-state":"artifact"},"cases":{"type":"array","items":{"$ref":"#/$defs/CaseRow"},"x-semio-state":"artifact"},"investigations":{"type":"array","items":{"$ref":"#/$defs/Investigation"},"x-semio-state":"artifact"},"characteristicBases":{"type":"array","items":{"$ref":"#/$defs/CharacteristicBasis"},"x-semio-state":"artifact"}},
+  "$defs":{
+    "SoilType":{"title":"SoilType","type":"string","enum":["sand","gravel","clay","silt","fill"],"x-semio-ui":{"options":{"sand":{"en":"Sand","de":"Sand"},"gravel":{"en":"Gravel","de":"Kies"},"clay":{"en":"Clay","de":"Ton"},"silt":{"en":"Silt","de":"Schluff"},"fill":{"en":"Fill","de":"Auffüllung"}}}},
+    "SoilLayer":{"type":"object","additionalProperties":false,"properties":{"id":{"type":"string"},"soilType":{"$ref":"#/$defs/SoilType"},"depthTop":{"type":"number","format":"double"},"depthBottom":{"type":"number","format":"double"},"gamma":{"type":"number","format":"double"},"gammaPrime":{"type":"number","format":"double"},"phiPrimeDeg":{"type":"number","format":"double"},"cohesionEffective":{"type":"number","format":"double"},"cohesionUndrained":{"type":"number","format":"double"},"oedometricModulus":{"type":"number","format":"double"},"poissonRatio":{"type":"number","format":"double"},"cptQc":{"type":"number","format":"double"},"sptN":{"type":"number","format":"double"},"cptNkt":{"type":"number","format":"double"}},"required":["id","soilType","depthTop","depthBottom","gamma","gammaPrime","phiPrimeDeg","cohesionEffective","cohesionUndrained","oedometricModulus","poissonRatio","cptQc","sptN","cptNkt"]},
+    "SpreadFoundation":{"type":"object","additionalProperties":false,"properties":{"id":{"type":"string"},"width":{"type":"number","format":"double"},"length":{"type":"number","format":"double"},"embedment":{"type":"number","format":"double"},"baseInclinationDeg":{"type":"number","format":"double"},"settlementLimit":{"type":"number","format":"double"},"loadCases":{"type":"array","items":{"$ref":"#/$defs/FoundationLoadCase"}}},"required":["id","width","length","embedment","baseInclinationDeg","settlementLimit","loadCases"]},
+    "PileType":{"title":"PileType","type":"string","enum":["bored","driven","cfa"],"x-semio-ui":{"options":{"bored":{"en":"Bored pile","de":"Bohrpfahl"},"driven":{"en":"Driven pile","de":"Rammpfahl"},"cfa":{"en":"CFA pile","de":"Schneckenortbetonpfahl (CFA)"}}}},
+    "Pile":{"type":"object","additionalProperties":false,"properties":{"id":{"type":"string"},"pileType":{"$ref":"#/$defs/PileType"},"diameter":{"type":"number","format":"double"},"length":{"type":"number","format":"double"},"count":{"type":"integer","minimum":0,"maximum":4294967295},"alphaS":{"type":"number","format":"double"},"unitShaftResistance":{"type":"number","format":"double"},"unitBaseResistance":{"type":"number","format":"double"},"compressionPermanent":{"type":"number","format":"double"},"compressionVariable":{"type":"number","format":"double"},"tensionPermanent":{"type":"number","format":"double"},"tensionVariable":{"type":"number","format":"double"},"bendingStiffnessEi":{"type":"number","format":"double"},"horizontalSubgradeModulus":{"type":"number","format":"double"},"lateralHeadLoad":{"type":"number","format":"double"},"elasticModulus":{"type":"number","format":"double"},"settlingThickness":{"type":"number","format":"double"},"negativeFrictionBeta":{"type":"number","format":"double"},"dynamicTestCount":{"type":"number","format":"double"},"dynamicResistanceMean":{"type":"number","format":"double"},"dynamicResistanceMin":{"type":"number","format":"double"},"hammerWeight":{"type":"number","format":"double"},"dropHeight":{"type":"number","format":"double"},"setPerBlow":{"type":"number","format":"double"},"elasticCompression":{"type":"number","format":"double"},"hammerEfficiency":{"type":"number","format":"double"},"concreteClass":{"$ref":"#/$defs/PileConcreteClass","x-semio-rust":{"doc":["🪵 Concrete strength class of the pile shaft (EN 1992-1-1 Table 3.1) for the elastic shortening of the resistance-settlement curve (PILE-09): E_cm from the shared rows `ndp.en1992.t3-1.ecm.*`; `notGiven` leaves the explicit modulus `elasticModulus` as the only source, a modulus above 0 overrides the class."]}},"testProfiles":{"type":"array","items":{"$ref":"#/$defs/PileTestProfile"}}},"required":["id","pileType","diameter","length","count","alphaS","unitShaftResistance","unitBaseResistance","compressionPermanent","compressionVariable","tensionPermanent","tensionVariable","bendingStiffnessEi","horizontalSubgradeModulus","lateralHeadLoad","elasticModulus","settlingThickness","negativeFrictionBeta","dynamicTestCount","dynamicResistanceMean","dynamicResistanceMin","hammerWeight","dropHeight","setPerBlow","elasticCompression","hammerEfficiency","concreteClass","testProfiles"]},
+    "PileConcreteClass":{"title":"PileConcreteClass","type":"string","enum":["notGiven","c1215","c1620","c2025","c2530","c3037","c3545","c4050","c4555","c5060"],"x-semio-ui":{"options":{"notGiven":{"en":"Not given (explicit modulus or none)","de":"Nicht angegeben (expliziter Modul oder keiner)"},"c1215":{"en":"C12/15","de":"C12/15"},"c1620":{"en":"C16/20","de":"C16/20"},"c2025":{"en":"C20/25","de":"C20/25"},"c2530":{"en":"C25/30","de":"C25/30"},"c3037":{"en":"C30/37","de":"C30/37"},"c3545":{"en":"C35/45","de":"C35/45"},"c4050":{"en":"C40/50","de":"C40/50"},"c4555":{"en":"C45/55","de":"C45/55"},"c5060":{"en":"C50/60","de":"C50/60"}}}},
+    "EarthPressureMode":{"title":"EarthPressureMode","type":"string","enum":["active","atRest","increasedActive"],"x-semio-ui":{"options":{"active":{"en":"Active (Rankine/Coulomb)","de":"Aktiv (Rankine/Coulomb)"},"atRest":{"en":"At rest (Jáky K₀)","de":"Ruhe (Jáky K₀)"},"increasedActive":{"en":"Increased active (DIN 4085)","de":"Erhöht aktiv (DIN 4085)"}}}},
+    "WallMovement":{"title":"WallMovement","type":"string","enum":["free","rigid","propped"],"x-semio-ui":{"options":{"free":{"en":"Free (cantilever, sufficient displacement)","de":"Frei (Kragarm, ausreichende Verschiebung)"},"rigid":{"en":"Rigid (little displacement)","de":"Starr (geringe Verschiebung)"},"propped":{"en":"Propped / supported","de":"Gestützt"}}}},
+    "RetainingWall":{"type":"object","additionalProperties":false,"properties":{"id":{"type":"string"},"height":{"type":"number","format":"double"},"embedment":{"type":"number","format":"double"},"baseWidth":{"type":"number","format":"double"},"stemThickness":{"type":"number","format":"double"},"backfillPhiDeg":{"type":"number","format":"double"},"backfillGamma":{"type":"number","format":"double"},"wallFrictionDeg":{"type":"number","format":"double"},"earthPressureMode":{"$ref":"#/$defs/EarthPressureMode"},"wallMovement":{"$ref":"#/$defs/WallMovement"},"ocr":{"type":"number","format":"double"},"concreteGamma":{"type":"number","format":"double"},"surcharge":{"type":"number","format":"double"},"verticalPermanent":{"type":"number","format":"double"},"horizontalPermanent":{"type":"number","format":"double"},"seismicKh":{"type":"number","format":"double"},"seismicKv":{"type":"number","format":"double"},"reinforcementSpacing":{"type":"number","format":"double"},"reinforcementWidth":{"type":"number","format":"double"},"reinforcementFriction":{"type":"number","format":"double"}},"required":["id","height","embedment","baseWidth","stemThickness","backfillPhiDeg","backfillGamma","wallFrictionDeg","earthPressureMode","wallMovement","ocr","concreteGamma","surcharge","verticalPermanent","horizontalPermanent","seismicKh","seismicKv","reinforcementSpacing","reinforcementWidth","reinforcementFriction"]},
+    "Slope":{"type":"object","additionalProperties":false,"properties":{"id":{"type":"string"},"angleDeg":{"type":"number","format":"double"},"height":{"type":"number","format":"double"},"length":{"type":"number","format":"double"},"governingLayerId":{"type":"string"},"circleCentreX":{"type":"number","format":"double"},"circleCentreZ":{"type":"number","format":"double"},"circleRadius":{"type":"number","format":"double"},"width":{"type":"number","format":"double"}},"required":["id","angleDeg","height","length","governingLayerId","circleCentreX","circleCentreZ","circleRadius","width"]},
+    "UpliftCase":{"type":"object","additionalProperties":false,"properties":{"id":{"type":"string"},"permanentStabilizing":{"type":"number","format":"double"},"permanentDestabilizing":{"type":"number","format":"double"},"variableDestabilizing":{"type":"number","format":"double"},"porePressure":{"type":"number","format":"double"},"totalStress":{"type":"number","format":"double"}},"required":["id","permanentStabilizing","permanentDestabilizing","variableDestabilizing","porePressure","totalStress"]},
+    "TendonType":{"title":"TendonType","type":"string","enum":["strand","bar"],"x-semio-ui":{"options":{"strand":{"en":"Strand tendon","de":"Litzenanker"},"bar":{"en":"Bar tendon","de":"Stabanker"}}}},
+    "Anchor":{"type":"object","additionalProperties":false,"properties":{"id":{"type":"string"},"wallId":{"type":"string"},"tendon":{"$ref":"#/$defs/TendonType"},"headDepth":{"type":"number","format":"double"},"inclinationDeg":{"type":"number","format":"double"},"freeLength":{"type":"number","format":"double"},"fixedLength":{"type":"number","format":"double"},"fixedDiameter":{"type":"number","format":"double"},"bondStress":{"type":"number","format":"double"},"designForce":{"type":"number","format":"double"},"tendonYieldForce":{"type":"number","format":"double"},"minFreeLength":{"type":"number","format":"double"},"testFactor":{"type":"number","format":"double"},"tests":{"type":"array","items":{"$ref":"#/$defs/AnchorTest"}}},"required":["id","wallId","tendon","headDepth","inclinationDeg","freeLength","fixedLength","fixedDiameter","bondStress","designForce","tendonYieldForce","minFreeLength","testFactor","tests"]},
+    "EmbeddedWallKind":{"title":"EmbeddedWallKind","type":"string","enum":["freeEarth","cantilever"],"x-semio-ui":{"options":{"freeEarth":{"en":"Free earth support","de":"Freie Auflagerung"},"cantilever":{"en":"Cantilever (fixed in the ground)","de":"Einspannung im Boden"}}}},
+    "EmbeddedWall":{"type":"object","additionalProperties":false,"properties":{"id":{"type":"string"},"kind":{"$ref":"#/$defs/EmbeddedWallKind"},"retainedHeight":{"type":"number","format":"double"},"embedment":{"type":"number","format":"double"},"propDepth":{"type":"number","format":"double"},"thickness":{"type":"number","format":"double"},"backfillGamma":{"type":"number","format":"double"},"phiDeg":{"type":"number","format":"double"},"deltaActiveDeg":{"type":"number","format":"double"},"deltaPassiveDeg":{"type":"number","format":"double"},"surcharge":{"type":"number","format":"double"},"undrainedStrength":{"type":"number","format":"double"}},"required":["id","kind","retainedHeight","embedment","propDepth","thickness","backfillGamma","phiDeg","deltaActiveDeg","deltaPassiveDeg","surcharge","undrainedStrength"]},
+    "PileGroup":{"type":"object","additionalProperties":false,"properties":{"id":{"type":"string"},"pileId":{"type":"string"},"rows":{"type":"integer","minimum":0,"maximum":4294967295},"columns":{"type":"integer","minimum":0,"maximum":4294967295},"spacing":{"type":"number","format":"double"},"capVertical":{"type":"number","format":"double"},"capMomentX":{"type":"number","format":"double"},"capMomentY":{"type":"number","format":"double"},"singleResistance":{"type":"number","format":"double"},"shaftCohesionSum":{"type":"number","format":"double"},"baseCohesion":{"type":"number","format":"double"}},"required":["id","pileId","rows","columns","spacing","capVertical","capMomentX","capMomentY","singleResistance","shaftCohesionSum","baseCohesion"]},
+    "LabTestKind":{"title":"LabTestKind","type":"string","enum":["oedometer","triaxial","directShear"],"x-semio-ui":{"options":{"oedometer":{"en":"Oedometer test","de":"Ödometerversuch"},"triaxial":{"en":"Triaxial test","de":"Triaxialversuch"},"directShear":{"en":"Direct shear test","de":"Rahmenscherversuch"}}}},
+    "LabTest":{"type":"object","additionalProperties":false,"properties":{"id":{"type":"string"},"layerId":{"type":"string"},"kind":{"$ref":"#/$defs/LabTestKind"},"voidRatio":{"type":"number","format":"double"},"preloadStress":{"type":"number","format":"double"},"drainageHeight":{"type":"number","format":"double"},"consolidationTime":{"type":"number","format":"double"},"compressionIndex":{"type":"number","format":"double"},"swellingIndex":{"type":"number","format":"double"},"stressIncrement":{"type":"number","format":"double"},"secondaryCompressionIndex":{"type":"number","format":"double"},"designLife":{"type":"number","format":"double"},"points":{"type":"array","items":{"$ref":"#/$defs/LabPoint"}}},"required":["id","layerId","kind","voidRatio","preloadStress","drainageHeight","consolidationTime","compressionIndex","swellingIndex","stressIncrement","secondaryCompressionIndex","designLife","points"]},
+    "LayerWater":{"type":"object","additionalProperties":false,"properties":{"id":{"type":"string"},"layerId":{"type":"string"},"piezometricDepth":{"type":"number","format":"double"},"permeability":{"type":"number","format":"double"},"headDifference":{"type":"number","format":"double"},"flowLength":{"type":"number","format":"double"},"wellRadius":{"type":"number","format":"double"},"wellWaterDepth":{"type":"number","format":"double"},"influenceRadius":{"type":"number","format":"double"},"wellCapacity":{"type":"number","format":"double"}},"required":["id","layerId","piezometricDepth","permeability","headDifference","flowLength","wellRadius","wellWaterDepth","influenceRadius","wellCapacity"]},
+    "Placement":{"type":"object","additionalProperties":false,"properties":{"id":{"type":"string"},"x":{"type":"number","format":"double"},"y":{"type":"number","format":"double"},"z":{"type":"number","format":"double"},"yaw":{"type":"number","format":"double"}},"required":["id","x","y","z","yaw"]},
+    "CaseRow":{"type":"object","additionalProperties":false,"properties":{"id":{"type":"string"},"labelEn":{"type":"string"},"labelDe":{"type":"string"},"entryId":{"type":"string"},"numbers":{"type":"array","items":{"$ref":"#/$defs/CaseNumber"}},"texts":{"type":"array","items":{"$ref":"#/$defs/CaseText"}}},"required":["id","labelEn","labelDe","entryId","numbers","texts"]},
+    "CaseNumber":{"type":"object","additionalProperties":false,"properties":{"id":{"type":"string"},"value":{"type":"number","format":"double"}},"required":["id","value"]},
+    "CaseText":{"type":"object","additionalProperties":false,"properties":{"id":{"type":"string"},"value":{"type":"string"}},"required":["id","value"]},
+    "LabPoint":{"type":"object","additionalProperties":false,"properties":{"id":{"type":"string"},"normalStress":{"type":"number","format":"double"},"shearStress":{"type":"number","format":"double"}},"required":["id","normalStress","shearStress"]},
+    "AnchorTest":{"type":"object","additionalProperties":false,"properties":{"id":{"type":"string"},"pullOutResistance":{"type":"number","format":"double"}},"required":["id","pullOutResistance"]},
+    "PileTestProfile":{"type":"object","additionalProperties":false,"properties":{"id":{"type":"string"},"shaftResistance":{"type":"number","format":"double"},"baseResistance":{"type":"number","format":"double"}},"required":["id","shaftResistance","baseResistance"]},
+    "SituationChoice":{"title":"SituationChoice","type":"string","enum":["persistent","transient","accidental"],"x-semio-ui":{"options":{"persistent":{"en":"Persistent (BS-P)","de":"Ständig (BS-P)"},"transient":{"en":"Transient (BS-T)","de":"Vorübergehend (BS-T)"},"accidental":{"en":"Accidental (BS-A)","de":"Außergewöhnlich (BS-A)"}}}},
+    "FoundationLoadCase":{"type":"object","additionalProperties":false,"properties":{"id":{"type":"string"},"designSituation":{"$ref":"#/$defs/SituationChoice"},"verticalPermanent":{"type":"number","format":"double"},"verticalVariable":{"type":"number","format":"double"},"horizontalPermanent":{"type":"number","format":"double"},"horizontalVariable":{"type":"number","format":"double"},"momentPermanent":{"type":"number","format":"double"},"momentVariable":{"type":"number","format":"double"}},"required":["id","designSituation","verticalPermanent","verticalVariable","horizontalPermanent","horizontalVariable","momentPermanent","momentVariable"]},
+    "InvestigationKind":{"title":"InvestigationKind","type":"string","enum":["borehole","cpt","spt"],"x-semio-ui":{"options":{"borehole":{"en":"Borehole","de":"Bohrung"},"cpt":{"en":"Cone penetration test (CPT)","de":"Drucksondierung (CPT)"},"spt":{"en":"Standard penetration test (SPT)","de":"Rammsondierung (SPT)"}}}},
+    "InvestigationReading":{"type":"object","additionalProperties":false,"properties":{"id":{"type":"string"},"depth":{"type":"number","format":"double"},"measurement":{"type":"number","format":"double"}},"required":["id","depth","measurement"]},
+    "Investigation":{"type":"object","additionalProperties":false,"properties":{"id":{"type":"string"},"positionX":{"type":"number","format":"double"},"positionY":{"type":"number","format":"double"},"groundLevel":{"type":"number","format":"double"},"depth":{"type":"number","format":"double"},"kind":{"$ref":"#/$defs/InvestigationKind"},"readings":{"type":"array","items":{"$ref":"#/$defs/InvestigationReading"}}},"required":["id","positionX","positionY","groundLevel","depth","kind","readings"]},
+    "CharacteristicParameter":{"title":"CharacteristicParameter","type":"string","enum":["undrainedStrength","frictionAngle"],"x-semio-ui":{"options":{"undrainedStrength":{"en":"Undrained shear strength c_u","de":"Undränierte Scherfestigkeit c_u"},"frictionAngle":{"en":"Friction angle φ′","de":"Reibungswinkel φ′"}}}},
+    "ParameterBasis":{"title":"ParameterBasis","type":"string","enum":["declared","derived"],"x-semio-ui":{"options":{"declared":{"en":"Declared on the layer","de":"Auf der Schicht angegeben"},"derived":{"en":"Derived from investigations","de":"Aus Erkundungen abgeleitet"}}}},
+    "CharacteristicBasis":{"type":"object","additionalProperties":false,"properties":{"id":{"type":"string"},"layerId":{"type":"string"},"parameter":{"$ref":"#/$defs/CharacteristicParameter"},"basis":{"$ref":"#/$defs/ParameterBasis"}},"required":["id","layerId","parameter","basis"]}
+  },
+  "x-semio-rust":{"doc":["🧬️ EN 1997 document artifact state (mirrors snapshot)."],"derive":["Clone","Debug","PartialEq","ArtifactSchema","semio_framework_dsl_record_derive::DslRecord","value_derive::ToValue","value_derive::FromValue"],"artifactSchema":"s.norm.en1997","attributes":["#[cfg_attr(any(test, feature = \"test-support\"), derive(serde::Serialize, serde::Deserialize))]","#[cfg_attr(any(test, feature = \"test-support\"), serde(rename_all = \"camelCase\"))]","#[value(rename_all = \"camelCase\")]"]}
 }

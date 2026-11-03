@@ -1,0 +1,4 @@
+type RemoveStudRow {
+  memberId: String!
+  index: Int!
+}

@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/app/norm/viewport/window-config/schema.json",
+  "title": "NormViewportWindowConfig",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "hiddenLayers"
+  ],
+  "properties": {
+    "cameraPreset": {
+      "type": "string",
+      "x-semio-state": "windowConfig"
+    },
+    "hiddenLayers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-state": "windowConfig"
+    },
+    "colourMap": {
+      "type": "string",
+      "x-semio-state": "windowConfig"
+    },
+    "unitSystem": {
+      "type": "string",
+      "x-semio-state": "windowConfig"
+    }
+  }
+}

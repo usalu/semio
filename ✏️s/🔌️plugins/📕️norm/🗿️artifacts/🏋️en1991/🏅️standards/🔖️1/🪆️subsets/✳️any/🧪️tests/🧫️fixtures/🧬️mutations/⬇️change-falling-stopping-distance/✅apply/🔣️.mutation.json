@@ -1,0 +1,6 @@
+{
+  "ChangeFallingStoppingDistance": {
+    "id": "falling-1",
+    "newStoppingDistance": 3.0
+  }
+}

@@ -1,0 +1,3 @@
+type RemoveConcreteGrade {
+  index: Int!
+}

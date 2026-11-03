@@ -1,0 +1,6 @@
+{
+  "ChangeSlabSheetingRibsParallel": {
+    "id": "slab-S1",
+    "newRibsParallelToBeam": true
+  }
+}

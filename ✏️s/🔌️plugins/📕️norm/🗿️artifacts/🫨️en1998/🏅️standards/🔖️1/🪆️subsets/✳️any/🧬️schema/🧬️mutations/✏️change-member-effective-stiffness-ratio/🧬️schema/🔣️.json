@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-member-effective-stiffness-ratio/schema.json",
+  "title": "ChangeMemberEffectiveStiffnessRatio",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "buildingId",
+    "id",
+    "newEffectiveStiffnessRatio"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeMemberEffectiveStiffnessRatio"
+    },
+    "buildingId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Building",
+          "de": "Gebäude"
+        },
+        "description": {
+          "en": "The building this mutation addresses, by id.",
+          "de": "Das adressierte Element (Gebäude), per Kennung."
+        },
+        "ref": {
+          "kind": "building"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Member",
+          "de": "Bauteil"
+        },
+        "description": {
+          "en": "The member this mutation addresses, by id.",
+          "de": "Das adressierte Element (Bauteil), per Kennung."
+        },
+        "ref": {
+          "kind": "member"
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "newEffectiveStiffnessRatio": {
+      "type": "number",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Effective share of the gross wall stiffness (EN 1998-1 4.3.1(6)): 0 = simplified method with the cracked-stiffness factor of the registry, 0 < ratio <= 1 = effective stiffness declared from a more accurate analysis (1 = uncracked)",
+          "de": "Wirksamer Anteil der Bruttosteifigkeit der Wand (EN 1998-1 4.3.1(6)): 0 = vereinfachtes Verfahren mit dem Faktor der gerissenen Steifigkeit aus dem Register, 0 < Anteil <= 1 = aus genauerer Berechnung angegebene wirksame Steifigkeit (1 = ungerissen)"
+        },
+        "group": "value",
+        "order": 30,
+        "widget": "stepper",
+        "step": 0.001,
+        "precision": 3
+      }
+    }
+  }
+}

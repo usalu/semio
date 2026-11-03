@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-material-fy/schema.json",
+  "title": "ChangeMaterialFy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newFy"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Material",
+          "de": "Werkstoff"
+        },
+        "description": {
+          "en": "The material this mutation addresses, by id.",
+          "de": "Das adressierte Element (Werkstoff), per Kennung."
+        },
+        "ref": {
+          "kind": "material"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newFy": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Yield strength f_y",
+          "de": "Streckgrenze f_y"
+        },
+        "widget": "stepper",
+        "unit": "Pa",
+        "displayUnit": "N/mm²",
+        "displayFactor": 0.000001,
+        "precision": 1,
+        "step": 5000000,
+        "snaps": [
+          235000000,
+          275000000,
+          355000000,
+          420000000,
+          460000000
+        ],
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

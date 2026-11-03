@@ -225,6 +225,7 @@ export function subjectHostPackagesFor(registry: OracleRegistry, owner: string, 
     const previous = merged.get(entry.package);
     if (previous !== undefined && previous.path !== entry.path) throw new Error(`subject host package ${entry.package} is contributed from two paths (${previous.path} and ${entry.path})`);
     if (previous === undefined) merged.set(entry.package, entry);
+    else if (entry.features !== undefined) merged.set(entry.package, { ...previous, features: [...new Set([...(previous.features ?? []), ...entry.features])].sort() });
   }
   return [...merged.values()].sort((left, right) => left.package.localeCompare(right.package));
 }

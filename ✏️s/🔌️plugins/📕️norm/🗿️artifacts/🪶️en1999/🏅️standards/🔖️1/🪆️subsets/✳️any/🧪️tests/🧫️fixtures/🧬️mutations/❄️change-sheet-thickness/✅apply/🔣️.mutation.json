@@ -1,0 +1,5 @@
+{
+  "mutation": "changeSheetThickness",
+  "coldFormedId": "sheet-pass",
+  "newThickness": 0.01
+}

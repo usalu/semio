@@ -1,0 +1,6 @@
+{
+  "ChangeWindBridgeAssumedForce": {
+    "id": "wind-bridge-1",
+    "newAssumedForce": 3.0
+  }
+}

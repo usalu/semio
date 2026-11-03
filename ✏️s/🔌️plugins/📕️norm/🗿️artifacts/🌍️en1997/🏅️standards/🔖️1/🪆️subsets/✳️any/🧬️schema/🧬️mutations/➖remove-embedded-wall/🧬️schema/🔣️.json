@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/remove-embedded-wall/schema.json",
+  "title": "RemoveEmbeddedWall",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "index"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "removeEmbeddedWall"
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Embedded wall",
+          "de": "Eingespannte Wand"
+        },
+        "description": {
+          "en": "Zero-based position of the embedded wall in its list.",
+          "de": "Nullbasierte Position von Eingespannte Wand in der Liste."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
+    }
+  }
+}

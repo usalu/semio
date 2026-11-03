@@ -310,12 +310,16 @@ pub const DIM_VELOCITY: Dimension = Dimension { m: 1, kg: 0, s: -1, k: 0, a: 0, 
 pub const DIM_ACCELERATION: Dimension = Dimension { m: 1, kg: 0, s: -2, k: 0, a: 0, rad: 0 };
 pub const DIM_AREAL_LOAD: Dimension = Dimension { m: -2, kg: 1, s: -2, k: 0, a: 0, rad: 0 };
 pub const DIM_HEAT_TRANSFER: Dimension = Dimension { m: 0, kg: 1, s: -3, k: -1, a: 0, rad: 0 };
+pub const DIM_LINE_LOAD: Dimension = Dimension { m: 0, kg: 1, s: -2, k: 0, a: 0, rad: 0 };
+pub const DIM_UNIT_WEIGHT: Dimension = Dimension { m: -2, kg: 1, s: -2, k: 0, a: 0, rad: 0 };
+pub const DIM_M6: Dimension = Dimension { m: 6, kg: 0, s: 0, k: 0, a: 0, rad: 0 };
+pub const DIM_FREQUENCY: Dimension = Dimension { m: 0, kg: 0, s: -1, k: 0, a: 0, rad: 0 };
 
 /// 📚️ The static unit vocabulary every `Shape::Quantity`/`Shape::Angle` field draws from.
 /// Symbols are matched verbatim against the ident glued onto a numeric literal
 /// (`210GPa` -> number `210`, suffix `GPa`) — see `crate::os_dsl::schema::parse_scalar`'s `Quantity`/`Angle`
 /// arms. Grows as adopter DSLs need new units; never remove a symbol once a fixture uses it.
-static UNITS: [UnitSpec; 41] = [
+static UNITS: [UnitSpec; 50] = [
     UnitSpec { symbol: "m", dimension: DIM_LENGTH, factor: 1.0 },
     UnitSpec { symbol: "mm", dimension: DIM_LENGTH, factor: 0.001 },
     UnitSpec { symbol: "cm", dimension: DIM_LENGTH, factor: 0.01 },
@@ -357,6 +361,15 @@ static UNITS: [UnitSpec; 41] = [
     UnitSpec { symbol: "kN/m2", dimension: DIM_AREAL_LOAD, factor: 1000.0 },
     UnitSpec { symbol: "kPa/m2", dimension: DIM_AREAL_LOAD, factor: 1000.0 },
     UnitSpec { symbol: "W/m2K", dimension: DIM_HEAT_TRANSFER, factor: 1.0 },
+    UnitSpec { symbol: "N/m", dimension: DIM_LINE_LOAD, factor: 1.0 },
+    UnitSpec { symbol: "kN/m", dimension: DIM_LINE_LOAD, factor: 1000.0 },
+    UnitSpec { symbol: "m2/m", dimension: DIM_LENGTH, factor: 1.0 },
+    UnitSpec { symbol: "N/m3", dimension: DIM_UNIT_WEIGHT, factor: 1.0 },
+    UnitSpec { symbol: "kN/m3", dimension: DIM_UNIT_WEIGHT, factor: 1000.0 },
+    UnitSpec { symbol: "N*m", dimension: DIM_ENERGY, factor: 1.0 },
+    UnitSpec { symbol: "kN*m", dimension: DIM_ENERGY, factor: 1000.0 },
+    UnitSpec { symbol: "m6", dimension: DIM_M6, factor: 1.0 },
+    UnitSpec { symbol: "Hz", dimension: DIM_FREQUENCY, factor: 1.0 },
 ];
 
 /// 🔍️ Looks up a unit by its exact printed symbol (e.g. `"GPa"`).

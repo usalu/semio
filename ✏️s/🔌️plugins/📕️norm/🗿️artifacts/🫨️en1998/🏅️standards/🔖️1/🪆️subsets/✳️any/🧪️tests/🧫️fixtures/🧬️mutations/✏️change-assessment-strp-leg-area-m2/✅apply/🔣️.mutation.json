@@ -1,0 +1,5 @@
+{
+  "mutation": "changeAssessmentStrpLegAreaM2",
+  "id": "as-1",
+  "newStirrupLegAreaM2": 1.5
+}

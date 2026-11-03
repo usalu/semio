@@ -1,0 +1,5 @@
+{
+  "mutation": "changeCharacteristicBasisBasis",
+  "id": "characteristic-basis-1",
+  "newBasis": "declared"
+}

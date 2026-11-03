@@ -1,0 +1,53 @@
+# key|scope|kind|unit|example|flags|en|de|confidence|note   (EN 1998 kernel functions work in SI: kg, m, s, N, Pa; v3 gap catalogue)
+@choice head_fixity|fixed|Head fixed against rotation|Kopf drehfest eingespannt
+@choice head_fixity|free|Free head|Freier Kopf
+a_g||n|m_s2|1.5|r0.1:10|Design ground acceleration ag|Bemessungswert der Bodenbeschleunigung ag|high|
+s_soil||n|1|1.15|r0.5:2|Soil factor S|Bodenparameter S|high|
+t_b||n|s|0.2|r0.01:1|Corner period TB|Eckperiode TB|high|
+t_c||n|s|0.6|r0.05:2|Corner period TC|Eckperiode TC|high|
+t_d||n|s|2|r0.5:10|Corner period TD|Eckperiode TD|high|
+q_factor||n|1|3|r1:8,L|Behaviour factor q|Verhaltensbeiwert q|high|
+t_1||n|s|0.5|r0.05:10|Fundamental period T1|Grundperiode T1|high|
+mass||n|kg|1000000|r1:1e10,L|Seismic mass m|Seismische Masse m|high|
+lambda_c||n|1|0.85|r0.5:1|Correction factor λ|Korrekturbeiwert λ|high|
+v_rd||n|N|5000000|r1:1e11,L|Base shear resistance VRd|Fundamentschubwiderstand VRd|high|
+xi_percent||n|1|5|r0.5:50|Viscous damping ratio ξ in percent|Viskose Dämpfung ξ in Prozent|high|
+avg_ratio||n|1|0.9|r0.1:2|Ratio avg/ag of the vertical ground acceleration|Verhältnis avg/ag der vertikalen Bodenbeschleunigung|high|
+t_v||n|s|0.2|r0.01:5|Vertical period Tv|Vertikalperiode Tv|high|
+f_rd_v||n|N|5000000|r1:1e11,L|Vertical resistance FRd,v|Vertikaler Widerstand FRd,v|high|
+m_1||n|kg|300000|r1:1e9|Mass of storey 1|Masse Geschoss 1|high|
+m_2||n|kg|300000|r1:1e9|Mass of storey 2|Masse Geschoss 2|high|
+m_3||n|kg|300000|r1:1e9|Mass of storey 3|Masse Geschoss 3|high|
+k_1||n|N_m|60000000|r1:1e12|Stiffness of storey 1|Steifigkeit Geschoss 1|high|
+k_2||n|N_m|60000000|r1:1e12|Stiffness of storey 2|Steifigkeit Geschoss 2|high|
+k_3||n|N_m|60000000|r1:1e12|Stiffness of storey 3|Steifigkeit Geschoss 3|high|
+h_1||n|m|10|r0.1:30|Thickness of layer 1|Schichtdicke 1|high|
+h_2||n|m|10|r0.1:30|Thickness of layer 2|Schichtdicke 2|high|
+h_3||n|m|10|r0.1:30|Thickness of layer 3|Schichtdicke 3|high|
+vs_1||n|m_s|150|r10:2000|Shear wave velocity of layer 1|Scherwellengeschwindigkeit Schicht 1|high|
+vs_2||n|m_s|250|r10:2000|Shear wave velocity of layer 2|Scherwellengeschwindigkeit Schicht 2|high|
+vs_3||n|m_s|400|r10:2000|Shear wave velocity of layer 3|Scherwellengeschwindigkeit Schicht 3|high|
+vs_min||n|m_s|180|r0:2000|Lower bound of vs,30 of the assumed ground type|Untergrenze von vs,30 des angenommenen Baugrundtyps|high|
+n1_60||n|1|12|r0:60|Corrected blow count (N1)60|Korrigierte Schlagzahl (N1)60|high|
+fines_percent||n|1|10|r0:100|Fines content FC in percent|Feinkornanteil FC in Prozent|high|
+a_max||n|m_s2|1.5|r0.01:10|Peak ground acceleration at the surface amax|Maximale Bodenbeschleunigung an der Oberfläche amax|high|
+sigma_v||n|Pa|90000|r1000:5e6|Total vertical stress σv|Totale Vertikalspannung σv|high|
+sigma_v_eff||n|Pa|70000|r1000:5e6|Effective vertical stress σ′v|Effektive Vertikalspannung σ′v|high|
+z_depth||n|m|5|r0.5:30|Depth z|Tiefe z|high|
+magnitude||n|1|6.5|r4:9.5|Earthquake magnitude Ms|Erdbebenmagnitude Ms|high|
+f_l_min||n|1|1.25|r1:3|Required factor of safety FL|Erforderlicher Sicherheitsfaktor FL|high|
+e_pile||n|Pa|30000000000|r1e9:5e11|Modulus of elasticity of the pile Ep|Elastizitätsmodul des Pfahls Ep|high|
+d_pile||n|m|0.6|r0.1:3|Pile diameter d|Pfahldurchmesser d|high|
+l_pile||n|m|15|r1:80|Pile length L|Pfahllänge L|high|
+k_h||n|N_m3|20000000|r1e5:1e9|Horizontal subgrade modulus kh|Horizontaler Bettungsmodul kh|medium|
+head_shear||n|N|300000|r0:1e8|Inertial head shear V|Trägheitskopfquerkraft V|high|
+head_fixity||c|1|fixed||Pile head fixity|Pfahlkopfeinspannung|high|
+z_check||n|m|1|r0:30|Depth of the checked section below the pile head|Tiefe des Nachweisschnitts unter dem Pfahlkopf|high|
+m_rd||n|Nm|800000|r1:1e10,L|Pile moment resistance MRd|Pfahlmomententragfähigkeit MRd|high|
+f_storey||n|N|800000|r0:1e10|Storey force Fi|Geschosskraft Fi|high|
+gamma_d||n|1|1.3|r1:3|Diaphragm force factor γd|Kraftbeiwert der Scheibe γd|medium|
+span_dia||n|m|24|r1:200|Diaphragm span L|Scheibenspannweite L|high|
+depth_dia||n|m|12|r0.5:100|Diaphragm depth D|Scheibentiefe D|high|
+x_pos||n|m|12|r0:200|Position x along the span|Position x entlang der Spannweite|high|
+chord_area||n|m2|0.005|r1e-6:10,L|Chord area A|Gurtfläche A|high|
+chord_fd||n|MPa|435|r1:1000|Chord design strength fd|Gurtbemessungsfestigkeit fd|high|

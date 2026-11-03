@@ -1,0 +1,6 @@
+{
+  "ChangeSiloBoundaryFactorHoop": {
+    "id": "silo-1",
+    "newBoundaryFactorHoop": 1.5
+  }
+}

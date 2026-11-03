@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-storey-centre-of-mass-ym/schema.json",
+  "title": "ChangeStoreyCentreOfMassYM",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "buildingId",
+    "id",
+    "newCentreOfMassYM"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeStoreyCentreOfMassYM"
+    },
+    "buildingId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Building",
+          "de": "Gebäude"
+        },
+        "description": {
+          "en": "The building this mutation addresses, by id.",
+          "de": "Das adressierte Element (Gebäude), per Kennung."
+        },
+        "ref": {
+          "kind": "building"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Storey",
+          "de": "Geschoss"
+        },
+        "description": {
+          "en": "The storey this mutation addresses, by id.",
+          "de": "Das adressierte Element (Geschoss), per Kennung."
+        },
+        "ref": {
+          "kind": "storey"
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "newCentreOfMassYM": {
+      "type": "number",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Centre of mass Y",
+          "de": "Massenschwerpunkt Y"
+        },
+        "group": "value",
+        "order": 30,
+        "widget": "stepper",
+        "step": 0.001,
+        "precision": 3
+      }
+    }
+  }
+}

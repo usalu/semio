@@ -11,7 +11,7 @@ use semio_s_artifact_norm_en1999_model::En1999Snapshot;
 /// 🗄️ The aluminium-roof-purlin example fixture, handcrafted in `en1999`'s DSL (`pack::snapshot::ArtifactDsl`):
 /// a welded AW-6082-T6 aluminium roof purlin under the EN annex, exercising the higher-strength alloy's
 /// cross-section, buckling, bending, fatigue, welded-joint, cold-formed-sheeting, and shell-buckling
-/// checks together, distinct from `En1999Snapshot::default()`'s AW-6060-T6/DE-annex values so the grammar's
+/// checks together, distinct from `En1999Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De)`'s AW-6060-T6/DE-annex values so the grammar's
 /// non-default branches (alloy, annex) are exercised too.
 pub const EN1999_ALUMINIUM_ROOF_PURLIN_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🏠️aluminium-roof-purlin/🏠️aluminium-roof-purlin/🗣️.dsl.semio");
 
@@ -70,5 +70,3 @@ use framework_schema::ArtifactSchema;
 
 }
 #[cfg(test)] pub use crate::snapshot::snapshot_wire_codec::*;
-
-semio_s_plugin_norm_compliance::impl_norm_artifact_record!(@text En1999Snapshot, extension="en1999", envelope_id="norm.en1999");

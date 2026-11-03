@@ -1,0 +1,60 @@
+{
+  "annex": null,
+  "reliabilityClass": "RC2",
+  "materials": null,
+  "sections": null,
+  "members": null,
+  "connections": null,
+  "fireScenarios": null,
+  "fatigueDetails": null,
+  "coldFormed": null,
+  "shells": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "shell-pass",
+        "patch": {
+          "materialId": null,
+          "radius": null,
+          "thickness": null,
+          "length": null,
+          "welded": null,
+          "fabricationClass": null,
+          "actions": {
+            "removed": [],
+            "inserted": [],
+            "moved": [],
+            "modified": [
+              {
+                "id": "G-shell",
+                "patch": {
+                  "kind": "permanent",
+                  "category": null,
+                  "source": null,
+                  "gKLine": null,
+                  "qKLine": null,
+                  "nK": null,
+                  "vYK": null,
+                  "vZK": null,
+                  "mYK": null,
+                  "mZK": null,
+                  "torsionK": null,
+                  "localLoadK": null
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "placements": null,
+  "weldRuns": null,
+  "outlineVertices": null,
+  "fatigueCategories": null,
+  "patchLoads": null,
+  "ringStiffeners": null,
+  "transverseStiffeners": null
+}

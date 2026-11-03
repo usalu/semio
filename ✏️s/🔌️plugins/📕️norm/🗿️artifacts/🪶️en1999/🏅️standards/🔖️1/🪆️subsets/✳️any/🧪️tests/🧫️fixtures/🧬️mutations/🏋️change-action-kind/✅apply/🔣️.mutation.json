@@ -1,0 +1,6 @@
+{
+  "mutation": "changeActionKind",
+  "memberId": "purlin-1",
+  "actionId": "G",
+  "newKind": "permanent"
+}

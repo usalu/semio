@@ -1,0 +1,6 @@
+{
+  "ChangeDustExplosionPMax": {
+    "id": "dust-explosion-1",
+    "newPMax": 800001.0
+  }
+}

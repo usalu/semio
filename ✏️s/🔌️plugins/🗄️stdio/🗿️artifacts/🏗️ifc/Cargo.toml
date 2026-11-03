@@ -221,6 +221,14 @@ path = "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/�
 [workspace.dependencies.semio-s-artifact-stdio-ifc-geometry]
 path = "📐️geometry/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-s-artifact-stdio-ifc-2x3-base-catalog]
+path = "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📚️catalog/📦️packages/🦀️rust"
+package = "semio-s-artifact-stdio-ifc2x3-catalog"
+
+[workspace.dependencies.semio-s-artifact-stdio-ifc-4-catalog]
+path = "🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/📚️catalog/📦️packages/🦀️rust"
+package = "semio-s-artifact-stdio-ifc4-catalog"
+
 [workspace.dependencies.semio-s-artifact-stdio-ifc-2x3-base-model]
 path = "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📦️packages/🦀️rust"
 

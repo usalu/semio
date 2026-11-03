@@ -21,7 +21,7 @@ pub fn definition() -> WindowKindDefinition {
 
 //#region 🔖️Render
 pub fn render(host: &NormHost<DinEn16798Family>, windows: &semio_framework_plugin::TreeWindows<'_>, locale: semio_framework_ui_locale::Locale, controller_id: Option<&'static str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    semio_s_plugin_norm_app_surface::render_report(host.report(), windows, locale, controller_id)
+    semio_s_plugin_norm_app_surface::render_checks(host.report(), windows, locale, controller_id)
 }
 //#endregion 🔖️Render
 

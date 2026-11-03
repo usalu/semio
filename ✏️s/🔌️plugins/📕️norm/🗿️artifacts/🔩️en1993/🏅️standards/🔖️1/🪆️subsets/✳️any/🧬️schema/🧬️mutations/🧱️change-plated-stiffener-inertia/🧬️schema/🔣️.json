@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-plated-stiffener-inertia/schema.json",
+  "title": "ChangePlatedStiffenerInertia",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newStiffenerInertia"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Plated panel",
+          "de": "Plattenfeld"
+        },
+        "description": {
+          "en": "The plated panel this mutation addresses, by id.",
+          "de": "Das adressierte Element (Plattenfeld), per Kennung."
+        },
+        "ref": {
+          "kind": "plated"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newStiffenerInertia": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Stiffener second moment I_sl",
+          "de": "Steifen-Flächenmoment I_sl"
+        },
+        "widget": "stepper",
+        "unit": "m⁴",
+        "precision": 9,
+        "step": 1e-8,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

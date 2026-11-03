@@ -1,0 +1,5 @@
+{
+  "mutation": "changeReliabilityResistanceSd",
+  "id": "rel-1",
+  "newResistanceSd": 2.0
+}

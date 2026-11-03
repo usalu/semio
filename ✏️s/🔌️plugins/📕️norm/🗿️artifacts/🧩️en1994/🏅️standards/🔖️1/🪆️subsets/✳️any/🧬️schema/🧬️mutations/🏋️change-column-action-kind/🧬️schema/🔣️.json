@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-column-action-kind/schema.json",
+  "title": "ChangeColumnActionKind",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "columnId",
+    "id",
+    "newKind"
+  ],
+  "properties": {
+    "columnId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Composite column",
+          "de": "Verbundstütze"
+        },
+        "description": {
+          "en": "The composite column this mutation addresses, by id.",
+          "de": "Das adressierte Element (Verbundstütze), per Kennung."
+        },
+        "ref": {
+          "kind": "column"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Action",
+          "de": "Einwirkung"
+        },
+        "description": {
+          "en": "The action this mutation addresses, by id.",
+          "de": "Das adressierte Element (Einwirkung), per Kennung."
+        },
+        "ref": {
+          "kind": "action"
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "newKind": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/ActionKind",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Kind of the column action",
+          "de": "Art der Stützeneinwirkung"
+        },
+        "group": "actions",
+        "order": 30
+      }
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "mutation": "changeShellActionKind",
+  "shellId": "shell-pass",
+  "actionId": "G-shell",
+  "newKind": "permanent"
+}

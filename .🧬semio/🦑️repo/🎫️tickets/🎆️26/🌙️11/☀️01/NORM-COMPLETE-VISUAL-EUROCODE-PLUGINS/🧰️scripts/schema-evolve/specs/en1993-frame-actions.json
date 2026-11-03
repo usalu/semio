@@ -1,0 +1,136 @@
+{
+  "artifact": "en1993",
+  "collection": {
+    "name": "frameActions",
+    "entity": "FrameAction",
+    "emoji": "🏗️",
+    "doc": "🏗️ Action of one load case on the frame (EN 1990 6.4.3): a point force or moment at a node, or a uniform line load on a bar between two positions along it; the load cases are combined by the EN 1990 rules and every combination is solved on its own.",
+    "label": {
+      "en": "Frame actions",
+      "de": "Rahmeneinwirkungen"
+    },
+    "id": {
+      "en": "Frame action ID",
+      "de": "Rahmeneinwirkungs-ID"
+    },
+    "singular": {
+      "en": "frame action",
+      "de": "Rahmeneinwirkung"
+    },
+    "kindSlug": "frame-action",
+    "fields": [
+      {
+        "name": "load_case_id",
+        "type": "String",
+        "label": {
+          "en": "Load case",
+          "de": "Lastfall"
+        },
+        "doc": "📋 Id of the load case (permanent, imposed, wind, ...) the action belongs to.",
+        "sample": "g-permanent"
+      },
+      {
+        "name": "target_id",
+        "type": "String",
+        "label": {
+          "en": "Target",
+          "de": "Ziel"
+        },
+        "doc": "🎯 Id of the frame node (force, moment) or frame bar (line load) the action acts on.",
+        "sample": "node-b"
+      },
+      {
+        "name": "kind",
+        "type": "enum",
+        "label": {
+          "en": "Kind (nodalForce | nodalMoment | barUniform)",
+          "de": "Art (nodalForce | nodalMoment | barUniform)"
+        },
+        "doc": "🏗️ nodalForce | nodalMoment | barUniform.",
+        "enum": {
+          "name": "FrameActionKind",
+          "doc": "🏗️ Kind of a frame action: point force at a node, point moment at a node or uniform line load on a bar.",
+          "values": [
+            {
+              "token": "nodalForce",
+              "label": {
+                "en": "Force at node",
+                "de": "Kraft am Knoten"
+              }
+            },
+            {
+              "token": "nodalMoment",
+              "label": {
+                "en": "Moment at node",
+                "de": "Moment am Knoten"
+              }
+            },
+            {
+              "token": "barUniform",
+              "label": {
+                "en": "Uniform load on bar",
+                "de": "Gleichlast auf Stab"
+              }
+            }
+          ]
+        },
+        "sample": "nodalForce"
+      },
+      {
+        "name": "fx",
+        "type": "f64",
+        "label": {
+          "en": "Component x",
+          "de": "Komponente x"
+        },
+        "doc": "➡️ Force [N] along global x at a node, or line load [N/m] along the bar axis.",
+        "sample": 0.0,
+        "unit": "N"
+      },
+      {
+        "name": "fz",
+        "type": "f64",
+        "label": {
+          "en": "Component z",
+          "de": "Komponente z"
+        },
+        "doc": "⬇️ Force [N] along global z at a node, or line load [N/m] transverse to the bar (local z).",
+        "sample": -100000.0,
+        "unit": "N"
+      },
+      {
+        "name": "my",
+        "type": "f64",
+        "label": {
+          "en": "Moment about y",
+          "de": "Moment um y"
+        },
+        "doc": "🔄 Moment [Nm] about the frame plane normal at a node.",
+        "sample": 0.0,
+        "unit": "N*m"
+      },
+      {
+        "name": "start_ratio",
+        "type": "f64",
+        "label": {
+          "en": "Start along bar",
+          "de": "Beginn am Stab"
+        },
+        "doc": "📍 Where a line load starts, as a fraction of the bar length from its start node (a multiple of 0.25, the solution grid).",
+        "sample": 0.0,
+        "unit": ""
+      },
+      {
+        "name": "end_ratio",
+        "type": "f64",
+        "label": {
+          "en": "End along bar",
+          "de": "Ende am Stab"
+        },
+        "doc": "📍 Where a line load ends, as a fraction of the bar length from its start node (a multiple of 0.25, at least the start).",
+        "sample": 1.0,
+        "unit": ""
+      }
+    ]
+  }
+}

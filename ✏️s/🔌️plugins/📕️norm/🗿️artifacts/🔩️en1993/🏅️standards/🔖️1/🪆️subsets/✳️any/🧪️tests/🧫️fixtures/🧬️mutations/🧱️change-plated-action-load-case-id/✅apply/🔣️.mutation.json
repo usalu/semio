@@ -1,0 +1,7 @@
+{
+  "ChangePlatedActionLoadCaseId": {
+    "id": "pp-1",
+    "elementId": "pp-g",
+    "newLoadCaseId": "g-permanent-alt"
+  }
+}

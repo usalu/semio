@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-floor-mass/schema.json",
+  "title": "ChangeFloorMass",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "floorId",
+    "newValue"
+  ],
+  "properties": {
+    "floorId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Floor",
+          "de": "Geschossdecke"
+        },
+        "description": {
+          "en": "The floor this mutation addresses.",
+          "de": "Das Element, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "floor"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newValue": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Mass per area m",
+          "de": "Flächenmasse m"
+        },
+        "unit": "kg/m²",
+        "precision": 1,
+        "step": 5,
+        "group": "fields",
+        "order": 20
+      }
+    }
+  }
+}

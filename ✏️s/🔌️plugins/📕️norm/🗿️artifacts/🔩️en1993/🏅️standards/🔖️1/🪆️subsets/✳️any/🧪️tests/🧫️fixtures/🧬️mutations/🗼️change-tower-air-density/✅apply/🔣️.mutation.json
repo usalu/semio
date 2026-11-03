@@ -1,0 +1,6 @@
+{
+  "ChangeTowerAirDensity": {
+    "id": "tw-1",
+    "newAirDensity": 1.5
+  }
+}

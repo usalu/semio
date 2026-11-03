@@ -1,0 +1,6 @@
+{
+  "ChangeFoundationGroutThickness": {
+    "id": "foundation-1",
+    "newGroutThickness": 2.0
+  }
+}

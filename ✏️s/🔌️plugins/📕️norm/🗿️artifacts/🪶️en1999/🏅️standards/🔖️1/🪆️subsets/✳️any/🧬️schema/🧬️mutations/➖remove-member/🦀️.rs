@@ -6,15 +6,15 @@ use semio_s_artifact_norm_en1999_model::En1999Snapshot;
 
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct RemoveMember {
     pub id: String,
 }
 
-impl<Op> protocol::MutationKind<En1999Snapshot, Op> for RemoveMember where Op: protocol::Mutation<En1999Snapshot, Diff = semio_s_artifact_norm_en1999_diff::En1999Diff> + From<crate::add_member::AddMember> {
+impl<Op> protocol::MutationKind<En1999Snapshot, Op> for RemoveMember where Op: protocol::Mutation<En1999Snapshot, Diff = semio_s_artifact_norm_en1999_diff::En1999Diff> + From<crate::insert_member::InsertMember> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor {
         verb: "remove",
         entity: "member",
@@ -27,7 +27,7 @@ impl<Op> protocol::MutationKind<En1999Snapshot, Op> for RemoveMember where Op: p
     }
 }
 
-impl<Op> protocol::ColdMutationKind<En1999Snapshot, Op> for RemoveMember where Op: protocol::ColdMutation<En1999Snapshot, ReferenceDiff = semio_s_artifact_norm_en1999_diff::En1999Diff> + From<crate::add_member::AddMember> {
+impl<Op> protocol::ColdMutationKind<En1999Snapshot, Op> for RemoveMember where Op: protocol::ColdMutation<En1999Snapshot, ReferenceDiff = semio_s_artifact_norm_en1999_diff::En1999Diff> + From<crate::insert_member::InsertMember> {
     fn diff(&self, base: &En1999Snapshot) -> protocol::MutationOutcome<En1999Diff> {
         crate::remove_member::diff::diff(self, base)
     }

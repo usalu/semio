@@ -1,0 +1,15 @@
+{
+  "InsertChase": {
+    "index": 0,
+    "item": {
+      "id": "chase-1",
+      "wallId": "wall-north",
+      "kind": "Vertical",
+      "xM": 1.0,
+      "yM": 0.4,
+      "widthM": 0.08,
+      "lengthM": 1.2,
+      "depthM": 0.03
+    }
+  }
+}

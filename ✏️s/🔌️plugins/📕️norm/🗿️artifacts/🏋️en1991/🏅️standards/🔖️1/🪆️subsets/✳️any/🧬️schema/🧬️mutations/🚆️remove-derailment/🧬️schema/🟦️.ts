@@ -1,0 +1,10 @@
+/** 🚆 `remove-derailment` wire twin: the leaf payload `RemoveDerailment`, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
+ * by `repo ./📜️script.ts schema twins generate`; readers judge structure, the schema's bounds stay Ajv's.
+ * @see ./🔣️.json */
+import { normWireObject, normWireRequired, normWireString, type NormWireReader } from "@semio-tech/norm-js/registry/contract";
+
+export interface RemoveDerailment {
+  id: string;
+}
+
+export const parseRemoveDerailment: NormWireReader<RemoveDerailment> = normWireObject<RemoveDerailment>({ id: normWireRequired(normWireString) });

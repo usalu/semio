@@ -147,11 +147,28 @@ test.skipIf(!supported)("the installer reports coexisting frontends without dest
       const mirror=`http://127.0.0.1:${server.port}`;
       await install(script,root,mirror);
       symlinkSync(join(root,"bin/repo"),join(linked,"repo"));
-      const run=await install(script,root,mirror,{PATH:`${linked}:${stale}:/usr/bin:/bin`});
+      const run=await install(script,root,mirror,{PATH:`${linked}:${stale}:${stale}:/usr/bin:/bin`});
       expect(run.status).toBe(0);
-      expect(run.stderr).toContain(`Another repository frontend is on PATH: ${stale}/repo`);expect(run.stderr).toContain(`Ein weiteres Repository-Frontend liegt im PATH: ${stale}/repo`);
+      expect(run.stderr).toContain(`Another repository frontend is on PATH: ${stale}/repo`);
+      expect(run.stderr.split(`Another repository frontend is on PATH: ${stale}/repo`).length-1).toBe(1);expect(run.stderr).toContain(`Ein weiteres Repository-Frontend liegt im PATH: ${stale}/repo`);
       expect(run.stderr).not.toContain("ln -sf");expect(run.stderr).not.toContain("Keep one copy");expect(readFileSync(join(stale,"repo"))).toEqual(frontend);
       expect(run.stderr).not.toContain(`launcher: ${linked}/repo`);
+    }finally{server.stop(true);}
+  }finally{rmSync(root,{recursive:true,force:true});}
+},120000);
+
+test.skipIf(!supported)("the installer downloads and unpacks pinned Go with Python when curl, tar and SHA-256 tools are missing",async()=>{
+  const root=mkdtempSync(join(tmpdir(),"semio-install-"));
+  try{
+    const{bytes,sha256}=synthetic(root),script=scaffold(root,sha256),pathDir=join(root,"path");mkdirSync(pathDir);
+    const hidden=new Set(["curl","sha256sum","shasum","tar","go","gofmt"]);
+    for(const source of["/usr/bin","/bin"])for(const name of readdirSync(source)){if(hidden.has(name)||existsSync(join(pathDir,name)))continue;try{symlinkSync(join(source,name),join(pathDir,name));}catch{}}
+    const server=Bun.serve({port:0,hostname:"127.0.0.1",fetch:request=>{if(new URL(request.url).pathname!==`/${archive}`)return new Response("missing",{status:404});return new Response(bytes);}});
+    try{
+      const result=await install(script,root,`http://127.0.0.1:${server.port}`,{PATH:pathDir});
+      expect(result.status,result.stderr).toBe(0);
+      expect(result.stderr).toContain("Installed the repo launcher");expect(result.stderr).toContain("Repo-Launcher installiert");
+      expect(existsSync(join(root,"bin/repo"))).toBe(true);expect(leftovers(root)).toEqual([]);
     }finally{server.stop(true);}
   }finally{rmSync(root,{recursive:true,force:true});}
 },120000);

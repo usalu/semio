@@ -9,11 +9,11 @@ pub const ICON: &str = "file";
 pub const PRIMARY_TEXT: &str = include_str!("../../🖼️assets/⚠️seismic-rc-frame-fail/⚠️seismic-rc-frame-fail/🗣️.dsl.semio");
 
 pub fn label() -> LocalizedLabel {
-    LocalizedLabel::native("Seismic RC frame (DE zone 2, failing)", "Erdbeben-Stahlbetonrahmen (DE Zone 2, nicht konform)")
+    LocalizedLabel::native("Seismic RC frame (DE S_aP,R 1.5 m/s², failing)", "Erdbeben-Stahlbetonrahmen (DE S_aP,R 1,5 m/s², nicht konform)")
 }
 
 pub fn snapshot() -> En1998Snapshot {
-    En1998Snapshot::noncompliant_de_office()
+    En1998Snapshot::noncompliant_de_office().with_example_joints(true)
 }
 
 pub fn source() -> ExampleSource {

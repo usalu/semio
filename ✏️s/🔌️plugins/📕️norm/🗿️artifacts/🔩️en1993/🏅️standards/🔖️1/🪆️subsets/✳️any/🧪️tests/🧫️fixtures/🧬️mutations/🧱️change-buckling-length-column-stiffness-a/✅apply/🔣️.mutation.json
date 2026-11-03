@@ -1,0 +1,6 @@
+{
+  "ChangeBucklingLengthColumnStiffnessA": {
+    "id": "buckling-length-1",
+    "newColumnStiffnessA": 1.000036
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-beam-steel-web-thickness-m/schema.json",
+  "title": "ChangeBeamSteelWebThicknessM",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newTwM"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Composite beam",
+          "de": "Verbundträger"
+        },
+        "description": {
+          "en": "The composite beam this mutation addresses, by id.",
+          "de": "Das adressierte Element (Verbundträger), per Kennung."
+        },
+        "ref": {
+          "kind": "beam"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newTwM": {
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Steel web thickness t_w",
+          "de": "Stegdicke t_w des Stahlträgers"
+        },
+        "unit": "m",
+        "step": 0.01,
+        "precision": 3,
+        "group": "steel-section",
+        "order": 20
+      }
+    }
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeDiaphragmSpanM",
+  "id": "dia-1",
+  "newSpanM": 1.5
+}

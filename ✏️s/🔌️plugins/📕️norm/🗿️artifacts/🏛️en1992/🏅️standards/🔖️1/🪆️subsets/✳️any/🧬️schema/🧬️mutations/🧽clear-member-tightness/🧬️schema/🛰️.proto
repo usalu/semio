@@ -1,0 +1,5 @@
+syntax = "proto3";
+package semio.s.norm.en1992.mutation.clear_member_tightness;
+message ClearMemberTightness {
+  string member_id = 1;
+}

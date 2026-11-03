@@ -1,0 +1,6 @@
+{
+  "ChangeBridgeDeckThickness": {
+    "id": "br-1",
+    "newDeckThickness": 1.5
+  }
+}

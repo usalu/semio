@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-accelerogram-building-id/schema.json",
+  "title": "ChangeAccelerogramBuildingId",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newBuildingId"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeAccelerogramBuildingId"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Accelerogram",
+          "de": "Akzelerogramm"
+        },
+        "description": {
+          "en": "The accelerogram this mutation addresses, by id.",
+          "de": "Das adressierte Element (Akzelerogramm), per Kennung."
+        },
+        "ref": {
+          "kind": "accelerogram"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newBuildingId": {
+      "type": "string",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Building whose fundamental period sets the period range",
+          "de": "Gebäude, dessen Grundschwingzeit den Periodenbereich bestimmt"
+        },
+        "group": "value",
+        "order": 20,
+        "widget": "text"
+      }
+    }
+  }
+}

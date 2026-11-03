@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-prestress-loss/schema.json",
+  "title": "ChangePrestressLoss",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "wallId",
+    "id",
+    "newLossRatio"
+  ],
+  "properties": {
+    "wallId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Wall",
+          "de": "Wand"
+        },
+        "description": {
+          "en": "The wall this mutation addresses, by id.",
+          "de": "Das adressierte Element (Wand), per Kennung."
+        },
+        "ref": {
+          "kind": "wall"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Tendon",
+          "de": "Spannglied"
+        },
+        "description": {
+          "en": "The tendon this mutation addresses, by id.",
+          "de": "Das adressierte Element (Spannglied), per Kennung."
+        },
+        "ref": {
+          "kind": "prestress"
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "newLossRatio": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Prestress loss ratio",
+          "de": "Spannkraftverlust"
+        },
+        "unit": "1",
+        "step": 0.01,
+        "precision": 2,
+        "group": "prestress",
+        "order": 30
+      }
+    }
+  }
+}

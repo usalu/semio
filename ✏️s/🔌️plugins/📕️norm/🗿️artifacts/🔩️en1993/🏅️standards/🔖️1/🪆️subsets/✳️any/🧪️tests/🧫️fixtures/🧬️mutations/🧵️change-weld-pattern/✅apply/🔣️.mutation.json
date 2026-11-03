@@ -1,0 +1,6 @@
+{
+  "ChangeWeldPattern": {
+    "id": "weld-group-1",
+    "newPattern": "TwoLines"
+  }
+}

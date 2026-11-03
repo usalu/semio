@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/insert-tie-beam/schema.json",
+  "title": "InsertTieBeam",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "tieBeam"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "insertTieBeam"
+    },
+    "index": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Zero-based list position at which the record is inserted. Empty appends; positions past the end append.",
+          "de": "Nullbasierte Listenposition, an der der Datensatz eingefügt wird. Ohne Angabe am Ende; Positionen hinter dem Ende hängen an."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
+    },
+    "tieBeam": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/snapshot.json#/$defs/En1998TieBeam",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "TieBeam",
+          "de": "Knoten"
+        },
+        "description": {
+          "en": "The complete tieBeam record to insert.",
+          "de": "Der vollständige einzufügende Datensatz (Knoten)."
+        },
+        "group": "record",
+        "order": 20
+      },
+      "x-semio-rust": {
+        "type": "semio_s_artifact_norm_en1998_model::En1998TieBeam"
+      }
+    }
+  }
+}

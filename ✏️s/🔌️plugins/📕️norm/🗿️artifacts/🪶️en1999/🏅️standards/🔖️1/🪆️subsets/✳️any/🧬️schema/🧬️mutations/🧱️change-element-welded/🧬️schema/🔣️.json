@@ -1,0 +1,71 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-element-welded/schema.json",
+  "title": "ChangeElementWelded",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "sectionId",
+    "elementId",
+    "newWelded"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeElementWelded"
+    },
+    "sectionId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Section",
+          "de": "Querschnitt"
+        },
+        "description": {
+          "en": "The section this mutation addresses, by id.",
+          "de": "Das adressierte Element (Querschnitt), per Kennung."
+        },
+        "ref": {
+          "kind": "section"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "elementId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Element",
+          "de": "Querschnittsteil"
+        },
+        "description": {
+          "en": "The element this mutation addresses, by id.",
+          "de": "Das adressierte Element (Querschnittsteil), per Kennung."
+        },
+        "ref": {
+          "kind": "element"
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "newWelded": {
+      "type": "boolean",
+      "x-semio-ui": {
+        "label": {
+          "en": "Welded",
+          "de": "Geschweißt"
+        },
+        "widget": "toggle",
+        "role": "value",
+        "group": "value",
+        "order": 30
+      }
+    }
+  }
+}

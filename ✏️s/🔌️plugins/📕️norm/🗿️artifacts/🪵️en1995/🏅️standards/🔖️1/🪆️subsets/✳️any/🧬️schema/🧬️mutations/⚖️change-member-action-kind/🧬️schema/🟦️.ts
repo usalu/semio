@@ -1,12 +1,13 @@
 /** ⚖️ `change-member-action-kind` wire twin: the leaf payload `ChangeMemberActionKind`, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
- * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
+ * by `repo ./📜️script.ts schema twins generate`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
-import { normWireObject, type NormWireReader, normWireRequired, normWireString } from "@semio-tech/norm-js/registry/contract";
+import { normWireObject, normWireRequired, normWireString, type NormWireReader } from "@semio-tech/norm-js/registry/contract";
+import { type ActionKind, parseActionKind } from "../../../📸️snapshot/🟦️.ts";
 
 export interface ChangeMemberActionKind {
   memberId: string;
   actionId: string;
-  newValue: string;
+  newValue: ActionKind;
 }
 
-export const parseChangeMemberActionKind: NormWireReader<ChangeMemberActionKind> = normWireObject<ChangeMemberActionKind>({ memberId: normWireRequired(normWireString), actionId: normWireRequired(normWireString), newValue: normWireRequired(normWireString) });
+export const parseChangeMemberActionKind: NormWireReader<ChangeMemberActionKind> = normWireObject<ChangeMemberActionKind>({ memberId: normWireRequired(normWireString), actionId: normWireRequired(normWireString), newValue: normWireRequired(parseActionKind) });

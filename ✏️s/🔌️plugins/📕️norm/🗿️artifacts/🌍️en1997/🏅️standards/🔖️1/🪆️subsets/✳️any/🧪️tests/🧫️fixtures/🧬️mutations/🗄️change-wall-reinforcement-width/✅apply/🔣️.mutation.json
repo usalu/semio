@@ -1,0 +1,5 @@
+{
+  "mutation": "changeWallReinforcementWidth",
+  "id": "wall-W1",
+  "newReinforcementWidth": 1.5
+}

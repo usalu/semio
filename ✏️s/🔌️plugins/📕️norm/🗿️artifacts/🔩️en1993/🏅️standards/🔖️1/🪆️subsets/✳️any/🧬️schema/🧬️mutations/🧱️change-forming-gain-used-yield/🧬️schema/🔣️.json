@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-forming-gain-used-yield/schema.json",
+  "title": "ChangeFormingGainUsedYield",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newUsedYield"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Forming gain",
+          "de": "Kaltverfestigung"
+        },
+        "description": {
+          "en": "The forming gain this mutation addresses, by id.",
+          "de": "Das adressierte Element (Kaltverfestigung), per Kennung."
+        },
+        "ref": {
+          "kind": "forming-gain"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newUsedYield": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Yield strength used f_y,used",
+          "de": "Angesetzte Streckgrenze f_y,used"
+        },
+        "widget": "stepper",
+        "role": "value",
+        "group": "value",
+        "order": 20,
+        "unit": "Pa",
+        "displayUnit": "kN/m²",
+        "displayFactor": 0.001,
+        "precision": 1,
+        "step": 1000000.0
+      }
+    }
+  }
+}

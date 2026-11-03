@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-stage-duration-days/schema.json",
+  "title": "ChangeStageDurationDays",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newDurationDays"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Construction stage",
+          "de": "Bauphase"
+        },
+        "description": {
+          "en": "The construction stage this mutation addresses, by id.",
+          "de": "Das adressierte Element (Bauphase), per Kennung."
+        },
+        "ref": {
+          "kind": "construction-stage"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newDurationDays": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Stage duration",
+          "de": "Dauer des Bauzustands"
+        },
+        "widget": "stepper",
+        "unit": "d",
+        "precision": 1,
+        "step": 1,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

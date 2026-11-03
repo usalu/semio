@@ -1,0 +1,2809 @@
+{
+  "annex": "De",
+  "reliabilityClass": "RC2",
+  "members": [
+    {
+      "id": "beam-B1",
+      "labelEn": "Main glulam floor beam B1",
+      "labelDe": "Hauptträger BSH Decke B1",
+      "role": "floor",
+      "strengthClass": "gl28h",
+      "serviceClass": 1,
+      "support": "simplySupported",
+      "bM": 0.2,
+      "hM": 0.4,
+      "spanM": 5.0,
+      "supportLengthM": 0.15,
+      "bearingLengthM": 0.15,
+      "bucklingLengthYM": 5.0,
+      "bucklingLengthZM": 1.5,
+      "lateralRestraintSpacingM": 1.5,
+      "notchDepthM": 0.0,
+      "notchDistanceM": 0.0,
+      "massKgPerM": 120.0,
+      "massKgPerM2": 450.0,
+      "dampingXi": 0.04,
+      "fireDurationS": 0.0,
+      "bridgeNObs": 0.0,
+      "bridgeTLYears": 0.0,
+      "bridgeBeta": 0.0,
+      "bridgeA": 0.0,
+      "bridgeB": 0.0,
+      "bridgeCrowdPerM2": 0.0,
+      "actions": [
+        {
+          "id": "g",
+          "kind": "permanent",
+          "category": "notImposed",
+          "loadDuration": "permanent",
+          "qLineNPerM": 2500.0,
+          "fPointN": 0.0,
+          "mKNm": 0.0,
+          "vKN": 0.0,
+          "nKN": 0.0,
+          "nTKN": 0.0,
+          "fC90KN": 0.0
+        },
+        {
+          "id": "q",
+          "kind": "imposed",
+          "category": "a",
+          "loadDuration": "medium",
+          "qLineNPerM": 3000.0,
+          "fPointN": 0.0,
+          "mKNm": 0.0,
+          "vKN": 0.0,
+          "nKN": 0.0,
+          "nTKN": 0.0,
+          "fC90KN": 0.0
+        }
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "conn-C1",
+      "labelEn": "Bolt group at support",
+      "labelDe": "Schraubverbund am Auflager",
+      "fastenerType": "bolt",
+      "strengthClass": "gl28h",
+      "serviceClass": 1,
+      "diameterM": 0.012,
+      "number": 8,
+      "rows": 2,
+      "spacingM": 0.09,
+      "edgeDistanceM": 0.048,
+      "endDistanceM": 0.096,
+      "t1M": 0.2,
+      "t2M": 0.2,
+      "steelPlate": false,
+      "steelPlateThicknessM": 0.0,
+      "shearPlanes": 1,
+      "fUK": 400000000.0,
+      "actions": [
+        {
+          "id": "g",
+          "kind": "permanent",
+          "loadDuration": "permanent",
+          "fKN": 8000.0
+        },
+        {
+          "id": "q",
+          "kind": "imposed",
+          "loadDuration": "medium",
+          "fKN": 10000.0
+        }
+      ]
+    }
+  ],
+  "placements": [],
+  "tapers": [],
+  "cutouts": [
+    {
+      "id": "cutout-1",
+      "memberId": "beam-B1",
+      "kind": "notch",
+      "face": "bottom",
+      "distanceM": 0.0,
+      "lengthM": 0.15,
+      "depthM": 0.06,
+      "centreHeightM": 0.0,
+      "slope": 0.0,
+      "rods": 0,
+      "rodResistanceN": 0.0
+    }
+  ],
+  "fasteners": [],
+  "panels": [],
+  "floors": [],
+  "diaphragms": [],
+  "trusses": [],
+  "bracings": [],
+  "decks": [],
+  "ulsEquation": "eq610",
+  "cases": [
+    {
+      "id": "case-t-01",
+      "labelEn": "Strength class properties",
+      "labelDe": "Festigkeitsklassen-Kennwerte",
+      "entryId": "T-01",
+      "numbers": [],
+      "texts": [
+        {
+          "id": "class",
+          "value": "GL24h"
+        }
+      ]
+    },
+    {
+      "id": "case-t-02",
+      "labelEn": "Modification factor k_mod",
+      "labelDe": "Modifikationsbeiwert k_mod",
+      "entryId": "T-02",
+      "numbers": [
+        {
+          "id": "kmod_2",
+          "value": 0.8
+        },
+        {
+          "id": "sc",
+          "value": 1.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "class",
+          "value": "GL24h"
+        },
+        {
+          "id": "duration",
+          "value": "medium"
+        }
+      ]
+    },
+    {
+      "id": "case-t-03",
+      "labelEn": "Partial factor γ_M",
+      "labelDe": "Teilsicherheitsbeiwert γ_M",
+      "entryId": "T-03",
+      "numbers": [],
+      "texts": [
+        {
+          "id": "material",
+          "value": "glulam"
+        },
+        {
+          "id": "situation",
+          "value": "persistent"
+        }
+      ]
+    },
+    {
+      "id": "case-t-04",
+      "labelEn": "Deformation factor k_def",
+      "labelDe": "Verformungsbeiwert k_def",
+      "entryId": "T-04",
+      "numbers": [
+        {
+          "id": "psi_2",
+          "value": 0.3
+        },
+        {
+          "id": "sc",
+          "value": 1.0
+        },
+        {
+          "id": "u_inst_g",
+          "value": 6.0
+        },
+        {
+          "id": "u_inst_q",
+          "value": 4.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "material",
+          "value": "glulam"
+        }
+      ]
+    },
+    {
+      "id": "case-t-05",
+      "labelEn": "Size factor k_h",
+      "labelDe": "Größenbeiwert k_h",
+      "entryId": "T-05",
+      "numbers": [
+        {
+          "id": "h",
+          "value": 400.0
+        },
+        {
+          "id": "volume",
+          "value": 400000000.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "class",
+          "value": "GL24h"
+        }
+      ]
+    },
+    {
+      "id": "case-t-06",
+      "labelEn": "Design strengths",
+      "labelDe": "Bemessungsfestigkeiten",
+      "entryId": "T-06",
+      "numbers": [
+        {
+          "id": "h",
+          "value": 400.0
+        },
+        {
+          "id": "sc",
+          "value": 1.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "class",
+          "value": "GL24h"
+        },
+        {
+          "id": "duration",
+          "value": "medium"
+        }
+      ]
+    },
+    {
+      "id": "case-t-10",
+      "labelEn": "Tension parallel to grain",
+      "labelDe": "Zug parallel zur Faser",
+      "entryId": "T-10",
+      "numbers": [
+        {
+          "id": "b",
+          "value": 200.0
+        },
+        {
+          "id": "h",
+          "value": 400.0
+        },
+        {
+          "id": "n_t",
+          "value": 150000.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "class",
+          "value": "GL24h"
+        }
+      ]
+    },
+    {
+      "id": "case-t-11",
+      "labelEn": "Tension perpendicular to grain",
+      "labelDe": "Zug quer zur Faser",
+      "entryId": "T-11",
+      "numbers": [
+        {
+          "id": "sigma_t_90",
+          "value": 0.3
+        }
+      ],
+      "texts": [
+        {
+          "id": "class",
+          "value": "GL24h"
+        }
+      ]
+    },
+    {
+      "id": "case-t-12",
+      "labelEn": "Compression parallel to grain",
+      "labelDe": "Druck parallel zur Faser",
+      "entryId": "T-12",
+      "numbers": [
+        {
+          "id": "b",
+          "value": 200.0
+        },
+        {
+          "id": "h",
+          "value": 400.0
+        },
+        {
+          "id": "n_c",
+          "value": 400000.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "class",
+          "value": "GL24h"
+        }
+      ]
+    },
+    {
+      "id": "case-t-13",
+      "labelEn": "Compression perpendicular to grain",
+      "labelDe": "Druck quer zur Faser",
+      "entryId": "T-13",
+      "numbers": [
+        {
+          "id": "b",
+          "value": 100.0
+        },
+        {
+          "id": "f_c90",
+          "value": 20000.0
+        },
+        {
+          "id": "h",
+          "value": 400.0
+        },
+        {
+          "id": "l",
+          "value": 100.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "class",
+          "value": "C24"
+        },
+        {
+          "id": "support",
+          "value": "discrete"
+        }
+      ]
+    },
+    {
+      "id": "case-t-14",
+      "labelEn": "Bending",
+      "labelDe": "Biegung",
+      "entryId": "T-14",
+      "numbers": [
+        {
+          "id": "b",
+          "value": 120.0
+        },
+        {
+          "id": "h",
+          "value": 240.0
+        },
+        {
+          "id": "m_y",
+          "value": 9000000.0
+        },
+        {
+          "id": "m_z",
+          "value": 1000000.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "class",
+          "value": "C24"
+        }
+      ]
+    },
+    {
+      "id": "case-t-15",
+      "labelEn": "Shear",
+      "labelDe": "Schub",
+      "entryId": "T-15",
+      "numbers": [
+        {
+          "id": "a_support",
+          "value": 1000.0
+        },
+        {
+          "id": "b",
+          "value": 200.0
+        },
+        {
+          "id": "h",
+          "value": 400.0
+        },
+        {
+          "id": "v",
+          "value": 40000.0
+        },
+        {
+          "id": "v_point",
+          "value": 40000.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "class",
+          "value": "GL24h"
+        }
+      ]
+    },
+    {
+      "id": "case-t-16",
+      "labelEn": "Torsion",
+      "labelDe": "Torsion",
+      "entryId": "T-16",
+      "numbers": [
+        {
+          "id": "b",
+          "value": 200.0
+        },
+        {
+          "id": "h",
+          "value": 400.0
+        },
+        {
+          "id": "m_t",
+          "value": 3000000.0
+        },
+        {
+          "id": "tau_v",
+          "value": 1.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "class",
+          "value": "GL24h"
+        }
+      ]
+    },
+    {
+      "id": "case-t-17",
+      "labelEn": "Axial force and bending combined",
+      "labelDe": "Normalkraft und Biegung kombiniert",
+      "entryId": "T-17",
+      "numbers": [
+        {
+          "id": "b",
+          "value": 200.0
+        },
+        {
+          "id": "h",
+          "value": 400.0
+        },
+        {
+          "id": "m_y",
+          "value": 40000000.0
+        },
+        {
+          "id": "m_z",
+          "value": 4000000.0
+        },
+        {
+          "id": "n_c",
+          "value": 100000.0
+        },
+        {
+          "id": "n_t",
+          "value": 80000.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "class",
+          "value": "GL24h"
+        }
+      ]
+    },
+    {
+      "id": "case-t-18",
+      "labelEn": "Net sections, notches and holes",
+      "labelDe": "Nettoquerschnitte, Ausklinkungen und Löcher",
+      "entryId": "T-18",
+      "numbers": [
+        {
+          "id": "b",
+          "value": 200.0
+        },
+        {
+          "id": "h",
+          "value": 400.0
+        },
+        {
+          "id": "hole_count",
+          "value": 2.0
+        },
+        {
+          "id": "hole_d",
+          "value": 18.0
+        },
+        {
+          "id": "n_t",
+          "value": 150000.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "class",
+          "value": "GL24h"
+        }
+      ]
+    },
+    {
+      "id": "case-t-50",
+      "labelEn": "System strength",
+      "labelDe": "Systemfestigkeit",
+      "entryId": "T-50",
+      "numbers": [
+        {
+          "id": "b",
+          "value": 200.0
+        },
+        {
+          "id": "h",
+          "value": 400.0
+        },
+        {
+          "id": "m_y",
+          "value": 50000000.0
+        },
+        {
+          "id": "n_members",
+          "value": 5.0
+        },
+        {
+          "id": "spacing_m",
+          "value": 0.6
+        }
+      ],
+      "texts": [
+        {
+          "id": "class",
+          "value": "GL24h"
+        }
+      ]
+    },
+    {
+      "id": "case-t-66",
+      "labelEn": "Walking excitation of footbridges",
+      "labelDe": "Fußgängeranregung von Fußgängerbrücken",
+      "entryId": "T-66",
+      "numbers": [
+        {
+          "id": "ei_nm2",
+          "value": 850000000.0
+        },
+        {
+          "id": "mass_kg_m",
+          "value": 800.0
+        },
+        {
+          "id": "n_peds",
+          "value": 20.0
+        },
+        {
+          "id": "span_m",
+          "value": 30.0
+        },
+        {
+          "id": "zeta",
+          "value": 0.015
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-t-120",
+      "labelEn": "Pedestrian dynamics",
+      "labelDe": "Fußgängerdynamik",
+      "entryId": "T-120",
+      "numbers": [
+        {
+          "id": "a_limit",
+          "value": 0.7
+        },
+        {
+          "id": "ei_nm2",
+          "value": 85000000.0
+        },
+        {
+          "id": "mass_kg_m",
+          "value": 220.0
+        },
+        {
+          "id": "span_m",
+          "value": 12.0
+        },
+        {
+          "id": "zeta",
+          "value": 0.015
+        }
+      ],
+      "texts": [
+        {
+          "id": "comfort",
+          "value": "normal"
+        },
+        {
+          "id": "crowd_model",
+          "value": "en1995-2"
+        }
+      ]
+    },
+    {
+      "id": "case-t-121",
+      "labelEn": "Fatigue",
+      "labelDe": "Ermüdung",
+      "entryId": "T-121",
+      "numbers": [
+        {
+          "id": "ds1",
+          "value": 1.2
+        },
+        {
+          "id": "ds2",
+          "value": 0.6
+        },
+        {
+          "id": "ds_cut",
+          "value": 0.0
+        },
+        {
+          "id": "n1",
+          "value": 2000000.0
+        },
+        {
+          "id": "n2",
+          "value": 50000000.0
+        },
+        {
+          "id": "sn_a",
+          "value": 15.0
+        },
+        {
+          "id": "sn_b",
+          "value": 4.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-t-122",
+      "labelEn": "Stress-laminated decks",
+      "labelDe": "Vorgespannte Brettstapeldecks",
+      "entryId": "T-122",
+      "numbers": [
+        {
+          "id": "bar_area",
+          "value": 804.0
+        },
+        {
+          "id": "bar_spacing",
+          "value": 800.0
+        },
+        {
+          "id": "deck_depth",
+          "value": 250.0
+        },
+        {
+          "id": "f_bar_d",
+          "value": 700.0
+        },
+        {
+          "id": "loss",
+          "value": 0.55
+        },
+        {
+          "id": "loss_creep",
+          "value": 0.25
+        },
+        {
+          "id": "loss_mc",
+          "value": 0.1
+        },
+        {
+          "id": "loss_relax",
+          "value": 0.15
+        },
+        {
+          "id": "mu",
+          "value": 0.3
+        },
+        {
+          "id": "plate_a",
+          "value": 22500.0
+        },
+        {
+          "id": "sigma_p_0",
+          "value": 1.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-t-123",
+      "labelEn": "Connections in bridges",
+      "labelDe": "Verbindungen in Brücken",
+      "entryId": "T-123",
+      "numbers": [
+        {
+          "id": "f_ed",
+          "value": 18000.0
+        },
+        {
+          "id": "f_v_rk",
+          "value": 8000.0
+        },
+        {
+          "id": "kmod",
+          "value": 0.8
+        },
+        {
+          "id": "n",
+          "value": 4.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-t-124",
+      "labelEn": "Combined bridge assessment",
+      "labelDe": "Gesamtnachweis Brücke",
+      "entryId": "T-124",
+      "numbers": [
+        {
+          "id": "ds1",
+          "value": 10.0
+        },
+        {
+          "id": "ei_nm2",
+          "value": 850000000.0
+        },
+        {
+          "id": "mass_kg_m",
+          "value": 800.0
+        },
+        {
+          "id": "n1",
+          "value": 1000000.0
+        },
+        {
+          "id": "span_m",
+          "value": 30.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-t-30",
+      "labelEn": "Single tapered beam",
+      "labelDe": "Einfach geneigter Träger",
+      "entryId": "T-30",
+      "numbers": [
+        {
+          "id": "alpha_deg",
+          "value": 6.0
+        },
+        {
+          "id": "b",
+          "value": 140.0
+        },
+        {
+          "id": "h",
+          "value": 500.0
+        },
+        {
+          "id": "m_d",
+          "value": 60000000.0
+        },
+        {
+          "id": "l",
+          "value": 6000
+        }
+      ],
+      "texts": [
+        {
+          "id": "class",
+          "value": "GL28h"
+        },
+        {
+          "id": "side",
+          "value": "compression"
+        },
+        {
+          "id": "load_case",
+          "value": "udl_ss"
+        }
+      ]
+    },
+    {
+      "id": "case-t-31",
+      "labelEn": "Double tapered, curved and pitched cambered beam",
+      "labelDe": "Satteldach-, gekrümmter und gekrümmter Satteldachträger",
+      "entryId": "T-31",
+      "numbers": [
+        {
+          "id": "alpha_ap_deg",
+          "value": 10.0
+        },
+        {
+          "id": "b",
+          "value": 160.0
+        },
+        {
+          "id": "h_ap",
+          "value": 900.0
+        },
+        {
+          "id": "m_ap",
+          "value": 120000000.0
+        },
+        {
+          "id": "r_in",
+          "value": 12000.0
+        },
+        {
+          "id": "t_lam",
+          "value": 33.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "class",
+          "value": "GL28h"
+        }
+      ]
+    },
+    {
+      "id": "case-t-32",
+      "labelEn": "Tension perpendicular at apex",
+      "labelDe": "Querzug im Firstbereich",
+      "entryId": "T-32",
+      "numbers": [
+        {
+          "id": "alpha_ap_deg",
+          "value": 10.0
+        },
+        {
+          "id": "b",
+          "value": 200.0
+        },
+        {
+          "id": "h_ap",
+          "value": 900.0
+        },
+        {
+          "id": "m_ap",
+          "value": 120000000.0
+        },
+        {
+          "id": "p_d",
+          "value": 15.0
+        },
+        {
+          "id": "r_in",
+          "value": 12000.0
+        },
+        {
+          "id": "tau_d",
+          "value": 0.8
+        },
+        {
+          "id": "v_beam",
+          "value": 500000000.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "class",
+          "value": "GL24h"
+        },
+        {
+          "id": "shape",
+          "value": "rect"
+        }
+      ]
+    },
+    {
+      "id": "case-t-33",
+      "labelEn": "Reinforced apex zone",
+      "labelDe": "Verstärkter Firstbereich",
+      "entryId": "T-33",
+      "numbers": [
+        {
+          "id": "b",
+          "value": 200.0
+        },
+        {
+          "id": "h_ap",
+          "value": 900.0
+        },
+        {
+          "id": "m_ap",
+          "value": 120000000.0
+        },
+        {
+          "id": "n_rods",
+          "value": 2.0
+        },
+        {
+          "id": "r_ax_k",
+          "value": 40000.0
+        },
+        {
+          "id": "r_in",
+          "value": 12000.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "class",
+          "value": "GL24h"
+        }
+      ]
+    },
+    {
+      "id": "case-t-45",
+      "labelEn": "Notch at support",
+      "labelDe": "Ausklinkung am Auflager",
+      "entryId": "T-45",
+      "numbers": [
+        {
+          "id": "b",
+          "value": 120.0
+        },
+        {
+          "id": "h",
+          "value": 240.0
+        },
+        {
+          "id": "h_ef",
+          "value": 180.0
+        },
+        {
+          "id": "v_d",
+          "value": 20000.0
+        },
+        {
+          "id": "x",
+          "value": 30.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "class",
+          "value": "C24"
+        },
+        {
+          "id": "side",
+          "value": "support"
+        }
+      ]
+    },
+    {
+      "id": "case-t-46",
+      "labelEn": "Reinforced notch",
+      "labelDe": "Verstärkte Ausklinkung",
+      "entryId": "T-46",
+      "numbers": [
+        {
+          "id": "h",
+          "value": 400.0
+        },
+        {
+          "id": "h_ef",
+          "value": 300.0
+        },
+        {
+          "id": "n_rods",
+          "value": 2.0
+        },
+        {
+          "id": "r_ax_k",
+          "value": 40000.0
+        },
+        {
+          "id": "v_d",
+          "value": 40000.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "class",
+          "value": "GL24h"
+        }
+      ]
+    },
+    {
+      "id": "case-t-70",
+      "labelEn": "Embedment strength and yield moment",
+      "labelDe": "Lochleibungsfestigkeit und Fließmoment",
+      "entryId": "T-70",
+      "numbers": [
+        {
+          "id": "d",
+          "value": 12.0
+        },
+        {
+          "id": "f_u",
+          "value": 400.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "class",
+          "value": "C24"
+        },
+        {
+          "id": "kind",
+          "value": "nail"
+        },
+        {
+          "id": "panel",
+          "value": "timber"
+        },
+        {
+          "id": "wood",
+          "value": "softwood"
+        }
+      ]
+    },
+    {
+      "id": "case-t-71",
+      "labelEn": "Timber-to-timber single shear (EYM)",
+      "labelDe": "Holz-Holz einschnittig (Johansen)",
+      "entryId": "T-71",
+      "numbers": [
+        {
+          "id": "d",
+          "value": 12.0
+        },
+        {
+          "id": "f_u",
+          "value": 400.0
+        },
+        {
+          "id": "sc",
+          "value": 1.0
+        },
+        {
+          "id": "t1",
+          "value": 60.0
+        },
+        {
+          "id": "t2",
+          "value": 60.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "class",
+          "value": "C24"
+        },
+        {
+          "id": "class_2",
+          "value": "GL24h"
+        },
+        {
+          "id": "duration",
+          "value": "medium"
+        },
+        {
+          "id": "kind",
+          "value": "nail"
+        }
+      ]
+    },
+    {
+      "id": "case-t-72",
+      "labelEn": "Timber-to-timber double shear (EYM)",
+      "labelDe": "Holz-Holz zweischnittig (Johansen)",
+      "entryId": "T-72",
+      "numbers": [
+        {
+          "id": "d",
+          "value": 12.0
+        },
+        {
+          "id": "f_ax_rk",
+          "value": 5000.0
+        },
+        {
+          "id": "f_ed",
+          "value": 4000.0
+        },
+        {
+          "id": "f_u",
+          "value": 400.0
+        },
+        {
+          "id": "sc",
+          "value": 1.0
+        },
+        {
+          "id": "t1",
+          "value": 60.0
+        },
+        {
+          "id": "t2",
+          "value": 60.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "class",
+          "value": "GL24h"
+        },
+        {
+          "id": "class_2",
+          "value": "GL24h"
+        },
+        {
+          "id": "duration",
+          "value": "medium"
+        },
+        {
+          "id": "kind",
+          "value": "nail"
+        }
+      ]
+    },
+    {
+      "id": "case-t-73",
+      "labelEn": "Steel-to-timber (EYM)",
+      "labelDe": "Stahl-Holz (Johansen)",
+      "entryId": "T-73",
+      "numbers": [
+        {
+          "id": "d",
+          "value": 12.0
+        },
+        {
+          "id": "f_ax_rk",
+          "value": 5000.0
+        },
+        {
+          "id": "f_ed",
+          "value": 6000.0
+        },
+        {
+          "id": "f_u",
+          "value": 400.0
+        },
+        {
+          "id": "sc",
+          "value": 1.0
+        },
+        {
+          "id": "t1",
+          "value": 60.0
+        },
+        {
+          "id": "t2",
+          "value": 60.0
+        },
+        {
+          "id": "t_steel",
+          "value": 5.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "class",
+          "value": "GL24h"
+        },
+        {
+          "id": "config",
+          "value": "single"
+        },
+        {
+          "id": "duration",
+          "value": "medium"
+        },
+        {
+          "id": "kind",
+          "value": "nail"
+        }
+      ]
+    },
+    {
+      "id": "case-t-74",
+      "labelEn": "Spacing, edge and end distances",
+      "labelDe": "Abstände, Rand- und Hirnholzabstände",
+      "entryId": "T-74",
+      "numbers": [
+        {
+          "id": "a1",
+          "value": 70.0
+        },
+        {
+          "id": "a2",
+          "value": 50.0
+        },
+        {
+          "id": "a3t",
+          "value": 90.0
+        },
+        {
+          "id": "a4c",
+          "value": 36.0
+        },
+        {
+          "id": "a4t",
+          "value": 40.0
+        },
+        {
+          "id": "alpha_deg",
+          "value": 30.0
+        },
+        {
+          "id": "d",
+          "value": 12.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "kind",
+          "value": "bolt"
+        }
+      ]
+    },
+    {
+      "id": "case-t-75",
+      "labelEn": "Effective number of fasteners",
+      "labelDe": "Wirksame Anzahl der Verbindungsmittel",
+      "entryId": "T-75",
+      "numbers": [
+        {
+          "id": "a1",
+          "value": 70.0
+        },
+        {
+          "id": "alpha_deg",
+          "value": 0.0
+        },
+        {
+          "id": "d",
+          "value": 12.0
+        },
+        {
+          "id": "f_v_rk",
+          "value": 8000.0
+        },
+        {
+          "id": "n",
+          "value": 4.0
+        },
+        {
+          "id": "predrilled",
+          "value": 1.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "kind",
+          "value": "nail"
+        }
+      ]
+    },
+    {
+      "id": "case-t-76",
+      "labelEn": "Axial resistance of nails, screws, bolts",
+      "labelDe": "Axiale Tragfähigkeit von Nägeln, Schrauben, Bolzen",
+      "entryId": "T-76",
+      "numbers": [
+        {
+          "id": "alpha_deg",
+          "value": 90.0
+        },
+        {
+          "id": "d",
+          "value": 12.0
+        },
+        {
+          "id": "f_ax_ed",
+          "value": 3000.0
+        },
+        {
+          "id": "kmod",
+          "value": 0.8
+        },
+        {
+          "id": "l_ef",
+          "value": 60.0
+        },
+        {
+          "id": "n_ef",
+          "value": 4.0
+        },
+        {
+          "id": "rho_k",
+          "value": 380.0
+        },
+        {
+          "id": "t_pen",
+          "value": 60.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "kind",
+          "value": "nail"
+        }
+      ]
+    },
+    {
+      "id": "case-t-77",
+      "labelEn": "Combined lateral and axial loading",
+      "labelDe": "Kombinierte Quer- und Axialbeanspruchung",
+      "entryId": "T-77",
+      "numbers": [
+        {
+          "id": "f_ax_ed",
+          "value": 3000.0
+        },
+        {
+          "id": "f_ax_rd",
+          "value": 5000.0
+        },
+        {
+          "id": "f_v_ed",
+          "value": 3000.0
+        },
+        {
+          "id": "f_v_rd",
+          "value": 6000.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "kind",
+          "value": "nail"
+        }
+      ]
+    },
+    {
+      "id": "case-t-78",
+      "labelEn": "Splitting and block shear",
+      "labelDe": "Aufspalten und Blockscheren",
+      "entryId": "T-78",
+      "numbers": [
+        {
+          "id": "a_net_t",
+          "value": 4000.0
+        },
+        {
+          "id": "a_net_v",
+          "value": 20000.0
+        },
+        {
+          "id": "b",
+          "value": 200.0
+        },
+        {
+          "id": "f_90_ed",
+          "value": 8000.0
+        },
+        {
+          "id": "f_ed",
+          "value": 15000.0
+        },
+        {
+          "id": "h",
+          "value": 400.0
+        },
+        {
+          "id": "he",
+          "value": 200.0
+        },
+        {
+          "id": "w",
+          "value": 1.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "class",
+          "value": "GL24h"
+        }
+      ]
+    },
+    {
+      "id": "case-t-79",
+      "labelEn": "Steel details inside timber connections",
+      "labelDe": "Stahlteile in Holzverbindungen",
+      "entryId": "T-79",
+      "numbers": [
+        {
+          "id": "a_net",
+          "value": 400.0
+        },
+        {
+          "id": "d",
+          "value": 12.0
+        },
+        {
+          "id": "d0",
+          "value": 14.0
+        },
+        {
+          "id": "e1",
+          "value": 50.0
+        },
+        {
+          "id": "e2",
+          "value": 30.0
+        },
+        {
+          "id": "f_ed",
+          "value": 20000.0
+        },
+        {
+          "id": "f_u_plate",
+          "value": 360.0
+        },
+        {
+          "id": "t_plate",
+          "value": 5.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-t-80",
+      "labelEn": "Split rings and shear plates",
+      "labelDe": "Ring- und Scheibendübel",
+      "entryId": "T-80",
+      "numbers": [
+        {
+          "id": "alpha_deg",
+          "value": 0.0
+        },
+        {
+          "id": "d_c",
+          "value": 65.0
+        },
+        {
+          "id": "f_ed",
+          "value": 15000.0
+        },
+        {
+          "id": "h_e",
+          "value": 15.0
+        },
+        {
+          "id": "kmod",
+          "value": 0.8
+        },
+        {
+          "id": "rho_k",
+          "value": 380.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-t-81",
+      "labelEn": "Toothed-plate connectors",
+      "labelDe": "Einpressdübel",
+      "entryId": "T-81",
+      "numbers": [
+        {
+          "id": "d_c",
+          "value": 62.0
+        },
+        {
+          "id": "f_ed",
+          "value": 20000.0
+        },
+        {
+          "id": "k1",
+          "value": 1.0
+        },
+        {
+          "id": "k2",
+          "value": 1.0
+        },
+        {
+          "id": "k3",
+          "value": 1.0
+        },
+        {
+          "id": "k4",
+          "value": 1.0
+        },
+        {
+          "id": "kmod",
+          "value": 0.8
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-t-82",
+      "labelEn": "Punched metal plate fasteners",
+      "labelDe": "Nagelplatten",
+      "entryId": "T-82",
+      "numbers": [
+        {
+          "id": "a_ef",
+          "value": 8000.0
+        },
+        {
+          "id": "f_a_k",
+          "value": 3.0
+        },
+        {
+          "id": "f_ed",
+          "value": 15000.0
+        },
+        {
+          "id": "f_t_k_plate",
+          "value": 100.0
+        },
+        {
+          "id": "kmod",
+          "value": 0.8
+        },
+        {
+          "id": "l_plate",
+          "value": 100.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-t-83",
+      "labelEn": "Connection stiffness K_ser and K_u",
+      "labelDe": "Verbindungssteifigkeit K_ser und K_u",
+      "entryId": "T-83",
+      "numbers": [
+        {
+          "id": "d",
+          "value": 12.0
+        },
+        {
+          "id": "rho_m1",
+          "value": 420.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "kind",
+          "value": "dowel"
+        }
+      ]
+    },
+    {
+      "id": "case-t-60",
+      "labelEn": "Instantaneous deflection",
+      "labelDe": "Anfangsdurchbiegung",
+      "entryId": "T-60",
+      "numbers": [
+        {
+          "id": "b",
+          "value": 200.0
+        },
+        {
+          "id": "h",
+          "value": 400.0
+        },
+        {
+          "id": "h_a",
+          "value": 400.0
+        },
+        {
+          "id": "h_b",
+          "value": 400.0
+        },
+        {
+          "id": "l",
+          "value": 5000.0
+        },
+        {
+          "id": "load_g",
+          "value": 1.5
+        },
+        {
+          "id": "load_q",
+          "value": 2.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "class",
+          "value": "GL24h"
+        },
+        {
+          "id": "load_case",
+          "value": "udl_ss"
+        }
+      ]
+    },
+    {
+      "id": "case-t-61",
+      "labelEn": "Final and net final deflection",
+      "labelDe": "Enddurchbiegung und Netto-Enddurchbiegung",
+      "entryId": "T-61",
+      "numbers": [
+        {
+          "id": "b",
+          "value": 200.0
+        },
+        {
+          "id": "h",
+          "value": 400.0
+        },
+        {
+          "id": "l",
+          "value": 5000.0
+        },
+        {
+          "id": "load_g",
+          "value": 1.5
+        },
+        {
+          "id": "load_q",
+          "value": 2.0
+        },
+        {
+          "id": "psi_2",
+          "value": 0.3
+        },
+        {
+          "id": "sc",
+          "value": 1.0
+        },
+        {
+          "id": "w_c",
+          "value": 0.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "class",
+          "value": "GL24h"
+        },
+        {
+          "id": "load_case",
+          "value": "udl_ss"
+        }
+      ]
+    },
+    {
+      "id": "case-t-62",
+      "labelEn": "Slip contribution",
+      "labelDe": "Nachgiebigkeit der Verbindung",
+      "entryId": "T-62",
+      "numbers": [
+        {
+          "id": "a1",
+          "value": 4800.0
+        },
+        {
+          "id": "a2",
+          "value": 9600.0
+        },
+        {
+          "id": "a3",
+          "value": 4800.0
+        },
+        {
+          "id": "e1",
+          "value": 11000.0
+        },
+        {
+          "id": "e2",
+          "value": 11000.0
+        },
+        {
+          "id": "e3",
+          "value": 11000.0
+        },
+        {
+          "id": "h1",
+          "value": 60.0
+        },
+        {
+          "id": "h2",
+          "value": 160.0
+        },
+        {
+          "id": "h3",
+          "value": 60.0
+        },
+        {
+          "id": "i1",
+          "value": 640000.0
+        },
+        {
+          "id": "i2",
+          "value": 5120000.0
+        },
+        {
+          "id": "i3",
+          "value": 640000.0
+        },
+        {
+          "id": "k_ser",
+          "value": 2000.0
+        },
+        {
+          "id": "l",
+          "value": 5000.0
+        },
+        {
+          "id": "load_g",
+          "value": 1.5
+        },
+        {
+          "id": "s1",
+          "value": 100.0
+        },
+        {
+          "id": "s3",
+          "value": 100.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-t-63",
+      "labelEn": "Floor vibration frequency",
+      "labelDe": "Eigenfrequenz der Decke",
+      "entryId": "T-63",
+      "numbers": [
+        {
+          "id": "ei_l",
+          "value": 12500000.0
+        },
+        {
+          "id": "mass_kg_m2",
+          "value": 150.0
+        },
+        {
+          "id": "span_m",
+          "value": 4.5
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-t-64",
+      "labelEn": "Unit point load deflection",
+      "labelDe": "Verformung unter Einheitslast",
+      "entryId": "T-64",
+      "numbers": [
+        {
+          "id": "a_mm_per_kn",
+          "value": 1.8
+        },
+        {
+          "id": "ei_b",
+          "value": 1000000.0
+        },
+        {
+          "id": "ei_l",
+          "value": 12500000.0
+        },
+        {
+          "id": "force_n",
+          "value": 1000.0
+        },
+        {
+          "id": "span_m",
+          "value": 4.5
+        },
+        {
+          "id": "width_m",
+          "value": 4.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-t-65",
+      "labelEn": "Unit impulse velocity response",
+      "labelDe": "Einheitsimpuls-Geschwindigkeitsantwort",
+      "entryId": "T-65",
+      "numbers": [
+        {
+          "id": "b_vel",
+          "value": 100.0
+        },
+        {
+          "id": "ei_b",
+          "value": 1000000.0
+        },
+        {
+          "id": "ei_l",
+          "value": 12500000.0
+        },
+        {
+          "id": "mass_kg_m2",
+          "value": 150.0
+        },
+        {
+          "id": "span_m",
+          "value": 4.5
+        },
+        {
+          "id": "width_m",
+          "value": 4.0
+        },
+        {
+          "id": "zeta",
+          "value": 0.02
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-t-20",
+      "labelEn": "Column buckling",
+      "labelDe": "Knicken von Stäben",
+      "entryId": "T-20",
+      "numbers": [
+        {
+          "id": "b",
+          "value": 100.0
+        },
+        {
+          "id": "h",
+          "value": 100.0
+        },
+        {
+          "id": "lef_y",
+          "value": 3000.0
+        },
+        {
+          "id": "lef_z",
+          "value": 3000.0
+        },
+        {
+          "id": "n_c",
+          "value": 30000.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "class",
+          "value": "C24"
+        }
+      ]
+    },
+    {
+      "id": "case-t-21",
+      "labelEn": "Compression with bending, governing axis",
+      "labelDe": "Druck mit Biegung, maßgebende Achse",
+      "entryId": "T-21",
+      "numbers": [
+        {
+          "id": "b",
+          "value": 200.0
+        },
+        {
+          "id": "h",
+          "value": 400.0
+        },
+        {
+          "id": "lef_y",
+          "value": 3000.0
+        },
+        {
+          "id": "lef_z",
+          "value": 3000.0
+        },
+        {
+          "id": "m_y",
+          "value": 40000000.0
+        },
+        {
+          "id": "m_z",
+          "value": 4000000.0
+        },
+        {
+          "id": "n_c",
+          "value": 100000.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "class",
+          "value": "GL24h"
+        }
+      ]
+    },
+    {
+      "id": "case-t-22",
+      "labelEn": "Lateral-torsional buckling",
+      "labelDe": "Biegedrillknicken",
+      "entryId": "T-22",
+      "numbers": [
+        {
+          "id": "b",
+          "value": 120.0
+        },
+        {
+          "id": "h",
+          "value": 400.0
+        },
+        {
+          "id": "l",
+          "value": 5000.0
+        },
+        {
+          "id": "lef",
+          "value": 4500.0
+        },
+        {
+          "id": "m_y",
+          "value": 30000000.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "class",
+          "value": "GL24h"
+        },
+        {
+          "id": "load_case",
+          "value": "udl_ss"
+        },
+        {
+          "id": "load_pos",
+          "value": "centroid"
+        }
+      ]
+    },
+    {
+      "id": "case-t-23",
+      "labelEn": "Biaxial stability interaction",
+      "labelDe": "Zweiachsige Stabilitätsinteraktion",
+      "entryId": "T-23",
+      "numbers": [
+        {
+          "id": "b",
+          "value": 200.0
+        },
+        {
+          "id": "h",
+          "value": 400.0
+        },
+        {
+          "id": "l",
+          "value": 5000.0
+        },
+        {
+          "id": "lef_y",
+          "value": 3000.0
+        },
+        {
+          "id": "lef_z",
+          "value": 3000.0
+        },
+        {
+          "id": "m_y",
+          "value": 40000000.0
+        },
+        {
+          "id": "m_z",
+          "value": 4000000.0
+        },
+        {
+          "id": "n_c",
+          "value": 100000.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "class",
+          "value": "GL24h"
+        }
+      ]
+    },
+    {
+      "id": "case-t-24",
+      "labelEn": "Second-order analysis with bow imperfection",
+      "labelDe": "Berechnung nach Theorie II. Ordnung mit Vorkrümmung",
+      "entryId": "T-24",
+      "numbers": [
+        {
+          "id": "b",
+          "value": 200.0
+        },
+        {
+          "id": "h",
+          "value": 400.0
+        },
+        {
+          "id": "lef_y",
+          "value": 4000.0
+        },
+        {
+          "id": "m_y",
+          "value": 15000000.0
+        },
+        {
+          "id": "n_c",
+          "value": 100000.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "class",
+          "value": "GL24h"
+        }
+      ]
+    },
+    {
+      "id": "case-t-100",
+      "labelEn": "Charring depth",
+      "labelDe": "Abbrandtiefe",
+      "entryId": "T-100",
+      "numbers": [
+        {
+          "id": "h_p",
+          "value": 20.0
+        },
+        {
+          "id": "rho_k",
+          "value": 380.0
+        },
+        {
+          "id": "series",
+          "value": 0.0
+        },
+        {
+          "id": "t_min",
+          "value": 30.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "char_material",
+          "value": "glulam"
+        },
+        {
+          "id": "class",
+          "value": "GL24h"
+        }
+      ]
+    },
+    {
+      "id": "case-t-101",
+      "labelEn": "Reduced cross-section method",
+      "labelDe": "Methode des reduzierten Querschnitts",
+      "entryId": "T-101",
+      "numbers": [
+        {
+          "id": "b",
+          "value": 200.0
+        },
+        {
+          "id": "face_bottom",
+          "value": 1.0
+        },
+        {
+          "id": "face_left",
+          "value": 1.0
+        },
+        {
+          "id": "face_right",
+          "value": 1.0
+        },
+        {
+          "id": "face_top",
+          "value": 0.0
+        },
+        {
+          "id": "h",
+          "value": 400.0
+        },
+        {
+          "id": "m_fi",
+          "value": 60000000.0
+        },
+        {
+          "id": "t_req",
+          "value": 60.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "class",
+          "value": "GL28h"
+        }
+      ]
+    },
+    {
+      "id": "case-t-102",
+      "labelEn": "Zero-strength layer method",
+      "labelDe": "Methode der Nullfestigkeitsschicht",
+      "entryId": "T-102",
+      "numbers": [
+        {
+          "id": "b",
+          "value": 200.0
+        },
+        {
+          "id": "h",
+          "value": 400.0
+        },
+        {
+          "id": "m_fi",
+          "value": 60000000.0
+        },
+        {
+          "id": "t_req",
+          "value": 60.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "class",
+          "value": "GL24h"
+        }
+      ]
+    },
+    {
+      "id": "case-t-103",
+      "labelEn": "Protected members, claddings",
+      "labelDe": "Geschützte Bauteile, Bekleidungen",
+      "entryId": "T-103",
+      "numbers": [
+        {
+          "id": "h_p",
+          "value": 20.0
+        },
+        {
+          "id": "t_min",
+          "value": 30.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "board",
+          "value": "F"
+        },
+        {
+          "id": "class",
+          "value": "GL24h"
+        }
+      ]
+    },
+    {
+      "id": "case-t-104",
+      "labelEn": "Connections in fire",
+      "labelDe": "Verbindungen im Brandfall",
+      "entryId": "T-104",
+      "numbers": [
+        {
+          "id": "beta_n",
+          "value": 0.7
+        },
+        {
+          "id": "f_fi_d",
+          "value": 3000.0
+        },
+        {
+          "id": "f_rd_20",
+          "value": 9000.0
+        },
+        {
+          "id": "f_v_rk",
+          "value": 8000.0
+        },
+        {
+          "id": "k_fire",
+          "value": 0.05
+        },
+        {
+          "id": "t_req",
+          "value": 30.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "side_members",
+          "value": "timber"
+        }
+      ]
+    },
+    {
+      "id": "case-t-105",
+      "labelEn": "Fire-separating assemblies",
+      "labelDe": "Raumabschließende Bauteile",
+      "entryId": "T-105",
+      "numbers": [
+        {
+          "id": "h1",
+          "value": 18.0
+        },
+        {
+          "id": "n_layers",
+          "value": 1.0
+        },
+        {
+          "id": "t_req",
+          "value": 30.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "kind1",
+          "value": "gypsum_f"
+        }
+      ]
+    },
+    {
+      "id": "case-t-106",
+      "labelEn": "Reduced properties method",
+      "labelDe": "Methode der reduzierten Eigenschaften",
+      "entryId": "T-106",
+      "numbers": [
+        {
+          "id": "b",
+          "value": 200.0
+        },
+        {
+          "id": "face_bottom",
+          "value": 1.0
+        },
+        {
+          "id": "face_left",
+          "value": 1.0
+        },
+        {
+          "id": "face_right",
+          "value": 1.0
+        },
+        {
+          "id": "face_top",
+          "value": 0.0
+        },
+        {
+          "id": "h",
+          "value": 400.0
+        },
+        {
+          "id": "m_fi",
+          "value": 60000000.0
+        },
+        {
+          "id": "t_req",
+          "value": 60.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "class",
+          "value": "GL28h"
+        }
+      ]
+    },
+    {
+      "id": "case-t-107",
+      "labelEn": "CLT charring with fall-off",
+      "labelDe": "BSP-Abbrand mit Abfallen der Kohleschicht",
+      "entryId": "T-107",
+      "numbers": [
+        {
+          "id": "fall_off",
+          "value": 1.0
+        },
+        {
+          "id": "fall_off_factor",
+          "value": 2.0
+        },
+        {
+          "id": "m_fi",
+          "value": 2000.0
+        },
+        {
+          "id": "n_layers",
+          "value": 5.0
+        },
+        {
+          "id": "o1",
+          "value": 1.0
+        },
+        {
+          "id": "o2",
+          "value": 0.0
+        },
+        {
+          "id": "o3",
+          "value": 1.0
+        },
+        {
+          "id": "o4",
+          "value": 0.0
+        },
+        {
+          "id": "o5",
+          "value": 1.0
+        },
+        {
+          "id": "protect_mm",
+          "value": 25.0
+        },
+        {
+          "id": "t1",
+          "value": 30.0
+        },
+        {
+          "id": "t2",
+          "value": 30.0
+        },
+        {
+          "id": "t3",
+          "value": 30.0
+        },
+        {
+          "id": "t4",
+          "value": 30.0
+        },
+        {
+          "id": "t5",
+          "value": 30.0
+        },
+        {
+          "id": "t_req",
+          "value": 90.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "class",
+          "value": "CLT100"
+        }
+      ]
+    },
+    {
+      "id": "case-t-90",
+      "labelEn": "Mechanically jointed beams (γ-method)",
+      "labelDe": "Nachgiebig verbundene Biegeträger (γ-Verfahren)",
+      "entryId": "T-90",
+      "numbers": [
+        {
+          "id": "a1",
+          "value": 4800.0
+        },
+        {
+          "id": "a2",
+          "value": 9600.0
+        },
+        {
+          "id": "e1",
+          "value": 11000.0
+        },
+        {
+          "id": "e2",
+          "value": 11000.0
+        },
+        {
+          "id": "h1",
+          "value": 40.0
+        },
+        {
+          "id": "h2",
+          "value": 80.0
+        },
+        {
+          "id": "i1",
+          "value": 640000.0
+        },
+        {
+          "id": "i2",
+          "value": 38400000.0
+        },
+        {
+          "id": "k",
+          "value": 2000.0
+        },
+        {
+          "id": "l",
+          "value": 5000.0
+        },
+        {
+          "id": "m_d",
+          "value": 8000000.0
+        },
+        {
+          "id": "s1",
+          "value": 100.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-t-91",
+      "labelEn": "Glued thin-webbed beams",
+      "labelDe": "Geklebte Träger mit dünnem Steg",
+      "entryId": "T-91",
+      "numbers": [
+        {
+          "id": "b_f",
+          "value": 100.0
+        },
+        {
+          "id": "b_w",
+          "value": 40.0
+        },
+        {
+          "id": "e_f",
+          "value": 11000.0
+        },
+        {
+          "id": "e_w",
+          "value": 4000.0
+        },
+        {
+          "id": "f_glue_d",
+          "value": 1.0
+        },
+        {
+          "id": "h_f",
+          "value": 40.0
+        },
+        {
+          "id": "h_w",
+          "value": 300.0
+        },
+        {
+          "id": "m_d",
+          "value": 20000000.0
+        },
+        {
+          "id": "v_d",
+          "value": 15000.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "class",
+          "value": "GL24h"
+        }
+      ]
+    },
+    {
+      "id": "case-t-92",
+      "labelEn": "Glued thin-flanged beams",
+      "labelDe": "Geklebte Träger mit dünnem Gurt",
+      "entryId": "T-92",
+      "numbers": [
+        {
+          "id": "b_w",
+          "value": 80.0
+        },
+        {
+          "id": "e_f",
+          "value": 11000.0
+        },
+        {
+          "id": "e_w",
+          "value": 11000.0
+        },
+        {
+          "id": "f_flange_d",
+          "value": 8.0
+        },
+        {
+          "id": "h_f",
+          "value": 40.0
+        },
+        {
+          "id": "h_w",
+          "value": 300.0
+        },
+        {
+          "id": "l",
+          "value": 5000.0
+        },
+        {
+          "id": "m_d",
+          "value": 20000000.0
+        },
+        {
+          "id": "outstand",
+          "value": 300.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "class",
+          "value": "GL24h"
+        }
+      ]
+    },
+    {
+      "id": "case-t-93",
+      "labelEn": "Mechanically jointed columns",
+      "labelDe": "Mechanisch verbundene Druckstäbe",
+      "entryId": "T-93",
+      "numbers": [
+        {
+          "id": "area",
+          "value": 30000.0
+        },
+        {
+          "id": "i1",
+          "value": 14.0
+        },
+        {
+          "id": "i_tot",
+          "value": 40.0
+        },
+        {
+          "id": "l1",
+          "value": 600.0
+        },
+        {
+          "id": "lef",
+          "value": 3000.0
+        },
+        {
+          "id": "n_c",
+          "value": 60000.0
+        },
+        {
+          "id": "n_parts",
+          "value": 2.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "class",
+          "value": "GL24h"
+        },
+        {
+          "id": "joint",
+          "value": "nailed"
+        }
+      ]
+    },
+    {
+      "id": "case-t-94",
+      "labelEn": "Roof, floor and wall diaphragms",
+      "labelDe": "Dach-, Decken- und Wandscheiben",
+      "entryId": "T-94",
+      "numbers": [
+        {
+          "id": "b_i",
+          "value": 1200.0
+        },
+        {
+          "id": "f_d",
+          "value": 15000.0
+        },
+        {
+          "id": "f_f_rd",
+          "value": 3000.0
+        },
+        {
+          "id": "f_v_ed",
+          "value": 3000.0
+        },
+        {
+          "id": "h",
+          "value": 400.0
+        },
+        {
+          "id": "l_dia",
+          "value": 12000.0
+        },
+        {
+          "id": "n_panels",
+          "value": 1.0
+        },
+        {
+          "id": "q_v_rd",
+          "value": 3.0
+        },
+        {
+          "id": "r_hold_down",
+          "value": 20000.0
+        },
+        {
+          "id": "s",
+          "value": 75.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "method",
+          "value": "A"
+        }
+      ]
+    },
+    {
+      "id": "case-t-95",
+      "labelEn": "Trusses and stabilising loads",
+      "labelDe": "Fachwerkträger und Stabilisierungslasten",
+      "entryId": "T-95",
+      "numbers": [
+        {
+          "id": "l_m",
+          "value": 6.0
+        },
+        {
+          "id": "n_braced",
+          "value": 4.0
+        },
+        {
+          "id": "n_d",
+          "value": 5000.0
+        },
+        {
+          "id": "q_rd",
+          "value": 1500.0
+        },
+        {
+          "id": "bays",
+          "value": 6.0
+        },
+        {
+          "id": "chord_b",
+          "value": 100.0
+        },
+        {
+          "id": "chord_h",
+          "value": 200.0
+        },
+        {
+          "id": "height",
+          "value": 900.0
+        },
+        {
+          "id": "span",
+          "value": 6000.0
+        },
+        {
+          "id": "web_b",
+          "value": 80.0
+        },
+        {
+          "id": "web_h",
+          "value": 120.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "product",
+          "value": "solid"
+        },
+        {
+          "id": "kind",
+          "value": "warren"
+        }
+      ]
+    },
+    {
+      "id": "case-t-96",
+      "labelEn": "Bracing systems and restraints",
+      "labelDe": "Aussteifungssysteme und Halterungen",
+      "entryId": "T-96",
+      "numbers": [
+        {
+          "id": "f_rd",
+          "value": 2000.0
+        },
+        {
+          "id": "k_br",
+          "value": 500.0
+        },
+        {
+          "id": "l_m",
+          "value": 6.0
+        },
+        {
+          "id": "n_braced",
+          "value": 4.0
+        },
+        {
+          "id": "n_d",
+          "value": 5000.0
+        },
+        {
+          "id": "brace_b",
+          "value": 60.0
+        },
+        {
+          "id": "brace_h",
+          "value": 120.0
+        },
+        {
+          "id": "member_b",
+          "value": 100.0
+        },
+        {
+          "id": "member_h",
+          "value": 200.0
+        },
+        {
+          "id": "spacing",
+          "value": 800.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "kind",
+          "value": "plan-bracing"
+        }
+      ]
+    },
+    {
+      "id": "case-t-97",
+      "labelEn": "Cross-laminated timber",
+      "labelDe": "Brettsperrholz",
+      "entryId": "T-97",
+      "numbers": [
+        {
+          "id": "g_r",
+          "value": 50.0
+        },
+        {
+          "id": "l",
+          "value": 4000.0
+        },
+        {
+          "id": "n_layers",
+          "value": 3.0
+        },
+        {
+          "id": "o1",
+          "value": 1.0
+        },
+        {
+          "id": "o2",
+          "value": 0.0
+        },
+        {
+          "id": "o3",
+          "value": 1.0
+        },
+        {
+          "id": "t1",
+          "value": 30.0
+        },
+        {
+          "id": "t2",
+          "value": 40.0
+        },
+        {
+          "id": "t3",
+          "value": 30.0
+        },
+        {
+          "id": "m_d",
+          "value": 10000.0
+        },
+        {
+          "id": "v_d",
+          "value": 10.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "class",
+          "value": "CLT100"
+        }
+      ]
+    },
+    {
+      "id": "case-t-98",
+      "labelEn": "Timber behaviour factor q",
+      "labelDe": "Verhaltensbeiwert q für Holz",
+      "entryId": "T-98",
+      "numbers": [],
+      "texts": [
+        {
+          "id": "ductility",
+          "value": "DCM"
+        },
+        {
+          "id": "system",
+          "value": "nailed_wall"
+        }
+      ]
+    }
+  ]
+}

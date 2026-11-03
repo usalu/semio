@@ -1,0 +1,149 @@
+{
+  "annex": "De",
+  "reliabilityClass": "RC2",
+  "masonryClass": "Class1",
+  "designSituation": "Persistent",
+  "storeys": 2,
+  "walls": [
+    {
+      "id": "wall-north",
+      "labelEn": "North load-bearing wall",
+      "labelDe": "Tragende Nordwand",
+      "wallType": "LoadBearing",
+      "thicknessM": 0.365,
+      "heightM": 2.75,
+      "lengthM": 5.0,
+      "supportSides": 4,
+      "openings": [
+        {
+          "id": "win-1",
+          "widthM": 1.2,
+          "heightM": 1.4,
+          "sillHeightM": 0.9,
+          "positionM": 0.8
+        }
+      ],
+      "slabBearingDepthM": 0.12,
+      "eccentricityTopM": 0.02,
+      "eccentricityBottomM": 0.015,
+      "unitGroup": "Group1",
+      "unitMaterial": "Clay",
+      "fBPa": 20000000.0,
+      "unitLengthM": 0.24,
+      "unitWidthM": 0.365,
+      "unitHeightM": 0.113,
+      "mortarType": "GeneralPurpose",
+      "mortarClass": "M10",
+      "mortarStrengthPa": 10000000.0,
+      "bedJointThicknessM": 0.012,
+      "reinforced": false,
+      "asVerticalM2": 0.0,
+      "asHorizontalM2": 0.0,
+      "fYdPa": 0.0,
+      "fireReiMin": 90,
+      "exposure": "Mx1",
+      "mu": 0.4,
+      "densityKgM3": 1800.0,
+      "phiInfinity": 1.5,
+      "isBasement": false,
+      "loadCases": [
+        {
+          "id": "ulsinz",
+          "designSituation": "persistent",
+          "imposedCategory": "a",
+          "gKSlabN": 120000.0,
+          "qKImposedPa": 2000.0,
+          "tributaryAreaM2": 12.5,
+          "slabSpanM": 4.5,
+          "qKSnowPa": 0.0,
+          "qPWindPa": 800.0,
+          "cPe": 0.8,
+          "hKEarthN": 0.0,
+          "concentrated": [
+            {
+              "id": "beam-A",
+              "forceN": 30000.0,
+              "bearingAreaM2": 0.04,
+              "bearingLengthM": 0.2,
+              "distanceA1M": 0.0,
+              "positionM": 1.0
+            }
+          ]
+        }
+      ],
+      "piers": [
+        {
+          "id": "pier-1",
+          "positionM": 2.0,
+          "widthM": 1.4
+        }
+      ],
+      "lintels": [
+        {
+          "id": "lintel-1",
+          "positionM": 0.6,
+          "spanM": 1.4,
+          "depthM": 0.2,
+          "bearingLengthM": 0.2
+        }
+      ],
+      "ties": [
+        {
+          "id": "tie-1",
+          "kind": "WallTie",
+          "positionM": 1.0,
+          "levelM": 1.0,
+          "capacityN": 1500.0
+        }
+      ],
+      "prestress": [
+        {
+          "id": "tendon-1",
+          "forceN": 80000.0,
+          "areaM2": 0.00015,
+          "fPkPa": 1500000000.0,
+          "positionM": 2.0,
+          "eccentricityM": 0.02,
+          "lossRatio": 0.1
+        }
+      ],
+      "confined": [
+        {
+          "id": "column-1",
+          "positionM": 4.9,
+          "widthM": 0.24,
+          "depthM": 0.24,
+          "asM2": 0.0005
+        }
+      ],
+      "flanges": [],
+      "bars": [
+        {
+          "id": "bar-1",
+          "kind": "Anchorage",
+          "diameterM": 0.01,
+          "lengthM": 0.5,
+          "spacingM": 0.3
+        }
+      ],
+      "frostClass": "Exempt",
+      "coverM": 0.03,
+      "deflectionLimit": 250.0,
+      "soilHeightM": 0.0,
+      "soilDensityKgM3": 1800.0,
+      "isothermDepthM": 0.0,
+      "planXM": 0.0,
+      "planYM": 0.0,
+      "planAngleDeg": 0.0,
+      "inPlaneShearN": 0.0,
+      "inPlaneMomentNm": 0.0,
+      "bracingSystem": "Unreinforced",
+      "diaphragmStiffnessNPerM": 0.0,
+      "webSpacingM": 0.0
+    }
+  ],
+  "placements": [],
+  "cases": [],
+  "movementJoints": [],
+  "chases": []
+}

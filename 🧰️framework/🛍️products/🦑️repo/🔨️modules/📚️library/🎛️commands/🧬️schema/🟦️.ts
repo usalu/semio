@@ -13,6 +13,7 @@ import { dirname, isAbsolute, join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { checkParsers, parseProjectionArguments, projectParsers, renderParserCheck, renderProjectionReport } from "./🪞️parser-projection/🟦️.ts";
 import { schemaCompilerEnvironmentV1 } from "./🎚️mode/🟦️.ts";
+import { annotateLeaves, parseTwinArguments, renderTwinReport, runTwins } from "./🧬️twin-projection/🟦️.ts";
 import { runtimeExecutableV1 } from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 
 //#region 🔖️SchemaScript
@@ -41,10 +42,11 @@ export class SchemaScript extends Script {
     if (sub === "docs") return this.docs();
     if (sub === "oracle") return this.oracle();
     if (sub === "parsers") return this.parsers(rest);
+    if (sub === "twins") return this.twins(rest);
     if (sub === "compile") return this.compile(rest);
     if (sub === "entries") return this.entries(rest);
     if (sub === "test") return this.test(rest);
-    throw new Error(`unknown schema subcommand: ${JSON.stringify(sub)} (expected audit | check | compile | docs | entries | generate | oracle | parsers | test | verify).`);
+    throw new Error(`unknown schema subcommand: ${JSON.stringify(sub)} (expected audit | check | compile | docs | entries | generate | oracle | parsers | test | twins | verify).`);
   }
 
   private inventory(): SchemaScopeInventory {
@@ -135,6 +137,33 @@ export class SchemaScript extends Script {
         return;
       }
       process.stdout.write(renderProjectionReport(projectParsers({ ...options, signal: controller.signal, onProgress })));
+    } finally {
+      process.off("SIGINT", cancel);
+      process.off("SIGTERM", cancel);
+    }
+  }
+
+  /**
+   * 🧬️ `twins generate|check|annotate`: the JSON Schema of a schema module is the single source and its TypeScript, Rust (leaf payloads and annotated records), protobuf and GraphQL twins are generated from it (`--under`, `--only`, `--out`, `--strict`, `--explain`). `check` is the CI gate: it fails when a committed twin differs from what the schema produces (`--strict` also in layout); `annotate` harvests the Rust annotations of committed structs into their schemas, once, when a record joins the generator. Ctrl-C cancels between twins.
+   * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧬️schema/🧬️twin-projection/🟦️.ts
+   */
+  private twins(args: string[]): void {
+    const options = parseTwinArguments(this.root, args);
+    if (options.command === "annotate") {
+      const changed = annotateLeaves(options.scope);
+      console.log(`[schema twins] annotate: ${changed.length} schema files now carry the Rust annotations of their committed structs.`);
+      return;
+    }
+    const controller = new AbortController();
+    const cancel = (): void => controller.abort(new Error("[schema twins] cancelled."));
+    process.once("SIGINT", cancel);
+    process.once("SIGTERM", cancel);
+    try {
+      const report = runTwins(this.root, args, controller.signal, (done, total) => {
+        if (done % 500 === 0 && process.stderr.isTTY) process.stderr.write(`[schema twins] ${options.command}: ${done}/${total} twins\r`);
+      });
+      process.stdout.write(renderTwinReport(options.command, report));
+      if (report.problems.length > 0 || (options.command === "check" && (report.counts.drift > 0 || (options.strict && report.counts.style > 0)))) process.exitCode = 1;
     } finally {
       process.off("SIGINT", cancel);
       process.off("SIGTERM", cancel);

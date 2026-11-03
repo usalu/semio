@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-weld-eccentricity/schema.json",
+  "title": "ChangeWeldEccentricity",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newEccentricity"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Weld group",
+          "de": "Schweißnahtgruppe"
+        },
+        "description": {
+          "en": "The weld group this mutation addresses, by id.",
+          "de": "Das adressierte Element (Schweißnahtgruppe), per Kennung."
+        },
+        "ref": {
+          "kind": "weld-group"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newEccentricity": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Eccentricity e of the force",
+          "de": "Ausmitte e der Kraft"
+        },
+        "widget": "stepper",
+        "unit": "m",
+        "precision": 3,
+        "step": 0.005,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

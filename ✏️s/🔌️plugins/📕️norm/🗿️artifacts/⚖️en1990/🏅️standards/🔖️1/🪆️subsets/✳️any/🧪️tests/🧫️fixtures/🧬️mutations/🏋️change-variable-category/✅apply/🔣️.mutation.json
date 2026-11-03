@@ -1,0 +1,5 @@
+{
+  "mutation": "changeVariableCategory",
+  "id": "Q-office",
+  "newCategory": "office-alt"
+}

@@ -1,0 +1,6 @@
+{
+  "mutation": "changeStoreyCentreOfStiffnessXM",
+  "buildingId": "bldg-office",
+  "id": "s2",
+  "newCentreOfStiffnessXM": 24.0
+}

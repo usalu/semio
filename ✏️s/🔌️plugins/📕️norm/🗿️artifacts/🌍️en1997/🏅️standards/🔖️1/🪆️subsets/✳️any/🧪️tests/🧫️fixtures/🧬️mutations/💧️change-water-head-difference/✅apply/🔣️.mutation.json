@@ -1,0 +1,5 @@
+{
+  "mutation": "changeWaterHeadDifference",
+  "id": "water-gravel",
+  "newHeadDifference": 2.0
+}

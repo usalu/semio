@@ -1,0 +1,6 @@
+{
+  "mutation": "changeStoreyHeightM",
+  "buildingId": "bldg-office",
+  "id": "s2",
+  "newHeightM": 7.0
+}

@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-anchor-action-point-force/schema.json",
+  "title": "ChangeAnchorActionPointForce",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "anchorId",
+    "actionId",
+    "newPointForce"
+  ],
+  "properties": {
+    "anchorId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Anchor",
+          "de": "Dübel"
+        },
+        "description": {
+          "en": "The anchor this mutation addresses, by id.",
+          "de": "Das adressierte Element (Dübel), per Kennung."
+        },
+        "ref": {
+          "kind": "anchor"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "actionId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Anchor action",
+          "de": "Dübeleinwirkung"
+        },
+        "description": {
+          "en": "The anchor action this mutation addresses, by id.",
+          "de": "Das adressierte Element (Dübeleinwirkung), per Kennung."
+        },
+        "ref": {
+          "kind": "action"
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "newPointForce": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Point load",
+          "de": "Einzellast"
+        },
+        "widget": "stepper",
+        "unit": "N",
+        "displayUnit": "kN",
+        "displayFactor": 0.001,
+        "precision": 2,
+        "step": 1000,
+        "role": "value",
+        "group": "value",
+        "order": 30
+      }
+    }
+  }
+}

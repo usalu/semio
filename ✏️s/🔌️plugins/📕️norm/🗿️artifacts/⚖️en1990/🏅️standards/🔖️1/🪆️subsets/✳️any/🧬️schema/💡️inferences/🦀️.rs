@@ -14,8 +14,8 @@ use framework_schema::ArtifactSchema;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a en1990 snapshot.
 #[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.norm.en1990.inference")]
 pub struct En1990Inference {
@@ -54,7 +54,6 @@ impl protocol::InferenceSpec<En1990Snapshot> for En1990Inference {
                 "referencePeriodYears",
                 "supervisionLevel",
                 "inspectionLevel",
-                "kFiDeclared",
                 "betaComputed",
                 "permanents",
                 "variables",
@@ -63,6 +62,13 @@ impl protocol::InferenceSpec<En1990Snapshot> for En1990Inference {
                 "members",
                 "bridgeSls",
                 "effects",
+                "fatigueSpectra",
+                "reliabilityAnalyses",
+                "testSeries",
+                "placements",
+                "cases",
+                "factorOverrides",
+                "trafficGroups",
             ],
         }]
     }
@@ -92,15 +98,15 @@ mod tests;
 //#endregion 🧪️Tests
 
 //#region 🔖️ComplianceReport
-use semio_s_plugin_norm_compliance::{AnnexChoice, CheckReport, CheckResult, ClauseId, LocalizedCopy, Quantity, QuantityKind, Remedy, SubjectRef};
-#[cfg(test)] use semio_s_plugin_norm_compliance::DesignSituation;
-use semio_s_artifact_norm_en1990_checks::{check_reliability_index_for, combination_6_11, combination_6_12b, combination_equ_for, combination_geo_a24c, combination_sls_char, combination_sls_frequent, combination_sls_quasi_permanent, combination_str_geo_610a_for, combination_str_geo_610b_for, k_fi, resolve_psi_category, ActionSet, NaDe, NaEn, NationalAnnexes};
-use semio_s_plugin_norm_compliance::NationalAnnex;
-use semio_s_artifact_norm_en1990_model::{Member, MemberEffect};
+use semio_s_plugin_norm_compliance::incremental_evaluation::Scope;
+use semio_s_plugin_norm_compliance::{AnnexChoice, CheckReport, CheckResult, CheckStatus, ClauseId, LocalizedCopy, Quantity, QuantityKind, Remedy, SubjectRef};
+use semio_s_artifact_norm_en1990_checks::*;
+use semio_s_artifact_norm_en1990_model::{BridgeSls, FactorOverride, LoadGroup, Member, MemberEffect, TrafficGroup, VariableAction};
 
 #[path = "🧰️report-helpers/🦀️.rs"]
 mod report_helpers;
 pub(crate) use report_helpers::*;
+pub use report_helpers::{actions_with, context_for, effective_group, group_coefficient, group_coefficient_id, member_actions};
 
 #[path = "🏗️ultimate-limit-state/🦀️.rs"]
 mod ultimate_limit_state;
@@ -114,6 +120,26 @@ use serviceability_and_fatigue::*;
 mod working_life_and_bridge_annexes;
 use working_life_and_bridge_annexes::*;
 
+#[path = "📐️annex-criteria/🦀️.rs"]
+mod annex_criteria;
+use annex_criteria::*;
+
+#[path = "📐️material-geometry-analysis/🦀️.rs"]
+mod material_geometry_analysis;
+use material_geometry_analysis::*;
+
+#[path = "🎚️factor-overrides/🦀️.rs"]
+pub mod factor_overrides;
+use factor_overrides::push_factor_overrides;
+
+#[path = "🚆️rail-and-frame-sls/🦀️.rs"]
+mod rail_and_frame_sls;
+use rail_and_frame_sls::*;
+
+#[path = "📊️annex-analyses/🦀️.rs"]
+mod annex_analyses;
+use annex_analyses::*;
+
 #[path = "🧮️partial-factor-sets/🦀️.rs"]
 mod partial_factor_sets;
 use partial_factor_sets::*;
@@ -126,12 +152,16 @@ pub use compliance_evaluation::*;
 mod referential_integrity;
 use referential_integrity::*;
 
+#[path = "🧮️units/🦀️.rs"]
+mod units;
+pub use units::*;
+
 //#endregion 🔖️ComplianceReport
 
 //#region 🧪️ComplianceReportTests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️compliance-report/🦀️.rs"]
-mod compliance_report_tests;
+#[cfg(any(test, feature = "oracle-wiring"))]
+#[path = "🧪️tests/🎯️oracle-wiring/🦀️.rs"]
+pub mod oracle_wiring;
 //#endregion 🧪️ComplianceReportTests
 
 //#region 🔁️Re-exports
@@ -142,3 +172,7 @@ pub use crate::outline::En1990Outline;
 #[path = "🧾outline/🦀️.rs"]
 pub mod outline;
 //#endregion 🪢️Mounts
+
+//#region 🛰️LiveEvaluation
+semio_s_plugin_norm_compliance::live_report!(pub mod live(En1990Snapshot) = En1990Units);
+//#endregion 🛰️LiveEvaluation

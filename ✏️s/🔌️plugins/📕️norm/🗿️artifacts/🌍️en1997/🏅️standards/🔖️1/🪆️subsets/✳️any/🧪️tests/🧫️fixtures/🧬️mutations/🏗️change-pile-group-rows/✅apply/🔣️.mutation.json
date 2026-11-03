@@ -1,0 +1,5 @@
+{
+  "mutation": "changePileGroupRows",
+  "id": "group-G1",
+  "newRows": 3
+}

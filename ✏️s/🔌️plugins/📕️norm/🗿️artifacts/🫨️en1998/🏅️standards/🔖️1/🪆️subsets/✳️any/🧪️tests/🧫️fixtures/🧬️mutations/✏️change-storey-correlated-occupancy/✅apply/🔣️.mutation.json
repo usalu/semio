@@ -1,0 +1,6 @@
+{
+  "mutation": "changeStoreyCorrelatedOccupancy",
+  "buildingId": "bldg-office",
+  "id": "s2",
+  "newCorrelatedOccupancy": false
+}

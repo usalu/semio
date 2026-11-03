@@ -1,0 +1,98 @@
+{
+  "artifact": "en1998",
+  "collection": {
+    "name": "pierBases",
+    "entity": "En1998PierBase",
+    "emoji": "🦶",
+    "doc": "🦶 Soil-structure interaction at the base of a bridge pier (EN 1998-5 Annex and EN 1998-2): the circular footing radius and the soil that give the translational and rocking springs of the foundation (Gazetas), with the shear modulus degraded for the design acceleration (EN 1998-5 Table 4.1); the checks find the period lengthening of the pier and the resulting bearing displacement.",
+    "label": {
+      "en": "Pier bases",
+      "de": "Pfeilerfüße"
+    },
+    "id": {
+      "en": "Pier base ID",
+      "de": "Pfeilerfuß-ID"
+    },
+    "singular": {
+      "en": "pier base",
+      "de": "Pfeilerfuß"
+    },
+    "kindSlug": "pier-base",
+    "fields": [
+      {
+        "name": "bridge_id",
+        "type": "String",
+        "label": {
+          "en": "Bridge",
+          "de": "Brücke"
+        },
+        "doc": "🌉 Id of the bridge the pier belongs to.",
+        "sample": "br-1"
+      },
+      {
+        "name": "pier_id",
+        "type": "String",
+        "label": {
+          "en": "Pier",
+          "de": "Pfeiler"
+        },
+        "doc": "🏛 Id of the pier whose base is founded on the soil spring.",
+        "sample": "P1"
+      },
+      {
+        "name": "radius_m",
+        "type": "f64",
+        "label": {
+          "en": "Footing radius R",
+          "de": "Fundamentradius R"
+        },
+        "doc": "⭕ Radius R [m] of the circular footing with the area of the real footing.",
+        "sample": 2.0,
+        "unit": "m"
+      },
+      {
+        "name": "soil_vs_m_s",
+        "type": "f64",
+        "label": {
+          "en": "Shear wave velocity v_s",
+          "de": "Scherwellengeschwindigkeit v_s"
+        },
+        "doc": "〰️ Small-strain shear wave velocity v_s [m/s] of the soil below the footing; G_max = ρ v_s².",
+        "sample": 200.0,
+        "unit": "m/s"
+      },
+      {
+        "name": "soil_unit_weight_n_m3",
+        "type": "f64",
+        "label": {
+          "en": "Soil unit weight γ",
+          "de": "Wichte des Bodens γ"
+        },
+        "doc": "⚖️ Unit weight γ [N/m³] of the soil below the footing; ρ = γ/g.",
+        "sample": 19000.0,
+        "precision": 0,
+        "step": 100,
+        "range": [
+          0,
+          30000
+        ]
+      },
+      {
+        "name": "poisson_ratio",
+        "type": "f64",
+        "label": {
+          "en": "Poisson ratio ν",
+          "de": "Querdehnzahl ν"
+        },
+        "doc": "🔁 Poisson ratio ν of the soil below the footing.",
+        "sample": 0.35,
+        "precision": 2,
+        "step": 0.01,
+        "range": [
+          0,
+          0.5
+        ]
+      }
+    ]
+  }
+}

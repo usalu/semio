@@ -1,0 +1,7 @@
+{
+  "ChangeBeamActionDeltaSigmaPa": {
+    "beamId": "beam-B1",
+    "id": "G-steel",
+    "newDeltaSigmaKPa": 2500000.0
+  }
+}

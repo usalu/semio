@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-wind-face-zone/schema.json",
+  "title": "ChangeWindFaceZone",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newZone"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Wind face",
+          "de": "Windfläche"
+        },
+        "description": {
+          "en": "The wind face this mutation addresses, by id.",
+          "de": "Das adressierte Element (Windfläche), per Kennung."
+        },
+        "ref": {
+          "kind": "wind-face"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newZone": {
+      "type": "string",
+      "x-semio-ui": {
+        "label": {
+          "en": "Pressure zone",
+          "de": "Druckzone"
+        },
+        "widget": "text",
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

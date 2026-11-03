@@ -1,0 +1,4 @@
+type RemoveBarLayer {
+  memberId: String!
+  index: Int!
+}

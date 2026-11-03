@@ -1,0 +1,6 @@
+{
+  "ChangeFrameActionTargetId": {
+    "id": "frame-action-1",
+    "newTargetId": "node-c"
+  }
+}

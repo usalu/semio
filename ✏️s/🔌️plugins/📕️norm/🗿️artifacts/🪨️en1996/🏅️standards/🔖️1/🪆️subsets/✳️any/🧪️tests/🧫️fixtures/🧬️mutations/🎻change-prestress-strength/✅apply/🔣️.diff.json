@@ -1,0 +1,138 @@
+{
+  "annex": null,
+  "reliabilityClass": null,
+  "masonryClass": null,
+  "designSituation": null,
+  "storeys": null,
+  "walls": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "wall-north",
+        "patch": {
+          "labelEn": null,
+          "labelDe": null,
+          "wallType": null,
+          "thicknessM": null,
+          "heightM": null,
+          "lengthM": null,
+          "supportSides": null,
+          "slabBearingDepthM": null,
+          "eccentricityTopM": null,
+          "eccentricityBottomM": null,
+          "unitGroup": null,
+          "unitMaterial": null,
+          "fBPa": null,
+          "unitLengthM": null,
+          "unitWidthM": null,
+          "unitHeightM": null,
+          "mortarType": null,
+          "mortarClass": null,
+          "mortarStrengthPa": null,
+          "bedJointThicknessM": null,
+          "reinforced": null,
+          "asVerticalM2": null,
+          "asHorizontalM2": null,
+          "fYdPa": null,
+          "fireReiMin": null,
+          "exposure": null,
+          "mu": null,
+          "densityKgM3": null,
+          "phiInfinity": null,
+          "isBasement": null,
+          "frostClass": null,
+          "coverM": null,
+          "deflectionLimit": null,
+          "soilHeightM": null,
+          "soilDensityKgM3": null,
+          "isothermDepthM": null,
+          "planXM": null,
+          "planYM": null,
+          "planAngleDeg": null,
+          "inPlaneShearN": null,
+          "inPlaneMomentNm": null,
+          "bracingSystem": null,
+          "diaphragmStiffnessNPerM": null,
+          "webSpacingM": null,
+          "openings": {
+            "removed": [],
+            "inserted": [],
+            "moved": [],
+            "modified": []
+          },
+          "loadCases": {
+            "removed": [],
+            "inserted": [],
+            "moved": [],
+            "modified": []
+          },
+          "piers": {
+            "removed": [],
+            "inserted": [],
+            "moved": [],
+            "modified": []
+          },
+          "lintels": {
+            "removed": [],
+            "inserted": [],
+            "moved": [],
+            "modified": []
+          },
+          "ties": {
+            "removed": [],
+            "inserted": [],
+            "moved": [],
+            "modified": []
+          },
+          "prestress": {
+            "removed": [],
+            "inserted": [],
+            "moved": [],
+            "modified": [
+              {
+                "id": "tendon-1",
+                "patch": {
+                  "forceN": null,
+                  "areaM2": null,
+                  "fPkPa": 1770000000.0,
+                  "positionM": null,
+                  "eccentricityM": null,
+                  "lossRatio": null
+                }
+              }
+            ]
+          },
+          "confined": {
+            "removed": [],
+            "inserted": [],
+            "moved": [],
+            "modified": []
+          },
+          "flanges": {
+            "removed": [],
+            "inserted": [],
+            "moved": [],
+            "modified": []
+          },
+          "bars": {
+            "removed": [],
+            "inserted": [],
+            "moved": [],
+            "modified": []
+          }
+        }
+      }
+    ]
+  },
+  "placements": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "cases": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "movementJoints": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "chases": {"removed": [], "inserted": [], "moved": [], "modified": []}
+}

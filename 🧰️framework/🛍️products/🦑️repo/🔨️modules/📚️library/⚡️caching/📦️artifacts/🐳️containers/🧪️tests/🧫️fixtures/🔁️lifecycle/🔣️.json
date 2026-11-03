@@ -63,11 +63,11 @@
     ],
     "required": [
       "/workspaces/semio",
-      "/workspaces/semio/♻️mit-bestand/🔎️recherche",
+      "/workspaces/semio/\u267b\ufe0fmit-bestand/\ud83d\udd0e\ufe0frecherche",
       "/workspaces/semio"
     ],
     "missing": [
-      "/workspaces/semio/♻️mit-bestand/🔎️recherche"
+      "/workspaces/semio/\u267b\ufe0fmit-bestand/\ud83d\udd0e\ufe0frecherche"
     ]
   },
   "claudeAuth": [
@@ -122,7 +122,7 @@
     "removedPaths": [
       ".vscode",
       ".vscode/launch.json",
-      ".vscode/🧩️launch.seed.jsonc",
+      ".vscode/\ud83e\udde9\ufe0flaunch.seed.jsonc",
       ".vscode/tasks.json",
       ".vscode/settings.json",
       ".vscode/extensions.json",
@@ -149,7 +149,7 @@
       "core.hooksPath"
     ],
     "nativeBootstrap": {
-      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🔵️.ps1",
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udd29\ufe0fnative/\ud83e\udd7e\ufe0fbootstrap/\ud83d\udd35\ufe0f.ps1",
       "forbiddenTokens": [
         "Install-EditorExtensions",
         "Microsoft.VisualStudioCode",
@@ -190,7 +190,7 @@
           "id": "bootstrap-installer",
           "argv": [
             "bun",
-            "./📜️script.ts",
+            "./\ud83d\udcdc\ufe0fscript.ts",
             "micro-commit",
             "install-hooks"
           ],
@@ -239,5 +239,18 @@
         }
       ]
     }
+  },
+  "headlessDisplay": {
+    "display": ":99",
+    "socket": "/tmp/.X11-unix/X99",
+    "argv": [
+      "Xvfb",
+      ":99",
+      "-screen",
+      "0",
+      "1920x1080x24",
+      "-nolisten",
+      "tcp"
+    ]
   }
 }

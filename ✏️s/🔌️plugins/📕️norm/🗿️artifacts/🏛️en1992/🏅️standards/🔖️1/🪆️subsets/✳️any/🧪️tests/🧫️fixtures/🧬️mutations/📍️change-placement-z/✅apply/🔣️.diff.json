@@ -1,0 +1,35 @@
+{
+  "annex": null,
+  "reliabilityClass": null,
+  "title": null,
+  "designWorkingLifeYears": null,
+  "deltaCDev": null,
+  "cementType": null,
+  "concreteGrades": null,
+  "reinforcementGrades": null,
+  "prestressSteels": null,
+  "members": null,
+  "anchors": null,
+  "placements": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "wall-W1",
+        "patch": {
+          "x": null,
+          "y": null,
+          "z": 1.5,
+          "yaw": null
+        }
+      }
+    ]
+  },
+  "cases": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  }
+}

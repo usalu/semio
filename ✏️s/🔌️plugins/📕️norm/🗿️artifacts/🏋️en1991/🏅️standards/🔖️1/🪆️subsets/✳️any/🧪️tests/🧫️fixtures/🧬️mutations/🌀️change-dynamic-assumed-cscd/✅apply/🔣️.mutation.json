@@ -1,0 +1,6 @@
+{
+  "ChangeDynamicAssumedCscd": {
+    "id": "dynamic-element-1",
+    "newAssumedCscd": 3.0
+  }
+}

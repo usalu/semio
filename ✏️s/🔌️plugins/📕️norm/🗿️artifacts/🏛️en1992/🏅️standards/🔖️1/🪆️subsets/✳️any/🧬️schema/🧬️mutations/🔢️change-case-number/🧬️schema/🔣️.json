@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-case-number/schema.json",
+  "title": "ChangeCaseNumber",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "caseId",
+    "key",
+    "value"
+  ],
+  "properties": {
+    "caseId": {
+      "type": "string",
+      "x-semio-ui": {
+        "role": "target",
+        "label": {
+          "en": "Case",
+          "de": "Fall"
+        },
+        "description": {
+          "en": "The design case this mutation addresses.",
+          "de": "Der Bemessungsfall, den diese Mutation adressiert."
+        },
+        "group": "target",
+        "order": 10,
+        "widget": "reference",
+        "ref": {
+          "kind": "case"
+        }
+      }
+    },
+    "key": {
+      "type": "string",
+      "x-semio-ui": {
+        "role": "target",
+        "label": {
+          "en": "Input",
+          "de": "Eingabe"
+        },
+        "description": {
+          "en": "The input key of the case.",
+          "de": "Der Eingabeschlüssel des Falls."
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "value": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Value",
+          "de": "Wert"
+        },
+        "description": {
+          "en": "The input value in the stored unit of the catalogue vocabulary (empty removes the input).",
+          "de": "Der Eingabewert in der gespeicherten Einheit des Katalogvokabulars (leer entfernt die Eingabe)."
+        },
+        "group": "case",
+        "order": 30,
+        "widget": "stepper",
+        "step": 1,
+        "precision": 4
+      }
+    }
+  }
+}

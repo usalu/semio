@@ -1,0 +1,5 @@
+type ChangeTendonPointY {
+  memberId: String!
+  tendonPointId: String!
+  newY: Float!
+}

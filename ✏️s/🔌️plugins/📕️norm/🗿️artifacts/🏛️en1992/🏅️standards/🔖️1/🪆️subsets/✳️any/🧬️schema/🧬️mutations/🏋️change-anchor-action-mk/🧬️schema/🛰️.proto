@@ -1,0 +1,7 @@
+syntax = "proto3";
+package semio.s.norm.en1992.mutation.change_anchor_action_mk;
+message ChangeAnchorActionMK {
+  string anchor_id = 1;
+  string action_id = 2;
+  double new_m_k = 3;
+}

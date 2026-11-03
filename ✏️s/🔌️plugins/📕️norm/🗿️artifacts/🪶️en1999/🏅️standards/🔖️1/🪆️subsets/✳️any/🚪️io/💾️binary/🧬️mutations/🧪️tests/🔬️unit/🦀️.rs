@@ -1,7 +1,7 @@
 //! 📏️ EN 1999 mutation binary unit smoke.
 
 use semio_s_artifact_norm_en1999_mut_inputs::change_annex::ChangeAnnex;
-use semio_s_artifact_norm_en1999_mutations::En1999Mutation;
+use crate::En1999Mutation;
 
 #[test]
 fn a_mutation_crosses_the_binary_op_codec_unchanged() {

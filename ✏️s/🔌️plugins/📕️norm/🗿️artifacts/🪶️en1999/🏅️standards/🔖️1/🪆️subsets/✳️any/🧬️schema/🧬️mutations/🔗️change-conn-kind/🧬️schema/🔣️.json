@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-conn-kind/schema.json",
+  "title": "ChangeConnKind",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "connectionId",
+    "newKind"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeConnKind"
+    },
+    "connectionId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Connection",
+          "de": "Anschluss"
+        },
+        "description": {
+          "en": "The connection this mutation addresses, by id.",
+          "de": "Das adressierte Element (Anschluss), per Kennung."
+        },
+        "ref": {
+          "kind": "connection"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newKind": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/$defs/ConnectionKind",
+      "x-semio-ui": {
+        "label": {
+          "en": "kind",
+          "de": "Art"
+        },
+        "role": "value",
+        "group": "value",
+        "order": 20
+      },
+      "x-semio-rust": {
+        "type": "ConnectionKind"
+      }
+    }
+  }
+}

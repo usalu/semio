@@ -1,0 +1,59 @@
+{
+  "annex": null,
+  "reliabilityClass": "RC2",
+  "materials": null,
+  "sections": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "sec-i120",
+        "patch": {
+          "kind": null,
+          "height": null,
+          "width": null,
+          "flangeThickness": null,
+          "webThickness": null,
+          "outerDiameter": null,
+          "elements": {
+            "removed": [],
+            "inserted": [
+              {
+                "index": 3,
+                "row": {
+                  "id": "flange-top-2",
+                  "width": 0.031000000000000003,
+                  "thickness": 0.01,
+                  "outstand": true,
+                  "welded": true,
+                  "weldPosition": 0.005,
+                  "weldProcess": "mig",
+                  "weldTJunction": false,
+                  "weldDirection": "longitudinal",
+                  "edgeStiffenerDepth": 0.0,
+                  "edgeStiffenerThickness": 0.0
+                }
+              }
+            ],
+            "moved": [],
+            "modified": []
+          }
+        }
+      }
+    ]
+  },
+  "members": null,
+  "connections": null,
+  "fireScenarios": null,
+  "fatigueDetails": null,
+  "coldFormed": null,
+  "shells": null,
+  "placements": null,
+  "weldRuns": null,
+  "outlineVertices": null,
+  "fatigueCategories": null,
+  "patchLoads": null,
+  "ringStiffeners": null,
+  "transverseStiffeners": null
+}

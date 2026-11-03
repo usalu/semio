@@ -1,0 +1,6 @@
+{
+  "ChangeJointFrictionSurfaces": {
+    "id": "joint-j1",
+    "newFrictionSurfaces": 2
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "mutation": "insertOutlineVertex",
+  "index": 0,
+  "outlineVertex": {
+    "id": "v-1",
+    "sectionId": "sec-i120",
+    "ring": "outer",
+    "elementId": "web",
+    "y": 0.0,
+    "z": 0.0
+  }
+}

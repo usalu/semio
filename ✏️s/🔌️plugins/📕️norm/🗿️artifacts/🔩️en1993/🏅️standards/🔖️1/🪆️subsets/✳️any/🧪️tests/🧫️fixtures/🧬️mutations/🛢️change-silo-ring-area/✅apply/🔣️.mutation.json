@@ -1,0 +1,6 @@
+{
+  "ChangeSiloRingArea": {
+    "id": "silo-1",
+    "newRingArea": 1.5
+  }
+}

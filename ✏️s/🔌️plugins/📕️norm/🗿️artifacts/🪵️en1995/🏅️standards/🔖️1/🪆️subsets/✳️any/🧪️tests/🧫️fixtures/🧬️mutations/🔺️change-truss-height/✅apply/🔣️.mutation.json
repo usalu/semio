@@ -1,0 +1,6 @@
+{
+  "ChangeTrussHeight": {
+    "trussId": "truss-1",
+    "newValue": 3.25
+  }
+}

@@ -25,3 +25,4 @@ semio-framework-value-derive = { workspace = true }
 [dev-dependencies]
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-s-plugin-norm-compliance = { workspace = true }

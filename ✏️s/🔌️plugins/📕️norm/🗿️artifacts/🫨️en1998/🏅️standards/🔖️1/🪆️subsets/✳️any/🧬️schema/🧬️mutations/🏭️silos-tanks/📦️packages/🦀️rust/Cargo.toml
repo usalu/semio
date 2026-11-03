@@ -16,6 +16,9 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+serde = { workspace = true, optional = true }
+semio-s-artifact-norm-en1998-mut-silos-tanks-tank = { workspace = true }
+semio-s-artifact-norm-en1998-mut-silos-tanks-silo-tank = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-schema = { workspace = true }
@@ -24,6 +27,10 @@ semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-norm-en1998-diff = { workspace = true }
 semio-s-artifact-norm-en1998-model = { workspace = true }
+semio-s-artifact-norm-en1998-mut-silos-tanks-shell = { workspace = true }
+
+[features]
+test-support = ["dep:serde", "semio-s-artifact-norm-en1998-diff/test-support", "semio-s-artifact-norm-en1998-model/test-support", "semio-s-artifact-norm-en1998-mut-silos-tanks-shell/test-support", "semio-s-artifact-norm-en1998-mut-silos-tanks-silo-tank/test-support", "semio-s-artifact-norm-en1998-mut-silos-tanks-tank/test-support"]
 
 [dev-dependencies]
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

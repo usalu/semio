@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-joint-plate-hole-diameter/schema.json",
+  "title": "ChangeJointPlateHoleDiameter",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newHoleDiameter"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Joint plate",
+          "de": "Anschlussblech"
+        },
+        "description": {
+          "en": "The joint plate this mutation addresses, by id.",
+          "de": "Das adressierte Element (Anschlussblech), per Kennung."
+        },
+        "ref": {
+          "kind": "joint-plate"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newHoleDiameter": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Hole diameter d_0",
+          "de": "Lochdurchmesser d_0"
+        },
+        "widget": "stepper",
+        "unit": "m",
+        "precision": 3,
+        "step": 0.005,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

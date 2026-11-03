@@ -1,0 +1,14 @@
+{
+  "InsertFormingGain": {
+    "index": 1,
+    "formingGain": {
+      "id": "forming-gain-2",
+      "memberId": "cold-1",
+      "forming": "RollForming",
+      "ultimateStrength": 360000000.0,
+      "grossArea": 0.0006,
+      "bends": 4,
+      "usedYield": 0.0
+    }
+  }
+}

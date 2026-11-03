@@ -1,0 +1,6 @@
+{
+  "mutation": "changeElementWeldPosition",
+  "sectionId": "sec-i120",
+  "elementId": "flange-top",
+  "newWeldPosition": 0.01
+}

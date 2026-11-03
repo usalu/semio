@@ -1,0 +1,213 @@
+{
+  "annex": null,
+  "reliabilityClass": null,
+  "materials": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "sections": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "members": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "loadCases": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "memberActions": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "joints": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "fatigueDetails": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "fireExposures": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "coldFormedMembers": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "platedPanels": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "siloShells": {
+    "removed": [],
+    "inserted": [
+      {
+        "index": 1,
+        "row": {
+          "id": "silo-1-2",
+          "thickness": 0.008,
+          "radius": 3.0,
+          "depth": 6.0,
+          "k": 0.5,
+          "gamma": 9000.0,
+          "fy": 355000000.0,
+          "length": 0.0,
+          "fabricationClass": "Unset",
+          "meridionalStress": 0.0,
+          "hoopStress": 0.0,
+          "shellShearStress": 0.0,
+          "boundaryFactorAxial": 1.0,
+          "boundaryFactorHoop": 0.0,
+          "boundaryFactorShear": 0.0,
+          "wallFriction": 0.0,
+          "planArea": 0.0,
+          "planPerimeter": 0.0,
+          "liquidDensity": 0.0,
+          "liquidHeight": 0.0,
+          "courseElevation": 0.0,
+          "internalPressure": 0.0,
+          "externalPressure": 0.0,
+          "temperatureChange": 0.0,
+          "ringSpacing": 0.0,
+          "ringArea": 0.0,
+          "ringInertia": 0.0,
+          "ringOffset": 0.0
+        }
+      }
+    ],
+    "moved": [],
+    "modified": []
+  },
+  "tensionComponents": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "bridgeFatigue": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "towerLegs": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "piles": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "craneRunways": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "storeys": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "restraints": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "builtUpMembers": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "weldGroups": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "parametricSections": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "hollowJoints": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "jointRows": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "frameNodes": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "frameBars": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "placements": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "jointPlates": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "foundationBlocks": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "frameActions": null,
+  "frameMemberBases": null,
+  "fatigueStresses": null,
+  "bucklingLengths": null,
+  "formingGains": null,
+  "materialDuctility": null,
+  "fastenedJoints": null
+}

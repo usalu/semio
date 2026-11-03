@@ -1,0 +1,6 @@
+{
+  "ChangeImperfectionAssumedForce": {
+    "id": "imperfection-1",
+    "newAssumedForce": 3.0
+  }
+}

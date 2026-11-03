@@ -1,0 +1,6 @@
+{
+  "ChangeBeamConstruction": {
+    "id": "beam-B1",
+    "newConstruction": "unpropped"
+  }
+}

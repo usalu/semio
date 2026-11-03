@@ -1,11 +1,11 @@
 /** ➖️ `remove-tank` wire twin: the leaf payload `RemoveTank`, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
- * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
+ * by `repo ./📜️script.ts schema twins generate`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
-import { normWireInteger, normWireLiteral, normWireObject, normWireRange, type NormWireReader, normWireRequired } from "@semio-tech/norm-js/registry/contract";
+import { normWireLiteral, normWireObject, normWireRequired, normWireString, type NormWireReader } from "@semio-tech/norm-js/registry/contract";
 
 export interface RemoveTank {
   mutation: "removeTank";
-  index: number;
+  id: string;
 }
 
-export const parseRemoveTank: NormWireReader<RemoveTank> = normWireObject<RemoveTank>({ mutation: normWireRequired(normWireLiteral("removeTank")), index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})) });
+export const parseRemoveTank: NormWireReader<RemoveTank> = normWireObject<RemoveTank>({ mutation: normWireRequired(normWireLiteral("removeTank")), id: normWireRequired(normWireString) });

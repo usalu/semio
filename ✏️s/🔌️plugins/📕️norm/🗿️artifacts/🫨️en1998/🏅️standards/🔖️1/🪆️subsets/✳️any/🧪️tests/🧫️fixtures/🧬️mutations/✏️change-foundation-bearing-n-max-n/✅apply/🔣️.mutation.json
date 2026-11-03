@@ -1,0 +1,5 @@
+{
+  "mutation": "changeFoundationBearingNMaxN",
+  "id": "fd-1",
+  "newBearingNMaxN": 1.5
+}

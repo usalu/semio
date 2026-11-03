@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/remove-tie-run/schema.json",
+  "title": "RemoveTieRun",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Tie run",
+          "de": "Zuggliedstrang"
+        },
+        "description": {
+          "en": "The tie run this mutation addresses, by id.",
+          "de": "Das adressierte Element (Zuggliedstrang), per Kennung."
+        },
+        "ref": {
+          "kind": "tie-run"
+        },
+        "group": "target",
+        "order": 10
+      }
+    }
+  }
+}

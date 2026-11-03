@@ -1,0 +1,6 @@
+{
+  "ChangeJointPlateHoleDiameter": {
+    "id": "joint-plate-1",
+    "newHoleDiameter": 2.0
+  }
+}

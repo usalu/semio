@@ -346,6 +346,7 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     assert.ok(!contracts.find((project) => project.name === validatedProject)?.targets[validatedTarget].inputs.includes("^default"), "Exact catalog discovery must not reintroduce generated outputs through broad dependency defaults");
     const workspace = contracts.find((project) => project.name === "workspace")!;
     assert.deepEqual(workspace.targets.setup.dependsOn, vectors.lifecycle.setupDependencies);
+    assert.deepEqual(workspace.targets["deps-browsers"].dependsOn, vectors.lifecycle.browserDependencies);
     assert.deepEqual(workspace.targets.prepare.dependsOn, vectors.lifecycle.prepareDependencies);
     for (const target of vectors.lifecycle.setupDependencies) assert.equal(workspace.targets[target]?.cache, false);
     for (const name of ["test", "lint", "build", "verify"]) assert.equal(workspace.targets[name]?.cache, true, name);

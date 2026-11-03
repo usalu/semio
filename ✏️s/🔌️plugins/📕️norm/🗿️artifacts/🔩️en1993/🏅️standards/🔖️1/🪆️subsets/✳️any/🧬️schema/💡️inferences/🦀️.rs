@@ -20,8 +20,8 @@ use framework_schema::ArtifactSchema;
 /// `💡️inferences/` (currently: `outline`, backed by the `🧾outline/` slug dir — this document's
 /// own field/section structure, since a norm compliance record IS the document it describes).
 #[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.norm.en1993.inference")]
 pub struct En1993Inference {
@@ -46,7 +46,7 @@ impl protocol::InferenceSpec<En1993Snapshot> for En1993Inference {
         1
     }
     fn fields() -> &'static [protocol::InferenceFieldSpec] {
-        &[protocol::InferenceFieldSpec { id: "s.norm.en1993.inference.outline", reads: &["annex", "materials", "sections", "members", "loadCases", "memberActions", "joints", "fatigueDetails", "fireExposures", "coldFormedMembers", "platedPanels", "siloShells", "tensionComponents", "bridgeFatigue", "towerLegs", "piles", "craneRunways"] }]
+        &[protocol::InferenceFieldSpec { id: "s.norm.en1993.inference.outline", reads: &["annex", "reliabilityClass", "materials", "sections", "members", "loadCases", "memberActions", "joints", "fatigueDetails", "fireExposures", "coldFormedMembers", "platedPanels", "siloShells", "tensionComponents", "bridgeFatigue", "towerLegs", "piles", "craneRunways", "storeys", "restraints", "builtUpMembers", "weldGroups", "parametricSections", "hollowJoints", "jointRows", "frameNodes", "frameBars", "placements", "fatigueStresses", "bucklingLengths", "formingGains", "fastenedJoints", "materialDuctility"] }]
     }
 }
 //#endregion 🔖️Inference
@@ -94,3 +94,7 @@ pub use crate::outline::En1993Outline;
 #[path = "🧾outline/🦀️.rs"]
 pub mod outline;
 //#endregion 🪢️Mounts
+
+//#region 🛰️LiveEvaluation
+semio_s_plugin_norm_compliance::live_report!(pub mod live(En1993Snapshot) = semio_s_artifact_norm_en1993_checks::En1993Units);
+//#endregion 🛰️LiveEvaluation

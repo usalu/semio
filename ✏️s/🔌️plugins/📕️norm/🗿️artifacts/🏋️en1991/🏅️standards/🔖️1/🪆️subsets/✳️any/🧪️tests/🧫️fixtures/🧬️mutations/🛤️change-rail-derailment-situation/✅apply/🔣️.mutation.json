@@ -1,0 +1,6 @@
+{
+  "ChangeRailDerailmentSituation": {
+    "id": "rail-derailment-1",
+    "newSituation": "i-changed"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "ChangeJointPlateBoltClass": {
+    "id": "joint-plate-1",
+    "newBoltClass": "alt"
+  }
+}

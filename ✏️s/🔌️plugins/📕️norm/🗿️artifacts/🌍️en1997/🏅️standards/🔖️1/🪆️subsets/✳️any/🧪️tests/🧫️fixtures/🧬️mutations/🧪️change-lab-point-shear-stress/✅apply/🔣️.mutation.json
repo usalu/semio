@@ -1,0 +1,6 @@
+{
+  "mutation": "changeLabPointShearStress",
+  "labTestId": "lab-T1",
+  "id": "pt-1",
+  "newShearStress": 65000.0
+}

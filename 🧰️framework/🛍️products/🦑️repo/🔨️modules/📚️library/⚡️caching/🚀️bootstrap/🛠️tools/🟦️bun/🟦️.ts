@@ -1,3 +1,4 @@
+import {linuxHostLibcV1} from "../../../../🎛️commands/🔧️setup/🟦️.ts";
 import{withRepositoryToolingOperationV1}from"../../../../📦️packages/🟦️typescript/💾️storage/🔒️enforcement/🛠️tools/🟦️.ts";
 import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import type{ToolingHeadroomRefusalV1}from"../🧹️retention/📏️headroom/🟦️.ts";
@@ -55,8 +56,7 @@ export function prepareBun(workspace:string,version:string,store:RepositoryTooli
 async function prepareBunOwnedV1(workspace:string,version:string,store:RepositoryToolingStoreV1,control:ResourceLeaseControl,publisher?:ManagedToolingPublisherV1):Promise<string|ToolingHeadroomRefusalV1>{
   requireNativeStorageReservationV1(store.storage,store.control);await store.storage.recheck();const signal=control.signal;signal.throwIfAborted();
   if (runtimeIdentityV1().id === manifest.runtime && runtimeIdentityV1().version === version) return runtimeExecutableV1();
-  const report = process.platform === "linux" ? process.report?.getReport?.() as { header?: { glibcVersionRuntime?: string } } : undefined;
-  const row = bunDistribution(version, process.platform, process.arch, process.platform === "linux" && !report?.header?.glibcVersionRuntime);
+  const row = bunDistribution(version, process.platform, process.arch, process.platform === "linux" && linuxHostLibcV1() === "musl");
   const base = requireNativeStoragePathV1(store.root,join(store.root,manifest.runtime)), directory = join(base, row.sha256), executable = join(directory, process.platform === "win32" ? manifest.runtime + ".exe" : manifest.runtime);
   for (let current = base; ; current = dirname(current)) {
     try { const stat = lstatSync(current); if (!stat.isDirectory() || stat.isSymbolicLink()) throw new Error(`Invalid Bun directory: ${current}`); }

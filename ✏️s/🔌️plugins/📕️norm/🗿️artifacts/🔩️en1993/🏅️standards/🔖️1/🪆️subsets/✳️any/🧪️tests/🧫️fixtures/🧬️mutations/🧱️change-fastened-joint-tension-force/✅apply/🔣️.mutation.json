@@ -1,0 +1,6 @@
+{
+  "ChangeFastenedJointTensionForce": {
+    "id": "fastened-joint-1",
+    "newTensionForce": 1.5
+  }
+}

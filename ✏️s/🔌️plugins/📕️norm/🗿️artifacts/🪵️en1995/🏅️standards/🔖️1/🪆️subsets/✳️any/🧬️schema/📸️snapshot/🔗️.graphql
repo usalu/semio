@@ -1,6 +1,18 @@
-# 🪵 EN 1995 snapshot GraphQL mirror
 type En1995Snapshot {
   annex: String!
-  members: [JSON!]!
-  connections: [JSON!]!
+  members: [TimberMember!]!
+  connections: [TimberConnection!]!
+  ulsEquation: UlsEquation!
+  cases: [CaseRow!]!
+  placements: [Placement!]!
+  tapers: [Taper!]!
+  cutouts: [Cutout!]!
+  fasteners: [Fastener!]!
+  panels: [Panel!]!
+  floors: [Floor!]!
+  diaphragms: [Diaphragm!]!
+  trusses: [Truss!]!
+  bracings: [Bracing!]!
+  decks: [Deck!]!
+  reliabilityClass: String!
 }

@@ -1,0 +1,43 @@
+{
+  "grips": [
+    { "id": "a.length", "entity": "a" },
+    { "id": "a.height", "entity": "a" },
+    { "id": "a.angle", "entity": "a" },
+    { "id": "b.length", "entity": "b" },
+    { "id": "b.height", "entity": "b" }
+  ],
+  "single": [{ "id": "m.rest", "entity": "m" }],
+  "walks": [
+    { "id": "tab starts at the first grip", "grips": "grips", "current": null, "how": "forward", "step": { "to": "a.length" } },
+    { "id": "shift tab starts at the last grip", "grips": "grips", "current": null, "how": "backward", "step": { "to": "b.height" } },
+    { "id": "tab crosses from one entity to the next", "grips": "grips", "current": "a.angle", "how": "forward", "step": { "to": "b.length" } },
+    { "id": "shift tab crosses back", "grips": "grips", "current": "b.length", "how": "backward", "step": { "to": "a.angle" } },
+    { "id": "tab past the last grip leaves the walk", "grips": "grips", "current": "b.height", "how": "forward", "step": "leave" },
+    { "id": "shift tab before the first grip leaves the walk", "grips": "grips", "current": "a.length", "how": "backward", "step": "leave" },
+    { "id": "no grips, nothing to walk", "grips": null, "current": null, "how": "forward", "step": "nothing" },
+    { "id": "ctrl arrow wraps inside the entity", "grips": "grips", "current": "a.angle", "how": "forwardInEntity", "step": { "to": "a.length" } },
+    { "id": "ctrl arrow backwards wraps inside the entity", "grips": "grips", "current": "a.length", "how": "backwardInEntity", "step": { "to": "a.angle" } },
+    { "id": "ctrl arrow steps inside the second entity", "grips": "grips", "current": "b.length", "how": "forwardInEntity", "step": { "to": "b.height" } },
+    { "id": "ctrl arrow wraps inside the second entity", "grips": "grips", "current": "b.height", "how": "forwardInEntity", "step": { "to": "b.length" } },
+    { "id": "ctrl arrow without focus starts at the first entity's first grip", "grips": "grips", "current": null, "how": "forwardInEntity", "step": { "to": "a.length" } },
+    { "id": "ctrl arrow backwards without focus starts at the first entity's last grip", "grips": "grips", "current": null, "how": "backwardInEntity", "step": { "to": "a.angle" } },
+    { "id": "an unknown focus counts as none", "grips": "grips", "current": "gone", "how": "forwardInEntity", "step": { "to": "a.length" } },
+    { "id": "a single grip cycles onto itself", "grips": "single", "current": "m.rest", "how": "forwardInEntity", "step": { "to": "m.rest" } },
+    { "id": "a single grip leaves the tab walk", "grips": "single", "current": "m.rest", "how": "forward", "step": "leave" }
+  ],
+  "registry": [
+    { "op": "note", "domain": "one", "grips": "grips" },
+    { "op": "note", "domain": "two", "grips": [{ "id": "z.depth", "entity": "z" }] },
+    { "op": "focused", "domain": "one", "expect": null },
+    { "op": "walk", "domain": "one", "how": "forward", "step": { "to": "a.length" } },
+    { "op": "walk", "domain": "one", "how": "forwardInEntity", "step": { "to": "a.height" } },
+    { "op": "focused", "domain": "one", "expect": "a.height" },
+    { "op": "focused", "domain": "two", "expect": null },
+    { "op": "note", "domain": "one", "grips": [{ "id": "a.length", "entity": "a" }] },
+    { "op": "focused", "domain": "one", "expect": null },
+    { "op": "walk", "domain": "one", "how": "forward", "step": { "to": "a.length" } },
+    { "op": "walk", "domain": "one", "how": "forward", "step": "leave" },
+    { "op": "focused", "domain": "one", "expect": null },
+    { "op": "walk", "domain": "none", "how": "forward", "step": "nothing" }
+  ]
+}

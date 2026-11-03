@@ -1,0 +1,105 @@
+{
+  "annex": null,
+  "projectId": null,
+  "structureKind": null,
+  "altitudeM": null,
+  "consequenceClass": null,
+  "reliabilityClass": null,
+  "designWorkingLifeCategory": null,
+  "designWorkingLifeYears": null,
+  "referencePeriodYears": null,
+  "supervisionLevel": null,
+  "inspectionLevel": null,
+  "betaComputed": null,
+  "permanents": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "variables": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "accidentals": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "seismics": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "members": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "bridgeSls": {
+    "removed": [],
+    "inserted": [
+      {
+        "index": 1,
+        "row": {
+          "id": "bri-1-new",
+          "memberId": "beam-B1",
+          "deckAcceleration": 1.0,
+          "deckAccelerationLimit": 1.0,
+          "deckTwist": 1.0,
+          "deckTwistLimit": 1.0,
+          "bridgeDeflection": 1.0,
+          "bridgeDeflectionLimit": 1.0,
+          "trackGauge": 0.0,
+          "lineSpeed": 0.0,
+          "ballastDepth": 0.0,
+          "deckMass": 0.0,
+          "naturalFrequency": 0.0,
+          "endRotation": 0.0,
+          "basicWindSpeed": 0.0,
+          "dampingRatio": 0.0
+        }
+      }
+    ],
+    "moved": [],
+    "modified": []
+  },
+  "effects": [],
+  "fatigueSpectra": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "reliabilityAnalyses": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "testSeries": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "placements": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "cases": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "factorOverrides": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "trafficGroups": {"removed": [], "inserted": [], "moved": [], "modified": []}
+}

@@ -1,5 +1,6 @@
 syntax = "proto3";
+package semio.s.norm.en1992.mutation.change_member_stirrup_spacing;
 message ChangeMemberStirrupSpacing {
-  string memberId = 1;
-  double newSpacing = 2;
+  string member_id = 1;
+  double new_spacing = 2;
 }

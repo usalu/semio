@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-fatigue-model-lane/schema.json",
+  "title": "ChangeFatigueModelLane",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newLane"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Fatigue model",
+          "de": "Ermüdungsmodell"
+        },
+        "description": {
+          "en": "The fatigue model this mutation addresses, by id.",
+          "de": "Das adressierte Element (Ermüdungsmodell), per Kennung."
+        },
+        "ref": {
+          "lane": "fatigue-model"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newLane": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255,
+      "x-semio-ui": {
+        "label": {
+          "en": "Load lane (0 Q_ca, 1 Q_cb, 2 Q_cc, 3 Q_cd, 4 Q_ce, 5 Q_cf)",
+          "de": "Fahrstreifennummer"
+        },
+        "widget": "stepper",
+        "precision": 0,
+        "step": 1,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

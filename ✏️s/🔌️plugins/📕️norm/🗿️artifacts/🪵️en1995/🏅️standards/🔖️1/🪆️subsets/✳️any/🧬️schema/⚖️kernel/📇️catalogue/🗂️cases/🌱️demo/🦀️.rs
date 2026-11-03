@@ -1,0 +1,89 @@
+//! 🌱️ Demo values of the design cases beyond the vocabulary examples: the numbers, text choices and vectors an evaluator reads without a default. Seeded demo inputs of a plausible EN1995 design situation, not normative values. Generated from `./🔣️.json` by `🧰️scripts/demo-values/demo_gen.py`. See [`super`].
+
+use semio_s_plugin_norm_compliance::design_case::CaseValues;
+
+struct Demo {
+    entry: &'static str,
+    numbers: &'static [(&'static str, f64)],
+    texts: &'static [(&'static str, &'static str)],
+    vectors: &'static [(&'static str, &'static [f64])],
+}
+
+const DEMOS: &[Demo] = &[
+    Demo { entry: "T-02", numbers: &[("kmod_2", 0.8)], texts: &[], vectors: &[] },
+    Demo { entry: "T-03", numbers: &[], texts: &[("material", "glulam")], vectors: &[] },
+    Demo { entry: "T-04", numbers: &[("u_inst_g", 6.0), ("u_inst_q", 4.0)], texts: &[("material", "glulam")], vectors: &[] },
+    Demo { entry: "T-05", numbers: &[("volume", 400000000.0)], texts: &[], vectors: &[] },
+    Demo { entry: "T-10", numbers: &[("n_t", 150000.0)], texts: &[], vectors: &[] },
+    Demo { entry: "T-11", numbers: &[("sigma_t_90", 0.3)], texts: &[], vectors: &[] },
+    Demo { entry: "T-12", numbers: &[("n_c", 400000.0)], texts: &[], vectors: &[] },
+    Demo { entry: "T-13", numbers: &[("b", 100.0), ("f_c90", 20000.0), ("l", 100.0)], texts: &[("class", "C24")], vectors: &[] },
+    Demo { entry: "T-14", numbers: &[("b", 120.0), ("h", 240.0), ("m_y", 9000000.0), ("m_z", 1000000.0)], texts: &[("class", "C24")], vectors: &[] },
+    Demo { entry: "T-15", numbers: &[("a_support", 1000.0), ("v", 40000.0), ("v_point", 40000.0)], texts: &[], vectors: &[] },
+    Demo { entry: "T-16", numbers: &[("m_t", 3000000.0), ("tau_v", 1.0)], texts: &[], vectors: &[] },
+    Demo { entry: "T-17", numbers: &[("m_y", 40000000.0), ("m_z", 4000000.0), ("n_c", 100000.0), ("n_t", 80000.0)], texts: &[], vectors: &[] },
+    Demo { entry: "T-18", numbers: &[("hole_count", 2.0), ("hole_d", 18.0), ("n_t", 150000.0)], texts: &[], vectors: &[] },
+    Demo { entry: "T-50", numbers: &[("m_y", 50000000.0), ("n_members", 5.0), ("spacing_m", 0.6)], texts: &[], vectors: &[] },
+    Demo { entry: "T-66", numbers: &[("ei_nm2", 850000000.0), ("mass_kg_m", 800.0), ("n_peds", 20.0), ("span_m", 30.0), ("zeta", 0.015)], texts: &[], vectors: &[] },
+    Demo { entry: "T-120", numbers: &[("ei_nm2", 85000000.0), ("mass_kg_m", 220.0), ("span_m", 12.0)], texts: &[], vectors: &[] },
+    Demo { entry: "T-121", numbers: &[("ds1", 1.2), ("ds2", 0.6), ("n1", 2000000.0), ("n2", 50000000.0)], texts: &[], vectors: &[] },
+    Demo { entry: "T-122", numbers: &[("bar_area", 804.0), ("bar_spacing", 800.0), ("deck_depth", 250.0), ("f_bar_d", 700.0), ("loss_creep", 0.25), ("loss_mc", 0.1), ("loss_relax", 0.15), ("plate_a", 22500.0), ("sigma_p_0", 1.0)], texts: &[], vectors: &[] },
+    Demo { entry: "T-123", numbers: &[("f_ed", 18000.0), ("f_v_rk", 8000.0), ("kmod", 0.8), ("n", 4.0)], texts: &[], vectors: &[] },
+    Demo { entry: "T-124", numbers: &[("ds1", 10.0), ("ei_nm2", 850000000.0), ("mass_kg_m", 800.0), ("n1", 1000000.0), ("span_m", 30.0)], texts: &[], vectors: &[] },
+    Demo { entry: "T-30", numbers: &[("alpha_deg", 6.0), ("b", 140.0), ("h", 500.0), ("l", 6000.0), ("m_d", 60000000.0)], texts: &[("class", "GL28h"), ("load_case", "udl_ss"), ("side", "compression")], vectors: &[] },
+    Demo { entry: "T-31", numbers: &[("alpha_ap_deg", 10.0), ("b", 160.0), ("h_ap", 900.0), ("m_ap", 120000000.0), ("r_in", 12000.0), ("t_lam", 33.0)], texts: &[("class", "GL28h")], vectors: &[] },
+    Demo { entry: "T-32", numbers: &[("alpha_ap_deg", 10.0), ("h_ap", 900.0), ("m_ap", 120000000.0), ("p_d", 15.0), ("r_in", 12000.0), ("tau_d", 0.8), ("v_beam", 500000000.0)], texts: &[], vectors: &[] },
+    Demo { entry: "T-33", numbers: &[("h_ap", 900.0), ("m_ap", 120000000.0), ("n_rods", 2.0), ("r_ax_k", 40000.0), ("r_in", 12000.0)], texts: &[], vectors: &[] },
+    Demo { entry: "T-45", numbers: &[("b", 120.0), ("h", 240.0), ("h_ef", 180.0), ("v_d", 20000.0), ("x", 30.0)], texts: &[("class", "C24")], vectors: &[] },
+    Demo { entry: "T-46", numbers: &[("h_ef", 300.0), ("n_rods", 2.0), ("r_ax_k", 40000.0), ("v_d", 40000.0)], texts: &[], vectors: &[] },
+    Demo { entry: "T-70", numbers: &[("d", 12.0), ("f_u", 400.0)], texts: &[("class", "C24")], vectors: &[] },
+    Demo { entry: "T-71", numbers: &[("d", 12.0), ("f_u", 400.0), ("t1", 60.0), ("t2", 60.0)], texts: &[("class", "C24")], vectors: &[] },
+    Demo { entry: "T-72", numbers: &[("d", 12.0), ("f_ax_rk", 5000.0), ("f_ed", 4000.0), ("f_u", 400.0), ("t1", 60.0), ("t2", 60.0)], texts: &[], vectors: &[] },
+    Demo { entry: "T-73", numbers: &[("d", 12.0), ("f_ax_rk", 5000.0), ("f_ed", 6000.0), ("f_u", 400.0), ("t1", 60.0), ("t2", 60.0), ("t_steel", 5.0)], texts: &[("config", "single")], vectors: &[] },
+    Demo { entry: "T-74", numbers: &[("a1", 70.0), ("a2", 50.0), ("a3t", 90.0), ("a4c", 36.0), ("a4t", 40.0), ("alpha_deg", 30.0), ("d", 12.0)], texts: &[("kind", "bolt")], vectors: &[] },
+    Demo { entry: "T-75", numbers: &[("a1", 70.0), ("alpha_deg", 0.0), ("d", 12.0), ("f_v_rk", 8000.0), ("n", 4.0), ("predrilled", 1.0)], texts: &[], vectors: &[] },
+    Demo { entry: "T-76", numbers: &[("alpha_deg", 90.0), ("d", 12.0), ("f_ax_ed", 3000.0), ("kmod", 0.8), ("l_ef", 60.0), ("n_ef", 4.0), ("rho_k", 380.0), ("t_pen", 60.0)], texts: &[], vectors: &[] },
+    Demo { entry: "T-77", numbers: &[("f_ax_ed", 3000.0), ("f_ax_rd", 5000.0), ("f_v_ed", 3000.0), ("f_v_rd", 6000.0)], texts: &[], vectors: &[] },
+    Demo { entry: "T-78", numbers: &[("a_net_t", 4000.0), ("a_net_v", 20000.0), ("f_90_ed", 8000.0), ("f_ed", 15000.0), ("he", 200.0)], texts: &[], vectors: &[] },
+    Demo { entry: "T-79", numbers: &[("a_net", 400.0), ("d", 12.0), ("d0", 14.0), ("e1", 50.0), ("e2", 30.0), ("f_ed", 20000.0), ("f_u_plate", 360.0), ("t_plate", 5.0)], texts: &[], vectors: &[] },
+    Demo { entry: "T-80", numbers: &[("alpha_deg", 0.0), ("d_c", 65.0), ("f_ed", 15000.0), ("h_e", 15.0), ("kmod", 0.8), ("rho_k", 380.0)], texts: &[], vectors: &[] },
+    Demo { entry: "T-81", numbers: &[("d_c", 62.0), ("f_ed", 20000.0), ("k1", 1.0), ("k2", 1.0), ("k3", 1.0), ("k4", 1.0), ("kmod", 0.8)], texts: &[], vectors: &[] },
+    Demo { entry: "T-82", numbers: &[("a_ef", 8000.0), ("f_a_k", 3.0), ("f_ed", 15000.0), ("f_t_k_plate", 100.0), ("kmod", 0.8), ("l_plate", 100.0)], texts: &[], vectors: &[] },
+    Demo { entry: "T-83", numbers: &[("d", 12.0), ("rho_m1", 420.0)], texts: &[("kind", "dowel")], vectors: &[] },
+    Demo { entry: "T-60", numbers: &[("h_a", 400.0), ("h_b", 400.0), ("load_g", 1.5), ("load_q", 2.0)], texts: &[], vectors: &[] },
+    Demo { entry: "T-61", numbers: &[("load_g", 1.5), ("load_q", 2.0), ("w_c", 0.0)], texts: &[], vectors: &[] },
+    Demo { entry: "T-62", numbers: &[("a1", 4800.0), ("a2", 9600.0), ("a3", 4800.0), ("e1", 11000.0), ("e2", 11000.0), ("e3", 11000.0), ("h1", 60.0), ("h2", 160.0), ("h3", 60.0), ("i1", 640000.0), ("i2", 5120000.0), ("i3", 640000.0), ("k_ser", 2000.0), ("load_g", 1.5), ("s1", 100.0), ("s3", 100.0)], texts: &[], vectors: &[] },
+    Demo { entry: "T-63", numbers: &[("ei_l", 12500000.0), ("mass_kg_m2", 150.0), ("span_m", 4.5)], texts: &[], vectors: &[] },
+    Demo { entry: "T-64", numbers: &[("a_mm_per_kn", 1.8), ("ei_b", 1000000.0), ("ei_l", 12500000.0), ("span_m", 4.5), ("width_m", 4.0)], texts: &[], vectors: &[] },
+    Demo { entry: "T-65", numbers: &[("ei_b", 1000000.0), ("ei_l", 12500000.0), ("mass_kg_m2", 150.0), ("span_m", 4.5), ("width_m", 4.0), ("zeta", 0.02)], texts: &[], vectors: &[] },
+    Demo { entry: "T-20", numbers: &[("b", 100.0), ("h", 100.0), ("lef_y", 3000.0), ("lef_z", 3000.0), ("n_c", 30000.0)], texts: &[("class", "C24")], vectors: &[] },
+    Demo { entry: "T-21", numbers: &[("lef_y", 3000.0), ("lef_z", 3000.0), ("m_y", 40000000.0), ("m_z", 4000000.0), ("n_c", 100000.0)], texts: &[], vectors: &[] },
+    Demo { entry: "T-22", numbers: &[("b", 120.0), ("lef", 4500.0), ("m_y", 30000000.0)], texts: &[], vectors: &[] },
+    Demo { entry: "T-23", numbers: &[("lef_y", 3000.0), ("lef_z", 3000.0), ("m_y", 40000000.0), ("m_z", 4000000.0), ("n_c", 100000.0)], texts: &[], vectors: &[] },
+    Demo { entry: "T-24", numbers: &[("lef_y", 4000.0), ("m_y", 15000000.0), ("n_c", 100000.0)], texts: &[], vectors: &[] },
+    Demo { entry: "T-100", numbers: &[("rho_k", 380.0), ("series", 0.0), ("t_min", 30.0)], texts: &[("char_material", "glulam")], vectors: &[] },
+    Demo { entry: "T-101", numbers: &[("m_fi", 60000000.0), ("t_req", 60.0)], texts: &[("class", "GL28h")], vectors: &[] },
+    Demo { entry: "T-102", numbers: &[("m_fi", 60000000.0), ("t_req", 60.0)], texts: &[], vectors: &[] },
+    Demo { entry: "T-103", numbers: &[("t_min", 30.0)], texts: &[], vectors: &[] },
+    Demo { entry: "T-104", numbers: &[("f_fi_d", 3000.0), ("f_rd_20", 9000.0), ("f_v_rk", 8000.0), ("k_fire", 0.05), ("t_req", 30.0)], texts: &[], vectors: &[] },
+    Demo { entry: "T-105", numbers: &[("h1", 18.0), ("n_layers", 1.0), ("t_req", 30.0)], texts: &[("kind1", "gypsum_f")], vectors: &[] },
+    Demo { entry: "T-106", numbers: &[("m_fi", 60000000.0), ("t_req", 60.0)], texts: &[("class", "GL28h")], vectors: &[] },
+    Demo { entry: "T-107", numbers: &[("m_fi", 2000.0), ("n_layers", 5.0), ("o1", 1.0), ("o2", 0.0), ("o3", 1.0), ("o4", 0.0), ("o5", 1.0), ("t1", 30.0), ("t2", 30.0), ("t3", 30.0), ("t4", 30.0), ("t5", 30.0), ("t_req", 90.0)], texts: &[("class", "CLT100")], vectors: &[] },
+    Demo { entry: "T-90", numbers: &[("a1", 4800.0), ("a2", 9600.0), ("e1", 11000.0), ("e2", 11000.0), ("h1", 40.0), ("h2", 80.0), ("i1", 640000.0), ("i2", 38400000.0), ("k", 2000.0), ("m_d", 8000000.0), ("s1", 100.0)], texts: &[], vectors: &[] },
+    Demo { entry: "T-91", numbers: &[("b_f", 100.0), ("b_w", 40.0), ("e_f", 11000.0), ("e_w", 4000.0), ("f_glue_d", 1.0), ("h_f", 40.0), ("h_w", 300.0), ("m_d", 20000000.0), ("v_d", 15000.0)], texts: &[], vectors: &[] },
+    Demo { entry: "T-92", numbers: &[("b_w", 80.0), ("e_f", 11000.0), ("e_w", 11000.0), ("f_flange_d", 8.0), ("h_f", 40.0), ("h_w", 300.0), ("m_d", 20000000.0), ("outstand", 300.0)], texts: &[], vectors: &[] },
+    Demo { entry: "T-93", numbers: &[("area", 30000.0), ("i1", 14.0), ("i_tot", 40.0), ("l1", 600.0), ("lef", 3000.0), ("n_c", 60000.0), ("n_parts", 2.0)], texts: &[], vectors: &[] },
+    Demo { entry: "T-94", numbers: &[("b_i", 1200.0), ("f_d", 15000.0), ("f_f_rd", 3000.0), ("f_v_ed", 3000.0), ("l_dia", 12000.0), ("q_v_rd", 3.0), ("r_hold_down", 20000.0), ("s", 75.0)], texts: &[], vectors: &[] },
+    Demo { entry: "T-95", numbers: &[("l_m", 6.0), ("n_braced", 4.0), ("n_d", 5000.0), ("q_rd", 1500.0), ("bays", 6.0), ("chord_b", 100.0), ("chord_h", 200.0), ("height", 900.0), ("span", 6000.0), ("web_b", 80.0), ("web_h", 120.0)], texts: &[], vectors: &[] },
+    Demo { entry: "T-96", numbers: &[("f_rd", 2000.0), ("k_br", 500.0), ("l_m", 6.0), ("n_braced", 4.0), ("n_d", 5000.0), ("brace_b", 60.0), ("brace_h", 120.0), ("member_b", 100.0), ("member_h", 200.0), ("spacing", 800.0)], texts: &[], vectors: &[] },
+    Demo { entry: "T-97", numbers: &[("l", 4000.0), ("n_layers", 3.0), ("o1", 1.0), ("o2", 0.0), ("o3", 1.0), ("t1", 30.0), ("t2", 40.0), ("t3", 30.0), ("m_d", 10000.0), ("v_d", 10.0)], texts: &[("class", "CLT100")], vectors: &[] },
+    Demo { entry: "T-98", numbers: &[], texts: &[("system", "nailed_wall")], vectors: &[] },
+];
+
+/// 🌱️ The demo values of one catalogue entry on top of the vocabulary examples.
+pub fn demo_values(entry_id: &str, values: CaseValues) -> CaseValues {
+    let Some(demo) = DEMOS.iter().find(|demo| demo.entry == entry_id) else { return values };
+    let values = demo.numbers.iter().fold(values, |values, (key, value)| values.with_number(key, *value));
+    let values = demo.texts.iter().fold(values, |values, (key, value)| values.with_text(key, value));
+    demo.vectors.iter().fold(values, |values, (key, items)| values.with_vector(key, items))
+}

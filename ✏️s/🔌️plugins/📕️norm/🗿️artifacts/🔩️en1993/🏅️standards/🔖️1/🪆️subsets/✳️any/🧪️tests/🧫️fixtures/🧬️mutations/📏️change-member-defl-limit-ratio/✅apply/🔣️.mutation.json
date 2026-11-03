@@ -1,0 +1,6 @@
+{
+  "ChangeMemberDeflLimitRatio": {
+    "id": "member-b1",
+    "newDeflectionLimitRatio": 600.0
+  }
+}

@@ -1,23 +1,212 @@
-type En1999Snapshot @state {
-  annex: String! @state(artifact)
-  materials: [AluminiumMaterial!]! @state(artifact)
-  sections: [AluminiumSection!]! @state(artifact)
-  members: [AluminiumMember!]! @state(artifact)
-  connections: [AluminiumConnection!]! @state(artifact)
-  fireScenarios: [FireScenario!]! @state(artifact)
-  fatigueDetails: [FatigueDetail!]! @state(artifact)
-  coldFormed: [ColdFormedSheet!]! @state(artifact)
-  shells: [AluminiumShell!]! @state(artifact)
+type En1999Snapshot {
+  annex: AnnexChoice!
+  materials: [AluminiumMaterial!]!
+  sections: [AluminiumSection!]!
+  members: [AluminiumMember!]!
+  connections: [AluminiumConnection!]!
+  fireScenarios: [FireScenario!]!
+  fatigueDetails: [FatigueDetail!]!
+  coldFormed: [ColdFormedSheet!]!
+  shells: [AluminiumShell!]!
+  placements: [Placement!]!
+  weldRuns: [WeldRun!]!
+  outlineVertices: [SectionVertex!]!
+  fatigueCategories: [FatigueCategory!]!
+  patchLoads: [PatchLoad!]!
+  ringStiffeners: [RingStiffener!]!
+  transverseStiffeners: [TransverseStiffener!]!
+  reliabilityClass: String!
 }
-type AluminiumMaterial { id: String!, designation: String! }
-type PlateElement { id: String!, width: Float!, thickness: Float!, outstand: Boolean!, welded: Boolean!, weldPosition: Float! }
-type AluminiumSection { id: String!, kind: String!, height: Float!, width: Float!, flangeThickness: Float!, webThickness: Float!, outerDiameter: Float!, elements: [PlateElement!]! }
-type MemberAction { id: String!, kind: String!, category: String!, source: String!, gKLine: Float!, qKLine: Float!, nK: Float!, vYK: Float!, vZK: Float!, mYK: Float!, mZK: Float! }
-type AluminiumMember { id: String!, sectionId: String!, materialId: String!, length: Float!, support: String!, bucklingLengthY: Float!, bucklingLengthZ: Float!, bucklingLengthT: Float!, ltbLength: Float!, c1: Float!, restrainedLtb: Boolean!, actions: [MemberAction!]! }
-type BoltGroup { material: String!, diameter: Float!, rows: Int!, boltsPerRow: Int!, edgeDistance: Float!, pitch: Float!, gauge: Float!, plateThickness: Float! }
-type WeldGroup { fillerAlloy: String!, throat: Float!, length: Float!, betaW: Float!, hazExtent: Float! }
-type AluminiumConnection { id: String!, memberId: String!, materialId: String!, kind: String!, actions: [MemberAction!]!, bolts: BoltGroup!, welds: WeldGroup! }
-type FireScenario { id: String!, memberId: String!, thetaA: Float!, durationS: Float! }
-type FatigueDetail { id: String!, memberId: String!, detailCategory: String!, deltaSigmaC: Float!, deltaSigmaEd: Float!, nCycles: Float!, m1: Float!, m2: Float! }
-type ColdFormedSheet { id: String!, materialId: String!, thickness: Float!, width: Float!, span: Float!, welded: Boolean!, actions: [MemberAction!]! }
-type AluminiumShell { id: String!, materialId: String!, radius: Float!, thickness: Float!, length: Float!, actions: [MemberAction!]! }
+type ColdFormedSheet {
+  id: String!
+  materialId: String!
+  thickness: Float!
+  width: Float!
+  span: Float!
+  welded: Boolean!
+  actions: [MemberAction!]!
+}
+type AluminiumMember {
+  id: String!
+  sectionId: String!
+  materialId: String!
+  length: Float!
+  support: SupportCondition!
+  bucklingLengthY: Float!
+  bucklingLengthZ: Float!
+  bucklingLengthT: Float!
+  ltbLength: Float!
+  c1: Float!
+  restrainedLtb: Boolean!
+  bearingLength: Float!
+  transverseWeld: Boolean!
+  transverseWeldOffset: Float!
+  actions: [MemberAction!]!
+}
+type AluminiumSection {
+  id: String!
+  kind: SectionKind!
+  height: Float!
+  width: Float!
+  flangeThickness: Float!
+  webThickness: Float!
+  outerDiameter: Float!
+  elements: [PlateElement!]!
+}
+type FatigueDetail {
+  id: String!
+  memberId: String!
+  detailCategory: String!
+  deltaSigmaC: Float!
+  deltaSigmaEd: Float!
+  nCycles: Float!
+  m1: Float!
+  m2: Float!
+}
+type AluminiumConnection {
+  id: String!
+  memberId: String!
+  materialId: String!
+  kind: ConnectionKind!
+  actions: [MemberAction!]!
+  bolts: BoltGroup!
+  welds: WeldGroup!
+  loadEccentricity: Float!
+  holeStagger: Float!
+  forceMethod: FastenerForceMethod!
+}
+type FireScenario {
+  id: String!
+  memberId: String!
+  thetaA: Float!
+  durationS: Float!
+}
+type AluminiumMaterial {
+  id: String!
+  designation: String!
+  productForm: ProductForm!
+}
+type AluminiumShell {
+  id: String!
+  materialId: String!
+  radius: Float!
+  thickness: Float!
+  length: Float!
+  welded: Boolean!
+  fabricationClass: FabricationClass!
+  actions: [MemberAction!]!
+}
+type MemberAction {
+  id: String!
+  kind: ActionKind!
+  category: ActionCategory!
+  source: ActionSource!
+  gKLine: Float!
+  qKLine: Float!
+  nK: Float!
+  vYK: Float!
+  vZK: Float!
+  mYK: Float!
+  mZK: Float!
+  torsionK: Float!
+  localLoadK: Float!
+}
+type PlateElement {
+  id: String!
+  width: Float!
+  thickness: Float!
+  outstand: Boolean!
+  welded: Boolean!
+  weldPosition: Float!
+  weldProcess: WeldProcess!
+  weldTJunction: Boolean!
+  weldDirection: WeldDirection!
+  edgeStiffenerDepth: Float!
+  edgeStiffenerThickness: Float!
+}
+type BoltGroup {
+  material: String!
+  diameter: Float!
+  rows: Int!
+  boltsPerRow: Int!
+  edgeDistance: Float!
+  pitch: Float!
+  gauge: Float!
+  plateThickness: Float!
+}
+type WeldGroup {
+  fillerAlloy: String!
+  throat: Float!
+  length: Float!
+  betaW: Float!
+  hazExtent: Float!
+}
+type Placement {
+  id: String!
+  x: Float!
+  y: Float!
+  z: Float!
+  yaw: Float!
+}
+type WeldRun {
+  id: String!
+  memberId: String!
+  elementId: String!
+  start: Float!
+  length: Float!
+  offset: Float!
+  throat: Float!
+  process: WeldProcess!
+  tJunction: Boolean!
+  direction: WeldDirection!
+  hazExtent: Float!
+}
+type SectionVertex {
+  id: String!
+  sectionId: String!
+  ring: OutlineRing!
+  elementId: String!
+  y: Float!
+  z: Float!
+}
+type FatigueCategory {
+  id: String!
+  memberId: String!
+  elementId: String!
+  detailCategory: String!
+  detailType: DetailType!
+  locationX: Float!
+  m1: Float!
+  m2: Float!
+}
+type PatchLoad {
+  id: String!
+  subjectId: String!
+  position: PatchLoadPosition!
+  x: Float!
+  bearingLength: Float!
+  webHeight: Float!
+  webAngle: Float!
+  cornerRadius: Float!
+  load: Float!
+}
+type RingStiffener {
+  id: String!
+  shellId: String!
+  x: Float!
+  depth: Float!
+  thickness: Float!
+  internal: Boolean!
+}
+type TransverseStiffener {
+  id: String!
+  girderId: String!
+  position: Float!
+  width: Float!
+  thickness: Float!
+  sides: StiffenerSides!
+}
+enum FastenerForceMethod {
+  elastic
+  instantaneousCentre
+}

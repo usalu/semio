@@ -1,0 +1,16 @@
+{
+  "artifact": "en1993",
+  "leaf": {
+    "kindSlug": "panel",
+    "default": "",
+    "field": {
+      "name": "steel_subgrade",
+      "type": "String",
+      "label": {
+        "en": "Sub-grade (empty = not given)",
+        "de": "Gütegruppe (leer = nicht angegeben)"
+      },
+      "doc": "🏷 Sub-grade of the plate (JR, J0, J2, K2, ...) for Table 2.1 of EN 1993-1-10; empty = not given."
+    }
+  }
+}

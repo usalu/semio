@@ -1,0 +1,6 @@
+{
+  "mutation": "changeSystemDuctilityClass",
+  "buildingId": "bldg-office",
+  "id": "sys-x",
+  "newDuctilityClass": "dcm"
+}

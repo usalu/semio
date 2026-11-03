@@ -1,0 +1,34 @@
+{
+  "InsertMember": {
+    "index": 1,
+    "member": {
+      "id": "member-b1-2",
+      "label": "HSS beam-column B1",
+      "memberType": "BeamColumn",
+      "sectionId": "sec-heb260",
+      "materialId": "mat-s460",
+      "length": 6.0,
+      "bucklingLengthY": 12.0,
+      "bucklingLengthZ": 12.0,
+      "ltbLength": 12.0,
+      "ltbRestraintSpacing": 12.0,
+      "loadApplication": "ShearCenter",
+      "endMomentRatioPsi": -1.0,
+      "momentDiagram": "Linear",
+      "deflectionLimitRatio": 300.0,
+      "analysis": "Elastic",
+      "stainlessForming": "Unset",
+      "designTemperature": 0.0,
+      "toughnessStressRatio": 0.75,
+      "radiationShift": 0.0,
+      "stressShift": 0.0,
+      "marginShift": 0.0,
+      "strainRateShift": 0.0,
+      "coldFormingRadius": 0.0,
+      "webMaterialId": "",
+      "torsionLoad": "Point",
+      "torquePosition": 0.5,
+      "warpingSupport": "Fork"
+    }
+  }
+}

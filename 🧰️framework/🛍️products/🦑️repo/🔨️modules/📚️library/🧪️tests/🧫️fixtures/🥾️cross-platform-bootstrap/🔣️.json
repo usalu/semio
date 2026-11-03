@@ -93,13 +93,15 @@
       "dl.google.com",
       "static.rust-lang.org",
       "github.com",
-      "raw.githubusercontent.com"
+      "raw.githubusercontent.com",
+      "ziglang.org"
     ],
     "tools": [
       "node",
       "go",
       "rustup",
-      "uv"
+      "uv",
+      "zig"
     ],
     "platforms": [
       "darwin",

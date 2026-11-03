@@ -1,0 +1,6 @@
+{
+  "ChangeMemberFireSlabSystem": {
+    "memberId": "wall-W1",
+    "newFireSlabSystem": "OneWay"
+  }
+}

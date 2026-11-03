@@ -1,0 +1,11 @@
+{
+  "InsertPlatedAction": {
+    "id": "pp-1",
+    "index": 2,
+    "element": {
+      "id": "pp-g-2",
+      "loadCaseId": "g-permanent",
+      "force": 80000000.0
+    }
+  }
+}

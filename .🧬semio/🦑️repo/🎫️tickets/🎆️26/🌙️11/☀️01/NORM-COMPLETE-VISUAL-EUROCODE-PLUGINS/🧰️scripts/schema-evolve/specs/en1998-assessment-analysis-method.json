@@ -1,0 +1,25 @@
+{
+  "artifact": "en1998",
+  "leaf": {
+    "kindSlug": "assessment",
+    "donor": "change-assessment-limit-state",
+    "after": "intermediateSteelAreaM2",
+    "default": "derived",
+    "field": {
+      "name": "analysis_method",
+      "type": "enum",
+      "label": {"en": "Analysis method", "de": "Berechnungsverfahren"},
+      "doc": "🧭 Analysis method of the assessment (EN 1998-3 4.3): lateral force, modal response spectrum, nonlinear static (pushover) or nonlinear time history; gated by the knowledge level (Table 3.1); `derived` takes the method from the model (pushover when every storey has a shear resistance, else lateral force).",
+      "enum": {
+        "name": "AnalysisMethodChoice",
+        "values": [
+          {"token": "derived", "label": {"en": "Derived from the model", "de": "Aus dem Modell abgeleitet"}},
+          {"token": "lf", "label": {"en": "Lateral force", "de": "Ersatzkraftverfahren"}},
+          {"token": "mrs", "label": {"en": "Modal response spectrum", "de": "Modales Antwortspektrenverfahren"}},
+          {"token": "pushover", "label": {"en": "Nonlinear static (pushover)", "de": "Nichtlinear statisch (Pushover)"}},
+          {"token": "nlth", "label": {"en": "Nonlinear time history", "de": "Nichtlineare Zeitverlaufsberechnung"}}
+        ]
+      }
+    }
+  }
+}

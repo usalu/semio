@@ -1,0 +1,8 @@
+{
+  "ChangeConcentratedPosition": {
+    "wallId": "wall-north",
+    "loadCaseId": "ulsinz",
+    "id": "beam-A",
+    "newPositionM": 1.5
+  }
+}

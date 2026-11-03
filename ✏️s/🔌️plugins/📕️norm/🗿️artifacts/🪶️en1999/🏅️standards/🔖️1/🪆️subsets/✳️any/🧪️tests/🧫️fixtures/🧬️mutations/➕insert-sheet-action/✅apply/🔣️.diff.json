@@ -1,0 +1,60 @@
+{
+  "annex": null,
+  "reliabilityClass": "RC2",
+  "materials": null,
+  "sections": null,
+  "members": null,
+  "connections": null,
+  "fireScenarios": null,
+  "fatigueDetails": null,
+  "coldFormed": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "sheet-pass",
+        "patch": {
+          "materialId": null,
+          "thickness": null,
+          "width": null,
+          "span": null,
+          "welded": null,
+          "actions": {
+            "removed": [],
+            "inserted": [
+              {
+                "index": 1,
+                "row": {
+                  "id": "G-sheet-2",
+                  "kind": "permanent",
+                  "category": "selfWeight",
+                  "source": "external",
+                  "gKLine": 120.0,
+                  "qKLine": 0.0,
+                  "nK": 5926.0,
+                  "vYK": 0.0,
+                  "vZK": 0.0,
+                  "mYK": 29.6,
+                  "mZK": 0.0,
+                  "torsionK": 0.0,
+                  "localLoadK": 0.0
+                }
+              }
+            ],
+            "moved": [],
+            "modified": []
+          }
+        }
+      }
+    ]
+  },
+  "shells": null,
+  "placements": null,
+  "weldRuns": null,
+  "outlineVertices": null,
+  "fatigueCategories": null,
+  "patchLoads": null,
+  "ringStiffeners": null,
+  "transverseStiffeners": null
+}

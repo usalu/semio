@@ -1,0 +1,45 @@
+{
+  "structureId": null,
+  "geotechnicalCategory": null,
+  "designSituation": null,
+  "designApproach": null,
+  "annex": null,
+  "groundwaterLevel": null,
+  "investigationDepth": null,
+  "layers": null,
+  "footings": null,
+  "piles": null,
+  "retainingWalls": null,
+  "slopes": null,
+  "upliftCases": null,
+  "anchors": null,
+  "embeddedWalls": null,
+  "pileGroups": null,
+  "labTests": null,
+  "layerWaters": null,
+  "placements": {
+    "removed": [],
+    "inserted": [
+      {
+        "index": 1,
+        "row": {
+          "id": "footing-F1-m1",
+          "x": 3.0,
+          "y": 4.0,
+          "z": 0.0,
+          "yaw": 1.5
+        }
+      }
+    ],
+    "moved": [],
+    "modified": []
+  },
+  "cases": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "investigations": null,
+  "characteristicBases": null
+}

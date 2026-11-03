@@ -1,0 +1,5 @@
+{
+  "mutation": "changeFootingSettlementLimit",
+  "id": "footing-F1",
+  "newSettlementLimit": 0.05
+}

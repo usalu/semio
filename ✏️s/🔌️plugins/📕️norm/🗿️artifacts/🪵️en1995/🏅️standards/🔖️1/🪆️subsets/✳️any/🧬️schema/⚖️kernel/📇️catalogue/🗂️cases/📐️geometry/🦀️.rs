@@ -1,0 +1,86 @@
+//! 📐️ Geometry declarations of the EN1995 design cases: per catalogue entry the form it draws in 3D, the inputs that size it and drive its load bar and the auxiliary roles of its form; generated from the hand-maintained `./🔣️.json` by `🧰️scripts/catalogue-bridge-v5/geometry_gen.py`. See [`super`].
+
+use semio_s_plugin_norm_compliance::design_case::{self, AuxRow, CaseForm, CaseGeometry, GeometryRow};
+
+const fn row(entry: &'static str, form: CaseForm, width: &'static str, length: &'static str, height: &'static str, load: &'static str, aux: &'static [AuxRow]) -> GeometryRow {
+    GeometryRow { entry, geometry: CaseGeometry { form, width, length, height, load, aux } }
+}
+
+/// 📐️ The declaration of every catalogue entry, in registry order.
+pub static GEOMETRY: &[GeometryRow] = &[
+    row("T-01", CaseForm::Symbol, "", "", "", "", &[]),
+    row("T-02", CaseForm::Gauge, "", "", "", "sc", &[]),
+    row("T-03", CaseForm::Symbol, "", "", "", "", &[]),
+    row("T-04", CaseForm::Gauge, "", "", "", "u_inst_g", &[]),
+    row("T-05", CaseForm::Member, "", "", "h", "", &[("grain", "")]),
+    row("T-06", CaseForm::Member, "", "", "h", "", &[("grain", "")]),
+    row("T-10", CaseForm::Member, "b", "", "h", "n_t", &[("grain", "")]),
+    row("T-11", CaseForm::Gauge, "", "", "", "sigma_t_90", &[]),
+    row("T-12", CaseForm::Column, "b", "h", "", "n_c", &[("grain", "")]),
+    row("T-13", CaseForm::Block, "b", "l", "h", "", &[("grain", ""), ("dim_x", "l1")]),
+    row("T-14", CaseForm::Member, "b", "", "h", "m_y", &[("grain", "")]),
+    row("T-15", CaseForm::Member, "b", "", "h", "v", &[("grain", ""), ("dim_x", "a_support")]),
+    row("T-16", CaseForm::Member, "b", "", "h", "m_t", &[("grain", "")]),
+    row("T-17", CaseForm::Member, "b", "", "h", "n_t", &[("grain", "")]),
+    row("T-18", CaseForm::Opening, "b", "h", "", "n_t", &[("open_w", "hole_d"), ("open_l", "hole_d")]),
+    row("T-50", CaseForm::Member, "b", "", "h", "m_y", &[("grain", ""), ("dim_x", "spacing_m")]),
+    row("T-66", CaseForm::Member, "", "span_m", "", "", &[("grain", "")]),
+    row("T-120", CaseForm::Member, "deck_width_m", "span_m", "", "", &[("grain", "")]),
+    row("T-121", CaseForm::Gauge, "", "", "", "ds1", &[]),
+    row("T-122", CaseForm::Plate, "deck_width_m", "span_m", "deck_depth", "sigma_p_0", &[("grain", "")]),
+    row("T-123", CaseForm::Fastener, "", "", "", "f_ed", &[("count", "n")]),
+    row("T-124", CaseForm::Member, "", "span_m", "", "", &[("grain", "")]),
+    row("T-30", CaseForm::Member, "b", "", "h", "m_d", &[("grain", ""), ("taper", "alpha_deg")]),
+    row("T-31", CaseForm::Member, "b", "", "h_ap", "m_ap", &[("grain", ""), ("apex_angle", "alpha_ap_deg"), ("apex_radius", "r_in"), ("dim_z", "t_lam")]),
+    row("T-32", CaseForm::Member, "b", "", "h_ap", "m_ap", &[("grain", ""), ("apex_angle", "alpha_ap_deg"), ("apex_radius", "r_in")]),
+    row("T-33", CaseForm::Member, "b", "", "h_ap", "m_ap", &[("grain", ""), ("dim_x", "r_in")]),
+    row("T-45", CaseForm::Member, "b", "", "h", "v_d", &[("grain", ""), ("eff_height", "h_ef"), ("notch_length", "x")]),
+    row("T-46", CaseForm::Member, "", "", "h", "v_d", &[("grain", ""), ("dim_z", "h_ef")]),
+    row("T-70", CaseForm::Fastener, "", "", "", "", &[("diameter", "d"), ("dim_angle", "alpha_deg"), ("dim_z", "t_panel")]),
+    row("T-71", CaseForm::Fastener, "", "", "t1", "f_ed", &[("thickness2", "t2"), ("diameter", "d")]),
+    row("T-72", CaseForm::Fastener, "", "", "t1", "f_ed", &[("thickness2", "t2"), ("diameter", "d")]),
+    row("T-73", CaseForm::Fastener, "", "", "t1", "f_ed", &[("thickness2", "t_steel"), ("diameter", "d"), ("dim_z", "t2")]),
+    row("T-74", CaseForm::Fastener, "", "", "", "", &[("diameter", "d"), ("spacing", "a1"), ("spacing2", "a2"), ("dim_angle", "alpha_deg"), ("dim_x", "a3t"), ("dim_x2", "a3c"), ("dim_y", "a4t"), ("dim_y2", "a4c")]),
+    row("T-75", CaseForm::Fastener, "", "", "", "f_v_rk", &[("diameter", "d"), ("spacing", "a1"), ("count", "n"), ("dim_angle", "alpha_deg")]),
+    row("T-76", CaseForm::Fastener, "", "", "t_pen", "f_ax_ed", &[("diameter", "d"), ("count", "n_ef"), ("dim_x", "l_ef"), ("dim_angle", "alpha_deg")]),
+    row("T-77", CaseForm::Fastener, "", "", "", "f_ax_ed", &[]),
+    row("T-78", CaseForm::Member, "b", "", "h", "f_ed", &[("grain", ""), ("dim_y", "he")]),
+    row("T-79", CaseForm::Fastener, "", "", "t_plate", "f_ed", &[("diameter", "d"), ("dim_x", "d0"), ("dim_x2", "e1"), ("dim_y", "e2")]),
+    row("T-80", CaseForm::Fastener, "", "", "h_e", "f_ed", &[("diameter", "d_c"), ("dim_angle", "alpha_deg")]),
+    row("T-81", CaseForm::Fastener, "", "", "", "f_ed", &[("diameter", "d_c")]),
+    row("T-82", CaseForm::Plate, "", "l_plate", "", "f_ed", &[("grain", "")]),
+    row("T-83", CaseForm::Fastener, "", "", "", "", &[("diameter", "d")]),
+    row("T-60", CaseForm::Member, "b", "l", "h", "load_g", &[("grain", ""), ("dim_z", "h_a"), ("dim_z2", "h_b")]),
+    row("T-61", CaseForm::Member, "b", "l", "h", "load_g", &[("grain", "")]),
+    row("T-62", CaseForm::Member, "", "l", "", "load_g", &[("grain", ""), ("dim_z", "h1"), ("dim_z2", "h2"), ("dim_z3", "h3"), ("dim_x", "s1"), ("dim_x2", "s3")]),
+    row("T-63", CaseForm::Member, "", "span_m", "", "", &[("grain", "")]),
+    row("T-64", CaseForm::Member, "width_m", "span_m", "", "force_n", &[("grain", "")]),
+    row("T-65", CaseForm::Member, "width_m", "span_m", "", "", &[("grain", "")]),
+    row("T-20", CaseForm::Column, "b", "h", "lef_y", "n_c", &[("grain", ""), ("dim_x", "lef_z")]),
+    row("T-21", CaseForm::Column, "b", "h", "lef_y", "n_c", &[("grain", ""), ("dim_x", "lef_z")]),
+    row("T-22", CaseForm::Member, "b", "l", "h", "m_y", &[("grain", ""), ("dim_x", "lef")]),
+    row("T-23", CaseForm::Column, "b", "h", "l", "n_c", &[("grain", ""), ("dim_x", "lef_y"), ("dim_x2", "lef_z")]),
+    row("T-24", CaseForm::Column, "b", "h", "lef_y", "n_c", &[("grain", "")]),
+    row("T-100", CaseForm::Plate, "", "", "h_p", "t_min", &[("grain", "")]),
+    row("T-101", CaseForm::Member, "b", "", "h", "m_fi", &[("grain", "")]),
+    row("T-102", CaseForm::Member, "b", "", "h", "m_fi", &[("grain", "")]),
+    row("T-103", CaseForm::Plate, "", "", "h_p", "t_min", &[("grain", "")]),
+    row("T-104", CaseForm::Fastener, "", "", "a_required", "f_fi_d", &[("dim_x", "a_provided")]),
+    row("T-105", CaseForm::Plate, "", "", "h1", "t_req", &[("grain", "")]),
+    row("T-106", CaseForm::Member, "b", "", "h", "m_fi", &[("grain", "")]),
+    row("T-107", CaseForm::Plate, "", "", "t1", "m_fi", &[("grain", ""), ("plies", "t1"), ("ply_dir", "o1"), ("dim_z", "protect_mm")]),
+    row("T-90", CaseForm::Member, "", "l", "h2", "", &[("grain", "")]),
+    row("T-91", CaseForm::Member, "b_f", "", "h_w", "m_d", &[("grain", ""), ("dim_z", "h_f"), ("dim_y", "b_w")]),
+    row("T-92", CaseForm::Member, "b_w", "l", "h_w", "m_d", &[("grain", ""), ("dim_z", "h_f"), ("dim_x", "outstand")]),
+    row("T-93", CaseForm::Column, "", "", "lef", "n_c", &[("grain", ""), ("dim_x", "i_tot"), ("dim_x2", "l1"), ("dim_x3", "i1")]),
+    row("T-94", CaseForm::Plate, "b_i", "l_dia", "", "f_v_ed", &[("grain", "")]),
+    row("T-95", CaseForm::Member, "", "l_m", "", "n_d", &[("grain", "")]),
+    row("T-96", CaseForm::Member, "", "l_m", "", "n_d", &[("grain", ""), ("dim_y", "brace_b"), ("dim_z", "brace_h")]),
+    row("T-97", CaseForm::Plate, "", "l", "t1", "", &[("grain", ""), ("plies", "t1"), ("ply_dir", "o1")]),
+    row("T-98", CaseForm::Symbol, "", "", "", "", &[]),
+];
+
+/// 📐️ The geometry declared for the catalogue entry `entry_id`.
+pub fn geometry_of(entry_id: &str) -> Option<CaseGeometry> {
+    design_case::geometry_in(GEOMETRY, entry_id)
+}

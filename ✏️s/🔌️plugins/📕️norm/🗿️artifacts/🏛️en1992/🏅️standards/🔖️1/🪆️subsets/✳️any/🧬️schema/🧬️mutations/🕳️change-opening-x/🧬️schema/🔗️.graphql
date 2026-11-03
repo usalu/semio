@@ -1,0 +1,5 @@
+type ChangeOpeningX {
+  memberId: String!
+  openingId: String!
+  newX: Float!
+}

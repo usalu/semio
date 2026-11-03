@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-transverse-width/schema.json",
+  "title": "ChangeTransverseWidth",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "transverseStiffenerId",
+    "newWidth"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeTransverseWidth"
+    },
+    "transverseStiffenerId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Transverse stiffener",
+          "de": "Quersteife"
+        },
+        "description": {
+          "en": "The transverse stiffener this mutation addresses, by id.",
+          "de": "Das adressierte Element (Quersteife), per Kennung."
+        },
+        "ref": {
+          "kind": "transverse-stiffener"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newWidth": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Stiffener width b_st",
+          "de": "Steifenbreite b_st"
+        },
+        "widget": "stepper",
+        "unit": "m",
+        "displayUnit": "mm",
+        "displayFactor": 1000,
+        "precision": 1,
+        "step": 0.005,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

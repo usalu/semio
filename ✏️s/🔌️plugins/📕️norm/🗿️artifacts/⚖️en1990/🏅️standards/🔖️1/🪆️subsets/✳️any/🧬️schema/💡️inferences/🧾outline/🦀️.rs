@@ -7,6 +7,8 @@ use semio_s_artifact_norm_en1990_model::En1990Snapshot;
 const SECTION_FIELDS: &[&str] = &[
     "annex",
     "projectId",
+    "structureKind",
+    "altitudeM",
     "consequenceClass",
     "reliabilityClass",
     "designWorkingLifeCategory",
@@ -20,13 +22,21 @@ const SECTION_FIELDS: &[&str] = &[
     "accidentals",
     "seismics",
     "members",
+    "bridgeSls",
     "effects",
+    "fatigueSpectra",
+    "reliabilityAnalyses",
+    "testSeries",
+    "placements",
+    "cases",
+    "factorOverrides",
+    "trafficGroups",
 ];
 
 /// 📏️ En1990 document outline and governing-clause summary.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct En1990Outline {
     pub section_outline: Vec<String>,
@@ -43,7 +53,7 @@ impl En1990Outline {
     pub fn compute(snapshot: &En1990Snapshot) -> Self {
         let section_outline: Vec<String> = SECTION_FIELDS.iter().map(|s| s.to_string()).collect();
         let field_count = section_outline.len() as u32;
-        let entry_count = (snapshot.permanents.len() + snapshot.variables.len() + snapshot.members.len()) as u32;
+        let entry_count = (snapshot.permanents.len() + snapshot.variables.len() + snapshot.accidentals.len() + snapshot.seismics.len() + snapshot.members.len() + snapshot.bridge_sls.len() + snapshot.effects.len() + snapshot.fatigue_spectra.len() + snapshot.reliability_analyses.len() + snapshot.test_series.len() + snapshot.placements.len() + snapshot.cases.len() + snapshot.factor_overrides.len() + snapshot.traffic_groups.len()) as u32;
         let report = crate::evaluate(snapshot);
         let check_count = report.checks.len() as u32;
         let pass_count = report.checks.iter().filter(|check| check.status == CheckStatus::Pass).count() as u32;
@@ -69,7 +79,7 @@ impl En1990Outline {
 
 impl Default for En1990Outline {
     fn default() -> Self {
-        Self::compute(&En1990Snapshot::default())
+        Self::compute(&En1990Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De))
     }
 }
 //#endregion 🔖️Outline

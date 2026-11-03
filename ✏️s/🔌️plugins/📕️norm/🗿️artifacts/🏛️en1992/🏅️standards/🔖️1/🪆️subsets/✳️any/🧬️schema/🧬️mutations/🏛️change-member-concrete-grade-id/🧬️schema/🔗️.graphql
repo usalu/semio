@@ -1,0 +1,4 @@
+type ChangeMemberConcreteGradeId {
+  memberId: String!
+  newConcreteGradeId: String!
+}

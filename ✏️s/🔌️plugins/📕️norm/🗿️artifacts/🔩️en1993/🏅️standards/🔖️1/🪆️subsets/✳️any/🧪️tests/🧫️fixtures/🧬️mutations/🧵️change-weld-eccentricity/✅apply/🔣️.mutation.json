@@ -1,0 +1,6 @@
+{
+  "ChangeWeldEccentricity": {
+    "id": "weld-group-1",
+    "newEccentricity": 0.3
+  }
+}

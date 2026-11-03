@@ -1,0 +1,193 @@
+{
+  "annex": "De",
+  "reliabilityClass": "RC2",
+  "masonryClass": "Class1",
+  "designSituation": "Persistent",
+  "storeys": 2,
+  "walls": [
+    {
+      "id": "wall-north",
+      "labelEn": "North load-bearing wall",
+      "labelDe": "Tragende Nordwand",
+      "wallType": "LoadBearing",
+      "thicknessM": 0.365,
+      "heightM": 2.75,
+      "lengthM": 5.0,
+      "supportSides": 4,
+      "openings": [],
+      "slabBearingDepthM": 0.12,
+      "eccentricityTopM": 0.02,
+      "eccentricityBottomM": 0.015,
+      "unitGroup": "Group1",
+      "unitMaterial": "Clay",
+      "fBPa": 20000000.0,
+      "unitLengthM": 0.24,
+      "unitWidthM": 0.365,
+      "unitHeightM": 0.113,
+      "mortarType": "GeneralPurpose",
+      "mortarClass": "M10",
+      "mortarStrengthPa": 10000000.0,
+      "bedJointThicknessM": 0.012,
+      "reinforced": false,
+      "asVerticalM2": 0.0,
+      "asHorizontalM2": 0.0,
+      "fYdPa": 0.0,
+      "fireReiMin": 90,
+      "exposure": "Mx1",
+      "mu": 0.4,
+      "densityKgM3": 1800.0,
+      "phiInfinity": 1.5,
+      "isBasement": false,
+      "loadCases": [
+        {
+          "id": "ulsinz",
+          "designSituation": "persistent",
+          "imposedCategory": "a",
+          "gKSlabN": 120000.0,
+          "qKImposedPa": 2000.0,
+          "tributaryAreaM2": 12.5,
+          "slabSpanM": 4.5,
+          "qKSnowPa": 0.0,
+          "qPWindPa": 800.0,
+          "cPe": 0.8,
+          "hKEarthN": 0.0,
+          "concentrated": []
+        }
+      ],
+      "piers": [],
+      "lintels": [],
+      "ties": [],
+      "prestress": [],
+      "confined": [],
+      "flanges": [],
+      "bars": [],
+      "frostClass": "Exempt",
+      "coverM": 0.03,
+      "deflectionLimit": 250.0,
+      "soilHeightM": 0.0,
+      "soilDensityKgM3": 1800.0,
+      "isothermDepthM": 0.0,
+      "planXM": 0.0,
+      "planYM": 0.0,
+      "planAngleDeg": 0.0,
+      "inPlaneShearN": 0.0,
+      "inPlaneMomentNm": 0.0,
+      "bracingSystem": "Unreinforced",
+      "diaphragmStiffnessNPerM": 0.0,
+      "webSpacingM": 0.0
+    }
+  ],
+  "placements": [],
+  "cases": [
+    {
+      "id": "case-m-44",
+      "labelEn": "Prestressed masonry",
+      "labelDe": "Vorgespanntes Mauerwerk",
+      "entryId": "M-44",
+      "numbers": [
+        {
+          "id": "a_m2",
+          "value": 0.365
+        },
+        {
+          "id": "ap_m2",
+          "value": 0.00014
+        },
+        {
+          "id": "e_pa",
+          "value": 6000000000.0
+        },
+        {
+          "id": "ep_pa",
+          "value": 195000000000.0
+        },
+        {
+          "id": "eps_cs",
+          "value": 0.0003
+        },
+        {
+          "id": "fd_pa",
+          "value": 5957000.0
+        },
+        {
+          "id": "fpk_pa",
+          "value": 1860000000.0
+        },
+        {
+          "id": "fxk1_pa",
+          "value": 200000.0
+        },
+        {
+          "id": "n_ed_n",
+          "value": 300000.0
+        },
+        {
+          "id": "p0_n",
+          "value": 200000.0
+        },
+        {
+          "id": "phi_inf",
+          "value": 1.5
+        },
+        {
+          "id": "rho_relax",
+          "value": 0.025
+        },
+        {
+          "id": "z_m3",
+          "value": 0.06
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-m-45",
+      "labelEn": "Anchorage of reinforcement bars",
+      "labelDe": "Verankerung der Bewehrungsstäbe",
+      "entryId": "M-45",
+      "numbers": [
+        {
+          "id": "diameter_m",
+          "value": 0.012
+        },
+        {
+          "id": "fyd_pa",
+          "value": 435000000.0
+        },
+        {
+          "id": "gamma_m",
+          "value": 1.5
+        },
+        {
+          "id": "provided_m",
+          "value": 1.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-m-95",
+      "labelEn": "Behaviour factor of masonry",
+      "labelDe": "Verhaltensbeiwert Mauerwerk",
+      "entryId": "M-95",
+      "numbers": [
+        {
+          "id": "k_diaphragm_n_m",
+          "value": 50000000.0
+        },
+        {
+          "id": "q",
+          "value": 2.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "system",
+          "value": "confined"
+        }
+      ]
+    }
+  ],
+  "movementJoints": [],
+  "chases": []
+}

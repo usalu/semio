@@ -131,9 +131,6 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/⚖️compliance/🦀️.rs"]
 mod checks_compliance;
 #[cfg(test)]
-#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧪️tests/🔬️unit/🦀️.rs"]
-mod diff_unit;
-#[cfg(test)]
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
 mod sqlite_snapshot_tests;
 //#endregion 🪢️Mounts

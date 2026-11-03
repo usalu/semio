@@ -1,0 +1,6 @@
+{
+  "ChangeJointColumnWebShearArea": {
+    "id": "joint-j1",
+    "newColumnWebShearArea": 1.5
+  }
+}

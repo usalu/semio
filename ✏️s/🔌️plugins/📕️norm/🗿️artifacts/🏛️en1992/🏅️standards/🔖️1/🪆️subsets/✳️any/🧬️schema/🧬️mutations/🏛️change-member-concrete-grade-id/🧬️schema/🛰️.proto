@@ -1,0 +1,6 @@
+syntax = "proto3";
+package semio.s.norm.en1992.mutation.change_member_concrete_grade_id;
+message ChangeMemberConcreteGradeId {
+  string member_id = 1;
+  string new_concrete_grade_id = 2;
+}

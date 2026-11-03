@@ -1,0 +1,10 @@
+{
+  "mutation": "insertCharacteristicBasis",
+  "index": 1,
+  "characteristicBasis": {
+    "id": "characteristic-basis-2",
+    "layerId": "sand-1",
+    "parameter": "undrainedStrength",
+    "basis": "derived"
+  }
+}

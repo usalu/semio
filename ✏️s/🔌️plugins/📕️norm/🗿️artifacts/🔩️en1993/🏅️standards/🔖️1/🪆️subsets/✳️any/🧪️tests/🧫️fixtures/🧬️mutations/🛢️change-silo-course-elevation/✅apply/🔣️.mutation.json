@@ -1,0 +1,6 @@
+{
+  "ChangeSiloCourseElevation": {
+    "id": "silo-1",
+    "newCourseElevation": 1.5
+  }
+}

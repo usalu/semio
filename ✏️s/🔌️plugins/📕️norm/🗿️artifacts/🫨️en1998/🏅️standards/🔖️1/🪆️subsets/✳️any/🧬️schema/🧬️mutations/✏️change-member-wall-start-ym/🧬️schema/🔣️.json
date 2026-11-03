@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-member-wall-start-ym/schema.json",
+  "title": "ChangeMemberWallStartYM",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "buildingId",
+    "id",
+    "newWallStartYM"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeMemberWallStartYM"
+    },
+    "buildingId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Building",
+          "de": "Gebäude"
+        },
+        "description": {
+          "en": "The building this mutation addresses, by id.",
+          "de": "Das adressierte Element (Gebäude), per Kennung."
+        },
+        "ref": {
+          "kind": "building"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Member",
+          "de": "Bauteil"
+        },
+        "description": {
+          "en": "The member this mutation addresses, by id.",
+          "de": "Das adressierte Element (Bauteil), per Kennung."
+        },
+        "ref": {
+          "kind": "member"
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "newWallStartYM": {
+      "type": "number",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Plan y of the wall start point in the building plan (the wall runs from here along its direction by its length)",
+          "de": "Grundriss-y des Wandanfangspunkts im Gebäudegrundriss (die Wand verläuft von hier in ihrer Richtung um ihre Länge)"
+        },
+        "group": "value",
+        "order": 30,
+        "widget": "stepper",
+        "step": 0.001,
+        "precision": 3
+      }
+    }
+  }
+}

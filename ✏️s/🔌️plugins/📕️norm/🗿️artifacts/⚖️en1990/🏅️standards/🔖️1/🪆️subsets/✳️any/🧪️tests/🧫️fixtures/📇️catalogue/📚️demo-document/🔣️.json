@@ -1,0 +1,892 @@
+{
+  "annex": "De",
+  "projectId": "accidental-seismic-compliant",
+  "structureKind": "building",
+  "altitudeM": 120.0,
+  "consequenceClass": 2,
+  "reliabilityClass": "RC2",
+  "designWorkingLifeCategory": 4,
+  "designWorkingLifeYears": 50.0,
+  "referencePeriodYears": 50.0,
+  "supervisionLevel": "dsl2",
+  "inspectionLevel": "il2",
+  "betaComputed": 3.8,
+  "permanents": [
+    {
+      "id": "G-sup",
+      "kind": "gSup",
+      "gk": 80000.0
+    },
+    {
+      "id": "G-inf",
+      "kind": "gInf",
+      "gk": 20000.0
+    }
+  ],
+  "variables": [
+    {
+      "id": "Q-office",
+      "category": "office",
+      "qk": 40000.0,
+      "group": ""
+    },
+    {
+      "id": "Q-wind",
+      "category": "wind",
+      "qk": 20000.0,
+      "group": ""
+    }
+  ],
+  "accidentals": [
+    {
+      "id": "A-impact",
+      "ad": 50000.0
+    }
+  ],
+  "seismics": [
+    {
+      "id": "E-1",
+      "aEk": 60000.0,
+      "importanceClass": "II"
+    }
+  ],
+  "members": [
+    {
+      "id": "beam-B1",
+      "labelEn": "Office beam B1",
+      "labelDe": "Büroträger B1",
+      "rdStr": 250000.0,
+      "rdGeo": 250000.0,
+      "rdEquStab": 200000.0,
+      "rdEquDestab": 180000.0,
+      "rdFat": 0.0,
+      "span": 6.0,
+      "precamber": 0.0,
+      "deflectionW1": 0.006,
+      "deflectionW2": 0.003,
+      "deflectionW3": 0.009,
+      "deflectionLimitRatio": 250.0,
+      "deflectionLimitRatioW3": 300.0,
+      "slsLimitChar": 250000.0,
+      "slsLimitFreq": 250000.0,
+      "slsLimitQp": 250000.0,
+      "vibrationFrequency": 5.5,
+      "vibrationFrequencyMin": 3.0,
+      "frameHeight": 0.0,
+      "frameDrift": 0.0,
+      "storeyHeight": 0.0,
+      "storeyDrift": 0.0,
+      "materialStrengthK": 0.0,
+      "materialConversionFactor": 0.0,
+      "materialPartialFactor": 0.0,
+      "materialDesignStrength": 0.0,
+      "nominalDimension": 0.0,
+      "dimensionTolerance": 0.0,
+      "designDimension": 0.0,
+      "memberAlphaCr": 0.0,
+      "secondOrderAnalysis": 0.0
+    }
+  ],
+  "bridgeSls": [
+    {
+      "id": "bri-1",
+      "memberId": "beam-B1",
+      "deckAcceleration": 1.0,
+      "deckAccelerationLimit": 1.0,
+      "deckTwist": 1.0,
+      "deckTwistLimit": 1.0,
+      "bridgeDeflection": 1.0,
+      "bridgeDeflectionLimit": 1.0,
+      "trackGauge": 0.0,
+      "lineSpeed": 0.0,
+      "ballastDepth": 0.0,
+      "deckMass": 0.0,
+      "naturalFrequency": 0.0,
+      "endRotation": 0.0,
+      "basicWindSpeed": 0.0,
+      "dampingRatio": 0.0
+    }
+  ],
+  "effects": [
+    {
+      "memberId": "beam-B1",
+      "actionId": "G-sup",
+      "influence": 1.0
+    },
+    {
+      "memberId": "beam-B1",
+      "actionId": "G-inf",
+      "influence": -1.0
+    },
+    {
+      "memberId": "beam-B1",
+      "actionId": "Q-office",
+      "influence": 1.0
+    },
+    {
+      "memberId": "beam-B1",
+      "actionId": "Q-wind",
+      "influence": 1.0
+    },
+    {
+      "memberId": "beam-B1",
+      "actionId": "A-impact",
+      "influence": 1.0
+    },
+    {
+      "memberId": "beam-B1",
+      "actionId": "E-1",
+      "influence": 1.0
+    }
+  ],
+  "fatigueSpectra": [
+    {
+      "id": "fat-1",
+      "memberId": "beam-B1",
+      "detailCategory": 1.0,
+      "stressRange": 1.0,
+      "cycles": 1.0
+    }
+  ],
+  "reliabilityAnalyses": [
+    {
+      "id": "rel-1",
+      "resistanceDistribution": "normal",
+      "resistanceMean": 1.0,
+      "resistanceSd": 1.0,
+      "actionDistribution": "normal",
+      "actionMean": 1.0,
+      "actionSd": 1.0
+    }
+  ],
+  "testSeries": [
+    {
+      "id": "tes-1",
+      "quantity": "normal",
+      "distribution": "normal",
+      "sampleSize": 1,
+      "mean": 1.0,
+      "stdDev": 1.0,
+      "variationKnown": 1.0,
+      "conversionFactor": 1.0,
+      "required": 1.0,
+      "pairs": "",
+      "theoryVariation": 0.0
+    }
+  ],
+  "placements": [
+    {
+      "id": "pla-1",
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0,
+      "yaw": 1.0
+    }
+  ],
+  "cases": [
+    {
+      "id": "case-e90-01",
+      "labelEn": "Basic requirements",
+      "labelDe": "Grundlegende Anforderungen",
+      "entryId": "E90.01",
+      "numbers": [],
+      "texts": [
+        {
+          "id": "use",
+          "value": "building"
+        }
+      ]
+    },
+    {
+      "id": "case-e90-02",
+      "labelEn": "Consequence and reliability classes",
+      "labelDe": "Schadensfolge- und Zuverlässigkeitsklassen",
+      "entryId": "E90.02",
+      "numbers": [
+        {
+          "id": "cc",
+          "value": 3.0
+        },
+        {
+          "id": "gamma_f",
+          "value": 1.5
+        },
+        {
+          "id": "k_fi_declared",
+          "value": 1.1
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e90-03",
+      "labelEn": "Design working life",
+      "labelDe": "Entwurfsnutzungsdauer",
+      "entryId": "E90.03",
+      "numbers": [
+        {
+          "id": "category",
+          "value": 2.0
+        },
+        {
+          "id": "years",
+          "value": 40.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e90-04",
+      "labelEn": "Durability",
+      "labelDe": "Dauerhaftigkeit",
+      "entryId": "E90.04",
+      "numbers": [
+        {
+          "id": "years",
+          "value": 50.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e90-05",
+      "labelEn": "Design supervision and inspection levels",
+      "labelDe": "Entwurfs- und Ausführungsüberwachung",
+      "entryId": "E90.05",
+      "numbers": [
+        {
+          "id": "dsl",
+          "value": 2.0
+        },
+        {
+          "id": "il",
+          "value": 3.0
+        },
+        {
+          "id": "rc",
+          "value": 3.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e90-06",
+      "labelEn": "Design situations",
+      "labelDe": "Bemessungssituationen",
+      "entryId": "E90.06",
+      "numbers": [],
+      "texts": [
+        {
+          "id": "situations",
+          "value": "persistent,accidental,seismic,fatigue"
+        }
+      ]
+    },
+    {
+      "id": "case-e90-07",
+      "labelEn": "Classification of actions",
+      "labelDe": "Einwirkungsklassifikation",
+      "entryId": "E90.07",
+      "numbers": [],
+      "texts": [
+        {
+          "id": "effect",
+          "value": "unfavourable"
+        },
+        {
+          "id": "nature",
+          "value": "static"
+        },
+        {
+          "id": "origin",
+          "value": "direct"
+        },
+        {
+          "id": "spatial",
+          "value": "free"
+        },
+        {
+          "id": "variation",
+          "value": "variable"
+        }
+      ]
+    },
+    {
+      "id": "case-e90-08",
+      "labelEn": "Characteristic values",
+      "labelDe": "Charakteristische Werte",
+      "entryId": "E90.08",
+      "numbers": [
+        {
+          "id": "g_mean",
+          "value": 100.0
+        },
+        {
+          "id": "q_cov",
+          "value": 0.3
+        },
+        {
+          "id": "q_mean",
+          "value": 2.0
+        },
+        {
+          "id": "v_g",
+          "value": 0.1
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e90-09",
+      "labelEn": "Other representative values",
+      "labelDe": "Weitere repräsentative Werte",
+      "entryId": "E90.09",
+      "numbers": [],
+      "texts": [
+        {
+          "id": "category",
+          "value": "B"
+        }
+      ]
+    },
+    {
+      "id": "case-e90-10",
+      "labelEn": "Material properties",
+      "labelDe": "Materialeigenschaften",
+      "entryId": "E90.10",
+      "numbers": [
+        {
+          "id": "e_d",
+          "value": 250.0
+        },
+        {
+          "id": "eta",
+          "value": 0.9
+        },
+        {
+          "id": "x_k",
+          "value": 355.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "material",
+          "value": "steel"
+        }
+      ]
+    },
+    {
+      "id": "case-e90-11",
+      "labelEn": "Geometrical data",
+      "labelDe": "Geometrische Größen",
+      "entryId": "E90.11",
+      "numbers": [
+        {
+          "id": "a_nom",
+          "value": 300.0
+        },
+        {
+          "id": "delta_a",
+          "value": -5.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e90-12",
+      "labelEn": "Structural analysis models",
+      "labelDe": "Berechnungsmodelle",
+      "entryId": "E90.12",
+      "numbers": [
+        {
+          "id": "alpha_cr",
+          "value": 8.5
+        }
+      ],
+      "texts": [
+        {
+          "id": "analysis",
+          "value": "second-order"
+        }
+      ]
+    },
+    {
+      "id": "case-e90-13",
+      "labelEn": "Design assisted by testing",
+      "labelDe": "Versuchsgestützte Bemessung",
+      "entryId": "E90.13",
+      "numbers": [
+        {
+          "id": "mean",
+          "value": 50.0
+        },
+        {
+          "id": "n",
+          "value": 5.0
+        },
+        {
+          "id": "v",
+          "value": 0.1
+        },
+        {
+          "id": "v_known",
+          "value": 1.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "dist",
+          "value": "normal"
+        }
+      ]
+    },
+    {
+      "id": "case-e90-14",
+      "labelEn": "Limit state definitions",
+      "labelDe": "Definition der Grenzzustände",
+      "entryId": "E90.14",
+      "numbers": [],
+      "texts": []
+    },
+    {
+      "id": "case-e90-20",
+      "labelEn": "Partial factors and design values",
+      "labelDe": "Teilsicherheitsbeiwerte und Bemessungswerte",
+      "entryId": "E90.20",
+      "numbers": [
+        {
+          "id": "eta",
+          "value": 0.85
+        },
+        {
+          "id": "f_rep",
+          "value": 80.0
+        },
+        {
+          "id": "gamma_f",
+          "value": 1.35
+        },
+        {
+          "id": "gamma_m",
+          "value": 1.5
+        },
+        {
+          "id": "gamma_rd",
+          "value": 1.1
+        },
+        {
+          "id": "gamma_sd",
+          "value": 1.05
+        },
+        {
+          "id": "section",
+          "value": 4.0
+        },
+        {
+          "id": "x_k",
+          "value": 30.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e90-21",
+      "labelEn": "Fatigue limit state (Palmgren-Miner)",
+      "labelDe": "Ermüdungsgrenzzustand (Palmgren-Miner)",
+      "entryId": "E90.21",
+      "numbers": [
+        {
+          "id": "delta_sigma_c",
+          "value": 71.0
+        },
+        {
+          "id": "gamma_ff",
+          "value": 1.0
+        },
+        {
+          "id": "gamma_mf",
+          "value": 1.15
+        }
+      ],
+      "texts": [
+        {
+          "id": "spectrum",
+          "value": "90:200000;60:2000000;40:6000000;20:50000000"
+        }
+      ]
+    },
+    {
+      "id": "case-e90-15",
+      "labelEn": "Equilibrium EQU",
+      "labelDe": "Lagesicherheit EQU",
+      "entryId": "E90.15",
+      "numbers": [
+        {
+          "id": "t_d",
+          "value": 0.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "actions",
+          "value": "Gs|G|-400;Gd|G|120;Qd|Q|60|office"
+        },
+        {
+          "id": "structure",
+          "value": "building"
+        }
+      ]
+    },
+    {
+      "id": "case-e90-16",
+      "labelEn": "Fundamental combination STR/GEO",
+      "labelDe": "Grundkombination STR/GEO",
+      "entryId": "E90.16",
+      "numbers": [
+        {
+          "id": "r_d",
+          "value": 120.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "actions",
+          "value": "G|G|50;Q1|Q|20|office;W|Q|10|wind;S|Q|8|snow"
+        },
+        {
+          "id": "set",
+          "value": "B"
+        },
+        {
+          "id": "structure",
+          "value": "building"
+        }
+      ]
+    },
+    {
+      "id": "case-e90-17",
+      "labelEn": "Accidental combination",
+      "labelDe": "Außergewöhnliche Kombination",
+      "entryId": "E90.17",
+      "numbers": [
+        {
+          "id": "r_d",
+          "value": 300.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "actions",
+          "value": "G|G|50;Q1|Q|20|office;W|Q|10|wind;S|Q|8|snow;Ad|A|100"
+        },
+        {
+          "id": "lead_psi",
+          "value": "psi1"
+        },
+        {
+          "id": "structure",
+          "value": "building"
+        }
+      ]
+    },
+    {
+      "id": "case-e90-18",
+      "labelEn": "Seismic combination",
+      "labelDe": "Erdbebenkombination",
+      "entryId": "E90.18",
+      "numbers": [
+        {
+          "id": "r_d",
+          "value": 300.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "actions",
+          "value": "G|G|50;Q1|Q|20|office;W|Q|10|wind;S|Q|8|snow;E1|E|40;E2|E|25"
+        },
+        {
+          "id": "structure",
+          "value": "building"
+        }
+      ]
+    },
+    {
+      "id": "case-e90-19",
+      "labelEn": "Serviceability combinations",
+      "labelDe": "Gebrauchstauglichkeitskombinationen",
+      "entryId": "E90.19",
+      "numbers": [
+        {
+          "id": "cd_char",
+          "value": 100.0
+        },
+        {
+          "id": "cd_freq",
+          "value": 80.0
+        },
+        {
+          "id": "cd_qp",
+          "value": 60.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "actions",
+          "value": "G|G|50;Q1|Q|20|office;W|Q|10|wind;S|Q|8|snow"
+        },
+        {
+          "id": "structure",
+          "value": "building"
+        }
+      ]
+    },
+    {
+      "id": "case-e90-23",
+      "labelEn": "Partial factor sets",
+      "labelDe": "Teilsicherheitsbeiwertsätze",
+      "entryId": "E90.23",
+      "numbers": [],
+      "texts": [
+        {
+          "id": "structure",
+          "value": "building"
+        }
+      ]
+    },
+    {
+      "id": "case-e90-22",
+      "labelEn": "ψ factors for buildings",
+      "labelDe": "ψ-Beiwerte Hochbau",
+      "entryId": "E90.22",
+      "numbers": [],
+      "texts": [
+        {
+          "id": "category",
+          "value": "G"
+        }
+      ]
+    },
+    {
+      "id": "case-e90-24",
+      "labelEn": "Serviceability of buildings",
+      "labelDe": "Gebrauchstauglichkeit Hochbau",
+      "entryId": "E90.24",
+      "numbers": [
+        {
+          "id": "drift_ratio",
+          "value": 500.0
+        },
+        {
+          "id": "f1",
+          "value": 2.5
+        },
+        {
+          "id": "h_storey",
+          "value": 3.2
+        },
+        {
+          "id": "height",
+          "value": 12.0
+        },
+        {
+          "id": "ratio_net",
+          "value": 250.0
+        },
+        {
+          "id": "ratio_w3",
+          "value": 300.0
+        },
+        {
+          "id": "span",
+          "value": 6.0
+        },
+        {
+          "id": "storey_ratio",
+          "value": 300.0
+        },
+        {
+          "id": "u",
+          "value": 30.0
+        },
+        {
+          "id": "u_storey",
+          "value": 5.0
+        },
+        {
+          "id": "w1",
+          "value": 6.0
+        },
+        {
+          "id": "w2",
+          "value": 3.0
+        },
+        {
+          "id": "w3",
+          "value": 11.25
+        },
+        {
+          "id": "w_c",
+          "value": 5.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e90-25",
+      "labelEn": "ψ factors for bridges",
+      "labelDe": "ψ-Beiwerte Brücken",
+      "entryId": "E90.25",
+      "numbers": [],
+      "texts": [
+        {
+          "id": "category",
+          "value": "temperature_bridge"
+        }
+      ]
+    },
+    {
+      "id": "case-e90-26",
+      "labelEn": "Partial factors and combinations for bridges",
+      "labelDe": "Teilsicherheitsbeiwerte und Kombinationen Brücken",
+      "entryId": "E90.26",
+      "numbers": [
+        {
+          "id": "r_d",
+          "value": 3000.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "actions",
+          "value": "G|G|1000;TS|Q|300|road_traffic|gr1a;UDL|Q|150|road_udl|gr1a;SA|Q|200|road_single_axle|gr1b;W|Q|80|wind_bridge;T|Q|50|temperature_bridge"
+        }
+      ]
+    },
+    {
+      "id": "case-e90-27",
+      "labelEn": "Serviceability of bridges",
+      "labelDe": "Gebrauchstauglichkeit Brücken",
+      "entryId": "E90.27",
+      "numbers": [
+        {
+          "id": "acc_h",
+          "value": 0.3
+        },
+        {
+          "id": "acc_v",
+          "value": 0.5
+        },
+        {
+          "id": "crowd",
+          "value": 1.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "track",
+          "value": "ballasted"
+        }
+      ]
+    },
+    {
+      "id": "case-e90-28",
+      "labelEn": "Reliability differentiation",
+      "labelDe": "Zuverlässigkeitsdifferenzierung",
+      "entryId": "E90.28",
+      "numbers": [
+        {
+          "id": "beta",
+          "value": 3.7
+        },
+        {
+          "id": "rc",
+          "value": 2.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e90-29",
+      "labelEn": "Reliability analysis (FORM)",
+      "labelDe": "Zuverlässigkeitsanalyse (FORM)",
+      "entryId": "E90.29",
+      "numbers": [
+        {
+          "id": "beta_t",
+          "value": 3.8
+        },
+        {
+          "id": "e_k",
+          "value": 65.0
+        },
+        {
+          "id": "e_mean",
+          "value": 60.0
+        },
+        {
+          "id": "e_sd",
+          "value": 12.0
+        },
+        {
+          "id": "r_k",
+          "value": 85.0
+        },
+        {
+          "id": "r_mean",
+          "value": 100.0
+        },
+        {
+          "id": "r_sd",
+          "value": 10.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "e_dist",
+          "value": "normal"
+        },
+        {
+          "id": "r_dist",
+          "value": "normal"
+        }
+      ]
+    },
+    {
+      "id": "case-e90-30",
+      "labelEn": "Design assisted by testing",
+      "labelDe": "Versuchsgestützte Bemessung",
+      "entryId": "E90.30",
+      "numbers": [
+        {
+          "id": "eta_d",
+          "value": 0.9
+        },
+        {
+          "id": "gamma_m",
+          "value": 1.25
+        },
+        {
+          "id": "mean",
+          "value": 100.0
+        },
+        {
+          "id": "n",
+          "value": 6.0
+        },
+        {
+          "id": "v",
+          "value": 0.08
+        }
+      ],
+      "texts": [
+        {
+          "id": "dist",
+          "value": "normal"
+        }
+      ]
+    }
+  ],
+  "factorOverrides": [],
+  "trafficGroups": []
+}

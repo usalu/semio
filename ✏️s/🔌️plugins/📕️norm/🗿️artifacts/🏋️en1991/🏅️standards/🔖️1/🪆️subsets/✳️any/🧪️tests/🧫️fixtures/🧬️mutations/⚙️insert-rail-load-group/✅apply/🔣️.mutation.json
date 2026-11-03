@@ -1,0 +1,16 @@
+{
+  "InsertRailLoadGroup": {
+    "index": 1,
+    "item": {
+      "id": "rail-load-group-2",
+      "loadGroup": "gr11",
+      "factorVertical": 1.0,
+      "factorLongitudinal": 0.5,
+      "factorLateral": 1.0,
+      "assumedAxleLoad": 250000.0,
+      "assumedUdl": 80000.0,
+      "assumedLongitudinal": 1200000.0,
+      "assumedLateral": 100000.0
+    }
+  }
+}

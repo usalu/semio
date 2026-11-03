@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/mutation/change-member-second-order-analysis/schema.json",
+  "title": "ChangeMemberSecondOrderAnalysis",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newSecondOrderAnalysis"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeMemberSecondOrderAnalysis"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Member",
+          "de": "Bauteil"
+        },
+        "description": {
+          "en": "The member this mutation addresses, by id.",
+          "de": "Das adressierte Element (Bauteil), per Kennung."
+        },
+        "ref": {
+          "kind": "member"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newSecondOrderAnalysis": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Second-order analysis used (0 = first order, 1 = second order)",
+          "de": "Theorie 2. Ordnung angesetzt (0 = Theorie 1. Ordnung, 1 = 2. Ordnung)"
+        },
+        "widget": "stepper",
+        "precision": 0,
+        "step": 1,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

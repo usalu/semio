@@ -1,0 +1,5 @@
+{
+  "mutation": "changeTankRadiusM",
+  "id": "tk-1",
+  "newRadiusM": 10.0
+}

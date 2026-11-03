@@ -1,0 +1,41 @@
+{
+  "dialect": "semio.schema-twins.dialect/v1",
+  "typescript": {
+    "contractModule": "@semio-tech/norm-js/registry/contract",
+    "readerPrefix": "normWire",
+    "readerType": "NormWireReader",
+    "jsonType": "NormJson",
+    "generatedBy": "repo ./📜️script.ts schema twins generate",
+    "recordPrefix": "^(?:En|Din|Iso|Vdi)\\d*",
+    "contractFile": "../📇️registry/🧬️contract/🟦️.ts"
+  },
+  "facets": {
+    "🧬️schema": {
+      "emoji": "🧬️",
+      "summary": "the artifact document across its state lanes"
+    },
+    "📸️snapshot": {
+      "emoji": "📸️",
+      "summary": "the persisted snapshot and every record it holds"
+    },
+    "🔺️diff": {
+      "emoji": "🔺️",
+      "summary": "the sparse field delta a mutation raises"
+    },
+    "💡️inferences": {
+      "emoji": "💡️",
+      "summary": "the derived reading of the document"
+    },
+    "🧬️mutations": {
+      "emoji": "🧺️",
+      "summary": "the mutation aggregate, branch for branch as `./🔣️.json` spells it"
+    },
+    "📝️text": {
+      "emoji": "📝️",
+      "summary": "the serialized text form this facet's grammar and codec speak"
+    }
+  },
+  "leaf": {
+    "summary": "the leaf payload"
+  }
+}

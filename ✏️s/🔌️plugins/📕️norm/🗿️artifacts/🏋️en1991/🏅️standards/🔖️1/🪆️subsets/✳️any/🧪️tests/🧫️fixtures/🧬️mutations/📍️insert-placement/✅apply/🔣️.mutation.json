@@ -1,0 +1,12 @@
+{
+  "InsertPlacement": {
+    "index": 1,
+    "item": {
+      "id": "placement-1-new",
+      "x": 1.5,
+      "y": 1.5,
+      "z": 1.5,
+      "yaw": 1.5
+    }
+  }
+}

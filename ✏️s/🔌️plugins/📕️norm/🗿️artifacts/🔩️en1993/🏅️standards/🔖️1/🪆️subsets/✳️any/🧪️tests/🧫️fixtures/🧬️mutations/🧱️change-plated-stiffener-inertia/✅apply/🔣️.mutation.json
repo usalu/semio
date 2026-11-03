@@ -1,0 +1,6 @@
+{
+  "ChangePlatedStiffenerInertia": {
+    "id": "pp-1",
+    "newStiffenerInertia": 1.5
+  }
+}

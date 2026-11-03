@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-lab-test-sec-compr-index/schema.json",
+  "title": "ChangeLabTestSecComprIndex",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newSecondaryCompressionIndex"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeLabTestSecComprIndex"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Laboratory test",
+          "de": "Laborversuch"
+        },
+        "description": {
+          "en": "The laboratory test this mutation addresses, by id.",
+          "de": "Die adressierte Zeile (Laborversuch), per Kennung."
+        },
+        "ref": {
+          "kind": "lab-test"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newSecondaryCompressionIndex": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Secondary compression index C_α",
+          "de": "Sekundärkompressionsbeiwert C_α"
+        },
+        "widget": "stepper",
+        "precision": 4,
+        "step": 0.001,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

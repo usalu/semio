@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-explosion-vent-pressure/schema.json",
+  "title": "ChangeExplosionVentPressure",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newVentPressure"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Internal explosion",
+          "de": "Innenexplosion"
+        },
+        "description": {
+          "en": "The internal explosion this mutation addresses, by id.",
+          "de": "Das adressierte Element (Innenexplosion), per Kennung."
+        },
+        "ref": {
+          "kind": "internal-explosion"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newVentPressure": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Static failure pressure of the vent p_v",
+          "de": "Statischer Ansprechdruck der Entlastung p_v"
+        },
+        "widget": "stepper",
+        "unit": "Pa",
+        "displayUnit": "kN/m²",
+        "displayFactor": 0.001,
+        "precision": 2,
+        "step": 50,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

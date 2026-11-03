@@ -1,11 +1,11 @@
 /** 🔩 `change-f-yd` wire twin: the leaf payload `ChangeFYd`, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
- * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
+ * by `repo ./📜️script.ts schema twins generate`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
-import { normWireInteger, normWireNumber, normWireObject, normWireRange, type NormWireReader, normWireRequired } from "@semio-tech/norm-js/registry/contract";
+import { normWireNumber, normWireObject, normWireRange, normWireRequired, normWireString, type NormWireReader } from "@semio-tech/norm-js/registry/contract";
 
 export interface ChangeFYd {
-  index: number;
+  id: string;
   newFYdPa: number;
 }
 
-export const parseChangeFYd: NormWireReader<ChangeFYd> = normWireObject<ChangeFYd>({ index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), newFYdPa: normWireRequired(normWireRange(normWireNumber, {"minimum":0})) });
+export const parseChangeFYd: NormWireReader<ChangeFYd> = normWireObject<ChangeFYd>({ id: normWireRequired(normWireString), newFYdPa: normWireRequired(normWireRange(normWireNumber, {"minimum":0,"maximum":1000000000000})) });

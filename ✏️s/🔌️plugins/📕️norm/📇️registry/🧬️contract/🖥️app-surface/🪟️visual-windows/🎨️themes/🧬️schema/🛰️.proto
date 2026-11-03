@@ -1,0 +1,37 @@
+syntax = "proto3";
+package semio.norm.themes;
+
+import "../../../../../../🎬️structural-scene/🧬️schema/🛰️.proto";
+import "../../🧊️viewport3d/🎚️config/🧬️schema/🛰️.proto";
+
+enum ThemeVariant { THEME_VARIANT_LIGHT = 0; THEME_VARIANT_DARK = 1; THEME_VARIANT_HIGH_CONTRAST = 2; }
+enum EdgeStyle { EDGE_STYLE_NONE = 0; EDGE_STYLE_THIN = 1; EDGE_STYLE_BOLD = 2; }
+enum MotionPolicy { MOTION_POLICY_SYSTEM = 0; MOTION_POLICY_REDUCED = 1; MOTION_POLICY_FULL = 2; }
+
+message ResultRamps {
+  string stress = 1;
+  string temperature = 2;
+  string pressure = 3;
+  string settlement = 4;
+}
+
+message RoleColour {
+  string role = 1;
+  semio.norm.structuralscene.Rgb rgb = 2;
+}
+
+message ThemeBundle {
+  string id = 1;
+  semio.norm.structuralscene.LocalizedCopy name = 2;
+  ThemeVariant variant = 3;
+  string utilisation_ramp = 4;
+  ResultRamps result_ramps = 5;
+  double domain_max = 6;
+  optional semio.norm.structuralscene.Rgb background = 7;
+  repeated RoleColour role_colours = 8;
+  EdgeStyle edge_style = 9;
+  semio.norm.viewport3d.LabelDensity label_density = 10;
+  bool sun = 11;
+  MotionPolicy motion = 12;
+  double text_scale = 13;
+}

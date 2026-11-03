@@ -1,0 +1,6 @@
+{
+  "ChangeTowerStrouhal": {
+    "id": "tw-1",
+    "newStrouhal": 1.5
+  }
+}

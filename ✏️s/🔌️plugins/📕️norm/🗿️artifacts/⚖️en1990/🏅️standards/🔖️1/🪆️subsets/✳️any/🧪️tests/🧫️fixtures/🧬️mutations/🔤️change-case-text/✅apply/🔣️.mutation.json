@@ -1,0 +1,6 @@
+{
+  "mutation": "changeCaseText",
+  "caseId": "case-psi",
+  "key": "category",
+  "value": "residential"
+}

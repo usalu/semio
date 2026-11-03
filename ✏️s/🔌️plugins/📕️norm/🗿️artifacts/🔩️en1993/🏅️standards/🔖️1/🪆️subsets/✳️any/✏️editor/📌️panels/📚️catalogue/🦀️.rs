@@ -6,10 +6,11 @@ use semio_framework_plugin::PanelTabDefinition;
 use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
 use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 
-use semio_s_plugin_norm_app_surface::{CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable};
+use semio_s_plugin_norm_app_surface::{spec_trace_table, CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable};
 use semio_s_plugin_norm_compliance::ClauseId;
 use semio_s_artifact_norm_en1993_model::rolled_heb_catalogue;
-use semio_s_artifact_norm_en1993_checks::{GAMMA_M0_DE, GAMMA_M0_EN, GAMMA_M1_DE, GAMMA_M1_EN, GAMMA_M2_DE, GAMMA_M2_EN, GAMMA_M3_DE, GAMMA_M3_EN, GAMMA_MF_DE, GAMMA_MF_EN};
+use semio_s_artifact_norm_en1993_checks::spec_trace::TABLE as SPEC_TRACE;
+use semio_s_artifact_norm_en1993_checks::AnnexParams;
 
 //#region 🔖️Constants
 pub const BODY_CATALOGUE: &str = "norm.en1993.play.catalogue";
@@ -23,7 +24,7 @@ pub fn definition() -> PanelTabDefinition {
 
 /// 📚️ Normative reference tables — same γ_M and rolled HEB properties `evaluate()` reads.
 pub fn reference_tables() -> Vec<CatalogueTable> {
-    vec![partial_factor_table(), section_property_table()]
+    vec![partial_factor_table(), section_property_table(), spec_trace_table(&SPEC_TRACE)]
 }
 
 fn partial_factor_table() -> CatalogueTable {
@@ -38,11 +39,11 @@ fn partial_factor_table() -> CatalogueTable {
             CatalogueColumn { id: "de", label_en: "DE national annex", label_de: "DE Nationaler Anhang", unit: None },
         ],
         rows: vec![
-            CatalogueRow { id: "gammaM0".into(), cells: vec![CatalogueCell::text("γ_M0"), CatalogueCell::number(GAMMA_M0_EN, 2), CatalogueCell::number(GAMMA_M0_DE, 2)] },
-            CatalogueRow { id: "gammaM1".into(), cells: vec![CatalogueCell::text("γ_M1"), CatalogueCell::number(GAMMA_M1_EN, 2), CatalogueCell::number(GAMMA_M1_DE, 2)] },
-            CatalogueRow { id: "gammaM2".into(), cells: vec![CatalogueCell::text("γ_M2"), CatalogueCell::number(GAMMA_M2_EN, 2), CatalogueCell::number(GAMMA_M2_DE, 2)] },
-            CatalogueRow { id: "gammaM3".into(), cells: vec![CatalogueCell::text("γ_M3"), CatalogueCell::number(GAMMA_M3_EN, 2), CatalogueCell::number(GAMMA_M3_DE, 2)] },
-            CatalogueRow { id: "gammaMf".into(), cells: vec![CatalogueCell::text("γ_Mf"), CatalogueCell::number(GAMMA_MF_EN, 2), CatalogueCell::number(GAMMA_MF_DE, 2)] },
+            CatalogueRow { id: "gammaM0".into(), cells: vec![CatalogueCell::text("γ_M0"), CatalogueCell::number(AnnexParams::en().gamma_m0, 2), CatalogueCell::number(AnnexParams::de().gamma_m0, 2)] },
+            CatalogueRow { id: "gammaM1".into(), cells: vec![CatalogueCell::text("γ_M1"), CatalogueCell::number(AnnexParams::en().gamma_m1, 2), CatalogueCell::number(AnnexParams::de().gamma_m1, 2)] },
+            CatalogueRow { id: "gammaM2".into(), cells: vec![CatalogueCell::text("γ_M2"), CatalogueCell::number(AnnexParams::en().gamma_m2, 2), CatalogueCell::number(AnnexParams::de().gamma_m2, 2)] },
+            CatalogueRow { id: "gammaM3".into(), cells: vec![CatalogueCell::text("γ_M3"), CatalogueCell::number(AnnexParams::en().gamma_m3, 2), CatalogueCell::number(AnnexParams::de().gamma_m3, 2)] },
+            CatalogueRow { id: "gammaMf".into(), cells: vec![CatalogueCell::text("γ_Mf"), CatalogueCell::number(AnnexParams::en().gamma_mf, 2), CatalogueCell::number(AnnexParams::de().gamma_mf, 2)] },
         ],
     }
 }

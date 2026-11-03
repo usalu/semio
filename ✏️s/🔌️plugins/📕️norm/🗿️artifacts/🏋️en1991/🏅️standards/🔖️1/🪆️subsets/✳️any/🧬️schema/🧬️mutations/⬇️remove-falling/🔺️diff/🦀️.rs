@@ -1,0 +1,12 @@
+//! ⬇ `remove-falling` diff: removes the addressed falling load row.
+
+use crate::remove_falling::RemoveFalling;
+use semio_s_artifact_norm_en1991_diff::{En1991Diff, En1991FallingLoadDelta};
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
+
+pub fn diff(payload: &RemoveFalling, base: &En1991Snapshot) -> protocol::MutationOutcome<En1991Diff> {
+    let Some(index) = base.falling_loads.iter().position(|row| row.id == payload.id) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Falling load {} does not exist.", payload.id), [payload.id.clone()]);
+    };
+    protocol::MutationOutcome::new(En1991Diff { falling_loads: En1991FallingLoadDelta::removal(&base.falling_loads, index), ..Default::default() })
+}

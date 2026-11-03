@@ -1,0 +1,46 @@
+# Incremental Units for EN 1990, 1991, 1992, 1994, 1995, 1996, 1997, 1998, 1999
+
+Status: code written for all nine artifacts and the shared compliance crate, NOT compiled or tested (build loop: the norm agents build; every `🗑️generated/build-enXXXX/latest.md` has "ready for rebuild: incremental units"; shared-crate concerns are in `📌️important/requests.md` addressed to `integrator`). Mechanical edits were done with exact-match replacements (they abort on a miss); the artifact-side wiring is scripted and idempotent in `🧰️scripts/incremental-units-wire.py`.
+
+NORM = `✏️s/🔌️plugins/📕️norm`, SUBSET = `NORM/🗿️artifacts/<emoji>enXXXX/🏅️standards/🔖️1/🪆️subsets/✳️any`.
+
+## 1. Shared infrastructure (`NORM/⚖️compliance/⚡️incremental-evaluation`)
+
+- `🧱️rows`: `Scope::{All, Globals, Part(name), Row(tag, index)}` (`admits(tag, index)`, `globals()`, `part(name)`) and the `Rows` builder (`new`, `except(document, row_collections)`, `global`, `part`, `row`, `slow`, `finish`). Rows are addressed by position, not by id, so a document with duplicate ids folds to exactly the full evaluation (unit ids get a `#n` suffix on repeats). `Rows::except` derives the shared read set from the document's top-level keys, so a misspelled field name cannot hide a read.
+- `UnitSource::summarise(document, merged_report)`: post-fold aggregate (default empty), used by `evaluate_units` and the session merge. EN 1997's governing-situation summary is the only user.
+- `🧪️laws`: `incremental_laws!(source, full, live, documents)` declares the four laws per artifact: fold == full, `audit_reads` per unit, unique ids with `global:document` first, retained session (and the global `live::report`) == full after 40 deterministic single-leaf edits per document (`read-tracker::leaf_edit`).
+- Worker path (std::thread, no runtime dependency): session hooks `fetch`/`complete`/`begin_cheap` run the plan so the session lock is held only between units, `SharedEvaluation::{commit_background, background, report_now, settled}`, `Worker::{join, is_finished}`, `EvalProgress.running_permille` (fed by `Progress::report` of the running unit). Cheap tiers settle inline, T2 units run on the worker; an edit/`cancel()` bumps the generation so a running unit that polls its `CancelToken` stops, finished units stay in the memo, the rest stay stale and are re-planned. A serial number keeps a superseded worker from touching the newer run's progress, `in_flight` keeps repeated paints from restarting a running worker.
+- `live_report!` module now also exposes `spawn(&doc)`, `report_now()`, `settled()`, `responsive(&doc, budget) -> (report, settled)` (starts the catch-up, waits at most `budget`, never freezes); `report`, `progress`, `cancel` unchanged.
+- Tests added in `🧪️tests/🔬️unit`: scope/duplicate ids, worker settles == full, report readable while the worker runs and the edit supersedes it, cancel keeps finished units and leaves the rest stale, repeated catch-ups never restart a worker, summary after the fold.
+
+## 2. Per artifact
+
+Every artifact: `evaluate` (the full reference) is `evaluate_scoped(.., Scope::All)`; `<Code>Units: UnitSource` (units listed below, report order identical); editor `🧮️incremental` implements `UnitSource`/`IncrementalNormFamily` for `<Code>Family` by delegation, family `evaluate` = `evaluate_incrementally`; the `live` module source is `<Code>Units` instead of `<Code>Fold`; editor `🧮️incremental/🧪️tests` instantiate `incremental_laws!` over the example documents.
+
+| Code | Evaluator split (file) | Units in report order | Reads | Slow (T2, worker) |
+|---|---|---|---|---|
+| EN 1990 | `inferences/📋️compliance-evaluation` `evaluate_scoped` (gates recomputed per scope into a sink) | `global:document` (validation, integrity, k_FI, RC/CC, working life, Annex B, beta), `members:<id>` | members: all top-level fields except `members`, `members.<i>`, `members.*.id` (unassessable remedy lists member ids) | none |
+| EN 1991 | `inferences/🦀️` `check_full_actions_scoped` | integrity, `part:floors-none`, floors, `part:self-weight-none`, selfWeightElements, `part:fire`, `part:snow`, roofs, `part:wind`, windFaces (also read `roofs`), `part:thermal`, `part:construction`, `part:accidental-none`, accidentalCases, `part:traffic` | scalars shared by every row (over-declared by design) plus the row | none |
+| EN 1992 | `inferences/🦀️` `evaluate_scoped` | `global:document` (duplicate ids), `members:<id>`, `anchors:<id>` | 8 exact shared keys (annex, title, designWorkingLifeYears, deltaCDev, cementType, concrete/reinforcement grades, prestressSteels) plus the row | members with a fire design (T2, `slow`, polls the token) |
+| EN 1994 | `inferences/🧮️compliance` + `🔥️fire-and-bridge` `evaluate_scoped` | `global:document` (empty verdict), beams, columns, slabs, `part:fire-rating`, fireBeams, fireSlabs, `part:bridge-kind`, bridgeBeams | everything except beams/columns/slabs plus the row | fireBeams (T2) |
+| EN 1995 | `schema/⚖️timber/🏗️structure-and-members` `evaluate_scoped`, units in `⚖️timber/🧮️units` | `global:document` (integrity, empty verdict), members, connections | `annex` plus the row | none |
+| EN 1996 | `schema/⚖️masonry/🛡️conformance-and-integrity` `evaluate_scoped`, units in `⚖️masonry/🧮️units` | `global:document`, walls | annex, masonryClass, designSituation, storeys plus the row | none |
+| EN 1997 | `inferences/⚖️checks/🏗️project-checks` `check_project_scoped(doc, scope, step)` + pile/wall/slope/uplift file, units in `⚖️checks/🧮️units` | integrity (duplicate ids, design selection, GK), layers, `part:footing-na`, footings, `part:pile-na`, piles, `part:wall-na`, retainingWalls, `part:slope-na`, slopes, `part:upl-na`, upliftCases; `summarise` = governing summary | scalars + `layers`/`footings` where read | slopes (T2: `bishop_fos_slices_with` reports per searched circle and aborts on cancel) |
+| EN 1998 | `inferences/🌍️full-seismic-check` `check_full_seismic_scoped(doc, scope, step)`, parts in `⚖️part-evaluators`, units in `🧮️units` | integrity (annex gate, site checks, references), `part:buildings-na`, buildings, `part:bridges-na`, bridges, assessments (read `buildings`), silos, tanks, foundations (read `buildings`), retainingWalls, towers, each after its `-na` part | `site`, `annex` plus the row | buildings (T2, polls token, reports progress) |
+| EN 1999 | `inferences/⚖️checks/🧾️structure-evaluation` `evaluate_scoped`, units in `⚖️checks/🧮️units` | integrity, four action-field row groups, then per collection `part:<x>-empty` and its rows (members, connections, fireScenarios, fatigueDetails, coldFormed, shells) in the original interleaving | annex plus the row and the referenced collections (sections, materials, members) | none (fire/shell rows T1) |
+
+Documents used by the laws: EN 1990 the seven example references, EN 1991 the seven example subjects, EN 1992/1994/1995/1996/1998/1999 their snapshot fixtures (compliant, non-compliant, multi-fail, bridge/fire variants, `empty`/`default`), EN 1997 `compliant_demo`/`noncompliant_demo`; every list also contains `default()` (empty-document and gate paths).
+
+## 3. Cancellation and progress in practice
+
+- Session API: `commit_background`/`spawn` start the worker, `progress()` gives `running`, `done`, `total`, `running_permille`, `cancelled`; `cancel()` or the next `commit`/`report_for` supersedes it.
+- Cooperative points actually inside the maths: EN 1997 slip-circle search (`bishop_fos_slices_with`, 200 circles), EN 1998 per building (`step` polled before each building), EN 1992 `thermal_field_with` (per time step, new; the fire member unit polls its token before the evaluation). EN 1992's member fire check is table based, the finite-difference conduction (`thermal_field`, catalogue R02/R03) is not part of `evaluate`, and EN 1998's `evaluate` has no modal analysis (lateral force method with Rayleigh period), so those two are classed T2 but have no heavier hook than the above; the hooks are ready for when a conduction or modal unit joins the evaluation.
+
+## 4. Open points
+
+1. Nothing compiled or run. Expected first-compile fixes: closure inference at the `Rows::{global, part}` call sites, `Scope` visibility through `use super::*` in the EN 1998 `⚖️part-evaluators`, `too_many_arguments` lints on the EN 1998/1997 evaluators (already above the threshold before).
+2. The audit tests may reveal reads the grep missed; over-declaring is safe, so the fix is to add the path to the unit's `extra` list.
+3. The editor paint still calls the synchronous `live::report`; switching `LiveView` to `live::responsive(doc, budget)` and showing `live::progress()` is app-surface work (requests.md). Tests keep the synchronous path on purpose (they assert equality with the full evaluation).
+4. EN 1993 keeps its id-based `Scope`; a document with duplicate row ids would make its fold differ from the full evaluation (the new shared `Scope` is positional). Moving EN 1993 to `Rows`/positional `Scope` is a mechanical follow-up.
+5. EN 1991 and EN 1990 are over-declared on purpose (scalar inputs shared by all rows): a scalar edit re-runs every row, which is cheap (T0/T1) and cannot go stale.
+6. Not touched: EN 1993, the five non-Eurocode norm apps (still the default full `live_report`).

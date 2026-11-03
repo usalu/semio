@@ -1,0 +1,5 @@
+{
+  "mutation": "changeAssessmentShearCrack",
+  "id": "as-1",
+  "newShearCrackingBeforeYield": 1.5
+}

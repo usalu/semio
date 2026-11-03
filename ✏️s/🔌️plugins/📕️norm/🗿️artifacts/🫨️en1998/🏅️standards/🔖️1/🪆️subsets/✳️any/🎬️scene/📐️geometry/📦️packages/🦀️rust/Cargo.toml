@@ -1,0 +1,24 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-norm-en1998-scene-geometry"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "EN 1998 scene geometry: kit, layout, tracks, handles, horizontal elements, ground and bridges and walls"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-s-artifact-norm-en1998-model = { workspace = true }
+semio-s-artifact-norm-en1998-scene-analysis = { workspace = true }
+semio-s-artifact-norm-en1998-scene-structures = { workspace = true }
+semio-s-artifact-norm-en1998-schema = { workspace = true }
+semio-s-plugin-norm-compliance = { workspace = true }
+semio-s-plugin-norm-structural-scene = { workspace = true }

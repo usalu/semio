@@ -1,0 +1,6 @@
+{
+  "ChangePlatedStiffenerFlangeThk": {
+    "id": "pp-1",
+    "newStiffenerFlangeThickness": 1.5
+  }
+}

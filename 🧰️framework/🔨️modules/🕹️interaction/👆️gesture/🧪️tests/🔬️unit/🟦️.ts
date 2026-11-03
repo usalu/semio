@@ -34,6 +34,12 @@ export async function registerTests1(
     | "shortestAngleDelta"
     | "zoomAboutPoint"
     | "appendSelectionDragPoints"
+    | "TouchSession"
+    | "gripHitEdgePx"
+    | "gripHitRadiusPx"
+    | "pickGrip"
+    | "lineParameter"
+    | "gripParameter"
   >,
   source: TestSource,
 ): Promise<void> {
@@ -62,6 +68,12 @@ export async function registerTests1(
     shortestAngleDelta,
     zoomAboutPoint,
     appendSelectionDragPoints,
+    TouchSession,
+    gripHitEdgePx,
+    gripHitRadiusPx,
+    pickGrip,
+    lineParameter,
+    gripParameter,
   } = dependencies;
 
   const { describe, expect, it } = vitest;
@@ -385,4 +397,61 @@ export async function registerTests1(
       expect(collapsed.zoom).toBe(0.5);
     });
   });
+
+  const touchFixture = JSON.parse(readFileSync(join(source.directory, "🧪️tests/🧫️fixtures", "🖐️touch-session.json"), "utf8")) as {
+    readonly session: readonly { readonly name: string; readonly oneFingerOrbit?: boolean; readonly longPress?: boolean; readonly deadlines?: readonly (number | null)[]; readonly events: readonly { readonly type: string; readonly t: number; readonly pointerId?: number; readonly x?: number; readonly y?: number }[]; readonly steps: readonly (readonly string[])[] }[];
+    readonly orbit: readonly { readonly name: string; readonly pose: readonly [readonly number[], readonly number[], readonly number[]]; readonly zoom: number; readonly step: readonly number[]; readonly projection: readonly number[]; readonly viewportHeight: number; readonly expectPosition: readonly number[]; readonly expectTarget: readonly number[]; readonly expectZoom: number }[];
+  };
+
+  describe("🖐️ touch session — 🧫️fixtures/🖐️touch-session.json", () => {
+    const label = (step: { readonly kind: string; readonly additive?: boolean }) => (step.kind === "press" || step.kind === "release" || step.kind === "drag" ? step.kind + (step.additive ? "+" : "") : step.kind);
+    for (const row of touchFixture.session) {
+      it(row.name, () => {
+        const session = new TouchSession();
+        session.oneFingerOrbit = row.oneFingerOrbit === true;
+        session.longPress = row.longPress !== false;
+        row.events.forEach((event, index) => {
+          const id = event.pointerId ?? 0;
+          const steps = event.type === "down" ? session.down(event.t, id, event.x ?? 0, event.y ?? 0) : event.type === "move" ? session.move(event.t, id, event.x ?? 0, event.y ?? 0) : event.type === "up" ? session.up(event.t, id) : event.type === "tick" ? session.tick(event.t) : session.cancel();
+          expect(steps.map(label), `${row.name} event ${index}`).toEqual(row.steps[index]);
+          if (row.deadlines) expect(session.nextDeadlineMs(), `${row.name} wake time after event ${index}`).toBe(row.deadlines[index]);
+        });
+      });
+    }
+    for (const row of touchFixture.orbit) {
+      it(`orbit: ${row.name}`, () => {
+        const projection = row.projection[0] === 0 ? ({ kind: "perspective", fovYRadians: row.projection[1]! } as const) : ({ kind: "orthographic", frustumHeight: row.projection[1]! } as const);
+        const step = { scale: row.step[0]!, panX: row.step[1]!, panY: row.step[2]!, rotation: 0, centroidX: row.step[3]!, centroidY: row.step[4]! };
+        const next = applyPinchToOrbit({ position: row.pose[0] as [number, number, number], target: row.pose[1] as [number, number, number], up: row.pose[2] as [number, number, number], zoom: row.zoom }, step, projection, row.viewportHeight, { distance: { min: 0.5, max: 500 }, zoom: { min: 0.1, max: 100 } });
+        row.expectPosition.forEach((value, axis) => expect(next.position[axis]).toBeCloseTo(value, 9));
+        row.expectTarget.forEach((value, axis) => expect(next.target[axis]).toBeCloseTo(value, 9));
+        expect(next.zoom).toBeCloseTo(row.expectZoom, 9);
+      });
+    }
+  });
+
+  const gripFixture = JSON.parse(readFileSync(join(source.directory, "🧪️tests/🧫️fixtures", "🎯️grip-pick.json"), "utf8")) as {
+    readonly hitEdge: readonly { readonly device: "pointer" | "touch"; readonly profileMin: number; readonly expect: number }[];
+    readonly pick: readonly { readonly name: string; readonly device: "pointer" | "touch"; readonly profileMin: number; readonly drawn: number; readonly points: readonly (readonly [number, number])[]; readonly at: readonly [number, number]; readonly expect: number | null }[];
+    readonly line: readonly { readonly name: string; readonly rayOrigin: readonly [number, number, number]; readonly rayDir: readonly [number, number, number]; readonly origin: readonly [number, number, number]; readonly axis: readonly [number, number, number]; readonly expect: number | null }[];
+    readonly drag: readonly { readonly anchorS: number; readonly pressT: number; readonly cursorT: number; readonly expect: number }[];
+  };
+
+  describe("🎯️ grip pick — 🧫️fixtures/🎯️grip-pick.json", () => {
+    for (const row of gripFixture.hitEdge) {
+      it(`hit edge: ${row.device} with profile minimum ${row.profileMin}`, () => expect(gripHitEdgePx(row.device, row.profileMin)).toBe(row.expect));
+    }
+    for (const row of gripFixture.pick) {
+      it(row.name, () => expect(pickGrip(row.points, row.at, gripHitRadiusPx(row.device, row.profileMin, row.drawn))).toBe(row.expect));
+    }
+    for (const row of gripFixture.line) {
+      it(`line: ${row.name}`, () => {
+        const got = lineParameter(row.rayOrigin, row.rayDir, row.origin, row.axis);
+        if (row.expect === null) expect(got).toBeNull();
+        else expect(got).toBeCloseTo(row.expect, 9);
+      });
+    }
+    gripFixture.drag.forEach((row, index) => it(`drag ${index}`, () => expect(gripParameter(row.anchorS, row.pressT, row.cursorT)).toBeCloseTo(row.expect, 12)));
+  });
+
 }

@@ -17,12 +17,6 @@ pub mod change_zone_clothing;
 pub mod change_zone_comfort_model;
 #[path = "../🏃️change-zone-metabolic-rate/🦀️.rs"]
 pub mod change_zone_metabolic_rate;
-#[path = "../💧️change-zone-rh/🦀️.rs"]
-pub mod change_zone_rh;
-#[path = "../☀️change-zone-t-op-summer/🦀️.rs"]
-pub mod change_zone_t_op_summer;
-#[path = "../❄️change-zone-t-op-winter/🦀️.rs"]
-pub mod change_zone_t_op_winter;
-#[path = "../💨change-zone-turbulence/🦀️.rs"]
-pub mod change_zone_turbulence;
 //#endregion 🪢️Mounts
+
+pub use semio_s_artifact_norm_din16798_mut_thermal_more::{change_zone_rh, change_zone_t_op_summer, change_zone_t_op_winter, change_zone_turbulence};

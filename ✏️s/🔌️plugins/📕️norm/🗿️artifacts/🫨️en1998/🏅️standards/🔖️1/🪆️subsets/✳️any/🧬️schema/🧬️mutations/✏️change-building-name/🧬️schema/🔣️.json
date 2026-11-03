@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-building-name/schema.json",
+  "title": "ChangeBuildingName",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newName"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeBuildingName"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Building",
+          "de": "Gebäude"
+        },
+        "description": {
+          "en": "The building this mutation addresses, by id.",
+          "de": "Das adressierte Element (Gebäude), per Kennung."
+        },
+        "ref": {
+          "kind": "building"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newName": {
+      "type": "string",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Building name",
+          "de": "Gebäudebezeichnung"
+        },
+        "group": "value",
+        "order": 20,
+        "widget": "text"
+      }
+    }
+  }
+}

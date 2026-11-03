@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/remove-outline-vertex/schema.json",
+  "title": "RemoveOutlineVertex",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "removeOutlineVertex"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Outline vertex",
+          "de": "Umrissknoten"
+        },
+        "description": {
+          "en": "The outline vertex this mutation removes.",
+          "de": "Der Umrissknoten, den diese Mutation entfernt."
+        },
+        "ref": {
+          "kind": "outline-vertex"
+        },
+        "group": "target",
+        "order": 10
+      }
+    }
+  }
+}

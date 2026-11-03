@@ -1,0 +1,182 @@
+{
+ "limitLines": 1500,
+ "cases": [
+  {
+   "id": "indent-0",
+   "original": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"title\": \"Small\",\n  \"type\": \"object\",\n  \"properties\": {\n    \"id\": {\n      \"type\": \"string\"\n    },\n    \"unit\": {\n      \"type\": \"string\",\n      \"description\": \"Größe ≤ 5 m\"\n    }\n  },\n  \"required\": [\n    \"id\"\n  ]\n}\n",
+   "document": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Small",
+    "type": "object",
+    "properties": {
+     "id": {
+      "type": "string"
+     },
+     "unit": {
+      "type": "string",
+      "description": "Größe ≤ 5 m"
+     }
+    },
+    "required": [
+     "id"
+    ]
+   },
+   "expected": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"title\": \"Small\",\n  \"type\": \"object\",\n  \"properties\": {\n    \"id\": {\n      \"type\": \"string\"\n    },\n    \"unit\": {\n      \"type\": \"string\",\n      \"description\": \"Größe ≤ 5 m\"\n    }\n  },\n  \"required\": [\n    \"id\"\n  ]\n}\n",
+   "layout": "indent"
+  },
+  {
+   "id": "compact-stays-compact-0",
+   "original": "{\n  \"$schema\":\"http://json-schema.org/draft-07/schema#\",\n  \"title\":\"Small\",\n  \"type\":\"object\",\n  \"properties\":{\"id\":{\"type\":\"string\"},\"unit\":{\"type\":\"string\",\"description\":\"Größe ≤ 5 m\"}},\n  \"required\":[\"id\"]\n}\n",
+   "document": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Small",
+    "type": "object",
+    "properties": {
+     "id": {
+      "type": "string"
+     },
+     "unit": {
+      "type": "string",
+      "description": "Größe ≤ 5 m"
+     }
+    },
+    "required": [
+     "id"
+    ]
+   },
+   "expected": "{\n  \"$schema\":\"http://json-schema.org/draft-07/schema#\",\n  \"title\":\"Small\",\n  \"type\":\"object\",\n  \"properties\":{\"id\":{\"type\":\"string\"},\"unit\":{\"type\":\"string\",\"description\":\"Größe ≤ 5 m\"}},\n  \"required\":[\"id\"]\n}\n",
+   "layout": "compact"
+  },
+  {
+   "id": "hybrid-reflows-0",
+   "original": "{\"$schema\": \"http://json-schema.org/draft-07/schema#\", \"title\": \"Small\", \"type\": \"object\", \"properties\": {\"id\": {\"type\": \"string\"}, \"unit\": {\"type\": \"string\", \"description\": \"Gr\\u00f6\\u00dfe \\u2264 5 m\"}}, \"required\": [\"id\"]}",
+   "document": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Small",
+    "type": "object",
+    "properties": {
+     "id": {
+      "type": "string"
+     },
+     "unit": {
+      "type": "string",
+      "description": "Größe ≤ 5 m"
+     }
+    },
+    "required": [
+     "id"
+    ]
+   },
+   "expected": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"title\": \"Small\",\n  \"type\": \"object\",\n  \"properties\": {\n    \"id\": {\n      \"type\": \"string\"\n    },\n    \"unit\": {\n      \"type\": \"string\",\n      \"description\": \"Größe ≤ 5 m\"\n    }\n  },\n  \"required\": [\n    \"id\"\n  ]\n}\n",
+   "layout": "indent"
+  },
+  {
+   "id": "indent-1",
+   "original": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"title\": \"Defs\",\n  \"type\": \"object\",\n  \"$defs\": {\n    \"Row\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"a\": {\n          \"type\": \"number\",\n          \"minimum\": 0\n        }\n      }\n    },\n    \"Kind\": {\n      \"enum\": [\n        \"x\",\n        \"y\"\n      ]\n    }\n  },\n  \"properties\": {\n    \"rows\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"$ref\": \"#/$defs/Row\"\n      }\n    }\n  }\n}\n",
+   "document": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Defs",
+    "type": "object",
+    "$defs": {
+     "Row": {
+      "type": "object",
+      "properties": {
+       "a": {
+        "type": "number",
+        "minimum": 0
+       }
+      }
+     },
+     "Kind": {
+      "enum": [
+       "x",
+       "y"
+      ]
+     }
+    },
+    "properties": {
+     "rows": {
+      "type": "array",
+      "items": {
+       "$ref": "#/$defs/Row"
+      }
+     }
+    }
+   },
+   "expected": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"title\": \"Defs\",\n  \"type\": \"object\",\n  \"$defs\": {\n    \"Row\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"a\": {\n          \"type\": \"number\",\n          \"minimum\": 0\n        }\n      }\n    },\n    \"Kind\": {\n      \"enum\": [\n        \"x\",\n        \"y\"\n      ]\n    }\n  },\n  \"properties\": {\n    \"rows\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"$ref\": \"#/$defs/Row\"\n      }\n    }\n  }\n}\n",
+   "layout": "indent"
+  },
+  {
+   "id": "compact-stays-compact-1",
+   "original": "{\n  \"$schema\":\"http://json-schema.org/draft-07/schema#\",\n  \"title\":\"Defs\",\n  \"type\":\"object\",\n  \"$defs\":{\n    \"Row\":{\"type\":\"object\",\"properties\":{\"a\":{\"type\":\"number\",\"minimum\":0}}},\n    \"Kind\":{\"enum\":[\"x\",\"y\"]}\n  },\n  \"properties\":{\"rows\":{\"type\":\"array\",\"items\":{\"$ref\":\"#/$defs/Row\"}}}\n}\n",
+   "document": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Defs",
+    "type": "object",
+    "$defs": {
+     "Row": {
+      "type": "object",
+      "properties": {
+       "a": {
+        "type": "number",
+        "minimum": 0
+       }
+      }
+     },
+     "Kind": {
+      "enum": [
+       "x",
+       "y"
+      ]
+     }
+    },
+    "properties": {
+     "rows": {
+      "type": "array",
+      "items": {
+       "$ref": "#/$defs/Row"
+      }
+     }
+    }
+   },
+   "expected": "{\n  \"$schema\":\"http://json-schema.org/draft-07/schema#\",\n  \"title\":\"Defs\",\n  \"type\":\"object\",\n  \"$defs\":{\n    \"Row\":{\"type\":\"object\",\"properties\":{\"a\":{\"type\":\"number\",\"minimum\":0}}},\n    \"Kind\":{\"enum\":[\"x\",\"y\"]}\n  },\n  \"properties\":{\"rows\":{\"type\":\"array\",\"items\":{\"$ref\":\"#/$defs/Row\"}}}\n}\n",
+   "layout": "compact"
+  },
+  {
+   "id": "hybrid-reflows-1",
+   "original": "{\"$schema\": \"http://json-schema.org/draft-07/schema#\", \"title\": \"Defs\", \"type\": \"object\", \"$defs\": {\"Row\": {\"type\": \"object\", \"properties\": {\"a\": {\"type\": \"number\", \"minimum\": 0}}}, \"Kind\": {\"enum\": [\"x\", \"y\"]}}, \"properties\": {\"rows\": {\"type\": \"array\", \"items\": {\"$ref\": \"#/$defs/Row\"}}}}",
+   "document": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Defs",
+    "type": "object",
+    "$defs": {
+     "Row": {
+      "type": "object",
+      "properties": {
+       "a": {
+        "type": "number",
+        "minimum": 0
+       }
+      }
+     },
+     "Kind": {
+      "enum": [
+       "x",
+       "y"
+      ]
+     }
+    },
+    "properties": {
+     "rows": {
+      "type": "array",
+      "items": {
+       "$ref": "#/$defs/Row"
+      }
+     }
+    }
+   },
+   "expected": "{\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"title\": \"Defs\",\n  \"type\": \"object\",\n  \"$defs\": {\n    \"Row\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"a\": {\n          \"type\": \"number\",\n          \"minimum\": 0\n        }\n      }\n    },\n    \"Kind\": {\n      \"enum\": [\n        \"x\",\n        \"y\"\n      ]\n    }\n  },\n  \"properties\": {\n    \"rows\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"$ref\": \"#/$defs/Row\"\n      }\n    }\n  }\n}\n",
+   "layout": "indent"
+  }
+ ]
+}

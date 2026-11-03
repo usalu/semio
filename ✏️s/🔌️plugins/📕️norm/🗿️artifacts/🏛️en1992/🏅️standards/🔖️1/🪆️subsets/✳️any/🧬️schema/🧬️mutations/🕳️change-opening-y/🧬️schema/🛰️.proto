@@ -1,0 +1,7 @@
+syntax = "proto3";
+package semio.s.norm.en1992.mutation.change_opening_y;
+message ChangeOpeningY {
+  string member_id = 1;
+  string opening_id = 2;
+  double new_y = 3;
+}

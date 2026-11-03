@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-bar-layer-anchorage-length/schema.json",
+  "title": "ChangeBarLayerAnchorageLength",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "memberId",
+    "layerId",
+    "newAnchorageLength"
+  ],
+  "properties": {
+    "memberId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Member",
+          "de": "Bauteil"
+        },
+        "description": {
+          "en": "The member this mutation addresses, by id.",
+          "de": "Das adressierte Element (Bauteil), per Kennung."
+        },
+        "ref": {
+          "kind": "member"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "layerId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Bar layer",
+          "de": "Bewehrungslage"
+        },
+        "description": {
+          "en": "The bar layer this mutation addresses, by id.",
+          "de": "Das adressierte Element (Bewehrungslage), per Kennung."
+        },
+        "ref": {
+          "kind": "layer"
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "newAnchorageLength": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Anchorage length l_bd",
+          "de": "Verankerungslänge l_bd"
+        },
+        "widget": "stepper",
+        "unit": "m",
+        "displayUnit": "mm",
+        "displayFactor": 1000,
+        "precision": 1,
+        "step": 0.01,
+        "role": "value",
+        "group": "value",
+        "order": 30
+      }
+    }
+  }
+}

@@ -1,0 +1,146 @@
+{
+  "annex": null,
+  "site": null,
+  "buildings": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "bridges": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "assessments": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "silos": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "tanks": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "foundations": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "retainingWalls": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "towers": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "joints": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "bearings": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "piers": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "accelerograms": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "diaphragms": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "soilLayers": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "placements": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "bldg-office",
+        "patch": {
+          "x": null,
+          "y": null,
+          "z": null,
+          "yaw": 0.5
+        }
+      }
+    ]
+  },
+  "tieBeams": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "en1998-tie-beam-1",
+        "patch": {
+          "foundationAId": null,
+          "foundationBId": null,
+          "span": 6.0,
+          "width": null,
+          "depth": null,
+          "steelArea": null,
+          "steelDesignStrength": null,
+          "relativeDisplacement": null,
+          "displacementLimit": null
+        }
+      }
+    ]
+  },
+  "slopes": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "en1998-slope-1",
+        "patch": {
+          "governingLayerId": null,
+          "height": null,
+          "angle": null,
+          "frictionAngle": 32.0,
+          "cohesion": null,
+          "topographicAmplification": null,
+          "circleCentreX": null,
+          "circleCentreZ": null,
+          "circleRadius": null
+        }
+      }
+    ]
+  }
+}

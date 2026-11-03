@@ -1,0 +1,636 @@
+{
+  "$schema": "../../../../../../../../../🔮️oracles/🏃️harness/🧬️schema/🔣️.json",
+  "schemaVersion": 1,
+  "artifact": "en1999",
+  "annex": "de",
+  "cases": [
+    {
+      "id": "en1999.6.3.1.w3-2-flexural-buckling-short-column",
+      "check": "en1999.6.3.1.flexural-buckling",
+      "citation": {
+        "standard": "EN 1999-1-1",
+        "edition": "2004",
+        "clause": "6.3.1.2 Eq. 6.49 to 6.51 flexural buckling of an extruded I section, buckling curve parameters of Table 6.6",
+        "table": "6.6",
+        "annex": "en"
+      },
+      "inputs": {
+        "h": 0.2,
+        "b": 0.1,
+        "tf": 0.01,
+        "tw": 0.006,
+        "E": 70000000000.0,
+        "G": 27000000000.0,
+        "f_o": 240000000.0,
+        "gamma_M1": 1.1,
+        "L": 1.2,
+        "alpha": 0.2,
+        "lambda_0": 0.1
+      },
+      "expected": {
+        "A": {
+          "value": 0.0030799999999999938,
+          "unit": "m^2",
+          "profile": "method-spread-v1"
+        },
+        "Iz": {
+          "value": 1.6699066666666549e-06,
+          "unit": "m^4",
+          "profile": "method-spread-v1"
+        },
+        "N_cr": {
+          "value": 801175.1896332758,
+          "unit": "N",
+          "profile": "method-spread-v1"
+        },
+        "lambda": {
+          "value": 0.9605439328680406,
+          "unit": "1",
+          "profile": "method-spread-v1"
+        },
+        "chi": {
+          "value": 0.6826250253549722,
+          "unit": "1",
+          "profile": "method-spread-v1"
+        },
+        "N_b_Rd": {
+          "value": 458724.0170385403,
+          "unit": "N",
+          "profile": "method-spread-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sectionproperties",
+          "adapter": "sectionproperties",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1999.6.3.1.w3-2-flexural-buckling-slender-column",
+      "check": "en1999.6.3.1.flexural-buckling",
+      "citation": {
+        "standard": "EN 1999-1-1",
+        "edition": "2004",
+        "clause": "6.3.1.2 Eq. 6.49 to 6.51 flexural buckling of an extruded I section, buckling curve parameters of Table 6.6",
+        "table": "6.6",
+        "annex": "en"
+      },
+      "inputs": {
+        "h": 0.2,
+        "b": 0.1,
+        "tf": 0.01,
+        "tw": 0.006,
+        "E": 70000000000.0,
+        "G": 27000000000.0,
+        "f_o": 240000000.0,
+        "gamma_M1": 1.1,
+        "L": 7.0,
+        "alpha": 0.2,
+        "lambda_0": 0.1
+      },
+      "expected": {
+        "A": {
+          "value": 0.0030799999999999938,
+          "unit": "m^2",
+          "profile": "method-spread-v1"
+        },
+        "Iz": {
+          "value": 1.6699066666666549e-06,
+          "unit": "m^4",
+          "profile": "method-spread-v1"
+        },
+        "N_cr": {
+          "value": 23544.74026677382,
+          "unit": "N",
+          "profile": "method-spread-v1"
+        },
+        "lambda": {
+          "value": 5.603172941730237,
+          "unit": "1",
+          "profile": "method-spread-v1"
+        },
+        "chi": {
+          "value": 0.030739826532204438,
+          "unit": "1",
+          "profile": "method-spread-v1"
+        },
+        "N_b_Rd": {
+          "value": 20657.16342964134,
+          "unit": "N",
+          "profile": "method-spread-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sectionproperties",
+          "adapter": "sectionproperties",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1999.6.3.1.w3-2-flexural-buckling-class-b-wide-flange",
+      "check": "en1999.6.3.1.flexural-buckling",
+      "citation": {
+        "standard": "EN 1999-1-1",
+        "edition": "2004",
+        "clause": "6.3.1.2 Eq. 6.49 to 6.51 flexural buckling of an extruded I section, buckling curve parameters of Table 6.6",
+        "table": "6.6",
+        "annex": "en"
+      },
+      "inputs": {
+        "h": 0.15,
+        "b": 0.15,
+        "tf": 0.012,
+        "tw": 0.008,
+        "E": 70000000000.0,
+        "G": 27000000000.0,
+        "f_o": 240000000.0,
+        "gamma_M1": 1.1,
+        "L": 3.0,
+        "alpha": 0.32,
+        "lambda_0": 0.0
+      },
+      "expected": {
+        "A": {
+          "value": 0.004608000000000005,
+          "unit": "m^2",
+          "profile": "method-spread-v1"
+        },
+        "Iz": {
+          "value": 6.755376000000101e-06,
+          "unit": "m^4",
+          "profile": "method-spread-v1"
+        },
+        "N_cr": {
+          "value": 518566.9121158899,
+          "unit": "N",
+          "profile": "method-spread-v1"
+        },
+        "lambda": {
+          "value": 1.4603584057640508,
+          "unit": "1",
+          "profile": "method-spread-v1"
+        },
+        "chi": {
+          "value": 0.350599640265012,
+          "unit": "1",
+          "profile": "method-spread-v1"
+        },
+        "N_b_Rd": {
+          "value": 352486.50378352957,
+          "unit": "N",
+          "profile": "method-spread-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sectionproperties",
+          "adapter": "sectionproperties",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1999.6.3.1.w3-2-flexural-buckling-high-strength-alloy",
+      "check": "en1999.6.3.1.flexural-buckling",
+      "citation": {
+        "standard": "EN 1999-1-1",
+        "edition": "2004",
+        "clause": "6.3.1.2 Eq. 6.49 to 6.51 flexural buckling of an extruded I section, buckling curve parameters of Table 6.6",
+        "table": "6.6",
+        "annex": "en"
+      },
+      "inputs": {
+        "h": 0.2,
+        "b": 0.1,
+        "tf": 0.01,
+        "tw": 0.006,
+        "E": 70000000000.0,
+        "G": 27000000000.0,
+        "f_o": 300000000.0,
+        "gamma_M1": 1.1,
+        "L": 3.5,
+        "alpha": 0.2,
+        "lambda_0": 0.1
+      },
+      "expected": {
+        "A": {
+          "value": 0.0030799999999999938,
+          "unit": "m^2",
+          "profile": "method-spread-v1"
+        },
+        "Iz": {
+          "value": 1.6699066666666549e-06,
+          "unit": "m^4",
+          "profile": "method-spread-v1"
+        },
+        "N_cr": {
+          "value": 94178.96106709528,
+          "unit": "N",
+          "profile": "method-spread-v1"
+        },
+        "lambda": {
+          "value": 3.1322688968490695,
+          "unit": "1",
+          "profile": "method-spread-v1"
+        },
+        "chi": {
+          "value": 0.09540597470129893,
+          "unit": "1",
+          "profile": "method-spread-v1"
+        },
+        "N_b_Rd": {
+          "value": 80141.01874909093,
+          "unit": "N",
+          "profile": "method-spread-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sectionproperties",
+          "adapter": "sectionproperties",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1999.section.i-extruded-300x150",
+      "check": "en1999.section.i",
+      "citation": {
+        "standard": "EN 1999-1-1",
+        "edition": "2004",
+        "clause": "6.1 section properties of extruded aluminium I-sections"
+      },
+      "inputs": {
+        "h": 0.3,
+        "b_t": 0.15,
+        "b_b": 0.15,
+        "t_ft": 0.014,
+        "t_fb": 0.014,
+        "tw": 0.008,
+        "r": 0.0
+      },
+      "expected": {
+        "A": {
+          "value": 0.00637600000000001,
+          "unit": "m^2",
+          "profile": "numerical-v1"
+        },
+        "Iy": {
+          "value": 9.937016533333298e-05,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "Iz": {
+          "value": 7.886605333333433e-06,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "It": {
+          "value": 3.1157195772179964e-07,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "Iw": {
+          "value": 1.6090151979816446e-07,
+          "unit": "m^6",
+          "profile": "numerical-v1"
+        },
+        "Wpl_y": {
+          "value": 0.000748568,
+          "unit": "m^3",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sectionproperties",
+          "adapter": "sectionproperties",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1999.section.i-mono-extruded",
+      "check": "en1999.section.i",
+      "citation": {
+        "standard": "EN 1999-1-1",
+        "edition": "2004",
+        "clause": "6.1 section properties of extruded aluminium I-sections"
+      },
+      "inputs": {
+        "h": 0.25,
+        "b_t": 0.08,
+        "b_b": 0.14,
+        "t_ft": 0.008,
+        "t_fb": 0.012,
+        "tw": 0.007,
+        "r": 0.0
+      },
+      "expected": {
+        "A": {
+          "value": 0.003930000000000003,
+          "unit": "m^2",
+          "profile": "numerical-v1"
+        },
+        "Iy": {
+          "value": 3.6669079363867655e-05,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "Iz": {
+          "value": 3.091907500000004e-06,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "It": {
+          "value": 1.1833954544752091e-07,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "Iw": {
+          "value": 1.7554478725617256e-08,
+          "unit": "m^6",
+          "profile": "numerical-v1"
+        },
+        "Wpl_y": {
+          "value": 0.0003333864285714292,
+          "unit": "m^3",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sectionproperties",
+          "adapter": "sectionproperties",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1999.section.chs-extruded-160x8",
+      "check": "en1999.section.chs",
+      "citation": {
+        "standard": "EN 1999-1-1",
+        "edition": "2004",
+        "clause": "6.1 section properties of extruded tubes"
+      },
+      "inputs": {
+        "d": 0.16,
+        "t": 0.008
+      },
+      "expected": {
+        "A": {
+          "value": 0.0038186426868570583,
+          "unit": "m^2",
+          "profile": "numerical-v1"
+        },
+        "Iy": {
+          "value": 1.1054348955826494e-05,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "Iz": {
+          "value": 1.1054348955826503e-05,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "It": {
+          "value": 2.2108697911653e-05,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "Wel_y": {
+          "value": 0.00013817936194783137,
+          "unit": "m^3",
+          "profile": "numerical-v1"
+        },
+        "Wpl_y": {
+          "value": 0.0001848912447595906,
+          "unit": "m^3",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sectionproperties",
+          "adapter": "sectionproperties",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1999.section.channel-extruded-200",
+      "check": "en1999.section.channel",
+      "citation": {
+        "standard": "EN 1999-1-1",
+        "edition": "2004",
+        "clause": "6.1 section properties of extruded channels"
+      },
+      "inputs": {
+        "h": 0.2,
+        "b": 0.08,
+        "tf": 0.01,
+        "tw": 0.007,
+        "r": 0.006
+      },
+      "expected": {
+        "A": {
+          "value": 0.0028755546298354644,
+          "unit": "m^2",
+          "profile": "numerical-v1"
+        },
+        "Iy": {
+          "value": 1.797760598391547e-05,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "Iz": {
+          "value": 1.8013470733513584e-06,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "It": {
+          "value": 7.364078248758986e-08,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "Iw": {
+          "value": 1.142929805776104e-08,
+          "unit": "m^6",
+          "profile": "numerical-v1"
+        },
+        "Wpl_y": {
+          "value": 0.0002100789833297124,
+          "unit": "m^3",
+          "profile": "numerical-v1"
+        },
+        "y_sc": {
+          "value": -0.04935092444916882,
+          "unit": "m",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sectionproperties",
+          "adapter": "sectionproperties",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1999.section.tee-extruded-100",
+      "check": "en1999.section.tee",
+      "citation": {
+        "standard": "EN 1999-1-1",
+        "edition": "2004",
+        "clause": "6.1 section properties of extruded T-sections"
+      },
+      "inputs": {
+        "h": 0.1,
+        "b": 0.1,
+        "tf": 0.008,
+        "tw": 0.007,
+        "r": 0.004
+      },
+      "expected": {
+        "A": {
+          "value": 0.0014509131688157661,
+          "unit": "m^2",
+          "profile": "numerical-v1"
+        },
+        "Iy": {
+          "value": 1.3525555696312859e-06,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "Iz": {
+          "value": 6.694339486653879e-07,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "It": {
+          "value": 2.867241364008095e-08,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "Wpl_y": {
+          "value": 3.277463526760622e-05,
+          "unit": "m^3",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sectionproperties",
+          "adapter": "sectionproperties",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1999.section.angle-extruded-100x8",
+      "check": "en1999.section.angle",
+      "citation": {
+        "standard": "EN 1999-1-1",
+        "edition": "2004",
+        "clause": "6.1 section properties of extruded angles"
+      },
+      "inputs": {
+        "h": 0.1,
+        "b": 0.1,
+        "t": 0.008,
+        "r_root": 0.008,
+        "r_toe": 0.004
+      },
+      "expected": {
+        "A": {
+          "value": 0.0015429131688157634,
+          "unit": "m^2",
+          "profile": "numerical-v1"
+        },
+        "Iy": {
+          "value": 1.4671985391310974e-06,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "Iz": {
+          "value": 1.4671985391311019e-06,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "I_major": {
+          "value": 2.3341793515019553e-06,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "I_minor": {
+          "value": 6.002177267602446e-07,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "It": {
+          "value": 3.4066162530418954e-08,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sectionproperties",
+          "adapter": "sectionproperties",
+          "kind": "third-party-library"
+        }
+      ]
+    }
+  ]
+}

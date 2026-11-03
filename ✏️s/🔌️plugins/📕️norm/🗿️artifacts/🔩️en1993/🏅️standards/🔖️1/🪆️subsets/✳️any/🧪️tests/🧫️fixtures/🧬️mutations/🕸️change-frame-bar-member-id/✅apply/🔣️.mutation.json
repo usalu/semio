@@ -1,0 +1,6 @@
+{
+  "ChangeFrameBarMemberId": {
+    "id": "bar-1",
+    "newMemberId": "member-b1-alt"
+  }
+}

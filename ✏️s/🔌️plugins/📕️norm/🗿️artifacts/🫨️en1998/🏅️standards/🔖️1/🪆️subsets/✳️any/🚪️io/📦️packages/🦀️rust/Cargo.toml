@@ -15,9 +15,6 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
-[features]
-testkit = ["semio-s-artifact-norm-en1998-io-text/testkit"]
-
 [dependencies]
 semio-s-artifact-norm-en1998-io-text = { path = "../../📝️text/📦️packages/🦀️rust" }
 pack = { workspace = true }
@@ -32,6 +29,9 @@ semio-framework-value-derive = { workspace = true }
 semio-s-artifact-norm-en1998-diff = { workspace = true }
 semio-s-artifact-norm-en1998-model = { workspace = true }
 semio-s-artifact-norm-en1998-mut-bridges-towers = { workspace = true }
+semio-s-artifact-norm-en1998-mut-placements = { workspace = true }
+semio-s-artifact-norm-en1998-mut-tie-beams = { workspace = true }
+semio-s-artifact-norm-en1998-mut-seismic-slopes = { workspace = true }
 semio-s-artifact-norm-en1998-mut-buildings = { workspace = true }
 semio-s-artifact-norm-en1998-mut-foundations = { workspace = true }
 semio-s-artifact-norm-en1998-mut-members = { workspace = true }
@@ -41,7 +41,7 @@ semio-s-plugin-norm-compliance = { workspace = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]
-semio-s-artifact-norm-en1998-io-text = { path = "../../📝️text/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-norm-en1998-io-text = { path = "../../📝️text/📦️packages/🦀️rust" }
 semio-framework-async-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }

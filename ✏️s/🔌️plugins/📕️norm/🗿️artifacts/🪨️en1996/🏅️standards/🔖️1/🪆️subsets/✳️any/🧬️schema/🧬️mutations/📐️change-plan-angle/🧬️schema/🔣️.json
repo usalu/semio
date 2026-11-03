@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-plan-angle/schema.json",
+  "title": "ChangePlanAngle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newPlanAngleDeg"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Wall",
+          "de": "Wand"
+        },
+        "description": {
+          "en": "The wall this mutation addresses, by id.",
+          "de": "Das adressierte Element (Wand), per Kennung."
+        },
+        "ref": {
+          "kind": "wall"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newPlanAngleDeg": {
+      "type": "number",
+      "minimum": -180,
+      "maximum": 180,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Plan angle",
+          "de": "Grundrisswinkel"
+        },
+        "unit": "deg",
+        "step": 5,
+        "precision": 1,
+        "group": "site",
+        "order": 20
+      }
+    }
+  }
+}

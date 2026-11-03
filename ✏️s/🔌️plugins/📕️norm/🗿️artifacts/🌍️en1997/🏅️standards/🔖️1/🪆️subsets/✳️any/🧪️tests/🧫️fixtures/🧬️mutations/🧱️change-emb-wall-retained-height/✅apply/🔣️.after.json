@@ -1,0 +1,313 @@
+{
+  "structureId": "geo-demo-compliant",
+  "geotechnicalCategory": 2,
+  "designSituation": "persistent",
+  "designApproach": "da2",
+  "annex": "De",
+  "groundwaterLevel": 4.0,
+  "investigationDepth": 12.0,
+  "layers": [
+    {
+      "id": "layer-sand",
+      "soilType": "sand",
+      "depthTop": 0.0,
+      "depthBottom": 8.0,
+      "gamma": 19000.0,
+      "gammaPrime": 10000.0,
+      "phiPrimeDeg": 32.0,
+      "cohesionEffective": 0.0,
+      "cohesionUndrained": 0.0,
+      "oedometricModulus": 40000000.0,
+      "poissonRatio": 0.3,
+      "cptQc": 8000000.0,
+      "sptN": 18.0,
+      "cptNkt": 0.0
+    },
+    {
+      "id": "layer-gravel",
+      "soilType": "gravel",
+      "depthTop": 8.0,
+      "depthBottom": 20.0,
+      "gamma": 20000.0,
+      "gammaPrime": 11000.0,
+      "phiPrimeDeg": 35.0,
+      "cohesionEffective": 0.0,
+      "cohesionUndrained": 0.0,
+      "oedometricModulus": 60000000.0,
+      "poissonRatio": 0.28,
+      "cptQc": 12000000.0,
+      "sptN": 28.0,
+      "cptNkt": 0.0
+    }
+  ],
+  "footings": [
+    {
+      "id": "footing-F1",
+      "width": 2.5,
+      "length": 2.5,
+      "embedment": 1.5,
+      "baseInclinationDeg": 0.0,
+      "settlementLimit": 0.025,
+      "loadCases": [
+        {
+          "id": "lc-bsP",
+          "designSituation": "persistent",
+          "verticalPermanent": 400000.0,
+          "verticalVariable": 150000.0,
+          "horizontalPermanent": 20000.0,
+          "horizontalVariable": 40000.0,
+          "momentPermanent": 30000.0,
+          "momentVariable": 50000.0
+        }
+      ]
+    },
+    {
+      "id": "footing-F1-m1",
+      "width": 2.5,
+      "length": 2.5,
+      "embedment": 1.5,
+      "baseInclinationDeg": 0.0,
+      "settlementLimit": 0.025,
+      "loadCases": [
+        {
+          "id": "lc-bsP",
+          "designSituation": "persistent",
+          "verticalPermanent": 400000.0,
+          "verticalVariable": 150000.0,
+          "horizontalPermanent": 20000.0,
+          "horizontalVariable": 40000.0,
+          "momentPermanent": 30000.0,
+          "momentVariable": 50000.0
+        }
+      ]
+    },
+    {
+      "id": "footing-F1-m2",
+      "width": 2.5,
+      "length": 2.5,
+      "embedment": 1.5,
+      "baseInclinationDeg": 0.0,
+      "settlementLimit": 0.025,
+      "loadCases": [
+        {
+          "id": "lc-bsP",
+          "designSituation": "persistent",
+          "verticalPermanent": 400000.0,
+          "verticalVariable": 150000.0,
+          "horizontalPermanent": 20000.0,
+          "horizontalVariable": 40000.0,
+          "momentPermanent": 30000.0,
+          "momentVariable": 50000.0
+        }
+      ]
+    }
+  ],
+  "piles": [
+    {
+      "id": "pile-P1",
+      "pileType": "bored",
+      "diameter": 0.6,
+      "length": 14.0,
+      "count": 1,
+      "alphaS": 0.7,
+      "unitShaftResistance": 90000.0,
+      "unitBaseResistance": 3000000.0,
+      "compressionPermanent": 500000.0,
+      "compressionVariable": 100000.0,
+      "tensionPermanent": 0.0,
+      "tensionVariable": 0.0,
+      "bendingStiffnessEi": 0.0,
+      "horizontalSubgradeModulus": 0.0,
+      "lateralHeadLoad": 0.0,
+      "elasticModulus": 33000000000.0,
+      "settlingThickness": 0.0,
+      "negativeFrictionBeta": 0.0,
+      "dynamicTestCount": 0.0,
+      "dynamicResistanceMean": 0.0,
+      "dynamicResistanceMin": 0.0,
+      "hammerWeight": 0.0,
+      "dropHeight": 0.0,
+      "setPerBlow": 0.0,
+      "elasticCompression": 0.0,
+      "hammerEfficiency": 0.0,
+      "concreteClass": "notGiven",
+      "testProfiles": [
+        {
+          "id": "test-1",
+          "shaftResistance": 1600000.0,
+          "baseResistance": 850000.0
+        },
+        {
+          "id": "test-2",
+          "shaftResistance": 1550000.0,
+          "baseResistance": 820000.0
+        },
+        {
+          "id": "test-3",
+          "shaftResistance": 1650000.0,
+          "baseResistance": 880000.0
+        }
+      ]
+    }
+  ],
+  "retainingWalls": [
+    {
+      "id": "wall-W1",
+      "height": 4.0,
+      "embedment": 1.2,
+      "baseWidth": 2.5,
+      "stemThickness": 0.35,
+      "backfillPhiDeg": 30.0,
+      "backfillGamma": 18000.0,
+      "wallFrictionDeg": 20.0,
+      "earthPressureMode": "active",
+      "wallMovement": "free",
+      "ocr": 1.0,
+      "concreteGamma": 25000.0,
+      "surcharge": 10000.0,
+      "verticalPermanent": 320000.0,
+      "horizontalPermanent": 40000.0,
+      "seismicKh": 0.0,
+      "seismicKv": 0.0,
+      "reinforcementSpacing": 0.0,
+      "reinforcementWidth": 0.0,
+      "reinforcementFriction": 0.0
+    }
+  ],
+  "slopes": [
+    {
+      "id": "slope-S1",
+      "angleDeg": 25.0,
+      "height": 6.0,
+      "length": 14.0,
+      "governingLayerId": "layer-sand",
+      "circleCentreX": 0.0,
+      "circleCentreZ": 0.0,
+      "circleRadius": 0.0,
+      "width": 0.0
+    }
+  ],
+  "upliftCases": [
+    {
+      "id": "upl-U1",
+      "permanentStabilizing": 900000.0,
+      "permanentDestabilizing": 500000.0,
+      "variableDestabilizing": 50000.0,
+      "porePressure": 40000.0,
+      "totalStress": 120000.0
+    }
+  ],
+  "anchors": [
+    {
+      "id": "anchor-A1",
+      "wallId": "ewall-E1",
+      "tendon": "strand",
+      "headDepth": 1.0,
+      "inclinationDeg": 15.0,
+      "freeLength": 8.0,
+      "fixedLength": 6.0,
+      "fixedDiameter": 0.15,
+      "bondStress": 200000.0,
+      "designForce": 300000.0,
+      "tendonYieldForce": 700000.0,
+      "minFreeLength": 4.5,
+      "testFactor": 1.1,
+      "tests": [
+        {
+          "id": "atest-1",
+          "pullOutResistance": 650000.0
+        },
+        {
+          "id": "atest-2",
+          "pullOutResistance": 640000.0
+        },
+        {
+          "id": "atest-3",
+          "pullOutResistance": 660000.0
+        }
+      ]
+    }
+  ],
+  "embeddedWalls": [
+    {
+      "id": "ewall-E1",
+      "kind": "freeEarth",
+      "retainedHeight": 8.0,
+      "embedment": 6.0,
+      "propDepth": 1.0,
+      "thickness": 0.6,
+      "backfillGamma": 19000.0,
+      "phiDeg": 32.0,
+      "deltaActiveDeg": 16.0,
+      "deltaPassiveDeg": 10.0,
+      "surcharge": 10000.0,
+      "undrainedStrength": 0.0
+    }
+  ],
+  "pileGroups": [
+    {
+      "id": "group-G1",
+      "pileId": "pile-P1",
+      "rows": 2,
+      "columns": 2,
+      "spacing": 1.8,
+      "capVertical": 1800000.0,
+      "capMomentX": 100000.0,
+      "capMomentY": 60000.0,
+      "singleResistance": 1400000.0,
+      "shaftCohesionSum": 400000.0,
+      "baseCohesion": 120000.0
+    }
+  ],
+  "labTests": [
+    {
+      "id": "lab-T1",
+      "layerId": "layer-sand",
+      "kind": "directShear",
+      "voidRatio": 0.65,
+      "preloadStress": 100000.0,
+      "drainageHeight": 0.01,
+      "consolidationTime": 120.0,
+      "compressionIndex": 0.0,
+      "swellingIndex": 0.0,
+      "stressIncrement": 0.0,
+      "secondaryCompressionIndex": 0.0,
+      "designLife": 0.0,
+      "points": [
+        {
+          "id": "pt-1",
+          "normalStress": 50000.0,
+          "shearStress": 32500.0
+        },
+        {
+          "id": "pt-2",
+          "normalStress": 100000.0,
+          "shearStress": 65000.0
+        },
+        {
+          "id": "pt-3",
+          "normalStress": 200000.0,
+          "shearStress": 130000.0
+        }
+      ]
+    }
+  ],
+  "layerWaters": [
+    {
+      "id": "water-gravel",
+      "layerId": "layer-gravel",
+      "piezometricDepth": 4.0,
+      "permeability": 0.001,
+      "headDifference": 1.0,
+      "flowLength": 6.0,
+      "wellRadius": 0.0,
+      "wellWaterDepth": 0.0,
+      "influenceRadius": 0.0,
+      "wellCapacity": 0.0
+    }
+  ],
+  "placements": [],
+  "cases": [],
+  "investigations": [],
+  "characteristicBases": []
+}

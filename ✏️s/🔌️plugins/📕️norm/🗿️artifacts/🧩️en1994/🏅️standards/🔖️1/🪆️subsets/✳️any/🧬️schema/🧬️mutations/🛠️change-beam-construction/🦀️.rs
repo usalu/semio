@@ -1,17 +1,18 @@
 //! 🛠️ `change-beam-construction` mutation leaf.
 
+use semio_s_artifact_norm_en1994_model::ConstructionMethod;
 use semio_s_artifact_norm_en1994_model::En1994Snapshot;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct ChangeBeamConstruction {
-    pub index: usize,
-    pub new_construction: String,
+    pub id: String,
+    pub new_construction: ConstructionMethod,
 }
 
 impl<Op> protocol::MutationKind<En1994Snapshot, Op> for ChangeBeamConstruction where Op: protocol::Mutation<En1994Snapshot, Diff = semio_s_artifact_norm_en1994_diff::En1994Diff> + From<crate::change_beam_construction::ChangeBeamConstruction> {

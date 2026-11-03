@@ -1,0 +1,6 @@
+{
+  "ChangePlatedStiffFlangeWidth": {
+    "id": "pp-1",
+    "newStiffenerFlangeWidth": 1.5
+  }
+}

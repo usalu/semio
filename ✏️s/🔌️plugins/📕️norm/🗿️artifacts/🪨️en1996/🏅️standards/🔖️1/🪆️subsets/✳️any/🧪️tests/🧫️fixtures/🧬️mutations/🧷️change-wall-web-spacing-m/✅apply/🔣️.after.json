@@ -1,0 +1,216 @@
+{
+  "annex": "De",
+  "masonryClass": "Class5",
+  "designSituation": "Seismic",
+  "reliabilityClass": "RC3",
+  "storeys": 4294967295,
+  "walls": [
+    {
+      "id": "duplicate wall 世界",
+      "labelEn": "Wall \u0000 north",
+      "labelDe": "Tragende Wand 🧱",
+      "wallType": "NonLoadBearing",
+      "thicknessM": 0.365,
+      "heightM": 2.75,
+      "lengthM": 5.125,
+      "supportSides": 255,
+      "openings": [
+        {
+          "id": "same opening",
+          "widthM": 1.25,
+          "heightM": 2.5,
+          "sillHeightM": 0.75,
+          "positionM": 0.5
+        },
+        {
+          "id": "same opening",
+          "widthM": 1.25,
+          "heightM": 2.5,
+          "sillHeightM": 0.75,
+          "positionM": -0.25
+        }
+      ],
+      "slabBearingDepthM": 0.12,
+      "eccentricityTopM": 0.02,
+      "eccentricityBottomM": -0.015,
+      "unitGroup": "Group4",
+      "unitMaterial": "CalciumSilicate",
+      "fBPa": 20000000.25,
+      "unitLengthM": 0.24,
+      "unitWidthM": 0.365,
+      "unitHeightM": 0.113,
+      "mortarType": "Lightweight",
+      "mortarClass": "M2_5",
+      "mortarStrengthPa": 2500000.5,
+      "bedJointThicknessM": 0.012,
+      "reinforced": true,
+      "asVerticalM2": 0.0006,
+      "asHorizontalM2": 0.0004,
+      "fYdPa": 435000000.75,
+      "fireReiMin": 4294967295,
+      "exposure": "Mx5",
+      "mu": 0.4,
+      "densityKgM3": 1800.25,
+      "phiInfinity": 1.5,
+      "isBasement": true,
+      "loadCases": [
+        {
+          "id": "case 世界",
+          "designSituation": "persistent",
+          "imposedCategory": "a",
+          "gKSlabN": 120000.5,
+          "qKImposedPa": 2000.25,
+          "tributaryAreaM2": 12.5,
+          "slabSpanM": 4.5,
+          "qKSnowPa": -0.25,
+          "qPWindPa": 800.75,
+          "cPe": 0.8,
+          "hKEarthN": 45000.5,
+          "concentrated": [
+            {
+              "id": "same beam",
+              "forceN": 35000.25,
+              "bearingAreaM2": 0.04,
+              "bearingLengthM": 0.2,
+              "distanceA1M": 0.25,
+              "positionM": 1.5
+            },
+            {
+              "id": "same beam",
+              "forceN": -35000.25,
+              "bearingAreaM2": 0.04,
+              "bearingLengthM": 0.2,
+              "distanceA1M": 0.25,
+              "positionM": 1.5
+            }
+          ]
+        },
+        {
+          "id": "case 世界",
+          "designSituation": "persistent",
+          "imposedCategory": "a",
+          "gKSlabN": 120000.5,
+          "qKImposedPa": -2000.25,
+          "tributaryAreaM2": 12.5,
+          "slabSpanM": 4.5,
+          "qKSnowPa": 0.25,
+          "qPWindPa": -800.75,
+          "cPe": -0.8,
+          "hKEarthN": -45000.5,
+          "concentrated": []
+        }
+      ],
+      "piers": [
+        {
+          "id": "pier 世界",
+          "positionM": 3.0,
+          "widthM": 0.9
+        }
+      ],
+      "lintels": [
+        {
+          "id": "lintel 1",
+          "positionM": 0.5,
+          "spanM": 1.5,
+          "depthM": 0.25,
+          "bearingLengthM": 0.25
+        }
+      ],
+      "ties": [
+        {
+          "id": "tie 1",
+          "kind": "Anchor",
+          "positionM": 1.0,
+          "levelM": 2.5,
+          "capacityN": 12000.5
+        },
+        {
+          "id": "tie 2",
+          "kind": "RingTie",
+          "positionM": -1.0,
+          "levelM": 0.0,
+          "capacityN": 0.0
+        }
+      ],
+      "prestress": [
+        {
+          "id": "tendon 1",
+          "forceN": 90000.25,
+          "areaM2": 0.0002,
+          "fPkPa": 1770000000.5,
+          "positionM": 2.5,
+          "eccentricityM": -0.05,
+          "lossRatio": 0.2
+        }
+      ],
+      "confined": [
+        {
+          "id": "column 1",
+          "positionM": 2.5,
+          "widthM": 0.25,
+          "depthM": 0.24,
+          "asM2": 0.0006
+        }
+      ],
+      "flanges": [
+        {
+          "id": "flange 1",
+          "lengthM": 1.2,
+          "thicknessM": 0.24,
+          "positionM": 0.0
+        }
+      ],
+      "bars": [
+        {
+          "id": "bar 1",
+          "kind": "Shear",
+          "diameterM": 0.012,
+          "lengthM": 0.6,
+          "spacingM": 0.4
+        },
+        {
+          "id": "bar 2",
+          "kind": "DeepBeam",
+          "diameterM": 0.016,
+          "lengthM": 1.0,
+          "spacingM": 0.2
+        }
+      ],
+      "frostClass": "Severe",
+      "coverM": 0.035,
+      "deflectionLimit": 300.0,
+      "soilHeightM": 1.8,
+      "soilDensityKgM3": 1900.25,
+      "isothermDepthM": 0.04,
+      "planXM": 2.0,
+      "planYM": -3.0,
+      "planAngleDeg": 90.0,
+      "inPlaneShearN": 15000.5,
+      "inPlaneMomentNm": -20000.25,
+      "bracingSystem": "Confined",
+      "diaphragmStiffnessNPerM": 50000000.25,
+      "webSpacingM": 1.5
+    }
+  ],
+  "placements": [],
+  "cases": [],
+  "chases": [
+    {
+      "id": "chase 世界",
+      "wallId": "duplicate wall 世界",
+      "kind": "Horizontal",
+      "xM": 1.25,
+      "yM": 0.9,
+      "widthM": 0.06,
+      "lengthM": 2.5,
+      "depthM": 0.03
+    }
+  ],
+  "movementJoints": [
+    {
+      "id": "joint 🧵",
+      "wallId": "duplicate wall 世界",
+      "positionM": 2.5625
+    }
+  ]
+}

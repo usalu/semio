@@ -36,6 +36,7 @@
   "workspaceFolder": "/workspaces/semio",
   "onCreateCommand": [
     "sudo",
+    "-n",
     "chown",
     "vscode:vscode",
     "/workspaces/semio/.🧬semio/🦑️repo/⚡️cache",
@@ -59,7 +60,7 @@
   "hostRequirements": {
     "cpus": 4,
     "memory": "8gb",
-    "storage": "200gb"
+    "storage": "278gb"
   },
   "forwardPorts": [
     8787,

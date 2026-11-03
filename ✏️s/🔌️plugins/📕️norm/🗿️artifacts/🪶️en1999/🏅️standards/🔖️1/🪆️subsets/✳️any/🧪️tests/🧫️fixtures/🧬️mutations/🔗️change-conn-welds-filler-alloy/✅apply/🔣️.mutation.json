@@ -1,0 +1,5 @@
+{
+  "mutation": "changeConnWeldsFillerAlloy",
+  "connectionId": "support-weld",
+  "newWeldsFillerAlloy": "4043-alt"
+}

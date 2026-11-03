@@ -1,0 +1,6 @@
+{
+  "ChangeJointPlatePlateWidth": {
+    "id": "joint-plate-1",
+    "newPlateWidth": 2.0
+  }
+}

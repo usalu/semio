@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-site-de-ground-combo/schema.json",
+  "title": "ChangeSiteDeGroundCombo",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "newDeGroundCombo"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeSiteDeGroundCombo"
+    },
+    "newDeGroundCombo": {
+      "type": "string",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "DE-NA ground combination",
+          "de": "DE-NA-Untergrundkombination"
+        },
+        "group": "value",
+        "order": 10,
+        "widget": "text"
+      },
+      "x-semio-rust": {
+        "type": "semio_s_artifact_norm_en1998_model::DeGroundCombo"
+      }
+    }
+  }
+}

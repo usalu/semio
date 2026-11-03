@@ -1,0 +1,5 @@
+{
+  "mutation": "changePlacementYaw",
+  "id": "bldg-office",
+  "newYaw": 0.5
+}

@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-floor-assumed-qk-conc/schema.json",
+  "title": "ChangeFloorAssumedQkConc",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newAssumedQkConcentrated"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Floor area",
+          "de": "Geschossfläche"
+        },
+        "description": {
+          "en": "The floor area this mutation addresses, by id.",
+          "de": "Das adressierte Element (Geschossfläche), per Kennung."
+        },
+        "ref": {
+          "kind": "floor"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newAssumedQkConcentrated": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Assumed concentrated Qk",
+          "de": "Angenommene Einzellast Qk"
+        },
+        "widget": "stepper",
+        "unit": "N",
+        "displayUnit": "kN",
+        "displayFactor": 0.001,
+        "precision": 2,
+        "step": 500,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

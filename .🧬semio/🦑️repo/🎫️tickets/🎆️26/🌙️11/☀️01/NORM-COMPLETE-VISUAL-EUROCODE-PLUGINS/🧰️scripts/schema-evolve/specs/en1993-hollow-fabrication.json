@@ -1,0 +1,22 @@
+{
+  "artifact": "en1993",
+  "leaf": {
+    "kindSlug": "section",
+    "default": "Unset",
+    "field": {
+      "name": "fabrication",
+      "type": "enum",
+      "label": {"en": "Hollow fabrication route", "de": "Herstellungsart Hohlprofil"},
+      "doc": "🏭 Fabrication route of a hollow section for the buckling curve of EN 1993-1-1 Table 6.2: hot finished (curve a, a0 for S460) or cold formed (curve c); Unset for sections that are not hollow. A hollow section left Unset has no buckling curve, so its buckling rows stay open.",
+      "enum": {
+        "name": "HollowFabrication",
+        "doc": "🏭 Fabrication route of a hollow section (EN 1993-1-1 Table 6.2): hot finished or cold formed; Unset for sections that are not hollow.",
+        "values": [
+          {"token": "Unset", "label": {"en": "Not a hollow section", "de": "Kein Hohlprofil"}},
+          {"token": "HotFinished", "label": {"en": "Hot finished", "de": "Warmgefertigt"}},
+          {"token": "ColdFormed", "label": {"en": "Cold formed", "de": "Kaltgefertigt"}}
+        ]
+      }
+    }
+  }
+}

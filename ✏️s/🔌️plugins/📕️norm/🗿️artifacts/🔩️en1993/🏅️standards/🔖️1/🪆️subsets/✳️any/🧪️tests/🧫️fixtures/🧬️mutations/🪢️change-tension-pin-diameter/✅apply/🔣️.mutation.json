@@ -1,0 +1,6 @@
+{
+  "ChangeTensionPinDiameter": {
+    "id": "ten-1",
+    "newPinDiameter": 1.5
+  }
+}

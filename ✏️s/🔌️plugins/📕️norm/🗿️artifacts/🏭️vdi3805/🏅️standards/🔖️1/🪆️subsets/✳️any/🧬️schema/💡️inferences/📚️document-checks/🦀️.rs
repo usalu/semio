@@ -4,7 +4,7 @@ use super::*;
 
 //#region 🔖️ComplianceReport
 
-#[path = "🗃️catalog-integrity/🦀️.rs"]
+#[path = "🗃️catalog/🦀️.rs"]
 mod catalog_integrity;
 use catalog_integrity::*;
 

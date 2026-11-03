@@ -1,0 +1,6 @@
+{
+  "ChangeDerailmentDistance": {
+    "id": "derailment-1",
+    "newDistance": 3.0
+  }
+}

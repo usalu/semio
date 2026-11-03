@@ -1,15 +1,10 @@
-//! 🧬️ EN 1993 mutation unit tests — hierarchical entity upserts.
+//! 🧬️ EN 1993 mutation unit tests — typed leaf and row kinds.
 
 use semio_s_plugin_norm_compliance::AnnexChoice;
 use crate::mutation_bridge::apply_en1993_mutation;
-use semio_s_artifact_norm_en1993_mut_general::{change_annex, update_member_properties, update_stainless_inputs, update_through_thickness_inputs};
-use semio_s_artifact_norm_en1993_mut_connections::{update_bolt_inputs, update_hss_inputs, update_weld_inputs};
-use semio_s_artifact_norm_en1993_mut_fire_fatigue::{update_bridge_inputs, update_fatigue_inputs, update_fire_inputs};
-use semio_s_artifact_norm_en1993_mut_thin_walled::{update_cold_formed_inputs, update_plated_inputs, update_silo_shell_inputs};
-use semio_s_artifact_norm_en1993_mut_cranes::{update_crane_inputs, update_tension_component_inputs};
-use semio_s_artifact_norm_en1993_mut_towers::{update_pile_inputs, update_tower_inputs};
+use semio_s_artifact_norm_en1993_mut_general::change_annex;
 use crate::En1993Mutation;
-use semio_s_artifact_norm_en1993_model::{BridgeFatigue, SteelMember, ColdFormedMember, CraneRunway, En1993Snapshot, FatigueDetail, FireExposure, LoadCase, PlatedPanel, SiloShell, SteelJoint, SteelMaterial, SteelPile, TensionComponent, TowerLeg};
+use semio_s_artifact_norm_en1993_model::{SteelMember, En1993Snapshot};
 
 fn base() -> En1993Snapshot {
     En1993Snapshot::compliant_heb240_frame()
@@ -24,224 +19,24 @@ fn change_annex_switches_national_annex() {
 }
 
 #[test]
-fn update_member_properties_upserts_member() {
-    let before = base();
-    let mut member = before.members[0].clone();
-    member.length = 9.0;
-    let mutation = En1993Mutation::UpdateMemberProperties(update_member_properties::UpdateMemberProperties { member: member.clone() });
-    let (after, _) = apply_en1993_mutation(&before, &mutation).expect("apply");
-    assert_eq!(after.members.iter().find(|m| m.id == member.id).unwrap().length, 9.0);
-}
-
-#[test]
-fn update_stainless_inputs_upserts_material() {
-    let before = base();
-    let material = SteelMaterial {
-        id: "mat-s460".into(),
-        grade: "S460".into(),
-        fy: 460.0e6,
-        fu: 540.0e6,
-        e_modulus: 210.0e9,
-        g_modulus: 81.0e9,
-        subgrade: "J2".into(),
-        kind: "carbon".into(),
-    };
-    let mutation = En1993Mutation::UpdateStainlessInputs(update_stainless_inputs::UpdateStainlessInputs { material });
-    let (after, _) = apply_en1993_mutation(&before, &mutation).expect("apply");
-    assert!(after.materials.iter().any(|m| m.id == "mat-s460" && m.fy == 460.0e6));
-}
-
-#[test]
-fn update_through_thickness_inputs_upserts_section() {
-    let before = base();
-    let mut section = before.sections[0].clone();
-    section.designation = "HEB 300".into();
-    let mutation = En1993Mutation::UpdateThroughThicknessInputs(update_through_thickness_inputs::UpdateThroughThicknessInputs { section: section.clone() });
-    let (after, _) = apply_en1993_mutation(&before, &mutation).expect("apply");
-    assert_eq!(after.sections.iter().find(|s| s.id == section.id).unwrap().designation, "HEB 300");
-}
-
-#[test]
-fn update_hss_inputs_upserts_load_case() {
-    let before = base();
-    let load_case = LoadCase { id: "lc-acc".into(), name: "Accidental".into(), kind: "accidental".into(), category: "office".into() };
-    let mutation = En1993Mutation::UpdateHssInputs(update_hss_inputs::UpdateHssInputs { load_case  });
-    let (after, _) = apply_en1993_mutation(&before, &mutation).expect("apply");
-    assert!(after.load_cases.iter().any(|l| l.id == "lc-acc"));
-}
-
-#[test]
-fn update_weld_inputs_upserts_member_action() {
-    let before = base();
-    let mut action = before.member_actions[0].clone();
-    action.action.n = 1.0e6;
-    let mutation = En1993Mutation::UpdateWeldInputs(update_weld_inputs::UpdateWeldInputs { member_action: action.clone() });
-    let (after, _) = apply_en1993_mutation(&before, &mutation).expect("apply");
-    assert_eq!(after.member_actions.iter().find(|a| a.id == action.id).unwrap().action.n, 1.0e6);
-}
-
-#[test]
-fn update_bolt_inputs_upserts_joint() {
-    let before = base();
-    let mut joint = before.joints[0].clone();
-    joint.bolt_diameter = 0.024;
-    joint.bolt_class = "10.9".into();
-    joint.bolt_rows = 2;
-    joint.bolts_per_row = 2;
-    let mutation = En1993Mutation::UpdateBoltInputs(update_bolt_inputs::UpdateBoltInputs { joint: joint.clone() });
-    let (after, _) = apply_en1993_mutation(&before, &mutation).expect("apply");
-    assert_eq!(after.joints.iter().find(|j| j.id == joint.id).unwrap().bolt_diameter, 0.024);
-}
-
-#[test]
-fn update_fatigue_inputs_upserts_detail() {
-    let before = base();
-    let detail = FatigueDetail {
-        id: "fat-new".into(),
-        member_id: before.members[0].id.clone(),
-        category: 56,
-        method: "safe_life".into(), spectrum: vec![semio_s_artifact_norm_en1993_model::FatigueBand { id: "fb".into(), delta_sigma: 80.0e6, cycles: 2.0e6 }] };
-    let mutation = En1993Mutation::UpdateFatigueInputs(update_fatigue_inputs::UpdateFatigueInputs { fatigue_detail: detail });
-    let (after, _) = apply_en1993_mutation(&before, &mutation).expect("apply");
-    assert_eq!(after.fatigue_details.iter().find(|f| f.id == "fat-new").unwrap().category, 56);
-}
-
-#[test]
-fn update_fire_inputs_upserts_exposure() {
-    let before = base();
-    let mut fire = before.fire_exposures[0].clone();
-    fire.rating = "r90".into();
-    fire.protection_thickness = 0.025;
-    let mutation = En1993Mutation::UpdateFireInputs(update_fire_inputs::UpdateFireInputs { fire_exposure: fire.clone() });
-    let (after, _) = apply_en1993_mutation(&before, &mutation).expect("apply");
-    assert_eq!(after.fire_exposures.iter().find(|f| f.id == fire.id).unwrap().rating, "r90");
-}
-
-#[test]
-fn update_cold_formed_inputs_upserts_member() {
-    let before = base();
-    let cf = ColdFormedMember {
-        id: "cf-1".into(),
-        b_bar: 0.080,
-        thickness: 0.003,
-        k_sigma: 0.43,
-        psi: -1.0,
-        fy: 355.0e6,
-        gross_resistance: 120.0e3, actions: vec![semio_s_artifact_norm_en1993_model::ForceAction { id: "a".into(), load_case_id: "g-permanent".into(), force: 50.0e3 }] };
-    let mutation = En1993Mutation::UpdateColdFormedInputs(update_cold_formed_inputs::UpdateColdFormedInputs { cold_formed_member: cf });
-    let (after, _) = apply_en1993_mutation(&before, &mutation).expect("apply");
-    assert_eq!(after.cold_formed_members.iter().find(|c| c.id == "cf-1").unwrap().thickness, 0.003);
-}
-
-#[test]
-fn update_plated_inputs_upserts_panel() {
-    let before = base();
-    let panel = PlatedPanel {
-        id: "pl-1".into(),
-        a: 1.0,
-        b: 0.5,
-        thickness: 0.012,
-        fy: 355.0e6,
-        k_sigma: 4.0, actions: vec![semio_s_artifact_norm_en1993_model::ForceAction { id: "a".into(), load_case_id: "g-permanent".into(), force: 200.0e6 }] };
-    let mutation = En1993Mutation::UpdatePlatedInputs(update_plated_inputs::UpdatePlatedInputs { plated_panel: panel });
-    let (after, _) = apply_en1993_mutation(&before, &mutation).expect("apply");
-    assert_eq!(after.plated_panels.iter().find(|p| p.id == "pl-1").unwrap().thickness, 0.012);
-}
-
-#[test]
-fn update_silo_shell_inputs_upserts_shell() {
-    let before = base();
-    let silo = SiloShell {
-        id: "silo-1".into(),
-        thickness: 0.008,
-        radius: 3.0,
-        depth: 12.0,
-        k: 0.5,
-        gamma: 9.0e3,
-        fy: 355.0e6,
-    };
-    let mutation = En1993Mutation::UpdateSiloShellInputs(update_silo_shell_inputs::UpdateSiloShellInputs { silo_shell: silo });
-    let (after, _) = apply_en1993_mutation(&before, &mutation).expect("apply");
-    assert_eq!(after.silo_shells.iter().find(|s| s.id == "silo-1").unwrap().radius, 3.0);
-}
-
-#[test]
-fn update_tension_component_inputs_upserts_component() {
-    let before = base();
-    let tc = TensionComponent { id: "tc-1".into(), f_uk: 500.0e3, f_k: 400.0e3, actions: vec![semio_s_artifact_norm_en1993_model::ForceAction { id: "a".into(), load_case_id: "g-permanent".into(), force: 300.0e3 }] };
-    let mutation = En1993Mutation::UpdateTensionComponentInputs(update_tension_component_inputs::UpdateTensionComponentInputs { tension_component: tc });
-    let (after, _) = apply_en1993_mutation(&before, &mutation).expect("apply");
-    assert_eq!(after.tension_components.iter().find(|t| t.id == "tc-1").unwrap().actions[0].force, 300.0e3);
-}
-
-#[test]
-fn update_bridge_inputs_upserts_fatigue() {
-    let before = base();
-    let bf = BridgeFatigue {
-        id: "br-1".into(),
-        member_id: before.members[0].id.clone(),
-        lambda: 1.2,
-        phi2: 1.1,
-        delta_sigma_p: 60.0e6,
-        category: 71,
-        method: "safe_life".into(),
-    };
-    let mutation = En1993Mutation::UpdateBridgeInputs(update_bridge_inputs::UpdateBridgeInputs { bridge_fatigue_item: bf });
-    let (after, _) = apply_en1993_mutation(&before, &mutation).expect("apply");
-    assert_eq!(after.bridge_fatigue.iter().find(|b| b.id == "br-1").unwrap().lambda, 1.2);
-}
-
-#[test]
-fn update_tower_inputs_upserts_leg() {
-    let before = base();
-    let tower = TowerLeg {
-        id: "tw-1".into(),
-        member_id: before.members[0].id.clone(),
-        force_coefficient: 1.2,
-        dynamic_factor: 1.5, actions: vec![semio_s_artifact_norm_en1993_model::ForceAction { id: "a".into(), load_case_id: "g-permanent".into(), force: 400.0e3 }] };
-    let mutation = En1993Mutation::UpdateTowerInputs(update_tower_inputs::UpdateTowerInputs { tower_leg: tower });
-    let (after, _) = apply_en1993_mutation(&before, &mutation).expect("apply");
-    assert_eq!(after.tower_legs.iter().find(|t| t.id == "tw-1").unwrap().force_coefficient, 1.2);
-    assert_eq!(after.tower_legs.iter().find(|t| t.id == "tw-1").unwrap().dynamic_factor, 1.5);
-}
-
-#[test]
-fn update_pile_inputs_upserts_pile() {
-    let before = base();
-    let pile = SteelPile {
-        id: "pile-1".into(),
-        section_id: before.sections[0].id.clone(),
-        material_id: before.materials[0].id.clone(),
-        driving_stress: 200.0e6,
-        embedded_length: 8.0,
-        shaft_perimeter: 1.2, actions: vec![semio_s_artifact_norm_en1993_model::ForceAction { id: "a".into(), load_case_id: "g-permanent".into(), force: 1500.0e3 }] };
-    let mutation = En1993Mutation::UpdatePileInputs(update_pile_inputs::UpdatePileInputs { pile });
-    let (after, _) = apply_en1993_mutation(&before, &mutation).expect("apply");
-    assert!((after.piles.iter().find(|p| p.id == "pile-1").unwrap().driving_stress - 200.0e6).abs() < 1.0);
-}
-
-#[test]
-fn update_crane_inputs_upserts_runway() {
-    let before = base();
-    let crane = CraneRunway {
-        id: "cr-1".into(),
-        member_id: before.members[0].id.clone(),
-        wheel_contact_length: 0.050,
-        dispersion: 0.015,
-        web_thickness: 0.012,
-        phi: 1.1, fy: 355.0e6, actions: vec![semio_s_artifact_norm_en1993_model::ForceAction { id: "a".into(), load_case_id: "q-imposed".into(), force: 200.0e3 }] };
-    let mutation = En1993Mutation::UpdateCraneInputs(update_crane_inputs::UpdateCraneInputs { crane_runway: crane });
-    let (after, _) = apply_en1993_mutation(&before, &mutation).expect("apply");
-    assert_eq!(after.crane_runways.iter().find(|c| c.id == "cr-1").unwrap().actions[0].force, 200.0e3);
-}
-
-#[test]
 fn insert_and_remove_member_round_trip() {
     let before = base();
     let member = SteelMember {
+        warping_support: semio_s_artifact_norm_en1993_model::WarpingSupport::Fork,
+        web_material_id: String::new(),
+        torsion_load: semio_s_artifact_norm_en1993_model::TorsionLoad::Point,
+        torque_position: 0.5,
+        stainless_forming: semio_s_artifact_norm_en1993_model::StainlessForming::Unset,
+        design_temperature: 0.0,
+        toughness_stress_ratio: 0.75,
+        radiation_shift: 0.0,
+        stress_shift: 0.0,
+        margin_shift: 0.0,
+        strain_rate_shift: 0.0,
+        cold_forming_radius: 0.0,
         id: "member-x".into(),
         label: "X".into(),
-        member_type: "beam".into(),
+        member_type: semio_s_artifact_norm_en1993_model::SteelMemberType::Beam,
         section_id: "sec-heb240".into(),
         material_id: "mat-s355".into(),
         length: 3.0,
@@ -249,11 +44,11 @@ fn insert_and_remove_member_round_trip() {
         buckling_length_z: 3.0,
         ltb_length: 3.0,
         ltb_restraint_spacing: 1.5,
-        load_application: "shearCenter".into(),
+        load_application: semio_s_artifact_norm_en1993_model::LoadApplication::ShearCenter,
         end_moment_ratio_psi: -1.0,
-        moment_diagram: "linear".into(),
+        moment_diagram: semio_s_artifact_norm_en1993_model::MomentDiagram::Linear,
         deflection_limit_ratio: 300.0,
-        analysis: "elastic".into(),
+        analysis: semio_s_artifact_norm_en1993_model::AnalysisKind::Elastic,
     };
     let insert = En1993Mutation::InsertMember(semio_s_artifact_norm_en1993_mut_general::insert_member::InsertMember { index: Some(before.members.len()), member: member.clone() });
     let (mid, _) = apply_en1993_mutation(&before, &insert).expect("insert");
@@ -263,3 +58,398 @@ fn insert_and_remove_member_round_trip() {
     assert_eq!(after.members.len(), before.members.len());
 }
 
+const SPECIAL_LEAVES: &[(&str, &str, &str, char)] = &[
+    ("members", "member-b1", "stainlessForming", 's'),
+    ("members", "member-b1", "designTemperature", 'f'),
+    ("members", "member-b1", "toughnessStressRatio", 'f'),
+    ("members", "member-b1", "radiationShift", 'f'),
+    ("members", "member-b1", "stressShift", 'f'),
+    ("members", "member-b1", "marginShift", 'f'),
+    ("members", "member-b1", "strainRateShift", 'f'),
+    ("members", "member-b1", "coldFormingRadius", 'f'),
+    ("coldFormedMembers", "cf-1", "flangeWidth", 'f'),
+    ("coldFormedMembers", "cf-1", "lipLength", 'f'),
+    ("coldFormedMembers", "cf-1", "webHeight", 'f'),
+    ("coldFormedMembers", "cf-1", "webSlope", 'f'),
+    ("coldFormedMembers", "cf-1", "oppositeFlangeWidth", 'f'),
+    ("coldFormedMembers", "cf-1", "springFactor", 'f'),
+    ("coldFormedMembers", "cf-1", "cornerRadius", 'f'),
+    ("coldFormedMembers", "cf-1", "flangeStress", 'f'),
+    ("coldFormedMembers", "cf-1", "shearForce", 'f'),
+    ("coldFormedMembers", "cf-1", "supportReaction", 'f'),
+    ("coldFormedMembers", "cf-1", "supportLength", 'f'),
+    ("coldFormedMembers", "cf-1", "cripplingCategory", 'u'),
+    ("coldFormedMembers", "cf-1", "stiffenedSupport", 'u'),
+    ("coldFormedMembers", "cf-1", "bendingMoment", 'f'),
+    ("coldFormedMembers", "cf-1", "momentResistance", 'f'),
+    ("coldFormedMembers", "cf-1", "sheetingStiffness", 'f'),
+    ("coldFormedMembers", "cf-1", "requiredRestraintStiffness", 'f'),
+    ("platedPanels", "pp-1", "stiffenerInertia", 'f'),
+    ("platedPanels", "pp-1", "stiffenerArea", 'f'),
+    ("platedPanels", "pp-1", "stiffenerEccentricity", 'f'),
+    ("platedPanels", "pp-1", "stiffenerAlpha", 'f'),
+    ("platedPanels", "pp-1", "compressionStress", 'f'),
+    ("platedPanels", "pp-1", "halfWidth", 'f'),
+    ("platedPanels", "pp-1", "equivalentSpan", 'f'),
+    ("platedPanels", "pp-1", "hogging", 'u'),
+    ("platedPanels", "pp-1", "patchType", 's'),
+    ("platedPanels", "pp-1", "patchForce", 'f'),
+    ("platedPanels", "pp-1", "patchLength", 'f'),
+    ("platedPanels", "pp-1", "patchOffset", 'f'),
+    ("platedPanels", "pp-1", "flangeThickness", 'f'),
+    ("platedPanels", "pp-1", "flangeWidth", 'f'),
+    ("platedPanels", "pp-1", "flangeFy", 'f'),
+    ("platedPanels", "pp-1", "longitudinalOffset", 'f'),
+    ("platedPanels", "pp-1", "longitudinalInertia", 'f'),
+    ("platedPanels", "pp-1", "patchMoment", 'f'),
+    ("platedPanels", "pp-1", "patchMomentResistance", 'f'),
+    ("platedPanels", "pp-1", "bendingMoment", 'f'),
+    ("platedPanels", "pp-1", "plasticMoment", 'f'),
+    ("platedPanels", "pp-1", "flangeMoment", 'f'),
+    ("platedPanels", "pp-1", "shearForce", 'f'),
+    ("platedPanels", "pp-1", "transverseStiffenerInertia", 'f'),
+    ("platedPanels", "pp-1", "flangeInducedK", 'f'),
+    ("platedPanels", "pp-1", "flangeArea", 'f'),
+    ("platedPanels", "pp-1", "stressX", 'f'),
+    ("platedPanels", "pp-1", "stressZ", 'f'),
+    ("platedPanels", "pp-1", "shearStress", 'f'),
+    ("platedPanels", "pp-1", "alphaCr", 'f'),
+    ("siloShells", "silo-1", "length", 'f'),
+    ("siloShells", "silo-1", "fabricationClass", 's'),
+    ("siloShells", "silo-1", "meridionalStress", 'f'),
+    ("siloShells", "silo-1", "hoopStress", 'f'),
+    ("siloShells", "silo-1", "shellShearStress", 'f'),
+    ("siloShells", "silo-1", "boundaryFactorAxial", 'f'),
+    ("siloShells", "silo-1", "boundaryFactorHoop", 'f'),
+    ("siloShells", "silo-1", "boundaryFactorShear", 'f'),
+    ("siloShells", "silo-1", "wallFriction", 'f'),
+    ("siloShells", "silo-1", "planArea", 'f'),
+    ("siloShells", "silo-1", "planPerimeter", 'f'),
+    ("siloShells", "silo-1", "liquidDensity", 'f'),
+    ("siloShells", "silo-1", "liquidHeight", 'f'),
+    ("siloShells", "silo-1", "courseElevation", 'f'),
+    ("siloShells", "silo-1", "internalPressure", 'f'),
+    ("siloShells", "silo-1", "externalPressure", 'f'),
+    ("siloShells", "silo-1", "temperatureChange", 'f'),
+    ("joints", "joint-ep", "plateFy", 'f'),
+    ("joints", "joint-ep", "plateWidth", 'f'),
+    ("joints", "joint-ep", "boltToWeb", 'f'),
+    ("joints", "joint-ep", "extensionToFlange", 'f'),
+    ("joints", "joint-ep", "extensionEdge", 'f'),
+    ("joints", "joint-ep", "alphaFactor", 'f'),
+    ("joints", "joint-ep", "boltStressArea", 'f'),
+    ("joints", "joint-ep", "boltGripLength", 'f'),
+    ("joints", "joint-ep", "columnFlangeThickness", 'f'),
+    ("joints", "joint-ep", "columnWebThickness", 'f'),
+    ("joints", "joint-ep", "columnWebDepth", 'f'),
+    ("joints", "joint-ep", "columnWebShearArea", 'f'),
+    ("joints", "joint-ep", "columnRootRadius", 'f'),
+    ("joints", "joint-ep", "columnFy", 'f'),
+    ("joints", "joint-ep", "columnWebStress", 'f'),
+    ("joints", "joint-ep", "beamFlangeThickness", 'f'),
+    ("joints", "joint-ep", "compressionLever", 'f'),
+    ("joints", "joint-ep", "momentDemand", 'f'),
+    ("joints", "joint-ep", "beamMomentResistance", 'f'),
+    ("joints", "joint-ep", "columnMomentResistance", 'f'),
+    ("joints", "joint-ep", "beamInertia", 'f'),
+    ("joints", "joint-ep", "beamSpan", 'f'),
+    ("joints", "joint-ep", "bracedFrame", 'u'),
+    ("joints", "joint-ep", "stiffnessRatio", 'f'),
+    ("joints", "joint-ep", "transformationParameter", 'f'),
+    ("joints", "joint-ep", "assumedClass", 's'),
+    ("joints", "joint-ep", "basePlateLength", 'f'),
+    ("joints", "joint-ep", "concreteFcd", 'f'),
+    ("joints", "joint-ep", "concreteModulus", 'f'),
+    ("joints", "joint-ep", "concreteAreaA0", 'f'),
+    ("joints", "joint-ep", "concreteAreaA1", 'f'),
+    ("joints", "joint-ep", "jointCoefficient", 'f'),
+    ("joints", "joint-ep", "anchorArea", 'f'),
+    ("joints", "joint-ep", "anchorLength", 'f'),
+    ("joints", "joint-ep", "baseNormalForce", 'f'),
+    ("joints", "joint-ep", "baseMoment", 'f'),
+    ("joints", "joint-ep", "baseLeverLeft", 'f'),
+    ("joints", "joint-ep", "baseLeverRight", 'f'),
+    ("tensionComponents", "ten-1", "partialFactor", 'f'),
+    ("tensionComponents", "ten-1", "cableLength", 'f'),
+    ("tensionComponents", "ten-1", "cableWeight", 'f'),
+    ("tensionComponents", "ten-1", "cableHorizontalForce", 'f'),
+    ("tensionComponents", "ten-1", "cableModulus", 'f'),
+    ("tensionComponents", "ten-1", "cableStress", 'f'),
+    ("tensionComponents", "ten-1", "cableUnitWeight", 'f'),
+    ("tensionComponents", "ten-1", "threadFactor", 'f'),
+    ("tensionComponents", "ten-1", "rodStressArea", 'f'),
+    ("tensionComponents", "ten-1", "rodFu", 'f'),
+    ("tensionComponents", "ten-1", "pinDiameter", 'f'),
+    ("tensionComponents", "ten-1", "pinPlateThickness", 'f'),
+    ("tensionComponents", "ten-1", "pinGap", 'f'),
+    ("tensionComponents", "ten-1", "pinOuterThickness", 'f'),
+    ("tensionComponents", "ten-1", "pinInnerThickness", 'f'),
+    ("tensionComponents", "ten-1", "pinFup", 'f'),
+    ("tensionComponents", "ten-1", "pinFyp", 'f'),
+    ("tensionComponents", "ten-1", "pinPlateFy", 'f'),
+    ("bridgeFatigue", "br-1", "heavyVehicleWeight", 'f'),
+    ("bridgeFatigue", "br-1", "referenceWeight", 'f'),
+    ("bridgeFatigue", "br-1", "observedTraffic", 'f'),
+    ("bridgeFatigue", "br-1", "designLife", 'f'),
+    ("bridgeFatigue", "br-1", "secondLaneTraffic", 'f'),
+    ("bridgeFatigue", "br-1", "secondLaneWeight", 'f'),
+    ("bridgeFatigue", "br-1", "lambda1", 'f'),
+    ("bridgeFatigue", "br-1", "lambdaMax", 'f'),
+    ("bridgeFatigue", "br-1", "detailId", 's'),
+    ("bridgeFatigue", "br-1", "plateThickness", 'f'),
+    ("towerLegs", "tw-1", "latticeKind", 's'),
+    ("towerLegs", "tw-1", "slenderness", 'f'),
+    ("towerLegs", "tw-1", "diameter", 'f'),
+    ("towerLegs", "tw-1", "height", 'f'),
+    ("towerLegs", "tw-1", "bendingStiffness", 'f'),
+    ("towerLegs", "tw-1", "massPerLength", 'f'),
+    ("towerLegs", "tw-1", "strouhal", 'f'),
+    ("towerLegs", "tw-1", "logDecrement", 'f'),
+    ("towerLegs", "tw-1", "airDensity", 'f'),
+    ("towerLegs", "tw-1", "meanWindSpeed", 'f'),
+    ("towerLegs", "tw-1", "crossingRate", 'f'),
+    ("towerLegs", "tw-1", "designLife", 'f'),
+    ("towerLegs", "tw-1", "kFactor", 'f'),
+    ("towerLegs", "tw-1", "kwFactor", 'f'),
+    ("towerLegs", "tw-1", "lateralForceCoefficient", 'f'),
+    ("towerLegs", "tw-1", "permittedAmplitudeRatio", 'f'),
+    ("towerLegs", "tw-1", "ringMode", 'f'),
+    ("towerLegs", "tw-1", "shellThickness", 'f'),
+    ("towerLegs", "tw-1", "guyArea", 'f'),
+    ("towerLegs", "tw-1", "guyAngle", 'f'),
+    ("towerLegs", "tw-1", "guyLength", 'f'),
+    ("piles", "pile-1", "environment", 's'),
+    ("piles", "pile-1", "designLife", 'f'),
+    ("piles", "pile-1", "wallThickness", 'f'),
+    ("piles", "pile-1", "interlockBendingFactor", 'f'),
+    ("piles", "pile-1", "interlockStiffnessFactor", 'f'),
+    ("piles", "pile-1", "sectionModulus", 'f'),
+    ("piles", "pile-1", "shearArea", 'f'),
+    ("piles", "pile-1", "designMoment", 'f'),
+    ("piles", "pile-1", "designShear", 'f'),
+    ("piles", "pile-1", "interlockShear", 'f'),
+    ("craneRunways", "crane-1", "maxWheelLoad", 'f'),
+    ("craneRunways", "crane-1", "loadFactor", 'f'),
+    ("craneRunways", "crane-1", "railInertia", 'f'),
+    ("craneRunways", "crane-1", "railFixed", 'u'),
+    ("craneRunways", "crane-1", "flangeEffectiveWidth", 'f'),
+    ("craneRunways", "crane-1", "flangeThickness", 'f'),
+    ("craneRunways", "crane-1", "wheelEccentricity", 'f'),
+    ("craneRunways", "crane-1", "torsionConstant", 'f'),
+    ("craneRunways", "crane-1", "longitudinalStress", 'f'),
+    ("craneRunways", "crane-1", "railRadius", 'f'),
+    ("craneRunways", "crane-1", "railContactWidth", 'f'),
+    ("craneRunways", "crane-1", "craneNu", 'f'),
+    ("craneRunways", "crane-1", "craneKq", 'f'),
+    ("craneRunways", "crane-1", "damageExponent", 'f'),
+    ("craneRunways", "crane-1", "stressRange", 'f'),
+    ("craneRunways", "crane-1", "detailCategoryStress", 'f'),
+    ("craneRunways", "crane-1", "fatiguePhi", 'f'),
+];
+
+#[test]
+fn every_special_part_leaf_resolves_to_one_typed_leaf_kind() {
+    use semio_framework_value::ToValue;
+    use semio_s_plugin_norm_app_surface::NormEdit;
+    let before = En1993Snapshot::special_parts_showcase();
+    for (collection, id, field, kind) in SPECIAL_LEAVES {
+        let path = format!("{collection}[id={id}].{field}");
+        let value = match kind {
+            's' => "x".to_string().to_value(),
+            'u' => 3_u32.to_value(),
+            _ => 123.0_f64.to_value(),
+        };
+        let mutations = crate::resolve(&before, &NormEdit::SetField { path: path.clone(), value }).unwrap_or_else(|error| panic!("{path}: {error}"));
+        assert_eq!(mutations.len(), 1, "{path}");
+        let (after, _) = apply_en1993_mutation(&before, &mutations[0]).expect("apply");
+        assert_ne!(after, before, "{path}");
+    }
+}
+
+#[test]
+fn core_entity_leaves_resolve_to_one_typed_kind() {
+    use semio_framework_value::ToValue;
+    use semio_s_plugin_norm_app_surface::NormEdit;
+    let before = base();
+    let cases = [
+        (format!("materials[id={}].fy", before.materials[0].id), 123.0e6_f64),
+        (format!("sections[id={}].area", before.sections[0].id), 0.0123),
+        (format!("members[id={}].length", before.members[0].id), 9.0),
+    ];
+    for (path, number) in cases {
+        let mutations = crate::resolve(&before, &NormEdit::SetField { path: path.clone(), value: number.to_value() }).unwrap_or_else(|error| panic!("{path}: {error}"));
+        assert_eq!(mutations.len(), 1, "{path}");
+        let (after, _) = apply_en1993_mutation(&before, &mutations[0]).expect("apply");
+        assert_ne!(after, before, "{path}");
+    }
+}
+
+const ANNEX_LEAVES: &[(&str, &str, &str, char)] = &[
+    ("siloShells", "silo-1", "ringSpacing", 'f'),
+    ("siloShells", "silo-1", "ringArea", 'f'),
+    ("siloShells", "silo-1", "ringInertia", 'f'),
+    ("siloShells", "silo-1", "ringOffset", 'f'),
+    ("platedPanels", "pp-1", "corrugationFlat", 'f'),
+    ("platedPanels", "pp-1", "corrugationProjection", 'f'),
+    ("platedPanels", "pp-1", "corrugationDepth", 'f'),
+    ("platedPanels", "pp-1", "webHeight", 'f'),
+    ("bridgeFatigue", "br-1", "deckThickness", 'f'),
+    ("bridgeFatigue", "br-1", "troughSpacing", 'f'),
+    ("bridgeFatigue", "br-1", "troughWidth", 'f'),
+    ("bridgeFatigue", "br-1", "troughThickness", 'f'),
+    ("bridgeFatigue", "br-1", "crossbeamSpacing", 'f'),
+    ("bridgeFatigue", "br-1", "surfacingThickness", 'f'),
+    ("bridgeFatigue", "br-1", "wheelLoad", 'f'),
+    ("bridgeFatigue", "br-1", "wheelPatch", 'f'),
+    ("coldFormedMembers", "cf-1", "purlinSpan", 'f'),
+    ("coldFormedMembers", "cf-1", "purlinLoad", 'f'),
+    ("coldFormedMembers", "cf-1", "purlinLateralRatio", 'f'),
+];
+
+#[test]
+fn every_annex_leaf_resolves_to_one_typed_leaf_kind() {
+    use semio_framework_value::ToValue;
+    use semio_s_plugin_norm_app_surface::NormEdit;
+    let before = En1993Snapshot::special_parts_showcase();
+    for (collection, id, field, kind) in ANNEX_LEAVES {
+        let path = format!("{collection}[id={id}].{field}");
+        let value = match kind {
+            's' => "x".to_string().to_value(),
+            'u' => 3_u32.to_value(),
+            _ => 123.0_f64.to_value(),
+        };
+        let mutations = crate::resolve(&before, &NormEdit::SetField { path: path.clone(), value }).unwrap_or_else(|error| panic!("{path}: {error}"));
+        assert_eq!(mutations.len(), 1, "{path}");
+        let (after, _) = apply_en1993_mutation(&before, &mutations[0]).expect("apply");
+        assert_ne!(after, before, "{path}");
+    }
+}
+
+const STIFFENED_LEAVES: &[(&str, &str, &str, char)] = &[
+    ("platedPanels", "pp-1", "stiffenerSpacing", 'f'),
+];
+
+#[test]
+fn every_stiffened_leaf_resolves_to_one_typed_leaf_kind() {
+    use semio_framework_value::ToValue;
+    use semio_s_plugin_norm_app_surface::NormEdit;
+    let before = En1993Snapshot::special_parts_showcase();
+    for (collection, id, field, kind) in STIFFENED_LEAVES {
+        let path = format!("{collection}[id={id}].{field}");
+        let value = match kind {
+            's' => "x".to_string().to_value(),
+            'u' => 3_u32.to_value(),
+            _ => 123.0_f64.to_value(),
+        };
+        let mutations = crate::resolve(&before, &NormEdit::SetField { path: path.clone(), value }).unwrap_or_else(|error| panic!("{path}: {error}"));
+        assert_eq!(mutations.len(), 1, "{path}");
+        let (after, _) = apply_en1993_mutation(&before, &mutations[0]).expect("apply");
+        assert_ne!(after, before, "{path}");
+    }
+}
+
+const BUILTUPOUTLINE_LEAVES: &[(&str, &str, &str, char)] = &[
+    ("builtUpMembers", "joint-ep", "chordShape", 's'),
+    ("builtUpMembers", "joint-ep", "chordDepth", 'f'),
+    ("builtUpMembers", "joint-ep", "chordWidth", 'f'),
+    ("builtUpMembers", "joint-ep", "chordFlangeThickness", 'f'),
+    ("builtUpMembers", "joint-ep", "chordWebThickness", 'f'),
+];
+
+#[test]
+fn every_builtupoutline_leaf_resolves_to_one_typed_leaf_kind() {
+    use semio_framework_value::ToValue;
+    use semio_s_plugin_norm_app_surface::NormEdit;
+    let before = En1993Snapshot::special_parts_showcase();
+    for (collection, id, field, kind) in BUILTUPOUTLINE_LEAVES {
+        let path = format!("{collection}[id={id}].{field}");
+        let value = match kind {
+            's' => "x".to_string().to_value(),
+            'u' => 3_u32.to_value(),
+            _ => 123.0_f64.to_value(),
+        };
+        let mutations = crate::resolve(&before, &NormEdit::SetField { path: path.clone(), value }).unwrap_or_else(|error| panic!("{path}: {error}"));
+        assert_eq!(mutations.len(), 1, "{path}");
+        let (after, _) = apply_en1993_mutation(&before, &mutations[0]).expect("apply");
+        assert_ne!(after, before, "{path}");
+    }
+}
+
+const V7_LEAVES: &[(&str, &str, &str, char)] = &[
+    ("platedPanels", "pp-1", "stiffenerShape", 'c'),
+    ("platedPanels", "pp-1", "stiffenerDepth", 'f'),
+    ("platedPanels", "pp-1", "stiffenerThickness", 'f'),
+    ("platedPanels", "pp-1", "stiffenerFlangeWidth", 'f'),
+    ("platedPanels", "pp-1", "stiffenerFlangeThickness", 'f'),
+    ("platedPanels", "pp-1", "lateralPressure", 'f'),
+    ("platedPanels", "pp-1", "lateralPressureCoefficient", 'f'),
+    ("members", "member-b1", "webMaterialId", 's'),
+    ("members", "member-b1", "torsionLoad", 's'),
+    ("members", "member-b1", "torquePosition", 'f'),
+    ("fatigueDetails", "fat-1", "stressHistory", 's'),
+];
+
+#[test]
+fn every_v7_leaf_resolves_to_one_typed_leaf_kind() {
+    use semio_framework_value::ToValue;
+    use semio_s_plugin_norm_app_surface::NormEdit;
+    let before = En1993Snapshot::special_parts_showcase();
+    for (collection, id, field, kind) in V7_LEAVES {
+        let path = format!("{collection}[id={id}].{field}");
+        let value = match kind {
+            's' => "x".to_string().to_value(),
+            'c' => 1.0_f64.to_value(),
+            'u' => 3_u32.to_value(),
+            _ => 123.0_f64.to_value(),
+        };
+        let mutations = crate::resolve(&before, &NormEdit::SetField { path: path.clone(), value }).unwrap_or_else(|error| panic!("{path}: {error}"));
+        assert_eq!(mutations.len(), 1, "{path}");
+        let (after, _) = apply_en1993_mutation(&before, &mutations[0]).expect("apply");
+        assert_ne!(after, before, "{path}");
+    }
+}
+
+const V8_LEAVES: &[(&str, &str, &str, char)] = &[
+    ("members", "member-b1", "warpingSupport", 'c'),
+];
+
+#[test]
+fn every_v8_leaf_resolves_to_one_typed_leaf_kind() {
+    use semio_framework_value::ToValue;
+    use semio_s_plugin_norm_app_surface::NormEdit;
+    let before = En1993Snapshot::special_parts_showcase();
+    for (collection, id, field, kind) in V8_LEAVES {
+        let path = format!("{collection}[id={id}].{field}");
+        let value = match kind {
+            's' => "x".to_string().to_value(),
+            'c' => 1.0_f64.to_value(),
+            'u' => 3_u32.to_value(),
+            _ => 123.0_f64.to_value(),
+        };
+        let mutations = crate::resolve(&before, &NormEdit::SetField { path: path.clone(), value }).unwrap_or_else(|error| panic!("{path}: {error}"));
+        assert_eq!(mutations.len(), 1, "{path}");
+        let (after, _) = apply_en1993_mutation(&before, &mutations[0]).expect("apply");
+        assert_ne!(after, before, "{path}");
+    }
+}
+
+#[test]
+fn the_choice_leaves_take_the_enum_token_a_choice_grip_writes() {
+    use semio_framework_value::ToValue;
+    use semio_s_plugin_norm_app_surface::NormEdit;
+    let before = En1993Snapshot::special_parts_showcase();
+    for (path, token) in [("platedPanels[id=pp-1].stiffenerShape", "Angle"), ("platedPanels[id=pp-1].stiffenerShape", "None"), ("members[id=member-b1].warpingSupport", "Cantilever"), ("members[id=member-b1].warpingSupport", "FixedFork")] {
+        let mutations = crate::resolve(&before, &NormEdit::SetField { path: path.to_string(), value: token.to_string().to_value() }).unwrap_or_else(|error| panic!("{path}: {error}"));
+        assert_eq!(mutations.len(), 1, "{path}");
+        apply_en1993_mutation(&before, &mutations[0]).unwrap_or_else(|error| panic!("{path}: {error:?}"));
+    }
+}
+
+#[test]
+    use semio_framework_value::ToValue;
+    let before = base();
+    let cases = [
+    ];
+    for (path, number) in cases {
+    }
+}

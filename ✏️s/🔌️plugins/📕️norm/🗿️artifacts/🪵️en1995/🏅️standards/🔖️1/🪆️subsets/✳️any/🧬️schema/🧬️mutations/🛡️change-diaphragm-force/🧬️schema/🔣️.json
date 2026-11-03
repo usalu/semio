@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-diaphragm-force/schema.json",
+  "title": "ChangeDiaphragmForce",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "diaphragmId",
+    "newValue"
+  ],
+  "properties": {
+    "diaphragmId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Diaphragm",
+          "de": "Scheibe"
+        },
+        "description": {
+          "en": "The diaphragm this mutation addresses.",
+          "de": "Das Element, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "diaphragm"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newValue": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Diaphragm force F_d",
+          "de": "Scheibenkraft F_d"
+        },
+        "unit": "N",
+        "displayUnit": "kN",
+        "displayFactor": 0.001,
+        "precision": 2,
+        "step": 100,
+        "group": "fields",
+        "order": 20
+      }
+    }
+  }
+}

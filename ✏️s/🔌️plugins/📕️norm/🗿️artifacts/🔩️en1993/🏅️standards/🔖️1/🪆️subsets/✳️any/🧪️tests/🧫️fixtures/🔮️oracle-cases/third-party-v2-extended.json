@@ -1,0 +1,445 @@
+{
+  "$schema": "../../../../../../../../../🔮️oracles/🏃️harness/🧬️schema/🔣️.json",
+  "schemaVersion": 1,
+  "artifact": "en1993",
+  "annex": "De",
+  "cases": [
+    {
+      "id": "en1993.5.2.alpha-cr-storey-portal",
+      "check": "en1993.5.2.alpha-cr-storey",
+      "citation": {
+        "standard": "EN 1993-1-1",
+        "edition": "2004",
+        "clause": "5.2.1(4)B Eq. 5.2 alpha_cr = H/V h/delta_H with the first-order drift"
+      },
+      "inputs": {
+        "E": 210000000000.0,
+        "A": 0.02,
+        "I_col": 8e-05,
+        "I_beam": 0.00016,
+        "h": 4.0,
+        "span": 6.0,
+        "H": 50000.0,
+        "V": 2000000.0
+      },
+      "expected": {
+        "alpha_cr_formula": {
+          "value": 9.426666871589228,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "sway": {
+          "value": 0.01060820344690309,
+          "unit": "m",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-pynite",
+          "adapter": "pynite",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-anastruct",
+          "adapter": "anastruct",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1993.5.2.alpha-cr-eigen-stiff-beam",
+      "check": "en1993.5.2.alpha-cr-eigen",
+      "citation": {
+        "standard": "EN 1993-1-1",
+        "edition": "2004",
+        "clause": "5.2.1(3) alpha_cr as the lowest eigenvalue of the geometric stiffness problem (scipy) against the second-order amplification delta_II / delta_I = 1 / (1 - 1 / alpha_cr) (PyNite P-Delta)"
+      },
+      "inputs": {
+        "E": 210000000000.0,
+        "A": 0.02,
+        "I_col": 8e-05,
+        "I_beam": 0.0008,
+        "h": 4.0,
+        "span": 6.0,
+        "H": 50000.0,
+        "V": 2000000.0
+      },
+      "expected": {
+        "alpha_cr_eigen": {
+          "value": 9.969025748699481,
+          "unit": "1",
+          "profile": "method-spread-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-pynite",
+          "adapter": "pynite",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1993.5.2.alpha-cr-formula-vs-eigen-stiff-beam",
+      "check": "en1993.5.2.alpha-cr-storey",
+      "citation": {
+        "standard": "EN 1993-1-1",
+        "edition": "2004",
+        "clause": "5.2.1(4)B Eq. 5.2 against the eigenvalue: both quantities at one frame"
+      },
+      "inputs": {
+        "E": 210000000000.0,
+        "A": 0.02,
+        "I_col": 8e-05,
+        "I_beam": 0.0008,
+        "h": 4.0,
+        "span": 6.0,
+        "H": 50000.0,
+        "V": 2000000.0
+      },
+      "expected": {
+        "alpha_cr_formula": {
+          "value": 11.70258614027177,
+          "unit": "1",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-pynite",
+          "adapter": "pynite",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-anastruct",
+          "adapter": "anastruct",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1993.5.2.alpha-cr-eigen-flexible-beam",
+      "check": "en1993.5.2.alpha-cr-eigen",
+      "citation": {
+        "standard": "EN 1993-1-1",
+        "edition": "2004",
+        "clause": "5.2.1(3) alpha_cr as the lowest eigenvalue of the geometric stiffness problem (scipy) against the second-order amplification delta_II / delta_I = 1 / (1 - 1 / alpha_cr) (PyNite P-Delta)"
+      },
+      "inputs": {
+        "E": 210000000000.0,
+        "A": 0.02,
+        "I_col": 8e-05,
+        "I_beam": 6e-05,
+        "h": 4.0,
+        "span": 6.0,
+        "H": 50000.0,
+        "V": 2000000.0
+      },
+      "expected": {
+        "alpha_cr_eigen": {
+          "value": 6.3873393216356,
+          "unit": "1",
+          "profile": "method-spread-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-pynite",
+          "adapter": "pynite",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1993.5.2.alpha-cr-formula-vs-eigen-flexible-beam",
+      "check": "en1993.5.2.alpha-cr-storey",
+      "citation": {
+        "standard": "EN 1993-1-1",
+        "edition": "2004",
+        "clause": "5.2.1(4)B Eq. 5.2 against the eigenvalue: both quantities at one frame"
+      },
+      "inputs": {
+        "E": 210000000000.0,
+        "A": 0.02,
+        "I_col": 8e-05,
+        "I_beam": 6e-05,
+        "h": 4.0,
+        "span": 6.0,
+        "H": 50000.0,
+        "V": 2000000.0
+      },
+      "expected": {
+        "alpha_cr_formula": {
+          "value": 7.187687586025297,
+          "unit": "1",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-pynite",
+          "adapter": "pynite",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-anastruct",
+          "adapter": "anastruct",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1993.5.3.2.sway-imperfection-h6-m2",
+      "check": "en1993.5.3.2.sway-imperfection",
+      "citation": {
+        "standard": "EN 1993-1-1",
+        "edition": "2004",
+        "clause": "5.3.2(3) Eq. 5.5 phi = phi_0 alpha_h alpha_m, equivalent horizontal force H = phi V"
+      },
+      "inputs": {
+        "V": 1200000.0,
+        "h": 6.0,
+        "m": 2.0
+      },
+      "expected": {
+        "alpha_h": {
+          "value": 0.8164965809277261,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "phi": {
+          "value": 0.0035355339059327377,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "H_eq": {
+          "value": 4242.640687119285,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1993.5.3.2.sway-imperfection-h3-m5",
+      "check": "en1993.5.3.2.sway-imperfection",
+      "citation": {
+        "standard": "EN 1993-1-1",
+        "edition": "2004",
+        "clause": "5.3.2(3) Eq. 5.5 phi = phi_0 alpha_h alpha_m, equivalent horizontal force H = phi V"
+      },
+      "inputs": {
+        "V": 1200000.0,
+        "h": 3.0,
+        "m": 5.0
+      },
+      "expected": {
+        "alpha_h": {
+          "value": 1.0,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "phi": {
+          "value": 0.0038729833462074173,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "H_eq": {
+          "value": 4647.580015448901,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1993.5.3.2.sway-imperfection-h20-m1",
+      "check": "en1993.5.3.2.sway-imperfection",
+      "citation": {
+        "standard": "EN 1993-1-1",
+        "edition": "2004",
+        "clause": "5.3.2(3) Eq. 5.5 phi = phi_0 alpha_h alpha_m, equivalent horizontal force H = phi V"
+      },
+      "inputs": {
+        "V": 1200000.0,
+        "h": 20.0,
+        "m": 1.0
+      },
+      "expected": {
+        "alpha_h": {
+          "value": 0.6666666666666666,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "phi": {
+          "value": 0.003333333333333333,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "H_eq": {
+          "value": 3999.9999999999995,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1993.1-8.4.5.weld-group-box-square-eccentric",
+      "check": "en1993.1-8.4.5.weld-group-box",
+      "citation": {
+        "standard": "EN 1993-1-8",
+        "edition": "2005",
+        "clause": "EN 1993-1-8 4.5.3.2 directional/simplified method, elastic vector method for a box weld group (per unit throat)"
+      },
+      "inputs": {
+        "b": 0.2,
+        "d": 0.2,
+        "F": 100000.0,
+        "e": 0.15
+      },
+      "expected": {
+        "L_w": {
+          "value": 0.7999999999999963,
+          "unit": "m",
+          "profile": "numerical-v1"
+        },
+        "I_p": {
+          "value": 0.01066773333333328,
+          "unit": "m^3",
+          "profile": "numerical-v1"
+        },
+        "f_max": {
+          "value": 300533.86998247553,
+          "unit": "N/m",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sectionproperties",
+          "adapter": "sectionproperties",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1993.1-8.4.5.weld-group-box-slender-eccentric",
+      "check": "en1993.1-8.4.5.weld-group-box",
+      "citation": {
+        "standard": "EN 1993-1-8",
+        "edition": "2005",
+        "clause": "EN 1993-1-8 4.5.3.2 directional/simplified method, elastic vector method for a box weld group (per unit throat)"
+      },
+      "inputs": {
+        "b": 0.1,
+        "d": 0.3,
+        "F": 80000.0,
+        "e": 0.2
+      },
+      "expected": {
+        "L_w": {
+          "value": 0.7999999999999978,
+          "unit": "m",
+          "profile": "numerical-v1"
+        },
+        "I_p": {
+          "value": 0.010667733333333264,
+          "unit": "m^3",
+          "profile": "numerical-v1"
+        },
+        "f_max": {
+          "value": 285021.4936408498,
+          "unit": "N/m",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sectionproperties",
+          "adapter": "sectionproperties",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    }
+  ]
+}

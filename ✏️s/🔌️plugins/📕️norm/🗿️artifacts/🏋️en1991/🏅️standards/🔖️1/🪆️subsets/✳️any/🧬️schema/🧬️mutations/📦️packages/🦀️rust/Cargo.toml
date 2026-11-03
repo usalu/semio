@@ -20,6 +20,12 @@ name = "mutation_vectors"
 path = "../../🧪️tests/🔬️vectors/🦀️.rs"
 
 [dependencies]
+serde = { workspace = true, optional = true }
+semio-s-artifact-norm-en1991-mutations-protocol = { workspace = true }
+semio-s-artifact-norm-en1991-mutations-proto = { workspace = true }
+semio-s-artifact-norm-en1991-mutations-json-schema = { workspace = true }
+semio-s-artifact-norm-en1991-mutations-graphql = { workspace = true }
+semio-s-artifact-norm-en1991-mutations-typescript = { workspace = true }
 semio-framework-os-command = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-os-store-one-item = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/📦️packages/🦀️rust" }
@@ -33,10 +39,49 @@ semio-framework-value-derive = { workspace = true }
 semio-s-artifact-norm-en1991-diff = { workspace = true }
 semio-s-artifact-norm-en1991-model = { workspace = true }
 semio-s-artifact-norm-en1991-mut-compartment = { workspace = true }
+semio-s-artifact-norm-en1991-mut-dust-explosions = { workspace = true }
+semio-s-artifact-norm-en1991-mut-rail-load-groups = { workspace = true }
+semio-s-artifact-norm-en1991-mut-rail-derailments = { workspace = true }
+semio-s-artifact-norm-en1991-mut-snow-guards = { workspace = true }
+semio-s-artifact-norm-en1991-mut-local-fires = { workspace = true }
+semio-s-artifact-norm-en1991-mut-support-collisions = { workspace = true }
+semio-s-artifact-norm-en1991-mut-fatigue-models = { workspace = true }
+semio-s-artifact-norm-en1991-mut-design-cases = { workspace = true }
 semio-s-artifact-norm-en1991-mut-cranes = { workspace = true }
 semio-s-artifact-norm-en1991-mut-fire = { workspace = true }
 semio-s-artifact-norm-en1991-mut-general = { workspace = true }
 semio-s-artifact-norm-en1991-mut-gravity = { workspace = true }
+semio-s-artifact-norm-en1991-mut-footbridges = { workspace = true }
+semio-s-artifact-norm-en1991-mut-rail-dynamics = { workspace = true }
+semio-s-artifact-norm-en1991-mut-load-dispersals = { workspace = true }
+semio-s-artifact-norm-en1991-mut-bulk-solids = { workspace = true }
+semio-s-artifact-norm-en1991-mut-rotating-machines = { workspace = true }
+semio-s-artifact-norm-en1991-mut-crane-hoists = { workspace = true }
+semio-s-artifact-norm-en1991-mut-helicopter-landings = { workspace = true }
+semio-s-artifact-norm-en1991-mut-tie-runs-position = { workspace = true }
+semio-s-artifact-norm-en1991-mut-tie-runs-loading = { workspace = true }
+semio-s-artifact-norm-en1991-mut-tie-runs = { workspace = true }
+semio-s-artifact-norm-en1991-mut-construction-loads = { workspace = true }
+semio-s-artifact-norm-en1991-mut-falling-loads = { workspace = true }
+semio-s-artifact-norm-en1991-mut-execution-imperfections = { workspace = true }
+semio-s-artifact-norm-en1991-mut-derailment-cases = { workspace = true }
+semio-s-artifact-norm-en1991-mut-gravity-content = { workspace = true }
+semio-s-artifact-norm-en1991-mut-roof-content = { workspace = true }
+semio-s-artifact-norm-en1991-mut-wind-face-coefficients = { workspace = true }
+semio-s-artifact-norm-en1991-mut-special-vehicles = { workspace = true }
+semio-s-artifact-norm-en1991-mut-wind-bridges = { workspace = true }
+semio-s-artifact-norm-en1991-mut-wind-bridges-loading = { workspace = true }
+semio-s-artifact-norm-en1991-mut-dynamic-elements = { workspace = true }
+semio-s-artifact-norm-en1991-mut-dynamic-elements-response = { workspace = true }
+semio-s-artifact-norm-en1991-mut-impact-actions = { workspace = true }
+semio-s-artifact-norm-en1991-mut-impact-actions-position = { workspace = true }
+semio-s-artifact-norm-en1991-mut-internal-explosions = { workspace = true }
+semio-s-artifact-norm-en1991-mut-thermal-sections = { workspace = true }
+semio-s-artifact-norm-en1991-mut-accidental-case-variants = { workspace = true }
+semio-s-artifact-norm-en1991-mut-placements = { workspace = true }
+semio-s-artifact-norm-en1991-mut-bridge-lanes = { workspace = true }
+semio-s-artifact-norm-en1991-mut-construction-stages = { workspace = true }
+semio-s-artifact-norm-en1991-mut-roof-surfaces = { workspace = true }
 semio-s-artifact-norm-en1991-mut-silos = { workspace = true }
 semio-s-artifact-norm-en1991-mut-snow = { workspace = true }
 semio-s-artifact-norm-en1991-mut-thermal = { workspace = true }
@@ -44,6 +89,12 @@ semio-s-artifact-norm-en1991-mut-traffic = { workspace = true }
 semio-s-artifact-norm-en1991-mut-wind = { workspace = true }
 semio-s-artifact-norm-en1991-mut-wind-faces = { workspace = true }
 semio-s-plugin-norm-app-surface = { workspace = true }
+semio-framework-diagnostic = { workspace = true }
+semio-s-artifact-norm-contract = { workspace = true }
+semio-s-plugin-norm-compliance = { workspace = true }
+
+[features]
+test-support = ["dep:serde", "semio-s-artifact-norm-en1991-diff/test-support", "semio-s-artifact-norm-en1991-model/test-support", "semio-s-artifact-norm-en1991-mut-accidental-case-variants/test-support", "semio-s-artifact-norm-en1991-mut-bridge-lanes/test-support", "semio-s-artifact-norm-en1991-mut-bulk-solids/test-support", "semio-s-artifact-norm-en1991-mut-compartment/test-support", "semio-s-artifact-norm-en1991-mut-construction-loads/test-support", "semio-s-artifact-norm-en1991-mut-construction-stages/test-support", "semio-s-artifact-norm-en1991-mut-crane-hoists/test-support", "semio-s-artifact-norm-en1991-mut-cranes/test-support", "semio-s-artifact-norm-en1991-mut-derailment-cases/test-support", "semio-s-artifact-norm-en1991-mut-design-cases/test-support", "semio-s-artifact-norm-en1991-mut-dynamic-elements/test-support", "semio-s-artifact-norm-en1991-mut-dynamic-elements-response/test-support", "semio-s-artifact-norm-en1991-mut-execution-imperfections/test-support", "semio-s-artifact-norm-en1991-mut-falling-loads/test-support", "semio-s-artifact-norm-en1991-mut-fire/test-support", "semio-s-artifact-norm-en1991-mut-footbridges/test-support", "semio-s-artifact-norm-en1991-mut-general/test-support", "semio-s-artifact-norm-en1991-mut-gravity/test-support", "semio-s-artifact-norm-en1991-mut-gravity-content/test-support", "semio-s-artifact-norm-en1991-mut-helicopter-landings/test-support", "semio-s-artifact-norm-en1991-mut-impact-actions/test-support", "semio-s-artifact-norm-en1991-mut-impact-actions-position/test-support", "semio-s-artifact-norm-en1991-mut-internal-explosions/test-support", "semio-s-artifact-norm-en1991-mut-load-dispersals/test-support", "semio-s-artifact-norm-en1991-mut-placements/test-support", "semio-s-artifact-norm-en1991-mut-rail-dynamics/test-support", "semio-s-artifact-norm-en1991-mut-roof-content/test-support", "semio-s-artifact-norm-en1991-mut-roof-surfaces/test-support", "semio-s-artifact-norm-en1991-mut-rotating-machines/test-support", "semio-s-artifact-norm-en1991-mut-silos/test-support", "semio-s-artifact-norm-en1991-mut-snow/test-support", "semio-s-artifact-norm-en1991-mut-special-vehicles/test-support", "semio-s-artifact-norm-en1991-mut-thermal/test-support", "semio-s-artifact-norm-en1991-mut-thermal-sections/test-support", "semio-s-artifact-norm-en1991-mut-tie-runs/test-support", "semio-s-artifact-norm-en1991-mut-tie-runs-loading/test-support", "semio-s-artifact-norm-en1991-mut-tie-runs-position/test-support", "semio-s-artifact-norm-en1991-mut-traffic/test-support", "semio-s-artifact-norm-en1991-mut-wind/test-support", "semio-s-artifact-norm-en1991-mut-wind-bridges/test-support", "semio-s-artifact-norm-en1991-mut-wind-bridges-loading/test-support", "semio-s-artifact-norm-en1991-mut-wind-face-coefficients/test-support", "semio-s-artifact-norm-en1991-mut-wind-faces/test-support", "semio-s-plugin-norm-compliance/test-support"]
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }

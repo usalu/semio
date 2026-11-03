@@ -1,0 +1,6 @@
+{
+  "ChangeJointPlateBoltDiameter": {
+    "id": "joint-plate-1",
+    "newBoltDiameter": 2.0
+  }
+}

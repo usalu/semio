@@ -1,0 +1,60 @@
+# key|scope|kind|unit|example|flags|en|de|confidence|note   (EN 1994 catalogue functions work in SI: m, Pa, N, N·m; v3 gap catalogue)
+@choice ribs|transverse|Ribs transverse to the beam|Rippen quer zum Träger
+@choice ribs|parallel|Ribs parallel to the beam|Rippen parallel zum Träger
+@choice kind|concrete_encased|Concrete encased section|Einbetonierter Querschnitt
+@choice kind|filled_circular|Concrete-filled circular section|Kreisförmig betongefüllter Querschnitt
+@choice kind|filled_rectangular|Concrete-filled rectangular section|Rechteckig betongefüllter Querschnitt
+@choice kind|partially_encased_flange|Partially encased section, flange contact|Teilweise einbetonierter Querschnitt, Flanschkontakt
+@choice kind|partially_encased_web|Partially encased section, web contact|Teilweise einbetonierter Querschnitt, Stegkontakt
+d_stud||n|m|0.019|r0.01:0.03|Stud diameter d|Dübeldurchmesser d|high|
+h_sc||n|m|0.125|r0.03:0.4|Stud height after welding hsc|Dübelhöhe nach dem Schweißen hsc|high|
+fu_stud||n|Pa|450000000|r300e6:700e6|Stud tensile strength fu|Zugfestigkeit des Dübels fu|high|
+fck||n|Pa|25000000|r12e6:90e6|Characteristic concrete cylinder strength fck|Charakteristische Zylinderdruckfestigkeit des Betons fck|high|
+gamma_v||n|1|1.25|r1:2|Partial factor γV|Teilsicherheitsbeiwert γV|high|
+h_p||n|m|0.06|r0:0.2|Sheeting rib height hp (0 for a solid slab)|Profilhöhe hp (0 für Vollplatte)|high|
+b_0||n|m|0.1|r0:0.5|Mean rib width b0|Mittlere Rippenbreite b0|high|
+t_sheet||n|m|0.001|r0.0003:0.003|Sheeting thickness t|Profilblechdicke t|high|
+n_r||n|1|1|r1:2|Studs per rib nr|Dübel je Rippe nr|high|
+ribs||c|1|transverse||Rib direction|Rippenrichtung|high|
+p_ed||n|N|60000|r0:1e7|Design force per stud PEd|Bemessungskraft je Dübel PEd|high|
+h_w||n|m|0.5|r0.05:3|Web depth hw|Stegmaß hw|high|
+t_w||n|m|0.01|r0.002:0.1|Web thickness tw|Stegdicke tw|high|
+b_f||n|m|0.2|r0.05:1|Flange width bf|Flanschbreite bf|high|
+t_f||n|m|0.015|r0.003:0.1|Flange thickness tf|Flanschdicke tf|high|
+fyw||n|Pa|355000000|r150e6:800e6|Web yield strength fyw|Streckgrenze des Stegs fyw|high|
+fyf||n|Pa|355000000|r150e6:800e6|Flange yield strength fyf|Streckgrenze des Flansches fyf|high|
+s_s||n|m|0.1|r0:1|Stiff bearing length ss|Lasteinleitungslänge ss|high|
+a_panel||n|m|2|r0.1:20|Web panel length a|Stegfeldlänge a|high|
+gamma_m1||n|1|1.0|r0.8:2|Partial factor γM1|Teilsicherheitsbeiwert γM1|high|
+f_ed||n|N|150000|r0:1e9|Transverse force FEd|Querkraft FEd|high|
+m_ed||n|Nm|100000|r-1e9:1e9|Design moment MEd|Bemessungsmoment MEd|high|
+m_rd||n|Nm|400000|r1:1e9,L|Moment resistance MRd|Momententragfähigkeit MRd|high|
+kind||c|1|concrete_encased||Interface of the composite column|Verbundfuge des Verbundstützenquerschnitts|high|
+n_intro||n|N|150000|r0:1e9,L|Introduced force Nintro|Eingeleitete Kraft Nintro|high|
+perimeter||n|m|1.2|r0.1:10|Steel-concrete contact perimeter u|Kontaktumfang Stahl-Beton u|high|
+d_min||n|m|0.3|r0.05:2|Lesser cross-section dimension d|Kleinere Querschnittsabmessung d|high|
+l_col||n|m|3.5|r0.5:30|Column length L|Stützenlänge L|high|
+p_rd||n|N|80000|r1:1e7|Design stud resistance PRd|Bemessungswiderstand des Dübels PRd|high|
+l_span||n|m|8|r1:100|Span L|Spannweite L|high|
+g_line||n|N_m|10000|r0:1e7|Permanent line load g|Ständige Linienlast g|high|
+q_line||n|N_m|15000|r0:1e7|Variable line load q|Veränderliche Linienlast q|high|
+i_long||n|m4|0.0004|r1e-7:1|Second moment of area, long term I(nL)|Flächenmoment 2. Grades langfristig I(nL)|high|
+i_short||n|m4|0.0006|r1e-7:1|Second moment of area, short term I(n0)|Flächenmoment 2. Grades kurzfristig I(n0)|high|
+span_ratio||n|1|250|r50:1000|Deflection limit ratio L/δ|Durchbiegungsgrenze L/δ|high|
+theta_a||n|C|550|r20:1200|Steel temperature θa|Stahltemperatur θa|high|
+fy||n|Pa|355000000|r150e6:800e6|Steel yield strength fy|Streckgrenze des Stahls fy|high|
+sigma_ed||n|Pa|100000000|r0:1e9|Design steel stress σEd in fire|Bemessungsspannung σEd im Brandfall|high|
+sec_h||n|m|0.4|r0.05:3|Section depth h|Querschnittshöhe h|high|
+sec_b||n|m|0.18|r0.03:1|Section width b|Querschnittsbreite b|high|
+sec_tf||n|m|0.0135|r0.002:0.1|Flange thickness tf of the steel section|Flanschdicke tf des Stahlprofils|high|
+sec_tw||n|m|0.0086|r0.002:0.1|Web thickness tw of the steel section|Stegdicke tw des Stahlprofils|high|
+sec_a||n|m2|0.0085|r0.0005:0.5|Steel section area A|Stahlquerschnittsfläche A|high|
+sec_iy||n|m4|0.000231|r1e-7:1|Steel section second moment Iy|Flächenmoment 2. Grades Iy des Stahlprofils|high|
+fyd||n|Pa|355000000|r150e6:800e6|Design yield strength fyd of the steel|Bemessungsstreckgrenze fyd des Stahls|high|
+ys||n|m|0.15|r0:1|Depth of the steel top below the slab top|Tiefe der Stahloberkante unter Plattenoberkante|high|
+b_eff||n|m|2|r0.1:20|Effective slab width beff|Mittragende Plattenbreite beff|high|
+h_c||n|m|0.12|r0.03:0.5|Concrete slab thickness hc|Betonplattendicke hc|high|
+gamma_c||n|1|1.5|r1:2|Partial factor γC|Teilsicherheitsbeiwert γC|high|
+as_rebar||n|m2|0.004|r0:0.1|Reinforcement area As in the slab|Bewehrungsfläche As in der Platte|high|
+fsd||n|Pa|435000000|r200e6:700e6|Design yield strength fsd of the reinforcement|Bemessungsstreckgrenze fsd der Bewehrung|high|
+y_r||n|m|0.04|r0:0.5|Depth of the reinforcement below the slab top|Tiefe der Bewehrung unter Plattenoberkante|high|

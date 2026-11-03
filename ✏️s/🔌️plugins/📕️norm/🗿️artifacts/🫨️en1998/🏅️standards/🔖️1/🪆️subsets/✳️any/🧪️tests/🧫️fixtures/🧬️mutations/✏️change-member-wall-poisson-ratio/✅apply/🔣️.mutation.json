@@ -1,0 +1,6 @@
+{
+  "mutation": "changeMemberWallPoissonRatio",
+  "buildingId": "bldg-office",
+  "id": "col-c1",
+  "newWallPoissonRatio": 0.3
+}

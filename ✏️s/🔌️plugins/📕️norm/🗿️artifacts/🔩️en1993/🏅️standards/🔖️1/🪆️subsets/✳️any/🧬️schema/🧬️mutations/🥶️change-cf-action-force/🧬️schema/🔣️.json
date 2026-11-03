@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-cf-action-force/schema.json",
+  "title": "ChangeCfActionForce",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "elementId",
+    "newForce"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Cold-formed action",
+          "de": "Kaltprofil-Einwirkung"
+        },
+        "description": {
+          "en": "The cold-formed action this mutation addresses, by id.",
+          "de": "Das adressierte Element (Kaltprofil-Einwirkung), per Kennung."
+        },
+        "ref": {
+          "kind": "cf-action"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "elementId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Cold-formed action",
+          "de": "Kaltprofil-Einwirkung"
+        },
+        "description": {
+          "en": "The cold-formed action element this mutation addresses, by id.",
+          "de": "Das adressierte Element (Kaltprofil-Einwirkung), per Kennung."
+        },
+        "ref": {
+          "kind": "cf-action"
+        },
+        "group": "target",
+        "order": 15
+      }
+    },
+    "newForce": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Characteristic force",
+          "de": "Charakteristische Kraft"
+        },
+        "widget": "stepper",
+        "unit": "N",
+        "displayUnit": "kN",
+        "displayFactor": 0.001,
+        "precision": 2,
+        "step": 1000,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

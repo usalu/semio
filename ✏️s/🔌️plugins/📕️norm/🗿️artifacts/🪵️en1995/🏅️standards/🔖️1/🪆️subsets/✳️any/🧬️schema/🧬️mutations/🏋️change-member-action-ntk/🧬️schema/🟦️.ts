@@ -1,7 +1,7 @@
 /** 🏋️ `change-member-action-ntk` wire twin: the leaf payload `ChangeMemberActionNTK`, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
- * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
+ * by `repo ./📜️script.ts schema twins generate`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
-import { normWireNumber, normWireObject, type NormWireReader, normWireRequired, normWireString } from "@semio-tech/norm-js/registry/contract";
+import { normWireNumber, normWireObject, normWireRequired, normWireString, type NormWireReader } from "@semio-tech/norm-js/registry/contract";
 
 export interface ChangeMemberActionNTK {
   memberId: string;

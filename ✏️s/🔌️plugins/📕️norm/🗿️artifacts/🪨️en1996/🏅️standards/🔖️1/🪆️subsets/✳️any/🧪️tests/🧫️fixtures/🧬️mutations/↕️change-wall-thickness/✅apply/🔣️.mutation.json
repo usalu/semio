@@ -1,0 +1,6 @@
+{
+  "ChangeWallThickness": {
+    "id": "wall-north",
+    "newThicknessM": 0.49
+  }
+}

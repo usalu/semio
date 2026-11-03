@@ -170,7 +170,7 @@ where
             };
         }
         if let Some(history) = self.history.take() {
-            return match semio_framework_value::retirement::controlled::admit_typed_controlled_retirement(history, child) .result {
+            return match semio_framework_value::retirement::controlled::admit_typed_controlled_retirement(history, child).result {
                 Ok((owner, progress)) => { *self.active = Some(owner); Ok(RetainedCloneStep::Progress(progress)) }
                 Err((error, history)) => { *self.history = Some(history); Err(error) }
             };

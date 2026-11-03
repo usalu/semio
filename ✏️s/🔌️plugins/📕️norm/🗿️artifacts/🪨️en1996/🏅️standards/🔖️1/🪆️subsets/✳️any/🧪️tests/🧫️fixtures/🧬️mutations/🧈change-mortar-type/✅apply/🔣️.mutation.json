@@ -1,0 +1,6 @@
+{
+  "ChangeMortarType": {
+    "id": "wall-north",
+    "newMortarType": "ThinLayer"
+  }
+}

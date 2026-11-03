@@ -1,0 +1,37 @@
+{
+  "annex": null,
+  "reliabilityClass": "RC2",
+  "materials": null,
+  "sections": null,
+  "members": null,
+  "connections": null,
+  "fireScenarios": null,
+  "fatigueDetails": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "fat-1",
+        "patch": {
+          "memberId": null,
+          "detailCategory": "71-alt",
+          "deltaSigmaC": null,
+          "deltaSigmaEd": null,
+          "nCycles": null,
+          "m1": null,
+          "m2": null
+        }
+      }
+    ]
+  },
+  "coldFormed": null,
+  "shells": null,
+  "placements": null,
+  "weldRuns": null,
+  "outlineVertices": null,
+  "fatigueCategories": null,
+  "patchLoads": null,
+  "ringStiffeners": null,
+  "transverseStiffeners": null
+}

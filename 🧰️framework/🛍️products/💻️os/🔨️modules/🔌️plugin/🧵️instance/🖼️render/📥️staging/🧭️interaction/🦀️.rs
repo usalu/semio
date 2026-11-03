@@ -78,6 +78,11 @@ pub(crate) fn leftover_interaction_view_from(state: &protocol::InteractionState,
     )])
 }
 
+/// 🎯️ The optional `granularities` argument of `selectAll`: a comma separated list of granularity ids whose nodes are all selected together (every kind of a scope at once); empty or absent selects the nodes of the active granularity only.
+fn select_all_granularity_scope(args: Option<&DslValue>) -> Vec<String> {
+    args.and_then(|value| value.get("granularities")).and_then(DslValue::as_str).map(|list| list.split(',').map(str::trim).filter(|id| !id.is_empty()).map(str::to_owned).collect()).unwrap_or_default()
+}
+
 impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> RenderCtx<'ctx, A, M, X> {
     /// 🌳️ Resolves `def`'s `DomainTopology` for the current document — the CLOSURE/RANGE-ARITHMETIC
     /// use (always a concrete, possibly-empty topology; safe for `next_selection`/`next_hover`, which
@@ -351,15 +356,19 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 }
             }
             InteractionVerb::SelectAll => {
+                let scope = select_all_granularity_scope(args);
                 for def in self.tools.registry.interactions().await.cloned().collect::<Vec<_>>() {
-                    let granularity = state.active_granularity.get(&def.id).cloned().unwrap_or_else(|| def.granularities.first().map(|granularity| granularity.id.clone()).unwrap_or_default());
+                    let active = state.active_granularity.get(&def.id).cloned().unwrap_or_else(|| def.granularities.first().map(|granularity| granularity.id.clone()).unwrap_or_default());
+                    let scoped: Vec<String> = scope.iter().filter(|id| def.granularities.iter().any(|granularity| &granularity.id == *id)).cloned().collect();
                     let mode = state.active_mode.get(&def.id).copied().unwrap_or_else(|| def.selection.modes.first().copied().unwrap_or(protocol::SelectionMode::Multiple));
                     let current = state.selection.get(&def.id).cloned().unwrap_or_default();
                     let hovered_ids = self.interaction.interaction_hover.get(&def.id).map(|hover| hover.ids.clone()).unwrap_or_default();
                     let known_ids = current.ids.iter().cloned().chain(hovered_ids);
                     let topology = self.resolve_domain_topology(&def, known_ids).await?;
-                    let ids: Vec<String> = topology.ordered.iter().filter(|node| node.granularity == granularity).map(|node| node.id.clone()).collect();
-                    if !ids.is_empty() {
+                    let nodes: Vec<&protocol::TopologyNode> = topology.ordered.iter().filter(|node| if scoped.is_empty() { node.granularity == active } else { scoped.contains(&node.granularity) }).collect();
+                    if let Some(first) = nodes.first() {
+                        let granularity = first.granularity.clone();
+                        let ids = nodes.iter().map(|node| node.id.clone()).collect();
                         state.selection.insert(def.id.clone(), protocol::DomainSelection { granularity, ids, anchor_id: None });
                     }
                     state.active_mode.insert(def.id.clone(), mode);

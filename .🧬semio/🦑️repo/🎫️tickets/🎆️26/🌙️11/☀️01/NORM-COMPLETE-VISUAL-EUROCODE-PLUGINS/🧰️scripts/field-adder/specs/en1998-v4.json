@@ -1,0 +1,29 @@
+{
+ "artifact": "en1998",
+ "fields": [
+  {
+   "entity": "building",
+   "field": "overturning_base_x_m",
+   "default": 0.0,
+   "unit": "Metre",
+   "en": "Base width in x for the overturning check (0 = plan width)",
+   "de": "Fundamentbreite in x für den Kippnachweis (0 = Grundrissbreite)"
+  },
+  {
+   "entity": "building",
+   "field": "overturning_base_y_m",
+   "default": 0.0,
+   "unit": "Metre",
+   "en": "Base width in y for the overturning check (0 = plan length)",
+   "de": "Fundamentbreite in y für den Kippnachweis (0 = Grundrisslänge)"
+  },
+  {
+   "entity": "building",
+   "field": "tie_down_moment_nm",
+   "default": 0.0,
+   "unit": "NewtonMetre",
+   "en": "Stabilising moment of tie-downs and anchors about the overturning edge",
+   "de": "Rückhaltemoment von Zugankern und Verankerungen um die Kippkante"
+  }
+ ]
+}

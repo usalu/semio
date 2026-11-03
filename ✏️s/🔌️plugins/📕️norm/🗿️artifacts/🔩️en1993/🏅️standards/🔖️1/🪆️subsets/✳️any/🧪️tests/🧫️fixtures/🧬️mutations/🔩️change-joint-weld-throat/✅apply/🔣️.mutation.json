@@ -1,0 +1,6 @@
+{
+  "ChangeJointWeldThroat": {
+    "id": "joint-j1",
+    "newWeldThroat": 1.5
+  }
+}

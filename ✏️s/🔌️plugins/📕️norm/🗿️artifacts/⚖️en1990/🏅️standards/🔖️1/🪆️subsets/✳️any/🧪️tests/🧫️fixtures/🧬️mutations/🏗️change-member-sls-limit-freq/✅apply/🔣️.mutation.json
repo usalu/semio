@@ -1,0 +1,5 @@
+{
+  "mutation": "changeMemberSlsLimitFreq",
+  "id": "beam-B1",
+  "newSlsLimitFreq": 500000.0
+}

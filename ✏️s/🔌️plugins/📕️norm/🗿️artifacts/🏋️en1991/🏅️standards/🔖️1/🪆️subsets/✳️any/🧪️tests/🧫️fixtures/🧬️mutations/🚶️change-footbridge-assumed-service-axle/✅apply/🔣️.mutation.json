@@ -1,0 +1,6 @@
+{
+  "ChangeFootbridgeAssumedServiceAxle": {
+    "id": "footbridge-1",
+    "newAssumedServiceAxle": 1.5
+  }
+}

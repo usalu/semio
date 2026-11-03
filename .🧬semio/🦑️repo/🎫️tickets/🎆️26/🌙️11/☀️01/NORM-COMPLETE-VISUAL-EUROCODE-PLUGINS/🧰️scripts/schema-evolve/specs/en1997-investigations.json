@@ -1,0 +1,150 @@
+{
+  "artifact": "en1997",
+  "collection": {
+    "name": "investigations",
+    "entity": "Investigation",
+    "emoji": "🕳️",
+    "doc": "Ground investigation point of EN 1997-2 (borehole, cone penetration test or standard penetration test) with its position, ground level, depth and depth-resolved readings (GI-01, GI-03).",
+    "label": {
+      "en": "Ground investigations",
+      "de": "Baugrunderkundungen"
+    },
+    "id": {
+      "en": "Investigation ID",
+      "de": "Erkundungs-ID"
+    },
+    "fields": [
+      {
+        "name": "position_x",
+        "type": "f64",
+        "unit": "m",
+        "label": {
+          "en": "Position x",
+          "de": "Position x"
+        },
+        "doc": "↔️ Easting x [m] of the investigation point in the site frame.",
+        "sample": 12.5
+      },
+      {
+        "name": "position_y",
+        "type": "f64",
+        "unit": "m",
+        "label": {
+          "en": "Position y",
+          "de": "Position y"
+        },
+        "doc": "↕️ Northing y [m] of the investigation point in the site frame.",
+        "sample": 8.0
+      },
+      {
+        "name": "ground_level",
+        "type": "f64",
+        "unit": "m",
+        "label": {
+          "en": "Ground level",
+          "de": "Geländehöhe"
+        },
+        "doc": "⬆️ Ground level z [m] at the investigation point.",
+        "sample": 100.0
+      },
+      {
+        "name": "depth",
+        "type": "f64",
+        "unit": "m",
+        "label": {
+          "en": "Investigation depth",
+          "de": "Erkundungstiefe"
+        },
+        "doc": "⬇️ Depth [m] below the ground level reached by the investigation.",
+        "sample": 12.0
+      },
+      {
+        "name": "kind",
+        "type": "enum",
+        "label": {
+          "en": "Kind (borehole | cpt | spt)",
+          "de": "Art (borehole | cpt | spt)"
+        },
+        "doc": "🕳️ borehole | cpt | spt.",
+        "enum": {
+          "name": "InvestigationKind",
+          "values": [
+            {
+              "token": "borehole",
+              "label": {
+                "en": "Borehole",
+                "de": "Bohrung"
+              }
+            },
+            {
+              "token": "cpt",
+              "label": {
+                "en": "Cone penetration test (CPT)",
+                "de": "Drucksondierung (CPT)"
+              }
+            },
+            {
+              "token": "spt",
+              "label": {
+                "en": "Standard penetration test (SPT)",
+                "de": "Rammsondierung (SPT)"
+              }
+            }
+          ],
+          "doc": "🕳️ Ground investigation kind (EN 1997-2): borehole, cone penetration test or standard penetration test."
+        },
+        "sample": "borehole"
+      }
+    ],
+    "nested": [
+      {
+        "name": "readings",
+        "entity": "InvestigationReading",
+        "emoji": "📈",
+        "doc": "One depth-resolved reading of an investigation point: cone resistance q_c [Pa] for a CPT, blow count N for an SPT, or the sample value of a borehole.",
+        "label": {
+          "en": "Readings",
+          "de": "Messwerte"
+        },
+        "id": {
+          "en": "Reading ID",
+          "de": "Messwert-ID"
+        },
+        "fields": [
+          {
+            "name": "depth",
+            "type": "f64",
+            "unit": "m",
+            "label": {
+              "en": "Reading depth",
+              "de": "Tiefe des Messwerts"
+            },
+            "doc": "⬇️ Depth [m] below the ground level of the reading.",
+            "sample": 1.0
+          },
+          {
+            "name": "measurement",
+            "type": "f64",
+            "unit": "",
+            "label": {
+              "en": "Measurement",
+              "de": "Messgröße"
+            },
+            "doc": "📈 Measured value at the depth: q_c [Pa] (CPT), N (SPT) or the sample value (borehole).",
+            "sample": 2000000.0
+          }
+        ],
+        "singular": {
+          "en": "investigation reading",
+          "de": "Erkundungsmesswert"
+        },
+        "kindSlug": "ground-investigation-reading"
+      }
+    ],
+    "singular": {
+      "en": "ground investigation",
+      "de": "Baugrunderkundung"
+    },
+    "kindSlug": "ground-investigation"
+  }
+}

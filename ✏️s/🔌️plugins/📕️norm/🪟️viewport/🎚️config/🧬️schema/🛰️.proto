@@ -1,0 +1,9 @@
+syntax = "proto3";
+package semio.window.norm.viewport;
+message NormViewportWindowConfig {
+  // @state windowConfig
+  optional string camera_preset = 1;
+  repeated string hidden_layers = 2;
+  optional string colour_map = 3;
+  optional string unit_system = 4;
+}

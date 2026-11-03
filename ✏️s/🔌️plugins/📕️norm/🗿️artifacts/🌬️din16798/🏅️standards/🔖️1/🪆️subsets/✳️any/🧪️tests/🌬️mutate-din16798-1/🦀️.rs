@@ -37,7 +37,7 @@ mod subject {
             let uri = uris.iter().find(|uri| uri.ends_with(suffix)).ok_or_else(|| format!("the scenario names no committed …{suffix}"))?;
             String::from_utf8(ctx.input_bytes(uri)?).map_err(|error| format!("{uri}: {error}"))
         };
-        Ok([text("⬅️before/🔣️.json")?, text("🦠️mutation/🔣️.json")?, text("➡️after/🔣️.json")?, text("🎯️outcome/🔣️.json")?])
+        Ok([text("🔣️.before.json")?, text("🔣️.mutation.json")?, text("🔣️.after.json")?, text("🔣️.outcome.json")?])
     }
 
     fn snapshot_of(text: &str, label: &str) -> Result<Din16798Snapshot, String> {

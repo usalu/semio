@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeAssumedDeltaT",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
-  "binaryTag": 38,
+  "binaryTag": 16,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

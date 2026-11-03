@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-accidental-assumed-pressure/schema.json",
+  "title": "ChangeAccidentalAssumedPressure",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newAssumedPressure"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Accidental case",
+          "de": "Außergewöhnlicher Fall"
+        },
+        "description": {
+          "en": "The accidental case this mutation addresses, by id.",
+          "de": "Das adressierte Element (Außergewöhnlicher Fall), per Kennung."
+        },
+        "ref": {
+          "kind": "accidental-case"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newAssumedPressure": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Assumed accidental pressure",
+          "de": "Angenommener außergewöhnlicher Druck"
+        },
+        "widget": "stepper",
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

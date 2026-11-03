@@ -15,10 +15,6 @@ pub mod change_annex;
 pub mod change_design_approach;
 #[path = "../📅️change-design-situation/🦀️.rs"]
 pub mod change_design_situation;
-#[path = "../🗂️change-geotechnical-category/🦀️.rs"]
-pub mod change_geotechnical_category;
-#[path = "../💧change-groundwater-level/🦀️.rs"]
-pub mod change_groundwater_level;
-#[path = "../🔎️change-investigation-depth/🦀️.rs"]
-pub mod change_investigation_depth;
 //#endregion 🪢️Mounts
+
+pub use semio_s_artifact_norm_en1997_mut_design_more::{change_geotechnical_category, change_groundwater_level, change_investigation_depth, change_structure_id};

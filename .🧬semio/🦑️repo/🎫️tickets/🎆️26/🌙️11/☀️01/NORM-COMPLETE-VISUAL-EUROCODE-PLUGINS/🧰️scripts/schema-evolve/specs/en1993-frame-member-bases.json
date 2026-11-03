@@ -1,0 +1,64 @@
+{
+  "artifact": "en1993",
+  "collection": {
+    "name": "frameMemberBases",
+    "entity": "FrameMemberBasis",
+    "emoji": "🧭",
+    "doc": "🧭 Where the design forces of a steel member come from: the frame analysis (envelope over the combinations of its bars) or its explicit member actions (EN 1993-1-1 5.2.2, EN 1990 6.4.3).",
+    "label": {
+      "en": "Member force bases",
+      "de": "Kraftgrundlagen der Bauteile"
+    },
+    "id": {
+      "en": "Force basis ID",
+      "de": "Kraftgrundlagen-ID"
+    },
+    "singular": {
+      "en": "member force basis",
+      "de": "Kraftgrundlage des Bauteils"
+    },
+    "kindSlug": "frame-member-basis",
+    "fields": [
+      {
+        "name": "member_id",
+        "type": "String",
+        "label": {
+          "en": "Member",
+          "de": "Bauteil"
+        },
+        "doc": "🧱 Id of the steel member the basis applies to.",
+        "sample": "member-b1"
+      },
+      {
+        "name": "basis",
+        "type": "enum",
+        "label": {
+          "en": "Basis (frameDerived | explicit)",
+          "de": "Grundlage (frameDerived | explicit)"
+        },
+        "doc": "🧭 frameDerived | explicit.",
+        "enum": {
+          "name": "MemberForceBasis",
+          "doc": "🧭 Source of the design forces of a member: the envelope of the frame bars of the member or its explicit member actions.",
+          "values": [
+            {
+              "token": "frameDerived",
+              "label": {
+                "en": "Frame-derived",
+                "de": "Aus dem Rahmen"
+              }
+            },
+            {
+              "token": "explicit",
+              "label": {
+                "en": "Explicit member actions",
+                "de": "Explizite Bauteilwirkungen"
+              }
+            }
+          ]
+        },
+        "sample": "explicit"
+      }
+    ]
+  }
+}

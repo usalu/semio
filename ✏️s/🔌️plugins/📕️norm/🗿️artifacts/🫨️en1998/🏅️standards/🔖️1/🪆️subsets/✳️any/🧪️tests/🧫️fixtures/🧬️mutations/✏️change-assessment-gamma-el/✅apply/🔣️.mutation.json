@@ -1,0 +1,5 @@
+{
+  "mutation": "changeAssessmentGammaEl",
+  "id": "as-1",
+  "newGammaEl": 2.0
+}

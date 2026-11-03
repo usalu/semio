@@ -1,1 +1,1244 @@
-union En1998Mutation = ChangeAnnex
+union En1998Mutation = ChangeAnnex | InsertBuilding | RemoveBuilding | ChangeSystemVRdN | ChangeStoreyPermanentGkN | ChangeStoreyStiffnessX | ChangeStoreyDriftXM | ChangeBuildingPlanRegular | ChangeElevationRegular | ChangeMemberDetailing | ChangeMasonryWallRatio | InsertBridge | ChangeBridgeVRdN | InsertAssessment | ChangeAssessmentRKN | InsertSilo | InsertTank | InsertFoundation | InsertRetainingWall | InsertTower | ChangeTowerMRdNm | RemoveBridge | RemoveAssessment | RemoveSilo | RemoveTank | RemoveFoundation | RemoveRetainingWall | RemoveTower | ChangeSiteSApR | ChangeSiteAGr | ChangeSiteDeGroundCombo | ChangeSiteEnGroundType | ChangeSiteEnSpectrumType | ChangeSiteImportanceClass | ChangeBuildingName | ChangeBuildingPlanWidthM | ChangeBuildingPlanLengthM | ChangeBuildingT1Method | ChangeBuildingT1GivenS | ChangeBuildingCt | ChangeBuildingDriftLimitClass | ChangeBuildingNu | ChangeBuildingMultiResistingSystems | ChangeBuildingClaimsSimpleMasonry | ChangeBuildingAccidentalEccRatio | ChangeSystemDirection | ChangeSystemSystemType | ChangeSystemMaterial | ChangeSystemDuctilityClass | ChangeSystemQ0 | ChangeSystemAlphaUOverAlpha1 | ChangeSystemKW | ChangeStoreyHeightM | ChangeStoreyCorrelatedOccupancy | ChangeStoreyStiffnessY | ChangeStoreyCentreOfMassXM | ChangeStoreyCentreOfMassYM | ChangeStoreyCentreOfStiffnessXM | ChangeStoreyCentreOfStiffnessYM | ChangeStoreyDriftYM | ChangeStoreyShearResistanceN | ChangeMemberMaterial | ChangeMemberRole | ChangeMemberMinDimensionM | ChangeMemberRho | ChangeMemberRhoPrime | ChangeMemberOmegaWd | ChangeMemberSteelSectionClass | ChangeBridgePeriodRatio | ChangeBridgeFundamentalPeriodS | ChangeBridgeBearingDRdM | ChangeBridgePermanentGkN | ChangeBridgeCorrelatedOccupancy | ChangeAssessmentKnowledgeLevel | ChangeAssessmentLimitState | ChangeAssessmentSupportedBuildingId | ChangeAssessmentGammaEl | ChangeTowerHeightM | ChangeTowerIsChimney | ChangeTowerQNominal | ChangeTowerPermanentGkN | ChangeTowerCorrelatedOccupancy | ChangeSiloHeightM | ChangeSiloRadiusM | ChangeSiloPermanentGkN | ChangeSiloContentQkN | ChangeSiloContentCategory | ChangeSiloFillingRatio | ChangeSiloNRdN | ChangeSiloVRdN | ChangeSiloQNominal | ChangeTankHeightM | ChangeTankRadiusM | ChangeTankPermanentGkN | ChangeTankContentQkN | ChangeTankContentCategory | ChangeTankFillingRatio | ChangeTankVRdN | ChangeFoundationSupportedBuildingId | ChangeTieBeamFoundationBId | ChangeTieBeamFoundationAId | ChangeSeismicSlopeGoverningLayerId | ChangeFoundationAreaM2 | ChangeFoundationPRdPa | ChangeFoundationPassiveResistanceN | ChangeFoundationKFoundation | ChangeFoundationKSoil | ChangeRetainingWallHeightM | ChangeRetainingWallPhiDeg | ChangeRetainingWallSoilGamma | ChangeRetainingWallR | ChangeRetainingWallHRdNPerM | ChangeSiteVS30MS | ChangeSiteNSpt | ChangeSiteCUKpa | ChangeSiteSoftClayThicknessM | ChangeSiteSoftClayPi | ChangeSiteLiquefiableLayer | ChangeSiteAlluviumThicknessM | ChangeSiteAlluviumVSMS | ChangeSiteBelowAlluviumVSMS | ChangeBuildingSetbackRatio | ChangeBuildingStoreyStiffnessRatio | ChangeBuildingStoreyStiffnessBasis | ChangeBuildingPlanEnvGapRatio | ChangeBuildingJointGapM | ChangeBuildingNsWeightN | ChangeBuildingNsHeightM | ChangeBuildingNsPeriodS | ChangeBuildingNsQ | ChangeBuildingNsResistanceN | ChangeBuildingColMomentSumNm | ChangeBuildingBeamMomentSumNm | ChangeMemberFastenerDiameterMm | ChangeMemberTimberThicknessMm | ChangeMemberWallThicknessM | ChangeMemberEffectiveStiffnessRatio | ChangeMemberEffectiveStiffnessBasis | ChangeMemberWallPoissonRatio | ChangeMemberWallStartXM | ChangeMemberWallStartYM | ChangeMemberWallLengthM | ChangeMemberWallDirectionRad | ChangeMemberWallStoreyId | ChangeMemberWallEffHeightM | ChangeBridgePierHeightM | ChangeBridgePierMomentRdNm | ChangeBridgePierShearRdN | ChangeBridgeImportanceClass | ChangeBridgeVerticalPeriodS | ChangeBridgePierCrackedInertiaRatio | ChangeBridgeDeckLengthM | ChangeBridgeDeckEiNm2 | ChangeAssessmentChordDemandRad | ChangeAssessmentChordYieldRad | ChangeAssessmentChordUltRad | ChangeTowerEiNm2 | ChangeFoundationLiqN160 | ChangeFoundationLiqFinesPercent | ChangeFoundationLiqDepthM | ChangeFoundationLiqWaterDepthM | ChangeFoundationLiqUnitWtNM3 | ChangeFoundationLiqMagnitude | ChangeAssessmentSectionDepthM | ChangeAssessmentSectionWidthM | ChangeAssessmentEffDepthM | ChangeAssessmentShearSpanM | ChangeAssessmentAxialForceN | ChangeAssessmentShearForceDemandN | ChangeAssessmentAs1AreaM2 | ChangeAssessmentAs2AreaM2 | ChangeAssessmentBarDiameterMm | ChangeAssessmentSteelYieldMpa | ChangeAssessmentFcMpa | ChangeAssessmentStrpLegAreaM2 | ChangeAssessmentStrpSpacingM | ChangeAssessmentStrpYieldMpa | ChangeAssessmentCoreWidthM | ChangeAssessmentCoreDepthM | ChangeAssessmentMidSteelAreaM2 | ChangeAssessmentRbarCount | ChangeAssessmentRbarSpacingM | ChangeAssessmentDiagReinfRatio | ChangeAssessmentShearCrack | ChangeFoundationLiqLayerM | ChangeFoundationFootingWidthM | ChangeFoundationBearAxialN | ChangeFoundationBearShearN | ChangeFoundationBearMomentNm | ChangeFoundationBearingNMaxN | ChangeFoundationSoilPhiDeg | ChangeFoundationPileDiameterM | ChangeFoundationPileLengthM | ChangeFoundationPileModulusPa | ChangeFoundationPileKsNM3 | ChangeFoundationPileHeadShearN | ChangeFoundationPileHeadFixed | ChangeFoundationPileIfaceM | ChangeFoundationPileUpVsMS | ChangeFoundationPileLowVsMS | ChangeFoundationPileMomentRdNm | ChangeStoreyVariableCategory | ChangeStoreyVariableQkN | ChangeBridgeVariableCategory | ChangeBridgeVariableQkN | ChangeTowerVariableCategory | ChangeTowerVariableQkN | InsertStoreyVariable | RemoveStoreyVariable | InsertBridgeVariable | RemoveBridgeVariable | InsertTowerVariable | RemoveTowerVariable | ChangeSoilLayerFoundationId | ChangeSoilLayerThicknessM | ChangeSoilUnitWtNM3 | ChangeSoilLayerVsMS | ChangeSoilLayerN160 | ChangeSoilLayerFinesPercent | InsertSoilLayer | RemoveSoilLayer | ChangePlacementX | ChangePlacementY | ChangePlacementZ | ChangePlacementYaw | InsertPlacement | RemovePlacement | ChangeBuildingOtBaseXM | ChangeBuildingOtBaseYM | ChangeBuildingTiedownNm | ChangeDiaphragmBuildingId | ChangeDiaphragmStoreyId | ChangeDiaphragmMaterial | ChangeDiaphragmThicknessM | ChangeDiaphragmSpanM | ChangeDiaphragmDepthM | ChangeDiaphragmOpeningWidthM | ChangeDiaphragmShearStrMpa | ChangeDiaphragmChordAreaM2 | ChangeDiaphragmChordStrMpa | ChangeDiaphragmGammaD | ChangeAccelerogramBuildingId | ChangeAccelerogramLabel | ChangeAccelerogramSamples | ChangeAccelerogramDtS | ChangeAccelerogramScaleFactor | InsertDiaphragm | RemoveDiaphragm | InsertAccelerogram | RemoveAccelerogram | ChangeTowerBaseRotStiffNm | ChangeTankShellTM | ChangeTankShellStrMpa | ChangePierBridgeId | ChangePierStiffnessBasis | ChangePierXM | ChangePierHeightM | ChangePierSectionBM | ChangePierSectionHM | ChangePierModulusMpa | ChangePierMomentRdNm | ChangePierShearRdN | ChangePierReinforcementRatio | ChangePierCoverM | ChangePierConcreteFckMpa | ChangePierSteelFykMpa | ChangePierAxialLoadN | ChangeBearingBridgeId | ChangeJointBuildingId | ChangeJointStoreyId | ChangeJointColumnId | ChangeJointBeamId | ChangeBearingPierId | ChangeBearingDevice | ChangeBearingXM | ChangeJointXM | ChangeJointYM | ChangeBearingStiffnessNPerM | ChangeBearingDRdM | ChangeBearingSeatLengthM | ChangeJointColumnMomentRdNm | ChangeJointBeamMomentRdNm | ChangeBearingMinSupportM | InsertPier | RemovePier | InsertBearing | InsertJoint | InsertTieBeam | InsertSeismicSlope | RemoveBearing | RemoveJoint | RemoveTieBeam | RemoveSeismicSlope | InsertMember | RemoveMember | InsertStorey | RemoveStorey | InsertSystem | RemoveSystem | ChangeJointColMomentRdNm | ChangeRetainingWallWaterHeightM | ChangeRetainingWallSaturatedGamma | ChangeRetainingWallPermeabilityMS | ChangeFoundationBaseFrictionDeg | ChangeFoundationBasePorePressurePa
+type ChangeAnnex {
+  newAnnex: AnnexChoice!
+}
+type InsertBuilding {
+  index: Int
+  building: En1998Building!
+}
+type RemoveBuilding {
+  id: String!
+}
+type ChangeSystemVRdN {
+  buildingId: String!
+  id: String!
+  newBaseShearResistanceN: Float!
+}
+type ChangeStoreyPermanentGkN {
+  buildingId: String!
+  id: String!
+  newPermanentGkN: Float!
+}
+type ChangeStoreyStiffnessX {
+  buildingId: String!
+  id: String!
+  newStiffnessX: Float!
+}
+type ChangeStoreyDriftXM {
+  buildingId: String!
+  id: String!
+  newDriftXM: Float!
+}
+type ChangeBuildingPlanRegular {
+  id: String!
+  newPlanRegular: Boolean!
+}
+type ChangeElevationRegular {
+  id: String!
+  newElevationRegular: Boolean!
+}
+type ChangeMemberDetailing {
+  buildingId: String!
+  id: String!
+  newDetailingCompatibleWithQ: Boolean!
+}
+type ChangeMasonryWallRatio {
+  id: String!
+  newMasonryWallAreaRatio: Float!
+}
+type InsertBridge {
+  index: Int
+  bridge: En1998Bridge!
+}
+type ChangeBridgeVRdN {
+  id: String!
+  newVRdN: Float!
+}
+type InsertAssessment {
+  index: Int
+  assessment: En1998Assessment!
+}
+type ChangeAssessmentRKN {
+  id: String!
+  newRKN: Float!
+}
+type InsertSilo {
+  index: Int
+  silo: En1998Silo!
+}
+type InsertTank {
+  index: Int
+  tank: En1998Tank!
+}
+type InsertFoundation {
+  index: Int
+  foundation: En1998Foundation!
+}
+type InsertRetainingWall {
+  index: Int
+  wall: En1998RetainingWall!
+}
+type InsertTower {
+  index: Int
+  tower: En1998Tower!
+}
+type ChangeTowerMRdNm {
+  id: String!
+  newMRdNm: Float!
+}
+type RemoveBridge {
+  id: String!
+}
+type RemoveAssessment {
+  id: String!
+}
+type RemoveSilo {
+  id: String!
+}
+type RemoveTank {
+  id: String!
+}
+type RemoveFoundation {
+  id: String!
+}
+type RemoveRetainingWall {
+  id: String!
+}
+type RemoveTower {
+  id: String!
+}
+type ChangeSiteSApR {
+  newSApR: Float!
+}
+type ChangeSiteAGr {
+  newAGr: Float!
+}
+type ChangeSiteDeGroundCombo {
+  newDeGroundCombo: String!
+}
+type ChangeSiteEnGroundType {
+  newEnGroundType: EnGroundType!
+}
+type ChangeSiteEnSpectrumType {
+  newEnSpectrumType: EnSpectrumType!
+}
+type ChangeSiteImportanceClass {
+  newImportanceClass: ImportanceClass!
+}
+type ChangeBuildingName {
+  id: String!
+  newName: String!
+}
+type ChangeBuildingPlanWidthM {
+  id: String!
+  newPlanWidthM: Float!
+}
+type ChangeBuildingPlanLengthM {
+  id: String!
+  newPlanLengthM: Float!
+}
+type ChangeBuildingT1Method {
+  id: String!
+  newT1Method: T1Method!
+}
+type ChangeBuildingT1GivenS {
+  id: String!
+  newT1GivenS: Float!
+}
+type ChangeBuildingCt {
+  id: String!
+  newCt: Float!
+}
+type ChangeBuildingDriftLimitClass {
+  id: String!
+  newDriftLimitClass: DriftLimitClass!
+}
+type ChangeBuildingNu {
+  id: String!
+  newNu: Float!
+}
+type ChangeBuildingMultiResistingSystems {
+  id: String!
+  newMultipleResistingSystems: Boolean!
+}
+type ChangeBuildingClaimsSimpleMasonry {
+  id: String!
+  newClaimsSimpleMasonry: Boolean!
+}
+type ChangeBuildingAccidentalEccRatio {
+  id: String!
+  newAccidentalEccentricityRatio: Float!
+}
+type ChangeSystemDirection {
+  buildingId: String!
+  id: String!
+  newDirection: AnalysisDirection!
+}
+type ChangeSystemSystemType {
+  buildingId: String!
+  id: String!
+  newSystemType: SystemType!
+}
+type ChangeSystemMaterial {
+  buildingId: String!
+  id: String!
+  newMaterial: StructuralMaterial!
+}
+type ChangeSystemDuctilityClass {
+  buildingId: String!
+  id: String!
+  newDuctilityClass: DuctilityClass!
+}
+type ChangeSystemQ0 {
+  buildingId: String!
+  id: String!
+  newQ0: Float!
+}
+type ChangeSystemAlphaUOverAlpha1 {
+  buildingId: String!
+  id: String!
+  newAlphaUOverAlpha1: Float!
+}
+type ChangeSystemKW {
+  buildingId: String!
+  id: String!
+  newKW: Float!
+}
+type ChangeStoreyHeightM {
+  buildingId: String!
+  id: String!
+  newHeightM: Float!
+}
+type ChangeStoreyCorrelatedOccupancy {
+  buildingId: String!
+  id: String!
+  newCorrelatedOccupancy: Boolean!
+}
+type ChangeStoreyStiffnessY {
+  buildingId: String!
+  id: String!
+  newStiffnessY: Float!
+}
+type ChangeStoreyCentreOfMassXM {
+  buildingId: String!
+  id: String!
+  newCentreOfMassXM: Float!
+}
+type ChangeStoreyCentreOfMassYM {
+  buildingId: String!
+  id: String!
+  newCentreOfMassYM: Float!
+}
+type ChangeStoreyCentreOfStiffnessXM {
+  buildingId: String!
+  id: String!
+  newCentreOfStiffnessXM: Float!
+}
+type ChangeStoreyCentreOfStiffnessYM {
+  buildingId: String!
+  id: String!
+  newCentreOfStiffnessYM: Float!
+}
+type ChangeStoreyDriftYM {
+  buildingId: String!
+  id: String!
+  newDriftYM: Float!
+}
+type ChangeStoreyShearResistanceN {
+  buildingId: String!
+  id: String!
+  newShearResistanceN: Float!
+}
+type ChangeMemberMaterial {
+  buildingId: String!
+  id: String!
+  newMaterial: StructuralMaterial!
+}
+type ChangeMemberRole {
+  buildingId: String!
+  id: String!
+  newRole: String!
+}
+type ChangeMemberMinDimensionM {
+  buildingId: String!
+  id: String!
+  newMinDimensionM: Float!
+}
+type ChangeMemberRho {
+  buildingId: String!
+  id: String!
+  newRho: Float!
+}
+type ChangeMemberRhoPrime {
+  buildingId: String!
+  id: String!
+  newRhoPrime: Float!
+}
+type ChangeMemberOmegaWd {
+  buildingId: String!
+  id: String!
+  newOmegaWd: Float!
+}
+type ChangeMemberSteelSectionClass {
+  buildingId: String!
+  id: String!
+  newSteelSectionClass: Int!
+}
+type ChangeBridgePeriodRatio {
+  id: String!
+  newPeriodRatio: Float!
+}
+type ChangeBridgeFundamentalPeriodS {
+  id: String!
+  newFundamentalPeriodS: Float!
+}
+type ChangeBridgeBearingDRdM {
+  id: String!
+  newBearingDRdM: Float!
+}
+type ChangeBridgePermanentGkN {
+  id: String!
+  newPermanentGkN: Float!
+}
+type ChangeBridgeCorrelatedOccupancy {
+  id: String!
+  newCorrelatedOccupancy: Boolean!
+}
+type ChangeAssessmentKnowledgeLevel {
+  id: String!
+  newKnowledgeLevel: KnowledgeLevel!
+}
+type ChangeAssessmentLimitState {
+  id: String!
+  newLimitState: LimitState!
+}
+type ChangeAssessmentSupportedBuildingId {
+  id: String!
+  newSupportedBuildingId: String!
+}
+type ChangeAssessmentGammaEl {
+  id: String!
+  newGammaEl: Float!
+}
+type ChangeTowerHeightM {
+  id: String!
+  newHeightM: Float!
+}
+type ChangeTowerIsChimney {
+  id: String!
+  newIsChimney: Boolean!
+}
+type ChangeTowerQNominal {
+  id: String!
+  newQNominal: Float!
+}
+type ChangeTowerPermanentGkN {
+  id: String!
+  newPermanentGkN: Float!
+}
+type ChangeTowerCorrelatedOccupancy {
+  id: String!
+  newCorrelatedOccupancy: Boolean!
+}
+type ChangeSiloHeightM {
+  id: String!
+  newHeightM: Float!
+}
+type ChangeSiloRadiusM {
+  id: String!
+  newRadiusM: Float!
+}
+type ChangeSiloPermanentGkN {
+  id: String!
+  newPermanentGkN: Float!
+}
+type ChangeSiloContentQkN {
+  id: String!
+  newContentQkN: Float!
+}
+type ChangeSiloContentCategory {
+  id: String!
+  newContentCategory: ImposedCategory!
+}
+type ChangeSiloFillingRatio {
+  id: String!
+  newFillingRatio: Float!
+}
+type ChangeSiloNRdN {
+  id: String!
+  newNRdN: Float!
+}
+type ChangeSiloVRdN {
+  id: String!
+  newVRdN: Float!
+}
+type ChangeSiloQNominal {
+  id: String!
+  newQNominal: Float!
+}
+type ChangeTankHeightM {
+  id: String!
+  newHeightM: Float!
+}
+type ChangeTankRadiusM {
+  id: String!
+  newRadiusM: Float!
+}
+type ChangeTankPermanentGkN {
+  id: String!
+  newPermanentGkN: Float!
+}
+type ChangeTankContentQkN {
+  id: String!
+  newContentQkN: Float!
+}
+type ChangeTankContentCategory {
+  id: String!
+  newContentCategory: ImposedCategory!
+}
+type ChangeTankFillingRatio {
+  id: String!
+  newFillingRatio: Float!
+}
+type ChangeTankVRdN {
+  id: String!
+  newVRdN: Float!
+}
+type ChangeFoundationSupportedBuildingId {
+  id: String!
+  newSupportedBuildingId: String!
+}
+type ChangeTieBeamFoundationBId {
+  id: String!
+  newFoundationBId: String!
+}
+type ChangeTieBeamFoundationAId {
+  id: String!
+  newFoundationAId: String!
+}
+type ChangeSeismicSlopeGoverningLayerId {
+  id: String!
+  newGoverningLayerId: String!
+}
+type ChangeFoundationAreaM2 {
+  id: String!
+  newAreaM2: Float!
+}
+type ChangeFoundationPRdPa {
+  id: String!
+  newPRdPa: Float!
+}
+type ChangeFoundationPassiveResistanceN {
+  id: String!
+  newPassiveResistanceN: Float!
+}
+type ChangeFoundationKFoundation {
+  id: String!
+  newKFoundation: Float!
+}
+type ChangeFoundationKSoil {
+  id: String!
+  newKSoil: Float!
+}
+type ChangeRetainingWallHeightM {
+  id: String!
+  newHeightM: Float!
+}
+type ChangeRetainingWallPhiDeg {
+  id: String!
+  newPhiDeg: Float!
+}
+type ChangeRetainingWallSoilGamma {
+  id: String!
+  newSoilGamma: Float!
+}
+type ChangeRetainingWallR {
+  id: String!
+  newR: Float!
+}
+type ChangeRetainingWallHRdNPerM {
+  id: String!
+  newHRdNPerM: Float!
+}
+type ChangeSiteVS30MS {
+  newVS30MS: Float!
+}
+type ChangeSiteNSpt {
+  newNSpt: Float!
+}
+type ChangeSiteCUKpa {
+  newCUKpa: Float!
+}
+type ChangeSiteSoftClayThicknessM {
+  newSoftClayThicknessM: Float!
+}
+type ChangeSiteSoftClayPi {
+  newSoftClayPi: Float!
+}
+type ChangeSiteLiquefiableLayer {
+  newLiquefiableLayer: Boolean!
+}
+type ChangeSiteAlluviumThicknessM {
+  newAlluviumThicknessM: Float!
+}
+type ChangeSiteAlluviumVSMS {
+  newAlluviumVSMS: Float!
+}
+type ChangeSiteBelowAlluviumVSMS {
+  newBelowAlluviumVSMS: Float!
+}
+type ChangeBuildingSetbackRatio {
+  id: String!
+  newSetbackRatio: Float!
+}
+type ChangeBuildingStoreyStiffnessRatio {
+  id: String!
+  newStoreyStiffnessRatio: Float!
+}
+type ChangeBuildingStoreyStiffnessBasis {
+  id: String!
+  newStoreyStiffnessBasis: String!
+}
+type ChangeBuildingPlanEnvGapRatio {
+  id: String!
+  newPlanEnvelopeGapRatio: Float!
+}
+type ChangeBuildingJointGapM {
+  id: String!
+  newJointGapM: Float!
+}
+type ChangeBuildingNsWeightN {
+  id: String!
+  newNonstructuralWeightN: Float!
+}
+type ChangeBuildingNsHeightM {
+  id: String!
+  newNonstructuralHeightM: Float!
+}
+type ChangeBuildingNsPeriodS {
+  id: String!
+  newNonstructuralPeriodS: Float!
+}
+type ChangeBuildingNsQ {
+  id: String!
+  newNonstructuralQ: Float!
+}
+type ChangeBuildingNsResistanceN {
+  id: String!
+  newNonstructuralResistanceN: Float!
+}
+type ChangeBuildingColMomentSumNm {
+  id: String!
+  newColumnMomentSumNm: Float!
+}
+type ChangeBuildingBeamMomentSumNm {
+  id: String!
+  newBeamMomentSumNm: Float!
+}
+type ChangeMemberFastenerDiameterMm {
+  buildingId: String!
+  id: String!
+  newFastenerDiameterMm: Float!
+}
+type ChangeMemberTimberThicknessMm {
+  buildingId: String!
+  id: String!
+  newTimberThicknessMm: Float!
+}
+type ChangeMemberWallThicknessM {
+  buildingId: String!
+  id: String!
+  newWallThicknessM: Float!
+}
+type ChangeMemberEffectiveStiffnessRatio {
+  buildingId: String!
+  id: String!
+  newEffectiveStiffnessRatio: Float!
+}
+type ChangeMemberEffectiveStiffnessBasis {
+  buildingId: String!
+  id: String!
+  newEffectiveStiffnessBasis: String!
+}
+type ChangeMemberWallPoissonRatio {
+  buildingId: String!
+  id: String!
+  newWallPoissonRatio: Float!
+}
+type ChangeMemberWallStartXM {
+  buildingId: String!
+  id: String!
+  newWallStartXM: Float!
+}
+type ChangeMemberWallStartYM {
+  buildingId: String!
+  id: String!
+  newWallStartYM: Float!
+}
+type ChangeMemberWallLengthM {
+  buildingId: String!
+  id: String!
+  newWallLengthM: Float!
+}
+type ChangeMemberWallDirectionRad {
+  buildingId: String!
+  id: String!
+  newWallDirectionRad: Float!
+}
+type ChangeMemberWallStoreyId {
+  buildingId: String!
+  id: String!
+  newWallStoreyId: String!
+}
+type ChangeMemberWallEffHeightM {
+  buildingId: String!
+  id: String!
+  newWallEffectiveHeightM: Float!
+}
+type ChangeBridgePierHeightM {
+  id: String!
+  newPierHeightM: Float!
+}
+type ChangeBridgePierMomentRdNm {
+  id: String!
+  newPierMomentRdNm: Float!
+}
+type ChangeBridgePierShearRdN {
+  id: String!
+  newPierShearRdN: Float!
+}
+type ChangeBridgeImportanceClass {
+  id: String!
+  newImportanceClass: Float!
+}
+type ChangeBridgeVerticalPeriodS {
+  id: String!
+  newVerticalPeriodS: Float!
+}
+type ChangeBridgePierCrackedInertiaRatio {
+  id: String!
+  newPierCrackedInertiaRatio: Float!
+}
+type ChangeBridgeDeckLengthM {
+  id: String!
+  newDeckLengthM: Float!
+}
+type ChangeBridgeDeckEiNm2 {
+  id: String!
+  newDeckEiNm2: Float!
+}
+type ChangeAssessmentChordDemandRad {
+  id: String!
+  newChordRotationDemandRad: Float!
+}
+type ChangeAssessmentChordYieldRad {
+  id: String!
+  newChordRotationYieldRad: Float!
+}
+type ChangeAssessmentChordUltRad {
+  id: String!
+  newChordRotationUltimateRad: Float!
+}
+type ChangeTowerEiNm2 {
+  id: String!
+  newEiNm2: Float!
+}
+type ChangeFoundationLiqN160 {
+  id: String!
+  newLiqN160: Float!
+}
+type ChangeFoundationLiqFinesPercent {
+  id: String!
+  newLiqFinesPercent: Float!
+}
+type ChangeFoundationLiqDepthM {
+  id: String!
+  newLiqDepthM: Float!
+}
+type ChangeFoundationLiqWaterDepthM {
+  id: String!
+  newLiqWaterDepthM: Float!
+}
+type ChangeFoundationLiqUnitWtNM3 {
+  id: String!
+  newLiqUnitWeightNM3: Float!
+}
+type ChangeFoundationLiqMagnitude {
+  id: String!
+  newLiqMagnitude: Float!
+}
+type ChangeAssessmentSectionDepthM {
+  id: String!
+  newSectionDepthM: Float!
+}
+type ChangeAssessmentSectionWidthM {
+  id: String!
+  newSectionWidthM: Float!
+}
+type ChangeAssessmentEffDepthM {
+  id: String!
+  newEffectiveDepthM: Float!
+}
+type ChangeAssessmentShearSpanM {
+  id: String!
+  newShearSpanM: Float!
+}
+type ChangeAssessmentAxialForceN {
+  id: String!
+  newAxialForceN: Float!
+}
+type ChangeAssessmentShearForceDemandN {
+  id: String!
+  newShearForceDemandN: Float!
+}
+type ChangeAssessmentAs1AreaM2 {
+  id: String!
+  newTensionSteelAreaM2: Float!
+}
+type ChangeAssessmentAs2AreaM2 {
+  id: String!
+  newCompressionSteelAreaM2: Float!
+}
+type ChangeAssessmentBarDiameterMm {
+  id: String!
+  newBarDiameterMm: Float!
+}
+type ChangeAssessmentSteelYieldMpa {
+  id: String!
+  newSteelYieldMpa: Float!
+}
+type ChangeAssessmentFcMpa {
+  id: String!
+  newConcreteStrengthMpa: Float!
+}
+type ChangeAssessmentStrpLegAreaM2 {
+  id: String!
+  newStirrupLegAreaM2: Float!
+}
+type ChangeAssessmentStrpSpacingM {
+  id: String!
+  newStirrupSpacingM: Float!
+}
+type ChangeAssessmentStrpYieldMpa {
+  id: String!
+  newStirrupYieldMpa: Float!
+}
+type ChangeAssessmentCoreWidthM {
+  id: String!
+  newCoreWidthM: Float!
+}
+type ChangeAssessmentCoreDepthM {
+  id: String!
+  newCoreDepthM: Float!
+}
+type ChangeAssessmentMidSteelAreaM2 {
+  id: String!
+  newIntermediateSteelAreaM2: Float!
+}
+type ChangeAssessmentRbarCount {
+  id: String!
+  newRestrainedBarCount: Float!
+}
+type ChangeAssessmentRbarSpacingM {
+  id: String!
+  newRestrainedBarSpacingM: Float!
+}
+type ChangeAssessmentDiagReinfRatio {
+  id: String!
+  newDiagonalReinforcementRatio: Float!
+}
+type ChangeAssessmentShearCrack {
+  id: String!
+  newShearCrackingBeforeYield: Float!
+}
+type ChangeFoundationLiqLayerM {
+  id: String!
+  newLiqLayerThicknessM: Float!
+}
+type ChangeFoundationFootingWidthM {
+  id: String!
+  newFootingWidthM: Float!
+}
+type ChangeFoundationBearAxialN {
+  id: String!
+  newBearingAxialN: Float!
+}
+type ChangeFoundationBearShearN {
+  id: String!
+  newBearingShearN: Float!
+}
+type ChangeFoundationBearMomentNm {
+  id: String!
+  newBearingMomentNm: Float!
+}
+type ChangeFoundationBearingNMaxN {
+  id: String!
+  newBearingNMaxN: Float!
+}
+type ChangeFoundationSoilPhiDeg {
+  id: String!
+  newSoilFrictionAngleDeg: Float!
+}
+type ChangeFoundationPileDiameterM {
+  id: String!
+  newPileDiameterM: Float!
+}
+type ChangeFoundationPileLengthM {
+  id: String!
+  newPileLengthM: Float!
+}
+type ChangeFoundationPileModulusPa {
+  id: String!
+  newPileModulusPa: Float!
+}
+type ChangeFoundationPileKsNM3 {
+  id: String!
+  newPileSubgradeModulusNM3: Float!
+}
+type ChangeFoundationPileHeadShearN {
+  id: String!
+  newPileHeadShearN: Float!
+}
+type ChangeFoundationPileHeadFixed {
+  id: String!
+  newPileHeadFixed: Float!
+}
+type ChangeFoundationPileIfaceM {
+  id: String!
+  newPileInterfaceDepthM: Float!
+}
+type ChangeFoundationPileUpVsMS {
+  id: String!
+  newPileUpperVsMS: Float!
+}
+type ChangeFoundationPileLowVsMS {
+  id: String!
+  newPileLowerVsMS: Float!
+}
+type ChangeFoundationPileMomentRdNm {
+  id: String!
+  newPileMomentRdNm: Float!
+}
+type ChangeStoreyVariableCategory {
+  buildingId: String!
+  storeyId: String!
+  id: String!
+  newCategory: ImposedCategory!
+}
+type ChangeStoreyVariableQkN {
+  buildingId: String!
+  storeyId: String!
+  id: String!
+  newQkN: Float!
+}
+type ChangeBridgeVariableCategory {
+  bridgeId: String!
+  id: String!
+  newCategory: ImposedCategory!
+}
+type ChangeBridgeVariableQkN {
+  bridgeId: String!
+  id: String!
+  newQkN: Float!
+}
+type ChangeTowerVariableCategory {
+  towerId: String!
+  id: String!
+  newCategory: ImposedCategory!
+}
+type ChangeTowerVariableQkN {
+  towerId: String!
+  id: String!
+  newQkN: Float!
+}
+type InsertStoreyVariable {
+  buildingId: String!
+  storeyId: String!
+  index: Int
+  variable: En1998VariableAction!
+}
+type RemoveStoreyVariable {
+  buildingId: String!
+  storeyId: String!
+  id: String!
+}
+type InsertBridgeVariable {
+  bridgeId: String!
+  index: Int
+  variable: En1998VariableAction!
+}
+type RemoveBridgeVariable {
+  bridgeId: String!
+  id: String!
+}
+type InsertTowerVariable {
+  towerId: String!
+  index: Int
+  variable: En1998VariableAction!
+}
+type RemoveTowerVariable {
+  towerId: String!
+  id: String!
+}
+type ChangeSoilLayerFoundationId {
+  id: String!
+  newFoundationId: String!
+}
+type ChangeSoilLayerThicknessM {
+  id: String!
+  newThicknessM: Float!
+}
+type ChangeSoilUnitWtNM3 {
+  id: String!
+  newUnitWeightNM3: Float!
+}
+type ChangeSoilLayerVsMS {
+  id: String!
+  newShearWaveVelocityMS: Float!
+}
+type ChangeSoilLayerN160 {
+  id: String!
+  newN160: Float!
+}
+type ChangeSoilLayerFinesPercent {
+  id: String!
+  newFinesPercent: Float!
+}
+type InsertSoilLayer {
+  index: Int
+  layer: En1998SoilLayer!
+}
+type RemoveSoilLayer {
+  id: String!
+}
+type ChangePlacementX {
+  id: String!
+  newX: Float!
+}
+type ChangePlacementY {
+  id: String!
+  newY: Float!
+}
+type ChangePlacementZ {
+  id: String!
+  newZ: Float!
+}
+type ChangePlacementYaw {
+  id: String!
+  newYaw: Float!
+}
+type InsertPlacement {
+  index: Int!
+  item: En1998Placement!
+}
+type RemovePlacement {
+  id: String!
+}
+type ChangeBuildingOtBaseXM {
+  id: String!
+  newOverturningBaseXM: Float!
+}
+type ChangeBuildingOtBaseYM {
+  id: String!
+  newOverturningBaseYM: Float!
+}
+type ChangeBuildingTiedownNm {
+  id: String!
+  newTieDownMomentNm: Float!
+}
+type ChangeDiaphragmBuildingId {
+  id: String!
+  newBuildingId: String!
+}
+type ChangeDiaphragmStoreyId {
+  id: String!
+  newStoreyId: String!
+}
+type ChangeDiaphragmMaterial {
+  id: String!
+  newMaterial: DiaphragmMaterial!
+}
+type ChangeDiaphragmThicknessM {
+  id: String!
+  newThicknessM: Float!
+}
+type ChangeDiaphragmSpanM {
+  id: String!
+  newSpanM: Float!
+}
+type ChangeDiaphragmDepthM {
+  id: String!
+  newDepthM: Float!
+}
+type ChangeDiaphragmOpeningWidthM {
+  id: String!
+  newOpeningWidthM: Float!
+}
+type ChangeDiaphragmShearStrMpa {
+  id: String!
+  newShearStrengthMpa: Float!
+}
+type ChangeDiaphragmChordAreaM2 {
+  id: String!
+  newChordAreaM2: Float!
+}
+type ChangeDiaphragmChordStrMpa {
+  id: String!
+  newChordStrengthMpa: Float!
+}
+type ChangeDiaphragmGammaD {
+  id: String!
+  newGammaD: Float!
+}
+type ChangeAccelerogramBuildingId {
+  id: String!
+  newBuildingId: String!
+}
+type ChangeAccelerogramLabel {
+  id: String!
+  newLabel: String!
+}
+type ChangeAccelerogramSamples {
+  id: String!
+  newSamples: String!
+}
+type ChangeAccelerogramDtS {
+  id: String!
+  newDtS: Float!
+}
+type ChangeAccelerogramScaleFactor {
+  id: String!
+  newScaleFactor: Float!
+}
+type InsertDiaphragm {
+  index: Int
+  diaphragm: En1998Diaphragm!
+}
+type RemoveDiaphragm {
+  id: String!
+}
+type InsertAccelerogram {
+  index: Int
+  accelerogram: En1998Accelerogram!
+}
+type RemoveAccelerogram {
+  id: String!
+}
+type ChangeTowerBaseRotStiffNm {
+  id: String!
+  newBaseRotationalStiffnessNm: Float!
+}
+type ChangeTankShellTM {
+  id: String!
+  newShellThicknessM: Float!
+}
+type ChangeTankShellStrMpa {
+  id: String!
+  newShellStrengthMpa: Float!
+}
+type ChangePierBridgeId {
+  id: String!
+  newBridgeId: String!
+}
+type ChangePierStiffnessBasis {
+  id: String!
+  newStiffnessBasis: PierStiffnessBasis!
+}
+type ChangePierXM {
+  id: String!
+  newXM: Float!
+}
+type ChangePierHeightM {
+  id: String!
+  newHeightM: Float!
+}
+type ChangePierSectionBM {
+  id: String!
+  newSectionBM: Float!
+}
+type ChangePierSectionHM {
+  id: String!
+  newSectionHM: Float!
+}
+type ChangePierModulusMpa {
+  id: String!
+  newModulusMpa: Float!
+}
+type ChangePierMomentRdNm {
+  id: String!
+  newMomentRdNm: Float!
+}
+type ChangePierShearRdN {
+  id: String!
+  newShearRdN: Float!
+}
+type ChangePierReinforcementRatio {
+  id: String!
+  newReinforcementRatio: Float!
+}
+type ChangePierCoverM {
+  id: String!
+  newCoverM: Float!
+}
+type ChangePierConcreteFckMpa {
+  id: String!
+  newConcreteFckMpa: Float!
+}
+type ChangePierSteelFykMpa {
+  id: String!
+  newSteelFykMpa: Float!
+}
+type ChangePierAxialLoadN {
+  id: String!
+  newAxialLoadN: Float!
+}
+type ChangeBearingBridgeId {
+  id: String!
+  newBridgeId: String!
+}
+type ChangeJointBuildingId {
+  id: String!
+  newBuildingId: String!
+}
+type ChangeJointStoreyId {
+  id: String!
+  newStoreyId: String!
+}
+type ChangeJointColumnId {
+  id: String!
+  newColumnId: String!
+}
+type ChangeJointBeamId {
+  id: String!
+  newBeamId: String!
+}
+type ChangeBearingPierId {
+  id: String!
+  newPierId: String!
+}
+type ChangeBearingDevice {
+  id: String!
+  newDevice: BearingDevice!
+}
+type ChangeBearingXM {
+  id: String!
+  newXM: Float!
+}
+type ChangeJointXM {
+  id: String!
+  newXM: Float!
+}
+type ChangeJointYM {
+  id: String!
+  newYM: Float!
+}
+type ChangeBearingStiffnessNPerM {
+  id: String!
+  newStiffnessNPerM: Float!
+}
+type ChangeBearingDRdM {
+  id: String!
+  newDRdM: Float!
+}
+type ChangeBearingSeatLengthM {
+  id: String!
+  newSeatLengthM: Float!
+}
+type ChangeJointColumnMomentRdNm {
+  id: String!
+  newColumnMomentRdNm: Float!
+}
+type ChangeJointBeamMomentRdNm {
+  id: String!
+  newBeamMomentRdNm: Float!
+}
+type ChangeBearingMinSupportM {
+  id: String!
+  newMinSupportLengthM: Float!
+}
+type InsertPier {
+  index: Int
+  pier: En1998Pier!
+}
+type RemovePier {
+  id: String!
+}
+type InsertBearing {
+  index: Int
+  bearing: En1998Bearing!
+}
+type InsertJoint {
+  index: Int
+  joint: En1998Joint!
+}
+type InsertTieBeam {
+  index: Int
+  tieBeam: En1998TieBeam!
+}
+type InsertSeismicSlope {
+  index: Int
+  seismicSlope: En1998Slope!
+}
+type RemoveBearing {
+  id: String!
+}
+type RemoveJoint {
+  id: String!
+}
+type RemoveTieBeam {
+  id: String!
+}
+type RemoveSeismicSlope {
+  id: String!
+}
+type InsertMember {
+  buildingId: String!
+  index: Int
+  member: En1998Member!
+}
+type RemoveMember {
+  buildingId: String!
+  id: String!
+}
+type InsertStorey {
+  buildingId: String!
+  index: Int
+  storey: En1998Storey!
+}
+type RemoveStorey {
+  buildingId: String!
+  id: String!
+}
+type InsertSystem {
+  buildingId: String!
+  index: Int
+  system: En1998System!
+}
+type RemoveSystem {
+  buildingId: String!
+  id: String!
+}
+type ChangeJointColMomentRdNm {
+  index: Int!
+  newColumnMomentRdNm: Float!
+}
+type ChangeRetainingWallWaterHeightM {
+  index: Int!
+  newWaterHeightM: Float!
+}
+type ChangeRetainingWallSaturatedGamma {
+  index: Int!
+  newSaturatedGamma: Float!
+}
+type ChangeRetainingWallPermeabilityMS {
+  index: Int!
+  newPermeabilityMS: Float!
+}
+type ChangeFoundationBaseFrictionDeg {
+  index: Int!
+  newBaseFrictionAngleDeg: Float!
+}
+type ChangeFoundationBasePorePressurePa {
+  index: Int!
+  newBasePorePressurePa: Float!
+}

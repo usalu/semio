@@ -1,0 +1,6 @@
+{
+  "mutation": "changeShellActionLocalLoadK",
+  "shellId": "shell-pass",
+  "actionId": "G-shell",
+  "newLocalLoadK": 1.5
+}

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeAssessmentDiagReinfRatio",
+  "id": "as-1",
+  "newDiagonalReinforcementRatio": 1.5
+}

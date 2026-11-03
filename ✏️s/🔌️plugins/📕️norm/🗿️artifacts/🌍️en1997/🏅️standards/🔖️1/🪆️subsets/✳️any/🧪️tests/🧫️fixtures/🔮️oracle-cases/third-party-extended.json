@@ -1,0 +1,250 @@
+{
+  "$schema": "../../../../../../../../../🔮️oracles/🏃️harness/🧬️schema/🔣️.json",
+  "schemaVersion": 1,
+  "artifact": "en1997",
+  "annex": "de",
+  "cases": [
+    {
+      "id": "en1997.F.boussinesq-strip-edge",
+      "check": "en1997.F.boussinesq",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "Annex F.2 stress increase below a loaded area (Boussinesq elastic half-space)"
+      },
+      "inputs": {
+        "shape": "strip",
+        "q": 100000.0,
+        "z": 2.0,
+        "width": 2.0,
+        "x": 0.0
+      },
+      "expected": {
+        "sigma_z": {
+          "value": 40915.49430918953,
+          "unit": "Pa",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-groundhog",
+          "adapter": "groundhog",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1997.F.boussinesq-strip-outside",
+      "check": "en1997.F.boussinesq",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "Annex F.2 stress increase below a loaded area (Boussinesq elastic half-space)"
+      },
+      "inputs": {
+        "shape": "strip",
+        "q": 100000.0,
+        "z": 3.0,
+        "width": 2.0,
+        "x": 1.5
+      },
+      "expected": {
+        "sigma_z": {
+          "value": 37909.38482163581,
+          "unit": "Pa",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-groundhog",
+          "adapter": "groundhog",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1997.F.boussinesq-rectangle-corner",
+      "check": "en1997.F.boussinesq",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "Annex F.2 stress increase below a loaded area (Boussinesq elastic half-space)"
+      },
+      "inputs": {
+        "shape": "rectangle",
+        "q": 100000.0,
+        "z": 2.0,
+        "width": 2.0,
+        "length": 4.0
+      },
+      "expected": {
+        "sigma_z": {
+          "value": 19994.107259835182,
+          "unit": "Pa",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-groundhog",
+          "adapter": "groundhog",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1997.F.boussinesq-rectangle-corner-deep",
+      "check": "en1997.F.boussinesq",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "Annex F.2 stress increase below a loaded area (Boussinesq elastic half-space)"
+      },
+      "inputs": {
+        "shape": "rectangle",
+        "q": 150000.0,
+        "z": 6.0,
+        "width": 3.0,
+        "length": 3.0
+      },
+      "expected": {
+        "sigma_z": {
+          "value": 12604.03427600988,
+          "unit": "Pa",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-groundhog",
+          "adapter": "groundhog",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1997.F.boussinesq-circle-axis",
+      "check": "en1997.F.boussinesq",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "Annex F.2 stress increase below a loaded area (Boussinesq elastic half-space)"
+      },
+      "inputs": {
+        "shape": "circle",
+        "q": 100000.0,
+        "z": 2.0,
+        "radius": 1.0
+      },
+      "expected": {
+        "sigma_z": {
+          "value": 28445.82472000672,
+          "unit": "Pa",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-groundhog",
+          "adapter": "groundhog",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1997.2.phase-relations-saturated-clay",
+      "check": "en1997.2.phase-relations",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "2.4.3 derived values; unit weight from the phase relations of EN ISO 14688-2"
+      },
+      "inputs": {
+        "S_r": 1.0,
+        "e": 0.8,
+        "G_s": 2.65,
+        "gamma_w": 10000.0
+      },
+      "expected": {
+        "gamma": {
+          "value": 19166.666666666668,
+          "unit": "N/m^3",
+          "profile": "eurocode-quantities-v1"
+        },
+        "gamma_eff": {
+          "value": 9166.666666666668,
+          "unit": "N/m^3",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-groundhog",
+          "adapter": "groundhog",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1997.2.phase-relations-partly-saturated-sand",
+      "check": "en1997.2.phase-relations",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "2.4.3 derived values; unit weight from the phase relations of EN ISO 14688-2"
+      },
+      "inputs": {
+        "S_r": 0.6,
+        "e": 0.55,
+        "G_s": 2.67,
+        "gamma_w": 10000.0
+      },
+      "expected": {
+        "gamma": {
+          "value": 19354.838709677417,
+          "unit": "N/m^3",
+          "profile": "eurocode-quantities-v1"
+        },
+        "gamma_eff": {
+          "value": 9354.838709677417,
+          "unit": "N/m^3",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-groundhog",
+          "adapter": "groundhog",
+          "kind": "third-party-library"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+syntax = "proto3";
+package semio.s.norm.en1992.mutation.change_bar_point_diameter;
+message ChangeBarPointDiameter {
+  string member_id = 1;
+  string bar_id = 2;
+  double new_diameter = 3;
+}

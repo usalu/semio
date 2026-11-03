@@ -1,0 +1,5 @@
+{
+  "mutation": "changeSlopeCircleRadius",
+  "id": "slope-S1",
+  "newCircleRadius": 1.5
+}

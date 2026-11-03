@@ -57,7 +57,7 @@ thread_local! {
 }
 
 fn history_row(seq: u64) -> HistoryEntry {
-    HistoryEntry { seq, edit_id: Some(format!("e-{seq}")), action_id: "apply".into(), label: LocalizedLabel::native("Apply", "Anwenden"), kind: "mutation".into(), applied: true, ..Default::default() }
+    HistoryEntry { edit_id: Some(format!("e-{seq}")), applied: true, ..HistoryEntry::new(seq, "apply", LocalizedLabel::native("Apply", "Anwenden"), "mutation") }
 }
 
 fn program_archive() -> protocol::DocumentArchivePack {

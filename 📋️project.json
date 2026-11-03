@@ -4830,7 +4830,9 @@
       "options": {
         "command": "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts\" sync browsers"
       },
-      "dependsOn": [],
+      "dependsOn": [
+        "deps-js-all"
+      ],
       "metadata": {
         "semio": {
           "execution": {

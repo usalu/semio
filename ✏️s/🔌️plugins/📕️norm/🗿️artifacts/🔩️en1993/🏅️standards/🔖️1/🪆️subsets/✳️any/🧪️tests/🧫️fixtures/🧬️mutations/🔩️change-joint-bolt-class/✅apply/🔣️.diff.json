@@ -1,0 +1,250 @@
+{
+  "annex": null,
+  "reliabilityClass": null,
+  "materials": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "sections": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "members": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "loadCases": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "memberActions": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "joints": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "joint-j1",
+        "patch": {
+          "kind": null,
+          "memberId": null,
+          "boltClass": "10.9-alt",
+          "boltDiameter": null,
+          "boltRows": null,
+          "boltsPerRow": null,
+          "pitch": null,
+          "gauge": null,
+          "endDistance": null,
+          "edgeDistance": null,
+          "shearPlanes": null,
+          "plateThickness": null,
+          "plateFu": null,
+          "weldThroat": null,
+          "weldLength": null,
+          "weldFu": null,
+          "weldGrade": null,
+          "actions": null,
+          "category": null,
+          "frictionMu": null,
+          "preloadForce": null,
+          "slipFactorKs": null,
+          "frictionSurfaces": null,
+          "plateFy": null,
+          "plateWidth": null,
+          "boltToWeb": null,
+          "extensionToFlange": null,
+          "extensionEdge": null,
+          "alphaFactor": null,
+          "boltStressArea": null,
+          "boltGripLength": null,
+          "columnFlangeThickness": null,
+          "columnWebThickness": null,
+          "columnWebDepth": null,
+          "columnWebShearArea": null,
+          "columnRootRadius": null,
+          "columnFy": null,
+          "columnWebStress": null,
+          "beamFlangeThickness": null,
+          "compressionLever": null,
+          "momentDemand": null,
+          "beamMomentResistance": null,
+          "columnMomentResistance": null,
+          "beamInertia": null,
+          "beamSpan": null,
+          "bracedFrame": null,
+          "stiffnessRatio": null,
+          "transformationParameter": null,
+          "assumedClass": null,
+          "basePlateLength": null,
+          "concreteFcd": null,
+          "concreteModulus": null,
+          "concreteAreaA0": null,
+          "concreteAreaA1": null,
+          "jointCoefficient": null,
+          "anchorArea": null,
+          "anchorLength": null,
+          "baseNormalForce": null,
+          "baseMoment": null,
+          "baseLeverLeft": null,
+          "baseLeverRight": null,
+          "beamWebThickness": null,
+          "beamWebFy": null,
+          "weldForceLongitudinal": null,
+          "weldForceTransverse": null
+        }
+      }
+    ]
+  },
+  "fatigueDetails": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "fireExposures": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "coldFormedMembers": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "platedPanels": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "siloShells": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "tensionComponents": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "bridgeFatigue": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "towerLegs": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "piles": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "craneRunways": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "storeys": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "restraints": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "builtUpMembers": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "weldGroups": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "parametricSections": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "hollowJoints": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "jointRows": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "frameNodes": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "frameBars": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "placements": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "jointPlates": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "foundationBlocks": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "frameActions": null,
+  "frameMemberBases": null,
+  "fatigueStresses": null,
+  "bucklingLengths": null,
+  "formingGains": null,
+  "materialDuctility": null,
+  "fastenedJoints": null
+}

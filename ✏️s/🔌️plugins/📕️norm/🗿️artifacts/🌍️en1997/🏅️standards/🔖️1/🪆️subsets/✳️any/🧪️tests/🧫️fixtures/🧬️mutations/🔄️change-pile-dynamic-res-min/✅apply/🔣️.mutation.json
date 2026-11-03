@@ -1,0 +1,5 @@
+{
+  "mutation": "changePileDynamicResMin",
+  "id": "pile-P1",
+  "newDynamicResistanceMin": 1.5
+}

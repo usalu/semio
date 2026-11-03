@@ -1,411 +1,833 @@
-# 🧬️ EN 1995 mutation schema — hierarchical timber subject (members ⊃ actions, connections ⊃ actions).
-
-union En1995Mutation =
-    ChangeAnnex
-  | InsertMember
-  | RemoveMember
-  | ChangeMemberLabelEn
-  | ChangeMemberLabelDe
-  | ChangeMemberRole
-  | ChangeMemberStrengthClass
-  | ChangeMemberServiceClass
-  | ChangeMemberSupport
-  | ChangeMemberB
-  | ChangeMemberH
-  | ChangeMemberSpan
-  | ChangeMemberSupportLength
-  | ChangeMemberBearingLength
-  | ChangeMemberBucklingLengthY
-  | ChangeMemberBucklingLengthZ
-  | ChangeMemberRestraintSpacing
-  | ChangeMemberNotchDepth
-  | ChangeMemberNotchDistance
-  | ChangeMemberMCrit
-  | ChangeMemberMassKgPerM
-  | ChangeMemberMassKgPerM2
-  | ChangeMemberDampingXi
-  | ChangeMemberFireDuration
-  | ChangeMemberBridgeNObs
-  | ChangeMemberBridgeTLYears
-  | ChangeMemberBridgeBeta
-  | ChangeMemberBridgeA
-  | ChangeMemberBridgeB
-  | ChangeMemberBridgeCrowd
-  | InsertMemberAction
-  | RemoveMemberAction
-  | ChangeMemberActionKind
-  | ChangeMemberActionCategory
-  | ChangeMemberLoadDuration
-  | ChangeMemberActionQLine
-  | ChangeMemberActionFPoint
-  | ChangeMemberActionMK
-  | ChangeMemberActionVK
-  | ChangeMemberActionNK
-  | ChangeMemberActionNTK
-  | ChangeMemberActionFC90K
-  | InsertConnection
-  | RemoveConnection
-  | ChangeConnectionLabelEn
-  | ChangeConnectionLabelDe
-  | ChangeConnectionFastenerType
-  | ChangeConnectionStrengthClass
-  | ChangeConnectionServiceClass
-  | ChangeConnectionDiameter
-  | ChangeConnectionNumber
-  | ChangeConnectionRows
-  | ChangeConnectionSpacing
-  | ChangeConnectionEdgeDistance
-  | ChangeConnectionEndDistance
-  | ChangeConnectionT1
-  | ChangeConnectionT2
-  | ChangeConnectionSteelPlate
-  | ChangeConnectionPlateThickness
-  | ChangeConnectionShearPlanes
-  | ChangeConnectionFUK
-  | InsertConnectionAction
-  | RemoveConnectionAction
-  | ChangeConnectionActionKind
-  | ChangeConnectionLoadDuration
-  | ChangeConnectionActionFK
-
+union En1995Mutation = ChangeAnnex | ChangeReliabilityClass | InsertMember | RemoveMember | ChangeMemberLabelEn | ChangeMemberLabelDe | ChangeMemberRole | ChangeMemberStrengthClass | ChangeMemberServiceClass | ChangeMemberSupport | ChangeMemberB | ChangeMemberH | ChangeMemberSpan | ChangeMemberSupportLength | ChangeMemberBearingLength | ChangeMemberBucklingLengthY | ChangeMemberBucklingLengthZ | ChangeMemberRestraintSpacing | ChangeMemberNotchDepth | ChangeMemberNotchDistance | ChangeMemberMassKgPerM | ChangeMemberMassKgPerM2 | ChangeMemberDampingXi | ChangeMemberFireDuration | ChangeMemberBridgeNObs | ChangeMemberBridgeTLYears | ChangeMemberBridgeBeta | ChangeMemberBridgeA | ChangeMemberBridgeB | ChangeMemberBridgeCrowd | InsertMemberAction | RemoveMemberAction | ChangeMemberActionKind | ChangeMemberActionCategory | ChangeMemberLoadDuration | ChangeMemberActionQLine | ChangeMemberActionFPoint | ChangeMemberActionMK | ChangeMemberActionVK | ChangeMemberActionNK | ChangeMemberActionNTK | ChangeMemberActionFC90K | InsertConnection | RemoveConnection | ChangeConnectionLabelEn | ChangeConnectionLabelDe | ChangeConnectionFastenerType | ChangeConnectionStrengthClass | ChangeConnectionServiceClass | ChangeConnectionDiameter | ChangeConnectionNumber | ChangeConnectionRows | ChangeConnectionSpacing | ChangeConnectionEdgeDistance | ChangeConnectionEndDistance | ChangeConnectionT1 | ChangeConnectionT2 | ChangeConnectionSteelPlate | ChangeConnectionPlateThickness | ChangeConnectionShearPlanes | ChangeConnectionFUK | InsertConnectionAction | RemoveConnectionAction | ChangeConnectionActionKind | ChangeConnectionLoadDuration | ChangeConnectionActionFK | ChangeUlsEquation | InsertCase | RemoveCase | ChangeCaseLabelEn | ChangeCaseLabelDe | ChangeCaseEntryId | ChangeCaseNumber | ChangeCaseText | ChangePlacementX | ChangePlacementY | ChangePlacementZ | ChangePlacementYaw | InsertPlacement | RemovePlacement | InsertTaper | RemoveTaper | ChangeTaperMember | ChangeTaperKind | ChangeTaperTaperAngle | ChangeTaperApexDepth | ChangeTaperInnerRadius | ChangeTaperLamella | ChangeTaperApexAngle | ChangeTaperSide | ChangeTaperRods | ChangeTaperRodResistance | InsertCutout | RemoveCutout | ChangeCutoutMember | ChangeCutoutKind | ChangeCutoutFace | ChangeCutoutDistance | ChangeCutoutLength | ChangeCutoutDepth | ChangeCutoutCentreHeight | ChangeCutoutSlope | ChangeCutoutRods | ChangeCutoutRodResistance | InsertFastener | RemoveFastener | ChangeFastenerConnection | ChangeFastenerMember | ChangeFastenerColumns | ChangeFastenerLines | ChangeFastenerSpacingPar | ChangeFastenerSpacingPerp | ChangeFastenerEndDistance | ChangeFastenerEdgeDistance | ChangeFastenerOffsetX | ChangeFastenerOffsetY | ChangeFastenerLoadAngle | InsertPanel | RemovePanel | ChangePanelStrengthClass | ChangePanelSpan | ChangePanelWidth | ChangePanelLoad | ChangePanelFireDuration | InsertFloor | RemoveFloor | ChangeFloorMember | ChangeFloorSpan | ChangeFloorWidth | ChangeFloorJoistSpacing | ChangeFloorEiL | ChangeFloorEiB | ChangeFloorMass | ChangeFloorDamping | ChangeFloorPermanentLoad | ChangeFloorImposedLoad | ChangeFloorPsi2 | InsertPanelLayer | RemovePanelLayer | ChangePanelLayerThickness | ChangePanelLayerOrientation | ChangePanelLayerGrade | InsertFastenerPosition | RemoveFastenerPosition | ChangeFastenerPositionX | ChangeFastenerPositionY | InsertDiaphragm | RemoveDiaphragm | ChangeDiaphragmKind | ChangeDiaphragmMethod | ChangeDiaphragmPanelWidth | ChangeDiaphragmWallHeight | ChangeDiaphragmFastenerSpacing | ChangeDiaphragmPanels | ChangeDiaphragmFastenerCapacity | ChangeDiaphragmShearEd | ChangeDiaphragmHoldDown | ChangeDiaphragmForce | ChangeDiaphragmLength | ChangeDiaphragmShearResistance | InsertTruss | RemoveTruss | ChangeTrussKind | ChangeTrussProduct | ChangeTrussSpan | ChangeTrussHeight | ChangeTrussBays | ChangeTrussChordWidth | ChangeTrussChordDepth | ChangeTrussWebWidth | ChangeTrussWebDepth | ChangeTrussChordForce | ChangeTrussRestraintLength | ChangeTrussBracingCapacity | InsertBracing | RemoveBracing | ChangeBracingKind | ChangeBracingMember | ChangeBracingStabilisedCount | ChangeBracingSpacing | ChangeBracingLength | ChangeBracingBraceWidth | ChangeBracingBraceDepth | ChangeBracingCompression | ChangeBracingResistance | ChangeBracingStiffness | InsertDeck | RemoveDeck | ChangeDeckLaminationProduct | ChangeDeckBarProduct | ChangeDeckSpan | ChangeDeckDeckWidth | ChangeDeckDeckDepth | ChangeDeckLaminationWidth | ChangeDeckBarSpacing | ChangeDeckBarDiameter | ChangeDeckPlateSide | ChangeDeckInitialPrestress | ChangeDeckLossRelaxation | ChangeDeckLossCreep | ChangeDeckLossMoisture | ChangeDeckBarResistance | ChangeDeckShearStress | ChangeDeckCompressionC90 | ChangeDeckWheelLoad | ChangeDeckWheelContact
 type ChangeAnnex {
-  newAnnex: String! @state(class: ARTIFACT)
+  newAnnex: AnnexChoice!
 }
-
+type ChangeReliabilityClass {
+  newReliabilityClass: String!
+}
 type InsertMember {
-  index: Int! @state(class: ARTIFACT)
-  member: JSON! @state(class: ARTIFACT)
+  index: Int!
+  member: TimberMember!
 }
-
 type RemoveMember {
-  index: Int! @state(class: ARTIFACT)
+  index: Int!
 }
-
 type ChangeMemberLabelEn {
-  memberId: String! @state(class: ARTIFACT)
-  newValue: String! @state(class: ARTIFACT)
+  memberId: String!
+  newValue: String!
 }
-
 type ChangeMemberLabelDe {
-  memberId: String! @state(class: ARTIFACT)
-  newValue: String! @state(class: ARTIFACT)
+  memberId: String!
+  newValue: String!
 }
-
 type ChangeMemberRole {
-  memberId: String! @state(class: ARTIFACT)
-  newValue: String! @state(class: ARTIFACT)
+  memberId: String!
+  newValue: MemberRole!
 }
-
 type ChangeMemberStrengthClass {
-  memberId: String! @state(class: ARTIFACT)
-  newValue: String! @state(class: ARTIFACT)
+  memberId: String!
+  newValue: StrengthClass!
 }
-
 type ChangeMemberServiceClass {
-  memberId: String! @state(class: ARTIFACT)
-  newValue: Int! @state(class: ARTIFACT)
+  memberId: String!
+  newValue: Int!
 }
-
 type ChangeMemberSupport {
-  memberId: String! @state(class: ARTIFACT)
-  newValue: String! @state(class: ARTIFACT)
+  memberId: String!
+  newValue: SupportType!
 }
-
 type ChangeMemberB {
-  memberId: String! @state(class: ARTIFACT)
-  newValue: Float! @state(class: ARTIFACT)
+  memberId: String!
+  newValue: Float!
 }
-
 type ChangeMemberH {
-  memberId: String! @state(class: ARTIFACT)
-  newValue: Float! @state(class: ARTIFACT)
+  memberId: String!
+  newValue: Float!
 }
-
 type ChangeMemberSpan {
-  memberId: String! @state(class: ARTIFACT)
-  newValue: Float! @state(class: ARTIFACT)
+  memberId: String!
+  newValue: Float!
 }
-
 type ChangeMemberSupportLength {
-  memberId: String! @state(class: ARTIFACT)
-  newValue: Float! @state(class: ARTIFACT)
+  memberId: String!
+  newValue: Float!
 }
-
 type ChangeMemberBearingLength {
-  memberId: String! @state(class: ARTIFACT)
-  newValue: Float! @state(class: ARTIFACT)
+  memberId: String!
+  newValue: Float!
 }
-
 type ChangeMemberBucklingLengthY {
-  memberId: String! @state(class: ARTIFACT)
-  newValue: Float! @state(class: ARTIFACT)
+  memberId: String!
+  newValue: Float!
 }
-
 type ChangeMemberBucklingLengthZ {
-  memberId: String! @state(class: ARTIFACT)
-  newValue: Float! @state(class: ARTIFACT)
+  memberId: String!
+  newValue: Float!
 }
-
 type ChangeMemberRestraintSpacing {
-  memberId: String! @state(class: ARTIFACT)
-  newValue: Float! @state(class: ARTIFACT)
+  memberId: String!
+  newValue: Float!
 }
-
 type ChangeMemberNotchDepth {
-  memberId: String! @state(class: ARTIFACT)
-  newValue: Float! @state(class: ARTIFACT)
+  memberId: String!
+  newValue: Float!
 }
-
 type ChangeMemberNotchDistance {
-  memberId: String! @state(class: ARTIFACT)
-  newValue: Float! @state(class: ARTIFACT)
+  memberId: String!
+  newValue: Float!
 }
-
-type ChangeMemberMCrit {
-  memberId: String! @state(class: ARTIFACT)
-  newValue: Float! @state(class: ARTIFACT)
-}
-
 type ChangeMemberMassKgPerM {
-  memberId: String! @state(class: ARTIFACT)
-  newValue: Float! @state(class: ARTIFACT)
+  memberId: String!
+  newValue: Float!
 }
-
 type ChangeMemberMassKgPerM2 {
-  memberId: String! @state(class: ARTIFACT)
-  newValue: Float! @state(class: ARTIFACT)
+  memberId: String!
+  newValue: Float!
 }
-
 type ChangeMemberDampingXi {
-  memberId: String! @state(class: ARTIFACT)
-  newValue: Float! @state(class: ARTIFACT)
+  memberId: String!
+  newValue: Float!
 }
-
 type ChangeMemberFireDuration {
-  memberId: String! @state(class: ARTIFACT)
-  newValue: Float! @state(class: ARTIFACT)
+  memberId: String!
+  newValue: Float!
 }
-
 type ChangeMemberBridgeNObs {
-  memberId: String! @state(class: ARTIFACT)
-  newValue: Float! @state(class: ARTIFACT)
+  memberId: String!
+  newValue: Float!
 }
-
 type ChangeMemberBridgeTLYears {
-  memberId: String! @state(class: ARTIFACT)
-  newValue: Float! @state(class: ARTIFACT)
+  memberId: String!
+  newValue: Float!
 }
-
 type ChangeMemberBridgeBeta {
-  memberId: String! @state(class: ARTIFACT)
-  newValue: Float! @state(class: ARTIFACT)
+  memberId: String!
+  newValue: Float!
 }
-
 type ChangeMemberBridgeA {
-  memberId: String! @state(class: ARTIFACT)
-  newValue: Float! @state(class: ARTIFACT)
+  memberId: String!
+  newValue: Float!
 }
-
 type ChangeMemberBridgeB {
-  memberId: String! @state(class: ARTIFACT)
-  newValue: Float! @state(class: ARTIFACT)
+  memberId: String!
+  newValue: Float!
 }
-
 type ChangeMemberBridgeCrowd {
-  memberId: String! @state(class: ARTIFACT)
-  newValue: Float! @state(class: ARTIFACT)
+  memberId: String!
+  newValue: Float!
 }
-
 type InsertMemberAction {
-  memberId: String! @state(class: ARTIFACT)
-  index: Int! @state(class: ARTIFACT)
-  action: JSON! @state(class: ARTIFACT)
+  memberId: String!
+  index: Int!
+  action: CharacteristicAction!
 }
-
 type RemoveMemberAction {
-  memberId: String! @state(class: ARTIFACT)
-  index: Int! @state(class: ARTIFACT)
+  memberId: String!
+  index: Int!
 }
-
 type ChangeMemberActionKind {
-  memberId: String! @state(class: ARTIFACT)
-  actionId: String! @state(class: ARTIFACT)
-  newValue: String! @state(class: ARTIFACT)
+  memberId: String!
+  actionId: String!
+  newValue: ActionKind!
 }
-
 type ChangeMemberActionCategory {
-  memberId: String! @state(class: ARTIFACT)
-  actionId: String! @state(class: ARTIFACT)
-  newValue: String! @state(class: ARTIFACT)
+  memberId: String!
+  actionId: String!
+  newValue: ImposedCategory!
 }
-
 type ChangeMemberLoadDuration {
-  memberId: String! @state(class: ARTIFACT)
-  actionId: String! @state(class: ARTIFACT)
-  newValue: String! @state(class: ARTIFACT)
+  memberId: String!
+  actionId: String!
+  newValue: LoadDurationClass!
 }
-
 type ChangeMemberActionQLine {
-  memberId: String! @state(class: ARTIFACT)
-  actionId: String! @state(class: ARTIFACT)
-  newValue: Float! @state(class: ARTIFACT)
+  memberId: String!
+  actionId: String!
+  newValue: Float!
 }
-
 type ChangeMemberActionFPoint {
-  memberId: String! @state(class: ARTIFACT)
-  actionId: String! @state(class: ARTIFACT)
-  newValue: Float! @state(class: ARTIFACT)
+  memberId: String!
+  actionId: String!
+  newValue: Float!
 }
-
 type ChangeMemberActionMK {
-  memberId: String! @state(class: ARTIFACT)
-  actionId: String! @state(class: ARTIFACT)
-  newValue: Float! @state(class: ARTIFACT)
+  memberId: String!
+  actionId: String!
+  newValue: Float!
 }
-
 type ChangeMemberActionVK {
-  memberId: String! @state(class: ARTIFACT)
-  actionId: String! @state(class: ARTIFACT)
-  newValue: Float! @state(class: ARTIFACT)
+  memberId: String!
+  actionId: String!
+  newValue: Float!
 }
-
 type ChangeMemberActionNK {
-  memberId: String! @state(class: ARTIFACT)
-  actionId: String! @state(class: ARTIFACT)
-  newValue: Float! @state(class: ARTIFACT)
+  memberId: String!
+  actionId: String!
+  newValue: Float!
 }
-
 type ChangeMemberActionNTK {
-  memberId: String! @state(class: ARTIFACT)
-  actionId: String! @state(class: ARTIFACT)
-  newValue: Float! @state(class: ARTIFACT)
+  memberId: String!
+  actionId: String!
+  newValue: Float!
 }
-
 type ChangeMemberActionFC90K {
-  memberId: String! @state(class: ARTIFACT)
-  actionId: String! @state(class: ARTIFACT)
-  newValue: Float! @state(class: ARTIFACT)
+  memberId: String!
+  actionId: String!
+  newValue: Float!
 }
-
 type InsertConnection {
-  index: Int! @state(class: ARTIFACT)
-  connection: JSON! @state(class: ARTIFACT)
+  index: Int!
+  connection: TimberConnection!
 }
-
 type RemoveConnection {
-  index: Int! @state(class: ARTIFACT)
+  index: Int!
 }
-
 type ChangeConnectionLabelEn {
-  connectionId: String! @state(class: ARTIFACT)
-  newValue: String! @state(class: ARTIFACT)
+  connectionId: String!
+  newValue: String!
 }
-
 type ChangeConnectionLabelDe {
-  connectionId: String! @state(class: ARTIFACT)
-  newValue: String! @state(class: ARTIFACT)
+  connectionId: String!
+  newValue: String!
 }
-
 type ChangeConnectionFastenerType {
-  connectionId: String! @state(class: ARTIFACT)
-  newValue: String! @state(class: ARTIFACT)
+  connectionId: String!
+  newValue: FastenerType!
 }
-
 type ChangeConnectionStrengthClass {
-  connectionId: String! @state(class: ARTIFACT)
-  newValue: String! @state(class: ARTIFACT)
+  connectionId: String!
+  newValue: StrengthClass!
 }
-
 type ChangeConnectionServiceClass {
-  connectionId: String! @state(class: ARTIFACT)
-  newValue: Int! @state(class: ARTIFACT)
+  connectionId: String!
+  newValue: Int!
 }
-
 type ChangeConnectionDiameter {
-  connectionId: String! @state(class: ARTIFACT)
-  newValue: Float! @state(class: ARTIFACT)
+  connectionId: String!
+  newValue: Float!
 }
-
 type ChangeConnectionNumber {
-  connectionId: String! @state(class: ARTIFACT)
-  newValue: Int! @state(class: ARTIFACT)
+  connectionId: String!
+  newValue: Int!
 }
-
 type ChangeConnectionRows {
-  connectionId: String! @state(class: ARTIFACT)
-  newValue: Int! @state(class: ARTIFACT)
+  connectionId: String!
+  newValue: Int!
 }
-
 type ChangeConnectionSpacing {
-  connectionId: String! @state(class: ARTIFACT)
-  newValue: Float! @state(class: ARTIFACT)
+  connectionId: String!
+  newValue: Float!
 }
-
 type ChangeConnectionEdgeDistance {
-  connectionId: String! @state(class: ARTIFACT)
-  newValue: Float! @state(class: ARTIFACT)
+  connectionId: String!
+  newValue: Float!
 }
-
 type ChangeConnectionEndDistance {
-  connectionId: String! @state(class: ARTIFACT)
-  newValue: Float! @state(class: ARTIFACT)
+  connectionId: String!
+  newValue: Float!
 }
-
 type ChangeConnectionT1 {
-  connectionId: String! @state(class: ARTIFACT)
-  newValue: Float! @state(class: ARTIFACT)
+  connectionId: String!
+  newValue: Float!
 }
-
 type ChangeConnectionT2 {
-  connectionId: String! @state(class: ARTIFACT)
-  newValue: Float! @state(class: ARTIFACT)
+  connectionId: String!
+  newValue: Float!
 }
-
 type ChangeConnectionSteelPlate {
-  connectionId: String! @state(class: ARTIFACT)
-  newValue: Boolean! @state(class: ARTIFACT)
+  connectionId: String!
+  newValue: Boolean!
 }
-
 type ChangeConnectionPlateThickness {
-  connectionId: String! @state(class: ARTIFACT)
-  newValue: Float! @state(class: ARTIFACT)
+  connectionId: String!
+  newValue: Float!
 }
-
 type ChangeConnectionShearPlanes {
-  connectionId: String! @state(class: ARTIFACT)
-  newValue: Int! @state(class: ARTIFACT)
+  connectionId: String!
+  newValue: Int!
 }
-
 type ChangeConnectionFUK {
-  connectionId: String! @state(class: ARTIFACT)
-  newValue: Float! @state(class: ARTIFACT)
+  connectionId: String!
+  newValue: Float!
 }
-
 type InsertConnectionAction {
-  connectionId: String! @state(class: ARTIFACT)
-  index: Int! @state(class: ARTIFACT)
-  action: JSON! @state(class: ARTIFACT)
+  connectionId: String!
+  index: Int!
+  action: ConnectionAction!
 }
-
 type RemoveConnectionAction {
-  connectionId: String! @state(class: ARTIFACT)
-  index: Int! @state(class: ARTIFACT)
+  connectionId: String!
+  index: Int!
 }
-
 type ChangeConnectionActionKind {
-  connectionId: String! @state(class: ARTIFACT)
-  actionId: String! @state(class: ARTIFACT)
-  newValue: String! @state(class: ARTIFACT)
+  connectionId: String!
+  actionId: String!
+  newValue: ActionKind!
 }
-
 type ChangeConnectionLoadDuration {
-  connectionId: String! @state(class: ARTIFACT)
-  actionId: String! @state(class: ARTIFACT)
-  newValue: String! @state(class: ARTIFACT)
+  connectionId: String!
+  actionId: String!
+  newValue: LoadDurationClass!
 }
-
 type ChangeConnectionActionFK {
-  connectionId: String! @state(class: ARTIFACT)
-  actionId: String! @state(class: ARTIFACT)
-  newValue: Float! @state(class: ARTIFACT)
+  connectionId: String!
+  actionId: String!
+  newValue: Float!
+}
+type ChangeUlsEquation {
+  newValue: UlsEquation!
+}
+type InsertCase {
+  index: Int!
+  case: CaseRow!
+}
+type RemoveCase {
+  id: String!
+}
+type ChangeCaseLabelEn {
+  caseId: String!
+  newValue: String!
+}
+type ChangeCaseLabelDe {
+  caseId: String!
+  newValue: String!
+}
+type ChangeCaseEntryId {
+  caseId: String!
+  newValue: String!
+}
+type ChangeCaseNumber {
+  caseId: String!
+  key: String!
+  value: Float
+}
+type ChangeCaseText {
+  caseId: String!
+  key: String!
+  value: String
+}
+type ChangePlacementX {
+  id: String!
+  newValue: Float!
+}
+type ChangePlacementY {
+  id: String!
+  newValue: Float!
+}
+type ChangePlacementZ {
+  id: String!
+  newValue: Float!
+}
+type ChangePlacementYaw {
+  id: String!
+  newValue: Float!
+}
+type InsertPlacement {
+  index: Int!
+  placement: Placement!
+}
+type RemovePlacement {
+  index: Int!
+}
+type InsertTaper {
+  index: Int!
+  taper: Taper!
+}
+type RemoveTaper {
+  index: Int!
+}
+type ChangeTaperMember {
+  taperId: String!
+  newValue: String!
+}
+type ChangeTaperKind {
+  taperId: String!
+  newValue: TaperKind!
+}
+type ChangeTaperTaperAngle {
+  taperId: String!
+  newValue: Float!
+}
+type ChangeTaperApexDepth {
+  taperId: String!
+  newValue: Float!
+}
+type ChangeTaperInnerRadius {
+  taperId: String!
+  newValue: Float!
+}
+type ChangeTaperLamella {
+  taperId: String!
+  newValue: Float!
+}
+type ChangeTaperApexAngle {
+  taperId: String!
+  newValue: Float!
+}
+type ChangeTaperSide {
+  taperId: String!
+  newValue: TensionSide!
+}
+type ChangeTaperRods {
+  taperId: String!
+  newValue: Int!
+}
+type ChangeTaperRodResistance {
+  taperId: String!
+  newValue: Float!
+}
+type InsertCutout {
+  index: Int!
+  cutout: Cutout!
+}
+type RemoveCutout {
+  index: Int!
+}
+type ChangeCutoutMember {
+  cutoutId: String!
+  newValue: String!
+}
+type ChangeCutoutKind {
+  cutoutId: String!
+  newValue: CutoutKind!
+}
+type ChangeCutoutFace {
+  cutoutId: String!
+  newValue: CutoutFace!
+}
+type ChangeCutoutDistance {
+  cutoutId: String!
+  newValue: Float!
+}
+type ChangeCutoutLength {
+  cutoutId: String!
+  newValue: Float!
+}
+type ChangeCutoutDepth {
+  cutoutId: String!
+  newValue: Float!
+}
+type ChangeCutoutCentreHeight {
+  cutoutId: String!
+  newValue: Float!
+}
+type ChangeCutoutSlope {
+  cutoutId: String!
+  newValue: Float!
+}
+type ChangeCutoutRods {
+  cutoutId: String!
+  newValue: Int!
+}
+type ChangeCutoutRodResistance {
+  cutoutId: String!
+  newValue: Float!
+}
+type InsertFastener {
+  index: Int!
+  fastener: Fastener!
+}
+type RemoveFastener {
+  index: Int!
+}
+type ChangeFastenerConnection {
+  fastenerId: String!
+  newValue: String!
+}
+type ChangeFastenerMember {
+  fastenerId: String!
+  newValue: String!
+}
+type ChangeFastenerColumns {
+  fastenerId: String!
+  newValue: Int!
+}
+type ChangeFastenerLines {
+  fastenerId: String!
+  newValue: Int!
+}
+type ChangeFastenerSpacingPar {
+  fastenerId: String!
+  newValue: Float!
+}
+type ChangeFastenerSpacingPerp {
+  fastenerId: String!
+  newValue: Float!
+}
+type ChangeFastenerEndDistance {
+  fastenerId: String!
+  newValue: Float!
+}
+type ChangeFastenerEdgeDistance {
+  fastenerId: String!
+  newValue: Float!
+}
+type ChangeFastenerOffsetX {
+  fastenerId: String!
+  newValue: Float!
+}
+type ChangeFastenerOffsetY {
+  fastenerId: String!
+  newValue: Float!
+}
+type ChangeFastenerLoadAngle {
+  fastenerId: String!
+  newValue: Float!
+}
+type InsertPanel {
+  index: Int!
+  panel: Panel!
+}
+type RemovePanel {
+  index: Int!
+}
+type ChangePanelStrengthClass {
+  panelId: String!
+  newValue: StrengthClass!
+}
+type ChangePanelSpan {
+  panelId: String!
+  newValue: Float!
+}
+type ChangePanelWidth {
+  panelId: String!
+  newValue: Float!
+}
+type ChangePanelLoad {
+  panelId: String!
+  newValue: Float!
+}
+type ChangePanelFireDuration {
+  panelId: String!
+  newValue: Float!
+}
+type InsertFloor {
+  index: Int!
+  floor: Floor!
+}
+type RemoveFloor {
+  index: Int!
+}
+type ChangeFloorMember {
+  floorId: String!
+  newValue: String!
+}
+type ChangeFloorSpan {
+  floorId: String!
+  newValue: Float!
+}
+type ChangeFloorWidth {
+  floorId: String!
+  newValue: Float!
+}
+type ChangeFloorJoistSpacing {
+  floorId: String!
+  newValue: Float!
+}
+type ChangeFloorEiL {
+  floorId: String!
+  newValue: Float!
+}
+type ChangeFloorEiB {
+  floorId: String!
+  newValue: Float!
+}
+type ChangeFloorMass {
+  floorId: String!
+  newValue: Float!
+}
+type ChangeFloorDamping {
+  floorId: String!
+  newValue: Float!
+}
+type ChangeFloorPermanentLoad {
+  floorId: String!
+  newValue: Float!
+}
+type ChangeFloorImposedLoad {
+  floorId: String!
+  newValue: Float!
+}
+type ChangeFloorPsi2 {
+  floorId: String!
+  newValue: Float!
+}
+type InsertPanelLayer {
+  panelId: String!
+  index: Int!
+  layer: PanelLayer!
+}
+type RemovePanelLayer {
+  panelId: String!
+  id: String!
+}
+type ChangePanelLayerThickness {
+  panelId: String!
+  layerId: String!
+  newValue: Float!
+}
+type ChangePanelLayerOrientation {
+  panelId: String!
+  layerId: String!
+  newValue: LayerOrientation!
+}
+type ChangePanelLayerGrade {
+  panelId: String!
+  layerId: String!
+  newValue: String!
+}
+type InsertFastenerPosition {
+  fastenerId: String!
+  index: Int!
+  position: FastenerPosition!
+}
+type RemoveFastenerPosition {
+  fastenerId: String!
+  id: String!
+}
+type ChangeFastenerPositionX {
+  fastenerId: String!
+  positionId: String!
+  newValue: Float!
+}
+type ChangeFastenerPositionY {
+  fastenerId: String!
+  positionId: String!
+  newValue: Float!
+}
+type InsertDiaphragm {
+  index: Int!
+  diaphragm: Diaphragm!
+}
+type RemoveDiaphragm {
+  index: Int!
+}
+type ChangeDiaphragmKind {
+  diaphragmId: String!
+  newValue: DiaphragmKind!
+}
+type ChangeDiaphragmMethod {
+  diaphragmId: String!
+  newValue: DiaphragmMethod!
+}
+type ChangeDiaphragmPanelWidth {
+  diaphragmId: String!
+  newValue: Float!
+}
+type ChangeDiaphragmWallHeight {
+  diaphragmId: String!
+  newValue: Float!
+}
+type ChangeDiaphragmFastenerSpacing {
+  diaphragmId: String!
+  newValue: Float!
+}
+type ChangeDiaphragmPanels {
+  diaphragmId: String!
+  newValue: Int!
+}
+type ChangeDiaphragmFastenerCapacity {
+  diaphragmId: String!
+  newValue: Float!
+}
+type ChangeDiaphragmShearEd {
+  diaphragmId: String!
+  newValue: Float!
+}
+type ChangeDiaphragmHoldDown {
+  diaphragmId: String!
+  newValue: Float!
+}
+type ChangeDiaphragmForce {
+  diaphragmId: String!
+  newValue: Float!
+}
+type ChangeDiaphragmLength {
+  diaphragmId: String!
+  newValue: Float!
+}
+type ChangeDiaphragmShearResistance {
+  diaphragmId: String!
+  newValue: Float!
+}
+type InsertTruss {
+  index: Int!
+  truss: Truss!
+}
+type RemoveTruss {
+  index: Int!
+}
+type ChangeTrussKind {
+  trussId: String!
+  newValue: TrussKind!
+}
+type ChangeTrussProduct {
+  trussId: String!
+  newValue: BracingProduct!
+}
+type ChangeTrussSpan {
+  trussId: String!
+  newValue: Float!
+}
+type ChangeTrussHeight {
+  trussId: String!
+  newValue: Float!
+}
+type ChangeTrussBays {
+  trussId: String!
+  newValue: Int!
+}
+type ChangeTrussChordWidth {
+  trussId: String!
+  newValue: Float!
+}
+type ChangeTrussChordDepth {
+  trussId: String!
+  newValue: Float!
+}
+type ChangeTrussWebWidth {
+  trussId: String!
+  newValue: Float!
+}
+type ChangeTrussWebDepth {
+  trussId: String!
+  newValue: Float!
+}
+type ChangeTrussChordForce {
+  trussId: String!
+  newValue: Float!
+}
+type ChangeTrussRestraintLength {
+  trussId: String!
+  newValue: Float!
+}
+type ChangeTrussBracingCapacity {
+  trussId: String!
+  newValue: Float!
+}
+type InsertBracing {
+  index: Int!
+  bracing: Bracing!
+}
+type RemoveBracing {
+  index: Int!
+}
+type ChangeBracingKind {
+  bracingId: String!
+  newValue: BracingKind!
+}
+type ChangeBracingMember {
+  bracingId: String!
+  newValue: String!
+}
+type ChangeBracingStabilisedCount {
+  bracingId: String!
+  newValue: Int!
+}
+type ChangeBracingSpacing {
+  bracingId: String!
+  newValue: Float!
+}
+type ChangeBracingLength {
+  bracingId: String!
+  newValue: Float!
+}
+type ChangeBracingBraceWidth {
+  bracingId: String!
+  newValue: Float!
+}
+type ChangeBracingBraceDepth {
+  bracingId: String!
+  newValue: Float!
+}
+type ChangeBracingCompression {
+  bracingId: String!
+  newValue: Float!
+}
+type ChangeBracingResistance {
+  bracingId: String!
+  newValue: Float!
+}
+type ChangeBracingStiffness {
+  bracingId: String!
+  newValue: Float!
+}
+type InsertDeck {
+  index: Int!
+  deck: Deck!
+}
+type RemoveDeck {
+  index: Int!
+}
+type ChangeDeckLaminationProduct {
+  deckId: String!
+  newValue: LaminationProduct!
+}
+type ChangeDeckBarProduct {
+  deckId: String!
+  newValue: PrestressBarProduct!
+}
+type ChangeDeckSpan {
+  deckId: String!
+  newValue: Float!
+}
+type ChangeDeckDeckWidth {
+  deckId: String!
+  newValue: Float!
+}
+type ChangeDeckDeckDepth {
+  deckId: String!
+  newValue: Float!
+}
+type ChangeDeckLaminationWidth {
+  deckId: String!
+  newValue: Float!
+}
+type ChangeDeckBarSpacing {
+  deckId: String!
+  newValue: Float!
+}
+type ChangeDeckBarDiameter {
+  deckId: String!
+  newValue: Float!
+}
+type ChangeDeckPlateSide {
+  deckId: String!
+  newValue: Float!
+}
+type ChangeDeckInitialPrestress {
+  deckId: String!
+  newValue: Float!
+}
+type ChangeDeckLossRelaxation {
+  deckId: String!
+  newValue: Float!
+}
+type ChangeDeckLossCreep {
+  deckId: String!
+  newValue: Float!
+}
+type ChangeDeckLossMoisture {
+  deckId: String!
+  newValue: Float!
+}
+type ChangeDeckBarResistance {
+  deckId: String!
+  newValue: Float!
+}
+type ChangeDeckShearStress {
+  deckId: String!
+  newValue: Float!
+}
+type ChangeDeckCompressionC90 {
+  deckId: String!
+  newValue: Float!
+}
+type ChangeDeckWheelLoad {
+  deckId: String!
+  newValue: Float!
+}
+type ChangeDeckWheelContact {
+  deckId: String!
+  newValue: Float!
 }

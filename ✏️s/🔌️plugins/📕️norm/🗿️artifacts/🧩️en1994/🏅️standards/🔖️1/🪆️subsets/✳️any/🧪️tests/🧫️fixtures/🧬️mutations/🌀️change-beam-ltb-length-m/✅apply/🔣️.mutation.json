@@ -1,0 +1,6 @@
+{
+  "ChangeBeamLtbLengthM": {
+    "id": "beam-B1",
+    "newLtbLengthM": 5.0
+  }
+}

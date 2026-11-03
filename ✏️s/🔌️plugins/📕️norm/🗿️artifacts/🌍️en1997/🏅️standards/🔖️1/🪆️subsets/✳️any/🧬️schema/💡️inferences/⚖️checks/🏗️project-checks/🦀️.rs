@@ -2,19 +2,41 @@
 
 use super::*;
 
+/// 📚️ The demo document with a design case for every catalogue entry that no typed entity realises: the compliant package plus [`catalogue_demo_cases`] without the entries whose spec-trace row is a `Check` row (their entities already carry the checks, so a case would duplicate them).
+pub fn catalogue_demo_document() -> En1997Snapshot {
+    let realised = |entry: &str| spec_trace::TABLE.items.iter().any(|item| item.id == entry && matches!(item.realisation, semio_s_plugin_norm_compliance::spec_trace::Realisation::Check(_)));
+    En1997Snapshot { cases: catalogue::catalogue_demo_cases().into_iter().filter(|case| !realised(&case.entry_id)).collect(), ..semio_s_artifact_norm_en1997_model::compliant_demo() }
+}
+
 pub fn check_project(doc: &En1997Snapshot) -> CheckReport {
-    let mut report = CheckReport::default();
-    push_all_duplicate_ids(&mut report, doc);
-    let approach = parse_design_approach(&doc.design_approach);
-    let annex = doc.annex;
-    let _p_project = resolve_params(approach, annex, &doc.design_situation);
-    let _upl_p = resolve_upl_params(annex, &doc.design_situation);
-    let part1 = "DIN EN 1997-1";
-    let part2 = "DIN EN 1997-2";
-    let part1054 = "DIN 1054";
-    let gwl = doc.groundwater_level;
-    let gk = doc.geotechnical_category;
-    let mut design_situations: Vec<String> = vec![doc.design_situation.clone()];
+    check_project_scoped(doc, Scope::All, &mut |_| true)
+}
+
+/// 🌐️ The governing-situation summary of the whole project, derived from the merged results of every other check (the post-fold aggregate of the units).
+pub fn governing_summary(doc: &En1997Snapshot, report: &CheckReport) -> Vec<CheckResult> {
+    let approach_lbl = doc.design_approach.as_str().to_string();
+    let (part1, annex) = ("DIN EN 1997-1", doc.annex);
+    let design_situations = project_design_situations(doc);
+    let mut out = CheckReport::default();
+    let governing_info = report
+        .checks
+        .iter()
+        .filter(|c| c.status != CheckStatus::NotApplicable && !c.id.starts_with("en1997.governing.situation"))
+        .max_by(|a, b| a.utilization.partial_cmp(&b.utilization).unwrap_or(std::cmp::Ordering::Equal))
+        .map(|c| (c.utilization, c.id.clone(), c.explanation.en.clone(), c.remedies.clone()));
+    if let Some((gov_u, gov_id, gov_expl, gov_remedies)) = governing_info {
+        let sit_guess = design_situations
+            .iter()
+            .find(|s| gov_expl.contains(situation_short(s)) || gov_expl.contains(s.as_str()))
+            .cloned()
+            .unwrap_or_else(|| doc.design_situation.as_str().to_string());
+        push_governing_situation_summary(&mut out, "en1997.governing.situation".into(), part1, annex, SubjectRef::whole(loc("Project", "Projekt")), &sit_guess, &approach_lbl, gov_u, &gov_id, &gov_remedies);
+    }
+    out.checks
+}
+
+fn project_design_situations(doc: &En1997Snapshot) -> Vec<String> {
+    let mut design_situations: Vec<String> = vec![doc.design_situation.as_str().to_string()];
     for footing in doc.footings.iter() {
         for lc in footing.load_cases.iter() {
             let sit = situation_for_load_case(doc, lc);
@@ -23,10 +45,28 @@ pub fn check_project(doc: &En1997Snapshot) -> CheckReport {
             }
         }
     }
-    if design_situations.is_empty() {
-        design_situations.push("bsP".into());
+    design_situations
+}
+
+/// 🎯️ The project check restricted to `scope` (`step(fraction)` is polled by the slip-circle search and returns `false` to cancel): the parts `integrity`, `footing-na`, `pile-na`, `wall-na`, `slope-na`, `upl-na` or one row of `layers`, `footings`, `piles`, `retainingWalls`, `slopes`, `upliftCases`; the ordered concatenation of the units in [`En1997Units`] plus [`governing_summary`] is [`check_project`].
+pub fn check_project_scoped(declared: &En1997Snapshot, scope: Scope<'_>, step: &mut dyn FnMut(f32) -> bool) -> CheckReport {
+    let resolved = ground_derivation::resolved_document(declared);
+    let doc: &En1997Snapshot = &resolved;
+    let mut report = CheckReport::default();
+    if scope.part("integrity") {
+        push_all_duplicate_ids(&mut report, doc);
+        ground_derivation::push_integrity(&mut report, doc);
     }
-    {
+    let approach = parse_design_approach(doc.design_approach.as_str());
+    let annex = doc.annex;
+    let part1 = "DIN EN 1997-1";
+    let part2 = "DIN EN 1997-2";
+    let part1054 = "DIN 1054";
+    let gwl = doc.groundwater_level;
+    let gk = doc.geotechnical_category;
+    let design_situations = project_design_situations(doc);
+    if scope.part("integrity") {
+        push_design_selection_check(doc, &mut report, part1054);
         let gk_ok = (1..=3).contains(&gk);
         let mut gk_check = CheckResult::assess(
             "en1997.gk.category",
@@ -41,19 +81,21 @@ pub fn check_project(doc: &En1997Snapshot) -> CheckReport {
             &format!("GK={gk} (1=einfach, 2=üblich, 3=schwierig)."),
         ));
         if !gk_ok {
-            gk_check = gk_check.utilization(Quantity::new(QuantityKind::Dimensionless, gk as f64), Quantity::new(QuantityKind::Dimensionless, 2.0))
-                .remedy(Remedy::one_of(
-                    subject_entity("", "geotechnicalCategory", "Geotechnical category", "Geotechnische Kategorie"),
-                    vec!["1".into(), "2".into(), "3".into()],
-                    loc("Set geotechnical category to 1, 2, or 3.", "Geotechnische Kategorie auf 1, 2 oder 3 setzen."),
-                ));
+            gk_check = gk_check.status(CheckStatus::Fail).remedy(Remedy::one_of(
+                subject_entity("", "geotechnicalCategory", "Geotechnical category", "Geotechnische Kategorie"),
+                vec!["1".into(), "2".into(), "3".into()],
+                loc("Set geotechnical category to 1, 2, or 3.", "Geotechnische Kategorie auf 1, 2 oder 3 setzen."),
+            ));
         } else {
-            gk_check = gk_check.utilization(Quantity::new(QuantityKind::Dimensionless, 1.0), Quantity::new(QuantityKind::Dimensionless, 1.0));
+            gk_check = gk_check.status(CheckStatus::Pass);
         }
-        report.push(gk_check.build());
+        report.push(gk_check.ndps(&factor_ndp_ids(annex)).build());
     }
-    check_soil_layers(doc, &mut report, annex, part1, part2);
-    if doc.footings.is_empty() {
+    if scope.part("investigation-extent") {
+        investigation_extent::push_investigation_extent(&mut report, doc);
+    }
+    check_soil_layers(declared, doc, &mut report, annex, part1, part2, scope);
+    if doc.footings.is_empty() && scope.part("footing-na") {
         report.push(
             CheckResult::assess("en1997.footing.na", part1, ClauseId::new("EN 1997-1", "6", "6.5"), SubjectRef::whole(loc("Project", "Projekt")), loc("Spread foundation checks", "Flachgründungsnachweise"))
                 .not_applicable(loc("No spread foundations in the subject.", "Keine Flachgründungen im Gegenstand."))
@@ -61,8 +103,9 @@ pub fn check_project(doc: &En1997Snapshot) -> CheckReport {
                 .build(),
         );
     }
-    check_footings(doc, &mut report, approach, annex, part1, part2, part1054, gwl, gk);
-    if doc.piles.is_empty() {
+    check_footings(doc, &mut report, approach, annex, part1, part2, part1054, gwl, gk, scope);
+    sls_pairs::check_sls_pairs(doc, &mut report, annex, gwl, scope);
+    if doc.piles.is_empty() && scope.part("pile-na") {
         report.push(
             CheckResult::assess("en1997.pile.na", part1, ClauseId::new("EN 1997-1", "7", "7.6"), SubjectRef::whole(loc("Project", "Projekt")), loc("Pile checks", "Pfahlnachweise"))
                 .not_applicable(loc("No piles in the subject.", "Keine Pfähle im Gegenstand."))
@@ -70,88 +113,31 @@ pub fn check_project(doc: &En1997Snapshot) -> CheckReport {
                 .build(),
         );
     }
-    check_piles_walls_slopes_and_uplift(doc, &mut report, approach, annex, gwl, part1, part1054, &design_situations);
-    let approach_lbl = doc.design_approach.clone();
-    let governing_info = report
-        .checks
-        .iter()
-        .filter(|c| c.status != CheckStatus::NotApplicable && !c.id.starts_with("en1997.governing.situation"))
-        .max_by(|a, b| a.utilization.partial_cmp(&b.utilization).unwrap_or(std::cmp::Ordering::Equal))
-        .map(|c| (c.utilization, c.id.clone(), c.explanation.en.clone()));
-    if let Some((gov_u, gov_id, gov_expl)) = governing_info {
-        let sit_guess = design_situations
-            .iter()
-            .find(|s| gov_expl.contains(situation_short(s)) || gov_expl.contains(s.as_str()))
-            .cloned()
-            .unwrap_or_else(|| doc.design_situation.clone());
-        push_governing_situation_summary(
-            &mut report,
-            "en1997.governing.situation".into(),
-            part1,
-            annex,
-            SubjectRef::whole(loc("Project", "Projekt")),
-            &sit_guess,
-            &approach_lbl,
-            gov_u,
-            &gov_id,
-        );
+    check_piles_walls_slopes_and_uplift(doc, &mut report, approach, annex, gwl, part1, part1054, &design_situations, scope, step);
+    geo_entities::check_embedded_walls(doc, &mut report, scope);
+    geo_entities::check_anchors(doc, &mut report, scope);
+    geo_entities::check_pile_groups(doc, &mut report, scope);
+    geo_entities::check_lab_tests(doc, &mut report, scope);
+    geo_entities::check_layer_waters(doc, &mut report, scope);
+    for (_, case) in doc.cases.iter().enumerate().filter(|(index, _)| scope.admits("cases", *index)) {
+        report.extend(crate::catalogue::evaluate_design_case(&semio_s_plugin_norm_compliance::design_case::DesignCase::from(case), annex));
+    }
+    if matches!(scope, Scope::All) {
+        let summary = governing_summary(doc, &report);
+        report.extend(summary);
     }
     report
 }
 
 /// 🧱️ Checks the strength parameters and the id uniqueness of every soil layer.
-fn check_soil_layers(doc: &En1997Snapshot, report: &mut CheckReport, annex: AnnexChoice, part1: &str, part2: &str) {
-    for layer in doc.layers.iter() {
-        let path_phi = format!("layers[id={}].phiPrimeDeg", layer.id);
-        let path_cu = format!("layers[id={}].cohesionUndrained", layer.id);
-        let path_c = format!("layers[id={}].cohesionEffective", layer.id);
-        let thick = (layer.depth_bottom - layer.depth_top).max(0.1);
+fn check_soil_layers(declared: &En1997Snapshot, doc: &En1997Snapshot, report: &mut CheckReport, annex: AnnexChoice, part1: &str, part2: &str, scope: Scope<'_>) {
+    for (_, layer) in doc.layers.iter().enumerate().filter(|(index, _)| scope.admits("layers", *index)) {
         let overburden = layer.gamma * ((layer.depth_top + layer.depth_bottom) * 0.5).max(0.5);
-        let cohesive = part_1::is_cohesive_layer(layer);
-        let (computed, limit, path, title) = if cohesive {
-            let cu_req = 0.15 * overburden;
-            (layer.cohesion_undrained.max(0.0), cu_req.max(1.0), path_cu.clone(), loc("Layer undrained strength", "Schicht undränierte Festigkeit"))
-        } else {
-            let idx = layer.phi_prime_deg + layer.cohesion_effective / 1000.0;
-            (idx, 20.0_f64, path_c.clone(), loc("Layer drained strength φ′/c′", "Schicht dränierte Festigkeit φ′/c′"))
-        };
-        let mut chk = CheckResult::assess(
-            format!("en1997.layer.strength.{}", layer.id),
-            part1,
-            ClauseId::new("EN 1997-1", "3", "3.3"),
-            subject_entity(&layer.id, &path, &format!("Layer {}", layer.id), &format!("Schicht {}", layer.id)),
-            title,
-        )
-        .minimum(Quantity::new(QuantityKind::Dimensionless, computed), Quantity::new(QuantityKind::Dimensionless, limit))
-        .annex(annex)
-        .explanation(loc(
-            &format!("Layer {} ({}) thickness={:.1} m, φ′={:.1}°, c_u={:.0} kPa, γ={:.0}.", layer.id, layer.soil_type, thick, layer.phi_prime_deg, layer.cohesion_undrained/1000.0, layer.gamma),
-            &format!("Schicht {} ({}) d={:.1} m, φ′={:.1}°, c_u={:.0} kPa, γ={:.0}.", layer.id, layer.soil_type, thick, layer.phi_prime_deg, layer.cohesion_undrained/1000.0, layer.gamma),
-        ));
-        if computed < limit {
-            if cohesive {
-                chk = chk.remedy(Remedy::at_least(
-                    subject_entity(&layer.id, &path_cu, &format!("Layer {}", layer.id), &format!("Schicht {}", layer.id)),
-                    Quantity::new(QuantityKind::Pressure, layer.cohesion_undrained),
-                    Quantity::new(QuantityKind::Pressure, limit),
-                    loc("Increase undrained cohesion for this cohesive layer.", "Undränierte Kohäsion dieser bindigen Schicht erhöhen."),
-                ));
-            } else {
-                let c_need = ((limit - layer.phi_prime_deg).max(0.0) * 1000.0).max(layer.cohesion_effective);
-                chk = chk.remedy(Remedy::at_least(
-                    subject_entity(&layer.id, &path_c, &format!("Layer {}", layer.id), &format!("Schicht {}", layer.id)),
-                    Quantity::new(QuantityKind::Pressure, layer.cohesion_effective),
-                    Quantity::new(QuantityKind::Pressure, c_need),
-                    loc("Increase effective cohesion for this drained layer.", "Effektive Kohäsion dieser dränierten Schicht erhöhen."),
-                )).remedy(Remedy::at_least(
-                    subject_entity(&layer.id, &path_phi, &format!("Layer {}", layer.id), &format!("Schicht {}", layer.id)),
-                    Quantity::new(QuantityKind::Dimensionless, layer.phi_prime_deg),
-                    Quantity::new(QuantityKind::Dimensionless, limit),
-                    loc("Increase φ′ for this drained layer.", "φ′ dieser dränierten Schicht erhöhen."),
-                ));
-            }
+        report.push(layer_model_check(doc, layer, annex, part1));
+        for check in ground_derivation::layer_checks(declared, layer) {
+            report.push(check);
         }
-        report.push(chk.build());
+        report.extend(investigation_extent::cone_factor_check(layer, annex));
         if layer.cpt_qc > 0.0 || layer.spt_n > 0.0 {
             let overburden = layer.gamma * ((layer.depth_top + layer.depth_bottom) * 0.5).max(0.5);
             let path_phi = format!("layers[id={}].phiPrimeDeg", layer.id);
@@ -190,7 +176,7 @@ fn check_soil_layers(doc: &En1997Snapshot, report: &mut CheckReport, annex: Anne
                 report.push(cpt_chk.build());
             }
             if layer.spt_n > 0.0 {
-                let phi_spt = part_2::phi_from_spt_deg(layer.spt_n);
+                let phi_spt = part_2::phi_from_spt_deg(layer.spt_n, overburden.max(50_000.0));
                 let mut spt_chk = CheckResult::assess(
                     format!("en1997.2.phi.spt.{}", layer.id),
                     part2,
@@ -265,10 +251,11 @@ fn check_footings(
     part1054: &str,
     gwl: f64,
     gk: u8,
+    scope: Scope<'_>,
 ) {
-    for footing in doc.footings.iter() {
+    for (_, footing) in doc.footings.iter().enumerate().filter(|(index, _)| scope.admits("footings", *index)) {
         let layer = layer_at(&doc.layers, footing.embedment).cloned().unwrap_or_else(|| SoilLayer {
-            id: "default".into(), soil_type: "sand".into(), depth_top: 0.0, depth_bottom: 10.0,
+            id: "default".into(), soil_type: semio_s_artifact_norm_en1997_model::SoilType::Sand, depth_top: 0.0, depth_bottom: 10.0,
             gamma: 18_000.0, gamma_prime: 10_000.0, phi_prime_deg: 30.0, cohesion_effective: 0.0, cohesion_undrained: 0.0,
             oedometric_modulus: 30e6, poisson_ratio: 0.3, cpt_qc: 0.0, spt_n: 0.0,
         });
@@ -287,7 +274,7 @@ fn check_footings(
         let gamma_below = part_1::effective_gamma_below_pa_m(layer.gamma, layer.gamma_prime, footing.embedment, gwl, footing.width);
         let phi_use = phi_char;
         let mut foot_gov_u = -1.0f64;
-        let mut foot_gov_sit = doc.design_situation.clone();
+        let mut foot_gov_sit = doc.design_situation.as_str().to_string();
         let mut foot_gov_check = String::new();
         check_footing_load_cases(doc, report, approach, annex, part1, part1054, gwl, gk, footing, &layer, &path_w, &label, gamma_below, phi_use, &mut foot_gov_u, &mut foot_gov_sit, &mut foot_gov_check);
         check_footing_uplift_and_bounds(doc, report, annex, part1, gwl, footing, &layer, &label);
@@ -330,7 +317,7 @@ fn check_footing_load_cases(
         let short_term = matches!(sit_kind, DesignSituation::Transient | DesignSituation::Accidental);
         let use_undrained = cohesive && short_term && layer.cohesion_undrained > 0.0;
         let r_v = if gk == 1 {
-            let q_all = part_1::presumptive_bearing_pa(&layer.soil_type, footing.embedment);
+            let q_all = part_1::presumptive_bearing_pa(layer.soil_type.as_str(), footing.embedment);
             q_all * a / p.gamma_r_v
         } else if use_undrained {
             part_1::undrained_bearing_resistance_n(
@@ -342,6 +329,7 @@ fn check_footing_load_cases(
                 e_b, 0.0, h_d, v_d, footing.base_inclination_deg, &p,
             )
         };
+        let r_v = r_v.max(1.0);
         let b_req = find_required_width(footing, layer, phi_use, lc, approach, annex, &sit, gwl, footing.width);
         let mut bearing = CheckResult::assess(
             format!("en1997.6.5.bearing.{}.{}", footing.id, lc.id),
@@ -370,6 +358,14 @@ fn check_footing_load_cases(
             *foot_gov_sit = sit.clone();
             *foot_gov_check = format!("en1997.6.5.bearing.{}.{}", footing.id, lc.id);
         }
+        if gk != 1 {
+            bearing = bearing.field("soil-pressure", station_fields::contact_pressure(footing.width, footing.length, e_b, v_d, u_bearing));
+        }
+        if gk == 1 {
+            for key in [part_1::presumptive_soil_key(layer.soil_type.as_str()), "embedment-gain", "embedment-cap"] {
+                bearing = bearing.ndp(&format!("ndp.en1997.gk1.presumptive.{key}"));
+            }
+        }
         report.push(bearing.build());
 
         let gamma_passive = part_1::effective_gamma_below_pa_m(layer.gamma, layer.gamma_prime, 0.0, gwl, footing.embedment.max(0.1));
@@ -377,10 +373,11 @@ fn check_footing_load_cases(
             part_1::undrained_sliding_resistance_n(layer.cohesion_undrained, a, &p)
         } else {
             part_1::sliding_resistance_with_params(
-                phi_use, layer.cohesion_effective, v_d, a, &p,
+                phi_use, layer.cohesion_effective, lc.vertical_permanent, a, &p,
                 footing.embedment, footing.length, gamma_passive, footing.embedment > 0.0,
             )
         };
+        let r_h = r_h.max(1.0);
         let path_hv = format!("footings[id={}].loadCases[id={}].horizontalVariable", footing.id, lc.id);
         let mut sliding = CheckResult::assess(
             format!("en1997.6.5.3.sliding.{}.{}", footing.id, lc.id),
@@ -415,11 +412,16 @@ fn check_footing_load_cases(
             *foot_gov_check = format!("en1997.6.5.3.sliding.{}.{}", footing.id, lc.id);
         }
         report.push(sliding.build());
+        entity_catalogue_cases::footing_sliding_catalogue(doc, footing, lc, &sit, phi_use, use_undrained.then_some(layer.cohesion_undrained), report);
+        if gk != 1 && !use_undrained && layer.phi_prime_deg > 0.5 {
+            entity_catalogue_cases::footing_din4017_catalogue(doc, footing, lc, &sit, layer, gamma_below, report);
+        }
         if layer.cohesion_undrained > 0.0 || cohesive {
             let path_cu = format!("layers[id={}].cohesionUndrained", layer.id);
             let r_vu = part_1::undrained_bearing_resistance_n(
                 layer.cohesion_undrained.max(1.0), gamma_below, footing.width, footing.length, footing.embedment, e_b, h_d, v_d, &p,
             );
+            let r_vu = r_vu.max(1.0);
             let mut ub = CheckResult::assess(
                 format!("en1997.6.5.bearing.undrained.{}.{}", footing.id, lc.id),
                 part1,
@@ -448,6 +450,7 @@ fn check_footing_load_cases(
             }
             report.push(ub.build());
             let r_hu = part_1::undrained_sliding_resistance_n(layer.cohesion_undrained.max(1.0), a, &p);
+            let r_hu = r_hu.max(1.0);
             let mut us = CheckResult::assess(
                 format!("en1997.6.5.3.sliding.undrained.{}.{}", footing.id, lc.id),
                 part1,
@@ -609,40 +612,150 @@ fn check_footing_governing_situation(
     foot_gov_sit: &str,
     foot_gov_check: &str,
 ) {
-    let z_min = part_2::min_investigation_depth_for_gk(footing.width.max(footing.length), gk);
+    let reached = ground_derivation::reached_depth(doc);
+    let deepest = doc.investigations.iter().max_by(|a, b| a.depth.partial_cmp(&b.depth).unwrap_or(std::cmp::Ordering::Equal));
+    let (subject_id, subject_path) = deepest.map_or((String::new(), "investigationDepth".to_string()), |i| (i.id.clone(), format!("investigations[id={}].depth", i.id)));
+    let z_min = investigation_extent::footing_required_depth_m(footing, gk);
+    let z_a = part_2::min_investigation_depth_for_gk(footing.width.max(footing.length), gk);
     let mut inv = CheckResult::assess(
         format!("en1997.2.4.2.investigation.{}", footing.id),
         part2,
         ClauseId::new("EN 1997-2", "2", "2.4.2"),
-        subject_entity("", "investigationDepth", "Ground investigation", "Baugrunderkundung"),
+        subject_entity(&subject_id, &subject_path, "Ground investigation", "Baugrunderkundung"),
         loc("Minimum investigation depth", "Mindestaufschlusstiefe"),
     )
-    .minimum(Quantity::length_m(doc.investigation_depth), Quantity::length_m(z_min))
+    .minimum(Quantity::length_m(reached), Quantity::length_m(z_min))
     .annex(annex)
     .explanation(loc(
-        &format!("z={:.2} m; GK{gk} requires ≥ {:.2} m.", doc.investigation_depth, z_min),
-        &format!("z={:.2} m; GK{gk} fordert ≥ {:.2} m.", doc.investigation_depth, z_min),
+        &format!("z={:.2} m ({}); GK{gk} requires embedment {:.2} m + z_a = max(6 m, 2 B) = {:.2} m, so ≥ {:.2} m.", reached, if deepest.is_some() { "deepest investigation point" } else { "declared depth" }, footing.embedment, z_a, z_min),
+        &format!("z={:.2} m ({}); GK{gk} fordert Einbindetiefe {:.2} m + z_a = max(6 m, 2 B) = {:.2} m, also ≥ {:.2} m.", reached, if deepest.is_some() { "tiefster Erkundungspunkt" } else { "angegebene Tiefe" }, footing.embedment, z_a, z_min),
     ));
-    if doc.investigation_depth < z_min {
+    if reached < z_min {
         inv = inv.remedy(Remedy::at_least(
-            subject_entity("", "investigationDepth", "Ground investigation", "Baugrunderkundung"),
-            Quantity::length_m(doc.investigation_depth),
+            subject_entity(&subject_id, &subject_path, "Ground investigation", "Baugrunderkundung"),
+            Quantity::length_m(reached),
             Quantity::length_m(z_min),
-            loc(&format!("Deepen investigation from {:.2} m to at least {:.2} m.", doc.investigation_depth, z_min), &format!("Aufschlusstiefe von {:.2} m auf mindestens {:.2} m erhöhen.", doc.investigation_depth, z_min)),
+            loc(&format!("Deepen investigation from {:.2} m to at least {:.2} m.", reached, z_min), &format!("Aufschlusstiefe von {:.2} m auf mindestens {:.2} m erhöhen.", reached, z_min)),
         ));
     }
     report.push(inv.build());
     if foot_gov_u >= 0.0 {
+        let governing_remedies = report.checks.iter().find(|c| c.id == foot_gov_check).map(|c| c.remedies.clone()).unwrap_or_default();
         push_governing_situation_summary(
-            &mut report,
+            report,
             format!("en1997.governing.situation.footing.{}", footing.id),
             part1,
             annex,
             subject_entity(&footing.id, path_w, &label.en, &label.de),
             foot_gov_sit,
-            &doc.design_approach,
+            doc.design_approach.as_str(),
             foot_gov_u,
             foot_gov_check,
+            &governing_remedies,
         );
     }
+}
+
+/// 🧭️ Rejects design-approach and design-situation spellings the factor tables do not know instead of silently falling back.
+fn push_design_selection_check(doc: &En1997Snapshot, report: &mut CheckReport, part: &str) {
+    let approach_key = doc.design_approach.as_str().to_ascii_lowercase().replace(['-', '_', ' ', '*'], "");
+    let situation_key = doc.design_situation.as_str().to_ascii_lowercase().replace(['-', '_'], "");
+    let approach_ok = matches!(approach_key.as_str(), "da1str" | "da1c1" | "da1geo" | "da1c2" | "da2" | "da2star" | "da2s" | "da3" | "geo3");
+    let situation_ok = matches!(situation_key.as_str(), "bsp" | "bst" | "bsa" | "persistent" | "transient" | "accidental");
+    let subject = subject_entity("", "designApproach", "Design approach", "Nachweisverfahren");
+    let mut check = CheckResult::assess(
+        "en1997.design.selection",
+        part,
+        ClauseId::new("EN 1997-1", "2", "2.4.7"),
+        subject.clone(),
+        loc("Design approach and situation", "Nachweisverfahren und Bemessungssituation"),
+    )
+    .annex(doc.annex)
+    .explanation(loc(
+        &format!("Approach '{}' and situation '{}' resolve to {} and {}.", doc.design_approach, doc.design_situation, parse_design_approach(doc.design_approach.as_str()).label(doc.annex), situation_short(doc.design_situation.as_str())),
+        &format!("Nachweisverfahren '{}' und Situation '{}' werden zu {} und {} aufgelöst.", doc.design_approach, doc.design_situation, parse_design_approach(doc.design_approach.as_str()).label(doc.annex), situation_short(doc.design_situation.as_str())),
+    ));
+    if approach_ok && situation_ok {
+        check = check.status(CheckStatus::Pass);
+    } else {
+        check = check.status(CheckStatus::Fail);
+        if !approach_ok {
+            check = check.remedy(Remedy::one_of(subject, vec!["da1str".into(), "da1geo".into(), "da2".into(), "da2star".into(), "da3".into(), "geo3".into()], loc("Select a known design approach.", "Ein bekanntes Nachweisverfahren wählen.")));
+        }
+        if !situation_ok {
+            check = check.remedy(Remedy::one_of(subject_entity("", "designSituation", "Design situation", "Bemessungssituation"), vec!["bsP".into(), "bsT".into(), "bsA".into()], loc("Select BS-P, BS-T or BS-A.", "BS-P, BS-T oder BS-A wählen.")));
+        }
+    }
+    report.push(check.build());
+}
+
+/// 🧱️ Ground-model consistency of one layer (EN 1997-1 §2.4.3, DIN 4020): positive thickness, no gap or overlap with the next layer, γ′ < γ, φ′ ∈ [0°, 50°], c′, c_u ≥ 0, E_oed > 0.
+fn layer_model_check(doc: &En1997Snapshot, layer: &SoilLayer, annex: AnnexChoice, part: &str) -> CheckResult {
+    let label = loc(&format!("Layer {}", layer.id), &format!("Schicht {}", layer.id));
+    let target = |field: &str| subject_entity(&layer.id, &id_path("layers", &layer.id, field), &label.en, &label.de);
+    let mut check = CheckResult::assess(
+        format!("en1997.layer.model.{}", layer.id),
+        part,
+        ClauseId::new("EN 1997-1", "2", "2.4.3"),
+        target("depthTop"),
+        loc("Ground model consistency", "Baugrundmodell Konsistenz"),
+    )
+    .annex(annex);
+    let mut problems_en: Vec<String> = Vec::new();
+    let mut problems_de: Vec<String> = Vec::new();
+    let mut failed = false;
+    let mut note = |en: &str, de: &str| {
+        problems_en.push(en.into());
+        problems_de.push(de.into());
+    };
+    if layer.depth_bottom <= layer.depth_top {
+        failed = true;
+        note("thickness not positive", "Schichtdicke nicht positiv");
+        check = check.remedy(Remedy::at_least(target("depthBottom"), Quantity::length_m(layer.depth_bottom), Quantity::length_m(layer.depth_top + 0.1), loc("Make the layer at least 0.1 m thick.", "Schicht mindestens 0,1 m dick machen.")));
+    }
+    let mut sorted: Vec<&SoilLayer> = doc.layers.iter().collect();
+    sorted.sort_by(|a, b| a.depth_top.partial_cmp(&b.depth_top).unwrap_or(std::cmp::Ordering::Equal));
+    if let Some(pos) = sorted.iter().position(|l| std::ptr::eq(*l, layer)) {
+        if let Some(next) = sorted.get(pos + 1) {
+            if (next.depth_top - layer.depth_bottom).abs() > 1e-6 {
+                failed = true;
+                note("gap or overlap with the next layer", "Lücke oder Überlappung zur nächsten Schicht");
+                check = check.remedy(Remedy::exactly(
+                    subject_entity(&next.id, &id_path("layers", &next.id, "depthTop"), &format!("Layer {}", next.id), &format!("Schicht {}", next.id)),
+                    Quantity::length_m(next.depth_top),
+                    Quantity::length_m(layer.depth_bottom),
+                    loc("Start the next layer where this layer ends.", "Nächste Schicht dort beginnen lassen, wo diese endet."),
+                ));
+            }
+        }
+    }
+    if layer.gamma_prime >= layer.gamma {
+        failed = true;
+        note("γ′ not below γ", "γ′ nicht kleiner als γ");
+        check = check.remedy(Remedy::at_most(target("gammaPrime"), Quantity::new(QuantityKind::Dimensionless, layer.gamma_prime), Quantity::new(QuantityKind::Dimensionless, (layer.gamma - 9_810.0).max(1_000.0)), loc("Set γ′ = γ − γw.", "γ′ = γ − γw setzen.")));
+    }
+    if !(0.0..=50.0).contains(&layer.phi_prime_deg) {
+        failed = true;
+        note("φ′ outside 0°…50°", "φ′ außerhalb 0°…50°");
+        check = check.remedy(Remedy::one_of(target("phiPrimeDeg"), vec!["0".into(), "30".into(), "50".into()], loc("Set φ′ within 0°…50°.", "φ′ im Bereich 0°…50° wählen.")));
+    }
+    if layer.cohesion_effective < 0.0 || layer.cohesion_undrained < 0.0 {
+        failed = true;
+        note("negative cohesion", "negative Kohäsion");
+        check = check.remedy(Remedy::at_least(target("cohesionEffective"), Quantity::new(QuantityKind::Pressure, layer.cohesion_effective), Quantity::new(QuantityKind::Pressure, 0.0), loc("Cohesion must not be negative.", "Kohäsion darf nicht negativ sein.")));
+    }
+    if layer.oedometric_modulus <= 0.0 {
+        failed = true;
+        note("E_oed not positive", "E_oed nicht positiv");
+        check = check.remedy(Remedy::at_least(target("oedometricModulus"), Quantity::new(QuantityKind::Stress, layer.oedometric_modulus), Quantity::new(QuantityKind::Stress, 1.0e6), loc("Set a positive oedometric modulus.", "Positiven Steifemodul setzen.")));
+    }
+    let verdict_en = if failed { problems_en.join("; ") } else { "layer consistent".into() };
+    let verdict_de = if failed { problems_de.join("; ") } else { "Schicht konsistent".into() };
+    check
+        .status(if failed { CheckStatus::Fail } else { CheckStatus::Pass })
+        .explanation(loc(
+            &format!("Layer {} ({}) {:.1}…{:.1} m, φ′={:.1}°, c_u={:.0} kPa: {verdict_en}.", layer.id, layer.soil_type, layer.depth_top, layer.depth_bottom, layer.phi_prime_deg, layer.cohesion_undrained / 1000.0),
+            &format!("Schicht {} ({}) {:.1}…{:.1} m, φ′={:.1}°, c_u={:.0} kPa: {verdict_de}.", layer.id, layer.soil_type, layer.depth_top, layer.depth_bottom, layer.phi_prime_deg, layer.cohesion_undrained / 1000.0),
+        ))
+        .build()
 }

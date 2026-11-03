@@ -8,6 +8,7 @@ import { commitUiPreferencesConfigMutation, readUiPreferences } from "../🎚️
 import { setLocale } from "@semio-tech/framework/config/mutations";
 import type { ShellLocale } from "@semio-tech/framework";
 import { ShellLocalePicker } from "./🌐️locale-picker/🟦️.tsx";
+import { useShellPlatformPrefs } from "./🎛️platform-prefs/🟦️.ts";
 import { PluginSurfaceActionsContext } from "../🗣️Interpreter/🧷️interpreter-context/🟦️.ts";
 import { RowActionRefusalsContext, UiPresenceOverlayContext } from "../🗣️Interpreter/👥️presence-overlay/🟦️.ts";
 import { SpaceAdministrationPane } from "../🛂️SpaceAdministration/🟦️.tsx";
@@ -163,6 +164,9 @@ function FrameworkOsShellMounted(props: FrameworkOsShellProps & { readonly initi
     bumpAfterRootAttach((n) => n + 1);
   }, [scope]);
   useEffect(() => () => disposeShellI18nInstance(scope.i18n), [scope]);
+  const [rootAttached, setRootAttached] = useState<Element | null>(null);
+  useLayoutEffect(() => setRootAttached(scope.rootRef.current));
+  useShellPlatformPrefs(scope.rootRef, rootAttached);
   return (
     <div ref={setRoot} className="semio-scope" data-shell-id={scope.shellId} style={{ position: "relative", height: "100%", width: "100%", isolation: "isolate" }}>
       <ShellScopeProvider scope={scope}>

@@ -1,0 +1,23 @@
+{
+  "artifact": "en1993",
+  "leaf": {
+    "kindSlug": "forming-gain",
+    "default": 0.0,
+    "field": {
+      "name": "used_yield",
+      "type": "f64",
+      "unit": "Pa",
+      "label": {
+        "en": "Yield strength used f_y,used",
+        "de": "Angesetzte Streckgrenze f_y,used"
+      },
+      "doc": "🥫 Yield strength the design uses for the member: the basic f_yb, or an enhanced value that must not exceed the average yield strength f_ya of the cold forming (EN 1993-1-3 3.2.2); 0 = the basic yield strength of the member is used.",
+      "precision": 1,
+      "step": 1000000.0,
+      "range": [
+        0,
+        1000000000.0
+      ]
+    }
+  }
+}

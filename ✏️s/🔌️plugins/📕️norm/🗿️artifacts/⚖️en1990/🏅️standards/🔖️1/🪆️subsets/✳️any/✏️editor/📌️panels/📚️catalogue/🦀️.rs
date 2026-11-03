@@ -1,6 +1,7 @@
 //! 📚️ EN 1990 play app panel — examples plus DE NA / EN ψ tables and importance factors.
 
-use semio_s_plugin_norm_app_surface::{CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable};
+use semio_s_plugin_norm_app_surface::{spec_trace_table, CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable};
+use semio_s_artifact_norm_en1990_checks::spec_trace::TABLE as SPEC_TRACE;
 use semio_s_artifact_norm_en1990_checks::{psi_for_category, NaDe, NaEn};
 use semio_s_plugin_norm_compliance::{ClauseId, NationalAnnex};
 use semio_s_artifact_norm_en1990_model::ImportanceClass;
@@ -19,7 +20,7 @@ pub fn definition() -> PanelTabDefinition {
 
 /// 📚️ Normative reference tables beside examples (EN 1990 A1.1 / DIN EN 1990/NA ψ + EN 1998-1 γ_I).
 pub fn reference_tables() -> Vec<CatalogueTable> {
-    vec![psi_table_en(), psi_table_de(), importance_gamma_i()]
+    vec![psi_table_en(), psi_table_de(), importance_gamma_i(), spec_trace_table(&SPEC_TRACE)]
 }
 
 fn psi_columns() -> Vec<CatalogueColumn> {
@@ -36,7 +37,7 @@ fn psi_row(key: &str, label_en: &str, label_de: &str, annex: &impl NationalAnnex
     CatalogueRow {
         id: key.into(),
         cells: vec![
-            CatalogueCell::text(format!("{label_en} / {label_de}")),
+            CatalogueCell::localized(label_en, label_de),
             CatalogueCell::number(row.psi_0, 2),
             CatalogueCell::number(row.psi_1, 2),
             CatalogueCell::number(row.psi_2, 2),
@@ -116,7 +117,8 @@ pub fn render(
     controller_id: &'static str,
     windows: &TreeWindows<'_>,
 ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let tables = reference_tables();
+    let mut tables = reference_tables();
+    tables.push(semio_s_plugin_norm_app_surface::case_catalogue_table("en1990", &<semio_s_artifact_norm_en1990_checks::catalogue::En1990Cases as semio_s_plugin_norm_compliance::design_case::CaseCatalogue>::entries(), "", locale));
     semio_s_plugin_norm_app_surface::render_catalogue(&examples, &tables, locale, controller_id, windows)
 }
 

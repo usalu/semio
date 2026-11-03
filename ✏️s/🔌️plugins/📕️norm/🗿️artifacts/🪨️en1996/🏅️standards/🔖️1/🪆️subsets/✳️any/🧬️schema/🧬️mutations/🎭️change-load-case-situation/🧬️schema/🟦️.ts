@@ -1,12 +1,13 @@
 /** 🎭️ `change-load-case-situation` wire twin: the leaf payload `ChangeLoadCaseSituation`, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
- * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
+ * by `repo ./📜️script.ts schema twins generate`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
-import { normWireInteger, normWireObject, normWireRange, type NormWireReader, normWireRequired, normWireString } from "@semio-tech/norm-js/registry/contract";
+import { normWireObject, normWireRequired, normWireString, type NormWireReader } from "@semio-tech/norm-js/registry/contract";
+import { type En1996LoadCaseSituation, parseEn1996LoadCaseSituation } from "../../../📸️snapshot/🟦️.ts";
 
 export interface ChangeLoadCaseSituation {
-  wallIndex: number;
-  loadCaseIndex: number;
-  newDesignSituation: string;
+  wallId: string;
+  id: string;
+  newDesignSituation: En1996LoadCaseSituation;
 }
 
-export const parseChangeLoadCaseSituation: NormWireReader<ChangeLoadCaseSituation> = normWireObject<ChangeLoadCaseSituation>({ wallIndex: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), loadCaseIndex: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), newDesignSituation: normWireRequired(normWireString) });
+export const parseChangeLoadCaseSituation: NormWireReader<ChangeLoadCaseSituation> = normWireObject<ChangeLoadCaseSituation>({ wallId: normWireRequired(normWireString), id: normWireRequired(normWireString), newDesignSituation: normWireRequired(parseEn1996LoadCaseSituation) });

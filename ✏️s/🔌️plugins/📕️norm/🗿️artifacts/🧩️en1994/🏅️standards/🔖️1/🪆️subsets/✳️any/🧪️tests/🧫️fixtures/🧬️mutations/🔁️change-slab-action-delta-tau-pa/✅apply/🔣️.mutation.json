@@ -1,0 +1,7 @@
+{
+  "ChangeSlabActionDeltaTauPa": {
+    "slabId": "slab-S1",
+    "id": "G-slab",
+    "newDeltaTauKPa": 2500000.0
+  }
+}

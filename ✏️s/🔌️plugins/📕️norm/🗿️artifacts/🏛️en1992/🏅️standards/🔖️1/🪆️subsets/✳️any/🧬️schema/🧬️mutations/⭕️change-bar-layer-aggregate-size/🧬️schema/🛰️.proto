@@ -1,0 +1,7 @@
+syntax = "proto3";
+package semio.s.norm.en1992.mutation.change_bar_layer_aggregate_size;
+message ChangeBarLayerAggregateSize {
+  string member_id = 1;
+  string layer_id = 2;
+  double new_aggregate_size = 3;
+}

@@ -1,0 +1,13 @@
+{
+  "InsertTie": {
+    "wallId": "wall-north",
+    "index": 1,
+    "tie": {
+      "id": "tie-2",
+      "kind": "Anchor",
+      "positionM": 1.0,
+      "levelM": 2.5,
+      "capacityN": 12000.0
+    }
+  }
+}

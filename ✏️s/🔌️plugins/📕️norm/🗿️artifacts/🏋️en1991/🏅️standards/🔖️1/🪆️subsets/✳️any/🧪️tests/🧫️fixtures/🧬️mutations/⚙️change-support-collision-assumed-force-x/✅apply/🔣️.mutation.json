@@ -1,0 +1,6 @@
+{
+  "ChangeSupportCollisionAssumedForceX": {
+    "id": "support-collision-1",
+    "newAssumedForceX": 1000001.0
+  }
+}

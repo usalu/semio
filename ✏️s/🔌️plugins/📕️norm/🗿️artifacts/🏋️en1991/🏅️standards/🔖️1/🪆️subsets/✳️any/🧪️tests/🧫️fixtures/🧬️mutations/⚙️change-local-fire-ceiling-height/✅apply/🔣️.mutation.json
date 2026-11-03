@@ -1,0 +1,6 @@
+{
+  "ChangeLocalFireCeilingHeight": {
+    "id": "local-fire-1",
+    "newCeilingHeight": 4.0
+  }
+}

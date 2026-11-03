@@ -1,0 +1,41 @@
+{
+  "note": "Average degree of consolidation U(Tv) of a layer drained on one side, finite-volume Crank-Nicolson (400 cells, 400 steps, Rannacher start); blessed by 🧰️scripts/en1997-w3/bless_consolidation.py",
+  "rows": [
+    {
+      "timeFactor": 0.01,
+      "degree": 0.11283335443174025
+    },
+    {
+      "timeFactor": 0.05,
+      "degree": 0.2523109359870572
+    },
+    {
+      "timeFactor": 0.1,
+      "degree": 0.35682151646463456
+    },
+    {
+      "timeFactor": 0.197,
+      "degree": 0.5003363076229608
+    },
+    {
+      "timeFactor": 0.3,
+      "degree": 0.6132339390376829
+    },
+    {
+      "timeFactor": 0.5,
+      "degree": 0.7639476382927005
+    },
+    {
+      "timeFactor": 0.848,
+      "degree": 0.8999762670657523
+    },
+    {
+      "timeFactor": 1.2,
+      "degree": 0.9580322237345802
+    },
+    {
+      "timeFactor": 2.0,
+      "degree": 0.9941699120393944
+    }
+  ]
+}

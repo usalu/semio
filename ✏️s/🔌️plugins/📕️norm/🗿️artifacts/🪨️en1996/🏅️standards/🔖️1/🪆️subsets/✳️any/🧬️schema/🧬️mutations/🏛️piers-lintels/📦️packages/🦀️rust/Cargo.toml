@@ -1,0 +1,35 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-s-artifact-norm-en1996-mut-piers-lintels"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "EN 1996 piers and lintels mutation leaves"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+serde = { workspace = true, optional = true }
+semio-s-artifact-norm-en1996-mut-lintels = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-schema = { workspace = true }
+semio-framework-ui-locale = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-norm-en1996-diff = { workspace = true }
+semio-s-artifact-norm-en1996-model = { workspace = true }
+
+[features]
+test-support = ["dep:serde", "semio-s-artifact-norm-en1996-diff/test-support", "semio-s-artifact-norm-en1996-model/test-support", "semio-s-artifact-norm-en1996-mut-lintels/test-support"]
+
+[dev-dependencies]
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+serde = { workspace = true }

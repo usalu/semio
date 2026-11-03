@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-site-soft-clay-thickness-m/schema.json",
+  "title": "ChangeSiteSoftClayThicknessM",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "newSoftClayThicknessM"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeSiteSoftClayThicknessM"
+    },
+    "newSoftClayThicknessM": {
+      "type": "number",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Thickness of a soft clay or silt layer with high plasticity index (S1 indicator, 0 = none)",
+          "de": "Mächtigkeit einer weichen Ton- oder Schluffschicht mit hoher Plastizitätszahl (S1-Kennzeichen, 0 = keine)"
+        },
+        "group": "value",
+        "order": 10,
+        "widget": "stepper",
+        "step": 0.001,
+        "precision": 3
+      }
+    }
+  }
+}

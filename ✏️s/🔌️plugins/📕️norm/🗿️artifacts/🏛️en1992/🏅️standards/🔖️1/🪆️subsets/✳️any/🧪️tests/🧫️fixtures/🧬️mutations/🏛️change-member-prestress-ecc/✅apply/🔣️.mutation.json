@@ -1,0 +1,6 @@
+{
+  "ChangeMemberPrestressEcc": {
+    "memberId": "wall-W1",
+    "newPrestressEccentricity": 0.2
+  }
+}

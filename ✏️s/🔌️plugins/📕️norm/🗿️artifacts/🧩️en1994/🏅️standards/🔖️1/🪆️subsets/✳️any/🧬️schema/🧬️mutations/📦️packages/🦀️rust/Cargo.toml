@@ -20,9 +20,16 @@ name = "mutation_vectors"
 path = "../../🧪️tests/🔬️vectors/🦀️.rs"
 
 [features]
+test-support = ["dep:serde", "semio-s-artifact-norm-en1994-diff/test-support", "semio-s-artifact-norm-en1994-model/test-support", "semio-s-artifact-norm-en1994-mut-design-cases/test-support", "semio-s-artifact-norm-en1994-mut-beam-action-position/test-support", "semio-s-artifact-norm-en1994-mut-beam-action-rows/test-support", "semio-s-artifact-norm-en1994-mut-beam-actions/test-support", "semio-s-artifact-norm-en1994-mut-beam-design/test-support", "semio-s-artifact-norm-en1994-mut-beam-fields/test-support", "semio-s-artifact-norm-en1994-mut-beam-sheeting/test-support", "semio-s-artifact-norm-en1994-mut-beam-steel/test-support", "semio-s-artifact-norm-en1994-mut-beams/test-support", "semio-s-artifact-norm-en1994-mut-column-action-rows/test-support", "semio-s-artifact-norm-en1994-mut-column-design/test-support", "semio-s-artifact-norm-en1994-mut-column-material/test-support", "semio-s-artifact-norm-en1994-mut-column-section/test-support", "semio-s-artifact-norm-en1994-mut-columns-slabs/test-support", "semio-s-artifact-norm-en1994-mut-placements/test-support", "semio-s-artifact-norm-en1994-mut-project/test-support", "semio-s-artifact-norm-en1994-mut-slab-action-position/test-support", "semio-s-artifact-norm-en1994-mut-slab-action-rows/test-support", "semio-s-artifact-norm-en1994-mut-slab-actions/test-support", "semio-s-artifact-norm-en1994-mut-slab-fields/test-support", "semio-s-artifact-norm-en1994-mut-slab-sheeting/test-support", "semio-s-artifact-norm-en1994-mut-stud-rows/test-support", "semio-s-artifact-norm-en1994-mut-studs/test-support", "semio-s-plugin-norm-compliance/test-support"]
 testkit = ["dep:semio-s-plugin-norm-compliance"]
 
 [dependencies]
+semio-s-artifact-norm-en1994-mutations-protocol = { workspace = true }
+semio-s-artifact-norm-en1994-mutations-proto = { workspace = true }
+semio-s-artifact-norm-en1994-mutations-json-schema = { workspace = true }
+semio-s-artifact-norm-en1994-mutations-graphql = { workspace = true }
+semio-s-artifact-norm-en1994-mutations-typescript = { workspace = true }
+serde = { workspace = true, optional = true }
 semio-framework-os-command = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/📦️packages/🦀️rust" }
 semio-framework-os-store-one-item = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
@@ -36,11 +43,31 @@ semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-norm-en1994-diff = { workspace = true }
 semio-s-artifact-norm-en1994-model = { workspace = true }
+semio-s-artifact-norm-en1994-mut-beam-fields = { workspace = true }
+semio-s-artifact-norm-en1994-mut-design-cases = { workspace = true }
+semio-s-artifact-norm-en1994-mut-beam-steel = { workspace = true }
+semio-s-artifact-norm-en1994-mut-beam-sheeting = { workspace = true }
+semio-s-artifact-norm-en1994-mut-beam-actions = { workspace = true }
+semio-s-artifact-norm-en1994-mut-column-section = { workspace = true }
+semio-s-artifact-norm-en1994-mut-column-material = { workspace = true }
+semio-s-artifact-norm-en1994-mut-slab-fields = { workspace = true }
+semio-s-artifact-norm-en1994-mut-slab-sheeting = { workspace = true }
+semio-s-artifact-norm-en1994-mut-slab-actions = { workspace = true }
+semio-s-artifact-norm-en1994-mut-beam-design = { workspace = true }
+semio-s-artifact-norm-en1994-mut-column-design = { workspace = true }
 semio-s-artifact-norm-en1994-mut-beams = { workspace = true }
 semio-s-artifact-norm-en1994-mut-columns-slabs = { workspace = true }
 semio-s-artifact-norm-en1994-mut-project = { workspace = true }
 semio-s-artifact-norm-en1994-mut-studs = { workspace = true }
+semio-s-artifact-norm-en1994-mut-stud-rows = { workspace = true }
+semio-s-artifact-norm-en1994-mut-beam-action-position = { workspace = true }
+semio-s-artifact-norm-en1994-mut-slab-action-position = { workspace = true }
+semio-s-artifact-norm-en1994-mut-beam-action-rows = { workspace = true }
+semio-s-artifact-norm-en1994-mut-column-action-rows = { workspace = true }
+semio-s-artifact-norm-en1994-mut-slab-action-rows = { workspace = true }
+semio-s-artifact-norm-en1994-mut-placements = { workspace = true }
 semio-s-plugin-norm-app-surface = { workspace = true }
+semio-framework-diagnostic = { workspace = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }

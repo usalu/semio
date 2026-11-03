@@ -1,0 +1,6 @@
+{
+  "ChangeTaperMember": {
+    "taperId": "taper-1",
+    "newValue": "changed-beam-B1"
+  }
+}

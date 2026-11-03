@@ -1,0 +1,246 @@
+{
+  "$schema": "../../../🔮️oracles/🏃️harness/🧬️schema/🔣️.json",
+  "schemaVersion": 1,
+  "artifact": "en1993",
+  "annex": "De",
+  "cases": [
+    {
+      "id": "en1993.mechanics.section-rectangle",
+      "check": "mechanics.analyse-section",
+      "citation": {
+        "standard": "EN 1993-1-1",
+        "edition": "2005",
+        "clause": "6.2.2 (gross section properties)"
+      },
+      "inputs": {
+        "outer": [
+          [
+            0,
+            0
+          ],
+          [
+            0.07,
+            0
+          ],
+          [
+            0.07,
+            0.14
+          ],
+          [
+            0,
+            0.14
+          ]
+        ],
+        "nu": 0.3,
+        "cells": 2500
+      },
+      "expected": {
+        "area": {
+          "value": 0.009800000000000008,
+          "unit": "m^2",
+          "profile": "numerical-v1"
+        },
+        "iy": {
+          "value": 1.600666666666686e-05,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "iz": {
+          "value": 4.001666666666679e-06,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "j": {
+          "value": 1.0981300861052075e-05,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "a_vy": {
+          "value": 0.007687531045163596,
+          "unit": "m^2",
+          "profile": "method-spread-v1"
+        },
+        "a_vz": {
+          "value": 0.008162829008006014,
+          "unit": "m^2",
+          "profile": "method-spread-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sectionproperties",
+          "adapter": "sectionproperties",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1993.mechanics.section-rhs-sharp",
+      "check": "mechanics.analyse-section",
+      "citation": {
+        "standard": "EN 1993-1-1",
+        "edition": "2005",
+        "clause": "6.2.2 (gross section properties)"
+      },
+      "inputs": {
+        "outer": [
+          [
+            0,
+            0
+          ],
+          [
+            0.1,
+            0
+          ],
+          [
+            0.1,
+            0.06
+          ],
+          [
+            0,
+            0.06
+          ]
+        ],
+        "holes": [
+          [
+            [
+              0.004,
+              0.004
+            ],
+            [
+              0.096,
+              0.004
+            ],
+            [
+              0.096,
+              0.056
+            ],
+            [
+              0.004,
+              0.056
+            ]
+          ]
+        ],
+        "cells": 4000
+      },
+      "expected": {
+        "area": {
+          "value": 0.0012160000000000005,
+          "unit": "m^2",
+          "profile": "numerical-v1"
+        },
+        "iy": {
+          "value": 7.220053333333295e-07,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "iz": {
+          "value": 1.625685333333319e-06,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "j": {
+          "value": 1.560321781770068e-06,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "a_vy": {
+          "value": 0.0007064402780154904,
+          "unit": "m^2",
+          "profile": "method-spread-v1"
+        },
+        "a_vz": {
+          "value": 0.0003311041871610042,
+          "unit": "m^2",
+          "profile": "method-spread-v1"
+        },
+        "w_pl_y": {
+          "value": 2.7807999999999992e-05,
+          "unit": "m^3",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sectionproperties",
+          "adapter": "sectionproperties",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1993.mechanics.thin-channel",
+      "check": "mechanics.analyse-thin-walled",
+      "citation": {
+        "standard": "EN 1993-1-1",
+        "edition": "2005",
+        "clause": "6.2.2 (gross section properties)"
+      },
+      "inputs": {
+        "walls": [
+          {
+            "y1": 0.075,
+            "z1": 0.0055,
+            "y2": 0.0,
+            "z2": 0.0055,
+            "thickness": 0.011
+          },
+          {
+            "y1": 0.0,
+            "z1": 0.0055,
+            "y2": 0.0,
+            "z2": 0.1945,
+            "thickness": 0.0085
+          },
+          {
+            "y1": 0.0,
+            "z1": 0.1945,
+            "y2": 0.075,
+            "z2": 0.1945,
+            "thickness": 0.011
+          }
+        ],
+        "cells": 6000
+      },
+      "expected": {
+        "area": {
+          "value": 0.0032565,
+          "unit": "m^2",
+          "profile": "method-spread-v1",
+          "tolerance": 0.005
+        },
+        "iy": {
+          "value": 1.95170025e-05,
+          "unit": "m^4",
+          "profile": "method-spread-v1",
+          "tolerance": 0.005
+        },
+        "iz": {
+          "value": 1.91806714e-06,
+          "unit": "m^4",
+          "profile": "method-spread-v1",
+          "tolerance": 0.005
+        },
+        "j": {
+          "value": 1.05253001e-07,
+          "unit": "m^4",
+          "profile": "method-spread-v1",
+          "tolerance": 0.005
+        },
+        "shear_centre_y": {
+          "value": -0.0283111981,
+          "unit": "m",
+          "profile": "method-spread-v1",
+          "tolerance": 0.005
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sectionproperties",
+          "adapter": "sectionproperties",
+          "kind": "third-party-library"
+        }
+      ]
+    }
+  ]
+}

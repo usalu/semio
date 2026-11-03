@@ -1,0 +1,6 @@
+{
+  "mutation": "changeElementWeldProcess",
+  "sectionId": "sec-i120",
+  "elementId": "flange-top",
+  "newWeldProcess": "mig"
+}

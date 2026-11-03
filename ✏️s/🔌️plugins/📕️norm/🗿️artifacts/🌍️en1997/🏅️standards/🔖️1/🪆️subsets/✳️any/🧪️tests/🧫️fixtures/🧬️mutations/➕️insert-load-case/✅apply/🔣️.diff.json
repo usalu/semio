@@ -1,0 +1,59 @@
+{
+  "structureId": null,
+  "geotechnicalCategory": null,
+  "designSituation": null,
+  "designApproach": null,
+  "annex": null,
+  "groundwaterLevel": null,
+  "investigationDepth": null,
+  "layers": null,
+  "footings": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "footing-F1",
+        "patch": {
+          "loadCases": {
+            "removed": [],
+            "inserted": [
+              {
+                "index": 0,
+                "row": {
+                  "id": "lc-bsP-new",
+                  "designSituation": "persistent",
+                  "verticalPermanent": 400000.0,
+                  "verticalVariable": 150000.0,
+                  "horizontalPermanent": 20000.0,
+                  "horizontalVariable": 40000.0,
+                  "momentPermanent": 30000.0,
+                  "momentVariable": 50000.0
+                }
+              }
+            ],
+            "moved": [],
+            "modified": []
+          }
+        }
+      }
+    ]
+  },
+  "piles": null,
+  "retainingWalls": null,
+  "slopes": null,
+  "upliftCases": null,
+  "anchors": null,
+  "embeddedWalls": null,
+  "pileGroups": null,
+  "labTests": null,
+  "layerWaters": null,
+  "cases": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "investigations": null,
+  "characteristicBases": null
+}

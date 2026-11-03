@@ -1,15 +1,13 @@
 #!/usr/bin/env repo
-import { receiveScriptProcessInvocation } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
+/** 📦️ norm artifact Rust package router. */
+import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️cargo/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptProgram } from "../../🧪️tests/🔬️rust-package-commands/🟦️.ts";
-
-
-const packageRoot = import.meta.dir;/** 🚪️ `regenerate-example-assets` — runs the program of this script. */
+/** 🚪️ `regenerate-example-assets` — runs the program of this package. */
 class RegenerateExampleAssetsScript extends BundleScript {
   async run(): Promise<void> {
-    await runScriptProgram(packageRoot);
+    await runScriptProgram(import.meta.dir);
   }
 }
 const router = new ScriptRouter(import.meta.dir).register("regenerate-example-assets", RegenerateExampleAssetsScript);
-if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, argv: ["regenerate-example-assets"] }));
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-norm-en1996", {packages:["semio-s-artifact-norm-en1996-checks","semio-s-artifact-norm-en1996-diff","semio-s-artifact-norm-en1996-diff-proto","semio-s-artifact-norm-en1996-diff-json-schema","semio-s-artifact-norm-en1996-diff-graphql","semio-s-artifact-norm-en1996-diff-typescript","semio-s-artifact-norm-en1996-editor","semio-s-artifact-norm-en1996-examples","semio-s-artifact-norm-en1996-inferences","semio-s-artifact-norm-en1996-io","semio-s-artifact-norm-en1996-io-text","semio-s-artifact-norm-en1996-masonry","semio-s-artifact-norm-en1996-masonry-catalogue","semio-s-artifact-norm-en1996-masonry-formulas","semio-s-artifact-norm-en1996-masonry-tables","semio-s-artifact-norm-en1996-model","semio-s-artifact-norm-en1996-model-proto","semio-s-artifact-norm-en1996-model-json-schema","semio-s-artifact-norm-en1996-model-graphql","semio-s-artifact-norm-en1996-model-typescript","semio-s-artifact-norm-en1996-mut-bars","semio-s-artifact-norm-en1996-mut-concentrated","semio-s-artifact-norm-en1996-mut-confined","semio-s-artifact-norm-en1996-mut-eccentricity","semio-s-artifact-norm-en1996-mut-flanges","semio-s-artifact-norm-en1996-mut-loads","semio-s-artifact-norm-en1996-mut-loads-cases","semio-s-artifact-norm-en1996-mut-mortar","semio-s-artifact-norm-en1996-mut-openings","semio-s-artifact-norm-en1996-mut-piers-lintels","semio-s-artifact-norm-en1996-mut-lintels","semio-s-artifact-norm-en1996-mut-plan","semio-s-artifact-norm-en1996-mut-bracing","semio-s-artifact-norm-en1996-mut-chases","semio-s-artifact-norm-en1996-mut-chases-geometry","semio-s-artifact-norm-en1996-mut-movement-joints","semio-s-artifact-norm-en1996-mut-placements","semio-s-artifact-norm-en1996-mut-positions","semio-s-artifact-norm-en1996-mut-prestress","semio-s-artifact-norm-en1996-mut-prestress-more","semio-s-artifact-norm-en1996-mut-project","semio-s-artifact-norm-en1996-mut-reinforcement","semio-s-artifact-norm-en1996-mut-site","semio-s-artifact-norm-en1996-mut-ties","semio-s-artifact-norm-en1996-mut-units","semio-s-artifact-norm-en1996-mut-units-more","semio-s-artifact-norm-en1996-mut-walls","semio-s-artifact-norm-en1996-mut-walls-geometry","semio-s-artifact-norm-en1996-mut-design-cases","semio-s-artifact-norm-en1996-mutations","semio-s-artifact-norm-en1996-mutations-proto","semio-s-artifact-norm-en1996-mutations-json-schema","semio-s-artifact-norm-en1996-mutations-graphql","semio-s-artifact-norm-en1996-mutations-typescript","semio-s-artifact-norm-en1996-scene","semio-s-artifact-norm-en1996-schema","semio-s-artifact-norm-en1996-viewer","semio-s-artifact-norm-en1996"],commands: router,snapshotSqliteTests:["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"]});

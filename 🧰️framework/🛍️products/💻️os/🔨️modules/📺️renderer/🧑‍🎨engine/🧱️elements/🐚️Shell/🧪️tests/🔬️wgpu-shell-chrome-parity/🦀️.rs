@@ -24,3 +24,7 @@ include!("🗣️chrome-i18n-and-switch-order/🦀️.rs");
 include!("🪟️window-scope-laws/🦀️.rs");
 
 include!("🛟️safe-area-and-incoming-layout/🦀️.rs");
+
+include!("🎯️focus-window-of-kind/🦀️.rs");
+
+include!("🎯️focus-row-control/🦀️.rs");

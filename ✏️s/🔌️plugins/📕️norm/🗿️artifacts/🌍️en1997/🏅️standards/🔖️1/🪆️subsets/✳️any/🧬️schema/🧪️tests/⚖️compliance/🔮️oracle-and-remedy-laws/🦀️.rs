@@ -5,10 +5,14 @@ use semio_framework_test_fixtures::fixture_path;
 
 #[test]
 fn python_oracle_matches_check_project_within_half_percent() {
-    for (label, snap) in [("compliant", compliant_demo()), ("noncompliant", noncompliant_demo())] {
+    let mut overridden = compliant_demo();
+    overridden.slopes[0].circle_centre_x = 4.0;
+    overridden.slopes[0].circle_centre_z = 9.0;
+    overridden.slopes[0].circle_radius = 10.0;
+    for (label, snap) in [("compliant", compliant_demo()), ("noncompliant", noncompliant_demo()), ("slip-circle-override", overridden), ("showcase", semio_s_artifact_norm_en1997_model::showcase_demo())] {
         let rust = check_project(&snap);
         let input = serde_json::to_string(&snap).expect("json");
-        let mut child = Command::new("python3")
+        let mut child = semio_s_plugin_norm_compliance::python_oracle::command()
             .arg(oracle_script())
             .arg("--json")
             .stdin(std::process::Stdio::piped())
@@ -59,7 +63,7 @@ fn example_snapshot_validates_against_json_schema() {
         let instance = serde_json::to_string(&instance_val).expect("instance");
         let tmp = std::env::temp_dir().join(format!("en1997-instance-{}.json", snap.structure_id));
         std::fs::write(&tmp, &instance).unwrap();
-        let status = Command::new("python3")
+        let status = semio_s_plugin_norm_compliance::python_oracle::command()
             .arg("-c")
             .arg("import json,sys,jsonschema; s=json.load(open(sys.argv[1])); i=json.load(open(sys.argv[2])); jsonschema.validate(instance=i, schema=s); print('ok')")
             .arg(&schema_path)
@@ -244,9 +248,16 @@ fn base_inclination_changes_bearing_utilization() {
 #[test]
 fn rankine_vs_at_rest_changes_wall_earth_pressure() {
     let mut doc = compliant_demo();
-    doc.retaining_walls[0].earth_pressure_mode = "active".into();
+    doc.retaining_walls[0].earth_pressure_mode = semio_s_artifact_norm_en1997_model::EarthPressureMode::Active;
     let u_a = check_project(&doc).checks.iter().find(|c| c.id.contains("earthPressure") || c.id.contains("9.sliding")).map(|c| c.utilization).unwrap();
-    doc.retaining_walls[0].earth_pressure_mode = "atRest".into();
+    doc.retaining_walls[0].earth_pressure_mode = semio_s_artifact_norm_en1997_model::EarthPressureMode::AtRest;
     let u_r = check_project(&doc).checks.iter().find(|c| c.id.contains("9.sliding")).map(|c| c.utilization).unwrap();
     assert!((u_a - u_r).abs() > 0.01, "Rankine vs K0 must change wall sliding u; active={u_a} atRest={u_r}");
+}
+
+/// 🔮️ EN 1997 third-party oracle cases: the shared harness recomputes every blessed case in `🧪️tests/🧫️fixtures/🔮️oracle-cases` with the registered libraries and fails on any mismatch beyond the tolerance profile or between libraries.
+#[test]
+fn third_party_libraries_reproduce_the_blessed_oracle_cases() {
+    let verified = semio_s_plugin_norm_compliance::python_oracle::verify_cases_above(env!("CARGO_MANIFEST_DIR"));
+    assert!(verified >= 18, "expected at least 18 verified oracle cases, got {verified}");
 }

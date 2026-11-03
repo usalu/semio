@@ -3,24 +3,21 @@
 use super::*;
 
 /// ⚖️ Combine characteristic anchor actions (N_k, V_k and allied extras) per EN 1990 into design N_Ed, V_Ed.
-pub fn combine_anchor_actions(anchor: &Anchor) -> Vec<DesignEffects> {
+pub fn combine_anchor_actions(anchor: &Anchor, factors: &semio_s_plugin_norm_compliance::ActionFactors) -> Vec<DesignEffects> {
     let mut g = (0.0_f64, 0.0_f64);
     let mut variables: Vec<(&LoadCaseActions, (f64, f64))> = Vec::new();
     let mut accidentals = Vec::new();
     for a in &anchor.actions {
         let mut n = a.n_k;
         let mut v = a.v_k;
-        match a.source.as_str() {
-            "udl" => {
+        match a.source {
+            semio_s_artifact_norm_en1992_model::ActionSource::Udl => {
                 n += a.g_k_line.abs() + a.q_k_line.abs();
             }
-            "point" => {
+            semio_s_artifact_norm_en1992_model::ActionSource::Point => {
                 n += a.point_force.abs();
             }
-            "external" => {}
-            _ => {
-                n += a.point_force.abs() + a.g_k_line.abs() + a.q_k_line.abs();
-            }
+            semio_s_artifact_norm_en1992_model::ActionSource::External => {}
         }
         if anchor.h_ef > 0.0 {
             n += a.m_k.abs() / anchor.h_ef;
@@ -30,14 +27,13 @@ pub fn combine_anchor_actions(anchor: &Anchor) -> Vec<DesignEffects> {
         }
         v += a.v_k_punch.abs();
         let eff = (n, v);
-        match a.kind.as_str() {
-            "permanent" | "prestress" => { g.0 += eff.0; g.1 += eff.1; }
-            "accidental" => accidentals.push((a, eff)),
-            _ => variables.push((a, eff)),
+        match a.kind {
+            semio_s_artifact_norm_en1992_model::ActionKind::Permanent | semio_s_artifact_norm_en1992_model::ActionKind::Prestress => { g.0 += eff.0; g.1 += eff.1; }
+            semio_s_artifact_norm_en1992_model::ActionKind::Accidental => accidentals.push((a, eff)),
+            semio_s_artifact_norm_en1992_model::ActionKind::Imposed | semio_s_artifact_norm_en1992_model::ActionKind::Snow | semio_s_artifact_norm_en1992_model::ActionKind::Wind => variables.push((a, eff)),
         }
     }
-    let gamma_g = 1.35;
-    let gamma_q = 1.5;
+    let (gamma_g, gamma_q) = (factors.gamma_g_sup(), factors.gamma_q_building());
     let mut out = Vec::new();
     if variables.is_empty() {
         out.push(DesignEffects {
@@ -50,7 +46,7 @@ pub fn combine_anchor_actions(anchor: &Anchor) -> Vec<DesignEffects> {
             let mut v = gamma_g * g.1 + gamma_q * lead_e.1;
             for (j, (oa, oe)) in variables.iter().enumerate() {
                 if j == lead_i { continue; }
-                let (psi0, _, _) = psi_factors(&oa.category);
+                let (psi0, _, _) = psi_factors(factors, oa.category);
                 n += gamma_q * psi0 * oe.0;
                 v += gamma_q * psi0 * oe.1;
             }
@@ -58,12 +54,12 @@ pub fn combine_anchor_actions(anchor: &Anchor) -> Vec<DesignEffects> {
                 m_ed: 0.0, n_ed: n, v_ed: v, t_ed: 0.0, v_ed_punch: 0.0,
                 combination_id: format!("ULS-6.10b-{}", lead_a.id), situation: "uls".into(),
             });
-            let (_, _, psi2) = psi_factors(&lead_a.category);
+            let (_, _, psi2) = psi_factors(factors, lead_a.category);
             let mut n_qp = g.0 + psi2 * lead_e.0;
             let mut v_qp = g.1 + psi2 * lead_e.1;
             for (j, (oa, oe)) in variables.iter().enumerate() {
                 if j == lead_i { continue; }
-                let (_, _, p2) = psi_factors(&oa.category);
+                let (_, _, p2) = psi_factors(factors, oa.category);
                 n_qp += p2 * oe.0;
                 v_qp += p2 * oe.1;
             }
@@ -77,7 +73,7 @@ pub fn combine_anchor_actions(anchor: &Anchor) -> Vec<DesignEffects> {
         let mut n = 1.0 * g.0 + acc_e.0;
         let mut v = 1.0 * g.1 + acc_e.1;
         for (oa, oe) in &variables {
-            let (_, psi1, _) = psi_factors(&oa.category);
+            let (_, psi1, _) = psi_factors(factors, oa.category);
             n += psi1 * oe.0;
             v += psi1 * oe.1;
         }
@@ -89,15 +85,25 @@ pub fn combine_anchor_actions(anchor: &Anchor) -> Vec<DesignEffects> {
     out
 }
 
-/// ⚓️ Evaluate anchors with EN 1990-combined characteristic actions + EN 1992-4 resistances.
+#[path = "🩹️minimal-remedies/🦀️.rs"]
+mod minimal_remedies;
+
+/// ⚓️ Evaluate anchors with EN 1990-combined characteristic actions + EN 1992-4 resistances; every failing check carries the minimal one-click remedies of [`minimal_remedies`].
 pub fn evaluate_anchor(doc: &En1992Snapshot, anchor: &Anchor) -> Vec<CheckResult> {
+    let mut results = evaluate_anchor_unsolved(doc, anchor);
+    minimal_remedies::attach_minimal_remedies(doc, anchor, &mut results);
+    results
+}
+
+/// ⚓️ The anchor checks without the solved remedies; the remedy search re-evaluates through this.
+pub(super) fn evaluate_anchor_unsolved(doc: &En1992Snapshot, anchor: &Anchor) -> Vec<CheckResult> {
     let annex = doc.annex;
     let label = l(
         &format!("{} — Anchor {}", doc.title, anchor.id),
         &format!("{} — Dübel {}", doc.title, anchor.id),
     );
     let mut out = Vec::new();
-    let effects = combine_anchor_actions(anchor);
+    let effects = combine_anchor_actions(anchor, &doc.action_factors());
     let uls = governing(&effects, "uls").cloned().or_else(|| effects.first().cloned());
     let Some(uls) = uls else {
         out.push(CheckResult::assess(format!("en1992-4.na.{}", anchor.id), part_4(), ClauseId::new("EN 1992-4", "§7", "7"), SubjectRef::new(&anchor.id, format!("anchors[id={}]", anchor.id), label), l("Anchor actions", "Dübeleinwirkungen"))
@@ -109,182 +115,98 @@ pub fn evaluate_anchor(doc: &En1992Snapshot, anchor: &Anchor) -> Vec<CheckResult
     let v_ed = uls.v_ed.max(0.0);
 
     let n_rd_s = part_4::steel_resistance_n(anchor.a_s, anchor.f_uk, anchor.f_yk);
-    let mut s = CheckResult::assess(format!("en1992-4.steel.{}", anchor.id), part_4(), ClauseId::new("EN 1992-4", "§7.2.1.4", "7.2.1.4"), SubjectRef::new(&anchor.id, format!("anchors[id={}].aS", anchor.id), label.clone()), l("Anchor steel tension", "Dübel Stahlzugtragfähigkeit"))
+    let s = CheckResult::assess(format!("en1992-4.steel.{}", anchor.id), part_4(), ClauseId::new("EN 1992-4", "§7.2.1.4", "7.2.1.4"), SubjectRef::new(&anchor.id, format!("anchors[id={}].aS", anchor.id), label.clone()), l("Anchor steel tension", "Dübel Stahlzugtragfähigkeit")).remedies_attached_by("attach_minimal_remedies")
         .utilization(force_n(n_ed), force_n(n_rd_s.max(1.0)))
         .annex(annex)
         .explanation(l(
             &format!("Anchor steel: N_Ed={:.1} kN ≤ N_Rd,s={:.1} kN ({})", n_ed / 1e3, n_rd_s / 1e3, uls.combination_id),
             &format!("Dübel Stahlzug: N_Ed={:.1} kN ≤ N_Rd,s={:.1} kN ({})", n_ed / 1e3, n_rd_s / 1e3, uls.combination_id),
         ));
-    if n_ed > n_rd_s {
-        let a_req = anchor.a_s * n_ed / n_rd_s;
-        s = s.remedy(Remedy::at_least(
-            SubjectRef::new(&anchor.id, format!("anchors[id={}].aS", anchor.id), label.clone()),
-            area_m2(anchor.a_s), area_m2(a_req),
-            l(&format!("Increase anchor steel area to ≥ {:.1} mm².", a_req * 1e6), &format!("Dübelstahlquerschnitt auf ≥ {:.1} mm² erhöhen.", a_req * 1e6)),
-        ));
-    }
-    out.push(s.build());
+    out.push(ndps(s, &[]).build());
 
     if let Some(sls) = governing(&effects, "sls_qp") {
         let n_sls = sls.n_ed.max(0.0);
-        let n_rd_sls = anchor.a_s * anchor.f_yk / 1.15;
-        let mut ss = CheckResult::assess(format!("en1992-4.steel.sls.{}", anchor.id), part_4(), ClauseId::new("EN 1992-4", "§7.2.1.4", "7.2.1.4"), SubjectRef::new(&anchor.id, format!("anchors[id={}].actions", anchor.id), label.clone()), l("Anchor steel SLS (ψ₂)", "Dübel Stahlzug GZG (ψ₂)"))
+        let n_rd_sls = anchor.a_s * anchor.f_yk / ndp(annex, "ndp.en1992.gamma-s");
+        let ss = CheckResult::assess(format!("en1992-4.steel.sls.{}", anchor.id), part_4(), ClauseId::new("EN 1992-4", "§7.2.1.4", "7.2.1.4"), SubjectRef::new(&anchor.id, format!("anchors[id={}].actions", anchor.id), label.clone()), l("Anchor steel SLS (ψ₂)", "Dübel Stahlzug GZG (ψ₂)")).remedies_attached_by("attach_minimal_remedies")
             .utilization(force_n(n_sls), force_n(n_rd_sls.max(1.0)))
             .annex(annex)
             .explanation(l(
                 &format!("Anchor SLS: N_Ed,qp={:.1} kN ≤ N_Rd,s={:.1} kN ({})", n_sls / 1e3, n_rd_sls / 1e3, sls.combination_id),
                 &format!("Dübel GZG: N_Ed,qp={:.1} kN ≤ N_Rd,s={:.1} kN ({})", n_sls / 1e3, n_rd_sls / 1e3, sls.combination_id),
             ));
-        if n_sls > n_rd_sls {
-            ss = ss.remedy(Remedy::at_least(
-                SubjectRef::new(&anchor.id, format!("anchors[id={}].aS", anchor.id), label.clone()),
-                area_m2(anchor.a_s), area_m2(anchor.a_s * n_sls / n_rd_sls),
-                l("Increase anchor steel area for SLS.", "Dübelstahlquerschnitt für GZG erhöhen."),
-            ));
-        }
-        out.push(ss.build());
+        out.push(ndps(ss, &[]).build());
     }
 
-    let n_rd_c = part_4::cone_resistance_n(anchor.f_ck, anchor.h_ef, anchor.cracked);
-    let mut c = CheckResult::assess(format!("en1992-4.cone.{}", anchor.id), part_4(), ClauseId::new("EN 1992-4", "§7.2.1.5", "7.2.1.5"), SubjectRef::new(&anchor.id, format!("anchors[id={}].hEf", anchor.id), label.clone()), l("Concrete cone", "Betonausbruchkegel"))
+    let n_rd_c = part_4::cone_resistance_n(annex, anchor.f_ck, anchor.h_ef, anchor.cracked, anchor.c1);
+    let c = CheckResult::assess(format!("en1992-4.cone.{}", anchor.id), part_4(), ClauseId::new("EN 1992-4", "§7.2.1.5", "7.2.1.5"), SubjectRef::new(&anchor.id, format!("anchors[id={}].hEf", anchor.id), label.clone()), l("Concrete cone", "Betonausbruchkegel")).remedies_attached_by("attach_minimal_remedies")
         .utilization(force_n(n_ed), force_n(n_rd_c.max(1.0)))
         .annex(annex)
         .explanation(l(
             &format!("Concrete cone: N_Ed={:.1} kN ≤ N_Rd,c={:.1} kN", n_ed / 1e3, n_rd_c / 1e3),
             &format!("Betonausbruchkegel: N_Ed={:.1} kN ≤ N_Rd,c={:.1} kN", n_ed / 1e3, n_rd_c / 1e3),
         ));
-    if n_ed > n_rd_c {
-        let h_req = anchor.h_ef * (n_ed / n_rd_c.max(1e-12)).powf(2.0 / 3.0) * 1.05;
-        c = c.remedy(Remedy::at_least(
-            SubjectRef::new(&anchor.id, format!("anchors[id={}].hEf", anchor.id), label.clone()),
-            length_m(anchor.h_ef), length_m(h_req),
-            l(&format!("Increase effective embedment to ≥ {:.0} mm.", h_req * 1000.0), &format!("Effektive Verankerungstiefe auf ≥ {:.0} mm erhöhen.", h_req * 1000.0)),
-        ));
-    }
-    out.push(c.build());
+    out.push(ndps(c.field("anchor-cone", vec![Station::ratio_of(&[0.0, 0.0], force_n(n_ed), force_n(n_rd_c.max(1.0)))]), &[]).build());
 
-    let n_rd_p = part_4::pullout_resistance_n(anchor.a_s, anchor.f_uk);
-    let mut p = CheckResult::assess(format!("en1992-4.pullout.{}", anchor.id), part_4(), ClauseId::new("EN 1992-4", "§7.2.1.6", "7.2.1.6"), SubjectRef::new(&anchor.id, format!("anchors[id={}].aS", anchor.id), label.clone()), l("Pull-out", "Herausziehen"))
+    let n_rd_p = part_4::pullout_resistance_n(annex, anchor.d, anchor.head_diameter, anchor.f_ck, anchor.cracked);
+    let p = CheckResult::assess(format!("en1992-4.pullout.{}", anchor.id), part_4(), ClauseId::new("EN 1992-4", "§7.2.1.6", "7.2.1.6"), SubjectRef::new(&anchor.id, format!("anchors[id={}].aS", anchor.id), label.clone()), l("Pull-out", "Herausziehen")).remedies_attached_by("attach_minimal_remedies")
         .utilization(force_n(n_ed), force_n(n_rd_p.max(1.0)))
         .annex(annex)
         .explanation(l(
             &format!("Pull-out: N_Ed={:.1} kN ≤ N_Rd,p={:.1} kN", n_ed / 1e3, n_rd_p / 1e3),
             &format!("Herausziehen: N_Ed={:.1} kN ≤ N_Rd,p={:.1} kN", n_ed / 1e3, n_rd_p / 1e3),
         ));
-    if n_ed > n_rd_p {
-        p = p.remedy(Remedy::at_least(
-            SubjectRef::new(&anchor.id, format!("anchors[id={}].aS", anchor.id), label.clone()),
-            area_m2(anchor.a_s), area_m2(anchor.a_s * n_ed / n_rd_p),
-            l("Increase steel area against pull-out.", "Stahlquerschnitt gegen Herausziehen vergrößern."),
-        ));
-    }
-    out.push(p.build());
+    out.push(ndps(p, &["ndp.en1992.fa-04.1"]).build());
 
-    let n_rd_sp = part_4::splitting_resistance_n(anchor.f_ck, anchor.h_ef, anchor.c1);
-    let mut sp = CheckResult::assess(format!("en1992-4.splitting.{}", anchor.id), part_4(), ClauseId::new("EN 1992-4", "§7.2.1.7", "7.2.1.7"), SubjectRef::new(&anchor.id, format!("anchors[id={}].c1", anchor.id), label.clone()), l("Splitting", "Spalten"))
+    let n_rd_sp = part_4::splitting_resistance_n(annex, anchor.f_ck, anchor.h_ef, anchor.c1, anchor.d, anchor.head_diameter, anchor.cracked);
+    let sp = CheckResult::assess(format!("en1992-4.splitting.{}", anchor.id), part_4(), ClauseId::new("EN 1992-4", "§7.2.1.7", "7.2.1.7"), SubjectRef::new(&anchor.id, format!("anchors[id={}].c1", anchor.id), label.clone()), l("Splitting", "Spalten")).remedies_attached_by("attach_minimal_remedies")
         .utilization(force_n(n_ed), force_n(n_rd_sp.max(1.0)))
         .annex(annex)
         .explanation(l(
             &format!("Splitting: N_Ed={:.1} kN ≤ N_Rd,sp={:.1} kN", n_ed / 1e3, n_rd_sp / 1e3),
             &format!("Spalten: N_Ed={:.1} kN ≤ N_Rd,sp={:.1} kN", n_ed / 1e3, n_rd_sp / 1e3),
         ));
-    if n_ed > n_rd_sp {
-        let ratio = (n_ed / n_rd_sp.max(1e-12)).max(1.0) * 1.05;
-        let h_cap = (anchor.c1 / 1.5).max(anchor.h_ef);
-        let gain_at_cap = (h_cap / anchor.h_ef.max(1e-12)).powf(1.5);
-        let h_req = if gain_at_cap + 1e-12 >= ratio {
-            anchor.h_ef * ratio.powf(2.0 / 3.0)
-        } else {
-            let need_sqrt_h = ratio * anchor.h_ef.powf(1.5) * 1.5 / anchor.c1.max(1e-12);
-            need_sqrt_h.powi(2)
-        };
-        sp = sp.remedy(Remedy::at_least(
-            SubjectRef::new(&anchor.id, format!("anchors[id={}].hEf", anchor.id), label.clone()),
-            length_m(anchor.h_ef), length_m(h_req),
-            l(
-                &format!("Increase effective embedment to ≥ {:.0} mm against splitting.", h_req * 1000.0),
-                &format!("Effektive Verankerungstiefe auf ≥ {:.0} mm gegen Spalten erhöhen.", h_req * 1000.0),
-            ),
-        ));
-    }
-    out.push(sp.build());
+    out.push(ndps(sp, &[]).build());
 
-    let n_rd_pr = part_4::pryout_resistance_n(anchor.f_ck, anchor.h_ef, anchor.cracked);
-    let mut pr = CheckResult::assess(format!("en1992-4.pryout.{}", anchor.id), part_4(), ClauseId::new("EN 1992-4", "§7.2.2.4", "7.2.2.4"), SubjectRef::new(&anchor.id, format!("anchors[id={}].hEf", anchor.id), label.clone()), l("Pry-out", "Hebelausbruch"))
+    let n_rd_pr = part_4::pryout_resistance_n(annex, anchor.f_ck, anchor.h_ef, anchor.cracked, anchor.c1);
+    let pr = CheckResult::assess(format!("en1992-4.pryout.{}", anchor.id), part_4(), ClauseId::new("EN 1992-4", "§7.2.2.4", "7.2.2.4"), SubjectRef::new(&anchor.id, format!("anchors[id={}].hEf", anchor.id), label.clone()), l("Pry-out", "Hebelausbruch")).remedies_attached_by("attach_minimal_remedies")
         .utilization(force_n(v_ed), force_n(n_rd_pr.max(1.0)))
         .annex(annex)
         .explanation(l(
             &format!("Pry-out: V_Ed={:.1} kN ≤ V_Rd,cp={:.1} kN", v_ed / 1e3, n_rd_pr / 1e3),
             &format!("Hebelausbruch: V_Ed={:.1} kN ≤ V_Rd,cp={:.1} kN", v_ed / 1e3, n_rd_pr / 1e3),
         ));
-    if v_ed > n_rd_pr {
-        pr = pr.remedy(Remedy::at_least(
-            SubjectRef::new(&anchor.id, format!("anchors[id={}].hEf", anchor.id), label.clone()),
-            length_m(anchor.h_ef), length_m(anchor.h_ef * 1.2),
-            l("Increase embedment against pry-out.", "Verankerungstiefe gegen Hebelausbruch erhöhen."),
-        ));
-    }
-    out.push(pr.build());
+    out.push(ndps(pr, &["ndp.en1992.fa-03.1"]).build());
 
-    let v_rd = part_4::edge_resistance_n(anchor.d, anchor.h_ef, anchor.f_ck, anchor.c1);
-    let mut e = CheckResult::assess(format!("en1992-4.edge.{}", anchor.id), part_4(), ClauseId::new("EN 1992-4", "§7.2.2.5", "7.2.2.5"), SubjectRef::new(&anchor.id, format!("anchors[id={}].c1", anchor.id), label.clone()), l("Edge breakout shear", "Randausbruch Querkraft"))
+    let v_rd = part_4::edge_resistance_n(annex, anchor.d, anchor.h_ef, anchor.f_ck, anchor.c1, anchor.cracked);
+    let e = CheckResult::assess(format!("en1992-4.edge.{}", anchor.id), part_4(), ClauseId::new("EN 1992-4", "§7.2.2.5", "7.2.2.5"), SubjectRef::new(&anchor.id, format!("anchors[id={}].c1", anchor.id), label.clone()), l("Edge breakout shear", "Randausbruch Querkraft")).remedies_attached_by("attach_minimal_remedies")
         .utilization(force_n(v_ed), force_n(v_rd.max(1.0)))
         .annex(annex)
         .explanation(l(
             &format!("Edge shear: V_Ed={:.1} kN ≤ V_Rd,c={:.1} kN", v_ed / 1e3, v_rd / 1e3),
             &format!("Randausbruch Querkraft: V_Ed={:.1} kN ≤ V_Rd,c={:.1} kN", v_ed / 1e3, v_rd / 1e3),
         ));
-    if v_ed > v_rd {
-        let c_req = anchor.c1 * (v_ed / v_rd).powf(2.0 / 3.0);
-        e = e.remedy(Remedy::at_least(
-            SubjectRef::new(&anchor.id, format!("anchors[id={}].c1", anchor.id), label.clone()),
-            length_m(anchor.c1), length_m(c_req),
-            l(&format!("Increase edge distance c1 to ≥ {:.0} mm.", c_req * 1000.0), &format!("Randabstand c1 auf ≥ {:.0} mm erhöhen.", c_req * 1000.0)),
-        ));
-    }
-    out.push(e.build());
+    out.push(ndps(e, &["ndp.en1992.fa-03.1"]).build());
 
-    let n_rd_t = n_rd_s.min(n_rd_c).min(n_rd_p).min(n_rd_sp);
+    let v_rd_s = part_4::steel_shear_resistance_n(anchor.a_s, anchor.f_uk, anchor.f_yk);
+    let vs = CheckResult::assess(format!("en1992-4.steel-shear.{}", anchor.id), part_4(), ClauseId::new("EN 1992-4", "§7.2.2.3", "7.2.2.3"), SubjectRef::new(&anchor.id, format!("anchors[id={}].aS", anchor.id), label.clone()), l("Anchor steel shear", "Dübel Stahlversagen Querkraft")).remedies_attached_by("attach_minimal_remedies")
+        .utilization(force_n(v_ed), force_n(v_rd_s.max(1.0)))
+        .annex(annex)
+        .explanation(l(
+            &format!("Steel shear: V_Ed={:.1} kN ≤ V_Rd,s={:.1} kN (0.5 A_s f_uk/γ_Ms,V)", v_ed / 1e3, v_rd_s / 1e3),
+            &format!("Stahlquerkraft: V_Ed={:.1} kN ≤ V_Rd,s={:.1} kN (0,5 A_s f_uk/γ_Ms,V)", v_ed / 1e3, v_rd_s / 1e3),
+        ));
+    out.push(ndps(vs, &[]).build());
+
+    let n_rd_t = n_rd_c.min(n_rd_p).min(n_rd_sp);
     let v_rd_t = v_rd.min(n_rd_pr);
-    let inter = part_4::interaction_utilization(n_ed, n_rd_t, v_ed, v_rd_t);
-    let mut ix = CheckResult::assess(format!("en1992-4.interaction.{}", anchor.id), part_4(), ClauseId::new("EN 1992-4", "§7.2.3", "7.2.3"), SubjectRef::new(&anchor.id, format!("anchors[id={}]", anchor.id), label.clone()), l("Tension–shear interaction", "Zug–Querkraft-Interaktion"))
+    let inter = part_4::interaction_utilization(n_ed, n_rd_t, v_ed, v_rd_t).max(part_4::steel_interaction_utilization(n_ed, n_rd_s, v_ed, v_rd_s));
+    let ix = CheckResult::assess(format!("en1992-4.interaction.{}", anchor.id), part_4(), ClauseId::new("EN 1992-4", "§7.2.3", "7.2.3"), SubjectRef::new(&anchor.id, format!("anchors[id={}]", anchor.id), label.clone()), l("Tension–shear interaction", "Zug–Querkraft-Interaktion")).remedies_attached_by("attach_minimal_remedies")
         .utilization(Quantity::new(QuantityKind::Dimensionless, inter), Quantity::new(QuantityKind::Dimensionless, 1.0))
         .annex(annex)
         .explanation(l(
-            &format!("Interaction: (N/N_Rd)^1.5+(V/V_Rd)^1.5={:.3} ≤ 1 (N_Ed={:.1} kN, V_Ed={:.1} kN)", inter, n_ed / 1e3, v_ed / 1e3),
-            &format!("Interaktion: (N/N_Rd)^1,5+(V/V_Rd)^1,5={:.3} ≤ 1 (N_Ed={:.1} kN, V_Ed={:.1} kN)", inter, n_ed / 1e3, v_ed / 1e3),
+            &format!("Interaction: (N/N_Rd)^1.5+(V/V_Rd)^1.5 and steel (N/N_Rd,s)²+(V/V_Rd,s)²: {:.3} ≤ 1 (N_Ed={:.1} kN, V_Ed={:.1} kN)", inter, n_ed / 1e3, v_ed / 1e3),
+            &format!("Interaktion: (N/N_Rd)^1,5+(V/V_Rd)^1,5 und Stahl (N/N_Rd,s)²+(V/V_Rd,s)²: {:.3} ≤ 1 (N_Ed={:.1} kN, V_Ed={:.1} kN)", inter, n_ed / 1e3, v_ed / 1e3),
         ));
-    if inter > 1.0 {
-        let scale = inter.max(1.0) * 1.15;
-        let h_req = anchor.h_ef * scale.powf(2.0 / 3.0);
-        let c_req = anchor.c1 * scale.powf(2.0 / 3.0);
-        let a_req = anchor.a_s * scale;
-        ix = ix.remedy(Remedy::at_least(
-            SubjectRef::new(&anchor.id, format!("anchors[id={}].hEf", anchor.id), label.clone()),
-            length_m(anchor.h_ef), length_m(h_req),
-            l(
-                &format!("Increase effective embedment to ≥ {:.0} mm for tension–shear interaction.", h_req * 1000.0),
-                &format!("Effektive Verankerungstiefe auf ≥ {:.0} mm für Zug–Querkraft-Interaktion erhöhen.", h_req * 1000.0),
-            ),
-        ));
-        ix = ix.remedy(Remedy::at_least(
-            SubjectRef::new(&anchor.id, format!("anchors[id={}].c1", anchor.id), label.clone()),
-            length_m(anchor.c1), length_m(c_req),
-            l(
-                &format!("Increase edge distance to ≥ {:.0} mm for tension–shear interaction.", c_req * 1000.0),
-                &format!("Randabstand auf ≥ {:.0} mm für Zug–Querkraft-Interaktion erhöhen.", c_req * 1000.0),
-            ),
-        ));
-        ix = ix.remedy(Remedy::at_least(
-            SubjectRef::new(&anchor.id, format!("anchors[id={}].aS", anchor.id), label),
-            area_m2(anchor.a_s), area_m2(a_req),
-            l(
-                &format!("Increase anchor steel area to ≥ {:.1} mm² for tension–shear interaction.", a_req * 1e6),
-                &format!("Dübelstahlquerschnitt auf ≥ {:.1} mm² für Zug–Querkraft-Interaktion erhöhen.", a_req * 1e6),
-            ),
-        ));
-    }
-    out.push(ix.build());
+    out.push(ndps(ix, &["ndp.en1992.fa-03.1"]).build());
     out
 }

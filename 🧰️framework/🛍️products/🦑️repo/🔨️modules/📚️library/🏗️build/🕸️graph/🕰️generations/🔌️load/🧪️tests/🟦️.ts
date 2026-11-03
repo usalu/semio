@@ -27,8 +27,8 @@ test("the fixture is closed under its schema",()=>{expect(new Ajv({strict:true})
 
 test("the bilingual texts are the declared ones, equal in both languages by placeholder, and rendering fills them",()=>{
  expect(JSON.parse(JSON.stringify(GENERATION_MESSAGES_V1))).toEqual(schema.definitions.Messages.const);
- expect(renderGenerationMessageV1("published",{generation:7,computed:2,seconds:3},"en")).toBe("graph: generation 7 published, 2 projects refreshed in 3 s");
- expect(renderGenerationMessageV1("published",{generation:7,computed:2,seconds:3},"de")).toBe("Graph: Generation 7 veröffentlicht, 2 Projekte in 3 s erneuert");
+ expect(renderGenerationMessageV1("published",{generation:7,computed:2,carried:5,seconds:3},"en")).toBe("graph: generation 7 published, 2 projects refreshed in 3 s (5 kept their edges)");
+ expect(renderGenerationMessageV1("published",{generation:7,computed:2,carried:5,seconds:3},"de")).toBe("Graph: Generation 7 veröffentlicht, 2 Projekte in 3 s erneuert (5 behielten ihre Kanten)");
  expect(()=>renderGenerationMessageV1("other" as never,{},"en")).toThrow();
 });
 

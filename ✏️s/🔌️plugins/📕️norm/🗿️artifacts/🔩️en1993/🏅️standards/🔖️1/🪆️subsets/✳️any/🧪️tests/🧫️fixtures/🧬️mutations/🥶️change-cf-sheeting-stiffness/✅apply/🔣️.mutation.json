@@ -1,0 +1,6 @@
+{
+  "ChangeCfSheetingStiffness": {
+    "id": "cf-1",
+    "newSheetingStiffness": 1.5
+  }
+}

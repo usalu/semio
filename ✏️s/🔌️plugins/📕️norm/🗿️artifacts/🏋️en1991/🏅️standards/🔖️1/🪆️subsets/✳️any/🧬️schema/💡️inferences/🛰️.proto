@@ -1,13 +1,8 @@
 syntax = "proto3";
-package semio.s.norm.en1991.inference;
-
-// 💡️ En1991 inference schema — document outline (field/section list + entry count).
-
+package semio.s.norm.en1991;
 message En1991Inference {
-  // @derived
   En1991Outline outline = 1;
 }
-
 message En1991Outline {
   repeated string section_outline = 1;
   uint32 field_count = 2;

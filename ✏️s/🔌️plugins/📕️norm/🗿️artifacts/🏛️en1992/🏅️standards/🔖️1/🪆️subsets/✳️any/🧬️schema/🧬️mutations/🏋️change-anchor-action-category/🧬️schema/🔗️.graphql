@@ -1,0 +1,5 @@
+type ChangeAnchorActionCategory {
+  anchorId: String!
+  actionId: String!
+  newCategory: PsiCategory!
+}

@@ -1,0 +1,16 @@
+# Kind convention (wave 2)
+
+Convention: `<change|insert|remove>-<singular-entity>[-<field>]`, id selectors for rows, index only as insert position, id-only removal, insert/remove kinds for every editable collection. No aliases. Nothing compiled; `repo ./📜️script.ts verify build-owners sync` passes after every crate change.
+
+## Done (scripts in `🧰️scripts/kind-convention/`)
+- `rename.py` (one script, every layer: kind dirs, rs, json, ts, graphql, proto, py, feature, semio, taxonomy fixture rows incl. verb/entity/record, oracle manifests, framework `schema-document-index.json`): `set-case-number|text` -> `change-case-number|text` (en1990/1995/1996/1997, shared `design_case::change_case_number|change_case_text`; decided with the design-case owner via requests.md), en1999 `add-member|weld-run|outline-vertex|placement` -> `insert-*` (+ dupe vector ids), en1991 plural insert/remove -> singular (floor, self-weight-element, roof, wind-face, accidental-case, bridge-lane, construction-stage, roof-surface), en1992 `reorder-members` -> `change-member-order`. No path over 255 bytes.
+- Generators emit the convention: `leaf-kinds/en1999_rows.py` (insert kind names, oracle source), `en1995-gen-placement-kinds.py` anchors.
+- `retire_en1998_site.py`: en1998 `update-site` kind and the dead `replace_all` helper removed through every layer (dirs, fixtures, mounts, root enum/KINDS, ts/json/graphql/proto, text codec, binary protocol record, harness, oracle, taxonomy, framework index, three unit tests moved to `change-site-s-ap-r`). Wire tags/proto numbers of other kinds unchanged (gaps).
+- en1999 regression: `en1999_collections.py` generated 14 kinds `insert|remove-{material,section,connection,fire-scenario,fatigue-detail,cold-formed-sheet,shell}` (rows lanes already existed; id removal via `IdRemoval`, insert via `InsertItemRule`, fixtures with dupe vectors, harness, oracle, taxonomy, text codec, binary tags 145-158). `en1999_collections_repair.py` re-added root enum/KINDS/protocol after the en1999 owner's concurrent run overwrote them; `en1999_collections_split.py` split the crate into `collection-rows` and `scenario-rows` (file cap). `bucklingLengthT` was added meanwhile by the en1999 owner (`change-member-buckling-length-t`).
+- Requests and `ready for rebuild: kind-convention` lines appended (build-en1990/91/92/95/96/97/98/99).
+
+## Not done (open)
+1. Index -> id selector migration for en1991 (23 set rules), en1994 (92), en1996 (87), en1998 (161): needs row ids in snapshots, regenerated payloads, diff lanes and fixtures per artifact.
+2. Missing insert/remove kinds: en1999 nested (`members|connections|coldFormed|shells[].actions`, `sections[].elements`), en1991 8, en1994 3 (`beams|columns|slabs[].actions`), en1998 3 (`buildings[].members|storeys|systems`), `cases[].numbers|texts` (en1990/1995/1996/1997; `change-case-number|text` already upsert/clear by caseId+key, design-case owner to confirm that this suffices).
+3. 39 en1991 leaves, en1992 `members[].tightness` (Option enum: diff lane must distinguish clearing from not setting).
+4. Cargo.lock synchronise (en1999 two new packages; hub, bridge, fixture-sweep), `en1991-mutations` crate is over the source budget (4572 lines, en1991 owner), taxonomy record `ReorderedLayers` (en1997) untouched, `insert-layer` (en1997) vs `insert-soil-layer` (en1998) noun not unified.

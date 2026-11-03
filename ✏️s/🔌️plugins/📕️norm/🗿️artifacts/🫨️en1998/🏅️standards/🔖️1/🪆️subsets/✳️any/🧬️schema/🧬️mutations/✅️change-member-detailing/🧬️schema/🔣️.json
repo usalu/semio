@@ -6,50 +6,50 @@
   "additionalProperties": false,
   "required": [
     "mutation",
-    "buildingIndex",
-    "memberIndex",
+    "buildingId",
+    "id",
     "newDetailingCompatibleWithQ"
   ],
   "properties": {
     "mutation": {
       "const": "changeMemberDetailing"
     },
-    "buildingIndex": {
-      "type": "integer",
-      "minimum": 0,
+    "buildingId": {
+      "type": "string",
       "x-semio-ui": {
-        "widget": "stepper",
-        "role": "value",
+        "widget": "reference",
+        "role": "target",
         "label": {
           "en": "Building",
           "de": "Gebäude"
         },
         "description": {
-          "en": "Zero-based position of the building in its list.",
-          "de": "Nullbasierte Position des Gebäudes in der Liste."
+          "en": "The building this mutation addresses, by id.",
+          "de": "Das adressierte Element (Gebäude), per Kennung."
         },
-        "step": 1,
-        "precision": 0,
+        "ref": {
+          "kind": "building"
+        },
         "group": "target",
         "order": 10
       }
     },
-    "memberIndex": {
-      "type": "integer",
-      "minimum": 0,
+    "id": {
+      "type": "string",
       "x-semio-ui": {
-        "widget": "stepper",
-        "role": "value",
+        "widget": "reference",
+        "role": "target",
         "label": {
           "en": "Member",
           "de": "Bauteil"
         },
         "description": {
-          "en": "Zero-based position of the member within the building in its list.",
-          "de": "Nullbasierte Position des Bauteils im Gebäude in der Liste."
+          "en": "The member this mutation addresses, by id.",
+          "de": "Das adressierte Element (Bauteil), per Kennung."
         },
-        "step": 1,
-        "precision": 0,
+        "ref": {
+          "kind": "member"
+        },
         "group": "target",
         "order": 20
       }

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeTankContentCategory",
+  "id": "tk-1",
+  "newContentCategory": "b"
+}

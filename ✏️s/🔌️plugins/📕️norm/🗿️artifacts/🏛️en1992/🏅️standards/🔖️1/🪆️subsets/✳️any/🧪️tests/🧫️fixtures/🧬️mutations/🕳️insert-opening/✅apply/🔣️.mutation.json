@@ -1,0 +1,13 @@
+{
+  "InsertOpening": {
+    "memberId": "wall-W1",
+    "index": 1,
+    "opening": {
+      "id": "op-1-new",
+      "x": 0.6,
+      "y": 0.0,
+      "width": 0.3,
+      "depth": 0.3
+    }
+  }
+}

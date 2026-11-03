@@ -71,10 +71,10 @@ impl RetainedCloneCursor<String> for StringCursor {
             3 => Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "retained string clone cursor is spent")),
             _ => Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "retained string clone state is invalid")),
         }
-    })();crate::RetainedWorkOutcome{result,work}}
+    })();RetainedWorkOutcome{result,work}}
 
-    fn take_demand(&self)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::retained_clone::retained_clone_take_demand())}
-    fn take(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<Option<(String,RetainedCloneProgress)>>{if !self.output_ready(){return crate::RetainedWorkOutcome{result:Ok(None),work:0}}let turn=crate::retained_clone::take_retained_clone_output(&mut self.output,grant);if matches!(&turn.result,Ok(Some(_))){self.phase = 3;}turn}
+    fn take_demand(&self)->Result<RetirementDemand,ValueError>{Ok(retained_clone_take_demand())}
+    fn take(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<Option<(String,RetainedCloneProgress)>>{if !self.output_ready(){return RetainedWorkOutcome{result:Ok(None),work:0}}let turn=take_retained_clone_output(&mut self.output,grant);if matches!(&turn.result,Ok(Some(_))){self.phase = 3;}turn}
 
     fn begin_close(&mut self) -> bool {
         if self.closing {
@@ -94,7 +94,7 @@ impl RetainedCloneCursor<String> for StringCursor {
         if !self.close.is_empty() { let turn=self.close.step_granted(grant);work+=turn.work;return turn.result; }
         {let turn=self.close.begin_granted(&mut self.output, grant);work+=turn.work;if let Some(step)=turn.result?{return Ok(step)}}
         {let turn=close_retained_binding(&mut self.source, grant);work+=turn.work;turn.result}
-    })();crate::RetainedWorkOutcome{result,work}}
+    })();RetainedWorkOutcome{result,work}}
 
     fn next_close_depth_demand(&self)->Result<usize,ValueError>{if !self.closing {return Ok(0);} self.close.next_owner_depth_with_binding(self.output.is_some(),&self.source)}
     fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> {

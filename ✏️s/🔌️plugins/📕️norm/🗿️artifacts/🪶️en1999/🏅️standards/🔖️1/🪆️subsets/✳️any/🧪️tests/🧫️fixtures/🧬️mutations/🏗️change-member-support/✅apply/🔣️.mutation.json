@@ -1,0 +1,5 @@
+{
+  "mutation": "changeMemberSupport",
+  "memberId": "purlin-1",
+  "newSupport": "continuous"
+}

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeRetainingWallSoilGamma",
+  "id": "rw-1",
+  "newSoilGamma": 36000.0
+}

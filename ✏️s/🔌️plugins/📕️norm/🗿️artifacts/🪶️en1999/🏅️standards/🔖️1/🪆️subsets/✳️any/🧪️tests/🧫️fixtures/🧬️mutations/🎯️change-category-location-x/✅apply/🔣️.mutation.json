@@ -1,0 +1,5 @@
+{
+  "mutation": "changeCategoryLocationX",
+  "fatigueCategoryId": "site-1",
+  "newLocationX": 3.0
+}

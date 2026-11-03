@@ -93,7 +93,6 @@ fn retained_command_dispositions_match_the_language_neutral_oracle() {
 /// that is not listed here fails `command_ids_cover_every_row`.
 fn every_command() -> Vec<Din18599Command> {
     vec![
-        Din18599Command::Evaluate(evaluate::Evaluate {}),
         Din18599Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) }),
     ]
 }
@@ -106,14 +105,14 @@ async fn command_ids_cover_every_row_and_are_unique() {
     sorted.sort_unstable();
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-    assert_eq!(ids, vec!["evaluate", "setSelectedCheckIndex"]);
+    assert_eq!(ids, vec!["setSelectedCheckIndex"]);
 }
 
 /// 🧷️ The permanent wire guard: every row round-trips textâbinary and prints under its own declared
 /// kebab wire keyword (which is deliberately NOT the camelCase `command_id`).
 #[semio_framework_async_macros::async_test]
 async fn every_command_round_trips_text_and_binary_under_its_declared_wire_keyword() {
-    let keywords = ["evaluate", "selected-check"];
+    let keywords = ["selected-check"];
     for (command, keyword) in every_command().into_iter().zip(keywords) {
         store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         let printed = protocol::OpText::print_op(&command);
@@ -129,9 +128,8 @@ async fn every_command_round_trips_text_and_binary_under_its_declared_wire_keywo
 #[semio_framework_async_macros::async_test]
 async fn optional_field_rows_keep_their_pre_migration_bytes() {
     let hex = |command: &Din18599Command| protocol::OpBinary::encode_op(command).expect("encode").iter().map(|byte| format!("{byte:02x}")).collect::<String>();
-    assert_eq!(hex(&Din18599Command::Evaluate(evaluate::Evaluate {})), "01010000");
-    assert_eq!(hex(&Din18599Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) })), "01020001000402");
-    assert_eq!(hex(&Din18599Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: None })), "01020000");
+    assert_eq!(hex(&Din18599Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) })), "01010001000402");
+    assert_eq!(hex(&Din18599Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: None })), "01010000");
 }
 //#endregion ðï¸CommandSurface
 
@@ -175,26 +173,6 @@ async fn every_declared_body_key_renders() {
 //#endregion ðï¸Manifest
 
 //#region ðï¸Behavior
-#[semio_framework_async_macros::async_test]
-async fn evaluate_commits_a_host_backed_report() {
-    let mut app = context::app_with_registry().await;
-    context::dispatch(&mut app, Din18599Command::Evaluate(evaluate::Evaluate {})).await;
-    context::dispatch(&mut app, Din18599Command::Evaluate(evaluate::Evaluate {})).await;
-    context::settle(&mut app).await;
-    let host = NormHost::<DinV18599Family>::from_artifact(app.snapshot().expect("projection"));
-    assert!(!host.report().checks.is_empty());
-    context::close(&mut app);
-}
-
-#[semio_framework_async_macros::async_test]
-async fn evaluate_recommits_the_current_projection_without_changing_it() {
-    let mut app = context::app_with_registry().await;
-    let before = app.snapshot().expect("projection");
-    context::dispatch(&mut app, Din18599Command::Evaluate(evaluate::Evaluate {})).await;
-    assert_eq!(before, app.snapshot().expect("projection"));
-    context::close(&mut app);
-}
-
 /// 🧮️ `setSelectedCheckIndex` is Results-window-config-only â it must dispatch cleanly and never touch the document.
 #[semio_framework_async_macros::async_test]
 async fn selected_check_index_is_a_config_only_edit() {

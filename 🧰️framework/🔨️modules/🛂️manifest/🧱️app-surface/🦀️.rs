@@ -65,6 +65,10 @@ pub use reserved_contributions::*;
 mod interaction_window_bodies;
 pub use interaction_window_bodies::*;
 
+#[path = "📱️shell-hooks/🦀️.rs"]
+mod shell_hooks;
+pub use shell_hooks::*;
+
 #[cfg(any(test, feature = "testkit"))]
 #[path = "../🧪️tests/🧰️testkit/🦀️.rs"]
 pub mod testkit;

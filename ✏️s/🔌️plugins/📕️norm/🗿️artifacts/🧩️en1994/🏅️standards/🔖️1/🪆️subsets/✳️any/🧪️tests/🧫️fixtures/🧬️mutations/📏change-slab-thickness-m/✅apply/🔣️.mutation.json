@@ -1,0 +1,6 @@
+{
+  "ChangeSlabThicknessM": {
+    "id": "slab-S1",
+    "newConcreteThicknessM": 0.16
+  }
+}

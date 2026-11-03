@@ -1,0 +1,14 @@
+{
+  "InsertDustExplosion": {
+    "index": 1,
+    "item": {
+      "id": "dust-explosion-2",
+      "kst": 150.0,
+      "pMax": 800000.0,
+      "volume": 100.0,
+      "ventArea": 8.0,
+      "staticOpeningPressure": 20000.0,
+      "designPressure": 50000.0
+    }
+  }
+}

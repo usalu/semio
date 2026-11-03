@@ -1,0 +1,58 @@
+[
+ {
+  "si": "m",
+  "symbol": "mm",
+  "siValue": 0.0015,
+  "precision": 3,
+  "en": "1.5 mm",
+  "de": "1,5 mm"
+ },
+ {
+  "si": "m",
+  "symbol": "cm",
+  "siValue": 2.5,
+  "precision": 2,
+  "en": "250 cm",
+  "de": "250 cm"
+ },
+ {
+  "si": "N",
+  "symbol": "kN",
+  "siValue": 125000.0,
+  "precision": 3,
+  "en": "125 kN",
+  "de": "125 kN"
+ },
+ {
+  "si": "Pa",
+  "symbol": "MPa",
+  "siValue": 355000000.0,
+  "precision": 1,
+  "en": "355 MPa",
+  "de": "355 MPa"
+ },
+ {
+  "si": "N·m",
+  "symbol": "kN·m",
+  "siValue": 48250.0,
+  "precision": 3,
+  "en": "48.25 kN·m",
+  "de": "48,25 kN·m"
+ },
+ {
+  "si": "m²",
+  "symbol": "cm²",
+  "siValue": 0.0054,
+  "precision": 2,
+  "en": "54 cm²",
+  "de": "54 cm²"
+ },
+ {
+  "si": "m⁴",
+  "symbol": "cm⁴",
+  "siValue": 1.9e-06,
+  "precision": 0,
+  "en": "190 cm⁴",
+  "de": "190 cm⁴"
+ }
+]

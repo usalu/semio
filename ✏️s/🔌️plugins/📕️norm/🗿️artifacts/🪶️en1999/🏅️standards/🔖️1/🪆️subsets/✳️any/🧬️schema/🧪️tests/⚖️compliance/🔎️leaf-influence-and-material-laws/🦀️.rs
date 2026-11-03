@@ -89,15 +89,12 @@ pub(super) fn walk_leaves(path: &str, value: &serde_json::Value, visit: &mut dyn
 #[test]
 fn haz_rho_u_governs_welded_net_section() {
     let alloy = part_1_1::resolve_alloy("aw6060-t6").unwrap();
-    assert!(alloy.rho_u_haz < alloy.rho_o_haz || alloy.rho_u_haz < 1.0);
+    assert!(alloy.rho_u_haz < 1.0);
     let mut sec = En1999Snapshot::noncompliant_multi_fail().sections[0].clone();
     for e in &mut sec.elements { e.welded = true; e.weld_position = 0.01; }
-    let (_, _, _, _, _, _, _) = part_1_1::section_geometry(&sec);
-    let a_net = part_1_1::effective_area(&sec, alloy.f_o_pa, true, 1.0, 1.0);
-    let n_u_full = a_net * alloy.f_u_pa;
-    let n_u_haz = a_net * alloy.rho_u_haz * alloy.f_u_pa;
-    assert!(alloy.rho_u_haz < 1.0);
-    assert!(n_u_haz < n_u_full - 1e-6, "ρ_u,haz must reduce N_u,Rd ({n_u_haz} vs {n_u_full})");
+    let gross = part_1_1::props(&sec, &part_1_1::EffCtx::gross(alloy.f_o_pa, true));
+    let haz = part_1_1::props(&sec, &part_1_1::EffCtx { f_o_pa: alloy.f_o_pa, class_a: true, eta_web: 1.0, local: false, haz_rho: Some(alloy.rho_u_haz), haz_extents: &[] });
+    assert!(haz.a * alloy.f_u_pa < gross.a * alloy.f_u_pa - 1e-6, "ρ_u,haz must reduce N_u,Rd");
 }
 
 #[test]
@@ -120,8 +117,39 @@ fn shell_chi_from_geometry_hand_value() {
     assert!(shell.explanation.en.contains("χ=") || shell.explanation.en.contains("Rcr") || shell.utilization > 0.0);
 }
 
-#[test]
+/// 🧯 Leaves that carry no information for the physical situation they sit in: hollow sections are immune to lateral-torsional and torsional buckling, and the second S–N slope is inactive while γ·Δσ stays above the knee stress.
+fn physically_inactive(snap: &En1999Snapshot, path: &str) -> bool {
+    if (path.ends_with(".torsionK") || path.ends_with(".localLoadK")) && !path.starts_with("members[") {
+        return true;
+    }
+    if path.ends_with(".transverseWeld") {
+        let idx: usize = path.strip_prefix("members[").and_then(|r| r.split(']').next()).and_then(|i| i.parse().ok()).unwrap_or(usize::MAX);
+        return snap.members.get(idx).is_none_or(|m| m.transverse_weld_offset == 0.0);
+    }
+    if path.ends_with(".transverseWeldOffset") {
+        let idx: usize = path.strip_prefix("members[").and_then(|r| r.split(']').next()).and_then(|i| i.parse().ok()).unwrap_or(usize::MAX);
+        return snap.members.get(idx).is_none_or(|m| !m.transverse_weld);
+    }
+    if let Some(rest) = path.strip_prefix("members[") {
+        let idx: usize = rest.split(']').next().and_then(|i| i.parse().ok()).unwrap_or(usize::MAX);
+        let leaf = path.rsplit('.').next().unwrap_or("");
+        if let Some(member) = snap.members.get(idx) {
+            let hollow = snap.sections.iter().find(|s| s.id == member.section_id).is_some_and(|s| matches!(s.kind, semio_s_artifact_norm_en1999_model::SectionKind::Chs | semio_s_artifact_norm_en1999_model::SectionKind::Box | semio_s_artifact_norm_en1999_model::SectionKind::Rhs));
+            return hollow && matches!(leaf, "bucklingLengthT" | "ltbLength" | "c1" | "restrainedLtb");
+        }
+    }
+    if let Some(rest) = path.strip_prefix("fatigueDetails[") {
+        let idx: usize = rest.split(']').next().and_then(|i| i.parse().ok()).unwrap_or(usize::MAX);
+        if let (Some(f), true) = (snap.fatigue_details.get(idx), path.ends_with(".m2")) {
+            let params = na_de::AnnexParams::for_choice(snap.annex);
+            let dc = part_1_3::detail_category_delta_sigma_c(&f.detail_category).unwrap_or(f.delta_sigma_c);
+            return f.delta_sigma_ed * params.gamma_ff * params.gamma_mf >= part_1_3::delta_sigma_d(dc, f.m1);
+        }
+    }
+    false
+}
 
+#[test]
 fn every_editable_leaf_influences_a_check() {
     const EXEMPT_SUFFIXES: &[&str] = &[".id"];
     for snap in [En1999Snapshot::compliant_roof_purlin(), En1999Snapshot::noncompliant_multi_fail()] {
@@ -147,10 +175,13 @@ fn every_editable_leaf_influences_a_check() {
             let mut tree = serde_json::to_value(&snap).unwrap();
             let cur = resolve_path(&tree, path).cloned();
             let Some(cur) = cur else { continue; };
+            if physically_inactive(&snap, path) { continue; }
             match cur {
                 serde_json::Value::Number(n) => {
                     let v = n.as_f64().unwrap_or(0.0);
-                    let nv = if v.abs() < 1e-12 { 1.0e5 } else { v * 1.35 };
+                    let nv = if let Some(parent) = path.strip_suffix(".weldPosition") {
+                        resolve_path(&tree, &format!("{parent}.width")).and_then(|w| w.as_f64()).unwrap_or(v * 1.35)
+                    } else if v.abs() < 1e-12 { 1.0e5 } else { v * 1.35 };
                     let _ = set_number_at_path(&mut tree, path, nv);
                 }
                 serde_json::Value::Bool(b) => { let _ = set_bool_at_path(&mut tree, path, !b); }

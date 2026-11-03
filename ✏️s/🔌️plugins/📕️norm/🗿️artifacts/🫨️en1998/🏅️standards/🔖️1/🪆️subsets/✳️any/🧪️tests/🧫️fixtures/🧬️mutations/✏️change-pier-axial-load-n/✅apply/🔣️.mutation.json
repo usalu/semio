@@ -1,0 +1,5 @@
+{
+  "mutation": "changePierAxialLoadN",
+  "id": "pier-1",
+  "newAxialLoadN": 1.5
+}

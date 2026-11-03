@@ -7,7 +7,7 @@
   "aggregateVariant": "InsertPlatedPanel",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
-  "binaryTag": 36,
+  "binaryTag": 19,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

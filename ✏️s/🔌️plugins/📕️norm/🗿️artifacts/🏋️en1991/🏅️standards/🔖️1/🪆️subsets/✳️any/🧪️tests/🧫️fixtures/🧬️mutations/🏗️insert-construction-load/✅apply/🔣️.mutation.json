@@ -1,0 +1,11 @@
+{
+  "InsertConstructionLoad": {
+    "index": 1,
+    "item": {
+      "id": "construction-load-1-new",
+      "stage": "x",
+      "kind": 1,
+      "magnitude": 1.5
+    }
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-prestress-steel-f-pk/schema.json",
+  "title": "ChangePrestressSteelFPk",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "gradeId",
+    "newFPk"
+  ],
+  "properties": {
+    "gradeId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Prestressing steel",
+          "de": "Spannstahl"
+        },
+        "description": {
+          "en": "The prestressing steel this mutation addresses, by id.",
+          "de": "Das adressierte Element (Spannstahl), per Kennung."
+        },
+        "ref": {
+          "kind": "grade"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newFPk": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "f pk",
+          "de": "f pk"
+        },
+        "widget": "stepper",
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

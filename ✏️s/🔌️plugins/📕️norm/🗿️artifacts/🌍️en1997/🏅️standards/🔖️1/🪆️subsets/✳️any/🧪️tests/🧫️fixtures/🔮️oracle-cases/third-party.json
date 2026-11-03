@@ -1,0 +1,372 @@
+{
+  "$schema": "../../../../../../../../../🔮️oracles/🏃️harness/🧬️schema/🔣️.json",
+  "schemaVersion": 1,
+  "artifact": "en1997",
+  "annex": "de",
+  "cases": [
+    {
+      "id": "en1997.D.4.bearing-factors-phi20",
+      "check": "en1997.D.4.bearing-factors",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "Annex D.4 (D.2-D.4)"
+      },
+      "inputs": {
+        "phi": 20.0
+      },
+      "expected": {
+        "Nq": {
+          "value": 6.39939352108521,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "Nc": {
+          "value": 14.8347117779312,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "Ng_ec7": {
+          "value": 3.9304370495295986,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-groundhog",
+          "adapter": "groundhog",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1997.D.4.bearing-factors-phi30",
+      "check": "en1997.D.4.bearing-factors",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "Annex D.4 (D.2-D.4)"
+      },
+      "inputs": {
+        "phi": 30.0
+      },
+      "expected": {
+        "Nq": {
+          "value": 18.401122218708668,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "Nc": {
+          "value": 30.139627791519086,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "Ng_ec7": {
+          "value": 20.093085194346052,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-groundhog",
+          "adapter": "groundhog",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1997.D.4.bearing-factors-phi35",
+      "check": "en1997.D.4.bearing-factors",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "Annex D.4 (D.2-D.4)"
+      },
+      "inputs": {
+        "phi": 35.0
+      },
+      "expected": {
+        "Nq": {
+          "value": 33.29609149141177,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "Nc": {
+          "value": 46.12359868902069,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "Ng_ec7": {
+          "value": 45.227933433993975,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-groundhog",
+          "adapter": "groundhog",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1997.9.earth-pressure-phi30-delta0",
+      "check": "en1997.9.earth-pressure",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "9.5 and Annex C (limit earth pressure coefficients)",
+        "table": "C"
+      },
+      "inputs": {
+        "phi": 30.0,
+        "delta": 0.0
+      },
+      "expected": {
+        "Ka_rankine": {
+          "value": 0.3333333333333334,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "Kp_rankine": {
+          "value": 3.0,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-groundhog",
+          "adapter": "groundhog",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1997.9.earth-pressure-phi30-delta20",
+      "check": "en1997.9.earth-pressure",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "9.5 and Annex C (limit earth pressure coefficients)",
+        "table": "C"
+      },
+      "inputs": {
+        "phi": 30.0,
+        "delta": 20.0
+      },
+      "expected": {
+        "Ka_rankine": {
+          "value": 0.3333333333333334,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "Kp_rankine": {
+          "value": 3.0,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "Ka_coulomb": {
+          "value": 0.29731385720545095,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "Kp_coulomb": {
+          "value": 6.105357772952885,
+          "unit": "1",
+          "profile": "method-spread-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-groundhog",
+          "adapter": "groundhog",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1997.9.earth-pressure-phi35-delta23",
+      "check": "en1997.9.earth-pressure",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "9.5 and Annex C (limit earth pressure coefficients)",
+        "table": "C"
+      },
+      "inputs": {
+        "phi": 35.0,
+        "delta": 23.3333
+      },
+      "expected": {
+        "Ka_rankine": {
+          "value": 0.27099005412014443,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "Kp_rankine": {
+          "value": 3.6901723321426636,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "Ka_coulomb": {
+          "value": 0.24440949086294722,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "Kp_coulomb": {
+          "value": 9.961627412377874,
+          "unit": "1",
+          "profile": "method-spread-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-groundhog",
+          "adapter": "groundhog",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1997.2.cpt-phi-qc10-sv100",
+      "check": "en1997.2.cpt-friction-angle",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "2.4.3 and 10.2 derived values from field tests (Kulhawy and Mayne 1990)"
+      },
+      "inputs": {
+        "qc": 10000000.0,
+        "sigma_v0_eff": 100000.0
+      },
+      "expected": {
+        "phi_deg": {
+          "value": 39.6,
+          "unit": "deg",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-groundhog",
+          "adapter": "groundhog",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1997.2.cpt-phi-qc5-sv50",
+      "check": "en1997.2.cpt-friction-angle",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "2.4.3 and 10.2 derived values from field tests (Kulhawy and Mayne 1990)"
+      },
+      "inputs": {
+        "qc": 5000000.0,
+        "sigma_v0_eff": 50000.0
+      },
+      "expected": {
+        "phi_deg": {
+          "value": 37.944335023848105,
+          "unit": "deg",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-groundhog",
+          "adapter": "groundhog",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1997.2.cpt-phi-qc20-sv200",
+      "check": "en1997.2.cpt-friction-angle",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "2.4.3 and 10.2 derived values from field tests (Kulhawy and Mayne 1990)"
+      },
+      "inputs": {
+        "qc": 20000000.0,
+        "sigma_v0_eff": 200000.0
+      },
+      "expected": {
+        "phi_deg": {
+          "value": 41.2556649761519,
+          "unit": "deg",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-groundhog",
+          "adapter": "groundhog",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1997.2.cpt-su-nk15",
+      "check": "en1997.2.cpt-undrained-strength",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "2.4.3 derived values from field tests (Rad and Lunne 1988)"
+      },
+      "inputs": {
+        "q_net": 1500000.0,
+        "N_k": 15.0
+      },
+      "expected": {
+        "s_u": {
+          "value": 100000.0,
+          "unit": "Pa",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-groundhog",
+          "adapter": "groundhog",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1997.2.cpt-behaviour-index",
+      "check": "en1997.2.cpt-behaviour-index",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "2.4.3 derived values from field tests (Robertson and Wride 1998)"
+      },
+      "inputs": {
+        "qt": 10000000.0,
+        "fs": 100000.0,
+        "sigma_v0": 150000.0,
+        "sigma_v0_eff": 100000.0
+      },
+      "expected": {
+        "Ic": {
+          "value": 1.919557044232604,
+          "unit": "1",
+          "profile": "method-spread-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-groundhog",
+          "adapter": "groundhog",
+          "kind": "third-party-library"
+        }
+      ]
+    }
+  ]
+}

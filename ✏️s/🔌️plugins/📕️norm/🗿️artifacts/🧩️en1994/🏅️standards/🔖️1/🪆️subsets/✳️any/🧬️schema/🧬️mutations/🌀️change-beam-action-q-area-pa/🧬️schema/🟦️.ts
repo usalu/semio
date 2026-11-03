@@ -1,12 +1,12 @@
 /** 🌀️ `change-beam-action-q-area-pa` wire twin: the leaf payload `ChangeBeamActionQAreaPa`, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
- * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
+ * by `repo ./📜️script.ts schema twins generate`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
-import { normWireInteger, normWireNumber, normWireObject, normWireRange, type NormWireReader, normWireRequired } from "@semio-tech/norm-js/registry/contract";
+import { normWireNumber, normWireObject, normWireRequired, normWireString, type NormWireReader } from "@semio-tech/norm-js/registry/contract";
 
 export interface ChangeBeamActionQAreaPa {
-  index: number;
-  actionIndex: number;
+  beamId: string;
+  id: string;
   newQAreaPa: number;
 }
 
-export const parseChangeBeamActionQAreaPa: NormWireReader<ChangeBeamActionQAreaPa> = normWireObject<ChangeBeamActionQAreaPa>({ index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), actionIndex: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), newQAreaPa: normWireRequired(normWireNumber) });
+export const parseChangeBeamActionQAreaPa: NormWireReader<ChangeBeamActionQAreaPa> = normWireObject<ChangeBeamActionQAreaPa>({ beamId: normWireRequired(normWireString), id: normWireRequired(normWireString), newQAreaPa: normWireRequired(normWireNumber) });

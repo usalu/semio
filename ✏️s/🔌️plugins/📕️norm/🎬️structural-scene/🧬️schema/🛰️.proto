@@ -1,0 +1,1062 @@
+syntax = "proto3";
+package semio.norm.structuralscene;
+
+import "📈️diagram2d/🛰️.proto";
+import "🕹️handles/🛰️.proto";
+
+message Empty {}
+
+message LocalizedCopy {
+  string en = 1;
+  string de = 2;
+}
+
+message ClauseId {
+  string family = 1;
+  string part = 2;
+  string section = 3;
+}
+
+message Quantity {
+  QuantityKind kind = 1;
+  double value = 2;
+}
+
+message Vec2 {
+  double x = 1;
+  double y = 2;
+}
+
+message Vec3 {
+  double x = 1;
+  double y = 2;
+  double z = 3;
+}
+
+message Rotation {
+  double x = 1;
+  double y = 2;
+  double z = 3;
+  double w = 4;
+}
+
+message Transform {
+  Vec3 translation = 1;
+  Rotation rotation = 2;
+  Vec3 scale = 3;
+}
+
+message Frame {
+  Vec3 origin = 1;
+  Vec3 x = 2;
+  Vec3 y = 3;
+  Vec3 z = 4;
+}
+
+message Aabb {
+  Vec3 min = 1;
+  Vec3 max = 2;
+}
+
+message Polyline2 {
+ repeated Vec2 points = 1;
+}
+
+message Polyline3 {
+ repeated Vec3 points = 1;
+}
+
+message Ring2 {
+ repeated Vec2 points = 1;
+}
+
+message Ring3 {
+ repeated Vec3 points = 1;
+}
+
+message Polygon2 {
+  Ring2 outer = 1;
+ repeated Ring2 holes = 2;
+}
+
+message Polygon3 {
+  Ring3 outer = 1;
+ repeated Ring3 holes = 2;
+}
+
+message Arc {
+  Vec3 centre = 1;
+  Vec3 normal = 2;
+  Vec3 start = 3;
+  double sweep = 4;
+}
+
+message Spline3 {
+ repeated Vec3 control = 1;
+  uint32 degree = 2;
+}
+
+message Segment3 {
+  Vec3 from = 1;
+  Vec3 to = 2;
+}
+
+message Path3 {
+  oneof kind {
+    Polyline3 polyline = 1;
+    Arc arc = 2;
+    Spline3 spline = 3;
+  }
+}
+
+enum QuantityKind {
+  QUANTITY_KIND_DIMENSIONLESS = 0;
+  QUANTITY_KIND_LENGTH = 1;
+  QUANTITY_KIND_AREA = 2;
+  QUANTITY_KIND_VOLUME = 3;
+  QUANTITY_KIND_MASS = 4;
+  QUANTITY_KIND_TIME = 5;
+  QUANTITY_KIND_TEMPERATURE = 6;
+  QUANTITY_KIND_ANGLE = 7;
+  QUANTITY_KIND_FORCE = 8;
+  QUANTITY_KIND_MOMENT = 9;
+  QUANTITY_KIND_PRESSURE = 10;
+  QUANTITY_KIND_STRESS = 11;
+  QUANTITY_KIND_ENERGY = 12;
+  QUANTITY_KIND_ACCELERATION = 13;
+  QUANTITY_KIND_FREQUENCY = 14;
+  QUANTITY_KIND_FORCE_PER_LENGTH = 15;
+  QUANTITY_KIND_STIFFNESS = 16;
+}
+
+message Rgb {
+  uint32 r = 1;
+  uint32 g = 2;
+  uint32 b = 3;
+}
+
+message Appearance {
+  MaterialRole role = 1;
+  ColourChannel channel = 2;
+  StyleState style = 3;
+  double opacity = 4;
+ optional Hatch hatch = 5;
+ optional DeformationOverlay deformation = 6;
+}
+
+message UtilisationBinding {
+  string check_id = 1;
+  double ratio = 2;
+  CheckStatus status = 3;
+ optional StationValue per_station = 4;
+  bool stale = 5;
+}
+
+message StationValue {
+  double at = 1;
+  double value = 2;
+}
+
+message DisplacementSample {
+  double at = 1;
+  Vec3 delta = 2;
+}
+
+message DeformationOverlay {
+  DeformationKind kind = 1;
+  uint32 index = 2;
+ optional Quantity frequency = 3;
+  double participation = 4;
+  double scale = 5;
+ repeated DisplacementSample samples = 6;
+ repeated SurfaceSample surface = 7;
+  Motion motion = 8;
+ optional double load_factor = 9;
+}
+
+message SurfaceSample {
+  Vec2 at = 1;
+  Vec3 delta = 2;
+}
+
+message ScalarField {
+  string id = 1;
+  QuantityKind unit = 2;
+  FieldSamples samples = 3;
+}
+
+message Layer {
+  string id = 1;
+  LocalizedCopy name = 2;
+  bool visible = 3;
+  bool locked = 4;
+}
+
+message ColourMapRef {
+  string id = 1;
+  double min = 2;
+  double max = 3;
+}
+
+message ParameterTrack {
+  string id = 1;
+  TrackKind kind = 2;
+  LocalizedCopy label = 3;
+  QuantityKind unit = 4;
+  double min = 5;
+  double max = 6;
+  double step = 7;
+  bool looped = 8;
+ repeated Keyframe keyframes = 9;
+}
+
+message Keyframe {
+  double at = 1;
+  LocalizedCopy caption = 2;
+ optional string field = 3;
+ optional string layer = 4;
+}
+
+message MaterialRole {
+  message SoilData {
+    string class = 1;
+  }
+  message LoadData {
+    LoadKind kind = 1;
+  }
+  oneof kind {
+    Empty steel = 1;
+    Empty concrete = 2;
+    Empty rebar = 3;
+    Empty timber = 4;
+    Empty masonry = 5;
+    SoilData soil = 6;
+    Empty aluminium = 7;
+    Empty glass = 8;
+    Empty weld = 9;
+    Empty bolt = 10;
+    LoadData load = 11;
+    Empty support = 12;
+    Empty neutral = 13;
+  }
+}
+
+message FieldSamples {
+  message VertexData {
+    repeated double values = 1;
+  }
+  message StationData {
+    repeated StationValue values = 1;
+  }
+  message InstanceData {
+    repeated double values = 1;
+  }
+  oneof kind {
+    VertexData vertex = 1;
+    StationData station = 2;
+    InstanceData instance = 3;
+  }
+}
+
+message ColourChannel {
+  message FieldsData {
+    string active = 1;
+    repeated ScalarField fields = 2;
+  }
+  message CustomData {
+    Rgb rgb = 1;
+  }
+  oneof kind {
+    Empty role = 1;
+    Empty utilisation = 2;
+    Empty status = 3;
+    FieldsData fields = 4;
+    CustomData custom = 5;
+  }
+}
+
+enum StyleState {
+  STYLE_STATE_NORMAL = 0;
+  STYLE_STATE_HOVER = 1;
+  STYLE_STATE_SELECTED = 2;
+  STYLE_STATE_DIMMED = 3;
+  STYLE_STATE_GHOST = 4;
+  STYLE_STATE_ERROR = 5;
+  STYLE_STATE_STALE = 6;
+}
+
+enum Hatch {
+  HATCH_DIAGONAL = 0;
+  HATCH_CROSS_DIAGONAL = 1;
+  HATCH_HORIZONTAL = 2;
+  HATCH_DOTS = 3;
+  HATCH_VERTICAL = 4;
+}
+
+enum CheckStatus {
+  CHECK_STATUS_PASS = 0;
+  CHECK_STATUS_WARNING = 1;
+  CHECK_STATUS_FAIL = 2;
+  CHECK_STATUS_NOT_APPLICABLE = 3;
+}
+
+enum Motion {
+  MOTION_STATIC = 0;
+  MOTION_HARMONIC = 1;
+  MOTION_RAMP = 2;
+}
+
+enum TrackKind {
+  TRACK_KIND_TIME = 0;
+  TRACK_KIND_AGE = 1;
+  TRACK_KIND_MODE = 2;
+  TRACK_KIND_PHASE = 3;
+  TRACK_KIND_COMBINATION = 4;
+}
+
+enum DeformationKind {
+  DEFORMATION_KIND_DEFORMED = 0;
+  DEFORMATION_KIND_MODE = 1;
+}
+
+message SectionParam {
+  string name = 1;
+  double value = 2;
+}
+
+message CompositePart {
+  SectionShape shape = 1;
+  MaterialRole role = 2;
+  Vec2 offset = 3;
+}
+
+message RebarLayout {
+  double bar_diameter = 1;
+ repeated Vec2 positions = 2;
+  double cover = 3;
+}
+
+enum ProfileKind {
+  PROFILE_KIND_I_SHAPE = 0;
+  PROFILE_KIND_RECT = 1;
+  PROFILE_KIND_CIRCLE = 2;
+  PROFILE_KIND_CHS = 3;
+  PROFILE_KIND_RHS = 4;
+  PROFILE_KIND_CHANNEL = 5;
+  PROFILE_KIND_TEE = 6;
+  PROFILE_KIND_ANGLE = 7;
+  PROFILE_KIND_CEE = 8;
+  PROFILE_KIND_ZED = 9;
+}
+
+message SectionShape {
+  message ParametricData {
+    ProfileKind profile = 1;
+    repeated SectionParam params = 2;
+  }
+  message PolygonData {
+    Polygon2 polygon = 1;
+  }
+  message CompositeData {
+    repeated CompositePart parts = 1;
+    repeated RebarLayout rebar = 2;
+  }
+  message ThinWalledData {
+    Polyline2 centreline = 1;
+    repeated double thickness = 2;
+  }
+  oneof kind {
+    ParametricData parametric = 1;
+    PolygonData polygon = 2;
+    CompositeData composite = 3;
+    ThinWalledData thin_walled = 4;
+  }
+}
+
+message LoadCaseRef {
+  string id = 1;
+  LoadKind kind = 2;
+ optional CombinationFactors psi = 3;
+}
+
+message CombinationFactors {
+  double psi0 = 1;
+  double psi1 = 2;
+  double psi2 = 3;
+}
+
+message ProfileSample {
+  double at = 1;
+  Quantity value = 2;
+}
+
+message PressureZone {
+  Polygon3 polygon = 1;
+  Quantity value = 2;
+  LocalizedCopy label = 3;
+}
+
+message PointMass {
+  Vec3 at = 1;
+  Quantity mass = 2;
+}
+
+message SupportGeometry {
+  SupportKind kind = 1;
+  Vec3 at = 2;
+  Frame frame = 3;
+}
+
+enum LoadKind {
+  LOAD_KIND_PERMANENT = 0;
+  LOAD_KIND_VARIABLE = 1;
+  LOAD_KIND_ACCIDENTAL = 2;
+  LOAD_KIND_SEISMIC = 3;
+  LOAD_KIND_WIND = 4;
+  LOAD_KIND_SNOW = 5;
+  LOAD_KIND_THERMAL = 6;
+  LOAD_KIND_PRESTRESS = 7;
+  LOAD_KIND_OTHER = 8;
+}
+
+enum LoadScaleRule {
+  LOAD_SCALE_RULE_LOG_LENGTH_BY_MAGNITUDE = 0;
+  LOAD_SCALE_RULE_FIXED = 1;
+}
+
+enum PressureWave {
+  PRESSURE_WAVE_SPHERICAL = 0;
+  PRESSURE_WAVE_PLANAR = 1;
+}
+
+message LoadProfile {
+  message UniformData {
+    Quantity value = 1;
+  }
+  message LinearData {
+    Quantity start = 1;
+    Quantity end = 2;
+  }
+  message SteppedData {
+    repeated ProfileSample steps = 1;
+  }
+  message SampledData {
+    repeated ProfileSample samples = 1;
+  }
+  oneof kind {
+    UniformData uniform = 1;
+    LinearData linear = 2;
+    SteppedData stepped = 3;
+    SampledData sampled = 4;
+  }
+}
+
+message LoadGlyph {
+  message PointData {
+    Vec3 at = 1;
+    Vec3 direction = 2;
+    Quantity magnitude = 3;
+    LoadCaseRef case = 4;
+  }
+  message MomentData {
+    Vec3 at = 1;
+    Vec3 axis = 2;
+    Quantity magnitude = 3;
+    LoadCaseRef case = 4;
+  }
+  message LineData {
+    Path3 path = 1;
+    Vec3 direction = 2;
+    LoadProfile profile = 3;
+    LoadCaseRef case = 4;
+  }
+  message AreaData {
+    Polygon3 polygon = 1;
+    Vec3 direction = 2;
+    Quantity intensity = 3;
+    LoadCaseRef case = 4;
+  }
+  message PressureData {
+    EntityRef face = 1;
+    repeated PressureZone zones = 2;
+    LoadCaseRef case = 3;
+  }
+  message ThermalData {
+    EntityRef target = 1;
+    Quantity delta_t = 2;
+    LoadCaseRef case = 3;
+  }
+  message InertialData {
+    Vec3 origin = 1;
+    Vec3 direction = 2;
+    repeated PointMass masses = 3;
+    LoadCaseRef case = 4;
+  }
+  message ImpactData {
+    Vec3 at = 1;
+    Vec3 direction = 2;
+    Quantity energy_or_force = 3;
+    LoadCaseRef case = 4;
+  }
+  message ExplosionData {
+    Vec3 centre = 1;
+    Quantity pressure = 2;
+    PressureWave shape = 3;
+    LoadCaseRef case = 4;
+  }
+  oneof kind {
+    PointData point = 1;
+    MomentData moment = 2;
+    LineData line = 3;
+    AreaData area = 4;
+    PressureData pressure = 5;
+    ThermalData thermal = 6;
+    InertialData inertial = 7;
+    ImpactData impact = 8;
+    ExplosionData explosion = 9;
+  }
+}
+
+message SupportKind {
+  message RollerData {
+    Vec3 normal = 1;
+  }
+  message SpringData {
+    repeated Quantity stiffness = 1;
+  }
+  message ElasticBedData {
+    Quantity stiffness = 1;
+    Polygon3 extent = 2;
+  }
+  oneof kind {
+    Empty fixed = 1;
+    Empty pinned = 2;
+    RollerData roller = 3;
+    SpringData spring = 4;
+    ElasticBedData elastic_bed = 5;
+    Empty pile_head = 6;
+  }
+}
+
+message StructuralScene {
+  string schema = 1;
+  SceneRevision revision = 2;
+  Aabb bounds = 3;
+ repeated SceneEntity entities = 4;
+ repeated Annotation annotations = 5;
+ repeated Legend legends = 6;
+ repeated Layer layers = 7;
+ repeated ParameterTrack tracks = 8;
+ repeated Ownership owners = 10;
+  LocalizedCopy description = 9;
+}
+
+message Ownership {
+  OwnedKind kind = 1;
+  string id = 2;
+  EntityRef owner = 3;
+}
+
+message SceneRevision {
+  uint64 document_seq = 1;
+  uint64 report_seq = 2;
+}
+
+message EntityRef {
+  EntityKind kind = 1;
+  string id = 2;
+  string path = 3;
+}
+
+message SceneEntity {
+  EntityRef entity = 1;
+  Geometry geometry = 2;
+  Appearance appearance = 3;
+ optional UtilisationBinding utilisation = 4;
+ optional LocalizedCopy label = 5;
+  LocalizedCopy accessible_name = 6;
+  LocalizedCopy accessible_detail = 7;
+  string layer = 8;
+  PickPolicy pick = 9;
+ repeated string handles = 10;
+  string content_hash = 11;
+}
+
+message MemberGeometry {
+  Path3 axis = 1;
+  Frame frame = 2;
+  SectionShape section = 3;
+ optional SectionShape section_taper = 4;
+  Vec2 start_offset = 5;
+  Vec2 end_offset = 6;
+  EndRelease start_release = 7;
+  EndRelease end_release = 8;
+ repeated double stations = 9;
+}
+
+message PlateGeometry {
+  Frame frame = 1;
+  Polygon2 outline = 2;
+  double thickness = 3;
+  double offset = 4;
+ repeated Stiffener stiffeners = 5;
+}
+
+message Stiffener {
+  Polyline2 path = 1;
+  SectionShape section = 2;
+}
+
+message ShellGeometry {
+  ShellShape shape = 1;
+  double thickness = 2;
+}
+
+message PointGrid {
+  uint32 rows = 1;
+  uint32 columns = 2;
+ repeated Vec3 points = 3;
+}
+
+message Triangle {
+  uint32 a = 1;
+  uint32 b = 2;
+  uint32 c = 3;
+}
+
+message Stratum {
+  double thickness = 1;
+  MaterialRole role = 2;
+  LocalizedCopy label = 3;
+}
+
+message WallLayer {
+  double thickness = 1;
+  MaterialRole role = 2;
+  LocalizedCopy label = 3;
+}
+
+message WallCut {
+  double offset = 1;
+  double width = 2;
+  double sill = 3;
+  double height = 4;
+}
+
+message GrainLayer {
+  double thickness = 1;
+  MaterialRole role = 2;
+  double grain = 3;
+  LocalizedCopy label = 4;
+}
+
+message LinkZone {
+  double start = 1;
+  double spacing = 2;
+  uint32 count = 3;
+}
+
+message WeldPitch {
+  double length = 1;
+  double gap = 2;
+}
+
+message SolidGeometry {
+  SolidShape shape = 1;
+}
+
+message FastenerGeometry {
+  FastenerKind kind = 1;
+  Segment3 axis = 2;
+  double diameter = 3;
+  HeadShape head = 4;
+ optional Pattern pattern = 5;
+ optional double hole_clearance = 6;
+}
+
+message BendShape {
+  double bend_angle = 1;
+  double bend_radius = 2;
+  double leg_length = 3;
+  bool both_ends = 4;
+}
+
+message SurfaceGeometry {
+  SurfaceShape shape = 1;
+}
+
+enum OwnedKind {
+  OWNED_KIND_ANNOTATION = 0;
+  OWNED_KIND_TRACK = 1;
+}
+
+enum EntityKind {
+  ENTITY_KIND_MEMBER = 0;
+  ENTITY_KIND_PLATE = 1;
+  ENTITY_KIND_SHELL = 2;
+  ENTITY_KIND_SOLID = 3;
+  ENTITY_KIND_FASTENER = 4;
+  ENTITY_KIND_SUPPORT = 5;
+  ENTITY_KIND_LOAD = 6;
+  ENTITY_KIND_SURFACE = 7;
+  ENTITY_KIND_GROUP = 8;
+}
+
+enum PickPolicy {
+  PICK_POLICY_WHOLE = 0;
+  PICK_POLICY_VERTEX = 1;
+  PICK_POLICY_EDGE = 2;
+  PICK_POLICY_FACE = 3;
+  PICK_POLICY_NONE = 4;
+}
+
+enum EndRelease {
+  END_RELEASE_RIGID = 0;
+  END_RELEASE_PINNED = 1;
+  END_RELEASE_SLIDING = 2;
+  END_RELEASE_FREE = 3;
+}
+
+enum HeadShape {
+  HEAD_SHAPE_HEX = 0;
+  HEAD_SHAPE_COUNTERSUNK = 1;
+  HEAD_SHAPE_ROUND = 2;
+  HEAD_SHAPE_HEADED = 3;
+  HEAD_SHAPE_NONE = 4;
+}
+
+enum WeldKind {
+  WELD_KIND_FILLET = 0;
+  WELD_KIND_BUTT = 1;
+}
+
+message Geometry {
+  message GroupData {
+    repeated EntityRef members = 1;
+  }
+  oneof kind {
+    MemberGeometry member = 1;
+    PlateGeometry plate = 2;
+    ShellGeometry shell = 3;
+    SolidGeometry solid = 4;
+    FastenerGeometry fastener = 5;
+    SupportGeometry support = 6;
+    LoadGlyph load = 7;
+    SurfaceGeometry surface = 8;
+    GroupData group = 9;
+  }
+}
+
+message ShellShape {
+  message RevolvedData {
+    Vec3 origin = 1;
+    Vec3 axis = 2;
+    Polyline2 generatrix = 3;
+    double sweep = 4;
+  }
+  message PatchData {
+    PointGrid grid = 1;
+  }
+  oneof kind {
+    RevolvedData revolved = 1;
+    PatchData patch = 2;
+  }
+}
+
+message SolidShape {
+  message PrismData {
+    Frame frame = 1;
+    Polygon2 base = 2;
+    double height = 3;
+  }
+  message BoxData {
+    Frame frame = 1;
+    Vec3 size = 2;
+  }
+  message CylinderData {
+    Frame frame = 1;
+    double radius = 2;
+    double height = 3;
+  }
+  message WedgeData {
+    Frame frame = 1;
+    Vec2 base = 2;
+    double height = 3;
+  }
+  message MeshData {
+    repeated Vec3 vertices = 1;
+    repeated Triangle triangles = 2;
+  }
+  message StrataColumnData {
+    Frame frame = 1;
+    Polygon2 footprint = 2;
+    repeated Stratum strata = 3;
+  }
+  message FootingBodyData {
+    Frame frame = 1;
+    Polygon2 footprint = 2;
+    double thickness = 3;
+    optional Vec2 pedestal = 4;
+    double pedestal_height = 5;
+  }
+  message WallAssemblyData {
+    Polyline3 path = 1;
+    double height = 2;
+    repeated WallLayer layers = 3;
+    repeated WallCut openings = 4;
+  }
+  message LaminateData {
+    Frame frame = 1;
+    Polygon2 footprint = 2;
+    repeated GrainLayer layers = 3;
+  }
+  oneof kind {
+    PrismData prism = 1;
+    BoxData box = 2;
+    CylinderData cylinder = 3;
+    WedgeData wedge = 4;
+    MeshData mesh = 5;
+    StrataColumnData strata_column = 6;
+    FootingBodyData footing_body = 7;
+    WallAssemblyData wall_assembly = 8;
+    LaminateData laminate = 9;
+  }
+}
+
+message FastenerKind {
+  message BoltData {
+    string class = 1;
+    optional Quantity preload = 2;
+  }
+  message StudData {
+    double head_height = 1;
+    double head_diameter = 2;
+  }
+  message RebarData {
+    optional BendShape bend = 1;
+  }
+  message WeldData {
+    double throat = 1;
+    WeldKind weld = 2;
+  }
+  message WeldRunData {
+    double throat = 1;
+    WeldKind weld = 2;
+    Path3 path = 3;
+    optional WeldPitch pitch = 4;
+  }
+  message TendonData {
+    Path3 profile = 1;
+    optional double duct = 2;
+  }
+  oneof kind {
+    BoltData bolt = 1;
+    Empty screw = 2;
+    Empty nail = 3;
+    Empty dowel = 4;
+    StudData stud = 5;
+    RebarData rebar = 6;
+    Empty anchor = 7;
+    WeldData weld = 8;
+    WeldRunData weld_run = 9;
+    TendonData tendon = 10;
+  }
+}
+
+message Pattern {
+  message GridData {
+    uint32 nx = 1;
+    uint32 ny = 2;
+    double sx = 3;
+    double sy = 4;
+  }
+  message RowData {
+    uint32 n = 1;
+    double s = 2;
+  }
+  message AlongData {
+    Path3 path = 1;
+    double spacing = 2;
+  }
+  message CageData {
+    Ring2 outline = 1;
+    repeated LinkZone zones = 2;
+    Vec3 reference = 3;
+  }
+  message PointsData {
+    repeated Vec3 offsets = 1;
+  }
+  oneof kind {
+    GridData grid = 1;
+    RowData row = 2;
+    AlongData along = 3;
+    CageData cage = 4;
+    PointsData points = 5;
+  }
+}
+
+message SurfaceShape {
+  message PolygonData {
+    Polygon3 polygon = 1;
+  }
+  message ArcData {
+    Arc arc = 1;
+    double width = 2;
+  }
+  message GridData {
+    PointGrid grid = 1;
+  }
+  oneof kind {
+    PolygonData polygon = 1;
+    ArcData arc = 2;
+    GridData grid = 3;
+  }
+}
+
+message Legend {
+  string id = 1;
+  LocalizedCopy title = 2;
+  LegendScale scale = 3;
+}
+
+message LegendRole {
+  MaterialRole role = 1;
+  LocalizedCopy label = 2;
+}
+
+enum Tone {
+  TONE_NEUTRAL = 0;
+  TONE_INFO = 1;
+  TONE_WARNING = 2;
+  TONE_ERROR = 3;
+}
+
+enum FailureMode {
+  FAILURE_MODE_LATERAL_TORSIONAL_BUCKLING = 0;
+  FAILURE_MODE_FLEXURAL_BUCKLING = 1;
+  FAILURE_MODE_YIELDING = 2;
+  FAILURE_MODE_CRUSHING = 3;
+  FAILURE_MODE_PUNCHING = 4;
+  FAILURE_MODE_SLIP_CIRCLE = 5;
+  FAILURE_MODE_SHEAR_CONE = 6;
+  FAILURE_MODE_BLOCK_TEAR_OUT = 7;
+  FAILURE_MODE_OVERTURNING = 8;
+  FAILURE_MODE_SLIDING = 9;
+  FAILURE_MODE_FATIGUE = 10;
+  FAILURE_MODE_OTHER = 11;
+}
+
+message Annotation {
+  message DimensionData {
+    string id = 1;
+    Vec3 from = 2;
+    Vec3 to = 3;
+    Vec3 offset = 4;
+    Quantity value = 5;
+    optional FieldBinding binding = 6;
+  }
+  message LabelData {
+    string id = 1;
+    Vec3 anchor = 2;
+    LocalizedCopy text = 3;
+    Tone tone = 4;
+  }
+  message LeaderData {
+    string id = 1;
+    Vec3 anchor = 2;
+    LocalizedCopy text = 3;
+    repeated int32 offset_px = 4;
+  }
+  message ClauseData {
+    string id = 1;
+    EntityRef anchor = 2;
+    ClauseId clause = 3;
+  }
+  message FailureGlyphData {
+    string id = 1;
+    EntityRef at = 2;
+    FailureMode mode = 3;
+    optional Polygon3 extent = 4;
+  }
+  oneof kind {
+    DimensionData dimension = 1;
+    LabelData label = 2;
+    LeaderData leader = 3;
+    ClauseData clause = 4;
+    FailureGlyphData failure_glyph = 5;
+  }
+}
+
+message LegendScale {
+  message UtilisationData {
+    ColourMapRef map = 1;
+  }
+  message RolesData {
+    repeated LegendRole entries = 1;
+  }
+  message ScalarData {
+    string field_id = 1;
+    ColourMapRef map = 2;
+    QuantityKind unit = 3;
+  }
+  oneof kind {
+    UtilisationData utilisation = 1;
+    RolesData roles = 2;
+    ScalarData scalar = 3;
+  }
+}
+
+message SceneDelta {
+  SceneRevision base = 1;
+  SceneRevision revision = 2;
+ optional Aabb bounds = 3;
+ repeated EntityPatch entities = 4;
+ repeated AnnotationPatch annotations = 5;
+ optional Legend legends = 6;
+ optional Layer layers = 7;
+ optional ParameterTrack tracks = 8;
+ optional Ownership owners = 10;
+ optional LocalizedCopy description = 9;
+}
+
+message EntityPatch {
+  message AddData {
+    uint32 index = 1;
+    SceneEntity entity = 2;
+  }
+  message ReplaceData {
+    SceneEntity entity = 1;
+  }
+  message RemoveData {
+    string id = 1;
+  }
+  oneof kind {
+    AddData add = 1;
+    ReplaceData replace = 2;
+    RemoveData remove = 3;
+  }
+}
+
+message AnnotationPatch {
+  message AddData {
+    uint32 index = 1;
+    Annotation annotation = 2;
+  }
+  message ReplaceData {
+    Annotation annotation = 1;
+  }
+  message RemoveData {
+    string id = 1;
+  }
+  oneof kind {
+    AddData add = 1;
+    ReplaceData replace = 2;
+    RemoveData remove = 3;
+  }
+}
+
+message Violation {
+  string path = 1;
+  string rule = 2;
+}
+

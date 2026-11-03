@@ -5,7 +5,7 @@ use std::collections::BTreeMap;
 /// 📐️ Space classification per Part 2 §5.3.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
 pub enum SpaceKind {
     Overall,
     Operation,
@@ -18,9 +18,9 @@ pub enum SpaceKind {
 /// 🔌️ Port medium and direction.
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 pub struct PortDefinition {
     pub id: String,
     pub medium: String,
@@ -32,9 +32,9 @@ pub struct PortDefinition {
 /// 📦️ Axis-aligned bounding box.
 #[derive(Clone, Copy, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 pub struct BoundingBox {
     pub min: [f64; 3],
     pub max: [f64; 3],
@@ -64,9 +64,9 @@ impl BoundingBox {
 
 /// 🧱️ CSG primitive kind registry entry.
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 pub struct PrimitiveKind {
     pub id: String,
     pub parameters: Vec<String>,
@@ -78,8 +78,8 @@ pub struct PrimitiveKind {
 /// collection), both recursing back into this same enum's own `DslVariants` impl.
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(tag = "node", rename_all = "camelCase", rename_all_fields = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(tag = "node", rename_all = "camelCase", rename_all_fields = "camelCase"))]
 #[value(tag = "node", rename_all = "camelCase")]
 #[dsl(retire_with="crate::standards::v1::subsets::any::schema::snapshot::retire_decoded_catalogue_geometry")]
 pub enum GeometryNode {
@@ -106,7 +106,7 @@ pub enum GeometryNode {
 /// ➕️ Boolean CSG operator.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
 pub enum BooleanOperator {
     Union,
     Intersection,
@@ -116,9 +116,9 @@ pub enum BooleanOperator {
 /// 🏗️ Complete geometry object.
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 pub struct GeometryObject {
     pub id: String,
     #[dsl(statements, block)]
@@ -134,11 +134,11 @@ pub struct GeometryObject {
 /// 📦️ Space envelope with kind.
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 pub struct SpaceEnvelope {
-    #[cfg_attr(test, serde(default = "default_installation_space_id"))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(default = "default_installation_space_id"))]
     pub id: String,
     pub kind: SpaceKind,
     pub bounds: BoundingBox,
@@ -151,9 +151,9 @@ fn default_installation_space_id() -> String {
 /// 🎨️ Semantic surface.
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 pub struct SurfaceDefinition {
     pub id: String,
     pub purpose: String,
@@ -162,9 +162,9 @@ pub struct SurfaceDefinition {
 
 /// 📚️ Geometry catalogue index.
 #[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 pub struct GeometryCatalogue {
     pub objects: BTreeMap<String, GeometryObject>,
     #[dsl(table)]

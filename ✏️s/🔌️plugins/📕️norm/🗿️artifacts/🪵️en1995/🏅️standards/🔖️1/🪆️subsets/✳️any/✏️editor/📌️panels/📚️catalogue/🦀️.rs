@@ -8,10 +8,11 @@ use semio_framework_ui_locale::Terminology;
 use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
 use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 
-use semio_s_plugin_norm_app_surface::{CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable, NormFieldChoice};
+use semio_s_plugin_norm_app_surface::{spec_trace_table, CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable, NormFieldChoice};
+use semio_s_artifact_norm_en1995_schema::spec_trace::TABLE as SPEC_TRACE;
 use semio_s_artifact_norm_en1995_schema::checks::timber::{k_mod, parse_service_class, properties_for_class, spacing_minima, strength_class_options, LoadDuration};
 use semio_s_plugin_norm_compliance::ClauseId;
-use semio_s_artifact_norm_en1995_model::{TimberConnection, TimberProduct};
+use semio_s_artifact_norm_en1995_model::{FastenerType, StrengthClass, TimberConnection, TimberProduct};
 
 //#region 🔖️Constants
 pub const BODY_CATALOGUE: &str = "norm.en1995.play.catalogue";
@@ -29,7 +30,7 @@ fn pick(locale: Locale, en: &str, de: &str) -> String {
 }
 
 fn choices(path: &str) -> &'static [NormFieldChoice] {
-    crate::field_meta::en1995_field_meta(path).and_then(|meta| meta.choices).unwrap_or(&[])
+    crate::field_meta::en1995_field_meta(path).and_then(|meta| meta.choices()).unwrap_or(&[])
 }
 
 fn choice_label(path: &str, value: &str, locale: Locale) -> String {
@@ -118,12 +119,18 @@ fn fastener_table(locale: Locale) -> CatalogueTable {
     let rows = choices("connections[].fastenerType")
         .iter()
         .map(|f| {
+            let fastener_type = match f.value {
+                "nail" => FastenerType::Nail,
+                "screw" => FastenerType::Screw,
+                "bolt" => FastenerType::Bolt,
+                _ => FastenerType::Dowel,
+            };
             let probe = TimberConnection {
                 id: String::new(),
                 label_en: String::new(),
                 label_de: String::new(),
-                fastener_type: f.value.to_string(),
-                strength_class: String::new(),
+                fastener_type,
+                strength_class: StrengthClass::C24,
                 service_class: 1,
                 diameter_m: 1.0,
                 number: 1,
@@ -206,7 +213,7 @@ fn role_table(locale: Locale) -> CatalogueTable {
 
 /// 📚️ Normative reference tables for the timber subject, localized to `locale`.
 pub fn reference_tables(locale: Locale) -> Vec<CatalogueTable> {
-    vec![strength_class_table(locale), k_mod_table(locale), fastener_table(locale), role_table(locale)]
+    vec![strength_class_table(locale), k_mod_table(locale), fastener_table(locale), role_table(locale), spec_trace_table(&SPEC_TRACE)]
 }
 //#endregion 📚️Tables
 

@@ -7,7 +7,7 @@ use semio_s_plugin_norm_compliance::LocalizedText;
 /// 🏷️ Dictionary subject kind.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
 pub enum SubjectKind {
     #[dsl(key = "productGroup")]
     ProductGroup,
@@ -31,9 +31,9 @@ pub enum SubjectKind {
 /// 📖️ Dictionary subject.
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 pub struct Subject {
     pub id: String,
     pub kind: SubjectKind,
@@ -44,7 +44,7 @@ pub struct Subject {
 
 /// 🔗️ Relationship kind per Part 4 §4.4.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
 pub enum RelationshipKind {
     #[dsl(key = "isSubtypeOf")]
     IsSubtypeOf,
@@ -60,9 +60,9 @@ pub enum RelationshipKind {
 
 /// 🔗️ Typed relationship.
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 pub struct Relationship {
     pub id: String,
     pub kind: RelationshipKind,
@@ -73,9 +73,9 @@ pub struct Relationship {
 
 /// 📊️ Dictionary property definition.
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 pub struct DictionaryProperty {
     pub id: String,
     pub names: Names,
@@ -88,9 +88,9 @@ pub struct DictionaryProperty {
 
 /// ✅️ Controlled value list.
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 pub struct ControlledValueList {
     pub id: String,
     pub values: Vec<String>,
@@ -99,9 +99,9 @@ pub struct ControlledValueList {
 
 /// 🎯️ Value constraint on a property.
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 pub struct ValueConstraint {
     pub min: Option<f64>,
     pub max: Option<f64>,
@@ -110,9 +110,9 @@ pub struct ValueConstraint {
 
 /// 📚️ Data dictionary snapshot.
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 pub struct Dictionary {
     pub reference: DictionaryRef,
     #[dsl(table)]
@@ -129,9 +129,9 @@ pub struct Dictionary {
 
 /// 🗺️ ISO 12006-3 mapping record.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 pub struct Iso12006Mapping {
     pub dictionary_object_id: String,
     pub iso12006_uri: String,

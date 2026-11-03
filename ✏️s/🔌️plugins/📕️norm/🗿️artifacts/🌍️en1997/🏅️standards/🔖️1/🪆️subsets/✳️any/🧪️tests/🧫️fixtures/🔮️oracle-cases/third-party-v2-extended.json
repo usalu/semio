@@ -1,0 +1,1012 @@
+{
+  "$schema": "../../../../../../../../../🔮️oracles/🏃️harness/🧬️schema/🔣️.json",
+  "schemaVersion": 1,
+  "artifact": "en1997",
+  "annex": "de",
+  "cases": [
+    {
+      "id": "en1997.D.4.bearing-resistance-sand-rectangle-inclined",
+      "check": "en1997.D.4.bearing-resistance",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "Annex D.4 drained bearing resistance: N factors, shape s, base inclination b, load inclination i",
+        "annex": "en"
+      },
+      "inputs": {
+        "phi": 30.0,
+        "c": 0.0,
+        "B": 2.0,
+        "L": 3.0,
+        "gamma": 18000.0,
+        "q": 18000.0,
+        "V": 1000000.0,
+        "H": 150000.0,
+        "alpha": 0.0
+      },
+      "expected": {
+        "N_q": {
+          "value": 18.401122218708668,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "N_c": {
+          "value": 30.139627791519086,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "N_gamma": {
+          "value": 20.093085194346052,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "s_q": {
+          "value": 1.3333333333333333,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "s_gamma": {
+          "value": 0.8,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "s_c": {
+          "value": 1.3524891859929367,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "i_q": {
+          "value": 0.7710282331663665,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "i_gamma": {
+          "value": 0.6553739981914115,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "i_c": {
+          "value": 0.7578697848803441,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "b_q": {
+          "value": 1.0,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "q_ult": {
+          "value": 530133.0264110605,
+          "unit": "Pa",
+          "profile": "eurocode-quantities-v1"
+        },
+        "R_k": {
+          "value": 3180798.158466363,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-groundhog",
+          "adapter": "groundhog",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1997.D.4.bearing-resistance-cohesive-frictional",
+      "check": "en1997.D.4.bearing-resistance",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "Annex D.4 drained bearing resistance: N factors, shape s, base inclination b, load inclination i",
+        "annex": "en"
+      },
+      "inputs": {
+        "phi": 25.0,
+        "c": 10000.0,
+        "B": 2.5,
+        "L": 2.5,
+        "gamma": 18000.0,
+        "q": 20000.0,
+        "V": 1200000.0,
+        "H": 100000.0,
+        "alpha": 0.0
+      },
+      "expected": {
+        "N_q": {
+          "value": 10.66214238849845,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "N_c": {
+          "value": 20.720531219083686,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "N_gamma": {
+          "value": 9.011061979881713,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "s_q": {
+          "value": 1.4226182617406995,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "s_gamma": {
+          "value": 0.7,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "s_c": {
+          "value": 1.4663578636579484,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "i_q": {
+          "value": 0.8896931543192086,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "i_gamma": {
+          "value": 0.8230010985030628,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "i_c": {
+          "value": 0.8782767581158057,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "b_q": {
+          "value": 1.0,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "q_ult": {
+          "value": 653557.026529514,
+          "unit": "Pa",
+          "profile": "eurocode-quantities-v1"
+        },
+        "R_k": {
+          "value": 4084731.4158094623,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-groundhog",
+          "adapter": "groundhog",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1997.D.4.bearing-resistance-dense-square-vertical",
+      "check": "en1997.D.4.bearing-resistance",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "Annex D.4 drained bearing resistance: N factors, shape s, base inclination b, load inclination i",
+        "annex": "en"
+      },
+      "inputs": {
+        "phi": 35.0,
+        "c": 0.0,
+        "B": 2.0,
+        "L": 2.0,
+        "gamma": 18000.0,
+        "q": 18000.0,
+        "V": 1000000.0,
+        "H": 0.0,
+        "alpha": 0.0
+      },
+      "expected": {
+        "N_q": {
+          "value": 33.29609149141177,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "N_c": {
+          "value": 46.12359868902069,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "N_gamma": {
+          "value": 45.227933433993975,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "s_q": {
+          "value": 1.573576436351046,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "s_gamma": {
+          "value": 0.7,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "s_c": {
+          "value": 1.5913363698248404,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "i_q": {
+          "value": 1.0,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "i_gamma": {
+          "value": 1.0,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "i_c": {
+          "value": 1.0,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "b_q": {
+          "value": 1.0,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "q_ult": {
+          "value": 1512962.9711508583,
+          "unit": "Pa",
+          "profile": "eurocode-quantities-v1"
+        },
+        "R_k": {
+          "value": 6051851.884603433,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-groundhog",
+          "adapter": "groundhog",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1997.D.4.bearing-resistance-base-inclined",
+      "check": "en1997.D.4.bearing-resistance",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "Annex D.4 drained bearing resistance: N factors, shape s, base inclination b, load inclination i",
+        "annex": "en"
+      },
+      "inputs": {
+        "phi": 32.0,
+        "c": 0.0,
+        "B": 1.5,
+        "L": 6.0,
+        "gamma": 18000.0,
+        "q": 18000.0,
+        "V": 600000.0,
+        "H": 80000.0,
+        "alpha": 5.0
+      },
+      "expected": {
+        "N_q": {
+          "value": 23.176776207012633,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "N_c": {
+          "value": 35.49026070689833,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "N_gamma": {
+          "value": 27.715175551828352,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "s_q": {
+          "value": 1.1324798160583012,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "s_gamma": {
+          "value": 0.925,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "s_c": {
+          "value": 1.1384536246417332,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "i_q": {
+          "value": 0.7729186165379145,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "i_gamma": {
+          "value": 0.669862800999526,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "i_c": {
+          "value": 0.7626790135702713,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "b_q": {
+          "value": 0.8939132600862494,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "q_ult": {
+          "value": 533666.6838464086,
+          "unit": "Pa",
+          "profile": "eurocode-quantities-v1"
+        },
+        "R_k": {
+          "value": 4803000.154617677,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-groundhog",
+          "adapter": "groundhog",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1997.F.stress-strain-settlement-rectangle-footing",
+      "check": "en1997.F.stress-strain-settlement",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "Annex F.1 stress-strain method: s = integral sigma_z / E_m dz, Boussinesq stresses of a uniform rectangle below the centre",
+        "annex": "en"
+      },
+      "inputs": {
+        "B": 4.0,
+        "L": 6.0,
+        "q": 150000.0,
+        "E_m": 20000000.0,
+        "z_max": 12.0
+      },
+      "expected": {
+        "s": {
+          "value": 0.033737184837543475,
+          "unit": "m",
+          "profile": "numerical-v1"
+        },
+        "sigma_z_mid": {
+          "value": 36741.31944079328,
+          "unit": "Pa",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-groundhog",
+          "adapter": "groundhog",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1997.F.stress-strain-settlement-square-footing",
+      "check": "en1997.F.stress-strain-settlement",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "Annex F.1 stress-strain method: s = integral sigma_z / E_m dz, Boussinesq stresses of a uniform rectangle below the centre",
+        "annex": "en"
+      },
+      "inputs": {
+        "B": 3.0,
+        "L": 3.0,
+        "q": 200000.0,
+        "E_m": 40000000.0,
+        "z_max": 9.0
+      },
+      "expected": {
+        "s": {
+          "value": 0.014481546254234147,
+          "unit": "m",
+          "profile": "numerical-v1"
+        },
+        "sigma_z_mid": {
+          "value": 35787.48219786469,
+          "unit": "Pa",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-groundhog",
+          "adapter": "groundhog",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1997.F.oedometer-settlement-clay-layer",
+      "check": "en1997.F.oedometer-settlement",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "Annex F.2 oedometer method for normally consolidated clay: s = H_0 C_c / (1 + e_0) log10((sigma'_v0 + d sigma) / sigma'_v0)",
+        "annex": "en"
+      },
+      "inputs": {
+        "H0": 4.0,
+        "e0": 0.9,
+        "sigma_v0": 80000.0,
+        "d_sigma": 60000.0,
+        "C_c": 0.3
+      },
+      "expected": {
+        "s": {
+          "value": 0.1534977149597649,
+          "unit": "m",
+          "profile": "eurocode-quantities-v1"
+        },
+        "delta_e": {
+          "value": 0.07291141460588833,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-groundhog",
+          "adapter": "groundhog",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1997.F.oedometer-settlement-soft-layer",
+      "check": "en1997.F.oedometer-settlement",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "Annex F.2 oedometer method for normally consolidated clay: s = H_0 C_c / (1 + e_0) log10((sigma'_v0 + d sigma) / sigma'_v0)",
+        "annex": "en"
+      },
+      "inputs": {
+        "H0": 2.5,
+        "e0": 1.1,
+        "sigma_v0": 50000.0,
+        "d_sigma": 120000.0,
+        "C_c": 0.45
+      },
+      "expected": {
+        "s": {
+          "value": 0.28472084841549383,
+          "unit": "m",
+          "profile": "eurocode-quantities-v1"
+        },
+        "delta_e": {
+          "value": 0.2391655126690148,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-groundhog",
+          "adapter": "groundhog",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1997.9.embedded-wall-cantilever-smooth",
+      "check": "en1997.9.embedded-wall",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "9.7 and Annex C: horizontal Coulomb earth pressures, moment equilibrium for the required embedment t (unfactored, cantilever about the toe, free earth support about the prop)",
+        "annex": "en"
+      },
+      "inputs": {
+        "gamma": 19000.0,
+        "phi": 32.0,
+        "delta_a": 0.0,
+        "delta_p": 0.0,
+        "q": 10000.0,
+        "kind": "cantilever",
+        "h": 3.0
+      },
+      "expected": {
+        "K_ah": {
+          "value": 0.3072585245224685,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "K_ph": {
+          "value": 3.254588303299863,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "t": {
+          "value": 2.9138124527998848,
+          "unit": "m",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-groundhog",
+          "adapter": "groundhog",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1997.9.embedded-wall-cantilever-friction",
+      "check": "en1997.9.embedded-wall",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "9.7 and Annex C: horizontal Coulomb earth pressures, moment equilibrium for the required embedment t (unfactored, cantilever about the toe, free earth support about the prop)",
+        "annex": "en"
+      },
+      "inputs": {
+        "gamma": 19000.0,
+        "phi": 32.0,
+        "delta_a": 18.0,
+        "delta_p": 21.0,
+        "q": 0.0,
+        "kind": "cantilever",
+        "h": 3.0
+      },
+      "expected": {
+        "K_ah": {
+          "value": 0.2631025018435088,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "K_ph": {
+          "value": 6.737841112658575,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "t": {
+          "value": 1.5403749981749768,
+          "unit": "m",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-groundhog",
+          "adapter": "groundhog",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1997.9.embedded-wall-free-earth-prop",
+      "check": "en1997.9.embedded-wall",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "9.7 and Annex C: horizontal Coulomb earth pressures, moment equilibrium for the required embedment t (unfactored, cantilever about the toe, free earth support about the prop)",
+        "annex": "en"
+      },
+      "inputs": {
+        "gamma": 19000.0,
+        "phi": 30.0,
+        "delta_a": 20.0,
+        "delta_p": 0.0,
+        "q": 0.0,
+        "kind": "propped",
+        "h": 5.0,
+        "prop_depth": 0.5
+      },
+      "expected": {
+        "K_ah": {
+          "value": 0.27938363767335755,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "K_ph": {
+          "value": 3.0,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "t": {
+          "value": 1.7224079446687486,
+          "unit": "m",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-groundhog",
+          "adapter": "groundhog",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1997.7.pile-group-3x4",
+      "check": "en1997.7.pile-group",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "7.6.2.1 group efficiency by the Converse-Labarre formula",
+        "annex": "en"
+      },
+      "inputs": {
+        "m": 3,
+        "n": 4,
+        "d": 0.6,
+        "s": 1.8,
+        "R_c": 1200000.0
+      },
+      "expected": {
+        "E_g": {
+          "value": 0.709820250009561,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "R_group": {
+          "value": 10221411.600137677,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1997.7.pile-group-2x2-wide",
+      "check": "en1997.7.pile-group",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "7.6.2.1 group efficiency by the Converse-Labarre formula",
+        "annex": "en"
+      },
+      "inputs": {
+        "m": 2,
+        "n": 2,
+        "d": 0.4,
+        "s": 2.4,
+        "R_c": 900000.0
+      },
+      "expected": {
+        "E_g": {
+          "value": 0.8948630865774931,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "R_group": {
+          "value": 3221507.111678975,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1997.7.pile-resistance-3-profiles",
+      "check": "en1997.7.pile-resistance",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "7.6.2.2 Eq. 7.8 and Table A.10 correlation factors xi_1, xi_2 for the characteristic resistance from n profiles",
+        "table": "A.10",
+        "annex": "en"
+      },
+      "inputs": {
+        "D": 0.6,
+        "q_s": [
+          30000.0,
+          80000.0,
+          120000.0
+        ],
+        "h": [
+          3.0,
+          4.0,
+          5.0
+        ],
+        "q_b": 3000000.0,
+        "n_profiles": 3,
+        "R_min_ratio": 0.9
+      },
+      "expected": {
+        "R_c": {
+          "value": 2752035.1645446587,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        },
+        "xi_1": {
+          "value": 1.33,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        },
+        "xi_2": {
+          "value": 1.23,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        },
+        "R_ck": {
+          "value": 2013684.2667399943,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1997.7.pile-resistance-5-profiles",
+      "check": "en1997.7.pile-resistance",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "7.6.2.2 Eq. 7.8 and Table A.10 correlation factors xi_1, xi_2 for the characteristic resistance from n profiles",
+        "table": "A.10",
+        "annex": "en"
+      },
+      "inputs": {
+        "D": 0.6,
+        "q_s": [
+          30000.0,
+          80000.0,
+          120000.0
+        ],
+        "h": [
+          3.0,
+          4.0,
+          5.0
+        ],
+        "q_b": 3000000.0,
+        "n_profiles": 5,
+        "R_min_ratio": 0.9
+      },
+      "expected": {
+        "R_c": {
+          "value": 2752035.1645446587,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        },
+        "xi_1": {
+          "value": 1.29,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        },
+        "xi_2": {
+          "value": 1.15,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        },
+        "R_ck": {
+          "value": 2133360.592670278,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1997.8.anchor-resistance-fixed-length",
+      "check": "en1997.8.anchor-resistance",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "8.5.2 and 8.6 fixed-length pull-out R_a = pi d l_f tau_f, horizontal component for the wall",
+        "annex": "en"
+      },
+      "inputs": {
+        "d": 0.15,
+        "l_f": 6.0,
+        "tau_f": 200000.0,
+        "theta": 15.0,
+        "a_d": 500000.0
+      },
+      "expected": {
+        "R_a": {
+          "value": 565486.6776461628,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        },
+        "R_a_h": {
+          "value": 546218.1863608299,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        },
+        "utilisation": {
+          "value": 0.8841941282883073,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1997.8.anchor-elongation-free-length",
+      "check": "en1997.8.anchor-elongation",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "8.5.3 free-length elastic elongation of a ground anchor under the design force",
+        "annex": "en"
+      },
+      "inputs": {
+        "E": 195000000000.0,
+        "A_t": 0.001,
+        "l_free": 12.0,
+        "a_d": 500000.0
+      },
+      "expected": {
+        "delta": {
+          "value": 0.03076923076923077,
+          "unit": "m",
+          "profile": "numerical-v1"
+        },
+        "N": {
+          "value": 500000.0,
+          "unit": "N",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-pynite",
+          "adapter": "pynite",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-anastruct",
+          "adapter": "anastruct",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    }
+  ]
+}

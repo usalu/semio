@@ -17,8 +17,6 @@ pub mod change_assumed_crane_wheel;
 pub mod change_crane_claimed;
 #[path = "../💥change-crane-class/🦀️.rs"]
 pub mod change_crane_class;
-#[path = "../➕change-hoist-class/🦀️.rs"]
-pub mod change_hoist_class;
-#[path = "../⏫change-hoisting-speed/🦀️.rs"]
-pub mod change_hoisting_speed;
 //#endregion 🪢️Mounts
+
+pub use semio_s_artifact_norm_en1991_mut_cranes_more::{change_hoist_class, change_hoisting_speed, change_crane_x, change_crane_runway_length, change_crane_wheel_base};

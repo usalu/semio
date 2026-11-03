@@ -1,0 +1,7 @@
+{
+  "ChangeBarKind": {
+    "wallId": "wall-north",
+    "id": "bar-1",
+    "newKind": "Shear"
+  }
+}

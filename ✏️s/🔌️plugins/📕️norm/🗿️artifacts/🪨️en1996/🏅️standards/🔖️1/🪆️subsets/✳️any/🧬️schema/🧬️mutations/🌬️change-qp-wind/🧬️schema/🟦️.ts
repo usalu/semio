@@ -1,12 +1,12 @@
 /** 🌬️ `change-qp-wind` wire twin: the leaf payload `ChangeQPWind`, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
- * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
+ * by `repo ./📜️script.ts schema twins generate`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
-import { normWireInteger, normWireNumber, normWireObject, normWireRange, type NormWireReader, normWireRequired } from "@semio-tech/norm-js/registry/contract";
+import { normWireNumber, normWireObject, normWireRange, normWireRequired, normWireString, type NormWireReader } from "@semio-tech/norm-js/registry/contract";
 
 export interface ChangeQPWind {
-  wallIndex: number;
-  index: number;
+  wallId: string;
+  id: string;
   newQPWindPa: number;
 }
 
-export const parseChangeQPWind: NormWireReader<ChangeQPWind> = normWireObject<ChangeQPWind>({ wallIndex: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), newQPWindPa: normWireRequired(normWireRange(normWireNumber, {"minimum":0})) });
+export const parseChangeQPWind: NormWireReader<ChangeQPWind> = normWireObject<ChangeQPWind>({ wallId: normWireRequired(normWireString), id: normWireRequired(normWireString), newQPWindPa: normWireRequired(normWireRange(normWireNumber, {"minimum":0,"maximum":1000000000000})) });

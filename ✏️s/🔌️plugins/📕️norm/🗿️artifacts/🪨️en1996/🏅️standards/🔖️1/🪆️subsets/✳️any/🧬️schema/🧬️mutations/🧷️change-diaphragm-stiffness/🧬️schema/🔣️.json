@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-diaphragm-stiffness/schema.json",
+  "title": "ChangeDiaphragmStiffness",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newDiaphragmStiffnessNPerM"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Wall",
+          "de": "Wand"
+        },
+        "description": {
+          "en": "The wall this mutation addresses, by id.",
+          "de": "Das adressierte Element (Wand), per Kennung."
+        },
+        "ref": {
+          "kind": "wall"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newDiaphragmStiffnessNPerM": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100000000000000,
+      "x-semio-ui": {
+        "label": {
+          "en": "Diaphragm in-plane stiffness",
+          "de": "Scheibensteifigkeit der Decke"
+        },
+        "widget": "stepper",
+        "unit": "N/m",
+        "step": 1000000,
+        "precision": 0,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

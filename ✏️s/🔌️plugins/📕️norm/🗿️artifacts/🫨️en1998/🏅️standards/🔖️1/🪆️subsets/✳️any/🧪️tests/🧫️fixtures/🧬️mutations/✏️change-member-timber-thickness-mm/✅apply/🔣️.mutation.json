@@ -1,0 +1,6 @@
+{
+  "mutation": "changeMemberTimberThicknessMm",
+  "buildingId": "bldg-office",
+  "id": "col-c1",
+  "newTimberThicknessMm": 1.5
+}

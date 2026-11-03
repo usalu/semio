@@ -22,27 +22,27 @@ pub struct RetainedOrderedMapRemoveCursor<K:BoundedOrd+RetireOwned,V:RetireOwned
 impl<K:BoundedOrd+RetireOwned,V:RetireOwned+Sync> RetainedOrderedMapRemoveCursor<K,V> {
  pub fn constructor_capacity_bytes()->usize{0}
  pub fn constructor_copy_bytes()->usize{0}
- pub fn admit(map:RetainedOrderedMap<K,V>,key:K,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<(Self,RetainedCloneProgress),(crate::ValueError,RetainedOrderedMap<K,V>,K)> {let work=0;let result=(||{
-  if !K::controlled_retirement_supported()||!V::controlled_retirement_supported(){return Err((crate::ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"removal requires supported original owner facets"),map,key))}
+ pub fn admit(map:RetainedOrderedMap<K,V>,key:K,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<(Self,RetainedCloneProgress),(ValueError,RetainedOrderedMap<K,V>,K)> {let work=0;let result=(||{
+  if !K::controlled_retirement_supported()||!V::controlled_retirement_supported(){return Err((ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"removal requires supported original owner facets"),map,key))}
   let(lease,receipt)=(StagedLease::new(RemoveWorkspace{map,key}),RetainedCloneProgress::default());let _=grant;
   Ok((Self{state:ManuallyDrop::new(State{map:None,key:None,removed:None,page:None,lookup:Default::default(),lease,target:None,shift:0,phase:0,found:false,closing:false,spent:false,close:Default::default()})},receipt))
  })();crate::RetainedWorkOutcome{result,work}}
  /// 🎟️ Reports whether the staged authority birth has finished its funded turns.
  pub fn birth_complete(&self)->bool{self.state.lease.ready()}
- pub fn advance_retirement_demands(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{
+ pub fn advance_retirement_demands(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{
   let s=&*self.state;if !s.lease.ready(){return s.lease.birth_demand();}if s.phase==0{return s.lookup.advance_retirement_demands(body);}if s.phase!=1{return Ok(Default::default());}
   if !s.lookup.terminal_is_empty(){return s.lookup.close_demands(body);}
   s.lease.next_take_demands(body)
  }
- pub fn advance(&mut self,grant:RetainedOrderedMapRemoveGrant)->crate::RetainedWorkOutcome<RetainedOrderedMapRemoveStep,crate::ValueError>{let mut work=0;let result=(||{
-  let s=&mut *self.state;if s.closing||s.spent{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"removal cursor is closing or spent"))}
+ pub fn advance(&mut self,grant:RetainedOrderedMapRemoveGrant)->crate::RetainedWorkOutcome<RetainedOrderedMapRemoveStep,ValueError>{let mut work=0;let result=(||{
+  let s=&mut *self.state;if s.closing||s.spent{return Err(ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"removal cursor is closing or spent"))}
   let mut progress=RetainedOrderedMapRemoveProgress::default();
   if !s.lease.ready(){let turn=s.lease.advance_birth(grant.retirement);work+=turn.work;progress.retirement=turn.result?.progress();return Ok(RetainedOrderedMapRemoveStep::Progress(progress));}
   match s.phase {
    0=>{let(result,comparison,retirement)={let turn=s.lookup.advance(s.lease.borrow(1,|workspace|&workspace.map),s.lease.borrow(2,|workspace|&workspace.key),grant.comparison,grant.retirement);work+=turn.work;turn.result}?;progress.comparison=comparison;progress.retirement=retirement;if let Some(result)=result {s.found=matches!(result,RetainedOrderedMapLookup::Found(_));s.target=match result{RetainedOrderedMapLookup::Found(index)=>Some(index),_=>None};s.lookup.begin_close();s.phase=1;}}
    1=>{if !s.lookup.terminal_is_empty(){progress.retirement={let turn=s.lookup.close_step(grant.retirement);work+=turn.work;turn.result}?.progress();}else{let demand=s.lease.next_take_demands(grant.retirement.maximum_copy_bytes)?;if grant.retirement.maximum_items==0||demand.copy_bytes>grant.retirement.maximum_copy_bytes||demand.capacity_bytes>grant.retirement.maximum_capacity_bytes||demand.release_bytes>grant.retirement.maximum_release_bytes||demand.depth>grant.retirement.maximum_depth{return Ok(RetainedOrderedMapRemoveStep::Progress(Default::default()))}match {let turn=s.lease.take_authority(grant.retirement);work+=turn.work;turn.result}?{super::super::RetainedCloneSourceTake::Pending(retirement)=>progress.retirement=retirement,super::super::RetainedCloneSourceTake::Ready(RemoveWorkspace{map,key},retirement)=>{s.map=Some(map);s.key=Some(key);s.phase=if s.found{2}else{5};progress.retirement=retirement;}}}}
-   2=>{let map=s.map.as_mut().ok_or_else(||ValueError::invariant("map absent"))?;let index=s.target.unwrap();let page=index/RETAINED_ORDERED_MAP_PAGE_CAPACITY;let slot=index%RETAINED_ORDERED_MAP_PAGE_CAPACITY;progress.moved_items=map.pages[page].len()-slot;progress.moved_bytes=progress.moved_items.checked_mul(size_of::<(K,V)>()).ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::OwnershipLimit,"removal movement overflow"))?;if !progress.fits(grant){return Ok(RetainedOrderedMapRemoveStep::Progress(Default::default()))}work+=1;s.removed=Some(map.pages[page].remove(slot));s.shift=page;s.phase=3;}
-   3=>{let map=s.map.as_mut().ok_or_else(||ValueError::invariant("map absent"))?;if s.shift+1<map.pages.len(){progress.moved_items=map.pages[s.shift+1].len()+1;progress.moved_bytes=progress.moved_items.checked_mul(size_of::<(K,V)>()).ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::OwnershipLimit,"removal page movement overflow"))?;if !progress.fits(grant){return Ok(RetainedOrderedMapRemoveStep::Progress(Default::default()))}work+=1;let entry=map.pages[s.shift+1].remove(0);map.pages[s.shift].push(entry);s.shift+=1;}else{if grant.maximum_moved_items==0{return Ok(RetainedOrderedMapRemoveStep::Progress(Default::default()));}work+=1;s.phase=4;}}
+   2=>{let map=s.map.as_mut().ok_or_else(||ValueError::invariant("map absent"))?;let index=s.target.unwrap();let page=index/RETAINED_ORDERED_MAP_PAGE_CAPACITY;let slot=index%RETAINED_ORDERED_MAP_PAGE_CAPACITY;progress.moved_items=map.pages[page].len()-slot;progress.moved_bytes=progress.moved_items.checked_mul(size_of::<(K,V)>()).ok_or_else(||ValueError::literal(crate::ValueRefusalKind::OwnershipLimit,"removal movement overflow"))?;if !progress.fits(grant){return Ok(RetainedOrderedMapRemoveStep::Progress(Default::default()))}work+=1;s.removed=Some(map.pages[page].remove(slot));s.shift=page;s.phase=3;}
+   3=>{let map=s.map.as_mut().ok_or_else(||ValueError::invariant("map absent"))?;if s.shift+1<map.pages.len(){progress.moved_items=map.pages[s.shift+1].len()+1;progress.moved_bytes=progress.moved_items.checked_mul(size_of::<(K,V)>()).ok_or_else(||ValueError::literal(crate::ValueRefusalKind::OwnershipLimit,"removal page movement overflow"))?;if !progress.fits(grant){return Ok(RetainedOrderedMapRemoveStep::Progress(Default::default()))}work+=1;let entry=map.pages[s.shift+1].remove(0);map.pages[s.shift].push(entry);s.shift+=1;}else{if grant.maximum_moved_items==0{return Ok(RetainedOrderedMapRemoveStep::Progress(Default::default()));}work+=1;s.phase=4;}}
    4=>{progress.moved_items=1;progress.moved_bytes=size_of::<usize>()+size_of::<Vec<(K,V)>>();if !progress.fits(grant){return Ok(RetainedOrderedMapRemoveStep::Progress(Default::default()))}work+=1;let map=s.map.as_mut().ok_or_else(||ValueError::invariant("map absent"))?;map.len-=1;if map.pages.last().is_some_and(Vec::is_empty){s.page=map.pages.pop();}s.phase=5;}
    5=>return Ok(RetainedOrderedMapRemoveStep::Complete{removed:s.found,progress}),
    _=>unreachable!()
@@ -52,7 +52,7 @@ impl<K:BoundedOrd+RetireOwned,V:RetireOwned+Sync> RetainedOrderedMapRemoveCursor
  pub fn output_ready(&self)->bool{let s=&*self.state;s.phase==5&&s.map.is_some()&&!s.closing&&!s.spent}
  pub fn take(&mut self)->Option<RetainedOrderedMap<K,V>> {let s=&mut *self.state;if s.phase!=5||s.closing||s.spent{return None}s.spent=true;s.map.take()}
  pub fn begin_close(&mut self)->bool {let s=&mut *self.state;let started=!s.closing;s.closing=true;s.lookup.begin_close();started}
- pub(super) fn close_demands(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{
+ pub(super) fn close_demands(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{
   let s=&*self.state;
   if !s.lookup.terminal_is_empty(){return s.lookup.close_demands(body);}
   if !s.close.is_empty(){return s.close.next_owner_demands::<K>(false,&None,body);}
@@ -62,13 +62,13 @@ impl<K:BoundedOrd+RetireOwned,V:RetireOwned+Sync> RetainedOrderedMapRemoveCursor
   if s.map.is_some(){return s.close.next_owner_demands::<RetainedOrderedMap<K,V>>(true,&None,body);}
   s.lease.next_close_demand(body)
  }
- pub fn next_close_copy_byte_demand(&self)->Result<usize,crate::ValueError>{Ok(self.close_demands(0)?.copy_bytes)}
- pub fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,crate::ValueError>{Ok(self.close_demands(body)?.capacity_bytes)}
- pub fn next_close_release_byte_demand(&self)->Result<usize,crate::ValueError>{Ok(self.close_demands(0)?.release_bytes)}
- pub fn next_close_depth_demand(&self)->Result<usize,crate::ValueError>{Ok(self.close_demands(0)?.depth)}
- pub fn close_step(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<RetainedCloneStep,crate::ValueError>{let mut work=0;let result=(||{
-  if !super::super::retained_clone_grant_admits(grant,self.close_demands(grant.maximum_copy_bytes)?){return Ok(RetainedCloneStep::Progress(Default::default()));}
-  let s=&mut *self.state;if !s.closing{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"removal must begin close"))}
+ pub fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.copy_bytes)}
+ pub fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.close_demands(body)?.capacity_bytes)}
+ pub fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.release_bytes)}
+ pub fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.depth)}
+ pub fn close_step(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<RetainedCloneStep,ValueError>{let mut work=0;let result=(||{
+  if !retained_clone_grant_admits(grant,self.close_demands(grant.maximum_copy_bytes)?){return Ok(RetainedCloneStep::Progress(Default::default()));}
+  let s=&mut *self.state;if !s.closing{return Err(ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"removal must begin close"))}
   if !s.lookup.terminal_is_empty(){return {let turn=s.lookup.close_step(grant);work+=turn.work;turn.result}}if !s.close.is_empty(){return {let turn=s.close.step_granted(grant);work+=turn.work;turn.result}}
   if let Some(step)={let turn=s.close.begin_granted(&mut s.key,grant);work+=turn.work;turn.result}?{return Ok(step)}if let Some(step)={let turn=s.close.begin_granted(&mut s.removed,grant);work+=turn.work;turn.result}?{return Ok(step)}if let Some(step)={let turn=s.close.begin_granted(&mut s.page,grant);work+=turn.work;turn.result}?{return Ok(step)}if let Some(step)={let turn=s.close.begin_granted(&mut s.map,grant);work+=turn.work;turn.result}?{return Ok(step)}{let turn=s.lease.close_step(grant);work+=turn.work;turn.result}
  })();crate::RetainedWorkOutcome{result,work}}

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeTrafficGroupVariableId",
+  "id": "tra-1",
+  "newVariableId": "normal-alt"
+}

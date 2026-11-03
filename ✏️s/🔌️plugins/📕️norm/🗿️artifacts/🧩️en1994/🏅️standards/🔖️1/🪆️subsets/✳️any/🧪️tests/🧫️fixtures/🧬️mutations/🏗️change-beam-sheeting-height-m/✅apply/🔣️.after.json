@@ -1,0 +1,547 @@
+{
+  "annex": "De",
+  "reliabilityClass": "RC2",
+  "cases": [],
+  "structureKind": "building",
+  "steelFYPa": 355000000.0,
+  "beams": [
+    {
+      "id": "beam-B1",
+      "spanM": 8.0,
+      "spacingM": 3.0,
+      "support": "simplySupported",
+      "construction": "propped",
+      "steel": {
+        "designation": "HEB300",
+        "heightM": 0.3,
+        "widthM": 0.3,
+        "twM": 0.011,
+        "tfM": 0.019,
+        "aM2": 0.0149,
+        "wPlYM3": 0.001867,
+        "iYM4": 0.0002517,
+        "aVM2": 0.0045,
+        "rM": 0.027
+      },
+      "slabThicknessM": 0.14,
+      "concreteFCkPa": 30000000.0,
+      "concreteECmPa": 33000000000.0,
+      "sheeting": {
+        "profile": "trapezoidal",
+        "heightM": 0.06875,
+        "ribWidthM": 0.1,
+        "thicknessM": 0.0009,
+        "ribsParallelToBeam": false
+      },
+      "transverseAsM2PerM": 0.00025,
+      "ltbLengthM": 4.0,
+      "asHoggingM2PerM": 0.0005,
+      "barSpacingM": 0.15,
+      "wkLimitM": 0.0003,
+      "nCycles": 2000000.0,
+      "adjacentSpanM": 0.0,
+      "patchBearingLengthM": 0.1,
+      "bridgeLanes": 0,
+      "crackedLengthFraction": 0.15,
+      "studTransverseSpacingM": 0.0,
+      "studEdgeDistanceM": 0.0,
+      "transverseAsTopM2PerM": 0.0,
+      "endPlateWidthM": 0.0,
+      "endPlateHeightM": 0.0,
+      "endZoneLengthM": 0.0,
+      "reinforcementProduct": "hotRolled",
+      "actions": [
+        {
+          "id": "G-steel",
+          "kind": "permanent",
+          "category": "self_steel",
+          "stage": "construction",
+          "qAreaPa": 382.47555000000006,
+          "fKN": 0.0,
+          "deltaSigmaKPa": 0.0,
+          "deltaTauKPa": 0.0,
+          "xM": 0.0
+        },
+        {
+          "id": "G-wet",
+          "kind": "permanent",
+          "category": "wet_concrete",
+          "stage": "construction",
+          "qAreaPa": 2125.0000000000005,
+          "fKN": 0.0,
+          "deltaSigmaKPa": 0.0,
+          "deltaTauKPa": 0.0,
+          "xM": 0.0
+        },
+        {
+          "id": "Q-constr",
+          "kind": "construction",
+          "category": "construction",
+          "stage": "construction",
+          "qAreaPa": 1000.0,
+          "fKN": 0.0,
+          "deltaSigmaKPa": 0.0,
+          "deltaTauKPa": 0.0,
+          "xM": 0.0
+        },
+        {
+          "id": "G-steel-comp",
+          "kind": "permanent",
+          "category": "self_steel",
+          "stage": "composite",
+          "qAreaPa": 382.47555000000006,
+          "fKN": 0.0,
+          "deltaSigmaKPa": 0.0,
+          "deltaTauKPa": 0.0,
+          "xM": 0.0
+        },
+        {
+          "id": "G-slab",
+          "kind": "permanent",
+          "category": "slab",
+          "stage": "composite",
+          "qAreaPa": 1912.5000000000005,
+          "fKN": 0.0,
+          "deltaSigmaKPa": 0.0,
+          "deltaTauKPa": 0.0,
+          "xM": 0.0
+        },
+        {
+          "id": "G-finishes",
+          "kind": "permanent",
+          "category": "finishes",
+          "stage": "composite",
+          "qAreaPa": 1000.0,
+          "fKN": 0.0,
+          "deltaSigmaKPa": 0.0,
+          "deltaTauKPa": 0.0,
+          "xM": 0.0
+        },
+        {
+          "id": "Q-office",
+          "kind": "imposed",
+          "category": "B",
+          "stage": "composite",
+          "qAreaPa": 2000.0,
+          "fKN": 0.0,
+          "deltaSigmaKPa": 0.0,
+          "deltaTauKPa": 0.0,
+          "xM": 0.0
+        }
+      ]
+    }
+  ],
+  "columns": [
+    {
+      "id": "col-C1",
+      "kind": "concreteFilled",
+      "lengthM": 3.5,
+      "outerSizeM": 0.3,
+      "wallThicknessM": 0.01,
+      "steelAM2": 0.0084,
+      "steelFYPa": 355000000.0,
+      "concreteAM2": 0.072,
+      "concreteFCkPa": 30000000.0,
+      "reinforcementAsM2": 0.0012,
+      "reinforcementFYkPa": 500000000.0,
+      "iM4": 0.00021,
+      "bucklingCurve": "a",
+      "introducedForceN": 0.0,
+      "sectionHeightM": 0.0,
+      "sectionWidthM": 0.0,
+      "sectionTwM": 0.0,
+      "sectionTfM": 0.0,
+      "rebarCoverM": 0.0,
+      "reinforcementProduct": "hotRolled",
+      "actions": [
+        {
+          "id": "G-col",
+          "kind": "permanent",
+          "category": "self",
+          "stage": "composite",
+          "nKN": 1200000.0,
+          "mKNm": 20000.0
+        },
+        {
+          "id": "Q-col",
+          "kind": "imposed",
+          "category": "B",
+          "stage": "composite",
+          "nKN": 400000.0,
+          "mKNm": 15000.0
+        }
+      ]
+    }
+  ],
+  "slabs": [
+    {
+      "id": "slab-S1",
+      "spanM": 3.0,
+      "support": "simplySupported",
+      "sheeting": {
+        "profile": "trapezoidal",
+        "heightM": 0.055,
+        "ribWidthM": 0.1,
+        "thicknessM": 0.0009,
+        "ribsParallelToBeam": false
+      },
+      "concreteThicknessM": 0.14,
+      "fCkPa": 30000000.0,
+      "mFactor": 180.0,
+      "kFactor": 0.05,
+      "asM2PerM": 0.00025,
+      "actions": [
+        {
+          "id": "G-slab",
+          "kind": "permanent",
+          "category": "self",
+          "stage": "composite",
+          "qAreaPa": 3500.0,
+          "fKN": 0.0,
+          "deltaSigmaKPa": 0.0,
+          "deltaTauKPa": 0.0,
+          "xM": 0.0,
+          "yM": 0.0
+        },
+        {
+          "id": "Q-slab",
+          "kind": "imposed",
+          "category": "B",
+          "stage": "composite",
+          "qAreaPa": 2000.0,
+          "fKN": 0.0,
+          "deltaSigmaKPa": 0.0,
+          "deltaTauKPa": 0.0,
+          "xM": 0.0,
+          "yM": 0.0
+        }
+      ]
+    }
+  ],
+  "placements": [],
+  "fireRating": "r60",
+  "insulationThicknessM": 0.025,
+  "fatigueDetail": "studWelded",
+  "studs": [
+    {
+      "id": "beam-B1-stud-0",
+      "beamId": "beam-B1",
+      "xM": 0.1,
+      "diameterM": 0.019,
+      "heightM": 0.095,
+      "fUPa": 450000000.0
+    },
+    {
+      "id": "beam-B1-stud-1",
+      "beamId": "beam-B1",
+      "xM": 0.3,
+      "diameterM": 0.019,
+      "heightM": 0.095,
+      "fUPa": 450000000.0
+    },
+    {
+      "id": "beam-B1-stud-2",
+      "beamId": "beam-B1",
+      "xM": 0.5,
+      "diameterM": 0.019,
+      "heightM": 0.095,
+      "fUPa": 450000000.0
+    },
+    {
+      "id": "beam-B1-stud-3",
+      "beamId": "beam-B1",
+      "xM": 0.7,
+      "diameterM": 0.019,
+      "heightM": 0.095,
+      "fUPa": 450000000.0
+    },
+    {
+      "id": "beam-B1-stud-4",
+      "beamId": "beam-B1",
+      "xM": 0.9,
+      "diameterM": 0.019,
+      "heightM": 0.095,
+      "fUPa": 450000000.0
+    },
+    {
+      "id": "beam-B1-stud-5",
+      "beamId": "beam-B1",
+      "xM": 1.1,
+      "diameterM": 0.019,
+      "heightM": 0.095,
+      "fUPa": 450000000.0
+    },
+    {
+      "id": "beam-B1-stud-6",
+      "beamId": "beam-B1",
+      "xM": 1.3,
+      "diameterM": 0.019,
+      "heightM": 0.095,
+      "fUPa": 450000000.0
+    },
+    {
+      "id": "beam-B1-stud-7",
+      "beamId": "beam-B1",
+      "xM": 1.5,
+      "diameterM": 0.019,
+      "heightM": 0.095,
+      "fUPa": 450000000.0
+    },
+    {
+      "id": "beam-B1-stud-8",
+      "beamId": "beam-B1",
+      "xM": 1.7,
+      "diameterM": 0.019,
+      "heightM": 0.095,
+      "fUPa": 450000000.0
+    },
+    {
+      "id": "beam-B1-stud-9",
+      "beamId": "beam-B1",
+      "xM": 1.9,
+      "diameterM": 0.019,
+      "heightM": 0.095,
+      "fUPa": 450000000.0
+    },
+    {
+      "id": "beam-B1-stud-10",
+      "beamId": "beam-B1",
+      "xM": 2.1,
+      "diameterM": 0.019,
+      "heightM": 0.095,
+      "fUPa": 450000000.0
+    },
+    {
+      "id": "beam-B1-stud-11",
+      "beamId": "beam-B1",
+      "xM": 2.3,
+      "diameterM": 0.019,
+      "heightM": 0.095,
+      "fUPa": 450000000.0
+    },
+    {
+      "id": "beam-B1-stud-12",
+      "beamId": "beam-B1",
+      "xM": 2.5,
+      "diameterM": 0.019,
+      "heightM": 0.095,
+      "fUPa": 450000000.0
+    },
+    {
+      "id": "beam-B1-stud-13",
+      "beamId": "beam-B1",
+      "xM": 2.7,
+      "diameterM": 0.019,
+      "heightM": 0.095,
+      "fUPa": 450000000.0
+    },
+    {
+      "id": "beam-B1-stud-14",
+      "beamId": "beam-B1",
+      "xM": 2.9,
+      "diameterM": 0.019,
+      "heightM": 0.095,
+      "fUPa": 450000000.0
+    },
+    {
+      "id": "beam-B1-stud-15",
+      "beamId": "beam-B1",
+      "xM": 3.1,
+      "diameterM": 0.019,
+      "heightM": 0.095,
+      "fUPa": 450000000.0
+    },
+    {
+      "id": "beam-B1-stud-16",
+      "beamId": "beam-B1",
+      "xM": 3.3,
+      "diameterM": 0.019,
+      "heightM": 0.095,
+      "fUPa": 450000000.0
+    },
+    {
+      "id": "beam-B1-stud-17",
+      "beamId": "beam-B1",
+      "xM": 3.5,
+      "diameterM": 0.019,
+      "heightM": 0.095,
+      "fUPa": 450000000.0
+    },
+    {
+      "id": "beam-B1-stud-18",
+      "beamId": "beam-B1",
+      "xM": 3.7,
+      "diameterM": 0.019,
+      "heightM": 0.095,
+      "fUPa": 450000000.0
+    },
+    {
+      "id": "beam-B1-stud-19",
+      "beamId": "beam-B1",
+      "xM": 3.9,
+      "diameterM": 0.019,
+      "heightM": 0.095,
+      "fUPa": 450000000.0
+    },
+    {
+      "id": "beam-B1-stud-20",
+      "beamId": "beam-B1",
+      "xM": 4.1,
+      "diameterM": 0.019,
+      "heightM": 0.095,
+      "fUPa": 450000000.0
+    },
+    {
+      "id": "beam-B1-stud-21",
+      "beamId": "beam-B1",
+      "xM": 4.3,
+      "diameterM": 0.019,
+      "heightM": 0.095,
+      "fUPa": 450000000.0
+    },
+    {
+      "id": "beam-B1-stud-22",
+      "beamId": "beam-B1",
+      "xM": 4.5,
+      "diameterM": 0.019,
+      "heightM": 0.095,
+      "fUPa": 450000000.0
+    },
+    {
+      "id": "beam-B1-stud-23",
+      "beamId": "beam-B1",
+      "xM": 4.7,
+      "diameterM": 0.019,
+      "heightM": 0.095,
+      "fUPa": 450000000.0
+    },
+    {
+      "id": "beam-B1-stud-24",
+      "beamId": "beam-B1",
+      "xM": 4.9,
+      "diameterM": 0.019,
+      "heightM": 0.095,
+      "fUPa": 450000000.0
+    },
+    {
+      "id": "beam-B1-stud-25",
+      "beamId": "beam-B1",
+      "xM": 5.1,
+      "diameterM": 0.019,
+      "heightM": 0.095,
+      "fUPa": 450000000.0
+    },
+    {
+      "id": "beam-B1-stud-26",
+      "beamId": "beam-B1",
+      "xM": 5.3,
+      "diameterM": 0.019,
+      "heightM": 0.095,
+      "fUPa": 450000000.0
+    },
+    {
+      "id": "beam-B1-stud-27",
+      "beamId": "beam-B1",
+      "xM": 5.5,
+      "diameterM": 0.019,
+      "heightM": 0.095,
+      "fUPa": 450000000.0
+    },
+    {
+      "id": "beam-B1-stud-28",
+      "beamId": "beam-B1",
+      "xM": 5.7,
+      "diameterM": 0.019,
+      "heightM": 0.095,
+      "fUPa": 450000000.0
+    },
+    {
+      "id": "beam-B1-stud-29",
+      "beamId": "beam-B1",
+      "xM": 5.9,
+      "diameterM": 0.019,
+      "heightM": 0.095,
+      "fUPa": 450000000.0
+    },
+    {
+      "id": "beam-B1-stud-30",
+      "beamId": "beam-B1",
+      "xM": 6.1,
+      "diameterM": 0.019,
+      "heightM": 0.095,
+      "fUPa": 450000000.0
+    },
+    {
+      "id": "beam-B1-stud-31",
+      "beamId": "beam-B1",
+      "xM": 6.3,
+      "diameterM": 0.019,
+      "heightM": 0.095,
+      "fUPa": 450000000.0
+    },
+    {
+      "id": "beam-B1-stud-32",
+      "beamId": "beam-B1",
+      "xM": 6.5,
+      "diameterM": 0.019,
+      "heightM": 0.095,
+      "fUPa": 450000000.0
+    },
+    {
+      "id": "beam-B1-stud-33",
+      "beamId": "beam-B1",
+      "xM": 6.7,
+      "diameterM": 0.019,
+      "heightM": 0.095,
+      "fUPa": 450000000.0
+    },
+    {
+      "id": "beam-B1-stud-34",
+      "beamId": "beam-B1",
+      "xM": 6.9,
+      "diameterM": 0.019,
+      "heightM": 0.095,
+      "fUPa": 450000000.0
+    },
+    {
+      "id": "beam-B1-stud-35",
+      "beamId": "beam-B1",
+      "xM": 7.1,
+      "diameterM": 0.019,
+      "heightM": 0.095,
+      "fUPa": 450000000.0
+    },
+    {
+      "id": "beam-B1-stud-36",
+      "beamId": "beam-B1",
+      "xM": 7.3,
+      "diameterM": 0.019,
+      "heightM": 0.095,
+      "fUPa": 450000000.0
+    },
+    {
+      "id": "beam-B1-stud-37",
+      "beamId": "beam-B1",
+      "xM": 7.5,
+      "diameterM": 0.019,
+      "heightM": 0.095,
+      "fUPa": 450000000.0
+    },
+    {
+      "id": "beam-B1-stud-38",
+      "beamId": "beam-B1",
+      "xM": 7.7,
+      "diameterM": 0.019,
+      "heightM": 0.095,
+      "fUPa": 450000000.0
+    },
+    {
+      "id": "beam-B1-stud-39",
+      "beamId": "beam-B1",
+      "xM": 7.9,
+      "diameterM": 0.019,
+      "heightM": 0.095,
+      "fUPa": 450000000.0
+    }
+  ]
+}

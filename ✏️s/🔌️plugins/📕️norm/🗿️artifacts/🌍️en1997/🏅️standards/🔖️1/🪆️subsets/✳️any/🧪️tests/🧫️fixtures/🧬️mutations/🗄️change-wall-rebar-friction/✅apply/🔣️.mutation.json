@@ -1,0 +1,5 @@
+{
+  "mutation": "changeWallRebarFriction",
+  "id": "wall-W1",
+  "newReinforcementFriction": 1.5
+}

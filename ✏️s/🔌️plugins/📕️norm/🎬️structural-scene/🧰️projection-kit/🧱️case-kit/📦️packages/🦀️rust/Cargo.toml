@@ -1,0 +1,24 @@
+[package]
+workspace = "../../../../.."
+name = "semio-s-plugin-norm-structural-scene-case-kit"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Norm structural scene case kit: projection-kit vectors, identity, utilisation, handle and diagram parts and the design-case forms"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-s-plugin-norm-compliance = { workspace = true }
+semio-s-plugin-norm-structural-scene-foundation = { path = "../../../../🧱️foundation/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+serde_json = { workspace = true }
+semio-s-plugin-norm-compliance = { workspace = true, features = ["test-support", "compliance-testing"] }

@@ -93,7 +93,6 @@ fn retained_command_dispositions_match_the_language_neutral_oracle() {
 /// that is not listed here fails `command_ids_cover_every_row`.
 fn every_command() -> Vec<Iso16757Command> {
     vec![
-        Iso16757Command::Evaluate(evaluate::Evaluate {}),
         Iso16757Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) }),
         Iso16757Command::SetField(crate::commands::set_field::SetField { path: "partNumberInputs.dn".into(), value_json: "50".into() }),
         Iso16757Command::InsertItem(crate::commands::insert_item::InsertItem { path: "catalogue.productGroups".into(), index: 0, value_json: None }),
@@ -110,14 +109,14 @@ async fn command_ids_cover_every_row_and_are_unique() {
     sorted.sort_unstable();
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-    assert_eq!(ids, vec!["evaluate", "setSelectedCheckIndex", "setField", "insertItem", "removeItem", "applyRemedy"]);
+    assert_eq!(ids, vec!["setSelectedCheckIndex", "setField", "insertItem", "removeItem", "applyRemedy"]);
 }
 
 /// 🧷️ The permanent wire guard: every row round-trips text↔binary and prints under its own declared
 /// kebab wire keyword (which is deliberately NOT the camelCase `command_id`).
 #[semio_framework_async_macros::async_test]
 async fn every_command_round_trips_text_and_binary_under_its_declared_wire_keyword() {
-    let keywords = ["evaluate", "selected-check", "set-field", "insert-item", "remove-item", "apply-remedy"];
+    let keywords = ["selected-check", "set-field", "insert-item", "remove-item", "apply-remedy"];
     for (command, keyword) in every_command().into_iter().zip(keywords) {
         store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         let printed = protocol::OpText::print_op(&command);
@@ -133,9 +132,8 @@ async fn every_command_round_trips_text_and_binary_under_its_declared_wire_keywo
 #[semio_framework_async_macros::async_test]
 async fn optional_field_rows_keep_their_pre_migration_bytes() {
     let hex = |command: &Iso16757Command| protocol::OpBinary::encode_op(command).expect("encode").iter().map(|byte| format!("{byte:02x}")).collect::<String>();
-    assert_eq!(hex(&Iso16757Command::Evaluate(evaluate::Evaluate {})), "01010000");
-    assert_eq!(hex(&Iso16757Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) })), "01020001000402");
-    assert_eq!(hex(&Iso16757Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: None })), "01020000");
+    assert_eq!(hex(&Iso16757Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) })), "01010001000402");
+    assert_eq!(hex(&Iso16757Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: None })), "01010000");
 }
 //#endregion 🔖️CommandSurface
 
@@ -179,36 +177,17 @@ async fn every_declared_body_key_renders() {
 //#endregion 🔖️Manifest
 
 //#region 🔖️Behavior
-#[semio_framework_async_macros::async_test]
-async fn evaluate_commits_a_host_backed_report() {
-    let mut app = crate::unit_tests::context::app_with_registry().await;
-    crate::unit_tests::context::dispatch(&mut app, Iso16757Command::Evaluate(evaluate::Evaluate {})).await;
-    crate::unit_tests::context::dispatch(&mut app, Iso16757Command::Evaluate(evaluate::Evaluate {})).await;
-    let host = NormHost::<Iso16757Family>::from_artifact(app.snapshot().expect("projection"));
-    assert!(!host.report().checks.is_empty());
-    crate::unit_tests::context::close(&mut app);
-}
-
 /// 🧩️ The `NormFamily` binding lives here now (it was in the constitutional `op` crate) it
 /// names `evaluate`, so it belongs beside the compute it binds.
 #[semio_framework_async_macros::async_test]
 async fn norm_family_evaluate_matches_host() {
     let doc = Iso16757Snapshot::default();
-    let mut host = Host::from_artifact(doc);
+    let mut host = Host::live(doc);
     if host.report().checks.is_empty() {
         host.evaluate();
     }
     assert!(!host.report().checks.is_empty());
     assert_eq!(<Iso16757Family as semio_s_plugin_norm_compliance::NormFamily>::family_id(), semio_s_plugin_norm_compliance::NormFamilyId::Iso16757);
-}
-
-#[semio_framework_async_macros::async_test]
-async fn evaluate_recommits_the_current_projection_without_changing_it() {
-    let mut app = crate::unit_tests::context::app_with_registry().await;
-    let before = app.snapshot().expect("projection");
-    crate::unit_tests::context::dispatch(&mut app, Iso16757Command::Evaluate(evaluate::Evaluate {})).await;
-    assert_eq!(before, app.snapshot().expect("projection"));
-    crate::unit_tests::context::close(&mut app);
 }
 
 /// 🧮️ `setSelectedCheckIndex` is Results-window-config-only — it must dispatch cleanly and never touch the document.
@@ -249,17 +228,3 @@ async fn undo_redo_round_trips_through_the_wrapper() {
 }
 
 /// 🎞️ `report:out` dumps the currently computed `CheckReport` as a `Structured` media payload.
-#[semio_framework_async_macros::async_test]
-async fn report_out_exports_the_computed_check_report() {
-    let mut app = crate::unit_tests::context::app_with_registry().await;
-    crate::unit_tests::context::dispatch(&mut app, Iso16757Command::Evaluate(evaluate::Evaluate {})).await;
-    let media = ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::artifact_app_laws::export_fixture_media(&mut app.0, "report:out", app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close)).expect("export report:out");
-    let semio_framework_plugin::MediaPayload::Structured { schema, json } = media.payload else { panic!("expected a structured payload") };
-    assert_eq!(schema, semio_s_plugin_norm_app_surface::artifact_kind_id(VARIANT));
-    let report: semio_s_plugin_norm_compliance::CheckReport = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("report json parses");
-    assert!(!report.checks.is_empty());
-    crate::unit_tests::context::close(&mut app);
-}
-//#endregion 🔖️Behavior
-
-semio_framework_plugin::history_edit_acceptance_law!("norm", crate::Iso16757PlayApp, || semio_framework_plugin::App { definition: crate::create_iso16757_app(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");

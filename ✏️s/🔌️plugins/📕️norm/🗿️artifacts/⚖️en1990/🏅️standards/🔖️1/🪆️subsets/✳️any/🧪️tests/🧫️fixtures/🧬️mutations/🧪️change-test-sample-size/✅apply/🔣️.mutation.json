@@ -1,0 +1,5 @@
+{
+  "mutation": "changeTestSampleSize",
+  "id": "tes-1",
+  "newSampleSize": 2
+}

@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-ground-investigation-level/schema.json",
+  "title": "ChangeGroundInvestigationLevel",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newGroundLevel"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeGroundInvestigationLevel"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Ground investigation",
+          "de": "Baugrunderkundung"
+        },
+        "description": {
+          "en": "The ground investigation this mutation addresses, by id.",
+          "de": "Die adressierte Zeile (Baugrunderkundung), per Kennung."
+        },
+        "ref": {
+          "kind": "investigation"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newGroundLevel": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Ground level",
+          "de": "Geländehöhe"
+        },
+        "widget": "stepper",
+        "unit": "m",
+        "precision": 2,
+        "step": 0.1,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

@@ -3,11 +3,16 @@ cargo-features = [ "trim-paths" ]
 [workspace]
 resolver = "2"
 members = [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️geometry-more/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🛰️proto-twin/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️json-schema-twin/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔗️graphql-twin/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️typescript-twin/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/❌️failing/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📦️packages/🦀️rust",
-  "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🪜️failing-2/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/❌️failing-blatt-4-to-19/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks/📦️packages/🦀️rust",
@@ -143,8 +148,8 @@ path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️p
 [workspace.dependencies.semio-s-artifact-norm-vdi3805-examples-failing]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/❌️failing/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-s-artifact-norm-vdi3805-examples-failing-2]
-path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🪜️failing-2/📦️packages/🦀️rust"
+[workspace.dependencies.semio-s-artifact-norm-vdi3805-examples-failing-blatt-4-to-19]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/❌️failing-blatt-4-to-19/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-norm-vdi3805-examples]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📦️packages/🦀️rust"
@@ -178,6 +183,21 @@ path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️
 
 [workspace.dependencies.semio-s-mutation-vectors]
 path = "../../../../🧪️tests/🧪️mutation-vectors/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-vdi3805-model-typescript]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️typescript-twin/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-vdi3805-model-graphql]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔗️graphql-twin/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-vdi3805-model-json-schema]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️json-schema-twin/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-vdi3805-model-proto]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🛰️proto-twin/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-vdi3805-mut-geometry-more]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️geometry-more/📦️packages/🦀️rust"
 
 [workspace.lints.rust]
 unsafe_op_in_unsafe_fn = "warn"

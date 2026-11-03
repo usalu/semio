@@ -1,0 +1,6 @@
+{
+  "ChangeBridgeSecondLaneWeight": {
+    "id": "br-1",
+    "newSecondLaneWeight": 1.5
+  }
+}

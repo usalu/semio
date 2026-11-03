@@ -354,20 +354,20 @@ impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {
             return Ok(None);
         }
         let source = cursor.bytes(&self.checkpoint_target)?;
-        let result = self.publication.advance_from_source(JobPublicationKind::Checkpoint { applied_progress: self.work_progress.max(self.raw_page_cursor as u64) }, source, cx)?;
+        let result = self.publication.advance_from_source(JobPublicationKind::Checkpoint { applied_progress: self.work_progress.max(self.raw_page_cursor as u64) }, source, cx).map_err(|failure|failure.primary_value().cloned().unwrap_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original publication advance refused")))?;
         if result.is_some() { self.publication_delivered = true; }
         Ok(result)
     }
 
     fn advance_publication<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         if let Some(fault) = self.fault.as_ref() {
-            let result = self.fault_publication.advance_from_fault(fault, cx)?;
+            let result = self.fault_publication.advance_from_fault(fault, cx).map_err(|failure|failure.primary_value().cloned().unwrap_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original publication advance refused")))?;
             if result.is_some() { self.publication_delivered = true; }
             return Ok(result);
         }
         match self.pending_publication {
             Some(ArtifactCommandPublication::Static { kind, bytes }) => {
-                let result = self.publication.advance_from_source(kind, bytes, cx)?;
+                let result = self.publication.advance_from_source(kind, bytes, cx).map_err(|failure|failure.primary_value().cloned().unwrap_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original publication advance refused")))?;
                 if result.is_some() { self.publication_delivered = true; }
                 Ok(result)
             }

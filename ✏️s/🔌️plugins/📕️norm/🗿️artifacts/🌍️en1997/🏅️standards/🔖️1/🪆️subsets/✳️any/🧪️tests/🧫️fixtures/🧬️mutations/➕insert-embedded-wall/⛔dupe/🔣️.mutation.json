@@ -1,0 +1,18 @@
+{
+  "mutation": "insertEmbeddedWall",
+  "index": 1,
+  "embeddedWall": {
+    "id": "ewall-E1-2",
+    "kind": "freeEarth",
+    "retainedHeight": 4.0,
+    "embedment": 6.0,
+    "propDepth": 1.0,
+    "thickness": 0.6,
+    "backfillGamma": 19000.0,
+    "phiDeg": 32.0,
+    "deltaActiveDeg": 16.0,
+    "deltaPassiveDeg": 10.0,
+    "surcharge": 10000.0,
+    "undrainedStrength": 0.0
+  }
+}

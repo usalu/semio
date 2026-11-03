@@ -1,11 +1,11 @@
 /** 🧱 `change-unit-width` wire twin: the leaf payload `ChangeUnitWidth`, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
- * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
+ * by `repo ./📜️script.ts schema twins generate`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
-import { normWireInteger, normWireNumber, normWireObject, normWireRange, type NormWireReader, normWireRequired } from "@semio-tech/norm-js/registry/contract";
+import { normWireNumber, normWireObject, normWireRange, normWireRequired, normWireString, type NormWireReader } from "@semio-tech/norm-js/registry/contract";
 
 export interface ChangeUnitWidth {
-  index: number;
+  id: string;
   newUnitWidthM: number;
 }
 
-export const parseChangeUnitWidth: NormWireReader<ChangeUnitWidth> = normWireObject<ChangeUnitWidth>({ index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), newUnitWidthM: normWireRequired(normWireRange(normWireNumber, {"exclusiveMinimum":0})) });
+export const parseChangeUnitWidth: NormWireReader<ChangeUnitWidth> = normWireObject<ChangeUnitWidth>({ id: normWireRequired(normWireString), newUnitWidthM: normWireRequired(normWireRange(normWireNumber, {"maximum":10000,"exclusiveMinimum":0})) });

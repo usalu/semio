@@ -1,0 +1,20 @@
+import sys, pathlib
+sys.path.insert(0, str(pathlib.Path(__file__).parent))
+from ndplib import *
+d = load()
+def p(k, cl, sym, v, unit, note, part): put(d, "1991", k, cl, sym, v, v, unit, note, part=part)
+p("1-2.configuration-factor", "3.1 Eq. 3.2", "Phi", 1.0, "", "Configuration factor of the net heat flux", "1-2")
+p("1-2.member-emissivity", "3.1 Eq. 3.2", "eps_m", 0.8, "", "Surface emissivity of the member", "1-2")
+p("1-2.flame-emissivity", "3.1 Eq. 3.2", "eps_f", 1.0, "", "Emissivity of the fire", "1-2")
+p("1-2.combustion-factor", "Annex E", "m", 0.8, "", "Combustion factor of the fire load density", "1-2")
+p("1-3.cylindrical-mu3-cap", "5.3.5", "mu3 cap cylindrical", 2.0, "", "Upper bound of the shape coefficient mu3 of cylindrical roofs", "1-3")
+p("1-7.vehicle-stiffness", "Annex C", "k", 300000.0, "N/m", "Equivalent vehicle stiffness k = 300 kN/m", "1-7")
+p("2.lm1-axle-spacing", "4.3.2 Fig. 4.2b", "axle spacing", 1.2, "m", "Axle spacing of the LM1 tandem system", "2")
+for i, a in enumerate([0.75, 0.83, 0.91, 1.0, 1.1, 1.21, 1.33, 1.46], 1):
+    p(f"2.rail-alpha.{i}", "6.3.2", f"alpha {i}", a, "", f"Classification factor alpha, value {i} of 8", "2")
+p("3.drive-friction-mu", "5.3.2", "mu", 0.2, "", "Drive factor steel on steel", "3")
+p("3.phi-5", "2.7", "phi_5", 1.5, "", "Acceleration factor phi_5", "3")
+p("4.patch-factor", "5.2.4", "p_pf / p_hf", 0.2, "", "Basic patch factor of the silo patch pressure", "4")
+p("1-4.c-pi.1", "7.2.9", "c_pi overpressure", 0.2, "", "Internal pressure coefficient case 1", "1-4")
+p("1-4.c-pi.2", "7.2.9", "c_pi suction", -0.3, "", "Internal pressure coefficient case 2", "1-4")
+save(d); print(len(d))

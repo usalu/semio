@@ -1,0 +1,10 @@
+{
+  "InsertRailDynamic": {
+    "index": 1,
+    "item": {
+      "id": "rail-dynamic-1-new",
+      "determinantLength": 1.5,
+      "maintenance": "x"
+    }
+  }
+}

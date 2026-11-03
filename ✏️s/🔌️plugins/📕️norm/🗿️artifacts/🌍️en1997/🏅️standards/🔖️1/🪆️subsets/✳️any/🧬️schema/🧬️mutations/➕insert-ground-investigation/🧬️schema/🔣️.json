@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/insert-ground-investigation/schema.json",
+  "title": "InsertGroundInvestigation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "index",
+    "investigation"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "insertGroundInvestigation"
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Zero-based list position at which the record is inserted.",
+          "de": "Nullbasierte Listenposition, an der der Datensatz eingefügt wird."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
+    },
+    "investigation": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/snapshot.json#/$defs/Investigation",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Layer water regime",
+          "de": "Wasserverhältnis der Schicht"
+        },
+        "description": {
+          "en": "The complete layer water regime record to insert.",
+          "de": "Der vollständige einzufügende Datensatz (Wasserverhältnis der Schicht)."
+        },
+        "group": "record",
+        "order": 20
+      },
+      "x-semio-rust": {
+        "type": "semio_s_artifact_norm_en1997_model::Investigation"
+      }
+    }
+  }
+}

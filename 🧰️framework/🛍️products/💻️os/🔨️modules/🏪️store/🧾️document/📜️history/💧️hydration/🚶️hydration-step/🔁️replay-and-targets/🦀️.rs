@@ -193,7 +193,7 @@ where
             } else if let Err(diagnostic) = self.admit_active(retired_strings, cx, grant) { return self.reject(diagnostic); }
             self.operation_index += 1;
         } else {
-            let step = match semio_framework_os_store_read::artifact_retirement_admit_owned(&mut self.pending_target, &mut self.active, RetainedCloneGrant { maximum_items: grant.maximum_items.min(1), ..grant }) .result {
+            let step = match semio_framework_os_store_read::artifact_retirement_admit_owned(&mut self.pending_target, &mut self.active, RetainedCloneGrant { maximum_items: grant.maximum_items.min(1), ..grant }).result {
                 Ok(step) => step,
                 Err(_) => return self.reject(MemberOpenDiagnostic::Initialization),
             };

@@ -1,12 +1,13 @@
 /** 🏷️ `change-imposed-category` wire twin: the leaf payload `ChangeImposedCategory`, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
- * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
+ * by `repo ./📜️script.ts schema twins generate`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
-import { normWireInteger, normWireObject, normWireRange, type NormWireReader, normWireRequired, normWireString } from "@semio-tech/norm-js/registry/contract";
+import { normWireObject, normWireRequired, normWireString, type NormWireReader } from "@semio-tech/norm-js/registry/contract";
+import { type En1996ImposedCategory, parseEn1996ImposedCategory } from "../../../📸️snapshot/🟦️.ts";
 
 export interface ChangeImposedCategory {
-  wallIndex: number;
-  index: number;
-  newImposedCategory: string;
+  wallId: string;
+  id: string;
+  newImposedCategory: En1996ImposedCategory;
 }
 
-export const parseChangeImposedCategory: NormWireReader<ChangeImposedCategory> = normWireObject<ChangeImposedCategory>({ wallIndex: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), newImposedCategory: normWireRequired(normWireString) });
+export const parseChangeImposedCategory: NormWireReader<ChangeImposedCategory> = normWireObject<ChangeImposedCategory>({ wallId: normWireRequired(normWireString), id: normWireRequired(normWireString), newImposedCategory: normWireRequired(parseEn1996ImposedCategory) });

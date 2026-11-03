@@ -1,0 +1,6 @@
+{
+  "ChangeJointPlateEdgeDistance": {
+    "id": "joint-plate-1",
+    "newEdgeDistance": 2.0
+  }
+}

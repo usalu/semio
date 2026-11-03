@@ -1,0 +1,6 @@
+{
+  "ChangeTensionFK": {
+    "id": "ten-1",
+    "newFK": 800000.0
+  }
+}

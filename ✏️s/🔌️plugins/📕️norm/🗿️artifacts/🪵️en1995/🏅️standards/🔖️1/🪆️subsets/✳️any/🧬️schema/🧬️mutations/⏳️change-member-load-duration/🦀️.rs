@@ -1,12 +1,13 @@
 //! ⏳️ `change-member-load-duration` — changes `loadDuration` (Load-duration class) on one addressed member.
+use semio_s_artifact_norm_en1995_model::LoadDurationClass;
 use semio_s_artifact_norm_en1995_model::En1995Snapshot;
 #[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
-pub struct ChangeMemberLoadDuration { pub member_id: String, pub action_id: String, pub new_value: String }
+pub struct ChangeMemberLoadDuration { pub member_id: String, pub action_id: String, pub new_value: LoadDurationClass }
 impl<Op> protocol::MutationKind<En1995Snapshot, Op> for ChangeMemberLoadDuration where Op: protocol::Mutation<En1995Snapshot, Diff = semio_s_artifact_norm_en1995_diff::En1995Diff> + From<crate::change_member_load_duration::ChangeMemberLoadDuration> {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "member-action-loadDuration", kind: "change-member-load-duration", record: "ChangedMemberLoadDuration" };
 

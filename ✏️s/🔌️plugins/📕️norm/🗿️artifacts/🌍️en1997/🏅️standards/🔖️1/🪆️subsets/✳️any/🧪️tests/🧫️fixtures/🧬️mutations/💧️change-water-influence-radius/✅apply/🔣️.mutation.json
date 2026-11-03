@@ -1,0 +1,5 @@
+{
+  "mutation": "changeWaterInfluenceRadius",
+  "id": "water-gravel",
+  "newInfluenceRadius": 1.5
+}

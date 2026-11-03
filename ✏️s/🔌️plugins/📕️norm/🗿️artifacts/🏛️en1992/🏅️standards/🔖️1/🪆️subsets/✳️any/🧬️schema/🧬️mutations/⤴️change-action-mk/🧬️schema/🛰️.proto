@@ -1,6 +1,7 @@
 syntax = "proto3";
+package semio.s.norm.en1992.mutation.change_action_mk;
 message ChangeActionMk {
-  string memberId = 1;
-  string actionId = 2;
-  double newValue = 3;
+  string member_id = 1;
+  string action_id = 2;
+  double new_value = 3;
 }

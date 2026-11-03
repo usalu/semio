@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-param-tolerance/schema.json",
+  "title": "ChangeParamTolerance",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newTolerance"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Parametric section",
+          "de": "Parametrischer Querschnitt"
+        },
+        "description": {
+          "en": "The parametric section this mutation addresses, by id.",
+          "de": "Das adressierte Element (Parametrischer Querschnitt), per Kennung."
+        },
+        "ref": {
+          "kind": "param-section"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newTolerance": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Tolerance against the section row (fillets)",
+          "de": "Toleranz gegen den Querschnitt (Ausrundungen)"
+        },
+        "widget": "stepper",
+        "unit": "1",
+        "precision": 3,
+        "step": 0.01,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

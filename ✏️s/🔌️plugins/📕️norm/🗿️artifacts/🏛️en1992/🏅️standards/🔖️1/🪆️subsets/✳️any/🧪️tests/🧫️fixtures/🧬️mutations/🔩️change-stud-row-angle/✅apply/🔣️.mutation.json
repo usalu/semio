@@ -1,0 +1,7 @@
+{
+  "ChangeStudRowAngle": {
+    "memberId": "wall-W1",
+    "studRowId": "sr-1",
+    "newAngle": 1.5
+  }
+}

@@ -7,5 +7,5 @@ pub fn diff(payload: &InsertSlab, base: &En1994Snapshot) -> protocol::MutationOu
     if payload.index > base.slabs.len() {
         return protocol::MutationOutcome::error("mutation.target-missing", "index out of range", [payload.index.to_string()]);
     }
-    protocol::MutationOutcome::new(En1994Diff { slabs: Some(En1994SlabsRows { inserted: vec![En1994SlabsInserted { index: payload.index, row: payload.slab.clone() }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(En1994Diff { slabs: Some(En1994SlabsRows::insertion(payload.index, payload.slab.clone())), ..Default::default() })
 }

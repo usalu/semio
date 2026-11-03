@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-emb-wall-embedment/schema.json",
+  "title": "ChangeEmbWallEmbedment",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newEmbedment"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeEmbWallEmbedment"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Embedded wall",
+          "de": "Eingespannte Wand"
+        },
+        "description": {
+          "en": "The embedded wall this mutation addresses, by id.",
+          "de": "Die adressierte Zeile (Eingespannte Wand), per Kennung."
+        },
+        "ref": {
+          "kind": "embedded-wall"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newEmbedment": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Provided embedment t",
+          "de": "Vorhandene Einbindetiefe t"
+        },
+        "widget": "stepper",
+        "unit": "m",
+        "precision": 2,
+        "step": 0.05,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

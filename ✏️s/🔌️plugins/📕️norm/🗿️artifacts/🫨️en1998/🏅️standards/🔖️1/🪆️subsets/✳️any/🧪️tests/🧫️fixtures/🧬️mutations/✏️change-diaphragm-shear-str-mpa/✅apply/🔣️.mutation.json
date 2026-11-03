@@ -1,0 +1,5 @@
+{
+  "mutation": "changeDiaphragmShearStrMpa",
+  "id": "dia-1",
+  "newShearStrengthMpa": 2.0
+}

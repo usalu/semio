@@ -1,0 +1,78 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-member-wall-storey-id/schema.json",
+  "title": "ChangeMemberWallStoreyId",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "buildingId",
+    "id",
+    "newWallStoreyId"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeMemberWallStoreyId"
+    },
+    "buildingId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Building",
+          "de": "Gebäude"
+        },
+        "description": {
+          "en": "The building this mutation addresses, by id.",
+          "de": "Das adressierte Element (Gebäude), per Kennung."
+        },
+        "ref": {
+          "kind": "building"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Member",
+          "de": "Bauteil"
+        },
+        "description": {
+          "en": "The member this mutation addresses, by id.",
+          "de": "Das adressierte Element (Bauteil), per Kennung."
+        },
+        "ref": {
+          "kind": "member"
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "newWallStoreyId": {
+      "type": "string",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Storey of the wall (empty = every storey)",
+          "de": "Geschoss der Wand (leer = jedes Geschoss)"
+        },
+        "description": {
+          "en": "Id of a storey row of the building; empty means the wall counts in every storey.",
+          "de": "Kennung einer Geschosszeile des Gebäudes; leer heißt, die Wand zählt in jedem Geschoss."
+        },
+        "ref": {
+          "kind": "storey"
+        },
+        "group": "value",
+        "order": 30,
+        "widget": "reference"
+      }
+    }
+  }
+}

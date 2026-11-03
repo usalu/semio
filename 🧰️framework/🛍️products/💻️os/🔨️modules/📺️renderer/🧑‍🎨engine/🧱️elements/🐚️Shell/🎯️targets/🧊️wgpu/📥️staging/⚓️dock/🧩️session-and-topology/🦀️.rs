@@ -52,6 +52,15 @@ impl ShellDockState {
         self.dock.window_kind_id(window_id).or_else(|| session.app.window_kinds.iter().find(|kind| kind.id == window_id).map(|kind| kind.id.as_str()))
     }
 
+    /// 📱️ Asks the open app's plugin for its layout when the device signal changed (start, resize, input modality, selection): the answer becomes the layout override and is applied to the dock at once; `true` when the plugin chose a layout. The stored layout preferences of the plugin (read once per opened app from the key its hooks name) ride on the request.
+    pub fn observe_device_hooks(&mut self, docs: &DocumentState, width_px: f32, lang: &str) -> bool {
+        let Some(session) = docs.session.as_ref() else { return false };
+        let Some(choice) = self.shell_hooks.observe(&session.plugin_id, &session.app.id, width_px.max(0.0).round() as u32, None, lang) else { return false };
+        self.dock.apply_layout_diff(&choice.layout);
+        self.layout_override = Some(choice.layout);
+        true
+    }
+
     pub fn persist_dock_layout(&mut self) {
         self.layout_override = Some(self.dock.to_window_layout());
     }

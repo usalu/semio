@@ -1,0 +1,5 @@
+{
+  "mutation": "changeBridgeDeflectionLimit",
+  "id": "bri-1",
+  "newBridgeDeflectionLimit": 2.0
+}

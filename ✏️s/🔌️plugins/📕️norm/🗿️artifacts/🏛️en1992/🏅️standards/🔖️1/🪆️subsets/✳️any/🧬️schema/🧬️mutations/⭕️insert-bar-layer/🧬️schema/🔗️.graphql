@@ -1,0 +1,5 @@
+type InsertBarLayer {
+  memberId: String!
+  index: Int!
+  barLayer: BarLayer!
+}

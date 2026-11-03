@@ -26,6 +26,7 @@ pub enum QuantityKind {
     AirPermeability,
     VentilationRate,
     Acceleration,
+    Velocity,
 }
 
 /// 📊️ A scalar value tagged with its physical quantity kind (SI units).
@@ -68,8 +69,16 @@ impl Quantity {
     pub fn acceleration_m_s2(value: f64) -> Self {
         Self::new(QuantityKind::Acceleration, value)
     }
+
+    pub fn velocity_m_s(value: f64) -> Self {
+        Self::new(QuantityKind::Velocity, value)
+    }
 }
 // #endregion 🔖️Quantity
+
+#[path = "🔢️units/🦀️.rs"]
+mod units;
+pub use units::*;
 
 // #region 🔖️Clause
 /// 📑️ Stable clause identifier within a norm family (e.g. `EN 1992-1-1` §6.1).
@@ -87,9 +96,85 @@ impl ClauseId {
     }
 }
 
+/// 🌐️ Bilingual designator vocabulary of clause labels: each row is the canonical English word and its German edition; a label such as `Annex B` or `EN 772-1 Table A.1` is stored once and rendered per locale by [`designator`].
+pub const DESIGNATOR_WORDS: &[(&str, &str)] = &[("Annex", "Anhang"), ("Tables", "Tabellen"), ("Table", "Tabelle"), ("Figure", "Bild"), ("Eq.", "Gl."), ("Expression", "Ausdruck"), ("Design case", "Bemessungsfall"), ("Section", "Abschnitt")];
+
+/// 🏷️ A clause or table designator in a locale: every whole word of [`DESIGNATOR_WORDS`] is translated, numbers, letters, standard codes and symbols stay.
+pub fn designator(label: &str, locale: &semio_framework_ui_locale::Locale) -> String {
+    match locale {
+        semio_framework_ui_locale::Locale::En => label.to_owned(),
+        semio_framework_ui_locale::Locale::De => {
+            let mut out = String::with_capacity(label.len());
+            let mut rest = label;
+            'scan: while !rest.is_empty() {
+                let at_word_start = out.chars().last().map_or(true, |c| !c.is_alphanumeric());
+                if at_word_start {
+                    for (en, de) in DESIGNATOR_WORDS {
+                        if let Some(tail) = rest.strip_prefix(en) {
+                            if tail.chars().next().map_or(true, |c| !c.is_alphanumeric()) {
+                                out.push_str(de);
+                                rest = tail;
+                                continue 'scan;
+                            }
+                        }
+                    }
+                }
+                let mut chars = rest.chars();
+                out.extend(chars.next());
+                rest = chars.as_str();
+            }
+            out
+        }
+    }
+}
+
+/// 🅰️ The canonical label of an annex, `Annex B`; rendered `Anhang B` in German by [`designator`].
+pub fn annex(letter: &str) -> String {
+    format!("Annex {letter}")
+}
+
+impl ClauseId {
+    /// 🔗️ The clause as one line in a locale, `EN 1993 1-1 §6.2.5` / `EN 1993 1-1 Abschn. 6.2.5`, with annex and table words translated.
+    pub fn text(&self, locale: &semio_framework_ui_locale::Locale) -> String {
+        let (family, part, section) = (designator(&self.family, locale), designator(&self.part, locale), designator(&self.section, locale));
+        match locale {
+            semio_framework_ui_locale::Locale::En => format!("{family} {part} §{section}"),
+            semio_framework_ui_locale::Locale::De => format!("{family} {part} Abschn. {section}"),
+        }
+    }
+}
+
+/// 📍️ The source locator of an NDP row in a locale: `Annex B` as `Anhang B`, `EN 772-1 Table A.1` as `EN 772-1 Tabelle A.1`.
+pub fn locator_text(source: &NdpSource, locale: &semio_framework_ui_locale::Locale) -> String {
+    designator(source.locator, locale)
+}
+
 impl fmt::Display for ClauseId {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{} {} §{}", self.family, self.part, self.section)
+    }
+}
+
+#[cfg(test)]
+mod designator_tests {
+    use super::*;
+    use semio_framework_ui_locale::Locale;
+
+    #[test]
+    fn german_labels_translate_whole_words_only() {
+        assert_eq!(designator("Annex B", &Locale::De), "Anhang B");
+        assert_eq!(designator("EN 772-1 Table A.1", &Locale::De), "EN 772-1 Tabelle A.1");
+        assert_eq!(designator("Annexes", &Locale::De), "Annexes");
+        assert_eq!(designator("Annex B", &Locale::En), "Annex B");
+        assert_eq!(designator("Design case", &Locale::De), "Bemessungsfall");
+        assert_eq!(annex("E"), "Annex E");
+    }
+
+    #[test]
+    fn clause_text_reads_in_both_languages() {
+        let clause = ClauseId::new("EN 1991-1-2", "Annex E", "E.1");
+        assert_eq!(clause.text(&Locale::En), "EN 1991-1-2 Annex E §E.1");
+        assert_eq!(clause.text(&Locale::De), "EN 1991-1-2 Anhang E Abschn. E.1");
     }
 }
 // #endregion 🔖️Clause
@@ -103,8 +188,8 @@ impl fmt::Display for ClauseId {
 /// the norm plugin") — kept as a local plain value type here rather than a composed
 /// `store::os_store::artifact_child::ArtifactChild<SemioTextSnapshot>` because it is nested by the DOZENS as an ordinary
 /// leaf field inside `Names`/`Subject`/`CatalogueProduct` etc., not a top-level content slot; a
-/// composed child handle is for a single large content slot with its own working-scene cache
-/// (`📓️migration-recipe.md` §1/§3), not a value type reused pervasively as a struct field.
+/// composed child handle is for a single large content slot with its own working-scene cache,
+/// not a value type reused pervasively as a struct field.
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "compliance-testing"), derive(serde::Serialize, serde::Deserialize))]

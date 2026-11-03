@@ -1,0 +1,6 @@
+{
+  "ChangeSoilHeight": {
+    "id": "wall-north",
+    "newSoilHeightM": 1.8
+  }
+}

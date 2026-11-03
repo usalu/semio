@@ -1,0 +1,6 @@
+{
+  "ChangeDeflectionLimit": {
+    "id": "wall-north",
+    "newDeflectionLimit": 300.0
+  }
+}

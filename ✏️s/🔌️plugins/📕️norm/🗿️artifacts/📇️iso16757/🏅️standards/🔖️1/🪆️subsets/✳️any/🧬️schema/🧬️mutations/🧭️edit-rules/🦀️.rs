@@ -6,6 +6,7 @@ use semio_s_artifact_norm_iso16757_model::Iso16757Snapshot;
 
 /// 📚 Every path a Iso16757 editor edit resolves, one rule per kind that sets, inserts or removes through it.
 pub const EDIT_RULES: NormEditRules = NormEditRules {
+    move_item: &[],
     set_field: &[
         SetFieldRule { path: "selection.classId", kind: "change-selection-class", selectors: &[], value: "newClassId" },
         SetFieldRule { path: "catalogue.manufacturer.names.preferred.text", kind: "rename-manufacturer", selectors: &[], value: "newName" },

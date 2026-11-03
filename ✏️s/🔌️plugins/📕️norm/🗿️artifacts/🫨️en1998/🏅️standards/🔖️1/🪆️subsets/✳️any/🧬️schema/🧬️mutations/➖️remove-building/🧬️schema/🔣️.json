@@ -6,28 +6,28 @@
   "additionalProperties": false,
   "required": [
     "mutation",
-    "index"
+    "id"
   ],
   "properties": {
     "mutation": {
       "const": "removeBuilding"
     },
-    "index": {
-      "type": "integer",
-      "minimum": 0,
+    "id": {
+      "type": "string",
       "x-semio-ui": {
-        "widget": "stepper",
-        "role": "value",
+        "widget": "reference",
+        "role": "target",
         "label": {
           "en": "Building",
           "de": "Gebäude"
         },
         "description": {
-          "en": "Zero-based position of the building in its list.",
-          "de": "Nullbasierte Position des Gebäudes in der Liste."
+          "en": "The building this mutation addresses, by id.",
+          "de": "Das adressierte Element (Gebäude), per Kennung."
         },
-        "step": 1,
-        "precision": 0,
+        "ref": {
+          "kind": "building"
+        },
         "group": "target",
         "order": 10
       }

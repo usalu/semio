@@ -1,0 +1,1288 @@
+{
+  "cases": [
+    {
+      "entry": "T-13",
+      "case": {
+        "annex": "De",
+        "num": {
+          "f_c90": 20000,
+          "l": 100,
+          "b": 100,
+          "a_left": 50,
+          "sc": 1
+        },
+        "text": {
+          "class": "C24",
+          "duration": "medium"
+        }
+      }
+    },
+    {
+      "entry": "T-14",
+      "case": {
+        "annex": "De",
+        "num": {
+          "m_y": 9000000.0,
+          "m_z": 1000000.0,
+          "b": 120,
+          "h": 240,
+          "sc": 1
+        },
+        "text": {
+          "class": "C24",
+          "duration": "medium"
+        }
+      }
+    },
+    {
+      "entry": "T-20",
+      "case": {
+        "annex": "De",
+        "num": {
+          "n_c": 30000,
+          "b": 100,
+          "h": 100,
+          "lef_y": 3000,
+          "lef_z": 3000,
+          "sc": 2
+        },
+        "text": {
+          "class": "C24",
+          "duration": "medium"
+        }
+      }
+    },
+    {
+      "entry": "T-20",
+      "case": {
+        "annex": "En",
+        "num": {
+          "n_c": 200000,
+          "m_y": 8000000.0,
+          "b": 200,
+          "h": 300,
+          "lef_y": 4000,
+          "lef_z": 2500,
+          "sc": 1
+        },
+        "text": {
+          "class": "GL28h",
+          "duration": "medium"
+        }
+      }
+    },
+    {
+      "entry": "T-22",
+      "case": {
+        "annex": "De",
+        "num": {
+          "m_y": 30000000.0,
+          "b": 120,
+          "h": 400,
+          "lef": 4500,
+          "sc": 1
+        },
+        "text": {
+          "class": "GL24h",
+          "duration": "medium"
+        }
+      }
+    },
+    {
+      "entry": "T-30",
+      "case": {
+        "annex": "De",
+        "num": {
+          "m_d": 60000000.0,
+          "b": 140,
+          "h": 500,
+          "alpha_deg": 6,
+          "sc": 1,
+          "l": 6000
+        },
+        "text": {
+          "class": "GL28h",
+          "duration": "medium",
+          "side": "compression",
+          "load_case": "udl_ss"
+        }
+      }
+    },
+    {
+      "entry": "T-31",
+      "case": {
+        "annex": "De",
+        "num": {
+          "m_ap": 120000000.0,
+          "b": 160,
+          "h_ap": 900,
+          "r_in": 12000,
+          "t_lam": 33,
+          "alpha_ap_deg": 10,
+          "sc": 1
+        },
+        "text": {
+          "class": "GL28h",
+          "duration": "medium"
+        }
+      }
+    },
+    {
+      "entry": "T-45",
+      "case": {
+        "annex": "De",
+        "num": {
+          "v_d": 20000,
+          "b": 120,
+          "h": 240,
+          "h_ef": 180,
+          "x": 30,
+          "sc": 1
+        },
+        "text": {
+          "class": "C24",
+          "duration": "medium"
+        }
+      }
+    },
+    {
+      "entry": "T-63",
+      "case": {
+        "annex": "De",
+        "num": {
+          "span_m": 4.5,
+          "ei_l": 12500000.0,
+          "mass_kg_m2": 150
+        },
+        "text": {
+          "class": "C24"
+        }
+      }
+    },
+    {
+      "entry": "T-70",
+      "case": {
+        "annex": "En",
+        "num": {
+          "d": 12,
+          "t1": 60,
+          "t2": 60,
+          "f_u": 400,
+          "sc": 1
+        },
+        "text": {
+          "class": "C24",
+          "duration": "medium"
+        }
+      }
+    },
+    {
+      "entry": "T-71",
+      "case": {
+        "annex": "En",
+        "num": {
+          "d": 12,
+          "t1": 60,
+          "t2": 60,
+          "f_u": 400,
+          "sc": 1
+        },
+        "text": {
+          "class": "C24",
+          "duration": "medium"
+        }
+      }
+    },
+    {
+      "entry": "T-74",
+      "case": {
+        "annex": "En",
+        "num": {
+          "d": 12,
+          "alpha_deg": 30,
+          "a1": 70,
+          "a2": 50,
+          "a3t": 90,
+          "a4t": 40,
+          "a4c": 36
+        },
+        "text": {
+          "kind": "bolt"
+        }
+      }
+    },
+    {
+      "entry": "T-83",
+      "case": {
+        "annex": "En",
+        "num": {
+          "d": 12,
+          "rho_m1": 420
+        },
+        "text": {
+          "kind": "dowel"
+        }
+      }
+    },
+    {
+      "entry": "T-90",
+      "case": {
+        "annex": "En",
+        "num": {
+          "a1": 4800,
+          "i1": 640000.0,
+          "e1": 11000,
+          "h1": 40,
+          "s1": 100,
+          "a2": 9600,
+          "i2": 38400000.0,
+          "e2": 11000,
+          "h2": 80,
+          "k": 2000,
+          "l": 5000,
+          "m_d": 8000000.0
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "T-97",
+      "case": {
+        "annex": "De",
+        "num": {
+          "n_layers": 3,
+          "t1": 30,
+          "o1": 1,
+          "t2": 40,
+          "o2": 0,
+          "t3": 30,
+          "o3": 1,
+          "l": 4000,
+          "g_r": 50,
+          "m_d": 10000,
+          "v_d": 10
+        },
+        "text": {
+          "class": "CLT100"
+        }
+      }
+    },
+    {
+      "entry": "T-121",
+      "case": {
+        "annex": "En",
+        "num": {
+          "ds1": 1.2,
+          "n1": 2000000.0,
+          "ds2": 0.6,
+          "n2": 50000000.0,
+          "sn_a": 15,
+          "sn_b": 4
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "T-120",
+      "case": {
+        "annex": "De",
+        "num": {
+          "span_m": 12,
+          "ei_nm2": 85000000.0,
+          "mass_kg_m": 220,
+          "zeta": 0.015
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "T-101",
+      "case": {
+        "annex": "De",
+        "num": {
+          "b": 200,
+          "h": 400,
+          "t_req": 60,
+          "m_fi": 60000000.0,
+          "sc": 1
+        },
+        "text": {
+          "class": "GL28h"
+        }
+      }
+    },
+    {
+      "entry": "T-106",
+      "case": {
+        "annex": "De",
+        "num": {
+          "b": 200,
+          "h": 400,
+          "t_req": 60,
+          "m_fi": 60000000.0,
+          "sc": 1
+        },
+        "text": {
+          "class": "GL28h"
+        }
+      }
+    },
+    {
+      "entry": "T-107",
+      "case": {
+        "annex": "De",
+        "num": {
+          "n_layers": 5,
+          "t1": 30,
+          "o1": 1,
+          "t2": 30,
+          "o2": 0,
+          "t3": 30,
+          "o3": 1,
+          "t4": 30,
+          "o4": 0,
+          "t5": 30,
+          "o5": 1,
+          "t_req": 90,
+          "m_fi": 2000.0
+        },
+        "text": {
+          "class": "CLT100"
+        }
+      }
+    },
+    {
+      "entry": "T-90",
+      "case": {
+        "annex": "En",
+        "num": {
+          "a1": 4800,
+          "i1": 5120000.0,
+          "e1": 11000,
+          "h1": 40,
+          "s1": 100,
+          "a2": 9600,
+          "i2": 5120000.0,
+          "e2": 11000,
+          "h2": 80,
+          "k": 2000,
+          "l": 5000,
+          "q_d": 0.1,
+          "m_d": 8000000.0
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "T-93",
+      "case": {
+        "annex": "De",
+        "num": {
+          "lef": 3000,
+          "i_tot": 40,
+          "l1": 600,
+          "i1": 14,
+          "n_parts": 2,
+          "n_c": 60000,
+          "area": 30000,
+          "sc": 1
+        },
+        "text": {
+          "class": "GL24h",
+          "joint": "nailed",
+          "duration": "medium"
+        }
+      }
+    },
+    {
+      "entry": "T-104",
+      "case": {
+        "annex": "En",
+        "num": {
+          "f_v_rk": 8000,
+          "t_req": 30,
+          "f_fi_d": 3000,
+          "f_rd_20": 9000,
+          "k_fire": 0.05
+        },
+        "text": {
+          "side_members": "timber"
+        }
+      }
+    },
+    {
+      "entry": "T-120",
+      "case": {
+        "annex": "En",
+        "num": {
+          "span_m": 30,
+          "ei_nm2": 850000000.0,
+          "mass_kg_m": 800,
+          "zeta": 0.03,
+          "crowd_density": 0.8,
+          "deck_width_m": 3,
+          "a_limit": 0.7
+        },
+        "text": {
+          "crowd_model": "setra"
+        }
+      }
+    },
+    {
+      "entry": "T-121",
+      "case": {
+        "annex": "En",
+        "num": {
+          "ds1": 10,
+          "n1": 1000000.0,
+          "ds2": 6,
+          "n2": 4000000.0,
+          "ds3": 2,
+          "n3": 8000000.0,
+          "ds_cut": 3,
+          "years": 50,
+          "sn_a": 12,
+          "sn_b": 4
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "T-122",
+      "case": {
+        "annex": "En",
+        "num": {
+          "sigma_p_0": 1.0,
+          "loss_relax": 0.15,
+          "loss_creep": 0.25,
+          "loss_mc": 0.1,
+          "bar_spacing": 800,
+          "deck_depth": 250,
+          "bar_area": 804,
+          "f_bar_d": 700,
+          "plate_a": 22500
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "T-03",
+      "case": {
+        "annex": "De",
+        "num": {},
+        "text": {
+          "material": "glulam",
+          "situation": "persistent"
+        }
+      }
+    },
+    {
+      "entry": "T-11",
+      "case": {
+        "annex": "De",
+        "num": {
+          "sigma_t_90": 0.3
+        },
+        "text": {
+          "class": "GL24h"
+        }
+      }
+    },
+    {
+      "entry": "T-01",
+      "case": {
+        "annex": "De",
+        "num": {},
+        "text": {
+          "class": "GL24h"
+        }
+      }
+    },
+    {
+      "entry": "T-02",
+      "case": {
+        "annex": "De",
+        "num": {
+          "kmod_2": 0.8,
+          "sc": 1.0
+        },
+        "text": {
+          "class": "GL24h",
+          "duration": "medium"
+        }
+      }
+    },
+    {
+      "entry": "T-04",
+      "case": {
+        "annex": "De",
+        "num": {
+          "psi_2": 0.3,
+          "sc": 1.0,
+          "u_inst_g": 6.0,
+          "u_inst_q": 4.0
+        },
+        "text": {
+          "material": "glulam"
+        }
+      }
+    },
+    {
+      "entry": "T-05",
+      "case": {
+        "annex": "De",
+        "num": {
+          "h": 400.0,
+          "volume": 400000000.0
+        },
+        "text": {
+          "class": "GL24h"
+        }
+      }
+    },
+    {
+      "entry": "T-06",
+      "case": {
+        "annex": "De",
+        "num": {
+          "h": 400.0,
+          "sc": 1.0
+        },
+        "text": {
+          "class": "GL24h",
+          "duration": "medium"
+        }
+      }
+    },
+    {
+      "entry": "T-10",
+      "case": {
+        "annex": "De",
+        "num": {
+          "b": 200.0,
+          "h": 400.0,
+          "n_t": 150000.0
+        },
+        "text": {
+          "class": "GL24h"
+        }
+      }
+    },
+    {
+      "entry": "T-12",
+      "case": {
+        "annex": "De",
+        "num": {
+          "b": 200.0,
+          "h": 400.0,
+          "n_c": 400000.0
+        },
+        "text": {
+          "class": "GL24h"
+        }
+      }
+    },
+    {
+      "entry": "T-15",
+      "case": {
+        "annex": "De",
+        "num": {
+          "a_support": 1000.0,
+          "b": 200.0,
+          "h": 400.0,
+          "v": 40000.0,
+          "v_point": 40000.0
+        },
+        "text": {
+          "class": "GL24h"
+        }
+      }
+    },
+    {
+      "entry": "T-16",
+      "case": {
+        "annex": "De",
+        "num": {
+          "b": 200.0,
+          "h": 400.0,
+          "m_t": 3000000.0,
+          "tau_v": 1.0
+        },
+        "text": {
+          "class": "GL24h"
+        }
+      }
+    },
+    {
+      "entry": "T-17",
+      "case": {
+        "annex": "De",
+        "num": {
+          "b": 200.0,
+          "h": 400.0,
+          "m_y": 40000000.0,
+          "m_z": 4000000.0,
+          "n_c": 100000.0,
+          "n_t": 80000.0
+        },
+        "text": {
+          "class": "GL24h"
+        }
+      }
+    },
+    {
+      "entry": "T-18",
+      "case": {
+        "annex": "De",
+        "num": {
+          "b": 200.0,
+          "h": 400.0,
+          "hole_count": 2.0,
+          "hole_d": 18.0,
+          "n_t": 150000.0
+        },
+        "text": {
+          "class": "GL24h"
+        }
+      }
+    },
+    {
+      "entry": "T-50",
+      "case": {
+        "annex": "De",
+        "num": {
+          "b": 200.0,
+          "h": 400.0,
+          "m_y": 50000000.0,
+          "n_members": 5.0,
+          "spacing_m": 0.6
+        },
+        "text": {
+          "class": "GL24h"
+        }
+      }
+    },
+    {
+      "entry": "T-66",
+      "case": {
+        "annex": "De",
+        "num": {
+          "ei_nm2": 850000000.0,
+          "mass_kg_m": 800.0,
+          "n_peds": 20.0,
+          "span_m": 30.0,
+          "zeta": 0.015
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "T-123",
+      "case": {
+        "annex": "De",
+        "num": {
+          "f_ed": 18000.0,
+          "f_v_rk": 8000.0,
+          "kmod": 0.8,
+          "n": 4.0
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "T-124",
+      "case": {
+        "annex": "De",
+        "num": {
+          "ds1": 10.0,
+          "ei_nm2": 850000000.0,
+          "mass_kg_m": 800.0,
+          "n1": 1000000.0,
+          "span_m": 30.0
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "T-32",
+      "case": {
+        "annex": "De",
+        "num": {
+          "alpha_ap_deg": 10.0,
+          "b": 200.0,
+          "h_ap": 900.0,
+          "m_ap": 120000000.0,
+          "p_d": 15.0,
+          "r_in": 12000.0,
+          "tau_d": 0.8,
+          "v_beam": 500000000.0
+        },
+        "text": {
+          "class": "GL24h",
+          "shape": "rect"
+        }
+      }
+    },
+    {
+      "entry": "T-33",
+      "case": {
+        "annex": "De",
+        "num": {
+          "b": 200.0,
+          "h_ap": 900.0,
+          "m_ap": 120000000.0,
+          "n_rods": 2.0,
+          "r_ax_k": 40000.0,
+          "r_in": 12000.0
+        },
+        "text": {
+          "class": "GL24h"
+        }
+      }
+    },
+    {
+      "entry": "T-46",
+      "case": {
+        "annex": "De",
+        "num": {
+          "h": 400.0,
+          "h_ef": 300.0,
+          "n_rods": 2.0,
+          "r_ax_k": 40000.0,
+          "v_d": 40000.0
+        },
+        "text": {
+          "class": "GL24h"
+        }
+      }
+    },
+    {
+      "entry": "T-72",
+      "case": {
+        "annex": "De",
+        "num": {
+          "d": 12.0,
+          "f_ax_rk": 5000.0,
+          "f_ed": 4000.0,
+          "f_u": 400.0,
+          "sc": 1.0,
+          "t1": 60.0,
+          "t2": 60.0
+        },
+        "text": {
+          "class": "GL24h",
+          "class_2": "GL24h",
+          "duration": "medium",
+          "kind": "nail"
+        }
+      }
+    },
+    {
+      "entry": "T-73",
+      "case": {
+        "annex": "De",
+        "num": {
+          "d": 12.0,
+          "f_ax_rk": 5000.0,
+          "f_ed": 6000.0,
+          "f_u": 400.0,
+          "sc": 1.0,
+          "t1": 60.0,
+          "t2": 60.0,
+          "t_steel": 5.0
+        },
+        "text": {
+          "class": "GL24h",
+          "config": "single",
+          "duration": "medium",
+          "kind": "nail"
+        }
+      }
+    },
+    {
+      "entry": "T-75",
+      "case": {
+        "annex": "De",
+        "num": {
+          "a1": 70.0,
+          "alpha_deg": 0.0,
+          "d": 12.0,
+          "f_v_rk": 8000.0,
+          "n": 4.0,
+          "predrilled": 1.0
+        },
+        "text": {
+          "kind": "nail"
+        }
+      }
+    },
+    {
+      "entry": "T-76",
+      "case": {
+        "annex": "De",
+        "num": {
+          "alpha_deg": 90.0,
+          "d": 12.0,
+          "f_ax_ed": 3000.0,
+          "kmod": 0.8,
+          "l_ef": 60.0,
+          "n_ef": 4.0,
+          "rho_k": 380.0,
+          "t_pen": 60.0
+        },
+        "text": {
+          "kind": "nail"
+        }
+      }
+    },
+    {
+      "entry": "T-77",
+      "case": {
+        "annex": "De",
+        "num": {
+          "f_ax_ed": 3000.0,
+          "f_ax_rd": 5000.0,
+          "f_v_ed": 3000.0,
+          "f_v_rd": 6000.0
+        },
+        "text": {
+          "kind": "nail"
+        }
+      }
+    },
+    {
+      "entry": "T-78",
+      "case": {
+        "annex": "De",
+        "num": {
+          "a_net_t": 4000.0,
+          "a_net_v": 20000.0,
+          "b": 200.0,
+          "f_90_ed": 8000.0,
+          "f_ed": 15000.0,
+          "h": 400.0,
+          "he": 200.0,
+          "w": 1.0
+        },
+        "text": {
+          "class": "GL24h"
+        }
+      }
+    },
+    {
+      "entry": "T-79",
+      "case": {
+        "annex": "De",
+        "num": {
+          "a_net": 400.0,
+          "d": 12.0,
+          "d0": 14.0,
+          "e1": 50.0,
+          "e2": 30.0,
+          "f_ed": 20000.0,
+          "f_u_plate": 360.0,
+          "t_plate": 5.0
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "T-80",
+      "case": {
+        "annex": "De",
+        "num": {
+          "alpha_deg": 0.0,
+          "d_c": 65.0,
+          "f_ed": 15000.0,
+          "h_e": 15.0,
+          "kmod": 0.8,
+          "rho_k": 380.0
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "T-81",
+      "case": {
+        "annex": "De",
+        "num": {
+          "d_c": 62.0,
+          "f_ed": 20000.0,
+          "k1": 1.0,
+          "k2": 1.0,
+          "k3": 1.0,
+          "k4": 1.0,
+          "kmod": 0.8
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "T-82",
+      "case": {
+        "annex": "De",
+        "num": {
+          "a_ef": 8000.0,
+          "f_a_k": 3.0,
+          "f_ed": 15000.0,
+          "f_t_k_plate": 100.0,
+          "kmod": 0.8,
+          "l_plate": 100.0
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "T-60",
+      "case": {
+        "annex": "De",
+        "num": {
+          "b": 200.0,
+          "h": 400.0,
+          "h_a": 400.0,
+          "h_b": 400.0,
+          "l": 5000.0,
+          "load_g": 1.5,
+          "load_q": 2.0
+        },
+        "text": {
+          "class": "GL24h",
+          "load_case": "udl_ss"
+        }
+      }
+    },
+    {
+      "entry": "T-61",
+      "case": {
+        "annex": "De",
+        "num": {
+          "b": 200.0,
+          "h": 400.0,
+          "l": 5000.0,
+          "load_g": 1.5,
+          "load_q": 2.0,
+          "psi_2": 0.3,
+          "sc": 1.0,
+          "w_c": 0.0
+        },
+        "text": {
+          "class": "GL24h",
+          "load_case": "udl_ss"
+        }
+      }
+    },
+    {
+      "entry": "T-62",
+      "case": {
+        "annex": "De",
+        "num": {
+          "a1": 4800.0,
+          "a2": 9600.0,
+          "a3": 4800.0,
+          "e1": 11000.0,
+          "e2": 11000.0,
+          "e3": 11000.0,
+          "h1": 60.0,
+          "h2": 160.0,
+          "h3": 60.0,
+          "i1": 640000.0,
+          "i2": 5120000.0,
+          "i3": 640000.0,
+          "k_ser": 2000.0,
+          "l": 5000.0,
+          "load_g": 1.5,
+          "s1": 100.0,
+          "s3": 100.0
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "T-64",
+      "case": {
+        "annex": "De",
+        "num": {
+          "a_mm_per_kn": 1.8,
+          "ei_b": 1000000.0,
+          "ei_l": 12500000.0,
+          "force_n": 1000.0,
+          "span_m": 4.5,
+          "width_m": 4.0
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "T-65",
+      "case": {
+        "annex": "De",
+        "num": {
+          "b_vel": 100.0,
+          "ei_b": 1000000.0,
+          "ei_l": 12500000.0,
+          "mass_kg_m2": 150.0,
+          "span_m": 4.5,
+          "width_m": 4.0,
+          "zeta": 0.02
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "T-21",
+      "case": {
+        "annex": "De",
+        "num": {
+          "b": 200.0,
+          "h": 400.0,
+          "lef_y": 3000.0,
+          "lef_z": 3000.0,
+          "m_y": 40000000.0,
+          "m_z": 4000000.0,
+          "n_c": 100000.0
+        },
+        "text": {
+          "class": "GL24h"
+        }
+      }
+    },
+    {
+      "entry": "T-23",
+      "case": {
+        "annex": "De",
+        "num": {
+          "b": 200.0,
+          "h": 400.0,
+          "l": 5000.0,
+          "lef_y": 3000.0,
+          "lef_z": 3000.0,
+          "m_y": 40000000.0,
+          "m_z": 4000000.0,
+          "n_c": 100000.0
+        },
+        "text": {
+          "class": "GL24h"
+        }
+      }
+    },
+    {
+      "entry": "T-24",
+      "case": {
+        "annex": "De",
+        "num": {
+          "b": 200.0,
+          "h": 400.0,
+          "lef_y": 4000.0,
+          "m_y": 15000000.0,
+          "n_c": 100000.0
+        },
+        "text": {
+          "class": "GL24h"
+        }
+      }
+    },
+    {
+      "entry": "T-100",
+      "case": {
+        "annex": "De",
+        "num": {
+          "h_p": 20.0,
+          "rho_k": 380.0,
+          "series": 0.0,
+          "t_min": 30.0
+        },
+        "text": {
+          "char_material": "glulam",
+          "class": "GL24h"
+        }
+      }
+    },
+    {
+      "entry": "T-102",
+      "case": {
+        "annex": "De",
+        "num": {
+          "b": 200.0,
+          "h": 400.0,
+          "m_fi": 60000000.0,
+          "t_req": 60.0
+        },
+        "text": {
+          "class": "GL24h"
+        }
+      }
+    },
+    {
+      "entry": "T-103",
+      "case": {
+        "annex": "De",
+        "num": {
+          "h_p": 20.0,
+          "t_min": 30.0
+        },
+        "text": {
+          "board": "F",
+          "class": "GL24h"
+        }
+      }
+    },
+    {
+      "entry": "T-105",
+      "case": {
+        "annex": "De",
+        "num": {
+          "h1": 18.0,
+          "n_layers": 1.0,
+          "t_req": 30.0
+        },
+        "text": {
+          "kind1": "gypsum_f"
+        }
+      }
+    },
+    {
+      "entry": "T-91",
+      "case": {
+        "annex": "De",
+        "num": {
+          "b_f": 100.0,
+          "b_w": 40.0,
+          "e_f": 11000.0,
+          "e_w": 4000.0,
+          "f_glue_d": 1.0,
+          "h_f": 40.0,
+          "h_w": 300.0,
+          "m_d": 20000000.0,
+          "v_d": 15000.0
+        },
+        "text": {
+          "class": "GL24h"
+        }
+      }
+    },
+    {
+      "entry": "T-92",
+      "case": {
+        "annex": "De",
+        "num": {
+          "b_w": 80.0,
+          "e_f": 11000.0,
+          "e_w": 11000.0,
+          "f_flange_d": 8.0,
+          "h_f": 40.0,
+          "h_w": 300.0,
+          "l": 5000.0,
+          "m_d": 20000000.0,
+          "outstand": 300.0
+        },
+        "text": {
+          "class": "GL24h"
+        }
+      }
+    },
+    {
+      "entry": "T-94",
+      "case": {
+        "annex": "De",
+        "num": {
+          "b_i": 1200.0,
+          "f_d": 15000.0,
+          "f_f_rd": 3000.0,
+          "f_v_ed": 3000.0,
+          "h": 400.0,
+          "l_dia": 12000.0,
+          "n_panels": 1.0,
+          "q_v_rd": 3.0,
+          "r_hold_down": 20000.0,
+          "s": 75.0
+        },
+        "text": {
+          "method": "A"
+        }
+      }
+    },
+    {
+      "entry": "T-95",
+      "case": {
+        "annex": "De",
+        "num": {
+          "l_m": 6.0,
+          "n_braced": 4.0,
+          "n_d": 5000.0,
+          "q_rd": 1500.0
+        },
+        "text": {
+          "product": "solid"
+        }
+      }
+    },
+    {
+      "entry": "T-96",
+      "case": {
+        "annex": "De",
+        "num": {
+          "f_rd": 2000.0,
+          "k_br": 500.0,
+          "l_m": 6.0,
+          "n_braced": 4.0,
+          "n_d": 5000.0
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "T-98",
+      "case": {
+        "annex": "De",
+        "num": {},
+        "text": {
+          "ductility": "DCM",
+          "system": "nailed_wall"
+        }
+      }
+    },
+    {
+      "entry": "T-95",
+      "case": {
+        "annex": "En",
+        "num": {
+          "l_m": 6.0,
+          "n_braced": 4.0,
+          "n_d": 5000.0,
+          "q_rd": 1500.0
+        },
+        "text": {
+          "product": "glulam"
+        }
+      }
+    },
+    {
+      "entry": "T-95",
+      "case": {
+        "annex": "En",
+        "num": {
+          "l_m": 20.0,
+          "n_braced": 4.0,
+          "n_d": 5000.0
+        },
+        "text": {
+          "product": "solid"
+        }
+      }
+    },
+    {
+      "entry": "T-96",
+      "case": {
+        "annex": "En",
+        "num": {
+          "f_rd": 2000.0,
+          "k_br": 500.0,
+          "l_m": 6.0,
+          "n_braced": 4.0,
+          "n_d": 5000.0
+        },
+        "text": {}
+      }
+    }
+  ]
+}

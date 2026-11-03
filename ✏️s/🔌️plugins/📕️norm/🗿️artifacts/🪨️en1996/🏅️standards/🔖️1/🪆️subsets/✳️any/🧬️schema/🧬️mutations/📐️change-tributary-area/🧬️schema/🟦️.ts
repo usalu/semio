@@ -1,12 +1,12 @@
 /** 📐️ `change-tributary-area` wire twin: the leaf payload `ChangeTributaryArea`, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
- * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
+ * by `repo ./📜️script.ts schema twins generate`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
-import { normWireInteger, normWireNumber, normWireObject, normWireRange, type NormWireReader, normWireRequired } from "@semio-tech/norm-js/registry/contract";
+import { normWireNumber, normWireObject, normWireRange, normWireRequired, normWireString, type NormWireReader } from "@semio-tech/norm-js/registry/contract";
 
 export interface ChangeTributaryArea {
-  wallIndex: number;
-  index: number;
+  wallId: string;
+  id: string;
   newTributaryAreaM2: number;
 }
 
-export const parseChangeTributaryArea: NormWireReader<ChangeTributaryArea> = normWireObject<ChangeTributaryArea>({ wallIndex: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), newTributaryAreaM2: normWireRequired(normWireRange(normWireNumber, {"minimum":0})) });
+export const parseChangeTributaryArea: NormWireReader<ChangeTributaryArea> = normWireObject<ChangeTributaryArea>({ wallId: normWireRequired(normWireString), id: normWireRequired(normWireString), newTributaryAreaM2: normWireRequired(normWireRange(normWireNumber, {"minimum":0,"maximum":100000000})) });

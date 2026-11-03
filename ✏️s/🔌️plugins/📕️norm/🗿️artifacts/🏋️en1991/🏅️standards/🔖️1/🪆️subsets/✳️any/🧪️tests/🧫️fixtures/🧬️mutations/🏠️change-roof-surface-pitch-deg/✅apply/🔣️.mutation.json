@@ -1,0 +1,6 @@
+{
+  "ChangeRoofSurfacePitchDeg": {
+    "id": "roof-surface-1",
+    "newPitchDeg": 3.0
+  }
+}

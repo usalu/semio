@@ -1,0 +1,6 @@
+{
+  "ChangeJointPlateEndDistance": {
+    "id": "joint-plate-1",
+    "newEndDistance": 2.0
+  }
+}

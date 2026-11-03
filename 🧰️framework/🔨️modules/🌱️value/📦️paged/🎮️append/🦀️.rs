@@ -73,7 +73,7 @@ impl PagedUtf8AppendCursor {
 }
 
 impl ErasedSnapshotRetirement for PagedUtf8AppendCursor {
- fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{self.close_demands(body)}
+ fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{self.close_demands(body)}
     fn close_step(&mut self, grant: RetainedCloneGrant) -> crate::RetainedWorkOutcome { Self::close_step(self, grant) }
     fn terminal_is_empty(&self) -> bool { PagedUtf8AppendCursor::terminal_is_empty(self) }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { self.next_close_copy_byte_demand() }

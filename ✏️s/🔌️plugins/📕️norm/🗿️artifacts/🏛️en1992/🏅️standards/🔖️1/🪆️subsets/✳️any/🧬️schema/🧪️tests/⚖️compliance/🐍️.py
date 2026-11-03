@@ -1,18 +1,23 @@
 #!/usr/bin/env python3
-"""Language-agnostic EN 1992 evaluate oracle — EN 1990 combinations + ULS/SLS twins."""
+"""🏛️ Language-agnostic EN 1992 evaluate oracle — EN 1990 combinations + ULS/SLS twins."""
 from __future__ import annotations
 
+import importlib.util
 import json
 import math
 import sys
+from pathlib import Path
 from typing import Any
+
+_FACTORS_PATH = next(parent / "⚖️compliance" / "📜️annex-and-tables" / "⚖️action-factors" / "🐍️.py" for parent in Path(__file__).resolve().parents if (parent / "⚖️compliance" / "📜️annex-and-tables" / "⚖️action-factors" / "🐍️.py").is_file())
+_SPEC = importlib.util.spec_from_file_location("action_factors", _FACTORS_PATH)
+FACTORS = importlib.util.module_from_spec(_SPEC)
+_SPEC.loader.exec_module(FACTORS)
 
 
 def annex_params(annex: str) -> dict[str, float]:
-    a = (annex or "De").strip().lower()
-    if a in ("de", "de-na", "din"):
-        return dict(alpha_cc=0.85, alpha_ct=0.85, gamma_c=1.5, gamma_s=1.15)
-    return dict(alpha_cc=1.0, alpha_ct=1.0, gamma_c=1.5, gamma_s=1.15)
+    a = annex or "De"
+    return dict(alpha_cc=FACTORS.ndp("ndp.en1992.m-01.alpha-cc-persistent", a), alpha_ct=FACTORS.ndp("ndp.en1992.m-01.alpha-ct", a), gamma_c=FACTORS.ndp("ndp.en1992.m-01.gamma-c-persistent", a), gamma_s=FACTORS.ndp("ndp.en1992.gamma-s", a))
 
 
 def is_de(annex: str) -> bool:
@@ -27,21 +32,15 @@ def f_yd(f_yk: float, p: dict[str, float]) -> float:
     return f_yk / p["gamma_s"]
 
 
-def psi_factors(category: str) -> tuple[float, float, float]:
-    c = (category or "").lower()
-    if c in ("office", "residential", "congregation"):
-        return 0.7, 0.5, 0.3
-    if c in ("shopping", "storage"):
-        return 0.7, 0.7, 0.6
-    if c in ("snow", "snow_high"):
-        return 0.5, 0.2, 0.0
-    if c == "wind":
-        return 0.6, 0.2, 0.0
-    return 0.7, 0.5, 0.3
+PSI_KEYS = {"office": "office", "selfweight": "office", "residential": "residential", "congregation": "congregation", "shopping": "retail", "storage": "storage", "snow": "snow", "snowhigh": "snow_high", "wind": "wind", "temperature": "temperature"}
+
+
+def psi_factors(factors: Any, category: str) -> tuple[float, float, float]:
+    return factors.psi(PSI_KEYS.get((category or "").lower().replace("_", ""), ""))
 
 
 def characteristic_effects(member: dict[str, Any], action: dict[str, Any]) -> tuple[float, float, float, float, float]:
-    source = str(action.get("source", "udl")).lower()
+    source = str(action.get("source", "Udl")).lower()
     use_fem = bool(member.get("useFem", False))
     if source == "external" or use_fem:
         return (
@@ -71,7 +70,7 @@ def characteristic_effects(member: dict[str, Any], action: dict[str, Any]) -> tu
     return m, 0.0, v, float(action.get("tK", 0.0)), float(action.get("vKPunch", 0.0))
 
 
-def combine_member_actions(member: dict[str, Any]) -> list[dict[str, Any]]:
+def combine_member_actions(member: dict[str, Any], factors: Any) -> list[dict[str, Any]]:
     g = [0.0, 0.0, 0.0, 0.0, 0.0]
     variables: list[tuple[dict[str, Any], tuple[float, float, float, float, float]]] = []
     accidentals: list[tuple[dict[str, Any], tuple[float, float, float, float, float]]] = []
@@ -97,7 +96,7 @@ def combine_member_actions(member: dict[str, Any]) -> list[dict[str, Any]]:
             g = [q * l * l / 12.0, 0.0, q * l / 2.0, 0.0, 0.0]
         else:
             g = [q * l * l / 8.0, 0.0, q * l / 2.0, 0.0, 0.0]
-    gamma_g, gamma_q = 1.35, 1.5
+    gamma_g, gamma_q = factors.gamma_g_sup(), factors.gamma_q()
     out: list[dict[str, Any]] = []
     if not variables:
         out.append({"situation": "uls", "combination_id": "ULS-6.10-G", "m_ed": gamma_g * g[0], "n_ed": gamma_g * g[1], "v_ed": gamma_g * g[2], "t_ed": gamma_g * g[3], "v_ed_punch": gamma_g * g[4]})
@@ -113,13 +112,13 @@ def combine_member_actions(member: dict[str, Any]) -> list[dict[str, Any]]:
             for j, (oa, oe) in enumerate(variables):
                 if j == lead_i:
                     continue
-                psi0, _, _ = psi_factors(str(oa.get("category", "")))
+                psi0, _, _ = psi_factors(factors, str(oa.get("category", "")))
                 m += gamma_q * psi0 * oe[0]
                 n += gamma_q * psi0 * oe[1]
                 v += gamma_q * psi0 * oe[2]
                 t += gamma_q * psi0 * oe[3]
                 vp += gamma_q * psi0 * oe[4]
-            xi = 0.85
+            xi = factors.xi()
             m_b = xi * gamma_g * g[0] + gamma_q * lead_e[0]
             n_b = xi * gamma_g * g[1] + gamma_q * lead_e[1]
             v_b = xi * gamma_g * g[2] + gamma_q * lead_e[2]
@@ -128,7 +127,7 @@ def combine_member_actions(member: dict[str, Any]) -> list[dict[str, Any]]:
             for j, (oa, oe) in enumerate(variables):
                 if j == lead_i:
                     continue
-                psi0, _, _ = psi_factors(str(oa.get("category", "")))
+                psi0, _, _ = psi_factors(factors, str(oa.get("category", "")))
                 m_b += gamma_q * psi0 * oe[0]
                 n_b += gamma_q * psi0 * oe[1]
                 v_b += gamma_q * psi0 * oe[2]
@@ -148,7 +147,7 @@ def combine_member_actions(member: dict[str, Any]) -> list[dict[str, Any]]:
             for j, (oa, oe) in enumerate(variables):
                 if j == lead_i:
                     continue
-                psi0, _, _ = psi_factors(str(oa.get("category", "")))
+                psi0, _, _ = psi_factors(factors, str(oa.get("category", "")))
                 ms += psi0 * oe[0]
                 ns += psi0 * oe[1]
                 vs += psi0 * oe[2]
@@ -157,7 +156,7 @@ def combine_member_actions(member: dict[str, Any]) -> list[dict[str, Any]]:
             out.append({"situation": "sls_char", "combination_id": f"SLS-char-{lid}", "m_ed": ms, "n_ed": ns, "v_ed": vs, "t_ed": ts, "v_ed_punch": vps})
         mq, nq, vq, tq, vpq = g[0], g[1], g[2], g[3], g[4]
         for oa, oe in variables:
-            _, _, psi2 = psi_factors(str(oa.get("category", "")))
+            _, _, psi2 = psi_factors(factors, str(oa.get("category", "")))
             mq += psi2 * oe[0]
             nq += psi2 * oe[1]
             vq += psi2 * oe[2]
@@ -171,7 +170,7 @@ def combine_member_actions(member: dict[str, Any]) -> list[dict[str, Any]]:
         t = g[3] + ae[3]
         vp = g[4] + ae[4]
         for oa, oe in variables:
-            _, psi1, _ = psi_factors(str(oa.get("category", "")))
+            _, psi1, _ = psi_factors(factors, str(oa.get("category", "")))
             m += psi1 * oe[0]
             n += psi1 * oe[1]
             v += psi1 * oe[2]
@@ -195,15 +194,14 @@ def shear_v_rd_c_n(b: float, d: float, f_ck: float, rho_l: float, n_ed: float, a
     b_mm = b * 1000.0
     k = min(1.0 + math.sqrt(200.0 / max(d_mm, 1e-9)), 2.0)
     rho = min(rho_l, 0.02)
-    a_c_mm2 = b_mm * d_mm
-    sigma_cp_mpa = 0.0
-    if a_c_mm2 > 0.0:
-        sigma_cp_mpa = (n_ed / 1000.0) / a_c_mm2 * 1000.0
-    sigma_cp_mpa = max(0.0, min(sigma_cp_mpa, 0.2 * f_ck_mpa))
+    a_c_mm2 = b_mm * d_mm / 0.9
+    sigma_cp_mpa = -n_ed / a_c_mm2 if a_c_mm2 > 0.0 else 0.0
+    sigma_cp_mpa = min(sigma_cp_mpa, 0.2 * f_cd(f_ck, p) / 1.0e6)
     c_rd_c = (0.15 if is_de(annex) else 0.18) / p["gamma_c"]
+    k1 = 0.12 if is_de(annex) else 0.15
     v_min = 0.035 * (k ** 1.5) * math.sqrt(max(f_ck_mpa, 0.0))
-    v1 = (c_rd_c * k * (100.0 * rho * f_ck_mpa) ** (1.0 / 3.0) + 0.15 * sigma_cp_mpa) * b_mm * d_mm
-    v2 = (v_min + 0.15 * sigma_cp_mpa) * b_mm * d_mm
+    v1 = (c_rd_c * k * (100.0 * rho * f_ck_mpa) ** (1.0 / 3.0) + k1 * sigma_cp_mpa) * b_mm * d_mm
+    v2 = (v_min + k1 * sigma_cp_mpa) * b_mm * d_mm
     return max(v1, v2)
 
 
@@ -240,27 +238,31 @@ def n_parabola_of(f_ck: float) -> float:
     return 1.4 + 23.4 * ((90.0 - fck) / 100.0) ** 4
 
 def flexural_resistance_nm(f_ck: float, b: float, d: float, a_s: float, f_yk: float, n_ed: float, annex: str, e_s: float = 200.0e9) -> float:
+    """🧵️ Strain compatibility by quadrature: parabola-rectangle concrete, bilinear steel, tension steel at depth d, N_Ed tension positive (units N, m, Pa)."""
+    from scipy import integrate, optimize
+
     p = annex_params(annex)
-    n_parabola = n_parabola_of(f_ck)
-    eps_cu2 = eps_cu2_of(f_ck)
-    eta = 1.0 if n_parabola <= 2.0 else max(1.0 - (f_ck / 1.0e6 - 50.0) / 200.0, 0.8)
-    lam = 0.8 if n_parabola <= 2.0 else max(0.8 - (f_ck / 1.0e6 - 50.0) / 400.0, 0.6)
-    fcd = eta * f_cd(f_ck, p)
-    fyd = f_yd(f_yk, p)
-    f_s = a_s * fyd
-    f_c_req = max(f_s - n_ed, 0.0)
-    x = f_c_req / (fcd * b * lam) if fcd * b * lam > 0 else 0.0
-    eps_yd = fyd / e_s if e_s > 0 else 0.0025
-    x_bal = d * eps_cu2 / (eps_cu2 + eps_yd) if eps_cu2 + eps_yd > 0 else 0.45 * d
-    x_lim = min(x_bal, 0.45 * d)
-    x_use = max(min(x, x_lim), 0.0)
-    z = d - 0.5 * lam * x_use
-    m_from_steel = f_s * z
-    if abs(n_ed) > 1.0 and b * d > 0.0:
-        n_rd = fcd * b * d + fyd * a_s
-        util_n = max(-n_ed, 0.0) / max(n_rd, 1.0)
-        return m_from_steel * max(1.0 - util_n, 0.0)
-    return m_from_steel
+    fcd = f_cd(f_ck, p) / 1.0e6
+    fyd = f_yd(f_yk, p) / 1.0e6
+    ec2, ecu, n = 2.0, eps_cu2_of(f_ck) * 1000.0, n_parabola_of(f_ck)
+    bm, dm, am = b * 1000.0, d * 1000.0, a_s * 1.0e6
+    h = dm / 0.9
+    sc = lambda e: 0.0 if e <= 0 or e > ecu + 1e-12 else (fcd * (1.0 - (1.0 - e / ec2) ** n) if e < ec2 else fcd)
+
+    def forces(x: float):
+        etop = min(ecu, 45.0 * x / max(dm - x, 1e-9)) if x < dm else (ecu if x <= h else ec2 * x / (x - h * (1.0 - ec2 / ecu)))
+        eps = lambda u: etop * (x - u) / x
+        zone = min(x, h)
+        fc = integrate.quad(lambda u: sc(eps(u)) * bm, 0.0, zone, limit=200)[0]
+        mc = integrate.quad(lambda u: sc(eps(u)) * bm * (h / 2.0 - u), 0.0, zone, limit=200)[0]
+        es = eps(dm)
+        st = min(abs(es) * e_s / 1.0e9, fyd) * (1.0 if es < 0 else -1.0)
+        t = am * st
+        return fc - t, mc + t * (dm - h / 2.0)
+
+    n_c = -n_ed / 1.0e3
+    x = optimize.brentq(lambda x: forces(x)[0] - n_c, 1e-3, 50.0 * h, xtol=1e-6)
+    return forces(x)[1] / 1.0e3
 
 
 def c_min_dur_m(exposure: str) -> float:
@@ -339,28 +341,41 @@ def asw_per_s(member: dict[str, Any]) -> float:
 
 
 
-def cracked_sigma_s_pa(m: float, b: float, d: float, a_s: float, e_s: float, e_cm: float) -> float:
-    if a_s <= 0.0 or d <= 0.0:
-        return 0.0
-    alpha_e = e_s / max(e_cm, 1.0)
-    rho = a_s / (b * d)
-    x = d * ((alpha_e * rho) ** 2 + 2.0 * alpha_e * rho) ** 0.5 - alpha_e * rho * d
-    z = d - x / 3.0
-    if z <= 0.0:
-        return 0.0
-    return abs(m) / (a_s * z)
+def layer_bars(member: dict[str, Any], d: float) -> list[tuple[float, float]]:
+    """🔩️ Bars as (distance u from the top fibre, area): top layers at cover + phi/2, the others at the effective depth."""
+    cover = float(member.get("cover", 0.0))
+    bars = []
+    for layer in member.get("longitudinal") or []:
+        dia = float(layer.get("diameter", 0.0))
+        area = float(layer.get("count", 0.0)) * math.pi * (dia * 0.5) ** 2
+        bars.append((cover + dia * 0.5 if layer.get("position") == "Top" else d, area))
+    return bars
 
 
-def cracked_sigma_c_pa(m: float, b: float, d: float, a_s: float, e_s: float, e_cm: float) -> float:
-    if a_s <= 0.0 or d <= 0.0 or b <= 0.0:
-        return 0.0
-    alpha_e = e_s / max(e_cm, 1.0)
-    rho = a_s / (b * d)
-    x = d * ((alpha_e * rho) ** 2 + 2.0 * alpha_e * rho) ** 0.5 - alpha_e * rho * d
-    i_cr = b * x ** 3 / 3.0 + alpha_e * a_s * (d - x) ** 2
-    if i_cr <= 0.0:
-        return 0.0
-    return abs(m) * x / i_cr
+def elastic_stresses(m_nm: float, n_comp: float, b: float, h: float, bars: list[tuple[float, float]], e_s: float, e_cm: float) -> tuple[float, float]:
+    """🪨️ Linear-elastic (sigma_c at the compressed face, largest bar tension sigma_s) in Pa of the rectangle b x h under M (sagging) and N (compression positive): cracked state II with bisection on the compressed depth (N f2 = M f1), the transformed uncracked section when no cracked root exists below h."""
+    if not bars or b <= 0.0 or h <= 0.0:
+        return 0.0, 0.0
+    ae, m = e_s / max(e_cm, 1.0), abs(m_nm)
+    f1 = lambda x: b * x * x / 2.0 + ae * sum(a * (x - u) for u, a in bars)
+    f2 = lambda x: b * x * x / 2.0 * (h / 2.0 - x / 3.0) + ae * sum(a * (x - u) * (h / 2.0 - u) for u, a in bars)
+    g = lambda x: n_comp * f2(x) - m * f1(x)
+    lo, hi = 1e-9, h
+    if g(lo) * g(hi) < 0.0:
+        up = g(hi) > g(lo)
+        for _ in range(100):
+            mid = 0.5 * (lo + hi)
+            lo, hi = (lo, mid) if (g(mid) > 0.0) == up else (mid, hi)
+        x = 0.5 * (lo + hi)
+        k = n_comp / f1(x) if abs(f1(x)) > 1e-12 and n_comp != 0.0 else m / f2(x)
+        return k * x, max(ae * k * max(u - x for u, _ in bars), 0.0)
+    area = b * h + ae * sum(a for _, a in bars)
+    z0 = (b * h * h / 2.0 + ae * sum(a * u for u, a in bars)) / area
+    inertia = b * h ** 3 / 12.0 + b * h * (z0 - h / 2.0) ** 2 + ae * sum(a * (u - z0) ** 2 for u, a in bars)
+    sigma_c = n_comp / area + m * z0 / inertia
+    sigma_s = max(ae * (-n_comp / area + m * (u - z0) / inertia) for u, _ in bars)
+    return sigma_c, sigma_s
+
 
 def util_minimum(computed: float, minimum: float) -> float:
     if computed >= minimum:
@@ -390,6 +405,15 @@ def second_order_moment_nm(n_ed: float, l_0: float, d: float, f_yd: float, e_s: 
     r = 1.0 / max(curv, 1e-9)
     e2 = l_0 * l_0 / (r * 10.0)
     return abs(n_ed) * e2
+
+
+# Checks whose formulas follow the EN 1992 clauses directly (strain compatibility, variable strut, punching, bond, cover, fire tables, l/d, second order) are validated by the independent catalogue oracle in 🔮️oracles/⚖️compliance/🐍️.py, not by this member-level mirror.
+MOVED_TO_CATALOGUE_ORACLE = ("en1992.6.1.", "en1992.6.2.", "en1992.6.3.", "en1992.6.4.", "en1992.7.4.", "en1992.5.8.", "en1992.8.", "en1992.4.4.", "en1992.1-2.", "en1992.7.3.")
+
+
+def ring_perimeter(position: str, c1: float, c2: float, radius: float) -> float:
+    """📐️ Length of the line at `radius` from the face of a c1 x c2 column (c1 normal to the free edge): interior all around, edge flush in one free edge, corner flush in two."""
+    return {"edge": c2 + 2.0 * c1 + math.pi * radius, "corner": c1 + c2 + 0.5 * math.pi * radius}.get(position, 2.0 * (c1 + c2) + 2.0 * math.pi * radius)
 
 
 def evaluate(snap: dict[str, Any]) -> dict[str, Any]:
@@ -426,7 +450,7 @@ def evaluate(snap: dict[str, Any]) -> dict[str, Any]:
         cover = float(m.get("cover", 0.0))
         checks.append({"id": f"en1992.4.4.cover.{mid}", "utilization": util_minimum(cover, c_nom)})
 
-        effects = combine_member_actions(m)
+        effects = combine_member_actions(m, FACTORS.ActionFactors(annex, reliability_class=int(str(snap["reliabilityClass"])[-1])))
         uls = governing(effects, "uls")
         sls_qp = governing(effects, "sls_qp")
         sls_char = governing(effects, "sls_char")
@@ -484,14 +508,13 @@ def evaluate(snap: dict[str, Any]) -> dict[str, Any]:
         e_cm = concrete_e_cm(f_ck)
         e_s = reinforcement_e_s(f_yk)
         if sls_char is not None:
-            sig_s = cracked_sigma_s_pa(float(sls_char["m_ed"]), b, d, a_s, e_s, e_cm)
+            sig_c, sig_s = elastic_stresses(abs(float(sls_char["m_ed"])), -float(sls_char["n_ed"]), b, h, layer_bars(m, d), e_s, e_cm)
             lim_s = 0.8 * f_yk
             checks.append({"id": f"en1992.7.2.sigma-s.{mid}", "utilization": abs(sig_s) / max(lim_s, 1.0)})
-            sig_c = cracked_sigma_c_pa(float(sls_char["m_ed"]), b, d, a_s, e_s, e_cm)
             lim_c = 0.60 * f_ck
             checks.append({"id": f"en1992.7.2.sigma-c.{mid}", "utilization": abs(sig_c) / max(lim_c, 1.0)})
         if sls_qp is not None:
-            sig_c = cracked_sigma_c_pa(float(sls_qp["m_ed"]), b, d, a_s, e_s, e_cm)
+            sig_c = elastic_stresses(abs(float(sls_qp["m_ed"])), -float(sls_qp["n_ed"]), b, h, layer_bars(m, d), e_s, e_cm)[0]
             lim = 0.45 * f_ck
             checks.append({"id": f"en1992.7.2.creep.{mid}", "utilization": abs(sig_c) / max(lim, 1.0)})
 
@@ -538,7 +561,7 @@ def evaluate(snap: dict[str, Any]) -> dict[str, Any]:
             pspec = m["punching"]
             c1 = float(pspec.get("columnWidth", 0.3))
             c2 = float(pspec.get("columnDepth", 0.3))
-            pos = str(pspec.get("columnPosition", "interior")).lower()
+            pos = str(pspec.get("columnPosition", "Interior")).lower()
             beta = 1.40 if pos == "edge" else (1.50 if pos == "corner" else 1.10)
             u0 = 2.0 * (c1 + c2)
             u1 = u0 + 2.0 * math.pi * 2.0 * d
@@ -561,7 +584,25 @@ def evaluate(snap: dict[str, Any]) -> dict[str, Any]:
             v_rd_cs_pa = v_rd_c_pa + (0.75 * asw * (f_yk / p["gamma_s"]) / max(u1 * d, 1e-9) if asw > 0 else 0.0)
             v_ed_pa = beta * abs(float(uls["v_ed_punch"])) / max(u1 * d, 1e-12)
             checks.append({"id": f"en1992.6.4.punching.{mid}", "utilization": v_ed_pa / max(v_rd_cs_pa, 1.0)})
+            rows = sorted((r for r in m.get("studRows") or [] if r["count"] > 0 and r["diameter"] > 0), key=lambda r: r["angle"] % (2.0 * math.pi))
+            if rows:
+                face = lambda a: min((c1 / 2.0) / abs(math.cos(a)) if abs(math.cos(a)) > 1e-12 else math.inf, (c2 / 2.0) / abs(math.sin(a)) if abs(math.sin(a)) > 1e-12 else math.inf)
+                at = lambda r, k: ((face(r["angle"]) + r["spacingFirst"] + k * r["spacingRadial"]) * math.cos(r["angle"]), (face(r["angle"]) + r["spacingFirst"] + k * r["spacingRadial"]) * math.sin(r["angle"]))
+                s_r = max([r["spacingRadial"] for r in rows if r["count"] > 1] or [0.0])
+                s0 = min(r["spacingFirst"] for r in rows)
+                s_t, outside = 0.0, False
+                for k in range(max(r["count"] for r in rows)):
+                    here = [r for r in rows if r["count"] > k]
+                    outside = outside or any((pos in ("edge", "wallend") and at(r, k)[0] > c1 / 2.0 + 1e-9) or (pos == "corner" and (at(r, k)[0] > c1 / 2.0 + 1e-9 or at(r, k)[1] > c2 / 2.0 + 1e-9)) for r in here)
+                    pairs = len(here) if pos not in ("edge", "wallend", "corner") and len(here) > 2 else max(len(here) - 1, 0)
+                    for j in range(pairs):
+                        a, b = here[j], here[(j + 1) % len(here)]
+                        radius = a["spacingFirst"] + k * a["spacingRadial"]
+                        s_t = max(s_t, math.dist(at(a, k), at(b, k)) / ((1.5 if radius <= 2.0 * d else 2.0) * d))
+                low = 0.3 * d / max(s0, 1e-9) if s0 < 0.3 * d else 0.0
+                checks.append({"id": f"en1992.9.4.3.studs.{mid}", "utilization": max(s0 / (0.5 * d), low, s_r / (0.75 * d), s_t, 1.0 + 1e-6 if outside else 0.0)})
 
+    checks = [c for c in checks if not c["id"].startswith(MOVED_TO_CATALOGUE_ORACLE)]
     return {"checks": checks, "params": {"gamma_c": p["gamma_c"], "gamma_s": p["gamma_s"], "alpha_cc": p["alpha_cc"]}}
 
 

@@ -1,0 +1,23 @@
+{
+  "InsertCase": {
+    "index": 99,
+    "case": {
+      "id": "case-e11-03",
+      "labelEn": "Imposed loads by category",
+      "labelDe": "Nutzlasten nach Kategorie",
+      "entryId": "E11.03",
+      "numbers": [
+        {
+          "id": "depth",
+          "value": 0.2
+        }
+      ],
+      "texts": [
+        {
+          "id": "category",
+          "value": "A"
+        }
+      ]
+    }
+  }
+}

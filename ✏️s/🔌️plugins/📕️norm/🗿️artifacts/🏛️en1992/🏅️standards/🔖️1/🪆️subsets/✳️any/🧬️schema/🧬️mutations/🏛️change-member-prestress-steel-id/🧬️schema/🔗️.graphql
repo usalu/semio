@@ -1,0 +1,4 @@
+type ChangeMemberPrestressSteelId {
+  memberId: String!
+  newPrestressSteelId: String!
+}

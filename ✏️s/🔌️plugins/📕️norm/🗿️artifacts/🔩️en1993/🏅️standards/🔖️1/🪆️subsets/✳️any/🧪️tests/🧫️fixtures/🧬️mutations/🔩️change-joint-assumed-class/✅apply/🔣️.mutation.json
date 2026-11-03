@@ -1,0 +1,6 @@
+{
+  "ChangeJointAssumedClass": {
+    "id": "joint-j1",
+    "newAssumedClass": "Unset"
+  }
+}

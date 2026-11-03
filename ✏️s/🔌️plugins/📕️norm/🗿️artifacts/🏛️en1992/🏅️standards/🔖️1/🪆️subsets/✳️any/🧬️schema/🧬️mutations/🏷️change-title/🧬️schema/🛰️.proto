@@ -1,4 +1,5 @@
 syntax = "proto3";
+package semio.s.norm.en1992.mutation.change_title;
 message ChangeTitle {
-  string newTitle = 1;
+  string new_title = 1;
 }

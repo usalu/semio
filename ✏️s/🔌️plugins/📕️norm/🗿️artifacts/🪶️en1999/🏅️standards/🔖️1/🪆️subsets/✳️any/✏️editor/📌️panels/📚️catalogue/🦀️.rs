@@ -7,7 +7,8 @@ use semio_framework_plugin::TreeWindows;
 use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID;
 use semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL;
 
-use semio_s_plugin_norm_app_surface::{CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable};
+use semio_s_plugin_norm_app_surface::{spec_trace_table, CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable};
+use semio_s_artifact_norm_en1999_checks::spec_trace::TABLE as SPEC_TRACE;
 use semio_s_plugin_norm_compliance::ClauseId;
 
 //#region 🔖️Constants
@@ -23,7 +24,7 @@ pub fn definition() -> PanelTabDefinition {
 //#region 📚️AlloyCatalogue
 /// 🧪 EN 1999-1-1 Table 3.2 alloy/temper reference rows (designation, f_o, f_u, ρ_o,haz, ρ_u,haz).
 pub fn reference_tables() -> Vec<CatalogueTable> {
-    vec![alloy_table_3_2()]
+    vec![alloy_table_3_2(), spec_trace_table(&SPEC_TRACE)]
 }
 
 pub fn alloy_table_3_2() -> CatalogueTable {

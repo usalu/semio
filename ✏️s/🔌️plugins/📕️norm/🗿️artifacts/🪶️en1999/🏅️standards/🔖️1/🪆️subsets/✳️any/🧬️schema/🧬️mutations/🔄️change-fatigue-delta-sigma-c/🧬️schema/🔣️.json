@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-fatigue-delta-sigma-c/schema.json",
+  "title": "ChangeFatigueDeltaSigmaC",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "fatigueDetailId",
+    "newDeltaSigmaC"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeFatigueDeltaSigmaC"
+    },
+    "fatigueDetailId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Fatigue detail",
+          "de": "Ermüdungsdetail"
+        },
+        "description": {
+          "en": "The fatigue detail this mutation addresses, by id.",
+          "de": "Das adressierte Element (Ermüdungsdetail), per Kennung."
+        },
+        "ref": {
+          "kind": "fatigue-detail"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newDeltaSigmaC": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Detail category strength Δσ_C",
+          "de": "Ermüdungsfestigkeit des Kerbfalls Δσ_C"
+        },
+        "widget": "stepper",
+        "unit": "Pa",
+        "displayUnit": "N/mm²",
+        "displayFactor": 0.000001,
+        "precision": 1,
+        "step": 1000000,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

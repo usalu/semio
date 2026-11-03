@@ -1,10 +1,10 @@
 /** ➖ `remove-slab` wire twin: the leaf payload `RemoveSlab`, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
- * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
+ * by `repo ./📜️script.ts schema twins generate`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
-import { normWireInteger, normWireObject, normWireRange, type NormWireReader, normWireRequired } from "@semio-tech/norm-js/registry/contract";
+import { normWireObject, normWireRequired, normWireString, type NormWireReader } from "@semio-tech/norm-js/registry/contract";
 
 export interface RemoveSlab {
-  index: number;
+  id: string;
 }
 
-export const parseRemoveSlab: NormWireReader<RemoveSlab> = normWireObject<RemoveSlab>({ index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})) });
+export const parseRemoveSlab: NormWireReader<RemoveSlab> = normWireObject<RemoveSlab>({ id: normWireRequired(normWireString) });

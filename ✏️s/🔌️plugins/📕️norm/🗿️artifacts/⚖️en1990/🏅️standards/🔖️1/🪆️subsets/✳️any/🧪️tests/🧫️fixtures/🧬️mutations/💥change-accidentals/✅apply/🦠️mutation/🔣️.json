@@ -1,9 +1,0 @@
-{
-  "mutation": "changeAccidentals",
-  "newAccidentals": [
-    {
-      "id": "A-impact",
-      "ad": 75000.0
-    }
-  ]
-}

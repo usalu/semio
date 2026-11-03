@@ -59,7 +59,7 @@ impl<const N:usize> PagedBytesCursor<N> {
 impl<const N: usize> RetainedCloneCursor<PagedBytes<N>> for PagedBytesCursor<N> {
     fn output_ready(&self) -> bool { !self.closing && self.phase == 1 && self.output.is_some() }
     fn close_started(&self) -> bool { self.closing }
-    fn close_demands(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{PagedBytesCursor::close_demands(self,body)}
+    fn close_demands(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{PagedBytesCursor::close_demands(self,body)}
 
     fn advance_demands(&self, source: RetainedCloneRef<'_, PagedBytes<N>>, body: usize) -> Result<crate::RetirementDemand, ValueError> {
         if self.closing || self.phase == 2 { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "paged bytes clone is closing or spent")); }
@@ -116,7 +116,7 @@ impl<const N: usize> RetainedCloneCursor<PagedBytes<N>> for PagedBytesCursor<N> 
         }
     })();crate::RetainedWorkOutcome{result,work}}
 
-    fn take_demand(&self)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::retained_clone::retained_clone_take_demand())}
+    fn take_demand(&self)->Result<crate::RetirementDemand,ValueError>{Ok(crate::retained_clone::retained_clone_take_demand())}
     fn take(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<Option<(PagedBytes<N>,RetainedCloneProgress)>>{if !self.output_ready(){return crate::RetainedWorkOutcome{result:Ok(None),work:0}}let turn=crate::retained_clone::take_retained_clone_output(&mut self.output,grant);if matches!(&turn.result,Ok(Some(_))){self.phase = 2;}turn}
 
     fn begin_close(&mut self) -> bool {
@@ -190,7 +190,7 @@ impl<const N:usize> PagedUtf8Cursor<N> {
 impl<const N: usize> RetainedCloneCursor<PagedUtf8<N>> for PagedUtf8Cursor<N> {
     fn output_ready(&self) -> bool { !self.closing && self.phase == 3 && self.output.is_some() }
     fn close_started(&self) -> bool { self.closing }
-    fn close_demands(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{PagedUtf8Cursor::close_demands(self,body)}
+    fn close_demands(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{PagedUtf8Cursor::close_demands(self,body)}
 
     fn advance_demands(&self, source: RetainedCloneRef<'_, PagedUtf8<N>>, body: usize) -> Result<crate::RetirementDemand, ValueError> {
         if self.closing || self.phase == 4 { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "paged text clone is closing or spent")); }
@@ -251,7 +251,7 @@ impl<const N: usize> RetainedCloneCursor<PagedUtf8<N>> for PagedUtf8Cursor<N> {
         }
     })();crate::RetainedWorkOutcome{result,work}}
 
-    fn take_demand(&self)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::retained_clone::retained_clone_take_demand())}
+    fn take_demand(&self)->Result<crate::RetirementDemand,ValueError>{Ok(crate::retained_clone::retained_clone_take_demand())}
     fn take(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<Option<(PagedUtf8<N>,RetainedCloneProgress)>>{if !self.output_ready(){return crate::RetainedWorkOutcome{result:Ok(None),work:0}}let turn=crate::retained_clone::take_retained_clone_output(&mut self.output,grant);if matches!(&turn.result,Ok(Some(_))){self.phase = 4;}turn}
 
     fn begin_close(&mut self) -> bool {
@@ -414,7 +414,7 @@ impl<V:RetainedClone,const N:usize> PagedMapCursor<V,N> {
 impl<V: RetainedClone, const N: usize> RetainedCloneCursor<PagedMap<V, N>> for PagedMapCursor<V, N> {
     fn output_ready(&self) -> bool { !self.closing && self.phase == 3 && self.output.is_some() }
     fn close_started(&self) -> bool { self.closing }
-    fn close_demands(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{PagedMapCursor::close_demands(self,body)}
+    fn close_demands(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{PagedMapCursor::close_demands(self,body)}
 
     fn advance_demands(&self, source: RetainedCloneRef<'_, PagedMap<V,N>>, body: usize) -> Result<crate::RetirementDemand, ValueError> {
         if self.closing || self.phase == 4 { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "paged map clone is closing or spent")); }
@@ -475,7 +475,7 @@ impl<V: RetainedClone, const N: usize> RetainedCloneCursor<PagedMap<V, N>> for P
         }
     })();crate::RetainedWorkOutcome{result,work}}
 
-    fn take_demand(&self)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::retained_clone::retained_clone_take_demand())}
+    fn take_demand(&self)->Result<crate::RetirementDemand,ValueError>{Ok(crate::retained_clone::retained_clone_take_demand())}
     fn take(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<Option<(PagedMap<V, N>,RetainedCloneProgress)>>{if !self.output_ready(){return crate::RetainedWorkOutcome{result:Ok(None),work:0}}let turn=crate::retained_clone::take_retained_clone_output(&mut self.output,grant);if matches!(&turn.result,Ok(Some(_))){self.phase = 4;}turn}
 
     fn begin_close(&mut self) -> bool {

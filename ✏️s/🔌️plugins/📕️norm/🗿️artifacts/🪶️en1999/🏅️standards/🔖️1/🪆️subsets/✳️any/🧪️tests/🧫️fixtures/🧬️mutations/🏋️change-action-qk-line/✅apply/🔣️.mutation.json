@@ -1,0 +1,6 @@
+{
+  "mutation": "changeActionQKLine",
+  "memberId": "purlin-1",
+  "actionId": "G",
+  "newQKLine": 1.5
+}

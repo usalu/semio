@@ -1,0 +1,5 @@
+{
+  "mutation": "changeSheetWidth",
+  "coldFormedId": "sheet-pass",
+  "newWidth": 0.16
+}

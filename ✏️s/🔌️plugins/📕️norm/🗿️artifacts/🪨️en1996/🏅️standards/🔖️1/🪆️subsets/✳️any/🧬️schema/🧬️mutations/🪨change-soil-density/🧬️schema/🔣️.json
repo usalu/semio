@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-soil-density/schema.json",
+  "title": "ChangeSoilDensity",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newSoilDensityKgM3"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Wall",
+          "de": "Wand"
+        },
+        "description": {
+          "en": "The wall this mutation addresses, by id.",
+          "de": "Das adressierte Element (Wand), per Kennung."
+        },
+        "ref": {
+          "kind": "wall"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newSoilDensityKgM3": {
+      "type": "number",
+      "maximum": 23000,
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Soil density",
+          "de": "Wichte des Bodens"
+        },
+        "unit": "kg/m3",
+        "step": 50,
+        "precision": 0,
+        "group": "site",
+        "order": 20
+      }
+    }
+  }
+}

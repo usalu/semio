@@ -1,11 +1,11 @@
 /** 🧱 `change-unit-fb` wire twin: the leaf payload `ChangeUnitFb`, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
- * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
+ * by `repo ./📜️script.ts schema twins generate`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
-import { normWireInteger, normWireNumber, normWireObject, normWireRange, type NormWireReader, normWireRequired } from "@semio-tech/norm-js/registry/contract";
+import { normWireNumber, normWireObject, normWireRange, normWireRequired, normWireString, type NormWireReader } from "@semio-tech/norm-js/registry/contract";
 
 export interface ChangeUnitFb {
-  index: number;
+  id: string;
   newFBPa: number;
 }
 
-export const parseChangeUnitFb: NormWireReader<ChangeUnitFb> = normWireObject<ChangeUnitFb>({ index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), newFBPa: normWireRequired(normWireRange(normWireNumber, {"exclusiveMinimum":0})) });
+export const parseChangeUnitFb: NormWireReader<ChangeUnitFb> = normWireObject<ChangeUnitFb>({ id: normWireRequired(normWireString), newFBPa: normWireRequired(normWireRange(normWireNumber, {"maximum":1000000000000,"exclusiveMinimum":0})) });

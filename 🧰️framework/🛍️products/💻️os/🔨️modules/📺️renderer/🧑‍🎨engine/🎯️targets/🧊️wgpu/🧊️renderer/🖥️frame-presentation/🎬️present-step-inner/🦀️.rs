@@ -433,7 +433,7 @@ impl AppPresenter {
                 cursor.has_animated_primitives = packet.has_animated_primitives();
                 cursor.retained_control_deadline = shell.input.presented_retained_clock_deadline();
                 if let Some(now_us) = semio_framework_job::default_now_us() {
-                    cursor.shell_clock_deadline = shell.surfaces.next_chrome_deadline(now_us as f64 / 1_000_000.0, app_now_ms(), &shell.chrome, &shell.tutorial);
+                    cursor.shell_clock_deadline = AppInteractionState::wake_deadline(shell.surfaces.next_chrome_deadline(now_us as f64 / 1_000_000.0, app_now_ms(), &shell.chrome, &shell.tutorial), now_us as f64 / 1_000_000.0, app_now_ms());
                 }
                 cursor.frame.input_candidate = None;
                 let Some(witness) = cursor.witness.take() else { return Err("prepared frame presenter witness was lost during acknowledgement".to_string()) };

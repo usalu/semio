@@ -1,0 +1,87 @@
+{
+  "artifact": "en1999",
+  "collection": {
+    "name": "fireInsulations",
+    "entity": "FireInsulation",
+    "emoji": "🧱️",
+    "doc": "🧱 Fire protection (insulation) of the member of a fire scenario (EN 1999-1-2 4.3.4): thickness, conductivity, specific heat and density of the insulating material for the temperature of a protected member.",
+    "label": {
+      "en": "Fire insulations",
+      "de": "Brandschutzbekleidungen"
+    },
+    "id": {
+      "en": "Insulation ID",
+      "de": "Bekleidungs-ID"
+    },
+    "singular": {
+      "en": "fire insulation",
+      "de": "Brandschutzbekleidung"
+    },
+    "kindSlug": "fire-insulation",
+    "fields": [
+      {
+        "name": "fire_id",
+        "type": "String",
+        "label": {
+          "en": "Fire scenario",
+          "de": "Brandszenario"
+        },
+        "doc": "🔗 Id of the fire scenario whose member is protected.",
+        "sample": "fire-1",
+        "settable": false
+      },
+      {
+        "name": "thickness",
+        "type": "f64",
+        "label": {
+          "en": "Insulation thickness d_p",
+          "de": "Bekleidungsdicke d_p"
+        },
+        "doc": "📏 Thickness d_p [m] of the insulation.",
+        "sample": 0.02,
+        "unit": "m",
+        "step": 0.001,
+        "precision": 3
+      },
+      {
+        "name": "conductivity",
+        "type": "f64",
+        "label": {
+          "en": "Conductivity λ_p",
+          "de": "Wärmeleitfähigkeit λ_p"
+        },
+        "doc": "🌡️ Thermal conductivity λ_p [W/(m·K)] of the insulation.",
+        "sample": 0.2,
+        "unit": "",
+        "step": 0.01,
+        "precision": 3
+      },
+      {
+        "name": "specific_heat",
+        "type": "f64",
+        "label": {
+          "en": "Specific heat c_p",
+          "de": "Spezifische Wärmekapazität c_p"
+        },
+        "doc": "🔥 Specific heat c_p [J/(kg·K)] of the insulation.",
+        "sample": 1200.0,
+        "unit": "",
+        "step": 10.0,
+        "precision": 0
+      },
+      {
+        "name": "density",
+        "type": "f64",
+        "label": {
+          "en": "Density ρ_p",
+          "de": "Rohdichte ρ_p"
+        },
+        "doc": "⚖️ Density ρ_p [kg/m³] of the insulation.",
+        "sample": 800.0,
+        "unit": "",
+        "step": 10.0,
+        "precision": 0
+      }
+    ]
+  }
+}

@@ -1,0 +1,5 @@
+type InsertAnchorAction {
+  anchorId: String!
+  index: Int!
+  anchorAction: LoadCaseActions!
+}

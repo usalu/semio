@@ -42,8 +42,8 @@ fn reference_tables_cells_match_psi_and_gamma_i_sources() {
     let CatalogueCell::Number { value: gamma_g, .. } = &de.cells[1] else {
         panic!("γ_G cell must be Number");
     };
-    assert_eq!(*gamma_g, part_en1990::gamma_g(AnnexChoice::De));
-    assert_eq!(*gamma_g, part_en1990::GAMMA_G_DE);
+    assert_eq!(*gamma_g, part_en1990::gamma_g(AnnexChoice::De, semio_s_plugin_norm_compliance::ReliabilityClass::RC2));
+    assert_eq!(*gamma_g, semio_s_plugin_norm_compliance::ndp_number("ndp.en1990.gG_sup.str.A1", AnnexChoice::De));
 
     let psi = tables.iter().find(|t| t.id == "en1990-psi-factors").expect("ψ table");
     let office = psi.rows.iter().find(|r| r.id == "imposed-B").expect("imposed-B");
@@ -57,7 +57,7 @@ fn reference_tables_cells_match_psi_and_gamma_i_sources() {
     let CatalogueCell::Number { value: s_max_cell, .. } = &s_max_row.cells[1] else {
         panic!("s_max cell must be Number");
     };
-    let beam = CompositeBeam::default_placeholder();
-    let (_s_min, s_max) = part_1_1::stud_spacing_limits_m(&beam);
+    let beam = CompositeBeam::default_example();
+    let (_s_min, s_max) = part_1_1::stud_spacing_limits_m(&beam, 0.019);
     assert!((s_max_cell - s_max).abs() < 1e-12, "catalogue s_max {s_max_cell} != evaluate {s_max}");
 }

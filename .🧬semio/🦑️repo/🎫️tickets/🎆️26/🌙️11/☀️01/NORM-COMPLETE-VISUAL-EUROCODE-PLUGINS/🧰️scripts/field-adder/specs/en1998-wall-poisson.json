@@ -1,0 +1,13 @@
+{
+ "artifact": "en1998",
+ "fields": [
+  {
+   "entity": "member",
+   "field": "wall_poisson_ratio",
+   "default": 0.25,
+   "unit": null,
+   "en": "Poisson's ratio ν of the wall material (the shear modulus follows as G = E / (2 (1 + ν)))",
+   "de": "Querdehnzahl ν des Wandbaustoffs (der Schubmodul folgt aus G = E / (2 (1 + ν)))"
+  }
+ ]
+}

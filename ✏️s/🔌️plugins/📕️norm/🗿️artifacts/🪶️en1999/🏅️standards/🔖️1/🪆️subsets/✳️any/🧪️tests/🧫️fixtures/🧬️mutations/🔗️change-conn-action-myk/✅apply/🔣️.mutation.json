@@ -1,0 +1,6 @@
+{
+  "mutation": "changeConnActionMYK",
+  "connectionId": "support-weld",
+  "actionId": "G-conn",
+  "newMYK": 800.0
+}

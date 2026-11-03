@@ -28,7 +28,6 @@ fn every_mutation() -> Vec<En1995Mutation> {
         En1995Mutation::ChangeMemberRestraintSpacing(change_member_restraint_spacing::ChangeMemberRestraintSpacing { member_id: base.members[0].id.clone(), new_value: 1.0 }),
         En1995Mutation::ChangeMemberNotchDepth(change_member_notch_depth::ChangeMemberNotchDepth { member_id: base.members[0].id.clone(), new_value: 0.02 }),
         En1995Mutation::ChangeMemberNotchDistance(change_member_notch_distance::ChangeMemberNotchDistance { member_id: base.members[0].id.clone(), new_value: 0.1 }),
-        En1995Mutation::ChangeMemberMCrit(change_member_m_crit::ChangeMemberMCrit { member_id: base.members[0].id.clone(), new_value: 150000.0 }),
         En1995Mutation::ChangeMemberMassKgPerM(change_member_mass_kg_per_m::ChangeMemberMassKgPerM { member_id: base.members[0].id.clone(), new_value: 140.0 }),
         En1995Mutation::ChangeMemberMassKgPerM2(change_member_mass_kg_per_m2::ChangeMemberMassKgPerM2 { member_id: base.members[0].id.clone(), new_value: 60.0 }),
         En1995Mutation::ChangeMemberDampingXi(change_member_damping_xi::ChangeMemberDampingXi { member_id: base.members[0].id.clone(), new_value: 0.02 }),
@@ -75,6 +74,146 @@ fn every_mutation() -> Vec<En1995Mutation> {
         En1995Mutation::ChangeConnectionActionKind(change_connection_action_kind::ChangeConnectionActionKind { connection_id: base.connections[0].id.clone(), action_id: base.connections[0].actions[0].id.clone(), new_value: "imposed".into() }),
         En1995Mutation::ChangeConnectionLoadDuration(change_connection_load_duration::ChangeConnectionLoadDuration { connection_id: base.connections[0].id.clone(), action_id: base.connections[0].actions[0].id.clone(), new_value: "short".into() }),
         En1995Mutation::ChangeConnectionActionFK(change_connection_action_fk::ChangeConnectionActionFK { connection_id: base.connections[0].id.clone(), action_id: base.connections[0].actions[0].id.clone(), new_value: 12000.0 }),
+        En1995Mutation::ChangeUlsEquation(semio_s_artifact_norm_en1995_mut_design_cases::change_uls_equation::ChangeUlsEquation { new_value: "6.10ab".into() }),
+        En1995Mutation::InsertCase(semio_s_artifact_norm_en1995_mut_design_cases::insert_case::InsertCase { index: 99, case: semio_s_artifact_norm_en1995_model::CaseRow { id: "case-extra".into(), ..base.cases[0].clone() } }),
+        En1995Mutation::RemoveCase(semio_s_artifact_norm_en1995_mut_design_cases::remove_case::RemoveCase { id: "case-1".into() }),
+        En1995Mutation::ChangeCaseLabelEn(semio_s_artifact_norm_en1995_mut_design_cases::change_case_label_en::ChangeCaseLabelEn { case_id: base.cases[0].id.clone(), new_value: "Revised".into() }),
+        En1995Mutation::ChangeCaseLabelDe(semio_s_artifact_norm_en1995_mut_design_cases::change_case_label_de::ChangeCaseLabelDe { case_id: base.cases[0].id.clone(), new_value: "Überarbeitet".into() }),
+        En1995Mutation::ChangeCaseEntryId(semio_s_artifact_norm_en1995_mut_design_cases::change_case_entry_id::ChangeCaseEntryId { case_id: base.cases[0].id.clone(), new_value: "T-70".into() }),
+        En1995Mutation::ChangeCaseNumber(semio_s_artifact_norm_en1995_mut_design_cases::change_case_number::ChangeCaseNumber { case_id: base.cases[0].id.clone(), key: "f_u".into(), value: Some(400.0) }),
+        En1995Mutation::ChangeCaseText(semio_s_artifact_norm_en1995_mut_design_cases::change_case_text::ChangeCaseText { case_id: base.cases[0].id.clone(), key: "class".into(), value: Some("C24".into()) }),
+        En1995Mutation::ChangePlacementX(semio_s_artifact_norm_en1995_mut_placements::change_placement_x::ChangePlacementX { id: "beam-B1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangePlacementY(semio_s_artifact_norm_en1995_mut_placements::change_placement_y::ChangePlacementY { id: "beam-B1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangePlacementZ(semio_s_artifact_norm_en1995_mut_placements::change_placement_z::ChangePlacementZ { id: "beam-B1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangePlacementYaw(semio_s_artifact_norm_en1995_mut_placements::change_placement_yaw::ChangePlacementYaw { id: "beam-B1".into(), new_value: 0.5 }),
+        En1995Mutation::InsertPlacement(semio_s_artifact_norm_en1995_mut_placements::insert_placement::InsertPlacement { index: 99, placement: semio_s_artifact_norm_en1995_model::Placement { id: "beam-B1".into(), x: 0.0, y: 0.0, z: 0.0, yaw: 0.0 } }),
+        En1995Mutation::RemovePlacement(semio_s_artifact_norm_en1995_mut_placements::remove_placement::RemovePlacement { index: 0 }),
+        En1995Mutation::InsertDeck(semio_s_artifact_norm_en1995_mut_structure_rows::insert_deck::InsertDeck { index: 99, deck: semio_s_artifact_norm_en1995_model::Deck { id: "deck-1".into(), lamination_product: "x".into(), bar_product: "x".into(), span_m: 0.0, deck_width_m: 0.0, deck_depth_m: 0.0, lamination_width_m: 0.0, bar_spacing_m: 0.0, bar_diameter_m: 0.0, plate_side_m: 0.0, initial_prestress_pa: 0.0, loss_relaxation: 0.0, loss_creep: 0.0, loss_moisture: 0.0, bar_resistance_pa: 0.0, shear_stress_pa: 0.0, compression_perpendicular_pa: 0.0, wheel_load_n: 0.0, wheel_contact_m: 0.0 } }),
+        En1995Mutation::RemoveDeck(semio_s_artifact_norm_en1995_mut_structure_rows::remove_deck::RemoveDeck { index: 0 }),
+        En1995Mutation::ChangeDeckLaminationProduct(semio_s_artifact_norm_en1995_mut_deck_geometry::change_deck_lamination_product::ChangeDeckLaminationProduct { deck_id: "deck-1".into(), new_value: semio_s_artifact_norm_en1995_model::LaminationProduct::Solid }),
+        En1995Mutation::ChangeDeckBarProduct(semio_s_artifact_norm_en1995_mut_deck_geometry::change_deck_bar_product::ChangeDeckBarProduct { deck_id: "deck-1".into(), new_value: semio_s_artifact_norm_en1995_model::PrestressBarProduct::ThreadedBar }),
+        En1995Mutation::ChangeDeckSpan(semio_s_artifact_norm_en1995_mut_deck_geometry::change_deck_span::ChangeDeckSpan { deck_id: "deck-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeDeckDeckWidth(semio_s_artifact_norm_en1995_mut_deck_geometry::change_deck_deck_width::ChangeDeckDeckWidth { deck_id: "deck-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeDeckDeckDepth(semio_s_artifact_norm_en1995_mut_deck_geometry::change_deck_deck_depth::ChangeDeckDeckDepth { deck_id: "deck-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeDeckLaminationWidth(semio_s_artifact_norm_en1995_mut_deck_geometry::change_deck_lamination_width::ChangeDeckLaminationWidth { deck_id: "deck-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeDeckBarSpacing(semio_s_artifact_norm_en1995_mut_deck_geometry::change_deck_bar_spacing::ChangeDeckBarSpacing { deck_id: "deck-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeDeckBarDiameter(semio_s_artifact_norm_en1995_mut_deck_geometry::change_deck_bar_diameter::ChangeDeckBarDiameter { deck_id: "deck-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeDeckPlateSide(semio_s_artifact_norm_en1995_mut_deck_geometry::change_deck_plate_side::ChangeDeckPlateSide { deck_id: "deck-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeDeckInitialPrestress(semio_s_artifact_norm_en1995_mut_deck_prestress::change_deck_initial_prestress::ChangeDeckInitialPrestress { deck_id: "deck-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeDeckLossRelaxation(semio_s_artifact_norm_en1995_mut_deck_prestress::change_deck_loss_relaxation::ChangeDeckLossRelaxation { deck_id: "deck-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeDeckLossCreep(semio_s_artifact_norm_en1995_mut_deck_prestress::change_deck_loss_creep::ChangeDeckLossCreep { deck_id: "deck-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeDeckLossMoisture(semio_s_artifact_norm_en1995_mut_deck_prestress::change_deck_loss_moisture::ChangeDeckLossMoisture { deck_id: "deck-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeDeckBarResistance(semio_s_artifact_norm_en1995_mut_deck_prestress::change_deck_bar_resistance::ChangeDeckBarResistance { deck_id: "deck-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeDeckShearStress(semio_s_artifact_norm_en1995_mut_deck_prestress::change_deck_shear_stress::ChangeDeckShearStress { deck_id: "deck-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeDeckCompressionC90(semio_s_artifact_norm_en1995_mut_deck_prestress::change_deck_compression_c90::ChangeDeckCompressionC90 { deck_id: "deck-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeDeckWheelLoad(semio_s_artifact_norm_en1995_mut_deck_prestress::change_deck_wheel_load::ChangeDeckWheelLoad { deck_id: "deck-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeDeckWheelContact(semio_s_artifact_norm_en1995_mut_deck_prestress::change_deck_wheel_contact::ChangeDeckWheelContact { deck_id: "deck-1".into(), new_value: 0.5 }),
+        En1995Mutation::InsertDiaphragm(semio_s_artifact_norm_en1995_mut_structure_rows::insert_diaphragm::InsertDiaphragm { index: 99, diaphragm: semio_s_artifact_norm_en1995_model::Diaphragm { id: "diaphragm-1".into(), kind: semio_s_artifact_norm_en1995_model::DiaphragmKind::Wall, method: semio_s_artifact_norm_en1995_model::DiaphragmMethod::MethodA, panel_width_m: 0.0, wall_height_m: 0.0, fastener_spacing_m: 0.0, panels: 0, fastener_capacity_n: 0.0, shear_ed_n: 0.0, hold_down_n: 0.0, diaphragm_force_n: 0.0, diaphragm_length_m: 0.0, shear_resistance_n_per_m: 0.0 } }),
+        En1995Mutation::RemoveDiaphragm(semio_s_artifact_norm_en1995_mut_structure_rows::remove_diaphragm::RemoveDiaphragm { index: 0 }),
+        En1995Mutation::ChangeDiaphragmKind(semio_s_artifact_norm_en1995_mut_diaphragm_sheathing::change_diaphragm_kind::ChangeDiaphragmKind { diaphragm_id: "diaphragm-1".into(), new_value: semio_s_artifact_norm_en1995_model::DiaphragmKind::Wall }),
+        En1995Mutation::ChangeDiaphragmMethod(semio_s_artifact_norm_en1995_mut_diaphragm_sheathing::change_diaphragm_method::ChangeDiaphragmMethod { diaphragm_id: "diaphragm-1".into(), new_value: semio_s_artifact_norm_en1995_model::DiaphragmMethod::MethodA }),
+        En1995Mutation::ChangeDiaphragmPanelWidth(semio_s_artifact_norm_en1995_mut_diaphragm_sheathing::change_diaphragm_panel_width::ChangeDiaphragmPanelWidth { diaphragm_id: "diaphragm-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeDiaphragmWallHeight(semio_s_artifact_norm_en1995_mut_diaphragm_sheathing::change_diaphragm_wall_height::ChangeDiaphragmWallHeight { diaphragm_id: "diaphragm-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeDiaphragmFastenerSpacing(semio_s_artifact_norm_en1995_mut_diaphragm_sheathing::change_diaphragm_fastener_spacing::ChangeDiaphragmFastenerSpacing { diaphragm_id: "diaphragm-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeDiaphragmPanels(semio_s_artifact_norm_en1995_mut_diaphragm_sheathing::change_diaphragm_panels::ChangeDiaphragmPanels { diaphragm_id: "diaphragm-1".into(), new_value: 1 }),
+        En1995Mutation::ChangeDiaphragmFastenerCapacity(semio_s_artifact_norm_en1995_mut_diaphragm_forces::change_diaphragm_fastener_capacity::ChangeDiaphragmFastenerCapacity { diaphragm_id: "diaphragm-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeDiaphragmShearEd(semio_s_artifact_norm_en1995_mut_diaphragm_forces::change_diaphragm_shear_ed::ChangeDiaphragmShearEd { diaphragm_id: "diaphragm-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeDiaphragmHoldDown(semio_s_artifact_norm_en1995_mut_diaphragm_forces::change_diaphragm_hold_down::ChangeDiaphragmHoldDown { diaphragm_id: "diaphragm-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeDiaphragmForce(semio_s_artifact_norm_en1995_mut_diaphragm_forces::change_diaphragm_force::ChangeDiaphragmForce { diaphragm_id: "diaphragm-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeDiaphragmLength(semio_s_artifact_norm_en1995_mut_diaphragm_forces::change_diaphragm_length::ChangeDiaphragmLength { diaphragm_id: "diaphragm-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeDiaphragmShearResistance(semio_s_artifact_norm_en1995_mut_diaphragm_forces::change_diaphragm_shear_resistance::ChangeDiaphragmShearResistance { diaphragm_id: "diaphragm-1".into(), new_value: 0.5 }),
+        En1995Mutation::InsertTruss(semio_s_artifact_norm_en1995_mut_structure_rows::insert_truss::InsertTruss { index: 99, truss: semio_s_artifact_norm_en1995_model::Truss { id: "truss-1".into(), kind: semio_s_artifact_norm_en1995_model::TrussKind::Warren, product: semio_s_artifact_norm_en1995_model::BracingProduct::Solid, span_m: 0.0, height_m: 0.0, bays: 0, chord_width_m: 0.0, chord_depth_m: 0.0, web_width_m: 0.0, web_depth_m: 0.0, chord_force_n: 0.0, restraint_length_m: 0.0, bracing_capacity_n_per_m: 0.0 } }),
+        En1995Mutation::RemoveTruss(semio_s_artifact_norm_en1995_mut_structure_rows::remove_truss::RemoveTruss { index: 0 }),
+        En1995Mutation::ChangeTrussKind(semio_s_artifact_norm_en1995_mut_truss_geometry::change_truss_kind::ChangeTrussKind { truss_id: "truss-1".into(), new_value: semio_s_artifact_norm_en1995_model::TrussKind::Warren }),
+        En1995Mutation::ChangeTrussProduct(semio_s_artifact_norm_en1995_mut_truss_geometry::change_truss_product::ChangeTrussProduct { truss_id: "truss-1".into(), new_value: semio_s_artifact_norm_en1995_model::BracingProduct::Solid }),
+        En1995Mutation::ChangeTrussSpan(semio_s_artifact_norm_en1995_mut_truss_geometry::change_truss_span::ChangeTrussSpan { truss_id: "truss-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeTrussHeight(semio_s_artifact_norm_en1995_mut_truss_geometry::change_truss_height::ChangeTrussHeight { truss_id: "truss-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeTrussBays(semio_s_artifact_norm_en1995_mut_truss_geometry::change_truss_bays::ChangeTrussBays { truss_id: "truss-1".into(), new_value: 1 }),
+        En1995Mutation::ChangeTrussChordWidth(semio_s_artifact_norm_en1995_mut_truss_geometry::change_truss_chord_width::ChangeTrussChordWidth { truss_id: "truss-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeTrussChordDepth(semio_s_artifact_norm_en1995_mut_truss_geometry::change_truss_chord_depth::ChangeTrussChordDepth { truss_id: "truss-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeTrussWebWidth(semio_s_artifact_norm_en1995_mut_truss_forces::change_truss_web_width::ChangeTrussWebWidth { truss_id: "truss-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeTrussWebDepth(semio_s_artifact_norm_en1995_mut_truss_forces::change_truss_web_depth::ChangeTrussWebDepth { truss_id: "truss-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeTrussChordForce(semio_s_artifact_norm_en1995_mut_truss_forces::change_truss_chord_force::ChangeTrussChordForce { truss_id: "truss-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeTrussRestraintLength(semio_s_artifact_norm_en1995_mut_truss_forces::change_truss_restraint_length::ChangeTrussRestraintLength { truss_id: "truss-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeTrussBracingCapacity(semio_s_artifact_norm_en1995_mut_truss_forces::change_truss_bracing_capacity::ChangeTrussBracingCapacity { truss_id: "truss-1".into(), new_value: 0.5 }),
+        En1995Mutation::InsertBracing(semio_s_artifact_norm_en1995_mut_structure_rows::insert_bracing::InsertBracing { index: 99, bracing: semio_s_artifact_norm_en1995_model::Bracing { id: "bracing-1".into(), kind: semio_s_artifact_norm_en1995_model::BracingKind::PlanBracing, member_id: "x".into(), stabilised_count: 0, spacing_m: 0.0, length_m: 0.0, brace_width_m: 0.0, brace_depth_m: 0.0, compression_force_n: 0.0, resistance_n: 0.0, stiffness_n_per_m: 0.0 } }),
+        En1995Mutation::RemoveBracing(semio_s_artifact_norm_en1995_mut_structure_rows::remove_bracing::RemoveBracing { index: 0 }),
+        En1995Mutation::ChangeBracingKind(semio_s_artifact_norm_en1995_mut_bracing_layout::change_bracing_kind::ChangeBracingKind { bracing_id: "bracing-1".into(), new_value: semio_s_artifact_norm_en1995_model::BracingKind::PlanBracing }),
+        En1995Mutation::ChangeBracingMember(semio_s_artifact_norm_en1995_mut_bracing_layout::change_bracing_member::ChangeBracingMember { bracing_id: "bracing-1".into(), new_value: "x".into() }),
+        En1995Mutation::ChangeBracingStabilisedCount(semio_s_artifact_norm_en1995_mut_bracing_layout::change_bracing_stabilised_count::ChangeBracingStabilisedCount { bracing_id: "bracing-1".into(), new_value: 1 }),
+        En1995Mutation::ChangeBracingSpacing(semio_s_artifact_norm_en1995_mut_bracing_layout::change_bracing_spacing::ChangeBracingSpacing { bracing_id: "bracing-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeBracingLength(semio_s_artifact_norm_en1995_mut_bracing_layout::change_bracing_length::ChangeBracingLength { bracing_id: "bracing-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeBracingBraceWidth(semio_s_artifact_norm_en1995_mut_bracing_forces::change_bracing_brace_width::ChangeBracingBraceWidth { bracing_id: "bracing-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeBracingBraceDepth(semio_s_artifact_norm_en1995_mut_bracing_forces::change_bracing_brace_depth::ChangeBracingBraceDepth { bracing_id: "bracing-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeBracingCompression(semio_s_artifact_norm_en1995_mut_bracing_forces::change_bracing_compression::ChangeBracingCompression { bracing_id: "bracing-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeBracingResistance(semio_s_artifact_norm_en1995_mut_bracing_forces::change_bracing_resistance::ChangeBracingResistance { bracing_id: "bracing-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeBracingStiffness(semio_s_artifact_norm_en1995_mut_bracing_forces::change_bracing_stiffness::ChangeBracingStiffness { bracing_id: "bracing-1".into(), new_value: 0.5 }),
+        En1995Mutation::InsertPanelLayer(semio_s_artifact_norm_en1995_mut_panel_layers::insert_panel_layer::InsertPanelLayer { panel_id: "panel-1".into(), index: 99, layer: semio_s_artifact_norm_en1995_model::PanelLayer { id: "panel-layer-1".into(), thickness_m: 0.0, orientation: semio_s_artifact_norm_en1995_model::LayerOrientation::Longitudinal, grade: "x".into() } }),
+        En1995Mutation::RemovePanelLayer(semio_s_artifact_norm_en1995_mut_panel_layers::remove_panel_layer::RemovePanelLayer { panel_id: "panel-1".into(), id: "panel-layer-1".into() }),
+        En1995Mutation::ChangePanelLayerThickness(semio_s_artifact_norm_en1995_mut_panel_layers::change_panel_layer_thickness::ChangePanelLayerThickness { panel_id: "panel-1".into(), layer_id: "panel-layer-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangePanelLayerOrientation(semio_s_artifact_norm_en1995_mut_panel_layers::change_panel_layer_orientation::ChangePanelLayerOrientation { panel_id: "panel-1".into(), layer_id: "panel-layer-1".into(), new_value: semio_s_artifact_norm_en1995_model::LayerOrientation::Longitudinal }),
+        En1995Mutation::ChangePanelLayerGrade(semio_s_artifact_norm_en1995_mut_panel_layers::change_panel_layer_grade::ChangePanelLayerGrade { panel_id: "panel-1".into(), layer_id: "panel-layer-1".into(), new_value: "x".into() }),
+        En1995Mutation::InsertFastenerPosition(semio_s_artifact_norm_en1995_mut_fastener_positions::insert_fastener_position::InsertFastenerPosition { fastener_id: "fastener-1".into(), index: 99, position: semio_s_artifact_norm_en1995_model::FastenerPosition { id: "fastener-position-1".into(), x_m: 0.0, y_m: 0.0 } }),
+        En1995Mutation::RemoveFastenerPosition(semio_s_artifact_norm_en1995_mut_fastener_positions::remove_fastener_position::RemoveFastenerPosition { fastener_id: "fastener-1".into(), id: "fastener-position-1".into() }),
+        En1995Mutation::ChangeFastenerPositionX(semio_s_artifact_norm_en1995_mut_fastener_positions::change_fastener_position_x::ChangeFastenerPositionX { fastener_id: "fastener-1".into(), position_id: "fastener-position-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeFastenerPositionY(semio_s_artifact_norm_en1995_mut_fastener_positions::change_fastener_position_y::ChangeFastenerPositionY { fastener_id: "fastener-1".into(), position_id: "fastener-position-1".into(), new_value: 0.5 }),
+        En1995Mutation::InsertTaper(semio_s_artifact_norm_en1995_mut_entity_rows::insert_taper::InsertTaper { index: 99, taper: semio_s_artifact_norm_en1995_model::Taper { id: "taper-1".into(), member_id: "x".into(), kind: semio_s_artifact_norm_en1995_model::TaperKind::SingleTapered, taper_angle_rad: 0.0, apex_depth_m: 0.0, inner_radius_m: 0.0, lamella_thickness_m: 0.0, apex_angle_rad: 0.0, tension_side: semio_s_artifact_norm_en1995_model::TensionSide::Tension, rods: 0, rod_resistance_n: 0.0 } }),
+        En1995Mutation::RemoveTaper(semio_s_artifact_norm_en1995_mut_entity_rows::remove_taper::RemoveTaper { index: 0 }),
+        En1995Mutation::ChangeTaperMember(semio_s_artifact_norm_en1995_mut_tapers::change_taper_member::ChangeTaperMember { taper_id: "taper-1".into(), new_value: "x".into() }),
+        En1995Mutation::ChangeTaperKind(semio_s_artifact_norm_en1995_mut_tapers::change_taper_kind::ChangeTaperKind { taper_id: "taper-1".into(), new_value: semio_s_artifact_norm_en1995_model::TaperKind::SingleTapered }),
+        En1995Mutation::ChangeTaperTaperAngle(semio_s_artifact_norm_en1995_mut_tapers::change_taper_taper_angle::ChangeTaperTaperAngle { taper_id: "taper-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeTaperApexDepth(semio_s_artifact_norm_en1995_mut_tapers::change_taper_apex_depth::ChangeTaperApexDepth { taper_id: "taper-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeTaperInnerRadius(semio_s_artifact_norm_en1995_mut_tapers::change_taper_inner_radius::ChangeTaperInnerRadius { taper_id: "taper-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeTaperLamella(semio_s_artifact_norm_en1995_mut_tapers::change_taper_lamella::ChangeTaperLamella { taper_id: "taper-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeTaperApexAngle(semio_s_artifact_norm_en1995_mut_tapers::change_taper_apex_angle::ChangeTaperApexAngle { taper_id: "taper-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeTaperSide(semio_s_artifact_norm_en1995_mut_tapers::change_taper_side::ChangeTaperSide { taper_id: "taper-1".into(), new_value: semio_s_artifact_norm_en1995_model::TensionSide::Tension }),
+        En1995Mutation::ChangeTaperRods(semio_s_artifact_norm_en1995_mut_tapers::change_taper_rods::ChangeTaperRods { taper_id: "taper-1".into(), new_value: 1 }),
+        En1995Mutation::ChangeTaperRodResistance(semio_s_artifact_norm_en1995_mut_tapers::change_taper_rod_resistance::ChangeTaperRodResistance { taper_id: "taper-1".into(), new_value: 0.5 }),
+        En1995Mutation::InsertCutout(semio_s_artifact_norm_en1995_mut_entity_rows::insert_cutout::InsertCutout { index: 99, cutout: semio_s_artifact_norm_en1995_model::Cutout { id: "cutout-1".into(), member_id: "x".into(), kind: semio_s_artifact_norm_en1995_model::CutoutKind::Notch, face: semio_s_artifact_norm_en1995_model::CutoutFace::Bottom, distance_m: 0.0, length_m: 0.0, depth_m: 0.0, centre_height_m: 0.0, slope: 0.0, rods: 0, rod_resistance_n: 0.0 } }),
+        En1995Mutation::RemoveCutout(semio_s_artifact_norm_en1995_mut_entity_rows::remove_cutout::RemoveCutout { index: 0 }),
+        En1995Mutation::ChangeCutoutMember(semio_s_artifact_norm_en1995_mut_cutouts::change_cutout_member::ChangeCutoutMember { cutout_id: "cutout-1".into(), new_value: "x".into() }),
+        En1995Mutation::ChangeCutoutKind(semio_s_artifact_norm_en1995_mut_cutouts::change_cutout_kind::ChangeCutoutKind { cutout_id: "cutout-1".into(), new_value: semio_s_artifact_norm_en1995_model::CutoutKind::Notch }),
+        En1995Mutation::ChangeCutoutFace(semio_s_artifact_norm_en1995_mut_cutouts::change_cutout_face::ChangeCutoutFace { cutout_id: "cutout-1".into(), new_value: semio_s_artifact_norm_en1995_model::CutoutFace::Bottom }),
+        En1995Mutation::ChangeCutoutDistance(semio_s_artifact_norm_en1995_mut_cutouts::change_cutout_distance::ChangeCutoutDistance { cutout_id: "cutout-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeCutoutLength(semio_s_artifact_norm_en1995_mut_cutouts::change_cutout_length::ChangeCutoutLength { cutout_id: "cutout-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeCutoutDepth(semio_s_artifact_norm_en1995_mut_cutouts::change_cutout_depth::ChangeCutoutDepth { cutout_id: "cutout-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeCutoutCentreHeight(semio_s_artifact_norm_en1995_mut_cutouts::change_cutout_centre_height::ChangeCutoutCentreHeight { cutout_id: "cutout-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeCutoutSlope(semio_s_artifact_norm_en1995_mut_cutouts::change_cutout_slope::ChangeCutoutSlope { cutout_id: "cutout-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeCutoutRods(semio_s_artifact_norm_en1995_mut_cutouts::change_cutout_rods::ChangeCutoutRods { cutout_id: "cutout-1".into(), new_value: 1 }),
+        En1995Mutation::ChangeCutoutRodResistance(semio_s_artifact_norm_en1995_mut_cutouts::change_cutout_rod_resistance::ChangeCutoutRodResistance { cutout_id: "cutout-1".into(), new_value: 0.5 }),
+        En1995Mutation::InsertFastener(semio_s_artifact_norm_en1995_mut_entity_rows::insert_fastener::InsertFastener { index: 99, fastener: semio_s_artifact_norm_en1995_model::Fastener { id: "fastener-1".into(), connection_id: "x".into(), member_id: "x".into(), columns: 0, lines: 0, spacing_parallel_m: 0.0, spacing_perpendicular_m: 0.0, end_distance_m: 0.0, edge_distance_m: 0.0, offset_x_m: 0.0, offset_y_m: 0.0, load_angle_rad: 0.0, positions: Vec::new() } }),
+        En1995Mutation::RemoveFastener(semio_s_artifact_norm_en1995_mut_entity_rows::remove_fastener::RemoveFastener { index: 0 }),
+        En1995Mutation::ChangeFastenerConnection(semio_s_artifact_norm_en1995_mut_fastener_links::change_fastener_connection::ChangeFastenerConnection { fastener_id: "fastener-1".into(), new_value: "x".into() }),
+        En1995Mutation::ChangeFastenerMember(semio_s_artifact_norm_en1995_mut_fastener_links::change_fastener_member::ChangeFastenerMember { fastener_id: "fastener-1".into(), new_value: "x".into() }),
+        En1995Mutation::ChangeFastenerColumns(semio_s_artifact_norm_en1995_mut_fastener_links::change_fastener_columns::ChangeFastenerColumns { fastener_id: "fastener-1".into(), new_value: 1 }),
+        En1995Mutation::ChangeFastenerLines(semio_s_artifact_norm_en1995_mut_fastener_links::change_fastener_lines::ChangeFastenerLines { fastener_id: "fastener-1".into(), new_value: 1 }),
+        En1995Mutation::ChangeFastenerSpacingPar(semio_s_artifact_norm_en1995_mut_fastener_distances::change_fastener_spacing_par::ChangeFastenerSpacingPar { fastener_id: "fastener-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeFastenerSpacingPerp(semio_s_artifact_norm_en1995_mut_fastener_distances::change_fastener_spacing_perp::ChangeFastenerSpacingPerp { fastener_id: "fastener-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeFastenerEndDistance(semio_s_artifact_norm_en1995_mut_fastener_distances::change_fastener_end_distance::ChangeFastenerEndDistance { fastener_id: "fastener-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeFastenerEdgeDistance(semio_s_artifact_norm_en1995_mut_fastener_distances::change_fastener_edge_distance::ChangeFastenerEdgeDistance { fastener_id: "fastener-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeFastenerOffsetX(semio_s_artifact_norm_en1995_mut_fastener_distances::change_fastener_offset_x::ChangeFastenerOffsetX { fastener_id: "fastener-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeFastenerOffsetY(semio_s_artifact_norm_en1995_mut_fastener_distances::change_fastener_offset_y::ChangeFastenerOffsetY { fastener_id: "fastener-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeFastenerLoadAngle(semio_s_artifact_norm_en1995_mut_fastener_distances::change_fastener_load_angle::ChangeFastenerLoadAngle { fastener_id: "fastener-1".into(), new_value: 0.5 }),
+        En1995Mutation::InsertPanel(semio_s_artifact_norm_en1995_mut_entity_rows::insert_panel::InsertPanel { index: 99, panel: semio_s_artifact_norm_en1995_model::Panel { id: "panel-1".into(), strength_class: semio_s_artifact_norm_en1995_model::StrengthClass::C24, layers: Vec::new(), span_m: 0.0, width_m: 0.0, load_pa: 0.0, fire_duration_s: 0.0 } }),
+        En1995Mutation::RemovePanel(semio_s_artifact_norm_en1995_mut_entity_rows::remove_panel::RemovePanel { index: 0 }),
+        En1995Mutation::ChangePanelStrengthClass(semio_s_artifact_norm_en1995_mut_panels::change_panel_strength_class::ChangePanelStrengthClass { panel_id: "panel-1".into(), new_value: semio_s_artifact_norm_en1995_model::StrengthClass::C24 }),
+        En1995Mutation::ChangePanelSpan(semio_s_artifact_norm_en1995_mut_panels::change_panel_span::ChangePanelSpan { panel_id: "panel-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangePanelWidth(semio_s_artifact_norm_en1995_mut_panels::change_panel_width::ChangePanelWidth { panel_id: "panel-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangePanelLoad(semio_s_artifact_norm_en1995_mut_panels::change_panel_load::ChangePanelLoad { panel_id: "panel-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangePanelFireDuration(semio_s_artifact_norm_en1995_mut_panels::change_panel_fire_duration::ChangePanelFireDuration { panel_id: "panel-1".into(), new_value: 0.5 }),
+        En1995Mutation::InsertFloor(semio_s_artifact_norm_en1995_mut_entity_rows::insert_floor::InsertFloor { index: 99, floor: semio_s_artifact_norm_en1995_model::Floor { id: "floor-1".into(), member_id: "x".into(), span_m: 0.0, width_m: 0.0, joist_spacing_m: 0.0, ei_l_n_m2_per_m: 0.0, ei_b_n_m2_per_m: 0.0, mass_kg_per_m2: 0.0, damping_ratio: 0.0, permanent_load_pa: 0.0, imposed_load_pa: 0.0, psi_2: 0.0 } }),
+        En1995Mutation::RemoveFloor(semio_s_artifact_norm_en1995_mut_entity_rows::remove_floor::RemoveFloor { index: 0 }),
+        En1995Mutation::ChangeFloorMember(semio_s_artifact_norm_en1995_mut_floor_stiffness::change_floor_member::ChangeFloorMember { floor_id: "floor-1".into(), new_value: "x".into() }),
+        En1995Mutation::ChangeFloorSpan(semio_s_artifact_norm_en1995_mut_floor_stiffness::change_floor_span::ChangeFloorSpan { floor_id: "floor-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeFloorWidth(semio_s_artifact_norm_en1995_mut_floor_stiffness::change_floor_width::ChangeFloorWidth { floor_id: "floor-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeFloorJoistSpacing(semio_s_artifact_norm_en1995_mut_floor_stiffness::change_floor_joist_spacing::ChangeFloorJoistSpacing { floor_id: "floor-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeFloorEiL(semio_s_artifact_norm_en1995_mut_floor_stiffness::change_floor_ei_l::ChangeFloorEiL { floor_id: "floor-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeFloorEiB(semio_s_artifact_norm_en1995_mut_floor_stiffness::change_floor_ei_b::ChangeFloorEiB { floor_id: "floor-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeFloorMass(semio_s_artifact_norm_en1995_mut_floor_loads::change_floor_mass::ChangeFloorMass { floor_id: "floor-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeFloorDamping(semio_s_artifact_norm_en1995_mut_floor_loads::change_floor_damping::ChangeFloorDamping { floor_id: "floor-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeFloorPermanentLoad(semio_s_artifact_norm_en1995_mut_floor_loads::change_floor_permanent_load::ChangeFloorPermanentLoad { floor_id: "floor-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeFloorImposedLoad(semio_s_artifact_norm_en1995_mut_floor_loads::change_floor_imposed_load::ChangeFloorImposedLoad { floor_id: "floor-1".into(), new_value: 0.5 }),
+        En1995Mutation::ChangeFloorPsi2(semio_s_artifact_norm_en1995_mut_floor_loads::change_floor_psi_2::ChangeFloorPsi2 { floor_id: "floor-1".into(), new_value: 0.5 }),
     ]
 }
 
@@ -146,7 +285,7 @@ fn catalog_vector_dirs() -> Vec<(&'static str, std::path::PathBuf)> {
 }
 
 fn text_at(dir: &std::path::Path, facet: &str) -> String {
-    let path = dir.join(facet).join("🔣️.json");
+    let path = dir.join(format!("🔣️.{facet}.json"));
     std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{}: {e}", path.display()))
 }
 
@@ -169,16 +308,15 @@ fn regen_mutation_vectors() {
         let outcome = <En1995Mutation as protocol::ColdMutation<En1995Snapshot>>::diff(&mutation, &base);
         let after = protocol::apply_diff_cold(outcome.diff(), &base).expect("applies");
         let facets = [
-            ("📸️snapshot/⬅️before", semio_framework_pack_json::to_json_string(&base)),
-            ("📸️snapshot/➡️after", semio_framework_pack_json::to_json_string(&after)),
-            ("🦠️mutation", semio_framework_pack_json::to_json_string(&mutation)),
-            ("🔺️diff", semio_framework_pack_json::to_json_string(outcome.diff())),
-            ("🎯️outcome", format!("{{\"status\":\"{}\"}}", if after == base { "no-op" } else { "applied" })),
+            ("before", semio_framework_pack_json::to_json_string(&base)),
+            ("after", semio_framework_pack_json::to_json_string(&after)),
+            ("mutation", semio_framework_pack_json::to_json_string(&mutation)),
+            ("diff", semio_framework_pack_json::to_json_string(outcome.diff())),
+            ("outcome", format!("{{\"status\":\"{}\"}}", if after == base { "no-op" } else { "applied" })),
         ];
         for (facet, compact) in facets {
-            let folder = dir.join(facet);
-            std::fs::create_dir_all(&folder).unwrap();
-            std::fs::write(folder.join("🔣️.json"), pretty(compact)).unwrap();
+            std::fs::create_dir_all(&dir).unwrap();
+            std::fs::write(dir.join(format!("🔣️.{facet}.json")), pretty(compact)).unwrap();
         }
     }
 }
@@ -190,15 +328,15 @@ fn committed_mutation_vectors_replay_for_every_kind() {
     let on_disk = std::fs::read_dir(fixtures_root()).expect("fixtures root").count();
     assert_eq!(on_disk, KINDS.len(), "one fixture folder per kind, no leftovers");
     for ((kind, dir), expected) in dirs.into_iter().zip(every_mutation()) {
-        let before = decoded!(En1995Snapshot, &dir, "📸️snapshot/⬅️before", kind);
-        let mutation = decoded!(En1995Mutation, &dir, "🦠️mutation", kind);
+        let before = decoded!(En1995Snapshot, &dir, "before", kind);
+        let mutation = decoded!(En1995Mutation, &dir, "mutation", kind);
         assert_eq!(mutation, expected, "{kind} mutation");
         assert_eq!(<En1995Mutation as SemanticMutation<En1995Snapshot>>::semantics(&mutation).kind, kind);
         let outcome = <En1995Mutation as protocol::ColdMutation<En1995Snapshot>>::diff(&mutation, &before);
         assert!(outcome.worst_level().is_none(), "{kind}: {:?}", outcome.messages());
-        assert_eq!(outcome.diff(), &decoded!(En1995Diff, &dir, "🔺️diff", kind), "{kind} diff");
+        assert_eq!(outcome.diff(), &decoded!(En1995Diff, &dir, "diff", kind), "{kind} diff");
         let after = protocol::apply_diff_cold(outcome.diff(), &before).expect("applies");
-        assert_eq!(after, decoded!(En1995Snapshot, &dir, "📸️snapshot/➡️after", kind), "{kind} after");
-        assert!(text_at(&dir, "🎯️outcome").contains("\"applied\""), "{kind} outcome");
+        assert_eq!(after, decoded!(En1995Snapshot, &dir, "after", kind), "{kind} after");
+        assert!(text_at(&dir, "outcome").contains("\"applied\""), "{kind} outcome");
     }
 }

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeSoilLayerFoundationId",
+  "id": "sl-1",
+  "newFoundationId": "x"
+}

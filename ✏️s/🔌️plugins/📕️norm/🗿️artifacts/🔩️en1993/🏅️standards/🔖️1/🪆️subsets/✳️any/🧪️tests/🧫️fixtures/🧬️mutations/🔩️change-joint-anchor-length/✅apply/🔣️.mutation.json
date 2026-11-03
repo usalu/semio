@@ -1,0 +1,6 @@
+{
+  "ChangeJointAnchorLength": {
+    "id": "joint-j1",
+    "newAnchorLength": 1.5
+  }
+}

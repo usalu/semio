@@ -1,0 +1,117 @@
+{
+  "annex": null,
+  "projectId": null,
+  "structureKind": null,
+  "altitudeM": null,
+  "consequenceClass": null,
+  "reliabilityClass": null,
+  "designWorkingLifeCategory": null,
+  "designWorkingLifeYears": null,
+  "referencePeriodYears": null,
+  "supervisionLevel": null,
+  "inspectionLevel": null,
+  "betaComputed": null,
+  "permanents": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "variables": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "accidentals": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "seismics": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "members": {
+    "removed": [],
+    "inserted": [
+      {
+        "index": 1,
+        "row": {
+          "id": "beam-B2",
+          "labelEn": "Office beam B2",
+          "labelDe": "Büroträger B2",
+          "rdStr": 250000.0,
+          "rdGeo": 250000.0,
+          "rdEquStab": 200000.0,
+          "rdEquDestab": 180000.0,
+          "rdFat": 0.0,
+          "span": 7.5,
+          "precamber": 0.0,
+          "deflectionW1": 0.006,
+          "deflectionW2": 0.003,
+          "deflectionW3": 0.009,
+          "deflectionLimitRatio": 250.0,
+          "deflectionLimitRatioW3": 300.0,
+          "slsLimitChar": 250000.0,
+          "slsLimitFreq": 250000.0,
+          "slsLimitQp": 250000.0,
+          "vibrationFrequency": 5.5,
+          "vibrationFrequencyMin": 3.0,
+          "frameHeight": 0.0,
+          "frameDrift": 0.0,
+          "storeyHeight": 0.0,
+          "storeyDrift": 0.0,
+          "materialStrengthK": 0.0,
+          "materialConversionFactor": 0.0,
+          "materialPartialFactor": 0.0,
+          "materialDesignStrength": 0.0,
+          "nominalDimension": 0.0,
+          "dimensionTolerance": 0.0,
+          "designDimension": 0.0,
+          "memberAlphaCr": 0.0,
+          "secondOrderAnalysis": 0.0
+        }
+      }
+    ],
+    "moved": [],
+    "modified": []
+  },
+  "bridgeSls": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "effects": [],
+  "fatigueSpectra": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "reliabilityAnalyses": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "testSeries": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "placements": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "cases": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "factorOverrides": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "trafficGroups": {"removed": [], "inserted": [], "moved": [], "modified": []}
+}

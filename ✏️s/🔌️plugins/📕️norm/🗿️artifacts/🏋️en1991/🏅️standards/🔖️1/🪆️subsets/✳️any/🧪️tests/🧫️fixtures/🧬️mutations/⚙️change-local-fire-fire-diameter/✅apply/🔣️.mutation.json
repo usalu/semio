@@ -1,0 +1,6 @@
+{
+  "ChangeLocalFireFireDiameter": {
+    "id": "local-fire-1",
+    "newFireDiameter": 3.0
+  }
+}

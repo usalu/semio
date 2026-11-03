@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-rail-load-group-factor-longitudinal/schema.json",
+  "title": "ChangeRailLoadGroupFactorLongitudinal",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newFactorLongitudinal"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Rail load group",
+          "de": "Eisenbahn-Lastgruppe"
+        },
+        "description": {
+          "en": "The rail load group this mutation addresses, by id.",
+          "de": "Das adressierte Element (Eisenbahn-Lastgruppe), per Kennung."
+        },
+        "ref": {
+          "kind": "rail-load-group"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newFactorLongitudinal": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Rotation factor_longitudinal f",
+          "de": "Faktor der Längskomponente"
+        },
+        "widget": "stepper",
+        "role": "value",
+        "group": "value",
+        "order": 20,
+        "precision": 2,
+        "step": 0.05
+      }
+    }
+  }
+}

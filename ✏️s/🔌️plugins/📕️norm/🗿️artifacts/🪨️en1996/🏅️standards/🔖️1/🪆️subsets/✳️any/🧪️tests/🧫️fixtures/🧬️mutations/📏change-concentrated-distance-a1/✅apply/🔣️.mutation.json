@@ -1,0 +1,8 @@
+{
+  "ChangeConcentratedDistanceA1": {
+    "wallId": "wall-north",
+    "loadCaseId": "ulsinz",
+    "id": "beam-A",
+    "newDistanceA1M": 0.5
+  }
+}

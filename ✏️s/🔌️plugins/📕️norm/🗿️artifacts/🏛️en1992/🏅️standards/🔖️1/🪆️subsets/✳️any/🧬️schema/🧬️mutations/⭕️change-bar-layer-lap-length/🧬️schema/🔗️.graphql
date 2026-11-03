@@ -1,0 +1,5 @@
+type ChangeBarLayerLapLength {
+  memberId: String!
+  layerId: String!
+  newLapLength: Float!
+}

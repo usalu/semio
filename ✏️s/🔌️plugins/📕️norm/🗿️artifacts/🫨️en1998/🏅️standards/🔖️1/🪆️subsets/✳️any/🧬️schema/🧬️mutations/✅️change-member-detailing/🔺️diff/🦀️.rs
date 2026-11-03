@@ -1,17 +1,18 @@
-//! ✅️ `change-member-detailing` diff — patches the one field of the nested row at the indexes; a missing building or member is a `mutation.target-missing`.
+//! ✅️ `change-member-detailing` diff: patches `detailing_compatible_with_q` of the addressed member row.
 
 use crate::change_member_detailing::ChangeMemberDetailing;
 use semio_s_artifact_norm_en1998_diff::{En1998BuildingDelta, En1998BuildingPatch, En1998Diff, En1998MemberDelta, En1998MemberPatch};
 use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 
 pub fn diff(payload: &ChangeMemberDetailing, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
-    let Some(building) = base.buildings.get(payload.building_index) else {
-        return protocol::MutationOutcome::error("mutation.target-missing", "building", Vec::<String>::new());
+    let Some(r0) = base.buildings.iter().find(|row| row.id == payload.building_id) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("building {} does not exist.", payload.building_id), [payload.building_id.clone()]);
     };
-    let Some(row) = building.members.get(payload.member_index) else {
-        return protocol::MutationOutcome::error("mutation.target-missing", "member", Vec::<String>::new());
+    let Some(r1) = r0.members.iter().find(|row| row.id == payload.id) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("member {} does not exist.", payload.id), [payload.id.clone()]);
     };
-    let nested = En1998MemberDelta::modification(&row.id, En1998MemberPatch { detailing_compatible_with_q: Some(payload.new_detailing_compatible_with_q), ..Default::default() });
-    let patch = En1998BuildingPatch { members: nested, ..Default::default() };
-    protocol::MutationOutcome::new(En1998Diff { buildings: En1998BuildingDelta::modification(&building.id, patch), ..Default::default() })
+    if r1.detailing_compatible_with_q == payload.new_detailing_compatible_with_q {
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "The member already has this value.");
+    }
+    protocol::MutationOutcome::new(En1998Diff { buildings: En1998BuildingDelta::modification(&payload.building_id, En1998BuildingPatch { members: En1998MemberDelta::modification(&payload.id, En1998MemberPatch { detailing_compatible_with_q: Some(payload.new_detailing_compatible_with_q), ..Default::default() }), ..Default::default() }), ..Default::default() })
 }

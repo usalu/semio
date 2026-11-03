@@ -1,0 +1,5 @@
+{
+  "mutation": "changeTieBeamSteelArea",
+  "id": "en1998-tie-beam-1",
+  "newSteelArea": 0.0012
+}

@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-built-up-planes/schema.json",
+  "title": "ChangeBuiltUpPlanes",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newPlanes"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Built-up member",
+          "de": "Zusammengesetzter Stab"
+        },
+        "description": {
+          "en": "The built-up member this mutation addresses, by id.",
+          "de": "Das adressierte Element (Zusammengesetzter Stab), per Kennung."
+        },
+        "ref": {
+          "kind": "built-up"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newPlanes": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295,
+      "x-semio-ui": {
+        "label": {
+          "en": "Planes of lacing or battens n",
+          "de": "Ebenen der Vergitterung oder Bindebleche n"
+        },
+        "widget": "stepper",
+        "step": 1,
+        "precision": 0,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

@@ -1,6 +1,6 @@
 //! ⚡️ En1996 mutations — OpText via JSON tokens, OpBinary via the norm-wide protocol-tagged payload frame.
 
-use semio_s_artifact_norm_en1996_mutations::En1996Mutation;
+use crate::En1996Mutation;
 
 use protocol::OpText;
 
@@ -25,8 +25,8 @@ mod tests;
 
 #[allow(unused_imports)]
 mod mutations_codec {
-use crate::mutations::*;
-use semio_s_artifact_norm_en1996_mutations::*;
+use crate::text::*;
+use crate::*;
 use semio_s_artifact_norm_en1996_diff::En1996Diff;
 use semio_s_artifact_norm_en1996_model::En1996Snapshot;
 use semio_s_artifact_norm_en1996_mut_concentrated::change_concentrated_bearing_length;
@@ -47,6 +47,7 @@ use semio_s_artifact_norm_en1996_mut_loads::remove_load_case;
 use semio_s_artifact_norm_en1996_mut_openings::remove_opening;
 use semio_s_artifact_norm_en1996_mut_walls::remove_wall;
 use semio_s_artifact_norm_en1996_mut_project::change_annex;
+use semio_s_artifact_norm_en1996_mut_project::change_reliability_class;
 use semio_s_artifact_norm_en1996_mut_loads::change_qp_wind;
 use semio_s_artifact_norm_en1996_mut_loads::change_design_situation;
 use semio_s_artifact_norm_en1996_mut_loads::change_load_case_situation;
@@ -87,13 +88,68 @@ use semio_s_artifact_norm_en1996_mut_openings::change_opening_height;
 use semio_s_artifact_norm_en1996_mut_openings::change_opening_sill;
 use semio_s_artifact_norm_en1996_mut_openings::change_opening_width;
 use semio_s_artifact_norm_en1996_mut_loads::change_hk_earth;
+use semio_s_artifact_norm_en1996_mut_piers_lintels::change_pier_position;
+use semio_s_artifact_norm_en1996_mut_piers_lintels::change_pier_width;
+use semio_s_artifact_norm_en1996_mut_piers_lintels::insert_pier;
+use semio_s_artifact_norm_en1996_mut_piers_lintels::remove_pier;
+use semio_s_artifact_norm_en1996_mut_piers_lintels::change_lintel_position;
+use semio_s_artifact_norm_en1996_mut_piers_lintels::change_lintel_span;
+use semio_s_artifact_norm_en1996_mut_piers_lintels::change_lintel_depth;
+use semio_s_artifact_norm_en1996_mut_piers_lintels::change_lintel_bearing_length;
+use semio_s_artifact_norm_en1996_mut_piers_lintels::insert_lintel;
+use semio_s_artifact_norm_en1996_mut_piers_lintels::remove_lintel;
+use semio_s_artifact_norm_en1996_mut_ties::change_tie_kind;
+use semio_s_artifact_norm_en1996_mut_ties::change_tie_position;
+use semio_s_artifact_norm_en1996_mut_ties::change_tie_level;
+use semio_s_artifact_norm_en1996_mut_ties::change_tie_capacity;
+use semio_s_artifact_norm_en1996_mut_ties::insert_tie;
+use semio_s_artifact_norm_en1996_mut_ties::remove_tie;
+use semio_s_artifact_norm_en1996_mut_prestress::change_prestress_force;
+use semio_s_artifact_norm_en1996_mut_prestress::change_prestress_area;
+use semio_s_artifact_norm_en1996_mut_prestress::change_prestress_strength;
+use semio_s_artifact_norm_en1996_mut_prestress::change_prestress_position;
+use semio_s_artifact_norm_en1996_mut_prestress::change_prestress_eccentricity;
+use semio_s_artifact_norm_en1996_mut_prestress::change_prestress_loss;
+use semio_s_artifact_norm_en1996_mut_prestress::insert_prestress;
+use semio_s_artifact_norm_en1996_mut_prestress::remove_prestress;
+use semio_s_artifact_norm_en1996_mut_confined::change_confined_position;
+use semio_s_artifact_norm_en1996_mut_confined::change_confined_width;
+use semio_s_artifact_norm_en1996_mut_confined::change_confined_depth;
+use semio_s_artifact_norm_en1996_mut_confined::change_confined_steel;
+use semio_s_artifact_norm_en1996_mut_confined::insert_confined;
+use semio_s_artifact_norm_en1996_mut_confined::remove_confined;
+use semio_s_artifact_norm_en1996_mut_flanges::change_flange_length;
+use semio_s_artifact_norm_en1996_mut_flanges::change_flange_thickness;
+use semio_s_artifact_norm_en1996_mut_flanges::change_flange_position;
+use semio_s_artifact_norm_en1996_mut_flanges::insert_flange;
+use semio_s_artifact_norm_en1996_mut_flanges::remove_flange;
+use semio_s_artifact_norm_en1996_mut_bars::change_bar_kind;
+use semio_s_artifact_norm_en1996_mut_bars::change_bar_diameter;
+use semio_s_artifact_norm_en1996_mut_bars::change_bar_length;
+use semio_s_artifact_norm_en1996_mut_bars::change_bar_spacing;
+use semio_s_artifact_norm_en1996_mut_bars::insert_bar;
+use semio_s_artifact_norm_en1996_mut_bars::remove_bar;
+use semio_s_artifact_norm_en1996_mut_site::change_frost_class;
+use semio_s_artifact_norm_en1996_mut_site::change_cover;
+use semio_s_artifact_norm_en1996_mut_site::change_deflection_limit;
+use semio_s_artifact_norm_en1996_mut_site::change_soil_height;
+use semio_s_artifact_norm_en1996_mut_site::change_soil_density;
+use semio_s_artifact_norm_en1996_mut_site::change_isotherm_depth;
+use semio_s_artifact_norm_en1996_mut_plan::change_plan_x;
+use semio_s_artifact_norm_en1996_mut_plan::change_plan_y;
+use semio_s_artifact_norm_en1996_mut_plan::change_plan_angle;
+use semio_s_artifact_norm_en1996_mut_plan::change_in_plane_shear;
+use semio_s_artifact_norm_en1996_mut_plan::change_in_plane_moment;
+use semio_s_artifact_norm_en1996_mut_positions::change_opening_position;
+use semio_s_artifact_norm_en1996_mut_positions::change_concentrated_position;
+use semio_s_artifact_norm_en1996_mut_positions::change_concentrated_distance_a1;
 
 /// 📥️ Decodes one committed mutation JSON document into [`En1996Mutation`] — the bridge the repository test host reaches, since it links no codec of its own.
 pub fn decode_en1996_mutation_json(text: &str) -> Result<En1996Mutation, String> {
     semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 }
-pub use crate::mutations::mutations_codec::*;
+pub use crate::text::mutations_codec::*;
 
 /// 📜️ Describes the artifact mutation dialect.
 pub const MUTATION_GRAMMAR_SEMIO: &str = include_str!("📖️mutations.grammar.semio");

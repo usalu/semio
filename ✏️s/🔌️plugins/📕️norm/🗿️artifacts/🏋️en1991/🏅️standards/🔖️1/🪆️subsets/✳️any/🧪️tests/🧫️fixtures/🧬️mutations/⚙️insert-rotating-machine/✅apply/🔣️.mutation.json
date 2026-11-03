@@ -1,0 +1,11 @@
+{
+  "InsertRotatingMachine": {
+    "index": 1,
+    "item": {
+      "id": "rotating-machine-1-new",
+      "mass": 1.5,
+      "eccentricity": 1.5,
+      "frequency": 1.5
+    }
+  }
+}

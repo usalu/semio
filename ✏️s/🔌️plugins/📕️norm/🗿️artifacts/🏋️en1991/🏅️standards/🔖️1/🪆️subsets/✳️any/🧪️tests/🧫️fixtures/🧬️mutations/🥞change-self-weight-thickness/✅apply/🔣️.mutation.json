@@ -1,0 +1,6 @@
+{
+  "ChangeSelfWeightThickness": {
+    "id": "slab-rc",
+    "newThickness": 0.25
+  }
+}

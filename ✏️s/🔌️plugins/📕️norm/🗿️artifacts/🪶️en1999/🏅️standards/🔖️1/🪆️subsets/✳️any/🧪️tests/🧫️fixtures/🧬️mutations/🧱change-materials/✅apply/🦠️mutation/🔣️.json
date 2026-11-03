@@ -1,9 +1,0 @@
-{
-  "mutation": "changeMaterials",
-  "materials": [
-    {
-      "id": "mat-6082",
-      "designation": "EN AW-6082 T6"
-    }
-  ]
-}

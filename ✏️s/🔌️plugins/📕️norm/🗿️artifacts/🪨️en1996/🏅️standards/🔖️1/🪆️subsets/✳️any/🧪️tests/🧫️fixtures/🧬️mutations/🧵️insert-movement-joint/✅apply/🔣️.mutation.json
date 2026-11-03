@@ -1,0 +1,10 @@
+{
+  "InsertMovementJoint": {
+    "index": 0,
+    "item": {
+      "id": "joint-1",
+      "wallId": "wall-north",
+      "positionM": 2.5
+    }
+  }
+}

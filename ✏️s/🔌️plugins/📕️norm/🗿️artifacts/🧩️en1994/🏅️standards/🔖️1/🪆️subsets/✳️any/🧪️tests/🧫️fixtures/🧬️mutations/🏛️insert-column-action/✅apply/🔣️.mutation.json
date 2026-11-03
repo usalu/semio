@@ -1,0 +1,14 @@
+{
+  "InsertColumnAction": {
+    "columnId": "col-C1",
+    "index": 1,
+    "action": {
+      "id": "G-col-new",
+      "kind": "permanent",
+      "category": "self",
+      "stage": "composite",
+      "nKN": 1200000.0,
+      "mKNm": 20000.0
+    }
+  }
+}

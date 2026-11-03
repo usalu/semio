@@ -1,0 +1,10 @@
+{
+  "mutation": "insertFireScenario",
+  "index": 0,
+  "fireScenario": {
+    "id": "fire-1",
+    "memberId": "purlin-1",
+    "thetaA": 180.0,
+    "durationS": 600.0
+  }
+}

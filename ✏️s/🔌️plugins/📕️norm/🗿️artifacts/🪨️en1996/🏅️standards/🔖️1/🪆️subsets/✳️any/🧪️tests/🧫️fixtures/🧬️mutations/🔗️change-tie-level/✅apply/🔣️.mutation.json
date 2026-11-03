@@ -1,0 +1,7 @@
+{
+  "ChangeTieLevel": {
+    "wallId": "wall-north",
+    "id": "tie-1",
+    "newLevelM": 2.5
+  }
+}

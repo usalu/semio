@@ -1,0 +1,6 @@
+{
+  "ChangeRailLoadGroupAssumedLateral": {
+    "id": "rail-load-group-1",
+    "newAssumedLateral": 100001.0
+  }
+}

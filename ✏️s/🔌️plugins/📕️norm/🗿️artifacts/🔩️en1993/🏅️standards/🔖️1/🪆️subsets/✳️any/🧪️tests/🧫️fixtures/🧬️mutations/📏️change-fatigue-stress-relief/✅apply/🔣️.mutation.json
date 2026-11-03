@@ -1,0 +1,6 @@
+{
+  "ChangeFatigueStressRelief": {
+    "id": "frame-action-1",
+    "newRelief": "NodalMoment"
+  }
+}

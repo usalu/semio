@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-conn-welds-filler-alloy/schema.json",
+  "title": "ChangeConnWeldsFillerAlloy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "connectionId",
+    "newWeldsFillerAlloy"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeConnWeldsFillerAlloy"
+    },
+    "connectionId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Connection",
+          "de": "Anschluss"
+        },
+        "description": {
+          "en": "The connection this mutation addresses, by id.",
+          "de": "Das adressierte Element (Anschluss), per Kennung."
+        },
+        "ref": {
+          "kind": "connection"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newWeldsFillerAlloy": {
+      "type": "string",
+      "x-semio-ui": {
+        "label": {
+          "en": "Filler alloy",
+          "de": "Schweißzusatz"
+        },
+        "widget": "text",
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

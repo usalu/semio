@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/mutation/change-bridge-line-speed/schema.json",
+  "title": "ChangeBridgeLineSpeed",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newLineSpeed"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeBridgeLineSpeed"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Bridge serviceability",
+          "de": "Brückengebrauchstauglichkeit"
+        },
+        "description": {
+          "en": "The bridge serviceability this mutation addresses, by id.",
+          "de": "Das adressierte Element (Brückengebrauchstauglichkeit), per Kennung."
+        },
+        "ref": {
+          "kind": "bridge-sls"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newLineSpeed": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Maximum line speed (0 = not declared)",
+          "de": "Höchstgeschwindigkeit der Strecke (0 = nicht angegeben)"
+        },
+        "widget": "stepper",
+        "precision": 0,
+        "step": 5,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

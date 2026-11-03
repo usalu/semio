@@ -1,0 +1,11 @@
+//! ↩️ `change-joint-plate-bolts-per-row` inverse: restores the previous `bolts_per_row`.
+
+use crate::change_joint_plate_bolts_per_row::ChangeJointPlateBoltsPerRow;
+use semio_s_artifact_norm_en1993_model::En1993Snapshot;
+
+pub fn inverse<Op>(payload: &ChangeJointPlateBoltsPerRow, base: &En1993Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_joint_plate_bolts_per_row::ChangeJointPlateBoltsPerRow> {
+    Ok(match base.joint_plates.iter().find(|row| row.id == payload.id) {
+        Some(row) => vec![Op::from(ChangeJointPlateBoltsPerRow { id: payload.id.clone(), new_bolts_per_row: row.bolts_per_row })],
+        None => Vec::new(),
+    })
+}

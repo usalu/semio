@@ -5,8 +5,10 @@ seq:
   - id: format
     contents: [0x01]
   - id: tag
-    type: u1
+    type: vlq_base128_le
+  - id: len
+    type: vlq_base128_le
   - id: payload
     type: str
     encoding: UTF-8
-    size-eos: true
+    size: len.value

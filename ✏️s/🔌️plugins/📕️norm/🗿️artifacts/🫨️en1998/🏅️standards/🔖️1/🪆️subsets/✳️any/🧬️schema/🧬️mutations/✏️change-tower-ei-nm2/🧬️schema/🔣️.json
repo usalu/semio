@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-tower-ei-nm2/schema.json",
+  "title": "ChangeTowerEiNm2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newEiNm2"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeTowerEiNm2"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Tower",
+          "de": "Turm"
+        },
+        "description": {
+          "en": "The tower this mutation addresses, by id.",
+          "de": "Das adressierte Element (Turm), per Kennung."
+        },
+        "ref": {
+          "kind": "tower"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newEiNm2": {
+      "type": "number",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Flexural stiffness EI of the tower (0 = not given)",
+          "de": "Biegesteifigkeit EI des Turms (0 = nicht angegeben)"
+        },
+        "group": "value",
+        "order": 20,
+        "widget": "stepper",
+        "step": 0.001,
+        "precision": 3
+      }
+    }
+  }
+}

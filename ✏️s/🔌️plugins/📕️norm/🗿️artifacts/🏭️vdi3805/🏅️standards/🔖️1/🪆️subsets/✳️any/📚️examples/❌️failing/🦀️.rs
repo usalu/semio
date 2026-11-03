@@ -21,4 +21,4 @@ pub mod blatt_60_fail;
 pub mod blatt_7_fail;
 //#endregion 🪢️Mounts
 
-pub use semio_s_artifact_norm_vdi3805_examples_failing_2::{blatt_19_fail, blatt_4_fail, blatt_5_fail, blatt_6_fail, blatt_8_fail};
+pub use semio_s_artifact_norm_vdi3805_examples_failing_blatt_4_to_19::{blatt_19_fail, blatt_4_fail, blatt_5_fail, blatt_6_fail, blatt_8_fail};

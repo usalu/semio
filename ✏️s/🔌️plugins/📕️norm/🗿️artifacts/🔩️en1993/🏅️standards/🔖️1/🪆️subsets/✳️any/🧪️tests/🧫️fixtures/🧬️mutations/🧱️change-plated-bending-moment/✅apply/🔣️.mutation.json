@@ -1,0 +1,6 @@
+{
+  "ChangePlatedBendingMoment": {
+    "id": "pp-1",
+    "newBendingMoment": 1.5
+  }
+}

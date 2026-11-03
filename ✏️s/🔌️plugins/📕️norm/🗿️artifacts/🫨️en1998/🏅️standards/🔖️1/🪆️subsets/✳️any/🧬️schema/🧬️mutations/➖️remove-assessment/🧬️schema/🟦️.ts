@@ -1,11 +1,11 @@
 /** ➖️ `remove-assessment` wire twin: the leaf payload `RemoveAssessment`, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
- * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
+ * by `repo ./📜️script.ts schema twins generate`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
-import { normWireInteger, normWireLiteral, normWireObject, normWireRange, type NormWireReader, normWireRequired } from "@semio-tech/norm-js/registry/contract";
+import { normWireLiteral, normWireObject, normWireRequired, normWireString, type NormWireReader } from "@semio-tech/norm-js/registry/contract";
 
 export interface RemoveAssessment {
   mutation: "removeAssessment";
-  index: number;
+  id: string;
 }
 
-export const parseRemoveAssessment: NormWireReader<RemoveAssessment> = normWireObject<RemoveAssessment>({ mutation: normWireRequired(normWireLiteral("removeAssessment")), index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})) });
+export const parseRemoveAssessment: NormWireReader<RemoveAssessment> = normWireObject<RemoveAssessment>({ mutation: normWireRequired(normWireLiteral("removeAssessment")), id: normWireRequired(normWireString) });

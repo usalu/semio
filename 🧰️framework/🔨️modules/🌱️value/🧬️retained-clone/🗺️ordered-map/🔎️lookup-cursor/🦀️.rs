@@ -28,8 +28,8 @@ impl<K: BoundedOrd> Default for RetainedOrderedMapLookupCursor<K> {
 }
 
 impl<K:BoundedOrd> RetainedOrderedMapLookupCursor<K>{
-    pub fn advance<V>(&mut self,source:RetainedCloneRef<'_,RetainedOrderedMap<K,V>>,target:RetainedCloneRef<'_,K>,grant:BoundedOrdGrant,retirement:RetainedCloneGrant)->crate::RetainedWorkOutcome<(Option<RetainedOrderedMapLookup>,BoundedOrdProgress,RetainedCloneProgress),crate::ValueError>{let mut work=0;let result=(||{
-        if self.closing{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"lookup is closing"));}
+    pub fn advance<V>(&mut self,source:RetainedCloneRef<'_,RetainedOrderedMap<K,V>>,target:RetainedCloneRef<'_,K>,grant:BoundedOrdGrant,retirement:RetainedCloneGrant)->crate::RetainedWorkOutcome<(Option<RetainedOrderedMapLookup>,BoundedOrdProgress,RetainedCloneProgress),ValueError>{let mut work=0;let result=(||{
+        if self.closing{return Err(ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"lookup is closing"));}
         let first=!self.initialized;
         if first&&grant.maximum_items==0{return Ok((None,Default::default(),Default::default()));}
         if let Some(progress)={let turn=source.bind(&mut self.source,retirement);work+=turn.work;turn.result}?{return Ok((None,Default::default(),progress));}
@@ -62,7 +62,7 @@ impl<K:BoundedOrd> RetainedOrderedMapLookupCursor<K>{
             BoundedOrdStep::Complete{ordering,progress}=>{self.pending=Some(ordering);Ok((None,progress,Default::default()))}
         }
     })();crate::RetainedWorkOutcome{result,work}}
-    pub fn advance_retirement_demands(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{
+    pub fn advance_retirement_demands(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{
         if self.complete.is_some(){return Ok(Default::default());}
         if self.source.is_none()||self.target.is_none(){return Ok(crate::RetirementDemand{copy_bytes:RetainedCloneBinding::alias_copy_bytes(),depth:1,..Default::default()});}
         if self.pending.is_some(){return self.comparison.as_ref().map_or(Ok(Default::default()),|cursor|cursor.close_demands(body));}
@@ -71,22 +71,22 @@ impl<K:BoundedOrd> RetainedOrderedMapLookupCursor<K>{
     }
     pub fn begin_close(&mut self)->bool{let started=!self.closing;self.closing=true;if let Some(c)=self.comparison.as_mut(){c.begin_close();}started}
     /// 🎟️ Retains the original comparator or projected binding through one complete next-action quote.
-    pub(super) fn close_demands(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{
-        if let Some(cursor)=self.comparison.as_ref(){if cursor.terminal_is_empty(){return Ok(crate::RetirementDemand{copy_bytes:size_of::<K::Cursor>(),depth:1,..Default::default()});}let mut d=cursor.close_demands(body)?;d.depth=d.depth.checked_add(1).ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::DepthLimit,"original lookup comparator close depth overflow"))?;return Ok(d);}
+    pub(super) fn close_demands(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{
+        if let Some(cursor)=self.comparison.as_ref(){if cursor.terminal_is_empty(){return Ok(crate::RetirementDemand{copy_bytes:size_of::<K::Cursor>(),depth:1,..Default::default()});}let mut d=cursor.close_demands(body)?;d.depth=d.depth.checked_add(1).ok_or_else(||ValueError::literal(crate::ValueRefusalKind::DepthLimit,"original lookup comparator close depth overflow"))?;return Ok(d);}
         RetainedCloneBinding::close_demand(if self.source.is_some(){&self.source}else{&self.target},body)
-    }    pub fn next_close_copy_byte_demand(&self)->Result<usize,crate::ValueError>{if let Some(c)=self.comparison.as_ref(){if c.terminal_is_empty(){Ok(size_of::<K::Cursor>())}else{c.next_close_copy_byte_demand()}}else{RetainedCloneBinding::copy_demand(if self.source.is_some(){&self.source}else{&self.target})}}
-    pub fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,crate::ValueError>{if let Some(c)=self.comparison.as_ref(){if c.terminal_is_empty(){Ok(0)}else{c.next_close_capacity_byte_demand(body)}}else{RetainedCloneBinding::capacity_demand(if self.source.is_some(){&self.source}else{&self.target},body)}}
-    pub fn next_close_release_byte_demand(&self)->Result<usize,crate::ValueError>{if let Some(c)=self.comparison.as_ref(){if c.terminal_is_empty(){Ok(0)}else{c.next_close_release_byte_demand()}}else{RetainedCloneBinding::release_demand(if self.source.is_some(){&self.source}else{&self.target})}}
-    pub fn next_close_depth_demand(&self)->Result<usize,crate::ValueError>{if let Some(c)=self.comparison.as_ref(){if c.terminal_is_empty(){Ok(1)}else{c.next_close_depth_demand()?.checked_add(1).ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::DepthLimit,"original lookup comparator close depth overflow"))}}else{RetainedCloneBinding::depth_demand(if self.source.is_some(){&self.source}else{&self.target})}}
-    pub fn close_step(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<RetainedCloneStep,crate::ValueError>{let mut work=0;let result=(||{
-        if !self.closing{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"lookup must begin close"));}
+    }    pub fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{if let Some(c)=self.comparison.as_ref(){if c.terminal_is_empty(){Ok(size_of::<K::Cursor>())}else{c.next_close_copy_byte_demand()}}else{RetainedCloneBinding::copy_demand(if self.source.is_some(){&self.source}else{&self.target})}}
+    pub fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{if let Some(c)=self.comparison.as_ref(){if c.terminal_is_empty(){Ok(0)}else{c.next_close_capacity_byte_demand(body)}}else{RetainedCloneBinding::capacity_demand(if self.source.is_some(){&self.source}else{&self.target},body)}}
+    pub fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{if let Some(c)=self.comparison.as_ref(){if c.terminal_is_empty(){Ok(0)}else{c.next_close_release_byte_demand()}}else{RetainedCloneBinding::release_demand(if self.source.is_some(){&self.source}else{&self.target})}}
+    pub fn next_close_depth_demand(&self)->Result<usize,ValueError>{if let Some(c)=self.comparison.as_ref(){if c.terminal_is_empty(){Ok(1)}else{c.next_close_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(crate::ValueRefusalKind::DepthLimit,"original lookup comparator close depth overflow"))}}else{RetainedCloneBinding::depth_demand(if self.source.is_some(){&self.source}else{&self.target})}}
+    pub fn close_step(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<RetainedCloneStep,ValueError>{let mut work=0;let result=(||{
+        if !self.closing{return Err(ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"lookup must begin close"));}
         let demand=self.close_demands(grant.maximum_copy_bytes)?;
-        if !super::retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()));}
+        if !retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()));}
         if let Some(c)=self.comparison.as_mut(){
             if c.terminal_is_empty(){work+=1;self.comparison=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}
             let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};
             let step={let turn=c.close_step(child);work+=turn.work;turn.result}?;
-            let step=super::admit_retained_clone_close(child,step,c.terminal_is_empty(),"original lookup comparator close")?;
+            let step=admit_retained_clone_close(child,step,c.terminal_is_empty(),"original lookup comparator close")?;
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         let step={let turn=close_retained_binding(if self.source.is_some(){&mut self.source}else{&mut self.target},grant);work+=turn.work;turn.result}?;

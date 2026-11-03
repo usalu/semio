@@ -1,0 +1,6 @@
+{
+  "mutation": "changeConnActionSource",
+  "connectionId": "support-weld",
+  "actionId": "G-conn",
+  "newSource": "external"
+}

@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-built-up-min-radius/schema.json",
+  "title": "ChangeBuiltUpMinRadius",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newMinRadius"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Built-up member",
+          "de": "Zusammengesetzter Stab"
+        },
+        "description": {
+          "en": "The built-up member this mutation addresses, by id.",
+          "de": "Das adressierte Element (Zusammengesetzter Stab), per Kennung."
+        },
+        "ref": {
+          "kind": "built-up"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newMinRadius": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Minimum radius of gyration i_min",
+          "de": "Kleinster Trägheitsradius i_min"
+        },
+        "widget": "stepper",
+        "unit": "m",
+        "precision": 3,
+        "step": 0.005,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeBuildingPlanRegular",
+  "id": "bldg-office",
+  "newPlanRegular": false
+}

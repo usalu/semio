@@ -1,0 +1,6 @@
+{
+  "ChangeJointPreloadForce": {
+    "id": "joint-j1",
+    "newPreloadForce": 1.5
+  }
+}

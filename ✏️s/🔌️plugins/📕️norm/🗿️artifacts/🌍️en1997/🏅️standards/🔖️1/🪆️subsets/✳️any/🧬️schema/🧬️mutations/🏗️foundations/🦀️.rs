@@ -17,14 +17,6 @@ pub mod change_footing_width;
 pub mod change_pile_count;
 #[path = "../📏️change-pile-length/🦀️.rs"]
 pub mod change_pile_length;
-#[path = "../🧱change-wall-base-width/🦀️.rs"]
-pub mod change_wall_base_width;
-#[path = "../➕insert-footing/🦀️.rs"]
-pub mod insert_footing;
-#[path = "../📥insert-pile/🦀️.rs"]
-pub mod insert_pile;
-#[path = "../➖remove-footing/🦀️.rs"]
-pub mod remove_footing;
-#[path = "../📤remove-pile/🦀️.rs"]
-pub mod remove_pile;
 //#endregion 🪢️Mounts
+
+pub use semio_s_artifact_norm_en1997_mut_foundations_more::{change_wall_base_width, insert_footing, insert_pile, remove_footing, remove_pile};

@@ -1,0 +1,6 @@
+{
+  "ChangeTensionThreadFactor": {
+    "id": "ten-1",
+    "newThreadFactor": 1.5
+  }
+}

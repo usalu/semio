@@ -49,7 +49,7 @@ impl Grain {
 }
 
 /// 🎚 One input field a remedy may raise, with its localized label for remedy copy.
-struct Lever<T> {
+pub(super) struct Lever<T> {
     pub(super) leaf: &'static str,
     pub(super) label_en: &'static str,
     pub(super) label_de: &'static str,
@@ -79,7 +79,7 @@ pub(super) const B: Lever<TimberMember> = Lever { leaf: "bM", label_en: "section
 
 const BEARING: Lever<TimberMember> = Lever { leaf: "bearingLengthM", label_en: "bearing length l", label_de: "Aufstandslänge l", unit: "m", grain: Grain::Millimetre, kind: QuantityKind::Length, get: |m| m.bearing_length_m, set: |m, v| m.bearing_length_m = v };
 
-const MCRIT: Lever<TimberMember> = Lever { leaf: "mCritNm", label_en: "critical moment M_crit (lateral restraint)", label_de: "Kippmoment M_crit (seitliche Halterung)", unit: "N·m", grain: Grain::Unit, kind: QuantityKind::Moment, get: |m| m.m_crit_nm, set: |m, v| m.m_crit_nm = v };
+const RESTRAINT: Lever<TimberMember> = Lever { leaf: "lateralRestraintSpacingM", label_en: "lateral restraint spacing l_ef", label_de: "Abstand der seitlichen Halterungen l_ef", unit: "m", grain: Grain::Millimetre, kind: QuantityKind::Length, get: |m| m.lateral_restraint_spacing_m, set: |m, v| m.lateral_restraint_spacing_m = v };
 
 const MASS: Lever<TimberMember> = Lever { leaf: "massKgPerM", label_en: "linear mass", label_de: "längenbezogene Masse", unit: "kg/m", grain: Grain::Unit, kind: QuantityKind::Mass, get: |m| m.mass_kg_per_m, set: |m, v| m.mass_kg_per_m = v };
 
@@ -97,7 +97,7 @@ const END: Lever<TimberConnection> = Lever { leaf: "endDistanceM", label_en: "en
 
 const EDGE: Lever<TimberConnection> = Lever { leaf: "edgeDistanceM", label_en: "edge distance a₄,t", label_de: "Randabstand a₄,t", unit: "m", grain: Grain::Millimetre, kind: QuantityKind::Length, get: |c| c.edge_distance_m, set: |c, v| c.edge_distance_m = v };
 
-pub(super) const BENDING_LEVERS: &[Lever<TimberMember>] = &[H, MCRIT];
+pub(super) const BENDING_LEVERS: &[Lever<TimberMember>] = &[H, RESTRAINT];
 
 pub(super) const DEPTH_LEVERS: &[Lever<TimberMember>] = &[H];
 
@@ -130,10 +130,45 @@ pub(super) struct Head {
 pub(super) fn assessed<T>(head: Head, computed: Quantity, limit: Quantity, explanation: LocalizedCopy, levers: &'static [Lever<T>]) -> Assessed<T> {
     let utilization = if limit.value.abs() < f64::EPSILON { 0.0 } else { computed.value / limit.value };
     let builder = CheckResult::assess(head.id.clone(), head.part, head.clause, head.subject, head.title)
+        .remedies_attached_by("finish")
         .utilization(computed, limit)
         .annex(head.annex)
         .explanation(explanation);
     Assessed { id: head.id, utilization, builder, levers }
+}
+
+impl<T: 'static> Assessed<T> {
+    /// 📍️ Attaches stations at the grid `i / 10` and the extra `positions`, each the ratio of the `(demand, capacity)` the closure returns at that member coordinate; the governing utilisation becomes their maximum.
+    pub(super) fn along(mut self, positions: Vec<f64>, kind: QuantityKind, f: impl Fn(f64) -> (f64, f64)) -> Self {
+        let mut at: Vec<f64> = (0..=10).map(|i| f64::from(i) / 10.0).chain(positions).collect();
+        at.sort_by(f64::total_cmp);
+        at.dedup();
+        let stations = at.into_iter().map(|s| {
+            let (demand, capacity) = f(s);
+            Station::ratio_of(&[s], Quantity::new(kind, demand), Quantity::new(kind, capacity.max(1e-9)))
+        });
+        self.builder = self.builder.stations(stations.collect());
+        self
+    }
+}
+
+impl<T: 'static> Assessed<T> {
+    /// 🗺️ Attaches the stations of the named 2D field (for example `fastener-force`); the governing utilisation becomes their maximum.
+    pub(super) fn fielded(mut self, name: &str, stations: Vec<Station>) -> Self {
+        self.builder = self.builder.field(name, stations);
+        self
+    }
+
+    /// ⏱️ Attaches stations of the field `fire-time`: eleven instants `s = t / t_fire` of the exposure, each the ratio of the `(demand, capacity, charring depth)` the closure returns; the governing utilisation becomes their maximum.
+    pub(super) fn timed(mut self, f: impl Fn(f64) -> (f64, f64, f64)) -> Self {
+        let stations = (0..=10).map(|i| {
+            let s = f64::from(i) / 10.0;
+            let (demand, capacity, depth) = f(s);
+            Station::ratio_of(&[s], Quantity::new(QuantityKind::Moment, demand), Quantity::new(QuantityKind::Moment, capacity.max(1e-9))).with(Quantity::new(QuantityKind::Length, depth))
+        });
+        self.builder = self.builder.field("fire-time", stations.collect());
+        self
+    }
 }
 
 /// 🔎 Smallest value of `lever` (rounded up to its grain) at which check `id` passes, re-evaluating through `probe`.
@@ -218,10 +253,15 @@ pub(super) fn finish<T: Clone>(item: &T, checks: Vec<Assessed<T>>, subject: fn(&
                         );
                         remedy.applicable = false;
                         builder = builder.remedy(remedy);
+                    } else {
+                        builder = builder.remedy(Remedy {
+                            applicable: false,
+                            ..Remedy::one_of(subject(item, ""), Vec::new(), loc("Increase the cross-section or the strength class, or reduce the span or the load.", "Querschnitt oder Festigkeitsklasse erhöhen, oder Spannweite bzw. Last verringern."))
+                        });
                     }
                 }
             }
-            builder.build()
+            builder.ndp_reads().build()
         })
         .collect()
 }

@@ -1,0 +1,6 @@
+{
+  "ChangeFastenedJointKind": {
+    "id": "fastened-joint-1",
+    "newKind": "BlindRivet"
+  }
+}

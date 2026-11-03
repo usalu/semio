@@ -1,0 +1,141 @@
+{
+  "$schema": "../../../../../../../../../🔮️oracles/🏃️harness/🧬️schema/🔣️.json",
+  "schemaVersion": 1,
+  "artifact": "en1997",
+  "annex": "de",
+  "cases": [
+    {
+      "id": "en1997.H.settlement-pairs-three-footings",
+      "check": "en1997.H.settlement-pairs",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "Annex H.2 limiting values of structural deformation: angular distortion between footings and tilt of the fitted settlement plane (settlements by the Annex F.1 stress-strain method)",
+        "annex": "en"
+      },
+      "inputs": {
+        "B": 2.5,
+        "L": 2.5,
+        "E_m": 40000000.0,
+        "z_max": 10.0,
+        "q": [
+          88000.0,
+          52800.0,
+          70400.0
+        ],
+        "xy": [
+          [
+            0,
+            0
+          ],
+          [
+            9,
+            0
+          ],
+          [
+            0,
+            9
+          ]
+        ]
+      },
+      "expected": {
+        "s_1": {
+          "value": 0.005521197453830389,
+          "unit": "m",
+          "profile": "numerical-v1"
+        },
+        "beta_12": {
+          "value": 0.0002453865535035728,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "tilt": {
+          "value": 0.00027435050719918887,
+          "unit": "1",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-groundhog",
+          "adapter": "groundhog",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1997.H.settlement-interaction-three-footings",
+      "check": "en1997.H.settlement-interaction",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "Annex H.2 and F.1: the stress-strain settlement of each footing includes the stress of its neighbours (Boussinesq superposition by signed rectangle corners); angular distortion between the first two footings and tilt of the fitted settlement plane",
+        "annex": "en"
+      },
+      "inputs": {
+        "B": 2.5,
+        "L": 2.5,
+        "E_m": 40000000.0,
+        "z_max": 10.0,
+        "q": [
+          88000.0,
+          52800.0,
+          70400.0
+        ],
+        "xy": [
+          [
+            0,
+            0
+          ],
+          [
+            4,
+            0
+          ],
+          [
+            0,
+            5
+          ]
+        ]
+      },
+      "expected": {
+        "s_1": {
+          "value": 0.006111555785878611,
+          "unit": "m",
+          "profile": "numerical-v1"
+        },
+        "beta_12": {
+          "value": 0.0005285089782244617,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "tilt": {
+          "value": 0.0005839968648923533,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "s_1_alone": {
+          "value": 0.005521197453830389,
+          "unit": "m",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-groundhog",
+          "adapter": "groundhog",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        }
+      ]
+    }
+  ]
+}

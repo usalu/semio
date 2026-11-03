@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/remove-fatigue-category/schema.json",
+  "title": "RemoveFatigueCategory",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "removeFatigueCategory"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Fatigue detail site",
+          "de": "Ermüdungsdetail-Stelle"
+        },
+        "description": {
+          "en": "The fatigue detail site this mutation removes.",
+          "de": "Entfernt wird: Ermüdungsdetail-Stelle."
+        },
+        "ref": {
+          "kind": "fatigue-category"
+        },
+        "group": "target",
+        "order": 10
+      }
+    }
+  }
+}

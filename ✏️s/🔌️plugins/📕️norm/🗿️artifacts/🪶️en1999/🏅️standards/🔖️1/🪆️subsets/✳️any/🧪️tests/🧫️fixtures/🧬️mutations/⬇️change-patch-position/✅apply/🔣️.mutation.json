@@ -1,0 +1,5 @@
+{
+  "mutation": "changePatchPosition",
+  "patchLoadId": "patch-1",
+  "newPosition": "interior"
+}

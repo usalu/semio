@@ -1,0 +1,7 @@
+{
+  "ChangeFlangePosition": {
+    "wallId": "wall-north",
+    "id": "flange-1",
+    "newPositionM": 0.0
+  }
+}

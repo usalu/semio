@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-joint-assumed-class/schema.json",
+  "title": "ChangeJointAssumedClass",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newAssumedClass"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Joint",
+          "de": "Anschluss"
+        },
+        "description": {
+          "en": "The joint this mutation addresses, by id.",
+          "de": "Das adressierte Element (Anschluss), per Kennung."
+        },
+        "ref": {
+          "kind": "joint"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newAssumedClass": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/StiffnessClass",
+      "x-semio-ui": {
+        "label": {
+          "en": "Assumed stiffness class",
+          "de": "Angenommene Steifigkeitsklasse"
+        },
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

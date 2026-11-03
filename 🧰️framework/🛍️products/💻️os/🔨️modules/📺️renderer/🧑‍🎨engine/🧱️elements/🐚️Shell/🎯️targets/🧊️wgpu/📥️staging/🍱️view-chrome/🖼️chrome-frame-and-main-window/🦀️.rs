@@ -204,6 +204,16 @@ impl<'ctx> ChromeViewCtx<'ctx> {
         self.dock.dock_canvas_bounds = rect;
         self.dock.dock_axis_separator = theme.gap_standard;
         self.dock.dock.mobile = self.chrome.screen_w <= semio_framework_os_renderer_wgpu_dock::MODE_DOCK_MOBILE_MAX_WIDTH_PX;
+        self.dock.shell_hooks.note_selection(self.input.interaction_selection.values().any(|selection| !selection.ids.is_empty()));
+        if let Some(session) = self.docs.session.as_ref() {
+            if let Some(key) = self.dock.shell_hooks.prefs_to_load(&session.plugin_id, &session.app.id) {
+                self.dock.shell_hooks.supply_prefs(stored_field_get(&key));
+            }
+        }
+        if let Some(session) = self.docs.session.as_ref() {
+            self.dock.shell_hooks.note_platform(&session.plugin_id, semio_framework_os_renderer_wgpu_host_base::host_platform_prefs());
+        }
+        self.dock.observe_device_hooks(&self.docs, self.chrome.screen_w, if self.prefs.locale_id == "de" { "de" } else { "en" });
         self.dock.dock_view = self.dock.dock.render_view(self.dock.dock_drag.as_ref().map(|drag| &drag.payload));
         if self.plugins.space_mode && self.docs.spawned_ui.is_some() {
             self.dock.dock_window_plan = vec![("spawned".to_string(), rect)];

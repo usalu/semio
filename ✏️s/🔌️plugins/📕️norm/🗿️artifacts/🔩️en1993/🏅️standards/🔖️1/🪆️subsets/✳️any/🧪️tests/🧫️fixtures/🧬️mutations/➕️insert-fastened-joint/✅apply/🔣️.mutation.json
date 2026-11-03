@@ -1,0 +1,26 @@
+{
+  "InsertFastenedJoint": {
+    "index": 1,
+    "fastenedJoint": {
+      "id": "fastened-joint-2",
+      "memberId": "cold-1",
+      "kind": "SelfTappingScrew",
+      "diameter": 0.0055,
+      "washerDiameter": 0.016,
+      "count": 4,
+      "perRow": 2,
+      "headThickness": 0.00075,
+      "baseThickness": 0.0015,
+      "headStrength": 360000000.0,
+      "baseStrength": 360000000.0,
+      "endDistance": 0.03,
+      "edgeDistance": 0.015,
+      "pitch": 0.03,
+      "gauge": 0.03,
+      "sheetWidth": 0.1,
+      "shearForce": 4000.0,
+      "tensionForce": 0.0,
+      "shearResistance": 0.0
+    }
+  }
+}

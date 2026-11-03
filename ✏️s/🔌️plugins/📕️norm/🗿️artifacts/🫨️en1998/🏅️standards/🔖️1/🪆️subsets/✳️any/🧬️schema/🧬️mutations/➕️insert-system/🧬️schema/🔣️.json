@@ -1,0 +1,79 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/insert-system/schema.json",
+  "title": "InsertSystem",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "buildingId",
+    "system"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "insertSystem"
+    },
+    "buildingId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Building",
+          "de": "Gebäude"
+        },
+        "description": {
+          "en": "The building this mutation addresses, by id.",
+          "de": "Das adressierte Element (Gebäude), per Kennung."
+        },
+        "ref": {
+          "kind": "building"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "index": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Zero-based list position at which the record is inserted. Empty appends; positions past the end append.",
+          "de": "Nullbasierte Listenposition, an der der Datensatz eingefügt wird. Ohne Angabe am Ende; Positionen hinter dem Ende hängen an."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 20
+      }
+    },
+    "system": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/snapshot.json#/$defs/En1998System",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Resisting system",
+          "de": "Tragsystem"
+        },
+        "description": {
+          "en": "The complete lateral-force-resisting system record to insert.",
+          "de": "Der vollständige einzufügende Datensatz: Tragsystem."
+        },
+        "group": "record",
+        "order": 30
+      },
+      "x-semio-rust": {
+        "type": "semio_s_artifact_norm_en1998_model::En1998System"
+      }
+    }
+  }
+}

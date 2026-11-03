@@ -1,0 +1,6 @@
+{
+  "mutation": "changeStoreyPermanentGkN",
+  "buildingId": "bldg-office",
+  "id": "s1",
+  "newPermanentGkN": 2500000.0
+}

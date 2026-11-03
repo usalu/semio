@@ -1,0 +1,5 @@
+{
+  "mutation": "changePierSectionBM",
+  "id": "pier-1",
+  "newSectionBM": 2.4
+}

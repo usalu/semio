@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-reinforcement-k/schema.json",
+  "title": "ChangeReinforcementK",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "gradeId",
+    "newK"
+  ],
+  "properties": {
+    "gradeId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Reinforcement grade",
+          "de": "Betonstahlsorte"
+        },
+        "description": {
+          "en": "The reinforcement grade this mutation addresses, by id.",
+          "de": "Das adressierte Element (Betonstahlsorte), per Kennung."
+        },
+        "ref": {
+          "kind": "grade"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newK": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "k",
+          "de": "k"
+        },
+        "widget": "stepper",
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-vertex-y/schema.json",
+  "title": "ChangeVertexY",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "outlineVertexId",
+    "newY"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeVertexY"
+    },
+    "outlineVertexId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Outline vertex",
+          "de": "Umrissknoten"
+        },
+        "description": {
+          "en": "The outline vertex this mutation addresses, by id.",
+          "de": "Das adressierte Element (Umrissknoten), per Kennung."
+        },
+        "ref": {
+          "kind": "outline-vertex"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newY": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Vertex y",
+          "de": "Knoten y"
+        },
+        "widget": "stepper",
+        "unit": "m",
+        "displayUnit": "mm",
+        "displayFactor": 1000,
+        "precision": 1,
+        "step": 0.001,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

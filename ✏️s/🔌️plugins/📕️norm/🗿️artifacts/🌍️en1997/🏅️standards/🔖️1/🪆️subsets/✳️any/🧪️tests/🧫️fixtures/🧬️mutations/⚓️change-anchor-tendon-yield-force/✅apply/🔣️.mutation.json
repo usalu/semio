@@ -1,0 +1,5 @@
+{
+  "mutation": "changeAnchorTendonYieldForce",
+  "id": "anchor-A1",
+  "newTendonYieldForce": 1400000.0
+}

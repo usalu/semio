@@ -1,0 +1,6 @@
+{
+  "ChangeExplosionAssumedPressure": {
+    "id": "internal-explosion-1",
+    "newAssumedPressure": 3.0
+  }
+}

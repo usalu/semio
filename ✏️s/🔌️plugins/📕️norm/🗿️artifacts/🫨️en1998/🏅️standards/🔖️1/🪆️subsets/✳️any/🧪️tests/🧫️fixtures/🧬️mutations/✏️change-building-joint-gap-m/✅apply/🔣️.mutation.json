@@ -1,0 +1,5 @@
+{
+  "mutation": "changeBuildingJointGapM",
+  "id": "bldg-office",
+  "newJointGapM": 1.5
+}

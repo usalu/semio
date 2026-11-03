@@ -5,5 +5,3 @@
 export const EN1999_VIEWER_DIALECT = { artifactKind: "s.norm.en1999", standard: "1", subset: "*" } as const;
 
 export const EN1999_VIEW_MODE_ID = "view" as const;
-
-export * from "./🎭️modes/👁️view/🪟️windows/📊️report/🟦️";

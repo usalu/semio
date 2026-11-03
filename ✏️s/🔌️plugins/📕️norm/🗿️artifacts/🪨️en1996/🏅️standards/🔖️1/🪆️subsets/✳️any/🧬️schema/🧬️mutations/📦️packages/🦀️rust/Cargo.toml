@@ -20,6 +20,11 @@ name = "mutation_vectors"
 path = "../../🧪️tests/🔬️vectors/🦀️.rs"
 
 [dependencies]
+serde = { workspace = true, optional = true }
+semio-s-artifact-norm-en1996-mutations-proto = { workspace = true }
+semio-s-artifact-norm-en1996-mutations-json-schema = { workspace = true }
+semio-s-artifact-norm-en1996-mutations-graphql = { workspace = true }
+semio-s-artifact-norm-en1996-mutations-typescript = { workspace = true }
 semio-framework-os-command = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-os-store-one-item = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/📦️packages/🦀️rust" }
@@ -33,15 +38,35 @@ semio-framework-value-derive = { workspace = true }
 semio-s-artifact-norm-en1996-diff = { workspace = true }
 semio-s-artifact-norm-en1996-model = { workspace = true }
 semio-s-artifact-norm-en1996-mut-concentrated = { workspace = true }
+semio-s-artifact-norm-en1996-mut-design-cases = { workspace = true }
 semio-s-artifact-norm-en1996-mut-eccentricity = { workspace = true }
 semio-s-artifact-norm-en1996-mut-loads = { workspace = true }
 semio-s-artifact-norm-en1996-mut-mortar = { workspace = true }
 semio-s-artifact-norm-en1996-mut-openings = { workspace = true }
+semio-s-artifact-norm-en1996-mut-piers-lintels = { workspace = true }
+semio-s-artifact-norm-en1996-mut-ties = { workspace = true }
+semio-s-artifact-norm-en1996-mut-prestress = { workspace = true }
+semio-s-artifact-norm-en1996-mut-confined = { workspace = true }
+semio-s-artifact-norm-en1996-mut-flanges = { workspace = true }
+semio-s-artifact-norm-en1996-mut-bars = { workspace = true }
+semio-s-artifact-norm-en1996-mut-site = { workspace = true }
+semio-s-artifact-norm-en1996-mut-plan = { workspace = true }
+semio-s-artifact-norm-en1996-mut-bracing = { workspace = true }
+semio-s-artifact-norm-en1996-mut-chases = { workspace = true }
+semio-s-artifact-norm-en1996-mut-chases-geometry = { workspace = true }
+semio-s-artifact-norm-en1996-mut-movement-joints = { workspace = true }
+semio-s-artifact-norm-en1996-mut-placements = { workspace = true }
+semio-s-artifact-norm-en1996-mut-positions = { workspace = true }
 semio-s-artifact-norm-en1996-mut-project = { workspace = true }
 semio-s-artifact-norm-en1996-mut-reinforcement = { workspace = true }
 semio-s-artifact-norm-en1996-mut-units = { workspace = true }
 semio-s-artifact-norm-en1996-mut-walls = { workspace = true }
 semio-s-plugin-norm-app-surface = { workspace = true }
+semio-framework-diagnostic = { workspace = true }
+semio-s-artifact-norm-contract = { workspace = true }
+
+[features]
+test-support = ["dep:serde", "semio-s-artifact-norm-en1996-diff/test-support", "semio-s-artifact-norm-en1996-model/test-support", "semio-s-artifact-norm-en1996-mut-bars/test-support", "semio-s-artifact-norm-en1996-mut-bracing/test-support", "semio-s-artifact-norm-en1996-mut-chases/test-support", "semio-s-artifact-norm-en1996-mut-chases-geometry/test-support", "semio-s-artifact-norm-en1996-mut-concentrated/test-support", "semio-s-artifact-norm-en1996-mut-confined/test-support", "semio-s-artifact-norm-en1996-mut-design-cases/test-support", "semio-s-artifact-norm-en1996-mut-eccentricity/test-support", "semio-s-artifact-norm-en1996-mut-flanges/test-support", "semio-s-artifact-norm-en1996-mut-loads/test-support", "semio-s-artifact-norm-en1996-mut-mortar/test-support", "semio-s-artifact-norm-en1996-mut-movement-joints/test-support", "semio-s-artifact-norm-en1996-mut-openings/test-support", "semio-s-artifact-norm-en1996-mut-piers-lintels/test-support", "semio-s-artifact-norm-en1996-mut-placements/test-support", "semio-s-artifact-norm-en1996-mut-plan/test-support", "semio-s-artifact-norm-en1996-mut-positions/test-support", "semio-s-artifact-norm-en1996-mut-prestress/test-support", "semio-s-artifact-norm-en1996-mut-project/test-support", "semio-s-artifact-norm-en1996-mut-reinforcement/test-support", "semio-s-artifact-norm-en1996-mut-site/test-support", "semio-s-artifact-norm-en1996-mut-ties/test-support", "semio-s-artifact-norm-en1996-mut-units/test-support", "semio-s-artifact-norm-en1996-mut-walls/test-support"]
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }
@@ -51,3 +76,4 @@ semio-s-plugin-norm-app-surface = { workspace = true, features = ["compliance-te
 semio-s-plugin-norm-compliance = { workspace = true }
 semio-s-mutation-vectors = { workspace = true }
 serde = { workspace = true }
+semio-framework-plugin = { workspace = true }

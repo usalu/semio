@@ -7,7 +7,7 @@
   "aggregateVariant": "InsertFireExposure",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
-  "binaryTag": 32,
+  "binaryTag": 15,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

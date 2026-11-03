@@ -1,0 +1,6 @@
+{
+  "ChangeTensionRodStressArea": {
+    "id": "ten-1",
+    "newRodStressArea": 1.5
+  }
+}

@@ -1,12 +1,12 @@
 /** 🏋️ `change-assessment-rkn` wire twin: the leaf payload `ChangeAssessmentRKN`, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
- * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
+ * by `repo ./📜️script.ts schema twins generate`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
-import { normWireInteger, normWireLiteral, normWireNumber, normWireObject, normWireRange, type NormWireReader, normWireRequired } from "@semio-tech/norm-js/registry/contract";
+import { normWireLiteral, normWireNumber, normWireObject, normWireRange, normWireRequired, normWireString, type NormWireReader } from "@semio-tech/norm-js/registry/contract";
 
 export interface ChangeAssessmentRKN {
   mutation: "changeAssessmentRKN";
-  index: number;
+  id: string;
   newRKN: number;
 }
 
-export const parseChangeAssessmentRKN: NormWireReader<ChangeAssessmentRKN> = normWireObject<ChangeAssessmentRKN>({ mutation: normWireRequired(normWireLiteral("changeAssessmentRKN")), index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), newRKN: normWireRequired(normWireRange(normWireNumber, {"minimum":0})) });
+export const parseChangeAssessmentRKN: NormWireReader<ChangeAssessmentRKN> = normWireObject<ChangeAssessmentRKN>({ mutation: normWireRequired(normWireLiteral("changeAssessmentRKN")), id: normWireRequired(normWireString), newRKN: normWireRequired(normWireRange(normWireNumber, {"minimum":0})) });

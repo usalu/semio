@@ -1,0 +1,5 @@
+{
+  "mutation": "changeLabTestCompressionIndex",
+  "id": "lab-T1",
+  "newCompressionIndex": 1.5
+}

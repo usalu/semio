@@ -11,7 +11,7 @@ Feature: Apply every typed EN 1995 mutation against an independent Python implem
   rules) and imports nothing from the Rust it judges.
 
   Both implementations read the SAME committed bytes: every `(before, mutation, after, outcome)` path below is a
-  declared `shared://` fixture, so neither side holds a transcription that could drift. The 66 `✅apply` vectors
+  declared `shared://` fixture, so neither side holds a transcription that could drift. The 77 `✅apply` vectors
   cover every kind of the current vocabulary (58 `change`, 4 `insert`, 4 `remove`) on a glued-laminated timber floor beam; each vector's after-snapshot and
   diff were written by production dispatch and its mutation is the canonical Rust wire. Each side asserts the same
   laws in role — the applied document must BE the committed after-snapshot, an `applied` vector must move the
@@ -28,7 +28,7 @@ Feature: Apply every typed EN 1995 mutation against an independent Python implem
 
   ⚠️ Honest boundary — the CARRIER. `identity-round-trip` reads the committed
   `asset://🏠️glulam-floor-beam/🏠️glulam-floor-beam/🗣️.dsl.semio`. The carrier has no published grammar: the committed
-  `📖️component.grammar.semio` is the repository-wide `payload = OCTET+` placeholder, so the two sides are compared
+  `📖️component.grammar.semio` is the repository-wide `payload = OCTET+` rule, so the two sides are compared
   at the envelope preamble, the ordered lines and the digest and length of what each re-emitted. The Rust side additionally proves it PARSED the document: the committed binary
   twin must decode to the same document as the text, through a separately written codec.
 
@@ -36,15 +36,16 @@ Feature: Apply every typed EN 1995 mutation against an independent Python implem
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to its committed specification vector
-    Given the committed before-snapshot shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/⬅️before/🔣️.json
-    And the committed mutation payload shared://🧬️mutations/<dir>/<fixture>/🦠️mutation/🔣️.json
-    And the committed after-snapshot shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/➡️after/🔣️.json
-    And the committed outcome shared://🧬️mutations/<dir>/<fixture>/🎯️outcome/🔣️.json
+    Given the committed before-snapshot shared://🧬️mutations/<dir>/<fixture>/🔣️.before.json
+    And the committed mutation payload shared://🧬️mutations/<dir>/<fixture>/🔣️.mutation.json
+    And the committed after-snapshot shared://🧬️mutations/<dir>/<fixture>/🔣️.after.json
+    And the committed outcome shared://🧬️mutations/<dir>/<fixture>/🔣️.outcome.json
     When both implementations apply the committed mutation to the committed before-snapshot
     Then each reaches the committed after-snapshot under the committed outcome status and the two agree
     Examples:
       | id                               | dir                                | fixture |
       | change-annex                     | 🌍️change-annex                     | ✅apply  |
+      | change-reliability-class                     | 🎯change-reliability-class                     | ✅apply  |
       | insert-member                    | ➕️insert-member                    | ✅apply  |
       | insert-member-dupe               | ➕️insert-member                    | ⛔dupe   |
       | remove-member                    | ➖️remove-member                    | ✅apply  |
@@ -64,7 +65,6 @@ Feature: Apply every typed EN 1995 mutation against an independent Python implem
       | change-member-restraint-spacing  | ↔️change-member-restraint-spacing  | ✅apply  |
       | change-member-notch-depth        | ↔️change-member-notch-depth        | ✅apply  |
       | change-member-notch-distance     | ↔️change-member-notch-distance     | ✅apply  |
-      | change-member-m-crit             | ⚠️change-member-m-crit             | ✅apply  |
       | change-member-mass-kg-per-m         | ⚖️change-member-mass-kg-per-m         | ✅apply  |
       | change-member-mass-kg-per-m2        | ⚖️change-member-mass-kg-per-m2        | ✅apply  |
       | change-member-damping-xi            | 🌊️change-member-damping-xi            | ✅apply  |
@@ -112,20 +112,161 @@ Feature: Apply every typed EN 1995 mutation against an independent Python implem
       | change-connection-action-kind    | ⚖️change-connection-action-kind    | ✅apply  |
       | change-connection-load-duration  | ⏳️change-connection-load-duration  | ✅apply  |
       | change-connection-action-fk      | 🔩️change-connection-action-fk      | ✅apply  |
+      | change-uls-equation | 🧮️change-uls-equation | ✅apply  |
+      | insert-case | ➕️insert-case | ✅apply  |
+      | remove-case | ➖️remove-case | ✅apply  |
+      | change-case-label-en | 🏷️change-case-label-en | ✅apply  |
+      | change-case-label-de | 🏷️change-case-label-de | ✅apply  |
+      | change-case-entry-id | 📇️change-case-entry-id | ✅apply  |
+      | change-case-number | 🔢️change-case-number | ✅apply  |
+      | change-case-text | 🔤️change-case-text | ✅apply  |
+      | change-placement-x | 📍️change-placement-x | ✅apply  |
+      | change-placement-y | 📍️change-placement-y | ✅apply  |
+      | change-placement-z | 📍️change-placement-z | ✅apply  |
+      | change-placement-yaw | 📍️change-placement-yaw | ✅apply  |
+      | insert-placement | ➕️insert-placement | ✅apply  |
+      | remove-placement | ➖️remove-placement | ✅apply  |
+      | insert-deck | ➕️insert-deck | ✅apply  |
+      | remove-deck | ➖️remove-deck | ✅apply  |
+      | change-deck-lamination-product | 🌉️change-deck-lamination-product | ✅apply  |
+      | change-deck-bar-product | 🌉️change-deck-bar-product | ✅apply  |
+      | change-deck-span | 🌉️change-deck-span | ✅apply  |
+      | change-deck-deck-width | 🌉️change-deck-deck-width | ✅apply  |
+      | change-deck-deck-depth | 🌉️change-deck-deck-depth | ✅apply  |
+      | change-deck-lamination-width | 🌉️change-deck-lamination-width | ✅apply  |
+      | change-deck-bar-spacing | 🌉️change-deck-bar-spacing | ✅apply  |
+      | change-deck-bar-diameter | 🌉️change-deck-bar-diameter | ✅apply  |
+      | change-deck-plate-side | 🌉️change-deck-plate-side | ✅apply  |
+      | change-deck-initial-prestress | 🌉️change-deck-initial-prestress | ✅apply  |
+      | change-deck-loss-relaxation | 🌉️change-deck-loss-relaxation | ✅apply  |
+      | change-deck-loss-creep | 🌉️change-deck-loss-creep | ✅apply  |
+      | change-deck-loss-moisture | 🌉️change-deck-loss-moisture | ✅apply  |
+      | change-deck-bar-resistance | 🌉️change-deck-bar-resistance | ✅apply  |
+      | change-deck-shear-stress | 🌉️change-deck-shear-stress | ✅apply  |
+      | change-deck-compression-c90 | 🌉️change-deck-compression-c90 | ✅apply  |
+      | change-deck-wheel-load | 🌉️change-deck-wheel-load | ✅apply  |
+      | change-deck-wheel-contact | 🌉️change-deck-wheel-contact | ✅apply  |
+      | insert-diaphragm | ➕️insert-diaphragm | ✅apply  |
+      | remove-diaphragm | ➖️remove-diaphragm | ✅apply  |
+      | change-diaphragm-kind | 🛡️change-diaphragm-kind | ✅apply  |
+      | change-diaphragm-method | 🛡️change-diaphragm-method | ✅apply  |
+      | change-diaphragm-panel-width | 🛡️change-diaphragm-panel-width | ✅apply  |
+      | change-diaphragm-wall-height | 🛡️change-diaphragm-wall-height | ✅apply  |
+      | change-diaphragm-fastener-spacing | 🛡️change-diaphragm-fastener-spacing | ✅apply  |
+      | change-diaphragm-panels | 🛡️change-diaphragm-panels | ✅apply  |
+      | change-diaphragm-fastener-capacity | 🛡️change-diaphragm-fastener-capacity | ✅apply  |
+      | change-diaphragm-shear-ed | 🛡️change-diaphragm-shear-ed | ✅apply  |
+      | change-diaphragm-hold-down | 🛡️change-diaphragm-hold-down | ✅apply  |
+      | change-diaphragm-force | 🛡️change-diaphragm-force | ✅apply  |
+      | change-diaphragm-length | 🛡️change-diaphragm-length | ✅apply  |
+      | change-diaphragm-shear-resistance | 🛡️change-diaphragm-shear-resistance | ✅apply  |
+      | insert-truss | ➕️insert-truss | ✅apply  |
+      | remove-truss | ➖️remove-truss | ✅apply  |
+      | change-truss-kind | 🔺️change-truss-kind | ✅apply  |
+      | change-truss-product | 🔺️change-truss-product | ✅apply  |
+      | change-truss-span | 🔺️change-truss-span | ✅apply  |
+      | change-truss-height | 🔺️change-truss-height | ✅apply  |
+      | change-truss-bays | 🔺️change-truss-bays | ✅apply  |
+      | change-truss-chord-width | 🔺️change-truss-chord-width | ✅apply  |
+      | change-truss-chord-depth | 🔺️change-truss-chord-depth | ✅apply  |
+      | change-truss-web-width | 🔺️change-truss-web-width | ✅apply  |
+      | change-truss-web-depth | 🔺️change-truss-web-depth | ✅apply  |
+      | change-truss-chord-force | 🔺️change-truss-chord-force | ✅apply  |
+      | change-truss-restraint-length | 🔺️change-truss-restraint-length | ✅apply  |
+      | change-truss-bracing-capacity | 🔺️change-truss-bracing-capacity | ✅apply  |
+      | insert-bracing | ➕️insert-bracing | ✅apply  |
+      | remove-bracing | ➖️remove-bracing | ✅apply  |
+      | change-bracing-kind | ✖️change-bracing-kind | ✅apply  |
+      | change-bracing-member | ✖️change-bracing-member | ✅apply  |
+      | change-bracing-stabilised-count | ✖️change-bracing-stabilised-count | ✅apply  |
+      | change-bracing-spacing | ✖️change-bracing-spacing | ✅apply  |
+      | change-bracing-length | ✖️change-bracing-length | ✅apply  |
+      | change-bracing-brace-width | ✖️change-bracing-brace-width | ✅apply  |
+      | change-bracing-brace-depth | ✖️change-bracing-brace-depth | ✅apply  |
+      | change-bracing-compression | ✖️change-bracing-compression | ✅apply  |
+      | change-bracing-resistance | ✖️change-bracing-resistance | ✅apply  |
+      | change-bracing-stiffness | ✖️change-bracing-stiffness | ✅apply  |
+      | insert-panel-layer | ➕️insert-panel-layer | ✅apply  |
+      | remove-panel-layer | ➖️remove-panel-layer | ✅apply  |
+      | change-panel-layer-thickness | 🧱️change-panel-layer-thickness | ✅apply  |
+      | change-panel-layer-orientation | 🧱️change-panel-layer-orientation | ✅apply  |
+      | change-panel-layer-grade | 🧱️change-panel-layer-grade | ✅apply  |
+      | insert-fastener-position | ➕️insert-fastener-position | ✅apply  |
+      | remove-fastener-position | ➖️remove-fastener-position | ✅apply  |
+      | change-fastener-position-x | 📍️change-fastener-position-x | ✅apply  |
+      | change-fastener-position-y | 📍️change-fastener-position-y | ✅apply  |
+      | insert-taper | ➕️insert-taper | ✅apply  |
+      | remove-taper | ➖️remove-taper | ✅apply  |
+      | change-taper-member | 📐️change-taper-member | ✅apply  |
+      | change-taper-kind | 📐️change-taper-kind | ✅apply  |
+      | change-taper-taper-angle | 📐️change-taper-taper-angle | ✅apply  |
+      | change-taper-apex-depth | 📐️change-taper-apex-depth | ✅apply  |
+      | change-taper-inner-radius | 📐️change-taper-inner-radius | ✅apply  |
+      | change-taper-lamella | 📐️change-taper-lamella | ✅apply  |
+      | change-taper-apex-angle | 📐️change-taper-apex-angle | ✅apply  |
+      | change-taper-side | 📐️change-taper-side | ✅apply  |
+      | change-taper-rods | 📐️change-taper-rods | ✅apply  |
+      | change-taper-rod-resistance | 📐️change-taper-rod-resistance | ✅apply  |
+      | insert-cutout | ➕️insert-cutout | ✅apply  |
+      | remove-cutout | ➖️remove-cutout | ✅apply  |
+      | change-cutout-member | 🕳️change-cutout-member | ✅apply  |
+      | change-cutout-kind | 🕳️change-cutout-kind | ✅apply  |
+      | change-cutout-face | 🕳️change-cutout-face | ✅apply  |
+      | change-cutout-distance | 🕳️change-cutout-distance | ✅apply  |
+      | change-cutout-length | 🕳️change-cutout-length | ✅apply  |
+      | change-cutout-depth | 🕳️change-cutout-depth | ✅apply  |
+      | change-cutout-centre-height | 🕳️change-cutout-centre-height | ✅apply  |
+      | change-cutout-slope | 🕳️change-cutout-slope | ✅apply  |
+      | change-cutout-rods | 🕳️change-cutout-rods | ✅apply  |
+      | change-cutout-rod-resistance | 🕳️change-cutout-rod-resistance | ✅apply  |
+      | insert-fastener | ➕️insert-fastener | ✅apply  |
+      | remove-fastener | ➖️remove-fastener | ✅apply  |
+      | change-fastener-connection | 🔩️change-fastener-connection | ✅apply  |
+      | change-fastener-member | 🔩️change-fastener-member | ✅apply  |
+      | change-fastener-columns | 🔩️change-fastener-columns | ✅apply  |
+      | change-fastener-lines | 🔩️change-fastener-lines | ✅apply  |
+      | change-fastener-spacing-par | 🔩️change-fastener-spacing-par | ✅apply  |
+      | change-fastener-spacing-perp | 🔩️change-fastener-spacing-perp | ✅apply  |
+      | change-fastener-end-distance | 🔩️change-fastener-end-distance | ✅apply  |
+      | change-fastener-edge-distance | 🔩️change-fastener-edge-distance | ✅apply  |
+      | change-fastener-offset-x | 🔩️change-fastener-offset-x | ✅apply  |
+      | change-fastener-offset-y | 🔩️change-fastener-offset-y | ✅apply  |
+      | change-fastener-load-angle | 🔩️change-fastener-load-angle | ✅apply  |
+      | insert-panel | ➕️insert-panel | ✅apply  |
+      | remove-panel | ➖️remove-panel | ✅apply  |
+      | change-panel-strength-class | 🧱️change-panel-strength-class | ✅apply  |
+      | change-panel-span | 🧱️change-panel-span | ✅apply  |
+      | change-panel-width | 🧱️change-panel-width | ✅apply  |
+      | change-panel-load | 🧱️change-panel-load | ✅apply  |
+      | change-panel-fire-duration | 🧱️change-panel-fire-duration | ✅apply  |
+      | insert-floor | ➕️insert-floor | ✅apply  |
+      | remove-floor | ➖️remove-floor | ✅apply  |
+      | change-floor-member | 🏠️change-floor-member | ✅apply  |
+      | change-floor-span | 🏠️change-floor-span | ✅apply  |
+      | change-floor-width | 🏠️change-floor-width | ✅apply  |
+      | change-floor-joist-spacing | 🏠️change-floor-joist-spacing | ✅apply  |
+      | change-floor-ei-l | 🏠️change-floor-ei-l | ✅apply  |
+      | change-floor-ei-b | 🏠️change-floor-ei-b | ✅apply  |
+      | change-floor-mass | 🏠️change-floor-mass | ✅apply  |
+      | change-floor-damping | 🏠️change-floor-damping | ✅apply  |
+      | change-floor-permanent-load | 🏠️change-floor-permanent-load | ✅apply  |
+      | change-floor-imposed-load | 🏠️change-floor-imposed-load | ✅apply  |
+      | change-floor-psi2 | 🏠️change-floor-psi2 | ✅apply  |
 
   @id-inverse
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undoing <id> restores its committed before-snapshot
-    Given the committed before-snapshot shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/⬅️before/🔣️.json
-    And the committed mutation payload shared://🧬️mutations/<dir>/<fixture>/🦠️mutation/🔣️.json
-    And the committed after-snapshot shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/➡️after/🔣️.json
-    And the committed outcome shared://🧬️mutations/<dir>/<fixture>/🎯️outcome/🔣️.json
+    Given the committed before-snapshot shared://🧬️mutations/<dir>/<fixture>/🔣️.before.json
+    And the committed mutation payload shared://🧬️mutations/<dir>/<fixture>/🔣️.mutation.json
+    And the committed after-snapshot shared://🧬️mutations/<dir>/<fixture>/🔣️.after.json
+    And the committed outcome shared://🧬️mutations/<dir>/<fixture>/🔣️.outcome.json
     When each implementation applies the committed mutation and then its OWN computed inverse
     Then both restore the before-snapshot and agree on the mutated and the restored document
     Examples:
       | id                               | dir                                | fixture |
       | change-annex                     | 🌍️change-annex                     | ✅apply  |
+      | change-reliability-class                     | 🎯change-reliability-class                     | ✅apply  |
       | insert-member                    | ➕️insert-member                    | ✅apply  |
       | remove-member                    | ➖️remove-member                    | ✅apply  |
       | change-member-label-en           | 🏷️change-member-label-en           | ✅apply  |
@@ -144,7 +285,6 @@ Feature: Apply every typed EN 1995 mutation against an independent Python implem
       | change-member-restraint-spacing  | ↔️change-member-restraint-spacing  | ✅apply  |
       | change-member-notch-depth        | ↔️change-member-notch-depth        | ✅apply  |
       | change-member-notch-distance     | ↔️change-member-notch-distance     | ✅apply  |
-      | change-member-m-crit             | ⚠️change-member-m-crit             | ✅apply  |
       | change-member-mass-kg-per-m         | ⚖️change-member-mass-kg-per-m         | ✅apply  |
       | change-member-mass-kg-per-m2        | ⚖️change-member-mass-kg-per-m2        | ✅apply  |
       | change-member-damping-xi            | 🌊️change-member-damping-xi            | ✅apply  |
@@ -191,6 +331,146 @@ Feature: Apply every typed EN 1995 mutation against an independent Python implem
       | change-connection-action-kind    | ⚖️change-connection-action-kind    | ✅apply  |
       | change-connection-load-duration  | ⏳️change-connection-load-duration  | ✅apply  |
       | change-connection-action-fk      | 🔩️change-connection-action-fk      | ✅apply  |
+      | change-uls-equation | 🧮️change-uls-equation | ✅apply  |
+      | insert-case | ➕️insert-case | ✅apply  |
+      | remove-case | ➖️remove-case | ✅apply  |
+      | change-case-label-en | 🏷️change-case-label-en | ✅apply  |
+      | change-case-label-de | 🏷️change-case-label-de | ✅apply  |
+      | change-case-entry-id | 📇️change-case-entry-id | ✅apply  |
+      | change-case-number | 🔢️change-case-number | ✅apply  |
+      | change-case-text | 🔤️change-case-text | ✅apply  |
+      | change-placement-x | 📍️change-placement-x | ✅apply  |
+      | change-placement-y | 📍️change-placement-y | ✅apply  |
+      | change-placement-z | 📍️change-placement-z | ✅apply  |
+      | change-placement-yaw | 📍️change-placement-yaw | ✅apply  |
+      | insert-placement | ➕️insert-placement | ✅apply  |
+      | remove-placement | ➖️remove-placement | ✅apply  |
+      | insert-deck | ➕️insert-deck | ✅apply  |
+      | remove-deck | ➖️remove-deck | ✅apply  |
+      | change-deck-lamination-product | 🌉️change-deck-lamination-product | ✅apply  |
+      | change-deck-bar-product | 🌉️change-deck-bar-product | ✅apply  |
+      | change-deck-span | 🌉️change-deck-span | ✅apply  |
+      | change-deck-deck-width | 🌉️change-deck-deck-width | ✅apply  |
+      | change-deck-deck-depth | 🌉️change-deck-deck-depth | ✅apply  |
+      | change-deck-lamination-width | 🌉️change-deck-lamination-width | ✅apply  |
+      | change-deck-bar-spacing | 🌉️change-deck-bar-spacing | ✅apply  |
+      | change-deck-bar-diameter | 🌉️change-deck-bar-diameter | ✅apply  |
+      | change-deck-plate-side | 🌉️change-deck-plate-side | ✅apply  |
+      | change-deck-initial-prestress | 🌉️change-deck-initial-prestress | ✅apply  |
+      | change-deck-loss-relaxation | 🌉️change-deck-loss-relaxation | ✅apply  |
+      | change-deck-loss-creep | 🌉️change-deck-loss-creep | ✅apply  |
+      | change-deck-loss-moisture | 🌉️change-deck-loss-moisture | ✅apply  |
+      | change-deck-bar-resistance | 🌉️change-deck-bar-resistance | ✅apply  |
+      | change-deck-shear-stress | 🌉️change-deck-shear-stress | ✅apply  |
+      | change-deck-compression-c90 | 🌉️change-deck-compression-c90 | ✅apply  |
+      | change-deck-wheel-load | 🌉️change-deck-wheel-load | ✅apply  |
+      | change-deck-wheel-contact | 🌉️change-deck-wheel-contact | ✅apply  |
+      | insert-diaphragm | ➕️insert-diaphragm | ✅apply  |
+      | remove-diaphragm | ➖️remove-diaphragm | ✅apply  |
+      | change-diaphragm-kind | 🛡️change-diaphragm-kind | ✅apply  |
+      | change-diaphragm-method | 🛡️change-diaphragm-method | ✅apply  |
+      | change-diaphragm-panel-width | 🛡️change-diaphragm-panel-width | ✅apply  |
+      | change-diaphragm-wall-height | 🛡️change-diaphragm-wall-height | ✅apply  |
+      | change-diaphragm-fastener-spacing | 🛡️change-diaphragm-fastener-spacing | ✅apply  |
+      | change-diaphragm-panels | 🛡️change-diaphragm-panels | ✅apply  |
+      | change-diaphragm-fastener-capacity | 🛡️change-diaphragm-fastener-capacity | ✅apply  |
+      | change-diaphragm-shear-ed | 🛡️change-diaphragm-shear-ed | ✅apply  |
+      | change-diaphragm-hold-down | 🛡️change-diaphragm-hold-down | ✅apply  |
+      | change-diaphragm-force | 🛡️change-diaphragm-force | ✅apply  |
+      | change-diaphragm-length | 🛡️change-diaphragm-length | ✅apply  |
+      | change-diaphragm-shear-resistance | 🛡️change-diaphragm-shear-resistance | ✅apply  |
+      | insert-truss | ➕️insert-truss | ✅apply  |
+      | remove-truss | ➖️remove-truss | ✅apply  |
+      | change-truss-kind | 🔺️change-truss-kind | ✅apply  |
+      | change-truss-product | 🔺️change-truss-product | ✅apply  |
+      | change-truss-span | 🔺️change-truss-span | ✅apply  |
+      | change-truss-height | 🔺️change-truss-height | ✅apply  |
+      | change-truss-bays | 🔺️change-truss-bays | ✅apply  |
+      | change-truss-chord-width | 🔺️change-truss-chord-width | ✅apply  |
+      | change-truss-chord-depth | 🔺️change-truss-chord-depth | ✅apply  |
+      | change-truss-web-width | 🔺️change-truss-web-width | ✅apply  |
+      | change-truss-web-depth | 🔺️change-truss-web-depth | ✅apply  |
+      | change-truss-chord-force | 🔺️change-truss-chord-force | ✅apply  |
+      | change-truss-restraint-length | 🔺️change-truss-restraint-length | ✅apply  |
+      | change-truss-bracing-capacity | 🔺️change-truss-bracing-capacity | ✅apply  |
+      | insert-bracing | ➕️insert-bracing | ✅apply  |
+      | remove-bracing | ➖️remove-bracing | ✅apply  |
+      | change-bracing-kind | ✖️change-bracing-kind | ✅apply  |
+      | change-bracing-member | ✖️change-bracing-member | ✅apply  |
+      | change-bracing-stabilised-count | ✖️change-bracing-stabilised-count | ✅apply  |
+      | change-bracing-spacing | ✖️change-bracing-spacing | ✅apply  |
+      | change-bracing-length | ✖️change-bracing-length | ✅apply  |
+      | change-bracing-brace-width | ✖️change-bracing-brace-width | ✅apply  |
+      | change-bracing-brace-depth | ✖️change-bracing-brace-depth | ✅apply  |
+      | change-bracing-compression | ✖️change-bracing-compression | ✅apply  |
+      | change-bracing-resistance | ✖️change-bracing-resistance | ✅apply  |
+      | change-bracing-stiffness | ✖️change-bracing-stiffness | ✅apply  |
+      | insert-panel-layer | ➕️insert-panel-layer | ✅apply  |
+      | remove-panel-layer | ➖️remove-panel-layer | ✅apply  |
+      | change-panel-layer-thickness | 🧱️change-panel-layer-thickness | ✅apply  |
+      | change-panel-layer-orientation | 🧱️change-panel-layer-orientation | ✅apply  |
+      | change-panel-layer-grade | 🧱️change-panel-layer-grade | ✅apply  |
+      | insert-fastener-position | ➕️insert-fastener-position | ✅apply  |
+      | remove-fastener-position | ➖️remove-fastener-position | ✅apply  |
+      | change-fastener-position-x | 📍️change-fastener-position-x | ✅apply  |
+      | change-fastener-position-y | 📍️change-fastener-position-y | ✅apply  |
+      | insert-taper | ➕️insert-taper | ✅apply  |
+      | remove-taper | ➖️remove-taper | ✅apply  |
+      | change-taper-member | 📐️change-taper-member | ✅apply  |
+      | change-taper-kind | 📐️change-taper-kind | ✅apply  |
+      | change-taper-taper-angle | 📐️change-taper-taper-angle | ✅apply  |
+      | change-taper-apex-depth | 📐️change-taper-apex-depth | ✅apply  |
+      | change-taper-inner-radius | 📐️change-taper-inner-radius | ✅apply  |
+      | change-taper-lamella | 📐️change-taper-lamella | ✅apply  |
+      | change-taper-apex-angle | 📐️change-taper-apex-angle | ✅apply  |
+      | change-taper-side | 📐️change-taper-side | ✅apply  |
+      | change-taper-rods | 📐️change-taper-rods | ✅apply  |
+      | change-taper-rod-resistance | 📐️change-taper-rod-resistance | ✅apply  |
+      | insert-cutout | ➕️insert-cutout | ✅apply  |
+      | remove-cutout | ➖️remove-cutout | ✅apply  |
+      | change-cutout-member | 🕳️change-cutout-member | ✅apply  |
+      | change-cutout-kind | 🕳️change-cutout-kind | ✅apply  |
+      | change-cutout-face | 🕳️change-cutout-face | ✅apply  |
+      | change-cutout-distance | 🕳️change-cutout-distance | ✅apply  |
+      | change-cutout-length | 🕳️change-cutout-length | ✅apply  |
+      | change-cutout-depth | 🕳️change-cutout-depth | ✅apply  |
+      | change-cutout-centre-height | 🕳️change-cutout-centre-height | ✅apply  |
+      | change-cutout-slope | 🕳️change-cutout-slope | ✅apply  |
+      | change-cutout-rods | 🕳️change-cutout-rods | ✅apply  |
+      | change-cutout-rod-resistance | 🕳️change-cutout-rod-resistance | ✅apply  |
+      | insert-fastener | ➕️insert-fastener | ✅apply  |
+      | remove-fastener | ➖️remove-fastener | ✅apply  |
+      | change-fastener-connection | 🔩️change-fastener-connection | ✅apply  |
+      | change-fastener-member | 🔩️change-fastener-member | ✅apply  |
+      | change-fastener-columns | 🔩️change-fastener-columns | ✅apply  |
+      | change-fastener-lines | 🔩️change-fastener-lines | ✅apply  |
+      | change-fastener-spacing-par | 🔩️change-fastener-spacing-par | ✅apply  |
+      | change-fastener-spacing-perp | 🔩️change-fastener-spacing-perp | ✅apply  |
+      | change-fastener-end-distance | 🔩️change-fastener-end-distance | ✅apply  |
+      | change-fastener-edge-distance | 🔩️change-fastener-edge-distance | ✅apply  |
+      | change-fastener-offset-x | 🔩️change-fastener-offset-x | ✅apply  |
+      | change-fastener-offset-y | 🔩️change-fastener-offset-y | ✅apply  |
+      | change-fastener-load-angle | 🔩️change-fastener-load-angle | ✅apply  |
+      | insert-panel | ➕️insert-panel | ✅apply  |
+      | remove-panel | ➖️remove-panel | ✅apply  |
+      | change-panel-strength-class | 🧱️change-panel-strength-class | ✅apply  |
+      | change-panel-span | 🧱️change-panel-span | ✅apply  |
+      | change-panel-width | 🧱️change-panel-width | ✅apply  |
+      | change-panel-load | 🧱️change-panel-load | ✅apply  |
+      | change-panel-fire-duration | 🧱️change-panel-fire-duration | ✅apply  |
+      | insert-floor | ➕️insert-floor | ✅apply  |
+      | remove-floor | ➖️remove-floor | ✅apply  |
+      | change-floor-member | 🏠️change-floor-member | ✅apply  |
+      | change-floor-span | 🏠️change-floor-span | ✅apply  |
+      | change-floor-width | 🏠️change-floor-width | ✅apply  |
+      | change-floor-joist-spacing | 🏠️change-floor-joist-spacing | ✅apply  |
+      | change-floor-ei-l | 🏠️change-floor-ei-l | ✅apply  |
+      | change-floor-ei-b | 🏠️change-floor-ei-b | ✅apply  |
+      | change-floor-mass | 🏠️change-floor-mass | ✅apply  |
+      | change-floor-damping | 🏠️change-floor-damping | ✅apply  |
+      | change-floor-permanent-load | 🏠️change-floor-permanent-load | ✅apply  |
+      | change-floor-imposed-load | 🏠️change-floor-imposed-load | ✅apply  |
+      | change-floor-psi2 | 🏠️change-floor-psi2 | ✅apply  |
 
   @id-identity-round-trip
   @level-long

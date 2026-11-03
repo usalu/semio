@@ -1,4 +1,4 @@
 /** 📚️ Example `liquid-retaining-fem-anchor`. */
 export const id = "liquid-retaining-fem-anchor";
-export const label = { en: "Liquid Retaining Fem Anchor", de: "Liquid Retaining Fem Anchor" } as const;
+export const label = { en: "Liquid-Retaining FEM Anchor", de: "Flüssigkeitsdichter Behälter mit FEM-Verankerung" } as const;
 export const icon = "file";

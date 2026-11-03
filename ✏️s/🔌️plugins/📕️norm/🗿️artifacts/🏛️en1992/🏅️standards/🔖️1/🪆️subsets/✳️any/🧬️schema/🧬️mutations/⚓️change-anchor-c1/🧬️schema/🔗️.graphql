@@ -1,0 +1,4 @@
+type ChangeAnchorC1 {
+  anchorId: String!
+  newC1: Float!
+}

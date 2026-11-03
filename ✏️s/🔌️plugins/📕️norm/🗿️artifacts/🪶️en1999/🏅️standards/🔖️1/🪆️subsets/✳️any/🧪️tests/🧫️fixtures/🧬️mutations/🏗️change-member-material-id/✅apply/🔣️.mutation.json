@@ -1,0 +1,5 @@
+{
+  "mutation": "changeMemberMaterialId",
+  "memberId": "purlin-1",
+  "newMaterialId": "mat-6082-alt"
+}

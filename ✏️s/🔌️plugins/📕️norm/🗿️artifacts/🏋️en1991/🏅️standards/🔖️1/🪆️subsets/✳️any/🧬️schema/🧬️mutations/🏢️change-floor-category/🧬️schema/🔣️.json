@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-floor-category/schema.json",
+  "title": "ChangeFloorCategory",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newCategory"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Floor area",
+          "de": "Geschossfläche"
+        },
+        "description": {
+          "en": "The floor area this mutation addresses, by id.",
+          "de": "Das adressierte Element (Geschossfläche), per Kennung."
+        },
+        "ref": {
+          "kind": "floor"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newCategory": {
+      "type": "string",
+      "x-semio-ui": {
+        "label": {
+          "en": "Imposed load category",
+          "de": "Nutzlastkategorie"
+        },
+        "widget": "text",
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

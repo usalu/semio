@@ -1,0 +1,7 @@
+{
+  "ChangeLintelDepth": {
+    "wallId": "wall-north",
+    "id": "lintel-1",
+    "newDepthM": 0.25
+  }
+}

@@ -19,7 +19,7 @@ pub fn definition() -> WindowKindDefinition {
 
 //#region 🔖️Render
 pub fn render(document: &Din4108Snapshot, locale: semio_framework_ui_locale::Locale, controller_id: &'static str, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    semio_s_plugin_norm_app_surface::render_document_editor(document, locale, controller_id, Some(crate::field_meta::din4108_field_meta), windows)
+    semio_s_plugin_norm_app_surface::render_inspector_for::<crate::Din4108Family>(document, locale, controller_id, Some(crate::field_meta::din4108_field_meta), windows)
 }
 //#endregion 🔖️Render
 

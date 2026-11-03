@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/mutation/change-reliability-resistance-sd/schema.json",
+  "title": "ChangeReliabilityResistanceSd",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newResistanceSd"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeReliabilityResistanceSd"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Reliability analysis",
+          "de": "Zuverlässigkeitsanalyse"
+        },
+        "description": {
+          "en": "The reliability analysis this mutation addresses, by id.",
+          "de": "Das adressierte Element (Zuverlässigkeitsanalyse), per Kennung."
+        },
+        "ref": {
+          "kind": "reliability-analysis"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newResistanceSd": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Resistance standard deviation σ_R",
+          "de": "Standardabweichung des Widerstands σ_R"
+        },
+        "widget": "stepper",
+        "unit": "N",
+        "displayUnit": "kN",
+        "displayFactor": 0.001,
+        "precision": 1,
+        "step": 1000,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

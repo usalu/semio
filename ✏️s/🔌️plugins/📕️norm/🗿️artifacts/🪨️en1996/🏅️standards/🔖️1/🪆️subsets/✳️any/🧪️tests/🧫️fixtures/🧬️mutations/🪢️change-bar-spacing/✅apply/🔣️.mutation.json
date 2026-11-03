@@ -1,0 +1,7 @@
+{
+  "ChangeBarSpacing": {
+    "wallId": "wall-north",
+    "id": "bar-1",
+    "newSpacingM": 0.4
+  }
+}

@@ -7733,6 +7733,7 @@ dependencies = [
  "semio-framework-value-persistent",
  "semio-s-artifact-draw-drawing-geometry",
  "semio-s-artifact-draw-drawing-model",
+ "semio-s-artifact-draw-drawing-scene-support",
  "serde",
  "serde_json",
  "tiny-skia",
@@ -7754,6 +7755,19 @@ dependencies = [
  "semio-s-artifact-draw-drawing-scene",
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-draw-drawing-scene-support"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-2d",
+ "semio-framework-job",
+ "semio-framework-pixels",
+ "semio-framework-value",
+ "semio-framework-value-persistent",
+ "semio-s-artifact-draw-drawing-geometry",
+ "semio-s-artifact-draw-drawing-model",
 ]
 
 [[package]]

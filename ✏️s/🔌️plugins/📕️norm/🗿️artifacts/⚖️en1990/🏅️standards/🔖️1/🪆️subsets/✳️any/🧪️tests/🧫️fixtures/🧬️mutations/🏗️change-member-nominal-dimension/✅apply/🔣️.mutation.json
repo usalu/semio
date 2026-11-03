@@ -1,0 +1,5 @@
+{
+  "mutation": "changeMemberNominalDimension",
+  "id": "beam-B1",
+  "newNominalDimension": 1.5
+}

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeTransverseSides",
+  "transverseStiffenerId": "stiffener-1",
+  "newSides": "one"
+}

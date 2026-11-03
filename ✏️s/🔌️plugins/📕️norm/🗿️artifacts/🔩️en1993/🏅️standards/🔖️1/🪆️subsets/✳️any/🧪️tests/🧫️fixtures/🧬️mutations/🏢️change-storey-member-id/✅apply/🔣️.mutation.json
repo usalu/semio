@@ -1,0 +1,6 @@
+{
+  "ChangeStoreyMemberId": {
+    "id": "storey-1",
+    "newMemberId": "member-b1-alt"
+  }
+}

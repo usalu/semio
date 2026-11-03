@@ -1,0 +1,7 @@
+{
+  "ChangePrestressArea": {
+    "wallId": "wall-north",
+    "id": "tendon-1",
+    "newAreaM2": 0.0002
+  }
+}

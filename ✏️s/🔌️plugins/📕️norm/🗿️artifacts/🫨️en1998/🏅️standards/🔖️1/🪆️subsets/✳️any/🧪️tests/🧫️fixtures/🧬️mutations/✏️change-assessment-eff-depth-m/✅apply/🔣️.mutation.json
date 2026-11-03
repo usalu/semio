@@ -1,0 +1,5 @@
+{
+  "mutation": "changeAssessmentEffDepthM",
+  "id": "as-1",
+  "newEffectiveDepthM": 1.5
+}

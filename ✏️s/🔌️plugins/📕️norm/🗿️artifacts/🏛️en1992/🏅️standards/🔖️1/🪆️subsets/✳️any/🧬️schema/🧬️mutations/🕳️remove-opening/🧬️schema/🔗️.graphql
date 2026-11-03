@@ -1,0 +1,4 @@
+type RemoveOpening {
+  memberId: String!
+  index: Int!
+}

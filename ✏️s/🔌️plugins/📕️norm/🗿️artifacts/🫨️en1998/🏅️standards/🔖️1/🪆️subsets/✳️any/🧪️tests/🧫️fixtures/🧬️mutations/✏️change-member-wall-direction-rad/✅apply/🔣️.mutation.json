@@ -1,0 +1,6 @@
+{
+  "mutation": "changeMemberWallDirectionRad",
+  "buildingId": "bldg-office",
+  "id": "col-c1",
+  "newWallDirectionRad": 1.5
+}

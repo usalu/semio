@@ -20,7 +20,7 @@ fn absorb_of_two_steps_equals_their_sequence() {
     let base = En1996Snapshot::compliant_clay_wall();
     let first = ::semio_framework_os_kernel::ColdMutation::diff(&En1996Mutation::ChangeStoreys(semio_s_artifact_norm_en1996_mut_project::change_storeys::ChangeStoreys { new_storeys: 7 }), &base).diff().clone();
     let mid = apply_diff_cold(&first, &base).expect("first applies");
-    let second = ::semio_framework_os_kernel::ColdMutation::diff(&En1996Mutation::ChangeWallLength(semio_s_artifact_norm_en1996_mut_walls::change_wall_length::ChangeWallLength { index: 0, new_length_m: 9.5 }), &mid).diff().clone();
+    let second = ::semio_framework_os_kernel::ColdMutation::diff(&En1996Mutation::ChangeWallLength(semio_s_artifact_norm_en1996_mut_walls::change_wall_length::ChangeWallLength { id: base.walls[0].id.clone(), new_length_m: 9.5 }), &mid).diff().clone();
     let after = apply_diff_cold(&second, &mid).expect("second applies");
     let mut sum = first;
     protocol::MutationDiff::absorb(&mut sum, second);

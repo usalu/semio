@@ -1,0 +1,5 @@
+{
+  "mutation": "changeBridgeMemberId",
+  "id": "bri-1",
+  "newMemberId": "beam-B1-alt"
+}

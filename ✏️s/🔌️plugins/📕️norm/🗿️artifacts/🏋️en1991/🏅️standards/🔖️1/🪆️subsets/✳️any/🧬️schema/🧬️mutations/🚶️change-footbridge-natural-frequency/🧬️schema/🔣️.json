@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-footbridge-natural-frequency/schema.json",
+  "title": "ChangeFootbridgeNaturalFrequency",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newNaturalFrequency"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Footbridge",
+          "de": "Fußgängerbrücke"
+        },
+        "description": {
+          "en": "The footbridge this mutation addresses, by id.",
+          "de": "Das adressierte Element (Fußgängerbrücke), per Kennung."
+        },
+        "ref": {
+          "kind": "footbridge"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newNaturalFrequency": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "First vertical natural frequency f_v",
+          "de": "Erste vertikale Eigenfrequenz f_v"
+        },
+        "widget": "stepper",
+        "unit": "Hz",
+        "precision": 2,
+        "step": 0.05,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

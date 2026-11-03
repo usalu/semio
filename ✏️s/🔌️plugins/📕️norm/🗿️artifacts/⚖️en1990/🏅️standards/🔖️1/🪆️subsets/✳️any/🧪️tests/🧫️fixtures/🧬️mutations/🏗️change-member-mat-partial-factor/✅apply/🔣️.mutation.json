@@ -1,0 +1,5 @@
+{
+  "mutation": "changeMemberMatPartialFactor",
+  "id": "beam-B1",
+  "newMaterialPartialFactor": 1.5
+}

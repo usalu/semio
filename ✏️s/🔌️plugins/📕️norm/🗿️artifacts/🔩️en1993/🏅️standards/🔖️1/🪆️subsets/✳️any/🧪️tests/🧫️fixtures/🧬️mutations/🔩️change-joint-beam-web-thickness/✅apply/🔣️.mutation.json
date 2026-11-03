@@ -1,0 +1,6 @@
+{
+  "ChangeJointBeamWebThickness": {
+    "id": "joint-j1",
+    "newBeamWebThickness": 1.5
+  }
+}

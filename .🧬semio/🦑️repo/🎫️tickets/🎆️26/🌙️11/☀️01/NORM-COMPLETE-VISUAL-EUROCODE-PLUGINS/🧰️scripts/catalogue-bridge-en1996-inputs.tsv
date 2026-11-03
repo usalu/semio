@@ -1,0 +1,158 @@
+# key|scope|kind|unit|example|flags|en|de|confidence|note   (EN 1996 evaluators work in SI: m, Pa, N, N·m; the key suffix names the unit)
+@choice exposure|xo|XO|XO
+@choice exposure|xf|XF frost|XF Frost
+@choice exposure|xs|XS salt|XS Salz
+@choice head_joint|filled|Filled|Vermörtelt
+@choice head_joint|unfilled|Unfilled|Unvermörtelt
+@choice material|clay|Clay|Ziegel
+@choice material|calcium_silicate|Calcium silicate|Kalksandstein
+@choice material|concrete|Concrete|Beton
+@choice material|aac|Autoclaved aerated concrete|Porenbeton
+@choice material|natural_stone|Natural stone|Naturstein
+@choice mortar|gp|General purpose mortar|Normalmörtel
+@choice mortar|tl|Thin layer mortar|Dünnbettmörtel
+@choice mortar|lw|Lightweight mortar|Leichtmörtel
+@choice situation|persistent|Persistent|Ständig
+@choice situation|transient|Transient|Vorübergehend
+@choice situation|accidental|Accidental|Außergewöhnlich
+@choice support|pinned|Pinned|Gelenkig
+@choice support|simple|Simply supported|Frei drehbar
+@choice support|fixed|Fixed|Eingespannt
+a1_m||n|m|||Distance a₁ from the wall end|Abstand a₁ vom Wandende|high|unit from the key suffix
+a_m2||n|m2|||Cross-section area A|Querschnittsfläche A|high|unit from the key suffix
+a_theta_m||n|m|||Reduced thickness a_θ in fire|Reduzierte Dicke a_θ im Brandfall|medium|unit from the key suffix
+ab_m2||n|m2|||Loaded area A_b|Belastete Fläche A_b|high|unit from the key suffix
+anchor_rk_n||n|N|||Characteristic anchor resistance R_k|Charakteristische Ankertragfähigkeit R_k|high|unit from the key suffix
+ap_m2||n|m2|||Prestressing steel area A_p|Spannstahlfläche A_p|high|unit from the key suffix
+as_m2||n|m2|||Reinforcement area A_s|Bewehrungsfläche A_s|high|unit from the key suffix
+asw_m2||n|m2|||Shear reinforcement area A_sw|Querkraftbewehrungsfläche A_sw|high|unit from the key suffix
+av_m||n|m|||Shear span a_v|Schubspannweite a_v|high|unit from the key suffix
+b_m||n|m|||Width b|Breite b|high|unit from the key suffix
+basement||n|1|||Basement wall (1) or not (0)|Kellerwand (1) oder nicht (0)|high|dimensionless by name
+bar_a_m2|M-42|v|m2|||Bar area A_s of bar i (one value per element)|Stabfläche A_s des Stabes i (je ein Wert pro Element)|high|unit from the key suffix; vector in M-42
+bar_y_m|M-42|v|m|||Bar position y of bar i (one value per element)|Stablage y des Stabes i (je ein Wert pro Element)|high|unit from the key suffix; vector in M-42
+beam_a_m2||n|m2|||Beam cross-section area|Balkenquerschnittsfläche|medium|unit from the key suffix
+bearing_m||n|m|||Bearing length|Auflagerlänge|high|unit from the key suffix
+bed_joint_m||n|m|||Bed joint thickness|Lagerfugendicke|high|unit from the key suffix
+cavity_m||n|m|||Cavity width|Schalenabstand|high|unit from the key suffix
+chase_depth_m||n|m|||Chase depth|Schlitztiefe|high|unit from the key suffix
+class||n|1|||Execution class|Ausführungsklasse|medium|dimensionless by name
+col_a_m2||n|m2|||Confining column cross-section area|Querschnittsfläche der Einfassungsstütze|high|unit from the key suffix
+col_as_m2||n|m2|||Confining column reinforcement area|Bewehrungsfläche der Einfassungsstütze|high|unit from the key suffix
+col_min_m||n|m|||Minimum column dimension|Kleinstes Stützenmaß|high|unit from the key suffix
+col_spacing_m||n|m|||Column spacing|Stützenabstand|high|unit from the key suffix
+cover_m||n|m|||Concrete or mortar cover|Betondeckung oder Mörteldeckung|high|unit from the key suffix
+cpe||n|1|||Pressure coefficient c_pe|Druckbeiwert c_pe|high|dimensionless by name
+d_m||n|m|||Effective depth d|Nutzhöhe d|high|unit from the key suffix
+deflection_m||n|m|||Deflection|Durchbiegung|high|unit from the key suffix
+density||x|-|||Density class or value|Rohdichteklasse oder -wert|low|free text
+diameter_m||n|m|||Bar diameter|Stabdurchmesser|high|unit from the key suffix
+e0_m||n|m|||Eccentricity e₀|Exzentrizität e₀|high|unit from the key suffix
+e_pa||n|Pa|||Modulus of elasticity E|Elastizitätsmodul E|high|unit from the key suffix
+edges||x|-|||Edge support code (F, S, X: top, bottom, left, right)|Randlagerung (F, S, X: oben, unten, links, rechts)|high|format: four letters of F, S, X
+ehe_m||n|m|||Eccentricity e_he|Exzentrizität e_he|medium|unit from the key suffix
+ep_pa||n|Pa|||Prestressing modulus E_p|Elastizitätsmodul E_p der Spannstähle|medium|unit from the key suffix
+eps_cs||n|1|||Shrinkage strain ε_cs|Schwinddehnung ε_cs|high|dimensionless by name
+exposure||c|-|xo||Exposure class|Expositionsklasse|high|
+fb_decl_pa||n|Pa|||Declared unit strength f_b|Deklarierte Steinfestigkeit f_b|high|unit from the key suffix
+fb_pa||n|Pa|||Normalised unit strength f_b|Normierte Steinfestigkeit f_b|high|unit from the key suffix
+fbok_pa||n|Pa|||Characteristic bond strength f_bok|Charakteristische Verbundfestigkeit f_bok|high|unit from the key suffix
+fd_pa||n|Pa|||Design compressive strength f_d|Bemessungsdruckfestigkeit f_d|high|unit from the key suffix
+fk_pa||n|Pa|||Characteristic compressive strength f_k|Charakteristische Druckfestigkeit f_k|high|unit from the key suffix
+flange_t_m||n|m|||Flange thickness|Flanschdicke|high|unit from the key suffix
+flanges||n|1|||Number of flanges|Anzahl der Flansche|high|dimensionless by name
+fm_pa||n|Pa|||Mortar compressive strength f_m|Mörteldruckfestigkeit f_m|high|unit from the key suffix
+fpk_pa||n|Pa|||Characteristic prestressing steel strength f_pk|Charakteristische Spannstahlfestigkeit f_pk|high|unit from the key suffix
+frost_class||n|1|||Frost resistance class|Frostwiderstandsklasse|medium|dimensionless by name
+fvk0_pa||n|Pa|||Initial shear strength f_vk0|Haftscherfestigkeit f_vk0|high|unit from the key suffix
+fvk_pa||n|Pa|||Characteristic shear strength f_vk|Charakteristische Schubfestigkeit f_vk|high|unit from the key suffix
+fxk1_pa||n|Pa|||Flexural strength f_xk1 (parallel to bed joints)|Biegezugfestigkeit f_xk1 (parallel zur Lagerfuge)|high|unit from the key suffix
+fxk2_pa||n|Pa|||Flexural strength f_xk2 (perpendicular to bed joints)|Biegezugfestigkeit f_xk2 (senkrecht zur Lagerfuge)|high|unit from the key suffix
+fyd_pa||n|Pa|||Design yield strength f_yd|Bemessungsstreckgrenze f_yd|high|unit from the key suffix
+gamma_m||n|1|||Partial factor γ_M|Teilsicherheitsbeiwert γ_M|high|dimensionless by name
+gamma_soil_n_m3||n|N_m3|||Unit weight of the soil γ|Wichte des Bodens γ|high|unit from the key suffix
+group||n|1|||Masonry unit group|Steingruppe|high|dimensionless by name
+h_m||n|m|||Wall height h|Wandhöhe h|high|unit from the key suffix
+h_trib_m||n|m|||Tributary height|Einflusshöhe|high|unit from the key suffix
+h_wall_m||n|m|||Wall height|Wandhöhe|high|unit from the key suffix
+hc_m||n|m|||Height of the load above the support|Höhe der Last über dem Auflager|medium|unit from the key suffix
+he_m||n|m|||Retained height h_e|Anschütthöhe h_e|high|unit from the key suffix
+head_joint||c|-|filled||Head joint type|Stoßfugenart|high|
+hef_m||n|m|||Effective height h_ef|Knicklänge h_ef|high|unit from the key suffix
+height_total_m||n|m|||Total height|Gesamthöhe|high|unit from the key suffix
+hole_pct||n|1|||Hole volume in percent|Lochanteil in Prozent|high|dimensionless by name
+hydrostatic||n|1|||Groundwater at the wall (1) or not (0)|Grundwasser an der Wand (1) oder nicht (0)|high|dimensionless by name
+k0||n|1|||At-rest earth pressure coefficient k₀|Ruhedruckbeiwert k₀|high|dimensionless by name
+k_e||n|1|||Creep eccentricity factor k_e|Beiwert k_e der Kriechausmitte|medium|dimensionless by name
+k_theta||n|1|||Fire reduction factor k_θ|Brandminderungsbeiwert k_θ|medium|dimensionless by name
+l_m|M-21|v|m|||Length l (one value per element)|Länge l (je ein Wert pro Element)|high|unit from the key suffix; vector in M-21
+l_m|M-10,M-20,M-31,M-42,M-43,M-80,M-91|n|m|||Length l|Länge l|high|unit from the key suffix
+la_m||n|m|||Arching span l_a|Gewölbespannweite l_a|medium|unit from the key suffix
+lb_avail_m||n|m|||Available anchorage length|Vorhandene Verankerungslänge|high|unit from the key suffix
+lc_m||n|m|||Wall length in compression|Überdrückte Wandlänge|medium|unit from the key suffix
+lefm_m||n|m|||Effective length of the load spread|Mitwirkende Länge der Lastausbreitung|medium|unit from the key suffix
+limit_ratio||n|1|||Limit ratio span/deflection|Grenzverhältnis Stützweite/Durchbiegung|high|dimensionless by name
+m_bot_nm||n|Nm|||Bending moment at the bottom|Biegemoment am Fuß|high|unit from the key suffix
+m_ed_nm||n|Nm|||Design bending moment M_Ed|Bemessungsmoment M_Ed|high|unit from the key suffix
+m_hm_nm||n|Nm|||Moment at mid-height from the horizontal load|Moment in Wandmitte aus Horizontallast|medium|unit from the key suffix
+m_mid_nm||n|Nm|||Bending moment at mid-height|Biegemoment in Wandmitte|high|unit from the key suffix
+m_top_nm||n|Nm|||Bending moment at the top|Biegemoment am Kopf|high|unit from the key suffix
+material||c|-|clay||Unit material|Steinmaterial|high|
+mortar||c|-|gp||Mortar type|Mörtelart|high|
+mu_fi||n|1|||Fire load level μ_fi|Brandlastgrad μ_fi|high|dimensionless by name
+n_bot_n||n|N|||Axial force at the bottom|Normalkraft am Fuß|high|unit from the key suffix
+n_ed_fi_n||n|N|||Axial force in fire N_Ed,fi|Normalkraft im Brandfall N_Ed,fi|high|unit from the key suffix
+n_ed_n||n|N|||Design axial force N_Ed|Bemessungsnormalkraft N_Ed|high|unit from the key suffix
+n_max_n||n|N|||Maximum axial force|Größte Normalkraft|high|unit from the key suffix
+n_mid_n||n|N|||Axial force at mid-height|Normalkraft in Wandmitte|high|unit from the key suffix
+n_min_n||n|N|||Minimum axial force|Kleinste Normalkraft|high|unit from the key suffix
+n_per_m2||n|1|||Wall ties per m²|Drahtanker je m²|high|dimensionless by name
+n_pier_n||n|N|||Axial force in the pier|Normalkraft im Pfeiler|high|unit from the key suffix
+n_top_n||n|N|||Axial force at the top|Normalkraft am Kopf|high|unit from the key suffix
+ned_c_n||n|N|||Concentrated load N_Ed,c|Einzellast N_Ed,c|high|unit from the key suffix
+opening_w_m||n|m|||Opening width|Öffnungsbreite|high|unit from the key suffix
+overlap_m||n|m|||Unit overlap|Überbindemaß|high|unit from the key suffix
+p0_n||n|N|||Initial prestressing force P₀|Anfangsvorspannkraft P₀|high|unit from the key suffix
+phi||n|1|||Capacity reduction factor Φ|Abminderungsbeiwert Φ|high|dimensionless by name
+phi_inf||n|1|||Final creep coefficient φ_∞|Endkriechzahl φ_∞|high|dimensionless by name
+pier_area_m2||n|m2|||Pier area|Pfeilerfläche|high|unit from the key suffix
+pier_l_m||n|m|||Pier length|Pfeilerlänge|high|unit from the key suffix
+plaster_m||n|m|||Plaster thickness|Putzdicke|high|unit from the key suffix
+provided_m||n|m|||Provided anchorage length|Vorhandene Verankerungslänge|high|unit from the key suffix
+q||n|1|||Behaviour factor q|Verhaltensbeiwert q|high|dimensionless by name
+qk_pa||n|Pa|||Characteristic surcharge q_k|Charakteristische Auflast q_k|high|unit from the key suffix
+qp_pa||n|Pa|||Peak velocity pressure q_p|Böengeschwindigkeitsdruck q_p|high|unit from the key suffix
+rei||n|min|||Fire resistance class REI in minutes|Feuerwiderstandsklasse REI in Minuten|high|unit from the key suffix
+rho2||n|1|||Support condition factor ρ₂|Beiwert ρ₂ der Lagerung|medium|dimensionless by name
+rho_e_n_m3||n|N_m3|||Unit weight of the backfill ρ_e|Wichte der Hinterfüllung ρ_e|high|unit from the key suffix
+rho_relax||n|1|||Relaxation loss ρ|Relaxationsverlust ρ|medium|dimensionless by name
+ring_tie_n||n|N|||Ring beam tie force|Zugkraft des Ringbalkens|high|unit from the key suffix
+s_anchor_m||n|m|||Anchor spacing|Ankerabstand|high|unit from the key suffix
+s_m||n|m|||Spacing s|Abstand s|high|unit from the key suffix
+sides||n|1|||Number of supported sides|Anzahl der gehaltenen Ränder|high|dimensionless by name
+sigma_d_pa||n|Pa|||Design compressive stress σ_d|Bemessungsdruckspannung σ_d|high|unit from the key suffix
+sigma_pa||n|Pa|||Compressive stress σ|Druckspannung σ|high|unit from the key suffix
+sigma_s_pa||n|Pa|||Reinforcement stress σ_s|Bewehrungsspannung σ_s|high|unit from the key suffix
+simplified||n|1|||Simplified method (1) or not (0)|Vereinfachtes Verfahren (1) oder nicht (0)|high|dimensionless by name
+situation||c|-|persistent||Design situation|Bemessungssituation|high|
+span_m||n|m|||Span|Stützweite|high|unit from the key suffix
+spacing_m||n|m|||Movement joint spacing|Dehnfugenabstand|high|unit from the key suffix
+stiff_len_m||n|m|||Length of the stiffening wall|Länge der aussteifenden Wand|high|unit from the key suffix
+stiff_t_m||n|m|||Thickness of the stiffening wall|Dicke der aussteifenden Wand|high|unit from the key suffix
+storeys||n|1|||Number of storeys|Anzahl der Geschosse|high|dimensionless by name
+support||c|-|pinned||Support condition|Lagerungsart|high|
+system||x|-|||Masonry system|Mauerwerkssystem|medium|free text
+t1_m||n|m|||Leaf thickness t₁|Schalendicke t₁|high|unit from the key suffix
+t2_m||n|m|||Leaf thickness t₂|Schalendicke t₂|high|unit from the key suffix
+t_m|M-21|v|m|||Wall thickness t (one value per element)|Wanddicke t (je ein Wert pro Element)|high|unit from the key suffix; vector in M-21
+t_m|M-10,M-11,M-12,M-13,M-14,M-15,M-16,M-20,M-30,M-31,M-32,M-34,M-43,M-70,M-80,M-81,M-82,M-83,M-90,M-91|n|m|||Wall thickness t|Wanddicke t|high|unit from the key suffix
+tie_rd_n||n|N|||Design tie resistance|Bemessungstragfähigkeit des Drahtankers|high|unit from the key suffix
+unit_h_m||n|m|||Unit height|Steinhöhe|high|unit from the key suffix
+unit_w_m||n|m|||Unit width|Steinbreite|high|unit from the key suffix
+v_ed_n||n|N|||Design shear force V_Ed|Bemessungsquerkraft V_Ed|high|unit from the key suffix
+vrd_n|M-21|v|N|||Shear resistance V_Rd (one value per element)|Querkrafttragfähigkeit V_Rd (je ein Wert pro Element)|high|unit from the key suffix; vector in M-21
+w_ed_pa||n|Pa|||Design wind or lateral pressure w_Ed|Bemessungswinddruck w_Ed|high|unit from the key suffix
+web_shell_ok||n|1|||Web and shell bedding permitted (1) or not (0)|Steg- und Schalenmörtel zulässig (1) oder nicht (0)|medium|dimensionless by name
+web_spacing_m||n|m|||Web spacing|Stegabstand|high|unit from the key suffix
+x_m|M-21|v|m|||Position x (one value per element)|Lage x (je ein Wert pro Element)|high|unit from the key suffix; vector in M-21
+z_m3||n|m3|||Section modulus Z|Widerstandsmoment Z|high|unit from the key suffix

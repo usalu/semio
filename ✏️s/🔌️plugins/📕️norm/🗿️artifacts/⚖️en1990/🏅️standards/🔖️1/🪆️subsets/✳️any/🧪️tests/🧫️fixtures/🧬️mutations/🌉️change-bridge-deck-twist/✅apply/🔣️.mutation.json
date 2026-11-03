@@ -1,0 +1,5 @@
+{
+  "mutation": "changeBridgeDeckTwist",
+  "id": "bri-1",
+  "newDeckTwist": 2.0
+}

@@ -1,8 +1,9 @@
 //! 📚️ EN 1998 play app panel — examples plus DIN EN 1998-1/NA Tables NA.1 and NA.4.
 
-use semio_s_plugin_norm_app_surface::{CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable};
+use semio_s_plugin_norm_app_surface::{spec_trace_table, CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable};
+use semio_s_artifact_norm_en1998_inferences::spec_trace::TABLE as SPEC_TRACE;
 use semio_s_plugin_norm_compliance::ClauseId;
-use semio_s_artifact_norm_en1998_schema::na_de::{GroundCombo, SeismicZone};
+use semio_s_artifact_norm_en1998_schema::na_de::{self, GroundCombo};
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::PanelGroup;
 use semio_framework_plugin::PanelTabDefinition;
@@ -21,27 +22,24 @@ pub fn definition() -> PanelTabDefinition {
 
 /// 📚️ Normative reference tables — same NA.1 / NA.4 consts `evaluate()` reads via `na_de`.
 pub fn reference_tables() -> Vec<CatalogueTable> {
-    vec![table_na1_zones(), table_na4_ground_combos()]
+    vec![table_na1_plateau(), table_na4_ground_combos(), spec_trace_table(&SPEC_TRACE)]
 }
 
-fn table_na1_zones() -> CatalogueTable {
+fn table_na1_plateau() -> CatalogueTable {
     CatalogueTable {
-        id: "table-na-1-seismic-zones",
-        title_en: "Reference PGA a_gR by seismic zone (DE NA)",
-        title_de: "Bezugsspitzenwert a_gR nach Erdbebenzone (DE NA)",
-        clause: ClauseId::new("DIN EN 1998-1/NA", "NA.3.2.1", "Table NA.1"),
+        id: "table-na-1-plateau-acceleration",
+        title_en: "Reference acceleration a_gR from plateau acceleration S_aP,R (DE NA:2023-11)",
+        title_de: "Bezugsbeschleunigung a_gR aus Plateau-Beschleunigung S_aP,R (DE NA:2023-11)",
+        clause: ClauseId::new("DIN EN 1998-1/NA", "NA.3.2.1", "S_aP,R"),
         columns: vec![
-            CatalogueColumn { id: "zone", label_en: "Zone", label_de: "Zone", unit: None },
-            CatalogueColumn { id: "agr", label_en: "a_gR", label_de: "a_gR", unit: Some("m/s²") },
+            CatalogueColumn { id: "sapr", label_en: "S_aP,R", label_de: "S_aP,R", unit: Some("m/s²") },
+            CatalogueColumn { id: "agr", label_en: "a_gR = S_aP,R / 2.5", label_de: "a_gR = S_aP,R / 2,5", unit: Some("m/s²") },
         ],
-        rows: [SeismicZone::Zone0, SeismicZone::Zone1, SeismicZone::Zone2, SeismicZone::Zone3]
+        rows: [0.5, 1.0, 1.5, 2.0, 2.5]
             .into_iter()
-            .map(|zone| {
-                let id = format!("zone-{}", zone.as_u8());
-                CatalogueRow {
-                    id: id.clone(),
-                    cells: vec![CatalogueCell::text(format!("Zone {}", zone.as_u8())), CatalogueCell::number(zone.a_gr(), 1)],
-                }
+            .map(|s_ap_r| CatalogueRow {
+                id: format!("s-ap-r-{s_ap_r}"),
+                cells: vec![CatalogueCell::number(s_ap_r, 2), CatalogueCell::number(na_de::a_gr_from_s_ap_r(s_ap_r), 2)],
             })
             .collect(),
     }

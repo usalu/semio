@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-joint-joint-coefficient/schema.json",
+  "title": "ChangeJointJointCoefficient",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newJointCoefficient"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Joint",
+          "de": "Anschluss"
+        },
+        "description": {
+          "en": "The joint this mutation addresses, by id.",
+          "de": "Das adressierte Element (Anschluss), per Kennung."
+        },
+        "ref": {
+          "kind": "joint"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newJointCoefficient": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Joint coefficient β_j",
+          "de": "Fugenbeiwert β_j"
+        },
+        "widget": "stepper",
+        "unit": "1",
+        "precision": 3,
+        "step": 0.01,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

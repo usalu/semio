@@ -1,0 +1,7 @@
+{
+  "ChangeColumnActionKind": {
+    "columnId": "col-C1",
+    "id": "G-col",
+    "newKind": "imposed"
+  }
+}

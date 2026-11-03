@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-wind-bridge-deck-depth/schema.json",
+  "title": "ChangeWindBridgeDeckDepth",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newDeckDepth"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Bridge wind case",
+          "de": "Brückenwindfall"
+        },
+        "description": {
+          "en": "The bridge wind case this mutation addresses, by id.",
+          "de": "Das adressierte Element (Brückenwindfall), per Kennung."
+        },
+        "ref": {
+          "kind": "wind-bridge"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newDeckDepth": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Deck depth d without parapets",
+          "de": "Überbauhöhe d ohne Geländer"
+        },
+        "widget": "stepper",
+        "unit": "m",
+        "precision": 2,
+        "step": 0.05,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

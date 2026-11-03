@@ -1,0 +1,246 @@
+{
+  "schema": "semio.norm.grip-keyboard-cases/v1",
+  "why": "Language-agnostic law of the keyboard path to the grips: the walk (Tab, Shift+Tab, Ctrl/Cmd+Arrow), the per-artifact focus registry, the key map of the hook, the nudge by the schema step, the value field opened by Enter and the editable marker cell of the diagram table twin. Replayed by Rust (shell-hooks/grip-focus, entity-editing, direct-manipulation) and by the TypeScript twins under the same folder names.",
+  "grips": [
+    { "id": "a.length", "entity": "a" },
+    { "id": "a.height", "entity": "a" },
+    { "id": "a.angle", "entity": "a" },
+    { "id": "b.length", "entity": "b" },
+    { "id": "b.height", "entity": "b" }
+  ],
+  "walks": [
+    { "current": null, "how": "forward", "expect": "to:a.length" },
+    { "current": null, "how": "backward", "expect": "to:b.height" },
+    { "current": "a.angle", "how": "forward", "expect": "to:b.length" },
+    { "current": "b.length", "how": "backward", "expect": "to:a.angle" },
+    { "current": "b.height", "how": "forward", "expect": "leave", "why": "past the last grip the shell's Tab order continues" },
+    { "current": "a.length", "how": "backward", "expect": "leave" },
+    { "current": "a.angle", "how": "forwardInEntity", "expect": "to:a.length", "why": "wraps within entity a, never reaches b" },
+    { "current": "a.length", "how": "backwardInEntity", "expect": "to:a.angle" },
+    { "current": "b.length", "how": "forwardInEntity", "expect": "to:b.height" },
+    { "current": "b.height", "how": "forwardInEntity", "expect": "to:b.length" },
+    { "current": null, "how": "forwardInEntity", "expect": "to:a.length", "why": "without focus the first entity's first grip" },
+    { "current": null, "how": "backwardInEntity", "expect": "to:a.angle" },
+    { "current": "gone", "how": "forwardInEntity", "expect": "to:a.length", "why": "an unknown focus counts as none" },
+    { "current": "gone", "how": "forward", "expect": "to:a.length" },
+    { "grips": [{ "id": "m.rest", "entity": "m" }], "current": "m.rest", "how": "forwardInEntity", "expect": "to:m.rest", "why": "a single-grip entity cycles onto itself" },
+    { "grips": [{ "id": "m.rest", "entity": "m" }], "current": "m.rest", "how": "forward", "expect": "leave" },
+    { "grips": [], "current": null, "how": "forward", "expect": "nothing" }
+  ],
+  "registry": [
+    { "op": "note", "domain": "norm.parity-one", "grips": "all" },
+    { "op": "note", "domain": "norm.parity-two", "grips": [{ "id": "z.depth", "entity": "z" }] },
+    { "op": "focus", "domain": "norm.parity-one", "expect": null },
+    { "op": "walk", "domain": "norm.parity-one", "how": "forward", "expect": "to:a.length" },
+    { "op": "walk", "domain": "norm.parity-one", "how": "forwardInEntity", "expect": "to:a.height" },
+    { "op": "focus", "domain": "norm.parity-one", "expect": "a.height" },
+    { "op": "focus", "domain": "norm.parity-two", "expect": null, "why": "another artifact's focus is untouched" },
+    { "op": "note", "domain": "norm.parity-one", "grips": [{ "id": "a.length", "entity": "a" }] },
+    { "op": "focus", "domain": "norm.parity-one", "expect": null, "why": "the selection changed, the focused grip is gone" },
+    { "op": "walk", "domain": "norm.parity-one", "how": "forward", "expect": "to:a.length" },
+    { "op": "walk", "domain": "norm.parity-one", "how": "forward", "expect": "leave" },
+    { "op": "focus", "domain": "norm.parity-one", "expect": null },
+    { "op": "walk", "domain": "norm.parity-none", "how": "forward", "expect": "nothing" }
+  ],
+  "keys": {
+    "scope": "norm-parity-viewport",
+    "domain": "norm.parity",
+    "grips": [
+      { "id": "a.length", "entity": "a" },
+      { "id": "a.height", "entity": "a" },
+      { "id": "b.length", "entity": "b" }
+    ],
+    "steps": [
+      { "key": "Tab", "expect": "ignored", "focus": null, "why": "outside the grip walk Tab belongs to the shell" },
+      { "key": "Enter", "expect": "consumed", "focus": "a.length" },
+      { "key": "Tab", "expect": "consumed", "focus": "a.height" },
+      { "key": "Tab", "shift": true, "expect": "consumed", "focus": "a.length" },
+      { "key": "ArrowRight", "ctrl": true, "expect": "consumed", "focus": "a.height" },
+      { "key": "ArrowDown", "ctrl": true, "expect": "consumed", "focus": "a.length", "why": "Ctrl+Arrow wraps inside the entity and never reaches b" },
+      { "key": "ArrowLeft", "ctrl": true, "expect": "consumed", "focus": "a.height" },
+      { "key": "ArrowUp", "meta": true, "expect": "consumed", "focus": "a.length", "why": "Command acts as Ctrl" },
+      { "key": "ArrowRight", "expect": "action:norm.handle.arrow-right.normal", "focus": "a.length", "why": "plain arrows stay nudges" },
+      { "key": "ArrowRight", "shift": true, "expect": "action:norm.handle.arrow-right.large", "focus": "a.length" },
+      { "key": "ArrowDown", "alt": true, "expect": "action:norm.handle.arrow-down.fine", "focus": "a.length" },
+      { "key": "ArrowUp", "alt": true, "shift": true, "expect": "ignored", "focus": "a.length", "why": "Alt+Shift is no step" },
+      { "key": "Enter", "expect": "action:norm.handle.enter.normal", "focus": "a.length", "why": "Enter on a focused grip opens its value field and applies it" },
+      { "key": "Tab", "expect": "consumed", "focus": "a.height" },
+      { "key": "Tab", "expect": "consumed", "focus": "b.length" },
+      { "key": "Tab", "expect": "ignored", "focus": null, "why": "past the last grip the walk ends" },
+      { "key": "Enter", "expect": "consumed", "focus": "a.length" },
+      { "key": "Escape", "expect": "action:norm.handle.escape.normal", "focus": null, "why": "Escape still cancels the open change and returns the keyboard to the viewport" }
+    ]
+  },
+  "keyIntents": [
+    { "key": "Tab", "expect": "cycle:1" },
+    { "key": "Tab", "shift": true, "expect": "cycle:-1" },
+    { "key": "ArrowRight", "expect": "nudge:1" },
+    { "key": "ArrowUp", "shift": true, "expect": "nudge:1" },
+    { "key": "ArrowLeft", "alt": true, "expect": "nudge:-1" },
+    { "key": "ArrowDown", "expect": "nudge:-1" },
+    { "key": "Enter", "expect": "commit" },
+    { "key": "Escape", "expect": "abort:escape" },
+    { "key": "Backspace", "expect": "backspace" },
+    { "key": "5", "expect": "entry:5" },
+    { "key": ",", "expect": "entry:," },
+    { "key": "-", "expect": "entry:-" },
+    { "key": "x", "expect": "ignored" }
+  ],
+  "handles": {
+    "length": { "id": "a.length", "kind": "scalarAlong", "limits": [0, 10], "snap": { "increment": null, "grid": null, "targets": [], "catalogue": [], "tolerance": 0 }, "writes": [{ "path": "beams[id=a].length", "base": 0, "k": 1, "unit": "m", "quantise": { "kind": "round", "step": 0.01 } }] },
+    "scaled": { "id": "a.scaled", "kind": "scalarAlong", "limits": null, "snap": { "increment": null, "grid": null, "targets": [], "catalogue": [], "tolerance": 0 }, "writes": [{ "path": "beams[id=a].scaled", "base": 0, "k": 2, "unit": "m", "quantise": { "kind": "round", "step": 0.01 } }] },
+    "free": { "id": "a.free", "kind": "scalarAlong", "limits": [0, 5], "snap": { "increment": 0.5, "grid": null, "targets": [], "catalogue": [], "tolerance": 0 }, "writes": [{ "path": "beams[id=a].free", "base": 0, "k": 1, "unit": "m", "quantise": null }] },
+    "material": { "id": "a.material", "kind": "choiceStepper", "limits": [0, 2], "snap": { "increment": null, "grid": null, "targets": [], "catalogue": [], "tolerance": 0 }, "writes": [{ "path": "beams[id=a].material", "base": 0, "k": 1, "unit": "token", "quantise": { "kind": "token", "tokens": ["steel", "timber", "concrete"] } }] }
+  },
+  "nudges": [
+    { "handle": "length", "modifiers": "", "expectStep": 0.01 },
+    { "handle": "length", "modifiers": "shift", "expectStep": 0.1 },
+    { "handle": "length", "modifiers": "alt", "expectStep": 0.001 },
+    { "handle": "length", "modifiers": "shift alt", "expectStep": 0.01 },
+    { "handle": "scaled", "modifiers": "", "expectStep": 0.005, "why": "the step is the field step divided by the slope of the map" },
+    { "handle": "free", "modifiers": "", "expectStep": 0.5, "why": "an unquantised field nudges by the snap increment" },
+    { "handle": "length", "modifiers": "", "from": 9.995, "direction": 1, "modifiers2": "shift", "expectS": 10, "why": "limits clamp the nudge" }
+  ],
+  "statechart": [
+    {
+      "id": "an arrow nudges by the schema step, Shift by ten steps and Alt by a tenth",
+      "handle": "length",
+      "start": { "state": "hover", "s": 2.5 },
+      "events": [
+        { "type": "nudge", "direction": 1, "expect": { "state": "dragging", "s": 2.51, "entry": "", "effect": "preview", "writes": { "beams[id=a].length": 2.51 } } },
+        { "type": "nudge", "direction": 1, "shift": true, "expect": { "state": "dragging", "s": 2.61, "entry": "", "effect": "preview", "writes": { "beams[id=a].length": 2.61 } } },
+        { "type": "nudge", "direction": -1, "alt": true, "expect": { "state": "dragging", "s": 2.609, "entry": "", "effect": "preview", "writes": { "beams[id=a].length": 2.61 } } },
+        { "type": "commit", "expect": { "state": "hover", "s": 2.609, "effect": "commit", "writes": { "beams[id=a].length": 2.61 } } }
+      ]
+    },
+    {
+      "id": "the step follows the slope of the field",
+      "handle": "scaled",
+      "start": { "state": "hover", "s": 1 },
+      "events": [{ "type": "nudge", "direction": 1, "expect": { "state": "dragging", "s": 1.005, "entry": "", "effect": "preview", "writes": { "beams[id=a].scaled": 2.01 } } }]
+    },
+    {
+      "id": "the limits clamp a nudge and it never wraps",
+      "handle": "length",
+      "start": { "state": "hover", "s": 9.995 },
+      "events": [
+        { "type": "nudge", "direction": 1, "shift": true, "expect": { "state": "dragging", "s": 10, "entry": "", "effect": "preview", "writes": { "beams[id=a].length": 10 } } },
+        { "type": "nudge", "direction": 1, "expect": { "state": "dragging", "s": 10, "entry": "", "effect": "preview", "writes": { "beams[id=a].length": 10 } } }
+      ]
+    },
+    {
+      "id": "Enter opens the value field with the shown value, typing replaces it and Enter applies it",
+      "handle": "length",
+      "start": { "state": "hover", "s": 2.5 },
+      "events": [
+        { "type": "commit", "expect": { "state": "dragging", "s": 2.5, "entry": "2.5", "effect": "preview", "writes": { "beams[id=a].length": 2.5 } } },
+        { "type": "backspace", "expect": { "state": "dragging", "s": 2, "entry": "2.", "effect": "preview", "writes": { "beams[id=a].length": 2 } } },
+        { "type": "backspace", "expect": { "state": "dragging", "s": 2, "entry": "2", "effect": "preview", "writes": { "beams[id=a].length": 2 } } },
+        { "type": "backspace", "expect": { "state": "dragging", "s": 2, "entry": "", "effect": "preview", "writes": { "beams[id=a].length": 2 } } },
+        { "type": "entry", "char": "7", "expect": { "state": "dragging", "s": 7, "entry": "7", "effect": "preview", "writes": { "beams[id=a].length": 7 } } },
+        { "type": "entry", "char": "x", "expect": { "state": "dragging", "s": 7, "entry": "7", "effect": "none" } },
+        { "type": "entry", "char": ",", "expect": { "state": "dragging", "s": 7, "entry": "7,", "effect": "preview", "writes": { "beams[id=a].length": 7 } } },
+        { "type": "entry", "char": "2", "expect": { "state": "dragging", "s": 7.2, "entry": "7,2", "effect": "preview", "writes": { "beams[id=a].length": 7.2 } } },
+        { "type": "entry", "char": "5", "expect": { "state": "dragging", "s": 7.25, "entry": "7,25", "effect": "preview", "writes": { "beams[id=a].length": 7.25 } } },
+        { "type": "commit", "expect": { "state": "hover", "s": 7.25, "effect": "commit", "writes": { "beams[id=a].length": 7.25 } } }
+      ]
+    },
+    {
+      "id": "a typed value beyond the limits is clamped",
+      "handle": "length",
+      "start": { "state": "hover", "s": 2.5 },
+      "events": [
+        { "type": "entry", "char": "9", "expect": { "state": "dragging", "s": 9, "entry": "9", "effect": "preview", "writes": { "beams[id=a].length": 9 } } },
+        { "type": "entry", "char": "9", "expect": { "state": "dragging", "s": 10, "entry": "99", "effect": "preview", "writes": { "beams[id=a].length": 10 } } }
+      ]
+    },
+    {
+      "id": "Enter twice on an untouched value commits nothing",
+      "handle": "length",
+      "start": { "state": "hover", "s": 2.5 },
+      "events": [
+        { "type": "commit", "expect": { "state": "dragging", "s": 2.5, "entry": "2.5", "effect": "preview", "writes": { "beams[id=a].length": 2.5 } } },
+        { "type": "commit", "expect": { "state": "hover", "s": 2.5, "effect": "cleared" } }
+      ]
+    },
+    {
+      "id": "Escape restores the resting value and a blur forgets the gesture",
+      "handle": "length",
+      "start": { "state": "hover", "s": 2.5 },
+      "events": [
+        { "type": "nudge", "direction": 1, "expect": { "state": "dragging", "s": 2.51, "entry": "", "effect": "preview", "writes": { "beams[id=a].length": 2.51 } } },
+        { "type": "abort", "reason": "escape", "expect": { "state": "hover", "s": 2.5, "effect": "cleared" } },
+        { "type": "nudge", "direction": 1, "expect": { "state": "dragging", "s": 2.51, "entry": "", "effect": "preview", "writes": { "beams[id=a].length": 2.51 } } },
+        { "type": "abort", "reason": "blur", "expect": { "state": "idle", "effect": "cleared" } }
+      ]
+    },
+    {
+      "id": "a token field is stepped and cycles past either end, never typed",
+      "handle": "material",
+      "start": { "state": "hover", "s": 2 },
+      "events": [
+        { "type": "commit", "expect": { "state": "hover", "s": 2, "effect": "none" } },
+        { "type": "nudge", "direction": 1, "expect": { "state": "dragging", "s": 0, "entry": "", "effect": "preview", "writes": { "beams[id=a].material": "steel" } } },
+        { "type": "nudge", "direction": -1, "expect": { "state": "dragging", "s": 2, "entry": "", "effect": "preview", "writes": { "beams[id=a].material": "concrete" } } }
+      ]
+    },
+    {
+      "id": "the pointer drag shares the statechart",
+      "handle": "free",
+      "start": { "state": "idle" },
+      "events": [
+        { "type": "hover", "handle": "a.free", "s": 1, "expect": { "state": "hover", "s": 1, "effect": "none" } },
+        { "type": "press", "handle": "a.free", "s": 1, "expect": { "state": "armed", "origin": 1, "effect": "none" } },
+        { "type": "move", "s": 2.3, "expect": { "state": "dragging", "s": 2.5, "entry": "", "effect": "preview", "writes": { "beams[id=a].free": 2.5 } } },
+        { "type": "move", "s": 2.3, "ctrl": true, "expect": { "state": "dragging", "s": 2.3, "entry": "", "effect": "preview", "writes": { "beams[id=a].free": 2.3 } } },
+        { "type": "release", "expect": { "state": "hover", "s": 2.3, "effect": "commit", "writes": { "beams[id=a].free": 2.3 } } },
+        { "type": "hover", "handle": null, "s": 0, "expect": { "state": "idle", "effect": "none" } }
+      ]
+    }
+  ],
+  "markerCells": {
+    "base": "diagrams.plan",
+    "diagram": {
+      "id": "plan",
+      "axes": [{ "unit": "m", "domain": [0, 10] }, { "unit": "mm", "domain": null }],
+      "markers": [
+        { "id": "p1", "at": [2.5, 14], "label": { "en": "Placement P1", "de": "Platzierung P1" }, "binding": { "path": "placements[id=p1].x", "base": 0, "k": 1, "unit": "m", "quantise": { "kind": "round", "step": 0.01 } } },
+        { "id": "fixed", "at": [1, 1], "label": { "en": "Fixed", "de": "Fest" }, "binding": null },
+        { "id": "d1", "at": [3, 40], "label": { "en": "Deflection", "de": "Durchbiegung" }, "binding": { "path": "beams[id=a].w", "base": 0, "k": 1, "unit": "mm", "quantise": null } },
+        { "id": "u1", "at": [4, 0], "label": { "en": "Ratio", "de": "Verhältnis" }, "binding": { "path": "beams[id=a].ratio", "base": 0, "k": 1, "unit": "", "quantise": null } },
+        { "id": "r1", "at": [0.000125, 0], "label": { "en": "Tiny", "de": "Winzig" }, "binding": { "path": "beams[id=a].tiny", "base": 0, "k": 1, "unit": "m", "quantise": null } }
+      ]
+    },
+    "cells": [
+      { "index": 0, "grip": { "id": "marker:plan:p1", "limits": [0, 10], "rest": 2.5, "name": { "en": "Placement P1", "de": "Platzierung P1" } }, "cell": { "id": "diagrams.plan.marker.m0.input", "text": "2.5 m", "unit": "m", "name": { "en": "Placement P1, edit value", "de": "Platzierung P1, Wert bearbeiten" }, "placeholder": { "en": "value in m", "de": "Wert in m" } } },
+      { "index": 1, "grip": null, "cell": null },
+      { "index": 2, "grip": { "id": "marker:plan:d1", "limits": null, "rest": 40, "name": { "en": "Deflection", "de": "Durchbiegung" } }, "cell": { "id": "diagrams.plan.marker.m2.input", "text": "40 mm", "unit": "mm", "name": { "en": "Deflection, edit value", "de": "Durchbiegung, Wert bearbeiten" }, "placeholder": { "en": "value in mm", "de": "Wert in mm" } } },
+      { "index": 3, "grip": { "id": "marker:plan:u1", "limits": null, "rest": 4, "name": { "en": "Ratio", "de": "Verhältnis" } }, "cell": { "id": "diagrams.plan.marker.m3.input", "text": "4", "unit": "", "name": { "en": "Ratio, edit value", "de": "Verhältnis, Wert bearbeiten" }, "placeholder": { "en": "value", "de": "Wert" } } },
+      { "index": 4, "grip": { "id": "marker:plan:r1", "limits": [0, 10], "rest": 0.000125, "name": { "en": "Tiny", "de": "Winzig" } }, "cell": { "id": "diagrams.plan.marker.m4.input", "text": "0.000125 m", "unit": "m", "name": { "en": "Tiny, edit value", "de": "Winzig, Wert bearbeiten" }, "placeholder": { "en": "value in m", "de": "Wert in m" } } }
+    ],
+    "shownValues": [
+      { "value": 2.5, "expect": "2.5" },
+      { "value": 0, "expect": "0" },
+      { "value": 1500, "expect": "1500" },
+      { "value": 0.000125, "expect": "0.000125" },
+      { "value": 123456789012345, "expect": "123456789012345" },
+      { "value": -3.25, "expect": "-3.25" },
+      { "value": 0.1, "expect": "0.1" }
+    ],
+    "commits": [
+      { "marker": 0, "text": "350 cm", "commit": { "path": "placements[id=p1].x", "value": 3.5 }, "why": "a typed quantity in another unit of the same dimension" },
+      { "marker": 0, "text": "99", "commit": { "path": "placements[id=p1].x", "value": 10 }, "why": "clamped to the limits" },
+      { "marker": 0, "text": "2,5", "commit": null, "why": "the current value commits nothing" },
+      { "marker": 0, "text": "3 kN", "commit": null, "why": "a unit of another dimension is refused" },
+      { "marker": 0, "text": "abc", "commit": null },
+      { "marker": 1, "text": "5", "commit": null, "why": "an unbound marker is not editable" },
+      { "marker": 2, "text": "12", "commit": { "path": "beams[id=a].w", "value": 12 } },
+      { "marker": 2, "text": "1.5 m", "commit": null, "why": "mm field, metre text: another dimension string is a length too, so it converts", "skip": true },
+      { "marker": 3, "text": "4", "commit": null }
+    ],
+    "keyboard": [
+      { "marker": 0, "key": "ArrowRight", "expectWrite": { "path": "placements[id=p1].x", "value": 2.51 }, "why": "an arrow moves the marker by the schema step of its field" },
+      { "marker": 0, "key": "ArrowLeft", "shift": true, "expectWrite": { "path": "placements[id=p1].x", "value": 2.4 } }
+    ]
+  }
+}

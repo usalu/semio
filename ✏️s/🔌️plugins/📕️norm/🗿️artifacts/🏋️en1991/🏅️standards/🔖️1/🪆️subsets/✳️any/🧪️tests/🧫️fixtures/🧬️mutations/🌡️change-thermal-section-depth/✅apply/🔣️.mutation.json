@@ -1,0 +1,6 @@
+{
+  "ChangeThermalSectionDepth": {
+    "id": "thermal-section-1",
+    "newDepth": 3.0
+  }
+}

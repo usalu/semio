@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-column-rebar-area-m2/schema.json",
+  "title": "ChangeColumnRebarAreaM2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newReinforcementAsM2"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Composite column",
+          "de": "Verbundstütze"
+        },
+        "description": {
+          "en": "The composite column this mutation addresses, by id.",
+          "de": "Das adressierte Element (Verbundstütze), per Kennung."
+        },
+        "ref": {
+          "kind": "column"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newReinforcementAsM2": {
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Column reinforcement area A_s",
+          "de": "Bewehrungsquerschnitt A_s der Stütze"
+        },
+        "unit": "m2",
+        "step": 0.0001,
+        "precision": 6,
+        "group": "column",
+        "order": 20
+      }
+    }
+  }
+}

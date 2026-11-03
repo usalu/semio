@@ -7,7 +7,7 @@
   "aggregateVariant": "RemoveFatigueDetail",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
-  "binaryTag": 31,
+  "binaryTag": 14,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

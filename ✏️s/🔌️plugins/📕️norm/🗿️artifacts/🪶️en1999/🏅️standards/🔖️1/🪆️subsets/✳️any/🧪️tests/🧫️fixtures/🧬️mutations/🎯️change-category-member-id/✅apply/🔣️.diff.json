@@ -1,0 +1,37 @@
+{
+  "annex": null,
+  "reliabilityClass": "RC2",
+  "materials": null,
+  "sections": null,
+  "members": null,
+  "connections": null,
+  "fireScenarios": null,
+  "fatigueDetails": null,
+  "coldFormed": null,
+  "shells": null,
+  "placements": null,
+  "weldRuns": null,
+  "outlineVertices": null,
+  "fatigueCategories": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "site-1",
+        "patch": {
+          "memberId": "post-chs",
+          "elementId": null,
+          "detailCategory": null,
+          "detailType": null,
+          "locationX": null,
+          "m1": null,
+          "m2": null
+        }
+      }
+    ]
+  },
+  "patchLoads": null,
+  "ringStiffeners": null,
+  "transverseStiffeners": null
+}

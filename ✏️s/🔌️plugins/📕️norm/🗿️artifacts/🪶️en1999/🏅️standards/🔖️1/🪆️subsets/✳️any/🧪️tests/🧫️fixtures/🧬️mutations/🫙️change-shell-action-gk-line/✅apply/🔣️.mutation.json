@@ -1,0 +1,6 @@
+{
+  "mutation": "changeShellActionGKLine",
+  "shellId": "shell-pass",
+  "actionId": "G-shell",
+  "newGKLine": 1600.0
+}

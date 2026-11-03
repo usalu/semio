@@ -20,6 +20,7 @@ name = "config_mutation"
 path = "../../🧪️tests/🎚️config/🦀️.rs"
 
 [dependencies]
+serde = { workspace = true, optional = true }
 pack = { workspace = true }
 semio-framework-diagnostic = { workspace = true }
 semio-framework-dsl-record = { workspace = true }
@@ -34,6 +35,9 @@ semio-framework-schema-state = { path = "../../../../../../../🧰️framework/�
 semio-framework-ui-locale = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
+
+[features]
+test-support = ["dep:serde"]
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }

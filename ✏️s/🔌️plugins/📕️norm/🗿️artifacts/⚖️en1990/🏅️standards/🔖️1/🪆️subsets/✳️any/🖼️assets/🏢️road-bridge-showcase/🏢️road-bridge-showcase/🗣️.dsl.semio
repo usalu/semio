@@ -1,0 +1,88 @@
+semio norm.en1990.dsl v1
+annex=de project-id=road-bridge-showcase structure-kind=road-bridge altitude-m=200 consequence-class=2 reliability-class=rc2 design-working-life-category=5 design-working-life-years=100 reference-period-years=100 supervision-level=dsl3 inspection-level=il3 beta-computed=4.7
+permanents [id:TEXT kind:ENUM gk:NUM] {
+  G-deck-s1 gsup 100000
+  G-deck-s2 gsup 100000
+  G-surf-s1 ginf 30000
+  G-surf-s2 ginf 30000
+}
+variables [id:TEXT category:TEXT qk:NUM group:TEXT] {
+  Q-ts road_traffic 300000 gr1a
+  Q-udl road_udl 90000 gr1a
+  Q-ped road_pedestrian 25000 gr1a
+  Q-sa road_single_axle 400000 gr1b
+  Q-brake road_horizontal 120000 gr2
+  Q-wind wind_bridge 50000 ""
+  Q-temp temperature_bridge 40000 ""
+}
+accidentals [id:TEXT ad:NUM] {
+  A-impact 50000
+}
+seismics [id:TEXT a-ek:NUM importance-class:ENUM] {
+  E-1 60000 iii
+}
+members [id:TEXT label-en:TEXT label-de:TEXT rd-str:NUM rd-geo:NUM rd-equ-stab:NUM rd-equ-destab:NUM rd-fat:NUM span:NUM precamber:NUM deflection-w1:NUM deflection-w2:NUM deflection-w3:NUM deflection-limit-ratio:NUM deflection-limit-ratio-w3:NUM sls-limit-char:NUM sls-limit-freq:NUM sls-limit-qp:NUM vibration-frequency:NUM vibration-frequency-min:NUM frame-height:NUM frame-drift:NUM storey-height:NUM storey-drift:NUM material-strength-k:NUM material-conversion-factor:NUM material-partial-factor:NUM material-design-strength:NUM nominal-dimension:NUM dimension-tolerance:NUM design-dimension:NUM member-alpha-cr:NUM second-order-analysis:NUM] {
+  span-1 "Span 1 of the continuous deck" "Feld 1 des Durchlauftraegers" 1400000 1400000 1000000 800000 500000 30 0 0.016 0.008 0.024 500 300 1400000 1400000 1400000 4.2 3 0 0 0 0 355000000 1 1 300000000 0 0 0 0 0
+  span-2 "Span 2 of the continuous deck" "Feld 2 des Durchlauftraegers" 1400000 1400000 1000000 800000 500000 30 0 0.016 0.008 0.024 500 300 1400000 1400000 1400000 4.2 3 0 0 0 0 355000000 1 1 300000000 0 0 0 0 0
+}
+bridge-sls [id:TEXT member-id:TEXT deck-acceleration:NUM deck-acceleration-limit:NUM deck-twist:NUM deck-twist-limit:NUM bridge-deflection:NUM bridge-deflection-limit:NUM track-gauge:NUM line-speed:NUM ballast-depth:NUM deck-mass:NUM natural-frequency:NUM end-rotation:NUM basic-wind-speed:NUM damping-ratio:NUM] {
+  sls-s1 span-1 0 0 0 0 0.03 0.0375 0 0 0 0 4.2 0 0 0
+  sls-s2 span-2 0 0 0 0 0.03 0.0375 0 0 0 0 4.2 0 0 0
+}
+effects [member-id:TEXT action-id:TEXT influence:NUM] {
+  span-1 G-deck-s1 1
+  span-1 G-deck-s2 -0.3333333333333333
+  span-1 G-surf-s1 1
+  span-1 G-surf-s2 -0.3333333333333333
+  span-1 Q-ts 1
+  span-1 Q-udl 1
+  span-1 Q-ped 1
+  span-1 Q-sa 1
+  span-1 Q-brake 1
+  span-1 Q-wind 1
+  span-1 Q-temp 1
+  span-1 A-impact 1
+  span-1 E-1 1
+  span-2 G-deck-s2 1
+  span-2 G-deck-s1 -0.3333333333333333
+  span-2 G-surf-s2 1
+  span-2 G-surf-s1 -0.3333333333333333
+  span-2 Q-ts 1
+  span-2 Q-udl 1
+  span-2 Q-ped 1
+  span-2 Q-sa 1
+  span-2 Q-brake 1
+  span-2 Q-wind 1
+  span-2 Q-temp 1
+  span-2 A-impact 1
+  span-2 E-1 1
+}
+fatigue-spectra [id:TEXT member-id:TEXT detail-category:NUM stress-range:NUM cycles:NUM] {
+  FS-1 span-1 71000000 60000000 200000
+  FS-2 span-1 71000000 30000000 1000000
+  FS-3 span-2 71000000 50000000 300000
+  FS-4 span-2 71000000 25000000 1500000
+}
+reliability-analyses [id:TEXT resistance-distribution:ENUM resistance-mean:NUM resistance-sd:NUM action-distribution:ENUM action-mean:NUM action-sd:NUM] {
+  rel-1 normal 330000 30000 normal 150000 30000
+}
+test-series [id:TEXT quantity:TEXT distribution:ENUM sample-size:UINT mean:NUM std-dev:NUM variation-known:NUM conversion-factor:NUM required:NUM pairs:TEXT theory-variation:NUM] {
+  tes-1 strength normal 10 40 4 0 0.9 25  0
+  tes-2 bearing-stiffness lognormal 6 12 1.5 0 0.9 7  0
+}
+placements [id:TEXT x:NUM y:NUM z:NUM yaw:NUM] {
+  abutment-A 0 0 0 0
+  pier-P 30 0 0 0
+  abutment-B 60 0 0 0
+}
+cases [id:TEXT label-en:TEXT label-de:TEXT entry-id:TEXT numbers:TABLE texts:TABLE] {
+}
+factor-overrides [id:TEXT factor:TEXT target:TEXT value:NUM justification:TEXT] {
+}
+traffic-groups [id:TEXT group:ENUM variable-id:TEXT] {
+  TG-ts gr1a Q-ts
+  TG-udl gr1a Q-udl
+  TG-ped gr1a Q-ped
+  TG-sa gr1b Q-sa
+  TG-brake gr2 Q-brake
+}

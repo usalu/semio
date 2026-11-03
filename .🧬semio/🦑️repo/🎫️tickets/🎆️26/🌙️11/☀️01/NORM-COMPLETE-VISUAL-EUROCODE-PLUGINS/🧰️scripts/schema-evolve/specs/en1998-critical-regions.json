@@ -1,0 +1,268 @@
+{
+  "artifact": "en1998",
+  "collection": {
+    "name": "criticalRegions",
+    "entity": "En1998CriticalRegion",
+    "emoji": "🔩",
+    "doc": "🔩 Critical region at the end of a ductile RC beam or column of a building (EN 1998-1 5.4.3 DCM, 5.5.3 DCH): section, confined core, longitudinal bars and the hoop layout, checked for the critical region length, hoop diameter and spacing, bar restraint, the confinement α·ω_wd and the total longitudinal ratio.",
+    "label": {
+      "en": "Critical regions",
+      "de": "Kritische Bereiche"
+    },
+    "id": {
+      "en": "Critical region ID",
+      "de": "ID des kritischen Bereichs"
+    },
+    "singular": {
+      "en": "critical region",
+      "de": "kritischer Bereich"
+    },
+    "kindSlug": "critical-region",
+    "fields": [
+      {
+        "name": "building_id",
+        "type": "String",
+        "label": {
+          "en": "Building",
+          "de": "Gebäude"
+        },
+        "doc": "🏢 Id of the building whose member this critical region belongs to.",
+        "sample": "bldg-office"
+      },
+      {
+        "name": "member_id",
+        "type": "String",
+        "label": {
+          "en": "Member",
+          "de": "Bauteil"
+        },
+        "doc": "🧱 Id of the RC beam or column of the building (EN 1998-1 5.4.3) whose end region is detailed.",
+        "sample": "col-c1"
+      },
+      {
+        "name": "section_width_m",
+        "type": "f64",
+        "label": {
+          "en": "Section width b_c",
+          "de": "Querschnittsbreite b_c"
+        },
+        "doc": "↔️ Gross section width b_c [m] of the member.",
+        "sample": 0.4,
+        "unit": "m"
+      },
+      {
+        "name": "section_depth_m",
+        "type": "f64",
+        "label": {
+          "en": "Section depth h_c",
+          "de": "Querschnittshöhe h_c"
+        },
+        "doc": "↕️ Gross section depth h_c [m] of the member, for a column the largest cross-section dimension; for a beam the depth h_w.",
+        "sample": 0.5,
+        "unit": "m"
+      },
+      {
+        "name": "clear_length_m",
+        "type": "f64",
+        "label": {
+          "en": "Clear length l_cl",
+          "de": "Lichte Länge l_cl"
+        },
+        "doc": "📏 Clear length l_cl [m] of the member between its end sections.",
+        "sample": 3.0,
+        "unit": "m"
+      },
+      {
+        "name": "hooped_length_m",
+        "type": "f64",
+        "label": {
+          "en": "Length with the given hoops",
+          "de": "Länge mit den gegebenen Bügeln"
+        },
+        "doc": "📏 Length [m] from the end section over which the given hoop layout is provided; it has to cover the critical region length l_cr.",
+        "sample": 0.75,
+        "unit": "m"
+      },
+      {
+        "name": "core_width_m",
+        "type": "f64",
+        "label": {
+          "en": "Core width b_0",
+          "de": "Kernbreite b_0"
+        },
+        "doc": "🔲 Width b_0 [m] of the confined core measured to the centreline of the hoop.",
+        "sample": 0.32,
+        "unit": "m"
+      },
+      {
+        "name": "core_depth_m",
+        "type": "f64",
+        "label": {
+          "en": "Core depth h_0",
+          "de": "Kernhöhe h_0"
+        },
+        "doc": "🔲 Depth h_0 [m] of the confined core measured to the centreline of the hoop.",
+        "sample": 0.42,
+        "unit": "m"
+      },
+      {
+        "name": "axial_force_n",
+        "type": "f64",
+        "label": {
+          "en": "Design axial force N_Ed",
+          "de": "Bemessungs-Normalkraft N_Ed"
+        },
+        "doc": "⬇️ Design axial force N_Ed [N] of the seismic combination, compression positive; gives the normalised axial force ν_d.",
+        "sample": 800000.0,
+        "unit": "N"
+      },
+      {
+        "name": "concrete_design_strength_mpa",
+        "type": "f64",
+        "label": {
+          "en": "Concrete design strength f_cd [MPa]",
+          "de": "Betonbemessungsfestigkeit f_cd [MPa]"
+        },
+        "doc": "🧱 Design compressive strength f_cd [MPa] of the concrete.",
+        "sample": 20.0,
+        "unit": ""
+      },
+      {
+        "name": "steel_design_yield_mpa",
+        "type": "f64",
+        "label": {
+          "en": "Longitudinal steel design yield f_yd [MPa]",
+          "de": "Bemessungsstreckgrenze Längsstahl f_yd [MPa]"
+        },
+        "doc": "🔩 Design yield strength f_yd [MPa] of the longitudinal reinforcement; gives ε_sy,d with the steel modulus.",
+        "sample": 434.8,
+        "unit": ""
+      },
+      {
+        "name": "hoop_design_yield_mpa",
+        "type": "f64",
+        "label": {
+          "en": "Hoop design yield f_ydw [MPa]",
+          "de": "Bemessungsstreckgrenze Bügel f_ydw [MPa]"
+        },
+        "doc": "🔩 Design yield strength f_ydw [MPa] of the hoops.",
+        "sample": 434.8,
+        "unit": ""
+      },
+      {
+        "name": "longitudinal_steel_area_m2",
+        "type": "f64",
+        "label": {
+          "en": "Total longitudinal steel area A_sl",
+          "de": "Gesamte Längsbewehrungsfläche A_sl"
+        },
+        "doc": "🔩 Area A_sl [m²] of all longitudinal bars of the section, corner, side and intermediate bars alike; gives the total ratio ρ_tot = A_sl/(b_c h_c).",
+        "sample": 0.0048,
+        "unit": "m2"
+      },
+      {
+        "name": "longitudinal_bar_diameter_m",
+        "type": "f64",
+        "label": {
+          "en": "Smallest longitudinal bar diameter d_bL",
+          "de": "Kleinster Längsstabdurchmesser d_bL"
+        },
+        "doc": "⌀ Smallest diameter d_bL [m] of the longitudinal bars; limits the hoop spacing.",
+        "sample": 0.016,
+        "unit": "m"
+      },
+      {
+        "name": "longitudinal_bar_max_diameter_m",
+        "type": "f64",
+        "label": {
+          "en": "Largest longitudinal bar diameter d_bL,max",
+          "de": "Größter Längsstabdurchmesser d_bL,max"
+        },
+        "doc": "⌀ Largest diameter d_bL,max [m] of the longitudinal bars; limits the hoop diameter of DCH columns.",
+        "sample": 0.02,
+        "unit": "m"
+      },
+      {
+        "name": "hoop_diameter_m",
+        "type": "f64",
+        "label": {
+          "en": "Hoop diameter d_bw",
+          "de": "Bügeldurchmesser d_bw"
+        },
+        "doc": "⌀ Diameter d_bw [m] of the hoop and cross-tie bars.",
+        "sample": 0.01,
+        "unit": "m"
+      },
+      {
+        "name": "hoop_spacing_m",
+        "type": "f64",
+        "label": {
+          "en": "Hoop spacing s",
+          "de": "Bügelabstand s"
+        },
+        "doc": "↔️ Spacing s [m] of the hoops along the member in the critical region.",
+        "sample": 0.08,
+        "unit": "m"
+      },
+      {
+        "name": "hoop_legs_x",
+        "type": "f64",
+        "label": {
+          "en": "Hoop legs along the width",
+          "de": "Bügelschenkel in Breitenrichtung"
+        },
+        "doc": "🔗 Number of hoop and cross-tie legs running along the core width b_0 (a single closed hoop has 2).",
+        "sample": 3.0,
+        "precision": 0,
+        "step": 1,
+        "range": [
+          0,
+          64
+        ]
+      },
+      {
+        "name": "hoop_legs_y",
+        "type": "f64",
+        "label": {
+          "en": "Hoop legs along the depth",
+          "de": "Bügelschenkel in Tiefenrichtung"
+        },
+        "doc": "🔗 Number of hoop and cross-tie legs running along the core depth h_0 (a single closed hoop has 2).",
+        "sample": 3.0,
+        "precision": 0,
+        "step": 1,
+        "range": [
+          0,
+          64
+        ]
+      },
+      {
+        "name": "restrained_bar_count",
+        "type": "f64",
+        "label": {
+          "en": "Restrained bar spacings n",
+          "de": "Anzahl gehaltener Stababstände n"
+        },
+        "doc": "🔗 Number n of the spacings b_i between longitudinal bars engaged by a hoop corner or a cross-tie, for the confinement effectiveness α_n = 1 − Σ b_i²/(6 b_0 h_0).",
+        "sample": 8.0,
+        "precision": 0,
+        "step": 1,
+        "range": [
+          0,
+          64
+        ]
+      },
+      {
+        "name": "restrained_bar_spacing_m",
+        "type": "f64",
+        "label": {
+          "en": "Spacing of restrained bars b_i",
+          "de": "Abstand gehaltener Stäbe b_i"
+        },
+        "doc": "↔️ Spacing b_i [m] of consecutive longitudinal bars engaged by a hoop or cross-tie; the same for all n spacings.",
+        "sample": 0.11,
+        "unit": "m"
+      }
+    ]
+  }
+}

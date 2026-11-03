@@ -1,11 +1,11 @@
 /** 🧱 `change-unit-height` wire twin: the leaf payload `ChangeUnitHeight`, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
- * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
+ * by `repo ./📜️script.ts schema twins generate`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
-import { normWireInteger, normWireNumber, normWireObject, normWireRange, type NormWireReader, normWireRequired } from "@semio-tech/norm-js/registry/contract";
+import { normWireNumber, normWireObject, normWireRange, normWireRequired, normWireString, type NormWireReader } from "@semio-tech/norm-js/registry/contract";
 
 export interface ChangeUnitHeight {
-  index: number;
+  id: string;
   newUnitHeightM: number;
 }
 
-export const parseChangeUnitHeight: NormWireReader<ChangeUnitHeight> = normWireObject<ChangeUnitHeight>({ index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), newUnitHeightM: normWireRequired(normWireRange(normWireNumber, {"exclusiveMinimum":0})) });
+export const parseChangeUnitHeight: NormWireReader<ChangeUnitHeight> = normWireObject<ChangeUnitHeight>({ id: normWireRequired(normWireString), newUnitHeightM: normWireRequired(normWireRange(normWireNumber, {"maximum":10000,"exclusiveMinimum":0})) });

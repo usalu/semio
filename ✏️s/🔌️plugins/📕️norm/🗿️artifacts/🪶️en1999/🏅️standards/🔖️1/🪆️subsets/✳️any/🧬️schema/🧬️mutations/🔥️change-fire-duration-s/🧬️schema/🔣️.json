@@ -1,0 +1,65 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-fire-duration-s/schema.json",
+  "title": "ChangeFireDurationS",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "fireScenarioId",
+    "newDurationS"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeFireDurationS"
+    },
+    "fireScenarioId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Fire scenario",
+          "de": "Brandszenario"
+        },
+        "description": {
+          "en": "The fire scenario this mutation addresses, by id.",
+          "de": "Das adressierte Element (Brandszenario), per Kennung."
+        },
+        "ref": {
+          "kind": "fire-scenario"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newDurationS": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Fire duration t",
+          "de": "Branddauer t"
+        },
+        "widget": "stepper",
+        "unit": "s",
+        "displayUnit": "min",
+        "displayFactor": 0.016666666666666666,
+        "precision": 0,
+        "step": 60,
+        "snaps": [
+          900,
+          1800,
+          2700,
+          3600,
+          5400,
+          7200,
+          10800,
+          14400
+        ],
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-site-cu-kpa/schema.json",
+  "title": "ChangeSiteCUKpa",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "newCUKpa"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeSiteCUKpa"
+    },
+    "newCUKpa": {
+      "type": "number",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Time-averaged undrained shear strength c_u in kPa of the top 30 m (0 = not given)",
+          "de": "Zeitlich gemittelte undränierte Scherfestigkeit c_u in kPa der obersten 30 m (0 = nicht angegeben)"
+        },
+        "group": "value",
+        "order": 10,
+        "widget": "stepper",
+        "step": 0.001,
+        "precision": 3
+      }
+    }
+  }
+}

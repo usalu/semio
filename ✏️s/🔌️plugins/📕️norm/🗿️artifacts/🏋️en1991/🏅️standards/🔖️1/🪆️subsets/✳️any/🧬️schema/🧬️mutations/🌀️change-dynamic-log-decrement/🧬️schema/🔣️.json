@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-dynamic-log-decrement/schema.json",
+  "title": "ChangeDynamicLogDecrement",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newLogDecrement"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Dynamic element",
+          "de": "Schwingungsanfälliges Bauteil"
+        },
+        "description": {
+          "en": "The dynamic element this mutation addresses, by id.",
+          "de": "Das adressierte Element (Schwingungsanfälliges Bauteil), per Kennung."
+        },
+        "ref": {
+          "kind": "dynamic-element"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newLogDecrement": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Logarithmic decrement of structural damping delta_s",
+          "de": "Logarithmisches Dämpfungsdekrement delta_s"
+        },
+        "widget": "stepper",
+        "precision": 3,
+        "step": 0.005,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

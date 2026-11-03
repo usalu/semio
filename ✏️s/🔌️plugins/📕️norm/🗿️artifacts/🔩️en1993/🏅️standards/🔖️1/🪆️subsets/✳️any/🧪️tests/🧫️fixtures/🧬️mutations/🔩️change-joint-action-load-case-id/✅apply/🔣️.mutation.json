@@ -1,0 +1,7 @@
+{
+  "ChangeJointActionLoadCaseId": {
+    "id": "joint-j1",
+    "elementId": "jf-1",
+    "newLoadCaseId": "g-permanent-alt"
+  }
+}

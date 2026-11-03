@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/remove-material/schema.json",
+  "title": "RemoveMaterial",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "removeMaterial"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Material",
+          "de": "Werkstoff"
+        },
+        "description": {
+          "en": "The material this mutation removes.",
+          "de": "Entfernt wird: Werkstoff."
+        },
+        "ref": {
+          "kind": "material"
+        },
+        "group": "target",
+        "order": 10
+      }
+    }
+  }
+}

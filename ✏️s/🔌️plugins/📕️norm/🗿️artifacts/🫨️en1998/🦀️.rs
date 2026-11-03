@@ -139,6 +139,9 @@ mod mutations_unit;
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/⚖️compliance/🦀️.rs"]
 mod schema_compliance;
 #[cfg(test)]
+#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🏗️structures/🦀️.rs"]
+mod structures_tests;
+#[cfg(test)]
 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]
 mod sqlite_snapshot_tests;
 //#endregion 🪢️Mounts

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeEmbWallDeltaActiveDeg",
+  "id": "ewall-E1",
+  "newDeltaActiveDeg": 32.0
+}

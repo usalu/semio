@@ -24,8 +24,8 @@
         },
         "unit": "J/m²",
         "displayUnit": "MJ/m²",
-        "displayFactor": 1e-06,
-        "step": 1000000.0,
+        "displayFactor": 0.000001,
+        "step": 1000000,
         "precision": 0,
         "group": "fire",
         "order": 10

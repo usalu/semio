@@ -1,0 +1,6 @@
+{
+  "mutation": "changeActionGKLine",
+  "memberId": "purlin-1",
+  "actionId": "G",
+  "newGKLine": 800.0
+}

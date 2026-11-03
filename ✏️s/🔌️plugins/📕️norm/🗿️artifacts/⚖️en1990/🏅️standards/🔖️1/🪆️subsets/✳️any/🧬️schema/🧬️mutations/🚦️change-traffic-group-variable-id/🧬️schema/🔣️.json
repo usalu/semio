@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/mutation/change-traffic-group-variable-id/schema.json",
+  "title": "ChangeTrafficGroupVariableId",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newVariableId"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeTrafficGroupVariableId"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Traffic group",
+          "de": "Verkehrsgruppe"
+        },
+        "description": {
+          "en": "The traffic group this mutation addresses, by id.",
+          "de": "Das adressierte Element (Verkehrsgruppe), per Kennung."
+        },
+        "ref": {
+          "kind": "traffic-group"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newVariableId": {
+      "type": "string",
+      "x-semio-ui": {
+        "label": {
+          "en": "Load component",
+          "de": "Lastbestandteil"
+        },
+        "widget": "text",
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

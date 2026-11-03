@@ -10,23 +10,25 @@ extern crate semio_framework_value_derive as value_derive;
 
 use semio_s_plugin_norm_compliance::AnnexChoice;
 use framework_schema::ArtifactSchema;
+use semio_s_artifact_norm_en1994_model::Placement;
 use semio_s_artifact_norm_en1994_model::CompositeBeam;
 use semio_s_artifact_norm_en1994_model::CompositeColumn;
 use semio_s_artifact_norm_en1994_model::CompositeSlab;
+use semio_s_artifact_norm_en1994_model::{FatigueDetail, FireRating, StructureKind};
 
 //#region 🔖️Artifact
 
 /// 🧬️ Full En1994 artifact state across the artifact and presence lanes.
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.norm.en1994")]
 pub struct En1994Artifact {
     #[state(artifact)]
     pub annex: AnnexChoice,
     #[state(artifact)]
-    pub structure_kind: String,
+    pub structure_kind: StructureKind,
     #[state(artifact)]
     pub steel_f_y_pa: f64,
     #[state(artifact)]
@@ -36,11 +38,19 @@ pub struct En1994Artifact {
     #[state(artifact)]
     pub slabs: Vec<CompositeSlab>,
     #[state(artifact)]
-    pub fire_rating: String,
+    pub placements: Vec<Placement>,
+    #[state(artifact)]
+    pub fire_rating: FireRating,
     #[state(artifact)]
     pub insulation_thickness_m: f64,
     #[state(artifact)]
-    pub fatigue_detail: String,
+    pub fatigue_detail: FatigueDetail,
+    #[state(artifact)]
+    pub reliability_class: semio_s_plugin_norm_compliance::ReliabilityClass,
+    #[state(artifact)]
+    pub studs: Vec<Stud>,
+    #[state(artifact)]
+    pub cases: Vec<CaseRow>,
 }
 //#endregion 🔖️Artifact
 
@@ -51,14 +61,18 @@ impl En1994Artifact {
     pub fn to_snapshot(&self) -> semio_s_artifact_norm_en1994_model::En1994Snapshot {
         semio_s_artifact_norm_en1994_model::En1994Snapshot {
             annex: self.annex,
+            reliability_class: self.reliability_class,
             structure_kind: self.structure_kind.clone(),
             steel_f_y_pa: self.steel_f_y_pa,
             beams: self.beams.clone(),
             columns: self.columns.clone(),
             slabs: self.slabs.clone(),
+            placements: self.placements.clone(),
+            studs: self.studs.clone(),
             fire_rating: self.fire_rating.clone(),
             insulation_thickness_m: self.insulation_thickness_m,
             fatigue_detail: self.fatigue_detail.clone(),
+            cases: self.cases.clone(),
         }
     }
 
@@ -66,14 +80,18 @@ impl En1994Artifact {
     pub fn from_snapshot(snapshot: semio_s_artifact_norm_en1994_model::En1994Snapshot) -> Self {
         Self {
             annex: snapshot.annex,
+            reliability_class: snapshot.reliability_class,
             structure_kind: snapshot.structure_kind,
             steel_f_y_pa: snapshot.steel_f_y_pa,
             beams: snapshot.beams,
             columns: snapshot.columns,
             slabs: snapshot.slabs,
+            placements: snapshot.placements,
+            studs: snapshot.studs,
             fire_rating: snapshot.fire_rating,
             insulation_thickness_m: snapshot.insulation_thickness_m,
             fatigue_detail: snapshot.fatigue_detail,
+            cases: snapshot.cases,
         }
     }
 }

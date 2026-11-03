@@ -123,6 +123,75 @@ async function download(tool: NativeToolV1, host: ToolchainHostV1, directory: st
   return archive;
 }
 
+/** 🗜️ Extracts a gzip tar inside the destination when `tar` cannot, keeping relative links that stay inside it. */
+const linuxGzipExtractV1 = String.raw`
+import gzip, os, sys, tarfile
+archive, dest = sys.argv[1], os.path.realpath(sys.argv[2])
+os.makedirs(dest, exist_ok=True)
+def inside(path):
+    path = os.path.normpath(path)
+    if path != dest and not path.startswith(dest + os.sep):
+        raise SystemExit(1)
+    return path
+with gzip.open(archive, "rb") as raw, tarfile.open(fileobj=raw, mode="r|") as tar:
+    for member in tar:
+        name = member.name.replace("\\", "/")
+        parts = name.split("/")
+        if parts[-1:] == [""]:
+            parts = parts[:-1]
+        if name.startswith("/") or not parts or any(part in ("", ".", "..") for part in parts):
+            raise SystemExit(1)
+        target = inside(os.path.join(dest, name))
+        if member.isdir():
+            os.makedirs(target, exist_ok=True)
+            continue
+        os.makedirs(os.path.dirname(target), exist_ok=True)
+        if member.issym():
+            link = member.linkname
+            if link.startswith("/") or os.path.isabs(link):
+                raise SystemExit(1)
+            inside(os.path.join(os.path.dirname(target), link))
+            if os.path.lexists(target):
+                os.unlink(target)
+            os.symlink(link, target)
+            continue
+        if not member.isreg():
+            continue
+        source = tar.extractfile(member)
+        if source is None:
+            continue
+        with open(target, "wb") as output:
+            output.write(source.read())
+        os.chmod(target, member.mode & 0o777)
+`;
+
+/** 📦 Extracts a zip inside the destination when the system `unzip` cannot, rejecting paths that leave that destination. */
+const linuxZipExtractV1 = String.raw`
+import os, sys, zipfile
+archive, dest = sys.argv[1], os.path.realpath(sys.argv[2])
+os.makedirs(dest, exist_ok=True)
+def inside(path):
+    path = os.path.normpath(path)
+    if path != dest and not path.startswith(dest + os.sep):
+        raise SystemExit(1)
+    return path
+with zipfile.ZipFile(archive) as archive_file:
+    for info in archive_file.infolist():
+        name = info.filename.replace("\\", "/")
+        parts = name.split("/")
+        if parts[-1:] == [""]:
+            parts = parts[:-1]
+        if name.startswith("/") or not parts or any(part in ("", ".", "..") for part in parts):
+            raise SystemExit(1)
+        target = inside(os.path.join(dest, name))
+        if name.endswith("/"):
+            os.makedirs(target, exist_ok=True)
+            continue
+        os.makedirs(os.path.dirname(target), exist_ok=True)
+        with archive_file.open(info) as source, open(target, "wb") as output:
+            output.write(source.read())
+`;
+
 /** 📦️ Provisions one pinned tool: download under the pinned checksum, unpack with the program every operating system ships, verify the tree, record the executables in a receipt and publish the directory by one rename; a second call finds the receipt and does nothing. */
 export async function prepareNativeToolV1(tool: NativeToolV1, host: ToolchainHostV1, toolsRoot: string, port: NativeToolPortV1, signal: AbortSignal): Promise<string> {
   const directory = nativeToolDirectoryV1(tool, host, toolsRoot), parent = dirname(directory), row = nativeDistributionV1(tool, host), version = nativeToolSpecV1(tool).version, values = {tool, version, host};
@@ -140,7 +209,15 @@ export async function prepareNativeToolV1(tool: NativeToolV1, host: ToolchainHos
     mkdirSync(extracted);
     const extractors: Readonly<Record<string, Readonly<Record<string, readonly string[]>>>> = NATIVE_TOOLCHAINS_V1.extract;
     const [program, ...template] = extractors[row.format]![port.platform]!;
-    await port.run(program!, template.map(part => part.replace("{archive}", archive).replace("{destination}", extracted)), temporary, signal);
+    const args = template.map(part => part.replace("{archive}", archive).replace("{destination}", extracted));
+    try {
+      await port.run(program!, args, temporary, signal);
+    } catch (error) {
+      signal.throwIfAborted();
+      if (program === "unzip") await port.run("python3", ["-c", linuxZipExtractV1, archive, extracted], temporary, signal);
+      else if (program === "tar" && args.includes("-xzf")) await port.run("python3", ["-c", linuxGzipExtractV1, archive, extracted], temporary, signal);
+      else throw error;
+    }
     const payload = row.prefix === "" ? extracted : join(extracted, row.prefix);
     if (!lstatSync(payload).isDirectory()) throw new Error(toolchainMessageV1("member", {...values, member: row.prefix}, port.environment));
     verifyExtractedTreeV1(payload);

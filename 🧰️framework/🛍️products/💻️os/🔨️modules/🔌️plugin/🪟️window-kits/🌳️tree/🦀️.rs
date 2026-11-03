@@ -141,12 +141,19 @@ pub struct PanelTreeBuilder {
     pub interaction_domain: Option<UiText>,
     interaction_select: Option<(ActionId, Option<UiValue>)>,
     drop_action: Option<ActionId>,
+    presentation: semio_framework_ui_contract::TreePresentation,
 }
 
 impl PanelTreeBuilder {
     /// 🌳️ `namespace` prefixes every id built via `.item_id()`, e.g. `"flow-play-document"`.
     pub fn new(namespace: impl TryInto<UiText>) -> UiAssemblyResult<Self> {
-        Ok(Self { namespace: ui_text(namespace, "panel-tree.namespace")?, sections: UiFixedList::default(), selected_ids: None, highlighted_ids: None, interaction_domain: None, interaction_select: None, drop_action: None })
+        Ok(Self { namespace: ui_text(namespace, "panel-tree.namespace")?, sections: UiFixedList::default(), selected_ids: None, highlighted_ids: None, interaction_domain: None, interaction_select: None, drop_action: None, presentation: semio_framework_ui_contract::TreePresentation::Standard })
+    }
+
+    /// 🌳️ Selects the inherited row presentation of the built tree: `Touch` makes every row at least 44 px tall, for trees a finger taps (the Edit menu, nudge buttons).
+    pub fn presentation(mut self, presentation: semio_framework_ui_contract::TreePresentation) -> Self {
+        self.presentation = presentation;
+        self
     }
 
     /// 🌳️ Builds a namespaced item id: `"{namespace}.{kind}.{id}"`.
@@ -257,7 +264,7 @@ impl PanelTreeBuilder {
     /// reach the built tree this wave.
     pub fn build(self) -> UiAssemblyResult<BuiltNode> {
         let builder = tree().try_id(&self.namespace).map_err(|_| ui_assembly_error("panel-tree.root-id"))?;
-        let mut builder = builder.try_children(self.sections).map_err(|_| ui_assembly_error("panel-tree.root-sections"))?;
+        let mut builder = builder.presentation(self.presentation).try_children(self.sections).map_err(|_| ui_assembly_error("panel-tree.root-sections"))?;
         if let Some(domain) = self.interaction_domain {
             builder = builder.interaction_domain(domain);
         }

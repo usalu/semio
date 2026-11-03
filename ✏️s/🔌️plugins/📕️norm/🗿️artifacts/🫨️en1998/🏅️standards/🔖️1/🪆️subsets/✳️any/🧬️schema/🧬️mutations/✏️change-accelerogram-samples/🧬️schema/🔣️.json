@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-accelerogram-samples/schema.json",
+  "title": "ChangeAccelerogramSamples",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newSamples"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeAccelerogramSamples"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Accelerogram",
+          "de": "Akzelerogramm"
+        },
+        "description": {
+          "en": "The accelerogram this mutation addresses, by id.",
+          "de": "Das adressierte Element (Akzelerogramm), per Kennung."
+        },
+        "ref": {
+          "kind": "accelerogram"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newSamples": {
+      "type": "string",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Ground acceleration samples in m/s² separated by blanks",
+          "de": "Bodenbeschleunigungswerte in m/s² durch Leerzeichen getrennt"
+        },
+        "group": "value",
+        "order": 20,
+        "widget": "text"
+      }
+    }
+  }
+}

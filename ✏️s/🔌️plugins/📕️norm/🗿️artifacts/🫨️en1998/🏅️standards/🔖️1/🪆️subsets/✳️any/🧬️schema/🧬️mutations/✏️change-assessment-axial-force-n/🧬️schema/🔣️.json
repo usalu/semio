@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-assessment-axial-force-n/schema.json",
+  "title": "ChangeAssessmentAxialForceN",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newAxialForceN"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeAssessmentAxialForceN"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Assessment",
+          "de": "Bewertung"
+        },
+        "description": {
+          "en": "The assessment this mutation addresses, by id.",
+          "de": "Das adressierte Element (Bewertung), per Kennung."
+        },
+        "ref": {
+          "kind": "assessment"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newAxialForceN": {
+      "type": "number",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Axial force N (compression positive)",
+          "de": "Normalkraft N (Druck positiv)"
+        },
+        "group": "value",
+        "order": 20,
+        "widget": "stepper",
+        "step": 0.001,
+        "precision": 3
+      }
+    }
+  }
+}

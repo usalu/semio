@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-built-up-design-moment/schema.json",
+  "title": "ChangeBuiltUpDesignMoment",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newDesignMoment"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Built-up member",
+          "de": "Zusammengesetzter Stab"
+        },
+        "description": {
+          "en": "The built-up member this mutation addresses, by id.",
+          "de": "Das adressierte Element (Zusammengesetzter Stab), per Kennung."
+        },
+        "ref": {
+          "kind": "built-up"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newDesignMoment": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "First-order moment M_Ed",
+          "de": "Moment nach Theorie I. Ordnung M_Ed"
+        },
+        "widget": "stepper",
+        "unit": "N·m",
+        "displayUnit": "kN·m",
+        "displayFactor": 0.001,
+        "precision": 1,
+        "step": 1000,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

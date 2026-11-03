@@ -1,0 +1,5 @@
+{
+  "mutation": "changeElevationRegular",
+  "id": "bldg-office",
+  "newElevationRegular": false
+}

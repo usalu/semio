@@ -1,0 +1,121 @@
+# key|scope|kind|unit|example|flags|en|de|confidence|note   (EN 1990 evaluators: forces in N, lengths in m unless the key says mm, stresses in N/mm²)
+@choice structure|building|Building|Hochbau
+@choice structure|bridge|Bridge|Brücke
+@choice set|A|Set A (EQU)|Satz A (EQU)
+@choice set|B|Set B (STR/GEO)|Satz B (STR/GEO)
+@choice set|C|Set C (GEO)|Satz C (GEO)
+@choice dist|normal|Normal|Normalverteilung
+@choice dist|lognormal|Lognormal|Lognormalverteilung
+@choice lead_psi|psi1|Leading action with ψ₁|Leiteinwirkung mit ψ₁
+@choice lead_psi|psi2|Leading action with ψ₂|Leiteinwirkung mit ψ₂
+@choice track|ballasted|Ballasted track|Schotteroberbau
+@choice r_dist|normal|Normal|Normalverteilung
+@choice r_dist|lognormal|Lognormal|Lognormalverteilung
+@choice e_dist|normal|Normal|Normalverteilung
+@choice e_dist|lognormal|Lognormal|Lognormalverteilung
+@choice track|slab|Slab track|Feste Fahrbahn
+@choice variation|permanent|Permanent|Ständig
+@choice variation|variable|Variable|Veränderlich
+@choice variation|accidental|Accidental|Außergewöhnlich
+@choice origin|direct|Direct|Direkt
+@choice origin|indirect|Indirect|Indirekt
+@choice spatial|fixed|Fixed|Ortsfest
+@choice spatial|free|Free|Frei
+@choice nature|static|Static|Statisch
+@choice nature|dynamic|Dynamic|Dynamisch
+@choice effect|favourable|Favourable|Günstig
+@choice effect|unfavourable|Unfavourable|Ungünstig
+structure||c|-|building||Structure type|Bauwerksart|high|building or bridge
+set||c|-|B||Partial factor set|Teilsicherheitsbeiwertsatz|high|A B C as parsed in match
+dist||c|-|normal||Distribution|Verteilung|high|normal or lognormal
+lead_psi||c|-|psi1||Leading accidental value|Leitwert der außergewöhnlichen Kombination|high|
+track||c|-|ballasted||Track type|Gleisart|high|
+variation||c|-|permanent||Variation in time|Zeitliche Veränderlichkeit|high|
+origin||c|-|direct||Origin|Herkunft|high|
+spatial||c|-|fixed||Spatial variation|Räumliche Veränderlichkeit|high|
+nature||c|-|static||Nature|Art der Beanspruchung|high|
+effect||c|-|unfavourable||Effect|Wirkung|medium|favourable assumed on the left
+use||x|-|||Use category of the structure|Nutzungskategorie|medium|value set read by a table match
+category|E90.03|n|1|||Design working life category|Kategorie der Nutzungsdauer|high|c.n category as u8
+category|E90.09,E90.22,E90.23,E90.25|x|-|office||Action category|Einwirkungskategorie|medium|text such as office
+material||x|-|other||Material|Werkstoff|medium|default other
+analysis||x|-|||Analysis model flag (1 to 4)|Berechnungsmodellkennung (1 bis 4)|medium|c.s parsed
+actions||x|-|||Actions list|Einwirkungsliste|medium|parsed by Action::parse_list
+situations||x|-|||Design situations, comma separated|Bemessungssituationen, kommagetrennt|high|
+spectrum||x|-|||Stress range spectrum range:cycles;…|Spannungsschwingbreitenspektrum Schwingbreite:Zyklen;…|high|rows range:cycles separated by semicolons
+cc||n|1|||Consequence class CC|Schadensfolgeklasse CC|high|within 1 to 3
+rc||n|1|||Reliability class RC|Zuverlässigkeitsklasse RC|high|1 to 3
+dsl||n|1|||Design supervision level DSL|Entwurfsüberwachungsstufe DSL|high|
+il||n|1|||Inspection level IL|Ausführungsüberwachungsstufe IL|high|
+gamma_f||n|1|||Partial factor γ_F|Teilsicherheitsbeiwert γ_F|high|
+gamma_sd||n|1|||Model uncertainty factor γ_Sd|Modellunsicherheitsbeiwert γ_Sd|high|
+gamma_rd||n|1|||Model uncertainty factor γ_Rd|Modellunsicherheitsbeiwert γ_Rd|high|
+gamma_m||n|1|||Partial factor γ_M|Teilsicherheitsbeiwert γ_M|high|
+gamma_mf||n|1|||Fatigue strength factor γ_Mf|Teilsicherheitsbeiwert Ermüdungsfestigkeit γ_Mf|high|
+gamma_ff||n|1|||Fatigue load factor γ_Ff|Teilsicherheitsbeiwert Ermüdungslast γ_Ff|high|
+k_fi_declared||n|1|||Declared K_FI factor|Angegebener K_FI-Faktor|medium|
+years||n|a|||Design working life or period|Nutzungsdauer oder Zeitraum|high|
+t_years||n|a|||Reference period in years|Bezugszeitraum in Jahren|high|
+g_mean||n|N|||Mean permanent action G_mean|Mittelwert der ständigen Einwirkung|medium|N assumed
+v_g||n|1|||Coefficient of variation of G|Variationskoeffizient von G|high|
+q_mean||n|N|||Mean variable action Q_mean|Mittelwert der veränderlichen Einwirkung|medium|N assumed
+q_cov||n|1|||Coefficient of variation of Q|Variationskoeffizient von Q|high|
+altitude||n|m|||Site altitude above sea level|Höhe über Meeresspiegel|high|
+psi0||n|1|||Combination factor ψ₀|Kombinationsbeiwert ψ₀|high|r0:1
+psi1||n|1|||Frequent value factor ψ₁|Beiwert ψ₁ des häufigen Werts|high|r0:1
+psi2||n|1|||Quasi-permanent factor ψ₂|Beiwert ψ₂ des quasi-ständigen Werts|high|r0:1
+x_k||n|MPa|||Characteristic property X_k|Charakteristische Eigenschaft X_k|medium|N/mm² for strength assumed
+eta||n|1|1||Conversion factor η|Umrechnungsbeiwert η|high|
+e_d||n|1|||Design value of the action effect|Bemessungswert der Beanspruchung|low|unit depends on the effect
+a_nom||n|mm|||Nominal geometric value a_nom|Nennwert a_nom der Geometrie|medium|mm assumed
+delta_a||n|mm|||Geometric deviation Δa|Geometrische Abweichung Δa|medium|
+alpha_cr||n|1|||Elastic critical load factor α_cr|Verzweigungslastfaktor α_cr|high|
+n||n|1|||Number of tests|Anzahl der Versuche|high|
+mean||n|1|||Sample mean|Stichprobenmittelwert|low|unit of the tested property
+v||n|1|||Coefficient of variation V_x|Variationskoeffizient V_x|high|
+v_known||n|1|||Known coefficient of variation|Bekannter Variationskoeffizient|high|
+eta_d||n|1|||Conversion factor η_d|Umrechnungsbeiwert η_d|high|
+f_rep||n|1|||Representative value F_rep|Repräsentativer Wert F_rep|low|unit of the action
+section||n|1|1||Cross-section parameter|Querschnittsparameter|low|c.o section
+delta_sigma_c||n|MPa|||Detail category Δσ_c|Kerbfallklasse Δσ_c|high|N/mm²
+t_d||n|Nm|||Design value of the stabilising effect|Bemessungswert der stabilisierenden Wirkung|low|moment or force
+r_d||n|1|||Design resistance R_d|Bemessungswiderstand R_d|low|same unit as the effect
+cd_char||n|mm|||Serviceability criterion, characteristic|Gebrauchstauglichkeitskriterium charakteristisch|medium|
+cd_freq||n|mm|||Serviceability criterion, frequent|Gebrauchstauglichkeitskriterium häufig|medium|
+cd_qp||n|mm|||Serviceability criterion, quasi-permanent|Gebrauchstauglichkeitskriterium quasi-ständig|medium|
+span||n|m|||Span L|Spannweite L|high|
+cantilever||n|1|||Cantilever (1) or not (0)|Kragarm (1) oder nicht (0)|high|flag > 0.5
+w_c||n|mm|||Pre-camber w_c|Überhöhung w_c|high|
+w1||n|mm|||Initial deflection w₁|Anfangsverformung w₁|high|
+w2||n|mm|||Long-term deflection w₂|Langzeitverformung w₂|high|
+w3||n|mm|||Variable deflection w₃|Verformung w₃ aus veränderlichen Einwirkungen|high|
+ratio_net||n|1|250||Net deflection limit L/ratio|Grenzwert L/Faktor der Nettodurchbiegung|high|
+ratio_w3||n|1|300||Variable deflection limit L/ratio|Grenzwert L/Faktor von w₃|high|
+f1||n|Hz|||Natural frequency f₁|Eigenfrequenz f₁|high|
+f_min||n|Hz|||Minimum natural frequency|Mindesteigenfrequenz|high|
+u||n|mm|||Horizontal displacement u|Horizontalverschiebung u|high|
+height||n|m|||Building height H|Gebäudehöhe H|high|
+drift_ratio||n|1|500||Drift limit H/ratio|Grenzwert H/Faktor der Verschiebung|high|
+u_storey||n|mm|||Storey displacement u_i|Stockwerksverschiebung u_i|high|
+h_storey||n|m|||Storey height h_i|Geschosshöhe h_i|high|
+storey_ratio||n|1|300||Storey drift limit h_i/ratio|Grenzwert h_i/Faktor der Stockwerksverschiebung|high|
+acc_v||n|m_s2|||Vertical acceleration|Vertikalbeschleunigung|high|
+acc_h||n|m_s2|||Horizontal acceleration|Horizontalbeschleunigung|high|
+acc_v_limit||n|m_s2|||Vertical acceleration limit|Grenzwert der Vertikalbeschleunigung|high|
+acc_h_limit||n|m_s2|||Horizontal acceleration limit|Grenzwert der Horizontalbeschleunigung|high|
+crowd||n|1|||Crowd loading (1) or not (0)|Menschenansammlung (1) oder nicht (0)|high|flag > 0.5
+deck_acc||n|m_s2|||Deck acceleration|Brückenbeschleunigung|high|
+twist||n|1|||Track twist|Gleisverwindung|medium|mm over 3 m assumed unitless
+v_kmh||n|km_h|||Train speed|Zuggeschwindigkeit|high|
+deflection||n|mm|||Deck deflection|Durchbiegung des Überbaus|high|
+deflection_ratio||n|1|||Deflection limit L/ratio|Grenzwert L/Faktor der Durchbiegung|high|
+beta||n|1|||Reliability index β|Zuverlässigkeitsindex β|high|
+beta_t||n|1|||Target reliability index β_t|Zielwert β_t des Zuverlässigkeitsindex|high|
+r_dist||c|-|normal||Distribution of the resistance|Verteilung des Widerstands|high|normal or lognormal
+e_dist||c|-|normal||Distribution of the action effect|Verteilung der Beanspruchung|high|
+r_mean||n|1|||Mean resistance|Mittelwert des Widerstands|low|same unit as the effect
+r_sd||n|1|||Standard deviation of the resistance|Standardabweichung des Widerstands|low|
+e_mean||n|1|||Mean action effect|Mittelwert der Beanspruchung|low|
+e_sd||n|1|||Standard deviation of the action effect|Standardabweichung der Beanspruchung|low|
+r_k||n|1|||Characteristic resistance R_k|Charakteristischer Widerstand R_k|low|
+e_k||n|1|||Characteristic action effect E_k|Charakteristische Beanspruchung E_k|low|

@@ -1,0 +1,17 @@
+{
+  "InsertBucklingLength": {
+    "index": 1,
+    "bucklingLength": {
+      "id": "buckling-length-2",
+      "memberId": "member-1",
+      "plane": "MajorAxis",
+      "sway": "NonSway",
+      "restraintA": "Framed",
+      "columnStiffnessA": 3.6e-05,
+      "beamStiffnessA": 7.2e-05,
+      "restraintB": "Framed",
+      "columnStiffnessB": 3.6e-05,
+      "beamStiffnessB": 7.2e-05
+    }
+  }
+}

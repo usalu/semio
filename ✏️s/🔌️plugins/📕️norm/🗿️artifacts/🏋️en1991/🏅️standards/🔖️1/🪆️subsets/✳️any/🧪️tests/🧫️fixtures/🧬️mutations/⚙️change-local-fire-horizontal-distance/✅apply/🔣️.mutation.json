@@ -1,0 +1,6 @@
+{
+  "ChangeLocalFireHorizontalDistance": {
+    "id": "local-fire-1",
+    "newHorizontalDistance": 2.0
+  }
+}

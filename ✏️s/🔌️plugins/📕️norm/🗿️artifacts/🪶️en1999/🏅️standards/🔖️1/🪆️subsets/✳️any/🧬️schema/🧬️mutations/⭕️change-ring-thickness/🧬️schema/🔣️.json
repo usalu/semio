@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-ring-thickness/schema.json",
+  "title": "ChangeRingThickness",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "ringStiffenerId",
+    "newThickness"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeRingThickness"
+    },
+    "ringStiffenerId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Ring stiffener",
+          "de": "Ringsteife"
+        },
+        "description": {
+          "en": "The ring stiffener this mutation addresses, by id.",
+          "de": "Das adressierte Element (Ringsteife), per Kennung."
+        },
+        "ref": {
+          "kind": "ring-stiffener"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newThickness": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Ring thickness",
+          "de": "Ringdicke"
+        },
+        "widget": "stepper",
+        "unit": "m",
+        "displayUnit": "mm",
+        "displayFactor": 1000,
+        "precision": 1,
+        "step": 0.001,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

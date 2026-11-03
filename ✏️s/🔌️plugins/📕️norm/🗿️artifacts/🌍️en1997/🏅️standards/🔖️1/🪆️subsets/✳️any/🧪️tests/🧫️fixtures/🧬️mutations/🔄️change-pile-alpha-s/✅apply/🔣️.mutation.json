@@ -1,0 +1,5 @@
+{
+  "mutation": "changePileAlphaS",
+  "id": "pile-P1",
+  "newAlphaS": 1.4
+}

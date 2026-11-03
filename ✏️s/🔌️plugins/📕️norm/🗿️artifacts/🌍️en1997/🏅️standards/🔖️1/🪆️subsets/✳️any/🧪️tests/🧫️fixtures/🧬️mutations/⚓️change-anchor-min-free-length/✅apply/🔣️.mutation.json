@@ -1,0 +1,5 @@
+{
+  "mutation": "changeAnchorMinFreeLength",
+  "id": "anchor-A1",
+  "newMinFreeLength": 9.0
+}

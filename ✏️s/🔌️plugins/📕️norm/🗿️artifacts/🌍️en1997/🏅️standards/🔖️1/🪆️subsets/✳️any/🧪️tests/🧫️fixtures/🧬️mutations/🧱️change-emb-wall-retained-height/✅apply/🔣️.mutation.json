@@ -1,0 +1,5 @@
+{
+  "mutation": "changeEmbWallRetainedHeight",
+  "id": "ewall-E1",
+  "newRetainedHeight": 8.0
+}

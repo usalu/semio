@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeAssumedGasTemperature",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
-  "binaryTag": 70,
+  "binaryTag": 37,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

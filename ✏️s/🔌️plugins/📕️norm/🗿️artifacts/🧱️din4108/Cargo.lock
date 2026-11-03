@@ -6052,6 +6052,7 @@ dependencies = [
  "semio-s-artifact-norm-din4108-schema",
  "semio-s-plugin-norm-app-surface",
  "semio-s-plugin-norm-compliance",
+ "semio-s-plugin-norm-results-config",
  "serde_json",
 ]
 
@@ -6214,12 +6215,12 @@ dependencies = [
  "semio-framework-value-derive",
  "semio-s-artifact-norm-din4108-diff",
  "semio-s-artifact-norm-din4108-model",
- "semio-s-artifact-norm-din4108-mut-elements-2",
+ "semio-s-artifact-norm-din4108-mut-elements-rows",
  "serde",
 ]
 
 [[package]]
-name = "semio-s-artifact-norm-din4108-mut-elements-2"
+name = "semio-s-artifact-norm-din4108-mut-elements-rows"
 version = "0.1.0"
 dependencies = [
  "semio-framework-os-kernel",
@@ -6237,6 +6238,22 @@ name = "semio-s-artifact-norm-din4108-mut-layers"
 version = "0.1.0"
 dependencies = [
  "semio-framework-os-kernel",
+ "semio-framework-schema",
+ "semio-framework-ui-locale",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-s-artifact-norm-din4108-diff",
+ "semio-s-artifact-norm-din4108-model",
+ "semio-s-artifact-norm-din4108-mut-layers-more",
+ "serde",
+]
+
+[[package]]
+name = "semio-s-artifact-norm-din4108-mut-layers-more"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-os-kernel",
+ "semio-framework-pack-json",
  "semio-framework-schema",
  "semio-framework-ui-locale",
  "semio-framework-value",
@@ -6413,6 +6430,7 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "serde",
 ]
 
 [[package]]

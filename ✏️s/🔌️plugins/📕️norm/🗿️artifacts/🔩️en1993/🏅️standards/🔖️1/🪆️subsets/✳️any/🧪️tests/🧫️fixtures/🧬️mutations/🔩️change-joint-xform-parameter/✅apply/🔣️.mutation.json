@@ -1,0 +1,6 @@
+{
+  "ChangeJointXformParameter": {
+    "id": "joint-j1",
+    "newTransformationParameter": 1.5
+  }
+}

@@ -1,0 +1,4 @@
+type ChangeMemberDeflectionSensitive {
+  memberId: String!
+  newDeflectionSensitive: Boolean!
+}

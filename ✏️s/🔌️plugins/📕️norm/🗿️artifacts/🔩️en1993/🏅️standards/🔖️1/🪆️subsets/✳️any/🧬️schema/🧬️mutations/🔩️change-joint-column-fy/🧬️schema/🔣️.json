@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-joint-column-fy/schema.json",
+  "title": "ChangeJointColumnFy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newColumnFy"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Joint",
+          "de": "Anschluss"
+        },
+        "description": {
+          "en": "The joint this mutation addresses, by id.",
+          "de": "Das adressierte Element (Anschluss), per Kennung."
+        },
+        "ref": {
+          "kind": "joint"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newColumnFy": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Column yield strength f_y,c",
+          "de": "Stützenstreckgrenze f_y,c"
+        },
+        "widget": "stepper",
+        "unit": "Pa",
+        "displayUnit": "N/mm²",
+        "displayFactor": 0.000001,
+        "precision": 1,
+        "step": 1000000,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

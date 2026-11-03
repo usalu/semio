@@ -20,6 +20,11 @@ name = "mutation_vectors"
 path = "../../🧪️tests/🔬️vectors/🦀️.rs"
 
 [dependencies]
+serde = { workspace = true, optional = true }
+semio-s-artifact-norm-en1992-mutations-proto = { workspace = true }
+semio-s-artifact-norm-en1992-mutations-json-schema = { workspace = true }
+semio-s-artifact-norm-en1992-mutations-graphql = { workspace = true }
+semio-s-artifact-norm-en1992-mutations-typescript = { workspace = true }
 semio-framework-os-command = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-os-store-one-item = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/📦️packages/🦀️rust" }
@@ -33,10 +38,40 @@ semio-framework-value-derive = { workspace = true }
 semio-s-artifact-norm-en1992-diff = { workspace = true }
 semio-s-artifact-norm-en1992-model = { workspace = true }
 semio-s-artifact-norm-en1992-mut-anchors = { workspace = true }
+semio-s-artifact-norm-en1992-mut-design-cases = { workspace = true }
 semio-s-artifact-norm-en1992-mut-members = { workspace = true }
+semio-s-artifact-norm-en1992-mut-member-fields = { workspace = true }
+semio-s-artifact-norm-en1992-mut-placements = { workspace = true }
+semio-s-artifact-norm-en1992-mut-placements-rows = { workspace = true }
+semio-s-artifact-norm-en1992-mut-concrete-grades = { workspace = true }
+semio-s-artifact-norm-en1992-mut-reinforcement-grades = { workspace = true }
+semio-s-artifact-norm-en1992-mut-prestress-steels = { workspace = true }
+semio-s-artifact-norm-en1992-mut-member-identity = { workspace = true }
+semio-s-artifact-norm-en1992-mut-member-prestress-steel = { workspace = true }
+semio-s-artifact-norm-en1992-mut-member-shear = { workspace = true }
+semio-s-artifact-norm-en1992-mut-member-prestress-fire = { workspace = true }
+semio-s-artifact-norm-en1992-mut-bar-layers = { workspace = true }
+semio-s-artifact-norm-en1992-mut-member-actions-identity = { workspace = true }
+semio-s-artifact-norm-en1992-mut-member-actions-loads = { workspace = true }
+semio-s-artifact-norm-en1992-mut-geometry-bar-fields = { workspace = true }
+semio-s-artifact-norm-en1992-mut-geometry-section-bars = { workspace = true }
+semio-s-artifact-norm-en1992-mut-geometry-tendons-studs = { workspace = true }
+semio-s-artifact-norm-en1992-mut-anchors-capacity = { workspace = true }
+semio-s-artifact-norm-en1992-mut-anchors-head = { workspace = true }
+semio-s-artifact-norm-en1992-mut-anchor-actions-identity = { workspace = true }
+semio-s-artifact-norm-en1992-mut-anchor-actions-loads = { workspace = true }
+semio-s-artifact-norm-en1992-mut-anchor-actions-resultants = { workspace = true }
+semio-s-artifact-norm-en1992-mut-grades-rows = { workspace = true }
+semio-s-artifact-norm-en1992-mut-member-lists-rows = { workspace = true }
+semio-s-artifact-norm-en1992-mut-member-geometry-rows = { workspace = true }
+semio-s-artifact-norm-en1992-mut-anchor-lists-rows = { workspace = true }
 semio-s-artifact-norm-en1992-mut-project = { workspace = true }
 semio-s-artifact-norm-en1992-mut-resistance = { workspace = true }
 semio-s-plugin-norm-app-surface = { workspace = true }
+semio-framework-diagnostic = { workspace = true }
+
+[features]
+test-support = ["dep:serde", "semio-s-artifact-norm-en1992-diff/test-support", "semio-s-artifact-norm-en1992-model/test-support", "semio-s-artifact-norm-en1992-mut-anchor-actions-identity/test-support", "semio-s-artifact-norm-en1992-mut-anchor-actions-loads/test-support", "semio-s-artifact-norm-en1992-mut-anchor-actions-resultants/test-support", "semio-s-artifact-norm-en1992-mut-anchor-lists-rows/test-support", "semio-s-artifact-norm-en1992-mut-anchors/test-support", "semio-s-artifact-norm-en1992-mut-anchors-capacity/test-support", "semio-s-artifact-norm-en1992-mut-anchors-head/test-support", "semio-s-artifact-norm-en1992-mut-bar-layers/test-support", "semio-s-artifact-norm-en1992-mut-concrete-grades/test-support", "semio-s-artifact-norm-en1992-mut-design-cases/test-support", "semio-s-artifact-norm-en1992-mut-geometry-bar-fields/test-support", "semio-s-artifact-norm-en1992-mut-geometry-section-bars/test-support", "semio-s-artifact-norm-en1992-mut-geometry-tendons-studs/test-support", "semio-s-artifact-norm-en1992-mut-grades-rows/test-support", "semio-s-artifact-norm-en1992-mut-member-actions-identity/test-support", "semio-s-artifact-norm-en1992-mut-member-actions-loads/test-support", "semio-s-artifact-norm-en1992-mut-member-fields/test-support", "semio-s-artifact-norm-en1992-mut-member-geometry-rows/test-support", "semio-s-artifact-norm-en1992-mut-member-identity/test-support", "semio-s-artifact-norm-en1992-mut-member-lists-rows/test-support", "semio-s-artifact-norm-en1992-mut-member-prestress-fire/test-support", "semio-s-artifact-norm-en1992-mut-member-prestress-steel/test-support", "semio-s-artifact-norm-en1992-mut-member-shear/test-support", "semio-s-artifact-norm-en1992-mut-members/test-support", "semio-s-artifact-norm-en1992-mut-placements/test-support", "semio-s-artifact-norm-en1992-mut-placements-rows/test-support", "semio-s-artifact-norm-en1992-mut-prestress-steels/test-support", "semio-s-artifact-norm-en1992-mut-project/test-support", "semio-s-artifact-norm-en1992-mut-reinforcement-grades/test-support", "semio-s-artifact-norm-en1992-mut-resistance/test-support"]
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }

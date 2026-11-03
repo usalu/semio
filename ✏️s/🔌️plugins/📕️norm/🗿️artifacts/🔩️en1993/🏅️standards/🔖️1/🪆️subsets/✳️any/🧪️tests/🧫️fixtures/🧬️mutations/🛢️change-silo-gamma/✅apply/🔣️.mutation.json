@@ -1,0 +1,6 @@
+{
+  "ChangeSiloGamma": {
+    "id": "silo-1",
+    "newGamma": 18000.0
+  }
+}

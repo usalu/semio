@@ -1,0 +1,5 @@
+type ChangeBarLayerLapShare {
+  memberId: String!
+  layerId: String!
+  newLapShare: Float!
+}

@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/remove-ground-investigation-reading/schema.json",
+  "title": "RemoveGroundInvestigationReading",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "investigationId",
+    "index"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "removeGroundInvestigationReading"
+    },
+    "investigationId": {
+      "type": "string",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Laboratory test",
+          "de": "Laborversuch"
+        },
+        "description": {
+          "en": "The laboratory test that owns the row, by id.",
+          "de": "Das Elternelement (Laborversuch), per Kennung."
+        },
+        "group": "target",
+        "order": 10,
+        "widget": "reference",
+        "ref": {
+          "kind": "investigation"
+        }
+      }
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Zero-based list position of the row.",
+          "de": "Nullbasierte Listenposition der Zeile."
+        },
+        "group": "target",
+        "order": 20,
+        "widget": "stepper",
+        "step": 1,
+        "precision": 0
+      }
+    }
+  }
+}

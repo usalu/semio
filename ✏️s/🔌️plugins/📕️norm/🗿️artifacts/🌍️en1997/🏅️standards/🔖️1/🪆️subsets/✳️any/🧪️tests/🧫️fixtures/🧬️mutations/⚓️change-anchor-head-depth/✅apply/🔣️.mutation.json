@@ -1,0 +1,5 @@
+{
+  "mutation": "changeAnchorHeadDepth",
+  "id": "anchor-A1",
+  "newHeadDepth": 2.0
+}

@@ -1,7 +1,7 @@
 import{BUILD_HOST_CAPACITY_POLICY_V1}from"../🌡️host-capacity/🎛️control/🟦️.ts";
 import{readLiveHostCapacityReservationV1}from"../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
 import {noticeLanguagesV1} from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
-import{totalmem}from"node:os";
+import{totalmem,freemem}from"node:os";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import {runtimeCollectGarbageV1} from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 
@@ -84,8 +84,8 @@ export function measureMemoryBaselineV1(ports=createMemoryPortsV1()){
  ports.collect();return ports.sample();
 }
 
-/** 🛂️ Keeps parent baseline charged and refreshes actual ledger reservation before each admission. */
-export function createGraphParentMemoryGovernorV1(options){if("baselineBytes"in options||"budgetBytes"in options||"readBudgetBytes"in options)throw Error("Owned graph parent memory policy required");const environment=options.environment??process.env;return createMemoryGovernorV1({...options,environment,baselineBytes:0,budgetBytes:graphMemoryBudgetBytesV1(environment),readBudgetBytes:()=>graphMemoryBudgetBytesV1(environment)});}
+/** 🛂️ Charges only what the graph parent grows beyond its working set at the start of the inference (the fact index of thousands of projects, measured after one collection) and refreshes the actual ledger reservation before each admission; the measured cost of one project and the free memory of the host bound the parallelism (see {@link createMemoryGovernorV1}). */
+export function createGraphParentMemoryGovernorV1(options){if("baselineBytes"in options||"budgetBytes"in options||"readBudgetBytes"in options)throw Error("Owned graph parent memory policy required");const environment=options.environment??process.env,ports=createMemoryPortsV1(),sample=options.sample??ports.sample,collect=options.collect??ports.collect;return createMemoryGovernorV1({...options,environment,sample,collect,baselineBytes:measureMemoryBaselineV1({sample,collect}),budgetBytes:graphMemoryBudgetBytesV1(environment),readBudgetBytes:()=>graphMemoryBudgetBytesV1(environment)});}
 
 const defaultSleep=(milliseconds,signal)=>new Promise((resolve,reject)=>{
  if(signal?.aborted){reject(signal.reason);return;}
@@ -97,10 +97,10 @@ const defaultSleep=(milliseconds,signal)=>new Promise((resolve,reject)=>{
  * 🚦️ Gates the start of concurrent project inferences by the managed memory above `baselineBytes` (the fixed working set that no admission can influence, see {@link measureMemoryBaselineV1}): at most `workers` run, a new one starts only while the heap is within `budgetBytes` (after one rate limited collection), waiters start in arrival order, progress is reported at most every `progressMilliseconds` and an abort rejects every waiter.
  * @param {{budgetBytes:number;workers:number;baselineBytes?:number;sample?:()=>number;collect?:()=>void;sleep?:(milliseconds:number,signal?:AbortSignal)=>Promise<void>;now?:()=>number;signal?:AbortSignal;report?:(line:string)=>void;environment?:Record<string,string|undefined>;policy?:typeof GRAPH_MEMORY_POLICY_V1}} options
  */
-export function createMemoryGovernorV1({budgetBytes,workers,baselineBytes=0,readBudgetBytes=()=>budgetBytes,sample,collect,sleep=defaultSleep,now=()=>performance.now(),signal,report,environment={},policy=P}){
+export function createMemoryGovernorV1({budgetBytes,workers,baselineBytes=0,readBudgetBytes=()=>budgetBytes,sample,collect,available=()=>freemem(),sleep=defaultSleep,now=()=>performance.now(),signal,report,environment={},policy=P}){
  if(!Number.isSafeInteger(workers)||workers<1||!(budgetBytes>0)||!(baselineBytes>=0))throw Error("Positive worker count and memory budget required");
  const defaults=createMemoryPortsV1(),read=sample??defaults.sample,collectNow=collect??defaults.collect;
- const queue=[],stats={waits:0,waitedMilliseconds:0,collections:0,peakBytes:0};
+ const queue=[],stats={waits:0,waitedMilliseconds:0,collections:0,peakBytes:0},cost={bytes:0,start:0,peak:0,solo:false},floorBytes=policy.hostAvailableFloorMegabytes*MEGABYTE;
  let currentBudget=budgetBytes,running=0,blocked=false,pumping=false,serialSaid=false,retained=false,lastCollect=-Infinity,lastReport=-Infinity,lastSampleAt=-Infinity,lastAdmit=-Infinity,lastRelease=0,lastUsed=0;
  const say=(key,fields)=>{for(const line of renderGraphMemoryMessagesV1(key,{budget:Math.round(currentBudget/MEGABYTE),running,...fields},environment))report?.(line);};
  const observe=fresh=>{const at=now();if(fresh||at-lastSampleAt>=policy.sampleMilliseconds){lastUsed=Math.max(0,read()-baselineBytes);lastSampleAt=at;if(lastUsed>stats.peakBytes)stats.peakBytes=lastUsed;}return lastUsed;};
@@ -115,16 +115,17 @@ export function createMemoryGovernorV1({budgetBytes,workers,baselineBytes=0,read
     const spacing=lastAdmit+policy.admitMinimumMilliseconds-now();
     if(running>0&&spacing>0){await sleep(spacing,signal);continue;}
     currentBudget=readBudgetBytes();if(!Number.isFinite(currentBudget)||currentBudget<=0)throw Error("Current positive graph memory budget required");
-    let used=observe(false),verdict=decideMemoryAdmissionV1(policy,{used,budget:currentBudget,running,workers,blocked,collected:false});
+    const hostLow=running>0&&floorBytes>0&&available()<floorBytes;
+    let used=observe(false)+(running>0?cost.bytes:0),verdict=hostLow?{admit:false,collect:false,reason:"over"}:decideMemoryAdmissionV1(policy,{used,budget:currentBudget,running,workers,blocked,collected:false});
     if(verdict.collect){
      if(mayCollect()){collectNow();lastCollect=now();stats.collections++;retained=running===0&&observe(true)>budgetBytes;}
-     used=observe(true);verdict=decideMemoryAdmissionV1(policy,{used,budget:currentBudget,running,workers,blocked,collected:settled()});
+     used=observe(true)+(running>0?cost.bytes:0);verdict=decideMemoryAdmissionV1(policy,{used,budget:currentBudget,running,workers,blocked,collected:settled()});
      if(verdict.collect)verdict={admit:false,collect:false,reason:"over"};
     }
     if(verdict.admit){
      if(verdict.reason==="within"){if(blocked){blocked=false;say("resumed",{used:Math.round(used/MEGABYTE)});}serialSaid=false;}
      else{blocked=true;if(!serialSaid){serialSaid=true;say("serial",{used:Math.round(used/MEGABYTE)});}}
-     const waiter=queue.shift();running++;lastAdmit=now();
+     const waiter=queue.shift();if(running===0){cost.start=observe(true);cost.peak=cost.start;cost.solo=true;}else cost.solo=false;running++;lastAdmit=now();
      if(waiter.waited){stats.waits++;stats.waitedMilliseconds+=now()-waiter.since;}
      waiter.resolve();
      continue;
@@ -144,9 +145,9 @@ export function createMemoryGovernorV1({budgetBytes,workers,baselineBytes=0,read
    signal?.throwIfAborted();
    await new Promise((resolve,reject)=>{queue.push({resolve,reject,since:now(),waited:false});pump();});
    try{return await task();}
-   finally{running--;lastRelease=now();if(queue.length)pump();}
+   finally{cost.peak=Math.max(cost.peak,observe(true));running--;if(running===0&&cost.solo&&cost.peak>cost.start)cost.bytes=cost.peak-cost.start;lastRelease=now();if(queue.length)pump();}
   },
-  stats:()=>({waits:stats.waits,waitedMilliseconds:Math.round(stats.waitedMilliseconds),collections:stats.collections,peakMegabytes:Math.round(stats.peakBytes/MEGABYTE)}),
+  stats:()=>({waits:stats.waits,waitedMilliseconds:Math.round(stats.waitedMilliseconds),collections:stats.collections,peakMegabytes:Math.round(stats.peakBytes/MEGABYTE),projectCostMegabytes:Math.round(cost.bytes/MEGABYTE)}),
   dispose:()=>{signal?.removeEventListener("abort",onAbort);},
  });
 }

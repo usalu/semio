@@ -1,0 +1,5 @@
+{
+  "mutation": "changeBuildingStoreyStiffnessRatio",
+  "id": "bldg-office",
+  "newStoreyStiffnessRatio": 0.5
+}

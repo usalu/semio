@@ -4,27 +4,29 @@ use semio_s_artifact_norm_en1994_model::En1994Snapshot;
 use semio_s_artifact_norm_en1994_diff::{En1994Diff, En1994SlabsRows, En1994SlabsPatch, En1994SlabsActionsRows, En1994SlabsActionsPatch};
 
 pub fn diff(payload: &ChangeSlabActionQAreaPa, base: &En1994Snapshot) -> protocol::MutationOutcome<En1994Diff> {
-    if !payload.new_q_area_pa.is_finite() {
-        return protocol::MutationOutcome::fatal("mutation.invariant", "must be finite", [payload.index.to_string()]);
-    }
-    let Some(slab) = base.slabs.get(payload.index) else {
-        return protocol::MutationOutcome::error("mutation.target-missing", "slab missing", [payload.index.to_string()]);
+    let Some(index) = base.slabs.iter().position(|row| row.id == payload.slab_id) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("slab {} does not exist.", payload.slab_id), [payload.slab_id.clone()]);
     };
-    let Some(action) = slab.actions.get(payload.action_index) else {
-        return protocol::MutationOutcome::error("mutation.target-missing", "action missing", [payload.action_index.to_string()]);
+    let Some(action_index) = base.slabs[index].actions.iter().position(|row| row.id == payload.id) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("action {} does not exist.", payload.id), [payload.id.clone()]);
+    };
+    if !payload.new_q_area_pa.is_finite() {
+        return protocol::MutationOutcome::fatal("mutation.invariant", "must be finite", [index.to_string()]);
+    }
+    let Some(slab) = base.slabs.get(index) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", "slab missing", [index.to_string()]);
+    };
+    let Some(action) = slab.actions.get(action_index) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", "action missing", [action_index.to_string()]);
     };
     if (action.q_area_pa - payload.new_q_area_pa).abs() < f64::EPSILON {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "unchanged");
     }
     protocol::MutationOutcome::new(En1994Diff {
-        slabs: Some(En1994SlabsRows {
-            modified: vec![En1994SlabsPatch {
-                index: payload.index,
-                actions: Some(En1994SlabsActionsRows { modified: vec![En1994SlabsActionsPatch { index: payload.action_index, q_area_pa: Some(payload.new_q_area_pa), ..Default::default() }] }),
+        slabs: Some(En1994SlabsRows::modification(&payload.slab_id, En1994SlabsPatch {
+                actions: Some(En1994SlabsActionsRows::modification(&payload.id, En1994SlabsActionsPatch { q_area_pa: Some(payload.new_q_area_pa), ..Default::default() })),
                 ..Default::default()
-            }],
-            ..Default::default()
-        }),
+            })),
         ..Default::default()
     })
 }

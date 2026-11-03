@@ -1,0 +1,5 @@
+{
+  "mutation": "changeTestTheoryVariation",
+  "id": "T",
+  "newTheoryVariation": 1.5
+}

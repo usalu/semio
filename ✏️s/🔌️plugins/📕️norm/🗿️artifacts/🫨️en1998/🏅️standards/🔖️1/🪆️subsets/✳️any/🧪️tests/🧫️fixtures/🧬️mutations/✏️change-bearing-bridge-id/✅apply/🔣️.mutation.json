@@ -1,0 +1,5 @@
+{
+  "mutation": "changeBearingBridgeId",
+  "id": "bear-1",
+  "newBridgeId": "x"
+}

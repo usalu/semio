@@ -1,0 +1,6 @@
+{
+  "ChangeSiloWallFriction": {
+    "id": "silo-1",
+    "newWallFriction": 1.5
+  }
+}

@@ -89,6 +89,7 @@ impl ShellState {
             },
             settle: SettleState {
                 deferred_actions: Vec::new(),
+                touch_gestures: Vec::new(),
                 settling: false,
                 owed_refresh_scope: UiDirtyScope::None,
                 settle_pump: ShellSettlePump::default(),
@@ -287,6 +288,7 @@ impl ShellState {
                 dock_window_plan: Vec::new(),
                 dock_plan_trace: None,
                 layout_override: None,
+                shell_hooks: Default::default(),
                 split_resize_origin: Vec::new(),
                 split_resize_secondary_path: None,
                 split_resize_secondary_index: 0,
@@ -305,6 +307,7 @@ impl ShellState {
                 collapsed_sections: HashMap::new(),
                 tree_open_states: BTreeMap::new(),
                 accessibility_focused_control_id: None,
+                pending_row_control_focus: None,
                 interaction_selection: HashMap::new(),
                 open_selects: HashMap::new(),
                 context_menu: None,

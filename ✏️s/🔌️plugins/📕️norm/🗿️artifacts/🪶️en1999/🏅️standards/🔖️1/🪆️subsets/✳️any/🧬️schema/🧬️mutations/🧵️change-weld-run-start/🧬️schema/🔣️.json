@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-weld-run-start/schema.json",
+  "title": "ChangeWeldRunStart",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "weldRunId",
+    "newStart"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeWeldRunStart"
+    },
+    "weldRunId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Weld run",
+          "de": "Schweißnaht"
+        },
+        "description": {
+          "en": "The weld run this mutation addresses, by id.",
+          "de": "Das adressierte Element (Schweißnaht), per Kennung."
+        },
+        "ref": {
+          "kind": "weld-run"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newStart": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Run start / position x_s",
+          "de": "Nahtanfang / Lage x_s"
+        },
+        "widget": "stepper",
+        "unit": "m",
+        "displayUnit": "mm",
+        "displayFactor": 1000,
+        "precision": 1,
+        "step": 0.01,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

@@ -32,6 +32,7 @@ pub fn keybinding_capture_key_token(action: &semio_framework_ui_wgpu_input::KeyA
         semio_framework_ui_wgpu_input::KeyAction::PageDown => "pagedown".into(),
         semio_framework_ui_wgpu_input::KeyAction::Function(number) => format!("f{number}"),
         semio_framework_ui_wgpu_input::KeyAction::Space(_) => "space".into(),
+        semio_framework_ui_wgpu_input::KeyAction::ContextMenu => "contextmenu".into(),
     })
 }
 

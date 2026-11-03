@@ -14,8 +14,8 @@ use framework_schema::ArtifactSchema;
 //#region 🔖️Artifact
 /// 🧬️ Full En1990 artifact state across the artifact and presence lanes.
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.norm.en1990")]
 pub struct En1990Artifact {
@@ -24,13 +24,13 @@ pub struct En1990Artifact {
     #[state(artifact)]
     pub project_id: String,
     #[state(artifact)]
-    pub structure_kind: String,
+    pub structure_kind: semio_s_artifact_norm_en1990_model::StructureKind,
     #[state(artifact)]
     pub altitude_m: f64,
     #[state(artifact)]
     pub consequence_class: u8,
     #[state(artifact)]
-    pub reliability_class: u8,
+    pub reliability_class: semio_s_artifact_norm_en1990_model::ReliabilityClass,
     #[state(artifact)]
     pub design_working_life_category: u8,
     #[state(artifact)]
@@ -38,11 +38,9 @@ pub struct En1990Artifact {
     #[state(artifact)]
     pub reference_period_years: f64,
     #[state(artifact)]
-    pub supervision_level: String,
+    pub supervision_level: semio_s_artifact_norm_en1990_model::SupervisionLevel,
     #[state(artifact)]
-    pub inspection_level: String,
-    #[state(artifact)]
-    pub k_fi_declared: f64,
+    pub inspection_level: semio_s_artifact_norm_en1990_model::InspectionLevel,
     #[state(artifact)]
     pub beta_computed: f64,
     #[state(artifact)]
@@ -59,6 +57,20 @@ pub struct En1990Artifact {
     pub bridge_sls: Vec<semio_s_artifact_norm_en1990_model::BridgeSls>,
     #[state(artifact)]
     pub effects: Vec<semio_s_artifact_norm_en1990_model::MemberEffect>,
+    #[state(artifact)]
+    pub fatigue_spectra: Vec<semio_s_artifact_norm_en1990_model::FatigueSpectrum>,
+    #[state(artifact)]
+    pub reliability_analyses: Vec<semio_s_artifact_norm_en1990_model::ReliabilityAnalysis>,
+    #[state(artifact)]
+    pub test_series: Vec<semio_s_artifact_norm_en1990_model::TestSeries>,
+    #[state(artifact)]
+    pub placements: Vec<semio_s_artifact_norm_en1990_model::Placement>,
+    #[state(artifact)]
+    pub cases: Vec<semio_s_artifact_norm_en1990_model::CaseRow>,
+    #[state(artifact)]
+    pub factor_overrides: Vec<semio_s_artifact_norm_en1990_model::FactorOverride>,
+    #[state(artifact)]
+    pub traffic_groups: Vec<semio_s_artifact_norm_en1990_model::TrafficGroup>,
 }
 //#endregion 🔖️Artifact
 
@@ -69,16 +81,15 @@ impl En1990Artifact {
         semio_s_artifact_norm_en1990_model::En1990Snapshot {
             annex: self.annex,
             project_id: self.project_id.clone(),
-            structure_kind: self.structure_kind.clone(),
+            structure_kind: self.structure_kind,
             altitude_m: self.altitude_m,
             consequence_class: self.consequence_class,
             reliability_class: self.reliability_class,
             design_working_life_category: self.design_working_life_category,
             design_working_life_years: self.design_working_life_years,
             reference_period_years: self.reference_period_years,
-            supervision_level: self.supervision_level.clone(),
-            inspection_level: self.inspection_level.clone(),
-            k_fi_declared: self.k_fi_declared,
+            supervision_level: self.supervision_level,
+            inspection_level: self.inspection_level,
             beta_computed: self.beta_computed,
             permanents: self.permanents.clone(),
             variables: self.variables.clone(),
@@ -87,6 +98,13 @@ impl En1990Artifact {
             members: self.members.clone(),
             bridge_sls: self.bridge_sls.clone(),
             effects: self.effects.clone(),
+            fatigue_spectra: self.fatigue_spectra.clone(),
+            reliability_analyses: self.reliability_analyses.clone(),
+            test_series: self.test_series.clone(),
+            placements: self.placements.clone(),
+            cases: self.cases.clone(),
+            factor_overrides: self.factor_overrides.clone(),
+            traffic_groups: self.traffic_groups.clone(),
         }
     }
 
@@ -104,7 +122,6 @@ impl En1990Artifact {
             reference_period_years: snapshot.reference_period_years,
             supervision_level: snapshot.supervision_level,
             inspection_level: snapshot.inspection_level,
-            k_fi_declared: snapshot.k_fi_declared,
             beta_computed: snapshot.beta_computed,
             permanents: snapshot.permanents,
             variables: snapshot.variables,
@@ -113,6 +130,13 @@ impl En1990Artifact {
             members: snapshot.members,
             bridge_sls: snapshot.bridge_sls,
             effects: snapshot.effects,
+            fatigue_spectra: snapshot.fatigue_spectra,
+            reliability_analyses: snapshot.reliability_analyses,
+            test_series: snapshot.test_series,
+            placements: snapshot.placements,
+            cases: snapshot.cases,
+            factor_overrides: snapshot.factor_overrides,
+            traffic_groups: snapshot.traffic_groups,
         }
     }
 }

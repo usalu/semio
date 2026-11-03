@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-slab-action-point-force-n/schema.json",
+  "title": "ChangeSlabActionPointForceN",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "slabId",
+    "id",
+    "newFKN"
+  ],
+  "properties": {
+    "slabId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Composite slab",
+          "de": "Verbunddecke"
+        },
+        "description": {
+          "en": "The composite slab this mutation addresses, by id.",
+          "de": "Das adressierte Element (Verbunddecke), per Kennung."
+        },
+        "ref": {
+          "kind": "slab"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Action",
+          "de": "Einwirkung"
+        },
+        "description": {
+          "en": "The action this mutation addresses, by id.",
+          "de": "Das adressierte Element (Einwirkung), per Kennung."
+        },
+        "ref": {
+          "kind": "action"
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "newFKN": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Characteristic point force of the slab action",
+          "de": "Charakteristische Einzellast der Deckeneinwirkung"
+        },
+        "unit": "N",
+        "displayUnit": "kN",
+        "displayFactor": 0.001,
+        "step": 1000,
+        "precision": 1,
+        "group": "actions",
+        "order": 30
+      }
+    }
+  }
+}

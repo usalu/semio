@@ -21,14 +21,16 @@ semio-framework-schema = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 
 [dev-dependencies]
+semio-s-plugin-norm-results-config = { workspace = true, features = ["test-support"] }
+semio-s-artifact-norm-en1996-inferences = { workspace = true, features = ["test-support"] }
 pack = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-value = { workspace = true }
 semio-s-artifact-norm-en1996-editor = { workspace = true }
 semio-s-artifact-norm-en1996-io = { workspace = true }
-semio-s-artifact-norm-en1996-model = { workspace = true }
-semio-s-artifact-norm-en1996-schema = { workspace = true }
+semio-s-artifact-norm-en1996-model = { workspace = true, features = ["test-support"] }
+semio-s-artifact-norm-en1996-schema = { workspace = true, features = ["test-support"] }
 semio-s-plugin-norm-app-surface = { workspace = true }
-semio-s-plugin-norm-compliance = { workspace = true }
+semio-s-plugin-norm-compliance = { workspace = true, features = ["test-support"] }
 serde_json = { workspace = true }

@@ -1,0 +1,5 @@
+type ChangeSectionPointZ {
+  memberId: String!
+  sectionPointId: String!
+  newZ: Float!
+}

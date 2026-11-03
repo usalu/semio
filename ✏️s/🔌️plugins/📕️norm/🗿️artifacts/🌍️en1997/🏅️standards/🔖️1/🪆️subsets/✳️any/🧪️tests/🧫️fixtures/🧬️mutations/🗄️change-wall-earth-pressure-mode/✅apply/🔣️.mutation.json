@@ -1,0 +1,5 @@
+{
+  "mutation": "changeWallEarthPressureMode",
+  "id": "wall-W1",
+  "newEarthPressureMode": "active"
+}

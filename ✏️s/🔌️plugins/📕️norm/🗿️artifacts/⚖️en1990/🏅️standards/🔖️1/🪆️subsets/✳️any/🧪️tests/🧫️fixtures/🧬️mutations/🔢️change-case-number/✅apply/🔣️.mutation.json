@@ -1,0 +1,6 @@
+{
+  "mutation": "changeCaseNumber",
+  "caseId": "case-psi",
+  "key": "altitude",
+  "value": 1500.0
+}

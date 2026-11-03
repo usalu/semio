@@ -20,6 +20,12 @@ name = "mutation_vectors"
 path = "../../🧪️tests/🔬️vectors/🦀️.rs"
 
 [dependencies]
+serde = { workspace = true, optional = true }
+semio-s-artifact-norm-en1997-mutations-protocol = { workspace = true }
+semio-s-artifact-norm-en1997-mutations-proto = { workspace = true }
+semio-s-artifact-norm-en1997-mutations-json-schema = { workspace = true }
+semio-s-artifact-norm-en1997-mutations-graphql = { workspace = true }
+semio-s-artifact-norm-en1997-mutations-typescript = { workspace = true }
 semio-framework-os-command = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-os-store-one-item = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/📦️packages/🦀️rust" }
@@ -33,9 +39,47 @@ semio-framework-value-derive = { workspace = true }
 semio-s-artifact-norm-en1997-diff = { workspace = true }
 semio-s-artifact-norm-en1997-model = { workspace = true }
 semio-s-artifact-norm-en1997-mut-design = { workspace = true }
+semio-s-artifact-norm-en1997-mut-design-cases = { workspace = true }
 semio-s-artifact-norm-en1997-mut-foundations = { workspace = true }
+semio-s-artifact-norm-en1997-mut-rows = { workspace = true }
+semio-s-artifact-norm-en1997-mut-structures = { workspace = true }
+semio-s-artifact-norm-en1997-mut-investigation = { workspace = true }
 semio-s-artifact-norm-en1997-mut-ground = { workspace = true }
+semio-s-artifact-norm-en1997-mut-characteristic-basis = { workspace = true }
+semio-s-artifact-norm-en1997-mut-ground-investigation = { workspace = true }
+semio-s-artifact-norm-en1997-mut-ground-investigation-reading = { workspace = true }
+semio-s-artifact-norm-en1997-mut-placements = { workspace = true }
+semio-s-artifact-norm-en1997-mut-nested-rows = { workspace = true }
+semio-s-artifact-norm-en1997-mut-layer = { workspace = true }
+semio-s-artifact-norm-en1997-mut-layer-investigation = { workspace = true }
+semio-s-artifact-norm-en1997-mut-footing = { workspace = true }
+semio-s-artifact-norm-en1997-mut-load-case = { workspace = true }
+semio-s-artifact-norm-en1997-mut-pile = { workspace = true }
+semio-s-artifact-norm-en1997-mut-pile-tension = { workspace = true }
+semio-s-artifact-norm-en1997-mut-profile = { workspace = true }
+semio-s-artifact-norm-en1997-mut-wall = { workspace = true }
+semio-s-artifact-norm-en1997-mut-wall-loads = { workspace = true }
+semio-s-artifact-norm-en1997-mut-wall-seismic-reinforcement = { workspace = true }
+semio-s-artifact-norm-en1997-mut-slope = { workspace = true }
+semio-s-artifact-norm-en1997-mut-uplift = { workspace = true }
+semio-s-artifact-norm-en1997-mut-anchor = { workspace = true }
+semio-s-artifact-norm-en1997-mut-anchor-proof = { workspace = true }
+semio-s-artifact-norm-en1997-mut-anchor-test = { workspace = true }
+semio-s-artifact-norm-en1997-mut-embedded-wall = { workspace = true }
+semio-s-artifact-norm-en1997-mut-embedded-wall-pressure = { workspace = true }
+semio-s-artifact-norm-en1997-mut-pile-group = { workspace = true }
+semio-s-artifact-norm-en1997-mut-pile-group-resistance = { workspace = true }
+semio-s-artifact-norm-en1997-mut-lab-test = { workspace = true }
+semio-s-artifact-norm-en1997-mut-lab-point = { workspace = true }
+semio-s-artifact-norm-en1997-mut-layer-water = { workspace = true }
 semio-s-plugin-norm-app-surface = { workspace = true }
+semio-framework-diagnostic = { workspace = true }
+semio-framework-dsl-record = { workspace = true }
+semio-framework-dsl-record-derive = { workspace = true }
+semio-s-plugin-norm-compliance = { workspace = true }
+
+[features]
+test-support = ["dep:serde", "semio-s-artifact-norm-en1997-diff/test-support", "semio-s-artifact-norm-en1997-model/test-support", "semio-s-artifact-norm-en1997-mut-anchor/test-support", "semio-s-artifact-norm-en1997-mut-anchor-proof/test-support", "semio-s-artifact-norm-en1997-mut-anchor-test/test-support", "semio-s-artifact-norm-en1997-mut-characteristic-basis/test-support", "semio-s-artifact-norm-en1997-mut-design/test-support", "semio-s-artifact-norm-en1997-mut-design-cases/test-support", "semio-s-artifact-norm-en1997-mut-embedded-wall/test-support", "semio-s-artifact-norm-en1997-mut-embedded-wall-pressure/test-support", "semio-s-artifact-norm-en1997-mut-footing/test-support", "semio-s-artifact-norm-en1997-mut-foundations/test-support", "semio-s-artifact-norm-en1997-mut-ground/test-support", "semio-s-artifact-norm-en1997-mut-ground-investigation/test-support", "semio-s-artifact-norm-en1997-mut-ground-investigation-reading/test-support", "semio-s-artifact-norm-en1997-mut-investigation/test-support", "semio-s-artifact-norm-en1997-mut-lab-point/test-support", "semio-s-artifact-norm-en1997-mut-lab-test/test-support", "semio-s-artifact-norm-en1997-mut-layer/test-support", "semio-s-artifact-norm-en1997-mut-layer-investigation/test-support", "semio-s-artifact-norm-en1997-mut-layer-water/test-support", "semio-s-artifact-norm-en1997-mut-load-case/test-support", "semio-s-artifact-norm-en1997-mut-nested-rows/test-support", "semio-s-artifact-norm-en1997-mut-pile/test-support", "semio-s-artifact-norm-en1997-mut-pile-group/test-support", "semio-s-artifact-norm-en1997-mut-pile-group-resistance/test-support", "semio-s-artifact-norm-en1997-mut-pile-tension/test-support", "semio-s-artifact-norm-en1997-mut-placements/test-support", "semio-s-artifact-norm-en1997-mut-profile/test-support", "semio-s-artifact-norm-en1997-mut-rows/test-support", "semio-s-artifact-norm-en1997-mut-slope/test-support", "semio-s-artifact-norm-en1997-mut-structures/test-support", "semio-s-artifact-norm-en1997-mut-uplift/test-support", "semio-s-artifact-norm-en1997-mut-wall/test-support", "semio-s-artifact-norm-en1997-mut-wall-loads/test-support", "semio-s-artifact-norm-en1997-mut-wall-seismic-reinforcement/test-support", "semio-s-plugin-norm-compliance/test-support"]
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }
@@ -44,3 +88,4 @@ semio-framework-test-fixtures = { path = "../../../../../../../../../../../../..
 semio-s-plugin-norm-app-surface = { workspace = true, features = ["compliance-testing"] }
 semio-s-mutation-vectors = { workspace = true }
 serde = { workspace = true }
+semio-framework-plugin = { workspace = true }

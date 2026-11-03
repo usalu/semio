@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/mutation/change-test-sample-size/schema.json",
+  "title": "ChangeTestSampleSize",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newSampleSize"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeTestSampleSize"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Test series",
+          "de": "Versuchsreihe"
+        },
+        "description": {
+          "en": "The test series this mutation addresses, by id.",
+          "de": "Das adressierte Element (Versuchsreihe), per Kennung."
+        },
+        "ref": {
+          "kind": "test-series"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newSampleSize": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295,
+      "x-semio-ui": {
+        "label": {
+          "en": "Sample size n",
+          "de": "Stichprobenumfang n"
+        },
+        "widget": "stepper",
+        "description": {
+          "en": "Number of test results.",
+          "de": "Anzahl der Versuchsergebnisse."
+        },
+        "precision": 0,
+        "step": 1,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

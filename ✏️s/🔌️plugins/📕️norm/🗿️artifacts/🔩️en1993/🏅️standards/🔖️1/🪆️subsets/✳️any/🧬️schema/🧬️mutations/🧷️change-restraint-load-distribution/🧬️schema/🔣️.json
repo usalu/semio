@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-restraint-load-distribution/schema.json",
+  "title": "ChangeRestraintLoadDistribution",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newLoadDistribution"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Restraint",
+          "de": "Halterung"
+        },
+        "description": {
+          "en": "The restraint this mutation addresses, by id.",
+          "de": "Das adressierte Element (Halterung), per Kennung."
+        },
+        "ref": {
+          "kind": "restraint"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newLoadDistribution": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/RestraintDistribution",
+      "x-semio-ui": {
+        "label": {
+          "en": "Load and moment distribution",
+          "de": "Last- und Momentenverlauf"
+        },
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

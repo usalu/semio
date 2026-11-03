@@ -1,0 +1,28 @@
+{
+  "artifact": "en1991",
+  "leaf": {
+    "kindSlug": "footbridge",
+    "default": 0.0,
+    "field": {
+      "name": "assumed_service_axle",
+      "type": "f64",
+      "label": {
+        "en": "Assumed service vehicle axle load (0 = none)",
+        "de": "Angesetzte Dienstfahrzeug-Achslast (0 = keine)"
+      },
+      "doc": "🚐 Axle load [N] of the service vehicle Q_sv the design assumes on the footbridge; 0 = no service vehicle, no value is assumed and the check is not applicable.",
+      "unit": "N",
+      "range": [
+        0,
+        200000
+      ]
+    },
+    "entity": {
+      "singular": {
+        "en": "footbridge",
+        "de": "Fußgängerbrücke"
+      }
+    },
+    "after": "naturalFrequency"
+  }
+}

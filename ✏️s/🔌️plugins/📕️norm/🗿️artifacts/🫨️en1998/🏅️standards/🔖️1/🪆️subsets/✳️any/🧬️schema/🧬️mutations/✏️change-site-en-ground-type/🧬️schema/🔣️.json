@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-site-en-ground-type/schema.json",
+  "title": "ChangeSiteEnGroundType",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "newEnGroundType"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeSiteEnGroundType"
+    },
+    "newEnGroundType": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/snapshot.json#/$defs/EnGroundType",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "EN ground type",
+          "de": "EN-Baugrundtyp"
+        },
+        "group": "value",
+        "order": 10
+      }
+    }
+  }
+}

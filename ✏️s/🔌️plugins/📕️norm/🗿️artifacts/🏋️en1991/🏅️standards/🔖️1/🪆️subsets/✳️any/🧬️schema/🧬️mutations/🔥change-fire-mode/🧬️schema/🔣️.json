@@ -33,6 +33,9 @@
         },
         "group": "fire",
         "order": 10
+      },
+      "x-semio-rust": {
+        "type": "semio_s_artifact_norm_en1991_model::FireMode"
       }
     }
   }

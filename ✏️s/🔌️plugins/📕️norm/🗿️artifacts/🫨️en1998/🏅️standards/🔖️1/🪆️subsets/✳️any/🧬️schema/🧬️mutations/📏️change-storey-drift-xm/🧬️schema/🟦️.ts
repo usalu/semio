@@ -1,13 +1,13 @@
 /** 📏️ `change-storey-drift-xm` wire twin: the leaf payload `ChangeStoreyDriftXM`, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
- * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
+ * by `repo ./📜️script.ts schema twins generate`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
-import { normWireInteger, normWireLiteral, normWireNumber, normWireObject, normWireRange, type NormWireReader, normWireRequired } from "@semio-tech/norm-js/registry/contract";
+import { normWireLiteral, normWireNumber, normWireObject, normWireRequired, normWireString, type NormWireReader } from "@semio-tech/norm-js/registry/contract";
 
 export interface ChangeStoreyDriftXM {
   mutation: "changeStoreyDriftXM";
-  buildingIndex: number;
-  storeyIndex: number;
+  buildingId: string;
+  id: string;
   newDriftXM: number;
 }
 
-export const parseChangeStoreyDriftXM: NormWireReader<ChangeStoreyDriftXM> = normWireObject<ChangeStoreyDriftXM>({ mutation: normWireRequired(normWireLiteral("changeStoreyDriftXM")), buildingIndex: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), storeyIndex: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), newDriftXM: normWireRequired(normWireNumber) });
+export const parseChangeStoreyDriftXM: NormWireReader<ChangeStoreyDriftXM> = normWireObject<ChangeStoreyDriftXM>({ mutation: normWireRequired(normWireLiteral("changeStoreyDriftXM")), buildingId: normWireRequired(normWireString), id: normWireRequired(normWireString), newDriftXM: normWireRequired(normWireNumber) });

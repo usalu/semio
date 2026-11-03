@@ -19,6 +19,7 @@ use semio_framework_plugin_runtime_instances::inst_wire_frames::{instance_actor,
 use semio_framework_plugin_reactor_app::app_runtime_helpers::plugin_internal_fault;
 #[cfg(test)]
 use std::mem::size_of;
+fn funded<T,E>(result:Result<T,E>)->semio_framework_value::RetainedWorkOutcome<T,E>{let work=u64::from(result.is_ok());semio_framework_value::RetainedWorkOutcome{result,work}}
 /// 🎯️ `AppCommand::ArtifactCommand`'s Wave 1 mapping — the same magic action-name strings
 /// `VcsArtifactApp::dispatch_action` already intercepts for `store::os_store::store_schema::ArtifactCommand` verbs (duplicated
 /// here rather than imported since `app`'s `HISTORY_ACTION_IDS` const is private — see

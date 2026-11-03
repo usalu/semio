@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️change-bridge-pier-cracked-inertia-ratio",
+  "semanticKind": "change-bridge-pier-cracked-inertia-ratio",
+  "displayName": "Change Cracked share I_eff / I_g of the gross pier inertia for the design displacement (required, 0 < share <= 1, zero leaves the piers without stiffness; EN 1998-2 2.3.6.1)",
+  "emoji": "✏️",
+  "aggregateVariant": "ChangeBridgePierCrackedInertiaRatio",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": null,
+  "binaryTag": 285,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

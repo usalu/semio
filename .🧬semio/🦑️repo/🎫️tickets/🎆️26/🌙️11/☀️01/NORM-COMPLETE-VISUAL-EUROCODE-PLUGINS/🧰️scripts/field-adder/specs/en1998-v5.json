@@ -1,0 +1,45 @@
+{
+ "artifact": "en1998",
+ "fields": [
+  {
+   "entity": "tank",
+   "field": "shell_thickness_m",
+   "default": 0.0,
+   "unit": "Metre",
+   "en": "Shell wall thickness t for the hoop stress under hydrostatic and hydrodynamic pressure (0 = not given)",
+   "de": "Wanddicke t der Schale für die Ringspannung aus hydrostatischem und hydrodynamischem Druck (0 = nicht angegeben)"
+  },
+  {
+   "entity": "tank",
+   "field": "shell_strength_mpa",
+   "default": 0.0,
+   "unit": "Megapascal",
+   "en": "Design strength of the shell wall in hoop tension (0 = not given)",
+   "de": "Bemessungsfestigkeit der Schalenwand in Ringzug (0 = nicht angegeben)"
+  },
+  {
+   "entity": "tower",
+   "field": "base_rotational_stiffness_nm",
+   "default": 0.0,
+   "unit": "NewtonMetre",
+   "en": "Rotational stiffness of the foundation under the tower base in N·m per rad (0 = fixed base)",
+   "de": "Drehfedersteifigkeit der Gründung unter dem Turmfuß in N·m je rad (0 = Einspannung)"
+  },
+  {
+   "entity": "bridge",
+   "field": "deck_length_m",
+   "default": 0.0,
+   "unit": "Metre",
+   "en": "Deck length for the lumped mass model (0 = span of the supports)",
+   "de": "Überbaulänge für das Punktmassenmodell (0 = Spannweite der Auflager)"
+  },
+  {
+   "entity": "bridge",
+   "field": "deck_ei_nm2",
+   "default": 0.0,
+   "unit": null,
+   "en": "Transverse bending stiffness EI of the deck in N·m² (0 = rigid deck)",
+   "de": "Biegesteifigkeit EI des Überbaus quer in N·m² (0 = starrer Überbau)"
+  }
+ ]
+}

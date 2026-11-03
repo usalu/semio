@@ -1,0 +1,16 @@
+{
+  "artifact": "en1993",
+  "leaf": {
+    "kindSlug": "panel",
+    "default": "",
+    "field": {
+      "name": "steel_grade",
+      "type": "String",
+      "label": {
+        "en": "Steel grade (empty = not given)",
+        "de": "Stahlgüte (leer = nicht angegeben)"
+      },
+      "doc": "🏷 Steel grade of the plate for the brittle fracture check of EN 1993-1-10 2.1 (Table 2.1 column, e.g. S355); empty = not given, the plate is then not assessed and no grade is assumed."
+    }
+  }
+}

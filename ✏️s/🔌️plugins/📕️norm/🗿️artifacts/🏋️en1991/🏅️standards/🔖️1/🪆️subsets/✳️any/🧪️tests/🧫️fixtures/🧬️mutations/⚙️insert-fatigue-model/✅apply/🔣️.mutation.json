@@ -1,0 +1,12 @@
+{
+  "InsertFatigueModel": {
+    "index": 1,
+    "item": {
+      "id": "fatigue-model-2",
+      "model": "flm1",
+      "lane": 1,
+      "assumedAxleLoad": 210000.0,
+      "assumedUdl": 2700.0
+    }
+  }
+}

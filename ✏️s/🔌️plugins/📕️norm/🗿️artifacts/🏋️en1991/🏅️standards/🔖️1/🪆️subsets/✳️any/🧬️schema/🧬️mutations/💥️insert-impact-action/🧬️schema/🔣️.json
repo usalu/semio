@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/insert-impact-action/schema.json",
+  "title": "InsertImpactAction",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "item"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Zero-based list position at which the record is inserted.",
+          "de": "Nullbasierte Listenposition, an der der Datensatz eingefügt wird."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 100
+      }
+    },
+    "item": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/ImpactAction",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Impact action",
+          "de": "Anpralleinwirkung"
+        },
+        "description": {
+          "en": "The complete impact action record to insert.",
+          "de": "Der vollständige einzufügende Datensatz (Anpralleinwirkung)."
+        },
+        "group": "record",
+        "order": 110
+      },
+      "x-semio-rust": {
+        "type": "semio_s_artifact_norm_en1991_model::ImpactAction"
+      }
+    }
+  }
+}

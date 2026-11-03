@@ -1,15 +1,18 @@
-//! 🔺️ Diff for `change-wind-face-assumed-wp`.
+//! 🛡️ `change-wind-face-assumed-wp` diff: patches `assumed_wp` of the addressed wind face row.
+
 use crate::change_wind_face_assumed_wp::ChangeWindFaceAssumedWp;
-use semio_s_artifact_norm_en1991_diff::En1991Diff;
+use semio_s_artifact_norm_en1991_diff::{En1991Diff, En1991WindFaceDelta, En1991WindFacePatch};
 use semio_s_artifact_norm_en1991_model::En1991Snapshot;
-use semio_s_artifact_norm_en1991_diff::{En1991WindFaceDelta, En1991WindFacePatch};
+
 pub fn diff(payload: &ChangeWindFaceAssumedWp, base: &En1991Snapshot) -> protocol::MutationOutcome<En1991Diff> {
-    if payload.index >= base.wind_faces.len() {
-        return protocol::MutationOutcome::error("mutation.target-missing", "Index out of range.", [payload.index.to_string()]);
+    if !payload.new_assumed_wp.is_finite() {
+        return protocol::MutationOutcome::fatal("mutation.invariant", "The value must be finite.", Vec::<String>::new());
     }
-    if base.wind_faces[payload.index].assumed_wp == payload.new_assumed_wp {
-        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Value unchanged.");
+    let Some(r0) = base.wind_faces.iter().find(|row| row.id == payload.id) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("wind face {} does not exist.", payload.id), [payload.id.clone()]);
+    };
+    if r0.assumed_wp == payload.new_assumed_wp {
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "The wind face already has this value.");
     }
-    let wind_face = &base.wind_faces[payload.index];
-    protocol::MutationOutcome::new(En1991Diff { wind_faces: En1991WindFaceDelta::modification(&wind_face.id, En1991WindFacePatch { assumed_wp: Some(payload.new_assumed_wp), ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(En1991Diff { wind_faces: En1991WindFaceDelta::modification(&payload.id, En1991WindFacePatch { assumed_wp: Some(payload.new_assumed_wp), ..Default::default() }), ..Default::default() })
 }

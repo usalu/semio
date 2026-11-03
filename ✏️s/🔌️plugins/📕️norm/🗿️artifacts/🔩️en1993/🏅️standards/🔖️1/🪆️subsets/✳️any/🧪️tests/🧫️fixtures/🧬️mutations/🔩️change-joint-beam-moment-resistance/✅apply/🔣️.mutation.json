@@ -1,0 +1,6 @@
+{
+  "ChangeJointBeamMomentResistance": {
+    "id": "joint-j1",
+    "newBeamMomentResistance": 1.5
+  }
+}

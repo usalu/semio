@@ -1,0 +1,6 @@
+{
+  "ChangeImpactActionAssumedForce": {
+    "id": "impact-action-1",
+    "newAssumedForce": 3.0
+  }
+}

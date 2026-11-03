@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-tower-bending-stiffness/schema.json",
+  "title": "ChangeTowerBendingStiffness",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newBendingStiffness"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Tower leg",
+          "de": "Turmstiel"
+        },
+        "description": {
+          "en": "The tower leg this mutation addresses, by id.",
+          "de": "Das adressierte Element (Turmstiel), per Kennung."
+        },
+        "ref": {
+          "kind": "tower"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newBendingStiffness": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Bending stiffness EI (N·m²)",
+          "de": "Biegesteifigkeit EI (N·m²)"
+        },
+        "widget": "stepper",
+        "precision": 0,
+        "step": 1000000,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

@@ -1,0 +1,174 @@
+{
+  "annex": null,
+  "site": null,
+  "buildings": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "bldg-office",
+        "patch": {
+          "name": null,
+          "planWidthM": null,
+          "planLengthM": null,
+          "systems": {
+            "removed": [],
+            "inserted": [],
+            "moved": [],
+            "modified": []
+          },
+          "storeys": {
+            "removed": [],
+            "inserted": [],
+            "moved": [],
+            "modified": []
+          },
+          "members": {
+            "removed": [],
+            "inserted": [
+              {
+                "index": 1,
+                "row": {
+                  "id": "col-c1-2",
+                  "material": "rc",
+                  "role": "column",
+                  "detailingCompatibleWithQ": true,
+                  "minDimensionM": 0.35,
+                  "rho": 0.012,
+                  "rhoPrime": 0.0,
+                  "omegaWd": 0.12,
+                  "steelSectionClass": 0,
+                  "fastenerDiameterMm": 0.0,
+                  "timberThicknessMm": 0.0,
+                  "wallThicknessM": 0.0,
+                  "wallEffectiveHeightM": 0.0,
+                  "wallLengthM": 0.0,
+                  "wallDirectionRad": 0.0,
+                  "wallStoreyId": "",
+                  "wallStartXM": 0.0,
+                  "wallStartYM": 0.0,
+                  "wallPoissonRatio": 0.25,
+                  "effectiveStiffnessBasis": "declared",
+                  "effectiveStiffnessRatio": 1.0
+                }
+              }
+            ],
+            "moved": [],
+            "modified": []
+          },
+          "planRegular": null,
+          "elevationRegular": null,
+          "t1Method": null,
+          "t1GivenS": null,
+          "ct": null,
+          "driftLimitClass": null,
+          "nu": null,
+          "multipleResistingSystems": null,
+          "claimsSimpleMasonry": null,
+          "masonryWallAreaRatio": null,
+          "accidentalEccentricityRatio": null,
+          "setbackRatio": null,
+          "planEnvelopeGapRatio": null,
+          "jointGapM": null,
+          "nonstructuralWeightN": null,
+          "nonstructuralHeightM": null,
+          "nonstructuralPeriodS": null,
+          "nonstructuralQ": null,
+          "nonstructuralResistanceN": null,
+          "columnMomentSumNm": null,
+          "beamMomentSumNm": null,
+          "overturningBaseXM": null,
+          "overturningBaseYM": null,
+          "tieDownMomentNm": null,
+          "storeyStiffnessBasis": null,
+          "storeyStiffnessRatio": null
+        }
+      }
+    ]
+  },
+  "bridges": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "assessments": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "silos": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "tanks": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "foundations": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "retainingWalls": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "towers": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "joints": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "bearings": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "piers": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "accelerograms": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "diaphragms": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "soilLayers": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "placements": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  }
+}

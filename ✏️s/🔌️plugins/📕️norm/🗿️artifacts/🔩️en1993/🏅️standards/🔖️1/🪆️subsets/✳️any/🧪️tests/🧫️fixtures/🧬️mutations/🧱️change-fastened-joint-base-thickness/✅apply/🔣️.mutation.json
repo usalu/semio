@@ -1,0 +1,6 @@
+{
+  "ChangeFastenedJointBaseThickness": {
+    "id": "fastened-joint-1",
+    "newBaseThickness": 1.0015
+  }
+}

@@ -2,7 +2,7 @@ use crate::binary::snapshot::*;
 
 #[semio_framework_async_macros::async_test]
 async fn pack_round_trips_and_agrees_with_dsl() {
-    let document = En1997Snapshot::default();
+    let document = En1997Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De);
     store::os_store::test_support::assert_dsl_pack_equivalence(&document);
     let bytes = encode(&document);
     assert_eq!(decode(&bytes).expect("decode"), document);

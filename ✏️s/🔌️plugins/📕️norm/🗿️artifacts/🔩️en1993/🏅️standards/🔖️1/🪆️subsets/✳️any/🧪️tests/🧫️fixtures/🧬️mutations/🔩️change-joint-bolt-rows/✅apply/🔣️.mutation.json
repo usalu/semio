@@ -1,0 +1,6 @@
+{
+  "ChangeJointBoltRows": {
+    "id": "joint-j1",
+    "newBoltRows": 3
+  }
+}

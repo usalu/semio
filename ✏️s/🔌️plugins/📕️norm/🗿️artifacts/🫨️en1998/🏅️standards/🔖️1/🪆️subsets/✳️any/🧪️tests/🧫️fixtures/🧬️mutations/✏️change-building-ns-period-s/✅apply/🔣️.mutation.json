@@ -1,0 +1,5 @@
+{
+  "mutation": "changeBuildingNsPeriodS",
+  "id": "bldg-office",
+  "newNonstructuralPeriodS": 1.5
+}

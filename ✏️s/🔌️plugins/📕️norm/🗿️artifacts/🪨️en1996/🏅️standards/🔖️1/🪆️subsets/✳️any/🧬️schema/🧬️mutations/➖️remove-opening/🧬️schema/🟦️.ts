@@ -1,11 +1,11 @@
 /** ➖️ `remove-opening` wire twin: the leaf payload `RemoveOpening`, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
- * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
+ * by `repo ./📜️script.ts schema twins generate`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
-import { normWireInteger, normWireObject, normWireRange, type NormWireReader, normWireRequired } from "@semio-tech/norm-js/registry/contract";
+import { normWireObject, normWireRequired, normWireString, type NormWireReader } from "@semio-tech/norm-js/registry/contract";
 
 export interface RemoveOpening {
-  wallIndex: number;
-  index: number;
+  wallId: string;
+  id: string;
 }
 
-export const parseRemoveOpening: NormWireReader<RemoveOpening> = normWireObject<RemoveOpening>({ wallIndex: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})) });
+export const parseRemoveOpening: NormWireReader<RemoveOpening> = normWireObject<RemoveOpening>({ wallId: normWireRequired(normWireString), id: normWireRequired(normWireString) });

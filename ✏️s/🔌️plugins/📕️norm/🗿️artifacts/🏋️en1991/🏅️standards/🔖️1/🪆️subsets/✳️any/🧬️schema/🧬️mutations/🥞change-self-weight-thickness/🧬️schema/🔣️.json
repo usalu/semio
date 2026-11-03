@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-self-weight-thickness/schema.json",
+  "title": "ChangeSelfWeightThickness",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newThickness"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Layer",
+          "de": "Schicht"
+        },
+        "description": {
+          "en": "The layer this mutation addresses, by id.",
+          "de": "Das adressierte Element (Schicht), per Kennung."
+        },
+        "ref": {
+          "kind": "self-weight-element"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newThickness": {
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Layer thickness",
+          "de": "Schichtdicke"
+        },
+        "description": {
+          "en": "Value of the design; the checks and the 3D scene derive their actions from it.",
+          "de": "Wert des Entwurfs; Nachweise und 3D-Szene leiten ihre Einwirkungen daraus ab."
+        },
+        "unit": "m",
+        "displayUnit": "m",
+        "displayFactor": 1,
+        "step": 0.01,
+        "precision": 3,
+        "group": "selfWeightElements",
+        "order": 20
+      }
+    }
+  }
+}

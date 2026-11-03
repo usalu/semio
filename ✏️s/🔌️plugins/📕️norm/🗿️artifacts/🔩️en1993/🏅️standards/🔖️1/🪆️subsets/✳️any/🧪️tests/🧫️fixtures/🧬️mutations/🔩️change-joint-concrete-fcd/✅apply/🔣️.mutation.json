@@ -1,0 +1,6 @@
+{
+  "ChangeJointConcreteFcd": {
+    "id": "joint-j1",
+    "newConcreteFcd": 1.5
+  }
+}

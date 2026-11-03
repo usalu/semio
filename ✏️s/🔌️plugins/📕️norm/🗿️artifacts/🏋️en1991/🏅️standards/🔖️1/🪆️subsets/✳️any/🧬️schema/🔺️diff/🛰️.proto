@@ -1,105 +1,251 @@
 syntax = "proto3";
-package semio.s.norm.en1991.diff;
-
-// 🧬️ En1991Diff schema — every field with its state class.
-
+package semio.s.norm.en1991;
 message En1991Diff {
   // @state artifact
-  string annex = 1;
+  optional string annex = 1;
   // @state artifact
-  string snow_zone = 2;
+  optional string snow_zone = 2;
   // @state artifact
-  double altitude = 3;
+  optional double altitude = 3;
   // @state artifact
-  double en_sk = 4;
+  optional double en_sk = 4;
   // @state artifact
-  bool north_german_lowland_snow = 5;
+  optional bool north_german_lowland_snow = 5;
   // @state artifact
-  uint32 wind_zone = 6;
+  optional uint32 wind_zone = 6;
   // @state artifact
-  double en_vb = 7;
+  optional double en_vb = 7;
   // @state artifact
-  uint32 terrain_category = 8;
+  optional uint32 terrain_category = 8;
   // @state artifact
-  uint32 mixed_terrain_upwind = 9;
+  optional uint32 mixed_terrain_upwind = 9;
   // @state artifact
-  double mixed_terrain_distance = 10;
+  optional double mixed_terrain_distance = 10;
   // @state artifact
-  double orography_factor = 11;
+  optional double orography_factor = 11;
   // @state artifact
-  bool coast_or_island = 12;
+  optional bool coast_or_island = 12;
   // @state artifact
-  double air_density = 13;
+  optional double air_density = 13;
   // @state artifact
-  double height = 14;
+  optional double height = 14;
   // @state artifact
-  double width = 15;
+  optional double width = 15;
   // @state artifact
-  double depth = 16;
+  optional double depth = 16;
   // @state artifact
-  double assumed_delta_t = 17;
+  optional double assumed_delta_t = 17;
   // @state artifact
-  double required_delta_t = 18;
+  optional double t_max = 18;
   // @state artifact
-  string construction_activity = 19;
+  optional double t_min = 19;
   // @state artifact
-  double assumed_construction_qk = 20;
+  optional double t0 = 20;
   // @state artifact
-  bool bridge_claimed = 21;
+  optional string thermal_element_type = 21;
   // @state artifact
-  uint32 bridge_lane = 22;
+  optional uint32 thermal_bridge_type = 22;
   // @state artifact
-  double bridge_span = 23;
+  optional double delta_t_m = 23;
   // @state artifact
-  double bridge_lane_width = 24;
+  optional uint32 storey_count = 24;
   // @state artifact
-  double assumed_bridge_tandem = 25;
+  optional string fire_mode = 25;
   // @state artifact
-  double assumed_bridge_udl = 26;
+  optional string fire_curve = 26;
   // @state artifact
-  double assumed_bridge_lm2 = 27;
+  optional double fire_duration = 27;
   // @state artifact
-  double assumed_bridge_footway = 28;
+  optional double assumed_gas_temperature = 28;
   // @state artifact
-  bool crane_claimed = 29;
+  optional double assumed_h_net = 29;
   // @state artifact
-  string crane_class = 30;
+  optional double fire_compartment_area = 30;
   // @state artifact
-  string hoist_class = 31;
+  optional double fire_compartment_height = 31;
   // @state artifact
-  double hoisting_speed = 32;
+  optional double fire_opening_factor = 32;
   // @state artifact
-  double assumed_crane_wheel = 33;
+  optional double fire_thermal_inertia = 33;
   // @state artifact
-  double assumed_crane_horizontal = 34;
+  optional string fire_occupancy = 34;
   // @state artifact
-  bool silo_claimed = 35;
+  optional double fire_load_density_qf = 35;
   // @state artifact
-  string silo_kind = 36;
+  optional double assumed_qf_d = 36;
   // @state artifact
-  double silo_bulk_density = 37;
+  optional string construction_activity = 37;
   // @state artifact
-  double silo_height = 38;
+  optional double assumed_construction_qk = 38;
   // @state artifact
-  double silo_hydraulic_radius = 39;
+  optional string structure_kind = 39;
   // @state artifact
-  double silo_mu = 40;
+  optional uint32 bridge_lane = 40;
   // @state artifact
-  double silo_k = 41;
+  optional double bridge_span = 41;
   // @state artifact
-  double assumed_silo_pressure = 42;
+  optional double bridge_lane_width = 42;
   // @state artifact
-  double assumed_silo_patch = 43;
+  optional double assumed_bridge_tandem = 43;
   // @state artifact
-  double assumed_silo_wall_friction = 44;
+  optional double assumed_bridge_udl = 44;
   // @state artifact
-  string floors = 45;
+  optional double assumed_bridge_lm2 = 45;
   // @state artifact
-  string self_weight_elements = 46;
+  optional double assumed_bridge_footway = 46;
   // @state artifact
-  string roofs = 47;
+  optional double assumed_bridge_lm3 = 47;
   // @state artifact
-  string wind_faces = 48;
+  optional double assumed_bridge_lm4 = 48;
   // @state artifact
-  string accidental_cases = 49;
+  optional string bridge_load_group = 49;
+  // @state artifact
+  optional bool crane_claimed = 50;
+  // @state artifact
+  optional string crane_class = 51;
+  // @state artifact
+  optional string hoist_class = 52;
+  // @state artifact
+  optional double hoisting_speed = 53;
+  // @state artifact
+  optional double assumed_crane_wheel = 54;
+  // @state artifact
+  optional double assumed_crane_horizontal = 55;
+  // @state artifact
+  optional bool silo_claimed = 56;
+  // @state artifact
+  optional string silo_kind = 57;
+  // @state artifact
+  optional double silo_bulk_density = 58;
+  // @state artifact
+  optional double silo_height = 59;
+  // @state artifact
+  optional double silo_hydraulic_radius = 60;
+  // @state artifact
+  optional double silo_mu = 61;
+  // @state artifact
+  optional double silo_k = 62;
+  // @state artifact
+  optional double assumed_silo_pressure = 63;
+  // @state artifact
+  optional double assumed_silo_patch = 64;
+  // @state artifact
+  optional double assumed_silo_wall_friction = 65;
+  // @state artifact
+  optional double bridge_tandem_x = 66;
+  // @state artifact
+  optional double rail_alpha = 67;
+  // @state artifact
+  optional double assumed_rail_lm71 = 68;
+  // @state artifact
+  optional double assumed_rail_lm71_udl = 69;
+  // @state artifact
+  optional double assumed_rail_sw0 = 70;
+  // @state artifact
+  optional double assumed_rail_sw2 = 71;
+  // @state artifact
+  optional double crane_x = 72;
+  // @state artifact
+  optional double crane_runway_length = 73;
+  // @state artifact
+  optional double crane_wheel_base = 74;
+  // @state artifact
+  optional double silo_diameter = 75;
+  // @state artifact
+  optional double silo_eccentricity = 76;
+  // @state artifact
+  optional double silo_hopper_angle_deg = 77;
+  // @state artifact
+  optional double bridge_curve_radius = 78;
+  // @state artifact
+  optional string fire_load_basis = 79;
+  // @state artifact
+  En1991FloorDelta floors = 80;
+  // @state artifact
+  En1991SelfWeightElementDelta self_weight_elements = 81;
+  // @state artifact
+  En1991RoofDelta roofs = 82;
+  // @state artifact
+  En1991WindFaceDelta wind_faces = 83;
+  // @state artifact
+  En1991AccidentalCaseDelta accidental_cases = 84;
+  // @state artifact
+  En1991BridgeLaneDelta bridge_lanes = 85;
+  // @state artifact
+  En1991ConstructionStageDelta construction_stages = 86;
+  // @state artifact
+  En1991RoofSurfaceDelta roof_surfaces = 87;
+  // @state artifact
+  En1991PlacementDelta placements = 88;
+  // @state artifact
+  En1991SpecialVehicleDelta special_vehicles = 89;
+  // @state artifact
+  En1991WindBridgeDelta wind_bridges = 90;
+  // @state artifact
+  En1991DynamicElementDelta dynamic_elements = 91;
+  // @state artifact
+  En1991ImpactActionDelta impact_actions = 92;
+  // @state artifact
+  En1991InternalExplosionDelta internal_explosions = 93;
+  // @state artifact
+  En1991ThermalSectionDelta thermal_sections = 94;
+  // @state artifact
+  CaseRowDelta cases = 95;
+  // @state artifact
+  En1991HelicopterLandingDelta helicopter_landings = 96;
+  // @state artifact
+  En1991TieRunDelta tie_runs = 97;
+  // @state artifact
+  En1991ConstructionLoadDelta construction_loads = 98;
+  // @state artifact
+  En1991FallingLoadDelta falling_loads = 99;
+  // @state artifact
+  En1991ExecutionImperfectionDelta execution_imperfections = 100;
+  // @state artifact
+  En1991DerailmentCaseDelta derailment_cases = 101;
+  // @state artifact
+  En1991CraneHoistDelta crane_hoists = 102;
+  // @state artifact
+  En1991FootbridgeDelta footbridges = 103;
+  // @state artifact
+  En1991RailDynamicDelta rail_dynamics = 104;
+  // @state artifact
+  En1991LoadDispersalDelta load_dispersals = 105;
+  // @state artifact
+  En1991BulkSolidDelta bulk_solids = 106;
+  // @state artifact
+  En1991RotatingMachineDelta rotating_machines = 107;
+  // @state artifact
+  optional En1991FatigueModelDelta fatigue_models = 108;
+  // @state artifact
+  optional En1991SupportCollisionDelta support_collisions = 109;
+  // @state artifact
+  optional En1991LocalFireDelta local_fires = 110;
+  // @state artifact
+  optional En1991SnowGuardDelta snow_guards = 111;
+}
+message En1991FatigueModelPatch {
+  optional string model = 1;
+  optional uint32 lane = 2;
+  optional double assumed_axle_load = 3;
+  optional double assumed_udl = 4;
+}
+message En1991SupportCollisionPatch {
+  optional string location = 1;
+  optional double assumed_force_x = 2;
+  optional double assumed_force_y = 3;
+  optional double height = 4;
+  optional double position_x = 5;
+}
+message En1991LocalFirePatch {
+  optional double fire_diameter = 1;
+  optional double heat_release_rate = 2;
+  optional double ceiling_height = 3;
+  optional double horizontal_distance = 4;
+  optional double assumed_flux = 5;
+}
+message En1991SnowGuardPatch {
+  optional string roof_id = 1;
+  optional double slope_length = 2;
+  optional double assumed_force = 3;
 }

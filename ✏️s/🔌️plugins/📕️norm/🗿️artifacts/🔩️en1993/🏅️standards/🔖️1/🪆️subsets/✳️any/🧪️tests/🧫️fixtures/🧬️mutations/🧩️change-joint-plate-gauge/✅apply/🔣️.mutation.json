@@ -1,0 +1,6 @@
+{
+  "ChangeJointPlateGauge": {
+    "id": "joint-plate-1",
+    "newGauge": 2.0
+  }
+}

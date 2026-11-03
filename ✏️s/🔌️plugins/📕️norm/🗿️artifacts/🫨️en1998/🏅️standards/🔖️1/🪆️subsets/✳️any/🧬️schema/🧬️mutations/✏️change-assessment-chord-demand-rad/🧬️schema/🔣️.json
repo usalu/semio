@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-assessment-chord-demand-rad/schema.json",
+  "title": "ChangeAssessmentChordDemandRad",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newChordRotationDemandRad"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeAssessmentChordDemandRad"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Assessment",
+          "de": "Bewertung"
+        },
+        "description": {
+          "en": "The assessment this mutation addresses, by id.",
+          "de": "Das adressierte Element (Bewertung), per Kennung."
+        },
+        "ref": {
+          "kind": "assessment"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newChordRotationDemandRad": {
+      "type": "number",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Chord rotation demand θ_Ed",
+          "de": "Sehnendrehwinkel-Einwirkung θ_Ed"
+        },
+        "group": "value",
+        "order": 20,
+        "widget": "stepper",
+        "step": 0.001,
+        "precision": 3
+      }
+    }
+  }
+}

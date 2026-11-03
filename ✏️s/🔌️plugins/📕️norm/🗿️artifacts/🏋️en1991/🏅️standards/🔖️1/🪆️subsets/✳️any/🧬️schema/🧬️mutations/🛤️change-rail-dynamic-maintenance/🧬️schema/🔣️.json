@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-rail-dynamic-maintenance/schema.json",
+  "title": "ChangeRailDynamicMaintenance",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newMaintenance"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Rail span",
+          "de": "Eisenbahnfeld"
+        },
+        "description": {
+          "en": "The rail span this mutation addresses, by id.",
+          "de": "Das adressierte Element (Eisenbahnfeld), per Kennung."
+        },
+        "ref": {
+          "kind": "rail-dynamic"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newMaintenance": {
+      "type": "string",
+      "x-semio-ui": {
+        "label": {
+          "en": "Track maintenance (careful or standard)",
+          "de": "Gleisunterhaltung (sorgfältig oder normal)"
+        },
+        "widget": "text",
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

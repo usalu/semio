@@ -1,0 +1,4 @@
+type ChangeMemberUdl {
+  memberId: String!
+  newValue: Float!
+}

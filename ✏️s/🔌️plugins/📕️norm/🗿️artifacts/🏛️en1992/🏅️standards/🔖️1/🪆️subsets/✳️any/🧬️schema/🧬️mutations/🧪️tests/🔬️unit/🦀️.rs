@@ -7,7 +7,7 @@ use crate::mutation_bridge::apply_en1992_mutation;
 use semio_s_artifact_norm_en1992_mut_resistance::{change_action_mk, change_action_nk, change_action_vk, change_bar_layer_count, change_bar_layer_diameter, change_member_axis_distance, change_member_fire_rating, change_member_stirrup_spacing};
 use semio_s_artifact_norm_en1992_mut_anchors::{change_anchor_a_s, change_anchor_h_ef, insert_anchor, remove_anchor};
 use semio_s_artifact_norm_en1992_mut_project::{change_annex, change_cement_type, change_concrete_f_ck, change_delta_c_dev, change_design_working_life, change_reinforcement_f_yk, change_title};
-use semio_s_artifact_norm_en1992_mut_members::{change_member_cover, change_member_effective_depth, change_member_exposure, change_member_height, change_member_span, change_member_width, insert_member, remove_member, reorder_members};
+use semio_s_artifact_norm_en1992_mut_members::{change_member_cover, change_member_effective_depth, change_member_exposure, change_member_height, change_member_span, change_member_width, insert_member, remove_member, change_member_order};
 use crate::En1992Mutation;
 
 fn base() -> En1992Snapshot {
@@ -49,9 +49,9 @@ fn change_delta_c_dev_updates_cover_allowance() {
 #[test]
 fn change_cement_type_updates_binder() {
     let before = base();
-    let mutation = En1992Mutation::ChangeCementType(change_cement_type::ChangeCementType { new_cement_type: "CEM III".into() });
+    let mutation = En1992Mutation::ChangeCementType(change_cement_type::ChangeCementType { new_cement_type: semio_s_artifact_norm_en1992_model::CementClass::R });
     let (after, _) = apply_en1992_mutation(&before, &mutation).expect("apply");
-    assert_eq!(after.cement_type, "CEM III");
+    assert_eq!(after.cement_type, semio_s_artifact_norm_en1992_model::CementClass::R);
 }
 
 #[test]
@@ -90,7 +90,7 @@ fn reorder_members_swaps_indices() {
     let before = base();
     assert!(before.members.len() >= 2);
     let first = before.members[0].id.clone();
-    let mutation = En1992Mutation::ReorderMembers(reorder_members::ReorderMembers { from_index: 0, to_index: 1 });
+    let mutation = En1992Mutation::ChangeMemberOrder(change_member_order::ChangeMemberOrder { from_index: 0, to_index: 1 });
     let (after, _) = apply_en1992_mutation(&before, &mutation).expect("reorder");
     assert_eq!(after.members[1].id, first);
 }

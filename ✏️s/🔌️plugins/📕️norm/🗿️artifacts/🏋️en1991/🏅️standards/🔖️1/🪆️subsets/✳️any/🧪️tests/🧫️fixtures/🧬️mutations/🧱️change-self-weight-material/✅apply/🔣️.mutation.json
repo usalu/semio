@@ -1,0 +1,6 @@
+{
+  "ChangeSelfWeightMaterial": {
+    "id": "slab-rc",
+    "newMaterial": "reinforced_concrete-alt"
+  }
+}

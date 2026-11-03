@@ -11,8 +11,12 @@ extern crate semio_framework_value_derive as value_derive;
 //#region 🪢️Mounts
 #[path = "../🛡️change-wind-face-assumed-wp/🦀️.rs"]
 pub mod change_wind_face_assumed_wp;
-#[path = "../➕️insert-wind-faces/🦀️.rs"]
-pub mod insert_wind_faces;
-#[path = "../➖️remove-wind-faces/🦀️.rs"]
-pub mod remove_wind_faces;
+#[path = "../➕️insert-wind-face/🦀️.rs"]
+pub mod insert_wind_face;
+#[path = "../➖️remove-wind-face/🦀️.rs"]
+pub mod remove_wind_face;
+#[path = "../↕️change-wind-face-z/🦀️.rs"]
+pub mod change_wind_face_z;
+#[path = "../🔲change-wind-face-loaded-area/🦀️.rs"]
+pub mod change_wind_face_loaded_area;
 //#endregion 🪢️Mounts

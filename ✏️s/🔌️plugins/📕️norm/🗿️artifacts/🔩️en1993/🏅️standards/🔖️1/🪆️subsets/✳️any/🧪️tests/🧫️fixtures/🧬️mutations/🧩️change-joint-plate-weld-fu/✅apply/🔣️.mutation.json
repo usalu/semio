@@ -1,0 +1,6 @@
+{
+  "ChangeJointPlateWeldFu": {
+    "id": "joint-plate-1",
+    "newWeldFu": 2.0
+  }
+}

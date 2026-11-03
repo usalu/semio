@@ -1,12 +1,12 @@
 /** ⬇️ `change-column-action-force-n` wire twin: the leaf payload `ChangeColumnActionForceN`, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
- * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
+ * by `repo ./📜️script.ts schema twins generate`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
-import { normWireInteger, normWireNumber, normWireObject, normWireRange, type NormWireReader, normWireRequired } from "@semio-tech/norm-js/registry/contract";
+import { normWireNumber, normWireObject, normWireRequired, normWireString, type NormWireReader } from "@semio-tech/norm-js/registry/contract";
 
 export interface ChangeColumnActionForceN {
-  index: number;
-  actionIndex: number;
+  columnId: string;
+  id: string;
   newNKN: number;
 }
 
-export const parseChangeColumnActionForceN: NormWireReader<ChangeColumnActionForceN> = normWireObject<ChangeColumnActionForceN>({ index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), actionIndex: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), newNKN: normWireRequired(normWireNumber) });
+export const parseChangeColumnActionForceN: NormWireReader<ChangeColumnActionForceN> = normWireObject<ChangeColumnActionForceN>({ columnId: normWireRequired(normWireString), id: normWireRequired(normWireString), newNKN: normWireRequired(normWireNumber) });

@@ -1,0 +1,6 @@
+{
+  "ChangeCraneFlangeEffectiveWidth": {
+    "id": "crane-1",
+    "newFlangeEffectiveWidth": 1.5
+  }
+}

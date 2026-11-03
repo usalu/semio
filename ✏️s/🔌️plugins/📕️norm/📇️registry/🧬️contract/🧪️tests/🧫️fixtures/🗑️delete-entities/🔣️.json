@@ -1,0 +1,106 @@
+{
+  "schema": "semio.norm.delete-entities-cases/v1",
+  "command": "deleteEntities",
+  "why": "Language-agnostic law of the multi-delete: one batch of per-row removals, last position first, resolved all-or-nothing into ONE emit (one undo step). Replayed by the Rust reducer (entity-editing/delete) and by the TypeScript executor (entity-editing/delete); the retained-command-dispositions row of deleteEntities points here so the route is executed, not only counted.",
+  "document": {
+    "beams": [
+      { "id": "b1", "x": 0 },
+      { "id": "b2", "x": 1 },
+      { "id": "b3", "x": 2 },
+      { "id": "b4", "x": 3 }
+    ]
+  },
+  "notices": {
+    "norm.entity-delete-empty": { "en": "Select at least one row to delete.", "de": "Mindestens eine Zeile zum Löschen auswählen." },
+    "norm.entity-delete-unknown": { "en": "A selected row no longer exists, so nothing was deleted.", "de": "Eine ausgewählte Zeile existiert nicht mehr, daher wurde nichts gelöscht." },
+    "norm.edit-unresolved": { "en": "The edit could not be resolved against the document.", "de": "Die Änderung konnte im Dokument nicht aufgelöst werden." }
+  },
+  "arguments": [
+    { "id": "selected rows", "args": { "collection": "beams", "ids": ["b1", "b2"] }, "parsed": { "collection": "beams", "ids": ["b1", "b2"] } },
+    { "id": "no collection", "args": { "ids": ["b1"] }, "error": "an entity command needs a 'collection'" },
+    { "id": "empty collection", "args": { "collection": "", "ids": ["b1"] }, "error": "an entity command needs a 'collection'" },
+    { "id": "no ids", "args": { "collection": "beams" }, "error": "an entity command needs an 'ids' array" },
+    { "id": "a number as id", "args": { "collection": "beams", "ids": ["b1", 2] }, "error": "every entity id must be a string" },
+    { "id": "nothing selected", "args": { "collection": "beams", "ids": [] }, "error": "an entity command needs at least one id" },
+    { "id": "no arguments", "args": null, "error": "an entity command needs a 'collection'" }
+  ],
+  "cases": [
+    {
+      "id": "two rows leave the list from the last position first",
+      "collection": "beams",
+      "ids": ["b1", "b3"],
+      "outcome": "emitted",
+      "edits": [{ "kind": "removeItem", "path": "beams", "index": 2 }, { "kind": "removeItem", "path": "beams", "index": 0 }],
+      "remaining": ["b2", "b4"],
+      "mutations": 2,
+      "undoSteps": 1
+    },
+    {
+      "id": "selection order does not matter",
+      "collection": "beams",
+      "ids": ["b4", "b2", "b1"],
+      "outcome": "emitted",
+      "edits": [{ "kind": "removeItem", "path": "beams", "index": 3 }, { "kind": "removeItem", "path": "beams", "index": 1 }, { "kind": "removeItem", "path": "beams", "index": 0 }],
+      "remaining": ["b3"],
+      "mutations": 3,
+      "undoSteps": 1
+    },
+    {
+      "id": "a row listed twice leaves once",
+      "collection": "beams",
+      "ids": ["b2", "b2"],
+      "outcome": "emitted",
+      "edits": [{ "kind": "removeItem", "path": "beams", "index": 1 }],
+      "remaining": ["b1", "b3", "b4"],
+      "mutations": 1,
+      "undoSteps": 1
+    },
+    {
+      "id": "the whole list can be deleted in one step",
+      "collection": "beams",
+      "ids": ["b1", "b2", "b3", "b4"],
+      "outcome": "emitted",
+      "edits": [{ "kind": "removeItem", "path": "beams", "index": 3 }, { "kind": "removeItem", "path": "beams", "index": 2 }, { "kind": "removeItem", "path": "beams", "index": 1 }, { "kind": "removeItem", "path": "beams", "index": 0 }],
+      "remaining": [],
+      "mutations": 4,
+      "undoSteps": 1
+    },
+    {
+      "id": "nothing selected is refused",
+      "collection": "beams",
+      "ids": [],
+      "outcome": "refused",
+      "code": "norm.entity-delete-empty",
+      "message": { "en": "Select at least one row to delete", "de": "Mindestens eine Zeile zum Löschen auswählen" },
+      "remaining": ["b1", "b2", "b3", "b4"]
+    },
+    {
+      "id": "an unknown list is refused",
+      "collection": "walls",
+      "ids": ["b1"],
+      "outcome": "refused",
+      "code": "norm.entity-delete-unknown",
+      "message": { "en": "'walls' is not a list of this document", "de": "'walls' ist keine Liste dieses Dokuments" },
+      "remaining": ["b1", "b2", "b3", "b4"]
+    },
+    {
+      "id": "one unknown row refuses the whole batch",
+      "collection": "beams",
+      "ids": ["b1", "gone"],
+      "outcome": "refused",
+      "code": "norm.entity-delete-unknown",
+      "message": { "en": "'gone' is not a row of 'beams'", "de": "'gone' ist keine Zeile von 'beams'" },
+      "remaining": ["b1", "b2", "b3", "b4"]
+    },
+    {
+      "id": "a kind invariant refusing one removal refuses the batch",
+      "collection": "beams",
+      "ids": ["b1", "b2"],
+      "refuseRemovalAt": 0,
+      "outcome": "refused",
+      "code": "norm.edit-unresolved",
+      "resolverError": "invariant",
+      "remaining": ["b1", "b2", "b3", "b4"]
+    }
+  ]
+}

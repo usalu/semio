@@ -1,0 +1,1539 @@
+{
+  "$schema": "../../../../../../../../../🔮️oracles/🏃️harness/🧬️schema/🔣️.json",
+  "schemaVersion": 1,
+  "artifact": "en1997",
+  "annex": "en",
+  "cases": [
+    {
+      "id": "en1997.G.bearing-strip-da2-pass",
+      "check": "en1997.G.bearing-design",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "6.5.2 and Annex D.4: drained strip bearing resistance, V_d = gamma_G V_k against R_k / gamma_R;v with the partial factors of the registry rows of the design approach",
+        "annex": "en"
+      },
+      "inputs": {
+        "annex": "en",
+        "approach": "da2",
+        "situation": "bsP",
+        "B": 2.0,
+        "D": 1.0,
+        "phi": 32.0,
+        "c": 0.0,
+        "gamma_above": 18000.0,
+        "gamma_below": 10000.0,
+        "V_k": 620000.0
+      },
+      "expected": {
+        "gamma_g": {
+          "value": 1.35,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        },
+        "gamma_phi": {
+          "value": 1.0,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        },
+        "gamma_r_v": {
+          "value": 1.4,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        },
+        "r_d": {
+          "value": 991905.3246350157,
+          "unit": "N/m",
+          "profile": "numerical-v1"
+        },
+        "utilization": {
+          "value": 0.8438305342377156,
+          "unit": "1",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "en1997-1-groundhog",
+          "adapter": "groundhog",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1997.G.bearing-strip-da3-fail",
+      "check": "en1997.G.bearing-design",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "6.5.2 and Annex D.4: drained strip bearing resistance, V_d = gamma_G V_k against R_k / gamma_R;v with the partial factors of the registry rows of the design approach",
+        "annex": "en"
+      },
+      "inputs": {
+        "annex": "en",
+        "approach": "da3",
+        "situation": "bsP",
+        "B": 1.0,
+        "D": 0.5,
+        "phi": 28.0,
+        "c": 0.0,
+        "gamma_above": 18000.0,
+        "gamma_below": 10000.0,
+        "V_k": 380000.0
+      },
+      "expected": {
+        "gamma_g": {
+          "value": 1.35,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        },
+        "gamma_phi": {
+          "value": 1.25,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        },
+        "gamma_r_v": {
+          "value": 1.0,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        },
+        "r_d": {
+          "value": 111050.64911999651,
+          "unit": "N/m",
+          "profile": "numerical-v1"
+        },
+        "utilization": {
+          "value": 4.619513744991031,
+          "unit": "1",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "en1997-1-groundhog",
+          "adapter": "groundhog",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1997.G.bearing-strip-da1c2-pass",
+      "check": "en1997.G.bearing-design",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "6.5.2 and Annex D.4: drained strip bearing resistance, V_d = gamma_G V_k against R_k / gamma_R;v with the partial factors of the registry rows of the design approach",
+        "annex": "en"
+      },
+      "inputs": {
+        "annex": "en",
+        "approach": "da1c2",
+        "situation": "bsP",
+        "B": 2.5,
+        "D": 1.0,
+        "phi": 35.0,
+        "c": 0.0,
+        "gamma_above": 18000.0,
+        "gamma_below": 10000.0,
+        "V_k": 500000.0
+      },
+      "expected": {
+        "gamma_g": {
+          "value": 1.0,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        },
+        "gamma_phi": {
+          "value": 1.25,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        },
+        "gamma_r_v": {
+          "value": 1.0,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        },
+        "r_d": {
+          "value": 1318839.6536698285,
+          "unit": "N/m",
+          "profile": "numerical-v1"
+        },
+        "utilization": {
+          "value": 0.3791211453255067,
+          "unit": "1",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "en1997-1-groundhog",
+          "adapter": "groundhog",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1997.G.bearing-strip-de-da2-pass",
+      "check": "en1997.G.bearing-design",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "6.5.2 and Annex D.4: drained strip bearing resistance, V_d = gamma_G V_k against R_k / gamma_R;v with the partial factors of the registry rows of the design approach",
+        "annex": "de"
+      },
+      "inputs": {
+        "annex": "de",
+        "approach": "da2star",
+        "situation": "bsT",
+        "B": 2.0,
+        "D": 1.0,
+        "phi": 32.0,
+        "c": 0.0,
+        "gamma_above": 18000.0,
+        "gamma_below": 10000.0,
+        "V_k": 560000.0
+      },
+      "expected": {
+        "gamma_g": {
+          "value": 1.2,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        },
+        "gamma_phi": {
+          "value": 1.0,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        },
+        "gamma_r_v": {
+          "value": 1.3,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        },
+        "r_d": {
+          "value": 1068205.7342223243,
+          "unit": "N/m",
+          "profile": "numerical-v1"
+        },
+        "utilization": {
+          "value": 0.6290922979263257,
+          "unit": "1",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "en1997-1-groundhog",
+          "adapter": "groundhog",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1997.G.wall-sliding-da2-pass",
+      "check": "en1997.G.wall-sliding-design",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "9.5.3 and Annex C: sliding of a gravity wall, Rankine active thrust from design strength against W tan(delta) / (gamma_phi gamma_R;h)",
+        "annex": "en"
+      },
+      "inputs": {
+        "annex": "en",
+        "approach": "da2",
+        "situation": "bsP",
+        "H": 4.0,
+        "phi": 32.0,
+        "gamma": 18000.0,
+        "q": 10000.0,
+        "W": 250000.0,
+        "delta_base": 30.0
+      },
+      "expected": {
+        "gamma_g": {
+          "value": 1.35,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        },
+        "gamma_phi": {
+          "value": 1.0,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        },
+        "gamma_r_h": {
+          "value": 1.1,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        },
+        "k_a": {
+          "value": 0.3072585245224685,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "thrust_k": {
+          "value": 56535.568512134196,
+          "unit": "N/m",
+          "profile": "numerical-v1"
+        },
+        "utilization": {
+          "value": 0.5816595139609774,
+          "unit": "1",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "en1997-1-groundhog",
+          "adapter": "groundhog",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1997.G.wall-sliding-da1c2-fail",
+      "check": "en1997.G.wall-sliding-design",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "9.5.3 and Annex C: sliding of a gravity wall, Rankine active thrust from design strength against W tan(delta) / (gamma_phi gamma_R;h)",
+        "annex": "en"
+      },
+      "inputs": {
+        "annex": "en",
+        "approach": "da1c2",
+        "situation": "bsP",
+        "H": 6.0,
+        "phi": 25.0,
+        "gamma": 19000.0,
+        "q": 20000.0,
+        "W": 120000.0,
+        "delta_base": 25.0
+      },
+      "expected": {
+        "gamma_g": {
+          "value": 1.0,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        },
+        "gamma_phi": {
+          "value": 1.25,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        },
+        "gamma_r_h": {
+          "value": 1.0,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        },
+        "k_a": {
+          "value": 0.4820106368293389,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "thrust_k": {
+          "value": 222688.91421515457,
+          "unit": "N/m",
+          "profile": "numerical-v1"
+        },
+        "utilization": {
+          "value": 4.974561642241233,
+          "unit": "1",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "en1997-1-groundhog",
+          "adapter": "groundhog",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1997.G.wall-sliding-de-da2-pass",
+      "check": "en1997.G.wall-sliding-design",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "9.5.3 and Annex C: sliding of a gravity wall, Rankine active thrust from design strength against W tan(delta) / (gamma_phi gamma_R;h)",
+        "annex": "de"
+      },
+      "inputs": {
+        "annex": "de",
+        "approach": "da2star",
+        "situation": "bsT",
+        "H": 4.0,
+        "phi": 32.0,
+        "gamma": 18000.0,
+        "q": 10000.0,
+        "W": 250000.0,
+        "delta_base": 30.0
+      },
+      "expected": {
+        "gamma_g": {
+          "value": 1.2,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        },
+        "gamma_phi": {
+          "value": 1.0,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        },
+        "gamma_r_h": {
+          "value": 1.1,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        },
+        "k_a": {
+          "value": 0.3072585245224685,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "thrust_k": {
+          "value": 56535.568512134196,
+          "unit": "N/m",
+          "profile": "numerical-v1"
+        },
+        "utilization": {
+          "value": 0.5170306790764244,
+          "unit": "1",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "en1997-1-groundhog",
+          "adapter": "groundhog",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1997.G.settlement-clay-pass",
+      "check": "en1997.G.settlement-primary",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "6.6.2 and Annex F: primary consolidation of a normally consolidated clay layer under the centre of a rectangle (Boussinesq), serviceability without partial factors",
+        "annex": "en"
+      },
+      "inputs": {
+        "B": 2.5,
+        "L": 2.5,
+        "z_top": 1.0,
+        "thickness": 3.0,
+        "q": 50000.0,
+        "e0": 0.9,
+        "sigma_v0": 60000.0,
+        "C_c": 0.2,
+        "limit": 0.08
+      },
+      "expected": {
+        "delta_sigma": {
+          "value": 16805.37903467984,
+          "unit": "Pa",
+          "profile": "numerical-v1"
+        },
+        "s": {
+          "value": 0.03386538516542107,
+          "unit": "m",
+          "profile": "numerical-v1"
+        },
+        "utilization": {
+          "value": 0.4233173145677634,
+          "unit": "1",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "en1997-1-groundhog",
+          "adapter": "groundhog",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1997.G.settlement-clay-fail",
+      "check": "en1997.G.settlement-primary",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "6.6.2 and Annex F: primary consolidation of a normally consolidated clay layer under the centre of a rectangle (Boussinesq), serviceability without partial factors",
+        "annex": "en"
+      },
+      "inputs": {
+        "B": 4.0,
+        "L": 6.0,
+        "z_top": 0.5,
+        "thickness": 6.0,
+        "q": 250000.0,
+        "e0": 1.1,
+        "sigma_v0": 45000.0,
+        "C_c": 0.4,
+        "limit": 0.05
+      },
+      "expected": {
+        "delta_sigma": {
+          "value": 124557.68577680741,
+          "unit": "Pa",
+          "profile": "numerical-v1"
+        },
+        "s": {
+          "value": 0.6584056761763787,
+          "unit": "m",
+          "profile": "numerical-v1"
+        },
+        "utilization": {
+          "value": 13.168113523527573,
+          "unit": "1",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "en1997-1-groundhog",
+          "adapter": "groundhog",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1997.G.slope-bishop-da1c1-pass",
+      "check": "en1997.G.slope-bishop",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "11.5: overall stability of a slope by the simplified Bishop method on one given circle with design strength tan(phi) / gamma_phi and c / gamma_c from the registry rows of the design approach",
+        "annex": "en"
+      },
+      "inputs": {
+        "annex": "en",
+        "approach": "da1c1",
+        "situation": "bsP",
+        "H": 6.0,
+        "beta": 22.0,
+        "gamma": 19000.0,
+        "phi": 32.0,
+        "c": 5000.0,
+        "xc": 4.0,
+        "yc": 12.0,
+        "r": 13.0
+      },
+      "expected": {
+        "gamma_phi": {
+          "value": 1.0,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        },
+        "gamma_c": {
+          "value": 1.0,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        },
+        "factor": {
+          "value": 3.7987078024791274,
+          "unit": "1",
+          "profile": "numerical-v1",
+          "tolerance": 0.01
+        },
+        "utilization": {
+          "value": 0.2632474125404897,
+          "unit": "1",
+          "profile": "numerical-v1",
+          "tolerance": 0.01
+        }
+      },
+      "references": [
+        {
+          "oracle": "en1997-1-groundhog",
+          "adapter": "groundhog",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1997.G.slope-bishop-da3-fail",
+      "check": "en1997.G.slope-bishop",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "11.5: overall stability of a slope by the simplified Bishop method on one given circle with design strength tan(phi) / gamma_phi and c / gamma_c from the registry rows of the design approach",
+        "annex": "en"
+      },
+      "inputs": {
+        "annex": "en",
+        "approach": "da3",
+        "situation": "bsP",
+        "H": 8.0,
+        "beta": 40.0,
+        "gamma": 19000.0,
+        "phi": 22.0,
+        "c": 0.0,
+        "xc": 8.0,
+        "yc": 12.0,
+        "r": 9.0
+      },
+      "expected": {
+        "gamma_phi": {
+          "value": 1.25,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        },
+        "gamma_c": {
+          "value": 1.25,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        },
+        "factor": {
+          "value": 0.4332625848787923,
+          "unit": "1",
+          "profile": "numerical-v1",
+          "tolerance": 0.01
+        },
+        "utilization": {
+          "value": 2.3080691361331276,
+          "unit": "1",
+          "profile": "numerical-v1",
+          "tolerance": 0.01
+        }
+      },
+      "references": [
+        {
+          "oracle": "en1997-1-groundhog",
+          "adapter": "groundhog",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1997.G.slope-undrained-phi0-da1c1-pass",
+      "check": "en1997.G.slope-bishop",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "11.5: overall stability of a slope by the simplified Bishop method on one given circle with design strength tan(phi) / gamma_phi and c / gamma_c from the registry rows of the design approach",
+        "annex": "en"
+      },
+      "inputs": {
+        "annex": "en",
+        "approach": "da1c1",
+        "situation": "bsP",
+        "H": 6.0,
+        "beta": 30.0,
+        "gamma": 18000.0,
+        "phi": 0.0,
+        "c": 60000.0,
+        "xc": 3.0,
+        "yc": 9.0,
+        "r": 10.0
+      },
+      "expected": {
+        "gamma_phi": {
+          "value": 1.0,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        },
+        "gamma_c": {
+          "value": 1.0,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        },
+        "factor": {
+          "value": 4.2235507495302995,
+          "unit": "1",
+          "profile": "numerical-v1",
+          "tolerance": 0.01
+        },
+        "utilization": {
+          "value": 0.2367676060507169,
+          "unit": "1",
+          "profile": "numerical-v1",
+          "tolerance": 0.01
+        }
+      },
+      "references": [
+        {
+          "oracle": "en1997-1-groundhog",
+          "adapter": "groundhog",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1997.G.slope-bishop-geo3-pass",
+      "check": "en1997.G.slope-bishop",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "11.5: overall stability of a slope by the simplified Bishop method on one given circle with design strength tan(phi) / gamma_phi and c / gamma_c from the registry rows of the design approach",
+        "annex": "en"
+      },
+      "inputs": {
+        "annex": "en",
+        "approach": "geo3",
+        "situation": "bsP",
+        "H": 6.0,
+        "beta": 22.0,
+        "gamma": 19000.0,
+        "phi": 32.0,
+        "c": 5000.0,
+        "xc": 4.0,
+        "yc": 12.0,
+        "r": 13.0
+      },
+      "expected": {
+        "gamma_phi": {
+          "value": 1.25,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        },
+        "gamma_c": {
+          "value": 1.25,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        },
+        "factor": {
+          "value": 3.0389662419829313,
+          "unit": "1",
+          "profile": "numerical-v1",
+          "tolerance": 0.01
+        },
+        "utilization": {
+          "value": 0.3290592656756523,
+          "unit": "1",
+          "profile": "numerical-v1",
+          "tolerance": 0.01
+        }
+      },
+      "references": [
+        {
+          "oracle": "en1997-1-groundhog",
+          "adapter": "groundhog",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1997.G.pile-settlement-pass",
+      "check": "en1997.G.pile-resistance-settlement",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "7.6.4: pile head settlement from a bilinear mobilisation of shaft and base resistance and the elastic shortening, E_c an input of the pile (33 GPa is the assumed C30/37, unverified)",
+        "annex": "en"
+      },
+      "inputs": {
+        "N": 600000.0,
+        "rs_max": 1660000.0,
+        "rb_max": 848000.0,
+        "D": 0.6,
+        "L": 14.0,
+        "E_c": 33000000000.0,
+        "s_ref_s": 0.006,
+        "s_ref_b": 0.06,
+        "s_lim": 0.025
+      },
+      "expected": {
+        "s_mobilised": {
+          "value": 0.002063273727647868,
+          "unit": "m",
+          "profile": "numerical-v1"
+        },
+        "s_elastic": {
+          "value": 0.0004720124646665005,
+          "unit": "m",
+          "profile": "numerical-v1"
+        },
+        "s_total": {
+          "value": 0.0025352861923143687,
+          "unit": "m",
+          "profile": "numerical-v1"
+        },
+        "utilization": {
+          "value": 0.10141144769257475,
+          "unit": "1",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "en1997-1-geotechnics-groundhog-scipy",
+          "adapter": "groundhog",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1997.G.pile-settlement-fail",
+      "check": "en1997.G.pile-resistance-settlement",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "7.6.4: pile head settlement from a bilinear mobilisation of shaft and base resistance and the elastic shortening, E_c an input of the pile (33 GPa is the assumed C30/37, unverified)",
+        "annex": "en"
+      },
+      "inputs": {
+        "N": 2300000.0,
+        "rs_max": 1660000.0,
+        "rb_max": 848000.0,
+        "D": 0.6,
+        "L": 14.0,
+        "E_c": 33000000000.0,
+        "s_ref_s": 0.006,
+        "s_ref_b": 0.06,
+        "s_lim": 0.025
+      },
+      "expected": {
+        "s_mobilised": {
+          "value": 0.04528301886792453,
+          "unit": "m",
+          "profile": "numerical-v1"
+        },
+        "s_elastic": {
+          "value": 0.0022056624436573784,
+          "unit": "m",
+          "profile": "numerical-v1"
+        },
+        "s_total": {
+          "value": 0.04748868131158191,
+          "unit": "m",
+          "profile": "numerical-v1"
+        },
+        "utilization": {
+          "value": 1.8995472524632764,
+          "unit": "1",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "en1997-1-geotechnics-groundhog-scipy",
+          "adapter": "groundhog",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1997.G.din4017-rect-da2-pass",
+      "check": "en1997.G.bearing-din4017",
+      "citation": {
+        "standard": "DIN 4017",
+        "edition": "2006-03",
+        "clause": "DIN 4017 bearing resistance of a rectangular footing under an inclined, eccentric load (shape and inclination factors, effective width), N_d0 = Prandtl N_q from groundhog; the shape and inclination factors are written independently in the oracle (no third-party library carries DIN 4017)",
+        "annex": "en"
+      },
+      "inputs": {
+        "annex": "en",
+        "approach": "da2",
+        "situation": "bsP",
+        "B": 2.5,
+        "L": 4.0,
+        "D": 1.2,
+        "phi": 32.0,
+        "c": 0.0,
+        "gamma_above": 18000.0,
+        "gamma_below": 10000.0,
+        "V_k": 2000000.0,
+        "H_k": 200000.0,
+        "M_k": 200000.0
+      },
+      "expected": {
+        "gamma_g": {
+          "value": 1.35,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        },
+        "gamma_phi": {
+          "value": 1.0,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        },
+        "gamma_r_v": {
+          "value": 1.4,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        },
+        "r_d": {
+          "value": 4858174.664053852,
+          "unit": "N/m",
+          "profile": "numerical-v1"
+        },
+        "utilization": {
+          "value": 0.5557642914688896,
+          "unit": "1",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "en1997-1-geotechnics-groundhog-scipy",
+          "adapter": "groundhog-scipy",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1997.G.din4017-rect-da2-fail",
+      "check": "en1997.G.bearing-din4017",
+      "citation": {
+        "standard": "DIN 4017",
+        "edition": "2006-03",
+        "clause": "DIN 4017 bearing resistance of a rectangular footing under an inclined, eccentric load (shape and inclination factors, effective width), N_d0 = Prandtl N_q from groundhog; the shape and inclination factors are written independently in the oracle (no third-party library carries DIN 4017)",
+        "annex": "en"
+      },
+      "inputs": {
+        "annex": "en",
+        "approach": "da2",
+        "situation": "bsP",
+        "B": 2.5,
+        "L": 4.0,
+        "D": 1.2,
+        "phi": 32.0,
+        "c": 0.0,
+        "gamma_above": 18000.0,
+        "gamma_below": 10000.0,
+        "V_k": 6000000.0,
+        "H_k": 500000.0,
+        "M_k": 500000.0
+      },
+      "expected": {
+        "gamma_g": {
+          "value": 1.35,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        },
+        "gamma_phi": {
+          "value": 1.0,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        },
+        "gamma_r_v": {
+          "value": 1.4,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        },
+        "r_d": {
+          "value": 5144388.802405908,
+          "unit": "N/m",
+          "profile": "numerical-v1"
+        },
+        "utilization": {
+          "value": 1.5745310689215062,
+          "unit": "1",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "en1997-1-geotechnics-groundhog-scipy",
+          "adapter": "groundhog-scipy",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1997.G.din4017-rect-de-pass",
+      "check": "en1997.G.bearing-din4017",
+      "citation": {
+        "standard": "DIN 4017",
+        "edition": "2006-03",
+        "clause": "DIN 4017 bearing resistance of a rectangular footing under an inclined, eccentric load (shape and inclination factors, effective width), N_d0 = Prandtl N_q from groundhog; the shape and inclination factors are written independently in the oracle (no third-party library carries DIN 4017)",
+        "annex": "de"
+      },
+      "inputs": {
+        "annex": "de",
+        "approach": "da2",
+        "situation": "bsP",
+        "B": 2.5,
+        "L": 4.0,
+        "D": 1.2,
+        "phi": 27.5,
+        "c": 8000.0,
+        "gamma_above": 18000.0,
+        "gamma_below": 10000.0,
+        "V_k": 2000000.0,
+        "H_k": 150000.0,
+        "M_k": 100000.0
+      },
+      "expected": {
+        "gamma_g": {
+          "value": 1.35,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        },
+        "gamma_phi": {
+          "value": 1.0,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        },
+        "gamma_r_v": {
+          "value": 1.4,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        },
+        "r_d": {
+          "value": 4546945.757389753,
+          "unit": "N/m",
+          "profile": "numerical-v1"
+        },
+        "utilization": {
+          "value": 0.5938051923342007,
+          "unit": "1",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "en1997-1-geotechnics-groundhog-scipy",
+          "adapter": "groundhog-scipy",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1997.G.passive-curved-delta0",
+      "check": "en1997.G.passive-curved",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "9.5 passive earth pressure on a logarithmic-spiral failure surface: Rankine limit at delta = 0 (groundhog), Poncelet plane coefficient as the upper bound (groundhog), spiral by scipy Nelder-Mead over the pole (independent of the Rust grid search); the Kerisel-Absi tables are not available and no value is taken from memory",
+        "annex": "en"
+      },
+      "inputs": {
+        "phi": 30.0,
+        "delta": 0.0
+      },
+      "expected": {
+        "kp_rankine": {
+          "value": 3.0,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "kp": {
+          "value": 3.0,
+          "unit": "1",
+          "profile": "numerical-v1",
+          "tolerance": 0.005
+        }
+      },
+      "references": [
+        {
+          "oracle": "en1997-1-geotechnics-groundhog-scipy",
+          "adapter": "groundhog-scipy",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1997.G.passive-curved-delta20",
+      "check": "en1997.G.passive-curved",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "9.5 passive earth pressure on a logarithmic-spiral failure surface: Rankine limit at delta = 0 (groundhog), Poncelet plane coefficient as the upper bound (groundhog), spiral by scipy Nelder-Mead over the pole (independent of the Rust grid search); the Kerisel-Absi tables are not available and no value is taken from memory",
+        "annex": "en"
+      },
+      "inputs": {
+        "phi": 30.0,
+        "delta": 20.0
+      },
+      "expected": {
+        "kp_rankine": {
+          "value": 3.0,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "kp": {
+          "value": 5.3402036332408835,
+          "unit": "1",
+          "profile": "numerical-v1",
+          "tolerance": 0.005
+        },
+        "kp_coulomb": {
+          "value": 6.105357772952885,
+          "unit": "1",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "en1997-1-geotechnics-groundhog-scipy",
+          "adapter": "groundhog-scipy",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1997.G.passive-curved-delta23",
+      "check": "en1997.G.passive-curved",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "9.5 passive earth pressure on a logarithmic-spiral failure surface: Rankine limit at delta = 0 (groundhog), Poncelet plane coefficient as the upper bound (groundhog), spiral by scipy Nelder-Mead over the pole (independent of the Rust grid search); the Kerisel-Absi tables are not available and no value is taken from memory",
+        "annex": "en"
+      },
+      "inputs": {
+        "phi": 35.0,
+        "delta": 23.0
+      },
+      "expected": {
+        "kp_rankine": {
+          "value": 3.6901723321426636,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "kp": {
+          "value": 7.865276726266659,
+          "unit": "1",
+          "profile": "numerical-v1",
+          "tolerance": 0.005
+        },
+        "kp_coulomb": {
+          "value": 9.775891057639239,
+          "unit": "1",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "en1997-1-geotechnics-groundhog-scipy",
+          "adapter": "groundhog-scipy",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1997.G.secondary-creep",
+      "check": "en1997.G.secondary-settlement",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "6.6.3 secondary compression s = C_alpha h / (1 + e0) log10(t2 / t1), numpy closed form (no library carries it)",
+        "annex": "en"
+      },
+      "inputs": {
+        "c_alpha": 0.012,
+        "h": 6.0,
+        "e0": 0.9,
+        "t1": 3000000.0,
+        "t2": 1580000000.0
+      },
+      "expected": {
+        "s_sec": {
+          "value": 0.1031318841688962,
+          "unit": "m",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "en1997-1-geotechnics-groundhog-scipy",
+          "adapter": "groundhog-scipy",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1997.G.negative-friction-da2",
+      "check": "en1997.G.negative-skin-friction",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "7.3.2.2 drag load F_neg = pi D beta sigma'v h of the settling ground, closed form with gamma_G of the registry row",
+        "annex": "en"
+      },
+      "inputs": {
+        "annex": "en",
+        "approach": "da2",
+        "situation": "bsP",
+        "d": 0.6,
+        "beta": 0.25,
+        "sv": 60000.0,
+        "h": 4.0
+      },
+      "expected": {
+        "gamma_g": {
+          "value": 1.35,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        },
+        "f_neg_k": {
+          "value": 113097.33552923256,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "f_neg_d": {
+          "value": 152681.40296446395,
+          "unit": "N",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "en1997-1-geotechnics-groundhog-scipy",
+          "adapter": "groundhog-scipy",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1997.G.reinforced-soil-strips",
+      "check": "en1997.G.reinforced-soil",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "9.8 reinforced soil T_max = K sigma_v S_v and the embedment length L_e = T_max / (2 b f* sigma_v), closed form",
+        "annex": "en"
+      },
+      "inputs": {
+        "k": 0.31,
+        "sigma_v": 80000.0,
+        "s_v": 0.6,
+        "f_star": 0.8,
+        "b": 0.1
+      },
+      "expected": {
+        "t_max": {
+          "value": 14880.0,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "l_e": {
+          "value": 1.1624999999999999,
+          "unit": "m",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "en1997-1-geotechnics-groundhog-scipy",
+          "adapter": "groundhog-scipy",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1997.G.single-well-unconfined",
+      "check": "en1997.G.single-well",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "10 Dupuit-Thiem discharge of a single well with the Sichardt radius, unconfined aquifer, closed form",
+        "annex": "en"
+      },
+      "inputs": {
+        "k": 0.001,
+        "h_aquifer": 16.0,
+        "h_well": 8.0,
+        "r_well": 0.3,
+        "aquifer": "unconfined",
+        "thickness": 12.0
+      },
+      "expected": {
+        "radius": {
+          "value": 758.946638440411,
+          "unit": "m",
+          "profile": "numerical-v1"
+        },
+        "q": {
+          "value": 0.07697717690068644,
+          "unit": "m3/s",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "en1997-1-geotechnics-groundhog-scipy",
+          "adapter": "groundhog-scipy",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1997.G.single-well-confined",
+      "check": "en1997.G.single-well",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "10 Thiem discharge of a single well with the Sichardt radius, confined aquifer, closed form",
+        "annex": "en"
+      },
+      "inputs": {
+        "k": 0.0005,
+        "h_aquifer": 16.0,
+        "h_well": 8.0,
+        "r_well": 0.3,
+        "aquifer": "confined",
+        "thickness": 12.0
+      },
+      "expected": {
+        "radius": {
+          "value": 536.6563145999495,
+          "unit": "m",
+          "profile": "numerical-v1"
+        },
+        "q": {
+          "value": 0.04026967261487956,
+          "unit": "m3/s",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "en1997-1-geotechnics-groundhog-scipy",
+          "adapter": "groundhog-scipy",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1997.G.pile-dynamic-mean-governs-da2",
+      "check": "en1997.G.pile-dynamic-tests",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "7.6.2.4 (7.10) R_c,k = min{mean/xi5; min/xi6}, R_c,d = R_c,k/gamma_t from n dynamic tests; xi5, xi6 by groundhog (Table A.11); driving formula R = eta W h/(s + 0.5 s_e), a convention, not a clause value",
+        "annex": "en"
+      },
+      "inputs": {
+        "annex": "en",
+        "situation": "bsP",
+        "eta": 0.9,
+        "W": 100000.0,
+        "h": 1.0,
+        "s": 0.01,
+        "s_e": 0.02,
+        "approach": "da2",
+        "n": 5,
+        "rm_mean": 2600000.0,
+        "rm_min": 2400000.0,
+        "f_cd": 1200000.0
+      },
+      "expected": {
+        "xi5": {
+          "value": 1.5,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        },
+        "xi6": {
+          "value": 1.35,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        },
+        "gamma_t": {
+          "value": 1.1,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        },
+        "r_c_k": {
+          "value": 1733333.3333333333,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "r_c_d": {
+          "value": 1575757.5757575755,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "r_driving": {
+          "value": 4500000.0,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "compression": {
+          "value": 0.7615384615384617,
+          "unit": "1",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "en1997-1-geotechnics-groundhog-scipy",
+          "adapter": "groundhog-scipy",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1997.G.pile-dynamic-lowest-governs-da3",
+      "check": "en1997.G.pile-dynamic-tests",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "7.6.2.4 (7.10) R_c,k = min{mean/xi5; min/xi6}, R_c,d = R_c,k/gamma_t from n dynamic tests; xi5, xi6 by groundhog (Table A.11); driving formula R = eta W h/(s + 0.5 s_e), a convention, not a clause value",
+        "annex": "en"
+      },
+      "inputs": {
+        "annex": "en",
+        "situation": "bsP",
+        "eta": 0.9,
+        "W": 100000.0,
+        "h": 1.0,
+        "s": 0.01,
+        "s_e": 0.02,
+        "approach": "da3",
+        "n": 10,
+        "rm_mean": 2600000.0,
+        "rm_min": 2000000.0
+      },
+      "expected": {
+        "xi5": {
+          "value": 1.45,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        },
+        "xi6": {
+          "value": 1.3,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        },
+        "gamma_t": {
+          "value": 1.0,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        },
+        "r_c_k": {
+          "value": 1538461.5384615385,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "r_c_d": {
+          "value": 1538461.5384615385,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "r_driving": {
+          "value": 4500000.0,
+          "unit": "N",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "en1997-1-geotechnics-groundhog-scipy",
+          "adapter": "groundhog-scipy",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1997.G.pile-dynamic-two-tests-da1c2",
+      "check": "en1997.G.pile-dynamic-tests",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "7.6.2.4 (7.10) R_c,k = min{mean/xi5; min/xi6}, R_c,d = R_c,k/gamma_t from n dynamic tests; xi5, xi6 by groundhog (Table A.11); driving formula R = eta W h/(s + 0.5 s_e), a convention, not a clause value",
+        "annex": "en"
+      },
+      "inputs": {
+        "annex": "en",
+        "situation": "bsP",
+        "eta": 0.9,
+        "W": 100000.0,
+        "h": 1.0,
+        "s": 0.01,
+        "s_e": 0.02,
+        "approach": "da1c2",
+        "n": 2,
+        "rm_mean": 3000000.0,
+        "rm_min": 2800000.0,
+        "f_cd": 1000000.0
+      },
+      "expected": {
+        "xi5": {
+          "value": 1.6,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        },
+        "xi6": {
+          "value": 1.5,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        },
+        "gamma_t": {
+          "value": 1.0,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        },
+        "r_c_k": {
+          "value": 1866666.6666666667,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "r_c_d": {
+          "value": 1866666.6666666667,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "r_driving": {
+          "value": 4500000.0,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "compression": {
+          "value": 0.5357142857142857,
+          "unit": "1",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "en1997-1-geotechnics-groundhog-scipy",
+          "adapter": "groundhog-scipy",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1997.G.downdrag-resistance-da2",
+      "check": "en1997.G.negative-skin-friction",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "7.3.2.2 / 7.6.2: downdrag verdict (F_c,d + F_neg,d) / R_c,d with the design drag force F_neg,d = gamma_G F_neg,k added to the action side, closed form",
+        "annex": "en"
+      },
+      "inputs": {
+        "annex": "en",
+        "approach": "da2",
+        "situation": "bsP",
+        "d": 0.6,
+        "beta": 0.25,
+        "sv": 60000.0,
+        "h": 4.0,
+        "f_cd": 700000.0,
+        "r_c_d": 1500000.0
+      },
+      "expected": {
+        "gamma_g": {
+          "value": 1.35,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        },
+        "f_neg_k": {
+          "value": 113097.33552923256,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "f_neg_d": {
+          "value": 152681.40296446395,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "downdrag": {
+          "value": 0.568454268642976,
+          "unit": "1",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "en1997-1-geotechnics-groundhog-scipy",
+          "adapter": "groundhog-scipy",
+          "kind": "third-party-library"
+        }
+      ]
+    }
+  ]
+}

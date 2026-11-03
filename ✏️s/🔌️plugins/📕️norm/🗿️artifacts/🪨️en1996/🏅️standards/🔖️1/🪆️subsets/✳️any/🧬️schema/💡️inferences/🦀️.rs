@@ -14,8 +14,8 @@ use framework_schema::ArtifactSchema;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from an EN 1996 snapshot.
 #[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.norm.en1996.inference")]
 pub struct En1996Inference {
@@ -42,7 +42,7 @@ impl protocol::InferenceSpec<En1996Snapshot> for En1996Inference {
     fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec {
             id: "s.norm.en1996.inference.outline",
-            reads: &["annex", "masonryClass", "designSituation", "storeys", "walls"],
+            reads: &["annex", "reliabilityClass", "masonryClass", "designSituation", "storeys", "walls"],
         }]
     }
 }
@@ -70,13 +70,17 @@ mod tests;
 //#region 🔖️ComplianceReport
 /// 📋️ `En1996Snapshot -> CheckReport` — full masonry-building evaluation.
 pub fn evaluate(document: &En1996Snapshot) -> semio_s_plugin_norm_compliance::CheckReport {
-    semio_s_artifact_norm_en1996_schema::checks::masonry::evaluate_building(
+    let mut report = semio_s_artifact_norm_en1996_schema::checks::masonry::evaluate_building(
         document.annex,
         document.masonry_class,
         document.design_situation,
+        document.reliability_class,
         document.storeys,
         &document.walls,
-    )
+    );
+    report.extend(semio_s_artifact_norm_en1996_schema::checks::masonry::evaluate_design_cases(document.annex, &document.cases, semio_s_plugin_norm_compliance::incremental_evaluation::Scope::All).checks);
+    report.extend(semio_s_artifact_norm_en1996_schema::checks::masonry::detailing_checks(document.annex, &document.walls, &document.chases, &document.movement_joints).checks);
+    report
 }
 //#endregion 🔖️ComplianceReport
 
@@ -84,9 +88,17 @@ pub fn evaluate(document: &En1996Snapshot) -> semio_s_plugin_norm_compliance::Ch
 #[path = "🧪️tests/🔬️compliance-report/🦀️.rs"]
 mod compliance_report_tests;
 
+#[cfg(any(test, feature = "oracle-wiring"))]
+#[path = "🧪️tests/🎯️oracle-wiring/🦀️.rs"]
+pub mod oracle_wiring;
+
 pub use crate::outline::En1996Outline;
 
 //#region 🪢️Mounts
 #[path = "🧾outline/🦀️.rs"]
 pub mod outline;
 //#endregion 🪢️Mounts
+
+//#region 🛰️LiveEvaluation
+semio_s_plugin_norm_compliance::live_report!(pub mod live(En1996Snapshot) = semio_s_artifact_norm_en1996_schema::checks::masonry::En1996Units);
+//#endregion 🛰️LiveEvaluation

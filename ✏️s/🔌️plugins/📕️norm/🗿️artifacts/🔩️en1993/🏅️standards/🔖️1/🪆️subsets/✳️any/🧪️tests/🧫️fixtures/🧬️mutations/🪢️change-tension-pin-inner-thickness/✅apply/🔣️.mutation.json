@@ -1,0 +1,6 @@
+{
+  "ChangeTensionPinInnerThickness": {
+    "id": "ten-1",
+    "newPinInnerThickness": 1.5
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/remove-ring-stiffener/schema.json",
+  "title": "RemoveRingStiffener",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "removeRingStiffener"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Ring stiffener",
+          "de": "Ringsteife"
+        },
+        "description": {
+          "en": "The ring stiffener this mutation removes.",
+          "de": "Entfernt wird: Ringsteife."
+        },
+        "ref": {
+          "kind": "ring-stiffener"
+        },
+        "group": "target",
+        "order": 10
+      }
+    }
+  }
+}

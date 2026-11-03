@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-shell-material-id/schema.json",
+  "title": "ChangeShellMaterialId",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "shellId",
+    "newMaterialId"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeShellMaterialId"
+    },
+    "shellId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Shell",
+          "de": "Schale"
+        },
+        "description": {
+          "en": "The shell this mutation addresses, by id.",
+          "de": "Das adressierte Element (Schale), per Kennung."
+        },
+        "ref": {
+          "kind": "shell"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newMaterialId": {
+      "type": "string",
+      "x-semio-ui": {
+        "label": {
+          "en": "Aluminium alloy",
+          "de": "Aluminiumlegierung"
+        },
+        "widget": "text",
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

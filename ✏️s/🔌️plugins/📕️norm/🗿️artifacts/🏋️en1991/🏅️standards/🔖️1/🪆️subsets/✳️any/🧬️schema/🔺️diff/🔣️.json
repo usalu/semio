@@ -1,1746 +1,234 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/diff.json",
-  "title": "En1991Diff",
-  "type": "object",
-  "additionalProperties": false,
-  "properties": {
-    "annex": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/annex"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "snowZone": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/snowZone"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "altitude": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/altitude"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "enSk": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/enSk"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "northGermanLowlandSnow": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/northGermanLowlandSnow"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "windZone": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/windZone"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "enVb": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/enVb"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "terrainCategory": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/terrainCategory"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "mixedTerrainUpwind": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/mixedTerrainUpwind"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "mixedTerrainDistance": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/mixedTerrainDistance"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "orographyFactor": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/orographyFactor"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "coastOrIsland": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/coastOrIsland"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "airDensity": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/airDensity"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "height": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/height"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "width": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/width"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "depth": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/depth"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "assumedDeltaT": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/assumedDeltaT"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "tMax": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/tMax"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "tMin": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/tMin"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "t0": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/t0"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "thermalElementType": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/thermalElementType"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "thermalBridgeType": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/thermalBridgeType"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "deltaTM": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/deltaTM"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "storeyCount": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/storeyCount"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "fireMode": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/fireMode"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "fireCurve": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/fireCurve"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "fireDuration": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/fireDuration"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "assumedGasTemperature": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/assumedGasTemperature"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "assumedHNet": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/assumedHNet"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "fireCompartmentArea": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/fireCompartmentArea"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "fireCompartmentHeight": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/fireCompartmentHeight"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "fireOpeningFactor": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/fireOpeningFactor"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "fireThermalInertia": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/fireThermalInertia"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "fireOccupancy": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/fireOccupancy"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "fireLoadDensityQf": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/fireLoadDensityQf"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "assumedQfD": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/assumedQfD"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "constructionActivity": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/constructionActivity"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "assumedConstructionQk": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/assumedConstructionQk"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "structureKind": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/structureKind"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "bridgeLane": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/bridgeLane"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "bridgeSpan": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/bridgeSpan"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "bridgeLaneWidth": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/bridgeLaneWidth"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "assumedBridgeTandem": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/assumedBridgeTandem"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "assumedBridgeUdl": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/assumedBridgeUdl"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "assumedBridgeLm2": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/assumedBridgeLm2"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "assumedBridgeFootway": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/assumedBridgeFootway"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "assumedBridgeLm3": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/assumedBridgeLm3"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "assumedBridgeLm4": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/assumedBridgeLm4"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "bridgeLoadGroup": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/bridgeLoadGroup"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "craneClaimed": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/craneClaimed"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "craneClass": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/craneClass"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "hoistClass": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/hoistClass"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "hoistingSpeed": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/hoistingSpeed"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "assumedCraneWheel": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/assumedCraneWheel"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "assumedCraneHorizontal": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/assumedCraneHorizontal"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "siloClaimed": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/siloClaimed"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "siloKind": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/siloKind"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "siloBulkDensity": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/siloBulkDensity"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "siloHeight": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/siloHeight"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "siloHydraulicRadius": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/siloHydraulicRadius"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "siloMu": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/siloMu"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "siloK": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/siloK"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "assumedSiloPressure": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/assumedSiloPressure"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "assumedSiloPatch": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/assumedSiloPatch"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "assumedSiloWallFriction": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/assumedSiloWallFriction"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "floors": {
-      "$ref": "#/$defs/En1991FloorDelta",
-      "x-semio-state": "artifact"
-    },
-    "selfWeightElements": {
-      "$ref": "#/$defs/En1991SelfWeightElementDelta",
-      "x-semio-state": "artifact"
-    },
-    "roofs": {
-      "$ref": "#/$defs/En1991RoofDelta",
-      "x-semio-state": "artifact"
-    },
-    "windFaces": {
-      "$ref": "#/$defs/En1991WindFaceDelta",
-      "x-semio-state": "artifact"
-    },
-    "accidentalCases": {
-      "$ref": "#/$defs/En1991AccidentalCaseDelta",
-      "x-semio-state": "artifact"
-    }
+  "$schema":"http://json-schema.org/draft-07/schema#",
+  "$id":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/diff.json",
+  "title":"En1991Diff",
+  "type":"object",
+  "additionalProperties":false,
+  "properties":{"annex":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/annex"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"semio_s_plugin_norm_compliance::AnnexChoice"}},"snowZone":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/snowZone"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"String"}},"altitude":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/altitude"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"enSk":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/enSk"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"northGermanLowlandSnow":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/northGermanLowlandSnow"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"bool"}},"windZone":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/windZone"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"u8"}},"enVb":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/enVb"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"terrainCategory":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/terrainCategory"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"u8"}},"mixedTerrainUpwind":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/mixedTerrainUpwind"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"u8"}},"mixedTerrainDistance":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/mixedTerrainDistance"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"orographyFactor":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/orographyFactor"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"coastOrIsland":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/coastOrIsland"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"bool"}},"airDensity":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/airDensity"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"height":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/height"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"width":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/width"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"depth":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/depth"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"assumedDeltaT":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/assumedDeltaT"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"tMax":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/tMax"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"tMin":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/tMin"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"t0":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/t0"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"name":"t_0","type":"f64"}},"thermalElementType":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/thermalElementType"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"String"}},"thermalBridgeType":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/thermalBridgeType"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"u8"}},"deltaTM":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/deltaTM"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"storeyCount":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/storeyCount"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"u8"}},"fireMode":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/fireMode"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"semio_s_artifact_norm_en1991_model::FireMode"}},"fireCurve":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/fireCurve"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"semio_s_artifact_norm_en1991_model::part_1_2::FireCurve"}},"fireDuration":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/fireDuration"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"assumedGasTemperature":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/assumedGasTemperature"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"assumedHNet":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/assumedHNet"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"fireCompartmentArea":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/fireCompartmentArea"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"fireCompartmentHeight":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/fireCompartmentHeight"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"fireOpeningFactor":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/fireOpeningFactor"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"fireThermalInertia":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/fireThermalInertia"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"fireOccupancy":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/fireOccupancy"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"semio_s_artifact_norm_en1991_model::FireOccupancy"}},"fireLoadDensityQf":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/fireLoadDensityQf"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"assumedQfD":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/assumedQfD"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"constructionActivity":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/constructionActivity"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"String"}},"assumedConstructionQk":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/assumedConstructionQk"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"structureKind":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/structureKind"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"semio_s_artifact_norm_en1991_model::StructureKind"}},"bridgeLane":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/bridgeLane"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"u8"}},"bridgeSpan":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/bridgeSpan"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"bridgeLaneWidth":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/bridgeLaneWidth"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"assumedBridgeTandem":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/assumedBridgeTandem"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"assumedBridgeUdl":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/assumedBridgeUdl"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"assumedBridgeLm2":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/assumedBridgeLm2"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"assumedBridgeFootway":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/assumedBridgeFootway"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"assumedBridgeLm3":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/assumedBridgeLm3"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"assumedBridgeLm4":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/assumedBridgeLm4"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"bridgeLoadGroup":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/bridgeLoadGroup"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"String"}},"craneClaimed":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/craneClaimed"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"bool"}},"craneClass":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/craneClass"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"String"}},"hoistClass":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/hoistClass"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"String"}},"hoistingSpeed":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/hoistingSpeed"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"assumedCraneWheel":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/assumedCraneWheel"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"assumedCraneHorizontal":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/assumedCraneHorizontal"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"siloClaimed":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/siloClaimed"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"bool"}},"siloKind":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/siloKind"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"String"}},"siloBulkDensity":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/siloBulkDensity"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"siloHeight":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/siloHeight"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"siloHydraulicRadius":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/siloHydraulicRadius"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"siloMu":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/siloMu"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"siloK":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/siloK"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"assumedSiloPressure":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/assumedSiloPressure"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"assumedSiloPatch":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/assumedSiloPatch"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"assumedSiloWallFriction":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/assumedSiloWallFriction"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"bridgeTandemX":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/bridgeTandemX"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"railAlpha":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/railAlpha"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"assumedRailLm71":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/assumedRailLm71"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"assumedRailLm71Udl":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/assumedRailLm71Udl"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"assumedRailSw0":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/assumedRailSw0"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"assumedRailSw2":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/assumedRailSw2"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"craneX":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/craneX"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"craneRunwayLength":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/craneRunwayLength"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"craneWheelBase":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/craneWheelBase"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"siloDiameter":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/siloDiameter"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"siloEccentricity":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/siloEccentricity"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"siloHopperAngleDeg":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/siloHopperAngleDeg"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"bridgeCurveRadius":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/bridgeCurveRadius"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"fireLoadBasis":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/properties/fireLoadBasis"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"semio_s_artifact_norm_en1991_model::FireLoadBasis"}},"floors":{"$ref":"#/$defs/En1991FloorDelta","x-semio-state":"artifact"},"selfWeightElements":{"$ref":"#/$defs/En1991SelfWeightElementDelta","x-semio-state":"artifact"},"roofs":{"$ref":"#/$defs/En1991RoofDelta","x-semio-state":"artifact"},"windFaces":{"$ref":"#/$defs/En1991WindFaceDelta","x-semio-state":"artifact"},"accidentalCases":{"$ref":"#/$defs/En1991AccidentalCaseDelta","x-semio-state":"artifact"},"bridgeLanes":{"$ref":"#/$defs/En1991BridgeLaneDelta","x-semio-state":"artifact"},"constructionStages":{"$ref":"#/$defs/En1991ConstructionStageDelta","x-semio-state":"artifact"},"roofSurfaces":{"$ref":"#/$defs/En1991RoofSurfaceDelta","x-semio-state":"artifact"},"placements":{"$ref":"#/$defs/En1991PlacementDelta","x-semio-state":"artifact"},"specialVehicles":{"$ref":"#/$defs/En1991SpecialVehicleDelta","x-semio-state":"artifact"},"windBridges":{"$ref":"#/$defs/En1991WindBridgeDelta","x-semio-state":"artifact"},"dynamicElements":{"$ref":"#/$defs/En1991DynamicElementDelta","x-semio-state":"artifact"},"impactActions":{"$ref":"#/$defs/En1991ImpactActionDelta","x-semio-state":"artifact"},"internalExplosions":{"$ref":"#/$defs/En1991InternalExplosionDelta","x-semio-state":"artifact"},"thermalSections":{"$ref":"#/$defs/En1991ThermalSectionDelta","x-semio-state":"artifact"},"cases":{"$ref":"#/$defs/CaseRowDelta","x-semio-state":"artifact","x-semio-rust":{"type":"semio_s_plugin_norm_compliance::design_case::CaseRowDelta"}},"helicopterLandings":{"$ref":"#/$defs/En1991HelicopterLandingDelta","x-semio-state":"artifact"},"tieRuns":{"$ref":"#/$defs/En1991TieRunDelta","x-semio-state":"artifact"},"constructionLoads":{"$ref":"#/$defs/En1991ConstructionLoadDelta","x-semio-state":"artifact"},"fallingLoads":{"$ref":"#/$defs/En1991FallingLoadDelta","x-semio-state":"artifact"},"executionImperfections":{"$ref":"#/$defs/En1991ExecutionImperfectionDelta","x-semio-state":"artifact"},"derailmentCases":{"$ref":"#/$defs/En1991DerailmentCaseDelta","x-semio-state":"artifact"},"craneHoists":{"$ref":"#/$defs/En1991CraneHoistDelta","x-semio-state":"artifact"},"footbridges":{"$ref":"#/$defs/En1991FootbridgeDelta","x-semio-state":"artifact"},"railDynamics":{"$ref":"#/$defs/En1991RailDynamicDelta","x-semio-state":"artifact"},"loadDispersals":{"$ref":"#/$defs/En1991LoadDispersalDelta","x-semio-state":"artifact"},"bulkSolids":{"$ref":"#/$defs/En1991BulkSolidDelta","x-semio-state":"artifact"},"rotatingMachines":{"$ref":"#/$defs/En1991RotatingMachineDelta","x-semio-state":"artifact"},"dustExplosions":{"$ref":"#/$defs/En1991DustExplosionDelta","x-semio-state":"artifact"},"railLoadGroups":{"$ref":"#/$defs/En1991RailLoadGroupDelta","x-semio-state":"artifact"},"railDerailments":{"$ref":"#/$defs/En1991RailDerailmentDelta","x-semio-state":"artifact"},"fatigueModels":{"$ref":"#/$defs/En1991FatigueModelDelta","x-semio-state":"artifact"},"supportCollisions":{"$ref":"#/$defs/En1991SupportCollisionDelta","x-semio-state":"artifact"},"localFires":{"$ref":"#/$defs/En1991LocalFireDelta","x-semio-state":"artifact"},"snowGuards":{"$ref":"#/$defs/En1991SnowGuardDelta","x-semio-state":"artifact"}},
+  "$defs":{
+    "En1991FloorPatch":{"title":"En1991FloorPatch","type":"object","additionalProperties":false,"properties":{"category":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/FloorArea/properties/category"},{"type":"null"}]},"area":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/FloorArea/properties/area"},{"type":"null"}]},"assumedQk":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/FloorArea/properties/assumedQk"},{"type":"null"}]},"assumedQkConcentrated":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/FloorArea/properties/assumedQkConcentrated"},{"type":"null"}]},"assumedPartitions":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/FloorArea/properties/assumedPartitions"},{"type":"null"}]}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"],"required":["category","area","assumedQk","assumedQkConcentrated","assumedPartitions"]},
+    "En1991FloorRemoval":{"title":"En1991FloorRemoval","type":"object","additionalProperties":false,"required":["id","index"],"properties":{"id":{"type":"string"},"index":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991FloorInsertion":{"title":"En1991FloorInsertion","type":"object","additionalProperties":false,"required":["index","row"],"properties":{"index":{"type":"integer","minimum":0},"row":{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/FloorArea"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991FloorRelocation":{"title":"En1991FloorRelocation","type":"object","additionalProperties":false,"required":["id","from","to"],"properties":{"id":{"type":"string"},"from":{"type":"integer","minimum":0},"to":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991FloorModification":{"title":"En1991FloorModification","type":"object","additionalProperties":false,"required":["id","patch"],"properties":{"id":{"type":"string"},"patch":{"$ref":"#/$defs/En1991FloorPatch"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991FloorDelta":{"title":"En1991FloorDelta","type":"object","additionalProperties":false,"required":["removed","inserted","moved","modified"],"properties":{"removed":{"type":"array","items":{"$ref":"#/$defs/En1991FloorRemoval"}},"inserted":{"type":"array","items":{"$ref":"#/$defs/En1991FloorInsertion"}},"moved":{"type":"array","items":{"$ref":"#/$defs/En1991FloorRelocation"}},"modified":{"type":"array","items":{"$ref":"#/$defs/En1991FloorModification"}}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991SelfWeightElementPatch":{"title":"En1991SelfWeightElementPatch","type":"object","additionalProperties":false,"properties":{"material":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/SelfWeightElement/properties/material"},{"type":"null"}]},"thickness":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/SelfWeightElement/properties/thickness"},{"type":"null"}]},"assumedGk":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/SelfWeightElement/properties/assumedGk"},{"type":"null"}]}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"],"required":["material","thickness","assumedGk"]},
+    "En1991SelfWeightElementRemoval":{"title":"En1991SelfWeightElementRemoval","type":"object","additionalProperties":false,"required":["id","index"],"properties":{"id":{"type":"string"},"index":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991SelfWeightElementInsertion":{"title":"En1991SelfWeightElementInsertion","type":"object","additionalProperties":false,"required":["index","row"],"properties":{"index":{"type":"integer","minimum":0},"row":{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/SelfWeightElement"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991SelfWeightElementRelocation":{"title":"En1991SelfWeightElementRelocation","type":"object","additionalProperties":false,"required":["id","from","to"],"properties":{"id":{"type":"string"},"from":{"type":"integer","minimum":0},"to":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991SelfWeightElementModification":{"title":"En1991SelfWeightElementModification","type":"object","additionalProperties":false,"required":["id","patch"],"properties":{"id":{"type":"string"},"patch":{"$ref":"#/$defs/En1991SelfWeightElementPatch"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991SelfWeightElementDelta":{"title":"En1991SelfWeightElementDelta","type":"object","additionalProperties":false,"required":["removed","inserted","moved","modified"],"properties":{"removed":{"type":"array","items":{"$ref":"#/$defs/En1991SelfWeightElementRemoval"}},"inserted":{"type":"array","items":{"$ref":"#/$defs/En1991SelfWeightElementInsertion"}},"moved":{"type":"array","items":{"$ref":"#/$defs/En1991SelfWeightElementRelocation"}},"modified":{"type":"array","items":{"$ref":"#/$defs/En1991SelfWeightElementModification"}}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991RoofPatch":{"title":"En1991RoofPatch","type":"object","additionalProperties":false,"properties":{"roofType":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RoofArea/properties/roofType"},{"type":"null"}]},"pitchDeg":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RoofArea/properties/pitchDeg"},{"type":"null"}]},"cE":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RoofArea/properties/cE"},{"type":"null"}]},"cT":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RoofArea/properties/cT"},{"type":"null"}]},"hasParapet":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RoofArea/properties/hasParapet"},{"type":"null"}]},"parapetHeight":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RoofArea/properties/parapetHeight"},{"type":"null"}]},"driftObstructionHeight":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RoofArea/properties/driftObstructionHeight"},{"type":"null"}]},"multiSpan":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RoofArea/properties/multiSpan"},{"type":"null"}]},"assumedSk":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RoofArea/properties/assumedSk"},{"type":"null"}]}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"],"required":["roofType","pitchDeg","cE","cT","hasParapet","parapetHeight","driftObstructionHeight","multiSpan","assumedSk"]},
+    "En1991RoofRemoval":{"title":"En1991RoofRemoval","type":"object","additionalProperties":false,"required":["id","index"],"properties":{"id":{"type":"string"},"index":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991RoofInsertion":{"title":"En1991RoofInsertion","type":"object","additionalProperties":false,"required":["index","row"],"properties":{"index":{"type":"integer","minimum":0},"row":{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RoofArea"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991RoofRelocation":{"title":"En1991RoofRelocation","type":"object","additionalProperties":false,"required":["id","from","to"],"properties":{"id":{"type":"string"},"from":{"type":"integer","minimum":0},"to":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991RoofModification":{"title":"En1991RoofModification","type":"object","additionalProperties":false,"required":["id","patch"],"properties":{"id":{"type":"string"},"patch":{"$ref":"#/$defs/En1991RoofPatch"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991RoofDelta":{"title":"En1991RoofDelta","type":"object","additionalProperties":false,"required":["removed","inserted","moved","modified"],"properties":{"removed":{"type":"array","items":{"$ref":"#/$defs/En1991RoofRemoval"}},"inserted":{"type":"array","items":{"$ref":"#/$defs/En1991RoofInsertion"}},"moved":{"type":"array","items":{"$ref":"#/$defs/En1991RoofRelocation"}},"modified":{"type":"array","items":{"$ref":"#/$defs/En1991RoofModification"}}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991WindFacePatch":{"title":"En1991WindFacePatch","type":"object","additionalProperties":false,"properties":{"zone":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/WindFace/properties/zone"},{"type":"null"}]},"z":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/WindFace/properties/z"},{"type":"null"}]},"cPe10":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/WindFace/properties/cPe10"},{"type":"null"}]},"cPe1":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/WindFace/properties/cPe1"},{"type":"null"}]},"cPi":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/WindFace/properties/cPi"},{"type":"null"}]},"cS":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/WindFace/properties/cS"},{"type":"null"}]},"cD":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/WindFace/properties/cD"},{"type":"null"}]},"loadedArea":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/WindFace/properties/loadedArea"},{"type":"null"}]},"assumedWp":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/WindFace/properties/assumedWp"},{"type":"null"}]}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"],"required":["zone","z","cPe10","cPe1","cPi","cS","cD","loadedArea","assumedWp"]},
+    "En1991WindFaceRemoval":{"title":"En1991WindFaceRemoval","type":"object","additionalProperties":false,"required":["id","index"],"properties":{"id":{"type":"string"},"index":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991WindFaceInsertion":{"title":"En1991WindFaceInsertion","type":"object","additionalProperties":false,"required":["index","row"],"properties":{"index":{"type":"integer","minimum":0},"row":{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/WindFace"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991WindFaceRelocation":{"title":"En1991WindFaceRelocation","type":"object","additionalProperties":false,"required":["id","from","to"],"properties":{"id":{"type":"string"},"from":{"type":"integer","minimum":0},"to":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991WindFaceModification":{"title":"En1991WindFaceModification","type":"object","additionalProperties":false,"required":["id","patch"],"properties":{"id":{"type":"string"},"patch":{"$ref":"#/$defs/En1991WindFacePatch"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991WindFaceDelta":{"title":"En1991WindFaceDelta","type":"object","additionalProperties":false,"required":["removed","inserted","moved","modified"],"properties":{"removed":{"type":"array","items":{"$ref":"#/$defs/En1991WindFaceRemoval"}},"inserted":{"type":"array","items":{"$ref":"#/$defs/En1991WindFaceInsertion"}},"moved":{"type":"array","items":{"$ref":"#/$defs/En1991WindFaceRelocation"}},"modified":{"type":"array","items":{"$ref":"#/$defs/En1991WindFaceModification"}}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991AccidentalCasePatch":{"title":"En1991AccidentalCasePatch","type":"object","additionalProperties":false,"properties":{"impact":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/AccidentalCase/properties/impact"},{"type":"null"}]},"explosion":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/AccidentalCase/properties/explosion"},{"type":"null"}]}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"],"required":["impact","explosion"]},
+    "En1991AccidentalCaseRemoval":{"title":"En1991AccidentalCaseRemoval","type":"object","additionalProperties":false,"required":["id","index"],"properties":{"id":{"type":"string"},"index":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991AccidentalCaseInsertion":{"title":"En1991AccidentalCaseInsertion","type":"object","additionalProperties":false,"required":["index","row"],"properties":{"index":{"type":"integer","minimum":0},"row":{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/AccidentalCase"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991AccidentalCaseRelocation":{"title":"En1991AccidentalCaseRelocation","type":"object","additionalProperties":false,"required":["id","from","to"],"properties":{"id":{"type":"string"},"from":{"type":"integer","minimum":0},"to":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991AccidentalCaseModification":{"title":"En1991AccidentalCaseModification","type":"object","additionalProperties":false,"required":["id","patch"],"properties":{"id":{"type":"string"},"patch":{"$ref":"#/$defs/En1991AccidentalCasePatch"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991AccidentalCaseDelta":{"title":"En1991AccidentalCaseDelta","type":"object","additionalProperties":false,"required":["removed","inserted","moved","modified"],"properties":{"removed":{"type":"array","items":{"$ref":"#/$defs/En1991AccidentalCaseRemoval"}},"inserted":{"type":"array","items":{"$ref":"#/$defs/En1991AccidentalCaseInsertion"}},"moved":{"type":"array","items":{"$ref":"#/$defs/En1991AccidentalCaseRelocation"}},"modified":{"type":"array","items":{"$ref":"#/$defs/En1991AccidentalCaseModification"}}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991BridgeLanePatch":{"title":"En1991BridgeLanePatch","type":"object","additionalProperties":false,"properties":{"width":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/BridgeLane/properties/width"},{"type":"null"}]},"offset":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/BridgeLane/properties/offset"},{"type":"null"}]},"lm1Lane":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/BridgeLane/properties/lm1Lane"},{"type":"null"}]}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"],"required":["width","offset","lm1Lane"]},
+    "En1991BridgeLaneRemoval":{"title":"En1991BridgeLaneRemoval","type":"object","additionalProperties":false,"required":["id","index"],"properties":{"id":{"type":"string"},"index":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991BridgeLaneInsertion":{"title":"En1991BridgeLaneInsertion","type":"object","additionalProperties":false,"required":["index","row"],"properties":{"index":{"type":"integer","minimum":0},"row":{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/BridgeLane"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991BridgeLaneRelocation":{"title":"En1991BridgeLaneRelocation","type":"object","additionalProperties":false,"required":["id","from","to"],"properties":{"id":{"type":"string"},"from":{"type":"integer","minimum":0},"to":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991BridgeLaneModification":{"title":"En1991BridgeLaneModification","type":"object","additionalProperties":false,"required":["id","patch"],"properties":{"id":{"type":"string"},"patch":{"$ref":"#/$defs/En1991BridgeLanePatch"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991BridgeLaneDelta":{"title":"En1991BridgeLaneDelta","type":"object","additionalProperties":false,"required":["removed","inserted","moved","modified"],"properties":{"removed":{"type":"array","items":{"$ref":"#/$defs/En1991BridgeLaneRemoval"}},"inserted":{"type":"array","items":{"$ref":"#/$defs/En1991BridgeLaneInsertion"}},"moved":{"type":"array","items":{"$ref":"#/$defs/En1991BridgeLaneRelocation"}},"modified":{"type":"array","items":{"$ref":"#/$defs/En1991BridgeLaneModification"}}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991ConstructionStagePatch":{"title":"En1991ConstructionStagePatch","type":"object","additionalProperties":false,"properties":{"activity":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/ConstructionStage/properties/activity"},{"type":"null"}]},"durationDays":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/ConstructionStage/properties/durationDays"},{"type":"null"}]},"returnYears":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/ConstructionStage/properties/returnYears"},{"type":"null"}]},"assumedQk":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/ConstructionStage/properties/assumedQk"},{"type":"null"}]}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"],"required":["activity","durationDays","returnYears","assumedQk"]},
+    "En1991ConstructionStageRemoval":{"title":"En1991ConstructionStageRemoval","type":"object","additionalProperties":false,"required":["id","index"],"properties":{"id":{"type":"string"},"index":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991ConstructionStageInsertion":{"title":"En1991ConstructionStageInsertion","type":"object","additionalProperties":false,"required":["index","row"],"properties":{"index":{"type":"integer","minimum":0},"row":{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/ConstructionStage"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991ConstructionStageRelocation":{"title":"En1991ConstructionStageRelocation","type":"object","additionalProperties":false,"required":["id","from","to"],"properties":{"id":{"type":"string"},"from":{"type":"integer","minimum":0},"to":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991ConstructionStageModification":{"title":"En1991ConstructionStageModification","type":"object","additionalProperties":false,"required":["id","patch"],"properties":{"id":{"type":"string"},"patch":{"$ref":"#/$defs/En1991ConstructionStagePatch"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991ConstructionStageDelta":{"title":"En1991ConstructionStageDelta","type":"object","additionalProperties":false,"required":["removed","inserted","moved","modified"],"properties":{"removed":{"type":"array","items":{"$ref":"#/$defs/En1991ConstructionStageRemoval"}},"inserted":{"type":"array","items":{"$ref":"#/$defs/En1991ConstructionStageInsertion"}},"moved":{"type":"array","items":{"$ref":"#/$defs/En1991ConstructionStageRelocation"}},"modified":{"type":"array","items":{"$ref":"#/$defs/En1991ConstructionStageModification"}}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991RoofSurfacePatch":{"title":"En1991RoofSurfacePatch","type":"object","additionalProperties":false,"properties":{"face":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RoofSurface/properties/face"},{"type":"null"}]},"shape":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RoofSurface/properties/shape"},{"type":"null"}]},"pitchDeg":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RoofSurface/properties/pitchDeg"},{"type":"null"}]},"extent":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RoofSurface/properties/extent"},{"type":"null"}]}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"],"required":["face","shape","pitchDeg","extent"]},
+    "En1991RoofSurfaceRemoval":{"title":"En1991RoofSurfaceRemoval","type":"object","additionalProperties":false,"required":["id","index"],"properties":{"id":{"type":"string"},"index":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991RoofSurfaceInsertion":{"title":"En1991RoofSurfaceInsertion","type":"object","additionalProperties":false,"required":["index","row"],"properties":{"index":{"type":"integer","minimum":0},"row":{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RoofSurface"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991RoofSurfaceRelocation":{"title":"En1991RoofSurfaceRelocation","type":"object","additionalProperties":false,"required":["id","from","to"],"properties":{"id":{"type":"string"},"from":{"type":"integer","minimum":0},"to":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991RoofSurfaceModification":{"title":"En1991RoofSurfaceModification","type":"object","additionalProperties":false,"required":["id","patch"],"properties":{"id":{"type":"string"},"patch":{"$ref":"#/$defs/En1991RoofSurfacePatch"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991RoofSurfaceDelta":{"title":"En1991RoofSurfaceDelta","type":"object","additionalProperties":false,"required":["removed","inserted","moved","modified"],"properties":{"removed":{"type":"array","items":{"$ref":"#/$defs/En1991RoofSurfaceRemoval"}},"inserted":{"type":"array","items":{"$ref":"#/$defs/En1991RoofSurfaceInsertion"}},"moved":{"type":"array","items":{"$ref":"#/$defs/En1991RoofSurfaceRelocation"}},"modified":{"type":"array","items":{"$ref":"#/$defs/En1991RoofSurfaceModification"}}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991PlacementPatch":{"title":"En1991PlacementPatch","type":"object","additionalProperties":false,"properties":{"x":{"anyOf":[{"type":"number"},{"type":"null"}]},"y":{"anyOf":[{"type":"number"},{"type":"null"}]},"z":{"anyOf":[{"type":"number"},{"type":"null"}]},"yaw":{"anyOf":[{"type":"number"},{"type":"null"}]}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"],"required":["x","y","z","yaw"]},
+    "En1991PlacementRemoval":{"title":"En1991PlacementRemoval","type":"object","additionalProperties":false,"required":["id","index"],"properties":{"id":{"type":"string"},"index":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991PlacementInsertion":{"title":"En1991PlacementInsertion","type":"object","additionalProperties":false,"required":["index","row"],"properties":{"index":{"type":"integer","minimum":0},"row":{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/Placement"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991PlacementRelocation":{"title":"En1991PlacementRelocation","type":"object","additionalProperties":false,"required":["id","from","to"],"properties":{"id":{"type":"string"},"from":{"type":"integer","minimum":0},"to":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991PlacementModification":{"title":"En1991PlacementModification","type":"object","additionalProperties":false,"required":["id","patch"],"properties":{"id":{"type":"string"},"patch":{"$ref":"#/$defs/En1991PlacementPatch"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991PlacementDelta":{"title":"En1991PlacementDelta","type":"object","additionalProperties":false,"required":["removed","inserted","moved","modified"],"properties":{"removed":{"type":"array","items":{"$ref":"#/$defs/En1991PlacementRemoval"}},"inserted":{"type":"array","items":{"$ref":"#/$defs/En1991PlacementInsertion"}},"moved":{"type":"array","items":{"$ref":"#/$defs/En1991PlacementRelocation"}},"modified":{"type":"array","items":{"$ref":"#/$defs/En1991PlacementModification"}}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991SpecialVehiclePatch":{"title":"En1991SpecialVehiclePatch","type":"object","additionalProperties":false,"properties":{"designation":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/SpecialVehicle/properties/designation"},{"type":"null"}]},"x":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/SpecialVehicle/properties/x"},{"type":"null"}]},"y":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/SpecialVehicle/properties/y"},{"type":"null"}]}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"],"required":["designation","x","y"]},
+    "En1991SpecialVehicleRemoval":{"title":"En1991SpecialVehicleRemoval","type":"object","additionalProperties":false,"required":["id","index"],"properties":{"id":{"type":"string"},"index":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991SpecialVehicleInsertion":{"title":"En1991SpecialVehicleInsertion","type":"object","additionalProperties":false,"required":["index","row"],"properties":{"index":{"type":"integer","minimum":0},"row":{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/SpecialVehicle"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991SpecialVehicleRelocation":{"title":"En1991SpecialVehicleRelocation","type":"object","additionalProperties":false,"required":["id","from","to"],"properties":{"id":{"type":"string"},"from":{"type":"integer","minimum":0},"to":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991SpecialVehicleModification":{"title":"En1991SpecialVehicleModification","type":"object","additionalProperties":false,"required":["id","patch"],"properties":{"id":{"type":"string"},"patch":{"$ref":"#/$defs/En1991SpecialVehiclePatch"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991SpecialVehicleDelta":{"title":"En1991SpecialVehicleDelta","type":"object","additionalProperties":false,"required":["removed","inserted","moved","modified"],"properties":{"removed":{"type":"array","items":{"$ref":"#/$defs/En1991SpecialVehicleRemoval"}},"inserted":{"type":"array","items":{"$ref":"#/$defs/En1991SpecialVehicleInsertion"}},"moved":{"type":"array","items":{"$ref":"#/$defs/En1991SpecialVehicleRelocation"}},"modified":{"type":"array","items":{"$ref":"#/$defs/En1991SpecialVehicleModification"}}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991WindBridgePatch":{"title":"En1991WindBridgePatch","type":"object","additionalProperties":false,"properties":{"deckWidth":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/WindBridge/properties/deckWidth"},{"type":"null"}]},"deckDepth":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/WindBridge/properties/deckDepth"},{"type":"null"}]},"parapetKind":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/WindBridge/properties/parapetKind"},{"type":"null"}]},"parapetHeight":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/WindBridge/properties/parapetHeight"},{"type":"null"}]},"trafficKind":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/WindBridge/properties/trafficKind"},{"type":"null"}]},"heightAboveGround":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/WindBridge/properties/heightAboveGround"},{"type":"null"}]},"span":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/WindBridge/properties/span"},{"type":"null"}]},"assumedForce":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/WindBridge/properties/assumedForce"},{"type":"null"}]}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"],"required":["deckWidth","deckDepth","parapetKind","parapetHeight","trafficKind","heightAboveGround","span","assumedForce"]},
+    "En1991WindBridgeRemoval":{"title":"En1991WindBridgeRemoval","type":"object","additionalProperties":false,"required":["id","index"],"properties":{"id":{"type":"string"},"index":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991WindBridgeInsertion":{"title":"En1991WindBridgeInsertion","type":"object","additionalProperties":false,"required":["index","row"],"properties":{"index":{"type":"integer","minimum":0},"row":{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/WindBridge"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991WindBridgeRelocation":{"title":"En1991WindBridgeRelocation","type":"object","additionalProperties":false,"required":["id","from","to"],"properties":{"id":{"type":"string"},"from":{"type":"integer","minimum":0},"to":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991WindBridgeModification":{"title":"En1991WindBridgeModification","type":"object","additionalProperties":false,"required":["id","patch"],"properties":{"id":{"type":"string"},"patch":{"$ref":"#/$defs/En1991WindBridgePatch"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991WindBridgeDelta":{"title":"En1991WindBridgeDelta","type":"object","additionalProperties":false,"required":["removed","inserted","moved","modified"],"properties":{"removed":{"type":"array","items":{"$ref":"#/$defs/En1991WindBridgeRemoval"}},"inserted":{"type":"array","items":{"$ref":"#/$defs/En1991WindBridgeInsertion"}},"moved":{"type":"array","items":{"$ref":"#/$defs/En1991WindBridgeRelocation"}},"modified":{"type":"array","items":{"$ref":"#/$defs/En1991WindBridgeModification"}}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991DynamicElementPatch":{"title":"En1991DynamicElementPatch","type":"object","additionalProperties":false,"properties":{"height":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/DynamicElement/properties/height"},{"type":"null"}]},"width":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/DynamicElement/properties/width"},{"type":"null"}]},"firstFrequency":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/DynamicElement/properties/firstFrequency"},{"type":"null"}]},"logDecrement":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/DynamicElement/properties/logDecrement"},{"type":"null"}]},"massPerLength":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/DynamicElement/properties/massPerLength"},{"type":"null"}]},"strouhal":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/DynamicElement/properties/strouhal"},{"type":"null"}]},"assumedCscd":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/DynamicElement/properties/assumedCscd"},{"type":"null"}]}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"],"required":["height","width","firstFrequency","logDecrement","massPerLength","strouhal","assumedCscd"]},
+    "En1991DynamicElementRemoval":{"title":"En1991DynamicElementRemoval","type":"object","additionalProperties":false,"required":["id","index"],"properties":{"id":{"type":"string"},"index":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991DynamicElementInsertion":{"title":"En1991DynamicElementInsertion","type":"object","additionalProperties":false,"required":["index","row"],"properties":{"index":{"type":"integer","minimum":0},"row":{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/DynamicElement"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991DynamicElementRelocation":{"title":"En1991DynamicElementRelocation","type":"object","additionalProperties":false,"required":["id","from","to"],"properties":{"id":{"type":"string"},"from":{"type":"integer","minimum":0},"to":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991DynamicElementModification":{"title":"En1991DynamicElementModification","type":"object","additionalProperties":false,"required":["id","patch"],"properties":{"id":{"type":"string"},"patch":{"$ref":"#/$defs/En1991DynamicElementPatch"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991DynamicElementDelta":{"title":"En1991DynamicElementDelta","type":"object","additionalProperties":false,"required":["removed","inserted","moved","modified"],"properties":{"removed":{"type":"array","items":{"$ref":"#/$defs/En1991DynamicElementRemoval"}},"inserted":{"type":"array","items":{"$ref":"#/$defs/En1991DynamicElementInsertion"}},"moved":{"type":"array","items":{"$ref":"#/$defs/En1991DynamicElementRelocation"}},"modified":{"type":"array","items":{"$ref":"#/$defs/En1991DynamicElementModification"}}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991ImpactActionPatch":{"title":"En1991ImpactActionPatch","type":"object","additionalProperties":false,"properties":{"kind":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/ImpactAction/properties/kind"},{"type":"null"}]},"mass":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/ImpactAction/properties/mass"},{"type":"null"}]},"speed":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/ImpactAction/properties/speed"},{"type":"null"}]},"stiffness":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/ImpactAction/properties/stiffness"},{"type":"null"}]},"height":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/ImpactAction/properties/height"},{"type":"null"}]},"x":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/ImpactAction/properties/x"},{"type":"null"}]},"y":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/ImpactAction/properties/y"},{"type":"null"}]},"assumedForce":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/ImpactAction/properties/assumedForce"},{"type":"null"}]}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"],"required":["kind","mass","speed","stiffness","height","x","y","assumedForce"]},
+    "En1991ImpactActionRemoval":{"title":"En1991ImpactActionRemoval","type":"object","additionalProperties":false,"required":["id","index"],"properties":{"id":{"type":"string"},"index":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991ImpactActionInsertion":{"title":"En1991ImpactActionInsertion","type":"object","additionalProperties":false,"required":["index","row"],"properties":{"index":{"type":"integer","minimum":0},"row":{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/ImpactAction"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991ImpactActionRelocation":{"title":"En1991ImpactActionRelocation","type":"object","additionalProperties":false,"required":["id","from","to"],"properties":{"id":{"type":"string"},"from":{"type":"integer","minimum":0},"to":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991ImpactActionModification":{"title":"En1991ImpactActionModification","type":"object","additionalProperties":false,"required":["id","patch"],"properties":{"id":{"type":"string"},"patch":{"$ref":"#/$defs/En1991ImpactActionPatch"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991ImpactActionDelta":{"title":"En1991ImpactActionDelta","type":"object","additionalProperties":false,"required":["removed","inserted","moved","modified"],"properties":{"removed":{"type":"array","items":{"$ref":"#/$defs/En1991ImpactActionRemoval"}},"inserted":{"type":"array","items":{"$ref":"#/$defs/En1991ImpactActionInsertion"}},"moved":{"type":"array","items":{"$ref":"#/$defs/En1991ImpactActionRelocation"}},"modified":{"type":"array","items":{"$ref":"#/$defs/En1991ImpactActionModification"}}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991InternalExplosionPatch":{"title":"En1991InternalExplosionPatch","type":"object","additionalProperties":false,"properties":{"volume":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/InternalExplosion/properties/volume"},{"type":"null"}]},"ventArea":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/InternalExplosion/properties/ventArea"},{"type":"null"}]},"ventPressure":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/InternalExplosion/properties/ventPressure"},{"type":"null"}]},"assumedPressure":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/InternalExplosion/properties/assumedPressure"},{"type":"null"}]}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"],"required":["volume","ventArea","ventPressure","assumedPressure"]},
+    "En1991InternalExplosionRemoval":{"title":"En1991InternalExplosionRemoval","type":"object","additionalProperties":false,"required":["id","index"],"properties":{"id":{"type":"string"},"index":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991InternalExplosionInsertion":{"title":"En1991InternalExplosionInsertion","type":"object","additionalProperties":false,"required":["index","row"],"properties":{"index":{"type":"integer","minimum":0},"row":{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/InternalExplosion"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991InternalExplosionRelocation":{"title":"En1991InternalExplosionRelocation","type":"object","additionalProperties":false,"required":["id","from","to"],"properties":{"id":{"type":"string"},"from":{"type":"integer","minimum":0},"to":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991InternalExplosionModification":{"title":"En1991InternalExplosionModification","type":"object","additionalProperties":false,"required":["id","patch"],"properties":{"id":{"type":"string"},"patch":{"$ref":"#/$defs/En1991InternalExplosionPatch"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991InternalExplosionDelta":{"title":"En1991InternalExplosionDelta","type":"object","additionalProperties":false,"required":["removed","inserted","moved","modified"],"properties":{"removed":{"type":"array","items":{"$ref":"#/$defs/En1991InternalExplosionRemoval"}},"inserted":{"type":"array","items":{"$ref":"#/$defs/En1991InternalExplosionInsertion"}},"moved":{"type":"array","items":{"$ref":"#/$defs/En1991InternalExplosionRelocation"}},"modified":{"type":"array","items":{"$ref":"#/$defs/En1991InternalExplosionModification"}}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991ThermalSectionPatch":{"title":"En1991ThermalSectionPatch","type":"object","additionalProperties":false,"properties":{"deckType":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/ThermalSection/properties/deckType"},{"type":"null"}]},"surfacing":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/ThermalSection/properties/surfacing"},{"type":"null"}]},"length":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/ThermalSection/properties/length"},{"type":"null"}]},"depth":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/ThermalSection/properties/depth"},{"type":"null"}]},"alphaMicro":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/ThermalSection/properties/alphaMicro"},{"type":"null"}]},"assumedRange":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/ThermalSection/properties/assumedRange"},{"type":"null"}]}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"],"required":["deckType","surfacing","length","depth","alphaMicro","assumedRange"]},
+    "En1991ThermalSectionRemoval":{"title":"En1991ThermalSectionRemoval","type":"object","additionalProperties":false,"required":["id","index"],"properties":{"id":{"type":"string"},"index":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991ThermalSectionInsertion":{"title":"En1991ThermalSectionInsertion","type":"object","additionalProperties":false,"required":["index","row"],"properties":{"index":{"type":"integer","minimum":0},"row":{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/ThermalSection"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991ThermalSectionRelocation":{"title":"En1991ThermalSectionRelocation","type":"object","additionalProperties":false,"required":["id","from","to"],"properties":{"id":{"type":"string"},"from":{"type":"integer","minimum":0},"to":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991ThermalSectionModification":{"title":"En1991ThermalSectionModification","type":"object","additionalProperties":false,"required":["id","patch"],"properties":{"id":{"type":"string"},"patch":{"$ref":"#/$defs/En1991ThermalSectionPatch"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991ThermalSectionDelta":{"title":"En1991ThermalSectionDelta","type":"object","additionalProperties":false,"required":["removed","inserted","moved","modified"],"properties":{"removed":{"type":"array","items":{"$ref":"#/$defs/En1991ThermalSectionRemoval"}},"inserted":{"type":"array","items":{"$ref":"#/$defs/En1991ThermalSectionInsertion"}},"moved":{"type":"array","items":{"$ref":"#/$defs/En1991ThermalSectionRelocation"}},"modified":{"type":"array","items":{"$ref":"#/$defs/En1991ThermalSectionModification"}}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "CaseNumberPatch":{"title":"CaseNumberPatch","type":"object","additionalProperties":false,"properties":{"value":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/CaseNumber/properties/value"},{"type":"null"}]}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"],"required":["value"]},
+    "CaseNumberRemoval":{"title":"CaseNumberRemoval","type":"object","additionalProperties":false,"required":["id","index"],"properties":{"id":{"type":"string"},"index":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "CaseNumberInsertion":{"title":"CaseNumberInsertion","type":"object","additionalProperties":false,"required":["index","row"],"properties":{"index":{"type":"integer","minimum":0},"row":{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/CaseNumber"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "CaseNumberRelocation":{"title":"CaseNumberRelocation","type":"object","additionalProperties":false,"required":["id","from","to"],"properties":{"id":{"type":"string"},"from":{"type":"integer","minimum":0},"to":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "CaseNumberModification":{"title":"CaseNumberModification","type":"object","additionalProperties":false,"required":["id","patch"],"properties":{"id":{"type":"string"},"patch":{"$ref":"#/$defs/CaseNumberPatch"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "CaseNumberDelta":{"title":"CaseNumberDelta","type":"object","additionalProperties":false,"required":["removed","inserted","moved","modified"],"properties":{"removed":{"type":"array","items":{"$ref":"#/$defs/CaseNumberRemoval"}},"inserted":{"type":"array","items":{"$ref":"#/$defs/CaseNumberInsertion"}},"moved":{"type":"array","items":{"$ref":"#/$defs/CaseNumberRelocation"}},"modified":{"type":"array","items":{"$ref":"#/$defs/CaseNumberModification"}}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "CaseTextPatch":{"title":"CaseTextPatch","type":"object","additionalProperties":false,"properties":{"value":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/CaseText/properties/value"},{"type":"null"}]}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"],"required":["value"]},
+    "CaseTextRemoval":{"title":"CaseTextRemoval","type":"object","additionalProperties":false,"required":["id","index"],"properties":{"id":{"type":"string"},"index":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "CaseTextInsertion":{"title":"CaseTextInsertion","type":"object","additionalProperties":false,"required":["index","row"],"properties":{"index":{"type":"integer","minimum":0},"row":{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/CaseText"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "CaseTextRelocation":{"title":"CaseTextRelocation","type":"object","additionalProperties":false,"required":["id","from","to"],"properties":{"id":{"type":"string"},"from":{"type":"integer","minimum":0},"to":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "CaseTextModification":{"title":"CaseTextModification","type":"object","additionalProperties":false,"required":["id","patch"],"properties":{"id":{"type":"string"},"patch":{"$ref":"#/$defs/CaseTextPatch"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "CaseTextDelta":{"title":"CaseTextDelta","type":"object","additionalProperties":false,"required":["removed","inserted","moved","modified"],"properties":{"removed":{"type":"array","items":{"$ref":"#/$defs/CaseTextRemoval"}},"inserted":{"type":"array","items":{"$ref":"#/$defs/CaseTextInsertion"}},"moved":{"type":"array","items":{"$ref":"#/$defs/CaseTextRelocation"}},"modified":{"type":"array","items":{"$ref":"#/$defs/CaseTextModification"}}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "CaseRowPatch":{"title":"CaseRowPatch","type":"object","additionalProperties":false,"properties":{"labelEn":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/CaseRow/properties/labelEn"},{"type":"null"}]},"labelDe":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/CaseRow/properties/labelDe"},{"type":"null"}]},"entryId":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/CaseRow/properties/entryId"},{"type":"null"}]},"numbers":{"$ref":"#/$defs/CaseNumberDelta"},"texts":{"$ref":"#/$defs/CaseTextDelta"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"],"required":["labelEn","labelDe","entryId","numbers","texts"]},
+    "CaseRowRemoval":{"title":"CaseRowRemoval","type":"object","additionalProperties":false,"required":["id","index"],"properties":{"id":{"type":"string"},"index":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "CaseRowInsertion":{"title":"CaseRowInsertion","type":"object","additionalProperties":false,"required":["index","row"],"properties":{"index":{"type":"integer","minimum":0},"row":{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/CaseRow"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "CaseRowRelocation":{"title":"CaseRowRelocation","type":"object","additionalProperties":false,"required":["id","from","to"],"properties":{"id":{"type":"string"},"from":{"type":"integer","minimum":0},"to":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "CaseRowModification":{"title":"CaseRowModification","type":"object","additionalProperties":false,"required":["id","patch"],"properties":{"id":{"type":"string"},"patch":{"$ref":"#/$defs/CaseRowPatch"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "CaseRowDelta":{"title":"CaseRowDelta","type":"object","additionalProperties":false,"required":["removed","inserted","moved","modified"],"properties":{"removed":{"type":"array","items":{"$ref":"#/$defs/CaseRowRemoval"}},"inserted":{"type":"array","items":{"$ref":"#/$defs/CaseRowInsertion"}},"moved":{"type":"array","items":{"$ref":"#/$defs/CaseRowRelocation"}},"modified":{"type":"array","items":{"$ref":"#/$defs/CaseRowModification"}}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991HelicopterLandingPatch":{"title":"En1991HelicopterLandingPatch","type":"object","additionalProperties":false,"properties":{"mass":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/HelicopterLanding/properties/mass"},{"type":"null"}]},"x":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/HelicopterLanding/properties/x"},{"type":"null"}]},"y":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/HelicopterLanding/properties/y"},{"type":"null"}]},"height":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/HelicopterLanding/properties/height"},{"type":"null"}]},"assumedForce":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/HelicopterLanding/properties/assumedForce"},{"type":"null"}]}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991HelicopterLandingRemoval":{"title":"En1991HelicopterLandingRemoval","type":"object","additionalProperties":false,"required":["id","index"],"properties":{"id":{"type":"string"},"index":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991HelicopterLandingInsertion":{"title":"En1991HelicopterLandingInsertion","type":"object","additionalProperties":false,"required":["index","row"],"properties":{"index":{"type":"integer","minimum":0},"row":{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/HelicopterLanding"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991HelicopterLandingRelocation":{"title":"En1991HelicopterLandingRelocation","type":"object","additionalProperties":false,"required":["id","from","to"],"properties":{"id":{"type":"string"},"from":{"type":"integer","minimum":0},"to":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991HelicopterLandingModification":{"title":"En1991HelicopterLandingModification","type":"object","additionalProperties":false,"required":["id","patch"],"properties":{"id":{"type":"string"},"patch":{"$ref":"#/$defs/En1991HelicopterLandingPatch"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991HelicopterLandingDelta":{"title":"En1991HelicopterLandingDelta","type":"object","additionalProperties":false,"required":["removed","inserted","moved","modified"],"properties":{"removed":{"type":"array","items":{"$ref":"#/$defs/En1991HelicopterLandingRemoval"}},"inserted":{"type":"array","items":{"$ref":"#/$defs/En1991HelicopterLandingInsertion"}},"moved":{"type":"array","items":{"$ref":"#/$defs/En1991HelicopterLandingRelocation"}},"modified":{"type":"array","items":{"$ref":"#/$defs/En1991HelicopterLandingModification"}}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991TieRunPatch":{"title":"En1991TieRunPatch","type":"object","additionalProperties":false,"properties":{"kind":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/TieRun/properties/kind"},{"type":"null"}]},"spacing":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/TieRun/properties/spacing"},{"type":"null"}]},"span":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/TieRun/properties/span"},{"type":"null"}]},"deadLoad":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/TieRun/properties/deadLoad"},{"type":"null"}]},"imposedLoad":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/TieRun/properties/imposedLoad"},{"type":"null"}]},"psi":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/TieRun/properties/psi"},{"type":"null"}]},"x":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/TieRun/properties/x"},{"type":"null"}]},"y":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/TieRun/properties/y"},{"type":"null"}]},"providedForce":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/TieRun/properties/providedForce"},{"type":"null"}]}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991TieRunRemoval":{"title":"En1991TieRunRemoval","type":"object","additionalProperties":false,"required":["id","index"],"properties":{"id":{"type":"string"},"index":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991TieRunInsertion":{"title":"En1991TieRunInsertion","type":"object","additionalProperties":false,"required":["index","row"],"properties":{"index":{"type":"integer","minimum":0},"row":{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/TieRun"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991TieRunRelocation":{"title":"En1991TieRunRelocation","type":"object","additionalProperties":false,"required":["id","from","to"],"properties":{"id":{"type":"string"},"from":{"type":"integer","minimum":0},"to":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991TieRunModification":{"title":"En1991TieRunModification","type":"object","additionalProperties":false,"required":["id","patch"],"properties":{"id":{"type":"string"},"patch":{"$ref":"#/$defs/En1991TieRunPatch"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991TieRunDelta":{"title":"En1991TieRunDelta","type":"object","additionalProperties":false,"required":["removed","inserted","moved","modified"],"properties":{"removed":{"type":"array","items":{"$ref":"#/$defs/En1991TieRunRemoval"}},"inserted":{"type":"array","items":{"$ref":"#/$defs/En1991TieRunInsertion"}},"moved":{"type":"array","items":{"$ref":"#/$defs/En1991TieRunRelocation"}},"modified":{"type":"array","items":{"$ref":"#/$defs/En1991TieRunModification"}}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991ConstructionLoadPatch":{"title":"En1991ConstructionLoadPatch","type":"object","additionalProperties":false,"properties":{"stage":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/ConstructionLoad/properties/stage"},{"type":"null"}]},"kind":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/ConstructionLoad/properties/kind"},{"type":"null"}]},"magnitude":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/ConstructionLoad/properties/magnitude"},{"type":"null"}]}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991ConstructionLoadRemoval":{"title":"En1991ConstructionLoadRemoval","type":"object","additionalProperties":false,"required":["id","index"],"properties":{"id":{"type":"string"},"index":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991ConstructionLoadInsertion":{"title":"En1991ConstructionLoadInsertion","type":"object","additionalProperties":false,"required":["index","row"],"properties":{"index":{"type":"integer","minimum":0},"row":{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/ConstructionLoad"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991ConstructionLoadRelocation":{"title":"En1991ConstructionLoadRelocation","type":"object","additionalProperties":false,"required":["id","from","to"],"properties":{"id":{"type":"string"},"from":{"type":"integer","minimum":0},"to":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991ConstructionLoadModification":{"title":"En1991ConstructionLoadModification","type":"object","additionalProperties":false,"required":["id","patch"],"properties":{"id":{"type":"string"},"patch":{"$ref":"#/$defs/En1991ConstructionLoadPatch"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991ConstructionLoadDelta":{"title":"En1991ConstructionLoadDelta","type":"object","additionalProperties":false,"required":["removed","inserted","moved","modified"],"properties":{"removed":{"type":"array","items":{"$ref":"#/$defs/En1991ConstructionLoadRemoval"}},"inserted":{"type":"array","items":{"$ref":"#/$defs/En1991ConstructionLoadInsertion"}},"moved":{"type":"array","items":{"$ref":"#/$defs/En1991ConstructionLoadRelocation"}},"modified":{"type":"array","items":{"$ref":"#/$defs/En1991ConstructionLoadModification"}}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991FallingLoadPatch":{"title":"En1991FallingLoadPatch","type":"object","additionalProperties":false,"properties":{"mass":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/FallingLoad/properties/mass"},{"type":"null"}]},"dropHeight":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/FallingLoad/properties/dropHeight"},{"type":"null"}]},"stoppingDistance":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/FallingLoad/properties/stoppingDistance"},{"type":"null"}]},"x":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/FallingLoad/properties/x"},{"type":"null"}]},"y":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/FallingLoad/properties/y"},{"type":"null"}]},"assumedForce":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/FallingLoad/properties/assumedForce"},{"type":"null"}]}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991FallingLoadRemoval":{"title":"En1991FallingLoadRemoval","type":"object","additionalProperties":false,"required":["id","index"],"properties":{"id":{"type":"string"},"index":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991FallingLoadInsertion":{"title":"En1991FallingLoadInsertion","type":"object","additionalProperties":false,"required":["index","row"],"properties":{"index":{"type":"integer","minimum":0},"row":{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/FallingLoad"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991FallingLoadRelocation":{"title":"En1991FallingLoadRelocation","type":"object","additionalProperties":false,"required":["id","from","to"],"properties":{"id":{"type":"string"},"from":{"type":"integer","minimum":0},"to":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991FallingLoadModification":{"title":"En1991FallingLoadModification","type":"object","additionalProperties":false,"required":["id","patch"],"properties":{"id":{"type":"string"},"patch":{"$ref":"#/$defs/En1991FallingLoadPatch"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991FallingLoadDelta":{"title":"En1991FallingLoadDelta","type":"object","additionalProperties":false,"required":["removed","inserted","moved","modified"],"properties":{"removed":{"type":"array","items":{"$ref":"#/$defs/En1991FallingLoadRemoval"}},"inserted":{"type":"array","items":{"$ref":"#/$defs/En1991FallingLoadInsertion"}},"moved":{"type":"array","items":{"$ref":"#/$defs/En1991FallingLoadRelocation"}},"modified":{"type":"array","items":{"$ref":"#/$defs/En1991FallingLoadModification"}}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991ExecutionImperfectionPatch":{"title":"En1991ExecutionImperfectionPatch","type":"object","additionalProperties":false,"properties":{"height":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/ExecutionImperfection/properties/height"},{"type":"null"}]},"tolerance":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/ExecutionImperfection/properties/tolerance"},{"type":"null"}]},"verticalLoad":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/ExecutionImperfection/properties/verticalLoad"},{"type":"null"}]},"x":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/ExecutionImperfection/properties/x"},{"type":"null"}]},"y":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/ExecutionImperfection/properties/y"},{"type":"null"}]},"assumedForce":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/ExecutionImperfection/properties/assumedForce"},{"type":"null"}]}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991ExecutionImperfectionRemoval":{"title":"En1991ExecutionImperfectionRemoval","type":"object","additionalProperties":false,"required":["id","index"],"properties":{"id":{"type":"string"},"index":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991ExecutionImperfectionInsertion":{"title":"En1991ExecutionImperfectionInsertion","type":"object","additionalProperties":false,"required":["index","row"],"properties":{"index":{"type":"integer","minimum":0},"row":{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/ExecutionImperfection"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991ExecutionImperfectionRelocation":{"title":"En1991ExecutionImperfectionRelocation","type":"object","additionalProperties":false,"required":["id","from","to"],"properties":{"id":{"type":"string"},"from":{"type":"integer","minimum":0},"to":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991ExecutionImperfectionModification":{"title":"En1991ExecutionImperfectionModification","type":"object","additionalProperties":false,"required":["id","patch"],"properties":{"id":{"type":"string"},"patch":{"$ref":"#/$defs/En1991ExecutionImperfectionPatch"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991ExecutionImperfectionDelta":{"title":"En1991ExecutionImperfectionDelta","type":"object","additionalProperties":false,"required":["removed","inserted","moved","modified"],"properties":{"removed":{"type":"array","items":{"$ref":"#/$defs/En1991ExecutionImperfectionRemoval"}},"inserted":{"type":"array","items":{"$ref":"#/$defs/En1991ExecutionImperfectionInsertion"}},"moved":{"type":"array","items":{"$ref":"#/$defs/En1991ExecutionImperfectionRelocation"}},"modified":{"type":"array","items":{"$ref":"#/$defs/En1991ExecutionImperfectionModification"}}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991DerailmentCasePatch":{"title":"En1991DerailmentCasePatch","type":"object","additionalProperties":false,"properties":{"distance":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/DerailmentCase/properties/distance"},{"type":"null"}]},"designForceX":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/DerailmentCase/properties/designForceX"},{"type":"null"}]},"designForceY":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/DerailmentCase/properties/designForceY"},{"type":"null"}]},"x":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/DerailmentCase/properties/x"},{"type":"null"}]},"y":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/DerailmentCase/properties/y"},{"type":"null"}]},"assumedForce":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/DerailmentCase/properties/assumedForce"},{"type":"null"}]}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991DerailmentCaseRemoval":{"title":"En1991DerailmentCaseRemoval","type":"object","additionalProperties":false,"required":["id","index"],"properties":{"id":{"type":"string"},"index":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991DerailmentCaseInsertion":{"title":"En1991DerailmentCaseInsertion","type":"object","additionalProperties":false,"required":["index","row"],"properties":{"index":{"type":"integer","minimum":0},"row":{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/DerailmentCase"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991DerailmentCaseRelocation":{"title":"En1991DerailmentCaseRelocation","type":"object","additionalProperties":false,"required":["id","from","to"],"properties":{"id":{"type":"string"},"from":{"type":"integer","minimum":0},"to":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991DerailmentCaseModification":{"title":"En1991DerailmentCaseModification","type":"object","additionalProperties":false,"required":["id","patch"],"properties":{"id":{"type":"string"},"patch":{"$ref":"#/$defs/En1991DerailmentCasePatch"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991DerailmentCaseDelta":{"title":"En1991DerailmentCaseDelta","type":"object","additionalProperties":false,"required":["removed","inserted","moved","modified"],"properties":{"removed":{"type":"array","items":{"$ref":"#/$defs/En1991DerailmentCaseRemoval"}},"inserted":{"type":"array","items":{"$ref":"#/$defs/En1991DerailmentCaseInsertion"}},"moved":{"type":"array","items":{"$ref":"#/$defs/En1991DerailmentCaseRelocation"}},"modified":{"type":"array","items":{"$ref":"#/$defs/En1991DerailmentCaseModification"}}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991CraneHoistPatch":{"title":"En1991CraneHoistPatch","type":"object","additionalProperties":false,"properties":{"ratedLoad":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/CraneHoist/properties/ratedLoad"},{"type":"null"}]},"releaseFraction":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/CraneHoist/properties/releaseFraction"},{"type":"null"}]},"releaseDevice":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/CraneHoist/properties/releaseDevice"},{"type":"null"}]}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991CraneHoistRemoval":{"title":"En1991CraneHoistRemoval","type":"object","additionalProperties":false,"required":["id","index"],"properties":{"id":{"type":"string"},"index":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991CraneHoistInsertion":{"title":"En1991CraneHoistInsertion","type":"object","additionalProperties":false,"required":["index","row"],"properties":{"index":{"type":"integer","minimum":0},"row":{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/CraneHoist"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991CraneHoistRelocation":{"title":"En1991CraneHoistRelocation","type":"object","additionalProperties":false,"required":["id","from","to"],"properties":{"id":{"type":"string"},"from":{"type":"integer","minimum":0},"to":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991CraneHoistModification":{"title":"En1991CraneHoistModification","type":"object","additionalProperties":false,"required":["id","patch"],"properties":{"id":{"type":"string"},"patch":{"$ref":"#/$defs/En1991CraneHoistPatch"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991CraneHoistDelta":{"title":"En1991CraneHoistDelta","type":"object","additionalProperties":false,"required":["removed","inserted","moved","modified"],"properties":{"removed":{"type":"array","items":{"$ref":"#/$defs/En1991CraneHoistRemoval"}},"inserted":{"type":"array","items":{"$ref":"#/$defs/En1991CraneHoistInsertion"}},"moved":{"type":"array","items":{"$ref":"#/$defs/En1991CraneHoistRelocation"}},"modified":{"type":"array","items":{"$ref":"#/$defs/En1991CraneHoistModification"}}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991FootbridgePatch":{"title":"En1991FootbridgePatch","type":"object","additionalProperties":false,"properties":{"loadedLength":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/Footbridge/properties/loadedLength"},{"type":"null"}]},"deckWidth":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/Footbridge/properties/deckWidth"},{"type":"null"}]},"naturalFrequency":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/Footbridge/properties/naturalFrequency"},{"type":"null"}]},"assumedServiceAxle":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/Footbridge/properties/assumedServiceAxle"},{"type":"null"}]}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991FootbridgeRemoval":{"title":"En1991FootbridgeRemoval","type":"object","additionalProperties":false,"required":["id","index"],"properties":{"id":{"type":"string"},"index":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991FootbridgeInsertion":{"title":"En1991FootbridgeInsertion","type":"object","additionalProperties":false,"required":["index","row"],"properties":{"index":{"type":"integer","minimum":0},"row":{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/Footbridge"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991FootbridgeRelocation":{"title":"En1991FootbridgeRelocation","type":"object","additionalProperties":false,"required":["id","from","to"],"properties":{"id":{"type":"string"},"from":{"type":"integer","minimum":0},"to":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991FootbridgeModification":{"title":"En1991FootbridgeModification","type":"object","additionalProperties":false,"required":["id","patch"],"properties":{"id":{"type":"string"},"patch":{"$ref":"#/$defs/En1991FootbridgePatch"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991FootbridgeDelta":{"title":"En1991FootbridgeDelta","type":"object","additionalProperties":false,"required":["removed","inserted","moved","modified"],"properties":{"removed":{"type":"array","items":{"$ref":"#/$defs/En1991FootbridgeRemoval"}},"inserted":{"type":"array","items":{"$ref":"#/$defs/En1991FootbridgeInsertion"}},"moved":{"type":"array","items":{"$ref":"#/$defs/En1991FootbridgeRelocation"}},"modified":{"type":"array","items":{"$ref":"#/$defs/En1991FootbridgeModification"}}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991RailDynamicPatch":{"title":"En1991RailDynamicPatch","type":"object","additionalProperties":false,"properties":{"determinantLength":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RailDynamic/properties/determinantLength"},{"type":"null"}]},"maintenance":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RailDynamic/properties/maintenance"},{"type":"null"}]}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991RailDynamicRemoval":{"title":"En1991RailDynamicRemoval","type":"object","additionalProperties":false,"required":["id","index"],"properties":{"id":{"type":"string"},"index":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991RailDynamicInsertion":{"title":"En1991RailDynamicInsertion","type":"object","additionalProperties":false,"required":["index","row"],"properties":{"index":{"type":"integer","minimum":0},"row":{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RailDynamic"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991RailDynamicRelocation":{"title":"En1991RailDynamicRelocation","type":"object","additionalProperties":false,"required":["id","from","to"],"properties":{"id":{"type":"string"},"from":{"type":"integer","minimum":0},"to":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991RailDynamicModification":{"title":"En1991RailDynamicModification","type":"object","additionalProperties":false,"required":["id","patch"],"properties":{"id":{"type":"string"},"patch":{"$ref":"#/$defs/En1991RailDynamicPatch"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991RailDynamicDelta":{"title":"En1991RailDynamicDelta","type":"object","additionalProperties":false,"required":["removed","inserted","moved","modified"],"properties":{"removed":{"type":"array","items":{"$ref":"#/$defs/En1991RailDynamicRemoval"}},"inserted":{"type":"array","items":{"$ref":"#/$defs/En1991RailDynamicInsertion"}},"moved":{"type":"array","items":{"$ref":"#/$defs/En1991RailDynamicRelocation"}},"modified":{"type":"array","items":{"$ref":"#/$defs/En1991RailDynamicModification"}}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991LoadDispersalPatch":{"title":"En1991LoadDispersalPatch","type":"object","additionalProperties":false,"properties":{"wheelLength":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/LoadDispersal/properties/wheelLength"},{"type":"null"}]},"wheelWidth":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/LoadDispersal/properties/wheelWidth"},{"type":"null"}]},"pavementThickness":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/LoadDispersal/properties/pavementThickness"},{"type":"null"}]},"slabThickness":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/LoadDispersal/properties/slabThickness"},{"type":"null"}]}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991LoadDispersalRemoval":{"title":"En1991LoadDispersalRemoval","type":"object","additionalProperties":false,"required":["id","index"],"properties":{"id":{"type":"string"},"index":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991LoadDispersalInsertion":{"title":"En1991LoadDispersalInsertion","type":"object","additionalProperties":false,"required":["index","row"],"properties":{"index":{"type":"integer","minimum":0},"row":{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/LoadDispersal"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991LoadDispersalRelocation":{"title":"En1991LoadDispersalRelocation","type":"object","additionalProperties":false,"required":["id","from","to"],"properties":{"id":{"type":"string"},"from":{"type":"integer","minimum":0},"to":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991LoadDispersalModification":{"title":"En1991LoadDispersalModification","type":"object","additionalProperties":false,"required":["id","patch"],"properties":{"id":{"type":"string"},"patch":{"$ref":"#/$defs/En1991LoadDispersalPatch"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991LoadDispersalDelta":{"title":"En1991LoadDispersalDelta","type":"object","additionalProperties":false,"required":["removed","inserted","moved","modified"],"properties":{"removed":{"type":"array","items":{"$ref":"#/$defs/En1991LoadDispersalRemoval"}},"inserted":{"type":"array","items":{"$ref":"#/$defs/En1991LoadDispersalInsertion"}},"moved":{"type":"array","items":{"$ref":"#/$defs/En1991LoadDispersalRelocation"}},"modified":{"type":"array","items":{"$ref":"#/$defs/En1991LoadDispersalModification"}}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991BulkSolidPatch":{"title":"En1991BulkSolidPatch","type":"object","additionalProperties":false,"properties":{"internalFriction":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/BulkSolid/properties/internalFriction"},{"type":"null"}]}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991BulkSolidRemoval":{"title":"En1991BulkSolidRemoval","type":"object","additionalProperties":false,"required":["id","index"],"properties":{"id":{"type":"string"},"index":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991BulkSolidInsertion":{"title":"En1991BulkSolidInsertion","type":"object","additionalProperties":false,"required":["index","row"],"properties":{"index":{"type":"integer","minimum":0},"row":{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/BulkSolid"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991BulkSolidRelocation":{"title":"En1991BulkSolidRelocation","type":"object","additionalProperties":false,"required":["id","from","to"],"properties":{"id":{"type":"string"},"from":{"type":"integer","minimum":0},"to":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991BulkSolidModification":{"title":"En1991BulkSolidModification","type":"object","additionalProperties":false,"required":["id","patch"],"properties":{"id":{"type":"string"},"patch":{"$ref":"#/$defs/En1991BulkSolidPatch"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991BulkSolidDelta":{"title":"En1991BulkSolidDelta","type":"object","additionalProperties":false,"required":["removed","inserted","moved","modified"],"properties":{"removed":{"type":"array","items":{"$ref":"#/$defs/En1991BulkSolidRemoval"}},"inserted":{"type":"array","items":{"$ref":"#/$defs/En1991BulkSolidInsertion"}},"moved":{"type":"array","items":{"$ref":"#/$defs/En1991BulkSolidRelocation"}},"modified":{"type":"array","items":{"$ref":"#/$defs/En1991BulkSolidModification"}}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991RotatingMachinePatch":{"title":"En1991RotatingMachinePatch","type":"object","additionalProperties":false,"properties":{"mass":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RotatingMachine/properties/mass"},{"type":"null"}]},"eccentricity":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RotatingMachine/properties/eccentricity"},{"type":"null"}]},"frequency":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RotatingMachine/properties/frequency"},{"type":"null"}]}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991RotatingMachineRemoval":{"title":"En1991RotatingMachineRemoval","type":"object","additionalProperties":false,"required":["id","index"],"properties":{"id":{"type":"string"},"index":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991RotatingMachineInsertion":{"title":"En1991RotatingMachineInsertion","type":"object","additionalProperties":false,"required":["index","row"],"properties":{"index":{"type":"integer","minimum":0},"row":{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RotatingMachine"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991RotatingMachineRelocation":{"title":"En1991RotatingMachineRelocation","type":"object","additionalProperties":false,"required":["id","from","to"],"properties":{"id":{"type":"string"},"from":{"type":"integer","minimum":0},"to":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991RotatingMachineModification":{"title":"En1991RotatingMachineModification","type":"object","additionalProperties":false,"required":["id","patch"],"properties":{"id":{"type":"string"},"patch":{"$ref":"#/$defs/En1991RotatingMachinePatch"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991RotatingMachineDelta":{"title":"En1991RotatingMachineDelta","type":"object","additionalProperties":false,"required":["removed","inserted","moved","modified"],"properties":{"removed":{"type":"array","items":{"$ref":"#/$defs/En1991RotatingMachineRemoval"}},"inserted":{"type":"array","items":{"$ref":"#/$defs/En1991RotatingMachineInsertion"}},"moved":{"type":"array","items":{"$ref":"#/$defs/En1991RotatingMachineRelocation"}},"modified":{"type":"array","items":{"$ref":"#/$defs/En1991RotatingMachineModification"}}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991FatigueModelRemoval":{"title":"En1991FatigueModelRemoval","type":"object","additionalProperties":false,"required":["id","index"],"properties":{"id":{"type":"string"},"index":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991FatigueModelInsertion":{"title":"En1991FatigueModelInsertion","type":"object","additionalProperties":false,"required":["index","row"],"properties":{"index":{"type":"integer","minimum":0},"row":{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/FatigueModel"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991FatigueModelRelocation":{"title":"En1991FatigueModelRelocation","type":"object","additionalProperties":false,"required":["id","from","to"],"properties":{"id":{"type":"string"},"from":{"type":"integer","minimum":0},"to":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991FatigueModelModification":{"title":"En1991FatigueModelModification","type":"object","additionalProperties":false,"required":["id","patch"],"properties":{"id":{"type":"string"},"patch":{"$ref":"#/$defs/En1991FatigueModelPatch"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991FatigueModelDelta":{"title":"En1991FatigueModelDelta","type":"object","additionalProperties":false,"required":["removed","inserted","moved","modified"],"properties":{"removed":{"type":"array","items":{"$ref":"#/$defs/En1991FatigueModelRemoval"}},"inserted":{"type":"array","items":{"$ref":"#/$defs/En1991FatigueModelInsertion"}},"moved":{"type":"array","items":{"$ref":"#/$defs/En1991FatigueModelRelocation"}},"modified":{"type":"array","items":{"$ref":"#/$defs/En1991FatigueModelModification"}}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991FatigueModelPatch":{"title":"En1991FatigueModelPatch","type":"object","additionalProperties":false,"properties":{"model":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/FatigueModel/properties/model"},{"type":"null"}]},"lane":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/FatigueModel/properties/lane"},{"type":"null"}]},"assumedAxleLoad":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/FatigueModel/properties/assumedAxleLoad"},{"type":"null"}]},"assumedUdl":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/FatigueModel/properties/assumedUdl"},{"type":"null"}]}}},
+    "En1991SupportCollisionRemoval":{"title":"En1991SupportCollisionRemoval","type":"object","additionalProperties":false,"required":["id","index"],"properties":{"id":{"type":"string"},"index":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991SupportCollisionInsertion":{"title":"En1991SupportCollisionInsertion","type":"object","additionalProperties":false,"required":["index","row"],"properties":{"index":{"type":"integer","minimum":0},"row":{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/SupportCollision"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991SupportCollisionRelocation":{"title":"En1991SupportCollisionRelocation","type":"object","additionalProperties":false,"required":["id","from","to"],"properties":{"id":{"type":"string"},"from":{"type":"integer","minimum":0},"to":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991SupportCollisionModification":{"title":"En1991SupportCollisionModification","type":"object","additionalProperties":false,"required":["id","patch"],"properties":{"id":{"type":"string"},"patch":{"$ref":"#/$defs/En1991SupportCollisionPatch"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991SupportCollisionDelta":{"title":"En1991SupportCollisionDelta","type":"object","additionalProperties":false,"required":["removed","inserted","moved","modified"],"properties":{"removed":{"type":"array","items":{"$ref":"#/$defs/En1991SupportCollisionRemoval"}},"inserted":{"type":"array","items":{"$ref":"#/$defs/En1991SupportCollisionInsertion"}},"moved":{"type":"array","items":{"$ref":"#/$defs/En1991SupportCollisionRelocation"}},"modified":{"type":"array","items":{"$ref":"#/$defs/En1991SupportCollisionModification"}}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991SupportCollisionPatch":{"title":"En1991SupportCollisionPatch","type":"object","additionalProperties":false,"properties":{"location":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/SupportCollision/properties/location"},{"type":"null"}]},"assumedForceX":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/SupportCollision/properties/assumedForceX"},{"type":"null"}]},"assumedForceY":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/SupportCollision/properties/assumedForceY"},{"type":"null"}]},"height":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/SupportCollision/properties/height"},{"type":"null"}]},"positionX":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/SupportCollision/properties/positionX"},{"type":"null"}]}}},
+    "En1991LocalFireRemoval":{"title":"En1991LocalFireRemoval","type":"object","additionalProperties":false,"required":["id","index"],"properties":{"id":{"type":"string"},"index":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991LocalFireInsertion":{"title":"En1991LocalFireInsertion","type":"object","additionalProperties":false,"required":["index","row"],"properties":{"index":{"type":"integer","minimum":0},"row":{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/LocalFire"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991LocalFireRelocation":{"title":"En1991LocalFireRelocation","type":"object","additionalProperties":false,"required":["id","from","to"],"properties":{"id":{"type":"string"},"from":{"type":"integer","minimum":0},"to":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991LocalFireModification":{"title":"En1991LocalFireModification","type":"object","additionalProperties":false,"required":["id","patch"],"properties":{"id":{"type":"string"},"patch":{"$ref":"#/$defs/En1991LocalFirePatch"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991LocalFireDelta":{"title":"En1991LocalFireDelta","type":"object","additionalProperties":false,"required":["removed","inserted","moved","modified"],"properties":{"removed":{"type":"array","items":{"$ref":"#/$defs/En1991LocalFireRemoval"}},"inserted":{"type":"array","items":{"$ref":"#/$defs/En1991LocalFireInsertion"}},"moved":{"type":"array","items":{"$ref":"#/$defs/En1991LocalFireRelocation"}},"modified":{"type":"array","items":{"$ref":"#/$defs/En1991LocalFireModification"}}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991LocalFirePatch":{"title":"En1991LocalFirePatch","type":"object","additionalProperties":false,"properties":{"fireDiameter":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/LocalFire/properties/fireDiameter"},{"type":"null"}]},"heatReleaseRate":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/LocalFire/properties/heatReleaseRate"},{"type":"null"}]},"ceilingHeight":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/LocalFire/properties/ceilingHeight"},{"type":"null"}]},"horizontalDistance":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/LocalFire/properties/horizontalDistance"},{"type":"null"}]},"assumedFlux":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/LocalFire/properties/assumedFlux"},{"type":"null"}]}}},
+    "En1991SnowGuardRemoval":{"title":"En1991SnowGuardRemoval","type":"object","additionalProperties":false,"required":["id","index"],"properties":{"id":{"type":"string"},"index":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991SnowGuardInsertion":{"title":"En1991SnowGuardInsertion","type":"object","additionalProperties":false,"required":["index","row"],"properties":{"index":{"type":"integer","minimum":0},"row":{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/SnowGuard"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991SnowGuardRelocation":{"title":"En1991SnowGuardRelocation","type":"object","additionalProperties":false,"required":["id","from","to"],"properties":{"id":{"type":"string"},"from":{"type":"integer","minimum":0},"to":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991SnowGuardModification":{"title":"En1991SnowGuardModification","type":"object","additionalProperties":false,"required":["id","patch"],"properties":{"id":{"type":"string"},"patch":{"$ref":"#/$defs/En1991SnowGuardPatch"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991SnowGuardDelta":{"title":"En1991SnowGuardDelta","type":"object","additionalProperties":false,"required":["removed","inserted","moved","modified"],"properties":{"removed":{"type":"array","items":{"$ref":"#/$defs/En1991SnowGuardRemoval"}},"inserted":{"type":"array","items":{"$ref":"#/$defs/En1991SnowGuardInsertion"}},"moved":{"type":"array","items":{"$ref":"#/$defs/En1991SnowGuardRelocation"}},"modified":{"type":"array","items":{"$ref":"#/$defs/En1991SnowGuardModification"}}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991SnowGuardPatch":{"title":"En1991SnowGuardPatch","type":"object","additionalProperties":false,"properties":{"roofId":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/SnowGuard/properties/roofId"},{"type":"null"}]},"slopeLength":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/SnowGuard/properties/slopeLength"},{"type":"null"}]},"assumedForce":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/SnowGuard/properties/assumedForce"},{"type":"null"}]}}},
+    "En1991RailDerailmentRemoval":{"title":"En1991RailDerailmentRemoval","type":"object","additionalProperties":false,"required":["id","index"],"properties":{"id":{"type":"string"},"index":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991RailDerailmentInsertion":{"title":"En1991RailDerailmentInsertion","type":"object","additionalProperties":false,"required":["index","row"],"properties":{"index":{"type":"integer","minimum":0},"row":{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RailDerailment"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991RailDerailmentRelocation":{"title":"En1991RailDerailmentRelocation","type":"object","additionalProperties":false,"required":["id","from","to"],"properties":{"id":{"type":"string"},"from":{"type":"integer","minimum":0},"to":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991RailDerailmentModification":{"title":"En1991RailDerailmentModification","type":"object","additionalProperties":false,"required":["id","patch"],"properties":{"id":{"type":"string"},"patch":{"$ref":"#/$defs/En1991RailDerailmentPatch"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991RailDerailmentDelta":{"title":"En1991RailDerailmentDelta","type":"object","additionalProperties":false,"required":["removed","inserted","moved","modified"],"properties":{"removed":{"type":"array","items":{"$ref":"#/$defs/En1991RailDerailmentRemoval"}},"inserted":{"type":"array","items":{"$ref":"#/$defs/En1991RailDerailmentInsertion"}},"moved":{"type":"array","items":{"$ref":"#/$defs/En1991RailDerailmentRelocation"}},"modified":{"type":"array","items":{"$ref":"#/$defs/En1991RailDerailmentModification"}}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991RailDerailmentPatch":{"title":"En1991RailDerailmentPatch","type":"object","additionalProperties":false,"properties":{"situation":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RailDerailment/properties/situation"},{"type":"null"}]},"assumedLineLoad":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RailDerailment/properties/assumedLineLoad"},{"type":"null"}]},"loadedLength":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RailDerailment/properties/loadedLength"},{"type":"null"}]},"offset":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RailDerailment/properties/offset"},{"type":"null"}]}}},
+    "En1991RailLoadGroupRemoval":{"title":"En1991RailLoadGroupRemoval","type":"object","additionalProperties":false,"required":["id","index"],"properties":{"id":{"type":"string"},"index":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991RailLoadGroupInsertion":{"title":"En1991RailLoadGroupInsertion","type":"object","additionalProperties":false,"required":["index","row"],"properties":{"index":{"type":"integer","minimum":0},"row":{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RailLoadGroup"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991RailLoadGroupRelocation":{"title":"En1991RailLoadGroupRelocation","type":"object","additionalProperties":false,"required":["id","from","to"],"properties":{"id":{"type":"string"},"from":{"type":"integer","minimum":0},"to":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991RailLoadGroupModification":{"title":"En1991RailLoadGroupModification","type":"object","additionalProperties":false,"required":["id","patch"],"properties":{"id":{"type":"string"},"patch":{"$ref":"#/$defs/En1991RailLoadGroupPatch"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991RailLoadGroupDelta":{"title":"En1991RailLoadGroupDelta","type":"object","additionalProperties":false,"required":["removed","inserted","moved","modified"],"properties":{"removed":{"type":"array","items":{"$ref":"#/$defs/En1991RailLoadGroupRemoval"}},"inserted":{"type":"array","items":{"$ref":"#/$defs/En1991RailLoadGroupInsertion"}},"moved":{"type":"array","items":{"$ref":"#/$defs/En1991RailLoadGroupRelocation"}},"modified":{"type":"array","items":{"$ref":"#/$defs/En1991RailLoadGroupModification"}}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991RailLoadGroupPatch":{"title":"En1991RailLoadGroupPatch","type":"object","additionalProperties":false,"properties":{"loadGroup":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RailLoadGroup/properties/loadGroup"},{"type":"null"}]},"factorVertical":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RailLoadGroup/properties/factorVertical"},{"type":"null"}]},"factorLongitudinal":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RailLoadGroup/properties/factorLongitudinal"},{"type":"null"}]},"factorLateral":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RailLoadGroup/properties/factorLateral"},{"type":"null"}]},"assumedAxleLoad":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RailLoadGroup/properties/assumedAxleLoad"},{"type":"null"}]},"assumedUdl":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RailLoadGroup/properties/assumedUdl"},{"type":"null"}]},"assumedLongitudinal":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RailLoadGroup/properties/assumedLongitudinal"},{"type":"null"}]},"assumedLateral":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RailLoadGroup/properties/assumedLateral"},{"type":"null"}]}}},
+    "En1991DustExplosionRemoval":{"title":"En1991DustExplosionRemoval","type":"object","additionalProperties":false,"required":["id","index"],"properties":{"id":{"type":"string"},"index":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991DustExplosionInsertion":{"title":"En1991DustExplosionInsertion","type":"object","additionalProperties":false,"required":["index","row"],"properties":{"index":{"type":"integer","minimum":0},"row":{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/DustExplosion"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991DustExplosionRelocation":{"title":"En1991DustExplosionRelocation","type":"object","additionalProperties":false,"required":["id","from","to"],"properties":{"id":{"type":"string"},"from":{"type":"integer","minimum":0},"to":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991DustExplosionModification":{"title":"En1991DustExplosionModification","type":"object","additionalProperties":false,"required":["id","patch"],"properties":{"id":{"type":"string"},"patch":{"$ref":"#/$defs/En1991DustExplosionPatch"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991DustExplosionDelta":{"title":"En1991DustExplosionDelta","type":"object","additionalProperties":false,"required":["removed","inserted","moved","modified"],"properties":{"removed":{"type":"array","items":{"$ref":"#/$defs/En1991DustExplosionRemoval"}},"inserted":{"type":"array","items":{"$ref":"#/$defs/En1991DustExplosionInsertion"}},"moved":{"type":"array","items":{"$ref":"#/$defs/En1991DustExplosionRelocation"}},"modified":{"type":"array","items":{"$ref":"#/$defs/En1991DustExplosionModification"}}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "En1991DustExplosionPatch":{"title":"En1991DustExplosionPatch","type":"object","additionalProperties":false,"properties":{"kst":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/DustExplosion/properties/kst"},{"type":"null"}]},"pMax":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/DustExplosion/properties/pMax"},{"type":"null"}]},"volume":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/DustExplosion/properties/volume"},{"type":"null"}]},"ventArea":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/DustExplosion/properties/ventArea"},{"type":"null"}]},"staticOpeningPressure":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/DustExplosion/properties/staticOpeningPressure"},{"type":"null"}]},"designPressure":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/DustExplosion/properties/designPressure"},{"type":"null"}]}}}
   },
-  "$defs": {
-    "En1991FloorPatch": {
-      "title": "En1991FloorPatch",
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "category": {
-          "anyOf": [
-            {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/FloorArea/properties/category"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "area": {
-          "anyOf": [
-            {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/FloorArea/properties/area"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "assumedQk": {
-          "anyOf": [
-            {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/FloorArea/properties/assumedQk"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "assumedQkConcentrated": {
-          "anyOf": [
-            {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/FloorArea/properties/assumedQkConcentrated"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "assumedPartitions": {
-          "anyOf": [
-            {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/FloorArea/properties/assumedPartitions"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      },
-      "x-semio-formats": [
-        "🔣️jsonschema",
-        "🟦️typescript"
-      ]
-    },
-    "En1991FloorRemoval": {
-      "title": "En1991FloorRemoval",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "index"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "index": {
-          "type": "integer",
-          "minimum": 0
-        }
-      },
-      "x-semio-formats": [
-        "🔣️jsonschema",
-        "🟦️typescript"
-      ]
-    },
-    "En1991FloorInsertion": {
-      "title": "En1991FloorInsertion",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "index",
-        "row"
-      ],
-      "properties": {
-        "index": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "row": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/FloorArea"
-        }
-      },
-      "x-semio-formats": [
-        "🔣️jsonschema",
-        "🟦️typescript"
-      ]
-    },
-    "En1991FloorRelocation": {
-      "title": "En1991FloorRelocation",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "from",
-        "to"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "from": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "to": {
-          "type": "integer",
-          "minimum": 0
-        }
-      },
-      "x-semio-formats": [
-        "🔣️jsonschema",
-        "🟦️typescript"
-      ]
-    },
-    "En1991FloorModification": {
-      "title": "En1991FloorModification",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "patch"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "patch": {
-          "$ref": "#/$defs/En1991FloorPatch"
-        }
-      },
-      "x-semio-formats": [
-        "🔣️jsonschema",
-        "🟦️typescript"
-      ]
-    },
-    "En1991FloorDelta": {
-      "title": "En1991FloorDelta",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "removed",
-        "inserted",
-        "moved",
-        "modified"
-      ],
-      "properties": {
-        "removed": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/En1991FloorRemoval"
-          }
-        },
-        "inserted": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/En1991FloorInsertion"
-          }
-        },
-        "moved": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/En1991FloorRelocation"
-          }
-        },
-        "modified": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/En1991FloorModification"
-          }
-        }
-      },
-      "x-semio-formats": [
-        "🔣️jsonschema",
-        "🟦️typescript"
-      ]
-    },
-    "En1991SelfWeightElementPatch": {
-      "title": "En1991SelfWeightElementPatch",
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "material": {
-          "anyOf": [
-            {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/SelfWeightElement/properties/material"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "thickness": {
-          "anyOf": [
-            {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/SelfWeightElement/properties/thickness"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "assumedGk": {
-          "anyOf": [
-            {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/SelfWeightElement/properties/assumedGk"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      },
-      "x-semio-formats": [
-        "🔣️jsonschema",
-        "🟦️typescript"
-      ]
-    },
-    "En1991SelfWeightElementRemoval": {
-      "title": "En1991SelfWeightElementRemoval",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "index"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "index": {
-          "type": "integer",
-          "minimum": 0
-        }
-      },
-      "x-semio-formats": [
-        "🔣️jsonschema",
-        "🟦️typescript"
-      ]
-    },
-    "En1991SelfWeightElementInsertion": {
-      "title": "En1991SelfWeightElementInsertion",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "index",
-        "row"
-      ],
-      "properties": {
-        "index": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "row": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/SelfWeightElement"
-        }
-      },
-      "x-semio-formats": [
-        "🔣️jsonschema",
-        "🟦️typescript"
-      ]
-    },
-    "En1991SelfWeightElementRelocation": {
-      "title": "En1991SelfWeightElementRelocation",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "from",
-        "to"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "from": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "to": {
-          "type": "integer",
-          "minimum": 0
-        }
-      },
-      "x-semio-formats": [
-        "🔣️jsonschema",
-        "🟦️typescript"
-      ]
-    },
-    "En1991SelfWeightElementModification": {
-      "title": "En1991SelfWeightElementModification",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "patch"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "patch": {
-          "$ref": "#/$defs/En1991SelfWeightElementPatch"
-        }
-      },
-      "x-semio-formats": [
-        "🔣️jsonschema",
-        "🟦️typescript"
-      ]
-    },
-    "En1991SelfWeightElementDelta": {
-      "title": "En1991SelfWeightElementDelta",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "removed",
-        "inserted",
-        "moved",
-        "modified"
-      ],
-      "properties": {
-        "removed": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/En1991SelfWeightElementRemoval"
-          }
-        },
-        "inserted": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/En1991SelfWeightElementInsertion"
-          }
-        },
-        "moved": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/En1991SelfWeightElementRelocation"
-          }
-        },
-        "modified": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/En1991SelfWeightElementModification"
-          }
-        }
-      },
-      "x-semio-formats": [
-        "🔣️jsonschema",
-        "🟦️typescript"
-      ]
-    },
-    "En1991RoofPatch": {
-      "title": "En1991RoofPatch",
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "roofType": {
-          "anyOf": [
-            {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RoofArea/properties/roofType"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "pitchDeg": {
-          "anyOf": [
-            {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RoofArea/properties/pitchDeg"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "cE": {
-          "anyOf": [
-            {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RoofArea/properties/cE"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "cT": {
-          "anyOf": [
-            {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RoofArea/properties/cT"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "hasParapet": {
-          "anyOf": [
-            {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RoofArea/properties/hasParapet"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "parapetHeight": {
-          "anyOf": [
-            {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RoofArea/properties/parapetHeight"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "driftObstructionHeight": {
-          "anyOf": [
-            {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RoofArea/properties/driftObstructionHeight"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "multiSpan": {
-          "anyOf": [
-            {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RoofArea/properties/multiSpan"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "assumedSk": {
-          "anyOf": [
-            {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RoofArea/properties/assumedSk"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      },
-      "x-semio-formats": [
-        "🔣️jsonschema",
-        "🟦️typescript"
-      ]
-    },
-    "En1991RoofRemoval": {
-      "title": "En1991RoofRemoval",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "index"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "index": {
-          "type": "integer",
-          "minimum": 0
-        }
-      },
-      "x-semio-formats": [
-        "🔣️jsonschema",
-        "🟦️typescript"
-      ]
-    },
-    "En1991RoofInsertion": {
-      "title": "En1991RoofInsertion",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "index",
-        "row"
-      ],
-      "properties": {
-        "index": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "row": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/RoofArea"
-        }
-      },
-      "x-semio-formats": [
-        "🔣️jsonschema",
-        "🟦️typescript"
-      ]
-    },
-    "En1991RoofRelocation": {
-      "title": "En1991RoofRelocation",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "from",
-        "to"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "from": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "to": {
-          "type": "integer",
-          "minimum": 0
-        }
-      },
-      "x-semio-formats": [
-        "🔣️jsonschema",
-        "🟦️typescript"
-      ]
-    },
-    "En1991RoofModification": {
-      "title": "En1991RoofModification",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "patch"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "patch": {
-          "$ref": "#/$defs/En1991RoofPatch"
-        }
-      },
-      "x-semio-formats": [
-        "🔣️jsonschema",
-        "🟦️typescript"
-      ]
-    },
-    "En1991RoofDelta": {
-      "title": "En1991RoofDelta",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "removed",
-        "inserted",
-        "moved",
-        "modified"
-      ],
-      "properties": {
-        "removed": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/En1991RoofRemoval"
-          }
-        },
-        "inserted": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/En1991RoofInsertion"
-          }
-        },
-        "moved": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/En1991RoofRelocation"
-          }
-        },
-        "modified": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/En1991RoofModification"
-          }
-        }
-      },
-      "x-semio-formats": [
-        "🔣️jsonschema",
-        "🟦️typescript"
-      ]
-    },
-    "En1991WindFacePatch": {
-      "title": "En1991WindFacePatch",
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "zone": {
-          "anyOf": [
-            {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/WindFace/properties/zone"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "z": {
-          "anyOf": [
-            {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/WindFace/properties/z"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "cPe10": {
-          "anyOf": [
-            {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/WindFace/properties/cPe10"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "cPe1": {
-          "anyOf": [
-            {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/WindFace/properties/cPe1"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "cPi": {
-          "anyOf": [
-            {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/WindFace/properties/cPi"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "cS": {
-          "anyOf": [
-            {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/WindFace/properties/cS"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "cD": {
-          "anyOf": [
-            {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/WindFace/properties/cD"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "loadedArea": {
-          "anyOf": [
-            {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/WindFace/properties/loadedArea"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "assumedWp": {
-          "anyOf": [
-            {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/WindFace/properties/assumedWp"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      },
-      "x-semio-formats": [
-        "🔣️jsonschema",
-        "🟦️typescript"
-      ]
-    },
-    "En1991WindFaceRemoval": {
-      "title": "En1991WindFaceRemoval",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "index"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "index": {
-          "type": "integer",
-          "minimum": 0
-        }
-      },
-      "x-semio-formats": [
-        "🔣️jsonschema",
-        "🟦️typescript"
-      ]
-    },
-    "En1991WindFaceInsertion": {
-      "title": "En1991WindFaceInsertion",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "index",
-        "row"
-      ],
-      "properties": {
-        "index": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "row": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/WindFace"
-        }
-      },
-      "x-semio-formats": [
-        "🔣️jsonschema",
-        "🟦️typescript"
-      ]
-    },
-    "En1991WindFaceRelocation": {
-      "title": "En1991WindFaceRelocation",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "from",
-        "to"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "from": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "to": {
-          "type": "integer",
-          "minimum": 0
-        }
-      },
-      "x-semio-formats": [
-        "🔣️jsonschema",
-        "🟦️typescript"
-      ]
-    },
-    "En1991WindFaceModification": {
-      "title": "En1991WindFaceModification",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "patch"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "patch": {
-          "$ref": "#/$defs/En1991WindFacePatch"
-        }
-      },
-      "x-semio-formats": [
-        "🔣️jsonschema",
-        "🟦️typescript"
-      ]
-    },
-    "En1991WindFaceDelta": {
-      "title": "En1991WindFaceDelta",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "removed",
-        "inserted",
-        "moved",
-        "modified"
-      ],
-      "properties": {
-        "removed": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/En1991WindFaceRemoval"
-          }
-        },
-        "inserted": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/En1991WindFaceInsertion"
-          }
-        },
-        "moved": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/En1991WindFaceRelocation"
-          }
-        },
-        "modified": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/En1991WindFaceModification"
-          }
-        }
-      },
-      "x-semio-formats": [
-        "🔣️jsonschema",
-        "🟦️typescript"
-      ]
-    },
-    "En1991AccidentalCasePatch": {
-      "title": "En1991AccidentalCasePatch",
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "impact": {
-          "anyOf": [
-            {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/AccidentalCase/properties/impact"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "explosion": {
-          "anyOf": [
-            {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/AccidentalCase/properties/explosion"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      },
-      "x-semio-formats": [
-        "🔣️jsonschema",
-        "🟦️typescript"
-      ]
-    },
-    "En1991AccidentalCaseRemoval": {
-      "title": "En1991AccidentalCaseRemoval",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "index"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "index": {
-          "type": "integer",
-          "minimum": 0
-        }
-      },
-      "x-semio-formats": [
-        "🔣️jsonschema",
-        "🟦️typescript"
-      ]
-    },
-    "En1991AccidentalCaseInsertion": {
-      "title": "En1991AccidentalCaseInsertion",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "index",
-        "row"
-      ],
-      "properties": {
-        "index": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "row": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/AccidentalCase"
-        }
-      },
-      "x-semio-formats": [
-        "🔣️jsonschema",
-        "🟦️typescript"
-      ]
-    },
-    "En1991AccidentalCaseRelocation": {
-      "title": "En1991AccidentalCaseRelocation",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "from",
-        "to"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "from": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "to": {
-          "type": "integer",
-          "minimum": 0
-        }
-      },
-      "x-semio-formats": [
-        "🔣️jsonschema",
-        "🟦️typescript"
-      ]
-    },
-    "En1991AccidentalCaseModification": {
-      "title": "En1991AccidentalCaseModification",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "id",
-        "patch"
-      ],
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "patch": {
-          "$ref": "#/$defs/En1991AccidentalCasePatch"
-        }
-      },
-      "x-semio-formats": [
-        "🔣️jsonschema",
-        "🟦️typescript"
-      ]
-    },
-    "En1991AccidentalCaseDelta": {
-      "title": "En1991AccidentalCaseDelta",
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "removed",
-        "inserted",
-        "moved",
-        "modified"
-      ],
-      "properties": {
-        "removed": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/En1991AccidentalCaseRemoval"
-          }
-        },
-        "inserted": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/En1991AccidentalCaseInsertion"
-          }
-        },
-        "moved": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/En1991AccidentalCaseRelocation"
-          }
-        },
-        "modified": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/En1991AccidentalCaseModification"
-          }
-        }
-      },
-      "x-semio-formats": [
-        "🔣️jsonschema",
-        "🟦️typescript"
-      ]
-    }
-  }
+  "required":["floors","selfWeightElements","roofs","windFaces","accidentalCases","bridgeLanes","constructionStages","roofSurfaces","placements","specialVehicles","windBridges","dynamicElements","impactActions","internalExplosions","thermalSections","cases","helicopterLandings","tieRuns","constructionLoads","fallingLoads","executionImperfections","derailmentCases","craneHoists","footbridges","railDynamics","loadDispersals","bulkSolids","rotatingMachines","dustExplosions","railLoadGroups","railDerailments"],
+  "x-semio-rust":{"doc":["🔺️ Sparse field delta for the En1991 artifact: the scalar fields a mutation sets and the keyed row deltas of its lists."],"derive":["Clone","Debug","Default","PartialEq","ArtifactSchema","value_derive::ToValue","value_derive::FromValue","semio_framework_dsl_record_derive::DslRecord"],"artifactSchema":"s.norm.en1991","attributes":["#[cfg_attr(any(test, feature = \"test-support\"), derive(serde::Serialize, serde::Deserialize))]","#[cfg_attr(any(test, feature = \"test-support\"), serde(rename_all = \"camelCase\", default))]","#[value(rename_all = \"camelCase\", default)]"]}
 }

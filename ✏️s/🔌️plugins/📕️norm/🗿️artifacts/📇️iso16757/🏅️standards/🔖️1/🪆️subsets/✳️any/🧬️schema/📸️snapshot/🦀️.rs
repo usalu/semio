@@ -15,8 +15,8 @@ use std::collections::BTreeMap;
 //#region 🔖️Snapshot
 
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ArtifactSchema, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[dsl(id = "norm.iso16757", layout = "lines")]
 #[artifact_schema(id = "s.norm.iso16757")]
@@ -227,7 +227,7 @@ pub(crate) fn retire_decoded_catalogue_geometry(node:part_2::GeometryNode){use c
 
 //#region 🍃️FacetLeaves
 /// 🍃️ The five handcrafted leaves of the `snapshot` schema facet.
-pub const SNAPSHOT_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: concat!(include_str!("🦀️.rs"), include_str!("🧱️catalogue-core/🦀️.rs"), include_str!("📚️part-1-catalogue/🦀️.rs"), include_str!("📐️part-2-geometry/🦀️.rs"), include_str!("📖️part-4-dictionary/🦀️.rs"), include_str!("🔄️part-5-exchange/🦀️.rs"), include_str!("🧾️artifact-definition/🦀️.rs")), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };
+pub const SNAPSHOT_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: concat!(include_str!("🦀️.rs"), include_str!("🧱️catalogue-core/🦀️.rs"), include_str!("📚️part-1-catalogue/🦀️.rs"), include_str!("📐️part-2-geometry/🦀️.rs"), include_str!("📖️part-4-dictionary/🦀️.rs"), include_str!("🔄️part-5-exchange/🦀️.rs"), include_str!("🧾️artifact-definition/🦀️.rs")), typescript: semio_s_artifact_norm_iso16757_model_typescript::LEAF, graphql: semio_s_artifact_norm_iso16757_model_graphql::LEAF, json_schema: semio_s_artifact_norm_iso16757_model_json_schema::LEAF, proto: semio_s_artifact_norm_iso16757_model_proto::LEAF };
 //#endregion 🍃️FacetLeaves
 
 #[path = "🧱️catalogue-core/🦀️.rs"]

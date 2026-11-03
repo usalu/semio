@@ -1,0 +1,9 @@
+{
+  "mutation": "insertTrafficGroup",
+  "index": 1,
+  "item": {
+    "id": "tra-1-new",
+    "group": "GR1A",
+    "variableId": "normal"
+  }
+}

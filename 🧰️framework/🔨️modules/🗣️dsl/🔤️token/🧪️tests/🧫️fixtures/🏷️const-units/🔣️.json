@@ -42,7 +42,16 @@
     "m/s2",
     "kN/m2",
     "kPa/m2",
-    "W/m2K"
+    "W/m2K",
+    "N/m",
+    "kN/m",
+    "m2/m",
+    "N/m3",
+    "kN/m3",
+    "N*m",
+    "kN*m",
+    "m6",
+    "Hz"
   ],
   "queries": [
     {
@@ -255,6 +264,46 @@
     },
     {
       "symbol": "deg\u0000",
+      "expectedIndex": null
+    },
+    {
+      "symbol": "N/m",
+      "expectedIndex": 41
+    },
+    {
+      "symbol": "kN/m",
+      "expectedIndex": 42
+    },
+    {
+      "symbol": "m2/m",
+      "expectedIndex": 43
+    },
+    {
+      "symbol": "N/m3",
+      "expectedIndex": 44
+    },
+    {
+      "symbol": "kN/m3",
+      "expectedIndex": 45
+    },
+    {
+      "symbol": "N*m",
+      "expectedIndex": 46
+    },
+    {
+      "symbol": "kN*m",
+      "expectedIndex": 47
+    },
+    {
+      "symbol": "m6",
+      "expectedIndex": 48
+    },
+    {
+      "symbol": "Hz",
+      "expectedIndex": 49
+    },
+    {
+      "symbol": "N/n",
       "expectedIndex": null
     }
   ]

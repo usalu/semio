@@ -1,0 +1,6 @@
+{
+  "mutation": "changeLoadCaseVerticalVar",
+  "footingId": "footing-F1",
+  "id": "lc-bsP",
+  "newVerticalVariable": 300000.0
+}

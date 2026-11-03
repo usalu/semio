@@ -83,8 +83,8 @@ pub(crate) fn parse_f64(raw: &str) -> Option<f64> {
 /// 📄️ One semicolon-delimited native record.
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct NativeRecord {
     pub family: RecordFamilyId,
@@ -95,8 +95,8 @@ pub struct NativeRecord {
 /// 🎛 Sheet-2 heating control valve attributes (VDI 3805 Blatt 2).
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct ValveHeatingAttributes {
     pub dn: u16,
@@ -120,8 +120,8 @@ impl ValveHeatingAttributes {
 /// ♨️ Sheet-3 radiator / heating-surface attributes (VDI 3805 Blatt 3; Φ at 75/65/20 °C).
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct RadiatorAttributes {
     pub standard_output_w: f64,
@@ -135,8 +135,8 @@ pub struct RadiatorAttributes {
 /// 💧 Sheet-5 heating pump attributes (VDI 3805 Blatt 5).
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct PumpHeatingAttributes {
     pub dn_suction: u16,
@@ -151,8 +151,8 @@ pub struct PumpHeatingAttributes {
 /// 🔥 Sheet-6 heat-generator attributes (VDI 3805 Blatt 6).
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct HeatGeneratorAttributes {
     pub nominal_heat_output_w: f64,
@@ -164,13 +164,13 @@ pub struct HeatGeneratorAttributes {
 /// 🧩 Single generic Blatt attribute (mirrors a native 210 key/value[/unit] pair).
 #[derive(Clone, Debug, PartialEq, Default, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct GenericAttribute {
     pub key: String,
     pub value: String,
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default)]
     pub unit: Option<String>,
 }
@@ -178,12 +178,12 @@ pub struct GenericAttribute {
 /// 📋 Generic sheet attributes as an ordered key/value/unit catalogue mirroring native records.
 #[derive(Clone, Debug, PartialEq, Default, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct GenericAttributes {
     #[dsl(table)]
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(default))]
     #[value(default)]
     pub entries: Vec<GenericAttribute>,
 }
@@ -222,8 +222,8 @@ impl GenericAttributes {
 /// 🎛 Typed per-sheet mandatory attribute payload — replaces the untyped parameters map.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(tag = "kind", rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(tag = "kind", rename_all = "camelCase"))]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum SheetAttributes {
     ValveHeating(ValveHeatingAttributes),
@@ -297,4 +297,69 @@ pub fn sheet_attribute_real(fields: &[(String, semio_framework_value::DslValue)]
 pub fn sheet_attribute_u16(fields: &[(String, semio_framework_value::DslValue)], key: &str) -> Result<u16,semio_framework_value::ValueError> {
     let word = sheet_attribute_field(fields, key)?.as_u64().ok_or_else(||vdi3805_invalid("expected unsigned VDI3805 attribute"))?;
     u16::try_from(word).map_err(|_|vdi3805_invalid("VDI3805 attribute exceeds u16"))
+}
+
+fn sheet_attribute_text(fields: &[(String, semio_framework_value::DslValue)], key: &str, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<String,semio_framework_value::ValueError> {
+    control.copy_text(sheet_attribute_field(fields, key)?.as_str().ok_or_else(||vdi3805_invalid("expected VDI3805 attribute text"))?)
+}
+fn sheet_attribute_optional_text(fields: &[(String, semio_framework_value::DslValue)], key: &str, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Option<String>,semio_framework_value::ValueError> {
+    match fields.iter().find(|(name, _)| name == key).map(|(_, value)| value) {
+        None | Some(semio_framework_value::DslValue::Null) => Ok(None),
+        Some(semio_framework_value::DslValue::String(text)) => control.copy_text(text).map(Some),
+        _ => Err(vdi3805_invalid("expected optional VDI3805 attribute text")),
+    }
+}
+fn sheet_attributes_controlled(value: &semio_framework_value::DslValue, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<SheetAttributes,semio_framework_value::ValueError> {
+    control.step()?;
+    let semio_framework_value::DslValue::Object(fields) = value else { return Err(vdi3805_invalid("expected VDI3805 sheet attribute object")); };
+    if fields.len() > 8 { return Err(vdi3805_invalid("VDI3805 sheet attribute object has excess fields")); }
+    let kind = sheet_attribute_field(fields, "kind")?.as_str().ok_or_else(||vdi3805_invalid("expected VDI3805 attribute kind"))?;
+    match kind {
+        "valveHeating" => {
+            let fields = sheet_attribute_object(value, &["kind", "dn", "kvsM3S", "pressureClass", "connectionType", "authorityMin", "authorityMax"], control)?;
+            Ok(SheetAttributes::ValveHeating(ValveHeatingAttributes {
+                dn: sheet_attribute_u16(fields, "dn")?, kvs_m3_s: sheet_attribute_real(fields, "kvsM3S")?,
+                pressure_class: sheet_attribute_text(fields, "pressureClass", control)?, connection_type: sheet_attribute_text(fields, "connectionType", control)?,
+                authority_min: sheet_attribute_real(fields, "authorityMin")?, authority_max: sheet_attribute_real(fields, "authorityMax")?,
+            }))
+        }
+        "radiator" => {
+            let fields = sheet_attribute_object(value, &["kind", "standardOutputW", "heatExponentN", "lengthM", "heightM", "depthM", "connectionType"], control)?;
+            Ok(SheetAttributes::Radiator(RadiatorAttributes {
+                standard_output_w: sheet_attribute_real(fields, "standardOutputW")?, heat_exponent_n: sheet_attribute_real(fields, "heatExponentN")?,
+                length_m: sheet_attribute_real(fields, "lengthM")?, height_m: sheet_attribute_real(fields, "heightM")?, depth_m: sheet_attribute_real(fields, "depthM")?,
+                connection_type: sheet_attribute_text(fields, "connectionType", control)?,
+            }))
+        }
+        "pumpHeating" => {
+            let fields = sheet_attribute_object(value, &["kind", "dnSuction", "dnDischarge", "nominalFlowM3S", "nominalHeadM", "motorPowerW", "hydraulicEfficiency", "qhCurveRef"], control)?;
+            Ok(SheetAttributes::PumpHeating(PumpHeatingAttributes {
+                dn_suction: sheet_attribute_u16(fields, "dnSuction")?, dn_discharge: sheet_attribute_u16(fields, "dnDischarge")?,
+                nominal_flow_m3_s: sheet_attribute_real(fields, "nominalFlowM3S")?, nominal_head_m: sheet_attribute_real(fields, "nominalHeadM")?,
+                motor_power_w: sheet_attribute_real(fields, "motorPowerW")?, hydraulic_efficiency: sheet_attribute_real(fields, "hydraulicEfficiency")?,
+                qh_curve_ref: sheet_attribute_optional_text(fields, "qhCurveRef", control)?,
+            }))
+        }
+        "heatGenerator" => {
+            let fields = sheet_attribute_object(value, &["kind", "nominalHeatOutputW", "fuelType", "flowTempMaxC", "returnTempMinC"], control)?;
+            Ok(SheetAttributes::HeatGenerator(HeatGeneratorAttributes {
+                nominal_heat_output_w: sheet_attribute_real(fields, "nominalHeatOutputW")?, fuel_type: sheet_attribute_text(fields, "fuelType", control)?,
+                flow_temp_max_c: sheet_attribute_real(fields, "flowTempMaxC")?, return_temp_min_c: sheet_attribute_real(fields, "returnTempMinC")?,
+            }))
+        }
+        "generic" => {
+            let fields = sheet_attribute_object(value, &["kind", "entries"], control)?;
+            let values = match fields.iter().find(|(key, _)| key == "entries").map(|(_, value)| value) {
+                None => &[][..], Some(semio_framework_value::DslValue::Array(values)) => values.as_slice(),
+                _ => return Err(vdi3805_invalid("expected VDI3805 generic attribute list")),
+            };
+            let mut entries = control.allocate_vec::<GenericAttribute>(values.len())?;
+            for value in values {
+                let fields = sheet_attribute_object(value, &["key", "value", "unit"], control)?;
+                entries.push(GenericAttribute { key: sheet_attribute_text(fields, "key", control)?, value: sheet_attribute_text(fields, "value", control)?, unit: sheet_attribute_optional_text(fields, "unit", control)? });
+            }
+            Ok(SheetAttributes::Generic(GenericAttributes { entries }))
+        }
+        _ => Err(vdi3805_invalid("unknown VDI3805 sheet attribute kind")),
+    }
 }

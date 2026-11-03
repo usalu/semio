@@ -1,0 +1,5 @@
+{
+  "mutation": "changeBuildingPlanWidthM",
+  "id": "bldg-office",
+  "newPlanWidthM": 48.0
+}

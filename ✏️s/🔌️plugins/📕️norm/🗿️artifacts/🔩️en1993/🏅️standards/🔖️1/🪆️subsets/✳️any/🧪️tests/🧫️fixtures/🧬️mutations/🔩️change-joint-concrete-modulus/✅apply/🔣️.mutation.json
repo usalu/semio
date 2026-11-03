@@ -1,0 +1,6 @@
+{
+  "ChangeJointConcreteModulus": {
+    "id": "joint-j1",
+    "newConcreteModulus": 1.5
+  }
+}

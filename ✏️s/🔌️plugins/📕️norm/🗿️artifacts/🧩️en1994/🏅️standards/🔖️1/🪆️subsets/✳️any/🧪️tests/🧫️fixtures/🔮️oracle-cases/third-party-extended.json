@@ -1,0 +1,332 @@
+{
+  "$schema": "../../../../../../../../../🔮️oracles/🏃️harness/🧬️schema/🔣️.json",
+  "schemaVersion": 1,
+  "artifact": "en1994",
+  "annex": "de",
+  "cases": [
+    {
+      "id": "en1994.5.4.composite-elastic-ipe300-short-term",
+      "check": "en1994.5.4.composite-elastic",
+      "citation": {
+        "standard": "EN 1994-1-1",
+        "edition": "2004",
+        "clause": "5.4.1.2 effective width and 5.4.2.2 modular ratio n = E_a / E_cm; transformed section"
+      },
+      "inputs": {
+        "E_a": 210000000000.0,
+        "h": 0.3,
+        "b": 0.15,
+        "tf": 0.0107,
+        "tw": 0.0071,
+        "r": 0.0,
+        "b_eff": 2.0,
+        "h_c": 0.12,
+        "E_c": 33000000000.0
+      },
+      "expected": {
+        "n": {
+          "value": 6.363636363636363,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "A_eff": {
+          "value": 0.04290234571428575,
+          "unit": "m^2",
+          "profile": "numerical-v1"
+        },
+        "z_na": {
+          "value": 0.3346052906464484,
+          "unit": "m",
+          "profile": "numerical-v1"
+        },
+        "I_eff": {
+          "value": 0.00032637311040038873,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sectionproperties",
+          "adapter": "sectionproperties",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1994.5.4.composite-elastic-ipe300-long-term",
+      "check": "en1994.5.4.composite-elastic",
+      "citation": {
+        "standard": "EN 1994-1-1",
+        "edition": "2004",
+        "clause": "5.4.2.2 modular ratio n_L = n (1 + psi_L phi_t) with E_c,eff = E_cm / (1 + psi_L phi_t)"
+      },
+      "inputs": {
+        "E_a": 210000000000.0,
+        "h": 0.3,
+        "b": 0.15,
+        "tf": 0.0107,
+        "tw": 0.0071,
+        "r": 0.0,
+        "b_eff": 2.0,
+        "h_c": 0.12,
+        "E_c": 11000000000.0
+      },
+      "expected": {
+        "n": {
+          "value": 19.09090909090909,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "A_eff": {
+          "value": 0.017759488571428568,
+          "unit": "m^2",
+          "profile": "numerical-v1"
+        },
+        "z_na": {
+          "value": 0.29865292935559057,
+          "unit": "m",
+          "profile": "numerical-v1"
+        },
+        "I_eff": {
+          "value": 0.0002570318502500976,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sectionproperties",
+          "adapter": "sectionproperties",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1994.5.4.composite-elastic-ipe300-rounded",
+      "check": "en1994.5.4.composite-elastic",
+      "citation": {
+        "standard": "EN 1994-1-1",
+        "edition": "2004",
+        "clause": "5.4.2.2 transformed section with the rolled root radius"
+      },
+      "inputs": {
+        "E_a": 210000000000.0,
+        "h": 0.3,
+        "b": 0.15,
+        "tf": 0.0107,
+        "tw": 0.0071,
+        "r": 0.015,
+        "b_eff": 2.0,
+        "h_c": 0.12,
+        "E_c": 33000000000.0
+      },
+      "expected": {
+        "n": {
+          "value": 6.363636363636363,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "A_eff": {
+          "value": 0.04309677858722898,
+          "unit": "m^2",
+          "profile": "numerical-v1"
+        },
+        "z_na": {
+          "value": 0.3337724363543702,
+          "unit": "m",
+          "profile": "numerical-v1"
+        },
+        "I_eff": {
+          "value": 0.000336563698051697,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sectionproperties",
+          "adapter": "sectionproperties",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1994.6.2.composite-plastic-neutral-axis-in-slab",
+      "check": "en1994.6.2.composite-plastic",
+      "citation": {
+        "standard": "EN 1994-1-1",
+        "edition": "2004",
+        "clause": "6.2.1.2 plastic resistance moment of a composite section with full shear connection under sagging bending"
+      },
+      "inputs": {
+        "h": 0.3,
+        "b": 0.15,
+        "tf": 0.0107,
+        "tw": 0.0071,
+        "h_c": 0.12,
+        "b_eff": 2.0,
+        "f_y": 355000000.0,
+        "gamma_a": 1.0,
+        "f_ck": 30000000.0,
+        "gamma_c": 1.5
+      },
+      "expected": {
+        "z_pna": {
+          "value": 0.05416944999999997,
+          "unit": "m",
+          "profile": "numerical-v1"
+        },
+        "M_pl_Rd": {
+          "value": 447391.9526738572,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1994.6.2.composite-plastic-neutral-axis-in-flange",
+      "check": "en1994.6.2.composite-plastic",
+      "citation": {
+        "standard": "EN 1994-1-1",
+        "edition": "2004",
+        "clause": "6.2.1.2 plastic resistance moment of a composite section with full shear connection under sagging bending"
+      },
+      "inputs": {
+        "h": 0.3,
+        "b": 0.15,
+        "tf": 0.0107,
+        "tw": 0.0071,
+        "h_c": 0.07,
+        "b_eff": 1.0,
+        "f_y": 355000000.0,
+        "gamma_a": 1.0,
+        "f_ck": 30000000.0,
+        "gamma_c": 1.5
+      },
+      "expected": {
+        "z_pna": {
+          "value": 0.07611982441314555,
+          "unit": "m",
+          "profile": "numerical-v1"
+        },
+        "M_pl_Rd": {
+          "value": 315919.86264235806,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1994.6.2.composite-plastic-neutral-axis-in-web",
+      "check": "en1994.6.2.composite-plastic",
+      "citation": {
+        "standard": "EN 1994-1-1",
+        "edition": "2004",
+        "clause": "6.2.1.2 plastic resistance moment of a composite section with full shear connection under sagging bending"
+      },
+      "inputs": {
+        "h": 0.3,
+        "b": 0.15,
+        "tf": 0.0107,
+        "tw": 0.0071,
+        "h_c": 0.08,
+        "b_eff": 0.5,
+        "f_y": 355000000.0,
+        "gamma_a": 1.0,
+        "f_ck": 30000000.0,
+        "gamma_c": 1.5
+      },
+      "expected": {
+        "z_pna": {
+          "value": 0.09510612973616148,
+          "unit": "m",
+          "profile": "numerical-v1"
+        },
+        "M_pl_Rd": {
+          "value": 297081.00865529536,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1994.6.2.1.4.composite-ultimate-ipe300",
+      "check": "en1994.6.2.1.4.composite-ultimate",
+      "citation": {
+        "standard": "EN 1994-1-1",
+        "edition": "2004",
+        "clause": "6.2.1.4 non-linear resistance to bending; EN 1992-1-1 3.1.7 parabola-rectangle law, bilinear structural steel"
+      },
+      "inputs": {
+        "E_a": 210000000000.0,
+        "f_yd": 355000000.0,
+        "f_cd": 17000000.0,
+        "b_eff": 2.0,
+        "h_c": 0.1,
+        "y_s": 0.1,
+        "h": 0.3,
+        "b": 0.15,
+        "tf": 0.0107,
+        "tw_eff": 0.00779,
+        "eps_cu": 0.0035,
+        "eps_su": 0.02
+      },
+      "expected": {
+        "M_Rd": {
+          "value": 422131.29064405744,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        },
+        "kappa_u": {
+          "value": 0.05058074065244804,
+          "unit": "rad/m",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-structuralcodes",
+          "adapter": "structuralcodes",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    }
+  ]
+}

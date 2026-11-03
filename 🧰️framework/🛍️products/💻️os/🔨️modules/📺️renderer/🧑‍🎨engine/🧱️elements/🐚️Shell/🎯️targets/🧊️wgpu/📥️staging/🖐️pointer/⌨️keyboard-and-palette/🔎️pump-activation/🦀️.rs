@@ -181,6 +181,15 @@ impl<'ctx> PointerCtx<'ctx> {
             self.as_actions().dispatch_action(action).await?;
             return Ok(());
         }
+        if let Some(target) = drag.drop_target_id.as_deref().filter(|target| *target != drag.source_id) {
+            let window = input.hit_at(x, y).and_then(|hit| self.input.retained_hit_window(hit)).map(|(window, _)| window);
+            if let Some(window) = window {
+                let dropped = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::apply_tree_row_drop(&window, target, &drag.drag_data, input).map_err(|_| format!("tree row drop on '{target}' was refused by the action queue"))?;
+                if dropped {
+                    self.settle.owe_settle();
+                }
+            }
+        }
         semio_framework_os_renderer_wgpu_engine_graph::node_graph::node_graph_clear_all_ghost_widgets();
         self.surfaces.clear_world3d_catalogue_drop_previews();
         Ok(())
@@ -219,8 +228,10 @@ impl<'ctx> PointerCtx<'ctx> {
         if let Some(action) = item.dispatch_action.clone() {
             self.as_actions().dispatch_action(action).await?;
         } else if let Some(action) = &item.action {
-            if let Some(window_id) = action.strip_prefix("window:") {
-                self.windows.active_window_id = Some(window_id.to_string());
+            if let Some(window_kind_id) = action.strip_prefix("window:") {
+                let controller_id = self.docs.session.as_ref().map(|session| session.app.controller_id.clone()).unwrap_or_default();
+                let args = semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "windowKindId": window_kind_id });
+                self.as_actions().dispatch_action(ActionDescriptor { controller_id, action: semio_framework::FOCUS_WINDOW_ACTION_ID.into(), args }).await?;
             } else if let Some(rest) = action.strip_prefix("action-panel:") {
                 if let Some((window_id, action_id)) = rest.split_once(':') {
                     self.windows.active_window_id = Some(window_id.to_string());

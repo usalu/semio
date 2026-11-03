@@ -304,6 +304,170 @@
      }
     }
    }
+  },
+  {
+   "id": "environment moved, consumers known: the other kept projects keep their edges and are carried",
+   "world": {
+    "cold": false,
+    "roots": [
+     "dirty"
+    ],
+    "environment": "e2",
+    "previousEnvironment": "e1",
+    "inferred": [
+     "redone"
+    ],
+    "stubs": {
+     "keep": {
+      "root": "k",
+      "kind": "project"
+     },
+     "withheld": {
+      "root": "w",
+      "kind": "unavailable"
+     },
+     "dirty-one": {
+      "root": "dirty",
+      "kind": "project"
+     },
+     "dirty-withheld": {
+      "root": "dirty",
+      "kind": "unavailable"
+     },
+     "redone": {
+      "root": "r",
+      "kind": "project"
+     },
+     "test": {
+      "root": "t",
+      "kind": "project",
+      "tag": "tests-v2"
+     },
+     "test-withheld": {
+      "root": "tw",
+      "kind": "unavailable",
+      "tag": "tests-v2"
+     },
+     "policy": {
+      "root": "p",
+      "kind": "project",
+      "tag": "policy-v2"
+     },
+     "kept-too": {
+      "root": "k2",
+      "kind": "project"
+     }
+    },
+    "consumers": [
+     "keep"
+    ]
+   }
+  },
+  {
+   "id": "environment moved, nobody consumes the edit: every kept project is carried, withheld owners are still refreshed",
+   "world": {
+    "cold": false,
+    "roots": [
+     "dirty"
+    ],
+    "environment": "e2",
+    "previousEnvironment": "e1",
+    "inferred": [
+     "redone"
+    ],
+    "stubs": {
+     "keep": {
+      "root": "k",
+      "kind": "project"
+     },
+     "withheld": {
+      "root": "w",
+      "kind": "unavailable"
+     },
+     "dirty-one": {
+      "root": "dirty",
+      "kind": "project"
+     },
+     "dirty-withheld": {
+      "root": "dirty",
+      "kind": "unavailable"
+     },
+     "redone": {
+      "root": "r",
+      "kind": "project"
+     },
+     "test": {
+      "root": "t",
+      "kind": "project",
+      "tag": "tests-v2"
+     },
+     "test-withheld": {
+      "root": "tw",
+      "kind": "unavailable",
+      "tag": "tests-v2"
+     },
+     "policy": {
+      "root": "p",
+      "kind": "project",
+      "tag": "policy-v2"
+     }
+    },
+    "consumers": []
+   }
+  },
+  {
+   "id": "environment unchanged, consumers known: nothing is refreshed or carried",
+   "world": {
+    "cold": false,
+    "roots": [
+     "dirty"
+    ],
+    "environment": "e2",
+    "previousEnvironment": "e2",
+    "inferred": [
+     "redone"
+    ],
+    "stubs": {
+     "keep": {
+      "root": "k",
+      "kind": "project"
+     },
+     "withheld": {
+      "root": "w",
+      "kind": "unavailable"
+     },
+     "dirty-one": {
+      "root": "dirty",
+      "kind": "project"
+     },
+     "dirty-withheld": {
+      "root": "dirty",
+      "kind": "unavailable"
+     },
+     "redone": {
+      "root": "r",
+      "kind": "project"
+     },
+     "test": {
+      "root": "t",
+      "kind": "project",
+      "tag": "tests-v2"
+     },
+     "test-withheld": {
+      "root": "tw",
+      "kind": "unavailable",
+      "tag": "tests-v2"
+     },
+     "policy": {
+      "root": "p",
+      "kind": "project",
+      "tag": "policy-v2"
+     }
+    },
+    "consumers": [
+     "keep"
+    ]
+   }
   }
  ]
 }

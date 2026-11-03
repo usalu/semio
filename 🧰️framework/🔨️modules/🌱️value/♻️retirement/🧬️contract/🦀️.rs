@@ -1,5 +1,4 @@
 //! ♻️ Neutral retained-owner retirement and typed factories.
-use std::sync::Arc;
 use crate::{ValueError,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 pub use semio_framework_value_control_contract::{RetirementDemand,RetainedWorkOutcome};
 /// 🪪️ Original decoding custody supplies its unchanged identity and funded cleanup allocations.

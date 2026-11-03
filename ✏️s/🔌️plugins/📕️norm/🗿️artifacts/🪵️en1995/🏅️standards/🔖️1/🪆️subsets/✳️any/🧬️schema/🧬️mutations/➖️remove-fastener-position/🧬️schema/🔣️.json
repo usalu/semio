@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/remove-fastener-position/schema.json",
+  "title": "RemoveFastenerPosition",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "fastenerId",
+    "id"
+  ],
+  "properties": {
+    "fastenerId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Fastener",
+          "de": "Verbindungsmittel"
+        },
+        "description": {
+          "en": "The fastener this mutation addresses.",
+          "de": "Das Element, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "fastener"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "FastenerPosition",
+          "de": "Verbindungsmittellage"
+        },
+        "description": {
+          "en": "The fastener-position this mutation addresses.",
+          "de": "Das Element, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "fastener-position"
+        },
+        "group": "target",
+        "order": 20
+      }
+    }
+  }
+}

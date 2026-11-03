@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-conn-action-category/schema.json",
+  "title": "ChangeConnActionCategory",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "connectionId",
+    "actionId",
+    "newCategory"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeConnActionCategory"
+    },
+    "connectionId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Connection",
+          "de": "Anschluss"
+        },
+        "description": {
+          "en": "The connection this mutation addresses, by id.",
+          "de": "Das adressierte Element (Anschluss), per Kennung."
+        },
+        "ref": {
+          "kind": "connection"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "actionId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Action",
+          "de": "Einwirkung"
+        },
+        "description": {
+          "en": "The action this mutation addresses, by id.",
+          "de": "Das adressierte Element (Einwirkung), per Kennung."
+        },
+        "ref": {
+          "kind": "action"
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "newCategory": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/$defs/ActionCategory",
+      "x-semio-ui": {
+        "label": {
+          "en": "Action category",
+          "de": "Einwirkungskategorie"
+        },
+        "role": "value",
+        "group": "value",
+        "order": 30
+      },
+      "x-semio-rust": {
+        "type": "ActionCategory"
+      }
+    }
+  }
+}

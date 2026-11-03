@@ -1,0 +1,5 @@
+{
+  "mutation": "removeShellAction",
+  "shellId": "shell-pass",
+  "id": "G-shell"
+}

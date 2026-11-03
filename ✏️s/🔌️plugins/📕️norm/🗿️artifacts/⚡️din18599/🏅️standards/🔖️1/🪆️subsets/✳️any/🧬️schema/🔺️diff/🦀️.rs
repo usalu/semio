@@ -18,8 +18,8 @@ use protocol::list_delta::Keyed as _;
 
 /// 🩹️ Sparse patch of the `zones` row addressed by its key.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct Din18599ZonesPatch {
     pub label_en: Option<String>,
@@ -122,11 +122,22 @@ impl protocol::list_delta::RowPatch<semio_s_artifact_norm_din18599_model::Therma
     }
 }
 
+/// 🔑️ Key extractor of the foreign `ThermalZone` rows (`id`).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Din18599ZonesRowsKey;
+
+impl protocol::list_delta::KeyOf<semio_s_artifact_norm_din18599_model::ThermalZone> for Din18599ZonesRowsKey {
+    type Key = String;
+    fn key_of(row: &semio_s_artifact_norm_din18599_model::ThermalZone) -> String {
+        row.id.clone()
+    }
+}
+
 protocol::list_delta! {
-    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
     /// 📋️ Positional row delta of the `zones` list (rows keyed by `id`).
-    pub Din18599ZonesRows { removal: Din18599ZonesRemoved, insertion: Din18599ZonesInserted, relocation: Din18599ZonesMoved, modification: Din18599ZonesModified, row: semio_s_artifact_norm_din18599_model::ThermalZone, patch: Din18599ZonesPatch, key: id }
+    pub Din18599ZonesRows { removal: Din18599ZonesRemoved, insertion: Din18599ZonesInserted, relocation: Din18599ZonesMoved, modification: Din18599ZonesModified, row: semio_s_artifact_norm_din18599_model::ThermalZone, patch: Din18599ZonesPatch, list: Vec<semio_s_artifact_norm_din18599_model::ThermalZone>, key: String = by Din18599ZonesRowsKey }
 }
 
 impl Din18599ZonesRows {
@@ -143,8 +154,8 @@ impl Din18599ZonesRows {
 
     /// 🩹️ Sparse patch of the `elements` row addressed by its key.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct Din18599ElementsPatch {
     pub label_en: Option<String>,
@@ -255,11 +266,22 @@ impl protocol::list_delta::RowPatch<semio_s_artifact_norm_din18599_model::Envelo
     }
 }
 
+/// 🔑️ Key extractor of the foreign `EnvelopeElement` rows (`id`).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Din18599ElementsRowsKey;
+
+impl protocol::list_delta::KeyOf<semio_s_artifact_norm_din18599_model::EnvelopeElement> for Din18599ElementsRowsKey {
+    type Key = String;
+    fn key_of(row: &semio_s_artifact_norm_din18599_model::EnvelopeElement) -> String {
+        row.id.clone()
+    }
+}
+
 protocol::list_delta! {
-    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
     /// 📋️ Positional row delta of the `elements` list (rows keyed by `id`).
-    pub Din18599ElementsRows { removal: Din18599ElementsRemoved, insertion: Din18599ElementsInserted, relocation: Din18599ElementsMoved, modification: Din18599ElementsModified, row: semio_s_artifact_norm_din18599_model::EnvelopeElement, patch: Din18599ElementsPatch, key: id }
+    pub Din18599ElementsRows { removal: Din18599ElementsRemoved, insertion: Din18599ElementsInserted, relocation: Din18599ElementsMoved, modification: Din18599ElementsModified, row: semio_s_artifact_norm_din18599_model::EnvelopeElement, patch: Din18599ElementsPatch, list: Vec<semio_s_artifact_norm_din18599_model::EnvelopeElement>, key: String = by Din18599ElementsRowsKey }
 }
 
 impl Din18599ElementsRows {
@@ -276,8 +298,8 @@ impl Din18599ElementsRows {
 
     /// 🩹️ Sparse per-field patch of the `heating` section.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct Din18599HeatingPatch {
     pub generation_efficiency: Option<f64>,
@@ -338,8 +360,8 @@ impl Din18599HeatingPatch {
 
 /// 🩹️ Sparse per-field patch of the `dhw` section.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct Din18599DhwPatch {
     pub specific_demand_kwh_person_a: Option<f64>,
@@ -392,8 +414,8 @@ impl Din18599DhwPatch {
 
 /// 🩹️ Sparse per-field patch of the `ventilation` section.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct Din18599VentilationPatch {
     pub airflow_m3_h: Option<f64>,
@@ -438,8 +460,8 @@ impl Din18599VentilationPatch {
 
 /// 🩹️ Sparse per-field patch of the `cooling` section.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct Din18599CoolingPatch {
     pub plant: Option<Din18599CoolingPatchPlantValue>,
@@ -468,8 +490,8 @@ impl Din18599CoolingPatch {
 
 /// 🩹️ Sparse per-field patch of the `lighting` section.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct Din18599LightingPatch {
     pub control_factor: Option<f64>,
@@ -498,8 +520,8 @@ impl Din18599LightingPatch {
 
 /// 🩹️ Sparse per-field patch of the `renewables` section.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct Din18599RenewablesPatch {
     pub pv_area_m2: Option<f64>,
@@ -544,8 +566,8 @@ impl Din18599RenewablesPatch {
 
 /// 🩹️ Sparse per-field patch of the `climate` section.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct Din18599ClimatePatch {
     pub theta_e_c: Option<[f64; 12]>,
@@ -582,8 +604,8 @@ impl Din18599ClimatePatch {
 
 /// 🎁️ Carries the optional `CoolingSystem.plant` value so an explicit `None` stays distinct from an untouched field.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct Din18599CoolingPatchPlantValue {
     pub value: Option<semio_s_artifact_norm_din18599_model::CoolingPlant>,
@@ -591,8 +613,8 @@ pub struct Din18599CoolingPatchPlantValue {
 
 /// 🔺️ Keyed sparse diff of the Din18599 artifact: scalar setters, keyed row diffs and per-field section patches.
 #[derive(Clone, Debug, Default, PartialEq, framework_schema::ArtifactSchema, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.norm.din18599")]
 pub struct Din18599Diff {

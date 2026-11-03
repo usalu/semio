@@ -1,20 +1,23 @@
-//! 👁️ EN 1996 viewer — the `view` mode: a single full-pane Report window, the read-only
-//! counterpart of the editor's inputs/results split — ticket
-//! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §1 only requires "at least one window"
-//! for a viewer packet.
+//! 👁️ EN 1996 viewer — the `view` mode: the read-only model, checks and diagrams over the same scene the editor projects — ticket
+//! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §1 only requires "at least one window" for a viewer packet.
 
-use crate::modes::view::windows::report;
 use semio_framework_plugin::{ModeDefinition, WindowLayout};
+use semio_s_plugin_norm_app_surface::{device_profiles::LayoutPrefs, viewport3d::config::DeviceClass};
 
 //#region 🔖️Definition
-/// 🧱️ Stitched into the viewer manifest by `crate::viewer::en1996::create_en1996_viewer`.
+/// 🧱️ Stitched into the viewer manifest by `crate::create_en1996_viewer`.
 pub fn definition() -> ModeDefinition {
     semio_s_plugin_norm_app_surface::view_mode_definition()
 }
 
-/// 🪟️ Single full-pane Report window — the read-only viewer has no inputs/results split to allocate.
+/// 🪟️ Model, checks and diagrams of the shared visual layout at the default preferences.
 pub fn layout() -> WindowLayout {
-    semio_s_plugin_norm_app_surface::single_window_layout(report::WINDOW_KIND_ID, "Report")
+    layout_for(DeviceClass::Desktop, &LayoutPrefs::default())
+}
+
+/// 📱️ The viewer's window layout of a device class under the user's persisted layout preferences.
+pub fn layout_for(device: DeviceClass, prefs: &LayoutPrefs) -> WindowLayout {
+    semio_s_plugin_norm_app_surface::view_layout_with("en1996", device, prefs)
 }
 //#endregion 🔖️Definition
 
@@ -27,7 +30,11 @@ mod tests;
 //#region 🪢️Mounts
 #[path = "."]
 pub mod windows {
-    #[path = "🪟️windows/📊️report/🦀️.rs"]
-    pub mod report;
+    #[path = "🪟️windows/✅️checks/🦀️.rs"]
+    pub mod checks;
+    #[path = "🪟️windows/📈️diagrams/🦀️.rs"]
+    pub mod diagrams;
+    #[path = "🪟️windows/🧊️viewport/🦀️.rs"]
+    pub mod viewport;
 }
 //#endregion 🪢️Mounts

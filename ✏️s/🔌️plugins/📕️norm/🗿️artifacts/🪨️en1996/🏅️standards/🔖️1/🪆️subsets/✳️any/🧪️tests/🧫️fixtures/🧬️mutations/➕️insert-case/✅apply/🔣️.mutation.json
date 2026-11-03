@@ -1,0 +1,30 @@
+{
+  "InsertCase": {
+    "index": 99,
+    "case": {
+      "id": "case-m32",
+      "labelEn": "Lateral load with arching",
+      "labelDe": "Horizontallast mit Gewölbewirkung",
+      "entryId": "M-32",
+      "numbers": [
+        {
+          "id": "t_m",
+          "value": 0.365
+        },
+        {
+          "id": "la_m",
+          "value": 2.5
+        },
+        {
+          "id": "fd_pa",
+          "value": 3500000.0
+        },
+        {
+          "id": "w_ed_pa",
+          "value": 1500.0
+        }
+      ],
+      "texts": []
+    }
+  }
+}

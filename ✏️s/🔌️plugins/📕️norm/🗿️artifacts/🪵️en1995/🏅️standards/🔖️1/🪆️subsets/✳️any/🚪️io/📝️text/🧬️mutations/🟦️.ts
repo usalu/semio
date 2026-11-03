@@ -1,13 +1,13 @@
 /** 📝️ `En1995Mutation` wire twin: the serialized text form this facet's grammar and codec speak, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
- * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
+ * by `repo ./📜️script.ts schema twins generate`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
 import { normWireAny, type NormWireReader } from "@semio-tech/norm-js/registry/contract";
 import { type ChangeMemberB, parseChangeMemberB } from "../../../🧬️schema/🧬️mutations/↔️change-member-b/🧬️schema/🟦️.ts";
 import { type ChangeMemberH, parseChangeMemberH } from "../../../🧬️schema/🧬️mutations/↕️change-member-h/🧬️schema/🟦️.ts";
 import { type InsertConnection, parseInsertConnection } from "../../../🧬️schema/🧬️mutations/➕️insert-connection/🧬️schema/🟦️.ts";
 import { type InsertMember, parseInsertMember } from "../../../🧬️schema/🧬️mutations/➕️insert-member/🧬️schema/🟦️.ts";
-import { parseRemoveConnection, type RemoveConnection } from "../../../🧬️schema/🧬️mutations/➖️remove-connection/🧬️schema/🟦️.ts";
-import { parseRemoveMember, type RemoveMember } from "../../../🧬️schema/🧬️mutations/➖️remove-member/🧬️schema/🟦️.ts";
+import { type RemoveConnection, parseRemoveConnection } from "../../../🧬️schema/🧬️mutations/➖️remove-connection/🧬️schema/🟦️.ts";
+import { type RemoveMember, parseRemoveMember } from "../../../🧬️schema/🧬️mutations/➖️remove-member/🧬️schema/🟦️.ts";
 import { type ChangeAnnex, parseChangeAnnex } from "../../../🧬️schema/🧬️mutations/🌍️change-annex/🧬️schema/🟦️.ts";
 import { type ChangeConnectionNumber, parseChangeConnectionNumber } from "../../../🧬️schema/🧬️mutations/🔢️change-connection-number/🧬️schema/🟦️.ts";
 import { type ChangeMemberStrengthClass, parseChangeMemberStrengthClass } from "../../../🧬️schema/🧬️mutations/🛡️change-member-strength-class/🧬️schema/🟦️.ts";

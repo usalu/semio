@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-category-detail-type/schema.json",
+  "title": "ChangeCategoryDetailType",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "fatigueCategoryId",
+    "newDetailType"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeCategoryDetailType"
+    },
+    "fatigueCategoryId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Fatigue category",
+          "de": "Ermüdungsdetail-Stelle"
+        },
+        "description": {
+          "en": "The fatigue category this mutation addresses, by id.",
+          "de": "Das adressierte Element (Ermüdungsdetail-Stelle), per Kennung."
+        },
+        "ref": {
+          "kind": "fatigue-category"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newDetailType": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/$defs/DetailType",
+      "x-semio-ui": {
+        "label": {
+          "en": "Detail type",
+          "de": "Detailtyp"
+        },
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

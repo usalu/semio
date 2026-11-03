@@ -1,0 +1,70 @@
+{
+  "$schema": "../../../../../../../../../🔮️oracles/🏃️harness/🧬️schema/🔣️.json",
+  "schemaVersion": 1,
+  "artifact": "en1994",
+  "annex": "de",
+  "cases": [
+    {
+      "id": "en1994.mechanics.two-span-composite-gamma-arrangement-envelope",
+      "check": "mechanics.beam-span-envelope",
+      "citation": {
+        "standard": "EN 1994-1-1",
+        "edition": "2004",
+        "clause": "5.4.2.3 and 5.4.2.4 global analysis of continuous composite beams, load arrangements of EN 1990 6.4.3.2; A1.3.1 permanent actions as individual actions with gamma_G,sup and gamma_G,inf per span (normative reading unverified against print)"
+      },
+      "inputs": {
+        "E": 210000000000.0,
+        "A": 0.00538,
+        "I": 8.356e-05,
+        "spans": [
+          6.0,
+          6.0
+        ],
+        "g": 20000.0,
+        "q": 15000.0,
+        "gamma_G": 1.35,
+        "gamma_Q": 1.5,
+        "gamma_G_inf": 1.0
+      },
+      "expected": {
+        "M_sag_0": {
+          "value": 151423.65056818168,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        },
+        "M_sag_1": {
+          "value": 151423.65056818188,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        },
+        "M_hog_support": {
+          "value": 222750.0,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        },
+        "R_max_support": {
+          "value": 371250.0,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "R_min_0": {
+          "value": 33937.49999999999,
+          "unit": "N",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-pynite",
+          "adapter": "pynite",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-anastruct",
+          "adapter": "anastruct",
+          "kind": "third-party-library"
+        }
+      ]
+    }
+  ]
+}

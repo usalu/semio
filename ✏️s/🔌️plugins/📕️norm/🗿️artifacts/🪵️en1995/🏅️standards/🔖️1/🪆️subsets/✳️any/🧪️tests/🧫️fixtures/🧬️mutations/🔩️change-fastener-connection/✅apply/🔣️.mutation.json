@@ -1,0 +1,6 @@
+{
+  "ChangeFastenerConnection": {
+    "fastenerId": "fastener-1",
+    "newValue": "changed-conn-C1"
+  }
+}

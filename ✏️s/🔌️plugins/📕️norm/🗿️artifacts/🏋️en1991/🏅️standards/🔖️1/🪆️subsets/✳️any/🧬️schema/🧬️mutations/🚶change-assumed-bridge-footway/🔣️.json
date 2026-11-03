@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeAssumedBridgeFootway",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
-  "binaryTag": 54,
+  "binaryTag": 26,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

@@ -1,0 +1,8 @@
+{
+  "ChangeConcentratedBearingArea": {
+    "wallId": "wall-concentrated",
+    "loadCaseId": "ulsinz",
+    "id": "beam-B",
+    "newBearingAreaM2": 0.05
+  }
+}

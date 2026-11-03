@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-column-outer-size-m/schema.json",
+  "title": "ChangeColumnOuterSizeM",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newOuterSizeM"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Composite column",
+          "de": "Verbundstütze"
+        },
+        "description": {
+          "en": "The composite column this mutation addresses, by id.",
+          "de": "Das adressierte Element (Verbundstütze), per Kennung."
+        },
+        "ref": {
+          "kind": "column"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newOuterSizeM": {
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Column outer size",
+          "de": "Außenabmessung der Stütze"
+        },
+        "unit": "m",
+        "step": 0.01,
+        "precision": 3,
+        "group": "column",
+        "order": 20
+      }
+    }
+  }
+}

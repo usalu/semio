@@ -1,0 +1,6 @@
+{
+  "ChangeFireProtectionDensity": {
+    "id": "fire-1",
+    "newProtectionDensity": 1600.0
+  }
+}

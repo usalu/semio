@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-conn-bolts-material/schema.json",
+  "title": "ChangeConnBoltsMaterial",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "connectionId",
+    "newBoltsMaterial"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeConnBoltsMaterial"
+    },
+    "connectionId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Connection",
+          "de": "Anschluss"
+        },
+        "description": {
+          "en": "The connection this mutation addresses, by id.",
+          "de": "Das adressierte Element (Anschluss), per Kennung."
+        },
+        "ref": {
+          "kind": "connection"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newBoltsMaterial": {
+      "type": "string",
+      "x-semio-ui": {
+        "label": {
+          "en": "bolts material",
+          "de": "Schraubenwerkstoff"
+        },
+        "widget": "text",
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

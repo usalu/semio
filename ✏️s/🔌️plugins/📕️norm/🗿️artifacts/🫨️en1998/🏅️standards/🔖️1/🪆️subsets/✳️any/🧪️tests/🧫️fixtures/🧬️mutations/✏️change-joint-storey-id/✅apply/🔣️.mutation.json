@@ -1,0 +1,5 @@
+{
+  "mutation": "changeJointStoreyId",
+  "id": "joint-1",
+  "newStoreyId": "s2"
+}

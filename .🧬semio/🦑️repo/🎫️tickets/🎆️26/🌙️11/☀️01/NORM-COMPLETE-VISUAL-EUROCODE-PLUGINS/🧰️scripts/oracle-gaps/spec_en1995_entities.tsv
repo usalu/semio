@@ -1,0 +1,12 @@
+shared://🚦️check-outcome/entities-pass/🔣️.json	en1995.t-94.racking.diaphragms:diaphragm-1:T-94
+shared://🚦️check-outcome/entities-pass/🔣️.json	en1995.t-94.hold_down.diaphragms:diaphragm-1:T-94
+shared://🚦️check-outcome/entities-pass/🔣️.json	en1995.t-94.diaphragm_shear.diaphragms:diaphragm-2:T-94
+shared://🚦️check-outcome/entities-pass/🔣️.json	en1995.t-95.bracing_capacity.trusses:truss-1:T-95
+shared://🚦️check-outcome/entities-pass/🔣️.json	en1995.t-96.bracing_force.bracings:bracing-1:T-96
+shared://🚦️check-outcome/entities-pass/🔣️.json	en1995.t-96.bracing_deflection.bracings:bracing-1:T-96
+shared://🚦️check-outcome/entities-fail/🔣️.json	en1995.t-94.racking.diaphragms:diaphragm-1:T-94
+shared://🚦️check-outcome/entities-fail/🔣️.json	en1995.t-94.hold_down.diaphragms:diaphragm-1:T-94
+shared://🚦️check-outcome/entities-fail/🔣️.json	en1995.t-94.diaphragm_shear.diaphragms:diaphragm-2:T-94
+shared://🚦️check-outcome/entities-fail/🔣️.json	en1995.t-95.bracing_capacity.trusses:truss-1:T-95
+shared://🚦️check-outcome/entities-fail/🔣️.json	en1995.t-96.bracing_force.bracings:bracing-1:T-96
+shared://🚦️check-outcome/entities-fail/🔣️.json	en1995.t-96.bracing_deflection.bracings:bracing-1:T-96

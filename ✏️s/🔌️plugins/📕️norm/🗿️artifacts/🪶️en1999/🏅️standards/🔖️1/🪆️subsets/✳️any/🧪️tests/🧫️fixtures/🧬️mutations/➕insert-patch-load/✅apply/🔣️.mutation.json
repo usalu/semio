@@ -1,0 +1,15 @@
+{
+  "mutation": "insertPatchLoad",
+  "index": 1,
+  "patchLoad": {
+    "id": "patch-1-2",
+    "subjectId": "purlin-1",
+    "position": "end",
+    "x": 0.0,
+    "bearingLength": 0.05,
+    "webHeight": 0.0,
+    "webAngle": 0.0,
+    "cornerRadius": 0.004,
+    "load": 12000.0
+  }
+}

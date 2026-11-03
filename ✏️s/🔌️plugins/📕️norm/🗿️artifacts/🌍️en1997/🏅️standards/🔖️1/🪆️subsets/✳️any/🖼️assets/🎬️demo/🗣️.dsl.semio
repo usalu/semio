@@ -1,21 +1,44 @@
 semio norm.en1997.dsl v1
 structure-id=geo-demo-compliant geotechnical-category=2 design-situation=bsP design-approach=da2 annex=de groundwater-level=4m investigation-depth=12m
-layers [id:TEXT soil-type:TEXT depth-top:QTY depth-bottom:QTY gamma:NUM gamma-prime:NUM phi-prime-deg:NUM cohesion-effective:QTY cohesion-undrained:QTY oedometric-modulus:QTY poisson-ratio:NUM cpt-qc:QTY spt-n:NUM] {
-  layer-sand sand 0m 8m 19000 10000 32 0Pa 0Pa 40000000Pa 0.3 8000000Pa 18
-  layer-gravel gravel 8m 20m 20000 11000 35 0Pa 0Pa 60000000Pa 0.28 12000000Pa 28
+layers [id:TEXT soil-type:TEXT depth-top:QTY depth-bottom:QTY gamma:NUM gamma-prime:NUM phi-prime-deg:NUM cohesion-effective:QTY cohesion-undrained:QTY oedometric-modulus:QTY poisson-ratio:NUM cpt-qc:QTY spt-n:NUM cpt-nkt:NUM] {
+  layer-sand sand 0m 8m 19000 10000 32 0Pa 0Pa 40000000Pa 0.3 8000000Pa 18 0
+  layer-gravel gravel 8m 20m 20000 11000 35 0Pa 0Pa 60000000Pa 0.28 12000000Pa 28 0
 }
 footings [id:TEXT width:QTY length:QTY embedment:QTY base-inclination-deg:NUM settlement-limit:QTY load-cases:TABLE] {
-  footing-F1 2.5m 2.5m 1.5m 0 0.025m [ {id=lc-bsP design-situation=bsP vertical-permanent=400000N vertical-variable=150000N horizontal-permanent=20000N horizontal-variable=40000N moment-permanent=30000J moment-variable=50000J} ]
+  footing-F1 2.5m 2.5m 1.5m 0 0.025m [ {id=lc-bsP design-situation=persistent vertical-permanent=400000N vertical-variable=150000N horizontal-permanent=20000N horizontal-variable=40000N moment-permanent=30000J moment-variable=50000J} ]
 }
-piles [id:TEXT pile-type:TEXT diameter:QTY length:QTY count:UINT alpha-s:NUM unit-shaft-resistance:QTY unit-base-resistance:QTY compression-permanent:QTY compression-variable:QTY tension-permanent:QTY tension-variable:QTY test-profiles:TABLE] {
-  pile-P1 bored 0.6m 14m 1 0.7 90000Pa 3000000Pa 500000N 100000N 0N 0N [ {id=test-1 shaft-resistance=1600000N base-resistance=850000N} {id=test-2 shaft-resistance=1550000N base-resistance=820000N} {id=test-3 shaft-resistance=1650000N base-resistance=880000N} ]
+piles [id:TEXT pile-type:TEXT diameter:QTY length:QTY count:UINT alpha-s:NUM unit-shaft-resistance:QTY unit-base-resistance:QTY compression-permanent:QTY compression-variable:QTY tension-permanent:QTY tension-variable:QTY bending-stiffness-ei:NUM horizontal-subgrade-modulus:NUM lateral-head-load:QTY elastic-modulus:QTY settling-thickness:QTY negative-friction-beta:NUM dynamic-test-count:NUM dynamic-resistance-mean:QTY dynamic-resistance-min:QTY hammer-weight:QTY drop-height:QTY set-per-blow:QTY elastic-compression:QTY hammer-efficiency:NUM concrete-class:ENUM test-profiles:TABLE] {
+  pile-P1 bored 0.6m 14m 1 0.7 90000Pa 3000000Pa 500000N 100000N 0N 0N 197200000 20000000 50000N 0Pa 0m 0 0 0N 0N 0N 0m 0m 0m 0 c3037 [ {id=test-1 shaft-resistance=1600000N base-resistance=850000N} {id=test-2 shaft-resistance=1550000N base-resistance=820000N} {id=test-3 shaft-resistance=1650000N base-resistance=880000N} ]
 }
-retaining-walls [id:TEXT height:QTY embedment:QTY base-width:QTY stem-thickness:QTY backfill-phi-deg:NUM backfill-gamma:NUM wall-friction-deg:NUM earth-pressure-mode:TEXT wall-movement:TEXT ocr:NUM concrete-gamma:NUM surcharge:QTY vertical-permanent:QTY horizontal-permanent:QTY] {
-  wall-W1 4m 1.2m 2.5m 0.35m 30 18000 20 active free 1 25000 10000Pa 320000N 40000N
+retaining-walls [id:TEXT height:QTY embedment:QTY base-width:QTY stem-thickness:QTY backfill-phi-deg:NUM backfill-gamma:NUM wall-friction-deg:NUM earth-pressure-mode:TEXT wall-movement:TEXT ocr:NUM concrete-gamma:NUM surcharge:QTY vertical-permanent:QTY horizontal-permanent:QTY seismic-kh:NUM seismic-kv:NUM reinforcement-spacing:QTY reinforcement-width:QTY reinforcement-friction:NUM] {
+  wall-W1 4m 1.2m 2.5m 0.35m 30 18000 20 active free 1 25000 10000Pa 320000N 40000N 0.15 0.05 0m 0m 0
 }
-slopes [id:TEXT angle-deg:NUM height:QTY length:QTY governing-layer-id:TEXT] {
-  slope-S1 25 6m 14m layer-sand
+slopes [id:TEXT angle-deg:NUM height:QTY length:QTY governing-layer-id:TEXT circle-centre-x:QTY circle-centre-z:QTY circle-radius:QTY width:QTY] {
+  slope-S1 25 6m 14m layer-sand 0m 0m 0m 0m
 }
 uplift-cases [id:TEXT permanent-stabilizing:QTY permanent-destabilizing:QTY variable-destabilizing:QTY pore-pressure:QTY total-stress:QTY] {
   upl-U1 900000N 500000N 50000N 40000Pa 120000Pa
+}
+anchors [id:TEXT wall-id:TEXT tendon:TEXT head-depth:QTY inclination-deg:NUM free-length:QTY fixed-length:QTY fixed-diameter:QTY bond-stress:QTY design-force:QTY tendon-yield-force:QTY min-free-length:QTY test-factor:NUM tests:TABLE] {
+  anchor-A1 ewall-E1 strand 1m 15 8m 6m 0.15m 200000Pa 300000N 700000N 4.5m 1.1 [ {id=atest-1 pull-out-resistance=650000N} {id=atest-2 pull-out-resistance=640000N} {id=atest-3 pull-out-resistance=660000N} ]
+}
+embedded-walls [id:TEXT kind:TEXT retained-height:QTY embedment:QTY prop-depth:QTY thickness:QTY backfill-gamma:NUM phi-deg:NUM delta-active-deg:NUM delta-passive-deg:NUM surcharge:QTY undrained-strength:QTY] {
+  ewall-E1 freeEarth 6m 6m 1m 0.6m 19000 32 16 10 10000Pa 0Pa
+}
+pile-groups [id:TEXT pile-id:TEXT rows:UINT columns:UINT spacing:QTY cap-vertical:QTY cap-moment-x:QTY cap-moment-y:QTY single-resistance:QTY shaft-cohesion-sum:QTY base-cohesion:QTY] {
+  group-G1 pile-P1 2 2 1.8m 1800000N 100000J 60000J 1400000N 400000Pa 120000Pa
+}
+lab-tests [id:TEXT layer-id:TEXT kind:TEXT void-ratio:NUM preload-stress:QTY drainage-height:QTY consolidation-time:NUM compression-index:NUM swelling-index:NUM stress-increment:QTY secondary-compression-index:NUM design-life:NUM points:TABLE] {
+  lab-T1 layer-sand directShear 0.65 100000Pa 0.01m 120 0 0 0Pa 0 0 [ {id=pt-1 normal-stress=50000Pa shear-stress=32500Pa} {id=pt-2 normal-stress=100000Pa shear-stress=65000Pa} {id=pt-3 normal-stress=200000Pa shear-stress=130000Pa} ]
+}
+layer-waters [id:TEXT layer-id:TEXT piezometric-depth:QTY permeability:NUM head-difference:QTY flow-length:QTY well-radius:QTY well-water-depth:QTY influence-radius:QTY well-capacity:NUM] {
+  water-gravel layer-gravel 4m 0.001 1m 6m 0m 0m 0m 0
+}
+placements [id:TEXT x:NUM y:NUM z:NUM yaw:NUM] {
+}
+cases [id:TEXT label-en:TEXT label-de:TEXT entry-id:TEXT numbers:TABLE texts:TABLE] {
+}
+investigations [id:TEXT position-x:QTY position-y:QTY ground-level:QTY depth:QTY kind:TEXT readings:TABLE] {
+}
+characteristic-bases [id:TEXT layer-id:TEXT parameter:TEXT basis:TEXT] {
 }

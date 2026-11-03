@@ -1,0 +1,7 @@
+{
+  "ChangeStudRowSpacingRadial": {
+    "memberId": "wall-W1",
+    "studRowId": "sr-1",
+    "newSpacingRadial": 0.3
+  }
+}

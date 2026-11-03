@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-action-vzk/schema.json",
+  "title": "ChangeActionVZK",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "memberId",
+    "actionId",
+    "newVZK"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeActionVZK"
+    },
+    "memberId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Member",
+          "de": "Bauteil"
+        },
+        "description": {
+          "en": "The member this mutation addresses, by id.",
+          "de": "Das adressierte Element (Bauteil), per Kennung."
+        },
+        "ref": {
+          "kind": "member"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "actionId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Action",
+          "de": "Einwirkung"
+        },
+        "description": {
+          "en": "The action this mutation addresses, by id.",
+          "de": "Das adressierte Element (Einwirkung), per Kennung."
+        },
+        "ref": {
+          "kind": "action"
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "newVZK": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Characteristic shear force V_z,k",
+          "de": "Charakteristische Querkraft V_z,k"
+        },
+        "widget": "stepper",
+        "unit": "N",
+        "displayUnit": "kN",
+        "displayFactor": 0.001,
+        "precision": 2,
+        "step": 100,
+        "role": "value",
+        "group": "value",
+        "order": 30
+      }
+    }
+  }
+}

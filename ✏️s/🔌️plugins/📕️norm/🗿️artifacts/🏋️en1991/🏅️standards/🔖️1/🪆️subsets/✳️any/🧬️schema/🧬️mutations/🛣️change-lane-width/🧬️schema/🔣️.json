@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-lane-width/schema.json",
+  "title": "ChangeLaneWidth",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newWidth"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Bridge lane",
+          "de": "Brückenfahrstreifen"
+        },
+        "description": {
+          "en": "The bridge lane this mutation addresses, by id.",
+          "de": "Das adressierte Element (Brückenfahrstreifen), per Kennung."
+        },
+        "ref": {
+          "kind": "bridge-lane"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newWidth": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Lane width w_l",
+          "de": "Fahrstreifenbreite w_l"
+        },
+        "widget": "stepper",
+        "unit": "m",
+        "precision": 2,
+        "step": 0.1,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

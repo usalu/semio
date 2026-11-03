@@ -10,7 +10,12 @@
   "properties": {
     "outline": {
       "$ref": "#/$defs/En1990Outline",
-      "x-semio-derived": true
+      "x-semio-derived": true,
+      "x-semio-rust": {
+        "attributes": [
+          "#[derived]"
+        ]
+      }
     }
   },
   "$defs": {
@@ -35,16 +40,24 @@
           }
         },
         "fieldCount": {
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "entryCount": {
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "checkCount": {
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "passCount": {
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "allPass": {
           "type": "boolean"
@@ -57,5 +70,25 @@
         }
       }
     }
+  },
+  "x-semio-rust": {
+    "doc": [
+      "💡️ Everything inferable from a en1990 snapshot."
+    ],
+    "derive": [
+      "Clone",
+      "Debug",
+      "Default",
+      "PartialEq",
+      "ArtifactSchema",
+      "value_derive::ToValue",
+      "value_derive::FromValue"
+    ],
+    "artifactSchema": "s.norm.en1990.inference",
+    "attributes": [
+      "#[cfg_attr(any(test, feature = \"test-support\"), derive(serde::Serialize, serde::Deserialize))]",
+      "#[cfg_attr(any(test, feature = \"test-support\"), serde(rename_all = \"camelCase\"))]",
+      "#[value(rename_all = \"camelCase\")]"
+    ]
   }
 }

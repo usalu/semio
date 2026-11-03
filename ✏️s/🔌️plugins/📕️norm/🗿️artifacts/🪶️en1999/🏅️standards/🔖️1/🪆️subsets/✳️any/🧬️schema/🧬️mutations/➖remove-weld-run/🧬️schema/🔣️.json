@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/remove-weld-run/schema.json",
+  "title": "RemoveWeldRun",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "removeWeldRun"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Weld run",
+          "de": "Schweißnaht"
+        },
+        "description": {
+          "en": "The weld run this mutation removes.",
+          "de": "Die Schweißnaht, die diese Mutation entfernt."
+        },
+        "ref": {
+          "kind": "weld-run"
+        },
+        "group": "target",
+        "order": 10
+      }
+    }
+  }
+}

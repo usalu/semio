@@ -20,6 +20,7 @@ name = "mutation_vectors"
 path = "../../🧪️tests/🔬️vectors/🦀️.rs"
 
 [dependencies]
+serde = { workspace = true, optional = true }
 semio-framework-os-command = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-os-store-one-item = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/📦️packages/🦀️rust" }
@@ -39,6 +40,9 @@ semio-s-artifact-norm-din16798-mut-thermal = { workspace = true }
 semio-s-artifact-norm-din16798-mut-ventilation = { workspace = true }
 semio-s-artifact-norm-din16798-mut-zones = { workspace = true }
 semio-s-plugin-norm-app-surface = { workspace = true }
+
+[features]
+test-support = ["dep:serde", "semio-s-artifact-norm-din16798-diff/test-support", "semio-s-artifact-norm-din16798-model/test-support", "semio-s-artifact-norm-din16798-mut-air-hygiene/test-support", "semio-s-artifact-norm-din16798-mut-building/test-support", "semio-s-artifact-norm-din16798-mut-indoor/test-support", "semio-s-artifact-norm-din16798-mut-thermal/test-support", "semio-s-artifact-norm-din16798-mut-ventilation/test-support", "semio-s-artifact-norm-din16798-mut-zones/test-support"]
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeGroundInvestigationKind",
+  "id": "investigation-1",
+  "newKind": "cpt"
+}

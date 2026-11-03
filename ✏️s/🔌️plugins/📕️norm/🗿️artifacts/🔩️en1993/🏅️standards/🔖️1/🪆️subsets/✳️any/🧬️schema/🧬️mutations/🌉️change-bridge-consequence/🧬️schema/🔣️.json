@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-bridge-consequence/schema.json",
+  "title": "ChangeBridgeConsequence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newConsequence"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Bridge fatigue",
+          "de": "Brückenermüdung"
+        },
+        "description": {
+          "en": "The bridge fatigue this mutation addresses, by id.",
+          "de": "Das adressierte Element (Brückenermüdung), per Kennung."
+        },
+        "ref": {
+          "kind": "bridge"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newConsequence": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/FatigueConsequence",
+      "x-semio-ui": {
+        "label": {
+          "en": "Assessment consequence",
+          "de": "Brückenermüdung"
+        },
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

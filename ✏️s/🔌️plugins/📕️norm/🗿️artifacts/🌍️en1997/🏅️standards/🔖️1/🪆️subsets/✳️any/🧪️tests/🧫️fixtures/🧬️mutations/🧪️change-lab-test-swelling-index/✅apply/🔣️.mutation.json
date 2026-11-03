@@ -1,0 +1,5 @@
+{
+  "mutation": "changeLabTestSwellingIndex",
+  "id": "lab-T1",
+  "newSwellingIndex": 1.5
+}

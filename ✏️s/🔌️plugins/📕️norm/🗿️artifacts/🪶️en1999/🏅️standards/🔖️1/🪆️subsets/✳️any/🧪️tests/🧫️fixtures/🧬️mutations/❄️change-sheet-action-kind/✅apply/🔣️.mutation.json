@@ -1,0 +1,6 @@
+{
+  "mutation": "changeSheetActionKind",
+  "coldFormedId": "sheet-pass",
+  "actionId": "G-sheet",
+  "newKind": "permanent"
+}

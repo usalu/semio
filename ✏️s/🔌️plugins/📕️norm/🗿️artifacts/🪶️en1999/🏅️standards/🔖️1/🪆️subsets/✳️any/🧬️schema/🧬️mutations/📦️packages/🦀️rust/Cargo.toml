@@ -20,6 +20,11 @@ name = "mutation_vectors"
 path = "../../🧪️tests/🔬️vectors/🦀️.rs"
 
 [dependencies]
+serde = { workspace = true, optional = true }
+semio-s-artifact-norm-en1999-mutations-proto = { workspace = true }
+semio-s-artifact-norm-en1999-mutations-json-schema = { workspace = true }
+semio-s-artifact-norm-en1999-mutations-graphql = { workspace = true }
+semio-s-artifact-norm-en1999-mutations-typescript = { workspace = true }
 semio-framework-os-command = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-os-store-one-item = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/📦️packages/🦀️rust" }
@@ -34,7 +39,56 @@ semio-s-artifact-norm-en1999-diff = { workspace = true }
 semio-s-artifact-norm-en1999-model = { workspace = true }
 semio-s-artifact-norm-en1999-mut-inputs = { workspace = true }
 semio-s-artifact-norm-en1999-mut-members = { workspace = true }
+semio-s-artifact-norm-en1999-mut-rows-transverse-stiffener = { workspace = true }
+semio-s-artifact-norm-en1999-mut-transverse-stiffener = { workspace = true }
+semio-s-artifact-norm-en1999-mut-rows-member-action = { workspace = true }
+semio-s-artifact-norm-en1999-mut-rows-connection-action = { workspace = true }
+semio-s-artifact-norm-en1999-mut-rows-section-element = { workspace = true }
+semio-s-artifact-norm-en1999-mut-rows-sheet-action = { workspace = true }
+semio-s-artifact-norm-en1999-mut-rows-shell-action = { workspace = true }
+semio-s-artifact-norm-en1999-mut-rows-fatigue-category = { workspace = true }
+semio-s-artifact-norm-en1999-mut-rows-patch-load = { workspace = true }
+semio-s-artifact-norm-en1999-mut-rows-ring-stiffener = { workspace = true }
+semio-s-artifact-norm-en1999-mut-fatigue-category = { workspace = true }
+semio-s-artifact-norm-en1999-mut-patch-load = { workspace = true }
+semio-s-artifact-norm-en1999-mut-patch-load-load = { workspace = true }
+semio-s-artifact-norm-en1999-mut-ring-stiffener = { workspace = true }
+semio-s-artifact-norm-en1999-mut-collection-rows = { workspace = true }
+semio-s-artifact-norm-en1999-mut-scenario-rows = { workspace = true }
+semio-s-artifact-norm-en1999-mut-weld-run = { workspace = true }
+semio-s-artifact-norm-en1999-mut-weld-run-process = { workspace = true }
+semio-s-artifact-norm-en1999-mut-outline-vertex = { workspace = true }
+semio-s-artifact-norm-en1999-mut-placement = { workspace = true }
+semio-s-artifact-norm-en1999-mut-detail-rows = { workspace = true }
+semio-s-artifact-norm-en1999-mut-material = { workspace = true }
+semio-s-artifact-norm-en1999-mut-section = { workspace = true }
+semio-s-artifact-norm-en1999-mut-section-element = { workspace = true }
+semio-s-artifact-norm-en1999-mut-section-element-stiffeners = { workspace = true }
+semio-s-artifact-norm-en1999-mut-member = { workspace = true }
+semio-s-artifact-norm-en1999-mut-member-web-details = { workspace = true }
+semio-s-artifact-norm-en1999-mut-member-action = { workspace = true }
+semio-s-artifact-norm-en1999-mut-member-action-components = { workspace = true }
+semio-s-artifact-norm-en1999-mut-connection = { workspace = true }
+semio-s-artifact-norm-en1999-mut-connection-fasteners = { workspace = true }
+semio-s-artifact-norm-en1999-mut-connection-action = { workspace = true }
+semio-s-artifact-norm-en1999-mut-connection-action-components = { workspace = true }
+semio-s-artifact-norm-en1999-mut-fire-scenario = { workspace = true }
+semio-s-artifact-norm-en1999-mut-fatigue-detail = { workspace = true }
+semio-s-artifact-norm-en1999-mut-cold-formed = { workspace = true }
+semio-s-artifact-norm-en1999-mut-cold-formed-action = { workspace = true }
+semio-s-artifact-norm-en1999-mut-cold-formed-action-components = { workspace = true }
+semio-s-artifact-norm-en1999-mut-shell = { workspace = true }
+semio-s-artifact-norm-en1999-mut-shell-action = { workspace = true }
+semio-s-artifact-norm-en1999-mut-shell-action-components = { workspace = true }
 semio-s-plugin-norm-app-surface = { workspace = true }
+pack = { workspace = true }
+semio-framework-diagnostic = { workspace = true }
+semio-framework-dsl-record = { workspace = true }
+semio-framework-dsl-record-derive = { workspace = true }
+semio-s-plugin-norm-compliance = { workspace = true }
+
+[features]
+test-support = ["dep:serde", "semio-s-artifact-norm-en1999-diff/test-support", "semio-s-artifact-norm-en1999-model/test-support", "semio-s-artifact-norm-en1999-mut-cold-formed/test-support", "semio-s-artifact-norm-en1999-mut-cold-formed-action/test-support", "semio-s-artifact-norm-en1999-mut-cold-formed-action-components/test-support", "semio-s-artifact-norm-en1999-mut-collection-rows/test-support", "semio-s-artifact-norm-en1999-mut-connection/test-support", "semio-s-artifact-norm-en1999-mut-connection-action/test-support", "semio-s-artifact-norm-en1999-mut-connection-action-components/test-support", "semio-s-artifact-norm-en1999-mut-connection-fasteners/test-support", "semio-s-artifact-norm-en1999-mut-detail-rows/test-support", "semio-s-artifact-norm-en1999-mut-fatigue-category/test-support", "semio-s-artifact-norm-en1999-mut-fatigue-detail/test-support", "semio-s-artifact-norm-en1999-mut-fire-scenario/test-support", "semio-s-artifact-norm-en1999-mut-inputs/test-support", "semio-s-artifact-norm-en1999-mut-material/test-support", "semio-s-artifact-norm-en1999-mut-member/test-support", "semio-s-artifact-norm-en1999-mut-member-action/test-support", "semio-s-artifact-norm-en1999-mut-member-action-components/test-support", "semio-s-artifact-norm-en1999-mut-member-web-details/test-support", "semio-s-artifact-norm-en1999-mut-members/test-support", "semio-s-artifact-norm-en1999-mut-outline-vertex/test-support", "semio-s-artifact-norm-en1999-mut-patch-load/test-support", "semio-s-artifact-norm-en1999-mut-patch-load-load/test-support", "semio-s-artifact-norm-en1999-mut-placement/test-support", "semio-s-artifact-norm-en1999-mut-ring-stiffener/test-support", "semio-s-artifact-norm-en1999-mut-rows-connection-action/test-support", "semio-s-artifact-norm-en1999-mut-rows-fatigue-category/test-support", "semio-s-artifact-norm-en1999-mut-rows-member-action/test-support", "semio-s-artifact-norm-en1999-mut-rows-patch-load/test-support", "semio-s-artifact-norm-en1999-mut-rows-ring-stiffener/test-support", "semio-s-artifact-norm-en1999-mut-rows-section-element/test-support", "semio-s-artifact-norm-en1999-mut-rows-sheet-action/test-support", "semio-s-artifact-norm-en1999-mut-rows-shell-action/test-support", "semio-s-artifact-norm-en1999-mut-rows-transverse-stiffener/test-support", "semio-s-artifact-norm-en1999-mut-scenario-rows/test-support", "semio-s-artifact-norm-en1999-mut-section/test-support", "semio-s-artifact-norm-en1999-mut-section-element/test-support", "semio-s-artifact-norm-en1999-mut-section-element-stiffeners/test-support", "semio-s-artifact-norm-en1999-mut-shell/test-support", "semio-s-artifact-norm-en1999-mut-shell-action/test-support", "semio-s-artifact-norm-en1999-mut-shell-action-components/test-support", "semio-s-artifact-norm-en1999-mut-transverse-stiffener/test-support", "semio-s-artifact-norm-en1999-mut-weld-run/test-support", "semio-s-artifact-norm-en1999-mut-weld-run-process/test-support", "semio-s-plugin-norm-compliance/test-support"]
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }

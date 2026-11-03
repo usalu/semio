@@ -1,0 +1,108 @@
+{
+  "annex": null,
+  "reliabilityClass": null,
+  "members": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "connections": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "placements": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "tapers": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "cutouts": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "fasteners": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "panels": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "floors": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "diaphragms": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "trusses": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "bracings": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "decks": {
+    "removed": [],
+    "inserted": [
+      {
+        "index": 0,
+        "row": {
+          "id": "deck-1",
+          "laminationProduct": "solid",
+          "barProduct": "threaded-bar",
+          "spanM": 8.0,
+          "deckWidthM": 4.0,
+          "deckDepthM": 0.25,
+          "laminationWidthM": 0.05,
+          "barSpacingM": 0.8,
+          "barDiameterM": 0.032,
+          "plateSideM": 0.15,
+          "initialPrestressPa": 1000000.0,
+          "lossRelaxation": 0.15,
+          "lossCreep": 0.25,
+          "lossMoisture": 0.1,
+          "barResistancePa": 700000000.0,
+          "shearStressPa": 100000.0,
+          "compressionPerpendicularPa": 1000000.0,
+          "wheelLoadN": 100000.0,
+          "wheelContactM": 0.4
+        }
+      }
+    ],
+    "moved": [],
+    "modified": []
+  },
+  "ulsEquation": null,
+  "cases": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  }
+}

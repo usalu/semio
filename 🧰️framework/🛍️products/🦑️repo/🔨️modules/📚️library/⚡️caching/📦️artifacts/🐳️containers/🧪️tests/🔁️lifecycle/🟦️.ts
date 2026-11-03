@@ -1,18 +1,21 @@
 import assert from "node:assert/strict";
-import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readlinkSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readlinkSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { join } from "node:path";
-import { EMOJI_FONTCONFIG, PERSISTED_HOME_DIRECTORIES, devcontainerAttach, devcontainerStart, missingSafeDirectories, normalizeClaudeAuth, releaseAssetUrl, toolArchitectures, withSshAgentShellBlock, type LifecycleAnswer, type LifecycleContext, type LifecycleHost } from "../../🔁️lifecycle/🟦️.ts";
+import { homedir, userInfo } from "node:os";
+import { EMOJI_FONTCONFIG, PERSISTED_HOME_DIRECTORIES, devcontainerAttach, devcontainerStart, installF3d, missingSafeDirectories, normalizeClaudeAuth, processLifecycleContext, processLifecycleHost, releaseAssetUrl, toolArchitectures, withSshAgentShellBlock, type LifecycleAnswer, type LifecycleContext, type LifecycleHost } from "../../🔁️lifecycle/🟦️.ts";
 
 /** 🎙️ A host that records every program call and answers from `answer`, never running anything. */
-function recordingHost(answer: (command: string, args: readonly string[]) => Partial<LifecycleAnswer> = () => ({})): LifecycleHost & { calls: string[][]; inputs: Map<string, string>; lines: string[] } {
-  const calls: string[][] = [], inputs = new Map<string, string>(), lines: string[] = [];
+function recordingHost(answer: (command: string, args: readonly string[]) => Partial<LifecycleAnswer> = () => ({})): LifecycleHost & { calls: string[][]; inputs: Map<string, string>; lines: string[]; backgrounds: string[] } {
+  const calls: string[][] = [], inputs = new Map<string, string>(), lines: string[] = [], backgrounds: string[] = [];
   return {
     calls,
     inputs,
     lines,
+    backgrounds,
     run: (command, args, options) => {
       calls.push([command, ...args]);
+      if (options?.background) backgrounds.push(command);
       if (options?.input !== undefined) inputs.set([command, ...args].join(" "), options.input);
       return { status: 0, stdout: "", stderr: "", ...answer(command, args) };
     },
@@ -26,6 +29,31 @@ function recordingHost(answer: (command: string, args: readonly string[]) => Par
  * oracle), architecture and release-asset selection (lodash oracle), dashboard attach without alternate control planes, duplicate-free `safe.directory`, Claude auth storage on a real temporary home, the idempotent shell hook, a start run
  * that never issues a destructive command, and dashboard-only attach through a recording host. */
 export async function testDevcontainerLifecycle(workspace: string, generated: string): Promise<void> {
+  const previousHome = process.env.HOME, previousUser = process.env.USER;
+  const restore = () => {
+    if (previousHome === undefined) delete process.env.HOME;
+    else process.env.HOME = previousHome;
+    if (previousUser === undefined) delete process.env.USER;
+    else process.env.USER = previousUser;
+  };
+  delete process.env.HOME;
+  delete process.env.USER;
+  try {
+    const missing = processLifecycleContext(workspace);
+    assert.equal(missing.home, homedir());
+    assert.equal(missing.user, userInfo().username);
+  } finally {
+    restore();
+  }
+  process.env.HOME = "/tmp/semio-lifecycle-home";
+  process.env.USER = "ada";
+  try {
+    const present = processLifecycleContext(workspace);
+    assert.equal(present.home, "/tmp/semio-lifecycle-home");
+    assert.equal(present.user, "ada");
+  } finally {
+    restore();
+  }
   const require = createRequire(import.meta.url), fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🔁️lifecycle/🔣️.json"), "utf8"));
   await testDevcontainerDashboardOwnership(workspace);
   const { JSDOM } = require("jsdom"), lodash = require("lodash");
@@ -62,14 +90,40 @@ export async function testDevcontainerLifecycle(workspace: string, generated: st
   const context: LifecycleContext = { workspace: checkout, home, user: "vscode", env: {}, arch: "x64" };
   devcontainerStart(start, context);
   const flat = start.calls.map((call) => call.join(" "));
-  for (const directory of PERSISTED_HOME_DIRECTORIES) assert.ok(flat.includes(`sudo chown -R vscode:vscode ${join(home, directory)}`), directory);
+  for (const directory of PERSISTED_HOME_DIRECTORIES) assert.ok(flat.includes(`sudo -n chown -R vscode:vscode ${join(home, directory)}`), directory);
   const devcontainer = Bun.JSONC.parse(readFileSync(join(workspace, ".devcontainer/devcontainer.json"), "utf8")) as { remoteUser: string; mounts: string[] };
   const homeVolumes = devcontainer.mounts.map((mount) => /(?:^|,)target=([^,]+)/u.exec(mount)?.[1] ?? "").filter((target) => target.startsWith(`/home/${devcontainer.remoteUser}/`));
   for (const target of homeVolumes) assert.ok(PERSISTED_HOME_DIRECTORIES.some((directory) => `${target}/`.startsWith(`/home/${devcontainer.remoteUser}/${directory}/`)), `the persisted home volume ${target} is handed to the container user on start`);
-  assert.ok(flat.includes(`sudo chown -R vscode:vscode ${join(checkout, "♻️mit-bestand/🔎️recherche")}`));
-  assert.equal(start.inputs.get("sudo tee /etc/fonts/local.conf"), EMOJI_FONTCONFIG);
+  assert.ok(flat.includes(`sudo -n chown -R vscode:vscode ${join(checkout, "♻️mit-bestand/🔎️recherche")}`));
+  assert.equal(start.inputs.get("sudo -n tee /etc/fonts/local.conf"), EMOJI_FONTCONFIG);
   assert.deepEqual(flat.filter((call) => call.startsWith("git config --global --add safe.directory")), [`git config --global --add safe.directory ${join(checkout, "♻️mit-bestand/🔎️recherche")}`]);
   assert.deepEqual(flat.filter((call) => fixture.forbiddenCommands.some((forbidden: string) => call.includes(forbidden))), [], "a container start never discards source-control or database state");
+  assert.equal(flat.some((call) => call.startsWith("Xvfb")), false, "a start without DISPLAY does not open a headless server");
+  const display = recordingHost((command) => command === "test" ? { status: 1 } : {});
+  devcontainerStart(display, { ...context, env: { DISPLAY: fixture.headlessDisplay.display } });
+  assert.deepEqual(lodash.find(display.calls, (call: string[]) => call[0] === "Xvfb"), fixture.headlessDisplay.argv);
+  assert.deepEqual(display.backgrounds, ["Xvfb"]);
+  const marker = join(generated, "xvfb-background.pid"), script = join(generated, "xvfb-background.sh");
+  rmSync(marker, {force: true});
+  writeFileSync(script, `#!/bin/sh\necho $$ > ${JSON.stringify(marker)}\nexec sleep 30\n`);
+  chmodSync(script, 0o755);
+  const began = Date.now(), background = processLifecycleHost().run(script, [], { background: true });
+  assert.equal(background.status, 0);
+  assert.ok(Date.now() - began < 1500, "a headless display server must not be waited on");
+  assert.equal(processLifecycleHost().run("semio-missing-xvfb", [], { background: true }).status, -1);
+  let pid = 0;
+  for (let attempt = 0; attempt < 50 && !pid; attempt += 1) { try { pid = Number(readFileSync(marker, "utf8")); } catch { Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 20); } }
+  assert.ok(pid > 0);
+  process.kill(pid, "SIGTERM");
+  const warm = recordingHost((command) => command === "test" ? { status: 0 } : {});
+  devcontainerStart(warm, { ...context, env: { DISPLAY: fixture.headlessDisplay.display } });
+  assert.equal(warm.calls.some((call) => call[0] === "Xvfb"), false);
+  const missingF3d = recordingHost((command) => command === "f3d" ? { status: 1 } : {});
+  await installF3d(missingF3d, context);
+  const sudo = missingF3d.calls.filter((call) => call[0] === "sudo");
+  assert.ok(sudo.length >= 2 && sudo.every((call) => call[1] === "-n"), "F3D installation cannot wait for a sudo password");
+  assert.ok(sudo.some((call) => call.includes("install") && call.includes("-y")));
+
 
   console.log("✅️ Devcontainer lifecycle: fontconfig (jsdom XML), tool selection (lodash), dashboard-only attach, safe.directory, Claude auth storage, start without destructive commands, IDE controls retired PASS");
 }

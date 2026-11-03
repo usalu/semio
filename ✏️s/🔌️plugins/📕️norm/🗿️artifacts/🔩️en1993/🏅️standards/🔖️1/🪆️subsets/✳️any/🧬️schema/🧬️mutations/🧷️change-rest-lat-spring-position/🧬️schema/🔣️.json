@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-rest-lat-spring-position/schema.json",
+  "title": "ChangeRestLatSpringPosition",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newLateralSpringPosition"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Restraint",
+          "de": "Halterung"
+        },
+        "description": {
+          "en": "The restraint this mutation addresses, by id.",
+          "de": "Das adressierte Element (Halterung), per Kennung."
+        },
+        "ref": {
+          "kind": "restraint"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newLateralSpringPosition": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Lateral spring at x (0 = none)",
+          "de": "Seitliche Feder bei x (0 = keine)"
+        },
+        "widget": "stepper",
+        "unit": "m",
+        "precision": 3,
+        "step": 0.005,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

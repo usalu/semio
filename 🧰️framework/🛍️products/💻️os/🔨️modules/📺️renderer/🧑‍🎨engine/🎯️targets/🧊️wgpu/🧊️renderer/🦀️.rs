@@ -102,6 +102,15 @@ pub fn semio_wgpu_set_host_appearance(preference: String, system_dark: bool) {
 }
 //#endregion 🌓️HostAppearance
 
+//#region 🎛️HostPlatformPrefs
+/// 🎛️ wasm platform-preferences hook — the browser twin of the OS read of the winit host. The frame Worker has no `window`, so the page thread resolves the `forced-colors`, `prefers-contrast`, `prefers-color-scheme` and `prefers-reduced-motion` media queries and hands the four answers here.
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen(js_name = semioWgpuSetHostPlatformPrefs)]
+pub fn semio_wgpu_set_host_platform_prefs(forced_colors: bool, prefers_contrast_more: bool, prefers_dark: bool, prefers_reduced_motion: bool) {
+    semio_framework_os_renderer_wgpu_host_base::set_host_platform_prefs(semio_framework::ShellPlatformPrefs { forced_colors, prefers_contrast_more, prefers_dark, prefers_reduced_motion });
+}
+//#endregion 🎛️HostPlatformPrefs
+
 //#region 🎓️HostIntroduction
 /// 🛰️ Publishes a browser mount's initial or live policy into its own frame Worker.
 #[cfg(target_arch = "wasm32")]

@@ -1,7 +1,14 @@
+scalar JSON
+
 type En1996Diff {
-  annex: String
-  masonryClass: String
-  designSituation: String
-  storeys: Int
-  walls: JSON
+  annex: JSON
+  masonryClass: JSON
+  designSituation: JSON
+  storeys: JSON
+  walls: En1996WallDelta!
+  placements: En1996PlacementDelta!
+  cases: CaseRowDelta!
+  chases: En1996ChaseDelta!
+  movementJoints: En1996JointDelta!
+  reliabilityClass: JSON
 }

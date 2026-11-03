@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-site-importance-class/schema.json",
+  "title": "ChangeSiteImportanceClass",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "newImportanceClass"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeSiteImportanceClass"
+    },
+    "newImportanceClass": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/snapshot.json#/$defs/ImportanceClass",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Importance class",
+          "de": "Bedeutungskategorie"
+        },
+        "group": "value",
+        "order": 10
+      }
+    }
+  }
+}

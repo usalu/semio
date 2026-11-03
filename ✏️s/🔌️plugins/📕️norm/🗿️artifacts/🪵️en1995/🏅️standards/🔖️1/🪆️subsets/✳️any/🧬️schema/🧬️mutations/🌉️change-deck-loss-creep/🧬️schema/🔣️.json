@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-deck-loss-creep/schema.json",
+  "title": "ChangeDeckLossCreep",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "deckId",
+    "newValue"
+  ],
+  "properties": {
+    "deckId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Deck",
+          "de": "Fahrbahnplatte"
+        },
+        "description": {
+          "en": "The deck this mutation addresses.",
+          "de": "Das Element, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "deck"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newValue": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Prestress loss by timber creep",
+          "de": "Vorspannverlust durch Kriechen"
+        },
+        "precision": 3,
+        "step": 0.01,
+        "group": "fields",
+        "order": 20
+      }
+    }
+  }
+}

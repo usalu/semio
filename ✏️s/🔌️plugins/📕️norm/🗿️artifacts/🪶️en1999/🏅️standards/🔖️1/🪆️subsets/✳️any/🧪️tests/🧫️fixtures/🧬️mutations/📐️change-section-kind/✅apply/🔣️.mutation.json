@@ -1,0 +1,5 @@
+{
+  "mutation": "changeSectionKind",
+  "sectionId": "sec-i120",
+  "newKind": "extrudedI"
+}

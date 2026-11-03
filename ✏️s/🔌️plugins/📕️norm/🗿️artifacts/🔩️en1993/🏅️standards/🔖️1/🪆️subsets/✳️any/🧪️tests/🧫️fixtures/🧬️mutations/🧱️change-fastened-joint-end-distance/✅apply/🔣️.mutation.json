@@ -1,0 +1,6 @@
+{
+  "ChangeFastenedJointEndDistance": {
+    "id": "fastened-joint-1",
+    "newEndDistance": 1.03
+  }
+}

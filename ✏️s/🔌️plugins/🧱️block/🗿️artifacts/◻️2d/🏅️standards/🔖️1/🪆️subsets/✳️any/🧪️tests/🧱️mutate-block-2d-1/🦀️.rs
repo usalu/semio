@@ -192,9 +192,9 @@ mod subject {
     /// fixtures — the same three files the Python reference reads.
     pub fn spec_vector(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
         move |ctx: &Context| {
-            let before = fixture_text(ctx, "⬅️before")?;
-            let mutation = fixture_text(ctx, "🦠️mutation")?;
-            let after = fixture_text(ctx, "➡️after")?;
+            let before = fixture_text(ctx, "🔣️.before.json")?;
+            let mutation = fixture_text(ctx, "🔣️.mutation.json")?;
+            let after = fixture_text(ctx, "🔣️.after.json")?;
             let report = report_of(&format!("spec-vector-{kind}"), &before, &mutation, &after)?;
             let applied = member(&report, "snapshot")?;
             if applied != member(&report, "expectedSnapshot")? {

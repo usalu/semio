@@ -1,0 +1,6 @@
+{
+  "ChangeMovementJointWall": {
+    "id": "joint-1",
+    "newWallId": "wall-south"
+  }
+}

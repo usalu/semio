@@ -1,0 +1,6 @@
+{
+  "ChangeRailLoadGroupFactorLongitudinal": {
+    "id": "rail-load-group-1",
+    "newFactorLongitudinal": 1.5
+  }
+}

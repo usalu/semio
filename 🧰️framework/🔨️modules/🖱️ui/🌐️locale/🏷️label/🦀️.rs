@@ -89,7 +89,7 @@ impl From<LabelText> for String {
 /// the multilingual replacement for `AppLabelsOverlay`'s stringly-typed per-id maps. TS mirror is
 /// the generated `LocalizedLabel` type in `🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🎚️ui-axes/🟦️.ts`
 /// (the wire shape below is explicitly kept in sync with that type by the owned schema metadata).
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct LocalizedLabel {
     cells: [[Cow<'static, str>; Locale::COUNT]; Terminology::COUNT],
 }

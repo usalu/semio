@@ -1,0 +1,6 @@
+{
+  "ChangeCraneDispersion": {
+    "id": "crane-1",
+    "newDispersion": 0.1
+  }
+}

@@ -1,0 +1,5 @@
+type InsertOpening {
+  memberId: String!
+  index: Int!
+  opening: Opening!
+}

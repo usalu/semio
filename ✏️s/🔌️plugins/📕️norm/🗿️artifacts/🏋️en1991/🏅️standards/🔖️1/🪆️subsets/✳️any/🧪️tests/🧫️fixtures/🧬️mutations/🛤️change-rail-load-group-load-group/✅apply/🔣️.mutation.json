@@ -1,0 +1,6 @@
+{
+  "ChangeRailLoadGroupLoadGroup": {
+    "id": "rail-load-group-1",
+    "newLoadGroup": "gr11-changed"
+  }
+}

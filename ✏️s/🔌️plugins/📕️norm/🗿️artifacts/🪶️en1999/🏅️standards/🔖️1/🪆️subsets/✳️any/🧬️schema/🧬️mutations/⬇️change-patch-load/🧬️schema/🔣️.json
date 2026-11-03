@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-patch-load/schema.json",
+  "title": "ChangePatchLoad",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "patchLoadId",
+    "newLoad"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changePatchLoad"
+    },
+    "patchLoadId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Patch load",
+          "de": "Stegeinzellast"
+        },
+        "description": {
+          "en": "The patch load this mutation addresses, by id.",
+          "de": "Das adressierte Element (Stegeinzellast), per Kennung."
+        },
+        "ref": {
+          "kind": "patch-load"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newLoad": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Transverse force F_Ed",
+          "de": "Querkraft F_Ed"
+        },
+        "widget": "stepper",
+        "unit": "N",
+        "displayUnit": "kN",
+        "displayFactor": 0.001,
+        "precision": 1,
+        "step": 100,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

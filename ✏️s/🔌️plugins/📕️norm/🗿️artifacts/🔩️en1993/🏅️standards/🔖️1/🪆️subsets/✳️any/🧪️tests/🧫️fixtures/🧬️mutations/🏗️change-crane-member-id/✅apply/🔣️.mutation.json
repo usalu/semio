@@ -1,0 +1,6 @@
+{
+  "ChangeCraneMemberId": {
+    "id": "crane-1",
+    "newMemberId": "member-b1-alt"
+  }
+}

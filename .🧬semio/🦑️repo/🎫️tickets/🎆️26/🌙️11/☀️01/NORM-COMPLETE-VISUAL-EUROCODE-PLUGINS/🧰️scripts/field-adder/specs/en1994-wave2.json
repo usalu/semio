@@ -1,0 +1,22 @@
+{
+  "artifact": "en1994",
+  "run_generator": true,
+  "crates": [
+    {"name": "beam-design", "dir": "🧭️beam-design", "description": "EN 1994 beam design input mutation leaves"},
+    {"name": "column-design", "dir": "🔗️column-design", "description": "EN 1994 column design input mutation leaves"}
+  ],
+  "fields": [
+    {"entity": "beams", "field": "adjacent_span_m", "after": "n_cycles", "type": "f64", "default": 0.0, "unit": "m",
+     "en": "Adjacent span L_2 (0 = equal span)", "de": "Nachbarfeld L_2 (0 = gleiche Stützweite)",
+     "kind": "change-beam-adjacent-span-m", "ui_unit": "m", "leaf_en": "adjacent span length for the equivalent span and statics (0 = equal to the span)", "leaf_de": "Länge des Nachbarfelds für Ersatzstützweite und Statik (0 = gleich der Stützweite)", "group": "beam", "emoji": "↔️", "crate": "beam-design"},
+    {"entity": "beams", "field": "patch_bearing_length_m", "after": "adjacent_span_m", "type": "f64", "default": 0.1, "unit": "m",
+     "en": "Patch load bearing length s_s", "de": "Lasteinleitungslänge s_s (Einzellast)",
+     "kind": "change-beam-patch-bearing-length-m", "ui_unit": "m", "leaf_en": "patch load bearing length s_s", "leaf_de": "Lasteinleitungslänge s_s der Einzellast", "group": "beam", "emoji": "📍️", "crate": "beam-design"},
+    {"entity": "beams", "field": "bridge_lanes", "after": "patch_bearing_length_m", "type": "u32", "default": 0, "unit": null,
+     "en": "Notional lanes on the girder (0 = from spacing)", "de": "Rechnerische Fahrstreifen am Träger (0 = aus Trägerabstand)",
+     "kind": "change-beam-bridge-lanes", "ui_unit": "count", "leaf_en": "notional lanes loading the girder (0 = from the girder spacing)", "leaf_de": "rechnerische Fahrstreifen am Träger (0 = aus dem Trägerabstand)", "group": "beam", "emoji": "🛣️", "crate": "beam-design"},
+    {"entity": "columns", "field": "introduced_force_n", "after": "buckling_curve", "type": "f64", "default": 0.0, "unit": "N", "tests_after": "i_m4",
+     "en": "Introduced force N_intro (0 = from actions)", "de": "Eingeleitete Kraft N_intro (0 = aus den Einwirkungen)",
+     "kind": "change-column-introduced-force-n", "ui_unit": "n", "leaf_en": "force introduced into the concrete (0 = from the actions)", "leaf_de": "in den Beton eingeleitete Kraft (0 = aus den Einwirkungen)", "group": "column", "emoji": "⬇️", "crate": "column-design"}
+  ]
+}

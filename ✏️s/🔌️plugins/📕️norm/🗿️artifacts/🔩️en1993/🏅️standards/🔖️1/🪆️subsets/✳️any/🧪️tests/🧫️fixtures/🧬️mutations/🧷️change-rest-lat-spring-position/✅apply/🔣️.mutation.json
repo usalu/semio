@@ -1,0 +1,6 @@
+{
+  "ChangeRestLatSpringPosition": {
+    "id": "restraint-1",
+    "newLateralSpringPosition": 1.5
+  }
+}

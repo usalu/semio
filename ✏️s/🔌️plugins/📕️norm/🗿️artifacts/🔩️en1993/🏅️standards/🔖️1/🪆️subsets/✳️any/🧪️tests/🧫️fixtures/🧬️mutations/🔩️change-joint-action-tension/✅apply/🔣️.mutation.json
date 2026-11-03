@@ -1,0 +1,7 @@
+{
+  "ChangeJointActionTension": {
+    "id": "joint-j1",
+    "elementId": "jf-1",
+    "newTension": 1.5
+  }
+}

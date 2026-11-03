@@ -1,0 +1,6 @@
+{
+  "ChangeCfShearForce": {
+    "id": "cf-1",
+    "newShearForce": 1.5
+  }
+}

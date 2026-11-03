@@ -1,53 +1,312 @@
-//! 🔗️ EN 1999 connection checks: `check_connection` verifies one aluminium connection against every clause.
+//! 🔗️ EN 1999 connection checks: bolts, rivets and welds (EN 1999-1-1 §8) of one aluminium connection.
 
 use super::*;
+use super::joints;
+use super::part_en1990::GoverningEffects;
 
 //#region 🔖️ComplianceHelpers
-pub fn check_connection(conn: &AluminiumConnection, material: &AluminiumMaterial, member: Option<&AluminiumMember>, member_ids: &[String], annex: AnnexChoice) -> Vec<CheckResult> {
+struct Demand {
+    n: f64,
+    v: f64,
+    m: f64,
+}
+
+fn demand(g: &GoverningEffects) -> Demand {
+    Demand { n: g.n_ed, v: g.v_y_ed.hypot(g.v_z_ed), m: g.m_y_ed.hypot(g.m_z_ed) }
+}
+
+struct Bolting {
+    n_bolts: f64,
+    d0: f64,
+    f_v_rd: f64,
+    f_b_rd: f64,
+    f_t_rd: f64,
+    f_v_ed: f64,
+    f_t_ed: f64,
+    governing: usize,
+    beta_lf: f64,
+    rivet: bool,
+}
+
+fn bolting(conn: &AluminiumConnection, alloy: &part_1_1::AlloyProps, params: &na_de::AnnexParams, d: &Demand) -> Bolting {
+    let b = &conn.bolts;
+    let n_bolts = (f64::from(b.rows) * f64::from(b.bolts_per_row)).max(1.0);
+    let l_j = (f64::from(b.rows) - 1.0).max(0.0) * b.pitch;
+    let beta_lf = joints::long_joint_factor(l_j, b.diameter);
+    let f_ub = joints::fastener_fu_pa(&b.material);
+    let f_v_rd = joints::shear_resistance(&b.material, b.diameter, params.gamma_m2) * beta_lf;
+    let f_b_rd = joints::bearing_resistance(b.edge_distance, b.pitch, b.edge_distance, b.diameter, b.plate_thickness, alloy.f_u_pa, f_ub, params.gamma_m2);
+    let f_t_rd = joints::tension_resistance(&b.material, b.diameter, params.gamma_m2);
+    let (count, arm) = if b.rows > 1 { (f64::from(b.rows), b.pitch) } else { (f64::from(b.bolts_per_row), b.gauge) };
+    let per_line = n_bolts / count.max(1.0);
+    let z2: f64 = (0..(count as usize)).map(|i| (i as f64 - (count - 1.0) * 0.5).powi(2) * arm * arm).sum::<f64>() * per_line;
+    let forces = joints::fastener_forces(conn.force_method, b.rows, b.bolts_per_row, b.pitch, b.gauge, d.v, conn.load_eccentricity);
+    let governing = joints::governing_fastener(&forces);
+    let z_max = (count - 1.0) * 0.5 * arm;
+    let f_m = if z2 > 0.0 { d.m * z_max / z2 } else { d.m / arm.max(1e-6) };
+    Bolting {
+        n_bolts,
+        d0: joints::hole_diameter(b.diameter),
+        f_v_rd,
+        f_b_rd,
+        f_t_rd,
+        f_v_ed: forces.get(governing).map_or(d.v / n_bolts, joints::FastenerForce::resultant),
+        f_t_ed: d.n.max(0.0) / n_bolts + f_m,
+        governing,
+        beta_lf,
+        rivet: joints::is_rivet(&b.material),
+    }
+}
+
+fn conn_subject(conn: &AluminiumConnection, path: &str) -> SubjectRef {
+    SubjectRef::new(&conn.id, format!("connections[id={}].{path}", conn.id), conn_label(&conn.id))
+}
+
+fn count_remedies(conn: &AluminiumConnection, u: f64) -> Vec<Remedy> {
+    if u <= 1.0 { return Vec::new(); }
+    let rows = f64::from(conn.bolts.rows);
+    let per = f64::from(conn.bolts.bolts_per_row);
+    vec![
+        Remedy::at_least(conn_subject(conn, "bolts.rows"), Quantity::new(QuantityKind::Dimensionless, rows), Quantity::new(QuantityKind::Dimensionless, (rows * u * 1.01).ceil().max(rows + 1.0)), loc("Add bolt rows.", "Schraubenreihen ergänzen.")),
+        Remedy::at_least(conn_subject(conn, "bolts.boltsPerRow"), Quantity::new(QuantityKind::Dimensionless, per), Quantity::new(QuantityKind::Dimensionless, (per * u * 1.01).ceil().max(per + 1.0)), loc("Add bolts per row.", "Schrauben je Reihe ergänzen.")),
+    ]
+}
+
+fn emit(out: &mut Vec<CheckResult>, conn: &AluminiumConnection, annex: AnnexChoice, g: &GoverningEffects, id: &str, sec: &str, title: (&str, &str), path: &str, computed: Quantity, limit: Quantity, expl: String, mut remedies: Vec<Remedy>) {
+    let u = if limit.value > 0.0 { computed.value.abs() / limit.value } else { 0.0 };
+    remedies.extend(leaf_remedies("connections", &conn.id, &conn.actions, u, &conn_label(&conn.id), "Reduce the connection load", "Anschlusslast senken", if id.ends_with("tension") || id.ends_with("punch") { "nK" } else { "vZK" }));
+    out.push(utilization_check(
+        format!("{id}.{}", conn.id),
+        "DIN EN 1999-1-1",
+        clause(sec),
+        conn_subject(conn, path),
+        loc(title.0, title.1),
+        computed,
+        limit,
+        annex,
+        loc(&format!("{expl} (ULS {}, lead {}); {}", g.combination, g.action_id, actions_digest(&conn.actions)), &format!("{expl} (GZT {}, führend {}); {}", g.combination, g.action_id, actions_digest(&conn.actions))),
+        remedies,
+    ));
+}
+
+fn bolted_checks(conn: &AluminiumConnection, annex: AnnexChoice, params: &na_de::AnnexParams, alloy: &part_1_1::AlloyProps, g: &GoverningEffects, out: &mut Vec<CheckResult>) {
+    let d = demand(g);
+    let bt = bolting(conn, alloy, params, &d);
+    let b = &conn.bolts;
+    if joints::fastener_fu_pa(&b.material) <= 0.0 {
+        let subject = conn_subject(conn, "bolts.material");
+        out.push(
+            CheckResult::assess(format!("en1999.8.5.grade.{}", conn.id), "DIN EN 1999-1-1", clause("8.5"), subject.clone(), loc("Fastener grade", "Verbindungsmittelgüte"))
+                .status(semio_s_plugin_norm_compliance::CheckStatus::Fail)
+                .explanation(loc(&format!("Unknown fastener grade '{}'.", b.material), &format!("Unbekannte Verbindungsmittelgüte '{}'.", b.material)))
+                .annex(annex)
+                .remedy(Remedy::one_of(subject, joints::FASTENER_GRADES.iter().map(|s| (*s).to_string()).collect(), loc("Pick a supported fastener grade.", "Unterstützte Verbindungsmittelgüte wählen.")))
+                .build(),
+        );
+        return;
+    }
+    let f_rd = bt.f_v_rd.min(bt.f_b_rd);
+    let u = bt.f_v_ed / f_rd.max(1e-9);
+    let rem = count_remedies(conn, u);
+    emit(out, conn, annex, g, "en1999.8.5.bolt", "8.5", ("Bolt shear and bearing", "Schrauben Abscheren und Lochleibung"), "bolts.rows",
+        q_force(bt.f_v_ed), q_force(f_rd.max(1e-9)),
+        format!("F_v,Ed,max = {:.2} kN (i = {}), V/n = {:.2} kN, e = {:.0} mm ({}), F_v,Rd = {:.2} kN (β_Lf = {:.3}), F_b,Rd = {:.2} kN, n = {}", bt.f_v_ed / 1e3, bt.governing + 1, d.v / bt.n_bolts / 1e3, conn.load_eccentricity * 1e3, conn.force_method.code(), bt.f_v_rd / 1e3, bt.beta_lf, bt.f_b_rd / 1e3, bt.n_bolts), rem);
+    if !bt.rivet {
+        let u_t = bt.f_t_ed / bt.f_t_rd.max(1e-9);
+        emit(out, conn, annex, g, "en1999.8.5.tension", "8.5", ("Bolt tension", "Schrauben Zug"), "bolts.rows", q_force(bt.f_t_ed), q_force(bt.f_t_rd.max(1e-9)),
+            format!("F_t,Ed = {:.2} kN per bolt, F_t,Rd = {:.2} kN", bt.f_t_ed / 1e3, bt.f_t_rd / 1e3), count_remedies(conn, u_t));
+        let u_vt = bt.f_v_ed / f_rd.max(1e-9) + bt.f_t_ed / (1.4 * bt.f_t_rd.max(1e-9));
+        emit(out, conn, annex, g, "en1999.8.5.vt", "8.5", ("Bolt shear and tension interaction", "Schrauben Interaktion Abscheren und Zug"), "bolts.rows", q_dim(u_vt), q_dim(1.0),
+            format!("F_v,Ed/F_Rd + F_t,Ed/(1.4·F_t,Rd) = {u_vt:.3}"), count_remedies(conn, u_vt));
+        let b_p = joints::punching_resistance(b.diameter, b.plate_thickness, alloy.f_u_pa, params.gamma_m2);
+        let u_p = bt.f_t_ed / b_p.max(1e-9);
+        emit(out, conn, annex, g, "en1999.8.5.punch", "8.5", ("Punching shear B_p,Rd", "Durchstanzen B_p,Rd"), "bolts.plateThickness", q_force(bt.f_t_ed), q_force(b_p.max(1e-9)),
+            format!("B_p,Rd = {:.2} kN (d_m = 1.5·d)", b_p / 1e3),
+            if u_p > 1.0 { vec![Remedy::at_least(conn_subject(conn, "bolts.plateThickness"), q_length(b.plate_thickness), q_length(b.plate_thickness * u_p * 1.01), loc("Increase the plate thickness.", "Blechdicke erhöhen."))] } else { Vec::new() });
+    }
+    let across = b.bolts_per_row > 1;
+    let spacing: [(&str, &str, &str, &str, f64, f64, bool, bool); 4] = [
+        ("pitch", "Pitch p1 ≥ 2.2·d0", "Teilung p1 ≥ 2,2·d0", "bolts.pitch", b.pitch, joints::MIN_PITCH_D0 * bt.d0, true, true),
+        ("edge", "Edge distances e1, e2 ≥ 1.2·d0", "Randabstände e1, e2 ≥ 1,2·d0", "bolts.edgeDistance", b.edge_distance, joints::MIN_END_EDGE_D0 * bt.d0, true, true),
+        ("gauge", "Spacing p2 ≥ {}·d0", "Lochabstand p2 ≥ {}·d0", "bolts.gauge", b.gauge, 0.0, true, across),
+        ("emax", "Edge distances e1, e2 ≤ 4·t + 40 mm", "Randabstände e1, e2 ≤ 4·t + 40 mm", "bolts.edgeDistance", b.edge_distance, 4.0 * b.plate_thickness + 0.040, false, true),
+    ];
+    for (suffix, en, de, path, actual, bound, is_min, applies) in spacing {
+        let p2 = (suffix == "gauge").then(joints::min_spacing_d0);
+        let bound = p2.map_or(bound, |factor| factor * bt.d0);
+        let (en, de) = p2.map_or((en.to_owned(), de.to_owned()), |factor| (en.replace("{}", &factor.to_string()), de.replace("{}", &factor.to_string().replace('.', ","))));
+        let (en, de) = (en.as_str(), de.as_str());
+        let util = if !applies { 0.0 } else if is_min { bound / actual.max(1e-9) } else { actual / bound.max(1e-9) };
+        let mut result = CheckResult::assess(format!("en1999.8.5.{suffix}.{}", conn.id), "DIN EN 1999-1-1", clause("8.5"), conn_subject(conn, path), loc(en, de))
+            .utilization(q_dim(util), q_dim(1.0))
+            .annex(annex)
+            .explanation(loc(&format!("{en}: {:.1} mm against {:.1} mm (d0 = {:.1} mm)", actual * 1e3, bound * 1e3, bt.d0 * 1e3), &format!("{de}: {:.1} mm gegenüber {:.1} mm (d0 = {:.1} mm)", actual * 1e3, bound * 1e3, bt.d0 * 1e3)));
+        if util > 1.0 {
+            result = result.remedy(if is_min {
+                Remedy::at_least(conn_subject(conn, path), q_length(actual), q_length(bound), loc("Increase the distance.", "Abstand vergrößern."))
+            } else {
+                Remedy::at_most(conn_subject(conn, path), q_length(actual), q_length(bound), loc("Reduce the distance.", "Abstand verkleinern."))
+            });
+        }
+        out.push(result.ndp_reads().build());
+    }
+    let p_max = (14.0 * b.plate_thickness).min(0.200);
+    if b.rows > 1 {
+        let u_p = b.pitch / p_max.max(1e-9);
+        let mut c = CheckResult::assess(format!("en1999.8.5.pmax.{}", conn.id), "DIN EN 1999-1-1", clause("8.5"), conn_subject(conn, "bolts.pitch"), loc("Pitch p1 ≤ min(14·t, 200 mm)", "Teilung p1 ≤ min(14·t, 200 mm)"))
+            .utilization(q_dim(u_p), q_dim(1.0))
+            .annex(annex)
+            .explanation(loc(&format!("Pitch p1 = {:.1} mm, maximum p1,max = {:.1} mm", b.pitch * 1e3, p_max * 1e3), &format!("Teilung p1 = {:.1} mm, Höchstwert p1,max = {:.1} mm", b.pitch * 1e3, p_max * 1e3)));
+        if u_p > 1.0 { c = c.remedy(Remedy::at_most(conn_subject(conn, "bolts.pitch"), q_length(b.pitch), q_length(p_max), loc("Reduce the pitch.", "Teilung verkleinern."))); }
+        out.push(c.ndp_reads().build());
+    }
+    let block = joints::block_tearing(b.rows, b.edge_distance, b.pitch, b.edge_distance, b.diameter, b.plate_thickness, alloy.f_u_pa, alloy.f_o_pa, params.gamma_m1, params.gamma_m2);
+    let u_blk = d.v / block.max(1e-9);
+    emit(out, conn, annex, g, "en1999.8.5.block", "8.5.2.3", ("Block tearing", "Blockversagen"), "bolts.edgeDistance", q_force(d.v), q_force(block.max(1e-9)),
+        format!("V_eff,Rd = {:.2} kN (single line, concentric)", block / 1e3),
+        if u_blk > 1.0 { vec![Remedy::at_least(conn_subject(conn, "bolts.edgeDistance"), q_length(b.edge_distance), q_length(b.edge_distance * u_blk * 1.1), loc("Increase the edge distance.", "Randabstand vergrößern."))] } else { Vec::new() });
+    let width = joints::plate_width(b.bolts_per_row, b.gauge, b.edge_distance);
+    let net = joints::net_width(width, bt.d0, b.bolts_per_row, b.gauge, conn.hole_stagger);
+    let (n_o_rd, n_u_rd) = joints::plate_tension_resistances(width, net, b.plate_thickness, alloy.f_o_pa, alloy.f_u_pa, params.gamma_m1, params.gamma_m2);
+    let n_rd = n_o_rd.min(n_u_rd).max(1e-9);
+    let u_net = d.v / n_rd;
+    let mut net_remedies = Vec::new();
+    if u_net > 1.0 {
+        let wider = (u_net * 1.01 - 1.0) * net / 2.0;
+        net_remedies.push(Remedy::at_least(conn_subject(conn, "bolts.plateThickness"), q_length(b.plate_thickness), q_length(b.plate_thickness * u_net * 1.01), loc("Increase the plate thickness.", "Blechdicke erhöhen.")));
+        net_remedies.push(Remedy::at_least(conn_subject(conn, "bolts.edgeDistance"), q_length(b.edge_distance), q_length(b.edge_distance + wider.max(1e-3)), loc("Increase the edge distance (wider plate).", "Randabstand vergrößern (breiteres Blech).")));
+    }
+    emit(out, conn, annex, g, "en1999.8.5.net", "6.2.3", ("Plate tension at the bolt lines (gross yield, net section)", "Blechzug an den Schraubenlinien (Brutto-Fließen, Nettoquerschnitt)"), "bolts.plateThickness", q_force(d.v), q_force(n_rd),
+        format!("b = {:.1} mm, b_net = {:.2} mm (n = {} lines, d0 = {:.1} mm, s = {:.1} mm), N_o,Rd = {:.2} kN, N_u,Rd = 0.9·A_net·f_u/γ_M2 = {:.2} kN (A_net = {:.1} mm²)", width * 1e3, net * 1e3, b.bolts_per_row, bt.d0 * 1e3, conn.hole_stagger * 1e3, n_o_rd / 1e3, n_u_rd / 1e3, net * b.plate_thickness * 1e6), net_remedies);
+}
+
+fn pinned_checks(conn: &AluminiumConnection, annex: AnnexChoice, params: &na_de::AnnexParams, alloy: &part_1_1::AlloyProps, g: &GoverningEffects, out: &mut Vec<CheckResult>) {
+    let d = demand(g);
+    let b = &conn.bolts;
+    if joints::fastener_fu_pa(&b.material) <= 0.0 {
+        let subject = conn_subject(conn, "bolts.material");
+        out.push(
+            CheckResult::assess(format!("en1999.8.5.grade.{}", conn.id), "DIN EN 1999-1-1", clause("8.5"), subject.clone(), loc("Pin grade", "Bolzengüte"))
+                .status(semio_s_plugin_norm_compliance::CheckStatus::Fail)
+                .explanation(loc(&format!("Unknown pin grade '{}'.", b.material), &format!("Unbekannte Bolzengüte '{}'.", b.material)))
+                .annex(annex)
+                .remedy(Remedy::one_of(subject, joints::FASTENER_GRADES.iter().map(|s| (*s).to_string()).collect(), loc("Pick a supported pin grade.", "Unterstützte Bolzengüte wählen.")))
+                .build(),
+        );
+        return;
+    }
+    let n_pins = (f64::from(b.rows) * f64::from(b.bolts_per_row)).max(1.0);
+    let f_ed = d.v.hypot(d.n.abs()) / n_pins;
+    let f_v_ed = f_ed * 0.5;
+    let f_v_rd = joints::pin_shear_resistance(&b.material, b.diameter, params.gamma_m2);
+    let f_b_rd = joints::pin_bearing_resistance(b.plate_thickness, b.diameter, alloy.f_o_pa, params.gamma_m1);
+    let m_ed = joints::pin_bending_moment(f_ed, b.plate_thickness);
+    let m_rd = joints::pin_bending_resistance(&b.material, b.diameter, params.gamma_m2);
+    let diameter_remedy = |u: f64| if u > 1.0 { vec![Remedy::at_least(conn_subject(conn, "bolts.diameter"), q_length(b.diameter), q_length(b.diameter * u.sqrt() * 1.01), loc("Increase the pin diameter.", "Bolzendurchmesser erhöhen."))] } else { Vec::new() };
+    let u_v = f_v_ed / f_v_rd.max(1e-9);
+    emit(out, conn, annex, g, "en1999.8.5.pin.shear", "8.5", ("Pin shear (double shear)", "Bolzen Abscheren (zweischnittig)"), "bolts.diameter", q_force(f_v_ed), q_force(f_v_rd.max(1e-9)),
+        format!("F_v,Ed = {:.2} kN per plane, F_v,Rd = {:.2} kN, {} pin(s)", f_v_ed / 1e3, f_v_rd / 1e3, n_pins), diameter_remedy(u_v));
+    let u_b = f_ed / f_b_rd.max(1e-9);
+    let mut rem_b = diameter_remedy(u_b);
+    if u_b > 1.0 { rem_b.push(Remedy::at_least(conn_subject(conn, "bolts.plateThickness"), q_length(b.plate_thickness), q_length(b.plate_thickness * u_b * 1.01), loc("Increase the plate thickness.", "Blechdicke erhöhen."))); }
+    emit(out, conn, annex, g, "en1999.8.5.pin.bearing", "8.5", ("Plate bearing at the pin", "Lochleibung am Bolzen"), "bolts.plateThickness", q_force(f_ed), q_force(f_b_rd.max(1e-9)),
+        format!("F_Ed = {:.2} kN per pin, F_b,Rd = 1.5·t·d·f_o/γ_M1 = {:.2} kN", f_ed / 1e3, f_b_rd / 1e3), rem_b);
+    let u_m = m_ed / m_rd.max(1e-9);
+    emit(out, conn, annex, g, "en1999.8.5.pin.bend", "8.5", ("Pin bending", "Bolzen Biegung"), "bolts.diameter", q_moment(m_ed), q_moment(m_rd.max(1e-9)),
+        format!("M_Ed = F_Ed·b/8 = {:.1} N·m, M_Rd = {:.1} N·m", m_ed, m_rd), diameter_remedy(u_m));
+    let u_i = u_m * u_m + u_v * u_v;
+    emit(out, conn, annex, g, "en1999.8.5.pin.int", "8.5", ("Pin shear and bending interaction", "Bolzen Interaktion Abscheren und Biegung"), "bolts.diameter", q_dim(u_i), q_dim(1.0),
+        format!("(M_Ed/M_Rd)² + (F_v,Ed/F_v,Rd)² = {u_i:.3}"), diameter_remedy(u_i.sqrt()));
+}
+
+fn welded_checks(conn: &AluminiumConnection, annex: AnnexChoice, params: &na_de::AnnexParams, alloy: &part_1_1::AlloyProps, g: &GoverningEffects, designation: &str, out: &mut Vec<CheckResult>) {
+    let d = demand(g);
+    let w = &conn.welds;
+    let parent_t = conn.bolts.plate_thickness.max(w.throat / 0.7);
+    let band = part_1_1::resolve_alloy_for_thickness(designation, parent_t).unwrap_or(*alloy);
+    let f_w = joints::filler_fw_pa(&w.filler_alloy, band.f_u_pa);
+    let (metal, haz) = joints::weld_resistance_per_length(w.throat, w.beta_w, f_w, band.f_u_pa, band.rho_u_haz, params.gamma_mw, params.gamma_m2);
+    let rd = metal.min(haz);
+    let len = w.length.max(1e-9);
+    let f_ed = (d.n.abs() / len + 6.0 * d.m / (len * len)).hypot(d.v / len);
+    let b_haz = if w.haz_extent > 0.0 { w.haz_extent } else { part_1_1::haz_width(parent_t) };
+    let u = f_ed / rd.max(1e-9);
+    let mut rem = Vec::new();
+    if u > 1.0 {
+        rem.push(Remedy::at_least(conn_subject(conn, "welds.throat"), q_length(w.throat), q_length(w.throat * u * 1.01), loc("Increase the weld throat.", "Nahtdicke erhöhen.")));
+        rem.push(Remedy::at_least(conn_subject(conn, "welds.length"), q_length(w.length), q_length(w.length * u * 1.05), loc("Increase the weld length.", "Nahtlänge erhöhen.")));
+    }
+    emit(out, conn, annex, g, "en1999.8.6.weld", "8.6", ("Fillet weld resistance (metal and HAZ)", "Kehlnahtwiderstand (Schweißgut und WEZ)"), "welds.throat",
+        Quantity::new(QuantityKind::Force, f_ed), Quantity::new(QuantityKind::Force, rd),
+        format!("f_Ed = {:.1} N/mm, weld metal {:.1} N/mm (f_w = {:.0} MPa, β_w = {:.2}, γ_Mw = {:.2}), HAZ boundary {:.1} N/mm (ρ_u,haz = {:.2}), b_haz = {:.0} mm", f_ed / 1e3, metal / 1e3, f_w / 1e6, w.beta_w, params.gamma_mw, haz / 1e3, band.rho_u_haz, b_haz * 1e3), rem);
+    let t_p = conn.bolts.plate_thickness;
+    let longitudinal = w.haz_extent > 0.0;
+    let (a_o, a_u) = if longitudinal {
+        let a_g = t_p * len;
+        let a_haz = (2.0 * b_haz * t_p).min(a_g);
+        (a_g - a_haz * (1.0 - band.rho_o_haz), a_g - a_haz * (1.0 - band.rho_u_haz))
+    } else {
+        (band.rho_o_haz * t_p * len, band.rho_u_haz * t_p * len)
+    };
+    let n_haz = (a_o * band.f_o_pa / params.gamma_m1).min(a_u * band.f_u_pa / params.gamma_m2);
+    let f_haz = d.n.abs() + d.v;
+    let mut rem_haz = Vec::new();
+    if f_haz > n_haz {
+        rem_haz.push(Remedy::at_least(conn_subject(conn, "bolts.plateThickness"), q_length(conn.bolts.plate_thickness), q_length(conn.bolts.plate_thickness * f_haz / n_haz.max(1e-9) * 1.01), loc("Increase the connected plate thickness.", "Dicke des angeschlossenen Blechs erhöhen.")));
+    }
+    emit(out, conn, annex, g, "en1999.8.6.haz", "8.6", ("Connected plate in the heat-affected zone", "Angeschlossenes Blech in der Wärmeeinflusszone"), "bolts.plateThickness", q_force(f_haz), q_force(n_haz),
+        format!("N_haz,Rd = min(A_o·f_o/γ_M1, A_u·f_u/γ_M2) = {:.2} kN, {} weld ({}), b_haz = {:.0} mm, ρ_o,haz = {:.2}, ρ_u,haz = {:.2} (plate width taken as the weld length)", n_haz / 1e3, if longitudinal { "longitudinal" } else { "transverse" }, if longitudinal { "HAZ strips on both sides" } else { "full width in the HAZ" }, b_haz * 1e3, band.rho_o_haz, band.rho_u_haz), rem_haz);
+    let l_min = joints::min_weld_length(w.throat);
+    let u_l = l_min / len;
+    let mut c = CheckResult::assess(format!("en1999.8.6.length.{}", conn.id), "DIN EN 1999-1-1", clause("8.6"), conn_subject(conn, "welds.length"), loc("Minimum weld length max(8·a, 40 mm)", "Mindestnahtlänge max(8·a, 40 mm)"))
+        .utilization(q_dim(u_l), q_dim(1.0))
+        .annex(annex)
+        .explanation(loc(&format!("Weld length L = {:.0} mm, minimum L,min = {:.0} mm", len * 1e3, l_min * 1e3), &format!("Nahtlänge L = {:.0} mm, Mindestwert L,min = {:.0} mm", len * 1e3, l_min * 1e3)));
+    if u_l > 1.0 { c = c.remedy(Remedy::at_least(conn_subject(conn, "welds.length"), q_length(w.length), q_length(l_min), loc("Lengthen the weld.", "Naht verlängern."))); }
+    out.push(c.ndps(&[na_de::AnnexParams::GAMMA_M1, na_de::AnnexParams::GAMMA_M2, na_de::AnnexParams::GAMMA_MW]).ndp_reads().build());
+}
+
+fn connection_sls(conn: &AluminiumConnection, annex: AnnexChoice, params: &na_de::AnnexParams, alloy: &part_1_1::AlloyProps, kind: semio_s_artifact_norm_en1999_model::ConnectionKind, g: &GoverningEffects) -> Option<CheckResult> {
+    use semio_s_artifact_norm_en1999_model::ConnectionKind as K;
+    let d = demand(g);
+    let mut cap = f64::INFINITY;
+    if matches!(kind, K::Bolted | K::Combined) {
+        let bt = bolting(conn, alloy, params, &d);
+        cap = cap.min(bt.n_bolts * bt.f_v_rd.min(bt.f_b_rd));
+    }
+    if kind == K::Pinned {
+        let n_pins = (f64::from(conn.bolts.rows) * f64::from(conn.bolts.bolts_per_row)).max(1.0);
+        cap = cap.min(2.0 * n_pins * joints::pin_shear_resistance(&conn.bolts.material, conn.bolts.diameter, params.gamma_m2));
+    }
+    if matches!(kind, K::Welded | K::Combined) {
+        let w = &conn.welds;
+        let f_w = joints::filler_fw_pa(&w.filler_alloy, alloy.f_u_pa);
+        let (metal, haz) = joints::weld_resistance_per_length(w.throat, w.beta_w, f_w, alloy.f_u_pa, alloy.rho_u_haz, params.gamma_mw, params.gamma_m2);
+        cap = cap.min(metal.min(haz) * w.length);
+    }
+    if !cap.is_finite() { return None; }
+    let f_ed = d.v + d.n.abs();
+    let u = f_ed / cap.max(1e-9);
+    let mut rem = leaf_remedies("connections", &conn.id, &conn.actions, u, &conn_label(&conn.id), "Reduce the connection load", "Anschlusslast senken", "vZK");
+    rem.extend(count_remedies(conn, u));
+    Some(utilization_check(
+        format!("en1999.8.sls-freq.{}", conn.id), "DIN EN 1999-1-1", ClauseId::new("EN 1990", "§6.5.3", "6.5.3"), conn_subject(conn, "bolts.rows"),
+        loc("Connection under the frequent combination", "Anschluss unter häufiger Kombination"),
+        q_force(f_ed), q_force(cap), annex,
+        loc(&format!("F_Ed,freq = {:.2} kN ≤ {:.2} kN (SLS {}, lead {}); {}", f_ed / 1e3, cap / 1e3, g.combination, g.action_id, actions_digest(&conn.actions)),
+            &format!("F_Ed,freq = {:.2} kN ≤ {:.2} kN (GZG {}, führend {}); {}", f_ed / 1e3, cap / 1e3, g.combination, g.action_id, actions_digest(&conn.actions))),
+        rem,
+    ))
+}
+
+pub fn check_connection(conn: &AluminiumConnection, material: &AluminiumMaterial, member: Option<&AluminiumMember>, member_ids: &[String], annex: AnnexChoice, reliability_class: semio_s_plugin_norm_compliance::ReliabilityClass) -> Vec<CheckResult> {
     let params = na_de::AnnexParams::for_choice(annex);
     let Some(alloy) = part_1_1::resolve_alloy(&material.designation) else {
-        return vec![CheckResult::assess(
-            format!("en1999.3.2.alloy.{}", conn.id),
-            "DIN EN 1999-1-1",
-            ClauseId::new("EN 1999-1-1", "§3.2", "3.2"),
-            SubjectRef::new(&material.id, format!("materials[id={}].designation", material.id), loc("Alloy", "Legierung")),
-            loc("Alloy designation", "Legierungsbezeichnung"),
-        )
-        .status(semio_s_plugin_norm_compliance::CheckStatus::Fail)
-        .explanation(loc(
-            &format!("Unknown alloy designation '{}'.", material.designation),
-            &format!("Unbekannte Legierungsbezeichnung '{}'.", material.designation),
-        ))
-        .annex(annex)
-        .remedy(Remedy::one_of(
-            SubjectRef::new(&material.id, format!("materials[id={}].designation", material.id), loc("Alloy", "Legierung")),
-            part_1_1::CATALOGUE_ALLOYS.iter().map(|s| (*s).to_string()).collect(),
-            loc("Pick a catalogue alloy from EN 1999-1-1 Table 3.2.", "Kataloglegierung nach EN 1999-1-1 Tabelle 3.2 wählen."),
-        ))
-        .build()];
+        return vec![alloy_unknown(format!("en1999.3.2.alloy.{}", conn.id), &conn.id, material, annex)];
     };
-    let part = "DIN EN 1999-1-1";
-    let mut out = Vec::new();
-    let kind = conn.kind.to_ascii_lowercase();
-    let gov = if conn.actions.is_empty() {
-        member.map(|m| part_en1990::governing_member_effects(m, annex)).unwrap_or(part_en1990::GoverningEffects {
-            action_id: "G".into(), combination: "uls-g", n_ed: 0.0, v_y_ed: 0.0, v_z_ed: 0.0, m_y_ed: 0.0, m_z_ed: 0.0,
-        })
-    } else {
-        part_en1990::governing_connection_effects(conn, annex)
-    };
-    let combo = gov.combination;
-    let action_id = gov.action_id.as_str();
-    let lever = 0.50;
-    let n_ed = gov.n_ed.abs() + 0.25 * (gov.m_y_ed.abs() + gov.m_z_ed.abs()) / lever;
-    let v_ed = gov.v_y_ed.abs() + gov.v_z_ed.abs() + (gov.m_y_ed.abs() + gov.m_z_ed.abs()) / lever;
-    let m_ed = gov.m_y_ed.abs() + gov.m_z_ed.abs();
-    let conn_dig = actions_digest(&conn.actions);
-    if member.is_none() {
+    let Some(member) = member else {
         return vec![CheckResult::assess(
-            format!("en1999.8.ref.{}", conn.id),
-            "DIN EN 1999-1-1",
-            ClauseId::new("EN 1999-1-1", "§8", "8"),
+            format!("en1999.8.ref.{}", conn.id), "DIN EN 1999-1-1", ClauseId::new("EN 1999-1-1", "§8", "8"),
             SubjectRef::new(&conn.id, format!("connections[id={}].memberId", conn.id), loc("Connection", "Anschluss")),
             loc("Connection member reference", "Anschluss-Bauteilverweis"),
         )
@@ -63,344 +322,27 @@ pub fn check_connection(conn: &AluminiumConnection, material: &AluminiumMaterial
             loc("Point connection.memberId at an existing member.", "connections.memberId auf ein vorhandenes Bauteil setzen."),
         ))
         .build()];
+    };
+    let alloy = part_1_1::resolve_alloy_for_thickness(&material.designation, conn.bolts.plate_thickness).unwrap_or(alloy);
+    use semio_s_artifact_norm_en1999_model::ConnectionKind as K;
+    let kind = conn.kind;
+    let uls: Vec<GoverningEffects> = if conn.actions.is_empty() {
+        part_en1990::uls_combinations(member, &params, reliability_class)
+    } else {
+        part_en1990::uls_combinations(&part_en1990::connection_proxy(conn), &params, reliability_class)
+    };
+    let mut sets = Vec::new();
+    for g in &uls {
+        let mut out = Vec::new();
+        if matches!(kind, K::Bolted | K::Combined) { bolted_checks(conn, annex, &params, &alloy, g, &mut out); }
+        if kind == K::Pinned { pinned_checks(conn, annex, &params, &alloy, g, &mut out); }
+        if matches!(kind, K::Welded | K::Combined) { welded_checks(conn, annex, &params, &alloy, g, &material.designation, &mut out); }
+        sets.push(out);
     }
-    check_bolted_connection(conn, annex, &params, &alloy, part, &mut out, &kind, combo, action_id, n_ed, v_ed, m_ed, &conn_dig);
-    check_welded_connection(conn, annex, &params, &alloy, part, &mut out, &kind, combo, action_id, n_ed, v_ed, m_ed, &conn_dig);
-    check_connection_serviceability(conn, annex, &params, &alloy, part, &mut out, &kind, lever, &conn_dig);
-    if out.is_empty() {
-        out.push(
-            CheckResult::assess(
-                format!("en1999.8.na.{}", conn.id),
-                part,
-                ClauseId::new("EN 1999-1-1", "§8", "8"),
-                SubjectRef::new(&conn.id, format!("connections[id={}].kind", conn.id), conn_label(&conn.id)),
-                loc("Connection check", "Anschlussnachweis"),
-            )
-            .not_applicable(loc("Connection kind not bolted/welded.", "Anschlussart weder geschraubt noch geschweißt."))
-            .annex(annex)
-            .build(),
-        );
+    let sls_source = if conn.actions.is_empty() { member.clone() } else { part_en1990::connection_proxy(conn) };
+    for g in part_en1990::sls_combinations(&sls_source, "frequent") {
+        if let Some(c) = connection_sls(conn, annex, &params, &alloy, conn.kind, &g) { sets.push(vec![c]); }
     }
-    out
-}
-
-/// 🧱️ Checks the bearing, shear, tension and interaction resistance of the bolts of a connection.
-#[allow(clippy::too_many_arguments, reason = "the extracted check keeps the connection values of its original function as explicit parameters")]
-fn check_bolted_connection(
-    conn: &AluminiumConnection,
-    annex: AnnexChoice,
-    params: &na_de::AnnexParams,
-    alloy: &part_1_1::AlloyProps,
-    part: &str,
-    out: &mut Vec<CheckResult>,
-    kind: &String,
-    combo: &str,
-    action_id: &str,
-    n_ed: f64,
-    v_ed: f64,
-    m_ed: f64,
-    conn_dig: &String,
-) {
-    if kind == "bolted" || kind == "combined" {
-        if part_1_1::bolt_fu_pa(&conn.bolts.material) <= 0.0 {
-            out.push(CheckResult::assess(
-                format!("en1999.8.5.boltgrade.{}", conn.id),
-                part,
-                ClauseId::new("EN 1999-1-1", "§8.5", "8.5"),
-                SubjectRef::new(&conn.id, format!("connections[id={}].bolts.material", conn.id), conn_label(&conn.id)),
-                loc("Bolt grade", "Schraubenfestigkeit"),
-            )
-            .status(semio_s_plugin_norm_compliance::CheckStatus::Fail)
-            .explanation(loc(
-                &format!("Unknown bolt grade '{}'.", conn.bolts.material),
-                &format!("Unbekannte Schraubenfestigkeit '{}'.", conn.bolts.material),
-            ))
-            .annex(annex)
-            .remedy(Remedy::one_of(
-                SubjectRef::new(&conn.id, format!("connections[id={}].bolts.material", conn.id), conn_label(&conn.id)),
-                vec!["4.6".into(), "5.6".into(), "8.8".into(), "10.9".into()],
-                loc("Select a bolt grade from EN 1999-1-1 Table 3.4.", "Schraubenfestigkeit nach EN 1999-1-1 Tabelle 3.4 wählen."),
-            ))
-            .build());
-        }
-        let f_v = part_1_1::bolt_shear_resistance(&conn.bolts, params.gamma_m2);
-        let f_b = part_1_1::bolt_bearing_resistance(&conn.bolts, alloy.f_u_pa, params.gamma_m2);
-        let pitch_ratio = conn.bolts.pitch / conn.bolts.diameter.max(1e-6);
-        let pitch_factor = (0.85 + 0.05 * pitch_ratio).clamp(0.80, 1.25);
-        let f_rd = (if f_v > 0.0 && f_b > 0.0 { (f_v * f_b) / (f_v + f_b) } else { f_v.min(f_b) }) * pitch_factor;
-        let mut remedies = Vec::new();
-        let force_bolt = v_ed + n_ed.abs();
-        if force_bolt > f_rd && f_rd > 0.0 {
-            let n_now = (conn.bolts.rows * conn.bolts.bolts_per_row) as f64;
-            let n_req = (n_now * force_bolt / f_rd * 1.05).ceil().max(n_now + 1.0) as u32;
-            let per_row = (n_req / conn.bolts.rows.max(1)).max(conn.bolts.bolts_per_row + 1);
-            remedies.push(Remedy::at_least(
-                SubjectRef::new(&conn.id, format!("connections[id={}].bolts.boltsPerRow", conn.id), conn_label(&conn.id)),
-                q_dim(conn.bolts.bolts_per_row as f64),
-                q_dim(per_row as f64),
-                loc(
-                    &format!("Increase bolt count (rows×bolts) so F_Rd ≥ {:.1} kN.", force_bolt/1e3),
-                    &format!("Schraubenzahl erhöhen, sodass F_Rd ≥ {:.1} kN.", force_bolt/1e3),
-                ),
-            ));
-            let rows_req = (n_req / conn.bolts.bolts_per_row.max(1)).max(conn.bolts.rows + 1);
-            remedies.push(Remedy::at_least(
-                SubjectRef::new(&conn.id, format!("connections[id={}].bolts.rows", conn.id), conn_label(&conn.id)),
-                q_dim(conn.bolts.rows as f64),
-                q_dim(rows_req as f64),
-                loc(
-                    &format!("Increase bolt rows so F_Rd ≥ {:.1} kN.", force_bolt/1e3),
-                    &format!("Schraubenreihen erhöhen, sodass F_Rd ≥ {:.1} kN.", force_bolt/1e3),
-                ),
-            ));
-            remedies.extend(scale_action_leaf_remedies(
-                "connections", &conn.id, &conn.actions, "vZK", |a| a.v_z_k, force_bolt, f_rd, q_force,
-                conn_label(&conn.id),
-                "Reduce V_z,k so bolted resistance governs.",
-                "V_z,k senken, damit Schraubentragfähigkeit maßgebend ist.",
-            ));
-            remedies.extend(scale_action_leaf_remedies(
-                "connections", &conn.id, &conn.actions, "nK", |a| a.n_k, force_bolt, f_rd, q_force,
-                conn_label(&conn.id),
-                "Reduce N_k so bolted resistance governs.",
-                "N_k senken, damit Schraubentragfähigkeit maßgebend ist.",
-            ));
-        }
-        if conn.bolts.edge_distance < 1.2 * conn.bolts.diameter {
-            remedies.push(Remedy::at_least(
-                SubjectRef::new(&conn.id, format!("connections[id={}].bolts.edgeDistance", conn.id), conn_label(&conn.id)),
-                q_length(conn.bolts.edge_distance),
-                q_length(1.2 * conn.bolts.diameter),
-                loc("Increase edge distance e1 to ≥ 1.2 d.", "Randabstand e1 auf ≥ 1.2 d erhöhen."),
-            ));
-        }
-        let p_min = 2.2 * conn.bolts.diameter;
-        out.push(utilization_check(
-            format!("en1999.8.5.pitch.{}", conn.id),
-            part,
-            ClauseId::new("EN 1999-1-1", "§8.5", "8.5.1"),
-            SubjectRef::new(&conn.id, format!("connections[id={}].bolts.pitch", conn.id), conn_label(&conn.id)),
-            loc("Minimum bolt pitch p1 ≥ 2.2 d", "Mindestlochabstand p1 ≥ 2.2 d"),
-            q_length(p_min),
-            q_length(conn.bolts.pitch.max(1e-9)),
-            annex,
-            loc(
-                &format!("p1={:.4} m, 2.2d={:.4} m (bolt spacing).", conn.bolts.pitch, p_min),
-                &format!("p1={:.4} m, 2.2d={:.4} m (Schraubenabstand).", conn.bolts.pitch, p_min),
-            ),
-            if conn.bolts.pitch + 1e-12 < p_min {
-                vec![Remedy::at_least(
-                    SubjectRef::new(&conn.id, format!("connections[id={}].bolts.pitch", conn.id), conn_label(&conn.id)),
-                    q_length(conn.bolts.pitch),
-                    q_length(p_min),
-                    loc("Increase pitch to ≥ 2.2 d.", "Lochabstand auf ≥ 2.2 d erhöhen."),
-                )]
-            } else { Vec::new() },
-        ));
-        out.push(utilization_check(
-            format!("en1999.8.5.bolt.{}", conn.id),
-            part,
-            ClauseId::new("EN 1999-1-1", "§8.5", "8.5"),
-            SubjectRef::new(&conn.id, format!("connections[id={}].bolts.diameter", conn.id), conn_label(&conn.id)),
-            loc("Bolted connection resistance", "Schraubenanschluss Tragfähigkeit"),
-            q_force(v_ed + n_ed.abs()),
-            q_force(f_rd),
-            annex,
-            loc(
-                &format!("V_Ed={:.1} kN, N_Ed={:.1} kN, M_Ed={:.2} kNm, F_v,Rd={:.1} kN, F_b,Rd={:.1} kN, d={d:.4} m, e1={e1:.4} m, p1={p1:.4} m, e2={e2:.4} m (ULS {combo}, lead {action_id}, bolt {mat}); {conn_dig}", v_ed/1e3, n_ed.abs()/1e3, m_ed/1e3, f_v/1e3, f_b/1e3, d=conn.bolts.diameter, e1=conn.bolts.edge_distance, p1=conn.bolts.pitch, e2=conn.bolts.gauge, mat=conn.bolts.material),
-                &format!("V_Ed={:.1} kN, N_Ed={:.1} kN, M_Ed={:.2} kNm, F_v,Rd={:.1} kN, F_b,Rd={:.1} kN, d={d:.4} m, e1={e1:.4} m, p1={p1:.4} m, e2={e2:.4} m (GZT {combo}, führend {action_id}, Schraube {mat}); {conn_dig}", v_ed/1e3, n_ed.abs()/1e3, m_ed/1e3, f_v/1e3, f_b/1e3, d=conn.bolts.diameter, e1=conn.bolts.edge_distance, p1=conn.bolts.pitch, e2=conn.bolts.gauge, mat=conn.bolts.material),
-            ),
-            remedies,
-        ));
-    }
-}
-
-/// 🪵️ Checks the weld resistance of a connection.
-#[allow(clippy::too_many_arguments, reason = "the extracted check keeps the connection values of its original function as explicit parameters")]
-fn check_welded_connection(
-    conn: &AluminiumConnection,
-    annex: AnnexChoice,
-    params: &na_de::AnnexParams,
-    alloy: &part_1_1::AlloyProps,
-    part: &str,
-    out: &mut Vec<CheckResult>,
-    kind: &String,
-    combo: &str,
-    action_id: &str,
-    n_ed: f64,
-    v_ed: f64,
-    m_ed: f64,
-    conn_dig: &String,
-) {
-    if kind == "welded" || kind == "combined" {
-        let f_w = part_1_1::weld_resistance(&conn.welds, alloy.f_u_pa, params.gamma_m2) * (alloy.rho_u_haz.min(alloy.rho_o_haz) / (1.0 + part_1_1::haz_extent_m(&conn.welds, conn.bolts.plate_thickness).max(conn.welds.throat) * 10.0)).clamp(0.2, 1.0);
-        let mut remedies = Vec::new();
-        let force_weld = v_ed + n_ed.abs();
-        if force_weld > f_w && f_w > 0.0 {
-            let rho_haz = alloy.rho_u_haz.min(alloy.rho_o_haz);
-            let mut t_req = conn.welds.throat;
-            for _ in 0..48 {
-                let mut trial = conn.welds.clone();
-                trial.throat = t_req;
-                let haz = part_1_1::haz_extent_m(&trial, conn.bolts.plate_thickness).max(trial.throat);
-                let fac = (rho_haz / (1.0 + haz * 10.0)).clamp(0.2, 1.0);
-                let f_w_base = part_1_1::weld_resistance(&trial, alloy.f_u_pa, params.gamma_m2);
-                let need = force_weld / fac.max(1e-9);
-                let a_need = need * trial.beta_w.max(0.01) * params.gamma_m2 / part_1_1::filler_fu_pa(&trial.filler_alloy, alloy.f_u_pa).max(1e-9);
-                t_req = (a_need / trial.length.max(1e-6)).max(t_req);
-                if f_w_base * fac >= force_weld * 0.999 { break; }
-            }
-            remedies.push(Remedy::at_least(
-                SubjectRef::new(&conn.id, format!("connections[id={}].welds.throat", conn.id), conn_label(&conn.id)),
-                q_length(conn.welds.throat),
-                q_length(t_req),
-                loc(
-                    &format!("Increase weld throat from {:.1} mm to at least {:.1} mm.", conn.welds.throat*1e3, t_req*1e3),
-                    &format!("Kehlnahtdicke von {:.1} mm auf mindestens {:.1} mm erhöhen.", conn.welds.throat*1e3, t_req*1e3),
-                ),
-            ));
-            let haz0 = part_1_1::haz_extent_m(&conn.welds, conn.bolts.plate_thickness).max(conn.welds.throat);
-            let fac0 = (rho_haz / (1.0 + haz0 * 10.0)).clamp(0.2, 1.0);
-            let a_need = force_weld / fac0.max(1e-9) * conn.welds.beta_w.max(0.01) * params.gamma_m2
-                / part_1_1::filler_fu_pa(&conn.welds.filler_alloy, alloy.f_u_pa).max(1e-9);
-            let l_req = a_need / conn.welds.throat.max(1e-6);
-            remedies.push(Remedy::at_least(
-                SubjectRef::new(&conn.id, format!("connections[id={}].welds.length", conn.id), conn_label(&conn.id)),
-                q_length(conn.welds.length),
-                q_length(l_req),
-                loc(
-                    &format!("Increase weld length from {:.0} mm to at least {:.0} mm (or relocate weld).", conn.welds.length*1e3, l_req*1e3),
-                    &format!("Nahtlänge von {:.0} mm auf mindestens {:.0} mm erhöhen (oder Naht verlegen).", conn.welds.length*1e3, l_req*1e3),
-                ),
-            ));
-            remedies.push(Remedy::at_most(
-                SubjectRef::new(&conn.id, format!("connections[id={}].welds.hazExtent", conn.id), conn_label(&conn.id)),
-                q_length(conn.welds.haz_extent),
-                q_length(0.0),
-                loc("Reduce stored HAZ extent so weld resistance recovers.", "Gespeicherte WEZ-Ausdehnung senken, damit Nahttragfähigkeit steigt."),
-            ));
-            remedies.extend(scale_action_leaf_remedies(
-                "connections", &conn.id, &conn.actions, "vZK", |a| a.v_z_k, force_weld, f_w, q_force,
-                conn_label(&conn.id),
-                "Reduce V_z,k so weld resistance governs.",
-                "V_z,k senken, damit Schweißtragfähigkeit maßgebend ist.",
-            ));
-        }
-        out.push(utilization_check(
-            format!("en1999.8.6.weld.{}", conn.id),
-            part,
-            ClauseId::new("EN 1999-1-1", "§8.6", "8.6"),
-            SubjectRef::new(&conn.id, format!("connections[id={}].welds.throat", conn.id), conn_label(&conn.id)),
-            loc("Welded connection resistance", "Schweißanschluss Tragfähigkeit"),
-            q_force(v_ed + n_ed.abs()),
-            q_force(f_w),
-            annex,
-            loc(
-                &format!("V_Ed={:.1} kN, N_Ed={:.1} kN, M_Ed={:.2} kNm, F_w,Rd={:.1} kN, a={:.1} mm, ℓ={:.0} mm, HAZ={:.0} mm, βw={bw:.3}, filler={filler} (ULS {combo}, lead {action_id}); {conn_dig}", v_ed/1e3, n_ed.abs()/1e3, m_ed/1e3, f_w/1e3, conn.welds.throat*1e3, conn.welds.length*1e3, conn.welds.haz_extent*1e3, bw=conn.welds.beta_w, filler=conn.welds.filler_alloy),
-                &format!("V_Ed={:.1} kN, N_Ed={:.1} kN, M_Ed={:.2} kNm, F_w,Rd={:.1} kN, a={:.1} mm, ℓ={:.0} mm, WEZ={:.0} mm, βw={bw:.3}, Schweißzusatz={filler} (GZT {combo}, führend {action_id}); {conn_dig}", v_ed/1e3, n_ed.abs()/1e3, m_ed/1e3, f_w/1e3, conn.welds.throat*1e3, conn.welds.length*1e3, conn.welds.haz_extent*1e3, bw=conn.welds.beta_w, filler=conn.welds.filler_alloy),
-            ),
-            remedies,
-        ));
-    }
-}
-
-/// 🔩️ Checks the serviceability of a connection under its frequent actions.
-#[allow(clippy::too_many_arguments, reason = "the extracted check keeps the connection values of its original function as explicit parameters")]
-fn check_connection_serviceability(
-    conn: &AluminiumConnection,
-    annex: AnnexChoice,
-    params: &na_de::AnnexParams,
-    alloy: &part_1_1::AlloyProps,
-    part: &str,
-    out: &mut Vec<CheckResult>,
-    kind: &String,
-    lever: f64,
-    conn_dig: &String,
-) {
-    if !conn.actions.is_empty() && (kind == "bolted" || kind == "welded" || kind == "combined") {
-        let sls = part_en1990::sls_connection_effects(conn, annex, "frequent");
-        let n_ed_s = sls.n_ed.abs() + 0.25 * (sls.m_y_ed.abs() + sls.m_z_ed.abs()) / lever;
-        let v_ed_s = sls.v_y_ed.abs() + sls.v_z_ed.abs() + (sls.m_y_ed.abs() + sls.m_z_ed.abs()) / lever;
-        let force_s = v_ed_s + n_ed_s;
-        let mut f_lim = 0.0;
-        if kind == "bolted" || kind == "combined" {
-            let f_v = part_1_1::bolt_shear_resistance(&conn.bolts, params.gamma_m2);
-            let f_b = part_1_1::bolt_bearing_resistance(&conn.bolts, alloy.f_u_pa, params.gamma_m2);
-            let pitch_ratio = conn.bolts.pitch / conn.bolts.diameter.max(1e-6);
-            let pitch_factor = (0.85 + 0.05 * pitch_ratio).clamp(0.80, 1.25);
-            f_lim = (if f_v > 0.0 && f_b > 0.0 { (f_v * f_b) / (f_v + f_b) } else { f_v.min(f_b) }) * pitch_factor;
-        }
-        if kind == "welded" || kind == "combined" {
-            let f_w = part_1_1::weld_resistance(&conn.welds, alloy.f_u_pa, params.gamma_m2)
-                * (alloy.rho_u_haz.min(alloy.rho_o_haz)
-                    / (1.0 + part_1_1::haz_extent_m(&conn.welds, conn.bolts.plate_thickness).max(conn.welds.throat) * 10.0))
-                    .clamp(0.2, 1.0);
-            f_lim = if f_lim > 0.0 { f_lim.min(f_w) } else { f_w };
-        }
-        let mut rem_s = Vec::new();
-        if force_s > f_lim && f_lim > 0.0 {
-            rem_s.extend(scale_action_leaf_remedies(
-                "connections", &conn.id, &conn.actions, "vZK", |a| a.v_z_k, force_s, f_lim, q_force,
-                conn_label(&conn.id),
-                "Reduce V_z,k so frequent SLS connection force ≤ F_Rd.",
-                "V_z,k senken, damit häufige GZG-Anschlusskraft ≤ F_Rd.",
-            ));
-            rem_s.extend(scale_action_leaf_remedies(
-                "connections", &conn.id, &conn.actions, "nK", |a| a.n_k, force_s, f_lim, q_force,
-                conn_label(&conn.id),
-                "Reduce N_k so frequent SLS connection force ≤ F_Rd.",
-                "N_k senken, damit häufige GZG-Anschlusskraft ≤ F_Rd.",
-            ));
-            rem_s.extend(scale_action_leaf_remedies(
-                "connections", &conn.id, &conn.actions, "qKLine", |a| a.q_k_line, force_s, f_lim, q_force,
-                conn_label(&conn.id),
-                "Reduce q_k so frequent SLS connection force ≤ F_Rd.",
-                "q_k senken, damit häufige GZG-Anschlusskraft ≤ F_Rd.",
-            ));
-            rem_s.extend(scale_action_leaf_remedies(
-                "connections", &conn.id, &conn.actions, "gKLine", |a| a.g_k_line, force_s, f_lim, q_force,
-                conn_label(&conn.id),
-                "Reduce g_k so frequent SLS connection force ≤ F_Rd.",
-                "g_k senken, damit häufige GZG-Anschlusskraft ≤ F_Rd.",
-            ));
-            rem_s.extend(scale_action_leaf_remedies(
-                "connections", &conn.id, &conn.actions, "mYK", |a| a.m_y_k, force_s, f_lim, q_moment,
-                conn_label(&conn.id),
-                "Reduce M_y,k so frequent SLS connection force ≤ F_Rd.",
-                "M_y,k senken, damit häufige GZG-Anschlusskraft ≤ F_Rd.",
-            ));
-        }
-        out.push(utilization_check(
-            format!("en1999.8.sls-freq.{}", conn.id),
-            part,
-            ClauseId::new("EN 1990", "§6.5.3", "6.5.3"),
-            SubjectRef::new(
-                &conn.id,
-                format!("connections[id={}].actions[id={}].category", conn.id, sls.action_id),
-                conn_label(&conn.id),
-            ),
-            loc("Connection force (frequent SLS ψ₁)", "Anschlusskraft (häufiges GZG ψ₁)"),
-            q_force(force_s),
-            q_force(f_lim.max(1e-9)),
-            annex,
-            loc(
-                &format!(
-                    "F_Ed,freq={:.1} kN ≤ F_Rd={:.1} kN (SLS {comb}, lead {aid}, ψ₁ via category); {conn_dig}",
-                    force_s / 1e3,
-                    f_lim / 1e3,
-                    comb = sls.combination,
-                    aid = sls.action_id
-                ),
-                &format!(
-                    "F_Ed,freq={:.1} kN ≤ F_Rd={:.1} kN (GZG {comb}, führend {aid}, ψ₁ über Kategorie); {conn_dig}",
-                    force_s / 1e3,
-                    f_lim / 1e3,
-                    comb = sls.combination,
-                    aid = sls.action_id
-                ),
-            ),
-            rem_s,
-        ));
-    }
+    worst_by_id(sets)
 }
 //#endregion 🔖️ComplianceHelpers

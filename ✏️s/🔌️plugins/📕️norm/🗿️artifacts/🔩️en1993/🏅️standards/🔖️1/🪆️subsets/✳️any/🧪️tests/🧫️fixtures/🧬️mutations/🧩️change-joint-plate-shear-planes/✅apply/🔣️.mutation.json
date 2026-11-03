@@ -1,0 +1,6 @@
+{
+  "ChangeJointPlateShearPlanes": {
+    "id": "joint-plate-1",
+    "newShearPlanes": 2
+  }
+}

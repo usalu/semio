@@ -1,40 +1,12 @@
-type En1996Wall {
-  id: String!
-  labelEn: String!
-  labelDe: String!
-  wallType: String!
-  thicknessM: Float!
-  heightM: Float!
-  lengthM: Float!
-  supportSides: Int!
-  openings: [JSON!]!
-  slabBearingDepthM: Float!
-  eccentricityTopM: Float!
-  eccentricityBottomM: Float!
-  unitGroup: String!
-  unitMaterial: String!
-  fBPa: Float!
-  unitLengthM: Float!
-  unitWidthM: Float!
-  unitHeightM: Float!
-  mortarType: String!
-  mortarClass: String!
-  fMPa: Float!
-  bedJointThicknessM: Float!
-  reinforced: Boolean!
-  asVerticalM2: Float!
-  asHorizontalM2: Float!
-  fYdPa: Float!
-  fireReiMin: Int!
-  exposure: String!
-  mu: Float!
-  loadCases: [JSON!]!
-}
-
-type En1996Snapshot @state {
-  annex: String! @state(lane: ARTIFACT)
-  masonryClass: String! @state(lane: ARTIFACT)
-  designSituation: String! @state(lane: ARTIFACT)
-  storeys: Int! @state(lane: ARTIFACT)
-  walls: [En1996Wall!]! @state(lane: ARTIFACT)
+type En1996Snapshot {
+  annex: String!
+  masonryClass: String!
+  designSituation: String!
+  storeys: Int!
+  walls: [MasonryWall!]!
+  placements: [Placement!]!
+  cases: [CaseRow!]!
+  chases: [WallChase!]!
+  movementJoints: [MovementJoint!]!
+  reliabilityClass: String!
 }

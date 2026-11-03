@@ -1,0 +1,5 @@
+{
+  "mutation": "changePileDynamicTestCount",
+  "id": "pile-P1",
+  "newDynamicTestCount": 1.5
+}

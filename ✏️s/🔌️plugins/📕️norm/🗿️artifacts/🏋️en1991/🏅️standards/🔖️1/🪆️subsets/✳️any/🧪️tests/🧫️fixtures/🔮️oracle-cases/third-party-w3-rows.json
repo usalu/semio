@@ -1,0 +1,775 @@
+{
+  "$schema": "../../../../../../../../../🔮️oracles/🏃️harness/🧬️schema/🔣️.json",
+  "schemaVersion": 1,
+  "artifact": "en1991",
+  "annex": "en",
+  "cases": [
+    {
+      "id": "en1991.2.fatigue-load-model-lane-1",
+      "check": "en1991.2.fatigue-load-model",
+      "citation": {
+        "standard": "EN 1991-2",
+        "edition": "2003",
+        "clause": "EN 1991-2 4.6.2 FLM1 = 0.7 Q_ik and 0.3 q_ik of LM1 (lane value, alpha = 1), 4.6.4 FLM3 four axles of 120 kN at 1.2, 6.0, 1.2 m; factors and axle data unverified (registry, spec line E2.10)",
+        "annex": "en"
+      },
+      "inputs": {
+        "lane": 1.0
+      },
+      "expected": {
+        "axle_flm1": {
+          "value": 210000.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        },
+        "udl_flm1": {
+          "value": 2700.0,
+          "unit": "Pa",
+          "profile": "eurocode-quantities-v1"
+        },
+        "axle_flm3": {
+          "value": 120000.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        },
+        "length_flm3": {
+          "value": 8.4,
+          "unit": "m",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1991.2.fatigue-load-model-lane-2",
+      "check": "en1991.2.fatigue-load-model",
+      "citation": {
+        "standard": "EN 1991-2",
+        "edition": "2003",
+        "clause": "EN 1991-2 4.6.2 FLM1 = 0.7 Q_ik and 0.3 q_ik of LM1 (lane value, alpha = 1), 4.6.4 FLM3 four axles of 120 kN at 1.2, 6.0, 1.2 m; factors and axle data unverified (registry, spec line E2.10)",
+        "annex": "en"
+      },
+      "inputs": {
+        "lane": 2.0
+      },
+      "expected": {
+        "axle_flm1": {
+          "value": 140000.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        },
+        "udl_flm1": {
+          "value": 750.0,
+          "unit": "Pa",
+          "profile": "eurocode-quantities-v1"
+        },
+        "axle_flm3": {
+          "value": 120000.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        },
+        "length_flm3": {
+          "value": 8.4,
+          "unit": "m",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1991.2.fatigue-load-model-lane-3",
+      "check": "en1991.2.fatigue-load-model",
+      "citation": {
+        "standard": "EN 1991-2",
+        "edition": "2003",
+        "clause": "EN 1991-2 4.6.2 FLM1 = 0.7 Q_ik and 0.3 q_ik of LM1 (lane value, alpha = 1), 4.6.4 FLM3 four axles of 120 kN at 1.2, 6.0, 1.2 m; factors and axle data unverified (registry, spec line E2.10)",
+        "annex": "en"
+      },
+      "inputs": {
+        "lane": 3.0
+      },
+      "expected": {
+        "axle_flm1": {
+          "value": 70000.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        },
+        "udl_flm1": {
+          "value": 750.0,
+          "unit": "Pa",
+          "profile": "eurocode-quantities-v1"
+        },
+        "axle_flm3": {
+          "value": 120000.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        },
+        "length_flm3": {
+          "value": 8.4,
+          "unit": "m",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1991.2.support-collision-deck",
+      "check": "en1991.2.support-collision",
+      "citation": {
+        "standard": "EN 1991-2",
+        "edition": "2003",
+        "clause": "EN 1991-2 4.7.3.1 collision forces on a support at deck level (F_dx 1000 kN, F_dy 500 kN) and on the soffit (F_dx 500 kN); the spec marks the values [V], unverified (registry)",
+        "annex": "en"
+      },
+      "inputs": {
+        "soffit": 0.0
+      },
+      "expected": {
+        "F_dx": {
+          "value": 1000000.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        },
+        "F_dy": {
+          "value": 500000.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1991.2.support-collision-soffit",
+      "check": "en1991.2.support-collision",
+      "citation": {
+        "standard": "EN 1991-2",
+        "edition": "2003",
+        "clause": "EN 1991-2 4.7.3.1 collision forces on a support at deck level (F_dx 1000 kN, F_dy 500 kN) and on the soffit (F_dx 500 kN); the spec marks the values [V], unverified (registry)",
+        "annex": "en"
+      },
+      "inputs": {
+        "soffit": 1.0
+      },
+      "expected": {
+        "F_dx": {
+          "value": 500000.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1991_1-2_local-fire-hasemi-D-2-Q-5e+06-H-3-r-1",
+      "check": "en1991.1-2.local-fire-hasemi",
+      "citation": {
+        "standard": "EN 1991-1-2",
+        "edition": "2003",
+        "clause": "EN 1991-1-2 Annex C L_f = -1.02 D + 0.0148 Q^0.4, horizontal flame length L_h = H (2.9 Q_H*^0.33 - 1), virtual source z', Hasemi flux; the constants beyond the spec line E12.05 are recalled and unverified (registry)",
+        "annex": "en"
+      },
+      "inputs": {
+        "D": 2.0,
+        "Q": 5000000.0,
+        "H": 3.0,
+        "r": 1.0
+      },
+      "expected": {
+        "L_f": {
+          "value": 5.037008498446276,
+          "unit": "m",
+          "profile": "eurocode-quantities-v1"
+        },
+        "L_h": {
+          "value": 2.775608354068795,
+          "unit": "m",
+          "profile": "eurocode-quantities-v1"
+        },
+        "z_prime": {
+          "value": 0.25825569954072947,
+          "unit": "m",
+          "profile": "eurocode-quantities-v1"
+        },
+        "flux": {
+          "value": 50907.13481998313,
+          "unit": "W/m2",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1991_1-2_local-fire-hasemi-D-1-Q-2e+06-H-2_5-r-0_2",
+      "check": "en1991.1-2.local-fire-hasemi",
+      "citation": {
+        "standard": "EN 1991-1-2",
+        "edition": "2003",
+        "clause": "EN 1991-1-2 Annex C L_f = -1.02 D + 0.0148 Q^0.4, horizontal flame length L_h = H (2.9 Q_H*^0.33 - 1), virtual source z', Hasemi flux; the constants beyond the spec line E12.05 are recalled and unverified (registry)",
+        "annex": "en"
+      },
+      "inputs": {
+        "D": 1.0,
+        "Q": 2000000.0,
+        "H": 2.5,
+        "r": 0.2
+      },
+      "expected": {
+        "L_f": {
+          "value": 3.8853919456631822,
+          "unit": "m",
+          "profile": "eurocode-quantities-v1"
+        },
+        "L_h": {
+          "value": 1.634479234187296,
+          "unit": "m",
+          "profile": "eurocode-quantities-v1"
+        },
+        "z_prime": {
+          "value": -0.6373444681309048,
+          "unit": "m",
+          "profile": "eurocode-quantities-v1"
+        },
+        "flux": {
+          "value": 64932.627550237215,
+          "unit": "W/m2",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1991_1-2_local-fire-hasemi-D-3-Q-1e+07-H-4-r-6",
+      "check": "en1991.1-2.local-fire-hasemi",
+      "citation": {
+        "standard": "EN 1991-1-2",
+        "edition": "2003",
+        "clause": "EN 1991-1-2 Annex C L_f = -1.02 D + 0.0148 Q^0.4, horizontal flame length L_h = H (2.9 Q_H*^0.33 - 1), virtual source z', Hasemi flux; the constants beyond the spec line E12.05 are recalled and unverified (registry)",
+        "annex": "en"
+      },
+      "inputs": {
+        "D": 3.0,
+        "Q": 10000000.0,
+        "H": 4.0,
+        "r": 6.0
+      },
+      "expected": {
+        "L_f": {
+          "value": 6.278168698306864,
+          "unit": "m",
+          "profile": "eurocode-quantities-v1"
+        },
+        "L_h": {
+          "value": 3.6348746889098154,
+          "unit": "m",
+          "profile": "eurocode-quantities-v1"
+        },
+        "z_prime": {
+          "value": 0.7865206746401849,
+          "unit": "m",
+          "profile": "eurocode-quantities-v1"
+        },
+        "flux": {
+          "value": 6002.762525988217,
+          "unit": "W/m2",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1991_1-3_snow-guard-680-6-30",
+      "check": "en1991.1-3.snow-guard",
+      "citation": {
+        "standard": "EN 1991-1-3",
+        "edition": "2003",
+        "clause": "EN 1991-1-3 5.3.8 and 6.3 snow guard line force F_s = s b sin(alpha)",
+        "annex": "en"
+      },
+      "inputs": {
+        "s": 680.0,
+        "b": 6.0,
+        "alpha_deg": 30.0
+      },
+      "expected": {
+        "F_s": {
+          "value": 2040.0000000000002,
+          "unit": "N/m",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1991_1-3_snow-guard-1250-4_5-20",
+      "check": "en1991.1-3.snow-guard",
+      "citation": {
+        "standard": "EN 1991-1-3",
+        "edition": "2003",
+        "clause": "EN 1991-1-3 5.3.8 and 6.3 snow guard line force F_s = s b sin(alpha)",
+        "annex": "en"
+      },
+      "inputs": {
+        "s": 1250.0,
+        "b": 4.5,
+        "alpha_deg": 20.0
+      },
+      "expected": {
+        "F_s": {
+          "value": 1923.8633062068868,
+          "unit": "N/m",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1991_1-3_snow-guard-900-10-45",
+      "check": "en1991.1-3.snow-guard",
+      "citation": {
+        "standard": "EN 1991-1-3",
+        "edition": "2003",
+        "clause": "EN 1991-1-3 5.3.8 and 6.3 snow guard line force F_s = s b sin(alpha)",
+        "annex": "en"
+      },
+      "inputs": {
+        "s": 900.0,
+        "b": 10.0,
+        "alpha_deg": 45.0
+      },
+      "expected": {
+        "F_s": {
+          "value": 6363.961030678927,
+          "unit": "N/m",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1991_3_hoist-release-grab-0_4",
+      "check": "en1991.3.hoist-release",
+      "citation": {
+        "standard": "EN 1991-3",
+        "edition": "2003",
+        "clause": "EN 1991-3 2.5 phi_3 = 1 - (dm/m)(1 + beta_3) for the sudden release of a payload fraction; beta_3 of grab 0.5 and magnet 1.0 are unverified registry rows (registry rows)",
+        "annex": "en"
+      },
+      "inputs": {
+        "dm_over_m": 0.4,
+        "beta_3": 0.5
+      },
+      "expected": {
+        "phi_3": {
+          "value": 0.3999999999999999,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1991_3_hoist-release-magnet-0_25",
+      "check": "en1991.3.hoist-release",
+      "citation": {
+        "standard": "EN 1991-3",
+        "edition": "2003",
+        "clause": "EN 1991-3 2.5 phi_3 = 1 - (dm/m)(1 + beta_3) for the sudden release of a payload fraction; beta_3 of grab 0.5 and magnet 1.0 are unverified registry rows (registry rows)",
+        "annex": "en"
+      },
+      "inputs": {
+        "dm_over_m": 0.25,
+        "beta_3": 1.0
+      },
+      "expected": {
+        "phi_3": {
+          "value": 0.5,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1991_3_hoist-release-grab-0",
+      "check": "en1991.3.hoist-release",
+      "citation": {
+        "standard": "EN 1991-3",
+        "edition": "2003",
+        "clause": "EN 1991-3 2.5 phi_3 = 1 - (dm/m)(1 + beta_3) for the sudden release of a payload fraction; beta_3 of grab 0.5 and magnet 1.0 are unverified registry rows (registry rows)",
+        "annex": "en"
+      },
+      "inputs": {
+        "dm_over_m": 0.0,
+        "beta_3": 0.5
+      },
+      "expected": {
+        "phi_3": {
+          "value": 1.0,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1991_2_rail-derailment-load-alpha-1",
+      "check": "en1991.2.rail-derailment-load",
+      "citation": {
+        "standard": "EN 1991-2",
+        "edition": "2003",
+        "clause": "EN 1991-2 6.7.1 derailment line loads (design situation I 45 kN/m per the spec line E2.19; situation II as 1.4 alpha q_vk, loaded length 20 m, offset at most 1.5 s of the track gauge s = 1.435 m; every value an unverified registry row)",
+        "annex": "en"
+      },
+      "inputs": {
+        "alpha": 1.0
+      },
+      "expected": {
+        "q_i": {
+          "value": 45000.0,
+          "unit": "N/m",
+          "profile": "eurocode-quantities-v1"
+        },
+        "q_ii": {
+          "value": 112000.0,
+          "unit": "N/m",
+          "profile": "eurocode-quantities-v1"
+        },
+        "length": {
+          "value": 20.0,
+          "unit": "m",
+          "profile": "eurocode-quantities-v1"
+        },
+        "offset_limit": {
+          "value": 2.1525,
+          "unit": "m",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1991_2_rail-derailment-load-alpha-1_21",
+      "check": "en1991.2.rail-derailment-load",
+      "citation": {
+        "standard": "EN 1991-2",
+        "edition": "2003",
+        "clause": "EN 1991-2 6.7.1 derailment line loads (design situation I 45 kN/m per the spec line E2.19; situation II as 1.4 alpha q_vk, loaded length 20 m, offset at most 1.5 s of the track gauge s = 1.435 m; every value an unverified registry row)",
+        "annex": "en"
+      },
+      "inputs": {
+        "alpha": 1.21
+      },
+      "expected": {
+        "q_i": {
+          "value": 45000.0,
+          "unit": "N/m",
+          "profile": "eurocode-quantities-v1"
+        },
+        "q_ii": {
+          "value": 135520.0,
+          "unit": "N/m",
+          "profile": "eurocode-quantities-v1"
+        },
+        "length": {
+          "value": 20.0,
+          "unit": "m",
+          "profile": "eurocode-quantities-v1"
+        },
+        "offset_limit": {
+          "value": 2.1525,
+          "unit": "m",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1991_2_rail-group-bases-30-1_21",
+      "check": "en1991.2.rail-group-bases",
+      "citation": {
+        "standard": "EN 1991-2",
+        "edition": "2003",
+        "clause": "EN 1991-2 Table 6.11 groups on the characteristic bases of the spec line E2.17: the larger of traction min(33 kN/m L, 1000 kN) and braking min(20 kN/m L, 6000 kN), and the nosing force alpha 100 kN (unverified registry rows)",
+        "annex": "en"
+      },
+      "inputs": {
+        "span": 30.0,
+        "alpha": 1.21
+      },
+      "expected": {
+        "F_long": {
+          "value": 990000.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        },
+        "F_nosing": {
+          "value": 121000.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1991_2_rail-group-bases-100-1",
+      "check": "en1991.2.rail-group-bases",
+      "citation": {
+        "standard": "EN 1991-2",
+        "edition": "2003",
+        "clause": "EN 1991-2 Table 6.11 groups on the characteristic bases of the spec line E2.17: the larger of traction min(33 kN/m L, 1000 kN) and braking min(20 kN/m L, 6000 kN), and the nosing force alpha 100 kN (unverified registry rows)",
+        "annex": "en"
+      },
+      "inputs": {
+        "span": 100.0,
+        "alpha": 1.0
+      },
+      "expected": {
+        "F_long": {
+          "value": 2000000.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        },
+        "F_nosing": {
+          "value": 100000.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1991_2_rail-group-bases-400-1_33",
+      "check": "en1991.2.rail-group-bases",
+      "citation": {
+        "standard": "EN 1991-2",
+        "edition": "2003",
+        "clause": "EN 1991-2 Table 6.11 groups on the characteristic bases of the spec line E2.17: the larger of traction min(33 kN/m L, 1000 kN) and braking min(20 kN/m L, 6000 kN), and the nosing force alpha 100 kN (unverified registry rows)",
+        "annex": "en"
+      },
+      "inputs": {
+        "span": 400.0,
+        "alpha": 1.33
+      },
+      "expected": {
+        "F_long": {
+          "value": 6000000.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        },
+        "F_nosing": {
+          "value": 133000.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1991_4_dust-vent-area-150-8-100-0_2-0_5",
+      "check": "en1991.4.dust-vent-area",
+      "citation": {
+        "standard": "EN 1991-4",
+        "edition": "2003",
+        "clause": "EN 14491 vent area after Bartknecht A = [3.264e-5 p_max K_St p_red^-0.569 + 0.27 (p_stat - 0.1) p_red^-0.5] V^0.753, pressures in bar (recalled; the spec line E4.07 states no value; unverified registry rows)",
+        "annex": "en"
+      },
+      "inputs": {
+        "K_St": 150.0,
+        "p_max_bar": 8.0,
+        "V": 100.0,
+        "p_stat_bar": 0.2,
+        "p_red_bar": 0.5
+      },
+      "expected": {
+        "A_v": {
+          "value": 3.0872941525031727,
+          "unit": "m2",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1991_4_dust-vent-area-150-8-100-0_2-1",
+      "check": "en1991.4.dust-vent-area",
+      "citation": {
+        "standard": "EN 1991-4",
+        "edition": "2003",
+        "clause": "EN 14491 vent area after Bartknecht A = [3.264e-5 p_max K_St p_red^-0.569 + 0.27 (p_stat - 0.1) p_red^-0.5] V^0.753, pressures in bar (recalled; the spec line E4.07 states no value; unverified registry rows)",
+        "annex": "en"
+      },
+      "inputs": {
+        "K_St": 150.0,
+        "p_max_bar": 8.0,
+        "V": 100.0,
+        "p_stat_bar": 0.2,
+        "p_red_bar": 1.0
+      },
+      "expected": {
+        "A_v": {
+          "value": 2.1215242866387767,
+          "unit": "m2",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1991_4_dust-vent-area-200-9-500-0_1-1_5",
+      "check": "en1991.4.dust-vent-area",
+      "citation": {
+        "standard": "EN 1991-4",
+        "edition": "2003",
+        "clause": "EN 14491 vent area after Bartknecht A = [3.264e-5 p_max K_St p_red^-0.569 + 0.27 (p_stat - 0.1) p_red^-0.5] V^0.753, pressures in bar (recalled; the spec line E4.07 states no value; unverified registry rows)",
+        "annex": "en"
+      },
+      "inputs": {
+        "K_St": 200.0,
+        "p_max_bar": 9.0,
+        "V": 500.0,
+        "p_stat_bar": 0.1,
+        "p_red_bar": 1.5
+      },
+      "expected": {
+        "A_v": {
+          "value": 5.02517443921499,
+          "unit": "m2",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        }
+      ]
+    }
+  ]
+}

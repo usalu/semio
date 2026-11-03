@@ -1,0 +1,5 @@
+{
+  "mutation": "changeAssessmentShearForceDemandN",
+  "id": "as-1",
+  "newShearForceDemandN": 1.5
+}

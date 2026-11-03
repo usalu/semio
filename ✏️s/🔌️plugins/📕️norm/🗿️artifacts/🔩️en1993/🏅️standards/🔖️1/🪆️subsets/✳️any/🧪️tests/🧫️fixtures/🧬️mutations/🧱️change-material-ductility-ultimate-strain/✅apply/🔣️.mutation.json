@@ -1,0 +1,6 @@
+{
+  "ChangeMaterialDuctilityUltimateStrain": {
+    "id": "material-ductility-1",
+    "newUltimateStrain": 1.15
+  }
+}

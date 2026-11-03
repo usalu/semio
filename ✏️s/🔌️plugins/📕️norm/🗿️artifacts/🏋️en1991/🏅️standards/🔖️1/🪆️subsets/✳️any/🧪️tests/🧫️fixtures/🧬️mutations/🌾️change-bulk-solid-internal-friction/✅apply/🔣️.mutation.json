@@ -1,0 +1,6 @@
+{
+  "ChangeBulkSolidInternalFriction": {
+    "id": "bulk-solid-1",
+    "newInternalFriction": 3.0
+  }
+}

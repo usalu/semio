@@ -1,0 +1,5 @@
+{
+  "mutation": "changeConnBoltsGauge",
+  "connectionId": "support-weld",
+  "newBoltsGauge": 0.032
+}

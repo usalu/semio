@@ -1,0 +1,16 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-s-artifact-norm-en1999-fatigue-math"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "EN 1999-1-3 fatigue: Annex J detail categories, bilinear S-N curve and Palmgren-Miner damage of stress-range spectra"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"

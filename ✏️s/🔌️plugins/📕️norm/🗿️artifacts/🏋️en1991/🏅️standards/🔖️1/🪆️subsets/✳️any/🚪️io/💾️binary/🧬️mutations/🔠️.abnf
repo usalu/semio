@@ -1,5 +1,6 @@
 ; abnf norm.en1991 mutations — one op frame
-op = format tag payload
+op = format tag len payload
 format = %x01
-tag = OCTET ; the kind's record tag in 📡️.protocol.semio
-payload = *OCTET ; the leaf payload as UTF-8 JSON
+tag = *%x80-FF %x00-7F ; varint record tag in 📡️.protocol.semio
+len = *%x80-FF %x00-7F ; varint byte length of the payload
+payload = *OCTET ; the mutation as UTF-8 JSON

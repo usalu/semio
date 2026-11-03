@@ -1,0 +1,18 @@
+{
+  "InsertCutout": {
+    "index": 0,
+    "cutout": {
+      "id": "cutout-1",
+      "memberId": "beam-B1",
+      "kind": "notch",
+      "face": "bottom",
+      "distanceM": 0.0,
+      "lengthM": 0.15,
+      "depthM": 0.06,
+      "centreHeightM": 0.0,
+      "slope": 0.0,
+      "rods": 0,
+      "rodResistanceN": 0.0
+    }
+  }
+}

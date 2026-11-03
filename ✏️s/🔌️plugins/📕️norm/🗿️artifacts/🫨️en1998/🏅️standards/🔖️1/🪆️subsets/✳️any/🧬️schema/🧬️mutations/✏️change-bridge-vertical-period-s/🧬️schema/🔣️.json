@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-bridge-vertical-period-s/schema.json",
+  "title": "ChangeBridgeVerticalPeriodS",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newVerticalPeriodS"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeBridgeVerticalPeriodS"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Bridge",
+          "de": "Brücke"
+        },
+        "description": {
+          "en": "The bridge this mutation addresses, by id.",
+          "de": "Das adressierte Element (Brücke), per Kennung."
+        },
+        "ref": {
+          "kind": "bridge"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newVerticalPeriodS": {
+      "type": "number",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Fundamental period T_v of the deck in the vertical direction (0 = no vertical action; EN 1998-2 3.2)",
+          "de": "Grundschwingzeit T_v des Überbaus in vertikaler Richtung (0 = keine Vertikalwirkung; EN 1998-2 3.2)"
+        },
+        "group": "value",
+        "order": 20,
+        "widget": "stepper",
+        "step": 0.001,
+        "precision": 3
+      }
+    }
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-member-effective-stiffness-basis/schema.json",
+  "title": "ChangeMemberEffectiveStiffnessBasis",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "buildingId",
+    "id",
+    "newEffectiveStiffnessBasis"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeMemberEffectiveStiffnessBasis"
+    },
+    "buildingId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Building",
+          "de": "Gebäude"
+        },
+        "description": {
+          "en": "The building this mutation addresses, by id.",
+          "de": "Das adressierte Element (Gebäude), per Kennung."
+        },
+        "ref": {
+          "kind": "building"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Member",
+          "de": "Bauteil"
+        },
+        "description": {
+          "en": "The member this mutation addresses, by id.",
+          "de": "Das adressierte Element (Bauteil), per Kennung."
+        },
+        "ref": {
+          "kind": "member"
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "newEffectiveStiffnessBasis": {
+      "type": "string",
+      "enum": [
+        "simplified",
+        "declared"
+      ],
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Stiffness basis of the gross wall stiffness (EN 1998-1 4.3.1(6))",
+          "de": "Steifigkeitsbasis der Brutto-Wandsteifigkeit (EN 1998-1 4.3.1(6))"
+        },
+        "group": "value",
+        "order": 30,
+        "widget": "select"
+      },
+      "x-semio-rust": {
+        "type": "semio_s_artifact_norm_en1998_model::StiffnessBasis"
+      }
+    }
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-wind-face-z/schema.json",
+  "title": "ChangeWindFaceZ",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newZ"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Wind face",
+          "de": "Windfläche"
+        },
+        "description": {
+          "en": "The wind face this mutation addresses, by id.",
+          "de": "Das adressierte Element (Windfläche), per Kennung."
+        },
+        "ref": {
+          "kind": "wind-face"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newZ": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Reference height z",
+          "de": "Bezugshöhe z"
+        },
+        "description": {
+          "en": "Value of the design; the checks and the 3D scene derive their actions from it.",
+          "de": "Wert des Entwurfs; Nachweise und 3D-Szene leiten ihre Einwirkungen daraus ab."
+        },
+        "unit": "m",
+        "displayUnit": "m",
+        "displayFactor": 1,
+        "step": 0.5,
+        "precision": 2,
+        "group": "windFaces",
+        "order": 20
+      },
+      "minimum": 0
+    }
+  }
+}

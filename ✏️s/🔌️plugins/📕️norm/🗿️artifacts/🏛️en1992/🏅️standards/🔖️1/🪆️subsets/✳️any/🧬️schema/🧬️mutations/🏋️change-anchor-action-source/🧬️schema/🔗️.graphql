@@ -1,0 +1,5 @@
+type ChangeAnchorActionSource {
+  anchorId: String!
+  actionId: String!
+  newSource: ActionSource!
+}

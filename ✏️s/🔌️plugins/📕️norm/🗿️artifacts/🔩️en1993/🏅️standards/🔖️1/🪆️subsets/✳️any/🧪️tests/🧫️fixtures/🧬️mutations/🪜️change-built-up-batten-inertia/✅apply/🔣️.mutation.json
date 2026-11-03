@@ -1,0 +1,6 @@
+{
+  "ChangeBuiltUpBattenInertia": {
+    "id": "built-up-1",
+    "newBattenInertia": 1e-05
+  }
+}

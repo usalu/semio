@@ -1,0 +1,6 @@
+{
+  "ChangeBeamPatchBearingLengthM": {
+    "id": "beam-B1",
+    "newPatchBearingLengthM": 0.125
+  }
+}

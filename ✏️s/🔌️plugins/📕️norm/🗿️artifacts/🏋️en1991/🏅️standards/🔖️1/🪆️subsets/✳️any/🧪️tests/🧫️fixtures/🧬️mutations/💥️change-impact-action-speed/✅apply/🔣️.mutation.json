@@ -1,0 +1,6 @@
+{
+  "ChangeImpactActionSpeed": {
+    "id": "impact-action-1",
+    "newSpeed": 3.0
+  }
+}

@@ -160,6 +160,8 @@ pub enum KeyAction {
     Function(u8),
     Tab,
     Space(bool),
+    /// ☰ The dedicated context-menu key of a keyboard (the secondary-click trigger without a pointer); `Shift+F10` is the same request spelled as [`KeyAction::Function`].
+    ContextMenu,
 }
 
 struct FixedKeyQueue {

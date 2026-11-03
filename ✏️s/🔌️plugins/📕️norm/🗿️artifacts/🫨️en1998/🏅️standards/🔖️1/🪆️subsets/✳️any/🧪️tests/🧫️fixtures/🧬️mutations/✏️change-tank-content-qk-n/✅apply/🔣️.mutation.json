@@ -1,0 +1,5 @@
+{
+  "mutation": "changeTankContentQkN",
+  "id": "tk-1",
+  "newContentQkN": 10000000.0
+}

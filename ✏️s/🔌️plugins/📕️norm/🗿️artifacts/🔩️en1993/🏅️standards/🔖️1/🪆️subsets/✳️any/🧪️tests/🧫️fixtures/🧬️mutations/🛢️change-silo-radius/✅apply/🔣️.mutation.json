@@ -1,0 +1,6 @@
+{
+  "ChangeSiloRadius": {
+    "id": "silo-1",
+    "newRadius": 6.0
+  }
+}

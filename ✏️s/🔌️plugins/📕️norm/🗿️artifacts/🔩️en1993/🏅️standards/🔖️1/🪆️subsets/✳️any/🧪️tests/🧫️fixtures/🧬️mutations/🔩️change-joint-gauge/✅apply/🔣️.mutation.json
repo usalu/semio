@@ -1,0 +1,6 @@
+{
+  "ChangeJointGauge": {
+    "id": "joint-j1",
+    "newGauge": 0.14
+  }
+}

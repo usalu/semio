@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️change-foundation-base-friction-deg",
+  "semanticKind": "change-foundation-base-friction-deg",
+  "displayName": "Change Interface friction angle δ of the footing base for the seismic sliding resistance (V − u) tan δ / γ_Rd (0 = no friction credited)",
+  "emoji": "✏️",
+  "aggregateVariant": "ChangeFoundationBaseFrictionDeg",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": null,
+  "binaryTag": 291,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

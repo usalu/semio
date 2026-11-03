@@ -1,0 +1,5 @@
+{
+  "mutation": "changeTransverseWidth",
+  "transverseStiffenerId": "stiffener-1",
+  "newWidth": 0.16
+}

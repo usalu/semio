@@ -1,0 +1,293 @@
+{
+  "artifact": "en1993",
+  "reference": "frameMemberBases",
+  "collection": {
+    "name": "fastenedJoints",
+    "entity": "FastenedJoint",
+    "emoji": "🪛",
+    "doc": "🪛 Mechanically fastened joint of cold-formed sheets (EN 1993-1-3 8.3): self-tapping screws or blind rivets in shear and tension with the sheet thicknesses and strengths, the fastener spacing and the shear resistance of the fastener from tests.",
+    "label": {
+      "en": "Fastened joints",
+      "de": "Befestigungsverbindungen"
+    },
+    "id": {
+      "en": "Fastened joint ID",
+      "de": "Verbindungs-ID"
+    },
+    "singular": {
+      "en": "fastened joint",
+      "de": "Befestigungsverbindung"
+    },
+    "kindSlug": "fastened-joint",
+    "fields": [
+      {
+        "name": "member_id",
+        "type": "String",
+        "label": {
+          "en": "Cold-formed section",
+          "de": "Kaltprofil"
+        },
+        "doc": "🥫 Id of the cold-formed member the joint belongs to.",
+        "sample": "cold-1"
+      },
+      {
+        "name": "kind",
+        "type": "enum",
+        "label": {
+          "en": "Fastener kind",
+          "de": "Art des Verbindungsmittels"
+        },
+        "doc": "🪛 Self-tapping screw or blind rivet.",
+        "sample": "SelfTappingScrew",
+        "enum": {
+          "name": "FastenerKind",
+          "doc": "🪛 Mechanical fastener of cold-formed sheets: self-tapping screw or blind rivet.",
+          "values": [
+            {
+              "token": "SelfTappingScrew",
+              "label": {
+                "en": "Self-tapping screw",
+                "de": "Selbstbohrende Schraube"
+              }
+            },
+            {
+              "token": "BlindRivet",
+              "label": {
+                "en": "Blind rivet",
+                "de": "Blindniet"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "name": "diameter",
+        "type": "f64",
+        "label": {
+          "en": "Fastener diameter d",
+          "de": "Durchmesser d"
+        },
+        "doc": "⌀ Nominal diameter d of the screw or rivet.",
+        "sample": 0.0055,
+        "unit": "m",
+        "precision": 4,
+        "step": 0.0005,
+        "range": [
+          0.002,
+          0.02
+        ]
+      },
+      {
+        "name": "washer_diameter",
+        "type": "f64",
+        "label": {
+          "en": "Washer or head diameter d_w",
+          "de": "Scheiben- oder Kopfdurchmesser d_w"
+        },
+        "doc": "⭕ Diameter d_w of the washer or head that bears on the sheet in tension (pull-over); 0 = not given.",
+        "sample": 0.016,
+        "unit": "m",
+        "precision": 4,
+        "step": 0.0005,
+        "range": [
+          0,
+          0.05
+        ]
+      },
+      {
+        "name": "count",
+        "type": "u32",
+        "label": {
+          "en": "Number of fasteners",
+          "de": "Anzahl der Verbindungsmittel"
+        },
+        "doc": "🔢 Number of fasteners n that share the force.",
+        "sample": 4
+      },
+      {
+        "name": "per_row",
+        "type": "u32",
+        "label": {
+          "en": "Fasteners across the section",
+          "de": "Verbindungsmittel im Schnitt"
+        },
+        "doc": "🔢 Number of fasteners in the net section across the width.",
+        "sample": 2
+      },
+      {
+        "name": "head_thickness",
+        "type": "f64",
+        "label": {
+          "en": "Sheet thickness t_1",
+          "de": "Blechdicke t_1"
+        },
+        "doc": "📏 Thickness t_1 of the sheet on the head side.",
+        "sample": 0.00075,
+        "unit": "m",
+        "precision": 5,
+        "step": 5e-05,
+        "range": [
+          0.0004,
+          0.01
+        ]
+      },
+      {
+        "name": "base_thickness",
+        "type": "f64",
+        "label": {
+          "en": "Sheet thickness t_2",
+          "de": "Blechdicke t_2"
+        },
+        "doc": "📏 Thickness t_2 of the sheet or support the fastener ends in.",
+        "sample": 0.0015,
+        "unit": "m",
+        "precision": 5,
+        "step": 5e-05,
+        "range": [
+          0.0004,
+          0.02
+        ]
+      },
+      {
+        "name": "head_strength",
+        "type": "f64",
+        "label": {
+          "en": "Ultimate strength f_u,1",
+          "de": "Zugfestigkeit f_u,1"
+        },
+        "doc": "💪 Ultimate tensile strength of the sheet t_1.",
+        "sample": 360000000.0,
+        "unit": "Pa"
+      },
+      {
+        "name": "base_strength",
+        "type": "f64",
+        "label": {
+          "en": "Ultimate strength f_u,2",
+          "de": "Zugfestigkeit f_u,2"
+        },
+        "doc": "💪 Ultimate tensile strength of the sheet t_2.",
+        "sample": 360000000.0,
+        "unit": "Pa"
+      },
+      {
+        "name": "end_distance",
+        "type": "f64",
+        "label": {
+          "en": "End distance e_1",
+          "de": "Randabstand e_1"
+        },
+        "doc": "↦ Distance e_1 from the fastener to the end of the sheet in the direction of the force.",
+        "sample": 0.03,
+        "unit": "m",
+        "precision": 4,
+        "step": 0.0005,
+        "range": [
+          0.005,
+          0.2
+        ]
+      },
+      {
+        "name": "edge_distance",
+        "type": "f64",
+        "label": {
+          "en": "Edge distance e_2",
+          "de": "Randabstand e_2"
+        },
+        "doc": "↥ Distance e_2 from the fastener to the edge of the sheet perpendicular to the force.",
+        "sample": 0.015,
+        "unit": "m",
+        "precision": 4,
+        "step": 0.0005,
+        "range": [
+          0.005,
+          0.2
+        ]
+      },
+      {
+        "name": "pitch",
+        "type": "f64",
+        "label": {
+          "en": "Pitch p_1",
+          "de": "Lochabstand p_1"
+        },
+        "doc": "↔ Spacing p_1 of the fasteners in the direction of the force.",
+        "sample": 0.03,
+        "unit": "m",
+        "precision": 4,
+        "step": 0.0005,
+        "range": [
+          0.005,
+          0.3
+        ]
+      },
+      {
+        "name": "gauge",
+        "type": "f64",
+        "label": {
+          "en": "Gauge p_2",
+          "de": "Rissabstand p_2"
+        },
+        "doc": "↕ Spacing p_2 of the fastener rows perpendicular to the force.",
+        "sample": 0.03,
+        "unit": "m",
+        "precision": 4,
+        "step": 0.0005,
+        "range": [
+          0.005,
+          0.3
+        ]
+      },
+      {
+        "name": "sheet_width",
+        "type": "f64",
+        "label": {
+          "en": "Sheet width b",
+          "de": "Blechbreite b"
+        },
+        "doc": "↔ Width b of the sheet in the net section across the fasteners.",
+        "sample": 0.1,
+        "unit": "m",
+        "precision": 4,
+        "step": 0.001,
+        "range": [
+          0.01,
+          1.0
+        ]
+      },
+      {
+        "name": "shear_force",
+        "type": "f64",
+        "label": {
+          "en": "Shear force F_v,Ed",
+          "de": "Querkraft F_v,Ed"
+        },
+        "doc": "➡ Shear force on the fastened joint, shared by the n fasteners.",
+        "sample": 4000.0,
+        "unit": "N"
+      },
+      {
+        "name": "tension_force",
+        "type": "f64",
+        "label": {
+          "en": "Tension force F_t,Ed",
+          "de": "Zugkraft F_t,Ed"
+        },
+        "doc": "⬆ Tension force on the fastened joint (pull-out and pull-over), shared by the n fasteners.",
+        "sample": 0.0,
+        "unit": "N"
+      },
+      {
+        "name": "shear_resistance",
+        "type": "f64",
+        "label": {
+          "en": "Fastener shear resistance F_v,Rd",
+          "de": "Abscherwiderstand F_v,Rd"
+        },
+        "doc": "🧪 Design shear resistance of one fastener from the manufacturer or tests; 0 = not given, only the sheet resistances are checked.",
+        "sample": 0.0,
+        "unit": "N"
+      }
+    ]
+  }
+}

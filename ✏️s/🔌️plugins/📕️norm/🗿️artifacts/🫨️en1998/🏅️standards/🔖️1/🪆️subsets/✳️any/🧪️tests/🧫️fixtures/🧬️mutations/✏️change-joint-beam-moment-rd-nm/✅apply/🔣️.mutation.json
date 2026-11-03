@@ -1,0 +1,5 @@
+{
+  "mutation": "changeJointBeamMomentRdNm",
+  "id": "joint-1",
+  "newBeamMomentRdNm": 5000000.0
+}

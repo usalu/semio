@@ -41,11 +41,11 @@ fn reference_tables_cells_match_imposed_and_evaluate_limit() {
     let CatalogueCell::Number { value: cell_qk, .. } = &b1.cells[1] else {
         panic!("B1 q_k cell must be Number");
     };
-    let source = part_1_1::imposed_qk_pa("B1", AnnexChoice::De);
+    let source = part_1_1::imposed_qk_pa("B1", AnnexChoice::De).expect("B1 is a DE category");
     assert_eq!(*cell_qk, source);
     assert_eq!(*cell_qk, 2000.0);
 
-    let mut doc = En1991Snapshot::default();
+    let mut doc = En1991Snapshot::example(AnnexChoice::De);
     doc.storey_count = 1;
     doc.floors = vec![FloorArea {
         id: "b1".into(),
@@ -57,5 +57,5 @@ fn reference_tables_cells_match_imposed_and_evaluate_limit() {
     }];
     let report = evaluate(&doc);
     let check = report.checks.iter().find(|c| c.id == "en1991.1-1.imposed.b1").expect("imposed B1 check");
-    assert!((check.limit.value - *cell_qk).abs() < 1e-9, "evaluated limit {} != table cell {}", check.limit.value, cell_qk);
+    assert!((check.computed.value - *cell_qk).abs() < 1e-9, "evaluated requirement {} != table cell {}", check.computed.value, cell_qk);
 }

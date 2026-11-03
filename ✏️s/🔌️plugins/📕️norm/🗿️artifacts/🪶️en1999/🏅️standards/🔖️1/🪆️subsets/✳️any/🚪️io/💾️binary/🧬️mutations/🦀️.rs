@@ -6,7 +6,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use semio_s_artifact_norm_en1999_mutations::En1999Mutation;
+use crate::En1999Mutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a document mutation to its binary op form.
@@ -26,14 +26,15 @@ mod tests;
 //#endregion 🧪️Tests
 
 mod native_codec {
-use crate::binary::mutations::*;
+use crate::binary::*;
 #[cfg(test)] use semio_s_plugin_norm_compliance::AnnexChoice;
-use semio_s_artifact_norm_en1999_mutations::En1999Mutation;
-use semio_s_artifact_norm_en1999_mut_inputs::{change_annex, change_cold_formed, change_connections, change_fatigue_details, change_fire_scenarios, change_materials, change_members, change_sections, change_shells};
-use semio_s_artifact_norm_en1999_mut_members::{change_bolt_count, change_material_designation, change_member_buckling_length, change_member_m_y_ed, change_member_n_ed, change_plate_thickness, change_weld_throat, add_member, remove_member};
+use crate::En1999Mutation;
+use semio_s_artifact_norm_en1999_mut_inputs::{change_annex};
+use semio_s_artifact_norm_en1999_mut_inputs::{change_reliability_class};
+use semio_s_artifact_norm_en1999_mut_members::{change_bolt_count, change_material_designation, change_member_buckling_length, change_member_m_y_ed, change_member_n_ed, change_plate_thickness, change_weld_throat, insert_member, remove_member};
 #[cfg(test)] use semio_s_artifact_norm_en1999_model::{AluminiumConnection, AluminiumMaterial, AluminiumMember, AluminiumSection, AluminiumShell, ColdFormedSheet, FatigueDetail, FireScenario};
 #[cfg(test)] use protocol::OpText;
-use crate::text::mutations::{En1999MutationDsl, en1999_mutation_to_dsl, en1999_mutation_from_dsl};
+use crate::text::{En1999MutationDsl, en1999_mutation_to_dsl, en1999_mutation_from_dsl};
 
 impl OpBinary for En1999MutationDsl {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

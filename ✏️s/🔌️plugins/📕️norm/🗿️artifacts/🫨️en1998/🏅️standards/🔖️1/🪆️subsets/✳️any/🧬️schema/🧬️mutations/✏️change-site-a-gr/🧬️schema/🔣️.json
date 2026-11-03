@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-site-a-gr/schema.json",
+  "title": "ChangeSiteAGr",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "newAGr"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeSiteAGr"
+    },
+    "newAGr": {
+      "type": "number",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "a gr",
+          "de": "a gr"
+        },
+        "group": "value",
+        "order": 10,
+        "widget": "stepper",
+        "step": 0.001,
+        "precision": 3
+      }
+    }
+  }
+}

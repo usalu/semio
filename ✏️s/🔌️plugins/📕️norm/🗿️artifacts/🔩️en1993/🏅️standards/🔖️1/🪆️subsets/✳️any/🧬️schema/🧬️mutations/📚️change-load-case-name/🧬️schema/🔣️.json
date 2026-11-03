@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-load-case-name/schema.json",
+  "title": "ChangeLoadCaseName",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newName"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Load case",
+          "de": "Lastfall"
+        },
+        "description": {
+          "en": "The load case this mutation addresses, by id.",
+          "de": "Das adressierte Element (Lastfall), per Kennung."
+        },
+        "ref": {
+          "kind": "load-case"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newName": {
+      "type": "string",
+      "x-semio-ui": {
+        "label": {
+          "en": "name",
+          "de": "Name"
+        },
+        "widget": "text",
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

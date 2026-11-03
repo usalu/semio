@@ -3,6 +3,8 @@ import{mkdtempSync,rmSync,writeFileSync}from"node:fs";
 import{tmpdir}from"node:os";
 import{fileURLToPath}from"node:url";
 import{join}from"node:path";
+import{mkdirSync}from"node:fs";
+import{uptime}from"node:os";
 import{heapStats}from"bun:jsc";
 import Ajv from"ajv";
 import{testPythonV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
@@ -89,7 +91,7 @@ class FakeTime{
 /** 🧪️ Runs one scenario of the fixture against the real governor over a modeled heap and returns the recorded trace. */
 async function run(scenario:typeof fixture.governor[number]){
  const time=new FakeTime(),controller=new AbortController(),language=(scenario as {language?:string}).language,environment:Record<string,string>=language==="none"?{}:{LANG:language==="de"?"de_DE.UTF-8":"en_US.UTF-8"};
- let live=0,garbage=0,running=0,collections=0,finishedCount=0,rejected=0;
+ let done=0,live=0,garbage=0,running=0,collections=0,finishedCount=0,rejected=0;
  const base=scenario.baseMegabytes*MEGABYTE,sample=()=>base+live+garbage,collect=()=>{garbage=0;collections++;};
  const lines:{at:number;text:string}[]=[],starts:{task:number;at:number;runningBefore:number;usedBytes:number}[]=[],finished:{task:number;at:number}[]=[];
  const governor=memory.createMemoryGovernorV1({budgetBytes:scenario.budgetMegabytes*MEGABYTE,baselineBytes:((scenario as {baselineMegabytes?:number}).baselineMegabytes??0)*MEGABYTE,workers:scenario.workers,sample,collect,sleep:time.sleep,now:time.now,signal:controller.signal,report:text=>lines.push({at:time.clock,text}),environment});
@@ -190,4 +192,20 @@ test("a governor leaves no abort listener on a long-lived signal once disposed: 
  expect(listeners.size).toBe(5);
  for(const governor of governors){expect(await governor.run(async()=>7)).toBe(7);governor.dispose();}
  expect(listeners.size).toBe(0);
+});
+
+test("the parent governor does not charge its working set, measures the cost of one project and admits parallel projects while memory allows",async()=>{
+ const time=new FakeTime();let done=0,live=0,garbage=0,running=0,peak=0,available=8192*MEGABYTE;
+ const environment=(()=>{const directory=mkdtempSync(join(tmpdir(),"memory-parent-")),id="graph_parent_002";mkdirSync(join(directory,"grants"));
+  writeFileSync(join(directory,"grants",id+".json"),JSON.stringify({id,operation:"run",jobs:8,cpu:8,reservedMegabytes:2048,admittedAtMs:Date.now(),observedMegabytes:null,pid:process.pid,bootAtMs:Math.round((Date.now()-uptime()*1000)/1000)*1000}));
+  return{SEMIO_HOST_CAPACITY_DIRECTORY:directory,SEMIO_HOST_CAPACITY_PLAN:JSON.stringify({version:1,id,jobs:8,cpu:8,memoryMegabytes:2048,fixedMegabytes:0,floorMegabytes:1981})};})();
+ const governor=memory.createGraphParentMemoryGovernorV1({environment,workers:4,sample:()=>3000*MEGABYTE+live+garbage,collect:()=>{garbage=0;},now:time.now,sleep:time.sleep,available:()=>available} as never);
+ const task=async()=>{running++;peak=Math.max(peak,running);live+=200*MEGABYTE;await time.sleep(1000);live-=200*MEGABYTE;garbage+=200*MEGABYTE;running--;done++;};
+const solo=governor.run(task);await time.drive(()=>done===1);await solo;
+expect(governor.stats().projectCostMegabytes).toBe(200);
+ peak=0;const batch=[1,2,3,4].map(()=>governor.run(task));await time.drive(()=>done===5);await Promise.all(batch);
+ expect(peak).toBe(4);
+ available=512*MEGABYTE;peak=0;const tight=[1,2,3].map(()=>governor.run(task));await time.drive(()=>done===8);await Promise.all(tight);
+ expect(peak).toBe(1);
+ governor.dispose();
 });

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeFoundationSoilPhiDeg",
+  "id": "fd-1",
+  "newSoilFrictionAngleDeg": 1.5
+}

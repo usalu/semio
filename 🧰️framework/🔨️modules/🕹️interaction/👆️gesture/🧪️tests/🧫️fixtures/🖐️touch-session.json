@@ -1,0 +1,1175 @@
+{
+  "why": "The touch session law every viewport host obeys: raw contacts with a clock in, host steps out (the primary press is deferred until the finger has decided, a held finger is an additive press that asks for its long press at the deadline while it is still down, a decided tap says `tap`, two fingers are the camera). `deadlines` (when present) is the wake time `nextDeadlineMs` after each event, `null` when nothing waits on the clock. `orbit` rows pin the pinch-to-orbit law against the TypeScript `applyPinchToOrbit` (values produced by that function). Language-agnostic: a TypeScript or other twin replays the same rows.",
+  "session": [
+    {
+      "name": "a tap presses and releases once",
+      "events": [
+        {
+          "type": "down",
+          "t": 0,
+          "pointerId": 1,
+          "x": 100,
+          "y": 100
+        },
+        {
+          "type": "up",
+          "t": 100,
+          "pointerId": 1
+        }
+      ],
+      "steps": [
+        [],
+        [
+          "press",
+          "release",
+          "tap"
+        ]
+      ]
+    },
+    {
+      "name": "two quick taps end in a double tap",
+      "events": [
+        {
+          "type": "down",
+          "t": 0,
+          "pointerId": 1,
+          "x": 100,
+          "y": 100
+        },
+        {
+          "type": "up",
+          "t": 50,
+          "pointerId": 1
+        },
+        {
+          "type": "down",
+          "t": 100,
+          "pointerId": 1,
+          "x": 104,
+          "y": 100
+        },
+        {
+          "type": "up",
+          "t": 150,
+          "pointerId": 1
+        }
+      ],
+      "steps": [
+        [],
+        [
+          "press",
+          "release",
+          "tap"
+        ],
+        [],
+        [
+          "press",
+          "release",
+          "tap",
+          "doubleTap"
+        ]
+      ]
+    },
+    {
+      "name": "two slow taps are two taps",
+      "events": [
+        {
+          "type": "down",
+          "t": 0,
+          "pointerId": 1,
+          "x": 100,
+          "y": 100
+        },
+        {
+          "type": "up",
+          "t": 50,
+          "pointerId": 1
+        },
+        {
+          "type": "down",
+          "t": 400,
+          "pointerId": 1,
+          "x": 100,
+          "y": 100
+        },
+        {
+          "type": "up",
+          "t": 449,
+          "pointerId": 1
+        }
+      ],
+      "steps": [
+        [],
+        [
+          "press",
+          "release",
+          "tap"
+        ],
+        [],
+        [
+          "press",
+          "release",
+          "tap"
+        ]
+      ]
+    },
+    {
+      "name": "a drag inside the slop is no drag",
+      "events": [
+        {
+          "type": "down",
+          "t": 0,
+          "pointerId": 1,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "type": "move",
+          "t": 10,
+          "pointerId": 1,
+          "x": 3,
+          "y": 0
+        },
+        {
+          "type": "up",
+          "t": 20,
+          "pointerId": 1
+        }
+      ],
+      "steps": [
+        [],
+        [],
+        [
+          "press",
+          "release",
+          "tap"
+        ]
+      ]
+    },
+    {
+      "name": "a drag beyond the slop presses at the start and drags",
+      "events": [
+        {
+          "type": "down",
+          "t": 0,
+          "pointerId": 1,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "type": "move",
+          "t": 10,
+          "pointerId": 1,
+          "x": 3,
+          "y": 0
+        },
+        {
+          "type": "move",
+          "t": 20,
+          "pointerId": 1,
+          "x": 20,
+          "y": 0
+        },
+        {
+          "type": "move",
+          "t": 30,
+          "pointerId": 1,
+          "x": 30,
+          "y": 0
+        },
+        {
+          "type": "up",
+          "t": 40,
+          "pointerId": 1
+        }
+      ],
+      "steps": [
+        [],
+        [],
+        [
+          "press",
+          "drag"
+        ],
+        [
+          "drag"
+        ],
+        [
+          "release"
+        ]
+      ]
+    },
+    {
+      "name": "on a tap-to-nudge device a drag orbits and never presses",
+      "oneFingerOrbit": true,
+      "events": [
+        {
+          "type": "down",
+          "t": 0,
+          "pointerId": 1,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "type": "move",
+          "t": 10,
+          "pointerId": 1,
+          "x": 3,
+          "y": 0
+        },
+        {
+          "type": "move",
+          "t": 20,
+          "pointerId": 1,
+          "x": 20,
+          "y": 0
+        },
+        {
+          "type": "move",
+          "t": 30,
+          "pointerId": 1,
+          "x": 30,
+          "y": 5
+        },
+        {
+          "type": "up",
+          "t": 40,
+          "pointerId": 1
+        }
+      ],
+      "steps": [
+        [],
+        [],
+        [],
+        [
+          "orbit"
+        ],
+        []
+      ]
+    },
+    {
+      "name": "a finger held past the long press asks for the menu at the deadline while it is still down, the lift only releases",
+      "events": [
+        {
+          "type": "down",
+          "t": 0,
+          "pointerId": 1,
+          "x": 50,
+          "y": 50
+        },
+        {
+          "type": "tick",
+          "t": 449
+        },
+        {
+          "type": "tick",
+          "t": 450
+        },
+        {
+          "type": "up",
+          "t": 600,
+          "pointerId": 1
+        }
+      ],
+      "steps": [
+        [],
+        [],
+        [
+          "press+",
+          "longPress"
+        ],
+        [
+          "release+"
+        ]
+      ]
+    },
+    {
+      "name": "a long press that is dragged afterwards selects a rectangle, the menu was asked for at the deadline",
+      "events": [
+        {
+          "type": "down",
+          "t": 0,
+          "pointerId": 1,
+          "x": 50,
+          "y": 50
+        },
+        {
+          "type": "tick",
+          "t": 450
+        },
+        {
+          "type": "move",
+          "t": 500,
+          "pointerId": 1,
+          "x": 90,
+          "y": 50
+        },
+        {
+          "type": "up",
+          "t": 600,
+          "pointerId": 1
+        }
+      ],
+      "steps": [
+        [],
+        [
+          "press+",
+          "longPress"
+        ],
+        [
+          "drag+"
+        ],
+        [
+          "release+"
+        ]
+      ]
+    },
+    {
+      "name": "a long press with a jittering finger fires on the first jitter",
+      "events": [
+        {
+          "type": "down",
+          "t": 0,
+          "pointerId": 1,
+          "x": 50,
+          "y": 50
+        },
+        {
+          "type": "move",
+          "t": 460,
+          "pointerId": 1,
+          "x": 52,
+          "y": 51
+        },
+        {
+          "type": "up",
+          "t": 480,
+          "pointerId": 1
+        }
+      ],
+      "steps": [
+        [],
+        [
+          "press+",
+          "longPress"
+        ],
+        [
+          "release+"
+        ]
+      ]
+    },
+    {
+      "name": "a long hold lifted before any tick still counts",
+      "events": [
+        {
+          "type": "down",
+          "t": 0,
+          "pointerId": 1,
+          "x": 50,
+          "y": 50
+        },
+        {
+          "type": "up",
+          "t": 500,
+          "pointerId": 1
+        }
+      ],
+      "steps": [
+        [],
+        [
+          "press+",
+          "longPress",
+          "release+"
+        ]
+      ]
+    },
+    {
+      "name": "a finger that left its slop is no long press",
+      "events": [
+        {
+          "type": "down",
+          "t": 0,
+          "pointerId": 1,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "type": "move",
+          "t": 10,
+          "pointerId": 1,
+          "x": 40,
+          "y": 0
+        },
+        {
+          "type": "tick",
+          "t": 1000
+        },
+        {
+          "type": "up",
+          "t": 1010,
+          "pointerId": 1
+        }
+      ],
+      "steps": [
+        [],
+        [
+          "press",
+          "drag"
+        ],
+        [],
+        [
+          "release"
+        ]
+      ]
+    },
+    {
+      "name": "two fingers are the camera and never a press",
+      "events": [
+        {
+          "type": "down",
+          "t": 0,
+          "pointerId": 1,
+          "x": 100,
+          "y": 100
+        },
+        {
+          "type": "down",
+          "t": 10,
+          "pointerId": 2,
+          "x": 200,
+          "y": 100
+        },
+        {
+          "type": "move",
+          "t": 20,
+          "pointerId": 2,
+          "x": 300,
+          "y": 100
+        },
+        {
+          "type": "up",
+          "t": 30,
+          "pointerId": 2
+        },
+        {
+          "type": "up",
+          "t": 40,
+          "pointerId": 1
+        }
+      ],
+      "steps": [
+        [],
+        [],
+        [
+          "camera"
+        ],
+        [],
+        [
+          "cameraEnd"
+        ]
+      ]
+    },
+    {
+      "name": "the finger left down after a pinch does not resume",
+      "events": [
+        {
+          "type": "down",
+          "t": 0,
+          "pointerId": 1,
+          "x": 100,
+          "y": 100
+        },
+        {
+          "type": "down",
+          "t": 10,
+          "pointerId": 2,
+          "x": 200,
+          "y": 100
+        },
+        {
+          "type": "up",
+          "t": 20,
+          "pointerId": 2
+        },
+        {
+          "type": "move",
+          "t": 30,
+          "pointerId": 1,
+          "x": 150,
+          "y": 150
+        },
+        {
+          "type": "up",
+          "t": 40,
+          "pointerId": 1
+        }
+      ],
+      "steps": [
+        [],
+        [],
+        [],
+        [],
+        [
+          "cameraEnd"
+        ]
+      ]
+    },
+    {
+      "name": "a second finger ends the forwarded drag with a release",
+      "events": [
+        {
+          "type": "down",
+          "t": 0,
+          "pointerId": 1,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "type": "move",
+          "t": 10,
+          "pointerId": 1,
+          "x": 30,
+          "y": 0
+        },
+        {
+          "type": "down",
+          "t": 20,
+          "pointerId": 2,
+          "x": 100,
+          "y": 0
+        },
+        {
+          "type": "move",
+          "t": 30,
+          "pointerId": 2,
+          "x": 120,
+          "y": 0
+        },
+        {
+          "type": "up",
+          "t": 40,
+          "pointerId": 2
+        },
+        {
+          "type": "up",
+          "t": 50,
+          "pointerId": 1
+        }
+      ],
+      "steps": [
+        [],
+        [
+          "press",
+          "drag"
+        ],
+        [
+          "release"
+        ],
+        [
+          "camera"
+        ],
+        [],
+        [
+          "cameraEnd"
+        ]
+      ]
+    },
+    {
+      "name": "a system cancel releases a forwarded press",
+      "events": [
+        {
+          "type": "down",
+          "t": 0,
+          "pointerId": 1,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "type": "move",
+          "t": 10,
+          "pointerId": 1,
+          "x": 30,
+          "y": 0
+        },
+        {
+          "type": "cancel",
+          "t": 20
+        }
+      ],
+      "steps": [
+        [],
+        [
+          "press",
+          "drag"
+        ],
+        [
+          "release"
+        ]
+      ]
+    },
+    {
+      "name": "a system cancel before the finger decided leaves nothing",
+      "events": [
+        {
+          "type": "down",
+          "t": 0,
+          "pointerId": 1,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "type": "cancel",
+          "t": 10
+        }
+      ],
+      "steps": [
+        [],
+        []
+      ]
+    },
+    {
+      "name": "a lost lift is forgiven after three seconds",
+      "events": [
+        {
+          "type": "down",
+          "t": 0,
+          "pointerId": 1,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "type": "move",
+          "t": 10,
+          "pointerId": 1,
+          "x": 30,
+          "y": 0
+        },
+        {
+          "type": "down",
+          "t": 5000,
+          "pointerId": 2,
+          "x": 100,
+          "y": 100
+        },
+        {
+          "type": "up",
+          "t": 5050,
+          "pointerId": 2
+        }
+      ],
+      "steps": [
+        [],
+        [
+          "press",
+          "drag"
+        ],
+        [
+          "release"
+        ],
+        [
+          "press",
+          "release",
+          "tap"
+        ]
+      ]
+    },
+    {
+      "name": "a still finger names its wake time and the long press fires on it",
+      "events": [
+        {
+          "type": "down",
+          "t": 100,
+          "pointerId": 1,
+          "x": 50,
+          "y": 50
+        },
+        {
+          "type": "tick",
+          "t": 549
+        },
+        {
+          "type": "tick",
+          "t": 550
+        },
+        {
+          "type": "up",
+          "t": 700,
+          "pointerId": 1
+        }
+      ],
+      "steps": [
+        [],
+        [],
+        [
+          "press+",
+          "longPress"
+        ],
+        [
+          "release+"
+        ]
+      ],
+      "deadlines": [
+        550,
+        550,
+        null,
+        null
+      ]
+    },
+    {
+      "name": "a finger that left its slop names no wake time",
+      "events": [
+        {
+          "type": "down",
+          "t": 0,
+          "pointerId": 1,
+          "x": 0,
+          "y": 0
+        },
+        {
+          "type": "move",
+          "t": 10,
+          "pointerId": 1,
+          "x": 40,
+          "y": 0
+        },
+        {
+          "type": "up",
+          "t": 20,
+          "pointerId": 1
+        }
+      ],
+      "steps": [
+        [],
+        [
+          "press",
+          "drag"
+        ],
+        [
+          "release"
+        ]
+      ],
+      "deadlines": [
+        450,
+        null,
+        null
+      ]
+    },
+    {
+      "name": "a lift before the deadline cancels the wake",
+      "events": [
+        {
+          "type": "down",
+          "t": 0,
+          "pointerId": 1,
+          "x": 10,
+          "y": 10
+        },
+        {
+          "type": "up",
+          "t": 100,
+          "pointerId": 1
+        }
+      ],
+      "steps": [
+        [],
+        [
+          "press",
+          "release",
+          "tap"
+        ]
+      ],
+      "deadlines": [
+        450,
+        null
+      ]
+    },
+    {
+      "name": "a second finger cancels the wake of the first",
+      "events": [
+        {
+          "type": "down",
+          "t": 0,
+          "pointerId": 1,
+          "x": 100,
+          "y": 100
+        },
+        {
+          "type": "down",
+          "t": 10,
+          "pointerId": 2,
+          "x": 200,
+          "y": 100
+        },
+        {
+          "type": "up",
+          "t": 20,
+          "pointerId": 2
+        },
+        {
+          "type": "up",
+          "t": 30,
+          "pointerId": 1
+        }
+      ],
+      "steps": [
+        [],
+        [],
+        [],
+        [
+          "cameraEnd"
+        ]
+      ],
+      "deadlines": [
+        450,
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "name": "a finger on a device where a long press is off never wakes the host",
+      "longPress": false,
+      "events": [
+        {
+          "type": "down",
+          "t": 0,
+          "pointerId": 1,
+          "x": 10,
+          "y": 10
+        },
+        {
+          "type": "tick",
+          "t": 1000
+        },
+        {
+          "type": "up",
+          "t": 1100,
+          "pointerId": 1
+        }
+      ],
+      "steps": [
+        [],
+        [],
+        [
+          "press",
+          "release",
+          "tap"
+        ]
+      ],
+      "deadlines": [
+        null,
+        null,
+        null
+      ]
+    }
+  ],
+  "orbit": [
+    {
+      "name": "perspective spread and pan",
+      "pose": [
+        [
+          10,
+          -6,
+          7
+        ],
+        [
+          1,
+          2,
+          0.5
+        ],
+        [
+          0,
+          0,
+          1
+        ]
+      ],
+      "zoom": 1,
+      "step": [
+        1.6,
+        30,
+        -12,
+        400,
+        300
+      ],
+      "projection": [
+        0,
+        0.7853981633974483
+      ],
+      "viewportHeight": 800,
+      "expectPosition": [
+        6.486215568320563,
+        -3.232118376146486,
+        4.468978903991235
+      ],
+      "expectTarget": [
+        0.8612155683205639,
+        1.7678816238535133,
+        0.40647890399123554
+      ],
+      "expectZoom": 1
+    },
+    {
+      "name": "perspective pinch in",
+      "pose": [
+        [
+          8,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1
+        ]
+      ],
+      "zoom": 1,
+      "step": [
+        0.5,
+        0,
+        0,
+        400,
+        300
+      ],
+      "projection": [
+        0,
+        0.7853981633974483
+      ],
+      "viewportHeight": 600,
+      "expectPosition": [
+        16,
+        0,
+        0
+      ],
+      "expectTarget": [
+        0,
+        0,
+        0
+      ],
+      "expectZoom": 1
+    },
+    {
+      "name": "perspective pan only",
+      "pose": [
+        [
+          0,
+          -12,
+          3
+        ],
+        [
+          2,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          1
+        ]
+      ],
+      "zoom": 1,
+      "step": [
+        1,
+        -40,
+        25,
+        400,
+        300
+      ],
+      "projection": [
+        0,
+        1.0471975511965976
+      ],
+      "viewportHeight": 720,
+      "expectPosition": [
+        0.7933164619472304,
+        -12.050925785688328,
+        3.487761747817256
+      ],
+      "expectTarget": [
+        2.79331646194723,
+        -0.05092578568832895,
+        1.4877617478172565
+      ],
+      "expectZoom": 1
+    },
+    {
+      "name": "perspective clamps the distance",
+      "pose": [
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1
+        ]
+      ],
+      "zoom": 1,
+      "step": [
+        8,
+        0,
+        0,
+        400,
+        300
+      ],
+      "projection": [
+        0,
+        0.7853981633974483
+      ],
+      "viewportHeight": 600,
+      "expectPosition": [
+        0.5,
+        0,
+        0
+      ],
+      "expectTarget": [
+        0,
+        0,
+        0
+      ],
+      "expectZoom": 1
+    },
+    {
+      "name": "orthographic zoom and pan",
+      "pose": [
+        [
+          10,
+          -10,
+          10
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1
+        ]
+      ],
+      "zoom": 2,
+      "step": [
+        1.5,
+        20,
+        10,
+        400,
+        300
+      ],
+      "projection": [
+        1,
+        12
+      ],
+      "viewportHeight": 600,
+      "expectPosition": [
+        9.878502543144203,
+        -10.067064351460616,
+        10.054433105395182
+      ],
+      "expectTarget": [
+        -0.12149745685579721,
+        -0.06706435146061546,
+        0.054433105395181744
+      ],
+      "expectZoom": 3
+    },
+    {
+      "name": "eye on target is unchanged",
+      "pose": [
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          0,
+          0,
+          1
+        ]
+      ],
+      "zoom": 1,
+      "step": [
+        2,
+        5,
+        5,
+        0,
+        0
+      ],
+      "projection": [
+        0,
+        0.8
+      ],
+      "viewportHeight": 600,
+      "expectPosition": [
+        1,
+        1,
+        1
+      ],
+      "expectTarget": [
+        1,
+        1,
+        1
+      ],
+      "expectZoom": 1
+    },
+    {
+      "name": "forward parallel to up is unchanged",
+      "pose": [
+        [
+          0,
+          0,
+          5
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1
+        ]
+      ],
+      "zoom": 1,
+      "step": [
+        2,
+        5,
+        5,
+        0,
+        0
+      ],
+      "projection": [
+        0,
+        0.8
+      ],
+      "viewportHeight": 600,
+      "expectPosition": [
+        0,
+        0,
+        5
+      ],
+      "expectTarget": [
+        0,
+        0,
+        0
+      ],
+      "expectZoom": 1
+    }
+  ]
+}

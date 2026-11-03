@@ -1,0 +1,5 @@
+{
+  "mutation": "changeWeldRunOffset",
+  "weldRunId": "weld-1",
+  "newOffset": 1.5
+}

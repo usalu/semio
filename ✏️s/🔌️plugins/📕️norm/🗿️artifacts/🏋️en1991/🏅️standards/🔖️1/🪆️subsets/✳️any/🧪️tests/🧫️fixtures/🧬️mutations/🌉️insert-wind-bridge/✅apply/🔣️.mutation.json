@@ -1,0 +1,16 @@
+{
+  "InsertWindBridge": {
+    "index": 1,
+    "item": {
+      "id": "wind-bridge-1-new",
+      "deckWidth": 1.5,
+      "deckDepth": 1.5,
+      "parapetKind": 1,
+      "parapetHeight": 1.5,
+      "trafficKind": 1,
+      "heightAboveGround": 1.5,
+      "span": 1.5,
+      "assumedForce": 1.5
+    }
+  }
+}

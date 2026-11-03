@@ -1,0 +1,6 @@
+syntax = "proto3";
+package semio.s.norm.en1992.mutation.insert_concrete_grade;
+message InsertConcreteGrade {
+  uint64 index = 1;
+  ConcreteGrade concrete_grade = 2;
+}

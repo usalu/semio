@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-case-label-en/schema.json",
+  "title": "ChangeCaseLabelEn",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "caseId",
+    "newValue"
+  ],
+  "properties": {
+    "caseId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Case",
+          "de": "Fall"
+        },
+        "description": {
+          "en": "The catalogue case this mutation addresses.",
+          "de": "Der Katalogfall, den diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "case"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newValue": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Label (EN)",
+          "de": "Bezeichnung (EN)"
+        },
+        "description": {
+          "en": "English display name of the case.",
+          "de": "Englische Anzeigebezeichnung des Falls."
+        },
+        "group": "case",
+        "order": 20
+      }
+    }
+  }
+}

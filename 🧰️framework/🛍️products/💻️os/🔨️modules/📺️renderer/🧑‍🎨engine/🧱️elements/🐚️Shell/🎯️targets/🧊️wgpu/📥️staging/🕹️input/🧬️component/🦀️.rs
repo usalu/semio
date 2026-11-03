@@ -4,6 +4,15 @@
 
 use super::*;
 
+/// ✏️ The control a `focusRowControl` verb chose: the retained window that presents it, the generation an accessibility event must carry, the document node id and the key its author gave it.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct PendingRowControlFocus {
+    pub window_id: String,
+    pub window_generation: u64,
+    pub node_id: u64,
+    pub node_key: String,
+}
+
 /// 🕹️ `ShellInputState`: scroll, overlay, selection, context menu, tree drag, widget maps and the retained input geometry.
 ///
 /// Fields keep the names they had on the former `ShellState`; the composer owns one value of this struct as `input`.
@@ -13,6 +22,8 @@ pub struct ShellInputState {
     pub collapsed_sections: HashMap<String, bool>,
     pub tree_open_states: BTreeMap<String, bool>,
     pub accessibility_focused_control_id: Option<String>,
+    /// ✏️ The cell a `focusRowControl` verb chose and the pointer context focuses with the input state in hand (the action context has none): addressed the way an accessibility focus event addresses it.
+    pub pending_row_control_focus: Option<PendingRowControlFocus>,
     pub interaction_selection: HashMap<String, semio_framework::DomainSelection>,
     pub open_selects: HashMap<String, bool>,
     pub context_menu: Option<ContextMenuState>,

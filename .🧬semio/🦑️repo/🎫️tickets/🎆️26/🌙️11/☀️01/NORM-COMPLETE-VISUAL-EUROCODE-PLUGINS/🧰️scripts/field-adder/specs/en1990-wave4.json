@@ -1,0 +1,15 @@
+{
+ "artifact": "en1990",
+ "fields": [
+  {"entity": "bridgeSls", "field": "damping_ratio", "after": "basic_wind_speed", "default": 0.0, "en": "Deck damping ratio ζ (0 = registry default)", "de": "Dämpfungsgrad ζ des Decks (0 = Registerwert)", "step": 0.001, "precision": 4},
+  {"entity": "members", "field": "material_strength_k", "after": "storey_drift", "default": 0.0, "unit_id": "Pascal", "en": "Characteristic material strength X_k (E90.10)", "de": "Charakteristische Materialfestigkeit X_k (E90.10)", "step": 500000, "precision": 0},
+  {"entity": "members", "field": "material_conversion_factor", "after": "material_strength_k", "default": 0.0, "en": "Conversion factor η (0 = 1.0)", "de": "Umrechnungsfaktor η (0 = 1,0)", "step": 0.01, "precision": 3},
+  {"entity": "members", "field": "material_partial_factor", "after": "material_conversion_factor", "default": 0.0, "en": "Material partial factor γ_m", "de": "Teilsicherheitsbeiwert des Materials γ_m", "step": 0.01, "precision": 3},
+  {"entity": "members", "field": "material_design_strength", "after": "material_partial_factor", "default": 0.0, "unit_id": "Pascal", "en": "Declared design strength X_d", "de": "Angesetzte Bemessungsfestigkeit X_d", "step": 500000, "precision": 0},
+  {"entity": "members", "field": "nominal_dimension", "after": "material_design_strength", "default": 0.0, "unit_id": "Metre", "en": "Nominal dimension a_nom (E90.11)", "de": "Nennmaß a_nom (E90.11)", "step": 0.001, "precision": 4},
+  {"entity": "members", "field": "dimension_tolerance", "after": "nominal_dimension", "default": 0.0, "unit_id": "Metre", "en": "Dimension tolerance Δa", "de": "Maßtoleranz Δa", "step": 0.0005, "precision": 4},
+  {"entity": "members", "field": "design_dimension", "after": "dimension_tolerance", "default": 0.0, "unit_id": "Metre", "en": "Declared design dimension a_d", "de": "Angesetztes Bemessungsmaß a_d", "step": 0.001, "precision": 4},
+  {"entity": "members", "field": "member_alpha_cr", "after": "design_dimension", "default": 0.0, "en": "Elastic critical load factor α_cr (0 = not declared, E90.12)", "de": "Verzweigungslastfaktor α_cr (0 = nicht angegeben, E90.12)", "step": 0.1, "precision": 2},
+  {"entity": "members", "field": "second_order_analysis", "after": "member_alpha_cr", "default": 0.0, "en": "Second-order analysis used (0 = first order, 1 = second order)", "de": "Theorie 2. Ordnung angesetzt (0 = Theorie 1. Ordnung, 1 = 2. Ordnung)", "step": 1, "precision": 0}
+ ]
+}

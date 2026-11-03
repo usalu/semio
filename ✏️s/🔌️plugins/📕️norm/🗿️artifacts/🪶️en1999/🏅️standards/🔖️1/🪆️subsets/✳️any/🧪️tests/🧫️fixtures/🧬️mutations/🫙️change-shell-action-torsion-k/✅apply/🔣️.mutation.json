@@ -1,0 +1,6 @@
+{
+  "mutation": "changeShellActionTorsionK",
+  "shellId": "shell-pass",
+  "actionId": "G-shell",
+  "newTorsionK": 1.5
+}

@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-slope-length/schema.json",
+  "title": "ChangeSlopeLength",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newLength"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeSlopeLength"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Slope",
+          "de": "Böschung"
+        },
+        "description": {
+          "en": "The slope this mutation addresses, by id.",
+          "de": "Die adressierte Zeile (Böschung), per Kennung."
+        },
+        "ref": {
+          "kind": "slope"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newLength": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "length",
+          "de": "Länge"
+        },
+        "widget": "stepper",
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

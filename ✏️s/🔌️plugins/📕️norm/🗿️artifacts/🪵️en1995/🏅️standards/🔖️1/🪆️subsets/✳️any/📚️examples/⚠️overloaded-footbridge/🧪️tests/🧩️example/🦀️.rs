@@ -14,7 +14,7 @@ fn primary_asset_decodes_to_the_noncompliant_bridge() {
 #[test]
 fn decoded_example_fails_bridge_checks_with_remedies() {
     let snap = decoded();
-    let report = evaluate_structure(snap.annex, &snap.members, &snap.connections);
+    let report = evaluate_structure(&snap);
     let failing: Vec<_> = report.failing().collect();
     assert!(failing.len() >= 2, "ids={:?}", failing.iter().map(|c| c.id.clone()).collect::<Vec<_>>());
     for check in &failing {

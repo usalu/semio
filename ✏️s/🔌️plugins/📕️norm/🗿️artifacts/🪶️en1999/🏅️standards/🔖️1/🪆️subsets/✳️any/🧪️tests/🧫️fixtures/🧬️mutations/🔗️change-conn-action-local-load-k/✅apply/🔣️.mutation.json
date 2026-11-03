@@ -1,0 +1,6 @@
+{
+  "mutation": "changeConnActionLocalLoadK",
+  "connectionId": "support-weld",
+  "actionId": "G-conn",
+  "newLocalLoadK": 1.5
+}

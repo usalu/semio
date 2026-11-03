@@ -1,0 +1,6 @@
+{
+  "ChangeCraneDamageExponent": {
+    "id": "crane-1",
+    "newDamageExponent": 1.5
+  }
+}

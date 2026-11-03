@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-buckling-length-restraint-b/schema.json",
+  "title": "ChangeBucklingLengthRestraintB",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newRestraintB"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Frame action",
+          "de": "Rahmeneinwirkung"
+        },
+        "description": {
+          "en": "The frame action this mutation addresses, by id.",
+          "de": "Das adressierte Element (Rahmeneinwirkung), per Kennung."
+        },
+        "ref": {
+          "restraintB": "buckling-length"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newRestraintB": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/NodeBRestraint",
+      "x-semio-ui": {
+        "label": {
+          "en": "RestraintB",
+          "de": "Knicklänge"
+        },
+        "role": "value",
+        "group": "value",
+        "order": 20
+      },
+      "x-semio-rust": {
+        "type": "semio_s_artifact_norm_en1993_model::NodeBRestraint"
+      }
+    }
+  }
+}

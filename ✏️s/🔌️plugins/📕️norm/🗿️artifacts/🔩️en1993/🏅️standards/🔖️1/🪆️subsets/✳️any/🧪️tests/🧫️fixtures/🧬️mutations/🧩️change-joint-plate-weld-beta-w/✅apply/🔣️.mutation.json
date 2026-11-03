@@ -1,0 +1,6 @@
+{
+  "ChangeJointPlateWeldBetaW": {
+    "id": "joint-plate-1",
+    "newWeldBetaW": 2.0
+  }
+}

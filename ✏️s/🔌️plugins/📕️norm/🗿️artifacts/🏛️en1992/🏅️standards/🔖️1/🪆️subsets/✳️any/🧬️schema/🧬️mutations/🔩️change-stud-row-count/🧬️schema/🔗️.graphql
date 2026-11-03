@@ -1,0 +1,5 @@
+type ChangeStudRowCount {
+  memberId: String!
+  studRowId: String!
+  newCount: Int!
+}

@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-cf-stiffened-support/schema.json",
+  "title": "ChangeCfStiffenedSupport",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newStiffenedSupport"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Cold-formed member",
+          "de": "Kaltprofil"
+        },
+        "description": {
+          "en": "The cold-formed member this mutation addresses, by id.",
+          "de": "Das adressierte Element (Kaltprofil), per Kennung."
+        },
+        "ref": {
+          "kind": "cold-formed"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newStiffenedSupport": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295,
+      "x-semio-ui": {
+        "label": {
+          "en": "Web with stiffened supports (0/1)",
+          "de": "Steg mit ausgesteiften Auflagern (0/1)"
+        },
+        "widget": "stepper",
+        "step": 1,
+        "precision": 0,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

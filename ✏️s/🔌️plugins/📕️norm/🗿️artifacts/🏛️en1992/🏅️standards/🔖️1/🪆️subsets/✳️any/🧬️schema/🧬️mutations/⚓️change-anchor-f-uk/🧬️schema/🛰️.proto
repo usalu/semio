@@ -1,0 +1,6 @@
+syntax = "proto3";
+package semio.s.norm.en1992.mutation.change_anchor_f_uk;
+message ChangeAnchorFUk {
+  string anchor_id = 1;
+  double new_f_uk = 2;
+}

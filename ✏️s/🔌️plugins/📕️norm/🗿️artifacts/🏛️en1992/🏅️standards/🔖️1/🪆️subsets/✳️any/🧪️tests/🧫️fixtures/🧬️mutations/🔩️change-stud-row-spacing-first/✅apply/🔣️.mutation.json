@@ -1,0 +1,7 @@
+{
+  "ChangeStudRowSpacingFirst": {
+    "memberId": "wall-W1",
+    "studRowId": "sr-1",
+    "newSpacingFirst": 0.2
+  }
+}

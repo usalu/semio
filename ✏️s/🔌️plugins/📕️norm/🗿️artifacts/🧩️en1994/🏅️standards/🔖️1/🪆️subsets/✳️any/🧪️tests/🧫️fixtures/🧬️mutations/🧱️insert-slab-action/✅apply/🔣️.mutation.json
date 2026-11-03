@@ -1,0 +1,18 @@
+{
+  "InsertSlabAction": {
+    "slabId": "slab-S1",
+    "index": 1,
+    "action": {
+      "id": "G-slab-new",
+      "kind": "permanent",
+      "category": "self",
+      "stage": "composite",
+      "qAreaPa": 3500.0,
+      "fKN": 0.0,
+      "deltaSigmaKPa": 0.0,
+      "deltaTauKPa": 0.0,
+      "xM": 0.0,
+      "yM": 0.0
+    }
+  }
+}

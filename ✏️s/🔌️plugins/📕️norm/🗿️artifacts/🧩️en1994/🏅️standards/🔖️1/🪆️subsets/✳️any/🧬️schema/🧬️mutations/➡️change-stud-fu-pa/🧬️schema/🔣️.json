@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-stud-fu-pa/schema.json",
+  "title": "ChangeStudFUPa",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newFUPa"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Composite stud",
+          "de": "Kopfbolzendübel"
+        },
+        "description": {
+          "en": "The composite stud this mutation addresses, by id.",
+          "de": "Das adressierte Element (Kopfbolzendübel), per Kennung."
+        },
+        "ref": {
+          "kind": "stud"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newFUPa": {
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Ultimate strength",
+          "de": "Zugfestigkeit"
+        },
+        "group": "stud",
+        "order": 20,
+        "unit": "Pa",
+        "displayUnit": "kN/m²",
+        "displayFactor": 0.001,
+        "precision": 2,
+        "step": 1000
+      }
+    }
+  }
+}

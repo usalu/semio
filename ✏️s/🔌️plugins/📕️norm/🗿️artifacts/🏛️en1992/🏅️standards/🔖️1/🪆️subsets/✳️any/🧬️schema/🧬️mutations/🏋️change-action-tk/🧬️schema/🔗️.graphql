@@ -1,0 +1,5 @@
+type ChangeActionTK {
+  memberId: String!
+  actionId: String!
+  newTK: Float!
+}

@@ -1,0 +1,29 @@
+{
+  "InsertBuiltUpMember": {
+    "index": 1,
+    "builtUpMember": {
+      "id": "built-up-1-2",
+      "memberId": "member-b1",
+      "label": "Built-up 1",
+      "kind": "Battened",
+      "chordArea": 0.00538,
+      "chordInertia": 1.336e-05,
+      "chordDistance": 0.3,
+      "panelSpacing": 0.8,
+      "planes": 2,
+      "battenInertia": 5e-06,
+      "diagonalArea": 0.0,
+      "diagonalLength": 0.0,
+      "designAxial": 400000.0,
+      "designMoment": 5000.0,
+      "backToBack": 0,
+      "minRadius": 0.0,
+      "chainSpacing": 0.0,
+      "chordShape": "Unset",
+      "chordDepth": 0.0,
+      "chordWidth": 0.0,
+      "chordFlangeThickness": 0.0,
+      "chordWebThickness": 0.0
+    }
+  }
+}

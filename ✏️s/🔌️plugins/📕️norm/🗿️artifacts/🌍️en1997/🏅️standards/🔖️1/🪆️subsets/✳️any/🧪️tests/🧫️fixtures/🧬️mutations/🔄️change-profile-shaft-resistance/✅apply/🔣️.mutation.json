@@ -1,0 +1,6 @@
+{
+  "mutation": "changeProfileShaftResistance",
+  "pileId": "pile-P1",
+  "id": "test-1",
+  "newShaftResistance": 3200000.0
+}

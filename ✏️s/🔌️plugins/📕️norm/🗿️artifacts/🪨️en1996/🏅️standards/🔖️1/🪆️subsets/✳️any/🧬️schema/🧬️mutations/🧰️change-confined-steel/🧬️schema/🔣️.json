@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-confined-steel/schema.json",
+  "title": "ChangeConfinedSteel",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "wallId",
+    "id",
+    "newAsM2"
+  ],
+  "properties": {
+    "wallId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Wall",
+          "de": "Wand"
+        },
+        "description": {
+          "en": "The wall this mutation addresses, by id.",
+          "de": "Das adressierte Element (Wand), per Kennung."
+        },
+        "ref": {
+          "kind": "wall"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Confining element",
+          "de": "Einfassungselement"
+        },
+        "description": {
+          "en": "The confining element this mutation addresses, by id.",
+          "de": "Das adressierte Element (Einfassungselement), per Kennung."
+        },
+        "ref": {
+          "kind": "confined"
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "newAsM2": {
+      "type": "number",
+      "maximum": 100000000,
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Column reinforcement A_s",
+          "de": "Stützenbewehrung A_s"
+        },
+        "unit": "m2",
+        "step": 0.00001,
+        "precision": 6,
+        "group": "confined",
+        "order": 30,
+        "displayUnit": "mm²",
+        "displayFactor": 1000000
+      }
+    }
+  }
+}

@@ -1,0 +1,128 @@
+{
+ "artifact": "en1996",
+ "conversions": [
+  {
+   "hosts": [
+    "WallLoadCase.design_situation"
+   ],
+   "enum": "LoadCaseSituation",
+   "doc": "⚖️ Design situation of a wall load case (EN 1990 3.2).",
+   "default": "Persistent",
+   "variants": [
+    [
+     "Persistent",
+     [
+      "persistent",
+      "bsp",
+      ""
+     ],
+     "Persistent",
+     "Ständig"
+    ],
+    [
+     "Transient",
+     [
+      "transient",
+      "bst"
+     ],
+     "Transient",
+     "Vorübergehend"
+    ],
+    [
+     "Accidental",
+     [
+      "accidental",
+      "bsa"
+     ],
+     "Accidental",
+     "Außergewöhnlich"
+    ],
+    [
+     "Seismic",
+     [
+      "seismic"
+     ],
+     "Seismic",
+     "Erdbeben"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "WallLoadCase.imposed_category"
+   ],
+   "enum": "ImposedCategory",
+   "doc": "📦 Imposed-floor category of an EN 1990 Table A1.1 action (psi factors).",
+   "default": "A",
+   "variants": [
+    [
+     "A",
+     [
+      "a",
+      "residential"
+     ],
+     "Residential (A)",
+     "Wohnen (A)"
+    ],
+    [
+     "B",
+     [
+      "b",
+      "office"
+     ],
+     "Office (B)",
+     "Büro (B)"
+    ],
+    [
+     "C",
+     [
+      "c"
+     ],
+     "Congregation (C)",
+     "Versammlung (C)"
+    ],
+    [
+     "D",
+     [
+      "d"
+     ],
+     "Retail (D)",
+     "Verkauf (D)"
+    ],
+    [
+     "E",
+     [
+      "e"
+     ],
+     "Storage (E)",
+     "Lager (E)"
+    ],
+    [
+     "F",
+     [
+      "f"
+     ],
+     "Traffic (F)",
+     "Verkehr (F)"
+    ],
+    [
+     "G",
+     [
+      "g"
+     ],
+     "Vehicles (G)",
+     "Fahrzeuge (G)"
+    ],
+    [
+     "H",
+     [
+      "h"
+     ],
+     "Roofs (H)",
+     "Dächer (H)"
+    ]
+   ]
+  }
+ ],
+ "wire": "camel"
+}

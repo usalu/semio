@@ -294,7 +294,7 @@ use semio_s_artifact_norm_vdi3805_mut_file::change_manufacturer_file;
 use semio_s_artifact_norm_vdi3805_mut_file::change_limits;
 
 /// 📥️ Decodes this facet's own internally-tagged (`{"mutation": "<camelCaseVariant>", …}`) JSON
-/// projection — the exact shape the committed `<kind>/🧪️tests/<fixture>/🦠️mutation/🔣️.json`
+/// projection — the exact shape the committed `<kind>/🧪️tests/<fixture>/🔣️.mutation.json`
 /// specification vectors carry — into a real [`Vdi3805Mutation`]. The generated test host of
 /// `../../../../../🧪️tests/🏭️mutate-vdi3805-1` links only this crate, so `serde_json` is unreachable
 /// from that adapter and the bridge belongs here rather than there.

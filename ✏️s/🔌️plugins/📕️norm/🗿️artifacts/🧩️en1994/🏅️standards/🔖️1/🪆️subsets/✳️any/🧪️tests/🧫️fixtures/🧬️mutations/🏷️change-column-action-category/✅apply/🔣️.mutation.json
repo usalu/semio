@@ -1,0 +1,7 @@
+{
+  "ChangeColumnActionCategory": {
+    "columnId": "col-C1",
+    "id": "G-col",
+    "newCategory": "C"
+  }
+}

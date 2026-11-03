@@ -1,0 +1,6 @@
+{
+  "ChangeJointBoltToWeb": {
+    "id": "joint-j1",
+    "newBoltToWeb": 1.5
+  }
+}

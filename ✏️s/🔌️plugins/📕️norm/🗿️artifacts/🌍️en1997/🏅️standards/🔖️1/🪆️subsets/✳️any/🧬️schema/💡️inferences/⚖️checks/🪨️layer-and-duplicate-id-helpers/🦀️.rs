@@ -2,13 +2,13 @@
 
 use super::*;
 
-pub(super) fn layer_at(layers: &[SoilLayer], depth: f64) -> Option<&SoilLayer> {
+pub fn layer_at(layers: &[SoilLayer], depth: f64) -> Option<&SoilLayer> {
     layers.iter().find(|l| depth >= l.depth_top && depth <= l.depth_bottom).or_else(|| layers.first())
 }
 
-pub(super) fn design_actions(p: &AnnexParams, g: f64, q: f64) -> f64 { p.gamma_g * g + p.gamma_q * q }
+pub fn design_actions(p: &AnnexParams, g: f64, q: f64) -> f64 { p.gamma_g * g + p.gamma_q * q }
 
-pub(super) fn find_required_width(
+pub fn find_required_width(
     footing: &SpreadFoundation, layer: &SoilLayer, phi_deg: f64, lc: &FoundationLoadCase,
     approach: DesignApproach, annex: AnnexChoice, situation: &str, gwl: f64, start: f64,
 ) -> f64 {
@@ -36,7 +36,7 @@ pub(super) fn find_required_width(
     b
 }
 
-pub(super) fn situation_short(situation: &str) -> &'static str {
+pub fn situation_short(situation: &str) -> &'static str {
     match parse_design_situation(situation) {
         DesignSituation::Transient => "BS-T",
         DesignSituation::Accidental => "BS-A",
@@ -44,12 +44,8 @@ pub(super) fn situation_short(situation: &str) -> &'static str {
     }
 }
 
-pub(super) fn situation_for_load_case(doc: &En1997Snapshot, lc: &FoundationLoadCase) -> String {
-    if !lc.design_situation.trim().is_empty() {
-        lc.design_situation.clone()
-    } else {
-        doc.design_situation.clone()
-    }
+pub fn situation_for_load_case(_doc: &En1997Snapshot, lc: &FoundationLoadCase) -> String {
+    lc.design_situation.as_str().to_string()
 }
 
 /// 🔗 Fail when an id-bearing collection contains duplicate entity ids.
@@ -108,7 +104,7 @@ fn push_duplicate_ids(
     }
 }
 
-pub(super) fn push_all_duplicate_ids(report: &mut CheckReport, doc: &En1997Snapshot) {
+pub fn push_all_duplicate_ids(report: &mut CheckReport, doc: &En1997Snapshot) {
     let annex = doc.annex;
     push_duplicate_ids(
         report,
@@ -186,9 +182,127 @@ pub(super) fn push_all_duplicate_ids(report: &mut CheckReport, doc: &En1997Snaps
         &doc.uplift_cases.iter().map(|u| u.id.clone()).collect::<Vec<_>>(),
         &|id| format!("upliftCases[id={id}].id"),
     );
+    push_duplicate_ids(
+        report,
+        annex,
+        "anchors",
+        "anchor",
+        "Anker",
+        &doc.anchors.iter().map(|x| x.id.clone()).collect::<Vec<_>>(),
+        &|id| format!("anchors[id={id}].id"),
+    );
+    for anchor in &doc.anchors {
+        push_duplicate_ids(
+            report,
+            annex,
+            "tests",
+            "anchor test",
+            "Ankerprüfung",
+            &anchor.tests.iter().map(|t| t.id.clone()).collect::<Vec<_>>(),
+            &|id| format!("anchors[id={}].tests[id={id}].id", anchor.id),
+        );
+    }
+    push_duplicate_ids(
+        report,
+        annex,
+        "embeddedWalls",
+        "embedded wall",
+        "Eingespannte Wand",
+        &doc.embedded_walls.iter().map(|x| x.id.clone()).collect::<Vec<_>>(),
+        &|id| format!("embeddedWalls[id={id}].id"),
+    );
+    push_duplicate_ids(
+        report,
+        annex,
+        "pileGroups",
+        "pile group",
+        "Pfahlgruppe",
+        &doc.pile_groups.iter().map(|x| x.id.clone()).collect::<Vec<_>>(),
+        &|id| format!("pileGroups[id={id}].id"),
+    );
+    push_duplicate_ids(
+        report,
+        annex,
+        "labTests",
+        "laboratory test",
+        "Laborversuch",
+        &doc.lab_tests.iter().map(|x| x.id.clone()).collect::<Vec<_>>(),
+        &|id| format!("labTests[id={id}].id"),
+    );
+    for test in &doc.lab_tests {
+        push_duplicate_ids(
+            report,
+            annex,
+            "points",
+            "laboratory point",
+            "Laborpunkt",
+            &test.points.iter().map(|t| t.id.clone()).collect::<Vec<_>>(),
+            &|id| format!("labTests[id={}].points[id={id}].id", test.id),
+        );
+    }
+    push_duplicate_ids(
+        report,
+        annex,
+        "layerWaters",
+        "layer water",
+        "Schichtwasser",
+        &doc.layer_waters.iter().map(|x| x.id.clone()).collect::<Vec<_>>(),
+        &|id| format!("layerWaters[id={id}].id"),
+    );
+    push_duplicate_ids(
+        report,
+        annex,
+        "characteristicBases",
+        "characteristic value basis",
+        "Grundlage des charakteristischen Werts",
+        &doc.characteristic_bases.iter().map(|x| x.id.clone()).collect::<Vec<_>>(),
+        &|id| format!("characteristicBases[id={id}].id"),
+    );
+    push_duplicate_ids(
+        report,
+        annex,
+        "investigations",
+        "ground investigation",
+        "Baugrunderkundung",
+        &doc.investigations.iter().map(|x| x.id.clone()).collect::<Vec<_>>(),
+        &|id| format!("investigations[id={id}].id"),
+    );
+    for row in &doc.investigations {
+        push_duplicate_ids(
+            report,
+            annex,
+            "readings",
+            "investigation reading",
+            "Erkundungsmesswert",
+            &row.readings.iter().map(|t| t.id.clone()).collect::<Vec<_>>(),
+            &|id| format!("investigations[id={}].readings[id={id}].id", row.id),
+        );
+    }
+    push_duplicate_ids(
+        report,
+        annex,
+        "placements",
+        "placement",
+        "Platzierung",
+        &doc.placements.iter().map(|x| x.id.clone()).collect::<Vec<_>>(),
+        &|id| format!("placements[id={id}].id"),
+    );
+    push_duplicate_ids(
+        report,
+        annex,
+        "cases",
+        "design case",
+        "Bemessungsfall",
+        &doc.cases.iter().map(|x| x.id.clone()).collect::<Vec<_>>(),
+        &|id| format!("cases[id={id}].id"),
+    );
+    for case in &doc.cases {
+        push_duplicate_ids(report, annex, "caseNumbers", "case number input", "Zahleneingabe des Falls", &case.numbers.iter().map(|x| x.id.clone()).collect::<Vec<_>>(), &|id| format!("cases[id={}].numbers[id={id}].id", case.id));
+        push_duplicate_ids(report, annex, "caseTexts", "case text input", "Texteingabe des Falls", &case.texts.iter().map(|x| x.id.clone()).collect::<Vec<_>>(), &|id| format!("cases[id={}].texts[id={id}].id", case.id));
+    }
 }
 
-pub(super) fn push_governing_situation_summary(
+pub fn push_governing_situation_summary(
     report: &mut CheckReport,
     id: String,
     part: &str,
@@ -198,9 +312,10 @@ pub(super) fn push_governing_situation_summary(
     approach: &str,
     util: f64,
     governing_check: &str,
+    governing_remedies: &[Remedy],
 ) {
     let sit_lbl = situation_short(sit);
-    report.push(
+    let mut summary =
         CheckResult::assess(
             id,
             part,
@@ -210,17 +325,22 @@ pub(super) fn push_governing_situation_summary(
         )
         .utilization(
             Quantity::new(QuantityKind::Dimensionless, util),
-            Quantity::new(QuantityKind::Dimensionless, util.max(1.0)),
+            Quantity::new(QuantityKind::Dimensionless, 1.0),
         )
+        .status(if util > 1.0 { CheckStatus::Warning } else { CheckStatus::Pass })
         .annex(annex)
         .explanation(loc(
             &format!("Governing: {sit_lbl} ({sit}) + approach {approach}; check {governing_check}; u={util:.3}."),
             &format!("Maßgebend: {sit_lbl} ({sit}) + Ansatz {approach}; Nachweis {governing_check}; u={util:.3}."),
-        ))
-        .build(),
-    );
+        ));
+    if util > 1.0 {
+        for remedy in governing_remedies {
+            summary = summary.remedy(remedy.clone());
+        }
+    }
+    report.push(summary.build());
 }
 
-pub(super) fn id_path(collection: &str, id: &str, field: &str) -> String {
+pub fn id_path(collection: &str, id: &str, field: &str) -> String {
     format!("{collection}[id={id}].{field}")
 }

@@ -1,0 +1,17 @@
+{
+  "InsertBarLayer": {
+    "memberId": "wall-W1",
+    "index": 1,
+    "barLayer": {
+      "id": "vert-new",
+      "diameter": 0.016,
+      "count": 6,
+      "position": "Bottom",
+      "anchorageLength": 0.7,
+      "lapLength": 0.85,
+      "bondCondition": "Good",
+      "aggregateSize": 0.016,
+      "lapShare": 1.0
+    }
+  }
+}

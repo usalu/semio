@@ -28,7 +28,7 @@ Feature: Apply every typed EN 1998 mutation against an independent Python implem
 
   ⚠️ Honest boundary — the CARRIER. `identity-round-trip` reads the committed
   `asset://🏢️seismic-rc-frame/🏢️seismic-rc-frame/🗣️.dsl.semio`. The carrier has no published grammar: the committed
-  `📖️component.grammar.semio` is the repository-wide `payload = OCTET+` placeholder, so the two sides are compared
+  `📖️component.grammar.semio` is the repository-wide `payload = OCTET+` rule, so the two sides are compared
   at the envelope preamble, the ordered lines and the digest and length of what each re-emitted. The Rust side additionally proves it PARSED the document: the committed binary
   twin must decode to the same document as the text, through a separately written codec.
 
@@ -36,17 +36,15 @@ Feature: Apply every typed EN 1998 mutation against an independent Python implem
   @level-exhaustive
   @mode-differential
   Scenario Outline: Apply <id> to its committed specification vector
-    Given the committed before-snapshot shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/⬅️before/🔣️.json
-    And the committed mutation payload shared://🧬️mutations/<dir>/<fixture>/🦠️mutation/🔣️.json
-    And the committed after-snapshot shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/➡️after/🔣️.json
-    And the committed outcome shared://🧬️mutations/<dir>/<fixture>/🎯️outcome/🔣️.json
+    Given the committed before-snapshot shared://🧬️mutations/<dir>/<fixture>/🔣️.before.json
+    And the committed mutation payload shared://🧬️mutations/<dir>/<fixture>/🔣️.mutation.json
+    And the committed after-snapshot shared://🧬️mutations/<dir>/<fixture>/🔣️.after.json
+    And the committed outcome shared://🧬️mutations/<dir>/<fixture>/🔣️.outcome.json
     When both implementations apply the committed mutation to the committed before-snapshot
     Then each reaches the committed after-snapshot under the committed outcome status and the two agree
     Examples:
       | id                           | dir                            | fixture |
       | change-annex                 | 📎️change-annex                 | ✅apply  |
-      | update-site                  | 🌚️update-site                  | ✅apply  |
-      | update-site-noop             | 🌚️update-site                  | 🟰noop   |
       | insert-building              | ➕️insert-building              | ✅apply  |
       | insert-building-dupe         | ➕️insert-building              | ⛔dupe   |
       | remove-building              | ➖️remove-building              | ✅apply  |
@@ -76,6 +74,12 @@ Feature: Apply every typed EN 1998 mutation against an independent Python implem
       | insert-tower                 | 🗼insert-tower                  | ✅apply  |
       | insert-tower-dupe            | 🗼insert-tower                  | ⛔dupe   |
       | change-tower-m-rd-nm         | ↪️change-tower-m-rd-nm         | ✅apply  |
+      | change-placement-x | 📍️change-placement-x | ✅apply  |
+      | change-placement-y | 📍️change-placement-y | ✅apply  |
+      | change-placement-z | 📍️change-placement-z | ✅apply  |
+      | change-placement-yaw | 📍️change-placement-yaw | ✅apply  |
+      | insert-placement | 📍️insert-placement | ✅apply  |
+      | remove-placement | 📍️remove-placement | ✅apply  |
       | remove-bridge                | ➖️remove-bridge                | ✅apply  |
       | remove-bridge-middle-row     | ➖️remove-bridge                | 🔬️middle-row |
       | remove-assessment            | ➖️remove-assessment            | ✅apply  |
@@ -90,21 +94,306 @@ Feature: Apply every typed EN 1998 mutation against an independent Python implem
       | remove-retaining-wall-middle-row | ➖️remove-retaining-wall        | 🔬️middle-row |
       | remove-tower                 | ➖️remove-tower                 | ✅apply  |
       | remove-tower-middle-row      | ➖️remove-tower                 | 🔬️middle-row |
+      | change-foundation-base-friction-deg | ✏️change-foundation-base-friction-deg | ✅apply  |
+      | change-foundation-base-pore-pressure-pa | ✏️change-foundation-base-pore-pressure-pa | ✅apply  |
+      | change-joint-col-moment-rd-nm | ✏️change-joint-col-moment-rd-nm | ✅apply  |
+      | change-retaining-wall-water-height-m | ✏️change-retaining-wall-water-height-m | ✅apply  |
+      | change-retaining-wall-saturated-gamma | ✏️change-retaining-wall-saturated-gamma | ✅apply  |
+      | change-retaining-wall-permeability-ms | ✏️change-retaining-wall-permeability-ms | ✅apply  |
+      | change-seismic-slope-governing-layer-id | ✏️change-seismic-slope-governing-layer-id | ✅apply  |
+      | change-tie-beam-foundation-a-id | ✏️change-tie-beam-foundation-a-id | ✅apply  |
+      | change-tie-beam-foundation-b-id | ✏️change-tie-beam-foundation-b-id | ✅apply  |
+      | insert-seismic-slope | ➕️insert-seismic-slope | ✅apply  |
+      | insert-tie-beam | ➕️insert-tie-beam | ✅apply  |
+      | remove-seismic-slope | ➖️remove-seismic-slope | ✅apply  |
+      | remove-tie-beam | ➖️remove-tie-beam | ✅apply  |
+      | change-seismic-slope-angle | 📍️change-seismic-slope-angle | ✅apply  |
+      | change-seismic-slope-circle-centre-x | 📍️change-seismic-slope-circle-centre-x | ✅apply  |
+      | change-seismic-slope-circle-centre-z | 📍️change-seismic-slope-circle-centre-z | ✅apply  |
+      | change-seismic-slope-circle-radius | 📍️change-seismic-slope-circle-radius | ✅apply  |
+      | change-seismic-slope-cohesion | 📍️change-seismic-slope-cohesion | ✅apply  |
+      | change-seismic-slope-friction-angle | 📍️change-seismic-slope-friction-angle | ✅apply  |
+      | change-seismic-slope-height | 📍️change-seismic-slope-height | ✅apply  |
+      | change-seismic-slope-topographic-factor | 📍️change-seismic-slope-topographic-factor | ✅apply  |
+      | change-tie-beam-depth | 📍️change-tie-beam-depth | ✅apply  |
+      | change-tie-beam-displacement-limit | 📍️change-tie-beam-displacement-limit | ✅apply  |
+      | change-tie-beam-relative-displacement | 📍️change-tie-beam-relative-displacement | ✅apply  |
+      | change-tie-beam-span | 📍️change-tie-beam-span | ✅apply  |
+      | change-tie-beam-steel-area | 📍️change-tie-beam-steel-area | ✅apply  |
+      | change-tie-beam-steel-design-strength | 📍️change-tie-beam-steel-design-strength | ✅apply  |
+      | change-tie-beam-width | 📍️change-tie-beam-width | ✅apply  |
+      | change-tower-base-rot-stiff-nm | ✏️change-tower-base-rot-stiff-nm | ✅apply  |
+      | change-tank-shell-tm | ✏️change-tank-shell-tm | ✅apply  |
+      | change-tank-shell-str-mpa | ✏️change-tank-shell-str-mpa | ✅apply  |
+      | change-pier-bridge-id | ✏️change-pier-bridge-id | ✅apply  |
+      | change-pier-xm | ✏️change-pier-xm | ✅apply  |
+      | change-pier-height-m | ✏️change-pier-height-m | ✅apply  |
+      | change-pier-section-bm | ✏️change-pier-section-bm | ✅apply  |
+      | change-pier-section-hm | ✏️change-pier-section-hm | ✅apply  |
+      | change-pier-modulus-mpa | ✏️change-pier-modulus-mpa | ✅apply  |
+      | change-pier-moment-rd-nm | ✏️change-pier-moment-rd-nm | ✅apply  |
+      | change-pier-shear-rd-n | ✏️change-pier-shear-rd-n | ✅apply  |
+      | change-pier-reinforcement-ratio | ✏️change-pier-reinforcement-ratio | ✅apply  |
+      | change-pier-cover-m | ✏️change-pier-cover-m | ✅apply  |
+      | change-pier-concrete-fck-mpa | ✏️change-pier-concrete-fck-mpa | ✅apply  |
+      | change-pier-steel-fyk-mpa | ✏️change-pier-steel-fyk-mpa | ✅apply  |
+      | change-pier-axial-load-n | ✏️change-pier-axial-load-n | ✅apply  |
+      | change-pier-stiffness-basis | ✏️change-pier-stiffness-basis | ✅apply  |
+      | change-bearing-bridge-id | ✏️change-bearing-bridge-id | ✅apply  |
+      | change-joint-building-id | ✏️change-joint-building-id | ✅apply  |
+      | change-joint-storey-id | ✏️change-joint-storey-id | ✅apply  |
+      | change-joint-column-id | ✏️change-joint-column-id | ✅apply  |
+      | change-joint-beam-id | ✏️change-joint-beam-id | ✅apply  |
+      | change-bearing-pier-id | ✏️change-bearing-pier-id | ✅apply  |
+      | change-bearing-device | ✏️change-bearing-device | ✅apply  |
+      | change-bearing-xm | ✏️change-bearing-xm | ✅apply  |
+      | change-joint-xm | ✏️change-joint-xm | ✅apply  |
+      | change-joint-ym | ✏️change-joint-ym | ✅apply  |
+      | change-bearing-stiffness-n-per-m | ✏️change-bearing-stiffness-n-per-m | ✅apply  |
+      | change-bearing-d-rd-m | ✏️change-bearing-d-rd-m | ✅apply  |
+      | change-bearing-seat-length-m | ✏️change-bearing-seat-length-m | ✅apply  |
+      | change-joint-column-moment-rd-nm | ✏️change-joint-column-moment-rd-nm | ✅apply  |
+      | change-joint-beam-moment-rd-nm | ✏️change-joint-beam-moment-rd-nm | ✅apply  |
+      | change-bearing-min-support-m | ✏️change-bearing-min-support-m | ✅apply  |
+      | insert-pier | ➕️insert-pier | ✅apply  |
+      | remove-pier | ➖️remove-pier | ✅apply  |
+      | insert-bearing | ➕️insert-bearing | ✅apply  |
+      | insert-joint | ➕️insert-joint | ✅apply  |
+      | remove-bearing | ➖️remove-bearing | ✅apply  |
+      | remove-joint | ➖️remove-joint | ✅apply  |
+      | change-building-ot-base-xm | ✏️change-building-ot-base-xm | ✅apply  |
+      | change-building-ot-base-ym | ✏️change-building-ot-base-ym | ✅apply  |
+      | change-building-tiedown-nm | ✏️change-building-tiedown-nm | ✅apply  |
+      | change-diaphragm-building-id | ✏️change-diaphragm-building-id | ✅apply  |
+      | change-diaphragm-storey-id | ✏️change-diaphragm-storey-id | ✅apply  |
+      | change-diaphragm-material | ✏️change-diaphragm-material | ✅apply  |
+      | change-diaphragm-thickness-m | ✏️change-diaphragm-thickness-m | ✅apply  |
+      | change-diaphragm-span-m | ✏️change-diaphragm-span-m | ✅apply  |
+      | change-diaphragm-depth-m | ✏️change-diaphragm-depth-m | ✅apply  |
+      | change-diaphragm-opening-width-m | ✏️change-diaphragm-opening-width-m | ✅apply  |
+      | change-diaphragm-shear-str-mpa | ✏️change-diaphragm-shear-str-mpa | ✅apply  |
+      | change-diaphragm-chord-area-m2 | ✏️change-diaphragm-chord-area-m2 | ✅apply  |
+      | change-diaphragm-chord-str-mpa | ✏️change-diaphragm-chord-str-mpa | ✅apply  |
+      | change-diaphragm-gamma-d | ✏️change-diaphragm-gamma-d | ✅apply  |
+      | change-accelerogram-building-id | ✏️change-accelerogram-building-id | ✅apply  |
+      | change-accelerogram-label | ✏️change-accelerogram-label | ✅apply  |
+      | change-accelerogram-samples | ✏️change-accelerogram-samples | ✅apply  |
+      | change-accelerogram-dt-s | ✏️change-accelerogram-dt-s | ✅apply  |
+      | change-accelerogram-scale-factor | ✏️change-accelerogram-scale-factor | ✅apply  |
+      | insert-diaphragm | ➕️insert-diaphragm | ✅apply  |
+      | remove-diaphragm | ➖️remove-diaphragm | ✅apply  |
+      | insert-accelerogram | ➕️insert-accelerogram | ✅apply  |
+      | remove-accelerogram | ➖️remove-accelerogram | ✅apply  |
+      | change-soil-layer-foundation-id | ✏️change-soil-layer-foundation-id | ✅apply  |
+      | change-soil-layer-thickness-m | ✏️change-soil-layer-thickness-m | ✅apply  |
+      | change-soil-unit-wt-nm3 | ✏️change-soil-unit-wt-nm3 | ✅apply  |
+      | change-soil-layer-vs-ms | ✏️change-soil-layer-vs-ms | ✅apply  |
+      | change-soil-layer-n160 | ✏️change-soil-layer-n160 | ✅apply  |
+      | change-soil-layer-fines-percent | ✏️change-soil-layer-fines-percent | ✅apply  |
+      | insert-soil-layer | ➕️insert-soil-layer | ✅apply  |
+      | remove-soil-layer | ➖️remove-soil-layer | ✅apply  |
+      | change-storey-variable-category | ✏️change-storey-variable-category | ✅apply  |
+      | change-storey-variable-qk-n | ✏️change-storey-variable-qk-n | ✅apply  |
+      | change-bridge-variable-category | ✏️change-bridge-variable-category | ✅apply  |
+      | change-bridge-variable-qk-n | ✏️change-bridge-variable-qk-n | ✅apply  |
+      | change-tower-variable-category | ✏️change-tower-variable-category | ✅apply  |
+      | change-tower-variable-qk-n | ✏️change-tower-variable-qk-n | ✅apply  |
+      | insert-storey-variable | ➕️insert-storey-variable | ✅apply  |
+      | remove-storey-variable | ➖️remove-storey-variable | ✅apply  |
+      | insert-member | ➕️insert-member | ✅apply  |
+      | remove-member | ➖️remove-member | ✅apply  |
+      | insert-storey | ➕️insert-storey | ✅apply  |
+      | remove-storey | ➖️remove-storey | ✅apply  |
+      | insert-system | ➕️insert-system | ✅apply  |
+      | remove-system | ➖️remove-system | ✅apply  |
+      | insert-bridge-variable | ➕️insert-bridge-variable | ✅apply  |
+      | remove-bridge-variable | ➖️remove-bridge-variable | ✅apply  |
+      | insert-tower-variable | ➕️insert-tower-variable | ✅apply  |
+      | remove-tower-variable | ➖️remove-tower-variable | ✅apply  |
+      | change-assessment-section-depth-m | ✏️change-assessment-section-depth-m | ✅apply  |
+      | change-assessment-section-width-m | ✏️change-assessment-section-width-m | ✅apply  |
+      | change-assessment-eff-depth-m | ✏️change-assessment-eff-depth-m | ✅apply  |
+      | change-assessment-shear-span-m | ✏️change-assessment-shear-span-m | ✅apply  |
+      | change-assessment-axial-force-n | ✏️change-assessment-axial-force-n | ✅apply  |
+      | change-assessment-shear-force-demand-n | ✏️change-assessment-shear-force-demand-n | ✅apply  |
+      | change-assessment-as1-area-m2 | ✏️change-assessment-as1-area-m2 | ✅apply  |
+      | change-assessment-as2-area-m2 | ✏️change-assessment-as2-area-m2 | ✅apply  |
+      | change-assessment-bar-diameter-mm | ✏️change-assessment-bar-diameter-mm | ✅apply  |
+      | change-assessment-steel-yield-mpa | ✏️change-assessment-steel-yield-mpa | ✅apply  |
+      | change-assessment-fc-mpa | ✏️change-assessment-fc-mpa | ✅apply  |
+      | change-assessment-strp-leg-area-m2 | ✏️change-assessment-strp-leg-area-m2 | ✅apply  |
+      | change-assessment-strp-spacing-m | ✏️change-assessment-strp-spacing-m | ✅apply  |
+      | change-assessment-strp-yield-mpa | ✏️change-assessment-strp-yield-mpa | ✅apply  |
+      | change-assessment-core-width-m | ✏️change-assessment-core-width-m | ✅apply  |
+      | change-assessment-core-depth-m | ✏️change-assessment-core-depth-m | ✅apply  |
+      | change-assessment-mid-steel-area-m2 | ✏️change-assessment-mid-steel-area-m2 | ✅apply  |
+      | change-assessment-rbar-count | ✏️change-assessment-rbar-count | ✅apply  |
+      | change-assessment-rbar-spacing-m | ✏️change-assessment-rbar-spacing-m | ✅apply  |
+      | change-assessment-diag-reinf-ratio | ✏️change-assessment-diag-reinf-ratio | ✅apply  |
+      | change-assessment-shear-crack | ✏️change-assessment-shear-crack | ✅apply  |
+      | change-foundation-liq-layer-m | ✏️change-foundation-liq-layer-m | ✅apply  |
+      | change-foundation-footing-width-m | ✏️change-foundation-footing-width-m | ✅apply  |
+      | change-foundation-bear-axial-n | ✏️change-foundation-bear-axial-n | ✅apply  |
+      | change-foundation-bear-shear-n | ✏️change-foundation-bear-shear-n | ✅apply  |
+      | change-foundation-bear-moment-nm | ✏️change-foundation-bear-moment-nm | ✅apply  |
+      | change-foundation-bearing-n-max-n | ✏️change-foundation-bearing-n-max-n | ✅apply  |
+      | change-foundation-soil-phi-deg | ✏️change-foundation-soil-phi-deg | ✅apply  |
+      | change-foundation-pile-diameter-m | ✏️change-foundation-pile-diameter-m | ✅apply  |
+      | change-foundation-pile-length-m | ✏️change-foundation-pile-length-m | ✅apply  |
+      | change-foundation-pile-modulus-pa | ✏️change-foundation-pile-modulus-pa | ✅apply  |
+      | change-foundation-pile-ks-nm3 | ✏️change-foundation-pile-ks-nm3 | ✅apply  |
+      | change-foundation-pile-head-shear-n | ✏️change-foundation-pile-head-shear-n | ✅apply  |
+      | change-foundation-pile-head-fixed | ✏️change-foundation-pile-head-fixed | ✅apply  |
+      | change-foundation-pile-iface-m | ✏️change-foundation-pile-iface-m | ✅apply  |
+      | change-foundation-pile-up-vs-ms | ✏️change-foundation-pile-up-vs-ms | ✅apply  |
+      | change-foundation-pile-low-vs-ms | ✏️change-foundation-pile-low-vs-ms | ✅apply  |
+      | change-foundation-pile-moment-rd-nm | ✏️change-foundation-pile-moment-rd-nm | ✅apply  |
+      | change-site-vs30-ms | ✏️change-site-vs30-ms | ✅apply  |
+      | change-site-n-spt | ✏️change-site-n-spt | ✅apply  |
+      | change-site-cu-kpa | ✏️change-site-cu-kpa | ✅apply  |
+      | change-site-soft-clay-thickness-m | ✏️change-site-soft-clay-thickness-m | ✅apply  |
+      | change-site-soft-clay-pi | ✏️change-site-soft-clay-pi | ✅apply  |
+      | change-site-liquefiable-layer | ✏️change-site-liquefiable-layer | ✅apply  |
+      | change-site-alluvium-thickness-m | ✏️change-site-alluvium-thickness-m | ✅apply  |
+      | change-site-alluvium-vsms | ✏️change-site-alluvium-vsms | ✅apply  |
+      | change-site-below-alluvium-vsms | ✏️change-site-below-alluvium-vsms | ✅apply  |
+      | change-building-setback-ratio | ✏️change-building-setback-ratio | ✅apply  |
+      | change-building-storey-stiffness-ratio | ✏️change-building-storey-stiffness-ratio | ✅apply  |
+      | change-building-storey-stiffness-basis | ✏️change-building-storey-stiffness-basis | ✅apply  |
+      | change-building-plan-env-gap-ratio | ✏️change-building-plan-env-gap-ratio | ✅apply  |
+      | change-building-joint-gap-m | ✏️change-building-joint-gap-m | ✅apply  |
+      | change-building-ns-weight-n | ✏️change-building-ns-weight-n | ✅apply  |
+      | change-building-ns-height-m | ✏️change-building-ns-height-m | ✅apply  |
+      | change-building-ns-period-s | ✏️change-building-ns-period-s | ✅apply  |
+      | change-building-ns-q | ✏️change-building-ns-q | ✅apply  |
+      | change-building-ns-resistance-n | ✏️change-building-ns-resistance-n | ✅apply  |
+      | change-building-col-moment-sum-nm | ✏️change-building-col-moment-sum-nm | ✅apply  |
+      | change-building-beam-moment-sum-nm | ✏️change-building-beam-moment-sum-nm | ✅apply  |
+      | change-member-fastener-diameter-mm | ✏️change-member-fastener-diameter-mm | ✅apply  |
+      | change-member-timber-thickness-mm | ✏️change-member-timber-thickness-mm | ✅apply  |
+      | change-member-wall-thickness-m | ✏️change-member-wall-thickness-m | ✅apply  |
+      | change-member-effective-stiffness-ratio | ✏️change-member-effective-stiffness-ratio | ✅apply  |
+      | change-member-effective-stiffness-basis | ✏️change-member-effective-stiffness-basis | ✅apply  |
+      | change-member-wall-poisson-ratio | ✏️change-member-wall-poisson-ratio | ✅apply  |
+      | change-member-wall-start-xm | ✏️change-member-wall-start-xm | ✅apply  |
+      | change-member-wall-start-ym | ✏️change-member-wall-start-ym | ✅apply  |
+      | change-member-wall-length-m | ✏️change-member-wall-length-m | ✅apply  |
+      | change-member-wall-direction-rad | ✏️change-member-wall-direction-rad | ✅apply  |
+      | change-member-wall-storey-id | ✏️change-member-wall-storey-id | ✅apply  |
+      | change-member-wall-eff-height-m | ✏️change-member-wall-eff-height-m | ✅apply  |
+      | change-bridge-pier-height-m | ✏️change-bridge-pier-height-m | ✅apply  |
+      | change-bridge-pier-moment-rd-nm | ✏️change-bridge-pier-moment-rd-nm | ✅apply  |
+      | change-bridge-pier-shear-rd-n | ✏️change-bridge-pier-shear-rd-n | ✅apply  |
+      | change-bridge-importance-class | ✏️change-bridge-importance-class | ✅apply  |
+      | change-bridge-vertical-period-s | ✏️change-bridge-vertical-period-s | ✅apply  |
+      | change-bridge-pier-cracked-inertia-ratio | ✏️change-bridge-pier-cracked-inertia-ratio | ✅apply  |
+      | change-bridge-deck-length-m | ✏️change-bridge-deck-length-m | ✅apply  |
+      | change-bridge-deck-ei-nm2 | ✏️change-bridge-deck-ei-nm2 | ✅apply  |
+      | change-assessment-chord-demand-rad | ✏️change-assessment-chord-demand-rad | ✅apply  |
+      | change-assessment-chord-yield-rad | ✏️change-assessment-chord-yield-rad | ✅apply  |
+      | change-assessment-chord-ult-rad | ✏️change-assessment-chord-ult-rad | ✅apply  |
+      | change-tower-ei-nm2 | ✏️change-tower-ei-nm2 | ✅apply  |
+      | change-foundation-liq-n160 | ✏️change-foundation-liq-n160 | ✅apply  |
+      | change-foundation-liq-fines-percent | ✏️change-foundation-liq-fines-percent | ✅apply  |
+      | change-foundation-liq-depth-m | ✏️change-foundation-liq-depth-m | ✅apply  |
+      | change-foundation-liq-water-depth-m | ✏️change-foundation-liq-water-depth-m | ✅apply  |
+      | change-foundation-liq-unit-wt-nm3 | ✏️change-foundation-liq-unit-wt-nm3 | ✅apply  |
+      | change-foundation-liq-magnitude | ✏️change-foundation-liq-magnitude | ✅apply  |
+      | change-site-s-ap-r | ✏️change-site-s-ap-r | ✅apply  |
+      | change-site-a-gr | ✏️change-site-a-gr | ✅apply  |
+      | change-site-de-ground-combo | ✏️change-site-de-ground-combo | ✅apply  |
+      | change-site-en-ground-type | ✏️change-site-en-ground-type | ✅apply  |
+      | change-site-en-spectrum-type | ✏️change-site-en-spectrum-type | ✅apply  |
+      | change-site-importance-class | ✏️change-site-importance-class | ✅apply  |
+      | change-building-name | ✏️change-building-name | ✅apply  |
+      | change-building-plan-width-m | ✏️change-building-plan-width-m | ✅apply  |
+      | change-building-plan-length-m | ✏️change-building-plan-length-m | ✅apply  |
+      | change-building-t1-method | ✏️change-building-t1-method | ✅apply  |
+      | change-building-t1-given-s | ✏️change-building-t1-given-s | ✅apply  |
+      | change-building-ct | ✏️change-building-ct | ✅apply  |
+      | change-building-drift-limit-class | ✏️change-building-drift-limit-class | ✅apply  |
+      | change-building-nu | ✏️change-building-nu | ✅apply  |
+      | change-building-multi-resisting-systems | ✏️change-building-multi-resisting-systems | ✅apply  |
+      | change-building-claims-simple-masonry | ✏️change-building-claims-simple-masonry | ✅apply  |
+      | change-building-accidental-ecc-ratio | ✏️change-building-accidental-ecc-ratio | ✅apply  |
+      | change-system-direction | ✏️change-system-direction | ✅apply  |
+      | change-system-system-type | ✏️change-system-system-type | ✅apply  |
+      | change-system-material | ✏️change-system-material | ✅apply  |
+      | change-system-ductility-class | ✏️change-system-ductility-class | ✅apply  |
+      | change-system-q0 | ✏️change-system-q0 | ✅apply  |
+      | change-system-alpha-u-over-alpha1 | ✏️change-system-alpha-u-over-alpha1 | ✅apply  |
+      | change-system-kw | ✏️change-system-kw | ✅apply  |
+      | change-storey-height-m | ✏️change-storey-height-m | ✅apply  |
+      | change-storey-correlated-occupancy | ✏️change-storey-correlated-occupancy | ✅apply  |
+      | change-storey-stiffness-y | ✏️change-storey-stiffness-y | ✅apply  |
+      | change-storey-centre-of-mass-xm | ✏️change-storey-centre-of-mass-xm | ✅apply  |
+      | change-storey-centre-of-mass-ym | ✏️change-storey-centre-of-mass-ym | ✅apply  |
+      | change-storey-centre-of-stiffness-xm | ✏️change-storey-centre-of-stiffness-xm | ✅apply  |
+      | change-storey-centre-of-stiffness-ym | ✏️change-storey-centre-of-stiffness-ym | ✅apply  |
+      | change-storey-drift-ym | ✏️change-storey-drift-ym | ✅apply  |
+      | change-storey-shear-resistance-n | ✏️change-storey-shear-resistance-n | ✅apply  |
+      | change-member-material | ✏️change-member-material | ✅apply  |
+      | change-member-role | ✏️change-member-role | ✅apply  |
+      | change-member-min-dimension-m | ✏️change-member-min-dimension-m | ✅apply  |
+      | change-member-rho | ✏️change-member-rho | ✅apply  |
+      | change-member-rho-prime | ✏️change-member-rho-prime | ✅apply  |
+      | change-member-omega-wd | ✏️change-member-omega-wd | ✅apply  |
+      | change-member-steel-section-class | ✏️change-member-steel-section-class | ✅apply  |
+      | change-bridge-period-ratio | ✏️change-bridge-period-ratio | ✅apply  |
+      | change-bridge-fundamental-period-s | ✏️change-bridge-fundamental-period-s | ✅apply  |
+      | change-bridge-bearing-d-rd-m | ✏️change-bridge-bearing-d-rd-m | ✅apply  |
+      | change-bridge-permanent-gk-n | ✏️change-bridge-permanent-gk-n | ✅apply  |
+      | change-bridge-correlated-occupancy | ✏️change-bridge-correlated-occupancy | ✅apply  |
+      | change-assessment-knowledge-level | ✏️change-assessment-knowledge-level | ✅apply  |
+      | change-assessment-limit-state | ✏️change-assessment-limit-state | ✅apply  |
+      | change-assessment-supported-building-id | ✏️change-assessment-supported-building-id | ✅apply  |
+      | change-assessment-gamma-el | ✏️change-assessment-gamma-el | ✅apply  |
+      | change-tower-height-m | ✏️change-tower-height-m | ✅apply  |
+      | change-tower-is-chimney | ✏️change-tower-is-chimney | ✅apply  |
+      | change-tower-q-nominal | ✏️change-tower-q-nominal | ✅apply  |
+      | change-tower-permanent-gk-n | ✏️change-tower-permanent-gk-n | ✅apply  |
+      | change-tower-correlated-occupancy | ✏️change-tower-correlated-occupancy | ✅apply  |
+      | change-silo-height-m | ✏️change-silo-height-m | ✅apply  |
+      | change-silo-radius-m | ✏️change-silo-radius-m | ✅apply  |
+      | change-silo-permanent-gk-n | ✏️change-silo-permanent-gk-n | ✅apply  |
+      | change-silo-content-qk-n | ✏️change-silo-content-qk-n | ✅apply  |
+      | change-silo-content-category | ✏️change-silo-content-category | ✅apply  |
+      | change-silo-filling-ratio | ✏️change-silo-filling-ratio | ✅apply  |
+      | change-silo-n-rd-n | ✏️change-silo-n-rd-n | ✅apply  |
+      | change-silo-v-rd-n | ✏️change-silo-v-rd-n | ✅apply  |
+      | change-silo-q-nominal | ✏️change-silo-q-nominal | ✅apply  |
+      | change-tank-height-m | ✏️change-tank-height-m | ✅apply  |
+      | change-tank-radius-m | ✏️change-tank-radius-m | ✅apply  |
+      | change-tank-permanent-gk-n | ✏️change-tank-permanent-gk-n | ✅apply  |
+      | change-tank-content-qk-n | ✏️change-tank-content-qk-n | ✅apply  |
+      | change-tank-content-category | ✏️change-tank-content-category | ✅apply  |
+      | change-tank-filling-ratio | ✏️change-tank-filling-ratio | ✅apply  |
+      | change-tank-v-rd-n | ✏️change-tank-v-rd-n | ✅apply  |
+      | change-foundation-supported-building-id | ✏️change-foundation-supported-building-id | ✅apply  |
+      | change-foundation-area-m2 | ✏️change-foundation-area-m2 | ✅apply  |
+      | change-foundation-p-rd-pa | ✏️change-foundation-p-rd-pa | ✅apply  |
+      | change-foundation-passive-resistance-n | ✏️change-foundation-passive-resistance-n | ✅apply  |
+      | change-foundation-k-foundation | ✏️change-foundation-k-foundation | ✅apply  |
+      | change-foundation-k-soil | ✏️change-foundation-k-soil | ✅apply  |
+      | change-retaining-wall-height-m | ✏️change-retaining-wall-height-m | ✅apply  |
+      | change-retaining-wall-phi-deg | ✏️change-retaining-wall-phi-deg | ✅apply  |
+      | change-retaining-wall-soil-gamma | ✏️change-retaining-wall-soil-gamma | ✅apply  |
+      | change-retaining-wall-r | ✏️change-retaining-wall-r | ✅apply  |
+      | change-retaining-wall-h-rd-n-per-m | ✏️change-retaining-wall-h-rd-n-per-m | ✅apply  |
 
   @id-inverse
   @level-exhaustive
   @mode-differential
   Scenario Outline: Undoing <id> restores its committed before-snapshot
-    Given the committed before-snapshot shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/⬅️before/🔣️.json
-    And the committed mutation payload shared://🧬️mutations/<dir>/<fixture>/🦠️mutation/🔣️.json
-    And the committed after-snapshot shared://🧬️mutations/<dir>/<fixture>/📸️snapshot/➡️after/🔣️.json
-    And the committed outcome shared://🧬️mutations/<dir>/<fixture>/🎯️outcome/🔣️.json
+    Given the committed before-snapshot shared://🧬️mutations/<dir>/<fixture>/🔣️.before.json
+    And the committed mutation payload shared://🧬️mutations/<dir>/<fixture>/🔣️.mutation.json
+    And the committed after-snapshot shared://🧬️mutations/<dir>/<fixture>/🔣️.after.json
+    And the committed outcome shared://🧬️mutations/<dir>/<fixture>/🔣️.outcome.json
     When each implementation applies the committed mutation and then its OWN computed inverse
     Then both restore the before-snapshot and agree on the mutated and the restored document
     Examples:
       | id                           | dir                            | fixture |
       | change-annex                 | 📎️change-annex                 | ✅apply  |
-      | update-site                  | 🌚️update-site                  | ✅apply  |
       | insert-building              | ➕️insert-building              | ✅apply  |
       | remove-building              | ➖️remove-building              | ✅apply  |
       | change-system-v-rd-n         | 💪️change-system-v-rd-n         | ✅apply  |
@@ -125,6 +414,12 @@ Feature: Apply every typed EN 1998 mutation against an independent Python implem
       | insert-retaining-wall        | 🧱️insert-retaining-wall        | ✅apply  |
       | insert-tower                 | 🗼insert-tower                  | ✅apply  |
       | change-tower-m-rd-nm         | ↪️change-tower-m-rd-nm         | ✅apply  |
+      | change-placement-x | 📍️change-placement-x | ✅apply  |
+      | change-placement-y | 📍️change-placement-y | ✅apply  |
+      | change-placement-z | 📍️change-placement-z | ✅apply  |
+      | change-placement-yaw | 📍️change-placement-yaw | ✅apply  |
+      | insert-placement | 📍️insert-placement | ✅apply  |
+      | remove-placement | 📍️remove-placement | ✅apply  |
       | remove-bridge                | ➖️remove-bridge                | ✅apply  |
       | remove-assessment            | ➖️remove-assessment            | ✅apply  |
       | remove-silo                  | ➖️remove-silo                  | ✅apply  |
@@ -132,6 +427,292 @@ Feature: Apply every typed EN 1998 mutation against an independent Python implem
       | remove-foundation            | ➖️remove-foundation            | ✅apply  |
       | remove-retaining-wall        | ➖️remove-retaining-wall        | ✅apply  |
       | remove-tower                 | ➖️remove-tower                 | ✅apply  |
+      | change-foundation-base-friction-deg | ✏️change-foundation-base-friction-deg | ✅apply  |
+      | change-foundation-base-pore-pressure-pa | ✏️change-foundation-base-pore-pressure-pa | ✅apply  |
+      | change-joint-col-moment-rd-nm | ✏️change-joint-col-moment-rd-nm | ✅apply  |
+      | change-retaining-wall-water-height-m | ✏️change-retaining-wall-water-height-m | ✅apply  |
+      | change-retaining-wall-saturated-gamma | ✏️change-retaining-wall-saturated-gamma | ✅apply  |
+      | change-retaining-wall-permeability-ms | ✏️change-retaining-wall-permeability-ms | ✅apply  |
+      | change-seismic-slope-governing-layer-id | ✏️change-seismic-slope-governing-layer-id | ✅apply  |
+      | change-tie-beam-foundation-a-id | ✏️change-tie-beam-foundation-a-id | ✅apply  |
+      | change-tie-beam-foundation-b-id | ✏️change-tie-beam-foundation-b-id | ✅apply  |
+      | insert-seismic-slope | ➕️insert-seismic-slope | ✅apply  |
+      | insert-tie-beam | ➕️insert-tie-beam | ✅apply  |
+      | remove-seismic-slope | ➖️remove-seismic-slope | ✅apply  |
+      | remove-tie-beam | ➖️remove-tie-beam | ✅apply  |
+      | change-seismic-slope-angle | 📍️change-seismic-slope-angle | ✅apply  |
+      | change-seismic-slope-circle-centre-x | 📍️change-seismic-slope-circle-centre-x | ✅apply  |
+      | change-seismic-slope-circle-centre-z | 📍️change-seismic-slope-circle-centre-z | ✅apply  |
+      | change-seismic-slope-circle-radius | 📍️change-seismic-slope-circle-radius | ✅apply  |
+      | change-seismic-slope-cohesion | 📍️change-seismic-slope-cohesion | ✅apply  |
+      | change-seismic-slope-friction-angle | 📍️change-seismic-slope-friction-angle | ✅apply  |
+      | change-seismic-slope-height | 📍️change-seismic-slope-height | ✅apply  |
+      | change-seismic-slope-topographic-factor | 📍️change-seismic-slope-topographic-factor | ✅apply  |
+      | change-tie-beam-depth | 📍️change-tie-beam-depth | ✅apply  |
+      | change-tie-beam-displacement-limit | 📍️change-tie-beam-displacement-limit | ✅apply  |
+      | change-tie-beam-relative-displacement | 📍️change-tie-beam-relative-displacement | ✅apply  |
+      | change-tie-beam-span | 📍️change-tie-beam-span | ✅apply  |
+      | change-tie-beam-steel-area | 📍️change-tie-beam-steel-area | ✅apply  |
+      | change-tie-beam-steel-design-strength | 📍️change-tie-beam-steel-design-strength | ✅apply  |
+      | change-tie-beam-width | 📍️change-tie-beam-width | ✅apply  |
+      | change-tower-base-rot-stiff-nm | ✏️change-tower-base-rot-stiff-nm | ✅apply  |
+      | change-tank-shell-tm | ✏️change-tank-shell-tm | ✅apply  |
+      | change-tank-shell-str-mpa | ✏️change-tank-shell-str-mpa | ✅apply  |
+      | change-pier-bridge-id | ✏️change-pier-bridge-id | ✅apply  |
+      | change-pier-xm | ✏️change-pier-xm | ✅apply  |
+      | change-pier-height-m | ✏️change-pier-height-m | ✅apply  |
+      | change-pier-section-bm | ✏️change-pier-section-bm | ✅apply  |
+      | change-pier-section-hm | ✏️change-pier-section-hm | ✅apply  |
+      | change-pier-modulus-mpa | ✏️change-pier-modulus-mpa | ✅apply  |
+      | change-pier-moment-rd-nm | ✏️change-pier-moment-rd-nm | ✅apply  |
+      | change-pier-shear-rd-n | ✏️change-pier-shear-rd-n | ✅apply  |
+      | change-pier-reinforcement-ratio | ✏️change-pier-reinforcement-ratio | ✅apply  |
+      | change-pier-cover-m | ✏️change-pier-cover-m | ✅apply  |
+      | change-pier-concrete-fck-mpa | ✏️change-pier-concrete-fck-mpa | ✅apply  |
+      | change-pier-steel-fyk-mpa | ✏️change-pier-steel-fyk-mpa | ✅apply  |
+      | change-pier-axial-load-n | ✏️change-pier-axial-load-n | ✅apply  |
+      | change-pier-stiffness-basis | ✏️change-pier-stiffness-basis | ✅apply  |
+      | change-bearing-bridge-id | ✏️change-bearing-bridge-id | ✅apply  |
+      | change-joint-building-id | ✏️change-joint-building-id | ✅apply  |
+      | change-joint-storey-id | ✏️change-joint-storey-id | ✅apply  |
+      | change-joint-column-id | ✏️change-joint-column-id | ✅apply  |
+      | change-joint-beam-id | ✏️change-joint-beam-id | ✅apply  |
+      | change-bearing-pier-id | ✏️change-bearing-pier-id | ✅apply  |
+      | change-bearing-device | ✏️change-bearing-device | ✅apply  |
+      | change-bearing-xm | ✏️change-bearing-xm | ✅apply  |
+      | change-joint-xm | ✏️change-joint-xm | ✅apply  |
+      | change-joint-ym | ✏️change-joint-ym | ✅apply  |
+      | change-bearing-stiffness-n-per-m | ✏️change-bearing-stiffness-n-per-m | ✅apply  |
+      | change-bearing-d-rd-m | ✏️change-bearing-d-rd-m | ✅apply  |
+      | change-bearing-seat-length-m | ✏️change-bearing-seat-length-m | ✅apply  |
+      | change-joint-column-moment-rd-nm | ✏️change-joint-column-moment-rd-nm | ✅apply  |
+      | change-joint-beam-moment-rd-nm | ✏️change-joint-beam-moment-rd-nm | ✅apply  |
+      | change-bearing-min-support-m | ✏️change-bearing-min-support-m | ✅apply  |
+      | insert-pier | ➕️insert-pier | ✅apply  |
+      | remove-pier | ➖️remove-pier | ✅apply  |
+      | insert-bearing | ➕️insert-bearing | ✅apply  |
+      | insert-joint | ➕️insert-joint | ✅apply  |
+      | remove-bearing | ➖️remove-bearing | ✅apply  |
+      | remove-joint | ➖️remove-joint | ✅apply  |
+      | change-building-ot-base-xm | ✏️change-building-ot-base-xm | ✅apply  |
+      | change-building-ot-base-ym | ✏️change-building-ot-base-ym | ✅apply  |
+      | change-building-tiedown-nm | ✏️change-building-tiedown-nm | ✅apply  |
+      | change-diaphragm-building-id | ✏️change-diaphragm-building-id | ✅apply  |
+      | change-diaphragm-storey-id | ✏️change-diaphragm-storey-id | ✅apply  |
+      | change-diaphragm-material | ✏️change-diaphragm-material | ✅apply  |
+      | change-diaphragm-thickness-m | ✏️change-diaphragm-thickness-m | ✅apply  |
+      | change-diaphragm-span-m | ✏️change-diaphragm-span-m | ✅apply  |
+      | change-diaphragm-depth-m | ✏️change-diaphragm-depth-m | ✅apply  |
+      | change-diaphragm-opening-width-m | ✏️change-diaphragm-opening-width-m | ✅apply  |
+      | change-diaphragm-shear-str-mpa | ✏️change-diaphragm-shear-str-mpa | ✅apply  |
+      | change-diaphragm-chord-area-m2 | ✏️change-diaphragm-chord-area-m2 | ✅apply  |
+      | change-diaphragm-chord-str-mpa | ✏️change-diaphragm-chord-str-mpa | ✅apply  |
+      | change-diaphragm-gamma-d | ✏️change-diaphragm-gamma-d | ✅apply  |
+      | change-accelerogram-building-id | ✏️change-accelerogram-building-id | ✅apply  |
+      | change-accelerogram-label | ✏️change-accelerogram-label | ✅apply  |
+      | change-accelerogram-samples | ✏️change-accelerogram-samples | ✅apply  |
+      | change-accelerogram-dt-s | ✏️change-accelerogram-dt-s | ✅apply  |
+      | change-accelerogram-scale-factor | ✏️change-accelerogram-scale-factor | ✅apply  |
+      | insert-diaphragm | ➕️insert-diaphragm | ✅apply  |
+      | remove-diaphragm | ➖️remove-diaphragm | ✅apply  |
+      | insert-accelerogram | ➕️insert-accelerogram | ✅apply  |
+      | remove-accelerogram | ➖️remove-accelerogram | ✅apply  |
+      | change-soil-layer-foundation-id | ✏️change-soil-layer-foundation-id | ✅apply  |
+      | change-soil-layer-thickness-m | ✏️change-soil-layer-thickness-m | ✅apply  |
+      | change-soil-unit-wt-nm3 | ✏️change-soil-unit-wt-nm3 | ✅apply  |
+      | change-soil-layer-vs-ms | ✏️change-soil-layer-vs-ms | ✅apply  |
+      | change-soil-layer-n160 | ✏️change-soil-layer-n160 | ✅apply  |
+      | change-soil-layer-fines-percent | ✏️change-soil-layer-fines-percent | ✅apply  |
+      | insert-soil-layer | ➕️insert-soil-layer | ✅apply  |
+      | remove-soil-layer | ➖️remove-soil-layer | ✅apply  |
+      | change-storey-variable-category | ✏️change-storey-variable-category | ✅apply  |
+      | change-storey-variable-qk-n | ✏️change-storey-variable-qk-n | ✅apply  |
+      | change-bridge-variable-category | ✏️change-bridge-variable-category | ✅apply  |
+      | change-bridge-variable-qk-n | ✏️change-bridge-variable-qk-n | ✅apply  |
+      | change-tower-variable-category | ✏️change-tower-variable-category | ✅apply  |
+      | change-tower-variable-qk-n | ✏️change-tower-variable-qk-n | ✅apply  |
+      | insert-storey-variable | ➕️insert-storey-variable | ✅apply  |
+      | remove-storey-variable | ➖️remove-storey-variable | ✅apply  |
+      | insert-member | ➕️insert-member | ✅apply  |
+      | remove-member | ➖️remove-member | ✅apply  |
+      | insert-storey | ➕️insert-storey | ✅apply  |
+      | remove-storey | ➖️remove-storey | ✅apply  |
+      | insert-system | ➕️insert-system | ✅apply  |
+      | remove-system | ➖️remove-system | ✅apply  |
+      | insert-bridge-variable | ➕️insert-bridge-variable | ✅apply  |
+      | remove-bridge-variable | ➖️remove-bridge-variable | ✅apply  |
+      | insert-tower-variable | ➕️insert-tower-variable | ✅apply  |
+      | remove-tower-variable | ➖️remove-tower-variable | ✅apply  |
+      | change-assessment-section-depth-m | ✏️change-assessment-section-depth-m | ✅apply  |
+      | change-assessment-section-width-m | ✏️change-assessment-section-width-m | ✅apply  |
+      | change-assessment-eff-depth-m | ✏️change-assessment-eff-depth-m | ✅apply  |
+      | change-assessment-shear-span-m | ✏️change-assessment-shear-span-m | ✅apply  |
+      | change-assessment-axial-force-n | ✏️change-assessment-axial-force-n | ✅apply  |
+      | change-assessment-shear-force-demand-n | ✏️change-assessment-shear-force-demand-n | ✅apply  |
+      | change-assessment-as1-area-m2 | ✏️change-assessment-as1-area-m2 | ✅apply  |
+      | change-assessment-as2-area-m2 | ✏️change-assessment-as2-area-m2 | ✅apply  |
+      | change-assessment-bar-diameter-mm | ✏️change-assessment-bar-diameter-mm | ✅apply  |
+      | change-assessment-steel-yield-mpa | ✏️change-assessment-steel-yield-mpa | ✅apply  |
+      | change-assessment-fc-mpa | ✏️change-assessment-fc-mpa | ✅apply  |
+      | change-assessment-strp-leg-area-m2 | ✏️change-assessment-strp-leg-area-m2 | ✅apply  |
+      | change-assessment-strp-spacing-m | ✏️change-assessment-strp-spacing-m | ✅apply  |
+      | change-assessment-strp-yield-mpa | ✏️change-assessment-strp-yield-mpa | ✅apply  |
+      | change-assessment-core-width-m | ✏️change-assessment-core-width-m | ✅apply  |
+      | change-assessment-core-depth-m | ✏️change-assessment-core-depth-m | ✅apply  |
+      | change-assessment-mid-steel-area-m2 | ✏️change-assessment-mid-steel-area-m2 | ✅apply  |
+      | change-assessment-rbar-count | ✏️change-assessment-rbar-count | ✅apply  |
+      | change-assessment-rbar-spacing-m | ✏️change-assessment-rbar-spacing-m | ✅apply  |
+      | change-assessment-diag-reinf-ratio | ✏️change-assessment-diag-reinf-ratio | ✅apply  |
+      | change-assessment-shear-crack | ✏️change-assessment-shear-crack | ✅apply  |
+      | change-foundation-liq-layer-m | ✏️change-foundation-liq-layer-m | ✅apply  |
+      | change-foundation-footing-width-m | ✏️change-foundation-footing-width-m | ✅apply  |
+      | change-foundation-bear-axial-n | ✏️change-foundation-bear-axial-n | ✅apply  |
+      | change-foundation-bear-shear-n | ✏️change-foundation-bear-shear-n | ✅apply  |
+      | change-foundation-bear-moment-nm | ✏️change-foundation-bear-moment-nm | ✅apply  |
+      | change-foundation-bearing-n-max-n | ✏️change-foundation-bearing-n-max-n | ✅apply  |
+      | change-foundation-soil-phi-deg | ✏️change-foundation-soil-phi-deg | ✅apply  |
+      | change-foundation-pile-diameter-m | ✏️change-foundation-pile-diameter-m | ✅apply  |
+      | change-foundation-pile-length-m | ✏️change-foundation-pile-length-m | ✅apply  |
+      | change-foundation-pile-modulus-pa | ✏️change-foundation-pile-modulus-pa | ✅apply  |
+      | change-foundation-pile-ks-nm3 | ✏️change-foundation-pile-ks-nm3 | ✅apply  |
+      | change-foundation-pile-head-shear-n | ✏️change-foundation-pile-head-shear-n | ✅apply  |
+      | change-foundation-pile-head-fixed | ✏️change-foundation-pile-head-fixed | ✅apply  |
+      | change-foundation-pile-iface-m | ✏️change-foundation-pile-iface-m | ✅apply  |
+      | change-foundation-pile-up-vs-ms | ✏️change-foundation-pile-up-vs-ms | ✅apply  |
+      | change-foundation-pile-low-vs-ms | ✏️change-foundation-pile-low-vs-ms | ✅apply  |
+      | change-foundation-pile-moment-rd-nm | ✏️change-foundation-pile-moment-rd-nm | ✅apply  |
+      | change-site-vs30-ms | ✏️change-site-vs30-ms | ✅apply  |
+      | change-site-n-spt | ✏️change-site-n-spt | ✅apply  |
+      | change-site-cu-kpa | ✏️change-site-cu-kpa | ✅apply  |
+      | change-site-soft-clay-thickness-m | ✏️change-site-soft-clay-thickness-m | ✅apply  |
+      | change-site-soft-clay-pi | ✏️change-site-soft-clay-pi | ✅apply  |
+      | change-site-liquefiable-layer | ✏️change-site-liquefiable-layer | ✅apply  |
+      | change-site-alluvium-thickness-m | ✏️change-site-alluvium-thickness-m | ✅apply  |
+      | change-site-alluvium-vsms | ✏️change-site-alluvium-vsms | ✅apply  |
+      | change-site-below-alluvium-vsms | ✏️change-site-below-alluvium-vsms | ✅apply  |
+      | change-building-setback-ratio | ✏️change-building-setback-ratio | ✅apply  |
+      | change-building-storey-stiffness-ratio | ✏️change-building-storey-stiffness-ratio | ✅apply  |
+      | change-building-storey-stiffness-basis | ✏️change-building-storey-stiffness-basis | ✅apply  |
+      | change-building-plan-env-gap-ratio | ✏️change-building-plan-env-gap-ratio | ✅apply  |
+      | change-building-joint-gap-m | ✏️change-building-joint-gap-m | ✅apply  |
+      | change-building-ns-weight-n | ✏️change-building-ns-weight-n | ✅apply  |
+      | change-building-ns-height-m | ✏️change-building-ns-height-m | ✅apply  |
+      | change-building-ns-period-s | ✏️change-building-ns-period-s | ✅apply  |
+      | change-building-ns-q | ✏️change-building-ns-q | ✅apply  |
+      | change-building-ns-resistance-n | ✏️change-building-ns-resistance-n | ✅apply  |
+      | change-building-col-moment-sum-nm | ✏️change-building-col-moment-sum-nm | ✅apply  |
+      | change-building-beam-moment-sum-nm | ✏️change-building-beam-moment-sum-nm | ✅apply  |
+      | change-member-fastener-diameter-mm | ✏️change-member-fastener-diameter-mm | ✅apply  |
+      | change-member-timber-thickness-mm | ✏️change-member-timber-thickness-mm | ✅apply  |
+      | change-member-wall-thickness-m | ✏️change-member-wall-thickness-m | ✅apply  |
+      | change-member-effective-stiffness-ratio | ✏️change-member-effective-stiffness-ratio | ✅apply  |
+      | change-member-effective-stiffness-basis | ✏️change-member-effective-stiffness-basis | ✅apply  |
+      | change-member-wall-poisson-ratio | ✏️change-member-wall-poisson-ratio | ✅apply  |
+      | change-member-wall-start-xm | ✏️change-member-wall-start-xm | ✅apply  |
+      | change-member-wall-start-ym | ✏️change-member-wall-start-ym | ✅apply  |
+      | change-member-wall-length-m | ✏️change-member-wall-length-m | ✅apply  |
+      | change-member-wall-direction-rad | ✏️change-member-wall-direction-rad | ✅apply  |
+      | change-member-wall-storey-id | ✏️change-member-wall-storey-id | ✅apply  |
+      | change-member-wall-eff-height-m | ✏️change-member-wall-eff-height-m | ✅apply  |
+      | change-bridge-pier-height-m | ✏️change-bridge-pier-height-m | ✅apply  |
+      | change-bridge-pier-moment-rd-nm | ✏️change-bridge-pier-moment-rd-nm | ✅apply  |
+      | change-bridge-pier-shear-rd-n | ✏️change-bridge-pier-shear-rd-n | ✅apply  |
+      | change-bridge-importance-class | ✏️change-bridge-importance-class | ✅apply  |
+      | change-bridge-vertical-period-s | ✏️change-bridge-vertical-period-s | ✅apply  |
+      | change-bridge-pier-cracked-inertia-ratio | ✏️change-bridge-pier-cracked-inertia-ratio | ✅apply  |
+      | change-bridge-deck-length-m | ✏️change-bridge-deck-length-m | ✅apply  |
+      | change-bridge-deck-ei-nm2 | ✏️change-bridge-deck-ei-nm2 | ✅apply  |
+      | change-assessment-chord-demand-rad | ✏️change-assessment-chord-demand-rad | ✅apply  |
+      | change-assessment-chord-yield-rad | ✏️change-assessment-chord-yield-rad | ✅apply  |
+      | change-assessment-chord-ult-rad | ✏️change-assessment-chord-ult-rad | ✅apply  |
+      | change-tower-ei-nm2 | ✏️change-tower-ei-nm2 | ✅apply  |
+      | change-foundation-liq-n160 | ✏️change-foundation-liq-n160 | ✅apply  |
+      | change-foundation-liq-fines-percent | ✏️change-foundation-liq-fines-percent | ✅apply  |
+      | change-foundation-liq-depth-m | ✏️change-foundation-liq-depth-m | ✅apply  |
+      | change-foundation-liq-water-depth-m | ✏️change-foundation-liq-water-depth-m | ✅apply  |
+      | change-foundation-liq-unit-wt-nm3 | ✏️change-foundation-liq-unit-wt-nm3 | ✅apply  |
+      | change-foundation-liq-magnitude | ✏️change-foundation-liq-magnitude | ✅apply  |
+      | change-site-s-ap-r | ✏️change-site-s-ap-r | ✅apply  |
+      | change-site-a-gr | ✏️change-site-a-gr | ✅apply  |
+      | change-site-de-ground-combo | ✏️change-site-de-ground-combo | ✅apply  |
+      | change-site-en-ground-type | ✏️change-site-en-ground-type | ✅apply  |
+      | change-site-en-spectrum-type | ✏️change-site-en-spectrum-type | ✅apply  |
+      | change-site-importance-class | ✏️change-site-importance-class | ✅apply  |
+      | change-building-name | ✏️change-building-name | ✅apply  |
+      | change-building-plan-width-m | ✏️change-building-plan-width-m | ✅apply  |
+      | change-building-plan-length-m | ✏️change-building-plan-length-m | ✅apply  |
+      | change-building-t1-method | ✏️change-building-t1-method | ✅apply  |
+      | change-building-t1-given-s | ✏️change-building-t1-given-s | ✅apply  |
+      | change-building-ct | ✏️change-building-ct | ✅apply  |
+      | change-building-drift-limit-class | ✏️change-building-drift-limit-class | ✅apply  |
+      | change-building-nu | ✏️change-building-nu | ✅apply  |
+      | change-building-multi-resisting-systems | ✏️change-building-multi-resisting-systems | ✅apply  |
+      | change-building-claims-simple-masonry | ✏️change-building-claims-simple-masonry | ✅apply  |
+      | change-building-accidental-ecc-ratio | ✏️change-building-accidental-ecc-ratio | ✅apply  |
+      | change-system-direction | ✏️change-system-direction | ✅apply  |
+      | change-system-system-type | ✏️change-system-system-type | ✅apply  |
+      | change-system-material | ✏️change-system-material | ✅apply  |
+      | change-system-ductility-class | ✏️change-system-ductility-class | ✅apply  |
+      | change-system-q0 | ✏️change-system-q0 | ✅apply  |
+      | change-system-alpha-u-over-alpha1 | ✏️change-system-alpha-u-over-alpha1 | ✅apply  |
+      | change-system-kw | ✏️change-system-kw | ✅apply  |
+      | change-storey-height-m | ✏️change-storey-height-m | ✅apply  |
+      | change-storey-correlated-occupancy | ✏️change-storey-correlated-occupancy | ✅apply  |
+      | change-storey-stiffness-y | ✏️change-storey-stiffness-y | ✅apply  |
+      | change-storey-centre-of-mass-xm | ✏️change-storey-centre-of-mass-xm | ✅apply  |
+      | change-storey-centre-of-mass-ym | ✏️change-storey-centre-of-mass-ym | ✅apply  |
+      | change-storey-centre-of-stiffness-xm | ✏️change-storey-centre-of-stiffness-xm | ✅apply  |
+      | change-storey-centre-of-stiffness-ym | ✏️change-storey-centre-of-stiffness-ym | ✅apply  |
+      | change-storey-drift-ym | ✏️change-storey-drift-ym | ✅apply  |
+      | change-storey-shear-resistance-n | ✏️change-storey-shear-resistance-n | ✅apply  |
+      | change-member-material | ✏️change-member-material | ✅apply  |
+      | change-member-role | ✏️change-member-role | ✅apply  |
+      | change-member-min-dimension-m | ✏️change-member-min-dimension-m | ✅apply  |
+      | change-member-rho | ✏️change-member-rho | ✅apply  |
+      | change-member-rho-prime | ✏️change-member-rho-prime | ✅apply  |
+      | change-member-omega-wd | ✏️change-member-omega-wd | ✅apply  |
+      | change-member-steel-section-class | ✏️change-member-steel-section-class | ✅apply  |
+      | change-bridge-period-ratio | ✏️change-bridge-period-ratio | ✅apply  |
+      | change-bridge-fundamental-period-s | ✏️change-bridge-fundamental-period-s | ✅apply  |
+      | change-bridge-bearing-d-rd-m | ✏️change-bridge-bearing-d-rd-m | ✅apply  |
+      | change-bridge-permanent-gk-n | ✏️change-bridge-permanent-gk-n | ✅apply  |
+      | change-bridge-correlated-occupancy | ✏️change-bridge-correlated-occupancy | ✅apply  |
+      | change-assessment-knowledge-level | ✏️change-assessment-knowledge-level | ✅apply  |
+      | change-assessment-limit-state | ✏️change-assessment-limit-state | ✅apply  |
+      | change-assessment-supported-building-id | ✏️change-assessment-supported-building-id | ✅apply  |
+      | change-assessment-gamma-el | ✏️change-assessment-gamma-el | ✅apply  |
+      | change-tower-height-m | ✏️change-tower-height-m | ✅apply  |
+      | change-tower-is-chimney | ✏️change-tower-is-chimney | ✅apply  |
+      | change-tower-q-nominal | ✏️change-tower-q-nominal | ✅apply  |
+      | change-tower-permanent-gk-n | ✏️change-tower-permanent-gk-n | ✅apply  |
+      | change-tower-correlated-occupancy | ✏️change-tower-correlated-occupancy | ✅apply  |
+      | change-silo-height-m | ✏️change-silo-height-m | ✅apply  |
+      | change-silo-radius-m | ✏️change-silo-radius-m | ✅apply  |
+      | change-silo-permanent-gk-n | ✏️change-silo-permanent-gk-n | ✅apply  |
+      | change-silo-content-qk-n | ✏️change-silo-content-qk-n | ✅apply  |
+      | change-silo-content-category | ✏️change-silo-content-category | ✅apply  |
+      | change-silo-filling-ratio | ✏️change-silo-filling-ratio | ✅apply  |
+      | change-silo-n-rd-n | ✏️change-silo-n-rd-n | ✅apply  |
+      | change-silo-v-rd-n | ✏️change-silo-v-rd-n | ✅apply  |
+      | change-silo-q-nominal | ✏️change-silo-q-nominal | ✅apply  |
+      | change-tank-height-m | ✏️change-tank-height-m | ✅apply  |
+      | change-tank-radius-m | ✏️change-tank-radius-m | ✅apply  |
+      | change-tank-permanent-gk-n | ✏️change-tank-permanent-gk-n | ✅apply  |
+      | change-tank-content-qk-n | ✏️change-tank-content-qk-n | ✅apply  |
+      | change-tank-content-category | ✏️change-tank-content-category | ✅apply  |
+      | change-tank-filling-ratio | ✏️change-tank-filling-ratio | ✅apply  |
+      | change-tank-v-rd-n | ✏️change-tank-v-rd-n | ✅apply  |
+      | change-foundation-supported-building-id | ✏️change-foundation-supported-building-id | ✅apply  |
+      | change-foundation-area-m2 | ✏️change-foundation-area-m2 | ✅apply  |
+      | change-foundation-p-rd-pa | ✏️change-foundation-p-rd-pa | ✅apply  |
+      | change-foundation-passive-resistance-n | ✏️change-foundation-passive-resistance-n | ✅apply  |
+      | change-foundation-k-foundation | ✏️change-foundation-k-foundation | ✅apply  |
+      | change-foundation-k-soil | ✏️change-foundation-k-soil | ✅apply  |
+      | change-retaining-wall-height-m | ✏️change-retaining-wall-height-m | ✅apply  |
+      | change-retaining-wall-phi-deg | ✏️change-retaining-wall-phi-deg | ✅apply  |
+      | change-retaining-wall-soil-gamma | ✏️change-retaining-wall-soil-gamma | ✅apply  |
+      | change-retaining-wall-r | ✏️change-retaining-wall-r | ✅apply  |
+      | change-retaining-wall-h-rd-n-per-m | ✏️change-retaining-wall-h-rd-n-per-m | ✅apply  |
 
   @id-identity-round-trip
   @level-long

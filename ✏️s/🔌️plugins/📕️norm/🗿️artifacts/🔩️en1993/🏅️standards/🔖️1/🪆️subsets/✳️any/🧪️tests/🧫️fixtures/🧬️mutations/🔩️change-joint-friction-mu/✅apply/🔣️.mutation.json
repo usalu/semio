@@ -1,0 +1,6 @@
+{
+  "ChangeJointFrictionMu": {
+    "id": "joint-j1",
+    "newFrictionMu": 1.0
+  }
+}

@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-lintel-bearing-length/schema.json",
+  "title": "ChangeLintelBearingLength",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "wallId",
+    "id",
+    "newBearingLengthM"
+  ],
+  "properties": {
+    "wallId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Wall",
+          "de": "Wand"
+        },
+        "description": {
+          "en": "The wall this mutation addresses, by id.",
+          "de": "Das adressierte Element (Wand), per Kennung."
+        },
+        "ref": {
+          "kind": "wall"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Lintel",
+          "de": "Sturz"
+        },
+        "description": {
+          "en": "The lintel this mutation addresses, by id.",
+          "de": "Das adressierte Element (Sturz), per Kennung."
+        },
+        "ref": {
+          "kind": "lintel"
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "newBearingLengthM": {
+      "type": "number",
+      "maximum": 10000,
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Lintel bearing length",
+          "de": "Sturz-Auflagerlänge"
+        },
+        "unit": "m",
+        "step": 0.05,
+        "precision": 2,
+        "group": "lintels",
+        "order": 30
+      }
+    }
+  }
+}

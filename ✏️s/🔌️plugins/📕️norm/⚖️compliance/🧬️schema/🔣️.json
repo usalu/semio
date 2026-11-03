@@ -30,7 +30,8 @@
         "HeatTransferCoefficient",
         "AirPermeability",
         "VentilationRate",
-        "Acceleration"
+        "Acceleration",
+        "Velocity"
       ]
     },
     "Quantity": {
@@ -111,7 +112,9 @@
         "Pass",
         "Warning",
         "Fail",
-        "NotApplicable"
+        "NotApplicable",
+        "UnverifiedBasis",
+        "Info"
       ]
     },
     "AnnexChoice": {
@@ -127,7 +130,9 @@
         "AtLeast",
         "AtMost",
         "Exactly",
-        "OneOf"
+        "OneOf",
+        "Remove",
+        "Insert"
       ]
     },
     "Remedy": {
@@ -184,7 +189,10 @@
         "limit",
         "utilization",
         "annex",
-        "remedies"
+        "remedies",
+        "ndps",
+        "stations",
+        "stationField"
       ],
       "properties": {
         "id": {
@@ -225,6 +233,50 @@
           "items": {
             "$ref": "#/definitions/Remedy"
           }
+        },
+        "ndps": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "stations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Station"
+          }
+        },
+        "stationField": {
+          "type": "string"
+        }
+      }
+    },
+    "Station": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "at",
+        "utilization",
+        "values"
+      ],
+      "properties": {
+        "at": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 3,
+          "items": {
+            "type": "number"
+          }
+        },
+        "utilization": {
+          "type": "number",
+          "minimum": 0
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Quantity"
+          }
         }
       }
     },
@@ -237,6 +289,8 @@
         "warning",
         "fail",
         "notApplicable",
+        "unverified",
+        "info",
         "worstUtilization",
         "complies"
       ],
@@ -260,11 +314,19 @@
           "type": "integer",
           "minimum": 0
         },
+        "unverified": {
+          "type": "integer",
+          "minimum": 0
+        },
         "worstUtilization": {
           "type": "number"
         },
         "complies": {
           "type": "boolean"
+        },
+        "info": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     },
@@ -277,6 +339,8 @@
         "warning",
         "fail",
         "notApplicable",
+        "unverified",
+        "info",
         "worstUtilization",
         "complies",
         "parts"
@@ -302,6 +366,10 @@
           "type": "integer",
           "minimum": 0
         },
+        "unverified": {
+          "type": "integer",
+          "minimum": 0
+        },
         "worstUtilization": {
           "type": "number"
         },
@@ -312,6 +380,160 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/PartVerdict"
+          }
+        },
+        "info": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "NdpStatus": {
+      "type": "string",
+      "enum": [
+        "verified",
+        "unverified"
+      ]
+    },
+    "NdpValue": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "NdpSource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "document",
+        "edition",
+        "locator"
+      ],
+      "properties": {
+        "document": {
+          "type": "string"
+        },
+        "edition": {
+          "type": "string"
+        },
+        "locator": {
+          "type": "string"
+        }
+      }
+    },
+    "NdpAnnexVerification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "evidence"
+      ],
+      "properties": {
+        "status": {
+          "$ref": "#/definitions/NdpStatus"
+        },
+        "evidence": {
+          "type": "string"
+        }
+      }
+    },
+    "NdpAnnexStatus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "en",
+        "naDe"
+      ],
+      "properties": {
+        "en": {
+          "$ref": "#/definitions/NdpAnnexVerification"
+        },
+        "naDe": {
+          "$ref": "#/definitions/NdpAnnexVerification"
+        }
+      }
+    },
+    "NdpEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "code",
+        "part",
+        "clause",
+        "symbol",
+        "recommended",
+        "naDe",
+        "unit",
+        "source",
+        "status",
+        "specRef",
+        "asWritten",
+        "evidence"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "code": {
+          "type": "string"
+        },
+        "part": {
+          "type": "string"
+        },
+        "clause": {
+          "type": "string"
+        },
+        "symbol": {
+          "type": "string"
+        },
+        "unit": {
+          "type": "string"
+        },
+        "specRef": {
+          "type": "string"
+        },
+        "asWritten": {
+          "type": "string"
+        },
+        "recommended": {
+          "$ref": "#/definitions/NdpValue"
+        },
+        "naDe": {
+          "$ref": "#/definitions/NdpValue"
+        },
+        "source": {
+          "$ref": "#/definitions/NdpSource"
+        },
+        "status": {
+          "$ref": "#/definitions/NdpStatus"
+        },
+        "evidence": {
+          "type": "string"
+        },
+        "annexStatus": {
+          "$ref": "#/definitions/NdpAnnexStatus"
+        }
+      }
+    },
+    "NdpRegistry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "entries"
+      ],
+      "properties": {
+        "entries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/NdpEntry"
           }
         }
       }
@@ -327,5 +549,9 @@
         "$ref": "#/definitions/CheckResult"
       }
     }
+  },
+  "x-semio-twin": {
+    "emoji": "⚖️",
+    "summary": "the compliance report every norm artifact's checks produce"
   }
 }

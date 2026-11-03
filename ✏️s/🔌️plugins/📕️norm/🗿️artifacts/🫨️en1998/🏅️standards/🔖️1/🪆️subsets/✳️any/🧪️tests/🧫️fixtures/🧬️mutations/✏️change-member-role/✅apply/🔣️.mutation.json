@@ -1,0 +1,6 @@
+{
+  "mutation": "changeMemberRole",
+  "buildingId": "bldg-office",
+  "id": "col-c1",
+  "newRole": "beam"
+}

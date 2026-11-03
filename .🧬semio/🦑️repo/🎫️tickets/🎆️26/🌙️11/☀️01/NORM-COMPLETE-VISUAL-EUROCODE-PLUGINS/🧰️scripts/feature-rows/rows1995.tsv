@@ -1,0 +1,15 @@
+shared://🚦️check-outcome/snow-high-pass/🔣️.json	en1995.6.1.5.c90.beam-B1
+shared://🚦️check-outcome/snow-high-pass/🔣️.json	en1995.6.1.7.shear.beam-B1
+shared://🚦️check-outcome/design-cases-fail/🔣️.json	en1995.7.3.stiffness.beam-B1
+shared://🚦️check-outcome/design-cases-fail/🔣️.json	en1995.7.3.velocity.beam-B1
+shared://🚦️check-outcome/column-fail/🔣️.json	en1995.8.spacing.a1.conn-C1
+shared://🚦️check-outcome/column-fail/🔣️.json	en1995.8.spacing.a3t.conn-C1
+shared://🚦️check-outcome/column-fail/🔣️.json	en1995.8.spacing.a4t.conn-C1
+shared://🚦️check-outcome/deck-pass/🔣️.json	en1995.t-122.bar_force.decks:deck-1:T-122
+shared://🚦️check-outcome/deck-fail/🔣️.json	en1995.t-122.wheel_spread.decks:deck-1:T-122
+shared://🚦️check-outcome/design-cases-pass/🔣️.json	en1995.t-14.bending_6_12.bend
+shared://🚦️check-outcome/design-cases-fail/🔣️.json	en1995.t-14.bending_6_12.bend
+shared://🚦️check-outcome/design-cases-fail/🔣️.json	en1995.t-18.hole_limit.net
+shared://🚦️check-outcome/design-cases-pass/🔣️.json	en1995.t-30.parallel_edge.taper
+shared://🚦️check-outcome/design-cases-fail/🔣️.json	en1995.t-30.parallel_edge.taper
+shared://🚦️check-outcome/design-cases-fail/🔣️.json	en1995.t-30.taper_angle.taper

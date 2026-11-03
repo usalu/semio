@@ -1,0 +1,6 @@
+{
+  "mutation": "changeSystemKW",
+  "buildingId": "bldg-office",
+  "id": "sys-x",
+  "newKW": 2.0
+}

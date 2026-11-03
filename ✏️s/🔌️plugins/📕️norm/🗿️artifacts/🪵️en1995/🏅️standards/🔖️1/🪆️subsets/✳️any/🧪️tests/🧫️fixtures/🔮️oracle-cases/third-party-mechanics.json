@@ -1,0 +1,249 @@
+{
+  "$schema": "../../../../../../../../../🔮️oracles/🏃️harness/🧬️schema/🔣️.json",
+  "schemaVersion": 1,
+  "artifact": "en1995",
+  "annex": "de",
+  "cases": [
+    {
+      "id": "en1995.mechanics.two-span-udl",
+      "check": "mechanics.beam-continuous",
+      "citation": {
+        "standard": "EN 1995-1-1",
+        "edition": "2004",
+        "clause": "5.1.3 load arrangements; 5.4 linear elastic analysis"
+      },
+      "inputs": {
+        "E": 11000000000.0,
+        "A": 0.03,
+        "I": 0.00022499999999999997,
+        "spans": [
+          6.0,
+          6.0
+        ],
+        "w": [
+          10000.0,
+          10000.0
+        ]
+      },
+      "expected": {
+        "R_0": {
+          "value": 22500.0,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "R_1": {
+          "value": 75000.0,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "R_2": {
+          "value": 22499.999999999993,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "M_sag_0": {
+          "value": 25312.499999999993,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        },
+        "M_hog_0": {
+          "value": 44999.999999999985,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        },
+        "delta_0": {
+          "value": 0.028359786469728046,
+          "unit": "m",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-pynite",
+          "adapter": "pynite",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-anastruct",
+          "adapter": "anastruct",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1995.mechanics.two-span-pattern-first-span",
+      "check": "mechanics.beam-continuous",
+      "citation": {
+        "standard": "EN 1995-1-1",
+        "edition": "2004",
+        "clause": "5.1.3 load arrangements (alternate spans)"
+      },
+      "inputs": {
+        "E": 11000000000.0,
+        "A": 0.03,
+        "I": 0.00022499999999999997,
+        "spans": [
+          6.0,
+          6.0
+        ],
+        "w": [
+          10000.0,
+          0.0
+        ]
+      },
+      "expected": {
+        "R_0": {
+          "value": 26250.0,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "R_1": {
+          "value": 37500.0,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "R_2": {
+          "value": -3750.0000000000073,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "M_sag_0": {
+          "value": 34453.124999999985,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        },
+        "M_hog_0": {
+          "value": 22499.999999999978,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-pynite",
+          "adapter": "pynite",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-anastruct",
+          "adapter": "anastruct",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1995.mechanics.two-span-midspan-forces",
+      "check": "mechanics.beam-continuous",
+      "citation": {
+        "standard": "EN 1995-1-1",
+        "edition": "2004",
+        "clause": "5.1.3 load arrangements (point loads at midspan)"
+      },
+      "inputs": {
+        "E": 11000000000.0,
+        "A": 0.03,
+        "I": 0.00022499999999999997,
+        "spans": [
+          6.0,
+          6.0
+        ],
+        "w": [
+          0.0,
+          0.0
+        ],
+        "P_mid": [
+          20000.0,
+          20000.0
+        ]
+      },
+      "expected": {
+        "R_0": {
+          "value": 6250.000000000004,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "R_1": {
+          "value": 27500.0,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "R_2": {
+          "value": 6249.999999999996,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "M_sag_0": {
+          "value": 18750.000000000004,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        },
+        "M_hog_0": {
+          "value": 22500.00000000001,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-pynite",
+          "adapter": "pynite",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-anastruct",
+          "adapter": "anastruct",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1995.mechanics.ss-beam-deflection",
+      "check": "mechanics.beam-continuous",
+      "citation": {
+        "standard": "EN 1995-1-1",
+        "edition": "2004",
+        "clause": "7.2 deflections"
+      },
+      "inputs": {
+        "E": 11000000000.0,
+        "A": 0.03,
+        "I": 0.00022499999999999997,
+        "spans": [
+          4.5
+        ],
+        "w": [
+          10000.0
+        ]
+      },
+      "expected": {
+        "R_0": {
+          "value": 22500.0,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "M_sag_0": {
+          "value": 25312.500000000007,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        },
+        "delta_0": {
+          "value": 0.02157315340909092,
+          "unit": "m",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-pynite",
+          "adapter": "pynite",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-anastruct",
+          "adapter": "anastruct",
+          "kind": "third-party-library"
+        }
+      ]
+    }
+  ]
+}

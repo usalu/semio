@@ -1,0 +1,6 @@
+{
+  "ChangeCraneWebThickness": {
+    "id": "crane-1",
+    "newWebThickness": 0.02
+  }
+}

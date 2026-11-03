@@ -2,11 +2,11 @@
 
 //#region 📡️SemioProtocol
 /// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
-pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");
+pub const COMPONENT_PROTOCOL_SEMIO: &str = semio_s_artifact_norm_en1994_mutations_protocol::LEAF;
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use semio_s_artifact_norm_en1994_mutations::En1994Mutation;
+use crate::En1994Mutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a document mutation to its binary op form.
@@ -20,7 +20,7 @@ pub fn decode_op(bytes: &[u8]) -> Result<En1994Mutation, protocol::ProtocolError
 }
 
 mod native_codec {
-use semio_s_artifact_norm_en1994_mutations::En1994Mutation;
+use crate::En1994Mutation;
 use protocol::OpText;
 
 impl protocol::OpBinary for En1994Mutation {

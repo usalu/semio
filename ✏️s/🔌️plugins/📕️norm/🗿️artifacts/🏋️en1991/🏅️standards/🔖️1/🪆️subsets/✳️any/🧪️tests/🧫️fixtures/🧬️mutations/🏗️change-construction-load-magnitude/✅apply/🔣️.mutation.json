@@ -1,0 +1,6 @@
+{
+  "ChangeConstructionLoadMagnitude": {
+    "id": "construction-load-1",
+    "newMagnitude": 3.0
+  }
+}

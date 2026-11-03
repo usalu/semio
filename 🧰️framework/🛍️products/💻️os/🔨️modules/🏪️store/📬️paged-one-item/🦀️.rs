@@ -442,11 +442,18 @@ where
                 if self.mutation.is_none() || self.mutation_retirement.is_none(){return Err(fault(prefix,"original-mutation-pair"));}
                 let original=self.mutation.take().ok_or_else(||fault(prefix,"mutation"))?;
                 let factory=self.mutation_retirement.take().ok_or_else(||fault(prefix,"mutation-issuer"))?;
-                self.mutation_admission=Some(RetainedCloneSource::admission_borrowed(FactoryOwnedSourceAuthority::new(original,factory),FactoryOwnedSourceAuthority::get));
+                *self.mutation_authority=Some(FactoryOwnedSourceAuthority::new(original,factory));
                 self.phase=Phase::MutationSource;
                 Ok(self.record(RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()}))
             }
             Phase::MutationSource => {
+                let demand=RetainedCloneSource::<M>::borrowed_constructor_demand::<FactoryOwnedSourceAuthority<M>>();
+                if demand.admit(clone_grant).is_err() || clone_grant.maximum_copy_bytes<RetainedCloneSource::<M>::borrowed_constructor_copy_bytes::<FactoryOwnedSourceAuthority<M>>(){return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
+                if self.mutation_admission.is_none(){
+                    let authority=self.mutation_authority.take().ok_or_else(||fault(prefix,"mutation-authority"))?;
+                    self.mutation_admission=Some(RetainedCloneSource::<M,FactoryOwnedSourceAuthority<M>>::admission_borrowed(authority,FactoryOwnedSourceAuthority::get));
+                    return Ok(self.record(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<FactoryOwnedSourceAuthority<M>>(),..Default::default()}));
+                }
                 let admission=self.mutation_admission.as_mut().ok_or_else(||fault(prefix,"mutation-admission"))?;
                 let progress=if admission.phase()=="ready"{
                     let progress=admission.take_output(&mut self.mutation_source,clone_grant).result?.progress();

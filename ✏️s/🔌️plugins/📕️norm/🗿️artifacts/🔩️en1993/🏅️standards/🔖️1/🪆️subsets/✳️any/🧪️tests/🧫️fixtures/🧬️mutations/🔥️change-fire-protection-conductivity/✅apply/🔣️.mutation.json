@@ -1,0 +1,6 @@
+{
+  "ChangeFireProtectionConductivity": {
+    "id": "fire-1",
+    "newProtectionConductivity": 0.4
+  }
+}

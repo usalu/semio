@@ -1,0 +1,6 @@
+{
+  "ChangeParamFlangeThickness": {
+    "id": "param-1",
+    "newFlangeThickness": 0.034
+  }
+}

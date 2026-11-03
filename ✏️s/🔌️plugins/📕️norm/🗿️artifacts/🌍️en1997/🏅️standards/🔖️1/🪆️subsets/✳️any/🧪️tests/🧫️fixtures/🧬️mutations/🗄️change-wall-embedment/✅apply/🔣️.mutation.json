@@ -1,0 +1,5 @@
+{
+  "mutation": "changeWallEmbedment",
+  "id": "wall-W1",
+  "newEmbedment": 2.4
+}

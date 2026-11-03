@@ -22,6 +22,9 @@
         "precision": 0,
         "group": "thermal",
         "order": 10
+      },
+      "x-semio-rust": {
+        "name": "new_t_0"
       }
     }
   }

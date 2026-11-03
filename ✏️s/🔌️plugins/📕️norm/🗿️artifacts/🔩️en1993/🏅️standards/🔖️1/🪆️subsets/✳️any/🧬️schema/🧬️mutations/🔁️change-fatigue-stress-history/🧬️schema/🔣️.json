@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-fatigue-stress-history/schema.json",
+  "title": "ChangeFatigueStressHistory",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newStressHistory"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Fatigue detail",
+          "de": "Ermüdungsdetail"
+        },
+        "description": {
+          "en": "The fatigue detail this mutation addresses, by id.",
+          "de": "Das adressierte Element (Ermüdungsdetail), per Kennung."
+        },
+        "ref": {
+          "kind": "fatigue-detail"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newStressHistory": {
+      "type": "string",
+      "x-semio-ui": {
+        "label": {
+          "en": "Stress history Δσ in N/mm² as numbers separated by spaces; rainflow counted into the blocks of the damage sum when the spectrum is empty",
+          "de": "Spannungsgeschichte σ in N/mm² als durch Leerzeichen getrennte Zahlen; wird bei leerem Kollektiv mit Rainflow in die Blöcke der Schadenssumme gezählt"
+        },
+        "widget": "text",
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

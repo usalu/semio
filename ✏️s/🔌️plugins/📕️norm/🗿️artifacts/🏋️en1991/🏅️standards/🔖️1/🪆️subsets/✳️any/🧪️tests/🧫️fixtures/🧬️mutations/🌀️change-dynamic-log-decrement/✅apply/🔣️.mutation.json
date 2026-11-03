@@ -1,0 +1,6 @@
+{
+  "ChangeDynamicLogDecrement": {
+    "id": "dynamic-element-1",
+    "newLogDecrement": 3.0
+  }
+}

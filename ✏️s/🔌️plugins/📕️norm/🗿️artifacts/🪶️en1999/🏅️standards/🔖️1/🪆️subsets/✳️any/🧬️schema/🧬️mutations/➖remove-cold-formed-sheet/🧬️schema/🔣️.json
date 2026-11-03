@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/remove-cold-formed-sheet/schema.json",
+  "title": "RemoveColdFormedSheet",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "removeColdFormedSheet"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Cold-formed sheet",
+          "de": "Kaltgeformtes Blech"
+        },
+        "description": {
+          "en": "The cold-formed sheet this mutation removes.",
+          "de": "Entfernt wird: Kaltgeformtes Blech."
+        },
+        "ref": {
+          "kind": "cold-formed-sheet"
+        },
+        "group": "target",
+        "order": 10
+      }
+    }
+  }
+}

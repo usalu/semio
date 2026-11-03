@@ -7,6 +7,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     pkg-config \
     lldb \
+    python3-lldb \
     uuid-dev \
     curl \
     wget \

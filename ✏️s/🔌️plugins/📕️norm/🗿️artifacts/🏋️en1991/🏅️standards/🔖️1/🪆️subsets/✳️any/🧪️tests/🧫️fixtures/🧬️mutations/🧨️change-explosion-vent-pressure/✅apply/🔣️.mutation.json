@@ -1,0 +1,6 @@
+{
+  "ChangeExplosionVentPressure": {
+    "id": "internal-explosion-1",
+    "newVentPressure": 3.0
+  }
+}

@@ -451,9 +451,9 @@ def spec_vector_handler(kind):
     """📐️ Replays the committed handcrafted `(before, mutation, after)` triple for one kind."""
 
     def handler(ctx):
-        before = document_of(json_fixture(ctx, "⬅️before"))
-        mutation = json_fixture(ctx, "🦠️mutation")
-        after = document_of(json_fixture(ctx, "➡️after"))
+        before = document_of(json_fixture(ctx, "🔣️.before.json"))
+        mutation = json_fixture(ctx, "🔣️.mutation.json")
+        after = document_of(json_fixture(ctx, "🔣️.after.json"))
         if kind_of(mutation) != kind:
             raise AssertionError("spec-vector-%s: the committed vector carries a %s payload" % (kind, kind_of(mutation)))
         applied = apply_mutation(before, mutation)

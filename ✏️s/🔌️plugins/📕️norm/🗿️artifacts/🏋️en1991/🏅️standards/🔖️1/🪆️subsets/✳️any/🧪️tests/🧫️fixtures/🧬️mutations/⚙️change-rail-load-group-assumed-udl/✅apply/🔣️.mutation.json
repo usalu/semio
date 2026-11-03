@@ -1,0 +1,6 @@
+{
+  "ChangeRailLoadGroupAssumedUdl": {
+    "id": "rail-load-group-1",
+    "newAssumedUdl": 80001.0
+  }
+}

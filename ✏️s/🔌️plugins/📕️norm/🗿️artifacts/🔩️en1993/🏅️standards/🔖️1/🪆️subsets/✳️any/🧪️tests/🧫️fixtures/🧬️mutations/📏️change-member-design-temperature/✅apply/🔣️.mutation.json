@@ -1,0 +1,6 @@
+{
+  "ChangeMemberDesignTemperature": {
+    "id": "member-b1",
+    "newDesignTemperature": 1.5
+  }
+}

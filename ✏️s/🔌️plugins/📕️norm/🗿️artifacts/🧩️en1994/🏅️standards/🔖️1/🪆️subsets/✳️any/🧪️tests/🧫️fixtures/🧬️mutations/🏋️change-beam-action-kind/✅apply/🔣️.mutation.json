@@ -1,0 +1,7 @@
+{
+  "ChangeBeamActionKind": {
+    "beamId": "beam-B1",
+    "id": "G-steel",
+    "newKind": "imposed"
+  }
+}

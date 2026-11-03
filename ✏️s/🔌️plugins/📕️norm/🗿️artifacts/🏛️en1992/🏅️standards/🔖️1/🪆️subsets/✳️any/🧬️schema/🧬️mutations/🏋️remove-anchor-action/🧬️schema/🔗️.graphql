@@ -1,0 +1,4 @@
+type RemoveAnchorAction {
+  anchorId: String!
+  index: Int!
+}

@@ -1,0 +1,6 @@
+{
+  "ChangeTensionPinGap": {
+    "id": "ten-1",
+    "newPinGap": 1.5
+  }
+}

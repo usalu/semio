@@ -1,0 +1,5 @@
+{
+  "mutation": "changeTestStdDev",
+  "id": "tes-1",
+  "newStdDev": 2.0
+}

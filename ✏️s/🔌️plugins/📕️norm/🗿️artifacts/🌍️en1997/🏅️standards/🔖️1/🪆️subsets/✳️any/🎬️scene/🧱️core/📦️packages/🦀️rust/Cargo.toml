@@ -1,0 +1,31 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-norm-en1997-scene-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "en1997-scene core: every module except 📈️diagrams"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-s-artifact-norm-en1997-checks = { workspace = true }
+semio-s-artifact-norm-en1997-model = { workspace = true }
+semio-s-plugin-norm-compliance = { workspace = true }
+semio-s-plugin-norm-structural-scene = { workspace = true }
+
+[dev-dependencies]
+semio-s-plugin-norm-results-config = { workspace = true, features = ["test-support"] }
+semio-s-artifact-norm-en1997-model = { workspace = true, features = ["test-support"] }
+semio-framework-value = { workspace = true }
+semio-s-plugin-norm-app-surface = { workspace = true }
+semio-s-plugin-norm-compliance = { workspace = true, features = ["test-support", "compliance-testing"] }
+serde_json = { workspace = true }
+

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeSeismicSlopeCircleRadius",
+  "id": "en1998-slope-1",
+  "newCircleRadius": 13.0
+}

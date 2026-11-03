@@ -1,0 +1,6 @@
+{
+  "mutation": "changeLabPointNormalStress",
+  "labTestId": "lab-T1",
+  "id": "pt-1",
+  "newNormalStress": 100000.0
+}

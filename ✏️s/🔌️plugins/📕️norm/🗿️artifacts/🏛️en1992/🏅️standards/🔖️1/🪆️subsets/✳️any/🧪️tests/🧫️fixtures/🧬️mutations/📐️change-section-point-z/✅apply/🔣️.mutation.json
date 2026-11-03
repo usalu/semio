@@ -1,0 +1,7 @@
+{
+  "ChangeSectionPointZ": {
+    "memberId": "wall-W1",
+    "sectionPointId": "sp-1",
+    "newZ": 1.5
+  }
+}

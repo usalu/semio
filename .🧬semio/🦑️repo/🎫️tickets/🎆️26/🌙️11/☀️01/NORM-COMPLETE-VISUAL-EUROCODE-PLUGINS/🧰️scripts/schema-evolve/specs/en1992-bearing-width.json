@@ -1,0 +1,30 @@
+{
+  "artifact": "en1992",
+  "leaf": {
+    "kindSlug": "member",
+    "after": "relativeHumidity",
+    "default": 0.0,
+    "field": {
+      "name": "bearing_width",
+      "type": "f64",
+      "unit": "m",
+      "label": {
+        "en": "Bearing plate width a (0 = not given)",
+        "de": "Auflagerplattenbreite a (0 = nicht angegeben)"
+      },
+      "doc": "🧱 Width a of the support and load bearing plates of a deep beam, the strut width at its nodes (EN 1992-1-1 6.5.2, 6.5.4); 0 = not given, no value is assumed and the strut and node checks are not applicable.",
+      "precision": 0,
+      "step": 0.005,
+      "range": [
+        0,
+        2
+      ]
+    },
+    "entity": {
+      "singular": {
+        "en": "member",
+        "de": "Bauteil"
+      }
+    }
+  }
+}

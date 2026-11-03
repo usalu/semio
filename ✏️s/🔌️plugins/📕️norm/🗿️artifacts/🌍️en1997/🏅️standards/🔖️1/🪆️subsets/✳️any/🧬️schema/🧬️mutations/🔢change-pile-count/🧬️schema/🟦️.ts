@@ -1,7 +1,7 @@
 /** 🔢 `change-pile-count` wire twin: the leaf payload `ChangePileCount`, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
- * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
+ * by `repo ./📜️script.ts schema twins generate`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
-import { normWireInteger, normWireLiteral, normWireObject, normWireRange, type NormWireReader, normWireRequired, normWireString } from "@semio-tech/norm-js/registry/contract";
+import { normWireInteger, normWireLiteral, normWireObject, normWireRange, normWireRequired, normWireString, type NormWireReader } from "@semio-tech/norm-js/registry/contract";
 
 export interface ChangePileCount {
   mutation: "changePileCount";
@@ -9,4 +9,4 @@ export interface ChangePileCount {
   newCount: number;
 }
 
-export const parseChangePileCount: NormWireReader<ChangePileCount> = normWireObject<ChangePileCount>({ mutation: normWireRequired(normWireLiteral("changePileCount")), id: normWireRequired(normWireString), newCount: normWireRequired(normWireRange(normWireInteger, {"minimum":1})) });
+export const parseChangePileCount: NormWireReader<ChangePileCount> = normWireObject<ChangePileCount>({ mutation: normWireRequired(normWireLiteral("changePileCount")), id: normWireRequired(normWireString), newCount: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})) });

@@ -1,8 +1,24 @@
 syntax = "proto3";
 package semio.s.norm.en1996;
 message En1996Diff {
+  // @state artifact
   optional string annex = 1;
+  // @state artifact
   optional string masonry_class = 2;
+  // @state artifact
   optional string design_situation = 3;
+  // @state artifact
   optional uint32 storeys = 4;
+  // @state artifact
+  En1996WallDelta walls = 5;
+  // @state artifact
+  En1996PlacementDelta placements = 6;
+  // @state artifact
+  CaseRowDelta cases = 7;
+  // @state artifact
+  En1996ChaseDelta chases = 8;
+  // @state artifact
+  En1996JointDelta movement_joints = 9;
+  // @state artifact
+  optional string reliability_class = 10;
 }

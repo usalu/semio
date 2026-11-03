@@ -10,7 +10,7 @@ use semio_s_artifact_norm_en1994_model::En1994Snapshot;
 
 /// 🗄️ The composite-bridge-girder example fixture, handcrafted in `en1994`'s DSL (`pack::snapshot::ArtifactDsl`):
 /// an EN-annex EN 1994-2 composite bridge girder with a re-entrant deck under an R90 fire rating and a
-/// shear-connector fatigue detail, distinct from `En1994Snapshot::default()`'s DE-annex/R60/trapezoidal-deck/
+/// shear-connector fatigue detail, distinct from `En1994Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De)`'s DE-annex/R60/trapezoidal-deck/
 /// stud-welded values so the grammar's non-default branches (annex, fire rating, deck type, fatigue
 /// detail) are exercised too.
 pub const EN1994_COMPOSITE_BRIDGE_GIRDER_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🌉️composite-bridge-girder/🌉️composite-bridge-girder/🗣️.dsl.semio");
@@ -76,5 +76,3 @@ use framework_schema::ArtifactSchema;
 
 }
 #[cfg(test)] pub use crate::text::snapshot::snapshot_wire_codec::*;
-
-semio_s_plugin_norm_compliance::impl_norm_artifact_record!(@text En1994Snapshot, extension="en1994", envelope_id="norm.en1994");

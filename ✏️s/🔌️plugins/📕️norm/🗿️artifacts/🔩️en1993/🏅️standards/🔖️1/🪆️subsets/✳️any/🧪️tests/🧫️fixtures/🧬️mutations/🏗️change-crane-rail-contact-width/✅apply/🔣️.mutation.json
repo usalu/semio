@@ -1,0 +1,6 @@
+{
+  "ChangeCraneRailContactWidth": {
+    "id": "crane-1",
+    "newRailContactWidth": 1.5
+  }
+}

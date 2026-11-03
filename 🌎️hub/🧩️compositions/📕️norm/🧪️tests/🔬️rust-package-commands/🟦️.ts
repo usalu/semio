@@ -9,9 +9,21 @@ const NORM_COMPONENT_BUDGET_BYTES = 200 * 1024 * 1024;
 const PLUGIN_OWNER = "✏️s/🔌️plugins/📕️norm";
 type WasmSection = { readonly id: number; readonly name: string; readonly bytes: number; readonly body: number };
 type NormComponentCensus = { readonly total: number; readonly module: number; readonly name: number; readonly code: number; readonly data: number };
+type MutationLeafSelector = { readonly kind: "id" | "index" | "implied"; readonly key: string | null };
+type MutationLeafEdit = {
+  readonly rule: "set-field" | "insert-item" | "remove-item" | "id-removal";
+  readonly path: string;
+  readonly selectors: readonly MutationLeafSelector[];
+  readonly value?: string;
+  readonly index?: string;
+  readonly item?: string;
+  readonly id?: string;
+  readonly owns?: readonly { readonly path: string; readonly key: string }[];
+};
 type MutationLeafTaxonomyRow = {
   readonly aggregateVariant: string;
   readonly artifact: string;
+  readonly edit: MutationLeafEdit | null;
   readonly entity: string;
   readonly kind: string;
   readonly module: string;
@@ -28,17 +40,40 @@ type MutationLeafTaxonomy = {
   readonly rows: readonly MutationLeafTaxonomyRow[];
   readonly schemaVersion: 1;
 };
+const EDIT_RULE_KINDS: Readonly<Record<string, MutationLeafEdit["rule"]>> = { SetFieldRule: "set-field", InsertItemRule: "insert-item", RemoveItemRule: "remove-item", IdRemoval: "id-removal" };
+const EDIT_RULE_TAILS = ["value", "index", "item", "id"] as const;
+/** 🧭 The explicit collection path and selectors every kind declares, read from the `EDIT_RULES` / `ID_REMOVALS` of the artifact's `edit-rules` leaf. */
+function editRules(mutationsRoot: string): Map<string, MutationLeafEdit> {
+  const rules = new Map<string, MutationLeafEdit>();
+  const file = join(mutationsRoot, "🧭️edit-rules", "🦀️.rs");
+  if (!existsSync(file)) return rules;
+  for (const match of readFileSync(file, "utf8").matchAll(/\b(SetFieldRule|InsertItemRule|RemoveItemRule|IdRemoval)\s*\{\s*path:\s*"([^"]*)",\s*kind:\s*"([^"]*)",\s*selectors:\s*&\[([^\]]*)\]((?:,\s*\w+:\s*"[^"]*")*)/g)) {
+    const selectors = [...match[4]!.matchAll(/SelectorKey::(Id|Index|Implied)(?:\("([^"]*)"\))?/g)].map((selector) => ({ kind: selector[1]!.toLowerCase() as MutationLeafSelector["kind"], key: selector[2] ?? null }));
+    const tails = new Map([...match[5]!.matchAll(/(\w+):\s*"([^"]*)"/g)].map((tail) => [tail[1]!, tail[2]!]));
+    const edit: Record<string, unknown> = { rule: EDIT_RULE_KINDS[match[1]!], path: match[2]!, selectors };
+    for (const name of EDIT_RULE_TAILS) if (tails.has(name)) edit[name] = tails.get(name);
+    rules.set(match[3]!, edit as MutationLeafEdit);
+  }
+  const owned = [...readFileSync(file, "utf8").matchAll(/\bOwnedRows\s*\{\s*owner:\s*"([^"]*)",\s*rows:\s*"([^"]*)",\s*key:\s*"([^"]*)"/g)];
+  for (const [kind, edit] of rules) {
+    if (edit.rule !== "id-removal" && edit.rule !== "remove-item") continue;
+    const owns = owned.filter((match) => match[1] === edit.path).map((match) => ({ path: match[2]!, key: match[3]! }));
+    if (owns.length > 0) rules.set(kind, { ...edit, owns });
+  }
+  return rules;
+}
 function filesBelow(root: string): string[] {
   return readdirSync(root, { withFileTypes: true }).flatMap((entry) => entry.isDirectory() ? filesBelow(join(root, entry.name)) : [join(root, entry.name)]);
 }
 function taxonomy(repoRoot: string): MutationLeafTaxonomy {
   const artifactsRoot = join(repoRoot, PLUGIN_OWNER, "🗿️artifacts");
   const rows: MutationLeafTaxonomyRow[] = [];
+  const rulesByRoot = new Map<string, Map<string, MutationLeafEdit>>();
   for (const source of filesBelow(artifactsRoot)) {
     const normalizedSource = source.replaceAll("\\", "/");
     if (!normalizedSource.endsWith("/🦀️.rs") || !normalizedSource.includes("/🧬️schema/🧬️mutations/")) continue;
     const rust = readFileSync(source, "utf8");
-    if (!rust.includes("impl protocol::MutationKind<")) continue;
+    if (!/\bimpl(?:<[^>]*>)?\s+protocol::MutationKind</.test(rust)) continue;
     const type = rust.match(/pub struct\s+([A-Za-z0-9_]+)/)?.[1];
     const semantics = rust.match(/const SEMANTICS:\s*protocol::SemanticDescriptor\s*=\s*protocol::SemanticDescriptor\s*\{\s*verb:\s*"([^"]+)",\s*entity:\s*"([^"]+)",\s*kind:\s*"([^"]+)",\s*record:\s*"([^"]+)",?\s*\}/s);
     if (!type || !semantics) throw new Error(`mutation leaf metadata is unreadable: ${source}`);
@@ -75,9 +110,12 @@ function taxonomy(repoRoot: string): MutationLeafTaxonomy {
       console.warn(`mutation leaf taxonomy skipping leaf without MutationLeaf contract: ${relative(artifactsRoot, source)}`);
       continue;
     }
+    const mutationsRoot = segments.slice(0, mutationsIndex + 1).join("/");
+    if (!rulesByRoot.has(mutationsRoot)) rulesByRoot.set(mutationsRoot, editRules(mutationsRoot));
     rows.push({
       aggregateVariant: type,
       artifact: segments[artifactIndex + 1]!,
+      edit: rulesByRoot.get(mutationsRoot)!.get(semantics[3]!) ?? null,
       entity: semantics[2]!,
       kind: semantics[3]!,
       module,

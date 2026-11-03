@@ -1,0 +1,68 @@
+{
+  "structureId": null,
+  "geotechnicalCategory": null,
+  "designSituation": null,
+  "designApproach": null,
+  "annex": null,
+  "groundwaterLevel": null,
+  "investigationDepth": null,
+  "layers": null,
+  "footings": null,
+  "piles": null,
+  "retainingWalls": null,
+  "slopes": null,
+  "upliftCases": null,
+  "anchors": null,
+  "embeddedWalls": null,
+  "pileGroups": null,
+  "labTests": null,
+  "layerWaters": null,
+  "placements": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "cases": {
+    "removed": [],
+    "inserted": [
+      {
+        "index": 1,
+        "row": {
+          "id": "case-upl-01",
+          "labelEn": "Uplift of the pit base",
+          "labelDe": "Auftrieb der Baugrubensohle",
+          "entryId": "UPL-01",
+          "numbers": [
+            {
+              "id": "g_dst",
+              "value": 300000.0
+            },
+            {
+              "id": "g_stb",
+              "value": 420000.0
+            },
+            {
+              "id": "head",
+              "value": 2.0
+            },
+            {
+              "id": "area",
+              "value": 25.0
+            }
+          ],
+          "texts": [
+            {
+              "id": "situation",
+              "value": "bsP"
+            }
+          ]
+        }
+      }
+    ],
+    "moved": [],
+    "modified": []
+  },
+  "investigations": null,
+  "characteristicBases": null
+}

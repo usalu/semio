@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-anchor-test-pull-out-res/schema.json",
+  "title": "ChangeAnchorTestPullOutRes",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "anchorId",
+    "id",
+    "newPullOutResistance"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeAnchorTestPullOutRes"
+    },
+    "anchorId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Anchor",
+          "de": "Anker"
+        },
+        "description": {
+          "en": "The anchor this mutation addresses, by id.",
+          "de": "Die adressierte Zeile (Anker), per Kennung."
+        },
+        "ref": {
+          "kind": "anchor"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Anchor test",
+          "de": "Ankerprüfung"
+        },
+        "description": {
+          "en": "The anchor test this mutation addresses, by id.",
+          "de": "Die adressierte Zeile (Ankerprüfung), per Kennung."
+        },
+        "ref": {
+          "kind": "anchor-test"
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "newPullOutResistance": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Suitability-test pull-out resistance R_a,m",
+          "de": "Herausziehwiderstand Eignungsprüfung R_a,m"
+        },
+        "widget": "stepper",
+        "unit": "N",
+        "displayUnit": "kN",
+        "displayFactor": 0.001,
+        "precision": 2,
+        "step": 1000,
+        "role": "value",
+        "group": "value",
+        "order": 30
+      }
+    }
+  }
+}

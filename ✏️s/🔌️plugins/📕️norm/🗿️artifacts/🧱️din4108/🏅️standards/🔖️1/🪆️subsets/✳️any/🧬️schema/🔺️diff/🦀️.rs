@@ -15,81 +15,136 @@ use semio_s_artifact_norm_din4108_model::Din4108Snapshot;
 
 //#region 🔖️Rows
 protocol::row_patch! {
-    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `ZoneWindow`.
     pub Din4108WindowPatch of semio_s_artifact_norm_din4108_model::ZoneWindow { set { orientation: String, inclination_deg: f64, area_m2: f64, g_value: f64, shading_fc: f64 } }
 }
 
+/// 🔑️ Key extractor of the foreign `ZoneWindow` rows (`id`).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Din4108WindowDeltaKey;
+
+impl protocol::list_delta::KeyOf<semio_s_artifact_norm_din4108_model::ZoneWindow> for Din4108WindowDeltaKey {
+    type Key = String;
+    fn key_of(row: &semio_s_artifact_norm_din4108_model::ZoneWindow) -> String {
+        row.id.clone()
+    }
+}
+
 protocol::list_delta! {
-    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
     /// 📋️ Keyed row delta of one `ZoneWindow` list.
-    pub Din4108WindowDelta { removal: Din4108WindowRemoval, insertion: Din4108WindowInsertion, relocation: Din4108WindowRelocation, modification: Din4108WindowModification, row: semio_s_artifact_norm_din4108_model::ZoneWindow, patch: Din4108WindowPatch, key: id }
+    pub Din4108WindowDelta { removal: Din4108WindowRemoval, insertion: Din4108WindowInsertion, relocation: Din4108WindowRelocation, modification: Din4108WindowModification, row: semio_s_artifact_norm_din4108_model::ZoneWindow, patch: Din4108WindowPatch, list: Vec<semio_s_artifact_norm_din4108_model::ZoneWindow>, key: String = by Din4108WindowDeltaKey }
 }
 
 protocol::row_patch! {
-    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `LayerDocument`.
     pub Din4108LayerPatch of semio_s_artifact_norm_din4108_model::LayerDocument { set { material_id: String, thickness_m: f64, lambda: f64, mu: f64, density: f64, application_type: String, compressive_class: String, water_class: String, tensile_class: String, acoustic_class: String, segments: Vec<semio_s_artifact_norm_din4108_model::LayerSegment> } }
 }
 
+/// 🔑️ Key extractor of the foreign `LayerDocument` rows (`id`).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Din4108LayerDeltaKey;
+
+impl protocol::list_delta::KeyOf<semio_s_artifact_norm_din4108_model::LayerDocument> for Din4108LayerDeltaKey {
+    type Key = String;
+    fn key_of(row: &semio_s_artifact_norm_din4108_model::LayerDocument) -> String {
+        row.id.clone()
+    }
+}
+
 protocol::list_delta! {
-    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
     /// 📋️ Keyed row delta of one `LayerDocument` list.
-    pub Din4108LayerDelta { removal: Din4108LayerRemoval, insertion: Din4108LayerInsertion, relocation: Din4108LayerRelocation, modification: Din4108LayerModification, row: semio_s_artifact_norm_din4108_model::LayerDocument, patch: Din4108LayerPatch, key: id }
+    pub Din4108LayerDelta { removal: Din4108LayerRemoval, insertion: Din4108LayerInsertion, relocation: Din4108LayerRelocation, modification: Din4108LayerModification, row: semio_s_artifact_norm_din4108_model::LayerDocument, patch: Din4108LayerPatch, list: Vec<semio_s_artifact_norm_din4108_model::LayerDocument>, key: String = by Din4108LayerDeltaKey }
 }
 
 protocol::row_patch! {
-    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `ThermalZone`.
     pub Din4108ZonePatch of semio_s_artifact_norm_din4108_model::ThermalZone { set { floor_area_m2: f64, heaviness: String, night_ventilation: String } nest { windows: Din4108WindowDelta } }
 }
 
+/// 🔑️ Key extractor of the foreign `ThermalZone` rows (`id`).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Din4108ZoneDeltaKey;
+
+impl protocol::list_delta::KeyOf<semio_s_artifact_norm_din4108_model::ThermalZone> for Din4108ZoneDeltaKey {
+    type Key = String;
+    fn key_of(row: &semio_s_artifact_norm_din4108_model::ThermalZone) -> String {
+        row.id.clone()
+    }
+}
+
 protocol::list_delta! {
-    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
     /// 📋️ Keyed row delta of one `ThermalZone` list.
-    pub Din4108ZoneDelta { removal: Din4108ZoneRemoval, insertion: Din4108ZoneInsertion, relocation: Din4108ZoneRelocation, modification: Din4108ZoneModification, row: semio_s_artifact_norm_din4108_model::ThermalZone, patch: Din4108ZonePatch, key: id }
+    pub Din4108ZoneDelta { removal: Din4108ZoneRemoval, insertion: Din4108ZoneInsertion, relocation: Din4108ZoneRelocation, modification: Din4108ZoneModification, row: semio_s_artifact_norm_din4108_model::ThermalZone, patch: Din4108ZonePatch, list: Vec<semio_s_artifact_norm_din4108_model::ThermalZone>, key: String = by Din4108ZoneDeltaKey }
 }
 
 protocol::row_patch! {
-    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `EnvelopeElement`.
     pub Din4108ElementPatch of semio_s_artifact_norm_din4108_model::EnvelopeElement { set { kind: String, zone_id: String, orientation_deg: f64, inclination_deg: f64, adjacent: String, area_m2: f64, delta_u_g: f64, delta_u_f: f64, delta_u_r: f64 } nest { layers: Din4108LayerDelta } }
 }
 
+/// 🔑️ Key extractor of the foreign `EnvelopeElement` rows (`id`).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Din4108ElementDeltaKey;
+
+impl protocol::list_delta::KeyOf<semio_s_artifact_norm_din4108_model::EnvelopeElement> for Din4108ElementDeltaKey {
+    type Key = String;
+    fn key_of(row: &semio_s_artifact_norm_din4108_model::EnvelopeElement) -> String {
+        row.id.clone()
+    }
+}
+
 protocol::list_delta! {
-    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
     /// 📋️ Keyed row delta of one `EnvelopeElement` list.
-    pub Din4108ElementDelta { removal: Din4108ElementRemoval, insertion: Din4108ElementInsertion, relocation: Din4108ElementRelocation, modification: Din4108ElementModification, row: semio_s_artifact_norm_din4108_model::EnvelopeElement, patch: Din4108ElementPatch, key: id }
+    pub Din4108ElementDelta { removal: Din4108ElementRemoval, insertion: Din4108ElementInsertion, relocation: Din4108ElementRelocation, modification: Din4108ElementModification, row: semio_s_artifact_norm_din4108_model::EnvelopeElement, patch: Din4108ElementPatch, list: Vec<semio_s_artifact_norm_din4108_model::EnvelopeElement>, key: String = by Din4108ElementDeltaKey }
 }
 
 protocol::row_patch! {
-    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `ThermalBridge`.
     pub Din4108ThermalBridgePatch of semio_s_artifact_norm_din4108_model::ThermalBridge { set { psi: f64, length_m: f64, bb2_type: String } }
 }
 
+/// 🔑️ Key extractor of the foreign `ThermalBridge` rows (`id`).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Din4108ThermalBridgeDeltaKey;
+
+impl protocol::list_delta::KeyOf<semio_s_artifact_norm_din4108_model::ThermalBridge> for Din4108ThermalBridgeDeltaKey {
+    type Key = String;
+    fn key_of(row: &semio_s_artifact_norm_din4108_model::ThermalBridge) -> String {
+        row.id.clone()
+    }
+}
+
 protocol::list_delta! {
-    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
     /// 📋️ Keyed row delta of one `ThermalBridge` list.
-    pub Din4108ThermalBridgeDelta { removal: Din4108ThermalBridgeRemoval, insertion: Din4108ThermalBridgeInsertion, relocation: Din4108ThermalBridgeRelocation, modification: Din4108ThermalBridgeModification, row: semio_s_artifact_norm_din4108_model::ThermalBridge, patch: Din4108ThermalBridgePatch, key: id }
+    pub Din4108ThermalBridgeDelta { removal: Din4108ThermalBridgeRemoval, insertion: Din4108ThermalBridgeInsertion, relocation: Din4108ThermalBridgeRelocation, modification: Din4108ThermalBridgeModification, row: semio_s_artifact_norm_din4108_model::ThermalBridge, patch: Din4108ThermalBridgePatch, list: Vec<semio_s_artifact_norm_din4108_model::ThermalBridge>, key: String = by Din4108ThermalBridgeDeltaKey }
 }
 //#endregion 🔖️Rows
 
 //#region 🔖️Diff
 /// 🔺️ Sparse delta for the Din4108 artifact: the scalar fields a mutation sets and the keyed row deltas of its lists.
 #[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.norm.din4108")]
 pub struct Din4108Diff {

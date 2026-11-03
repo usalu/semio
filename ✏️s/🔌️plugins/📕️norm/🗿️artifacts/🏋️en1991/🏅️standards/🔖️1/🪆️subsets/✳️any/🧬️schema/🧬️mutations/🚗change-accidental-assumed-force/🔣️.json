@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeAccidentalAssumedForce",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
-  "binaryTag": 17,
+  "binaryTag": 69,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

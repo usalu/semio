@@ -1,0 +1,5 @@
+{
+  "mutation": "changeFoundationBearShearN",
+  "id": "fd-1",
+  "newBearingShearN": 1.5
+}

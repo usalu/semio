@@ -1,0 +1,4 @@
+type ChangeMemberLiquidRhoPEff {
+  memberId: String!
+  newValue: Float!
+}

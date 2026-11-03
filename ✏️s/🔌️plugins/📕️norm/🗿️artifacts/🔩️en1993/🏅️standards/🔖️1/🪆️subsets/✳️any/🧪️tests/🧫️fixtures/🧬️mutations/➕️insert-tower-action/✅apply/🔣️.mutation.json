@@ -1,0 +1,11 @@
+{
+  "InsertTowerAction": {
+    "id": "tw-1",
+    "index": 2,
+    "element": {
+      "id": "tw-g-2",
+      "loadCaseId": "g-permanent",
+      "force": 80000.0
+    }
+  }
+}

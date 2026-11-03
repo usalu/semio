@@ -1,0 +1,6 @@
+{
+  "ChangeExplosionVentArea": {
+    "id": "internal-explosion-1",
+    "newVentArea": 3.0
+  }
+}

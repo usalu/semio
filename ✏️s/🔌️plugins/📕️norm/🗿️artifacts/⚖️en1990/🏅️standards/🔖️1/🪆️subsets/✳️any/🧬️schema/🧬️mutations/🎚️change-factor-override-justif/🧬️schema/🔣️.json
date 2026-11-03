@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/mutation/change-factor-override-justif/schema.json",
+  "title": "ChangeFactorOverrideJustif",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newJustification"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeFactorOverrideJustif"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Factor override",
+          "de": "Faktorüberschreibung"
+        },
+        "description": {
+          "en": "The factor override this mutation addresses, by id.",
+          "de": "Das adressierte Element (Faktorüberschreibung), per Kennung."
+        },
+        "ref": {
+          "kind": "factor-override"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newJustification": {
+      "type": "string",
+      "x-semio-ui": {
+        "label": {
+          "en": "Justification",
+          "de": "Begründung"
+        },
+        "widget": "text",
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

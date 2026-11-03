@@ -17,7 +17,7 @@ impl<T:Send+Sync+'static> RetainedCloneCursor<SealedShared<T>> for SharedCloneCu
   if state.output.is_some(){return Ok(RetainedCloneStep::Complete(Default::default()));}
   if source.get().terminal_is_empty(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original shared alias was already transferred"))}let turn=source.get().try_duplicate(grant);work+=turn.work;let(output,progress)=turn.result?;state.output=Some(output);let progress=super::admit_retained_clone_progress(grant,progress,"original shared alias clone")?;state.admitted=true;Ok(RetainedCloneStep::Complete(progress))
  })();crate::RetainedWorkOutcome{result,work}}
- fn take_demand(&self)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::retained_clone::retained_clone_take_demand())}
+ fn take_demand(&self)->Result<RetirementDemand,ValueError>{Ok(crate::retained_clone::retained_clone_take_demand())}
     fn take(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<Option<(SealedShared<T>,crate::RetainedCloneProgress)>>{if !self.output_ready(){return crate::RetainedWorkOutcome{result:Ok(None),work:0}}let turn=crate::retained_clone::take_retained_clone_output(&mut self.state.output,grant);if matches!(&turn.result,Ok(Some(_))){self.state.spent = true;}turn}
  fn begin_close(&mut self)->bool{if self.state.closing{return false;}self.state.closing=true;true}
  fn terminal_is_empty(&self)->bool{self.state.closing&&self.state.output.is_none()&&self.state.source.is_none()&&self.state.close.is_empty()}

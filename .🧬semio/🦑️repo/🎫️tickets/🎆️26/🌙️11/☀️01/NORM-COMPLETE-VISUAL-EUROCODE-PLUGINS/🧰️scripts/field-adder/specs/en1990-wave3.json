@@ -1,0 +1,16 @@
+{
+ "artifact": "en1990",
+ "fields": [
+  {"entity": "bridgeSls", "field": "track_gauge", "after": "bridge_deflection_limit", "default": 0.0, "unit_id": "Metre", "en": "Track gauge (0 = not declared)", "de": "Spurweite (0 = nicht angegeben)", "step": 0.001, "precision": 3},
+  {"entity": "bridgeSls", "field": "line_speed", "after": "track_gauge", "default": 0.0, "unit_id": "KilometrePerHour", "en": "Maximum line speed (0 = not declared)", "de": "Höchstgeschwindigkeit der Strecke (0 = nicht angegeben)", "step": 5, "precision": 0},
+  {"entity": "bridgeSls", "field": "ballast_depth", "after": "line_speed", "default": 0.0, "unit_id": "Metre", "en": "Ballast depth (0 = slab track)", "de": "Schotterhöhe (0 = feste Fahrbahn)", "step": 0.01, "precision": 2},
+  {"entity": "bridgeSls", "field": "deck_mass", "after": "ballast_depth", "default": 0.0, "unit_id": "KilogramPerMetre", "en": "Deck mass per length", "de": "Deckmasse je Meter", "step": 100, "precision": 0},
+  {"entity": "bridgeSls", "field": "natural_frequency", "after": "deck_mass", "default": 0.0, "unit_id": "Hertz", "en": "Deck natural frequency", "de": "Eigenfrequenz des Decks", "step": 0.1, "precision": 2},
+  {"entity": "bridgeSls", "field": "end_rotation", "after": "natural_frequency", "default": 0.0, "unit_id": "Radian", "en": "Deck end rotation", "de": "Endverdrehung des Decks", "step": 0.0001, "precision": 5},
+  {"entity": "bridgeSls", "field": "basic_wind_speed", "after": "end_rotation", "default": 0.0, "unit_id": "MetrePerSecond", "en": "Basic wind speed v_b (0 = no F*_W cap)", "de": "Basiswindgeschwindigkeit v_b (0 = keine F*_W-Kappung)", "step": 0.5, "precision": 1},
+  {"entity": "members", "field": "frame_height", "after": "vibration_frequency_min", "default": 0.0, "unit_id": "Metre", "en": "Frame height H (A1.4)", "de": "Rahmenhöhe H (A1.4)", "step": 0.01, "precision": 2},
+  {"entity": "members", "field": "frame_drift", "after": "frame_height", "default": 0.0, "unit_id": "Metre", "en": "Horizontal frame drift u", "de": "Horizontale Rahmenverschiebung u", "step": 0.001, "precision": 4},
+  {"entity": "members", "field": "storey_height", "after": "frame_drift", "default": 0.0, "unit_id": "Metre", "en": "Storey height h (A1.4)", "de": "Geschosshöhe h (A1.4)", "step": 0.01, "precision": 2},
+  {"entity": "members", "field": "storey_drift", "after": "storey_height", "default": 0.0, "unit_id": "Metre", "en": "Horizontal storey drift u_i", "de": "Horizontale Geschossverschiebung u_i", "step": 0.001, "precision": 4}
+ ]
+}

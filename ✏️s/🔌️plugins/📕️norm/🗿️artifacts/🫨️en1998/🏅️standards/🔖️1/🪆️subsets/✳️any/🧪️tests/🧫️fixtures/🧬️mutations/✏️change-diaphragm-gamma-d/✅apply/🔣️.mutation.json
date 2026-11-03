@@ -1,0 +1,5 @@
+{
+  "mutation": "changeDiaphragmGammaD",
+  "id": "dia-1",
+  "newGammaD": 1.5
+}

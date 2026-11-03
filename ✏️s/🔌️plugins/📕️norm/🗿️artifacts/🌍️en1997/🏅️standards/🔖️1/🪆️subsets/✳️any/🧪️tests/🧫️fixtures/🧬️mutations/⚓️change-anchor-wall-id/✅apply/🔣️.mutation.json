@@ -1,0 +1,5 @@
+{
+  "mutation": "changeAnchorWallId",
+  "id": "anchor-A1",
+  "newWallId": "ewall-E1-alt"
+}

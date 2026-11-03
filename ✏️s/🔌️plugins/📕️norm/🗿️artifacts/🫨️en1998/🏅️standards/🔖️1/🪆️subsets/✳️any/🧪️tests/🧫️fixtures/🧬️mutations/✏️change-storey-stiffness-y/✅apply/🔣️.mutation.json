@@ -1,0 +1,6 @@
+{
+  "mutation": "changeStoreyStiffnessY",
+  "buildingId": "bldg-office",
+  "id": "s2",
+  "newStiffnessY": 340000000.0
+}

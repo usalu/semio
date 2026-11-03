@@ -1,0 +1,6 @@
+{
+  "ChangeBridgeDeltaSigmaP": {
+    "id": "br-1",
+    "newDeltaSigmaP": 80000000.0
+  }
+}

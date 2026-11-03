@@ -1,0 +1,6 @@
+{
+  "ChangeTrussRestraintLength": {
+    "trussId": "truss-1",
+    "newValue": 10.0
+  }
+}

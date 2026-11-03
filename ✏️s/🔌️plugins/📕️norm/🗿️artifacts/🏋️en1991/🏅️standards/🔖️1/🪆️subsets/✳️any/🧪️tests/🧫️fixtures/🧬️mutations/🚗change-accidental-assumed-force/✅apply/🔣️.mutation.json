@@ -1,0 +1,6 @@
+{
+  "ChangeAccidentalAssumedForce": {
+    "id": "impact-1",
+    "newAssumedForce": 150000.0
+  }
+}

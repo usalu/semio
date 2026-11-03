@@ -1,0 +1,70 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-shell-action-source/schema.json",
+  "title": "ChangeShellActionSource",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "shellId",
+    "actionId",
+    "newSource"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeShellActionSource"
+    },
+    "shellId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Shell",
+          "de": "Schale"
+        },
+        "description": {
+          "en": "The shell this mutation addresses, by id.",
+          "de": "Das adressierte Element (Schale), per Kennung."
+        },
+        "ref": {
+          "kind": "shell"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "actionId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Action",
+          "de": "Einwirkung"
+        },
+        "description": {
+          "en": "The action this mutation addresses, by id.",
+          "de": "Das adressierte Element (Einwirkung), per Kennung."
+        },
+        "ref": {
+          "kind": "action"
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "newSource": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/$defs/ActionSource",
+      "x-semio-ui": {
+        "label": {
+          "en": "source",
+          "de": "Quelle"
+        },
+        "role": "value",
+        "group": "value",
+        "order": 30
+      }
+    }
+  }
+}

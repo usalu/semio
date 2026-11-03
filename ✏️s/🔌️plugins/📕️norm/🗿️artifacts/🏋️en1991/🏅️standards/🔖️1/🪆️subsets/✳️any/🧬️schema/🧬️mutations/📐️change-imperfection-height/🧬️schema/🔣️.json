@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-imperfection-height/schema.json",
+  "title": "ChangeImperfectionHeight",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newHeight"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Execution imperfection",
+          "de": "Ausführungsimperfektion"
+        },
+        "description": {
+          "en": "The execution imperfection this mutation addresses, by id.",
+          "de": "Das adressierte Element (Ausführungsimperfektion), per Kennung."
+        },
+        "ref": {
+          "kind": "execution-imperfection"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newHeight": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Member height h",
+          "de": "Bauteilhöhe h"
+        },
+        "widget": "stepper",
+        "unit": "m",
+        "precision": 2,
+        "step": 0.5,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

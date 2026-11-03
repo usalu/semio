@@ -8659,20 +8659,20 @@
         "defaultModeId": "edit",
         "windowKinds": [
           {
-            "id": "norm-en1990-inputs",
+            "id": "norm-en1990-properties",
             "label": {
               "native": {
-                "en": "Inputs",
-                "de": "Eingaben"
+                "en": "Properties",
+                "de": "Eigenschaften"
               },
               "reuse": {
-                "en": "Inputs",
-                "de": "Eingaben"
+                "en": "Properties",
+                "de": "Eigenschaften"
               }
             },
-            "bodyKey": "norm.en1990.play.inputs",
+            "bodyKey": "norm.en1990.play.properties",
             "surfaceKind": "canvas-2d",
-            "iconId": "download",
+            "iconId": "sliders",
             "options": {
               "engagement": {
                 "kind": "none"
@@ -8816,20 +8816,334 @@
             "capabilities": []
           },
           {
-            "id": "norm-en1990-results",
+            "id": "norm-en1990-viewport",
             "label": {
               "native": {
-                "en": "Results",
-                "de": "Ergebnisse"
+                "en": "Model",
+                "de": "Modell"
               },
               "reuse": {
-                "en": "Results",
-                "de": "Ergebnisse"
+                "en": "Model",
+                "de": "Modell"
               }
             },
-            "bodyKey": "norm.en1990.play.results",
+            "bodyKey": "norm.en1990.play.viewport",
+            "surfaceKind": "world-3d",
+            "iconId": "box",
+            "options": {
+              "engagement": {
+                "kind": "none"
+              }
+            },
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "exportArtifactDocument",
+                "label": {
+                  "native": {
+                    "en": "Export Document",
+                    "de": "Dokument exportieren"
+                  },
+                  "reuse": {
+                    "en": "Export Document",
+                    "de": "Dokument exportieren"
+                  }
+                },
+                "kind": "shell",
+                "iconId": "export",
+                "args": [],
+                "inPalette": true,
+                "category": "transfer",
+                "semantics": {
+                  "effects": {
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "shell.navigate"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "audience": "chrome"
+                }
+              },
+              {
+                "id": "importArtifactDocument",
+                "label": {
+                  "native": {
+                    "en": "Import Document…",
+                    "de": "Dokument importieren…"
+                  },
+                  "reuse": {
+                    "en": "Import Document…",
+                    "de": "Dokument importieren…"
+                  }
+                },
+                "kind": "shell",
+                "iconId": "import",
+                "args": [],
+                "inPalette": true,
+                "category": "transfer",
+                "semantics": {
+                  "effects": {
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "shell.navigate"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "audience": "chrome"
+                }
+              }
+            ],
+            "utilities": [],
+            "interactions": [],
+            "capabilities": []
+          },
+          {
+            "id": "norm-en1990-diagrams",
+            "label": {
+              "native": {
+                "en": "Diagrams",
+                "de": "Diagramme"
+              },
+              "reuse": {
+                "en": "Diagrams",
+                "de": "Diagramme"
+              }
+            },
+            "bodyKey": "norm.en1990.play.diagrams",
             "surfaceKind": "canvas-2d",
-            "iconId": "bar-chart-3",
+            "iconId": "chart-line",
+            "options": {
+              "engagement": {
+                "kind": "none"
+              }
+            },
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "exportArtifactDocument",
+                "label": {
+                  "native": {
+                    "en": "Export Document",
+                    "de": "Dokument exportieren"
+                  },
+                  "reuse": {
+                    "en": "Export Document",
+                    "de": "Dokument exportieren"
+                  }
+                },
+                "kind": "shell",
+                "iconId": "export",
+                "args": [],
+                "inPalette": true,
+                "category": "transfer",
+                "semantics": {
+                  "effects": {
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "shell.navigate"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "audience": "chrome"
+                }
+              },
+              {
+                "id": "importArtifactDocument",
+                "label": {
+                  "native": {
+                    "en": "Import Document…",
+                    "de": "Dokument importieren…"
+                  },
+                  "reuse": {
+                    "en": "Import Document…",
+                    "de": "Dokument importieren…"
+                  }
+                },
+                "kind": "shell",
+                "iconId": "import",
+                "args": [],
+                "inPalette": true,
+                "category": "transfer",
+                "semantics": {
+                  "effects": {
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "shell.navigate"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "audience": "chrome"
+                }
+              }
+            ],
+            "utilities": [],
+            "interactions": [],
+            "capabilities": []
+          },
+          {
+            "id": "norm-en1990-checks",
+            "label": {
+              "native": {
+                "en": "Checks",
+                "de": "Nachweise"
+              },
+              "reuse": {
+                "en": "Checks",
+                "de": "Nachweise"
+              }
+            },
+            "bodyKey": "norm.en1990.play.checks",
+            "surfaceKind": "canvas-2d",
+            "iconId": "check-circle",
             "options": {
               "engagement": {
                 "kind": "none"
@@ -10663,23 +10977,51 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 42.0,
+                "size": 22.0,
                 "children": [
                   {
                     "kind": "window",
-                    "windowKindId": "norm-en1990-inputs",
-                    "title": "Inputs"
+                    "windowKindId": "norm-en1990-properties",
+                    "title": "Properties"
                   }
                 ]
               },
               {
                 "kind": "stack",
-                "size": 58.0,
+                "size": 50.0,
                 "children": [
                   {
                     "kind": "window",
-                    "windowKindId": "norm-en1990-results",
-                    "title": "Results"
+                    "windowKindId": "norm-en1990-viewport",
+                    "title": "Model"
+                  }
+                ]
+              },
+              {
+                "kind": "column",
+                "size": 28.0,
+                "children": [
+                  {
+                    "kind": "stack",
+                    "size": 50.0,
+                    "children": [
+                      {
+                        "kind": "window",
+                        "windowKindId": "norm-en1990-checks",
+                        "title": "Checks"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "stack",
+                    "size": 50.0,
+                    "children": [
+                      {
+                        "kind": "window",
+                        "windowKindId": "norm-en1990-diagrams",
+                        "title": "Diagrams"
+                      }
+                    ]
                   }
                 ]
               }
@@ -14397,20 +14739,20 @@
         "defaultModeId": "edit",
         "windowKinds": [
           {
-            "id": "norm-en1992-inputs",
+            "id": "norm-en1992-properties",
             "label": {
               "native": {
-                "en": "Inputs",
-                "de": "Eingaben"
+                "en": "Properties",
+                "de": "Eigenschaften"
               },
               "reuse": {
-                "en": "Inputs",
-                "de": "Eingaben"
+                "en": "Properties",
+                "de": "Eigenschaften"
               }
             },
-            "bodyKey": "norm.en1992.play.inputs",
+            "bodyKey": "norm.en1992.play.properties",
             "surfaceKind": "canvas-2d",
-            "iconId": "download",
+            "iconId": "sliders",
             "options": {
               "engagement": {
                 "kind": "none"
@@ -14554,20 +14896,334 @@
             "capabilities": []
           },
           {
-            "id": "norm-en1992-results",
+            "id": "norm-en1992-viewport",
             "label": {
               "native": {
-                "en": "Results",
-                "de": "Ergebnisse"
+                "en": "Model",
+                "de": "Modell"
               },
               "reuse": {
-                "en": "Results",
-                "de": "Ergebnisse"
+                "en": "Model",
+                "de": "Modell"
               }
             },
-            "bodyKey": "norm.en1992.play.results",
+            "bodyKey": "norm.en1992.play.viewport",
+            "surfaceKind": "world-3d",
+            "iconId": "box",
+            "options": {
+              "engagement": {
+                "kind": "none"
+              }
+            },
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "exportArtifactDocument",
+                "label": {
+                  "native": {
+                    "en": "Export Document",
+                    "de": "Dokument exportieren"
+                  },
+                  "reuse": {
+                    "en": "Export Document",
+                    "de": "Dokument exportieren"
+                  }
+                },
+                "kind": "shell",
+                "iconId": "export",
+                "args": [],
+                "inPalette": true,
+                "category": "transfer",
+                "semantics": {
+                  "effects": {
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "shell.navigate"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "audience": "chrome"
+                }
+              },
+              {
+                "id": "importArtifactDocument",
+                "label": {
+                  "native": {
+                    "en": "Import Document…",
+                    "de": "Dokument importieren…"
+                  },
+                  "reuse": {
+                    "en": "Import Document…",
+                    "de": "Dokument importieren…"
+                  }
+                },
+                "kind": "shell",
+                "iconId": "import",
+                "args": [],
+                "inPalette": true,
+                "category": "transfer",
+                "semantics": {
+                  "effects": {
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "shell.navigate"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "audience": "chrome"
+                }
+              }
+            ],
+            "utilities": [],
+            "interactions": [],
+            "capabilities": []
+          },
+          {
+            "id": "norm-en1992-diagrams",
+            "label": {
+              "native": {
+                "en": "Diagrams",
+                "de": "Diagramme"
+              },
+              "reuse": {
+                "en": "Diagrams",
+                "de": "Diagramme"
+              }
+            },
+            "bodyKey": "norm.en1992.play.diagrams",
             "surfaceKind": "canvas-2d",
-            "iconId": "bar-chart-3",
+            "iconId": "chart-line",
+            "options": {
+              "engagement": {
+                "kind": "none"
+              }
+            },
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "exportArtifactDocument",
+                "label": {
+                  "native": {
+                    "en": "Export Document",
+                    "de": "Dokument exportieren"
+                  },
+                  "reuse": {
+                    "en": "Export Document",
+                    "de": "Dokument exportieren"
+                  }
+                },
+                "kind": "shell",
+                "iconId": "export",
+                "args": [],
+                "inPalette": true,
+                "category": "transfer",
+                "semantics": {
+                  "effects": {
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "shell.navigate"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "audience": "chrome"
+                }
+              },
+              {
+                "id": "importArtifactDocument",
+                "label": {
+                  "native": {
+                    "en": "Import Document…",
+                    "de": "Dokument importieren…"
+                  },
+                  "reuse": {
+                    "en": "Import Document…",
+                    "de": "Dokument importieren…"
+                  }
+                },
+                "kind": "shell",
+                "iconId": "import",
+                "args": [],
+                "inPalette": true,
+                "category": "transfer",
+                "semantics": {
+                  "effects": {
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "shell.navigate"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "audience": "chrome"
+                }
+              }
+            ],
+            "utilities": [],
+            "interactions": [],
+            "capabilities": []
+          },
+          {
+            "id": "norm-en1992-checks",
+            "label": {
+              "native": {
+                "en": "Checks",
+                "de": "Nachweise"
+              },
+              "reuse": {
+                "en": "Checks",
+                "de": "Nachweise"
+              }
+            },
+            "bodyKey": "norm.en1992.play.checks",
+            "surfaceKind": "canvas-2d",
+            "iconId": "check-circle",
             "options": {
               "engagement": {
                 "kind": "none"
@@ -16401,23 +17057,51 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 42.0,
+                "size": 22.0,
                 "children": [
                   {
                     "kind": "window",
-                    "windowKindId": "norm-en1992-inputs",
-                    "title": "Inputs"
+                    "windowKindId": "norm-en1992-properties",
+                    "title": "Properties"
                   }
                 ]
               },
               {
                 "kind": "stack",
-                "size": 58.0,
+                "size": 50.0,
                 "children": [
                   {
                     "kind": "window",
-                    "windowKindId": "norm-en1992-results",
-                    "title": "Results"
+                    "windowKindId": "norm-en1992-viewport",
+                    "title": "Model"
+                  }
+                ]
+              },
+              {
+                "kind": "column",
+                "size": 28.0,
+                "children": [
+                  {
+                    "kind": "stack",
+                    "size": 50.0,
+                    "children": [
+                      {
+                        "kind": "window",
+                        "windowKindId": "norm-en1992-checks",
+                        "title": "Checks"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "stack",
+                    "size": 50.0,
+                    "children": [
+                      {
+                        "kind": "window",
+                        "windowKindId": "norm-en1992-diagrams",
+                        "title": "Diagrams"
+                      }
+                    ]
                   }
                 ]
               }
@@ -17266,20 +17950,20 @@
         "defaultModeId": "edit",
         "windowKinds": [
           {
-            "id": "norm-en1993-inputs",
+            "id": "norm-en1993-properties",
             "label": {
               "native": {
-                "en": "Inputs",
-                "de": "Eingaben"
+                "en": "Properties",
+                "de": "Eigenschaften"
               },
               "reuse": {
-                "en": "Inputs",
-                "de": "Eingaben"
+                "en": "Properties",
+                "de": "Eigenschaften"
               }
             },
-            "bodyKey": "norm.en1993.play.inputs",
+            "bodyKey": "norm.en1993.play.properties",
             "surfaceKind": "canvas-2d",
-            "iconId": "download",
+            "iconId": "sliders",
             "options": {
               "engagement": {
                 "kind": "none"
@@ -17423,20 +18107,334 @@
             "capabilities": []
           },
           {
-            "id": "norm-en1993-results",
+            "id": "norm-en1993-viewport",
             "label": {
               "native": {
-                "en": "Results",
-                "de": "Ergebnisse"
+                "en": "Model",
+                "de": "Modell"
               },
               "reuse": {
-                "en": "Results",
-                "de": "Ergebnisse"
+                "en": "Model",
+                "de": "Modell"
               }
             },
-            "bodyKey": "norm.en1993.play.results",
+            "bodyKey": "norm.en1993.play.viewport",
+            "surfaceKind": "world-3d",
+            "iconId": "box",
+            "options": {
+              "engagement": {
+                "kind": "none"
+              }
+            },
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "exportArtifactDocument",
+                "label": {
+                  "native": {
+                    "en": "Export Document",
+                    "de": "Dokument exportieren"
+                  },
+                  "reuse": {
+                    "en": "Export Document",
+                    "de": "Dokument exportieren"
+                  }
+                },
+                "kind": "shell",
+                "iconId": "export",
+                "args": [],
+                "inPalette": true,
+                "category": "transfer",
+                "semantics": {
+                  "effects": {
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "shell.navigate"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "audience": "chrome"
+                }
+              },
+              {
+                "id": "importArtifactDocument",
+                "label": {
+                  "native": {
+                    "en": "Import Document…",
+                    "de": "Dokument importieren…"
+                  },
+                  "reuse": {
+                    "en": "Import Document…",
+                    "de": "Dokument importieren…"
+                  }
+                },
+                "kind": "shell",
+                "iconId": "import",
+                "args": [],
+                "inPalette": true,
+                "category": "transfer",
+                "semantics": {
+                  "effects": {
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "shell.navigate"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "audience": "chrome"
+                }
+              }
+            ],
+            "utilities": [],
+            "interactions": [],
+            "capabilities": []
+          },
+          {
+            "id": "norm-en1993-diagrams",
+            "label": {
+              "native": {
+                "en": "Diagrams",
+                "de": "Diagramme"
+              },
+              "reuse": {
+                "en": "Diagrams",
+                "de": "Diagramme"
+              }
+            },
+            "bodyKey": "norm.en1993.play.diagrams",
             "surfaceKind": "canvas-2d",
-            "iconId": "bar-chart-3",
+            "iconId": "chart-line",
+            "options": {
+              "engagement": {
+                "kind": "none"
+              }
+            },
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "exportArtifactDocument",
+                "label": {
+                  "native": {
+                    "en": "Export Document",
+                    "de": "Dokument exportieren"
+                  },
+                  "reuse": {
+                    "en": "Export Document",
+                    "de": "Dokument exportieren"
+                  }
+                },
+                "kind": "shell",
+                "iconId": "export",
+                "args": [],
+                "inPalette": true,
+                "category": "transfer",
+                "semantics": {
+                  "effects": {
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "shell.navigate"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "audience": "chrome"
+                }
+              },
+              {
+                "id": "importArtifactDocument",
+                "label": {
+                  "native": {
+                    "en": "Import Document…",
+                    "de": "Dokument importieren…"
+                  },
+                  "reuse": {
+                    "en": "Import Document…",
+                    "de": "Dokument importieren…"
+                  }
+                },
+                "kind": "shell",
+                "iconId": "import",
+                "args": [],
+                "inPalette": true,
+                "category": "transfer",
+                "semantics": {
+                  "effects": {
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "shell.navigate"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "audience": "chrome"
+                }
+              }
+            ],
+            "utilities": [],
+            "interactions": [],
+            "capabilities": []
+          },
+          {
+            "id": "norm-en1993-checks",
+            "label": {
+              "native": {
+                "en": "Checks",
+                "de": "Nachweise"
+              },
+              "reuse": {
+                "en": "Checks",
+                "de": "Nachweise"
+              }
+            },
+            "bodyKey": "norm.en1993.play.checks",
+            "surfaceKind": "canvas-2d",
+            "iconId": "check-circle",
             "options": {
               "engagement": {
                 "kind": "none"
@@ -19270,23 +20268,51 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 42.0,
+                "size": 22.0,
                 "children": [
                   {
                     "kind": "window",
-                    "windowKindId": "norm-en1993-inputs",
-                    "title": "Inputs"
+                    "windowKindId": "norm-en1993-properties",
+                    "title": "Properties"
                   }
                 ]
               },
               {
                 "kind": "stack",
-                "size": 58.0,
+                "size": 50.0,
                 "children": [
                   {
                     "kind": "window",
-                    "windowKindId": "norm-en1993-results",
-                    "title": "Results"
+                    "windowKindId": "norm-en1993-viewport",
+                    "title": "Model"
+                  }
+                ]
+              },
+              {
+                "kind": "column",
+                "size": 28.0,
+                "children": [
+                  {
+                    "kind": "stack",
+                    "size": 50.0,
+                    "children": [
+                      {
+                        "kind": "window",
+                        "windowKindId": "norm-en1993-checks",
+                        "title": "Checks"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "stack",
+                    "size": 50.0,
+                    "children": [
+                      {
+                        "kind": "window",
+                        "windowKindId": "norm-en1993-diagrams",
+                        "title": "Diagrams"
+                      }
+                    ]
                   }
                 ]
               }
@@ -20135,20 +21161,20 @@
         "defaultModeId": "edit",
         "windowKinds": [
           {
-            "id": "norm-en1994-inputs",
+            "id": "norm-en1994-properties",
             "label": {
               "native": {
-                "en": "Inputs",
-                "de": "Eingaben"
+                "en": "Properties",
+                "de": "Eigenschaften"
               },
               "reuse": {
-                "en": "Inputs",
-                "de": "Eingaben"
+                "en": "Properties",
+                "de": "Eigenschaften"
               }
             },
-            "bodyKey": "norm.en1994.play.inputs",
+            "bodyKey": "norm.en1994.play.properties",
             "surfaceKind": "canvas-2d",
-            "iconId": "download",
+            "iconId": "sliders",
             "options": {
               "engagement": {
                 "kind": "none"
@@ -20292,20 +21318,334 @@
             "capabilities": []
           },
           {
-            "id": "norm-en1994-results",
+            "id": "norm-en1994-viewport",
             "label": {
               "native": {
-                "en": "Results",
-                "de": "Ergebnisse"
+                "en": "Model",
+                "de": "Modell"
               },
               "reuse": {
-                "en": "Results",
-                "de": "Ergebnisse"
+                "en": "Model",
+                "de": "Modell"
               }
             },
-            "bodyKey": "norm.en1994.play.results",
+            "bodyKey": "norm.en1994.play.viewport",
+            "surfaceKind": "world-3d",
+            "iconId": "box",
+            "options": {
+              "engagement": {
+                "kind": "none"
+              }
+            },
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "exportArtifactDocument",
+                "label": {
+                  "native": {
+                    "en": "Export Document",
+                    "de": "Dokument exportieren"
+                  },
+                  "reuse": {
+                    "en": "Export Document",
+                    "de": "Dokument exportieren"
+                  }
+                },
+                "kind": "shell",
+                "iconId": "export",
+                "args": [],
+                "inPalette": true,
+                "category": "transfer",
+                "semantics": {
+                  "effects": {
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "shell.navigate"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "audience": "chrome"
+                }
+              },
+              {
+                "id": "importArtifactDocument",
+                "label": {
+                  "native": {
+                    "en": "Import Document…",
+                    "de": "Dokument importieren…"
+                  },
+                  "reuse": {
+                    "en": "Import Document…",
+                    "de": "Dokument importieren…"
+                  }
+                },
+                "kind": "shell",
+                "iconId": "import",
+                "args": [],
+                "inPalette": true,
+                "category": "transfer",
+                "semantics": {
+                  "effects": {
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "shell.navigate"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "audience": "chrome"
+                }
+              }
+            ],
+            "utilities": [],
+            "interactions": [],
+            "capabilities": []
+          },
+          {
+            "id": "norm-en1994-diagrams",
+            "label": {
+              "native": {
+                "en": "Diagrams",
+                "de": "Diagramme"
+              },
+              "reuse": {
+                "en": "Diagrams",
+                "de": "Diagramme"
+              }
+            },
+            "bodyKey": "norm.en1994.play.diagrams",
             "surfaceKind": "canvas-2d",
-            "iconId": "bar-chart-3",
+            "iconId": "chart-line",
+            "options": {
+              "engagement": {
+                "kind": "none"
+              }
+            },
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "exportArtifactDocument",
+                "label": {
+                  "native": {
+                    "en": "Export Document",
+                    "de": "Dokument exportieren"
+                  },
+                  "reuse": {
+                    "en": "Export Document",
+                    "de": "Dokument exportieren"
+                  }
+                },
+                "kind": "shell",
+                "iconId": "export",
+                "args": [],
+                "inPalette": true,
+                "category": "transfer",
+                "semantics": {
+                  "effects": {
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "shell.navigate"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "audience": "chrome"
+                }
+              },
+              {
+                "id": "importArtifactDocument",
+                "label": {
+                  "native": {
+                    "en": "Import Document…",
+                    "de": "Dokument importieren…"
+                  },
+                  "reuse": {
+                    "en": "Import Document…",
+                    "de": "Dokument importieren…"
+                  }
+                },
+                "kind": "shell",
+                "iconId": "import",
+                "args": [],
+                "inPalette": true,
+                "category": "transfer",
+                "semantics": {
+                  "effects": {
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "shell.navigate"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "audience": "chrome"
+                }
+              }
+            ],
+            "utilities": [],
+            "interactions": [],
+            "capabilities": []
+          },
+          {
+            "id": "norm-en1994-checks",
+            "label": {
+              "native": {
+                "en": "Checks",
+                "de": "Nachweise"
+              },
+              "reuse": {
+                "en": "Checks",
+                "de": "Nachweise"
+              }
+            },
+            "bodyKey": "norm.en1994.play.checks",
+            "surfaceKind": "canvas-2d",
+            "iconId": "check-circle",
             "options": {
               "engagement": {
                 "kind": "none"
@@ -22139,23 +23479,51 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 42.0,
+                "size": 22.0,
                 "children": [
                   {
                     "kind": "window",
-                    "windowKindId": "norm-en1994-inputs",
-                    "title": "Inputs"
+                    "windowKindId": "norm-en1994-properties",
+                    "title": "Properties"
                   }
                 ]
               },
               {
                 "kind": "stack",
-                "size": 58.0,
+                "size": 50.0,
                 "children": [
                   {
                     "kind": "window",
-                    "windowKindId": "norm-en1994-results",
-                    "title": "Results"
+                    "windowKindId": "norm-en1994-viewport",
+                    "title": "Model"
+                  }
+                ]
+              },
+              {
+                "kind": "column",
+                "size": 28.0,
+                "children": [
+                  {
+                    "kind": "stack",
+                    "size": 50.0,
+                    "children": [
+                      {
+                        "kind": "window",
+                        "windowKindId": "norm-en1994-checks",
+                        "title": "Checks"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "stack",
+                    "size": 50.0,
+                    "children": [
+                      {
+                        "kind": "window",
+                        "windowKindId": "norm-en1994-diagrams",
+                        "title": "Diagrams"
+                      }
+                    ]
                   }
                 ]
               }
@@ -25873,20 +27241,20 @@
         "defaultModeId": "edit",
         "windowKinds": [
           {
-            "id": "norm-en1996-inputs",
+            "id": "norm-en1996-properties",
             "label": {
               "native": {
-                "en": "Inputs",
-                "de": "Eingaben"
+                "en": "Properties",
+                "de": "Eigenschaften"
               },
               "reuse": {
-                "en": "Inputs",
-                "de": "Eingaben"
+                "en": "Properties",
+                "de": "Eigenschaften"
               }
             },
-            "bodyKey": "norm.en1996.play.inputs",
+            "bodyKey": "norm.en1996.play.properties",
             "surfaceKind": "canvas-2d",
-            "iconId": "download",
+            "iconId": "sliders",
             "options": {
               "engagement": {
                 "kind": "none"
@@ -26030,20 +27398,334 @@
             "capabilities": []
           },
           {
-            "id": "norm-en1996-results",
+            "id": "norm-en1996-viewport",
             "label": {
               "native": {
-                "en": "Results",
-                "de": "Ergebnisse"
+                "en": "Model",
+                "de": "Modell"
               },
               "reuse": {
-                "en": "Results",
-                "de": "Ergebnisse"
+                "en": "Model",
+                "de": "Modell"
               }
             },
-            "bodyKey": "norm.en1996.play.results",
+            "bodyKey": "norm.en1996.play.viewport",
+            "surfaceKind": "world-3d",
+            "iconId": "box",
+            "options": {
+              "engagement": {
+                "kind": "none"
+              }
+            },
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "exportArtifactDocument",
+                "label": {
+                  "native": {
+                    "en": "Export Document",
+                    "de": "Dokument exportieren"
+                  },
+                  "reuse": {
+                    "en": "Export Document",
+                    "de": "Dokument exportieren"
+                  }
+                },
+                "kind": "shell",
+                "iconId": "export",
+                "args": [],
+                "inPalette": true,
+                "category": "transfer",
+                "semantics": {
+                  "effects": {
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "shell.navigate"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "audience": "chrome"
+                }
+              },
+              {
+                "id": "importArtifactDocument",
+                "label": {
+                  "native": {
+                    "en": "Import Document…",
+                    "de": "Dokument importieren…"
+                  },
+                  "reuse": {
+                    "en": "Import Document…",
+                    "de": "Dokument importieren…"
+                  }
+                },
+                "kind": "shell",
+                "iconId": "import",
+                "args": [],
+                "inPalette": true,
+                "category": "transfer",
+                "semantics": {
+                  "effects": {
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "shell.navigate"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "audience": "chrome"
+                }
+              }
+            ],
+            "utilities": [],
+            "interactions": [],
+            "capabilities": []
+          },
+          {
+            "id": "norm-en1996-diagrams",
+            "label": {
+              "native": {
+                "en": "Diagrams",
+                "de": "Diagramme"
+              },
+              "reuse": {
+                "en": "Diagrams",
+                "de": "Diagramme"
+              }
+            },
+            "bodyKey": "norm.en1996.play.diagrams",
             "surfaceKind": "canvas-2d",
-            "iconId": "bar-chart-3",
+            "iconId": "chart-line",
+            "options": {
+              "engagement": {
+                "kind": "none"
+              }
+            },
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "exportArtifactDocument",
+                "label": {
+                  "native": {
+                    "en": "Export Document",
+                    "de": "Dokument exportieren"
+                  },
+                  "reuse": {
+                    "en": "Export Document",
+                    "de": "Dokument exportieren"
+                  }
+                },
+                "kind": "shell",
+                "iconId": "export",
+                "args": [],
+                "inPalette": true,
+                "category": "transfer",
+                "semantics": {
+                  "effects": {
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "shell.navigate"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "audience": "chrome"
+                }
+              },
+              {
+                "id": "importArtifactDocument",
+                "label": {
+                  "native": {
+                    "en": "Import Document…",
+                    "de": "Dokument importieren…"
+                  },
+                  "reuse": {
+                    "en": "Import Document…",
+                    "de": "Dokument importieren…"
+                  }
+                },
+                "kind": "shell",
+                "iconId": "import",
+                "args": [],
+                "inPalette": true,
+                "category": "transfer",
+                "semantics": {
+                  "effects": {
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "shell.navigate"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "audience": "chrome"
+                }
+              }
+            ],
+            "utilities": [],
+            "interactions": [],
+            "capabilities": []
+          },
+          {
+            "id": "norm-en1996-checks",
+            "label": {
+              "native": {
+                "en": "Checks",
+                "de": "Nachweise"
+              },
+              "reuse": {
+                "en": "Checks",
+                "de": "Nachweise"
+              }
+            },
+            "bodyKey": "norm.en1996.play.checks",
+            "surfaceKind": "canvas-2d",
+            "iconId": "check-circle",
             "options": {
               "engagement": {
                 "kind": "none"
@@ -27877,23 +29559,51 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 42.0,
+                "size": 22.0,
                 "children": [
                   {
                     "kind": "window",
-                    "windowKindId": "norm-en1996-inputs",
-                    "title": "Inputs"
+                    "windowKindId": "norm-en1996-properties",
+                    "title": "Properties"
                   }
                 ]
               },
               {
                 "kind": "stack",
-                "size": 58.0,
+                "size": 50.0,
                 "children": [
                   {
                     "kind": "window",
-                    "windowKindId": "norm-en1996-results",
-                    "title": "Results"
+                    "windowKindId": "norm-en1996-viewport",
+                    "title": "Model"
+                  }
+                ]
+              },
+              {
+                "kind": "column",
+                "size": 28.0,
+                "children": [
+                  {
+                    "kind": "stack",
+                    "size": 50.0,
+                    "children": [
+                      {
+                        "kind": "window",
+                        "windowKindId": "norm-en1996-checks",
+                        "title": "Checks"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "stack",
+                    "size": 50.0,
+                    "children": [
+                      {
+                        "kind": "window",
+                        "windowKindId": "norm-en1996-diagrams",
+                        "title": "Diagrams"
+                      }
+                    ]
                   }
                 ]
               }
@@ -31611,20 +33321,20 @@
         "defaultModeId": "edit",
         "windowKinds": [
           {
-            "id": "norm-en1998-inputs",
+            "id": "norm-en1998-properties",
             "label": {
               "native": {
-                "en": "Inputs",
-                "de": "Eingaben"
+                "en": "Properties",
+                "de": "Eigenschaften"
               },
               "reuse": {
-                "en": "Inputs",
-                "de": "Eingaben"
+                "en": "Properties",
+                "de": "Eigenschaften"
               }
             },
-            "bodyKey": "norm.en1998.play.inputs",
+            "bodyKey": "norm.en1998.play.properties",
             "surfaceKind": "canvas-2d",
-            "iconId": "download",
+            "iconId": "sliders",
             "options": {
               "engagement": {
                 "kind": "none"
@@ -31768,20 +33478,334 @@
             "capabilities": []
           },
           {
-            "id": "norm-en1998-results",
+            "id": "norm-en1998-viewport",
             "label": {
               "native": {
-                "en": "Results",
-                "de": "Ergebnisse"
+                "en": "Model",
+                "de": "Modell"
               },
               "reuse": {
-                "en": "Results",
-                "de": "Ergebnisse"
+                "en": "Model",
+                "de": "Modell"
               }
             },
-            "bodyKey": "norm.en1998.play.results",
+            "bodyKey": "norm.en1998.play.viewport",
+            "surfaceKind": "world-3d",
+            "iconId": "box",
+            "options": {
+              "engagement": {
+                "kind": "none"
+              }
+            },
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "exportArtifactDocument",
+                "label": {
+                  "native": {
+                    "en": "Export Document",
+                    "de": "Dokument exportieren"
+                  },
+                  "reuse": {
+                    "en": "Export Document",
+                    "de": "Dokument exportieren"
+                  }
+                },
+                "kind": "shell",
+                "iconId": "export",
+                "args": [],
+                "inPalette": true,
+                "category": "transfer",
+                "semantics": {
+                  "effects": {
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "shell.navigate"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "audience": "chrome"
+                }
+              },
+              {
+                "id": "importArtifactDocument",
+                "label": {
+                  "native": {
+                    "en": "Import Document…",
+                    "de": "Dokument importieren…"
+                  },
+                  "reuse": {
+                    "en": "Import Document…",
+                    "de": "Dokument importieren…"
+                  }
+                },
+                "kind": "shell",
+                "iconId": "import",
+                "args": [],
+                "inPalette": true,
+                "category": "transfer",
+                "semantics": {
+                  "effects": {
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "shell.navigate"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "audience": "chrome"
+                }
+              }
+            ],
+            "utilities": [],
+            "interactions": [],
+            "capabilities": []
+          },
+          {
+            "id": "norm-en1998-diagrams",
+            "label": {
+              "native": {
+                "en": "Diagrams",
+                "de": "Diagramme"
+              },
+              "reuse": {
+                "en": "Diagrams",
+                "de": "Diagramme"
+              }
+            },
+            "bodyKey": "norm.en1998.play.diagrams",
             "surfaceKind": "canvas-2d",
-            "iconId": "bar-chart-3",
+            "iconId": "chart-line",
+            "options": {
+              "engagement": {
+                "kind": "none"
+              }
+            },
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "exportArtifactDocument",
+                "label": {
+                  "native": {
+                    "en": "Export Document",
+                    "de": "Dokument exportieren"
+                  },
+                  "reuse": {
+                    "en": "Export Document",
+                    "de": "Dokument exportieren"
+                  }
+                },
+                "kind": "shell",
+                "iconId": "export",
+                "args": [],
+                "inPalette": true,
+                "category": "transfer",
+                "semantics": {
+                  "effects": {
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "shell.navigate"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "audience": "chrome"
+                }
+              },
+              {
+                "id": "importArtifactDocument",
+                "label": {
+                  "native": {
+                    "en": "Import Document…",
+                    "de": "Dokument importieren…"
+                  },
+                  "reuse": {
+                    "en": "Import Document…",
+                    "de": "Dokument importieren…"
+                  }
+                },
+                "kind": "shell",
+                "iconId": "import",
+                "args": [],
+                "inPalette": true,
+                "category": "transfer",
+                "semantics": {
+                  "effects": {
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "shell.navigate"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "audience": "chrome"
+                }
+              }
+            ],
+            "utilities": [],
+            "interactions": [],
+            "capabilities": []
+          },
+          {
+            "id": "norm-en1998-checks",
+            "label": {
+              "native": {
+                "en": "Checks",
+                "de": "Nachweise"
+              },
+              "reuse": {
+                "en": "Checks",
+                "de": "Nachweise"
+              }
+            },
+            "bodyKey": "norm.en1998.play.checks",
+            "surfaceKind": "canvas-2d",
+            "iconId": "check-circle",
             "options": {
               "engagement": {
                 "kind": "none"
@@ -33615,23 +35639,51 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 42.0,
+                "size": 22.0,
                 "children": [
                   {
                     "kind": "window",
-                    "windowKindId": "norm-en1998-inputs",
-                    "title": "Inputs"
+                    "windowKindId": "norm-en1998-properties",
+                    "title": "Properties"
                   }
                 ]
               },
               {
                 "kind": "stack",
-                "size": 58.0,
+                "size": 50.0,
                 "children": [
                   {
                     "kind": "window",
-                    "windowKindId": "norm-en1998-results",
-                    "title": "Results"
+                    "windowKindId": "norm-en1998-viewport",
+                    "title": "Model"
+                  }
+                ]
+              },
+              {
+                "kind": "column",
+                "size": 28.0,
+                "children": [
+                  {
+                    "kind": "stack",
+                    "size": 50.0,
+                    "children": [
+                      {
+                        "kind": "window",
+                        "windowKindId": "norm-en1998-checks",
+                        "title": "Checks"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "stack",
+                    "size": 50.0,
+                    "children": [
+                      {
+                        "kind": "window",
+                        "windowKindId": "norm-en1998-diagrams",
+                        "title": "Diagrams"
+                      }
+                    ]
                   }
                 ]
               }
@@ -34480,20 +36532,20 @@
         "defaultModeId": "edit",
         "windowKinds": [
           {
-            "id": "norm-en1999-inputs",
+            "id": "norm-en1999-properties",
             "label": {
               "native": {
-                "en": "Inputs",
-                "de": "Eingaben"
+                "en": "Properties",
+                "de": "Eigenschaften"
               },
               "reuse": {
-                "en": "Inputs",
-                "de": "Eingaben"
+                "en": "Properties",
+                "de": "Eigenschaften"
               }
             },
-            "bodyKey": "norm.en1999.play.inputs",
+            "bodyKey": "norm.en1999.play.properties",
             "surfaceKind": "canvas-2d",
-            "iconId": "download",
+            "iconId": "sliders",
             "options": {
               "engagement": {
                 "kind": "none"
@@ -34637,20 +36689,334 @@
             "capabilities": []
           },
           {
-            "id": "norm-en1999-results",
+            "id": "norm-en1999-viewport",
             "label": {
               "native": {
-                "en": "Results",
-                "de": "Ergebnisse"
+                "en": "Model",
+                "de": "Modell"
               },
               "reuse": {
-                "en": "Results",
-                "de": "Ergebnisse"
+                "en": "Model",
+                "de": "Modell"
               }
             },
-            "bodyKey": "norm.en1999.play.results",
+            "bodyKey": "norm.en1999.play.viewport",
+            "surfaceKind": "world-3d",
+            "iconId": "box",
+            "options": {
+              "engagement": {
+                "kind": "none"
+              }
+            },
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "exportArtifactDocument",
+                "label": {
+                  "native": {
+                    "en": "Export Document",
+                    "de": "Dokument exportieren"
+                  },
+                  "reuse": {
+                    "en": "Export Document",
+                    "de": "Dokument exportieren"
+                  }
+                },
+                "kind": "shell",
+                "iconId": "export",
+                "args": [],
+                "inPalette": true,
+                "category": "transfer",
+                "semantics": {
+                  "effects": {
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "shell.navigate"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "audience": "chrome"
+                }
+              },
+              {
+                "id": "importArtifactDocument",
+                "label": {
+                  "native": {
+                    "en": "Import Document…",
+                    "de": "Dokument importieren…"
+                  },
+                  "reuse": {
+                    "en": "Import Document…",
+                    "de": "Dokument importieren…"
+                  }
+                },
+                "kind": "shell",
+                "iconId": "import",
+                "args": [],
+                "inPalette": true,
+                "category": "transfer",
+                "semantics": {
+                  "effects": {
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "shell.navigate"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "audience": "chrome"
+                }
+              }
+            ],
+            "utilities": [],
+            "interactions": [],
+            "capabilities": []
+          },
+          {
+            "id": "norm-en1999-diagrams",
+            "label": {
+              "native": {
+                "en": "Diagrams",
+                "de": "Diagramme"
+              },
+              "reuse": {
+                "en": "Diagrams",
+                "de": "Diagramme"
+              }
+            },
+            "bodyKey": "norm.en1999.play.diagrams",
             "surfaceKind": "canvas-2d",
-            "iconId": "bar-chart-3",
+            "iconId": "chart-line",
+            "options": {
+              "engagement": {
+                "kind": "none"
+              }
+            },
+            "actions": [
+              {
+                "id": "cancelTypedOperation",
+                "label": {
+                  "native": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  },
+                  "reuse": {
+                    "en": "Cancel Operation",
+                    "de": "Vorgang abbrechen"
+                  }
+                },
+                "kind": "view",
+                "iconId": "square",
+                "args": [],
+                "inPalette": false,
+                "semantics": {
+                  "effects": {
+                    "reads": [
+                      "config:{self}"
+                    ],
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "artifacts.read",
+                      "shell.observe"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  }
+                }
+              },
+              {
+                "id": "exportArtifactDocument",
+                "label": {
+                  "native": {
+                    "en": "Export Document",
+                    "de": "Dokument exportieren"
+                  },
+                  "reuse": {
+                    "en": "Export Document",
+                    "de": "Dokument exportieren"
+                  }
+                },
+                "kind": "shell",
+                "iconId": "export",
+                "args": [],
+                "inPalette": true,
+                "category": "transfer",
+                "semantics": {
+                  "effects": {
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "shell.navigate"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "audience": "chrome"
+                }
+              },
+              {
+                "id": "importArtifactDocument",
+                "label": {
+                  "native": {
+                    "en": "Import Document…",
+                    "de": "Dokument importieren…"
+                  },
+                  "reuse": {
+                    "en": "Import Document…",
+                    "de": "Dokument importieren…"
+                  }
+                },
+                "kind": "shell",
+                "iconId": "import",
+                "args": [],
+                "inPalette": true,
+                "category": "transfer",
+                "semantics": {
+                  "effects": {
+                    "external": false,
+                    "destructive": false,
+                    "reversible": false
+                  },
+                  "policy": {
+                    "scopes": [
+                      "shell.navigate"
+                    ],
+                    "approval": "never"
+                  },
+                  "execution": {
+                    "preview": "none",
+                    "undo": {
+                      "kind": "none"
+                    },
+                    "idempotency": "none",
+                    "expectedRevision": false,
+                    "cancellable": false,
+                    "class": "interactive",
+                    "interactiveJob": "migrated"
+                  },
+                  "audience": "chrome"
+                }
+              }
+            ],
+            "utilities": [],
+            "interactions": [],
+            "capabilities": []
+          },
+          {
+            "id": "norm-en1999-checks",
+            "label": {
+              "native": {
+                "en": "Checks",
+                "de": "Nachweise"
+              },
+              "reuse": {
+                "en": "Checks",
+                "de": "Nachweise"
+              }
+            },
+            "bodyKey": "norm.en1999.play.checks",
+            "surfaceKind": "canvas-2d",
+            "iconId": "check-circle",
             "options": {
               "engagement": {
                 "kind": "none"
@@ -36484,23 +38850,51 @@
             "children": [
               {
                 "kind": "stack",
-                "size": 42.0,
+                "size": 22.0,
                 "children": [
                   {
                     "kind": "window",
-                    "windowKindId": "norm-en1999-inputs",
-                    "title": "Inputs"
+                    "windowKindId": "norm-en1999-properties",
+                    "title": "Properties"
                   }
                 ]
               },
               {
                 "kind": "stack",
-                "size": 58.0,
+                "size": 50.0,
                 "children": [
                   {
                     "kind": "window",
-                    "windowKindId": "norm-en1999-results",
-                    "title": "Results"
+                    "windowKindId": "norm-en1999-viewport",
+                    "title": "Model"
+                  }
+                ]
+              },
+              {
+                "kind": "column",
+                "size": 28.0,
+                "children": [
+                  {
+                    "kind": "stack",
+                    "size": 50.0,
+                    "children": [
+                      {
+                        "kind": "window",
+                        "windowKindId": "norm-en1999-checks",
+                        "title": "Checks"
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "stack",
+                    "size": 50.0,
+                    "children": [
+                      {
+                        "kind": "window",
+                        "windowKindId": "norm-en1999-diagrams",
+                        "title": "Diagrams"
+                      }
+                    ]
                   }
                 ]
               }
@@ -43277,7 +45671,7 @@
           }
         },
         "iconId": "file",
-        "artifactJson": "semio norm.en1990.dsl v1\nannex=en project-id=high-consequence-office structure-kind=building altitude-m=0 consequence-class=3 reliability-class=3 design-working-life-category=4 design-working-life-years=50 reference-period-years=50 supervision-level=DSL1 inspection-level=IL1 k-fi-declared=1 beta-computed=3.9\npermanents [id:TEXT kind:TEXT gk:NUM] {\n  G-sup g_sup 250000\n  G-inf g_inf 50000\n}\nvariables [id:TEXT category:TEXT qk:NUM] {\n  Q-office office 60000\n  Q-partition other 12000\n  Q-snow snow 18000\n}\naccidentals [id:TEXT ad:NUM] {\n}\nseismics [id:TEXT a-ek:NUM importance-class:TEXT] {\n}\nmembers [id:TEXT label-en:TEXT label-de:TEXT rd-str:NUM rd-geo:NUM rd-equ-stab:NUM rd-equ-destab:NUM rd-fat:NUM span:NUM deflection-w:NUM deflection-limit-ratio:NUM vibration-frequency:NUM vibration-frequency-min:NUM] {\n  beam-B1 \"Office beam B1\" \"Büroträger B1\" 200000 200000 180000 150000 0 8 0.04 250 2.5 3\n}\nbridge-sls [id:TEXT member-id:TEXT deck-acceleration:NUM deck-acceleration-limit:NUM deck-twist:NUM deck-twist-limit:NUM bridge-deflection:NUM bridge-deflection-limit:NUM] {\n}\neffects [member-id:TEXT action-id:TEXT influence:NUM] {\n  beam-B1 G-sup 1\n  beam-B1 G-inf 1\n  beam-B1 Q-office 1\n  beam-B1 Q-partition 1\n  beam-B1 Q-snow 1\n}\n",
+        "artifactJson": "semio norm.en1990.dsl v1\nannex=en project-id=high-consequence-office structure-kind=building altitude-m=0 consequence-class=3 reliability-class=rc3 design-working-life-category=4 design-working-life-years=50 reference-period-years=50 supervision-level=DSL1 inspection-level=IL1 beta-computed=3.9\npermanents [id:TEXT kind:TEXT gk:NUM] {\n  G-sup g_sup 250000\n  G-inf g_inf 50000\n}\nvariables [id:TEXT category:TEXT qk:NUM] {\n  Q-office office 60000\n  Q-partition other 12000\n  Q-snow snow 18000\n}\naccidentals [id:TEXT ad:NUM] {\n}\nseismics [id:TEXT a-ek:NUM importance-class:TEXT] {\n}\nmembers [id:TEXT label-en:TEXT label-de:TEXT rd-str:NUM rd-geo:NUM rd-equ-stab:NUM rd-equ-destab:NUM rd-fat:NUM span:NUM deflection-w:NUM deflection-limit-ratio:NUM vibration-frequency:NUM vibration-frequency-min:NUM] {\n  beam-B1 \"Office beam B1\" \"Büroträger B1\" 200000 200000 180000 150000 0 8 0.04 250 2.5 3\n}\nbridge-sls [id:TEXT member-id:TEXT deck-acceleration:NUM deck-acceleration-limit:NUM deck-twist:NUM deck-twist-limit:NUM bridge-deflection:NUM bridge-deflection-limit:NUM] {\n}\neffects [member-id:TEXT action-id:TEXT influence:NUM] {\n  beam-B1 G-sup 1\n  beam-B1 G-inf 1\n  beam-B1 Q-office 1\n  beam-B1 Q-partition 1\n  beam-B1 Q-snow 1\n}\n",
         "dialect": {
           "artifactKind": "s.norm.en1990",
           "standard": "1",
@@ -43297,7 +45691,7 @@
           }
         },
         "iconId": "file",
-        "artifactJson": "semio norm.en1990.dsl v1\nannex=de project-id=road-bridge-compliant structure-kind=rail_bridge altitude-m=200 consequence-class=2 reliability-class=2 design-working-life-category=5 design-working-life-years=100 reference-period-years=100 supervision-level=DSL2 inspection-level=IL2 k-fi-declared=1 beta-computed=3.8\npermanents [id:TEXT kind:TEXT gk:NUM] {\n  G-sup g_sup 120000\n  G-inf g_inf 40000\n}\nvariables [id:TEXT category:TEXT qk:NUM] {\n  Q-traffic rail_traffic 80000\n  Q-wind wind 20000\n}\naccidentals [id:TEXT ad:NUM] {\n}\nseismics [id:TEXT a-ek:NUM importance-class:TEXT] {\n}\nmembers [id:TEXT label-en:TEXT label-de:TEXT rd-str:NUM rd-geo:NUM rd-equ-stab:NUM rd-equ-destab:NUM rd-fat:NUM span:NUM deflection-w:NUM deflection-limit-ratio:NUM vibration-frequency:NUM vibration-frequency-min:NUM] {\n  deck-D1 \"Main deck D1\" \"Hauptfahrbahn D1\" 400000 400000 300000 250000 0 40 0.05 500 4 3\n}\nbridge-sls [id:TEXT member-id:TEXT deck-acceleration:NUM deck-acceleration-limit:NUM deck-twist:NUM deck-twist-limit:NUM bridge-deflection:NUM bridge-deflection-limit:NUM] {\n  sls-D1 deck-D1 0.2 0.5 0.0002 0.001 0.04 0.08\n}\neffects [member-id:TEXT action-id:TEXT influence:NUM] {\n  deck-D1 G-sup 1\n  deck-D1 G-inf 1\n  deck-D1 Q-traffic 1\n  deck-D1 Q-wind 1\n}\n",
+        "artifactJson": "semio norm.en1990.dsl v1\nannex=de project-id=road-bridge-compliant structure-kind=rail_bridge altitude-m=200 consequence-class=2 reliability-class=rc2 design-working-life-category=5 design-working-life-years=100 reference-period-years=100 supervision-level=DSL2 inspection-level=IL2 beta-computed=3.8\npermanents [id:TEXT kind:TEXT gk:NUM] {\n  G-sup g_sup 120000\n  G-inf g_inf 40000\n}\nvariables [id:TEXT category:TEXT qk:NUM] {\n  Q-traffic rail_traffic 80000\n  Q-wind wind 20000\n}\naccidentals [id:TEXT ad:NUM] {\n}\nseismics [id:TEXT a-ek:NUM importance-class:TEXT] {\n}\nmembers [id:TEXT label-en:TEXT label-de:TEXT rd-str:NUM rd-geo:NUM rd-equ-stab:NUM rd-equ-destab:NUM rd-fat:NUM span:NUM deflection-w:NUM deflection-limit-ratio:NUM vibration-frequency:NUM vibration-frequency-min:NUM] {\n  deck-D1 \"Main deck D1\" \"Hauptfahrbahn D1\" 400000 400000 300000 250000 0 40 0.05 500 4 3\n}\nbridge-sls [id:TEXT member-id:TEXT deck-acceleration:NUM deck-acceleration-limit:NUM deck-twist:NUM deck-twist-limit:NUM bridge-deflection:NUM bridge-deflection-limit:NUM] {\n  sls-D1 deck-D1 0.2 0.5 0.0002 0.001 0.04 0.08\n}\neffects [member-id:TEXT action-id:TEXT influence:NUM] {\n  deck-D1 G-sup 1\n  deck-D1 G-inf 1\n  deck-D1 Q-traffic 1\n  deck-D1 Q-wind 1\n}\n",
         "dialect": {
           "artifactKind": "s.norm.en1990",
           "standard": "1",
@@ -43317,7 +45711,7 @@
           }
         },
         "iconId": "file",
-        "artifactJson": "semio norm.en1990.dsl v1\nannex=de project-id=road-bridge-failing structure-kind=rail_bridge altitude-m=200 consequence-class=2 reliability-class=2 design-working-life-category=5 design-working-life-years=100 reference-period-years=100 supervision-level=DSL2 inspection-level=IL2 k-fi-declared=1 beta-computed=3.8\npermanents [id:TEXT kind:TEXT gk:NUM] {\n  G-sup g_sup 200000\n  G-inf g_inf 40000\n}\nvariables [id:TEXT category:TEXT qk:NUM] {\n  Q-traffic rail_traffic 150000\n  Q-wind wind 30000\n}\naccidentals [id:TEXT ad:NUM] {\n}\nseismics [id:TEXT a-ek:NUM importance-class:TEXT] {\n}\nmembers [id:TEXT label-en:TEXT label-de:TEXT rd-str:NUM rd-geo:NUM rd-equ-stab:NUM rd-equ-destab:NUM rd-fat:NUM span:NUM deflection-w:NUM deflection-limit-ratio:NUM vibration-frequency:NUM vibration-frequency-min:NUM] {\n  deck-D1 \"Main deck D1\" \"Hauptfahrbahn D1\" 200000 200000 180000 150000 0 40 0.12 500 2 3\n}\nbridge-sls [id:TEXT member-id:TEXT deck-acceleration:NUM deck-acceleration-limit:NUM deck-twist:NUM deck-twist-limit:NUM bridge-deflection:NUM bridge-deflection-limit:NUM] {\n  sls-D1 deck-D1 0.8 0.5 0.002 0.001 0.12 0.05\n}\neffects [member-id:TEXT action-id:TEXT influence:NUM] {\n  deck-D1 G-sup 1\n  deck-D1 G-inf 1\n  deck-D1 Q-traffic 1\n  deck-D1 Q-wind 1\n}\n",
+        "artifactJson": "semio norm.en1990.dsl v1\nannex=de project-id=road-bridge-failing structure-kind=rail_bridge altitude-m=200 consequence-class=2 reliability-class=rc2 design-working-life-category=5 design-working-life-years=100 reference-period-years=100 supervision-level=DSL2 inspection-level=IL2 beta-computed=3.8\npermanents [id:TEXT kind:TEXT gk:NUM] {\n  G-sup g_sup 200000\n  G-inf g_inf 40000\n}\nvariables [id:TEXT category:TEXT qk:NUM] {\n  Q-traffic rail_traffic 150000\n  Q-wind wind 30000\n}\naccidentals [id:TEXT ad:NUM] {\n}\nseismics [id:TEXT a-ek:NUM importance-class:TEXT] {\n}\nmembers [id:TEXT label-en:TEXT label-de:TEXT rd-str:NUM rd-geo:NUM rd-equ-stab:NUM rd-equ-destab:NUM rd-fat:NUM span:NUM deflection-w:NUM deflection-limit-ratio:NUM vibration-frequency:NUM vibration-frequency-min:NUM] {\n  deck-D1 \"Main deck D1\" \"Hauptfahrbahn D1\" 200000 200000 180000 150000 0 40 0.12 500 2 3\n}\nbridge-sls [id:TEXT member-id:TEXT deck-acceleration:NUM deck-acceleration-limit:NUM deck-twist:NUM deck-twist-limit:NUM bridge-deflection:NUM bridge-deflection-limit:NUM] {\n  sls-D1 deck-D1 0.8 0.5 0.002 0.001 0.12 0.05\n}\neffects [member-id:TEXT action-id:TEXT influence:NUM] {\n  deck-D1 G-sup 1\n  deck-D1 G-inf 1\n  deck-D1 Q-traffic 1\n  deck-D1 Q-wind 1\n}\n",
         "dialect": {
           "artifactKind": "s.norm.en1990",
           "standard": "1",
@@ -43337,7 +45731,7 @@
           }
         },
         "iconId": "file",
-        "artifactJson": "semio norm.en1990.dsl v1\nannex=de project-id=accidental-seismic-compliant structure-kind=building altitude-m=120 consequence-class=2 reliability-class=2 design-working-life-category=4 design-working-life-years=50 reference-period-years=50 supervision-level=DSL2 inspection-level=IL2 k-fi-declared=1 beta-computed=3.8\npermanents [id:TEXT kind:TEXT gk:NUM] {\n  G-sup g_sup 80000\n  G-inf g_inf 20000\n}\nvariables [id:TEXT category:TEXT qk:NUM] {\n  Q-office office 40000\n  Q-wind wind 20000\n}\naccidentals [id:TEXT ad:NUM] {\n  A-impact 50000\n}\nseismics [id:TEXT a-ek:NUM importance-class:TEXT] {\n  E-1 60000 ii\n}\nmembers [id:TEXT label-en:TEXT label-de:TEXT rd-str:NUM rd-geo:NUM rd-equ-stab:NUM rd-equ-destab:NUM rd-fat:NUM span:NUM deflection-w:NUM deflection-limit-ratio:NUM vibration-frequency:NUM vibration-frequency-min:NUM] {\n  beam-B1 \"Office beam B1\" \"Büroträger B1\" 250000 250000 200000 180000 0 6 0.018 250 5.5 3\n}\nbridge-sls [id:TEXT member-id:TEXT deck-acceleration:NUM deck-acceleration-limit:NUM deck-twist:NUM deck-twist-limit:NUM bridge-deflection:NUM bridge-deflection-limit:NUM] {\n}\neffects [member-id:TEXT action-id:TEXT influence:NUM] {\n  beam-B1 G-sup 1\n  beam-B1 G-inf 1\n  beam-B1 Q-office 1\n  beam-B1 Q-wind 1\n  beam-B1 A-impact 1\n  beam-B1 E-1 1\n}\n",
+        "artifactJson": "semio norm.en1990.dsl v1\nannex=de project-id=accidental-seismic-compliant structure-kind=building altitude-m=120 consequence-class=2 reliability-class=rc2 design-working-life-category=4 design-working-life-years=50 reference-period-years=50 supervision-level=DSL2 inspection-level=IL2 beta-computed=3.8\npermanents [id:TEXT kind:TEXT gk:NUM] {\n  G-sup g_sup 80000\n  G-inf g_inf 20000\n}\nvariables [id:TEXT category:TEXT qk:NUM] {\n  Q-office office 40000\n  Q-wind wind 20000\n}\naccidentals [id:TEXT ad:NUM] {\n  A-impact 50000\n}\nseismics [id:TEXT a-ek:NUM importance-class:TEXT] {\n  E-1 60000 ii\n}\nmembers [id:TEXT label-en:TEXT label-de:TEXT rd-str:NUM rd-geo:NUM rd-equ-stab:NUM rd-equ-destab:NUM rd-fat:NUM span:NUM deflection-w:NUM deflection-limit-ratio:NUM vibration-frequency:NUM vibration-frequency-min:NUM] {\n  beam-B1 \"Office beam B1\" \"Büroträger B1\" 250000 250000 200000 180000 0 6 0.018 250 5.5 3\n}\nbridge-sls [id:TEXT member-id:TEXT deck-acceleration:NUM deck-acceleration-limit:NUM deck-twist:NUM deck-twist-limit:NUM bridge-deflection:NUM bridge-deflection-limit:NUM] {\n}\neffects [member-id:TEXT action-id:TEXT influence:NUM] {\n  beam-B1 G-sup 1\n  beam-B1 G-inf 1\n  beam-B1 Q-office 1\n  beam-B1 Q-wind 1\n  beam-B1 A-impact 1\n  beam-B1 E-1 1\n}\n",
         "dialect": {
           "artifactKind": "s.norm.en1990",
           "standard": "1",
@@ -43357,7 +45751,7 @@
           }
         },
         "iconId": "file",
-        "artifactJson": "semio norm.en1990.dsl v1\nannex=de project-id=accidental-seismic-failing structure-kind=building altitude-m=120 consequence-class=2 reliability-class=2 design-working-life-category=4 design-working-life-years=50 reference-period-years=50 supervision-level=DSL2 inspection-level=IL2 k-fi-declared=1 beta-computed=3.8\npermanents [id:TEXT kind:TEXT gk:NUM] {\n  G-sup g_sup 100000\n  G-inf g_inf 20000\n}\nvariables [id:TEXT category:TEXT qk:NUM] {\n  Q-office office 50000\n  Q-wind wind 25000\n}\naccidentals [id:TEXT ad:NUM] {\n  A-impact 180000\n}\nseismics [id:TEXT a-ek:NUM importance-class:TEXT] {\n  E-1 150000 iii\n}\nmembers [id:TEXT label-en:TEXT label-de:TEXT rd-str:NUM rd-geo:NUM rd-equ-stab:NUM rd-equ-destab:NUM rd-fat:NUM span:NUM deflection-w:NUM deflection-limit-ratio:NUM vibration-frequency:NUM vibration-frequency-min:NUM] {\n  beam-B1 \"Office beam B1\" \"Büroträger B1\" 150000 150000 120000 100000 0 6 0.03 250 4 3\n}\nbridge-sls [id:TEXT member-id:TEXT deck-acceleration:NUM deck-acceleration-limit:NUM deck-twist:NUM deck-twist-limit:NUM bridge-deflection:NUM bridge-deflection-limit:NUM] {\n}\neffects [member-id:TEXT action-id:TEXT influence:NUM] {\n  beam-B1 G-sup 1\n  beam-B1 G-inf 1\n  beam-B1 Q-office 1\n  beam-B1 Q-wind 1\n  beam-B1 A-impact 1\n  beam-B1 E-1 1\n}\n",
+        "artifactJson": "semio norm.en1990.dsl v1\nannex=de project-id=accidental-seismic-failing structure-kind=building altitude-m=120 consequence-class=2 reliability-class=rc2 design-working-life-category=4 design-working-life-years=50 reference-period-years=50 supervision-level=DSL2 inspection-level=IL2 beta-computed=3.8\npermanents [id:TEXT kind:TEXT gk:NUM] {\n  G-sup g_sup 100000\n  G-inf g_inf 20000\n}\nvariables [id:TEXT category:TEXT qk:NUM] {\n  Q-office office 50000\n  Q-wind wind 25000\n}\naccidentals [id:TEXT ad:NUM] {\n  A-impact 180000\n}\nseismics [id:TEXT a-ek:NUM importance-class:TEXT] {\n  E-1 150000 iii\n}\nmembers [id:TEXT label-en:TEXT label-de:TEXT rd-str:NUM rd-geo:NUM rd-equ-stab:NUM rd-equ-destab:NUM rd-fat:NUM span:NUM deflection-w:NUM deflection-limit-ratio:NUM vibration-frequency:NUM vibration-frequency-min:NUM] {\n  beam-B1 \"Office beam B1\" \"Büroträger B1\" 150000 150000 120000 100000 0 6 0.03 250 4 3\n}\nbridge-sls [id:TEXT member-id:TEXT deck-acceleration:NUM deck-acceleration-limit:NUM deck-twist:NUM deck-twist-limit:NUM bridge-deflection:NUM bridge-deflection-limit:NUM] {\n}\neffects [member-id:TEXT action-id:TEXT influence:NUM] {\n  beam-B1 G-sup 1\n  beam-B1 G-inf 1\n  beam-B1 Q-office 1\n  beam-B1 Q-wind 1\n  beam-B1 A-impact 1\n  beam-B1 E-1 1\n}\n",
         "dialect": {
           "artifactKind": "s.norm.en1990",
           "standard": "1",
@@ -43377,7 +45771,7 @@
           }
         },
         "iconId": "file",
-        "artifactJson": "semio norm.en1990.dsl v1\nannex=de project-id=fatigue-compliant structure-kind=building altitude-m=0 consequence-class=2 reliability-class=2 design-working-life-category=4 design-working-life-years=50 reference-period-years=50 supervision-level=DSL2 inspection-level=IL2 k-fi-declared=1 beta-computed=3.8\npermanents [id:TEXT kind:TEXT gk:NUM] {\n  G-sup g_sup 80000\n  G-inf g_inf 20000\n}\nvariables [id:TEXT category:TEXT qk:NUM] {\n  Q-office office 40000\n  Q-wind wind 20000\n}\naccidentals [id:TEXT ad:NUM] {\n}\nseismics [id:TEXT a-ek:NUM importance-class:TEXT] {\n}\nmembers [id:TEXT label-en:TEXT label-de:TEXT rd-str:NUM rd-geo:NUM rd-equ-stab:NUM rd-equ-destab:NUM rd-fat:NUM span:NUM deflection-w:NUM deflection-limit-ratio:NUM vibration-frequency:NUM vibration-frequency-min:NUM] {\n  beam-B1 \"Fatigue beam B1\" \"Ermüdungsträger B1\" 250000 250000 200000 180000 200000 6 0.018 250 5.5 3\n}\nbridge-sls [id:TEXT member-id:TEXT deck-acceleration:NUM deck-acceleration-limit:NUM deck-twist:NUM deck-twist-limit:NUM bridge-deflection:NUM bridge-deflection-limit:NUM] {\n}\neffects [member-id:TEXT action-id:TEXT influence:NUM] {\n  beam-B1 G-sup 1\n  beam-B1 G-inf 1\n  beam-B1 Q-office 1\n  beam-B1 Q-wind 1\n}\n",
+        "artifactJson": "semio norm.en1990.dsl v1\nannex=de project-id=fatigue-compliant structure-kind=building altitude-m=0 consequence-class=2 reliability-class=rc2 design-working-life-category=4 design-working-life-years=50 reference-period-years=50 supervision-level=DSL2 inspection-level=IL2 beta-computed=3.8\npermanents [id:TEXT kind:TEXT gk:NUM] {\n  G-sup g_sup 80000\n  G-inf g_inf 20000\n}\nvariables [id:TEXT category:TEXT qk:NUM] {\n  Q-office office 40000\n  Q-wind wind 20000\n}\naccidentals [id:TEXT ad:NUM] {\n}\nseismics [id:TEXT a-ek:NUM importance-class:TEXT] {\n}\nmembers [id:TEXT label-en:TEXT label-de:TEXT rd-str:NUM rd-geo:NUM rd-equ-stab:NUM rd-equ-destab:NUM rd-fat:NUM span:NUM deflection-w:NUM deflection-limit-ratio:NUM vibration-frequency:NUM vibration-frequency-min:NUM] {\n  beam-B1 \"Fatigue beam B1\" \"Ermüdungsträger B1\" 250000 250000 200000 180000 200000 6 0.018 250 5.5 3\n}\nbridge-sls [id:TEXT member-id:TEXT deck-acceleration:NUM deck-acceleration-limit:NUM deck-twist:NUM deck-twist-limit:NUM bridge-deflection:NUM bridge-deflection-limit:NUM] {\n}\neffects [member-id:TEXT action-id:TEXT influence:NUM] {\n  beam-B1 G-sup 1\n  beam-B1 G-inf 1\n  beam-B1 Q-office 1\n  beam-B1 Q-wind 1\n}\n",
         "dialect": {
           "artifactKind": "s.norm.en1990",
           "standard": "1",
@@ -43397,7 +45791,7 @@
           }
         },
         "iconId": "file",
-        "artifactJson": "semio norm.en1990.dsl v1\nannex=de project-id=fatigue-failing structure-kind=building altitude-m=0 consequence-class=2 reliability-class=2 design-working-life-category=4 design-working-life-years=50 reference-period-years=50 supervision-level=DSL2 inspection-level=IL2 k-fi-declared=1 beta-computed=3.8\npermanents [id:TEXT kind:TEXT gk:NUM] {\n  G-sup g_sup 80000\n  G-inf g_inf 20000\n}\nvariables [id:TEXT category:TEXT qk:NUM] {\n  Q-office office 80000\n  Q-wind wind 20000\n}\naccidentals [id:TEXT ad:NUM] {\n}\nseismics [id:TEXT a-ek:NUM importance-class:TEXT] {\n}\nmembers [id:TEXT label-en:TEXT label-de:TEXT rd-str:NUM rd-geo:NUM rd-equ-stab:NUM rd-equ-destab:NUM rd-fat:NUM span:NUM deflection-w:NUM deflection-limit-ratio:NUM vibration-frequency:NUM vibration-frequency-min:NUM] {\n  beam-B1 \"Fatigue beam B1\" \"Ermüdungsträger B1\" 200000 200000 200000 180000 50000 6 0.018 250 5.5 3\n}\nbridge-sls [id:TEXT member-id:TEXT deck-acceleration:NUM deck-acceleration-limit:NUM deck-twist:NUM deck-twist-limit:NUM bridge-deflection:NUM bridge-deflection-limit:NUM] {\n}\neffects [member-id:TEXT action-id:TEXT influence:NUM] {\n  beam-B1 G-sup 1\n  beam-B1 G-inf 1\n  beam-B1 Q-office 1\n  beam-B1 Q-wind 1\n}\n",
+        "artifactJson": "semio norm.en1990.dsl v1\nannex=de project-id=fatigue-failing structure-kind=building altitude-m=0 consequence-class=2 reliability-class=rc2 design-working-life-category=4 design-working-life-years=50 reference-period-years=50 supervision-level=DSL2 inspection-level=IL2 beta-computed=3.8\npermanents [id:TEXT kind:TEXT gk:NUM] {\n  G-sup g_sup 80000\n  G-inf g_inf 20000\n}\nvariables [id:TEXT category:TEXT qk:NUM] {\n  Q-office office 80000\n  Q-wind wind 20000\n}\naccidentals [id:TEXT ad:NUM] {\n}\nseismics [id:TEXT a-ek:NUM importance-class:TEXT] {\n}\nmembers [id:TEXT label-en:TEXT label-de:TEXT rd-str:NUM rd-geo:NUM rd-equ-stab:NUM rd-equ-destab:NUM rd-fat:NUM span:NUM deflection-w:NUM deflection-limit-ratio:NUM vibration-frequency:NUM vibration-frequency-min:NUM] {\n  beam-B1 \"Fatigue beam B1\" \"Ermüdungsträger B1\" 200000 200000 200000 180000 50000 6 0.018 250 5.5 3\n}\nbridge-sls [id:TEXT member-id:TEXT deck-acceleration:NUM deck-acceleration-limit:NUM deck-twist:NUM deck-twist-limit:NUM bridge-deflection:NUM bridge-deflection-limit:NUM] {\n}\neffects [member-id:TEXT action-id:TEXT influence:NUM] {\n  beam-B1 G-sup 1\n  beam-B1 G-inf 1\n  beam-B1 Q-office 1\n  beam-B1 Q-wind 1\n}\n",
         "dialect": {
           "artifactKind": "s.norm.en1990",
           "standard": "1",
@@ -43689,11 +46083,11 @@
         "label": {
           "native": {
             "en": "Non-Compliant Multi-Fail Timber",
-            "de": "Nicht nachweisbarer Mehrfachversagen-Holzbau"
+            "de": "Nicht nachweisbarer Holzbau mit Mehrfachversagen"
           },
           "reuse": {
             "en": "Non-Compliant Multi-Fail Timber",
-            "de": "Nicht nachweisbarer Mehrfachversagen-Holzbau"
+            "de": "Nicht nachweisbarer Holzbau mit Mehrfachversagen"
           }
         },
         "iconId": "file",

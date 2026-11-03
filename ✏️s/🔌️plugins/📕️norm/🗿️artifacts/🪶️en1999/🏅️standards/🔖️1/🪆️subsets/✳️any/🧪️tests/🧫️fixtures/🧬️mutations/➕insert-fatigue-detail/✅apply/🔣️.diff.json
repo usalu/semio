@@ -1,0 +1,38 @@
+{
+  "annex": null,
+  "reliabilityClass": "RC2",
+  "materials": null,
+  "sections": null,
+  "members": null,
+  "connections": null,
+  "fireScenarios": null,
+  "fatigueDetails": {
+    "removed": [],
+    "inserted": [
+      {
+        "index": 1,
+        "row": {
+          "id": "fat-1-2",
+          "memberId": "purlin-1",
+          "detailCategory": "71",
+          "deltaSigmaC": 71000000.0,
+          "deltaSigmaEd": 35000000.0,
+          "nCycles": 6000000.0,
+          "m1": 4.3,
+          "m2": 6.3
+        }
+      }
+    ],
+    "moved": [],
+    "modified": []
+  },
+  "coldFormed": null,
+  "shells": null,
+  "placements": null,
+  "weldRuns": null,
+  "outlineVertices": null,
+  "fatigueCategories": null,
+  "patchLoads": null,
+  "ringStiffeners": null,
+  "transverseStiffeners": null
+}

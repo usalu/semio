@@ -1,0 +1,6 @@
+{
+  "ChangeJointBaseLeverRight": {
+    "id": "joint-j1",
+    "newBaseLeverRight": 1.5
+  }
+}

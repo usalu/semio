@@ -1,0 +1,5 @@
+{
+  "mutation": "changeBuildingTiedownNm",
+  "id": "bldg-office",
+  "newTieDownMomentNm": 1.5
+}

@@ -1,0 +1,22 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-s-artifact-norm-en1993-clauses"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "EN 1993 clause functions; tabulated values are read from the shared NDP registry"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-s-artifact-norm-en1993-clauses-special = { workspace = true }
+semio-s-artifact-norm-en1993-clauses-core = { workspace = true }
+semio-s-artifact-norm-en1993-model = { workspace = true }
+semio-s-plugin-norm-compliance = { workspace = true }

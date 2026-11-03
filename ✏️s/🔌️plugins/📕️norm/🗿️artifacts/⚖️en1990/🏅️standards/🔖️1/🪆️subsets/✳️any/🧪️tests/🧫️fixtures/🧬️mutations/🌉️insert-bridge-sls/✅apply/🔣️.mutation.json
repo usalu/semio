@@ -1,0 +1,22 @@
+{
+  "mutation": "insertBridgeSls",
+  "index": 1,
+  "item": {
+    "id": "bri-1-new",
+    "memberId": "beam-B1",
+    "deckAcceleration": 1.0,
+    "deckAccelerationLimit": 1.0,
+    "deckTwist": 1.0,
+    "deckTwistLimit": 1.0,
+    "bridgeDeflection": 1.0,
+    "bridgeDeflectionLimit": 1.0,
+    "trackGauge": 0.0,
+    "lineSpeed": 0.0,
+    "ballastDepth": 0.0,
+    "deckMass": 0.0,
+    "naturalFrequency": 0.0,
+    "endRotation": 0.0,
+    "basicWindSpeed": 0.0,
+    "dampingRatio": 0.0
+  }
+}

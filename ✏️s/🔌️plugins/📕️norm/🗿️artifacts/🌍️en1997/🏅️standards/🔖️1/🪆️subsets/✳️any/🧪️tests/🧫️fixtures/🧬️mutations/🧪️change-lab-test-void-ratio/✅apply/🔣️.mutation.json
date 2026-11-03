@@ -1,0 +1,5 @@
+{
+  "mutation": "changeLabTestVoidRatio",
+  "id": "lab-T1",
+  "newVoidRatio": 1.3
+}

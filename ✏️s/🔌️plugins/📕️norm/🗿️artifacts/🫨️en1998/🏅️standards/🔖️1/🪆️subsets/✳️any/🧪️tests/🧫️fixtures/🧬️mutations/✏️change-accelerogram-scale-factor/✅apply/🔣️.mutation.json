@@ -1,0 +1,5 @@
+{
+  "mutation": "changeAccelerogramScaleFactor",
+  "id": "acc-1",
+  "newScaleFactor": 2.0
+}

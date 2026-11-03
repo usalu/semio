@@ -1,0 +1,7 @@
+{
+  "ChangeBarLayerAnchorageLength": {
+    "memberId": "wall-W1",
+    "layerId": "vert",
+    "newAnchorageLength": 1.4
+  }
+}

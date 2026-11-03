@@ -11,7 +11,7 @@ use semio_s_artifact_norm_en1990_model::En1990Snapshot;
 /// 🏢️ The high-consequence-office example fixture, handcrafted in `en1990`'s DSL
 /// (`pack::snapshot::ArtifactDsl`): a CC3 (high-consequence) office building basis-of-design check with
 /// three variable-action entries under the EN annex and the seismic accidental action disabled —
-/// distinct from `En1990Snapshot::default()`'s CC2/DE-annex/seismic-enabled values so the grammar's
+/// distinct from `En1990Snapshot::example(AnnexChoice::De)`'s CC2/DE-annex/seismic-enabled values so the grammar's
 /// non-default branches (consequence class, annex, `q_k` table cardinality) are exercised too.
 pub const EN1990_HIGH_CONSEQUENCE_OFFICE_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🏢️high-consequence-office/🏢️high-consequence-office/🗣️.dsl.semio");
 
@@ -74,5 +74,3 @@ use framework_schema::ArtifactSchema;
 
 }
 #[cfg(test)] pub use crate::snapshot::snapshot_wire_codec::*;
-
-semio_s_plugin_norm_compliance::impl_norm_artifact_record!(@text En1990Snapshot, extension="en1990", envelope_id="norm.en1990");

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeEffectInfluence",
+  "index": 0,
+  "newInfluence": 2.0
+}

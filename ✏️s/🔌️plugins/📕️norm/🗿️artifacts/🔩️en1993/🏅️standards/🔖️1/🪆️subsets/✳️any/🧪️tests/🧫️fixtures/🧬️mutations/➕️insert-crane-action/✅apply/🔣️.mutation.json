@@ -1,0 +1,11 @@
+{
+  "InsertCraneAction": {
+    "id": "crane-1",
+    "index": 2,
+    "element": {
+      "id": "cr-g-2",
+      "loadCaseId": "g-permanent",
+      "force": 20000.0
+    }
+  }
+}

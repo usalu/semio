@@ -1,0 +1,5 @@
+type ChangeActionPointForce {
+  memberId: String!
+  actionId: String!
+  newPointForce: Float!
+}

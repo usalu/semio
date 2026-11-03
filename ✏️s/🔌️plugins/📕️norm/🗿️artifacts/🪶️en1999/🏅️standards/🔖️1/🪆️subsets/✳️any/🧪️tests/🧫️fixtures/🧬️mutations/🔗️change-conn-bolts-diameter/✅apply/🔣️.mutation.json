@@ -1,0 +1,5 @@
+{
+  "mutation": "changeConnBoltsDiameter",
+  "connectionId": "support-weld",
+  "newBoltsDiameter": 0.024
+}

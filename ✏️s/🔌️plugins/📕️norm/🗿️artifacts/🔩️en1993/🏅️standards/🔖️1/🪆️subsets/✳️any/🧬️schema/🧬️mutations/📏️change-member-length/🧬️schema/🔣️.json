@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-member-length/schema.json",
+  "title": "ChangeMemberLength",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newLength"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Member",
+          "de": "Bauteil"
+        },
+        "description": {
+          "en": "The member this mutation addresses, by id.",
+          "de": "Das adressierte Element (Bauteil), per Kennung."
+        },
+        "ref": {
+          "kind": "member"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newLength": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "System length L",
+          "de": "Systemlänge L"
+        },
+        "widget": "stepper",
+        "unit": "m",
+        "precision": 2,
+        "step": 0.05,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

@@ -44,7 +44,7 @@ impl<T:NativeDefaultValue> NativeDefaultCursor<T> for NativeDefaultValueCursor<T
 }
 impl<T:NativeDefaultValue> Drop for NativeDefaultValueCursor<T>{fn drop(&mut self){let empty=self.terminal_is_empty();assert!(std::thread::panicking()||empty,"native default leaf requires funded closure");if empty{unsafe{ManuallyDrop::drop(&mut self.output);}}}}
 macro_rules! empty_default{($copy:expr;$($ty:ty=>$value:expr),*$(,)?)=>{$(impl NativeDefaultValue for $ty{fn default_demand()->RetirementDemand{fixed($copy)}fn admit_default(output:&mut Option<Self>,g:RetainedCloneGrant)->RetainedWorkOutcome{if output.is_some(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}let d=Self::default_demand();if !retained_clone_grant_admits(g,d){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}*output=Some($value);RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(receipt(d))),work:1}}}impl NativeDefault for $ty{type Cursor=NativeDefaultValueCursor<Self>;fn default_cursor()->Self::Cursor{NativeDefaultValueCursor::new()}})*};}
-empty_default!(std::mem::size_of::<Self>();()=>(),bool=>false,u8=>0,u16=>0,u32=>0,u64=>0,usize=>0,i8=>0,i16=>0,i32=>0,i64=>0,isize=>0,f32=>0.0,f64=>0.0);
+empty_default!(size_of::<Self>();()=>(),bool=>false,u8=>0,u16=>0,u32=>0,u64=>0,usize=>0,i8=>0,i16=>0,i32=>0,i64=>0,isize=>0,f32=>0.0,f64=>0.0);
 empty_default!(0;String=>String::new());
 macro_rules! generic_empty_default{(($($generic:tt)*),$ty:ty,$value:expr)=>{impl<$($generic)*> NativeDefaultValue for $ty{fn default_demand()->RetirementDemand{fixed(0)}fn admit_default(output:&mut Option<Self>,g:RetainedCloneGrant)->RetainedWorkOutcome{if output.is_some(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}let d=Self::default_demand();if !retained_clone_grant_admits(g,d){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}*output=Some($value);RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(receipt(d))),work:1}}}impl<$($generic)*> NativeDefault for $ty{type Cursor=NativeDefaultValueCursor<Self>;fn default_cursor()->Self::Cursor{NativeDefaultValueCursor::new()}}};}
 generic_empty_default!((T:RetireOwned),Vec<T>,Vec::new());
@@ -55,15 +55,15 @@ generic_empty_default!((T:RetireOwned,const N:usize),semio_framework_value_paged
 #[path="👯️pair/🦀️.rs"]mod pairs;pub use pairs::NativePairDefaultCursor;
 
 impl<V:RetireOwned+Sync> NativeDefaultValue for OrderedMap<V>{
- fn default_demand()->crate::RetirementDemand{fixed(0)}
- fn admit_default(output:&mut Option<Self>,g:crate::RetainedCloneGrant)->crate::RetainedWorkOutcome{if output.is_some(){return crate::RetainedWorkOutcome{result:Ok(crate::RetainedCloneStep::Complete(Default::default())),work:0}}let d=<Self as NativeDefaultValue>::default_demand();if !retained_clone_grant_admits(g,d){return crate::RetainedWorkOutcome{result:Ok(crate::RetainedCloneStep::Progress(Default::default())),work:0}}*output=Some(Self::new());crate::RetainedWorkOutcome{result:Ok(crate::RetainedCloneStep::Complete(receipt(d))),work:1}}
+ fn default_demand()->RetirementDemand{fixed(0)}
+ fn admit_default(output:&mut Option<Self>,g:RetainedCloneGrant)->RetainedWorkOutcome{if output.is_some(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}let d=<Self as NativeDefaultValue>::default_demand();if !retained_clone_grant_admits(g,d){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}*output=Some(Self::new());RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(receipt(d))),work:1}}
 }
 impl<V:RetireOwned+Sync> NativeDefault for OrderedMap<V>{type Cursor=NativeDefaultValueCursor<Self>;fn default_cursor()->Self::Cursor{NativeDefaultValueCursor::new()}}
 
 
 impl NativeDefaultValue for OrderedSet{
- fn default_demand()->crate::RetirementDemand{fixed(0)}
- fn admit_default(output:&mut Option<Self>,g:crate::RetainedCloneGrant)->crate::RetainedWorkOutcome{if output.is_some(){return crate::RetainedWorkOutcome{result:Ok(crate::RetainedCloneStep::Complete(Default::default())),work:0}}let d=<Self as NativeDefaultValue>::default_demand();if !retained_clone_grant_admits(g,d){return crate::RetainedWorkOutcome{result:Ok(crate::RetainedCloneStep::Progress(Default::default())),work:0}}*output=Some(Self::new());crate::RetainedWorkOutcome{result:Ok(crate::RetainedCloneStep::Complete(receipt(d))),work:1}}
+ fn default_demand()->RetirementDemand{fixed(0)}
+ fn admit_default(output:&mut Option<Self>,g:RetainedCloneGrant)->RetainedWorkOutcome{if output.is_some(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}let d=<Self as NativeDefaultValue>::default_demand();if !retained_clone_grant_admits(g,d){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}*output=Some(Self::new());RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(receipt(d))),work:1}}
 }
 impl NativeDefault for OrderedSet{type Cursor=NativeDefaultValueCursor<Self>;fn default_cursor()->Self::Cursor{NativeDefaultValueCursor::new()}}
 

@@ -11,20 +11,6 @@ extern crate semio_framework_value_derive as value_derive;
 //#region 🪢️Mounts
 #[path = "../🌍️change-annex/🦀️.rs"]
 pub mod change_annex;
-#[path = "../❄️change-cold-formed/🦀️.rs"]
-pub mod change_cold_formed;
-#[path = "../🔗change-connections/🦀️.rs"]
-pub mod change_connections;
-#[path = "../🔄️change-fatigue-details/🦀️.rs"]
-pub mod change_fatigue_details;
-#[path = "../🔥️change-fire-scenarios/🦀️.rs"]
-pub mod change_fire_scenarios;
-#[path = "../🧱change-materials/🦀️.rs"]
-pub mod change_materials;
-#[path = "../🏗️change-members/🦀️.rs"]
-pub mod change_members;
-#[path = "../📐️change-sections/🦀️.rs"]
-pub mod change_sections;
-#[path = "../🫙change-shells/🦀️.rs"]
-pub mod change_shells;
+#[path = "../🎯change-reliability-class/🦀️.rs"]
+pub mod change_reliability_class;
 //#endregion 🪢️Mounts

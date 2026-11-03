@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-pier-modulus-mpa/schema.json",
+  "title": "ChangePierModulusMpa",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newModulusMpa"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changePierModulusMpa"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Pier",
+          "de": "Pfeiler"
+        },
+        "description": {
+          "en": "The pier this mutation addresses, by id.",
+          "de": "Das adressierte Element (Pfeiler), per Kennung."
+        },
+        "ref": {
+          "kind": "pier"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newModulusMpa": {
+      "type": "number",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Effective elastic modulus of the pier (cracked section included)",
+          "de": "Wirksamer Elastizitätsmodul des Pfeilers (gerissener Querschnitt eingeschlossen)"
+        },
+        "group": "value",
+        "order": 20,
+        "widget": "stepper",
+        "step": 0.001,
+        "precision": 3
+      }
+    }
+  }
+}

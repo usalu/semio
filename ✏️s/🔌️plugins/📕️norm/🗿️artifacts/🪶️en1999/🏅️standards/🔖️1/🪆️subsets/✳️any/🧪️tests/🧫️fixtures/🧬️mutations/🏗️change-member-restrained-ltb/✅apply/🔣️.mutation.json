@@ -1,0 +1,5 @@
+{
+  "mutation": "changeMemberRestrainedLtb",
+  "memberId": "purlin-1",
+  "newRestrainedLtb": true
+}

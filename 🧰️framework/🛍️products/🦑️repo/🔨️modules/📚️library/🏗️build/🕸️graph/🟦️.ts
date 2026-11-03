@@ -20,6 +20,7 @@ import{requireCurrentSourceInventoryV1,captureSourceInputInventoryV1,captureCarg
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {withRepositoryBuildGraphConsumerV1,withRepositoryBuildGraphFactStoreV1,withRepositoryBuildGraphSelectionV1} from "../📥️inputs/💾️storage/🟨️.mjs";
 import {buildGraphPublicationWriterResourceV1} from "../📥️inputs/💾️storage/🔒️writer/🟨️.mjs";
+import {reconcileBuildOwnerRegistry} from "./🧾️registry-consistency/🟦️.ts";
 import {readBuildOwnerRegistryV1,readBuildGraphSelectionV1,closeBuildOwnerAdmissionV1,buildGraphScopeKeyV1,type BuildGraphSelectionV1,type BuildOwnerRegistryV1,type BuildOwnerAdmissionV1} from "./🚪️admission/🟦️.ts";
 import{selectLiteralBuildProjectsV1}from"../🧭️selection/📥️options/🟦️.ts";
 import { readdir, readFile, open, mkdir, writeFile, rename, lstat, rm } from "node:fs/promises";
@@ -43,7 +44,9 @@ import{createSliceCustodyV1,renderCustodyMessageV1,type SliceClaimV1,type SliceC
 import{totalmem}from"node:os";
 import{markBuildCapacityPhaseV1,upgradeBuildCapacityBeforeRebuildV1}from"../🌡️host-capacity/🚏️marks/🟦️.ts";
 import{loadGenerationGraphV1,renderGenerationMessageV1,survivingStubsV1,withholdDanglingTestProjectsV1}from"./🕰️generations/🔌️load/🟨️.mjs";
-import{deriveEnvironmentV1,environmentRowHoldsV1}from"./🕰️generations/🌍️environment/🟨️.mjs";
+import{deriveEnvironmentV1,environmentDigestV1,environmentPartsV1,environmentRowHoldsV1}from"./🕰️generations/🌍️environment/🟨️.mjs";
+import{createEdgeReadsRecorderV1,diffEnvironmentV1,edgeConsumersV1}from"./🕰️generations/🧵️edge-reads/🟨️.mjs";
+import type{EnvironmentPartsV1,EnvironmentStoredPartsV1}from"./🕰️generations/🧵️edge-reads/🟨️.mjs";
 import{GRAPH_MEMORY_POLICY_V1,graphStringInternerV1,createMemoryPortsV1}from"../🧠️memory/🟨️.mjs";
 import{residentGraphSeamsV1}from"../🏡️resident/🕰️graph-hooks/🔌️host/🟨️.mjs";
 import{createGenerationFilesV1}from"./🗂️generation-files/🟦️.ts";
@@ -379,6 +382,15 @@ export function buildGraphGenerationIdentityV1(registry:BuildOwnerRegistryV1):st
   return createHash("sha256").update(JSON.stringify([generationSchemaV1.definitions.Identity.const,registry.catalogProviders.map(({ownerRoot,sourcePath})=>[ownerRoot,sourcePath])])).digest("hex");
 }
 
+/** 🕓️ Whether a changed workspace file is a crate manifest that has no build project owner yet: a `Cargo.toml` that is no owner manifest, owner root or native root of the registry and declares no workspace. Such a crate is pending: it neither makes the workspace stale nor enters the graph until its owner row exists (a removed manifest is never pending, the environment rows of a removed workspace manifest stale it on their own). */
+export async function pendingCrateManifestV1(registry:BuildOwnerRegistryV1,path:string,read:(path:string)=>Promise<string|undefined>):Promise<boolean>{
+  if(path.slice(path.lastIndexOf("/")+1)!=="Cargo.toml")return false;
+  const directory=path.includes("/")?path.slice(0,path.lastIndexOf("/")):".";
+  if(registry.owners.some(owner=>owner.manifest===path||owner.root===directory||owner.nativeRoots?.includes(directory)))return false;
+  const text=await read(path);
+  return text!==undefined&&!text.includes("[workspace");
+}
+
 /** 🕰️ Binds the repository to the graph generation load: shared reader custody, the builder custody, the bounded facts lease, fact checks that understand environment rows, the membership frontier and the partial inference. */
 export function generationHostV1(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,registry:BuildOwnerRegistryV1,compact=false){
   const registryDigest=createHash("sha256").update(JSON.stringify(registry)).digest("hex"),state={files:[] as string[],stable:new Set<string>(),carry:false},leaseDirectory=join(root,".cache/b/l/m/data");
@@ -404,12 +416,13 @@ export function generationHostV1(root:string,invocation:ScriptInvocation,phaseCo
   const membershipByStat=async(previous:{manifest:{membership:string};frontier:any}|undefined,signal?:AbortSignal)=>{
     if(previous&&await frontierHoldsV1(previous.frontier,statEntry,{signal})){state.files=previous.frontier.members.map((row:[string,number])=>row[0]);return {digest:previous.manifest.membership,frontier:previous.frontier,changes:[]};}
     const config=(path:string)=>["📋️project.json","Cargo.toml"].includes(path.slice(path.lastIndexOf("/")+1));
+    const classified=async(changes:ReturnType<typeof diffFrontiersV1>)=>Promise.all(changes.map(async change=>({...change,...(!change.directory&&config(change.path)?{config:true}:{}),...(!change.directory&&await pendingCrateManifestV1(registry,change.path,read)?{pending:true}:{})})));
     if(previous?.frontier){
       const capturedAt=Date.now(),descends=buildWalkDescendsV1(),advanced=await advanceFrontierV1({frontier:previous.frontier,stat:statEntry,list:listEntry,descend:(name,path,parent)=>descends(name,path,parent==="."?"":parent),member:graphMemberPredicateV1(),signal});
       if(advanced&&!("unchanged"in advanced)){
         const frontier=createFrontierV1({directories:advanced.directories,members:advanced.members,capturedAt}),digest=createHash("sha256").update(canonicalGenerationJsonV1(frontier.members)).digest("hex");
         state.files=frontier.members.map((row:[string,number])=>row[0]);
-        return {digest,frontier,changes:diffFrontiersV1(previous.frontier,frontier).map(change=>({...change,...(!change.directory&&config(change.path)?{config:true}:{})}))};
+        return {digest,frontier,changes:await classified(diffFrontiersV1(previous.frontier,frontier))};
       }
     }
     const capturedAt=Date.now(),all=await workspaceBuildFilesV1(root,invocation),members=buildGraphMembersV1(all),directoryPaths=inventoryDirectoriesV1.get(all)??[];
@@ -421,7 +434,7 @@ export function generationHostV1(root:string,invocation:ScriptInvocation,phaseCo
     const directories=await stamp(directoryPaths,(path,status)=>[path,status.mtimeMs,status.ino] as [string,number,number]),stamped=await stamp(members,(path,status)=>[path,status.mode] as [string,number]);
     const frontier=createFrontierV1({directories,members:stamped,capturedAt}),digest=createHash("sha256").update(canonicalGenerationJsonV1(frontier.members)).digest("hex");
     state.files=members;
-    return {digest,frontier,changes:previous?diffFrontiersV1(previous.frontier,frontier).map(change=>({...change,...(!change.directory&&config(change.path)?{config:true}:{})})):[]};
+    return {digest,frontier,changes:previous?await classified(diffFrontiersV1(previous.frontier,frontier)):[]};
   };
   const seams=residentGraphSeamsV1({root,membership:membershipByStat,holds:holdsByStat,adopt:(files:string[])=>{state.files=files;}}),holds=seams.holds;
   const membership=async(previous:Parameters<typeof seams.membership>[0],signal?:AbortSignal)=>{
@@ -450,7 +463,7 @@ export function generationHostV1(root:string,invocation:ScriptInvocation,phaseCo
     },
     storeOptions:(store:RepositoryCacheStoreV1,control:ResourceLeaseControl)=>({root:join(store.root,"generations"),fs:generationFilesV1(store),lease:lease(control),holds,derive:deriveAgain,resources:{facts:"repository-graph-facts:"+resolve(root)}}),
     membership,
-    discoverPart:(spec:{cold:boolean;owners:string[];discover:string[];removed:string[];changed?:string[];previousEnv:string|null;stubs:Record<string,BuildGraphPartStubV1>},signal:AbortSignal|undefined,control:ResourceLeaseControl)=>{signal?.throwIfAborted();requireCurrentFormatStampsV1(graphFormatStampsV1,"graph generation");return discoverBuildGraphPartV1(root,registry,invocation,control,state.files,{cold:spec.cold,changed:spec.changed,roots:new Set([...spec.owners.map(name=>spec.stubs[name]!.root),...spec.discover.map(path=>dirname(path))]),stubs:survivingStubsV1(spec.stubs,spec.removed),previousEnv:spec.previousEnv});},
+    discoverPart:(spec:{cold:boolean;owners:string[];discover:string[];removed:string[];changed?:string[];previousEnv:string|null;previousParts?:EnvironmentStoredPartsV1;stubs:Record<string,BuildGraphPartStubV1>},signal:AbortSignal|undefined,control:ResourceLeaseControl)=>{signal?.throwIfAborted();requireCurrentFormatStampsV1(graphFormatStampsV1,"graph generation");return discoverBuildGraphPartV1(root,registry,invocation,control,state.files,{cold:spec.cold,changed:spec.changed,roots:new Set([...spec.owners.map(name=>spec.stubs[name]!.root),...spec.discover.map(path=>dirname(path))]),stubs:survivingStubsV1(spec.stubs,spec.removed),previousEnv:spec.previousEnv,previousParts:spec.previousParts,previousOwners:previousEnvironmentOwnersV1(spec.stubs)});},
     expand:async(projects:Record<string,unknown>,control:ResourceLeaseControl)=>compact?projects:(await portableInputs(root,projects,invocation,control)) as Record<string,unknown>,
     expansionLimits:{maximumProjects:32,maximumBytes:Math.floor(graphDeclarationV1("../👁️observation/📥️reuse/🧬️schema/🔣️.json").definitions.Policy.const.maximumTextBytes/4)},
     readLean:(value:unknown)=>readBuildGraphLeanV1(value),
@@ -565,19 +578,33 @@ async function builderIdleV1(input:{root:string;invocation:ScriptInvocation;phas
   }catch(error){if(invocation.control.signal.aborted)throw error;return false;}
 }
 
-/** 🧵️ The owners of the previous generation that keep their fragment and only get their edges again when the environment moved: every owner of a real project root that is not inferred again. A withheld owner has no edges, but its fragment names the environment it was published for, so it is refreshed like the others; tagged owners are rediscovered as a group when the environment moves. */
-export function edgeRefreshOwnersV1(input:{cold:boolean;environment:string;previousEnvironment:string|null;roots:ReadonlySet<string>;stubs:Readonly<Record<string,{root:string;kind:string;tag?:string}>>;inferred:ReadonlySet<string>}):{projects:string[];withheld:string[]} {
-  if(input.cold||input.environment===input.previousEnvironment)return{projects:[],withheld:[]};
-  const kept=Object.entries(input.stubs).filter(([name,stub])=>!stub.tag&&!input.inferred.has(name)&&!input.roots.has(stub.root));
-  return{projects:kept.filter(([,stub])=>stub.kind==="project").map(([name])=>name),withheld:kept.filter(([,stub])=>stub.kind==="unavailable").map(([name])=>name)};
+/** 🧵️ The owners of the previous generation that keep their fragment and only get their edges again when the environment moved: every owner of a real project root that is not inferred again, except the `consumers` when they are known (the owners whose recorded lookups an edit of the environment touches, see `edgeConsumersOfPartV1`): the others keep their edges, are `carried` and only name the new environment. A withheld owner has no edges, but its fragment names the environment it was published for, so it is refreshed like the others; tagged owners are rediscovered as a group when the environment moves. */
+export function edgeRefreshOwnersV1(input:{cold:boolean;environment:string;previousEnvironment:string|null;roots:ReadonlySet<string>;stubs:Readonly<Record<string,{root:string;kind:string;tag?:string}>>;inferred:ReadonlySet<string>;consumers?:ReadonlySet<string>}):{projects:string[];withheld:string[];carried:string[]} {
+  if(input.cold||input.environment===input.previousEnvironment)return{projects:[],withheld:[],carried:[]};
+  const kept=Object.entries(input.stubs).filter(([name,stub])=>!stub.tag&&!input.inferred.has(name)&&!input.roots.has(stub.root)),projects=kept.filter(([,stub])=>stub.kind==="project"),carried=(name:string)=>input.consumers!==undefined&&!input.consumers.has(name);
+  return{projects:projects.filter(([name])=>!carried(name)).map(([name])=>name),withheld:kept.filter(([,stub])=>stub.kind==="unavailable").map(([name])=>name),carried:projects.filter(([name])=>carried(name)).map(([name])=>name)};
+}
+
+/** 🏛️ The owner table the environment of a generation was made of, read back from its stubs: the owners that are no test or policy owner and not withheld, as `[name, root, native root or null]`. */
+export function previousEnvironmentOwnersV1(stubs:Readonly<Record<string,{root:string;kind:string;nativeRoot?:string;tag?:string}>>):[string,string,string|null][] {
+  return Object.entries(stubs).filter(([,stub])=>!stub.tag&&stub.kind==="project").map(([name,stub])=>[name,stub.root,stub.nativeRoot??null]);
+}
+
+/** 🎯️ The owners that may not keep their edges when the environment moved from the previous generation to `parts`: what the stored parts and the stubs say the previous environment was is checked against its digest (a mismatch, or no stored parts, answers undefined: nothing is known and every kept owner is refreshed), the two environments are diffed and each kept owner's recorded lookups (`reads` of its stub) are matched against the diff. */
+export function edgeConsumersOfPartV1(input:{previousEnvironment:string|null;previousParts?:EnvironmentStoredPartsV1;previousOwners:readonly (readonly [string,string,string|null])[];parts:EnvironmentPartsV1;stubs:Readonly<Record<string,BuildGraphPartStubV1>>;inferred:ReadonlySet<string>;roots:ReadonlySet<string>}):ReadonlySet<string>|undefined {
+  if(input.previousParts===undefined)return undefined;
+  const previous=environmentPartsV1({owners:input.previousOwners,...input.previousParts});
+  if(environmentDigestV1(previous)!==input.previousEnvironment)return undefined;
+  const rows=new Map(Object.entries(input.stubs).filter(([name,stub])=>!stub.tag&&stub.kind==="project"&&!input.inferred.has(name)&&!input.roots.has(stub.root)).map(([name,stub])=>[name,{root:stub.root,...(stub.nativeRoot?{nativeRoot:stub.nativeRoot}:{}),...(stub.reads?{reads:stub.reads}:{})}])),table=(owners:readonly (readonly [string,string,string|null])[])=>new Map(owners.map(row=>[row[0],[row[1],row[2]] as readonly (string|null)[]]));
+  return edgeConsumersV1({diff:diffEnvironmentV1(previous,input.parts),rows,tables:[table(previous.owners),table(input.parts.owners)]});
 }
 
 /** 🔗️ Infers only the projects whose roots are in `part.roots` (all of them when cold) plus the test and policy contributions, recomputes the edges of every other owner when the environment moved, and returns the pieces owner by owner. Everything an owner consumed is recorded in its own project record or in the capture around this call, so a later edit finds exactly its consumers. */
-export async function discoverBuildGraphPartV1(root:string,registry:BuildOwnerRegistryV1,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,files:readonly string[],part:{cold:boolean;roots:ReadonlySet<string>;stubs:Record<string,BuildGraphPartStubV1>;previousEnv:string|null;changed?:readonly string[]}):Promise<BuildGraphPartV1> {
+export async function discoverBuildGraphPartV1(root:string,registry:BuildOwnerRegistryV1,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,files:readonly string[],part:{cold:boolean;roots:ReadonlySet<string>;stubs:Record<string,BuildGraphPartStubV1>;previousEnv:string|null;previousParts?:EnvironmentStoredPartsV1;previousOwners?:readonly (readonly [string,string,string|null])[];changed?:readonly string[]}):Promise<BuildGraphPartV1> {
   requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);registry=readBuildOwnerRegistryV1(registry);
   requireBuildOwnerRegistryAuthorityV1(registry,JSON.parse(pinnedAuthorityReadV1(join(root,"📋️build-owners.json"),()=>observationV1.observedFs.readFileSync(join(root,"📋️build-owners.json"),"utf8"))));
   const [owner,tests,policies]=await Promise.all([import("./📥️inference/🟨️.mjs"),import("../../../🧪️test/📦️packages/🟦️typescript/🟨️.mjs"),import("./📥️inference/🛡️policy/🟨️.mjs")]);checkResourceLeaseControl(phaseControl);requireCurrentGraphModuleV1();
-  const nodeRows:Record<string,BuildGraphRowV1[]>={},derivedFacts=new Map<string,{readonly row:BuildGraphRowV1;readonly support:readonly BuildGraphRowV1[]}>(),context={workspaceRoot:root,invocation,phaseControl,registry,setupShare:setupShareV1(invocation)},stubs=Object.entries(part.stubs),realRoots=new Set(stubs.filter(([,stub])=>!stub.tag).map(([,stub])=>stub.root));
+  const edgeReads=createEdgeReadsRecorderV1(),nodeRows:Record<string,BuildGraphRowV1[]>={},derivedFacts=new Map<string,{readonly row:BuildGraphRowV1;readonly support:readonly BuildGraphRowV1[]}>(),context={workspaceRoot:root,invocation,phaseControl,registry,setupShare:setupShareV1(invocation)},stubs=Object.entries(part.stubs),realRoots=new Set(stubs.filter(([,stub])=>!stub.tag).map(([,stub])=>stub.root));
   const read=async(path:string)=>{try{return await readFile(join(root,path),"utf8");}catch(error){if(["ENOENT","ENOTDIR"].includes((error as NodeJS.ErrnoException).code??""))return undefined;throw error;}},stat=async(path:string)=>{try{const status=await lstat(join(root,path));return status.isFile()?{size:status.size,mtimeMs:status.mtimeMs}:undefined;}catch(error){if(["ENOENT","ENOTDIR"].includes((error as NodeJS.ErrnoException).code??""))return undefined;throw error;}};
   const captured=await observationV1.captureObservedSourceInputsV1(async()=>{
     const options={analyzeLockfile:true,catalogProviders:registry.catalogProviders.map(({ownerRoot,sourcePath})=>({ownerRoot,sourcePath})),snapshot:true,...(part.cold?{}:{ownerRoots:part.roots}),onOwnerObservations:(name:string,rows:BuildGraphRowV1[],derived?:{readonly row:BuildGraphRowV1;readonly support:readonly BuildGraphRowV1[]}[])=>{nodeRows[name]=rows;for(const fact of derived??[])derivedFacts.set(fact.row.path+"\0"+fact.row.fact,fact);}};
@@ -610,12 +637,12 @@ export async function discoverBuildGraphPartV1(root:string,registry:BuildOwnerRe
     for(const name of Object.keys(projects))if(!primaryNames.has(name))tags[name]=testNames.has(name)?TEST_TAG_V1:POLICY_TAG_V1;
     if(!retained)await discoveredForTests(()=>withholdDanglingTestProjectsV1({projects,configs,unavailable,dangling:tests.danglingTestDependenciesV1({...Object.fromEntries(kept.map(([name,stub])=>[name,{root:stub.root}])),...projects}),digest:file=>observedFileDigestV1(root,file)}));
     const keptTagged=retained?tagged:incremental?tagged.filter(([,stub])=>stub.tag===TEST_TAG_V1&&!groups.has(stub.root)&&!part.roots.has(stub.root)):[],keptNames=new Set(keptTagged.map(([name])=>name));
-    const refresh=edgeRefreshOwnersV1({cold:part.cold,environment:env.digest,previousEnvironment:part.previousEnv,roots:part.roots,stubs:part.stubs,inferred:new Set(Object.keys(projects))}),edgeNames=refresh.projects,processed=new Set([...Object.keys(projects),...edgeNames]);
+    const consumers=part.cold||env.digest===part.previousEnv?undefined:edgeConsumersOfPartV1({previousEnvironment:part.previousEnv,previousParts:part.previousParts,previousOwners:part.previousOwners??[],parts:env.parts,stubs:part.stubs,inferred:new Set(Object.keys(projects)),roots:part.roots}),refresh=edgeRefreshOwnersV1({cold:part.cold,environment:env.digest,previousEnvironment:part.previousEnv,roots:part.roots,stubs:part.stubs,inferred:new Set(Object.keys(projects)),...(consumers?{consumers}:{})}),edgeNames=refresh.projects,processed=new Set([...Object.keys(projects),...edgeNames]);
     const contextProjects:Record<string,any>={...Object.fromEntries([...kept,...keptTagged.filter(([,stub])=>stub.kind==="project")].map(([name,stub])=>[name,{name,root:stub.root,targets:Object.fromEntries(stub.targets.map(target=>[target,{}])),...(stub.nativeRoot?{metadata:{nativeRoot:stub.nativeRoot}}:{})}])),...projects};
     const ownerOf=createProjectFileIndexV1(contextProjects),withheld=[...unavailable.keys(),...stubs.filter(([name,stub])=>(!stub.tag||keptNames.has(name))&&stub.kind==="unavailable"&&!part.roots.has(stub.root)).map(([,stub])=>stub.root)],projectFileMap:Record<string,{file:string}[]>=Object.fromEntries([...processed].map(name=>[name,[]]));
     for(const file of files){const found=ownerOf(file);if(found!==undefined&&projectFileMap[found]&&!withheld.some(withheldRoot=>file.startsWith(withheldRoot+"/")&&withheldRoot.length>contextProjects[found].root.length))projectFileMap[found]!.push({file});}
     const streamed=new Set<string>(edgeNames),direct=Object.fromEntries([...processed].filter(name=>!streamed.has(name)).map(name=>[name,projectFileMap[name]!]));
-    const graphContext={workspaceRoot:root,projects:contextProjects,fileMap:{projectFileMap:direct},invocation,phaseControl,selection:{kind:"all"},registry,completeSourceImports:false,moduleGraphProjects:new Set(Object.keys(projects)),edgeChunkOwners:CLAIMS_POLICY_V1.chunkOwners};
+    const graphContext={workspaceRoot:root,projects:contextProjects,fileMap:{projectFileMap:direct},invocation,phaseControl,selection:{kind:"all"},registry,edgeReads,completeSourceImports:false,moduleGraphProjects:new Set(Object.keys(projects)),edgeChunkOwners:CLAIMS_POLICY_V1.chunkOwners};
     const testEdges:unknown=retained?[]:await discoveredForTests(()=>tests.discoverTestBuildDependenciesV1({},graphContext));if(!Array.isArray(testEdges))throw Error("Test dependency DATA array required");
     const implementation=streamed.size?await owner.loadCurrentImplementationV1():undefined;await implementation?.libraryBootstrap;
     const streaming=await implementation?.createStreamingEdgesV1(options,{...graphContext,fileMap:{projectFileMap}}),edges=[...(await owner.discoverBuildDependenciesV1(options,graphContext)).filter((edge:{source:string})=>!streamed.has(edge.source)),...testEdges];
@@ -626,8 +653,8 @@ export async function discoverBuildGraphPartV1(root:string,registry:BuildOwnerRe
     if(invocation)await advanceScriptInvocation(invocation,"build:graph","complete");
     const rows=[...unavailable.values()],testRowLists=new Map<object,BuildGraphRowV1[]>(),testNodeRows=(name:string)=>{const own=discovery.rows.get(name)??[];let list=testRowLists.get(own);if(!list)testRowLists.set(own,list=[...own,...testRows]);return list;};
     return {
-      owners:[...Object.entries(neutral).map(([name,node]:[string,any])=>({name,root:node.root as string,nativeRoot:node.metadata?.nativeRoot as string|undefined,config:configs[name],...(tags[name]?{tag:tags[name]}:{}),node,nodeRows:tags[name]===TEST_TAG_V1?testNodeRows(name):tags[name]?tagRows:nodeRows[name]})),...rows.filter(row=>row.project!==undefined).map(row=>({name:row.project!,root:row.root,config:row.source,...(tags[row.project!]?{tag:tags[row.project!]}:{}),unavailable:row,nodeRows:tags[row.project!]===TEST_TAG_V1?testNodeRows(row.project!):tags[row.project!]?tagRows:nodeRows[row.project!]}))],
-      edgeOnly:[...edgeNames.map(name=>streamed.has(name)?{name,streamed:true as const}:{name}),...refresh.withheld.map(name=>({name}))],reEdge:streaming&&((name:string,fragment:{node?:any})=>streaming.edgesOf(name,fragment.node)),derived:[...derivedFacts.values()],edges:edges as BuildGraphPartV1["edges"],externalNodes,parseUnavailable:rows.filter(row=>row.project===undefined),env,replaceTags:retained?[]:incremental?["policy",POLICY_TAG_V1]:["tests","policy",TEST_TAG_V1,POLICY_TAG_V1],
+      owners:[...Object.entries(neutral).map(([name,node]:[string,any])=>({name,root:node.root as string,nativeRoot:node.metadata?.nativeRoot as string|undefined,config:configs[name],...(tags[name]?{tag:tags[name]}:{}),...(tags[name]||!edgeReads.finish(name)?{}:{reads:edgeReads.finish(name)}),node,nodeRows:tags[name]===TEST_TAG_V1?testNodeRows(name):tags[name]?tagRows:nodeRows[name]})),...rows.filter(row=>row.project!==undefined).map(row=>({name:row.project!,root:row.root,config:row.source,...(tags[row.project!]?{tag:tags[row.project!]}:{}),unavailable:row,nodeRows:tags[row.project!]===TEST_TAG_V1?testNodeRows(row.project!):tags[row.project!]?tagRows:nodeRows[row.project!]}))],
+      edgeOnly:[...edgeNames.map(name=>streamed.has(name)?{name,streamed:true as const}:{name}),...refresh.withheld.map(name=>({name}))],reEdge:streaming&&((name:string,fragment:{node?:any})=>streaming.edgesOf(name,fragment.node)),readsOf:(name:string)=>edgeReads.finish(name),carried:refresh.carried,derived:[...derivedFacts.values()],edges:edges as BuildGraphPartV1["edges"],externalNodes,parseUnavailable:rows.filter(row=>row.project===undefined),env,replaceTags:retained?[]:incremental?["policy",POLICY_TAG_V1]:["tests","policy",TEST_TAG_V1,POLICY_TAG_V1],
     };
   },undefined,false);
   return {...captured.value,rows:[...captured.observations] as BuildGraphRowV1[]};
@@ -733,7 +760,25 @@ async function readSealedBuildGraphV1(root:string,invocation:ScriptInvocation,ph
 export function requireBuildGraphExternalInputsV1(graph:BuildGraphV1,inputs:readonly string[]):readonly string[]{const requested=[...new Set(readGenerationExternalInputsV1(inputs).map(name=>{const key=resolveGenerationExternalInputV1(graph.externalNodes,name);if(key===undefined)throw Error("Pinned build graph lacks external input: "+name);return key;}))].sort();if(JSON.stringify(requested)!==JSON.stringify(graph.admission?.externalInputs??[]))throw Error("Original selected external input admission required");return requested;}
 
 /** 💾️ Publishes only a current graph and releases each invalidated candidate before retrying. */
+/** 🪪️ The native roots a refused inference names because no registry row owns them yet (the two refusals of the native closure), whatever wrapper carried the message across the worker farm. */
+export function pendingOwnerRootsV1(message:string):string[]{
+  return [...new Set([...message.matchAll(/Native dependency has no build project owner: (.+?) \(required by|Canonical native dependency owner required: (\S+)/gu)].map(match=>(match[1]??match[2])!))];
+}
+
+/** 🤝️ Adopts the crates a refused inference named into the registry before the graph is planned again: the registry consistency law's reconciler, scoped to exactly those roots, gives a crate that has a manifest but no row its row. Returns whether a row was added, so the caller plans once more only when something changed. */
+export function adoptPendingBuildOwnersV1(root:string,message:string):boolean{
+  const roots=pendingOwnerRootsV1(message);
+  return roots.length>0&&reconcileBuildOwnerRegistry(root,{scope:roots,write:true}).added.length>0;
+}
+
+/** 🕸️ Loads the graph; a refusal that names crates without an owner row adopts them into the registry once and plans again, any other refusal (or a crate that cannot be adopted) is the caller's. */
 export async function loadBuildGraphV1(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,options:BuildGraphLoadOptionsV1):Promise<BuildGraphV1> {
+  try{return await loadBuildGraphOnceV1(root,invocation,phaseControl,options);}
+  catch(error){if(invocation?.control.signal.aborted||!adoptPendingBuildOwnersV1(root,String((error as Error)?.message??"")))throw error;}
+  return loadBuildGraphOnceV1(root,invocation,phaseControl,options);
+}
+
+async function loadBuildGraphOnceV1(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,options:BuildGraphLoadOptionsV1):Promise<BuildGraphV1> {
   if(options.selection?.kind&&!options.baseline&&!options.reuse&&invocation){
     clearPinnedAuthorityV1();
     if(options.selection.kind==="all")return withImplementationPinV1(()=>loadBuildGraphUnpinnedV1(root,invocation,phaseControl,options));

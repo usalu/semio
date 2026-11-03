@@ -1,0 +1,18 @@
+{
+  "InsertWeldGroup": {
+    "index": 1,
+    "weldGroup": {
+      "id": "weld-group-1-2",
+      "memberId": "member-b1",
+      "label": "Weld group 1",
+      "pattern": "TwoLines",
+      "throat": 0.005,
+      "width": 0.1,
+      "depth": 0.2,
+      "shearForce": 100000.0,
+      "eccentricity": 0.15,
+      "steelFu": 510000000.0,
+      "betaW": 0.9
+    }
+  }
+}

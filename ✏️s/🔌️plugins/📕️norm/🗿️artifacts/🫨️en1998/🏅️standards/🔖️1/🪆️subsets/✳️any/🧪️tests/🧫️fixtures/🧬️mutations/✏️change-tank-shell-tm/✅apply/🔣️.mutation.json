@@ -1,0 +1,5 @@
+{
+  "mutation": "changeTankShellTM",
+  "id": "tk-1",
+  "newShellThicknessM": 1.5
+}

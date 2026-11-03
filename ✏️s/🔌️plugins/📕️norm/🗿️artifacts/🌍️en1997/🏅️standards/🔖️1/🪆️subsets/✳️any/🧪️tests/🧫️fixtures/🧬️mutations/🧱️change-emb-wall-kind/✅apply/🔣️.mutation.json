@@ -1,0 +1,5 @@
+{
+  "mutation": "changeEmbWallKind",
+  "id": "ewall-E1",
+  "newKind": "freeEarth"
+}

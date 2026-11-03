@@ -1,0 +1,6 @@
+{
+  "mutation": "changeSystemSystemType",
+  "buildingId": "bldg-office",
+  "id": "sys-x",
+  "newSystemType": "wall"
+}

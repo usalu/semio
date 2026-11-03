@@ -1,0 +1,6 @@
+{
+  "ChangeBedJointThickness": {
+    "id": "wall-north",
+    "newBedJointThicknessM": 0.01
+  }
+}

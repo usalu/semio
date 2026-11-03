@@ -1,0 +1,10 @@
+input ChangeViewportView {
+  cameraPreset: String
+  hiddenLayers: [String!]
+  colourMap: String
+  unitSystem: String
+}
+
+input NormViewportWindowConfigMutation @oneOf {
+  changeViewportView: ChangeViewportView
+}

@@ -1,6 +1,6 @@
 //! 🚪️ IO s.norm.en1997 (1/✳️any) — no stdio format bridges. W5a (ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT) deleted the five
 //! degenerate leaves (csv/json/txt/xlsx/zip) that either fabricated a one-cell-CSV/raw-DSL-dump
-//! shape or silently defaulted to `En1997Snapshot::default()` on import (an honesty bug, not a
+//! shape or silently defaulted to `En1997Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De)` on import (an honesty bug, not a
 //! real codec). En1997Snapshot is a compliance document (scalar fields plus a handful of nested
 //! records), not a flat row/column table, so no honest whole-artifact CSV round-trip exists to
 //! re-register in their place. Registration flows through 🎹️composer::register (called once from
@@ -78,8 +78,7 @@ pub mod binary;
 
 pub use semio_s_artifact_norm_en1997_io_text as text;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+pub use semio_s_artifact_norm_en1997_model::sqlite;
 
 pub mod derived_construction {
     use semio_s_artifact_norm_en1997_diff::En1997Diff;
@@ -87,7 +86,7 @@ pub mod derived_construction {
     use semio_s_artifact_norm_en1997_model::En1997Snapshot;
     use semio_framework_plugin::ArtifactBuilder;
 
-    #[derive(Clone, Debug, Default)]
+    #[derive(Clone, Debug)]
     pub struct En1997BuilderConstruction {
         snapshot: En1997Snapshot,
         diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
@@ -98,7 +97,7 @@ pub mod derived_construction {
         type Mutation = En1997Mutation;
         type Diff = En1997Diff;
         fn empty() -> Self {
-            Self { snapshot: En1997Snapshot::default(), diagnostics: Vec::new() }
+            Self { snapshot: En1997Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De), diagnostics: Vec::new() }
         }
         fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }

@@ -1,0 +1,6 @@
+{
+  "ChangeBeamBarSpacingM": {
+    "id": "beam-B1",
+    "newBarSpacingM": 0.1875
+  }
+}

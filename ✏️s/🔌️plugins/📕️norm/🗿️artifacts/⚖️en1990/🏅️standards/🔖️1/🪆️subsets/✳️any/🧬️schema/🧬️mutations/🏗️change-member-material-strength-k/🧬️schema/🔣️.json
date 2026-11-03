@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/mutation/change-member-material-strength-k/schema.json",
+  "title": "ChangeMemberMaterialStrengthK",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newMaterialStrengthK"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeMemberMaterialStrengthK"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Member",
+          "de": "Bauteil"
+        },
+        "description": {
+          "en": "The member this mutation addresses, by id.",
+          "de": "Das adressierte Element (Bauteil), per Kennung."
+        },
+        "ref": {
+          "kind": "member"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newMaterialStrengthK": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Characteristic material strength X_k (E90.10)",
+          "de": "Charakteristische Materialfestigkeit X_k (E90.10)"
+        },
+        "widget": "stepper",
+        "precision": 0,
+        "step": 500000,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

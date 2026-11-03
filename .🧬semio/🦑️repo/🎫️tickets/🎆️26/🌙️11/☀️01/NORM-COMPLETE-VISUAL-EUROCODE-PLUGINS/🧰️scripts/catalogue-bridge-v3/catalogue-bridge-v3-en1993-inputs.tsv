@@ -1,0 +1,70 @@
+# key|scope|kind|unit|example|flags|en|de|confidence|note   (EN 1993 clause functions work in mm, N, MPa; v3 gap catalogue)
+k_plate||n|1|0.5|r0.01:2|Plate coefficient k (support and load case)|Plattenbeiwert k (Lagerung und Lastfall)|medium|EN 1993-1-7 plate bending coefficient
+p_plate||n|MPa|0.02|r0:10|Transverse pressure p|Querdruck p|high|
+b_plate||n|mm|500|r1:100000|Plate span b|Plattenspannweite b|high|
+t_plate||n|mm|10|r0.5:1000,L|Plate thickness t|Plattendicke t|high|
+fy||n|MPa|355|r1:1500|Yield strength fy|Streckgrenze fy|high|
+gm0||n|1|1.0|r0.5:2|Partial factor γM0|Teilsicherheitsbeiwert γM0|high|
+gm1||n|1|1.0|r0.5:2|Partial factor γM1|Teilsicherheitsbeiwert γM1|high|
+lambda_1||n|1|0.8|r0:5|Damage equivalence factor λ1 (span)|Schadensäquivalenzfaktor λ1 (Spannweite)|high|
+lambda_2||n|1|0.9|r0:5|Damage equivalence factor λ2 (traffic volume)|Schadensäquivalenzfaktor λ2 (Verkehrsmenge)|high|
+lambda_3||n|1|1.0|r0:5|Damage equivalence factor λ3 (design life)|Schadensäquivalenzfaktor λ3 (Nutzungsdauer)|high|
+lambda_4||n|1|1.0|r0:5|Damage equivalence factor λ4 (further lanes)|Schadensäquivalenzfaktor λ4 (weitere Fahrstreifen)|high|
+lambda_max||n|1|2.0|r0:5|Upper limit λmax|Obergrenze λmax|high|
+phi_2||n|1|1.0|r0:3|Dynamic factor Φ2|Dynamikbeiwert Φ2|high|
+delta_sigma_p||n|MPa|20|r0:1000|Stress range Δσp of the fatigue load model|Spannungsschwingbreite Δσp des Ermüdungslastmodells|high|
+delta_sigma||n|MPa|40|r0:2000|Normal stress range Δσ|Normalspannungsschwingbreite Δσ|high|
+delta_sigma_c||n|MPa|71|r1:200,L|Detail category Δσc|Kerbfallklasse Δσc|high|
+delta_tau||n|MPa|20|r0:2000|Shear stress range Δτ|Schubspannungsschwingbreite Δτ|high|
+delta_tau_c||n|MPa|80|r1:200|Shear detail category Δτc|Schub-Kerbfallklasse Δτc|high|
+gamma_ff||n|1|1.0|r0.5:3|Fatigue load factor γFf|Ermüdungslast-Teilsicherheitsbeiwert γFf|high|
+gamma_mf||n|1|1.15|r0.5:3|Fatigue strength factor γMf|Ermüdungsfestigkeits-Teilsicherheitsbeiwert γMf|high|
+m_ed||n|Nmm|150000000|r0:1e13|Design bending moment MEd|Bemessungsbiegemoment MEd|high|
+beta_b||n|1|1.0|r0:1|Reduction factor βB (interlock shear transfer)|Abminderungsbeiwert βB (Schlossschubübertragung)|high|
+w_el||n|mm3|1500000|r1:1e10,L|Elastic section modulus Wel|Elastisches Widerstandsmoment Wel|high|
+f_ed||n|N|200000|r0:1e10|Design force FEd|Bemessungskraft FEd|high|
+f_uk||n|N|600000|r1:1e10,L|Characteristic breaking force Fuk|Charakteristische Bruchkraft Fuk|high|
+f_k||n|N|400000|r1:1e10|Characteristic resistance limit Fk|Charakteristischer Grenzwert Fk|medium|
+gamma_r||n|1|1.5|r1:3|Resistance factor γR|Widerstandsbeiwert γR|high|
+n_ed||n|N|500000|r-1e10:1e10|Design normal force NEd|Bemessungsnormalkraft NEd|high|
+amplification||n|1|1.2|r1:5|Wind amplification factor|Windverstärkungsfaktor|medium|
+chi||n|1|0.8|r0.01:1|Reduction factor χ|Abminderungsbeiwert χ|high|
+area||n|mm2|8000|r1:1e8,L|Cross-section area A|Querschnittsfläche A|high|
+beta_j||n|1|0.67|r0.1:1|Joint coefficient βj|Fugenbeiwert βj|high|
+k_j||n|1|1.0|r1:5|Concentration factor kj|Konzentrationsfaktor kj|high|
+f_cd||n|MPa|13.3|r1:100|Concrete design strength fcd|Betonbemessungsfestigkeit fcd|high|
+t_flange||n|mm|17|r1:200|Column flange thickness tf|Stützenflanschdicke tf|high|
+b_flange||n|mm|300|r10:2000|Column flange width bf|Stützenflanschbreite bf|high|
+i_rf||n|mm4|1200000|r1:1e10|Second moment of area of rail and flange Irf|Flächenmoment 2. Grades Schiene und Flansch Irf|high|
+t_web||n|mm|10|r1:200,L|Web thickness tw|Stegdicke tw|high|
+fz_ed||n|N|100000|r0:1e9|Vertical wheel load Fz,Ed|Vertikale Radlast Fz,Ed|high|
+sigma_x||n|MPa|150|r-2000:2000|Normal stress σx,Ed|Normalspannung σx,Ed|high|
+sigma_z||n|MPa|60|r-2000:2000|Normal stress σz,Ed|Normalspannung σz,Ed|high|
+tau||n|MPa|40|r-2000:2000|Shear stress τEd|Schubspannung τEd|high|
+my_ed||n|Nmm|80000000|r-1e13:1e13|Bending moment My,Ed|Biegemoment My,Ed|high|
+mz_ed||n|Nmm|10000000|r-1e13:1e13|Bending moment Mz,Ed|Biegemoment Mz,Ed|high|
+w_el_y||n|mm3|1000000|r1:1e10|Elastic section modulus Wel,y|Elastisches Widerstandsmoment Wel,y|high|
+w_el_z||n|mm3|200000|r1:1e10|Elastic section modulus Wel,z|Elastisches Widerstandsmoment Wel,z|high|
+w_pl_y||n|mm3|1100000|r1:1e10|Plastic section modulus Wpl,y|Plastisches Widerstandsmoment Wpl,y|high|
+w_pl_z||n|mm3|300000|r1:1e10|Plastic section modulus Wpl,z|Plastisches Widerstandsmoment Wpl,z|high|
+a_web||n|1|0.3|r0:0.5|Web area ratio a = (A − 2 b tf)/A ≤ 0.5|Stegflächenanteil a = (A − 2 b tf)/A ≤ 0,5|high|
+m_pl_rd||n|Nmm|400000000|r1:1e13,L|Plastic moment resistance Mpl,Rd|Plastische Momententragfähigkeit Mpl,Rd|high|
+m_f_rd||n|Nmm|250000000|r0:1e13|Flange moment resistance Mf,Rd|Gurtmomententragfähigkeit Mf,Rd|high|
+v_ed||n|N|300000|r0:1e10|Design shear force VEd|Bemessungsquerkraft VEd|high|
+v_bw_rd||n|N|900000|r1:1e10,L|Web shear buckling resistance Vbw,Rd|Beulquerkrafttragfähigkeit des Stegs Vbw,Rd|high|
+e_fi_d||n|N|200000|r0:1e10|Design effect in fire Efi,d|Bemessungswert der Beanspruchung im Brandfall Efi,d|high|
+r_fi_d_0||n|N|600000|r1:1e10,L|Design resistance in fire at t = 0 Rfi,d,0|Bemessungswiderstand im Brandfall bei t = 0 Rfi,d,0|high|
+k_sh||n|1|1.0|r0:1|Shadow effect factor ksh|Schattenwirkungsbeiwert ksh|high|
+am_over_v||n|per_m|200|r1:1000|Section factor Am/V|Profilfaktor Am/V|high|
+t_fire||n|min|30|r1:240,L|Fire exposure duration|Branddauer|high|
+eps_m||n|1|0.7|r0:1|Surface emissivity εm|Oberflächenemissivität εm|high|
+eps_f||n|1|1.0|r0:1|Fire emissivity εf|Brandemissivität εf|high|
+p_int||n|MPa|2|r0:100|Internal pressure p|Innendruck p|high|
+d_pipe||n|mm|1000|r10:10000|Pipe diameter d|Rohrdurchmesser d|high|
+t_pipe||n|mm|10|r0.5:200,L|Pipe wall thickness t|Rohrwanddicke t|high|
+k_b||n|1|0.1|r0:1|Bedding coefficient kb|Bettungsbeiwert kb|medium|
+w_line||n|N_mm|36|r0:1000|Vertical load per unit pipe length W|Vertikallast je Rohrlängeneinheit W|medium|
+e_pipe||n|MPa|210000|r1000:1e6|Modulus of elasticity of the pipe E|Elastizitätsmodul des Rohres E|high|
+i_wall||n|mm3|83.3|r0.01:1e6|Wall second moment of area per unit length|Wandflächenmoment 2. Grades je Längeneinheit|high|
+e_soil||n|MPa|5|r0.1:1000|Soil modulus E′|Bodenmodul E′|high|
+ovalisation_limit||n|1|0.03|r0.001:0.2|Permissible ovalisation Δd/d|Zulässige Ovalisierung Δd/d|medium|

@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-layer-soil-type/schema.json",
+  "title": "ChangeLayerSoilType",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newSoilType"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeLayerSoilType"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Soil layer",
+          "de": "Bodenschicht"
+        },
+        "description": {
+          "en": "The soil layer this mutation addresses, by id.",
+          "de": "Die adressierte Zeile (Bodenschicht), per Kennung."
+        },
+        "ref": {
+          "kind": "soil-layer"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newSoilType": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/snapshot.json#/$defs/SoilType",
+      "x-semio-ui": {
+        "label": {
+          "en": "Soil type",
+          "de": "Bodenart"
+        },
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

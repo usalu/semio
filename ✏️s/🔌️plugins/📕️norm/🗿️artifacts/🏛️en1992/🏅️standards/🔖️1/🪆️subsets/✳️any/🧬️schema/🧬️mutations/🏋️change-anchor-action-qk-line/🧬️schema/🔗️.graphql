@@ -1,0 +1,5 @@
+type ChangeAnchorActionQKLine {
+  anchorId: String!
+  actionId: String!
+  newQKLine: Float!
+}

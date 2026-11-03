@@ -1,0 +1,5 @@
+{
+  "mutation": "changeAssessmentShearSpanM",
+  "id": "as-1",
+  "newShearSpanM": 1.5
+}

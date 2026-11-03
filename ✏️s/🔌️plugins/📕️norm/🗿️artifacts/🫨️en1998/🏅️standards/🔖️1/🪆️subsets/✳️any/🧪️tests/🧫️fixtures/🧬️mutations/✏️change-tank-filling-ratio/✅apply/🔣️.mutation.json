@@ -1,0 +1,5 @@
+{
+  "mutation": "changeTankFillingRatio",
+  "id": "tk-1",
+  "newFillingRatio": 1.8
+}

@@ -277,7 +277,7 @@ exclude-patterns = [
   "🔌️plugins/**",
   "🧑‍💻dev/**"
 ]
-member-manifests = [ "🔨️modules/**/📦️packages/🦀️rust/Cargo.toml" ]
+member-manifests = [ "🔨️modules/**/📦️packages/🦀️rust/Cargo.toml", "🧪️tests/**/📦️packages/🦀️rust/Cargo.toml" ]
 
   [workspace.package]
   version = "0.1.0"

@@ -63,9 +63,9 @@ export function testNormResultsWindowOwnershipOracle(): void {
   }
   assert.equal(fixture.resultsWindowKinds.length, 15);
   assert.equal(new Set(fixture.resultsWindowKinds).size, 15);
-  assert(fixture.resultsWindowKinds.every((kind) => /^norm-(?:din|en|iso|vdi)[0-9]+-results$/.test(kind)));
+  assert(fixture.resultsWindowKinds.every((kind) => /^norm-(?:din|en|iso|vdi)[0-9]+-(?:results|checks)$/.test(kind)));
   const documentBytes = JSON.stringify(fixture.document);
-  const exactInstances = fixture.windowInstances.filter((instance) => instance.windowKindId === "norm-en1996-results");
+  const exactInstances = fixture.windowInstances.filter((instance) => instance.windowKindId === "norm-en1996-checks");
   const actual = Object.fromEntries(exactInstances.map((instance) => [instance.id, structuredClone(fixture.baseConfig)]));
   const oracle = structuredClone(actual);
   const applyRows = (rows: readonly MutationRow[]): void => {

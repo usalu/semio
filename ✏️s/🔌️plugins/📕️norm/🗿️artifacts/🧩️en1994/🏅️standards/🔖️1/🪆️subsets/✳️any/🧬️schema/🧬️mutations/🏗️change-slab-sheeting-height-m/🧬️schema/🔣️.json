@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-slab-sheeting-height-m/schema.json",
+  "title": "ChangeSlabSheetingHeightM",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newHeightM"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Composite slab",
+          "de": "Verbunddecke"
+        },
+        "description": {
+          "en": "The composite slab this mutation addresses, by id.",
+          "de": "Das adressierte Element (Verbunddecke), per Kennung."
+        },
+        "ref": {
+          "kind": "slab"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newHeightM": {
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Slab sheeting rib height h_p",
+          "de": "Rippenhöhe h_p des Deckenprofilblechs"
+        },
+        "unit": "m",
+        "step": 0.01,
+        "precision": 3,
+        "group": "sheeting",
+        "order": 20
+      }
+    }
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "ChangeOpeningSill": {
+    "wallId": "wall-openings",
+    "id": "win-1",
+    "newSillHeightM": 0.8
+  }
+}

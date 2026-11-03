@@ -20,6 +20,11 @@ name = "mutation_vectors"
 path = "../../🧪️tests/🔬️vectors/🦀️.rs"
 
 [dependencies]
+serde = { workspace = true, optional = true }
+semio-s-artifact-norm-en1995-mutations-proto = { workspace = true }
+semio-s-artifact-norm-en1995-mutations-json-schema = { workspace = true }
+semio-s-artifact-norm-en1995-mutations-graphql = { workspace = true }
+semio-s-artifact-norm-en1995-mutations-typescript = { workspace = true }
 semio-framework-os-command = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-os-store-one-item = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/📦️packages/🦀️rust" }
@@ -33,16 +38,41 @@ semio-framework-value-derive = { workspace = true }
 semio-s-artifact-norm-en1995-diff = { workspace = true }
 semio-s-artifact-norm-en1995-model = { workspace = true }
 semio-s-artifact-norm-en1995-mut-actions = { workspace = true }
+semio-s-artifact-norm-en1995-mut-design-cases = { workspace = true }
 semio-s-artifact-norm-en1995-mut-connections = { workspace = true }
 semio-s-artifact-norm-en1995-mut-effects = { workspace = true }
 semio-s-artifact-norm-en1995-mut-fasteners = { workspace = true }
 semio-s-artifact-norm-en1995-mut-footbridges = { workspace = true }
+semio-s-artifact-norm-en1995-mut-placements = { workspace = true }
+semio-s-artifact-norm-en1995-mut-deck-prestress = { workspace = true }
+semio-s-artifact-norm-en1995-mut-deck-geometry = { workspace = true }
+semio-s-artifact-norm-en1995-mut-bracing-forces = { workspace = true }
+semio-s-artifact-norm-en1995-mut-bracing-layout = { workspace = true }
+semio-s-artifact-norm-en1995-mut-truss-forces = { workspace = true }
+semio-s-artifact-norm-en1995-mut-truss-geometry = { workspace = true }
+semio-s-artifact-norm-en1995-mut-diaphragm-forces = { workspace = true }
+semio-s-artifact-norm-en1995-mut-diaphragm-sheathing = { workspace = true }
+semio-s-artifact-norm-en1995-mut-structure-rows = { workspace = true }
+semio-s-artifact-norm-en1995-mut-fastener-positions = { workspace = true }
+semio-s-artifact-norm-en1995-mut-panel-layers = { workspace = true }
+semio-s-artifact-norm-en1995-mut-floor-loads = { workspace = true }
+semio-s-artifact-norm-en1995-mut-floor-stiffness = { workspace = true }
+semio-s-artifact-norm-en1995-mut-panels = { workspace = true }
+semio-s-artifact-norm-en1995-mut-fastener-distances = { workspace = true }
+semio-s-artifact-norm-en1995-mut-fastener-links = { workspace = true }
+semio-s-artifact-norm-en1995-mut-cutouts = { workspace = true }
+semio-s-artifact-norm-en1995-mut-tapers = { workspace = true }
+semio-s-artifact-norm-en1995-mut-entity-rows = { workspace = true }
 semio-s-artifact-norm-en1995-mut-geometry = { workspace = true }
 semio-s-artifact-norm-en1995-mut-joint-actions = { workspace = true }
 semio-s-artifact-norm-en1995-mut-members = { workspace = true }
 semio-s-artifact-norm-en1995-mut-plates = { workspace = true }
 semio-s-artifact-norm-en1995-mut-stability = { workspace = true }
 semio-s-plugin-norm-app-surface = { workspace = true }
+semio-framework-diagnostic = { workspace = true }
+
+[features]
+test-support = ["dep:serde", "semio-s-artifact-norm-en1995-diff/test-support", "semio-s-artifact-norm-en1995-model/test-support", "semio-s-artifact-norm-en1995-mut-actions/test-support", "semio-s-artifact-norm-en1995-mut-bracing-forces/test-support", "semio-s-artifact-norm-en1995-mut-bracing-layout/test-support", "semio-s-artifact-norm-en1995-mut-connections/test-support", "semio-s-artifact-norm-en1995-mut-cutouts/test-support", "semio-s-artifact-norm-en1995-mut-deck-geometry/test-support", "semio-s-artifact-norm-en1995-mut-deck-prestress/test-support", "semio-s-artifact-norm-en1995-mut-design-cases/test-support", "semio-s-artifact-norm-en1995-mut-diaphragm-forces/test-support", "semio-s-artifact-norm-en1995-mut-diaphragm-sheathing/test-support", "semio-s-artifact-norm-en1995-mut-effects/test-support", "semio-s-artifact-norm-en1995-mut-entity-rows/test-support", "semio-s-artifact-norm-en1995-mut-fastener-distances/test-support", "semio-s-artifact-norm-en1995-mut-fastener-links/test-support", "semio-s-artifact-norm-en1995-mut-fastener-positions/test-support", "semio-s-artifact-norm-en1995-mut-fasteners/test-support", "semio-s-artifact-norm-en1995-mut-floor-loads/test-support", "semio-s-artifact-norm-en1995-mut-floor-stiffness/test-support", "semio-s-artifact-norm-en1995-mut-footbridges/test-support", "semio-s-artifact-norm-en1995-mut-geometry/test-support", "semio-s-artifact-norm-en1995-mut-joint-actions/test-support", "semio-s-artifact-norm-en1995-mut-members/test-support", "semio-s-artifact-norm-en1995-mut-panel-layers/test-support", "semio-s-artifact-norm-en1995-mut-panels/test-support", "semio-s-artifact-norm-en1995-mut-placements/test-support", "semio-s-artifact-norm-en1995-mut-plates/test-support", "semio-s-artifact-norm-en1995-mut-stability/test-support", "semio-s-artifact-norm-en1995-mut-structure-rows/test-support", "semio-s-artifact-norm-en1995-mut-tapers/test-support", "semio-s-artifact-norm-en1995-mut-truss-forces/test-support", "semio-s-artifact-norm-en1995-mut-truss-geometry/test-support"]
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }
@@ -51,3 +81,5 @@ semio-framework-test-fixtures = { path = "../../../../../../../../../../../../..
 semio-s-plugin-norm-app-surface = { workspace = true, features = ["compliance-testing"] }
 semio-s-mutation-vectors = { workspace = true }
 serde = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-s-plugin-norm-compliance = { workspace = true }

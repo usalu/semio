@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-member-tightness/schema.json",
+  "title": "ChangeMemberTightness",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "memberId",
+    "newTightness"
+  ],
+  "properties": {
+    "memberId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Member",
+          "de": "Bauteil"
+        },
+        "description": {
+          "en": "The reinforced concrete member this mutation addresses.",
+          "de": "Das Stahlbetonbauteil, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "member"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newTightness": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/$defs/TightnessClass",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Tightness class",
+          "de": "Dichtigkeitsklasse"
+        },
+        "description": {
+          "en": "Tc0, Tc1 or Tc2 (EN 1992-3 Table 7.105).",
+          "de": "Tc0, Tc1 oder Tc2 (EN 1992-3 Tabelle 7.105)."
+        },
+        "group": "tightness",
+        "order": 20
+      },
+      "x-semio-rust": {
+        "type": "TightnessClass"
+      }
+    }
+  }
+}

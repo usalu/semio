@@ -1,0 +1,5 @@
+{
+  "mutation": "changePlacementYaw",
+  "id": "pla-1",
+  "newYaw": 2.0
+}

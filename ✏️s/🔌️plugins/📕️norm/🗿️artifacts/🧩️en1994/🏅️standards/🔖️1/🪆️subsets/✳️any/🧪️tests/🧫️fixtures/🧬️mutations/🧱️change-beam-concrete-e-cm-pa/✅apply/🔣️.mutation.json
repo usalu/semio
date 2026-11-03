@@ -1,0 +1,6 @@
+{
+  "ChangeBeamConcreteECmPa": {
+    "id": "beam-B1",
+    "newConcreteECmPa": 41250000000.0
+  }
+}

@@ -1,0 +1,257 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "🥒️ Norm step vocabulary",
+  "description": "🥒️ The ONE domain-neutral step grammar every norm `🥒️.feature` is written in. A template is literal text with `{name}` holes; both step layers (`🐍️.py`, `🦀️.rs`) match it by finding the literal segments in order, so no regular-expression dialect is shared. A family fixes the step sequence, the fields its holes bind and the shape of the projection both implementations emit and the comparison profile judges.",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "families"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "families": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "steps",
+          "projection"
+        ],
+        "properties": {
+          "steps": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "keyword",
+                "template"
+              ],
+              "properties": {
+                "keyword": {
+                  "enum": [
+                    "Given",
+                    "When",
+                    "Then"
+                  ]
+                },
+                "template": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "projection": {
+            "type": "object"
+          }
+        }
+      }
+    }
+  },
+  "schemaVersion": 1,
+  "families": {
+    "catalogue-fixture-case": {
+      "law": "A committed catalogue case is evaluated by both implementations; every value the oracle names is compared by the feature's profile.",
+      "steps": [
+        {
+          "keyword": "Given",
+          "template": "the committed catalogue case {fixture} at index {index}"
+        },
+        {
+          "keyword": "When",
+          "template": "both implementations evaluate catalogue entry {entry} on that case"
+        },
+        {
+          "keyword": "Then",
+          "template": "every result named by the oracle agrees within the comparison profile"
+        }
+      ],
+      "projection": {
+        "entry": "string",
+        "index": "integer",
+        "values": "map<string, number>"
+      }
+    },
+    "catalogue-example": {
+      "law": "A hand-checked catalogue example is reproduced by each implementation within its stated relative tolerance.",
+      "steps": [
+        {
+          "keyword": "Given",
+          "template": "the catalogue entry \"{entry}\" for annex \"{annex}\" with inputs \"{inputs}\""
+        },
+        {
+          "keyword": "When",
+          "template": "the entry is evaluated"
+        },
+        {
+          "keyword": "Then",
+          "template": "the output \"{key}\" equals {expected} within relative tolerance {tolerance}"
+        }
+      ],
+      "projection": {
+        "entry": "string",
+        "annex": "string",
+        "key": "string",
+        "value": "number"
+      }
+    },
+    "clause-vector": {
+      "law": "A clause quantity of a committed vector equals the independent oracle value within the stated relative tolerance.",
+      "steps": [
+        {
+          "keyword": "Given",
+          "template": "the clause vector \"{vector}\" of \"{part}\""
+        },
+        {
+          "keyword": "When",
+          "template": "the quantity \"{quantity}\" is evaluated"
+        },
+        {
+          "keyword": "Then",
+          "template": "it equals the independent oracle value within relative tolerance {tolerance}"
+        }
+      ],
+      "projection": {
+        "vector": "string",
+        "quantity": "string",
+        "value": "number"
+      }
+    },
+    "published-example": {
+      "law": "A quantity of a hand-checked worked example equals its published value within the stated relative tolerance.",
+      "steps": [
+        {
+          "keyword": "Given",
+          "template": "the worked example \"{example}\" with its published inputs"
+        },
+        {
+          "keyword": "When",
+          "template": "the quantity \"{quantity}\" is evaluated"
+        },
+        {
+          "keyword": "Then",
+          "template": "it equals {expected} within relative tolerance {tolerance}"
+        }
+      ],
+      "projection": {
+        "example": "string",
+        "quantity": "string",
+        "value": "number"
+      }
+    },
+    "oracle-check": {
+      "law": "The utilisation a check reports on a committed showcase subject equals the independent oracle quantity.",
+      "steps": [
+        {
+          "keyword": "Given",
+          "template": "the showcase subject \"{subject}\" with the {annex} annex"
+        },
+        {
+          "keyword": "When",
+          "template": "the compliance report is evaluated"
+        },
+        {
+          "keyword": "Then",
+          "template": "the utilisation of the check \"{check}\" equals the oracle quantity \"{quantity}\" within relative tolerance {tolerance}"
+        }
+      ],
+      "projection": {
+        "check": "string",
+        "quantity": "string",
+        "utilisation": "number"
+      }
+    },
+    "check-outcome": {
+      "law": "A committed document fixture yields, for one check id, the committed status and utilisation.",
+      "steps": [
+        {
+          "keyword": "Given",
+          "template": "the committed document {fixture}"
+        },
+        {
+          "keyword": "When",
+          "template": "the check \"{check}\" is evaluated"
+        },
+        {
+          "keyword": "Then",
+          "template": "its status is \"{status}\" with utilisation {utilisation} within relative tolerance {tolerance}"
+        }
+      ],
+      "projection": {
+        "check": "string",
+        "status": "string",
+        "utilisation": "number"
+      }
+    },
+    "scene-law": {
+      "law": "A committed document fixture projects to a scene whose entities, handles and diagrams follow the stated laws.",
+      "steps": [
+        {
+          "keyword": "Given",
+          "template": "the committed document {fixture}"
+        },
+        {
+          "keyword": "When",
+          "template": "the scene is projected"
+        },
+        {
+          "keyword": "Then",
+          "template": "entity \"{entity}\" is of kind \"{kind}\" with {handles} handles and {diagrams} diagrams"
+        }
+      ],
+      "projection": {
+        "entity": "string",
+        "kind": "string",
+        "handles": "integer",
+        "diagrams": "integer"
+      }
+    },
+    "mutation-round-trip": {
+      "law": "A committed mutation applied to its before-snapshot and then inverted by its own computed inverse restores the before-snapshot exactly.",
+      "steps": [
+        {
+          "keyword": "Given",
+          "template": "the committed before-snapshot {before}"
+        },
+        {
+          "keyword": "Given",
+          "template": "the committed mutation payload {mutation}"
+        },
+        {
+          "keyword": "When",
+          "template": "the mutation is applied and then its computed inverse"
+        },
+        {
+          "keyword": "Then",
+          "template": "the document equals the before-snapshot"
+        }
+      ],
+      "projection": {
+        "mutation": "string",
+        "restored": "boolean"
+      }
+    },
+    "oracle-comparison": {
+      "law": "The Python oracle run on a committed input agrees with the kernel for every named quantity.",
+      "steps": [
+        {
+          "keyword": "Given",
+          "template": "the committed oracle input {fixture}"
+        },
+        {
+          "keyword": "When",
+          "template": "the Python oracle and the kernel both evaluate it"
+        },
+        {
+          "keyword": "Then",
+          "template": "every quantity named by the oracle agrees within the comparison profile"
+        }
+      ],
+      "projection": {
+        "fixture": "string",
+        "values": "map<string, number>"
+      }
+    }
+  }
+}

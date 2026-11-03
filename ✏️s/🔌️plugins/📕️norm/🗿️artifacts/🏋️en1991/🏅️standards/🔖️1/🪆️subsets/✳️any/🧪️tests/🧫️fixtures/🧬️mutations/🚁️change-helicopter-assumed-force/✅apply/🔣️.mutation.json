@@ -1,0 +1,6 @@
+{
+  "ChangeHelicopterAssumedForce": {
+    "id": "helicopter-1",
+    "newAssumedForce": 3.0
+  }
+}

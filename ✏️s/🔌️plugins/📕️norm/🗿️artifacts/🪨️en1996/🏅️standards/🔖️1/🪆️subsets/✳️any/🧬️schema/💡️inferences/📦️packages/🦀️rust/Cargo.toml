@@ -15,7 +15,12 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[features]
+test-support = ["dep:serde", "semio-s-artifact-norm-en1996-model/test-support", "semio-s-artifact-norm-en1996-schema/test-support", "semio-s-plugin-norm-compliance/test-support"]
+oracle-wiring = ["semio-s-plugin-norm-compliance/compliance-testing"]
+
 [dependencies]
+serde = { workspace = true, optional = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-schema-composition = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }

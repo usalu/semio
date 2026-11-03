@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-crane-runway-length/schema.json",
+  "title": "ChangeCraneRunwayLength",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newCraneRunwayLength"
+  ],
+  "properties": {
+    "newCraneRunwayLength": {
+      "type": "number",
+      "minimum": 1,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Runway length",
+          "de": "Kranbahnlänge"
+        },
+        "unit": "m",
+        "step": 0.5,
+        "precision": 2,
+        "group": "crane",
+        "order": 10,
+        "displayUnit": "m",
+        "displayFactor": 1
+      }
+    }
+  }
+}

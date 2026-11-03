@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-anchor-fixed-length/schema.json",
+  "title": "ChangeAnchorFixedLength",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newFixedLength"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeAnchorFixedLength"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Anchor",
+          "de": "Anker"
+        },
+        "description": {
+          "en": "The anchor this mutation addresses, by id.",
+          "de": "Die adressierte Zeile (Anker), per Kennung."
+        },
+        "ref": {
+          "kind": "anchor"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newFixedLength": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Fixed length L_f",
+          "de": "Verpresslänge L_f"
+        },
+        "widget": "stepper",
+        "unit": "m",
+        "precision": 2,
+        "step": 0.05,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

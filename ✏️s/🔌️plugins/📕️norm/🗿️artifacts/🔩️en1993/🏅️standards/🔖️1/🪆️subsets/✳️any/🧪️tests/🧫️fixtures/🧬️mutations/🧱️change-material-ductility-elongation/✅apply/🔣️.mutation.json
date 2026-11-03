@@ -1,0 +1,6 @@
+{
+  "ChangeMaterialDuctilityElongation": {
+    "id": "material-ductility-1",
+    "newElongation": 1.2
+  }
+}

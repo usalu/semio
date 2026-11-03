@@ -1,0 +1,14 @@
+{
+  "InsertStudRow": {
+    "memberId": "wall-W1",
+    "index": 1,
+    "studRow": {
+      "id": "sr-1-new",
+      "angle": 0.0,
+      "count": 4,
+      "spacingFirst": 0.1,
+      "spacingRadial": 0.15,
+      "diameter": 0.01
+    }
+  }
+}

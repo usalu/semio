@@ -1,0 +1,517 @@
+{
+ "artifact": "en1998",
+ "fields": [
+  {
+   "entity": "site",
+   "field": "v_s30_m_s",
+   "default": 0.0,
+   "unit": "MetrePerSecond",
+   "en": "Average shear wave velocity v_s,30 (0 = not given)",
+   "de": "Mittlere Scherwellengeschwindigkeit v_s,30 (0 = nicht angegeben)"
+  },
+  {
+   "entity": "building",
+   "field": "setback_ratio",
+   "default": 0.0,
+   "unit": null,
+   "en": "Largest set-back as share of the plan dimension below",
+   "de": "Größter Rücksprung als Anteil der darunterliegenden Grundrissabmessung"
+  },
+  {
+   "entity": "building",
+   "field": "plan_envelope_gap_ratio",
+   "default": 0.0,
+   "unit": null,
+   "en": "Area between plan outline and convex envelope per floor area",
+   "de": "Fläche zwischen Grundriss und konvexer Hülle je Geschossfläche"
+  },
+  {
+   "entity": "building",
+   "field": "joint_gap_m",
+   "default": 0.0,
+   "unit": "Metre",
+   "en": "Seismic joint gap to the next building (0 = none)",
+   "de": "Erdbebenfuge zum nächsten Gebäude (0 = keine)"
+  },
+  {
+   "entity": "building",
+   "field": "nonstructural_weight_n",
+   "default": 0.0,
+   "unit": "Newton",
+   "en": "Non-structural element weight W_a",
+   "de": "Gewicht des nichttragenden Bauteils W_a"
+  },
+  {
+   "entity": "building",
+   "field": "nonstructural_height_m",
+   "default": 0.0,
+   "unit": "Metre",
+   "en": "Non-structural element height z above the base",
+   "de": "Höhe z des nichttragenden Bauteils über dem Fußpunkt"
+  },
+  {
+   "entity": "building",
+   "field": "nonstructural_period_s",
+   "default": 0.0,
+   "unit": "Second",
+   "en": "Non-structural element period T_a",
+   "de": "Eigenperiode des nichttragenden Bauteils T_a"
+  },
+  {
+   "entity": "building",
+   "field": "nonstructural_q",
+   "default": 2.0,
+   "unit": null,
+   "en": "Non-structural element behaviour factor q_a",
+   "de": "Verhaltensbeiwert des nichttragenden Bauteils q_a"
+  },
+  {
+   "entity": "building",
+   "field": "nonstructural_resistance_n",
+   "default": 0.0,
+   "unit": "Newton",
+   "en": "Non-structural element anchorage resistance",
+   "de": "Verankerungswiderstand des nichttragenden Bauteils"
+  },
+  {
+   "entity": "building",
+   "field": "column_moment_sum_nm",
+   "default": 0.0,
+   "unit": "NewtonMetre",
+   "en": "Sum of column design resistances at the governing joint",
+   "de": "Summe der Stützenwiderstände am maßgebenden Knoten"
+  },
+  {
+   "entity": "building",
+   "field": "beam_moment_sum_nm",
+   "default": 0.0,
+   "unit": "NewtonMetre",
+   "en": "Sum of beam design resistances at the governing joint",
+   "de": "Summe der Balkenwiderstände am maßgebenden Knoten"
+  },
+  {
+   "entity": "tower",
+   "field": "ei_nm2",
+   "default": 0.0,
+   "unit": null,
+   "en": "Flexural stiffness EI of the tower (0 = not given)",
+   "de": "Biegesteifigkeit EI des Turms (0 = nicht angegeben)"
+  },
+  {
+   "entity": "assessment",
+   "field": "chord_rotation_demand_rad",
+   "default": 0.0,
+   "unit": "Radian",
+   "en": "Chord rotation demand θ_Ed",
+   "de": "Sehnendrehwinkel-Einwirkung θ_Ed"
+  },
+  {
+   "entity": "assessment",
+   "field": "chord_rotation_yield_rad",
+   "default": 0.0,
+   "unit": "Radian",
+   "en": "Yield chord rotation θ_y (0 = derived from the section)",
+   "de": "Fließ-Sehnendrehwinkel θ_y (0 = aus dem Querschnitt abgeleitet)"
+  },
+  {
+   "entity": "assessment",
+   "field": "chord_rotation_ultimate_rad",
+   "default": 0.0,
+   "unit": "Radian",
+   "en": "Ultimate chord rotation θ_um (0 = derived from the section)",
+   "de": "Bruch-Sehnendrehwinkel θ_um (0 = aus dem Querschnitt abgeleitet)"
+  },
+  {
+   "entity": "foundation",
+   "field": "liq_n1_60",
+   "default": 0.0,
+   "unit": null,
+   "en": "Corrected SPT blow count (N1)60 of the layer (0 = no liquefaction check)",
+   "de": "Korrigierte SPT-Schlagzahl (N1)60 der Schicht (0 = kein Verflüssigungsnachweis)"
+  },
+  {
+   "entity": "foundation",
+   "field": "liq_fines_percent",
+   "default": 0.0,
+   "unit": "Percent",
+   "en": "Fines content of the layer",
+   "de": "Feinkornanteil der Schicht"
+  },
+  {
+   "entity": "foundation",
+   "field": "liq_depth_m",
+   "default": 0.0,
+   "unit": "Metre",
+   "en": "Depth of the layer below the surface",
+   "de": "Tiefe der Schicht unter der Oberfläche"
+  },
+  {
+   "entity": "foundation",
+   "field": "liq_water_depth_m",
+   "default": 0.0,
+   "unit": "Metre",
+   "en": "Groundwater depth below the surface",
+   "de": "Grundwassertiefe unter der Oberfläche"
+  },
+  {
+   "entity": "foundation",
+   "field": "liq_unit_weight_n_m3",
+   "default": 0.0,
+   "unit": "NewtonPerCubicMetre",
+   "en": "Total unit weight of the soil above the layer",
+   "de": "Wichte des Bodens über der Schicht"
+  },
+  {
+   "entity": "foundation",
+   "field": "liq_magnitude",
+   "default": 0.0,
+   "unit": null,
+   "en": "Surface-wave magnitude Ms",
+   "de": "Oberflächenwellenmagnitude Ms"
+  },
+  {
+   "entity": "bridge",
+   "field": "pier_height_m",
+   "default": 0.0,
+   "unit": "Metre",
+   "en": "Pier height L_s (0 = no pier check)",
+   "de": "Pfeilerhöhe L_s (0 = kein Pfeilernachweis)"
+  },
+  {
+   "entity": "bridge",
+   "field": "pier_moment_rd_nm",
+   "default": 0.0,
+   "unit": "NewtonMetre",
+   "en": "Pier plastic hinge moment resistance M_Rd",
+   "de": "Plastisches Gelenkmoment des Pfeilers M_Rd"
+  },
+  {
+   "entity": "bridge",
+   "field": "pier_shear_rd_n",
+   "default": 0.0,
+   "unit": "Newton",
+   "en": "Pier shear resistance V_Rd",
+   "de": "Pfeilerquerkrafttragfähigkeit V_Rd"
+  },
+  {
+   "entity": "member",
+   "field": "fastener_diameter_mm",
+   "default": 0.0,
+   "unit": "Millimetre",
+   "en": "Timber fastener diameter d (0 = not a timber connection)",
+   "de": "Verbindungsmitteldurchmesser d (0 = keine Holzverbindung)"
+  },
+  {
+   "entity": "member",
+   "field": "timber_thickness_mm",
+   "default": 0.0,
+   "unit": "Millimetre",
+   "en": "Timber member thickness at the connection",
+   "de": "Holzdicke am Anschluss"
+  },
+  {
+   "entity": "member",
+   "field": "wall_thickness_m",
+   "default": 0.0,
+   "unit": "Metre",
+   "en": "Masonry wall thickness t_ef (0 = not a masonry wall)",
+   "de": "Mauerwerksdicke t_ef (0 = keine Mauerwerkswand)"
+  },
+  {
+   "entity": "member",
+   "field": "wall_effective_height_m",
+   "default": 0.0,
+   "unit": "Metre",
+   "en": "Masonry wall effective height h_ef",
+   "de": "Wirksame Mauerwerkshöhe h_ef"
+  },
+  {
+   "entity": "assessment",
+   "field": "section_depth_m",
+   "default": 0.0,
+   "unit": "Metre",
+   "en": "Member section depth h (0 = give θ_y and θ_um directly)",
+   "de": "Querschnittshöhe h (0 = θ_y und θ_um direkt angeben)"
+  },
+  {
+   "entity": "assessment",
+   "field": "section_width_m",
+   "default": 0.0,
+   "unit": "Metre",
+   "en": "Member section width b",
+   "de": "Querschnittsbreite b"
+  },
+  {
+   "entity": "assessment",
+   "field": "effective_depth_m",
+   "default": 0.0,
+   "unit": "Metre",
+   "en": "Effective depth d",
+   "de": "Nutzhöhe d"
+  },
+  {
+   "entity": "assessment",
+   "field": "shear_span_m",
+   "default": 0.0,
+   "unit": "Metre",
+   "en": "Shear span L_V = M/V at the end section",
+   "de": "Schubspannweite L_V = M/V am Stabende"
+  },
+  {
+   "entity": "assessment",
+   "field": "axial_force_n",
+   "default": 0.0,
+   "unit": "Newton",
+   "en": "Axial force N (compression positive)",
+   "de": "Normalkraft N (Druck positiv)"
+  },
+  {
+   "entity": "assessment",
+   "field": "tension_steel_area_m2",
+   "default": 0.0,
+   "unit": "SquareMetre",
+   "en": "Tension reinforcement area A_s1",
+   "de": "Zugbewehrungsfläche A_s1"
+  },
+  {
+   "entity": "assessment",
+   "field": "compression_steel_area_m2",
+   "default": 0.0,
+   "unit": "SquareMetre",
+   "en": "Compression reinforcement area A_s2",
+   "de": "Druckbewehrungsfläche A_s2"
+  },
+  {
+   "entity": "assessment",
+   "field": "bar_diameter_mm",
+   "default": 0.0,
+   "unit": "Millimetre",
+   "en": "Longitudinal bar diameter d_b",
+   "de": "Längsstabdurchmesser d_b"
+  },
+  {
+   "entity": "assessment",
+   "field": "steel_yield_mpa",
+   "default": 0.0,
+   "unit": "Megapascal",
+   "en": "Steel yield strength f_y (mean value)",
+   "de": "Stahlfließgrenze f_y (Mittelwert)"
+  },
+  {
+   "entity": "assessment",
+   "field": "concrete_strength_mpa",
+   "default": 0.0,
+   "unit": "Megapascal",
+   "en": "Concrete compressive strength f_c (mean value)",
+   "de": "Betondruckfestigkeit f_c (Mittelwert)"
+  },
+  {
+   "entity": "assessment",
+   "field": "stirrup_leg_area_m2",
+   "default": 0.0,
+   "unit": "SquareMetre",
+   "en": "Stirrup area A_sx in the loading direction per spacing",
+   "de": "Bügelfläche A_sx in Lastrichtung je Abstand"
+  },
+  {
+   "entity": "assessment",
+   "field": "stirrup_spacing_m",
+   "default": 0.0,
+   "unit": "Metre",
+   "en": "Stirrup spacing s_h",
+   "de": "Bügelabstand s_h"
+  },
+  {
+   "entity": "assessment",
+   "field": "stirrup_yield_mpa",
+   "default": 0.0,
+   "unit": "Megapascal",
+   "en": "Stirrup yield strength f_yw",
+   "de": "Bügelfließgrenze f_yw"
+  },
+  {
+   "entity": "assessment",
+   "field": "core_width_m",
+   "default": 0.0,
+   "unit": "Metre",
+   "en": "Confined core width b_0 (to stirrup centre line)",
+   "de": "Breite des Kerns b_0 (bis Bügelachse)"
+  },
+  {
+   "entity": "assessment",
+   "field": "core_depth_m",
+   "default": 0.0,
+   "unit": "Metre",
+   "en": "Confined core depth h_0 (to stirrup centre line)",
+   "de": "Höhe des Kerns h_0 (bis Bügelachse)"
+  },
+  {
+   "entity": "assessment",
+   "field": "restrained_bar_count",
+   "default": 0.0,
+   "unit": null,
+   "en": "Number of longitudinal bars restrained by stirrup corners or ties",
+   "de": "Anzahl der durch Bügelecken oder Haken gehaltenen Längsstäbe"
+  },
+  {
+   "entity": "assessment",
+   "field": "restrained_bar_spacing_m",
+   "default": 0.0,
+   "unit": "Metre",
+   "en": "Spacing b_i of the restrained bars",
+   "de": "Abstand b_i der gehaltenen Längsstäbe"
+  },
+  {
+   "entity": "assessment",
+   "field": "diagonal_reinforcement_ratio",
+   "default": 0.0,
+   "unit": null,
+   "en": "Diagonal reinforcement ratio ρ_d",
+   "de": "Diagonalbewehrungsgrad ρ_d"
+  },
+  {
+   "entity": "assessment",
+   "field": "shear_cracking_before_yield",
+   "default": 0.0,
+   "unit": null,
+   "en": "Shear cracking before flexural yielding a_V (1 = yes, 0 = no)",
+   "de": "Schubrisse vor dem Biegefließen a_V (1 = ja, 0 = nein)"
+  },
+  {
+   "entity": "foundation",
+   "field": "liq_layer_thickness_m",
+   "default": 0.0,
+   "unit": "Metre",
+   "en": "Thickness of the liquefiable layer (0 = point value)",
+   "de": "Dicke der verflüssigungsfähigen Schicht (0 = Punktwert)"
+  },
+  {
+   "entity": "foundation",
+   "field": "footing_width_m",
+   "default": 0.0,
+   "unit": "Metre",
+   "en": "Footing width B of the seismic bearing check (0 = no check)",
+   "de": "Fundamentbreite B für den Erdbebengrundbruch (0 = kein Nachweis)"
+  },
+  {
+   "entity": "foundation",
+   "field": "bearing_axial_n",
+   "default": 0.0,
+   "unit": "Newton",
+   "en": "Design axial force N_Ed of the footing",
+   "de": "Bemessungswert der Normalkraft N_Ed des Fundaments"
+  },
+  {
+   "entity": "foundation",
+   "field": "bearing_shear_n",
+   "default": 0.0,
+   "unit": "Newton",
+   "en": "Design horizontal force V_Ed of the footing",
+   "de": "Bemessungswert der Horizontalkraft V_Ed des Fundaments"
+  },
+  {
+   "entity": "foundation",
+   "field": "bearing_moment_nm",
+   "default": 0.0,
+   "unit": "NewtonMetre",
+   "en": "Design moment M_Ed of the footing",
+   "de": "Bemessungswert des Moments M_Ed des Fundaments"
+  },
+  {
+   "entity": "foundation",
+   "field": "bearing_n_max_n",
+   "default": 0.0,
+   "unit": "Newton",
+   "en": "Ultimate vertical bearing force N_max under central load",
+   "de": "Vertikale Grenztragkraft N_max unter zentrischer Last"
+  },
+  {
+   "entity": "foundation",
+   "field": "soil_friction_angle_deg",
+   "default": 0.0,
+   "unit": "Degree",
+   "en": "Soil friction angle φ' of the bearing layer",
+   "de": "Reibungswinkel φ' der Tragschicht"
+  },
+  {
+   "entity": "foundation",
+   "field": "pile_diameter_m",
+   "default": 0.0,
+   "unit": "Metre",
+   "en": "Pile diameter d (0 = no pile check)",
+   "de": "Pfahldurchmesser d (0 = kein Pfahlnachweis)"
+  },
+  {
+   "entity": "foundation",
+   "field": "pile_length_m",
+   "default": 0.0,
+   "unit": "Metre",
+   "en": "Pile length L",
+   "de": "Pfahllänge L"
+  },
+  {
+   "entity": "foundation",
+   "field": "pile_modulus_pa",
+   "default": 0.0,
+   "unit": "Pascal",
+   "en": "Pile material modulus E_p",
+   "de": "Elastizitätsmodul E_p des Pfahls"
+  },
+  {
+   "entity": "foundation",
+   "field": "pile_subgrade_modulus_n_m3",
+   "default": 0.0,
+   "unit": "NewtonPerCubicMetre",
+   "en": "Horizontal subgrade modulus k_h of the soil",
+   "de": "Horizontaler Bettungsmodul k_h des Bodens"
+  },
+  {
+   "entity": "foundation",
+   "field": "pile_head_shear_n",
+   "default": 0.0,
+   "unit": "Newton",
+   "en": "Inertial head shear per pile from the superstructure",
+   "de": "Trägheitskraft am Pfahlkopf je Pfahl aus dem Tragwerk"
+  },
+  {
+   "entity": "foundation",
+   "field": "pile_head_fixed",
+   "default": 0.0,
+   "unit": null,
+   "en": "Pile head fixed in the cap (1 = fixed, 0 = free)",
+   "de": "Pfahlkopf in der Platte eingespannt (1 = ja, 0 = frei)"
+  },
+  {
+   "entity": "foundation",
+   "field": "pile_interface_depth_m",
+   "default": 0.0,
+   "unit": "Metre",
+   "en": "Depth of the stiffness contrast between two soil layers",
+   "de": "Tiefe des Steifigkeitssprungs zwischen zwei Bodenschichten"
+  },
+  {
+   "entity": "foundation",
+   "field": "pile_upper_vs_m_s",
+   "default": 0.0,
+   "unit": "MetrePerSecond",
+   "en": "Shear wave velocity of the upper layer",
+   "de": "Scherwellengeschwindigkeit der oberen Schicht"
+  },
+  {
+   "entity": "foundation",
+   "field": "pile_lower_vs_m_s",
+   "default": 0.0,
+   "unit": "MetrePerSecond",
+   "en": "Shear wave velocity of the lower layer",
+   "de": "Scherwellengeschwindigkeit der unteren Schicht"
+  },
+  {
+   "entity": "foundation",
+   "field": "pile_moment_rd_nm",
+   "default": 0.0,
+   "unit": "NewtonMetre",
+   "en": "Pile bending resistance M_Rd",
+   "de": "Biegetragfähigkeit M_Rd des Pfahls"
+  }
+ ]
+}

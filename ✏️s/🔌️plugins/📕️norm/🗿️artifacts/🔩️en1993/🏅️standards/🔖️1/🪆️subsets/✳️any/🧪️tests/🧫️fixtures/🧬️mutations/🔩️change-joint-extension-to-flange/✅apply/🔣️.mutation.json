@@ -1,0 +1,6 @@
+{
+  "ChangeJointExtensionToFlange": {
+    "id": "joint-j1",
+    "newExtensionToFlange": 1.5
+  }
+}

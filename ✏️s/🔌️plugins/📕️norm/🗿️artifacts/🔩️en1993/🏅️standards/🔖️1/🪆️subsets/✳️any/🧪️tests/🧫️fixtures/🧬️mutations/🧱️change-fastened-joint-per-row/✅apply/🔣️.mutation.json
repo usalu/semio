@@ -1,0 +1,6 @@
+{
+  "ChangeFastenedJointPerRow": {
+    "id": "fastened-joint-1",
+    "newPerRow": 3
+  }
+}

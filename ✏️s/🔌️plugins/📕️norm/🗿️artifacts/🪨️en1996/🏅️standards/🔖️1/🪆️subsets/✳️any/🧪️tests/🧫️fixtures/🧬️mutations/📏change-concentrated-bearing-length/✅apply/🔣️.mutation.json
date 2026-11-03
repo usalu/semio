@@ -1,0 +1,8 @@
+{
+  "ChangeConcentratedBearingLength": {
+    "wallId": "wall-concentrated",
+    "loadCaseId": "ulsinz",
+    "id": "beam-B",
+    "newBearingLengthM": 0.25
+  }
+}

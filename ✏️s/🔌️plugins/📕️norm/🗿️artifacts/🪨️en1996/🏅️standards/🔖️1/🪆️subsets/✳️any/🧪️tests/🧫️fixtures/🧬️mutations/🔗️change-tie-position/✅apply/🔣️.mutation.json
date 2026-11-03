@@ -1,0 +1,7 @@
+{
+  "ChangeTiePosition": {
+    "wallId": "wall-north",
+    "id": "tie-1",
+    "newPositionM": 1.0
+  }
+}

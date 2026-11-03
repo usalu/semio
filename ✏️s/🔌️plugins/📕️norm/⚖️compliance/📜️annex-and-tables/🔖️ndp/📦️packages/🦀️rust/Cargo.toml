@@ -1,0 +1,29 @@
+[package]
+workspace = "../../../../.."
+name = "semio-s-plugin-norm-ndp"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Norm NDP registry: provenance and verification status of every nationally determined parameter"
+
+[package.metadata.semio]
+role = "library"
+
+[dependencies]
+semio-s-plugin-norm-ndp-model = { path = "../../🧱️model/📦️packages/🦀️rust" }
+semio-s-plugin-norm-ndp-en1990 = { path = "../../🗃️table/en1990/📦️packages/🦀️rust" }
+semio-s-plugin-norm-ndp-en1991 = { path = "../../🗃️table/en1991/📦️packages/🦀️rust" }
+semio-s-plugin-norm-ndp-en1992 = { path = "../../🗃️table/en1992/📦️packages/🦀️rust" }
+semio-s-plugin-norm-ndp-en1993 = { path = "../../🗃️table/en1993/📦️packages/🦀️rust" }
+semio-s-plugin-norm-ndp-en1994 = { path = "../../🗃️table/en1994/📦️packages/🦀️rust" }
+semio-s-plugin-norm-ndp-en1995 = { path = "../../🗃️table/en1995/📦️packages/🦀️rust" }
+semio-s-plugin-norm-ndp-en1996 = { path = "../../🗃️table/en1996/📦️packages/🦀️rust" }
+semio-s-plugin-norm-ndp-en1997 = { path = "../../🗃️table/en1997/📦️packages/🦀️rust" }
+semio-s-plugin-norm-ndp-en1998 = { path = "../../🗃️table/en1998/📦️packages/🦀️rust" }
+semio-s-plugin-norm-ndp-en1999 = { path = "../../🗃️table/en1999/📦️packages/🦀️rust" }
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"

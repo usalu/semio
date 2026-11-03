@@ -1,0 +1,6 @@
+{
+  "ChangeWallHeight": {
+    "id": "wall-north",
+    "newHeightM": 2.5
+  }
+}

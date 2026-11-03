@@ -1,0 +1,386 @@
+{
+ "artifact": "en1992",
+ "conversions": [
+  {
+   "hosts": [
+    "BarLayer.position"
+   ],
+   "enum": "BarPosition",
+   "doc": "📍 Position of a bar layer in the section (EN 1992-1-1 8.4.2, Figure 8.2).",
+   "default": "Bottom",
+   "variants": [
+    [
+     "Bottom",
+     [
+      "bottom"
+     ],
+     "Bottom / tension",
+     "Unten / Zug"
+    ],
+    [
+     "Top",
+     [
+      "top"
+     ],
+     "Top / compression",
+     "Oben / Druck"
+    ],
+    [
+     "Tension",
+     [
+      "tension"
+     ],
+     "Tension",
+     "Zug"
+    ],
+    [
+     "Compression",
+     [
+      "compression"
+     ],
+     "Compression",
+     "Druck"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "En1992Snapshot.cement_type",
+    "En1992Artifact.cement_type"
+   ],
+   "enum": "CementClass",
+   "doc": "🧱 Cement strength development class (EN 1992-1-1 3.1.2 (6)).",
+   "default": "N",
+   "variants": [
+    [
+     "S",
+     [
+      "S"
+     ],
+     "Class S (slow hardening)",
+     "Klasse S (langsam erhärtend)"
+    ],
+    [
+     "N",
+     [
+      "N"
+     ],
+     "Class N (normal hardening)",
+     "Klasse N (normal erhärtend)"
+    ],
+    [
+     "R",
+     [
+      "R"
+     ],
+     "Class R (rapid hardening)",
+     "Klasse R (rasch erhärtend)"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "PunchingSpec.column_position"
+   ],
+   "enum": "ColumnPosition",
+   "doc": "🕳️ Position of the column below a flat slab for the punching factor beta (EN 1992-1-1 6.4.3).",
+   "default": "Interior",
+   "variants": [
+    [
+     "Interior",
+     [
+      "interior"
+     ],
+     "Interior column",
+     "Innenstütze"
+    ],
+    [
+     "Edge",
+     [
+      "edge"
+     ],
+     "Edge column",
+     "Randstütze"
+    ],
+    [
+     "Corner",
+     [
+      "corner"
+     ],
+     "Corner column",
+     "Eckstütze"
+    ],
+    [
+     "WallEnd",
+     [
+      "wall_end",
+      "wall-end"
+     ],
+     "Wall end",
+     "Wandende"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "FireSpec.slab_system"
+   ],
+   "enum": "SlabFireSystem",
+   "doc": "🔥 Slab system of the EN 1992-1-2 tabulated fire data.",
+   "default": "OneWay",
+   "variants": [
+    [
+     "OneWay",
+     [
+      "one-way",
+      "flat",
+      "ribbed",
+      ""
+     ],
+     "One-way slab (Table 5.8)",
+     "Einachsig (Tabelle 5.8)"
+    ],
+    [
+     "TwoWay",
+     [
+      "two-way"
+     ],
+     "Two-way slab (Table 5.9)",
+     "Zweiachsig (Tabelle 5.9)"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "LoadCaseActions.kind"
+   ],
+   "enum": "ActionKind",
+   "doc": "🏋️ Kind of a characteristic action (EN 1990 4.1.1).",
+   "default": "Permanent",
+   "variants": [
+    [
+     "Permanent",
+     [
+      "permanent"
+     ],
+     "Permanent (G)",
+     "Ständig (G)"
+    ],
+    [
+     "Imposed",
+     [
+      "imposed"
+     ],
+     "Imposed (Q)",
+     "Nutzlast (Q)"
+    ],
+    [
+     "Snow",
+     [
+      "snow"
+     ],
+     "Snow (S)",
+     "Schnee (S)"
+    ],
+    [
+     "Wind",
+     [
+      "wind"
+     ],
+     "Wind (W)",
+     "Wind (W)"
+    ],
+    [
+     "Accidental",
+     [
+      "accidental"
+     ],
+     "Accidental (A)",
+     "Außergewöhnlich (A)"
+    ],
+    [
+     "Prestress",
+     [
+      "prestress"
+     ],
+     "Prestress (P)",
+     "Vorspannung (P)"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "LoadCaseActions.source"
+   ],
+   "enum": "ActionSource",
+   "doc": "🧮 Source of the characteristic internal forces of an action.",
+   "default": "Udl",
+   "variants": [
+    [
+     "Udl",
+     [
+      "udl"
+     ],
+     "Derive from line load (span/support)",
+     "Aus Streckenlast (Spannweite/Lagerung)"
+    ],
+    [
+     "Point",
+     [
+      "point"
+     ],
+     "Derive from midspan point load",
+     "Aus Einzellast in Feldmitte"
+    ],
+    [
+     "External",
+     [
+      "external"
+     ],
+     "External characteristic internal forces",
+     "Äußere charakteristische Schnittgrößen"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "BarPoint.bend"
+   ],
+   "enum": "BarBend",
+   "doc": "🪝 Bend of an explicit bar: derived hooks, straight, one hook or hooks at both ends.",
+   "default": "Auto",
+   "variants": [
+    [
+     "Auto",
+     [
+      "auto"
+     ],
+     "Automatic (hooks only where anchorage needs them)",
+     "Automatisch (Haken nur bei Verankerungsbedarf)"
+    ],
+    [
+     "Straight",
+     [
+      "straight"
+     ],
+     "Straight",
+     "Gerade"
+    ],
+    [
+     "Hook",
+     [
+      "hook"
+     ],
+     "Hook at one end",
+     "Haken an einem Ende"
+    ],
+    [
+     "UHook",
+     [
+      "u-hook"
+     ],
+     "Hooks at both ends",
+     "Haken an beiden Enden"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "LoadCaseActions.category"
+   ],
+   "enum": "PsiCategory",
+   "doc": "🏷️ Category of an action for the combination factors psi (EN 1990 Table A1.1); the variants are the rows of the psi table.",
+   "default": "Office",
+   "variants": [
+    [
+     "SelfWeight",
+     [
+      "self"
+     ],
+     "Self-weight",
+     "Eigengewicht"
+    ],
+    [
+     "Office",
+     [
+      "office"
+     ],
+     "Office",
+     "Büro"
+    ],
+    [
+     "Residential",
+     [
+      "residential"
+     ],
+     "Residential",
+     "Wohnen"
+    ],
+    [
+     "Congregation",
+     [
+      "congregation"
+     ],
+     "Congregation",
+     "Versammlung"
+    ],
+    [
+     "Shopping",
+     [
+      "shopping"
+     ],
+     "Shopping",
+     "Verkauf"
+    ],
+    [
+     "Storage",
+     [
+      "storage"
+     ],
+     "Storage",
+     "Lager"
+    ],
+    [
+     "Snow",
+     [
+      "snow"
+     ],
+     "Snow (CEN member states up to 1000 m)",
+     "Schnee (bis 1000 m)"
+    ],
+    [
+     "SnowHigh",
+     [
+      "snow_high"
+     ],
+     "Snow (above 1000 m)",
+     "Schnee (über 1000 m)"
+    ],
+    [
+     "Wind",
+     [
+      "wind"
+     ],
+     "Wind",
+     "Wind"
+    ],
+    [
+     "Temperature",
+     [
+      "temperature"
+     ],
+     "Temperature",
+     "Temperatur"
+    ],
+    [
+     "Accidental",
+     [
+      "accidental"
+     ],
+     "Accidental",
+     "Außergewöhnlich"
+    ]
+   ]
+  }
+ ]
+}

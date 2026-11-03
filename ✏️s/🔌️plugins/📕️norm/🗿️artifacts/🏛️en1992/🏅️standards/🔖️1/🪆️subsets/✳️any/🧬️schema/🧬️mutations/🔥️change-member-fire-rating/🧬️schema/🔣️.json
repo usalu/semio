@@ -43,6 +43,9 @@
         },
         "group": "fire",
         "order": 20
+      },
+      "x-semio-rust": {
+        "type": "FireRating"
       }
     }
   }

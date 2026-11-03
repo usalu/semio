@@ -9,7 +9,7 @@ fn example_snapshot_validates_against_json_schema() {
         let instance = serde_json::to_string(&snap).expect("instance");
         let tmp = std::env::temp_dir().join(format!("en1999-instance-{}.json", snap.members[0].id));
         std::fs::write(&tmp, &instance).unwrap();
-        let status = Command::new("python3")
+        let status = semio_s_plugin_norm_compliance::python_oracle::command()
             .arg("-c")
             .arg("import json,sys,jsonschema; s=json.load(open(sys.argv[1])); i=json.load(open(sys.argv[2])); jsonschema.validate(instance=i, schema=s); print('ok')")
             .arg(&schema_path)
@@ -63,9 +63,9 @@ fn field_meta_covers_every_editable_leaf_en_de() {
             match en1999_field_meta(path) {
                 None => missing.push(path.to_string()),
                 Some(meta) => {
-                    assert!(!meta.label_en.is_empty(), "{path} empty en");
-                    assert!(!meta.label_de.is_empty(), "{path} empty de");
-                    if let Some(choices) = meta.choices {
+                    assert!(!meta.label.en.is_empty(), "{path} empty en");
+                    assert!(!meta.label.de.is_empty(), "{path} empty de");
+                    if let Some(choices) = meta.choices() {
                         for c in choices {
                             assert!(!c.label_en.is_empty(), "{path} choice en");
                             assert!(!c.label_de.is_empty(), "{path} choice de");
@@ -108,11 +108,11 @@ fn facet_diff_matches_rust() {
     let diff_ts = std::fs::read_to_string(family_any_dir().join("🧬️schema/🔺️diff/🟦️.ts")).unwrap_or_default();
     let diff_gql = std::fs::read_to_string(family_any_dir().join("🧬️schema/🔺️diff/🔗️.graphql")).unwrap_or_default();
     let diff_proto = std::fs::read_to_string(family_any_dir().join("🧬️schema/🔺️diff/🛰️.proto")).unwrap_or_default();
-    for field in ["artifact", "annex", "materials", "sections", "members", "connections", "fireScenarios", "fatigueDetails", "coldFormed", "shells"] {
+    for field in ["artifact", "annex", "materials", "sections", "members", "connections", "fireScenarios", "fatigueDetails", "coldFormed", "shells", "placements", "weldRuns", "outlineVertices", "fatigueCategories", "patchLoads", "ringStiffeners", "transverseStiffeners"] {
         assert!(diff_ts.contains(field), "diff TS missing {field}");
         assert!(diff_gql.contains(field), "diff GraphQL missing {field}");
     }
-    for field in ["artifact", "annex", "materials", "sections", "members", "connections", "fire_scenarios", "fatigue_details", "cold_formed", "shells"] {
+    for field in ["artifact", "annex", "materials", "sections", "members", "connections", "fire_scenarios", "fatigue_details", "cold_formed", "shells", "placements", "weld_runs", "outline_vertices", "fatigue_categories", "patch_loads", "ring_stiffeners", "transverse_stiffeners"] {
         assert!(diff_proto.contains(field), "diff proto missing {field}");
     }
     for stale in ["nEdKn", "mEdKnm", "chi?:", "sheetMEdKnm", "sigmaEdShellMpa", "n_ed_kn", "sigma_ed_shell_mpa", "double chi", "chi:"] {

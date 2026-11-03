@@ -1,2 +1,1554 @@
 syntax = "proto3";
-message En1998Mutation { string mutation = 1; }
+package semio.s.norm.en1998;
+message En1998Mutation {
+  oneof kind {
+    ChangeAnnex change_annex = 1;
+    InsertBuilding insert_building = 2;
+    RemoveBuilding remove_building = 3;
+    ChangeSystemVRdN change_system_v_rd_n = 4;
+    ChangeStoreyPermanentGkN change_storey_permanent_gk_n = 5;
+    ChangeStoreyStiffnessX change_storey_stiffness_x = 6;
+    ChangeStoreyDriftXM change_storey_drift_x_m = 7;
+    ChangeBuildingPlanRegular change_building_plan_regular = 8;
+    ChangeElevationRegular change_elevation_regular = 9;
+    ChangeMemberDetailing change_member_detailing = 10;
+    ChangeMasonryWallRatio change_masonry_wall_ratio = 11;
+    InsertBridge insert_bridge = 12;
+    ChangeBridgeVRdN change_bridge_v_rd_n = 13;
+    InsertAssessment insert_assessment = 14;
+    ChangeAssessmentRKN change_assessment_r_k_n = 15;
+    InsertSilo insert_silo = 16;
+    InsertTank insert_tank = 17;
+    InsertFoundation insert_foundation = 18;
+    InsertRetainingWall insert_retaining_wall = 19;
+    InsertTower insert_tower = 20;
+    ChangeTowerMRdNm change_tower_m_rd_nm = 21;
+    RemoveBridge remove_bridge = 22;
+    RemoveAssessment remove_assessment = 23;
+    RemoveSilo remove_silo = 24;
+    RemoveTank remove_tank = 25;
+    RemoveFoundation remove_foundation = 26;
+    RemoveRetainingWall remove_retaining_wall = 27;
+    RemoveTower remove_tower = 28;
+    ChangeSiteSApR change_site_s_ap_r = 29;
+    ChangeSiteAGr change_site_a_gr = 30;
+    ChangeSiteDeGroundCombo change_site_de_ground_combo = 31;
+    ChangeSiteEnGroundType change_site_en_ground_type = 32;
+    ChangeSiteEnSpectrumType change_site_en_spectrum_type = 33;
+    ChangeSiteImportanceClass change_site_importance_class = 34;
+    ChangeBuildingName change_building_name = 35;
+    ChangeBuildingPlanWidthM change_building_plan_width_m = 36;
+    ChangeBuildingPlanLengthM change_building_plan_length_m = 37;
+    ChangeBuildingT1Method change_building_t1_method = 38;
+    ChangeBuildingT1GivenS change_building_t1_given_s = 39;
+    ChangeBuildingCt change_building_ct = 40;
+    ChangeBuildingDriftLimitClass change_building_drift_limit_class = 41;
+    ChangeBuildingNu change_building_nu = 42;
+    ChangeBuildingMultiResistingSystems change_building_multi_resisting_systems = 43;
+    ChangeBuildingClaimsSimpleMasonry change_building_claims_simple_masonry = 44;
+    ChangeBuildingAccidentalEccRatio change_building_accidental_ecc_ratio = 45;
+    ChangeSystemDirection change_system_direction = 46;
+    ChangeSystemSystemType change_system_system_type = 47;
+    ChangeSystemMaterial change_system_material = 48;
+    ChangeSystemDuctilityClass change_system_ductility_class = 49;
+    ChangeSystemQ0 change_system_q0 = 50;
+    ChangeSystemAlphaUOverAlpha1 change_system_alpha_u_over_alpha1 = 51;
+    ChangeSystemKW change_system_k_w = 52;
+    ChangeStoreyHeightM change_storey_height_m = 53;
+    ChangeStoreyCorrelatedOccupancy change_storey_correlated_occupancy = 54;
+    ChangeStoreyStiffnessY change_storey_stiffness_y = 55;
+    ChangeStoreyCentreOfMassXM change_storey_centre_of_mass_x_m = 56;
+    ChangeStoreyCentreOfMassYM change_storey_centre_of_mass_y_m = 57;
+    ChangeStoreyCentreOfStiffnessXM change_storey_centre_of_stiffness_x_m = 58;
+    ChangeStoreyCentreOfStiffnessYM change_storey_centre_of_stiffness_y_m = 59;
+    ChangeStoreyDriftYM change_storey_drift_y_m = 60;
+    ChangeStoreyShearResistanceN change_storey_shear_resistance_n = 61;
+    ChangeMemberMaterial change_member_material = 62;
+    ChangeMemberRole change_member_role = 63;
+    ChangeMemberMinDimensionM change_member_min_dimension_m = 64;
+    ChangeMemberRho change_member_rho = 65;
+    ChangeMemberRhoPrime change_member_rho_prime = 66;
+    ChangeMemberOmegaWd change_member_omega_wd = 67;
+    ChangeMemberSteelSectionClass change_member_steel_section_class = 68;
+    ChangeBridgePeriodRatio change_bridge_period_ratio = 69;
+    ChangeBridgeFundamentalPeriodS change_bridge_fundamental_period_s = 70;
+    ChangeBridgeBearingDRdM change_bridge_bearing_d_rd_m = 71;
+    ChangeBridgePermanentGkN change_bridge_permanent_gk_n = 72;
+    ChangeBridgeCorrelatedOccupancy change_bridge_correlated_occupancy = 73;
+    ChangeAssessmentKnowledgeLevel change_assessment_knowledge_level = 74;
+    ChangeAssessmentLimitState change_assessment_limit_state = 75;
+    ChangeAssessmentSupportedBuildingId change_assessment_supported_building_id = 76;
+    ChangeAssessmentGammaEl change_assessment_gamma_el = 77;
+    ChangeTowerHeightM change_tower_height_m = 78;
+    ChangeTowerIsChimney change_tower_is_chimney = 79;
+    ChangeTowerQNominal change_tower_q_nominal = 80;
+    ChangeTowerPermanentGkN change_tower_permanent_gk_n = 81;
+    ChangeTowerCorrelatedOccupancy change_tower_correlated_occupancy = 82;
+    ChangeSiloHeightM change_silo_height_m = 83;
+    ChangeSiloRadiusM change_silo_radius_m = 84;
+    ChangeSiloPermanentGkN change_silo_permanent_gk_n = 85;
+    ChangeSiloContentQkN change_silo_content_qk_n = 86;
+    ChangeSiloContentCategory change_silo_content_category = 87;
+    ChangeSiloFillingRatio change_silo_filling_ratio = 88;
+    ChangeSiloNRdN change_silo_n_rd_n = 89;
+    ChangeSiloVRdN change_silo_v_rd_n = 90;
+    ChangeSiloQNominal change_silo_q_nominal = 91;
+    ChangeTankHeightM change_tank_height_m = 92;
+    ChangeTankRadiusM change_tank_radius_m = 93;
+    ChangeTankPermanentGkN change_tank_permanent_gk_n = 94;
+    ChangeTankContentQkN change_tank_content_qk_n = 95;
+    ChangeTankContentCategory change_tank_content_category = 96;
+    ChangeTankFillingRatio change_tank_filling_ratio = 97;
+    ChangeTankVRdN change_tank_v_rd_n = 98;
+    ChangeFoundationSupportedBuildingId change_foundation_supported_building_id = 99;
+    ChangeTieBeamFoundationBId change_tie_beam_foundation_b_id = 100;
+    ChangeTieBeamFoundationAId change_tie_beam_foundation_a_id = 101;
+    ChangeSeismicSlopeGoverningLayerId change_seismic_slope_governing_layer_id = 102;
+    ChangeFoundationAreaM2 change_foundation_area_m2 = 103;
+    ChangeFoundationPRdPa change_foundation_p_rd_pa = 104;
+    ChangeFoundationPassiveResistanceN change_foundation_passive_resistance_n = 105;
+    ChangeFoundationKFoundation change_foundation_k_foundation = 106;
+    ChangeFoundationKSoil change_foundation_k_soil = 107;
+    ChangeRetainingWallHeightM change_retaining_wall_height_m = 108;
+    ChangeRetainingWallPhiDeg change_retaining_wall_phi_deg = 109;
+    ChangeRetainingWallSoilGamma change_retaining_wall_soil_gamma = 110;
+    ChangeRetainingWallR change_retaining_wall_r = 111;
+    ChangeRetainingWallHRdNPerM change_retaining_wall_h_rd_n_per_m = 112;
+    ChangeSiteVS30MS change_site_v_s30_m_s = 113;
+    ChangeSiteNSpt change_site_n_spt = 114;
+    ChangeSiteCUKpa change_site_c_u_kpa = 115;
+    ChangeSiteSoftClayThicknessM change_site_soft_clay_thickness_m = 116;
+    ChangeSiteSoftClayPi change_site_soft_clay_pi = 117;
+    ChangeSiteLiquefiableLayer change_site_liquefiable_layer = 118;
+    ChangeSiteAlluviumThicknessM change_site_alluvium_thickness_m = 119;
+    ChangeSiteAlluviumVSMS change_site_alluvium_v_s_m_s = 120;
+    ChangeSiteBelowAlluviumVSMS change_site_below_alluvium_v_s_m_s = 121;
+    ChangeBuildingSetbackRatio change_building_setback_ratio = 122;
+    ChangeBuildingStoreyStiffnessRatio change_building_storey_stiffness_ratio = 123;
+    ChangeBuildingStoreyStiffnessBasis change_building_storey_stiffness_basis = 124;
+    ChangeBuildingPlanEnvGapRatio change_building_plan_env_gap_ratio = 125;
+    ChangeBuildingJointGapM change_building_joint_gap_m = 126;
+    ChangeBuildingNsWeightN change_building_ns_weight_n = 127;
+    ChangeBuildingNsHeightM change_building_ns_height_m = 128;
+    ChangeBuildingNsPeriodS change_building_ns_period_s = 129;
+    ChangeBuildingNsQ change_building_ns_q = 130;
+    ChangeBuildingNsResistanceN change_building_ns_resistance_n = 131;
+    ChangeBuildingColMomentSumNm change_building_col_moment_sum_nm = 132;
+    ChangeBuildingBeamMomentSumNm change_building_beam_moment_sum_nm = 133;
+    ChangeMemberFastenerDiameterMm change_member_fastener_diameter_mm = 134;
+    ChangeMemberTimberThicknessMm change_member_timber_thickness_mm = 135;
+    ChangeMemberWallThicknessM change_member_wall_thickness_m = 136;
+    ChangeMemberEffectiveStiffnessRatio change_member_effective_stiffness_ratio = 137;
+    ChangeMemberEffectiveStiffnessBasis change_member_effective_stiffness_basis = 138;
+    ChangeMemberWallPoissonRatio change_member_wall_poisson_ratio = 139;
+    ChangeMemberWallStartXM change_member_wall_start_x_m = 140;
+    ChangeMemberWallStartYM change_member_wall_start_y_m = 141;
+    ChangeMemberWallLengthM change_member_wall_length_m = 142;
+    ChangeMemberWallDirectionRad change_member_wall_direction_rad = 143;
+    ChangeMemberWallStoreyId change_member_wall_storey_id = 144;
+    ChangeMemberWallEffHeightM change_member_wall_eff_height_m = 145;
+    ChangeBridgePierHeightM change_bridge_pier_height_m = 146;
+    ChangeBridgePierMomentRdNm change_bridge_pier_moment_rd_nm = 147;
+    ChangeBridgePierShearRdN change_bridge_pier_shear_rd_n = 148;
+    ChangeBridgeImportanceClass change_bridge_importance_class = 149;
+    ChangeBridgeVerticalPeriodS change_bridge_vertical_period_s = 150;
+    ChangeBridgePierCrackedInertiaRatio change_bridge_pier_cracked_inertia_ratio = 151;
+    ChangeBridgeDeckLengthM change_bridge_deck_length_m = 152;
+    ChangeBridgeDeckEiNm2 change_bridge_deck_ei_nm2 = 153;
+    ChangeAssessmentChordDemandRad change_assessment_chord_demand_rad = 154;
+    ChangeAssessmentChordYieldRad change_assessment_chord_yield_rad = 155;
+    ChangeAssessmentChordUltRad change_assessment_chord_ult_rad = 156;
+    ChangeTowerEiNm2 change_tower_ei_nm2 = 157;
+    ChangeFoundationLiqN160 change_foundation_liq_n160 = 158;
+    ChangeFoundationLiqFinesPercent change_foundation_liq_fines_percent = 159;
+    ChangeFoundationLiqDepthM change_foundation_liq_depth_m = 160;
+    ChangeFoundationLiqWaterDepthM change_foundation_liq_water_depth_m = 161;
+    ChangeFoundationLiqUnitWtNM3 change_foundation_liq_unit_wt_n_m3 = 162;
+    ChangeFoundationLiqMagnitude change_foundation_liq_magnitude = 163;
+    ChangeAssessmentSectionDepthM change_assessment_section_depth_m = 164;
+    ChangeAssessmentSectionWidthM change_assessment_section_width_m = 165;
+    ChangeAssessmentEffDepthM change_assessment_eff_depth_m = 166;
+    ChangeAssessmentShearSpanM change_assessment_shear_span_m = 167;
+    ChangeAssessmentAxialForceN change_assessment_axial_force_n = 168;
+    ChangeAssessmentShearForceDemandN change_assessment_shear_force_demand_n = 169;
+    ChangeAssessmentAs1AreaM2 change_assessment_as1_area_m2 = 170;
+    ChangeAssessmentAs2AreaM2 change_assessment_as2_area_m2 = 171;
+    ChangeAssessmentBarDiameterMm change_assessment_bar_diameter_mm = 172;
+    ChangeAssessmentSteelYieldMpa change_assessment_steel_yield_mpa = 173;
+    ChangeAssessmentFcMpa change_assessment_fc_mpa = 174;
+    ChangeAssessmentStrpLegAreaM2 change_assessment_strp_leg_area_m2 = 175;
+    ChangeAssessmentStrpSpacingM change_assessment_strp_spacing_m = 176;
+    ChangeAssessmentStrpYieldMpa change_assessment_strp_yield_mpa = 177;
+    ChangeAssessmentCoreWidthM change_assessment_core_width_m = 178;
+    ChangeAssessmentCoreDepthM change_assessment_core_depth_m = 179;
+    ChangeAssessmentMidSteelAreaM2 change_assessment_mid_steel_area_m2 = 180;
+    ChangeAssessmentRbarCount change_assessment_rbar_count = 181;
+    ChangeAssessmentRbarSpacingM change_assessment_rbar_spacing_m = 182;
+    ChangeAssessmentDiagReinfRatio change_assessment_diag_reinf_ratio = 183;
+    ChangeAssessmentShearCrack change_assessment_shear_crack = 184;
+    ChangeFoundationLiqLayerM change_foundation_liq_layer_m = 185;
+    ChangeFoundationFootingWidthM change_foundation_footing_width_m = 186;
+    ChangeFoundationBearAxialN change_foundation_bear_axial_n = 187;
+    ChangeFoundationBearShearN change_foundation_bear_shear_n = 188;
+    ChangeFoundationBearMomentNm change_foundation_bear_moment_nm = 189;
+    ChangeFoundationBearingNMaxN change_foundation_bearing_n_max_n = 190;
+    ChangeFoundationSoilPhiDeg change_foundation_soil_phi_deg = 191;
+    ChangeFoundationPileDiameterM change_foundation_pile_diameter_m = 192;
+    ChangeFoundationPileLengthM change_foundation_pile_length_m = 193;
+    ChangeFoundationPileModulusPa change_foundation_pile_modulus_pa = 194;
+    ChangeFoundationPileKsNM3 change_foundation_pile_ks_n_m3 = 195;
+    ChangeFoundationPileHeadShearN change_foundation_pile_head_shear_n = 196;
+    ChangeFoundationPileHeadFixed change_foundation_pile_head_fixed = 197;
+    ChangeFoundationPileIfaceM change_foundation_pile_iface_m = 198;
+    ChangeFoundationPileUpVsMS change_foundation_pile_up_vs_m_s = 199;
+    ChangeFoundationPileLowVsMS change_foundation_pile_low_vs_m_s = 200;
+    ChangeFoundationPileMomentRdNm change_foundation_pile_moment_rd_nm = 201;
+    ChangeStoreyVariableCategory change_storey_variable_category = 202;
+    ChangeStoreyVariableQkN change_storey_variable_qk_n = 203;
+    ChangeBridgeVariableCategory change_bridge_variable_category = 204;
+    ChangeBridgeVariableQkN change_bridge_variable_qk_n = 205;
+    ChangeTowerVariableCategory change_tower_variable_category = 206;
+    ChangeTowerVariableQkN change_tower_variable_qk_n = 207;
+    InsertStoreyVariable insert_storey_variable = 208;
+    RemoveStoreyVariable remove_storey_variable = 209;
+    InsertBridgeVariable insert_bridge_variable = 210;
+    RemoveBridgeVariable remove_bridge_variable = 211;
+    InsertTowerVariable insert_tower_variable = 212;
+    RemoveTowerVariable remove_tower_variable = 213;
+    ChangeSoilLayerFoundationId change_soil_layer_foundation_id = 214;
+    ChangeSoilLayerThicknessM change_soil_layer_thickness_m = 215;
+    ChangeSoilUnitWtNM3 change_soil_unit_wt_n_m3 = 216;
+    ChangeSoilLayerVsMS change_soil_layer_vs_m_s = 217;
+    ChangeSoilLayerN160 change_soil_layer_n160 = 218;
+    ChangeSoilLayerFinesPercent change_soil_layer_fines_percent = 219;
+    InsertSoilLayer insert_soil_layer = 220;
+    RemoveSoilLayer remove_soil_layer = 221;
+    ChangePlacementX change_placement_x = 222;
+    ChangePlacementY change_placement_y = 223;
+    ChangePlacementZ change_placement_z = 224;
+    ChangePlacementYaw change_placement_yaw = 225;
+    InsertPlacement insert_placement = 226;
+    RemovePlacement remove_placement = 227;
+    ChangeBuildingOtBaseXM change_building_ot_base_x_m = 228;
+    ChangeBuildingOtBaseYM change_building_ot_base_y_m = 229;
+    ChangeBuildingTiedownNm change_building_tiedown_nm = 230;
+    ChangeDiaphragmBuildingId change_diaphragm_building_id = 231;
+    ChangeDiaphragmStoreyId change_diaphragm_storey_id = 232;
+    ChangeDiaphragmMaterial change_diaphragm_material = 233;
+    ChangeDiaphragmThicknessM change_diaphragm_thickness_m = 234;
+    ChangeDiaphragmSpanM change_diaphragm_span_m = 235;
+    ChangeDiaphragmDepthM change_diaphragm_depth_m = 236;
+    ChangeDiaphragmOpeningWidthM change_diaphragm_opening_width_m = 237;
+    ChangeDiaphragmShearStrMpa change_diaphragm_shear_str_mpa = 238;
+    ChangeDiaphragmChordAreaM2 change_diaphragm_chord_area_m2 = 239;
+    ChangeDiaphragmChordStrMpa change_diaphragm_chord_str_mpa = 240;
+    ChangeDiaphragmGammaD change_diaphragm_gamma_d = 241;
+    ChangeAccelerogramBuildingId change_accelerogram_building_id = 242;
+    ChangeAccelerogramLabel change_accelerogram_label = 243;
+    ChangeAccelerogramSamples change_accelerogram_samples = 244;
+    ChangeAccelerogramDtS change_accelerogram_dt_s = 245;
+    ChangeAccelerogramScaleFactor change_accelerogram_scale_factor = 246;
+    InsertDiaphragm insert_diaphragm = 247;
+    RemoveDiaphragm remove_diaphragm = 248;
+    InsertAccelerogram insert_accelerogram = 249;
+    RemoveAccelerogram remove_accelerogram = 250;
+    ChangeTowerBaseRotStiffNm change_tower_base_rot_stiff_nm = 251;
+    ChangeTankShellTM change_tank_shell_t_m = 252;
+    ChangeTankShellStrMpa change_tank_shell_str_mpa = 253;
+    ChangePierBridgeId change_pier_bridge_id = 254;
+    ChangePierStiffnessBasis change_pier_stiffness_basis = 255;
+    ChangePierXM change_pier_x_m = 256;
+    ChangePierHeightM change_pier_height_m = 257;
+    ChangePierSectionBM change_pier_section_b_m = 258;
+    ChangePierSectionHM change_pier_section_h_m = 259;
+    ChangePierModulusMpa change_pier_modulus_mpa = 260;
+    ChangePierMomentRdNm change_pier_moment_rd_nm = 261;
+    ChangePierShearRdN change_pier_shear_rd_n = 262;
+    ChangePierReinforcementRatio change_pier_reinforcement_ratio = 263;
+    ChangePierCoverM change_pier_cover_m = 264;
+    ChangePierConcreteFckMpa change_pier_concrete_fck_mpa = 265;
+    ChangePierSteelFykMpa change_pier_steel_fyk_mpa = 266;
+    ChangePierAxialLoadN change_pier_axial_load_n = 267;
+    ChangeBearingBridgeId change_bearing_bridge_id = 268;
+    ChangeJointBuildingId change_joint_building_id = 269;
+    ChangeJointStoreyId change_joint_storey_id = 270;
+    ChangeJointColumnId change_joint_column_id = 271;
+    ChangeJointBeamId change_joint_beam_id = 272;
+    ChangeBearingPierId change_bearing_pier_id = 273;
+    ChangeBearingDevice change_bearing_device = 274;
+    ChangeBearingXM change_bearing_x_m = 275;
+    ChangeJointXM change_joint_x_m = 276;
+    ChangeJointYM change_joint_y_m = 277;
+    ChangeBearingStiffnessNPerM change_bearing_stiffness_n_per_m = 278;
+    ChangeBearingDRdM change_bearing_d_rd_m = 279;
+    ChangeBearingSeatLengthM change_bearing_seat_length_m = 280;
+    ChangeJointColumnMomentRdNm change_joint_column_moment_rd_nm = 281;
+    ChangeJointBeamMomentRdNm change_joint_beam_moment_rd_nm = 282;
+    ChangeBearingMinSupportM change_bearing_min_support_m = 283;
+    InsertPier insert_pier = 284;
+    RemovePier remove_pier = 285;
+    InsertBearing insert_bearing = 286;
+    InsertJoint insert_joint = 287;
+    InsertTieBeam insert_tie_beam = 288;
+    InsertSeismicSlope insert_seismic_slope = 289;
+    RemoveBearing remove_bearing = 290;
+    RemoveJoint remove_joint = 291;
+    RemoveTieBeam remove_tie_beam = 292;
+    RemoveSeismicSlope remove_seismic_slope = 293;
+    InsertMember insert_member = 294;
+    RemoveMember remove_member = 295;
+    InsertStorey insert_storey = 296;
+    RemoveStorey remove_storey = 297;
+    InsertSystem insert_system = 298;
+    RemoveSystem remove_system = 299;
+    ChangeJointColMomentRdNm change_joint_col_moment_rd_nm = 300;
+    ChangeRetainingWallWaterHeightM change_retaining_wall_water_height_m = 301;
+    ChangeRetainingWallSaturatedGamma change_retaining_wall_saturated_gamma = 302;
+    ChangeRetainingWallPermeabilityMS change_retaining_wall_permeability_m_s = 303;
+    ChangeFoundationBaseFrictionDeg change_foundation_base_friction_deg = 304;
+    ChangeFoundationBasePorePressurePa change_foundation_base_pore_pressure_pa = 305;
+  }
+}
+message ChangeAnnex {
+  AnnexChoice new_annex = 1;
+}
+message InsertBuilding {
+  optional uint64 index = 1;
+  En1998Building building = 2;
+}
+message RemoveBuilding {
+  string id = 1;
+}
+message ChangeSystemVRdN {
+  string building_id = 1;
+  string id = 2;
+  double new_base_shear_resistance_n = 3;
+}
+message ChangeStoreyPermanentGkN {
+  string building_id = 1;
+  string id = 2;
+  double new_permanent_gk_n = 3;
+}
+message ChangeStoreyStiffnessX {
+  string building_id = 1;
+  string id = 2;
+  double new_stiffness_x = 3;
+}
+message ChangeStoreyDriftXM {
+  string building_id = 1;
+  string id = 2;
+  double new_drift_x_m = 3;
+}
+message ChangeBuildingPlanRegular {
+  string id = 1;
+  bool new_plan_regular = 2;
+}
+message ChangeElevationRegular {
+  string id = 1;
+  bool new_elevation_regular = 2;
+}
+message ChangeMemberDetailing {
+  string building_id = 1;
+  string id = 2;
+  bool new_detailing_compatible_with_q = 3;
+}
+message ChangeMasonryWallRatio {
+  string id = 1;
+  double new_masonry_wall_area_ratio = 2;
+}
+message InsertBridge {
+  optional uint64 index = 1;
+  En1998Bridge bridge = 2;
+}
+message ChangeBridgeVRdN {
+  string id = 1;
+  double new_v_rd_n = 2;
+}
+message InsertAssessment {
+  optional uint64 index = 1;
+  En1998Assessment assessment = 2;
+}
+message ChangeAssessmentRKN {
+  string id = 1;
+  double new_r_k_n = 2;
+}
+message InsertSilo {
+  optional uint64 index = 1;
+  En1998Silo silo = 2;
+}
+message InsertTank {
+  optional uint64 index = 1;
+  En1998Tank tank = 2;
+}
+message InsertFoundation {
+  optional uint64 index = 1;
+  En1998Foundation foundation = 2;
+}
+message InsertRetainingWall {
+  optional uint64 index = 1;
+  En1998RetainingWall wall = 2;
+}
+message InsertTower {
+  optional uint64 index = 1;
+  En1998Tower tower = 2;
+}
+message ChangeTowerMRdNm {
+  string id = 1;
+  double new_m_rd_nm = 2;
+}
+message RemoveBridge {
+  string id = 1;
+}
+message RemoveAssessment {
+  string id = 1;
+}
+message RemoveSilo {
+  string id = 1;
+}
+message RemoveTank {
+  string id = 1;
+}
+message RemoveFoundation {
+  string id = 1;
+}
+message RemoveRetainingWall {
+  string id = 1;
+}
+message RemoveTower {
+  string id = 1;
+}
+message ChangeSiteSApR {
+  double new_s_ap_r = 1;
+}
+message ChangeSiteAGr {
+  double new_a_gr = 1;
+}
+message ChangeSiteDeGroundCombo {
+  string new_de_ground_combo = 1;
+}
+message ChangeSiteEnGroundType {
+  EnGroundType new_en_ground_type = 1;
+}
+message ChangeSiteEnSpectrumType {
+  EnSpectrumType new_en_spectrum_type = 1;
+}
+message ChangeSiteImportanceClass {
+  ImportanceClass new_importance_class = 1;
+}
+message ChangeBuildingName {
+  string id = 1;
+  string new_name = 2;
+}
+message ChangeBuildingPlanWidthM {
+  string id = 1;
+  double new_plan_width_m = 2;
+}
+message ChangeBuildingPlanLengthM {
+  string id = 1;
+  double new_plan_length_m = 2;
+}
+message ChangeBuildingT1Method {
+  string id = 1;
+  T1Method new_t1_method = 2;
+}
+message ChangeBuildingT1GivenS {
+  string id = 1;
+  double new_t1_given_s = 2;
+}
+message ChangeBuildingCt {
+  string id = 1;
+  double new_ct = 2;
+}
+message ChangeBuildingDriftLimitClass {
+  string id = 1;
+  DriftLimitClass new_drift_limit_class = 2;
+}
+message ChangeBuildingNu {
+  string id = 1;
+  double new_nu = 2;
+}
+message ChangeBuildingMultiResistingSystems {
+  string id = 1;
+  bool new_multiple_resisting_systems = 2;
+}
+message ChangeBuildingClaimsSimpleMasonry {
+  string id = 1;
+  bool new_claims_simple_masonry = 2;
+}
+message ChangeBuildingAccidentalEccRatio {
+  string id = 1;
+  double new_accidental_eccentricity_ratio = 2;
+}
+message ChangeSystemDirection {
+  string building_id = 1;
+  string id = 2;
+  AnalysisDirection new_direction = 3;
+}
+message ChangeSystemSystemType {
+  string building_id = 1;
+  string id = 2;
+  SystemType new_system_type = 3;
+}
+message ChangeSystemMaterial {
+  string building_id = 1;
+  string id = 2;
+  StructuralMaterial new_material = 3;
+}
+message ChangeSystemDuctilityClass {
+  string building_id = 1;
+  string id = 2;
+  DuctilityClass new_ductility_class = 3;
+}
+message ChangeSystemQ0 {
+  string building_id = 1;
+  string id = 2;
+  double new_q0 = 3;
+}
+message ChangeSystemAlphaUOverAlpha1 {
+  string building_id = 1;
+  string id = 2;
+  double new_alpha_u_over_alpha1 = 3;
+}
+message ChangeSystemKW {
+  string building_id = 1;
+  string id = 2;
+  double new_k_w = 3;
+}
+message ChangeStoreyHeightM {
+  string building_id = 1;
+  string id = 2;
+  double new_height_m = 3;
+}
+message ChangeStoreyCorrelatedOccupancy {
+  string building_id = 1;
+  string id = 2;
+  bool new_correlated_occupancy = 3;
+}
+message ChangeStoreyStiffnessY {
+  string building_id = 1;
+  string id = 2;
+  double new_stiffness_y = 3;
+}
+message ChangeStoreyCentreOfMassXM {
+  string building_id = 1;
+  string id = 2;
+  double new_centre_of_mass_x_m = 3;
+}
+message ChangeStoreyCentreOfMassYM {
+  string building_id = 1;
+  string id = 2;
+  double new_centre_of_mass_y_m = 3;
+}
+message ChangeStoreyCentreOfStiffnessXM {
+  string building_id = 1;
+  string id = 2;
+  double new_centre_of_stiffness_x_m = 3;
+}
+message ChangeStoreyCentreOfStiffnessYM {
+  string building_id = 1;
+  string id = 2;
+  double new_centre_of_stiffness_y_m = 3;
+}
+message ChangeStoreyDriftYM {
+  string building_id = 1;
+  string id = 2;
+  double new_drift_y_m = 3;
+}
+message ChangeStoreyShearResistanceN {
+  string building_id = 1;
+  string id = 2;
+  double new_shear_resistance_n = 3;
+}
+message ChangeMemberMaterial {
+  string building_id = 1;
+  string id = 2;
+  StructuralMaterial new_material = 3;
+}
+message ChangeMemberRole {
+  string building_id = 1;
+  string id = 2;
+  string new_role = 3;
+}
+message ChangeMemberMinDimensionM {
+  string building_id = 1;
+  string id = 2;
+  double new_min_dimension_m = 3;
+}
+message ChangeMemberRho {
+  string building_id = 1;
+  string id = 2;
+  double new_rho = 3;
+}
+message ChangeMemberRhoPrime {
+  string building_id = 1;
+  string id = 2;
+  double new_rho_prime = 3;
+}
+message ChangeMemberOmegaWd {
+  string building_id = 1;
+  string id = 2;
+  double new_omega_wd = 3;
+}
+message ChangeMemberSteelSectionClass {
+  string building_id = 1;
+  string id = 2;
+  uint32 new_steel_section_class = 3;
+}
+message ChangeBridgePeriodRatio {
+  string id = 1;
+  double new_period_ratio = 2;
+}
+message ChangeBridgeFundamentalPeriodS {
+  string id = 1;
+  double new_fundamental_period_s = 2;
+}
+message ChangeBridgeBearingDRdM {
+  string id = 1;
+  double new_bearing_d_rd_m = 2;
+}
+message ChangeBridgePermanentGkN {
+  string id = 1;
+  double new_permanent_gk_n = 2;
+}
+message ChangeBridgeCorrelatedOccupancy {
+  string id = 1;
+  bool new_correlated_occupancy = 2;
+}
+message ChangeAssessmentKnowledgeLevel {
+  string id = 1;
+  KnowledgeLevel new_knowledge_level = 2;
+}
+message ChangeAssessmentLimitState {
+  string id = 1;
+  LimitState new_limit_state = 2;
+}
+message ChangeAssessmentSupportedBuildingId {
+  string id = 1;
+  string new_supported_building_id = 2;
+}
+message ChangeAssessmentGammaEl {
+  string id = 1;
+  double new_gamma_el = 2;
+}
+message ChangeTowerHeightM {
+  string id = 1;
+  double new_height_m = 2;
+}
+message ChangeTowerIsChimney {
+  string id = 1;
+  bool new_is_chimney = 2;
+}
+message ChangeTowerQNominal {
+  string id = 1;
+  double new_q_nominal = 2;
+}
+message ChangeTowerPermanentGkN {
+  string id = 1;
+  double new_permanent_gk_n = 2;
+}
+message ChangeTowerCorrelatedOccupancy {
+  string id = 1;
+  bool new_correlated_occupancy = 2;
+}
+message ChangeSiloHeightM {
+  string id = 1;
+  double new_height_m = 2;
+}
+message ChangeSiloRadiusM {
+  string id = 1;
+  double new_radius_m = 2;
+}
+message ChangeSiloPermanentGkN {
+  string id = 1;
+  double new_permanent_gk_n = 2;
+}
+message ChangeSiloContentQkN {
+  string id = 1;
+  double new_content_qk_n = 2;
+}
+message ChangeSiloContentCategory {
+  string id = 1;
+  ImposedCategory new_content_category = 2;
+}
+message ChangeSiloFillingRatio {
+  string id = 1;
+  double new_filling_ratio = 2;
+}
+message ChangeSiloNRdN {
+  string id = 1;
+  double new_n_rd_n = 2;
+}
+message ChangeSiloVRdN {
+  string id = 1;
+  double new_v_rd_n = 2;
+}
+message ChangeSiloQNominal {
+  string id = 1;
+  double new_q_nominal = 2;
+}
+message ChangeTankHeightM {
+  string id = 1;
+  double new_height_m = 2;
+}
+message ChangeTankRadiusM {
+  string id = 1;
+  double new_radius_m = 2;
+}
+message ChangeTankPermanentGkN {
+  string id = 1;
+  double new_permanent_gk_n = 2;
+}
+message ChangeTankContentQkN {
+  string id = 1;
+  double new_content_qk_n = 2;
+}
+message ChangeTankContentCategory {
+  string id = 1;
+  ImposedCategory new_content_category = 2;
+}
+message ChangeTankFillingRatio {
+  string id = 1;
+  double new_filling_ratio = 2;
+}
+message ChangeTankVRdN {
+  string id = 1;
+  double new_v_rd_n = 2;
+}
+message ChangeFoundationSupportedBuildingId {
+  string id = 1;
+  string new_supported_building_id = 2;
+}
+message ChangeTieBeamFoundationBId {
+  string id = 1;
+  string new_foundation_b_id = 2;
+}
+message ChangeTieBeamFoundationAId {
+  string id = 1;
+  string new_foundation_a_id = 2;
+}
+message ChangeSeismicSlopeGoverningLayerId {
+  string id = 1;
+  string new_governing_layer_id = 2;
+}
+message ChangeFoundationAreaM2 {
+  string id = 1;
+  double new_area_m2 = 2;
+}
+message ChangeFoundationPRdPa {
+  string id = 1;
+  double new_p_rd_pa = 2;
+}
+message ChangeFoundationPassiveResistanceN {
+  string id = 1;
+  double new_passive_resistance_n = 2;
+}
+message ChangeFoundationKFoundation {
+  string id = 1;
+  double new_k_foundation = 2;
+}
+message ChangeFoundationKSoil {
+  string id = 1;
+  double new_k_soil = 2;
+}
+message ChangeRetainingWallHeightM {
+  string id = 1;
+  double new_height_m = 2;
+}
+message ChangeRetainingWallPhiDeg {
+  string id = 1;
+  double new_phi_deg = 2;
+}
+message ChangeRetainingWallSoilGamma {
+  string id = 1;
+  double new_soil_gamma = 2;
+}
+message ChangeRetainingWallR {
+  string id = 1;
+  double new_r = 2;
+}
+message ChangeRetainingWallHRdNPerM {
+  string id = 1;
+  double new_h_rd_n_per_m = 2;
+}
+message ChangeSiteVS30MS {
+  double new_v_s30_m_s = 1;
+}
+message ChangeSiteNSpt {
+  double new_n_spt = 1;
+}
+message ChangeSiteCUKpa {
+  double new_c_u_kpa = 1;
+}
+message ChangeSiteSoftClayThicknessM {
+  double new_soft_clay_thickness_m = 1;
+}
+message ChangeSiteSoftClayPi {
+  double new_soft_clay_pi = 1;
+}
+message ChangeSiteLiquefiableLayer {
+  bool new_liquefiable_layer = 1;
+}
+message ChangeSiteAlluviumThicknessM {
+  double new_alluvium_thickness_m = 1;
+}
+message ChangeSiteAlluviumVSMS {
+  double new_alluvium_v_s_m_s = 1;
+}
+message ChangeSiteBelowAlluviumVSMS {
+  double new_below_alluvium_v_s_m_s = 1;
+}
+message ChangeBuildingSetbackRatio {
+  string id = 1;
+  double new_setback_ratio = 2;
+}
+message ChangeBuildingStoreyStiffnessRatio {
+  string id = 1;
+  double new_storey_stiffness_ratio = 2;
+}
+message ChangeBuildingStoreyStiffnessBasis {
+  string id = 1;
+  string new_storey_stiffness_basis = 2;
+}
+message ChangeBuildingPlanEnvGapRatio {
+  string id = 1;
+  double new_plan_envelope_gap_ratio = 2;
+}
+message ChangeBuildingJointGapM {
+  string id = 1;
+  double new_joint_gap_m = 2;
+}
+message ChangeBuildingNsWeightN {
+  string id = 1;
+  double new_nonstructural_weight_n = 2;
+}
+message ChangeBuildingNsHeightM {
+  string id = 1;
+  double new_nonstructural_height_m = 2;
+}
+message ChangeBuildingNsPeriodS {
+  string id = 1;
+  double new_nonstructural_period_s = 2;
+}
+message ChangeBuildingNsQ {
+  string id = 1;
+  double new_nonstructural_q = 2;
+}
+message ChangeBuildingNsResistanceN {
+  string id = 1;
+  double new_nonstructural_resistance_n = 2;
+}
+message ChangeBuildingColMomentSumNm {
+  string id = 1;
+  double new_column_moment_sum_nm = 2;
+}
+message ChangeBuildingBeamMomentSumNm {
+  string id = 1;
+  double new_beam_moment_sum_nm = 2;
+}
+message ChangeMemberFastenerDiameterMm {
+  string building_id = 1;
+  string id = 2;
+  double new_fastener_diameter_mm = 3;
+}
+message ChangeMemberTimberThicknessMm {
+  string building_id = 1;
+  string id = 2;
+  double new_timber_thickness_mm = 3;
+}
+message ChangeMemberWallThicknessM {
+  string building_id = 1;
+  string id = 2;
+  double new_wall_thickness_m = 3;
+}
+message ChangeMemberEffectiveStiffnessRatio {
+  string building_id = 1;
+  string id = 2;
+  double new_effective_stiffness_ratio = 3;
+}
+message ChangeMemberEffectiveStiffnessBasis {
+  string building_id = 1;
+  string id = 2;
+  string new_effective_stiffness_basis = 3;
+}
+message ChangeMemberWallPoissonRatio {
+  string building_id = 1;
+  string id = 2;
+  double new_wall_poisson_ratio = 3;
+}
+message ChangeMemberWallStartXM {
+  string building_id = 1;
+  string id = 2;
+  double new_wall_start_x_m = 3;
+}
+message ChangeMemberWallStartYM {
+  string building_id = 1;
+  string id = 2;
+  double new_wall_start_y_m = 3;
+}
+message ChangeMemberWallLengthM {
+  string building_id = 1;
+  string id = 2;
+  double new_wall_length_m = 3;
+}
+message ChangeMemberWallDirectionRad {
+  string building_id = 1;
+  string id = 2;
+  double new_wall_direction_rad = 3;
+}
+message ChangeMemberWallStoreyId {
+  string building_id = 1;
+  string id = 2;
+  string new_wall_storey_id = 3;
+}
+message ChangeMemberWallEffHeightM {
+  string building_id = 1;
+  string id = 2;
+  double new_wall_effective_height_m = 3;
+}
+message ChangeBridgePierHeightM {
+  string id = 1;
+  double new_pier_height_m = 2;
+}
+message ChangeBridgePierMomentRdNm {
+  string id = 1;
+  double new_pier_moment_rd_nm = 2;
+}
+message ChangeBridgePierShearRdN {
+  string id = 1;
+  double new_pier_shear_rd_n = 2;
+}
+message ChangeBridgeImportanceClass {
+  string id = 1;
+  double new_importance_class = 2;
+}
+message ChangeBridgeVerticalPeriodS {
+  string id = 1;
+  double new_vertical_period_s = 2;
+}
+message ChangeBridgePierCrackedInertiaRatio {
+  string id = 1;
+  double new_pier_cracked_inertia_ratio = 2;
+}
+message ChangeBridgeDeckLengthM {
+  string id = 1;
+  double new_deck_length_m = 2;
+}
+message ChangeBridgeDeckEiNm2 {
+  string id = 1;
+  double new_deck_ei_nm2 = 2;
+}
+message ChangeAssessmentChordDemandRad {
+  string id = 1;
+  double new_chord_rotation_demand_rad = 2;
+}
+message ChangeAssessmentChordYieldRad {
+  string id = 1;
+  double new_chord_rotation_yield_rad = 2;
+}
+message ChangeAssessmentChordUltRad {
+  string id = 1;
+  double new_chord_rotation_ultimate_rad = 2;
+}
+message ChangeTowerEiNm2 {
+  string id = 1;
+  double new_ei_nm2 = 2;
+}
+message ChangeFoundationLiqN160 {
+  string id = 1;
+  double new_liq_n160 = 2;
+}
+message ChangeFoundationLiqFinesPercent {
+  string id = 1;
+  double new_liq_fines_percent = 2;
+}
+message ChangeFoundationLiqDepthM {
+  string id = 1;
+  double new_liq_depth_m = 2;
+}
+message ChangeFoundationLiqWaterDepthM {
+  string id = 1;
+  double new_liq_water_depth_m = 2;
+}
+message ChangeFoundationLiqUnitWtNM3 {
+  string id = 1;
+  double new_liq_unit_weight_n_m3 = 2;
+}
+message ChangeFoundationLiqMagnitude {
+  string id = 1;
+  double new_liq_magnitude = 2;
+}
+message ChangeAssessmentSectionDepthM {
+  string id = 1;
+  double new_section_depth_m = 2;
+}
+message ChangeAssessmentSectionWidthM {
+  string id = 1;
+  double new_section_width_m = 2;
+}
+message ChangeAssessmentEffDepthM {
+  string id = 1;
+  double new_effective_depth_m = 2;
+}
+message ChangeAssessmentShearSpanM {
+  string id = 1;
+  double new_shear_span_m = 2;
+}
+message ChangeAssessmentAxialForceN {
+  string id = 1;
+  double new_axial_force_n = 2;
+}
+message ChangeAssessmentShearForceDemandN {
+  string id = 1;
+  double new_shear_force_demand_n = 2;
+}
+message ChangeAssessmentAs1AreaM2 {
+  string id = 1;
+  double new_tension_steel_area_m2 = 2;
+}
+message ChangeAssessmentAs2AreaM2 {
+  string id = 1;
+  double new_compression_steel_area_m2 = 2;
+}
+message ChangeAssessmentBarDiameterMm {
+  string id = 1;
+  double new_bar_diameter_mm = 2;
+}
+message ChangeAssessmentSteelYieldMpa {
+  string id = 1;
+  double new_steel_yield_mpa = 2;
+}
+message ChangeAssessmentFcMpa {
+  string id = 1;
+  double new_concrete_strength_mpa = 2;
+}
+message ChangeAssessmentStrpLegAreaM2 {
+  string id = 1;
+  double new_stirrup_leg_area_m2 = 2;
+}
+message ChangeAssessmentStrpSpacingM {
+  string id = 1;
+  double new_stirrup_spacing_m = 2;
+}
+message ChangeAssessmentStrpYieldMpa {
+  string id = 1;
+  double new_stirrup_yield_mpa = 2;
+}
+message ChangeAssessmentCoreWidthM {
+  string id = 1;
+  double new_core_width_m = 2;
+}
+message ChangeAssessmentCoreDepthM {
+  string id = 1;
+  double new_core_depth_m = 2;
+}
+message ChangeAssessmentMidSteelAreaM2 {
+  string id = 1;
+  double new_intermediate_steel_area_m2 = 2;
+}
+message ChangeAssessmentRbarCount {
+  string id = 1;
+  double new_restrained_bar_count = 2;
+}
+message ChangeAssessmentRbarSpacingM {
+  string id = 1;
+  double new_restrained_bar_spacing_m = 2;
+}
+message ChangeAssessmentDiagReinfRatio {
+  string id = 1;
+  double new_diagonal_reinforcement_ratio = 2;
+}
+message ChangeAssessmentShearCrack {
+  string id = 1;
+  double new_shear_cracking_before_yield = 2;
+}
+message ChangeFoundationLiqLayerM {
+  string id = 1;
+  double new_liq_layer_thickness_m = 2;
+}
+message ChangeFoundationFootingWidthM {
+  string id = 1;
+  double new_footing_width_m = 2;
+}
+message ChangeFoundationBearAxialN {
+  string id = 1;
+  double new_bearing_axial_n = 2;
+}
+message ChangeFoundationBearShearN {
+  string id = 1;
+  double new_bearing_shear_n = 2;
+}
+message ChangeFoundationBearMomentNm {
+  string id = 1;
+  double new_bearing_moment_nm = 2;
+}
+message ChangeFoundationBearingNMaxN {
+  string id = 1;
+  double new_bearing_n_max_n = 2;
+}
+message ChangeFoundationSoilPhiDeg {
+  string id = 1;
+  double new_soil_friction_angle_deg = 2;
+}
+message ChangeFoundationPileDiameterM {
+  string id = 1;
+  double new_pile_diameter_m = 2;
+}
+message ChangeFoundationPileLengthM {
+  string id = 1;
+  double new_pile_length_m = 2;
+}
+message ChangeFoundationPileModulusPa {
+  string id = 1;
+  double new_pile_modulus_pa = 2;
+}
+message ChangeFoundationPileKsNM3 {
+  string id = 1;
+  double new_pile_subgrade_modulus_n_m3 = 2;
+}
+message ChangeFoundationPileHeadShearN {
+  string id = 1;
+  double new_pile_head_shear_n = 2;
+}
+message ChangeFoundationPileHeadFixed {
+  string id = 1;
+  double new_pile_head_fixed = 2;
+}
+message ChangeFoundationPileIfaceM {
+  string id = 1;
+  double new_pile_interface_depth_m = 2;
+}
+message ChangeFoundationPileUpVsMS {
+  string id = 1;
+  double new_pile_upper_vs_m_s = 2;
+}
+message ChangeFoundationPileLowVsMS {
+  string id = 1;
+  double new_pile_lower_vs_m_s = 2;
+}
+message ChangeFoundationPileMomentRdNm {
+  string id = 1;
+  double new_pile_moment_rd_nm = 2;
+}
+message ChangeStoreyVariableCategory {
+  string building_id = 1;
+  string storey_id = 2;
+  string id = 3;
+  ImposedCategory new_category = 4;
+}
+message ChangeStoreyVariableQkN {
+  string building_id = 1;
+  string storey_id = 2;
+  string id = 3;
+  double new_qk_n = 4;
+}
+message ChangeBridgeVariableCategory {
+  string bridge_id = 1;
+  string id = 2;
+  ImposedCategory new_category = 3;
+}
+message ChangeBridgeVariableQkN {
+  string bridge_id = 1;
+  string id = 2;
+  double new_qk_n = 3;
+}
+message ChangeTowerVariableCategory {
+  string tower_id = 1;
+  string id = 2;
+  ImposedCategory new_category = 3;
+}
+message ChangeTowerVariableQkN {
+  string tower_id = 1;
+  string id = 2;
+  double new_qk_n = 3;
+}
+message InsertStoreyVariable {
+  string building_id = 1;
+  string storey_id = 2;
+  optional uint64 index = 3;
+  En1998VariableAction variable = 4;
+}
+message RemoveStoreyVariable {
+  string building_id = 1;
+  string storey_id = 2;
+  string id = 3;
+}
+message InsertBridgeVariable {
+  string bridge_id = 1;
+  optional uint64 index = 2;
+  En1998VariableAction variable = 3;
+}
+message RemoveBridgeVariable {
+  string bridge_id = 1;
+  string id = 2;
+}
+message InsertTowerVariable {
+  string tower_id = 1;
+  optional uint64 index = 2;
+  En1998VariableAction variable = 3;
+}
+message RemoveTowerVariable {
+  string tower_id = 1;
+  string id = 2;
+}
+message ChangeSoilLayerFoundationId {
+  string id = 1;
+  string new_foundation_id = 2;
+}
+message ChangeSoilLayerThicknessM {
+  string id = 1;
+  double new_thickness_m = 2;
+}
+message ChangeSoilUnitWtNM3 {
+  string id = 1;
+  double new_unit_weight_n_m3 = 2;
+}
+message ChangeSoilLayerVsMS {
+  string id = 1;
+  double new_shear_wave_velocity_m_s = 2;
+}
+message ChangeSoilLayerN160 {
+  string id = 1;
+  double new_n160 = 2;
+}
+message ChangeSoilLayerFinesPercent {
+  string id = 1;
+  double new_fines_percent = 2;
+}
+message InsertSoilLayer {
+  optional uint64 index = 1;
+  En1998SoilLayer layer = 2;
+}
+message RemoveSoilLayer {
+  string id = 1;
+}
+message ChangePlacementX {
+  string id = 1;
+  double new_x = 2;
+}
+message ChangePlacementY {
+  string id = 1;
+  double new_y = 2;
+}
+message ChangePlacementZ {
+  string id = 1;
+  double new_z = 2;
+}
+message ChangePlacementYaw {
+  string id = 1;
+  double new_yaw = 2;
+}
+message InsertPlacement {
+  uint64 index = 1;
+  En1998Placement item = 2;
+}
+message RemovePlacement {
+  string id = 1;
+}
+message ChangeBuildingOtBaseXM {
+  string id = 1;
+  double new_overturning_base_x_m = 2;
+}
+message ChangeBuildingOtBaseYM {
+  string id = 1;
+  double new_overturning_base_y_m = 2;
+}
+message ChangeBuildingTiedownNm {
+  string id = 1;
+  double new_tie_down_moment_nm = 2;
+}
+message ChangeDiaphragmBuildingId {
+  string id = 1;
+  string new_building_id = 2;
+}
+message ChangeDiaphragmStoreyId {
+  string id = 1;
+  string new_storey_id = 2;
+}
+message ChangeDiaphragmMaterial {
+  string id = 1;
+  DiaphragmMaterial new_material = 2;
+}
+message ChangeDiaphragmThicknessM {
+  string id = 1;
+  double new_thickness_m = 2;
+}
+message ChangeDiaphragmSpanM {
+  string id = 1;
+  double new_span_m = 2;
+}
+message ChangeDiaphragmDepthM {
+  string id = 1;
+  double new_depth_m = 2;
+}
+message ChangeDiaphragmOpeningWidthM {
+  string id = 1;
+  double new_opening_width_m = 2;
+}
+message ChangeDiaphragmShearStrMpa {
+  string id = 1;
+  double new_shear_strength_mpa = 2;
+}
+message ChangeDiaphragmChordAreaM2 {
+  string id = 1;
+  double new_chord_area_m2 = 2;
+}
+message ChangeDiaphragmChordStrMpa {
+  string id = 1;
+  double new_chord_strength_mpa = 2;
+}
+message ChangeDiaphragmGammaD {
+  string id = 1;
+  double new_gamma_d = 2;
+}
+message ChangeAccelerogramBuildingId {
+  string id = 1;
+  string new_building_id = 2;
+}
+message ChangeAccelerogramLabel {
+  string id = 1;
+  string new_label = 2;
+}
+message ChangeAccelerogramSamples {
+  string id = 1;
+  string new_samples = 2;
+}
+message ChangeAccelerogramDtS {
+  string id = 1;
+  double new_dt_s = 2;
+}
+message ChangeAccelerogramScaleFactor {
+  string id = 1;
+  double new_scale_factor = 2;
+}
+message InsertDiaphragm {
+  optional uint64 index = 1;
+  En1998Diaphragm diaphragm = 2;
+}
+message RemoveDiaphragm {
+  string id = 1;
+}
+message InsertAccelerogram {
+  optional uint64 index = 1;
+  En1998Accelerogram accelerogram = 2;
+}
+message RemoveAccelerogram {
+  string id = 1;
+}
+message ChangeTowerBaseRotStiffNm {
+  string id = 1;
+  double new_base_rotational_stiffness_nm = 2;
+}
+message ChangeTankShellTM {
+  string id = 1;
+  double new_shell_thickness_m = 2;
+}
+message ChangeTankShellStrMpa {
+  string id = 1;
+  double new_shell_strength_mpa = 2;
+}
+message ChangePierBridgeId {
+  string id = 1;
+  string new_bridge_id = 2;
+}
+message ChangePierStiffnessBasis {
+  string id = 1;
+  PierStiffnessBasis new_stiffness_basis = 2;
+}
+message ChangePierXM {
+  string id = 1;
+  double new_x_m = 2;
+}
+message ChangePierHeightM {
+  string id = 1;
+  double new_height_m = 2;
+}
+message ChangePierSectionBM {
+  string id = 1;
+  double new_section_b_m = 2;
+}
+message ChangePierSectionHM {
+  string id = 1;
+  double new_section_h_m = 2;
+}
+message ChangePierModulusMpa {
+  string id = 1;
+  double new_modulus_mpa = 2;
+}
+message ChangePierMomentRdNm {
+  string id = 1;
+  double new_moment_rd_nm = 2;
+}
+message ChangePierShearRdN {
+  string id = 1;
+  double new_shear_rd_n = 2;
+}
+message ChangePierReinforcementRatio {
+  string id = 1;
+  double new_reinforcement_ratio = 2;
+}
+message ChangePierCoverM {
+  string id = 1;
+  double new_cover_m = 2;
+}
+message ChangePierConcreteFckMpa {
+  string id = 1;
+  double new_concrete_fck_mpa = 2;
+}
+message ChangePierSteelFykMpa {
+  string id = 1;
+  double new_steel_fyk_mpa = 2;
+}
+message ChangePierAxialLoadN {
+  string id = 1;
+  double new_axial_load_n = 2;
+}
+message ChangeBearingBridgeId {
+  string id = 1;
+  string new_bridge_id = 2;
+}
+message ChangeJointBuildingId {
+  string id = 1;
+  string new_building_id = 2;
+}
+message ChangeJointStoreyId {
+  string id = 1;
+  string new_storey_id = 2;
+}
+message ChangeJointColumnId {
+  string id = 1;
+  string new_column_id = 2;
+}
+message ChangeJointBeamId {
+  string id = 1;
+  string new_beam_id = 2;
+}
+message ChangeBearingPierId {
+  string id = 1;
+  string new_pier_id = 2;
+}
+message ChangeBearingDevice {
+  string id = 1;
+  BearingDevice new_device = 2;
+}
+message ChangeBearingXM {
+  string id = 1;
+  double new_x_m = 2;
+}
+message ChangeJointXM {
+  string id = 1;
+  double new_x_m = 2;
+}
+message ChangeJointYM {
+  string id = 1;
+  double new_y_m = 2;
+}
+message ChangeBearingStiffnessNPerM {
+  string id = 1;
+  double new_stiffness_n_per_m = 2;
+}
+message ChangeBearingDRdM {
+  string id = 1;
+  double new_d_rd_m = 2;
+}
+message ChangeBearingSeatLengthM {
+  string id = 1;
+  double new_seat_length_m = 2;
+}
+message ChangeJointColumnMomentRdNm {
+  string id = 1;
+  double new_column_moment_rd_nm = 2;
+}
+message ChangeJointBeamMomentRdNm {
+  string id = 1;
+  double new_beam_moment_rd_nm = 2;
+}
+message ChangeBearingMinSupportM {
+  string id = 1;
+  double new_min_support_length_m = 2;
+}
+message InsertPier {
+  optional uint64 index = 1;
+  En1998Pier pier = 2;
+}
+message RemovePier {
+  string id = 1;
+}
+message InsertBearing {
+  optional uint64 index = 1;
+  En1998Bearing bearing = 2;
+}
+message InsertJoint {
+  optional uint64 index = 1;
+  En1998Joint joint = 2;
+}
+message InsertTieBeam {
+  optional uint64 index = 1;
+  En1998TieBeam tie_beam = 2;
+}
+message InsertSeismicSlope {
+  optional uint64 index = 1;
+  En1998Slope seismic_slope = 2;
+}
+message RemoveBearing {
+  string id = 1;
+}
+message RemoveJoint {
+  string id = 1;
+}
+message RemoveTieBeam {
+  string id = 1;
+}
+message RemoveSeismicSlope {
+  string id = 1;
+}
+message InsertMember {
+  string building_id = 1;
+  optional uint64 index = 2;
+  En1998Member member = 3;
+}
+message RemoveMember {
+  string building_id = 1;
+  string id = 2;
+}
+message InsertStorey {
+  string building_id = 1;
+  optional uint64 index = 2;
+  En1998Storey storey = 3;
+}
+message RemoveStorey {
+  string building_id = 1;
+  string id = 2;
+}
+message InsertSystem {
+  string building_id = 1;
+  optional uint64 index = 2;
+  En1998System system = 3;
+}
+message RemoveSystem {
+  string building_id = 1;
+  string id = 2;
+}
+message ChangeJointColMomentRdNm {
+  uint64 index = 1;
+  double new_column_moment_rd_nm = 2;
+}
+message ChangeRetainingWallWaterHeightM {
+  uint64 index = 1;
+  double new_water_height_m = 2;
+}
+message ChangeRetainingWallSaturatedGamma {
+  uint64 index = 1;
+  double new_saturated_gamma = 2;
+}
+message ChangeRetainingWallPermeabilityMS {
+  uint64 index = 1;
+  double new_permeability_m_s = 2;
+}
+message ChangeFoundationBaseFrictionDeg {
+  uint64 index = 1;
+  double new_base_friction_angle_deg = 2;
+}
+message ChangeFoundationBasePorePressurePa {
+  uint64 index = 1;
+  double new_base_pore_pressure_pa = 2;
+}

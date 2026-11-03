@@ -9,9 +9,8 @@
   ],
   "properties": {
     "newFatigueDetail": {
-      "type": "string",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/FatigueDetail",
       "x-semio-ui": {
-        "widget": "text",
         "role": "value",
         "label": {
           "en": "Fatigue detail category",

@@ -1,0 +1,6 @@
+{
+  "ChangeBeamHoggingRebarM2PerM": {
+    "id": "beam-B1",
+    "newAsHoggingM2PerM": 0.000625
+  }
+}

@@ -3,7 +3,8 @@ CREATE TABLE en1996_document (
   annex TEXT NOT NULL CHECK (annex IN ('En','De')),
   masonry_class TEXT NOT NULL CHECK (masonry_class IN ('Class1','Class2','Class3','Class4','Class5')),
   design_situation TEXT NOT NULL CHECK (design_situation IN ('Persistent','Transient','Accidental','Seismic')),
-  storeys INTEGER NOT NULL CHECK (storeys BETWEEN 0 AND 4294967295)
+  storeys INTEGER NOT NULL CHECK (storeys BETWEEN 0 AND 4294967295),
+  reliability_class TEXT NOT NULL CHECK (reliability_class IN ('RC1','RC2','RC3'))
 );
 CREATE TABLE en1996_wall (
   id INTEGER PRIMARY KEY,
@@ -40,6 +41,20 @@ CREATE TABLE en1996_wall (
   density_kg_m3 REAL,
   phi_infinity REAL,
   is_basement INTEGER NOT NULL CHECK (is_basement IN (0,1)),
+  frost_class TEXT NOT NULL CHECK (frost_class IN ('Exempt','Moderate','Severe')),
+  cover_m REAL,
+  deflection_limit REAL,
+  soil_height_m REAL,
+  soil_density_kg_m3 REAL,
+  isotherm_depth_m REAL,
+  plan_x_m REAL,
+  plan_y_m REAL,
+  plan_angle_deg REAL,
+  in_plane_shear_n REAL,
+  in_plane_moment_nm REAL,
+  bracing_system TEXT NOT NULL CHECK (bracing_system IN ('Unreinforced','Confined','Reinforced')),
+  diaphragm_stiffness_n_per_m REAL,
+  web_spacing_m REAL,
   thickness_m_ieee754_bits INTEGER NOT NULL, thickness_m_ieee754_class TEXT NOT NULL,
   height_m_ieee754_bits INTEGER NOT NULL, height_m_ieee754_class TEXT NOT NULL,
   length_m_ieee754_bits INTEGER NOT NULL, length_m_ieee754_class TEXT NOT NULL,
@@ -57,17 +72,30 @@ CREATE TABLE en1996_wall (
   f_yd_pa_ieee754_bits INTEGER NOT NULL, f_yd_pa_ieee754_class TEXT NOT NULL,
   mu_ieee754_bits INTEGER NOT NULL, mu_ieee754_class TEXT NOT NULL,
   density_kg_m3_ieee754_bits INTEGER NOT NULL, density_kg_m3_ieee754_class TEXT NOT NULL,
-  phi_infinity_ieee754_bits INTEGER NOT NULL, phi_infinity_ieee754_class TEXT NOT NULL
+  phi_infinity_ieee754_bits INTEGER NOT NULL, phi_infinity_ieee754_class TEXT NOT NULL,
+  cover_m_ieee754_bits INTEGER NOT NULL, cover_m_ieee754_class TEXT NOT NULL,
+  deflection_limit_ieee754_bits INTEGER NOT NULL, deflection_limit_ieee754_class TEXT NOT NULL,
+  soil_height_m_ieee754_bits INTEGER NOT NULL, soil_height_m_ieee754_class TEXT NOT NULL,
+  soil_density_kg_m3_ieee754_bits INTEGER NOT NULL, soil_density_kg_m3_ieee754_class TEXT NOT NULL,
+  isotherm_depth_m_ieee754_bits INTEGER NOT NULL, isotherm_depth_m_ieee754_class TEXT NOT NULL,
+  plan_x_m_ieee754_bits INTEGER NOT NULL, plan_x_m_ieee754_class TEXT NOT NULL,
+  plan_y_m_ieee754_bits INTEGER NOT NULL, plan_y_m_ieee754_class TEXT NOT NULL,
+  plan_angle_deg_ieee754_bits INTEGER NOT NULL, plan_angle_deg_ieee754_class TEXT NOT NULL,
+  in_plane_shear_n_ieee754_bits INTEGER NOT NULL, in_plane_shear_n_ieee754_class TEXT NOT NULL,
+  in_plane_moment_nm_ieee754_bits INTEGER NOT NULL, in_plane_moment_nm_ieee754_class TEXT NOT NULL,
+  diaphragm_stiffness_n_per_m_ieee754_bits INTEGER NOT NULL, diaphragm_stiffness_n_per_m_ieee754_class TEXT NOT NULL,
+  web_spacing_m_ieee754_bits INTEGER NOT NULL, web_spacing_m_ieee754_class TEXT NOT NULL
 );
 CREATE TABLE en1996_opening (
   id INTEGER PRIMARY KEY,
   wall_id INTEGER NOT NULL REFERENCES en1996_wall(id),
   ordinal INTEGER NOT NULL CHECK (ordinal >= 0),
   logical_id TEXT NOT NULL,
-  width_m REAL, height_m REAL, sill_height_m REAL,
+  width_m REAL, height_m REAL, sill_height_m REAL, position_m REAL,
   width_m_ieee754_bits INTEGER NOT NULL, width_m_ieee754_class TEXT NOT NULL,
   height_m_ieee754_bits INTEGER NOT NULL, height_m_ieee754_class TEXT NOT NULL,
-  sill_height_m_ieee754_bits INTEGER NOT NULL, sill_height_m_ieee754_class TEXT NOT NULL
+  sill_height_m_ieee754_bits INTEGER NOT NULL, sill_height_m_ieee754_class TEXT NOT NULL,
+  position_m_ieee754_bits INTEGER NOT NULL, position_m_ieee754_class TEXT NOT NULL
 );
 CREATE TABLE en1996_load_case (
   id INTEGER PRIMARY KEY,
@@ -90,8 +118,165 @@ CREATE TABLE en1996_concentrated_load (
   load_case_id INTEGER NOT NULL REFERENCES en1996_load_case(id),
   ordinal INTEGER NOT NULL CHECK (ordinal >= 0),
   logical_id TEXT NOT NULL,
-  force_n REAL, bearing_area_m2 REAL, bearing_length_m REAL,
+  force_n REAL, bearing_area_m2 REAL, bearing_length_m REAL, distance_a1_m REAL, position_m REAL,
   force_n_ieee754_bits INTEGER NOT NULL, force_n_ieee754_class TEXT NOT NULL,
   bearing_area_m2_ieee754_bits INTEGER NOT NULL, bearing_area_m2_ieee754_class TEXT NOT NULL,
+  bearing_length_m_ieee754_bits INTEGER NOT NULL, bearing_length_m_ieee754_class TEXT NOT NULL,
+  distance_a1_m_ieee754_bits INTEGER NOT NULL, distance_a1_m_ieee754_class TEXT NOT NULL,
+  position_m_ieee754_bits INTEGER NOT NULL, position_m_ieee754_class TEXT NOT NULL
+);
+CREATE TABLE en1996_pier (
+  id INTEGER PRIMARY KEY,
+  wall_id INTEGER NOT NULL REFERENCES en1996_wall(id),
+  ordinal INTEGER NOT NULL CHECK (ordinal >= 0),
+  logical_id TEXT NOT NULL,
+  position_m REAL,
+  width_m REAL,
+  position_m_ieee754_bits INTEGER NOT NULL, position_m_ieee754_class TEXT NOT NULL,
+  width_m_ieee754_bits INTEGER NOT NULL, width_m_ieee754_class TEXT NOT NULL
+);
+CREATE TABLE en1996_lintel (
+  id INTEGER PRIMARY KEY,
+  wall_id INTEGER NOT NULL REFERENCES en1996_wall(id),
+  ordinal INTEGER NOT NULL CHECK (ordinal >= 0),
+  logical_id TEXT NOT NULL,
+  position_m REAL,
+  span_m REAL,
+  depth_m REAL,
+  bearing_length_m REAL,
+  position_m_ieee754_bits INTEGER NOT NULL, position_m_ieee754_class TEXT NOT NULL,
+  span_m_ieee754_bits INTEGER NOT NULL, span_m_ieee754_class TEXT NOT NULL,
+  depth_m_ieee754_bits INTEGER NOT NULL, depth_m_ieee754_class TEXT NOT NULL,
   bearing_length_m_ieee754_bits INTEGER NOT NULL, bearing_length_m_ieee754_class TEXT NOT NULL
+);
+CREATE TABLE en1996_tie (
+  id INTEGER PRIMARY KEY,
+  wall_id INTEGER NOT NULL REFERENCES en1996_wall(id),
+  ordinal INTEGER NOT NULL CHECK (ordinal >= 0),
+  logical_id TEXT NOT NULL,
+  kind TEXT NOT NULL CHECK (kind IN ('WallTie','Anchor','RingTie')),
+  position_m REAL,
+  level_m REAL,
+  capacity_n REAL,
+  position_m_ieee754_bits INTEGER NOT NULL, position_m_ieee754_class TEXT NOT NULL,
+  level_m_ieee754_bits INTEGER NOT NULL, level_m_ieee754_class TEXT NOT NULL,
+  capacity_n_ieee754_bits INTEGER NOT NULL, capacity_n_ieee754_class TEXT NOT NULL
+);
+CREATE TABLE en1996_prestress (
+  id INTEGER PRIMARY KEY,
+  wall_id INTEGER NOT NULL REFERENCES en1996_wall(id),
+  ordinal INTEGER NOT NULL CHECK (ordinal >= 0),
+  logical_id TEXT NOT NULL,
+  force_n REAL,
+  area_m2 REAL,
+  f_pk_pa REAL,
+  position_m REAL,
+  eccentricity_m REAL,
+  loss_ratio REAL,
+  force_n_ieee754_bits INTEGER NOT NULL, force_n_ieee754_class TEXT NOT NULL,
+  area_m2_ieee754_bits INTEGER NOT NULL, area_m2_ieee754_class TEXT NOT NULL,
+  f_pk_pa_ieee754_bits INTEGER NOT NULL, f_pk_pa_ieee754_class TEXT NOT NULL,
+  position_m_ieee754_bits INTEGER NOT NULL, position_m_ieee754_class TEXT NOT NULL,
+  eccentricity_m_ieee754_bits INTEGER NOT NULL, eccentricity_m_ieee754_class TEXT NOT NULL,
+  loss_ratio_ieee754_bits INTEGER NOT NULL, loss_ratio_ieee754_class TEXT NOT NULL
+);
+CREATE TABLE en1996_confined (
+  id INTEGER PRIMARY KEY,
+  wall_id INTEGER NOT NULL REFERENCES en1996_wall(id),
+  ordinal INTEGER NOT NULL CHECK (ordinal >= 0),
+  logical_id TEXT NOT NULL,
+  position_m REAL,
+  width_m REAL,
+  depth_m REAL,
+  as_m2 REAL,
+  position_m_ieee754_bits INTEGER NOT NULL, position_m_ieee754_class TEXT NOT NULL,
+  width_m_ieee754_bits INTEGER NOT NULL, width_m_ieee754_class TEXT NOT NULL,
+  depth_m_ieee754_bits INTEGER NOT NULL, depth_m_ieee754_class TEXT NOT NULL,
+  as_m2_ieee754_bits INTEGER NOT NULL, as_m2_ieee754_class TEXT NOT NULL
+);
+CREATE TABLE en1996_flange (
+  id INTEGER PRIMARY KEY,
+  wall_id INTEGER NOT NULL REFERENCES en1996_wall(id),
+  ordinal INTEGER NOT NULL CHECK (ordinal >= 0),
+  logical_id TEXT NOT NULL,
+  length_m REAL,
+  thickness_m REAL,
+  position_m REAL,
+  length_m_ieee754_bits INTEGER NOT NULL, length_m_ieee754_class TEXT NOT NULL,
+  thickness_m_ieee754_bits INTEGER NOT NULL, thickness_m_ieee754_class TEXT NOT NULL,
+  position_m_ieee754_bits INTEGER NOT NULL, position_m_ieee754_class TEXT NOT NULL
+);
+CREATE TABLE en1996_bar (
+  id INTEGER PRIMARY KEY,
+  wall_id INTEGER NOT NULL REFERENCES en1996_wall(id),
+  ordinal INTEGER NOT NULL CHECK (ordinal >= 0),
+  logical_id TEXT NOT NULL,
+  kind TEXT NOT NULL CHECK (kind IN ('Anchorage','Shear','DeepBeam')),
+  diameter_m REAL,
+  length_m REAL,
+  spacing_m REAL,
+  diameter_m_ieee754_bits INTEGER NOT NULL, diameter_m_ieee754_class TEXT NOT NULL,
+  length_m_ieee754_bits INTEGER NOT NULL, length_m_ieee754_class TEXT NOT NULL,
+  spacing_m_ieee754_bits INTEGER NOT NULL, spacing_m_ieee754_class TEXT NOT NULL
+);
+CREATE TABLE en1996_placement (
+  id INTEGER PRIMARY KEY,
+  document_id INTEGER NOT NULL REFERENCES en1996_document(id),
+  ordinal INTEGER NOT NULL CHECK(ordinal>=0),
+  logical_id TEXT NOT NULL,
+  x REAL,
+  y REAL,
+  z REAL,
+  yaw REAL,
+  x_ieee754_bits INTEGER NOT NULL, x_ieee754_class TEXT NOT NULL,
+  y_ieee754_bits INTEGER NOT NULL, y_ieee754_class TEXT NOT NULL,
+  z_ieee754_bits INTEGER NOT NULL, z_ieee754_class TEXT NOT NULL,
+  yaw_ieee754_bits INTEGER NOT NULL, yaw_ieee754_class TEXT NOT NULL
+);
+CREATE TABLE en1996_case (
+  id INTEGER PRIMARY KEY,
+  document_id INTEGER NOT NULL REFERENCES en1996_document(id),
+  ordinal INTEGER NOT NULL CHECK (ordinal >= 0),
+  logical_id TEXT NOT NULL, label_en TEXT NOT NULL, label_de TEXT NOT NULL, entry_id TEXT NOT NULL
+);
+CREATE TABLE en1996_case_number (
+  id INTEGER PRIMARY KEY,
+  case_id INTEGER NOT NULL REFERENCES en1996_case(id),
+  ordinal INTEGER NOT NULL CHECK (ordinal >= 0),
+  logical_id TEXT NOT NULL,
+  value REAL,
+  value_ieee754_bits INTEGER NOT NULL, value_ieee754_class TEXT NOT NULL
+);
+CREATE TABLE en1996_case_text (
+  id INTEGER PRIMARY KEY,
+  case_id INTEGER NOT NULL REFERENCES en1996_case(id),
+  ordinal INTEGER NOT NULL CHECK (ordinal >= 0),
+  logical_id TEXT NOT NULL, value TEXT NOT NULL
+);
+CREATE TABLE en1996_movement_joint (
+  id INTEGER PRIMARY KEY,
+  document_id INTEGER NOT NULL REFERENCES en1996_document(id),
+  ordinal INTEGER NOT NULL CHECK (ordinal >= 0),
+  logical_id TEXT NOT NULL,
+  wall_ref TEXT NOT NULL,
+  position_m REAL,
+  position_m_ieee754_bits INTEGER NOT NULL, position_m_ieee754_class TEXT NOT NULL
+);
+CREATE TABLE en1996_chase (
+  id INTEGER PRIMARY KEY,
+  document_id INTEGER NOT NULL REFERENCES en1996_document(id),
+  ordinal INTEGER NOT NULL CHECK (ordinal >= 0),
+  logical_id TEXT NOT NULL,
+  wall_ref TEXT NOT NULL,
+  kind TEXT NOT NULL CHECK (kind IN ('Vertical','Horizontal','Recess')),
+  x_m REAL,
+  y_m REAL,
+  width_m REAL,
+  length_m REAL,
+  depth_m REAL,
+  x_m_ieee754_bits INTEGER NOT NULL, x_m_ieee754_class TEXT NOT NULL,
+  y_m_ieee754_bits INTEGER NOT NULL, y_m_ieee754_class TEXT NOT NULL,
+  width_m_ieee754_bits INTEGER NOT NULL, width_m_ieee754_class TEXT NOT NULL,
+  length_m_ieee754_bits INTEGER NOT NULL, length_m_ieee754_class TEXT NOT NULL,
+  depth_m_ieee754_bits INTEGER NOT NULL, depth_m_ieee754_class TEXT NOT NULL
 );

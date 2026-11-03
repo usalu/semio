@@ -13,6 +13,14 @@ impl ArtifactOriginalVcsFailure{
  fn text(&self)->Option<&str>{match &self.source{VcsError::UnknownEdit(text)|VcsError::UnknownChange(text)|VcsError::UnknownAlternative(text)|VcsError::ForeignEdit(text)|VcsError::Serialize(text)|VcsError::Deserialize(text)|VcsError::Backbone(text)|VcsError::DialectMismatch(text)|VcsError::MigrationRequired(text)|VcsError::MigrationFailed(text)|VcsError::CompositionCycle(text)|VcsError::OwnershipViolation(text)|VcsError::ValidationFailed(text)|VcsError::CompensationFailed(text)|VcsError::UnknownConflict(text)|VcsError::UnknownTransaction(text)=>Some(text),VcsError::MutationApply(source)=>Some(&source.message),VcsError::InverseRefused(source)|VcsError::NativeEncoding(source)=>Some(&source.message),VcsError::TransactionOpen{transaction_id}=>Some(transaction_id),_=>None}}
 }
 impl OriginalDomainFailure for ArtifactOriginalVcsFailure{fn domain_code(&self)->&str{"history.native-command"}fn domain_message(&self)->&str{self.text().unwrap_or("native history command refused")}fn domain_retained_progress(&self)->RetainedCloneProgress{Default::default()}}
+pub fn publish_stored_vcs_failure(slot:&mut std::mem::ManuallyDrop<Option<ArtifactOriginalVcsFailure>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::OriginalTurnFailure>,semio_framework_job::OriginalTurnFailure>{
+ if slot.is_none(){return Ok(None)}
+ let mut reservation=semio_framework_job::OriginalDomainReservation::<ArtifactOriginalVcsFailure>::new();
+ if !reservation.prepare(cx)?{return Ok(None)}
+ if cx.should_yield()||cx.is_cancelled()||!cx.retained_work_can_enter(semio_framework_value::RetirementDemand{depth:1,..Default::default()}){return Ok(None)}
+ if reservation.with_body(cx,|_,body|{*body=slot.take();Ok(())})?.is_none(){return Ok(None)}
+ semio_framework_job::admit_original_domain_failure(&mut reservation,cx)
+}
 #[derive(Clone,Copy)]
 enum Node<'a>{Root(&'a ArtifactOriginalVcsFailure),Record(&'a VcsError),Apply(&'a protocol::MutationApplyError),Value(&'a ValueError),Messages(&'a[protocol::MutationMessage]),Message(&'a protocol::MutationMessage),Strings(&'a[String]),Text(&'a str),UInt(u64),Null}
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"original VCS failure projection changed its field")}

@@ -59,13 +59,13 @@ use close_scene_pointer_and_dispatch::{apply_window_clock_caret, stamp_window_cl
 mod accessibility_dispatch_and_focus;
 pub use accessibility_dispatch_and_focus::{
     dispatch_accessibility_event, retained_node_focus_identity, retained_node_has_visible_focus,
-    retained_node_is_select, RetainedNodeFocusKind,
+    retained_node_is_select, retained_focused_row_key, retained_row_controls, RetainedNodeFocusKind, RetainedRowControl, RetainedRowControls,
 };
 
 #[path = "📋️receipts-drop-and-clipboard/🦀️.rs"]
 mod receipts_drop_and_clipboard;
 pub use receipts_drop_and_clipboard::{
-    apply_drop_committed, apply_scene_ui_command, apply_ui_commands, decode_drop_payload,
+    apply_drop_committed, apply_scene_ui_command, apply_tree_row_drop, tree_item_drop_action, apply_ui_commands, decode_drop_payload,
     drop_target_action, pointer_button_code, reserve_retained_input_receipt,
     settle_retained_input_receipt, RETAINED_INPUT_RECEIPTS,
 };

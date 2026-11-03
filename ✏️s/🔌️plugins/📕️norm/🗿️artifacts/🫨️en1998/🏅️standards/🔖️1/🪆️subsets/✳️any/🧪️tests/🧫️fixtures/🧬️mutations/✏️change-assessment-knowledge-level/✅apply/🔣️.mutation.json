@@ -1,0 +1,5 @@
+{
+  "mutation": "changeAssessmentKnowledgeLevel",
+  "id": "as-1",
+  "newKnowledgeLevel": "kl1"
+}

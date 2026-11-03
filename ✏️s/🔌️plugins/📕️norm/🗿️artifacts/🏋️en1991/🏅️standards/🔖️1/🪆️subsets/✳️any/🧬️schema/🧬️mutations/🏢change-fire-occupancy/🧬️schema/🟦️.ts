@@ -1,10 +1,11 @@
 /** 🏢 `change-fire-occupancy` wire twin: the leaf payload `ChangeFireOccupancy`, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
- * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
+ * by `repo ./📜️script.ts schema twins generate`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
-import { normWireObject, type NormWireReader, normWireRequired, normWireString } from "@semio-tech/norm-js/registry/contract";
+import { normWireObject, normWireRequired, type NormWireReader } from "@semio-tech/norm-js/registry/contract";
+import { type En1991FireOccupancy, parseEn1991FireOccupancy } from "../../../📸️snapshot/🟦️.ts";
 
 export interface ChangeFireOccupancy {
-  newFireOccupancy: string;
+  newFireOccupancy: En1991FireOccupancy;
 }
 
-export const parseChangeFireOccupancy: NormWireReader<ChangeFireOccupancy> = normWireObject<ChangeFireOccupancy>({ newFireOccupancy: normWireRequired(normWireString) });
+export const parseChangeFireOccupancy: NormWireReader<ChangeFireOccupancy> = normWireObject<ChangeFireOccupancy>({ newFireOccupancy: normWireRequired(parseEn1991FireOccupancy) });

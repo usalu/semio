@@ -1,0 +1,39 @@
+{
+  "$schema": "../../../../../../../../../🔮️oracles/🏃️harness/🧬️schema/🔣️.json",
+  "schemaVersion": 1,
+  "artifact": "en1990",
+  "annex": "de",
+  "cases": [
+    {
+      "id": "en1990.beta-pf-1e-6",
+      "check": "en1990.C.beta",
+      "citation": {
+        "standard": "EN 1990",
+        "edition": "2002",
+        "clause": "Annex C; Table B2"
+      },
+      "inputs": {
+        "pf": 7.2348e-05
+      },
+      "expected": {
+        "beta": {
+          "value": 3.8000001504558827,
+          "unit": "1",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "third-party-library"
+        }
+      ]
+    }
+  ]
+}

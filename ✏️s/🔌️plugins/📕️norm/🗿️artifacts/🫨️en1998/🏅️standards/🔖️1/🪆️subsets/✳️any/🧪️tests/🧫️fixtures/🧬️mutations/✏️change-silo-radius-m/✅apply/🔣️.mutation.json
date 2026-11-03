@@ -1,0 +1,5 @@
+{
+  "mutation": "changeSiloRadiusM",
+  "id": "si-1",
+  "newRadiusM": 8.0
+}

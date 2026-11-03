@@ -443,6 +443,191 @@ export const applyPinchToOrbit = (pose: OrbitPose, step: PinchStep, projection: 
   return { position: orbitSub(target, orbitScale(forward, nextDistance)), target, up: pose.up, zoom: nextZoom };
 };
 // #endregion 🔖️Orbit
+
+// #region 🔖️Touch
+/** 🖐️ The slop, long-press and double-tap constants of the touch session; twins of the Rust constants. */
+export const TOUCH_SLOP_PX = 8;
+export const LONG_PRESS_MS = 450;
+export const DOUBLE_TAP_MS = 300;
+export const DOUBLE_TAP_SLOP_PX = 24;
+export const STALE_CONTACT_MS = 3000;
+
+/** 🧭️ What a host does after one contact event, in order; the kinds are the ones of the language-agnostic fixture `🖐️touch-session.json`. */
+export type TouchStep =
+  | { readonly kind: "press" | "release"; readonly x: number; readonly y: number; readonly additive: boolean }
+  | { readonly kind: "drag"; readonly x: number; readonly y: number; readonly dx: number; readonly dy: number; readonly additive: boolean }
+  | { readonly kind: "orbit"; readonly x: number; readonly y: number; readonly dx: number; readonly dy: number }
+  | { readonly kind: "camera"; readonly step: PinchStep }
+  | { readonly kind: "cameraEnd" }
+  | { readonly kind: "longPress" | "tap" | "doubleTap"; readonly x: number; readonly y: number };
+
+type TouchPhase =
+  | { readonly kind: "idle" }
+  | { readonly kind: "pending"; readonly id: number; readonly x0: number; readonly y0: number; readonly t0: number }
+  | { readonly kind: "orbiting"; readonly id: number; readonly x: number; readonly y: number }
+  | { readonly kind: "forwarding"; readonly id: number; readonly x: number; readonly y: number; readonly additive: boolean }
+  | { readonly kind: "camera" };
+
+const touchFar = (x0: number, y0: number, x: number, y: number): boolean => Math.hypot(x - x0, y - y0) > TOUCH_SLOP_PX;
+
+/** 🖐️ The domain-neutral touch session (twin of the Rust `TouchSession`): raw contacts and a clock in, host steps out. The primary press is deferred until the finger has decided, a held finger is an additive press that asks for its long press at the deadline while it is still down ({@link TouchSession.nextDeadlineMs} says when to wake it), two fingers are the camera of the shared {@link GestureRecognizer}. */
+export class TouchSession {
+  oneFingerOrbit = false;
+  longPress = true;
+  private phase: TouchPhase = { kind: "idle" };
+  private recognizer = new GestureRecognizer();
+  private lastTap: { readonly t: number; readonly x: number; readonly y: number } | null = null;
+  private lastMs = 0;
+
+  down(now: number, pointerId: number, x: number, y: number): TouchStep[] {
+    const steps = this.phase.kind !== "idle" && now - this.lastMs > STALE_CONTACT_MS ? this.cancel() : [];
+    this.lastMs = now;
+    const verdict = this.recognizer.down({ pointerId, x, y });
+    if (verdict.kind === "single" && this.phase.kind === "idle") {
+      this.phase = { kind: "pending", id: pointerId, x0: x, y0: y, t0: now };
+    } else if (verdict.kind === "pinchBegin") {
+      const phase = this.phase;
+      this.phase = { kind: "camera" };
+      if (phase.kind === "forwarding") steps.push({ kind: "release", x: phase.x, y: phase.y, additive: phase.additive });
+    }
+    return steps;
+  }
+
+  move(now: number, pointerId: number, x: number, y: number): TouchStep[] {
+    this.lastMs = now;
+    const verdict = this.recognizer.move({ pointerId, x, y });
+    if (verdict.kind === "pinch") return [{ kind: "camera", step: verdict.step }];
+    const phase = this.phase;
+    if (phase.kind === "pending" && phase.id === pointerId) {
+      if (touchFar(phase.x0, phase.y0, x, y)) {
+        if (this.oneFingerOrbit) {
+          this.phase = { kind: "orbiting", id: pointerId, x, y };
+          return [];
+        }
+        this.phase = { kind: "forwarding", id: pointerId, x, y, additive: false };
+        return [{ kind: "press", x: phase.x0, y: phase.y0, additive: false }, { kind: "drag", x, y, dx: x - phase.x0, dy: y - phase.y0, additive: false }];
+      }
+      if (this.longPress && now - phase.t0 >= LONG_PRESS_MS) {
+        this.phase = { kind: "forwarding", id: pointerId, x, y, additive: true };
+        return [{ kind: "press", x: phase.x0, y: phase.y0, additive: true }, { kind: "longPress", x: phase.x0, y: phase.y0 }];
+      }
+      return [];
+    }
+    if (phase.kind === "orbiting" && phase.id === pointerId) {
+      this.phase = { kind: "orbiting", id: pointerId, x, y };
+      return [{ kind: "orbit", x, y, dx: x - phase.x, dy: y - phase.y }];
+    }
+    if (phase.kind === "forwarding" && phase.id === pointerId) {
+      this.phase = { ...phase, x, y };
+      return [{ kind: "drag", x, y, dx: x - phase.x, dy: y - phase.y, additive: phase.additive }];
+    }
+    return [];
+  }
+
+  up(now: number, pointerId: number): TouchStep[] {
+    this.lastMs = now;
+    const verdict = this.recognizer.up(pointerId);
+    const phase = this.phase;
+    let steps: TouchStep[] = [];
+    if (verdict.kind === "pinchEnd") {
+      this.phase = { kind: "idle" };
+      steps = [{ kind: "cameraEnd" }];
+    } else if (phase.kind === "pending" && phase.id === pointerId) {
+      this.phase = { kind: "idle" };
+      if (this.longPress && now - phase.t0 >= LONG_PRESS_MS) {
+        steps = [{ kind: "press", x: phase.x0, y: phase.y0, additive: true }, { kind: "longPress", x: phase.x0, y: phase.y0 }, { kind: "release", x: phase.x0, y: phase.y0, additive: true }];
+      } else {
+        steps = [{ kind: "press", x: phase.x0, y: phase.y0, additive: false }, { kind: "release", x: phase.x0, y: phase.y0, additive: false }, { kind: "tap", x: phase.x0, y: phase.y0 }];
+        const last = this.lastTap;
+        if (last && now - last.t <= DOUBLE_TAP_MS && Math.hypot(phase.x0 - last.x, phase.y0 - last.y) <= DOUBLE_TAP_SLOP_PX) {
+          this.lastTap = null;
+          steps.push({ kind: "doubleTap", x: phase.x0, y: phase.y0 });
+        } else {
+          this.lastTap = { t: now, x: phase.x0, y: phase.y0 };
+        }
+      }
+    } else if (phase.kind === "orbiting" && phase.id === pointerId) {
+      this.phase = { kind: "idle" };
+    } else if (phase.kind === "forwarding" && phase.id === pointerId) {
+      this.phase = { kind: "idle" };
+      steps = [{ kind: "release", x: phase.x, y: phase.y, additive: phase.additive }];
+    }
+    if (this.recognizer.pointers.length === 0 && !this.recognizer.latched && this.phase.kind !== "idle") this.phase = { kind: "idle" };
+    return steps;
+  }
+
+  tick(now: number): TouchStep[] {
+    const phase = this.phase;
+    if (phase.kind === "pending" && this.longPress && now - phase.t0 >= LONG_PRESS_MS) {
+      this.phase = { kind: "forwarding", id: phase.id, x: phase.x0, y: phase.y0, additive: true };
+      return [{ kind: "press", x: phase.x0, y: phase.y0, additive: true }, { kind: "longPress", x: phase.x0, y: phase.y0 }];
+    }
+    return [];
+  }
+
+  /** ⏳️ The clock time at which a still finger turns into a long press, or `null` when nothing waits on the clock: the host sleeps until then and calls {@link tick}, it never polls. */
+  nextDeadlineMs(): number | null {
+    const phase = this.phase;
+    return phase.kind === "pending" && this.longPress ? phase.t0 + LONG_PRESS_MS : null;
+  }
+
+  cancel(): TouchStep[] {
+    const phase = this.phase;
+    this.phase = { kind: "idle" };
+    this.recognizer = new GestureRecognizer();
+    return phase.kind === "forwarding" ? [{ kind: "release", x: phase.x, y: phase.y, additive: phase.additive }] : [];
+  }
+}
+// #endregion 🔖️Touch
+
+// #region 🔖️GripPick
+/** 🎯️ The hit edges of a grip in pixels: 44 for a finger (WCAG 2.5.5), 24 for a pointer (WCAG 2.5.8); twins of the Rust constants. */
+export const TOUCH_HIT_EDGE_PX = 44;
+export const POINTER_HIT_EDGE_PX = 24;
+
+/** 🖱️ Which kind of pointer presses: a finger needs the larger target. */
+export type GripDevice = "pointer" | "touch";
+
+/** 📏️ The hit edge of a grip for `device`, raised to the device profile's own minimum (`profileMinPx`, 0 keeps the default). Twin of the Rust `grip_hit_edge_px`. */
+export const gripHitEdgePx = (device: GripDevice, profileMinPx: number): number => Math.max(device === "touch" ? TOUCH_HIT_EDGE_PX : POINTER_HIT_EDGE_PX, Number.isFinite(profileMinPx) ? profileMinPx : 0);
+
+/** ⭕️ The pick radius: half the hit edge, never smaller than the drawn radius of the grip. Twin of the Rust `grip_hit_radius_px`. */
+export const gripHitRadiusPx = (device: GripDevice, profileMinPx: number, drawnRadiusPx: number): number => Math.max(gripHitEdgePx(device, profileMinPx) / 2, Number.isFinite(drawnRadiusPx) ? drawnRadiusPx : 0);
+
+/** 🎯️ The index of the grip nearest to `at` within `radius` pixels (the first of equally near ones), or `null`. Twin of the Rust `pick_grip`. */
+export const pickGrip = (points: readonly (readonly [number, number])[], at: readonly [number, number], radius: number): number | null => {
+  let best: number | null = null;
+  let bestDistance = Infinity;
+  points.forEach((point, index) => {
+    if (!Number.isFinite(point[0]) || !Number.isFinite(point[1])) return;
+    const distance = Math.hypot(point[0] - at[0], point[1] - at[1]);
+    if (distance <= radius && distance < bestDistance) {
+      best = index;
+      bestDistance = distance;
+    }
+  });
+  return best;
+};
+
+type Vec3 = readonly [number, number, number];
+const dot3 = (a: Vec3, b: Vec3): number => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+
+/** 📐️ The parameter `t` of the point `origin + t · axis` nearest to the cursor ray; `null` for a ray parallel to the line or a non-finite input. Twin of the Rust `line_parameter`. */
+export const lineParameter = (rayOrigin: Vec3, rayDir: Vec3, origin: Vec3, axis: Vec3): number | null => {
+  if (![...rayOrigin, ...rayDir, ...origin, ...axis].every(Number.isFinite)) return null;
+  const w: Vec3 = [origin[0] - rayOrigin[0], origin[1] - rayOrigin[1], origin[2] - rayOrigin[2]];
+  const a = dot3(axis, axis);
+  const b = dot3(axis, rayDir);
+  const c = dot3(rayDir, rayDir);
+  const d = dot3(axis, w);
+  const e = dot3(rayDir, w);
+  const denominator = a * c - b * b;
+  return Math.abs(denominator) > 1e-12 * a * c && a > 0 && c > 0 ? (b * e - c * d) / denominator : null;
+};
+
+/** ✋️ The drag parameter of a held grip: where it rested plus how far the cursor moved along the line since the press. Twin of the Rust `grip_parameter`. */
+export const gripParameter = (anchorS: number, pressT: number, cursorT: number): number => anchorS + (cursorT - pressT);
+// #endregion 🔖️GripPick
 // #endregion 👆️Gesture
 
 //#region 🧪️GestureTests
@@ -475,6 +660,12 @@ if (import.meta.vitest) {
       shortestAngleDelta,
       zoomAboutPoint,
       appendSelectionDragPoints,
+      TouchSession,
+      gripHitEdgePx,
+      gripHitRadiusPx,
+      pickGrip,
+      lineParameter,
+      gripParameter,
     },
     { directory: (await import("node:path")).dirname((await import("node:url")).fileURLToPath(import.meta.url)), url: import.meta.url },
   );

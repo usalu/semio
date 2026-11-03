@@ -1,0 +1,5 @@
+{
+  "mutation": "changeWallConcreteGamma",
+  "id": "wall-W1",
+  "newConcreteGamma": 50000.0
+}

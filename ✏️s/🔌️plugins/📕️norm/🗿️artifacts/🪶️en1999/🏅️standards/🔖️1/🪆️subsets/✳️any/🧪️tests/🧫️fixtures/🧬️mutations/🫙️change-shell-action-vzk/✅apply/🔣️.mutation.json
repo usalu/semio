@@ -1,0 +1,6 @@
+{
+  "mutation": "changeShellActionVZK",
+  "shellId": "shell-pass",
+  "actionId": "G-shell",
+  "newVZK": 7400000.0
+}

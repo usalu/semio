@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-plated-stiff-flange-width/schema.json",
+  "title": "ChangePlatedStiffFlangeWidth",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newStiffenerFlangeWidth"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Plated panel",
+          "de": "Plattenfeld"
+        },
+        "description": {
+          "en": "The plated panel this mutation addresses, by id.",
+          "de": "Das adressierte Element (Plattenfeld), per Kennung."
+        },
+        "ref": {
+          "kind": "plated"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newStiffenerFlangeWidth": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Stiffener flange width or second leg length b_f",
+          "de": "Flanschbreite bzw. zweite Schenkellänge b_f der Steife"
+        },
+        "widget": "stepper",
+        "unit": "m",
+        "precision": 3,
+        "step": 0.005,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

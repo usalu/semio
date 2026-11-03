@@ -1,0 +1,5 @@
+{
+  "mutation": "changeSeismicSlopeTopographicFactor",
+  "id": "en1998-slope-1",
+  "newTopographicAmplification": 1.0
+}

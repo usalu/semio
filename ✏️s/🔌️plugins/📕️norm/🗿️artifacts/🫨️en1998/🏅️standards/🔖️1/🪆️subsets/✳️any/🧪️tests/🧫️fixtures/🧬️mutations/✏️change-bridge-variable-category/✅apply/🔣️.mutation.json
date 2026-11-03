@@ -1,0 +1,6 @@
+{
+  "mutation": "changeBridgeVariableCategory",
+  "bridgeId": "br-1",
+  "id": "br-q1",
+  "newCategory": "c"
+}

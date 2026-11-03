@@ -4,8 +4,8 @@ use crate::schema::NormResultsWindowConfig;
 
 /// 🎯️ The new selected compliance check (`None` clears the selection).
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct SelectedCheck {
     pub index: Option<u32>,
@@ -13,8 +13,8 @@ pub struct SelectedCheck {
 
 /// 🔺️ Sparse field delta over [`NormResultsWindowConfig`].
 #[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct NormResultsWindowConfigDiff {
     pub selected_check: Option<SelectedCheck>,

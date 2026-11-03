@@ -1,0 +1,6 @@
+{
+  "ChangeBeamSupport": {
+    "id": "beam-B1",
+    "newSupport": "continuous2Span"
+  }
+}

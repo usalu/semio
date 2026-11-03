@@ -1,7 +1,36 @@
 syntax = "proto3";
-package semio.norm.en1995.snapshot;
+package semio.s.norm.en1995;
 message En1995Snapshot {
+  // @state artifact
   string annex = 1;
-  repeated bytes members = 2;
-  repeated bytes connections = 3;
+  // @state artifact
+  repeated TimberMember members = 2;
+  // @state artifact
+  repeated TimberConnection connections = 3;
+  // @state artifact
+  UlsEquation uls_equation = 4;
+  // @state artifact
+  repeated CaseRow cases = 5;
+  // @state artifact
+  repeated Placement placements = 6;
+  // @state artifact
+  repeated Taper tapers = 7;
+  // @state artifact
+  repeated Cutout cutouts = 8;
+  // @state artifact
+  repeated Fastener fasteners = 9;
+  // @state artifact
+  repeated Panel panels = 10;
+  // @state artifact
+  repeated Floor floors = 11;
+  // @state artifact
+  repeated Diaphragm diaphragms = 12;
+  // @state artifact
+  repeated Truss trusses = 13;
+  // @state artifact
+  repeated Bracing bracings = 14;
+  // @state artifact
+  repeated Deck decks = 15;
+  // @state artifact
+  string reliability_class = 16;
 }

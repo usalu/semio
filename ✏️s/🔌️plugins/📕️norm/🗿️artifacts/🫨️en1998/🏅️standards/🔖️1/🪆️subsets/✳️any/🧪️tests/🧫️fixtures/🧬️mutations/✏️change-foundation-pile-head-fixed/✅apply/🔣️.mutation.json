@@ -1,0 +1,5 @@
+{
+  "mutation": "changeFoundationPileHeadFixed",
+  "id": "fd-1",
+  "newPileHeadFixed": 1.5
+}

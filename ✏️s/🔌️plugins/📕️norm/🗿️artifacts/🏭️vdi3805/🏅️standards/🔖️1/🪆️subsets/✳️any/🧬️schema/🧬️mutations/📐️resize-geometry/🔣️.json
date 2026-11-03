@@ -7,7 +7,7 @@
   "aggregateVariant": "ResizeGeometry",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
-  "binaryTag": 12,
+  "binaryTag": 11,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

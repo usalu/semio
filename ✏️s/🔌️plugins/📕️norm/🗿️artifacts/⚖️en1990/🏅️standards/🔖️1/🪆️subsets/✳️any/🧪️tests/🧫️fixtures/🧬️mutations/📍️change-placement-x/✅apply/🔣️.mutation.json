@@ -1,0 +1,5 @@
+{
+  "mutation": "changePlacementX",
+  "id": "pla-1",
+  "newX": 2.0
+}

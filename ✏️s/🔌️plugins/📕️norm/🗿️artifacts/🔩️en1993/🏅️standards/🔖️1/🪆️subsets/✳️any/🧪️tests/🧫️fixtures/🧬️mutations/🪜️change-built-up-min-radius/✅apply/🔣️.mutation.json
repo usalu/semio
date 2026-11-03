@@ -1,0 +1,6 @@
+{
+  "ChangeBuiltUpMinRadius": {
+    "id": "built-up-1",
+    "newMinRadius": 1.5
+  }
+}

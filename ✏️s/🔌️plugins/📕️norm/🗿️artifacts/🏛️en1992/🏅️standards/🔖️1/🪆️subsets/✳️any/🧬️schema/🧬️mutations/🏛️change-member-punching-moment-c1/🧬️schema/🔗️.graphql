@@ -1,0 +1,4 @@
+type ChangeMemberPunchingMomentC1 {
+  memberId: String!
+  newPunchingMomentC1: Float!
+}

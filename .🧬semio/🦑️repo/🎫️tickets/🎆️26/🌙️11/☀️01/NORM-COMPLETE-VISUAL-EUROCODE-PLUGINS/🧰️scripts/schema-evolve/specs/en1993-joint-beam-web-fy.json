@@ -1,0 +1,17 @@
+{
+  "artifact": "en1993",
+  "leaf": {
+    "kindSlug": "joint",
+    "default": 0.0,
+    "field": {
+      "name": "beam_web_fy",
+      "type": "f64",
+      "unit": "Pa",
+      "label": {"en": "Beam web yield strength f_y,wb (0 = not given)", "de": "Trägerstegstreckgrenze f_y,wb (0 = nicht angegeben)"},
+      "doc": "🔩 Yield strength f_y,wb of the beam web of an end plate joint for the beam web in tension (EN 1993-1-8 6.2.6.8); 0 = not given, the component is then not assessed and no value is assumed.",
+      "precision": 0,
+      "step": 5000000,
+      "range": [0, 1000000000]
+    }
+  }
+}

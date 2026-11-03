@@ -1,0 +1,905 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "name": "an owner added where an import found nothing is a consumer of that place, nobody else",
+   "previous": {
+    "owners": [
+     [
+      "a",
+      "a",
+      null
+     ],
+     [
+      "b",
+      "b",
+      null
+     ]
+    ],
+    "packages": [],
+    "modules": [],
+    "workspaces": [],
+    "lock": null,
+    "taxonomy": null
+   },
+   "current": {
+    "owners": [
+     [
+      "a",
+      "a",
+      null
+     ],
+     [
+      "b",
+      "b",
+      null
+     ],
+     [
+      "n",
+      "x/y",
+      null
+     ]
+    ],
+    "packages": [],
+    "modules": [],
+    "workspaces": [],
+    "lock": null,
+    "taxonomy": null
+   },
+   "rows": {
+    "a": {
+     "root": "a",
+     "reads": {
+      "paths": [
+       "x/y"
+      ]
+     }
+    },
+    "b": {
+     "root": "b",
+     "reads": {}
+    }
+   },
+   "expect": [
+    "a"
+   ]
+  },
+  {
+   "name": "an owner added below the root of a candidate takes over its files: the candidate refreshes, a sibling does not",
+   "previous": {
+    "owners": [
+     [
+      "host",
+      "x",
+      null
+     ],
+     [
+      "sibling",
+      "y",
+      null
+     ]
+    ],
+    "packages": [],
+    "modules": [],
+    "workspaces": [],
+    "lock": null,
+    "taxonomy": null
+   },
+   "current": {
+    "owners": [
+     [
+      "host",
+      "x",
+      null
+     ],
+     [
+      "sibling",
+      "y",
+      null
+     ],
+     [
+      "n",
+      "x/inner",
+      null
+     ]
+    ],
+    "packages": [],
+    "modules": [],
+    "workspaces": [],
+    "lock": null,
+    "taxonomy": null
+   },
+   "rows": {
+    "host": {
+     "root": "x",
+     "reads": {}
+    },
+    "sibling": {
+     "root": "y",
+     "reads": {}
+    }
+   },
+   "expect": [
+    "host"
+   ]
+  },
+  {
+   "name": "an owner added inside the territory of an owner a candidate resolved to takes over paths below it",
+   "previous": {
+    "owners": [
+     [
+      "t",
+      "t",
+      null
+     ],
+     [
+      "c",
+      "c",
+      null
+     ]
+    ],
+    "packages": [],
+    "modules": [],
+    "workspaces": [],
+    "lock": null,
+    "taxonomy": null
+   },
+   "current": {
+    "owners": [
+     [
+      "t",
+      "t",
+      null
+     ],
+     [
+      "c",
+      "c",
+      null
+     ],
+     [
+      "n",
+      "t/sub",
+      null
+     ]
+    ],
+    "packages": [],
+    "modules": [],
+    "workspaces": [],
+    "lock": null,
+    "taxonomy": null
+   },
+   "rows": {
+    "c": {
+     "root": "c",
+     "reads": {
+      "owners": [
+       "t"
+      ]
+     }
+    },
+    "t": {
+     "root": "t",
+     "reads": {}
+    },
+    "d": {
+     "root": "d",
+     "reads": {
+      "owners": [
+       "c"
+      ]
+     }
+    }
+   },
+   "expect": [
+    "c",
+    "t"
+   ]
+  },
+  {
+   "name": "an owner removed is a consumer of everyone who resolved to it",
+   "previous": {
+    "owners": [
+     [
+      "t",
+      "t",
+      null
+     ],
+     [
+      "c",
+      "c",
+      null
+     ],
+     [
+      "e",
+      "e",
+      null
+     ]
+    ],
+    "packages": [],
+    "modules": [],
+    "workspaces": [],
+    "lock": null,
+    "taxonomy": null
+   },
+   "current": {
+    "owners": [
+     [
+      "c",
+      "c",
+      null
+     ],
+     [
+      "e",
+      "e",
+      null
+     ]
+    ],
+    "packages": [],
+    "modules": [],
+    "workspaces": [],
+    "lock": null,
+    "taxonomy": null
+   },
+   "rows": {
+    "c": {
+     "root": "c",
+     "reads": {
+      "owners": [
+       "t"
+      ]
+     }
+    },
+    "e": {
+     "root": "e",
+     "reads": {
+      "owners": [
+       "c"
+      ]
+     }
+    }
+   },
+   "expect": [
+    "c"
+   ]
+  },
+  {
+   "name": "a package that changed owner is a consumer of every importer of that package name",
+   "previous": {
+    "owners": [
+     [
+      "p",
+      "p",
+      null
+     ],
+     [
+      "q",
+      "q",
+      null
+     ],
+     [
+      "c",
+      "c",
+      null
+     ]
+    ],
+    "packages": [
+     [
+      "@w/p",
+      "p"
+     ]
+    ],
+    "modules": [],
+    "workspaces": [],
+    "lock": null,
+    "taxonomy": null
+   },
+   "current": {
+    "owners": [
+     [
+      "p",
+      "p",
+      null
+     ],
+     [
+      "q",
+      "q",
+      null
+     ],
+     [
+      "c",
+      "c",
+      null
+     ]
+    ],
+    "packages": [
+     [
+      "@w/q",
+      "p"
+     ]
+    ],
+    "modules": [],
+    "workspaces": [],
+    "lock": null,
+    "taxonomy": null
+   },
+   "rows": {
+    "c": {
+     "root": "c",
+     "reads": {
+      "packages": [
+       "@w/p"
+      ]
+     }
+    },
+    "d": {
+     "root": "d",
+     "reads": {
+      "packages": [
+       "@w/q"
+      ]
+     }
+    },
+    "e": {
+     "root": "e",
+     "reads": {
+      "packages": [
+       "left-pad"
+      ]
+     }
+    }
+   },
+   "expect": [
+    "c",
+    "d"
+   ]
+  },
+  {
+   "name": "a Go module that appeared is a consumer of its requirers",
+   "previous": {
+    "owners": [
+     [
+      "g",
+      "g",
+      null
+     ]
+    ],
+    "packages": [],
+    "modules": [],
+    "workspaces": [],
+    "lock": null,
+    "taxonomy": null
+   },
+   "current": {
+    "owners": [
+     [
+      "g",
+      "g",
+      null
+     ]
+    ],
+    "packages": [],
+    "modules": [
+     [
+      "example.com/g",
+      "g"
+     ]
+    ],
+    "workspaces": [],
+    "lock": null,
+    "taxonomy": null
+   },
+   "rows": {
+    "c": {
+     "root": "c",
+     "reads": {
+      "modules": [
+       "example.com/g"
+      ]
+     }
+    },
+    "d": {
+     "root": "d",
+     "reads": {}
+    }
+   },
+   "expect": [
+    "c"
+   ]
+  },
+  {
+   "name": "a moved lock file is a consumer of the owners that consulted it",
+   "previous": {
+    "owners": [
+     [
+      "a",
+      "a",
+      null
+     ]
+    ],
+    "packages": [],
+    "modules": [],
+    "workspaces": [],
+    "lock": "l1",
+    "taxonomy": null
+   },
+   "current": {
+    "owners": [
+     [
+      "a",
+      "a",
+      null
+     ]
+    ],
+    "packages": [],
+    "modules": [],
+    "workspaces": [],
+    "lock": "l2",
+    "taxonomy": null
+   },
+   "rows": {
+    "js": {
+     "root": "js",
+     "reads": {
+      "lock": true,
+      "packages": [
+       "react"
+      ]
+     }
+    },
+    "rs": {
+     "root": "rs",
+     "reads": {
+      "workspaces": [
+       "."
+      ]
+     }
+    }
+   },
+   "expect": [
+    "js"
+   ]
+  },
+  {
+   "name": "a changed workspace manifest is a consumer of the crates that inherit from it and of crates below it, not of other owners",
+   "previous": {
+    "owners": [
+     [
+      "a",
+      "a",
+      null
+     ]
+    ],
+    "packages": [],
+    "modules": [],
+    "workspaces": [
+     [
+      "w/Cargo.toml",
+      "d1"
+     ]
+    ],
+    "lock": null,
+    "taxonomy": null
+   },
+   "current": {
+    "owners": [
+     [
+      "a",
+      "a",
+      null
+     ]
+    ],
+    "packages": [],
+    "modules": [],
+    "workspaces": [
+     [
+      "w/Cargo.toml",
+      "d2"
+     ]
+    ],
+    "lock": null,
+    "taxonomy": null
+   },
+   "rows": {
+    "inherits": {
+     "root": "elsewhere/c",
+     "reads": {
+      "workspaces": [
+       "w"
+      ]
+     }
+    },
+    "below": {
+     "root": "w/crate",
+     "reads": {
+      "workspaces": [
+       "w"
+      ]
+     }
+    },
+    "js": {
+     "root": "w/js",
+     "reads": {
+      "packages": [
+       "x"
+      ]
+     }
+    },
+    "far": {
+     "root": "far",
+     "reads": {
+      "workspaces": [
+       "far"
+      ]
+     }
+    }
+   },
+   "expect": [
+    "below",
+    "inherits"
+   ]
+  },
+  {
+   "name": "a workspace manifest added above a crate refreshes it",
+   "previous": {
+    "owners": [
+     [
+      "a",
+      "a",
+      null
+     ]
+    ],
+    "packages": [],
+    "modules": [],
+    "workspaces": [],
+    "lock": null,
+    "taxonomy": null
+   },
+   "current": {
+    "owners": [
+     [
+      "a",
+      "a",
+      null
+     ]
+    ],
+    "packages": [],
+    "modules": [],
+    "workspaces": [
+     [
+      "w/Cargo.toml",
+      "d"
+     ]
+    ],
+    "lock": null,
+    "taxonomy": null
+   },
+   "rows": {
+    "crate": {
+     "root": "w/c/crate",
+     "reads": {
+      "workspaces": [
+       "."
+      ]
+     }
+    },
+    "other": {
+     "root": "o/crate",
+     "reads": {
+      "workspaces": [
+       "."
+      ]
+     }
+    }
+   },
+   "expect": [
+    "crate"
+   ]
+  },
+  {
+   "name": "an owner without recorded reads is refreshed whatever changed",
+   "previous": {
+    "owners": [
+     [
+      "a",
+      "a",
+      null
+     ]
+    ],
+    "packages": [],
+    "modules": [],
+    "workspaces": [],
+    "lock": null,
+    "taxonomy": null
+   },
+   "current": {
+    "owners": [
+     [
+      "a",
+      "a",
+      null
+     ],
+     [
+      "n",
+      "n",
+      null
+     ]
+    ],
+    "packages": [],
+    "modules": [],
+    "workspaces": [],
+    "lock": null,
+    "taxonomy": null
+   },
+   "rows": {
+    "unknown": {
+     "root": "u"
+    },
+    "known": {
+     "root": "k",
+     "reads": {}
+    }
+   },
+   "expect": [
+    "unknown"
+   ]
+  },
+  {
+   "name": "a moved taxonomy refreshes everyone",
+   "previous": {
+    "owners": [
+     [
+      "a",
+      "a",
+      null
+     ]
+    ],
+    "packages": [],
+    "modules": [],
+    "workspaces": [],
+    "lock": null,
+    "taxonomy": "t1"
+   },
+   "current": {
+    "owners": [
+     [
+      "a",
+      "a",
+      null
+     ]
+    ],
+    "packages": [],
+    "modules": [],
+    "workspaces": [],
+    "lock": null,
+    "taxonomy": "t2"
+   },
+   "rows": {
+    "a": {
+     "root": "a",
+     "reads": {}
+    },
+    "b": {
+     "root": "b",
+     "reads": {}
+    }
+   },
+   "expect": [
+    "a",
+    "b"
+   ]
+  },
+  {
+   "name": "no previous parts refreshes everyone",
+   "previous": null,
+   "current": {
+    "owners": [
+     [
+      "a",
+      "a",
+      null
+     ]
+    ],
+    "packages": [],
+    "modules": [],
+    "workspaces": [],
+    "lock": null,
+    "taxonomy": null
+   },
+   "rows": {
+    "a": {
+     "root": "a",
+     "reads": {}
+    },
+    "b": {
+     "root": "b",
+     "reads": {}
+    }
+   },
+   "expect": [
+    "a",
+    "b"
+   ]
+  },
+  {
+   "name": "an unchanged environment refreshes nobody who has reads",
+   "previous": {
+    "owners": [
+     [
+      "a",
+      "a",
+      null
+     ]
+    ],
+    "packages": [
+     [
+      "@w/a",
+      "a"
+     ]
+    ],
+    "modules": [],
+    "workspaces": [
+     [
+      "Cargo.toml",
+      "d"
+     ]
+    ],
+    "lock": "l",
+    "taxonomy": null
+   },
+   "current": {
+    "owners": [
+     [
+      "a",
+      "a",
+      null
+     ]
+    ],
+    "packages": [
+     [
+      "@w/a",
+      "a"
+     ]
+    ],
+    "modules": [],
+    "workspaces": [
+     [
+      "Cargo.toml",
+      "d"
+     ]
+    ],
+    "lock": "l",
+    "taxonomy": null
+   },
+   "rows": {
+    "a": {
+     "root": "a",
+     "reads": {
+      "owners": [
+       "z"
+      ],
+      "lock": true,
+      "packages": [
+       "@w/a"
+      ],
+      "workspaces": [
+       "."
+      ]
+     }
+    }
+   },
+   "expect": []
+  },
+  {
+   "name": "a native root counts as a root of its owner and an owner moved to another root is a change at both roots",
+   "previous": {
+    "owners": [
+     [
+      "t",
+      "t",
+      "n/t"
+     ],
+     [
+      "c",
+      "c",
+      null
+     ]
+    ],
+    "packages": [],
+    "modules": [],
+    "workspaces": [],
+    "lock": null,
+    "taxonomy": null
+   },
+   "current": {
+    "owners": [
+     [
+      "t",
+      "t2",
+      "n/t"
+     ],
+     [
+      "c",
+      "c",
+      null
+     ]
+    ],
+    "packages": [],
+    "modules": [],
+    "workspaces": [],
+    "lock": null,
+    "taxonomy": null
+   },
+   "rows": {
+    "c": {
+     "root": "c",
+     "reads": {
+      "owners": [
+       "t"
+      ]
+     }
+    },
+    "under": {
+     "root": "n",
+     "reads": {}
+    },
+    "away": {
+     "root": "zz",
+     "reads": {}
+    }
+   },
+   "expect": [
+    "c",
+    "under"
+   ]
+  },
+  {
+   "name": "the root project contains every root: any owner change refreshes it",
+   "previous": {
+    "owners": [
+     [
+      "a",
+      "a",
+      null
+     ]
+    ],
+    "packages": [],
+    "modules": [],
+    "workspaces": [],
+    "lock": null,
+    "taxonomy": null
+   },
+   "current": {
+    "owners": [
+     [
+      "a",
+      "a",
+      null
+     ],
+     [
+      "n",
+      "n",
+      null
+     ]
+    ],
+    "packages": [],
+    "modules": [],
+    "workspaces": [],
+    "lock": null,
+    "taxonomy": null
+   },
+   "rows": {
+    "workspace": {
+     "root": ".",
+     "reads": {}
+    },
+    "b": {
+     "root": "b",
+     "reads": {}
+    }
+   },
+   "expect": [
+    "workspace"
+   ]
+  }
+ ]
+}

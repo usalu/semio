@@ -1,0 +1,7 @@
+syntax = "proto3";
+package semio.s.norm.en1992.mutation.change_opening_depth;
+message ChangeOpeningDepth {
+  string member_id = 1;
+  string opening_id = 2;
+  double new_depth = 3;
+}

@@ -172,6 +172,12 @@ impl<'ctx> ActionsCtx<'ctx> {
                 scope_action_to_window(&mut action, &owner);
             }
             semio_framework_os_renderer_wgpu_ui_engine_dump::chrome_ledger::note_dispatched_action(&action, self.chrome.dispatch_origin);
+            if action.action == semio_framework::FOCUS_WINDOW_ACTION_ID {
+                return self.framework_focus_window(&action);
+            }
+            if action.action == semio_framework::FOCUS_ROW_CONTROL_ACTION_ID {
+                return self.framework_focus_row_control(&action);
+            }
             if action.action == semio_framework::onboarding::START_TUTORIAL_ACTION_ID {
                 if let Some(tutorial_id) = action.args.as_ref().and_then(|args| args.get("tutorialId")).and_then(|v| v.as_str()) {
                     self.as_window_actions().tutorial_start(tutorial_id);

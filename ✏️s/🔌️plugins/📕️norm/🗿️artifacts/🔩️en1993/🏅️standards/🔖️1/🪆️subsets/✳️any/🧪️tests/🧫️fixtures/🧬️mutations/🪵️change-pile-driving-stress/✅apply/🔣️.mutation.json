@@ -1,0 +1,6 @@
+{
+  "ChangePileDrivingStress": {
+    "id": "pile-1",
+    "newDrivingStress": 400000000.0
+  }
+}

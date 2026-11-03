@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/mutation/change-fatigue-detail-category/schema.json",
+  "title": "ChangeFatigueDetailCategory",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newDetailCategory"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeFatigueDetailCategory"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Fatigue spectrum",
+          "de": "Ermüdungskollektiv"
+        },
+        "description": {
+          "en": "The fatigue spectrum this mutation addresses, by id.",
+          "de": "Das adressierte Element (Ermüdungskollektiv), per Kennung."
+        },
+        "ref": {
+          "kind": "fatigue-spectrum"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newDetailCategory": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Detail category Δσ_C",
+          "de": "Kerbfall Δσ_C"
+        },
+        "widget": "stepper",
+        "description": {
+          "en": "Reference fatigue strength at 2·10⁶ cycles.",
+          "de": "Referenzwert der Ermüdungsfestigkeit bei 2·10⁶ Lastwechseln."
+        },
+        "unit": "Pa",
+        "displayUnit": "MPa",
+        "displayFactor": 0.000001,
+        "precision": 0,
+        "step": 1000000,
+        "snaps": [
+          36000000,
+          40000000,
+          50000000,
+          56000000,
+          63000000,
+          71000000,
+          80000000,
+          90000000,
+          100000000,
+          112000000,
+          125000000,
+          140000000,
+          160000000
+        ],
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

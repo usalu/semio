@@ -1,0 +1,12 @@
+{
+  "InsertFlange": {
+    "wallId": "wall-north",
+    "index": 1,
+    "flange": {
+      "id": "flange-2",
+      "lengthM": 1.2,
+      "thicknessM": 0.24,
+      "positionM": 0.0
+    }
+  }
+}

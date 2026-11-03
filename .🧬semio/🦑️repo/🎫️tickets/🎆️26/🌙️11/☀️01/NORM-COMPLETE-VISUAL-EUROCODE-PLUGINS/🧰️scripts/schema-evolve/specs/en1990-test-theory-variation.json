@@ -1,0 +1,23 @@
+{
+  "artifact": "en1990",
+  "leaf": {
+    "kindSlug": "test",
+    "field": {
+      "name": "theory_variation",
+      "type": "f64",
+      "unit": "",
+      "label": {
+        "en": "Theory scatter V_rt (D.7.2)",
+        "de": "Streuung der Basisvariablen V_rt (D.7.2)"
+      },
+      "doc": "📉 Coefficient of variation V_rt of the basic variables of the resistance function for the standard evaluation of Annex D.7.2; used only with test pairs.",
+      "precision": 3,
+      "step": 0.01,
+      "range": [
+        0,
+        2
+      ]
+    },
+    "default": 0.0
+  }
+}

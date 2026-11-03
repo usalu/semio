@@ -1,174 +1,669 @@
 //! ⚡️ EN 1998 — hand-rolled OpText/OpBinary for `En1998Mutation` (B2 JSON-atom field codec).
 
-use semio_s_artifact_norm_en1998_mutations::En1998Mutation;
+use crate::En1998Mutation;
 
-use semio_s_artifact_norm_en1998_mut_buildings::change_annex::ChangeAnnex;
-use semio_s_artifact_norm_en1998_mut_buildings::update_site::UpdateSite;
-use semio_s_artifact_norm_en1998_mut_buildings::insert_building::InsertBuilding;
-use semio_s_artifact_norm_en1998_mut_buildings::remove_building::RemoveBuilding;
-use semio_s_artifact_norm_en1998_mut_buildings::change_system_v_rd_n::ChangeSystemVRdN;
-use semio_s_artifact_norm_en1998_mut_buildings::change_storey_permanent_gk_n::ChangeStoreyPermanentGkN;
-use semio_s_artifact_norm_en1998_mut_buildings::change_storey_stiffness_x::ChangeStoreyStiffnessX;
-use semio_s_artifact_norm_en1998_mut_buildings::change_storey_drift_xm::ChangeStoreyDriftXM;
-use semio_s_artifact_norm_en1998_mut_buildings::change_building_plan_regular::ChangeBuildingPlanRegular;
-use semio_s_artifact_norm_en1998_mut_buildings::change_elevation_regular::ChangeElevationRegular;
-use semio_s_artifact_norm_en1998_mut_members::change_member_detailing::ChangeMemberDetailing;
-use semio_s_artifact_norm_en1998_mut_members::change_masonry_wall_ratio::ChangeMasonryWallRatio;
-use semio_s_artifact_norm_en1998_mut_bridges_towers::insert_bridge::InsertBridge;
-use semio_s_artifact_norm_en1998_mut_bridges_towers::change_bridge_v_rd_n::ChangeBridgeVRdN;
-use semio_s_artifact_norm_en1998_mut_members::insert_assessment::InsertAssessment;
-use semio_s_artifact_norm_en1998_mut_members::change_assessment_rkn::ChangeAssessmentRKN;
-use semio_s_artifact_norm_en1998_mut_silos_tanks::insert_silo::InsertSilo;
-use semio_s_artifact_norm_en1998_mut_silos_tanks::insert_tank::InsertTank;
-use semio_s_artifact_norm_en1998_mut_foundations::insert_foundation::InsertFoundation;
-use semio_s_artifact_norm_en1998_mut_foundations::insert_retaining_wall::InsertRetainingWall;
-use semio_s_artifact_norm_en1998_mut_bridges_towers::insert_tower::InsertTower;
-use semio_s_artifact_norm_en1998_mut_bridges_towers::change_tower_m_rd_nm::ChangeTowerMRdNm;
-use semio_s_artifact_norm_en1998_mut_bridges_towers::remove_bridge::RemoveBridge;
-use semio_s_artifact_norm_en1998_mut_members::remove_assessment::RemoveAssessment;
-use semio_s_artifact_norm_en1998_mut_silos_tanks::remove_silo::RemoveSilo;
-use semio_s_artifact_norm_en1998_mut_silos_tanks::remove_tank::RemoveTank;
-use semio_s_artifact_norm_en1998_mut_foundations::remove_foundation::RemoveFoundation;
-use semio_s_artifact_norm_en1998_mut_foundations::remove_retaining_wall::RemoveRetainingWall;
-use semio_s_artifact_norm_en1998_mut_bridges_towers::remove_tower::RemoveTower;
+use semio_s_artifact_norm_en1998_mutations_text_bridges_towers as text_bridges_towers;
+use semio_s_artifact_norm_en1998_mutations_text_buildings as text_buildings;
+use semio_s_artifact_norm_en1998_mutations_text_foundations as text_foundations;
+use semio_s_artifact_norm_en1998_mutations_text_members as text_members;
+use semio_s_artifact_norm_en1998_mutations_text_placements as text_placements;
+use semio_s_artifact_norm_en1998_mutations_text_seismic_slopes as text_seismic_slopes;
+use semio_s_artifact_norm_en1998_mutations_text_silos_tanks as text_silos_tanks;
+use semio_s_artifact_norm_en1998_mutations_text_tie_beams as text_tie_beams;
+use semio_s_artifact_norm_en1998_mutations_text_kit::parse_args;
 
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 
-fn enc_str(s: &str) -> String {
-    format!("\"{}\"", s.replace('\\', "\\\\").replace('"', "\\\""))
-}
-fn dec_str(s: &str) -> Result<String, String> {
-    let inner = s.strip_prefix('"').and_then(|s| s.strip_suffix('"')).ok_or_else(|| format!("expected quoted string, got {s:?}"))?;
-    let mut out = String::with_capacity(inner.len());
-    let mut chars = inner.chars();
-    while let Some(c) = chars.next() {
-        if c != '\\' {
-            out.push(c);
-            continue;
-        }
-        match chars.next() {
-            Some('\\') => out.push('\\'),
-            Some('"') => out.push('"'),
-            Some(other) => return Err(format!("bad escape \\{other}")),
-            None => return Err("dangling escape".into()),
-        }
-    }
-    Ok(out)
-}
-fn enc_json<T: semio_framework_value::ToValue>(value: &T) -> String {
-    enc_str(&semio_framework_pack_json::to_json_string(value))
-}
-fn dec_json<T: semio_framework_value::FromValue>(s: &str) -> Result<T, String> {
-    semio_framework_pack_json::from_json_str(&dec_str(s)?, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|e| e.to_string())
-}
-
-/// 📍 An insert's optional `index=` argument: absent appends.
-fn opt_index(args: &std::collections::BTreeMap<String, String>) -> Result<Option<usize>, String> {
-    args.get("index").map_or(Ok(None), |raw| dec_json::<Option<usize>>(raw))
-}
-fn tokenize_args(rest: &str) -> Vec<String> {
-    let mut tokens = Vec::new();
-    let mut current = String::new();
-    let mut in_quotes = false;
-    let mut chars = rest.chars();
-    while let Some(c) = chars.next() {
-        match c {
-            '"' => {
-                current.push(c);
-                in_quotes = !in_quotes;
-            }
-            '\\' if in_quotes => {
-                current.push(c);
-                if let Some(next) = chars.next() {
-                    current.push(next);
-                }
-            }
-            ' ' if !in_quotes => {
-                if !current.is_empty() {
-                    tokens.push(std::mem::take(&mut current));
-                }
-            }
-            _ => current.push(c),
-        }
-    }
-    if !current.is_empty() {
-        tokens.push(current);
-    }
-    tokens
-}
-fn parse_args(rest: &str) -> Result<std::collections::BTreeMap<String, String>, String> {
-    tokenize_args(rest).into_iter().map(|token| token.split_once('=').map(|(k, v)| (k.to_string(), v.to_string())).ok_or_else(|| format!("bad arg token {token:?}"))).collect()
-}
-
 fn print_en1998_mutation(mutation: &En1998Mutation) -> String {
     match mutation {
-        En1998Mutation::ChangeAnnex(p) => format!("change-annex new-annex={}", enc_json(&p.new_annex)),
-        En1998Mutation::UpdateSite(p) => format!("update-site site={}", enc_json(&p.site)),
-        En1998Mutation::InsertBuilding(p) => format!("insert-building index={} building={}", enc_json(&p.index), enc_json(&p.building)),
-        En1998Mutation::RemoveBuilding(p) => format!("remove-building index={}", enc_json(&p.index)),
-        En1998Mutation::ChangeSystemVRdN(p) => format!("change-system-v-rd-n building-index={} system-index={} new-base-shear-resistance-n={}", enc_json(&p.building_index), enc_json(&p.system_index), enc_json(&p.new_base_shear_resistance_n)),
-        En1998Mutation::ChangeStoreyPermanentGkN(p) => format!("change-storey-permanent-gk-n building-index={} storey-index={} new-permanent-gk-n={}", enc_json(&p.building_index), enc_json(&p.storey_index), enc_json(&p.new_permanent_gk_n)),
-        En1998Mutation::ChangeStoreyStiffnessX(p) => format!("change-storey-stiffness-x building-index={} storey-index={} new-stiffness-x={}", enc_json(&p.building_index), enc_json(&p.storey_index), enc_json(&p.new_stiffness_x)),
-        En1998Mutation::ChangeStoreyDriftXM(p) => format!("change-storey-drift-xm building-index={} storey-index={} new-drift-x-m={}", enc_json(&p.building_index), enc_json(&p.storey_index), enc_json(&p.new_drift_x_m)),
-        En1998Mutation::ChangeBuildingPlanRegular(p) => format!("change-building-plan-regular building-index={} new-plan-regular={}", enc_json(&p.building_index), enc_json(&p.new_plan_regular)),
-        En1998Mutation::ChangeElevationRegular(p) => format!("change-elevation-regular building-index={} new-elevation-regular={}", enc_json(&p.building_index), enc_json(&p.new_elevation_regular)),
-        En1998Mutation::ChangeMemberDetailing(p) => format!("change-member-detailing building-index={} member-index={} new-detailing-compatible-with-q={}", enc_json(&p.building_index), enc_json(&p.member_index), enc_json(&p.new_detailing_compatible_with_q)),
-        En1998Mutation::ChangeMasonryWallRatio(p) => format!("change-masonry-wall-ratio building-index={} new-masonry-wall-area-ratio={}", enc_json(&p.building_index), enc_json(&p.new_masonry_wall_area_ratio)),
-        En1998Mutation::InsertBridge(p) => format!("insert-bridge index={} bridge={}", enc_json(&p.index), enc_json(&p.bridge)),
-        En1998Mutation::ChangeBridgeVRdN(p) => format!("change-bridge-v-rd-n index={} new-v-rd-n={}", enc_json(&p.index), enc_json(&p.new_v_rd_n)),
-        En1998Mutation::InsertAssessment(p) => format!("insert-assessment index={} assessment={}", enc_json(&p.index), enc_json(&p.assessment)),
-        En1998Mutation::ChangeAssessmentRKN(p) => format!("change-assessment-rkn index={} new-r-k-n={}", enc_json(&p.index), enc_json(&p.new_r_k_n)),
-        En1998Mutation::InsertSilo(p) => format!("insert-silo index={} silo={}", enc_json(&p.index), enc_json(&p.silo)),
-        En1998Mutation::InsertTank(p) => format!("insert-tank index={} tank={}", enc_json(&p.index), enc_json(&p.tank)),
-        En1998Mutation::InsertFoundation(p) => format!("insert-foundation index={} foundation={}", enc_json(&p.index), enc_json(&p.foundation)),
-        En1998Mutation::InsertRetainingWall(p) => format!("insert-retaining-wall index={} wall={}", enc_json(&p.index), enc_json(&p.wall)),
-        En1998Mutation::InsertTower(p) => format!("insert-tower index={} tower={}", enc_json(&p.index), enc_json(&p.tower)),
-        En1998Mutation::ChangeTowerMRdNm(p) => format!("change-tower-m-rd-nm index={} new-m-rd-nm={}", enc_json(&p.index), enc_json(&p.new_m_rd_nm)),
-        En1998Mutation::RemoveBridge(p) => format!("remove-bridge index={}", enc_json(&p.index)),
-        En1998Mutation::RemoveAssessment(p) => format!("remove-assessment index={}", enc_json(&p.index)),
-        En1998Mutation::RemoveSilo(p) => format!("remove-silo index={}", enc_json(&p.index)),
-        En1998Mutation::RemoveTank(p) => format!("remove-tank index={}", enc_json(&p.index)),
-        En1998Mutation::RemoveFoundation(p) => format!("remove-foundation index={}", enc_json(&p.index)),
-        En1998Mutation::RemoveRetainingWall(p) => format!("remove-retaining-wall index={}", enc_json(&p.index)),
-        En1998Mutation::RemoveTower(p) => format!("remove-tower index={}", enc_json(&p.index)),
+        En1998Mutation::ChangeAnnex(p) => text_buildings::print_change_annex(p),
+        En1998Mutation::InsertBuilding(p) => text_buildings::print_insert_building(p),
+        En1998Mutation::RemoveBuilding(p) => text_buildings::print_remove_building(p),
+        En1998Mutation::ChangeSystemVRdN(p) => text_buildings::print_change_system_v_rd_n(p),
+        En1998Mutation::ChangeStoreyPermanentGkN(p) => text_buildings::print_change_storey_permanent_gk_n(p),
+        En1998Mutation::ChangeStoreyStiffnessX(p) => text_buildings::print_change_storey_stiffness_x(p),
+        En1998Mutation::ChangeStoreyDriftXM(p) => text_buildings::print_change_storey_drift_xm(p),
+        En1998Mutation::ChangeBuildingPlanRegular(p) => text_buildings::print_change_building_plan_regular(p),
+        En1998Mutation::ChangeElevationRegular(p) => text_buildings::print_change_elevation_regular(p),
+        En1998Mutation::ChangeMemberDetailing(p) => text_members::print_change_member_detailing(p),
+        En1998Mutation::ChangeMasonryWallRatio(p) => text_members::print_change_masonry_wall_ratio(p),
+        En1998Mutation::InsertBridge(p) => text_bridges_towers::print_insert_bridge(p),
+        En1998Mutation::ChangeBridgeVRdN(p) => text_bridges_towers::print_change_bridge_v_rd_n(p),
+        En1998Mutation::InsertAssessment(p) => text_members::print_insert_assessment(p),
+        En1998Mutation::ChangeAssessmentRKN(p) => text_members::print_change_assessment_rkn(p),
+        En1998Mutation::InsertSilo(p) => text_silos_tanks::print_insert_silo(p),
+        En1998Mutation::InsertTank(p) => text_silos_tanks::print_insert_tank(p),
+        En1998Mutation::InsertFoundation(p) => text_foundations::print_insert_foundation(p),
+        En1998Mutation::InsertRetainingWall(p) => text_foundations::print_insert_retaining_wall(p),
+        En1998Mutation::InsertTower(p) => text_bridges_towers::print_insert_tower(p),
+        En1998Mutation::ChangeTowerMRdNm(p) => text_bridges_towers::print_change_tower_m_rd_nm(p),
+        En1998Mutation::RemoveBridge(p) => text_bridges_towers::print_remove_bridge(p),
+        En1998Mutation::RemoveAssessment(p) => text_members::print_remove_assessment(p),
+        En1998Mutation::ChangeSiteSApR(p) => text_buildings::print_change_site_s_ap_r(p),
+        En1998Mutation::ChangeSiteAGr(p) => text_buildings::print_change_site_a_gr(p),
+        En1998Mutation::ChangeSiteDeGroundCombo(p) => text_buildings::print_change_site_de_ground_combo(p),
+        En1998Mutation::ChangeSiteEnGroundType(p) => text_buildings::print_change_site_en_ground_type(p),
+        En1998Mutation::ChangeSiteEnSpectrumType(p) => text_buildings::print_change_site_en_spectrum_type(p),
+        En1998Mutation::ChangeSiteImportanceClass(p) => text_buildings::print_change_site_importance_class(p),
+        En1998Mutation::ChangeBuildingName(p) => text_buildings::print_change_building_name(p),
+        En1998Mutation::ChangeBuildingPlanWidthM(p) => text_buildings::print_change_building_plan_width_m(p),
+        En1998Mutation::ChangeBuildingPlanLengthM(p) => text_buildings::print_change_building_plan_length_m(p),
+        En1998Mutation::ChangeBuildingT1Method(p) => text_buildings::print_change_building_t1_method(p),
+        En1998Mutation::ChangeBuildingT1GivenS(p) => text_buildings::print_change_building_t1_given_s(p),
+        En1998Mutation::ChangeBuildingCt(p) => text_buildings::print_change_building_ct(p),
+        En1998Mutation::ChangeBuildingDriftLimitClass(p) => text_buildings::print_change_building_drift_limit_class(p),
+        En1998Mutation::ChangeBuildingNu(p) => text_buildings::print_change_building_nu(p),
+        En1998Mutation::ChangeBuildingMultiResistingSystems(p) => text_buildings::print_change_building_multi_resisting_systems(p),
+        En1998Mutation::ChangeBuildingClaimsSimpleMasonry(p) => text_buildings::print_change_building_claims_simple_masonry(p),
+        En1998Mutation::ChangeBuildingAccidentalEccRatio(p) => text_buildings::print_change_building_accidental_ecc_ratio(p),
+        En1998Mutation::ChangeSystemDirection(p) => text_buildings::print_change_system_direction(p),
+        En1998Mutation::ChangeSystemSystemType(p) => text_buildings::print_change_system_system_type(p),
+        En1998Mutation::ChangeSystemMaterial(p) => text_buildings::print_change_system_material(p),
+        En1998Mutation::ChangeSystemDuctilityClass(p) => text_buildings::print_change_system_ductility_class(p),
+        En1998Mutation::ChangeSystemQ0(p) => text_buildings::print_change_system_q0(p),
+        En1998Mutation::ChangeSystemAlphaUOverAlpha1(p) => text_buildings::print_change_system_alpha_u_over_alpha_1(p),
+        En1998Mutation::ChangeSystemKW(p) => text_buildings::print_change_system_k_w(p),
+        En1998Mutation::ChangeStoreyHeightM(p) => text_buildings::print_change_storey_height_m(p),
+        En1998Mutation::ChangeStoreyCorrelatedOccupancy(p) => text_buildings::print_change_storey_correlated_occupancy(p),
+        En1998Mutation::ChangeStoreyStiffnessY(p) => text_buildings::print_change_storey_stiffness_y(p),
+        En1998Mutation::ChangeStoreyCentreOfMassXM(p) => text_buildings::print_change_storey_centre_of_mass_x_m(p),
+        En1998Mutation::ChangeStoreyCentreOfMassYM(p) => text_buildings::print_change_storey_centre_of_mass_y_m(p),
+        En1998Mutation::ChangeStoreyCentreOfStiffnessXM(p) => text_buildings::print_change_storey_centre_of_stiffness_x_m(p),
+        En1998Mutation::ChangeStoreyCentreOfStiffnessYM(p) => text_buildings::print_change_storey_centre_of_stiffness_y_m(p),
+        En1998Mutation::ChangeStoreyDriftYM(p) => text_buildings::print_change_storey_drift_y_m(p),
+        En1998Mutation::ChangeStoreyShearResistanceN(p) => text_buildings::print_change_storey_shear_resistance_n(p),
+        En1998Mutation::ChangeMemberMaterial(p) => text_members::print_change_member_material(p),
+        En1998Mutation::ChangeMemberRole(p) => text_members::print_change_member_role(p),
+        En1998Mutation::ChangeMemberMinDimensionM(p) => text_members::print_change_member_min_dimension_m(p),
+        En1998Mutation::ChangeMemberRho(p) => text_members::print_change_member_rho(p),
+        En1998Mutation::ChangeMemberRhoPrime(p) => text_members::print_change_member_rho_prime(p),
+        En1998Mutation::ChangeMemberOmegaWd(p) => text_members::print_change_member_omega_wd(p),
+        En1998Mutation::ChangeMemberSteelSectionClass(p) => text_members::print_change_member_steel_section_class(p),
+        En1998Mutation::ChangeBridgePeriodRatio(p) => text_bridges_towers::print_change_bridge_period_ratio(p),
+        En1998Mutation::ChangeBridgeFundamentalPeriodS(p) => text_bridges_towers::print_change_bridge_fundamental_period_s(p),
+        En1998Mutation::ChangeBridgeBearingDRdM(p) => text_bridges_towers::print_change_bridge_bearing_d_rd_m(p),
+        En1998Mutation::ChangeBridgePermanentGkN(p) => text_bridges_towers::print_change_bridge_permanent_gk_n(p),
+        En1998Mutation::ChangeBridgeCorrelatedOccupancy(p) => text_bridges_towers::print_change_bridge_correlated_occupancy(p),
+        En1998Mutation::ChangeAssessmentKnowledgeLevel(p) => text_members::print_change_assessment_knowledge_level(p),
+        En1998Mutation::ChangeAssessmentLimitState(p) => text_members::print_change_assessment_limit_state(p),
+        En1998Mutation::ChangeAssessmentSupportedBuildingId(p) => text_members::print_change_assessment_supported_building_id(p),
+        En1998Mutation::ChangeAssessmentGammaEl(p) => text_members::print_change_assessment_gamma_el(p),
+        En1998Mutation::ChangeTowerHeightM(p) => text_bridges_towers::print_change_tower_height_m(p),
+        En1998Mutation::ChangeTowerIsChimney(p) => text_bridges_towers::print_change_tower_is_chimney(p),
+        En1998Mutation::ChangeTowerQNominal(p) => text_bridges_towers::print_change_tower_q_nominal(p),
+        En1998Mutation::ChangeTowerPermanentGkN(p) => text_bridges_towers::print_change_tower_permanent_gk_n(p),
+        En1998Mutation::ChangeTowerCorrelatedOccupancy(p) => text_bridges_towers::print_change_tower_correlated_occupancy(p),
+        En1998Mutation::ChangeSiloHeightM(p) => text_silos_tanks::print_change_silo_height_m(p),
+        En1998Mutation::ChangeSiloRadiusM(p) => text_silos_tanks::print_change_silo_radius_m(p),
+        En1998Mutation::ChangeSiloPermanentGkN(p) => text_silos_tanks::print_change_silo_permanent_gk_n(p),
+        En1998Mutation::ChangeSiloContentQkN(p) => text_silos_tanks::print_change_silo_content_qk_n(p),
+        En1998Mutation::ChangeSiloContentCategory(p) => text_silos_tanks::print_change_silo_content_category(p),
+        En1998Mutation::ChangeSiloFillingRatio(p) => text_silos_tanks::print_change_silo_filling_ratio(p),
+        En1998Mutation::ChangeSiloNRdN(p) => text_silos_tanks::print_change_silo_n_rd_n(p),
+        En1998Mutation::ChangeSiloVRdN(p) => text_silos_tanks::print_change_silo_v_rd_n(p),
+        En1998Mutation::ChangeSiloQNominal(p) => text_silos_tanks::print_change_silo_q_nominal(p),
+        En1998Mutation::ChangeTankHeightM(p) => text_silos_tanks::print_change_tank_height_m(p),
+        En1998Mutation::ChangeTankRadiusM(p) => text_silos_tanks::print_change_tank_radius_m(p),
+        En1998Mutation::ChangeTankPermanentGkN(p) => text_silos_tanks::print_change_tank_permanent_gk_n(p),
+        En1998Mutation::ChangeTankContentQkN(p) => text_silos_tanks::print_change_tank_content_qk_n(p),
+        En1998Mutation::ChangeTankContentCategory(p) => text_silos_tanks::print_change_tank_content_category(p),
+        En1998Mutation::ChangeTankFillingRatio(p) => text_silos_tanks::print_change_tank_filling_ratio(p),
+        En1998Mutation::ChangeTankVRdN(p) => text_silos_tanks::print_change_tank_v_rd_n(p),
+        En1998Mutation::ChangeFoundationSupportedBuildingId(p) => text_foundations::print_change_foundation_supported_building_id(p),
+        En1998Mutation::ChangeTieBeamFoundationBId(p) => text_foundations::print_change_tie_beam_foundation_b_id(p),
+        En1998Mutation::ChangeTieBeamFoundationAId(p) => text_foundations::print_change_tie_beam_foundation_a_id(p),
+        En1998Mutation::ChangeSeismicSlopeGoverningLayerId(p) => text_foundations::print_change_seismic_slope_governing_layer_id(p),
+        En1998Mutation::ChangeFoundationAreaM2(p) => text_foundations::print_change_foundation_area_m2(p),
+        En1998Mutation::ChangeFoundationPRdPa(p) => text_foundations::print_change_foundation_p_rd_pa(p),
+        En1998Mutation::ChangeFoundationPassiveResistanceN(p) => text_foundations::print_change_foundation_passive_resistance_n(p),
+        En1998Mutation::ChangeFoundationKFoundation(p) => text_foundations::print_change_foundation_k_foundation(p),
+        En1998Mutation::ChangeFoundationKSoil(p) => text_foundations::print_change_foundation_k_soil(p),
+        En1998Mutation::ChangeRetainingWallHeightM(p) => text_foundations::print_change_retaining_wall_height_m(p),
+        En1998Mutation::ChangeRetainingWallPhiDeg(p) => text_foundations::print_change_retaining_wall_phi_deg(p),
+        En1998Mutation::ChangeRetainingWallSoilGamma(p) => text_foundations::print_change_retaining_wall_soil_gamma(p),
+        En1998Mutation::ChangeRetainingWallR(p) => text_foundations::print_change_retaining_wall_r(p),
+        En1998Mutation::ChangeRetainingWallHRdNPerM(p) => text_foundations::print_change_retaining_wall_h_rd_n_per_m(p),
+        En1998Mutation::ChangeSiteVS30MS(p) => text_buildings::print_change_site_v_s30_m_s(p),
+        En1998Mutation::ChangeSiteNSpt(p) => text_buildings::print_change_site_n_spt(p),
+        En1998Mutation::ChangeSiteCUKpa(p) => text_buildings::print_change_site_c_u_kpa(p),
+        En1998Mutation::ChangeSiteSoftClayThicknessM(p) => text_buildings::print_change_site_soft_clay_thickness_m(p),
+        En1998Mutation::ChangeSiteSoftClayPi(p) => text_buildings::print_change_site_soft_clay_pi(p),
+        En1998Mutation::ChangeSiteLiquefiableLayer(p) => text_buildings::print_change_site_liquefiable_layer(p),
+        En1998Mutation::ChangeSiteAlluviumThicknessM(p) => text_buildings::print_change_site_alluvium_thickness_m(p),
+        En1998Mutation::ChangeSiteAlluviumVSMS(p) => text_buildings::print_change_site_alluvium_v_s_m_s(p),
+        En1998Mutation::ChangeSiteBelowAlluviumVSMS(p) => text_buildings::print_change_site_below_alluvium_v_s_m_s(p),
+        En1998Mutation::ChangeBuildingSetbackRatio(p) => text_buildings::print_change_building_setback_ratio(p),
+        En1998Mutation::ChangeBuildingStoreyStiffnessRatio(p) => text_buildings::print_change_building_storey_stiffness_ratio(p),
+        En1998Mutation::ChangeBuildingStoreyStiffnessBasis(p) => text_buildings::print_change_building_storey_stiffness_basis(p),
+        En1998Mutation::ChangeBuildingPlanEnvGapRatio(p) => text_buildings::print_change_building_plan_env_gap_ratio(p),
+        En1998Mutation::ChangeBuildingJointGapM(p) => text_buildings::print_change_building_joint_gap_m(p),
+        En1998Mutation::ChangeBuildingNsWeightN(p) => text_buildings::print_change_building_ns_weight_n(p),
+        En1998Mutation::ChangeBuildingNsHeightM(p) => text_buildings::print_change_building_ns_height_m(p),
+        En1998Mutation::ChangeBuildingNsPeriodS(p) => text_buildings::print_change_building_ns_period_s(p),
+        En1998Mutation::ChangeBuildingNsQ(p) => text_buildings::print_change_building_ns_q(p),
+        En1998Mutation::ChangeBuildingNsResistanceN(p) => text_buildings::print_change_building_ns_resistance_n(p),
+        En1998Mutation::ChangeBuildingColMomentSumNm(p) => text_buildings::print_change_building_col_moment_sum_nm(p),
+        En1998Mutation::ChangeBuildingBeamMomentSumNm(p) => text_buildings::print_change_building_beam_moment_sum_nm(p),
+        En1998Mutation::ChangeMemberFastenerDiameterMm(p) => text_members::print_change_member_fastener_diameter_mm(p),
+        En1998Mutation::ChangeMemberTimberThicknessMm(p) => text_members::print_change_member_timber_thickness_mm(p),
+        En1998Mutation::ChangeMemberWallThicknessM(p) => text_members::print_change_member_wall_thickness_m(p),
+        En1998Mutation::ChangeMemberEffectiveStiffnessRatio(p) => text_members::print_change_member_effective_stiffness_ratio(p),
+        En1998Mutation::ChangeMemberEffectiveStiffnessBasis(p) => text_members::print_change_member_effective_stiffness_basis(p),
+        En1998Mutation::ChangeMemberWallPoissonRatio(p) => text_members::print_change_member_wall_poisson_ratio(p),
+        En1998Mutation::ChangeMemberWallStartXM(p) => text_members::print_change_member_wall_start_x_m(p),
+        En1998Mutation::ChangeMemberWallStartYM(p) => text_members::print_change_member_wall_start_y_m(p),
+        En1998Mutation::ChangeMemberWallLengthM(p) => text_members::print_change_member_wall_length_m(p),
+        En1998Mutation::ChangeMemberWallDirectionRad(p) => text_members::print_change_member_wall_direction_rad(p),
+        En1998Mutation::ChangeMemberWallStoreyId(p) => text_members::print_change_member_wall_storey_id(p),
+        En1998Mutation::ChangeMemberWallEffHeightM(p) => text_members::print_change_member_wall_eff_height_m(p),
+        En1998Mutation::ChangeBridgePierHeightM(p) => text_bridges_towers::print_change_bridge_pier_height_m(p),
+        En1998Mutation::ChangeBridgePierMomentRdNm(p) => text_bridges_towers::print_change_bridge_pier_moment_rd_nm(p),
+        En1998Mutation::ChangeBridgePierShearRdN(p) => text_bridges_towers::print_change_bridge_pier_shear_rd_n(p),
+        En1998Mutation::ChangeBridgeImportanceClass(p) => text_bridges_towers::print_change_bridge_importance_class(p),
+        En1998Mutation::ChangeBridgeVerticalPeriodS(p) => text_bridges_towers::print_change_bridge_vertical_period_s(p),
+        En1998Mutation::ChangeBridgePierCrackedInertiaRatio(p) => text_bridges_towers::print_change_bridge_pier_cracked_inertia_ratio(p),
+        En1998Mutation::ChangeBridgeDeckLengthM(p) => text_bridges_towers::print_change_bridge_deck_length_m(p),
+        En1998Mutation::ChangeBridgeDeckEiNm2(p) => text_bridges_towers::print_change_bridge_deck_ei_nm2(p),
+        En1998Mutation::ChangeAssessmentChordDemandRad(p) => text_members::print_change_assessment_chord_demand_rad(p),
+        En1998Mutation::ChangeAssessmentChordYieldRad(p) => text_members::print_change_assessment_chord_yield_rad(p),
+        En1998Mutation::ChangeAssessmentChordUltRad(p) => text_members::print_change_assessment_chord_ult_rad(p),
+        En1998Mutation::ChangeTowerEiNm2(p) => text_bridges_towers::print_change_tower_ei_nm2(p),
+        En1998Mutation::ChangeFoundationLiqN160(p) => text_foundations::print_change_foundation_liq_n160(p),
+        En1998Mutation::ChangeFoundationLiqFinesPercent(p) => text_foundations::print_change_foundation_liq_fines_percent(p),
+        En1998Mutation::ChangeFoundationLiqDepthM(p) => text_foundations::print_change_foundation_liq_depth_m(p),
+        En1998Mutation::ChangeFoundationLiqWaterDepthM(p) => text_foundations::print_change_foundation_liq_water_depth_m(p),
+        En1998Mutation::ChangeFoundationLiqUnitWtNM3(p) => text_foundations::print_change_foundation_liq_unit_wt_n_m3(p),
+        En1998Mutation::ChangeFoundationLiqMagnitude(p) => text_foundations::print_change_foundation_liq_magnitude(p),
+        En1998Mutation::ChangeAssessmentSectionDepthM(p) => text_members::print_change_assessment_section_depth_m(p),
+        En1998Mutation::ChangeAssessmentSectionWidthM(p) => text_members::print_change_assessment_section_width_m(p),
+        En1998Mutation::ChangeAssessmentEffDepthM(p) => text_members::print_change_assessment_eff_depth_m(p),
+        En1998Mutation::ChangeAssessmentShearSpanM(p) => text_members::print_change_assessment_shear_span_m(p),
+        En1998Mutation::ChangeAssessmentAxialForceN(p) => text_members::print_change_assessment_axial_force_n(p),
+        En1998Mutation::ChangeAssessmentShearForceDemandN(p) => text_members::print_change_assessment_shear_force_demand_n(p),
+        En1998Mutation::ChangeAssessmentAs1AreaM2(p) => text_members::print_change_assessment_as1_area_m2(p),
+        En1998Mutation::ChangeAssessmentAs2AreaM2(p) => text_members::print_change_assessment_as2_area_m2(p),
+        En1998Mutation::ChangeAssessmentBarDiameterMm(p) => text_members::print_change_assessment_bar_diameter_mm(p),
+        En1998Mutation::ChangeAssessmentSteelYieldMpa(p) => text_members::print_change_assessment_steel_yield_mpa(p),
+        En1998Mutation::ChangeAssessmentFcMpa(p) => text_members::print_change_assessment_fc_mpa(p),
+        En1998Mutation::ChangeAssessmentStrpLegAreaM2(p) => text_members::print_change_assessment_strp_leg_area_m2(p),
+        En1998Mutation::ChangeAssessmentStrpSpacingM(p) => text_members::print_change_assessment_strp_spacing_m(p),
+        En1998Mutation::ChangeAssessmentStrpYieldMpa(p) => text_members::print_change_assessment_strp_yield_mpa(p),
+        En1998Mutation::ChangeAssessmentCoreWidthM(p) => text_members::print_change_assessment_core_width_m(p),
+        En1998Mutation::ChangeAssessmentCoreDepthM(p) => text_members::print_change_assessment_core_depth_m(p),
+        En1998Mutation::ChangeAssessmentMidSteelAreaM2(p) => text_members::print_change_assessment_mid_steel_area_m2(p),
+        En1998Mutation::ChangeAssessmentRbarCount(p) => text_members::print_change_assessment_rbar_count(p),
+        En1998Mutation::ChangeAssessmentRbarSpacingM(p) => text_members::print_change_assessment_rbar_spacing_m(p),
+        En1998Mutation::ChangeAssessmentDiagReinfRatio(p) => text_members::print_change_assessment_diag_reinf_ratio(p),
+        En1998Mutation::ChangeAssessmentShearCrack(p) => text_members::print_change_assessment_shear_crack(p),
+        En1998Mutation::ChangeFoundationLiqLayerM(p) => text_foundations::print_change_foundation_liq_layer_m(p),
+        En1998Mutation::ChangeFoundationFootingWidthM(p) => text_foundations::print_change_foundation_footing_width_m(p),
+        En1998Mutation::ChangeFoundationBearAxialN(p) => text_foundations::print_change_foundation_bear_axial_n(p),
+        En1998Mutation::ChangeFoundationBearShearN(p) => text_foundations::print_change_foundation_bear_shear_n(p),
+        En1998Mutation::ChangeFoundationBearMomentNm(p) => text_foundations::print_change_foundation_bear_moment_nm(p),
+        En1998Mutation::ChangeFoundationBearingNMaxN(p) => text_foundations::print_change_foundation_bearing_n_max_n(p),
+        En1998Mutation::ChangeFoundationSoilPhiDeg(p) => text_foundations::print_change_foundation_soil_phi_deg(p),
+        En1998Mutation::ChangeFoundationPileDiameterM(p) => text_foundations::print_change_foundation_pile_diameter_m(p),
+        En1998Mutation::ChangeFoundationPileLengthM(p) => text_foundations::print_change_foundation_pile_length_m(p),
+        En1998Mutation::ChangeFoundationPileModulusPa(p) => text_foundations::print_change_foundation_pile_modulus_pa(p),
+        En1998Mutation::ChangeFoundationPileKsNM3(p) => text_foundations::print_change_foundation_pile_ks_n_m3(p),
+        En1998Mutation::ChangeFoundationPileHeadShearN(p) => text_foundations::print_change_foundation_pile_head_shear_n(p),
+        En1998Mutation::ChangeFoundationPileHeadFixed(p) => text_foundations::print_change_foundation_pile_head_fixed(p),
+        En1998Mutation::ChangeFoundationPileIfaceM(p) => text_foundations::print_change_foundation_pile_iface_m(p),
+        En1998Mutation::ChangeFoundationPileUpVsMS(p) => text_foundations::print_change_foundation_pile_up_vs_m_s(p),
+        En1998Mutation::ChangeFoundationPileLowVsMS(p) => text_foundations::print_change_foundation_pile_low_vs_m_s(p),
+        En1998Mutation::ChangeFoundationPileMomentRdNm(p) => text_foundations::print_change_foundation_pile_moment_rd_nm(p),
+        En1998Mutation::ChangeStoreyVariableCategory(p) => text_buildings::print_change_storey_variable_category(p),
+        En1998Mutation::ChangeStoreyVariableQkN(p) => text_buildings::print_change_storey_variable_qk_n(p),
+        En1998Mutation::ChangeBridgeVariableCategory(p) => text_bridges_towers::print_change_bridge_variable_category(p),
+        En1998Mutation::ChangeBridgeVariableQkN(p) => text_bridges_towers::print_change_bridge_variable_qk_n(p),
+        En1998Mutation::ChangeTowerVariableCategory(p) => text_bridges_towers::print_change_tower_variable_category(p),
+        En1998Mutation::ChangeTowerVariableQkN(p) => text_bridges_towers::print_change_tower_variable_qk_n(p),
+        En1998Mutation::InsertStoreyVariable(p) => text_buildings::print_insert_storey_variable(p),
+        En1998Mutation::RemoveStoreyVariable(p) => text_buildings::print_remove_storey_variable(p),
+        En1998Mutation::InsertMember(p) => text_buildings::print_insert_member(p),
+        En1998Mutation::RemoveMember(p) => text_buildings::print_remove_member(p),
+        En1998Mutation::InsertStorey(p) => text_buildings::print_insert_storey(p),
+        En1998Mutation::RemoveStorey(p) => text_buildings::print_remove_storey(p),
+        En1998Mutation::InsertSystem(p) => text_buildings::print_insert_system(p),
+        En1998Mutation::RemoveSystem(p) => text_buildings::print_remove_system(p),
+        En1998Mutation::InsertBridgeVariable(p) => text_bridges_towers::print_insert_bridge_variable(p),
+        En1998Mutation::RemoveBridgeVariable(p) => text_bridges_towers::print_remove_bridge_variable(p),
+        En1998Mutation::InsertTowerVariable(p) => text_bridges_towers::print_insert_tower_variable(p),
+        En1998Mutation::RemoveTowerVariable(p) => text_bridges_towers::print_remove_tower_variable(p),
+        En1998Mutation::ChangeSoilLayerFoundationId(p) => text_foundations::print_change_soil_layer_foundation_id(p),
+        En1998Mutation::ChangeSoilLayerThicknessM(p) => text_foundations::print_change_soil_layer_thickness_m(p),
+        En1998Mutation::ChangeSoilUnitWtNM3(p) => text_foundations::print_change_soil_unit_wt_n_m3(p),
+        En1998Mutation::ChangeSoilLayerVsMS(p) => text_foundations::print_change_soil_layer_vs_m_s(p),
+        En1998Mutation::ChangeSoilLayerN160(p) => text_foundations::print_change_soil_layer_n1_60(p),
+        En1998Mutation::ChangeSoilLayerFinesPercent(p) => text_foundations::print_change_soil_layer_fines_percent(p),
+        En1998Mutation::InsertSoilLayer(p) => text_foundations::print_insert_soil_layer(p),
+        En1998Mutation::RemoveSoilLayer(p) => text_foundations::print_remove_soil_layer(p),
+        En1998Mutation::ChangeBuildingOtBaseXM(p) => text_buildings::print_change_building_ot_base_x_m(p),
+        En1998Mutation::ChangeBuildingOtBaseYM(p) => text_buildings::print_change_building_ot_base_y_m(p),
+        En1998Mutation::ChangeBuildingTiedownNm(p) => text_buildings::print_change_building_tiedown_nm(p),
+        En1998Mutation::ChangeDiaphragmBuildingId(p) => text_buildings::print_change_diaphragm_building_id(p),
+        En1998Mutation::ChangeDiaphragmStoreyId(p) => text_buildings::print_change_diaphragm_storey_id(p),
+        En1998Mutation::ChangeDiaphragmMaterial(p) => text_buildings::print_change_diaphragm_material(p),
+        En1998Mutation::ChangeDiaphragmThicknessM(p) => text_buildings::print_change_diaphragm_thickness_m(p),
+        En1998Mutation::ChangeDiaphragmSpanM(p) => text_buildings::print_change_diaphragm_span_m(p),
+        En1998Mutation::ChangeDiaphragmDepthM(p) => text_buildings::print_change_diaphragm_depth_m(p),
+        En1998Mutation::ChangeDiaphragmOpeningWidthM(p) => text_buildings::print_change_diaphragm_opening_width_m(p),
+        En1998Mutation::ChangeDiaphragmShearStrMpa(p) => text_buildings::print_change_diaphragm_shear_str_mpa(p),
+        En1998Mutation::ChangeDiaphragmChordAreaM2(p) => text_buildings::print_change_diaphragm_chord_area_m2(p),
+        En1998Mutation::ChangeDiaphragmChordStrMpa(p) => text_buildings::print_change_diaphragm_chord_str_mpa(p),
+        En1998Mutation::ChangeDiaphragmGammaD(p) => text_buildings::print_change_diaphragm_gamma_d(p),
+        En1998Mutation::ChangeAccelerogramBuildingId(p) => text_buildings::print_change_accelerogram_building_id(p),
+        En1998Mutation::ChangeAccelerogramLabel(p) => text_buildings::print_change_accelerogram_label(p),
+        En1998Mutation::ChangeAccelerogramSamples(p) => text_buildings::print_change_accelerogram_samples(p),
+        En1998Mutation::ChangeAccelerogramDtS(p) => text_buildings::print_change_accelerogram_dt_s(p),
+        En1998Mutation::ChangeAccelerogramScaleFactor(p) => text_buildings::print_change_accelerogram_scale_factor(p),
+        En1998Mutation::InsertDiaphragm(p) => text_buildings::print_insert_diaphragm(p),
+        En1998Mutation::RemoveDiaphragm(p) => text_buildings::print_remove_diaphragm(p),
+        En1998Mutation::InsertAccelerogram(p) => text_buildings::print_insert_accelerogram(p),
+        En1998Mutation::RemoveAccelerogram(p) => text_buildings::print_remove_accelerogram(p),
+        En1998Mutation::ChangeTowerBaseRotStiffNm(p) => text_bridges_towers::print_change_tower_base_rot_stiff_nm(p),
+        En1998Mutation::ChangeTankShellTM(p) => text_silos_tanks::print_change_tank_shell_t_m(p),
+        En1998Mutation::ChangeTankShellStrMpa(p) => text_silos_tanks::print_change_tank_shell_str_mpa(p),
+        En1998Mutation::ChangePierBridgeId(p) => text_bridges_towers::print_change_pier_bridge_id(p),
+        En1998Mutation::ChangePierStiffnessBasis(p) => text_bridges_towers::print_change_pier_stiffness_basis(p),
+        En1998Mutation::ChangePierXM(p) => text_bridges_towers::print_change_pier_x_m(p),
+        En1998Mutation::ChangePierHeightM(p) => text_bridges_towers::print_change_pier_height_m(p),
+        En1998Mutation::ChangePierSectionBM(p) => text_bridges_towers::print_change_pier_section_b_m(p),
+        En1998Mutation::ChangePierSectionHM(p) => text_bridges_towers::print_change_pier_section_h_m(p),
+        En1998Mutation::ChangePierModulusMpa(p) => text_bridges_towers::print_change_pier_modulus_mpa(p),
+        En1998Mutation::ChangePierMomentRdNm(p) => text_bridges_towers::print_change_pier_moment_rd_nm(p),
+        En1998Mutation::ChangePierShearRdN(p) => text_bridges_towers::print_change_pier_shear_rd_n(p),
+        En1998Mutation::ChangePierReinforcementRatio(p) => text_bridges_towers::print_change_pier_reinforcement_ratio(p),
+        En1998Mutation::ChangePierCoverM(p) => text_bridges_towers::print_change_pier_cover_m(p),
+        En1998Mutation::ChangePierConcreteFckMpa(p) => text_bridges_towers::print_change_pier_concrete_fck_mpa(p),
+        En1998Mutation::ChangePierSteelFykMpa(p) => text_bridges_towers::print_change_pier_steel_fyk_mpa(p),
+        En1998Mutation::ChangePierAxialLoadN(p) => text_bridges_towers::print_change_pier_axial_load_n(p),
+        En1998Mutation::ChangeBearingBridgeId(p) => text_bridges_towers::print_change_bearing_bridge_id(p),
+        En1998Mutation::ChangeJointBuildingId(p) => text_members::print_change_joint_building_id(p),
+        En1998Mutation::ChangeJointStoreyId(p) => text_members::print_change_joint_storey_id(p),
+        En1998Mutation::ChangeJointColumnId(p) => text_members::print_change_joint_column_id(p),
+        En1998Mutation::ChangeJointBeamId(p) => text_members::print_change_joint_beam_id(p),
+        En1998Mutation::ChangeBearingPierId(p) => text_bridges_towers::print_change_bearing_pier_id(p),
+        En1998Mutation::ChangeBearingDevice(p) => text_bridges_towers::print_change_bearing_device(p),
+        En1998Mutation::ChangeBearingXM(p) => text_bridges_towers::print_change_bearing_x_m(p),
+        En1998Mutation::ChangeJointXM(p) => text_members::print_change_joint_x_m(p),
+        En1998Mutation::ChangeJointYM(p) => text_members::print_change_joint_y_m(p),
+        En1998Mutation::ChangeBearingStiffnessNPerM(p) => text_bridges_towers::print_change_bearing_stiffness_n_per_m(p),
+        En1998Mutation::ChangeBearingDRdM(p) => text_bridges_towers::print_change_bearing_d_rd_m(p),
+        En1998Mutation::ChangeBearingSeatLengthM(p) => text_bridges_towers::print_change_bearing_seat_length_m(p),
+        En1998Mutation::ChangeJointColumnMomentRdNm(p) => text_members::print_change_joint_column_moment_rd_nm(p),
+        En1998Mutation::ChangeJointBeamMomentRdNm(p) => text_members::print_change_joint_beam_moment_rd_nm(p),
+        En1998Mutation::ChangeBearingMinSupportM(p) => text_bridges_towers::print_change_bearing_min_support_m(p),
+        En1998Mutation::InsertPier(p) => text_bridges_towers::print_insert_pier(p),
+        En1998Mutation::RemovePier(p) => text_bridges_towers::print_remove_pier(p),
+        En1998Mutation::InsertBearing(p) => text_bridges_towers::print_insert_bearing(p),
+        En1998Mutation::InsertJoint(p) => text_members::print_insert_joint(p),
+        En1998Mutation::InsertTieBeam(p) => text_members::print_insert_tie_beam(p),
+        En1998Mutation::InsertSeismicSlope(p) => text_members::print_insert_seismic_slope(p),
+        En1998Mutation::RemoveBearing(p) => text_bridges_towers::print_remove_bearing(p),
+        En1998Mutation::RemoveJoint(p) => text_members::print_remove_joint(p),
+        En1998Mutation::RemoveTieBeam(p) => text_members::print_remove_tie_beam(p),
+        En1998Mutation::RemoveSeismicSlope(p) => text_members::print_remove_seismic_slope(p),
+        En1998Mutation::ChangeJointColMomentRdNm(p) => text_members::print_change_joint_col_moment_rd_nm(p),
+        En1998Mutation::ChangeRetainingWallWaterHeightM(p) => text_foundations::print_change_retaining_wall_water_height_m(p),
+        En1998Mutation::ChangeRetainingWallSaturatedGamma(p) => text_foundations::print_change_retaining_wall_saturated_gamma(p),
+        En1998Mutation::ChangeRetainingWallPermeabilityMS(p) => text_foundations::print_change_retaining_wall_permeability_m_s(p),
+        En1998Mutation::ChangeFoundationBaseFrictionDeg(p) => text_foundations::print_change_foundation_base_friction_deg(p),
+        En1998Mutation::ChangeFoundationBasePorePressurePa(p) => text_foundations::print_change_foundation_base_pore_pressure_pa(p),
+        En1998Mutation::RemoveSilo(p) => text_silos_tanks::print_remove_silo(p),
+        En1998Mutation::RemoveTank(p) => text_silos_tanks::print_remove_tank(p),
+        En1998Mutation::RemoveFoundation(p) => text_foundations::print_remove_foundation(p),
+        En1998Mutation::RemoveRetainingWall(p) => text_foundations::print_remove_retaining_wall(p),
+        En1998Mutation::RemoveTower(p) => text_bridges_towers::print_remove_tower(p),
+        En1998Mutation::ChangePlacementX(p) => text_placements::print_change_placement_x(p),
+        En1998Mutation::ChangePlacementY(p) => text_placements::print_change_placement_y(p),
+        En1998Mutation::ChangePlacementZ(p) => text_placements::print_change_placement_z(p),
+        En1998Mutation::ChangePlacementYaw(p) => text_placements::print_change_placement_yaw(p),
+        En1998Mutation::ChangeTieBeamDisplacementLimit(p) => text_tie_beams::print_change_tie_beam_displacement_limit(p),
+        En1998Mutation::ChangeTieBeamRelativeDisplacement(p) => text_tie_beams::print_change_tie_beam_relative_displacement(p),
+        En1998Mutation::ChangeTieBeamSteelDesignStrength(p) => text_tie_beams::print_change_tie_beam_steel_design_strength(p),
+        En1998Mutation::ChangeTieBeamSteelArea(p) => text_tie_beams::print_change_tie_beam_steel_area(p),
+        En1998Mutation::ChangeTieBeamDepth(p) => text_tie_beams::print_change_tie_beam_depth(p),
+        En1998Mutation::ChangeTieBeamWidth(p) => text_tie_beams::print_change_tie_beam_width(p),
+        En1998Mutation::ChangeTieBeamSpan(p) => text_tie_beams::print_change_tie_beam_span(p),
+        En1998Mutation::ChangeSeismicSlopeCircleRadius(p) => text_seismic_slopes::print_change_seismic_slope_circle_radius(p),
+        En1998Mutation::ChangeSeismicSlopeCircleCentreZ(p) => text_seismic_slopes::print_change_seismic_slope_circle_centre_z(p),
+        En1998Mutation::ChangeSeismicSlopeCircleCentreX(p) => text_seismic_slopes::print_change_seismic_slope_circle_centre_x(p),
+        En1998Mutation::ChangeSeismicSlopeTopographicFactor(p) => text_seismic_slopes::print_change_seismic_slope_topographic_factor(p),
+        En1998Mutation::ChangeSeismicSlopeCohesion(p) => text_seismic_slopes::print_change_seismic_slope_cohesion(p),
+        En1998Mutation::ChangeSeismicSlopeFrictionAngle(p) => text_seismic_slopes::print_change_seismic_slope_friction_angle(p),
+        En1998Mutation::ChangeSeismicSlopeAngle(p) => text_seismic_slopes::print_change_seismic_slope_angle(p),
+        En1998Mutation::ChangeSeismicSlopeHeight(p) => text_seismic_slopes::print_change_seismic_slope_height(p),
+        En1998Mutation::InsertPlacement(p) => text_placements::print_insert_placement(p),
+        En1998Mutation::RemovePlacement(p) => text_placements::print_remove_placement(p),
     }
 }
 
 fn parse_en1998_mutation(line: &str) -> Result<En1998Mutation, String> {
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
     let args = parse_args(rest)?;
-    let arg = |k: &str| args.get(k).cloned().ok_or_else(|| format!("en1998 mutation: missing arg '{k}' for '{keyword}'"));
     match keyword {
-        "change-annex" => Ok(En1998Mutation::ChangeAnnex(ChangeAnnex { new_annex: dec_json(&arg("new-annex")?)? })),
-        "update-site" => Ok(En1998Mutation::UpdateSite(UpdateSite { site: dec_json(&arg("site")?)? })),
-        "insert-building" => Ok(En1998Mutation::InsertBuilding(InsertBuilding { index: opt_index(&args)?, building: dec_json(&arg("building")?)? })),
-        "remove-building" => Ok(En1998Mutation::RemoveBuilding(RemoveBuilding { index: dec_json(&arg("index")?)? })),
-        "change-system-v-rd-n" => Ok(En1998Mutation::ChangeSystemVRdN(ChangeSystemVRdN { building_index: dec_json(&arg("building-index")?)?, system_index: dec_json(&arg("system-index")?)?, new_base_shear_resistance_n: dec_json(&arg("new-base-shear-resistance-n")?)? })),
-        "change-storey-permanent-gk-n" => Ok(En1998Mutation::ChangeStoreyPermanentGkN(ChangeStoreyPermanentGkN { building_index: dec_json(&arg("building-index")?)?, storey_index: dec_json(&arg("storey-index")?)?, new_permanent_gk_n: dec_json(&arg("new-permanent-gk-n")?)? })),
-        "change-storey-stiffness-x" => Ok(En1998Mutation::ChangeStoreyStiffnessX(ChangeStoreyStiffnessX { building_index: dec_json(&arg("building-index")?)?, storey_index: dec_json(&arg("storey-index")?)?, new_stiffness_x: dec_json(&arg("new-stiffness-x")?)? })),
-        "change-storey-drift-xm" => Ok(En1998Mutation::ChangeStoreyDriftXM(ChangeStoreyDriftXM { building_index: dec_json(&arg("building-index")?)?, storey_index: dec_json(&arg("storey-index")?)?, new_drift_x_m: dec_json(&arg("new-drift-x-m")?)? })),
-        "change-building-plan-regular" => Ok(En1998Mutation::ChangeBuildingPlanRegular(ChangeBuildingPlanRegular { building_index: dec_json(&arg("building-index")?)?, new_plan_regular: dec_json(&arg("new-plan-regular")?)? })),
-        "change-elevation-regular" => Ok(En1998Mutation::ChangeElevationRegular(ChangeElevationRegular { building_index: dec_json(&arg("building-index")?)?, new_elevation_regular: dec_json(&arg("new-elevation-regular")?)? })),
-        "change-member-detailing" => Ok(En1998Mutation::ChangeMemberDetailing(ChangeMemberDetailing { building_index: dec_json(&arg("building-index")?)?, member_index: dec_json(&arg("member-index")?)?, new_detailing_compatible_with_q: dec_json(&arg("new-detailing-compatible-with-q")?)? })),
-        "change-masonry-wall-ratio" => Ok(En1998Mutation::ChangeMasonryWallRatio(ChangeMasonryWallRatio { building_index: dec_json(&arg("building-index")?)?, new_masonry_wall_area_ratio: dec_json(&arg("new-masonry-wall-area-ratio")?)? })),
-        "insert-bridge" => Ok(En1998Mutation::InsertBridge(InsertBridge { index: opt_index(&args)?, bridge: dec_json(&arg("bridge")?)? })),
-        "change-bridge-v-rd-n" => Ok(En1998Mutation::ChangeBridgeVRdN(ChangeBridgeVRdN { index: dec_json(&arg("index")?)?, new_v_rd_n: dec_json(&arg("new-v-rd-n")?)? })),
-        "insert-assessment" => Ok(En1998Mutation::InsertAssessment(InsertAssessment { index: opt_index(&args)?, assessment: dec_json(&arg("assessment")?)? })),
-        "change-assessment-rkn" => Ok(En1998Mutation::ChangeAssessmentRKN(ChangeAssessmentRKN { index: dec_json(&arg("index")?)?, new_r_k_n: dec_json(&arg("new-r-k-n")?)? })),
-        "insert-silo" => Ok(En1998Mutation::InsertSilo(InsertSilo { index: opt_index(&args)?, silo: dec_json(&arg("silo")?)? })),
-        "insert-tank" => Ok(En1998Mutation::InsertTank(InsertTank { index: opt_index(&args)?, tank: dec_json(&arg("tank")?)? })),
-        "insert-foundation" => Ok(En1998Mutation::InsertFoundation(InsertFoundation { index: opt_index(&args)?, foundation: dec_json(&arg("foundation")?)? })),
-        "insert-retaining-wall" => Ok(En1998Mutation::InsertRetainingWall(InsertRetainingWall { index: opt_index(&args)?, wall: dec_json(&arg("wall")?)? })),
-        "insert-tower" => Ok(En1998Mutation::InsertTower(InsertTower { index: opt_index(&args)?, tower: dec_json(&arg("tower")?)? })),
-        "change-tower-m-rd-nm" => Ok(En1998Mutation::ChangeTowerMRdNm(ChangeTowerMRdNm { index: dec_json(&arg("index")?)?, new_m_rd_nm: dec_json(&arg("new-m-rd-nm")?)? })),
-        "remove-bridge" => Ok(En1998Mutation::RemoveBridge(RemoveBridge { index: dec_json(&arg("index")?)? })),
-        "remove-assessment" => Ok(En1998Mutation::RemoveAssessment(RemoveAssessment { index: dec_json(&arg("index")?)? })),
-        "remove-silo" => Ok(En1998Mutation::RemoveSilo(RemoveSilo { index: dec_json(&arg("index")?)? })),
-        "remove-tank" => Ok(En1998Mutation::RemoveTank(RemoveTank { index: dec_json(&arg("index")?)? })),
-        "remove-foundation" => Ok(En1998Mutation::RemoveFoundation(RemoveFoundation { index: dec_json(&arg("index")?)? })),
-        "remove-retaining-wall" => Ok(En1998Mutation::RemoveRetainingWall(RemoveRetainingWall { index: dec_json(&arg("index")?)? })),
-        "remove-tower" => Ok(En1998Mutation::RemoveTower(RemoveTower { index: dec_json(&arg("index")?)? })),
+        "change-annex" => text_buildings::parse_change_annex(&args).map(En1998Mutation::ChangeAnnex),
+        "insert-building" => text_buildings::parse_insert_building(&args).map(En1998Mutation::InsertBuilding),
+        "remove-building" => text_buildings::parse_remove_building(&args).map(En1998Mutation::RemoveBuilding),
+        "change-system-v-rd-n" => text_buildings::parse_change_system_v_rd_n(&args).map(En1998Mutation::ChangeSystemVRdN),
+        "change-storey-permanent-gk-n" => text_buildings::parse_change_storey_permanent_gk_n(&args).map(En1998Mutation::ChangeStoreyPermanentGkN),
+        "change-storey-stiffness-x" => text_buildings::parse_change_storey_stiffness_x(&args).map(En1998Mutation::ChangeStoreyStiffnessX),
+        "change-storey-drift-xm" => text_buildings::parse_change_storey_drift_xm(&args).map(En1998Mutation::ChangeStoreyDriftXM),
+        "change-building-plan-regular" => text_buildings::parse_change_building_plan_regular(&args).map(En1998Mutation::ChangeBuildingPlanRegular),
+        "change-elevation-regular" => text_buildings::parse_change_elevation_regular(&args).map(En1998Mutation::ChangeElevationRegular),
+        "change-member-detailing" => text_members::parse_change_member_detailing(&args).map(En1998Mutation::ChangeMemberDetailing),
+        "change-masonry-wall-ratio" => text_members::parse_change_masonry_wall_ratio(&args).map(En1998Mutation::ChangeMasonryWallRatio),
+        "insert-bridge" => text_bridges_towers::parse_insert_bridge(&args).map(En1998Mutation::InsertBridge),
+        "change-bridge-v-rd-n" => text_bridges_towers::parse_change_bridge_v_rd_n(&args).map(En1998Mutation::ChangeBridgeVRdN),
+        "insert-assessment" => text_members::parse_insert_assessment(&args).map(En1998Mutation::InsertAssessment),
+        "change-assessment-rkn" => text_members::parse_change_assessment_rkn(&args).map(En1998Mutation::ChangeAssessmentRKN),
+        "insert-silo" => text_silos_tanks::parse_insert_silo(&args).map(En1998Mutation::InsertSilo),
+        "insert-tank" => text_silos_tanks::parse_insert_tank(&args).map(En1998Mutation::InsertTank),
+        "insert-foundation" => text_foundations::parse_insert_foundation(&args).map(En1998Mutation::InsertFoundation),
+        "insert-retaining-wall" => text_foundations::parse_insert_retaining_wall(&args).map(En1998Mutation::InsertRetainingWall),
+        "insert-tower" => text_bridges_towers::parse_insert_tower(&args).map(En1998Mutation::InsertTower),
+        "change-tower-m-rd-nm" => text_bridges_towers::parse_change_tower_m_rd_nm(&args).map(En1998Mutation::ChangeTowerMRdNm),
+        "remove-bridge" => text_bridges_towers::parse_remove_bridge(&args).map(En1998Mutation::RemoveBridge),
+        "remove-assessment" => text_members::parse_remove_assessment(&args).map(En1998Mutation::RemoveAssessment),
+        "change-site-s-ap-r" => text_buildings::parse_change_site_s_ap_r(&args).map(En1998Mutation::ChangeSiteSApR),
+        "change-site-a-gr" => text_buildings::parse_change_site_a_gr(&args).map(En1998Mutation::ChangeSiteAGr),
+        "change-site-de-ground-combo" => text_buildings::parse_change_site_de_ground_combo(&args).map(En1998Mutation::ChangeSiteDeGroundCombo),
+        "change-site-en-ground-type" => text_buildings::parse_change_site_en_ground_type(&args).map(En1998Mutation::ChangeSiteEnGroundType),
+        "change-site-en-spectrum-type" => text_buildings::parse_change_site_en_spectrum_type(&args).map(En1998Mutation::ChangeSiteEnSpectrumType),
+        "change-site-importance-class" => text_buildings::parse_change_site_importance_class(&args).map(En1998Mutation::ChangeSiteImportanceClass),
+        "change-building-name" => text_buildings::parse_change_building_name(&args).map(En1998Mutation::ChangeBuildingName),
+        "change-building-plan-width-m" => text_buildings::parse_change_building_plan_width_m(&args).map(En1998Mutation::ChangeBuildingPlanWidthM),
+        "change-building-plan-length-m" => text_buildings::parse_change_building_plan_length_m(&args).map(En1998Mutation::ChangeBuildingPlanLengthM),
+        "change-building-t1-method" => text_buildings::parse_change_building_t1_method(&args).map(En1998Mutation::ChangeBuildingT1Method),
+        "change-building-t1-given-s" => text_buildings::parse_change_building_t1_given_s(&args).map(En1998Mutation::ChangeBuildingT1GivenS),
+        "change-building-ct" => text_buildings::parse_change_building_ct(&args).map(En1998Mutation::ChangeBuildingCt),
+        "change-building-drift-limit-class" => text_buildings::parse_change_building_drift_limit_class(&args).map(En1998Mutation::ChangeBuildingDriftLimitClass),
+        "change-building-nu" => text_buildings::parse_change_building_nu(&args).map(En1998Mutation::ChangeBuildingNu),
+        "change-building-multi-resisting-systems" => text_buildings::parse_change_building_multi_resisting_systems(&args).map(En1998Mutation::ChangeBuildingMultiResistingSystems),
+        "change-building-claims-simple-masonry" => text_buildings::parse_change_building_claims_simple_masonry(&args).map(En1998Mutation::ChangeBuildingClaimsSimpleMasonry),
+        "change-building-accidental-ecc-ratio" => text_buildings::parse_change_building_accidental_ecc_ratio(&args).map(En1998Mutation::ChangeBuildingAccidentalEccRatio),
+        "change-system-direction" => text_buildings::parse_change_system_direction(&args).map(En1998Mutation::ChangeSystemDirection),
+        "change-system-system-type" => text_buildings::parse_change_system_system_type(&args).map(En1998Mutation::ChangeSystemSystemType),
+        "change-system-material" => text_buildings::parse_change_system_material(&args).map(En1998Mutation::ChangeSystemMaterial),
+        "change-system-ductility-class" => text_buildings::parse_change_system_ductility_class(&args).map(En1998Mutation::ChangeSystemDuctilityClass),
+        "change-system-q0" => text_buildings::parse_change_system_q0(&args).map(En1998Mutation::ChangeSystemQ0),
+        "change-system-alpha-u-over-alpha1" => text_buildings::parse_change_system_alpha_u_over_alpha_1(&args).map(En1998Mutation::ChangeSystemAlphaUOverAlpha1),
+        "change-system-kw" => text_buildings::parse_change_system_k_w(&args).map(En1998Mutation::ChangeSystemKW),
+        "change-storey-height-m" => text_buildings::parse_change_storey_height_m(&args).map(En1998Mutation::ChangeStoreyHeightM),
+        "change-storey-correlated-occupancy" => text_buildings::parse_change_storey_correlated_occupancy(&args).map(En1998Mutation::ChangeStoreyCorrelatedOccupancy),
+        "change-storey-stiffness-y" => text_buildings::parse_change_storey_stiffness_y(&args).map(En1998Mutation::ChangeStoreyStiffnessY),
+        "change-storey-centre-of-mass-xm" => text_buildings::parse_change_storey_centre_of_mass_x_m(&args).map(En1998Mutation::ChangeStoreyCentreOfMassXM),
+        "change-storey-centre-of-mass-ym" => text_buildings::parse_change_storey_centre_of_mass_y_m(&args).map(En1998Mutation::ChangeStoreyCentreOfMassYM),
+        "change-storey-centre-of-stiffness-xm" => text_buildings::parse_change_storey_centre_of_stiffness_x_m(&args).map(En1998Mutation::ChangeStoreyCentreOfStiffnessXM),
+        "change-storey-centre-of-stiffness-ym" => text_buildings::parse_change_storey_centre_of_stiffness_y_m(&args).map(En1998Mutation::ChangeStoreyCentreOfStiffnessYM),
+        "change-storey-drift-ym" => text_buildings::parse_change_storey_drift_y_m(&args).map(En1998Mutation::ChangeStoreyDriftYM),
+        "change-storey-shear-resistance-n" => text_buildings::parse_change_storey_shear_resistance_n(&args).map(En1998Mutation::ChangeStoreyShearResistanceN),
+        "change-member-material" => text_members::parse_change_member_material(&args).map(En1998Mutation::ChangeMemberMaterial),
+        "change-member-role" => text_members::parse_change_member_role(&args).map(En1998Mutation::ChangeMemberRole),
+        "change-member-min-dimension-m" => text_members::parse_change_member_min_dimension_m(&args).map(En1998Mutation::ChangeMemberMinDimensionM),
+        "change-member-rho" => text_members::parse_change_member_rho(&args).map(En1998Mutation::ChangeMemberRho),
+        "change-member-rho-prime" => text_members::parse_change_member_rho_prime(&args).map(En1998Mutation::ChangeMemberRhoPrime),
+        "change-member-omega-wd" => text_members::parse_change_member_omega_wd(&args).map(En1998Mutation::ChangeMemberOmegaWd),
+        "change-member-steel-section-class" => text_members::parse_change_member_steel_section_class(&args).map(En1998Mutation::ChangeMemberSteelSectionClass),
+        "change-bridge-period-ratio" => text_bridges_towers::parse_change_bridge_period_ratio(&args).map(En1998Mutation::ChangeBridgePeriodRatio),
+        "change-bridge-fundamental-period-s" => text_bridges_towers::parse_change_bridge_fundamental_period_s(&args).map(En1998Mutation::ChangeBridgeFundamentalPeriodS),
+        "change-bridge-bearing-d-rd-m" => text_bridges_towers::parse_change_bridge_bearing_d_rd_m(&args).map(En1998Mutation::ChangeBridgeBearingDRdM),
+        "change-bridge-permanent-gk-n" => text_bridges_towers::parse_change_bridge_permanent_gk_n(&args).map(En1998Mutation::ChangeBridgePermanentGkN),
+        "change-bridge-correlated-occupancy" => text_bridges_towers::parse_change_bridge_correlated_occupancy(&args).map(En1998Mutation::ChangeBridgeCorrelatedOccupancy),
+        "change-assessment-knowledge-level" => text_members::parse_change_assessment_knowledge_level(&args).map(En1998Mutation::ChangeAssessmentKnowledgeLevel),
+        "change-assessment-limit-state" => text_members::parse_change_assessment_limit_state(&args).map(En1998Mutation::ChangeAssessmentLimitState),
+        "change-assessment-supported-building-id" => text_members::parse_change_assessment_supported_building_id(&args).map(En1998Mutation::ChangeAssessmentSupportedBuildingId),
+        "change-assessment-gamma-el" => text_members::parse_change_assessment_gamma_el(&args).map(En1998Mutation::ChangeAssessmentGammaEl),
+        "change-tower-height-m" => text_bridges_towers::parse_change_tower_height_m(&args).map(En1998Mutation::ChangeTowerHeightM),
+        "change-tower-is-chimney" => text_bridges_towers::parse_change_tower_is_chimney(&args).map(En1998Mutation::ChangeTowerIsChimney),
+        "change-tower-q-nominal" => text_bridges_towers::parse_change_tower_q_nominal(&args).map(En1998Mutation::ChangeTowerQNominal),
+        "change-tower-permanent-gk-n" => text_bridges_towers::parse_change_tower_permanent_gk_n(&args).map(En1998Mutation::ChangeTowerPermanentGkN),
+        "change-tower-correlated-occupancy" => text_bridges_towers::parse_change_tower_correlated_occupancy(&args).map(En1998Mutation::ChangeTowerCorrelatedOccupancy),
+        "change-silo-height-m" => text_silos_tanks::parse_change_silo_height_m(&args).map(En1998Mutation::ChangeSiloHeightM),
+        "change-silo-radius-m" => text_silos_tanks::parse_change_silo_radius_m(&args).map(En1998Mutation::ChangeSiloRadiusM),
+        "change-silo-permanent-gk-n" => text_silos_tanks::parse_change_silo_permanent_gk_n(&args).map(En1998Mutation::ChangeSiloPermanentGkN),
+        "change-silo-content-qk-n" => text_silos_tanks::parse_change_silo_content_qk_n(&args).map(En1998Mutation::ChangeSiloContentQkN),
+        "change-silo-content-category" => text_silos_tanks::parse_change_silo_content_category(&args).map(En1998Mutation::ChangeSiloContentCategory),
+        "change-silo-filling-ratio" => text_silos_tanks::parse_change_silo_filling_ratio(&args).map(En1998Mutation::ChangeSiloFillingRatio),
+        "change-silo-n-rd-n" => text_silos_tanks::parse_change_silo_n_rd_n(&args).map(En1998Mutation::ChangeSiloNRdN),
+        "change-silo-v-rd-n" => text_silos_tanks::parse_change_silo_v_rd_n(&args).map(En1998Mutation::ChangeSiloVRdN),
+        "change-silo-q-nominal" => text_silos_tanks::parse_change_silo_q_nominal(&args).map(En1998Mutation::ChangeSiloQNominal),
+        "change-tank-height-m" => text_silos_tanks::parse_change_tank_height_m(&args).map(En1998Mutation::ChangeTankHeightM),
+        "change-tank-radius-m" => text_silos_tanks::parse_change_tank_radius_m(&args).map(En1998Mutation::ChangeTankRadiusM),
+        "change-tank-permanent-gk-n" => text_silos_tanks::parse_change_tank_permanent_gk_n(&args).map(En1998Mutation::ChangeTankPermanentGkN),
+        "change-tank-content-qk-n" => text_silos_tanks::parse_change_tank_content_qk_n(&args).map(En1998Mutation::ChangeTankContentQkN),
+        "change-tank-content-category" => text_silos_tanks::parse_change_tank_content_category(&args).map(En1998Mutation::ChangeTankContentCategory),
+        "change-tank-filling-ratio" => text_silos_tanks::parse_change_tank_filling_ratio(&args).map(En1998Mutation::ChangeTankFillingRatio),
+        "change-tank-v-rd-n" => text_silos_tanks::parse_change_tank_v_rd_n(&args).map(En1998Mutation::ChangeTankVRdN),
+        "change-foundation-supported-building-id" => text_foundations::parse_change_foundation_supported_building_id(&args).map(En1998Mutation::ChangeFoundationSupportedBuildingId),
+        "change-tie-beam-foundation-b-id" => text_foundations::parse_change_tie_beam_foundation_b_id(&args).map(En1998Mutation::ChangeTieBeamFoundationBId),
+        "change-tie-beam-foundation-a-id" => text_foundations::parse_change_tie_beam_foundation_a_id(&args).map(En1998Mutation::ChangeTieBeamFoundationAId),
+        "change-seismic-slope-governing-layer-id" => text_foundations::parse_change_seismic_slope_governing_layer_id(&args).map(En1998Mutation::ChangeSeismicSlopeGoverningLayerId),
+        "change-foundation-area-m2" => text_foundations::parse_change_foundation_area_m2(&args).map(En1998Mutation::ChangeFoundationAreaM2),
+        "change-foundation-p-rd-pa" => text_foundations::parse_change_foundation_p_rd_pa(&args).map(En1998Mutation::ChangeFoundationPRdPa),
+        "change-foundation-passive-resistance-n" => text_foundations::parse_change_foundation_passive_resistance_n(&args).map(En1998Mutation::ChangeFoundationPassiveResistanceN),
+        "change-foundation-k-foundation" => text_foundations::parse_change_foundation_k_foundation(&args).map(En1998Mutation::ChangeFoundationKFoundation),
+        "change-foundation-k-soil" => text_foundations::parse_change_foundation_k_soil(&args).map(En1998Mutation::ChangeFoundationKSoil),
+        "change-retaining-wall-height-m" => text_foundations::parse_change_retaining_wall_height_m(&args).map(En1998Mutation::ChangeRetainingWallHeightM),
+        "change-retaining-wall-phi-deg" => text_foundations::parse_change_retaining_wall_phi_deg(&args).map(En1998Mutation::ChangeRetainingWallPhiDeg),
+        "change-retaining-wall-soil-gamma" => text_foundations::parse_change_retaining_wall_soil_gamma(&args).map(En1998Mutation::ChangeRetainingWallSoilGamma),
+        "change-retaining-wall-r" => text_foundations::parse_change_retaining_wall_r(&args).map(En1998Mutation::ChangeRetainingWallR),
+        "change-retaining-wall-h-rd-n-per-m" => text_foundations::parse_change_retaining_wall_h_rd_n_per_m(&args).map(En1998Mutation::ChangeRetainingWallHRdNPerM),
+        "change-site-vs30-ms" => text_buildings::parse_change_site_v_s30_m_s(&args).map(En1998Mutation::ChangeSiteVS30MS),
+        "change-site-n-spt" => text_buildings::parse_change_site_n_spt(&args).map(En1998Mutation::ChangeSiteNSpt),
+        "change-site-cu-kpa" => text_buildings::parse_change_site_c_u_kpa(&args).map(En1998Mutation::ChangeSiteCUKpa),
+        "change-site-soft-clay-thickness-m" => text_buildings::parse_change_site_soft_clay_thickness_m(&args).map(En1998Mutation::ChangeSiteSoftClayThicknessM),
+        "change-site-soft-clay-pi" => text_buildings::parse_change_site_soft_clay_pi(&args).map(En1998Mutation::ChangeSiteSoftClayPi),
+        "change-site-liquefiable-layer" => text_buildings::parse_change_site_liquefiable_layer(&args).map(En1998Mutation::ChangeSiteLiquefiableLayer),
+        "change-site-alluvium-thickness-m" => text_buildings::parse_change_site_alluvium_thickness_m(&args).map(En1998Mutation::ChangeSiteAlluviumThicknessM),
+        "change-site-alluvium-vsms" => text_buildings::parse_change_site_alluvium_v_s_m_s(&args).map(En1998Mutation::ChangeSiteAlluviumVSMS),
+        "change-site-below-alluvium-vsms" => text_buildings::parse_change_site_below_alluvium_v_s_m_s(&args).map(En1998Mutation::ChangeSiteBelowAlluviumVSMS),
+        "change-building-setback-ratio" => text_buildings::parse_change_building_setback_ratio(&args).map(En1998Mutation::ChangeBuildingSetbackRatio),
+        "change-building-storey-stiffness-ratio" => text_buildings::parse_change_building_storey_stiffness_ratio(&args).map(En1998Mutation::ChangeBuildingStoreyStiffnessRatio),
+        "change-building-storey-stiffness-basis" => text_buildings::parse_change_building_storey_stiffness_basis(&args).map(En1998Mutation::ChangeBuildingStoreyStiffnessBasis),
+        "change-building-plan-env-gap-ratio" => text_buildings::parse_change_building_plan_env_gap_ratio(&args).map(En1998Mutation::ChangeBuildingPlanEnvGapRatio),
+        "change-building-joint-gap-m" => text_buildings::parse_change_building_joint_gap_m(&args).map(En1998Mutation::ChangeBuildingJointGapM),
+        "change-building-ns-weight-n" => text_buildings::parse_change_building_ns_weight_n(&args).map(En1998Mutation::ChangeBuildingNsWeightN),
+        "change-building-ns-height-m" => text_buildings::parse_change_building_ns_height_m(&args).map(En1998Mutation::ChangeBuildingNsHeightM),
+        "change-building-ns-period-s" => text_buildings::parse_change_building_ns_period_s(&args).map(En1998Mutation::ChangeBuildingNsPeriodS),
+        "change-building-ns-q" => text_buildings::parse_change_building_ns_q(&args).map(En1998Mutation::ChangeBuildingNsQ),
+        "change-building-ns-resistance-n" => text_buildings::parse_change_building_ns_resistance_n(&args).map(En1998Mutation::ChangeBuildingNsResistanceN),
+        "change-building-col-moment-sum-nm" => text_buildings::parse_change_building_col_moment_sum_nm(&args).map(En1998Mutation::ChangeBuildingColMomentSumNm),
+        "change-building-beam-moment-sum-nm" => text_buildings::parse_change_building_beam_moment_sum_nm(&args).map(En1998Mutation::ChangeBuildingBeamMomentSumNm),
+        "change-member-fastener-diameter-mm" => text_members::parse_change_member_fastener_diameter_mm(&args).map(En1998Mutation::ChangeMemberFastenerDiameterMm),
+        "change-member-timber-thickness-mm" => text_members::parse_change_member_timber_thickness_mm(&args).map(En1998Mutation::ChangeMemberTimberThicknessMm),
+        "change-member-wall-thickness-m" => text_members::parse_change_member_wall_thickness_m(&args).map(En1998Mutation::ChangeMemberWallThicknessM),
+        "change-member-effective-stiffness-ratio" => text_members::parse_change_member_effective_stiffness_ratio(&args).map(En1998Mutation::ChangeMemberEffectiveStiffnessRatio),
+        "change-member-effective-stiffness-basis" => text_members::parse_change_member_effective_stiffness_basis(&args).map(En1998Mutation::ChangeMemberEffectiveStiffnessBasis),
+        "change-member-wall-poisson-ratio" => text_members::parse_change_member_wall_poisson_ratio(&args).map(En1998Mutation::ChangeMemberWallPoissonRatio),
+        "change-member-wall-start-xm" => text_members::parse_change_member_wall_start_x_m(&args).map(En1998Mutation::ChangeMemberWallStartXM),
+        "change-member-wall-start-ym" => text_members::parse_change_member_wall_start_y_m(&args).map(En1998Mutation::ChangeMemberWallStartYM),
+        "change-member-wall-length-m" => text_members::parse_change_member_wall_length_m(&args).map(En1998Mutation::ChangeMemberWallLengthM),
+        "change-member-wall-direction-rad" => text_members::parse_change_member_wall_direction_rad(&args).map(En1998Mutation::ChangeMemberWallDirectionRad),
+        "change-member-wall-storey-id" => text_members::parse_change_member_wall_storey_id(&args).map(En1998Mutation::ChangeMemberWallStoreyId),
+        "change-member-wall-eff-height-m" => text_members::parse_change_member_wall_eff_height_m(&args).map(En1998Mutation::ChangeMemberWallEffHeightM),
+        "change-bridge-pier-height-m" => text_bridges_towers::parse_change_bridge_pier_height_m(&args).map(En1998Mutation::ChangeBridgePierHeightM),
+        "change-bridge-pier-moment-rd-nm" => text_bridges_towers::parse_change_bridge_pier_moment_rd_nm(&args).map(En1998Mutation::ChangeBridgePierMomentRdNm),
+        "change-bridge-pier-shear-rd-n" => text_bridges_towers::parse_change_bridge_pier_shear_rd_n(&args).map(En1998Mutation::ChangeBridgePierShearRdN),
+        "change-bridge-importance-class" => text_bridges_towers::parse_change_bridge_importance_class(&args).map(En1998Mutation::ChangeBridgeImportanceClass),
+        "change-bridge-vertical-period-s" => text_bridges_towers::parse_change_bridge_vertical_period_s(&args).map(En1998Mutation::ChangeBridgeVerticalPeriodS),
+        "change-bridge-pier-cracked-inertia-ratio" => text_bridges_towers::parse_change_bridge_pier_cracked_inertia_ratio(&args).map(En1998Mutation::ChangeBridgePierCrackedInertiaRatio),
+        "change-bridge-deck-length-m" => text_bridges_towers::parse_change_bridge_deck_length_m(&args).map(En1998Mutation::ChangeBridgeDeckLengthM),
+        "change-bridge-deck-ei-nm2" => text_bridges_towers::parse_change_bridge_deck_ei_nm2(&args).map(En1998Mutation::ChangeBridgeDeckEiNm2),
+        "change-assessment-chord-demand-rad" => text_members::parse_change_assessment_chord_demand_rad(&args).map(En1998Mutation::ChangeAssessmentChordDemandRad),
+        "change-assessment-chord-yield-rad" => text_members::parse_change_assessment_chord_yield_rad(&args).map(En1998Mutation::ChangeAssessmentChordYieldRad),
+        "change-assessment-chord-ult-rad" => text_members::parse_change_assessment_chord_ult_rad(&args).map(En1998Mutation::ChangeAssessmentChordUltRad),
+        "change-tower-ei-nm2" => text_bridges_towers::parse_change_tower_ei_nm2(&args).map(En1998Mutation::ChangeTowerEiNm2),
+        "change-foundation-liq-n160" => text_foundations::parse_change_foundation_liq_n160(&args).map(En1998Mutation::ChangeFoundationLiqN160),
+        "change-foundation-liq-fines-percent" => text_foundations::parse_change_foundation_liq_fines_percent(&args).map(En1998Mutation::ChangeFoundationLiqFinesPercent),
+        "change-foundation-liq-depth-m" => text_foundations::parse_change_foundation_liq_depth_m(&args).map(En1998Mutation::ChangeFoundationLiqDepthM),
+        "change-foundation-liq-water-depth-m" => text_foundations::parse_change_foundation_liq_water_depth_m(&args).map(En1998Mutation::ChangeFoundationLiqWaterDepthM),
+        "change-foundation-liq-unit-wt-nm3" => text_foundations::parse_change_foundation_liq_unit_wt_n_m3(&args).map(En1998Mutation::ChangeFoundationLiqUnitWtNM3),
+        "change-foundation-liq-magnitude" => text_foundations::parse_change_foundation_liq_magnitude(&args).map(En1998Mutation::ChangeFoundationLiqMagnitude),
+        "change-assessment-section-depth-m" => text_members::parse_change_assessment_section_depth_m(&args).map(En1998Mutation::ChangeAssessmentSectionDepthM),
+        "change-assessment-section-width-m" => text_members::parse_change_assessment_section_width_m(&args).map(En1998Mutation::ChangeAssessmentSectionWidthM),
+        "change-assessment-eff-depth-m" => text_members::parse_change_assessment_eff_depth_m(&args).map(En1998Mutation::ChangeAssessmentEffDepthM),
+        "change-assessment-shear-span-m" => text_members::parse_change_assessment_shear_span_m(&args).map(En1998Mutation::ChangeAssessmentShearSpanM),
+        "change-assessment-axial-force-n" => text_members::parse_change_assessment_axial_force_n(&args).map(En1998Mutation::ChangeAssessmentAxialForceN),
+        "change-assessment-shear-force-demand-n" => text_members::parse_change_assessment_shear_force_demand_n(&args).map(En1998Mutation::ChangeAssessmentShearForceDemandN),
+        "change-assessment-as1-area-m2" => text_members::parse_change_assessment_as1_area_m2(&args).map(En1998Mutation::ChangeAssessmentAs1AreaM2),
+        "change-assessment-as2-area-m2" => text_members::parse_change_assessment_as2_area_m2(&args).map(En1998Mutation::ChangeAssessmentAs2AreaM2),
+        "change-assessment-bar-diameter-mm" => text_members::parse_change_assessment_bar_diameter_mm(&args).map(En1998Mutation::ChangeAssessmentBarDiameterMm),
+        "change-assessment-steel-yield-mpa" => text_members::parse_change_assessment_steel_yield_mpa(&args).map(En1998Mutation::ChangeAssessmentSteelYieldMpa),
+        "change-assessment-fc-mpa" => text_members::parse_change_assessment_fc_mpa(&args).map(En1998Mutation::ChangeAssessmentFcMpa),
+        "change-assessment-strp-leg-area-m2" => text_members::parse_change_assessment_strp_leg_area_m2(&args).map(En1998Mutation::ChangeAssessmentStrpLegAreaM2),
+        "change-assessment-strp-spacing-m" => text_members::parse_change_assessment_strp_spacing_m(&args).map(En1998Mutation::ChangeAssessmentStrpSpacingM),
+        "change-assessment-strp-yield-mpa" => text_members::parse_change_assessment_strp_yield_mpa(&args).map(En1998Mutation::ChangeAssessmentStrpYieldMpa),
+        "change-assessment-core-width-m" => text_members::parse_change_assessment_core_width_m(&args).map(En1998Mutation::ChangeAssessmentCoreWidthM),
+        "change-assessment-core-depth-m" => text_members::parse_change_assessment_core_depth_m(&args).map(En1998Mutation::ChangeAssessmentCoreDepthM),
+        "change-assessment-mid-steel-area-m2" => text_members::parse_change_assessment_mid_steel_area_m2(&args).map(En1998Mutation::ChangeAssessmentMidSteelAreaM2),
+        "change-assessment-rbar-count" => text_members::parse_change_assessment_rbar_count(&args).map(En1998Mutation::ChangeAssessmentRbarCount),
+        "change-assessment-rbar-spacing-m" => text_members::parse_change_assessment_rbar_spacing_m(&args).map(En1998Mutation::ChangeAssessmentRbarSpacingM),
+        "change-assessment-diag-reinf-ratio" => text_members::parse_change_assessment_diag_reinf_ratio(&args).map(En1998Mutation::ChangeAssessmentDiagReinfRatio),
+        "change-assessment-shear-crack" => text_members::parse_change_assessment_shear_crack(&args).map(En1998Mutation::ChangeAssessmentShearCrack),
+        "change-foundation-liq-layer-m" => text_foundations::parse_change_foundation_liq_layer_m(&args).map(En1998Mutation::ChangeFoundationLiqLayerM),
+        "change-foundation-footing-width-m" => text_foundations::parse_change_foundation_footing_width_m(&args).map(En1998Mutation::ChangeFoundationFootingWidthM),
+        "change-foundation-bear-axial-n" => text_foundations::parse_change_foundation_bear_axial_n(&args).map(En1998Mutation::ChangeFoundationBearAxialN),
+        "change-foundation-bear-shear-n" => text_foundations::parse_change_foundation_bear_shear_n(&args).map(En1998Mutation::ChangeFoundationBearShearN),
+        "change-foundation-bear-moment-nm" => text_foundations::parse_change_foundation_bear_moment_nm(&args).map(En1998Mutation::ChangeFoundationBearMomentNm),
+        "change-foundation-bearing-n-max-n" => text_foundations::parse_change_foundation_bearing_n_max_n(&args).map(En1998Mutation::ChangeFoundationBearingNMaxN),
+        "change-foundation-soil-phi-deg" => text_foundations::parse_change_foundation_soil_phi_deg(&args).map(En1998Mutation::ChangeFoundationSoilPhiDeg),
+        "change-foundation-pile-diameter-m" => text_foundations::parse_change_foundation_pile_diameter_m(&args).map(En1998Mutation::ChangeFoundationPileDiameterM),
+        "change-foundation-pile-length-m" => text_foundations::parse_change_foundation_pile_length_m(&args).map(En1998Mutation::ChangeFoundationPileLengthM),
+        "change-foundation-pile-modulus-pa" => text_foundations::parse_change_foundation_pile_modulus_pa(&args).map(En1998Mutation::ChangeFoundationPileModulusPa),
+        "change-foundation-pile-ks-nm3" => text_foundations::parse_change_foundation_pile_ks_n_m3(&args).map(En1998Mutation::ChangeFoundationPileKsNM3),
+        "change-foundation-pile-head-shear-n" => text_foundations::parse_change_foundation_pile_head_shear_n(&args).map(En1998Mutation::ChangeFoundationPileHeadShearN),
+        "change-foundation-pile-head-fixed" => text_foundations::parse_change_foundation_pile_head_fixed(&args).map(En1998Mutation::ChangeFoundationPileHeadFixed),
+        "change-foundation-pile-iface-m" => text_foundations::parse_change_foundation_pile_iface_m(&args).map(En1998Mutation::ChangeFoundationPileIfaceM),
+        "change-foundation-pile-up-vs-ms" => text_foundations::parse_change_foundation_pile_up_vs_m_s(&args).map(En1998Mutation::ChangeFoundationPileUpVsMS),
+        "change-foundation-pile-low-vs-ms" => text_foundations::parse_change_foundation_pile_low_vs_m_s(&args).map(En1998Mutation::ChangeFoundationPileLowVsMS),
+        "change-foundation-pile-moment-rd-nm" => text_foundations::parse_change_foundation_pile_moment_rd_nm(&args).map(En1998Mutation::ChangeFoundationPileMomentRdNm),
+        "change-storey-variable-category" => text_buildings::parse_change_storey_variable_category(&args).map(En1998Mutation::ChangeStoreyVariableCategory),
+        "change-storey-variable-qk-n" => text_buildings::parse_change_storey_variable_qk_n(&args).map(En1998Mutation::ChangeStoreyVariableQkN),
+        "change-bridge-variable-category" => text_bridges_towers::parse_change_bridge_variable_category(&args).map(En1998Mutation::ChangeBridgeVariableCategory),
+        "change-bridge-variable-qk-n" => text_bridges_towers::parse_change_bridge_variable_qk_n(&args).map(En1998Mutation::ChangeBridgeVariableQkN),
+        "change-tower-variable-category" => text_bridges_towers::parse_change_tower_variable_category(&args).map(En1998Mutation::ChangeTowerVariableCategory),
+        "change-tower-variable-qk-n" => text_bridges_towers::parse_change_tower_variable_qk_n(&args).map(En1998Mutation::ChangeTowerVariableQkN),
+        "insert-storey-variable" => text_buildings::parse_insert_storey_variable(&args).map(En1998Mutation::InsertStoreyVariable),
+        "remove-storey-variable" => text_buildings::parse_remove_storey_variable(&args).map(En1998Mutation::RemoveStoreyVariable),
+        "insert-member" => text_buildings::parse_insert_member(&args).map(En1998Mutation::InsertMember),
+        "remove-member" => text_buildings::parse_remove_member(&args).map(En1998Mutation::RemoveMember),
+        "insert-storey" => text_buildings::parse_insert_storey(&args).map(En1998Mutation::InsertStorey),
+        "remove-storey" => text_buildings::parse_remove_storey(&args).map(En1998Mutation::RemoveStorey),
+        "insert-system" => text_buildings::parse_insert_system(&args).map(En1998Mutation::InsertSystem),
+        "remove-system" => text_buildings::parse_remove_system(&args).map(En1998Mutation::RemoveSystem),
+        "insert-bridge-variable" => text_bridges_towers::parse_insert_bridge_variable(&args).map(En1998Mutation::InsertBridgeVariable),
+        "remove-bridge-variable" => text_bridges_towers::parse_remove_bridge_variable(&args).map(En1998Mutation::RemoveBridgeVariable),
+        "insert-tower-variable" => text_bridges_towers::parse_insert_tower_variable(&args).map(En1998Mutation::InsertTowerVariable),
+        "remove-tower-variable" => text_bridges_towers::parse_remove_tower_variable(&args).map(En1998Mutation::RemoveTowerVariable),
+        "change-soil-layer-foundation-id" => text_foundations::parse_change_soil_layer_foundation_id(&args).map(En1998Mutation::ChangeSoilLayerFoundationId),
+        "change-soil-layer-thickness-m" => text_foundations::parse_change_soil_layer_thickness_m(&args).map(En1998Mutation::ChangeSoilLayerThicknessM),
+        "change-soil-unit-wt-nm3" => text_foundations::parse_change_soil_unit_wt_n_m3(&args).map(En1998Mutation::ChangeSoilUnitWtNM3),
+        "change-soil-layer-vs-ms" => text_foundations::parse_change_soil_layer_vs_m_s(&args).map(En1998Mutation::ChangeSoilLayerVsMS),
+        "change-soil-layer-n160" => text_foundations::parse_change_soil_layer_n1_60(&args).map(En1998Mutation::ChangeSoilLayerN160),
+        "change-soil-layer-fines-percent" => text_foundations::parse_change_soil_layer_fines_percent(&args).map(En1998Mutation::ChangeSoilLayerFinesPercent),
+        "insert-soil-layer" => text_foundations::parse_insert_soil_layer(&args).map(En1998Mutation::InsertSoilLayer),
+        "remove-soil-layer" => text_foundations::parse_remove_soil_layer(&args).map(En1998Mutation::RemoveSoilLayer),
+        "change-building-ot-base-xm" => text_buildings::parse_change_building_ot_base_x_m(&args).map(En1998Mutation::ChangeBuildingOtBaseXM),
+        "change-building-ot-base-ym" => text_buildings::parse_change_building_ot_base_y_m(&args).map(En1998Mutation::ChangeBuildingOtBaseYM),
+        "change-building-tiedown-nm" => text_buildings::parse_change_building_tiedown_nm(&args).map(En1998Mutation::ChangeBuildingTiedownNm),
+        "change-diaphragm-building-id" => text_buildings::parse_change_diaphragm_building_id(&args).map(En1998Mutation::ChangeDiaphragmBuildingId),
+        "change-diaphragm-storey-id" => text_buildings::parse_change_diaphragm_storey_id(&args).map(En1998Mutation::ChangeDiaphragmStoreyId),
+        "change-diaphragm-material" => text_buildings::parse_change_diaphragm_material(&args).map(En1998Mutation::ChangeDiaphragmMaterial),
+        "change-diaphragm-thickness-m" => text_buildings::parse_change_diaphragm_thickness_m(&args).map(En1998Mutation::ChangeDiaphragmThicknessM),
+        "change-diaphragm-span-m" => text_buildings::parse_change_diaphragm_span_m(&args).map(En1998Mutation::ChangeDiaphragmSpanM),
+        "change-diaphragm-depth-m" => text_buildings::parse_change_diaphragm_depth_m(&args).map(En1998Mutation::ChangeDiaphragmDepthM),
+        "change-diaphragm-opening-width-m" => text_buildings::parse_change_diaphragm_opening_width_m(&args).map(En1998Mutation::ChangeDiaphragmOpeningWidthM),
+        "change-diaphragm-shear-str-mpa" => text_buildings::parse_change_diaphragm_shear_str_mpa(&args).map(En1998Mutation::ChangeDiaphragmShearStrMpa),
+        "change-diaphragm-chord-area-m2" => text_buildings::parse_change_diaphragm_chord_area_m2(&args).map(En1998Mutation::ChangeDiaphragmChordAreaM2),
+        "change-diaphragm-chord-str-mpa" => text_buildings::parse_change_diaphragm_chord_str_mpa(&args).map(En1998Mutation::ChangeDiaphragmChordStrMpa),
+        "change-diaphragm-gamma-d" => text_buildings::parse_change_diaphragm_gamma_d(&args).map(En1998Mutation::ChangeDiaphragmGammaD),
+        "change-accelerogram-building-id" => text_buildings::parse_change_accelerogram_building_id(&args).map(En1998Mutation::ChangeAccelerogramBuildingId),
+        "change-accelerogram-label" => text_buildings::parse_change_accelerogram_label(&args).map(En1998Mutation::ChangeAccelerogramLabel),
+        "change-accelerogram-samples" => text_buildings::parse_change_accelerogram_samples(&args).map(En1998Mutation::ChangeAccelerogramSamples),
+        "change-accelerogram-dt-s" => text_buildings::parse_change_accelerogram_dt_s(&args).map(En1998Mutation::ChangeAccelerogramDtS),
+        "change-accelerogram-scale-factor" => text_buildings::parse_change_accelerogram_scale_factor(&args).map(En1998Mutation::ChangeAccelerogramScaleFactor),
+        "insert-diaphragm" => text_buildings::parse_insert_diaphragm(&args).map(En1998Mutation::InsertDiaphragm),
+        "remove-diaphragm" => text_buildings::parse_remove_diaphragm(&args).map(En1998Mutation::RemoveDiaphragm),
+        "insert-accelerogram" => text_buildings::parse_insert_accelerogram(&args).map(En1998Mutation::InsertAccelerogram),
+        "remove-accelerogram" => text_buildings::parse_remove_accelerogram(&args).map(En1998Mutation::RemoveAccelerogram),
+        "change-tower-base-rot-stiff-nm" => text_bridges_towers::parse_change_tower_base_rot_stiff_nm(&args).map(En1998Mutation::ChangeTowerBaseRotStiffNm),
+        "change-tank-shell-tm" => text_silos_tanks::parse_change_tank_shell_t_m(&args).map(En1998Mutation::ChangeTankShellTM),
+        "change-tank-shell-str-mpa" => text_silos_tanks::parse_change_tank_shell_str_mpa(&args).map(En1998Mutation::ChangeTankShellStrMpa),
+        "change-pier-bridge-id" => text_bridges_towers::parse_change_pier_bridge_id(&args).map(En1998Mutation::ChangePierBridgeId),
+        "change-pier-stiffness-basis" => text_bridges_towers::parse_change_pier_stiffness_basis(&args).map(En1998Mutation::ChangePierStiffnessBasis),
+        "change-pier-xm" => text_bridges_towers::parse_change_pier_x_m(&args).map(En1998Mutation::ChangePierXM),
+        "change-pier-height-m" => text_bridges_towers::parse_change_pier_height_m(&args).map(En1998Mutation::ChangePierHeightM),
+        "change-pier-section-bm" => text_bridges_towers::parse_change_pier_section_b_m(&args).map(En1998Mutation::ChangePierSectionBM),
+        "change-pier-section-hm" => text_bridges_towers::parse_change_pier_section_h_m(&args).map(En1998Mutation::ChangePierSectionHM),
+        "change-pier-modulus-mpa" => text_bridges_towers::parse_change_pier_modulus_mpa(&args).map(En1998Mutation::ChangePierModulusMpa),
+        "change-pier-moment-rd-nm" => text_bridges_towers::parse_change_pier_moment_rd_nm(&args).map(En1998Mutation::ChangePierMomentRdNm),
+        "change-pier-shear-rd-n" => text_bridges_towers::parse_change_pier_shear_rd_n(&args).map(En1998Mutation::ChangePierShearRdN),
+        "change-pier-reinforcement-ratio" => text_bridges_towers::parse_change_pier_reinforcement_ratio(&args).map(En1998Mutation::ChangePierReinforcementRatio),
+        "change-pier-cover-m" => text_bridges_towers::parse_change_pier_cover_m(&args).map(En1998Mutation::ChangePierCoverM),
+        "change-pier-concrete-fck-mpa" => text_bridges_towers::parse_change_pier_concrete_fck_mpa(&args).map(En1998Mutation::ChangePierConcreteFckMpa),
+        "change-pier-steel-fyk-mpa" => text_bridges_towers::parse_change_pier_steel_fyk_mpa(&args).map(En1998Mutation::ChangePierSteelFykMpa),
+        "change-pier-axial-load-n" => text_bridges_towers::parse_change_pier_axial_load_n(&args).map(En1998Mutation::ChangePierAxialLoadN),
+        "change-bearing-bridge-id" => text_bridges_towers::parse_change_bearing_bridge_id(&args).map(En1998Mutation::ChangeBearingBridgeId),
+        "change-joint-building-id" => text_members::parse_change_joint_building_id(&args).map(En1998Mutation::ChangeJointBuildingId),
+        "change-joint-storey-id" => text_members::parse_change_joint_storey_id(&args).map(En1998Mutation::ChangeJointStoreyId),
+        "change-joint-column-id" => text_members::parse_change_joint_column_id(&args).map(En1998Mutation::ChangeJointColumnId),
+        "change-joint-beam-id" => text_members::parse_change_joint_beam_id(&args).map(En1998Mutation::ChangeJointBeamId),
+        "change-bearing-pier-id" => text_bridges_towers::parse_change_bearing_pier_id(&args).map(En1998Mutation::ChangeBearingPierId),
+        "change-bearing-device" => text_bridges_towers::parse_change_bearing_device(&args).map(En1998Mutation::ChangeBearingDevice),
+        "change-bearing-xm" => text_bridges_towers::parse_change_bearing_x_m(&args).map(En1998Mutation::ChangeBearingXM),
+        "change-joint-xm" => text_members::parse_change_joint_x_m(&args).map(En1998Mutation::ChangeJointXM),
+        "change-joint-ym" => text_members::parse_change_joint_y_m(&args).map(En1998Mutation::ChangeJointYM),
+        "change-bearing-stiffness-n-per-m" => text_bridges_towers::parse_change_bearing_stiffness_n_per_m(&args).map(En1998Mutation::ChangeBearingStiffnessNPerM),
+        "change-bearing-d-rd-m" => text_bridges_towers::parse_change_bearing_d_rd_m(&args).map(En1998Mutation::ChangeBearingDRdM),
+        "change-bearing-seat-length-m" => text_bridges_towers::parse_change_bearing_seat_length_m(&args).map(En1998Mutation::ChangeBearingSeatLengthM),
+        "change-joint-column-moment-rd-nm" => text_members::parse_change_joint_column_moment_rd_nm(&args).map(En1998Mutation::ChangeJointColumnMomentRdNm),
+        "change-joint-beam-moment-rd-nm" => text_members::parse_change_joint_beam_moment_rd_nm(&args).map(En1998Mutation::ChangeJointBeamMomentRdNm),
+        "change-bearing-min-support-m" => text_bridges_towers::parse_change_bearing_min_support_m(&args).map(En1998Mutation::ChangeBearingMinSupportM),
+        "insert-pier" => text_bridges_towers::parse_insert_pier(&args).map(En1998Mutation::InsertPier),
+        "remove-pier" => text_bridges_towers::parse_remove_pier(&args).map(En1998Mutation::RemovePier),
+        "insert-bearing" => text_bridges_towers::parse_insert_bearing(&args).map(En1998Mutation::InsertBearing),
+        "insert-joint" => text_members::parse_insert_joint(&args).map(En1998Mutation::InsertJoint),
+        "insert-tie-beam" => text_members::parse_insert_tie_beam(&args).map(En1998Mutation::InsertTieBeam),
+        "insert-seismic-slope" => text_members::parse_insert_seismic_slope(&args).map(En1998Mutation::InsertSeismicSlope),
+        "remove-bearing" => text_bridges_towers::parse_remove_bearing(&args).map(En1998Mutation::RemoveBearing),
+        "remove-joint" => text_members::parse_remove_joint(&args).map(En1998Mutation::RemoveJoint),
+        "remove-tie-beam" => text_members::parse_remove_tie_beam(&args).map(En1998Mutation::RemoveTieBeam),
+        "remove-seismic-slope" => text_members::parse_remove_seismic_slope(&args).map(En1998Mutation::RemoveSeismicSlope),
+        "change-joint-col-moment-rd-nm" => text_members::parse_change_joint_col_moment_rd_nm(&args).map(En1998Mutation::ChangeJointColMomentRdNm),
+        "change-retaining-wall-water-height-m" => text_foundations::parse_change_retaining_wall_water_height_m(&args).map(En1998Mutation::ChangeRetainingWallWaterHeightM),
+        "change-retaining-wall-saturated-gamma" => text_foundations::parse_change_retaining_wall_saturated_gamma(&args).map(En1998Mutation::ChangeRetainingWallSaturatedGamma),
+        "change-retaining-wall-permeability-ms" => text_foundations::parse_change_retaining_wall_permeability_m_s(&args).map(En1998Mutation::ChangeRetainingWallPermeabilityMS),
+        "change-foundation-base-friction-deg" => text_foundations::parse_change_foundation_base_friction_deg(&args).map(En1998Mutation::ChangeFoundationBaseFrictionDeg),
+        "change-foundation-base-pore-pressure-pa" => text_foundations::parse_change_foundation_base_pore_pressure_pa(&args).map(En1998Mutation::ChangeFoundationBasePorePressurePa),
+        "remove-silo" => text_silos_tanks::parse_remove_silo(&args).map(En1998Mutation::RemoveSilo),
+        "remove-tank" => text_silos_tanks::parse_remove_tank(&args).map(En1998Mutation::RemoveTank),
+        "remove-foundation" => text_foundations::parse_remove_foundation(&args).map(En1998Mutation::RemoveFoundation),
+        "remove-retaining-wall" => text_foundations::parse_remove_retaining_wall(&args).map(En1998Mutation::RemoveRetainingWall),
+        "remove-tower" => text_bridges_towers::parse_remove_tower(&args).map(En1998Mutation::RemoveTower),
+        "change-placement-x" => text_placements::parse_change_placement_x(&args).map(En1998Mutation::ChangePlacementX),
+        "change-placement-y" => text_placements::parse_change_placement_y(&args).map(En1998Mutation::ChangePlacementY),
+        "change-placement-z" => text_placements::parse_change_placement_z(&args).map(En1998Mutation::ChangePlacementZ),
+        "change-placement-yaw" => text_placements::parse_change_placement_yaw(&args).map(En1998Mutation::ChangePlacementYaw),
+        "change-tie-beam-displacement-limit" => text_tie_beams::parse_change_tie_beam_displacement_limit(&args).map(En1998Mutation::ChangeTieBeamDisplacementLimit),
+        "change-tie-beam-relative-displacement" => text_tie_beams::parse_change_tie_beam_relative_displacement(&args).map(En1998Mutation::ChangeTieBeamRelativeDisplacement),
+        "change-tie-beam-steel-design-strength" => text_tie_beams::parse_change_tie_beam_steel_design_strength(&args).map(En1998Mutation::ChangeTieBeamSteelDesignStrength),
+        "change-tie-beam-steel-area" => text_tie_beams::parse_change_tie_beam_steel_area(&args).map(En1998Mutation::ChangeTieBeamSteelArea),
+        "change-tie-beam-depth" => text_tie_beams::parse_change_tie_beam_depth(&args).map(En1998Mutation::ChangeTieBeamDepth),
+        "change-tie-beam-width" => text_tie_beams::parse_change_tie_beam_width(&args).map(En1998Mutation::ChangeTieBeamWidth),
+        "change-tie-beam-span" => text_tie_beams::parse_change_tie_beam_span(&args).map(En1998Mutation::ChangeTieBeamSpan),
+        "change-seismic-slope-circle-radius" => text_seismic_slopes::parse_change_seismic_slope_circle_radius(&args).map(En1998Mutation::ChangeSeismicSlopeCircleRadius),
+        "change-seismic-slope-circle-centre-z" => text_seismic_slopes::parse_change_seismic_slope_circle_centre_z(&args).map(En1998Mutation::ChangeSeismicSlopeCircleCentreZ),
+        "change-seismic-slope-circle-centre-x" => text_seismic_slopes::parse_change_seismic_slope_circle_centre_x(&args).map(En1998Mutation::ChangeSeismicSlopeCircleCentreX),
+        "change-seismic-slope-topographic-factor" => text_seismic_slopes::parse_change_seismic_slope_topographic_factor(&args).map(En1998Mutation::ChangeSeismicSlopeTopographicFactor),
+        "change-seismic-slope-cohesion" => text_seismic_slopes::parse_change_seismic_slope_cohesion(&args).map(En1998Mutation::ChangeSeismicSlopeCohesion),
+        "change-seismic-slope-friction-angle" => text_seismic_slopes::parse_change_seismic_slope_friction_angle(&args).map(En1998Mutation::ChangeSeismicSlopeFrictionAngle),
+        "change-seismic-slope-angle" => text_seismic_slopes::parse_change_seismic_slope_angle(&args).map(En1998Mutation::ChangeSeismicSlopeAngle),
+        "change-seismic-slope-height" => text_seismic_slopes::parse_change_seismic_slope_height(&args).map(En1998Mutation::ChangeSeismicSlopeHeight),
+        "insert-placement" => text_placements::parse_insert_placement(&args).map(En1998Mutation::InsertPlacement),
+        "remove-placement" => text_placements::parse_remove_placement(&args).map(En1998Mutation::RemovePlacement),
         other => Err(format!("en1998 mutation: unknown keyword {other:?}")),
     }
 }
@@ -182,199 +677,15 @@ impl protocol::OpText for En1998Mutation {
     }
 }
 
-#[cfg(any(test, feature = "testkit"))]
-pub fn demo_mutation_cases() -> Vec<En1998Mutation> {
-    let snap = semio_s_artifact_norm_en1998_model::En1998Snapshot::default();
-    let building = snap.buildings[0].clone();
-    vec![
-        En1998Mutation::ChangeAnnex(ChangeAnnex { new_annex: String::from("en") }),
-        En1998Mutation::UpdateSite(UpdateSite { site: snap.site.clone() }),
-        En1998Mutation::InsertBuilding(InsertBuilding { index: Some(0usize), building: building.clone() }),
-        En1998Mutation::RemoveBuilding(RemoveBuilding { index: 0usize }),
-        En1998Mutation::ChangeSystemVRdN(ChangeSystemVRdN {
-            building_index: 0usize,
-            system_index: 0usize,
-            new_base_shear_resistance_n: 1.0e6,
-        }),
-        En1998Mutation::ChangeStoreyPermanentGkN(ChangeStoreyPermanentGkN {
-            building_index: 0usize,
-            storey_index: 0usize,
-            new_permanent_gk_n: 1.0e5,
-        }),
-        En1998Mutation::ChangeStoreyStiffnessX(ChangeStoreyStiffnessX {
-            building_index: 0usize,
-            storey_index: 0usize,
-            new_stiffness_x: 2.0e7,
-        }),
-        En1998Mutation::ChangeStoreyDriftXM(ChangeStoreyDriftXM {
-            building_index: 0usize,
-            storey_index: 0usize,
-            new_drift_x_m: 0.012,
-        }),
-        En1998Mutation::ChangeBuildingPlanRegular(ChangeBuildingPlanRegular {
-            building_index: 0usize,
-            new_plan_regular: false,
-        }),
-        En1998Mutation::ChangeElevationRegular(ChangeElevationRegular {
-            building_index: 0usize,
-            new_elevation_regular: false,
-        }),
-        En1998Mutation::ChangeMemberDetailing(ChangeMemberDetailing {
-            building_index: 0usize,
-            member_index: 0usize,
-            new_detailing_compatible_with_q: false,
-        }),
-        En1998Mutation::ChangeMasonryWallRatio(ChangeMasonryWallRatio {
-            building_index: 0usize,
-            new_masonry_wall_area_ratio: 0.05,
-        }),
-        En1998Mutation::InsertBridge(InsertBridge {
-            index: Some(0usize),
-            bridge: semio_s_artifact_norm_en1998_model::En1998Bridge {
-                id: "br-demo".into(),
-                period_ratio: 2.0,
-                fundamental_period_s: 1.5,
-                v_rd_n: 5.0e5,
-                bearing_d_rd_m: 0.25,
-                permanent_gk_n: 9.81e6,
-                correlated_occupancy: true,
-                variables: vec![semio_s_artifact_norm_en1998_model::En1998VariableAction { id: "br-q".into(), category: "F".into(), qk_n: 1.0e6 }],
-            },
-        }),
-        En1998Mutation::ChangeBridgeVRdN(ChangeBridgeVRdN { index: 0usize, new_v_rd_n: 5.0e5 }),
-        En1998Mutation::InsertAssessment(InsertAssessment {
-            index: Some(0usize),
-            assessment: semio_s_artifact_norm_en1998_model::En1998Assessment {
-                id: "as-demo".into(),
-                knowledge_level: "kl2".into(),
-                limit_state: "sd".into(),
-                supported_building_id: "bldg-office".into(),
-                r_k_n: 4.0e5,
-                gamma_el: 1.0,
-            },
-        }),
-        En1998Mutation::ChangeAssessmentRKN(ChangeAssessmentRKN { index: 0usize, new_r_k_n: 4.0e5 }),
-        En1998Mutation::InsertSilo(InsertSilo {
-            index: Some(0usize),
-            silo: semio_s_artifact_norm_en1998_model::En1998Silo {
-                id: "si-demo".into(),
-                height_m: 10.0,
-                radius_m: 5.0,
-                permanent_gk_n: 9.81e5,
-                content_qk_n: 3.924e6,
-                content_category: "E".into(),
-                filling_ratio: 0.9,
-                n_rd_n: 5.0e5,
-                v_rd_n: 3.0e5,
-                q_nominal: 2.0,
-            },
-        }),
-        En1998Mutation::InsertTank(InsertTank {
-            index: Some(0usize),
-            tank: semio_s_artifact_norm_en1998_model::En1998Tank {
-                id: "tk-demo".into(),
-                height_m: 8.0,
-                radius_m: 4.0,
-                permanent_gk_n: 4.905e5,
-                content_qk_n: 2.4525e6,
-                content_category: "E".into(),
-                filling_ratio: 0.85,
-                v_rd_n: 4.0e5,
-            },
-        }),
-        En1998Mutation::InsertFoundation(InsertFoundation {
-            index: Some(0usize),
-            foundation: semio_s_artifact_norm_en1998_model::En1998Foundation {
-                supported_building_id: String::new(),
-                id: "fd-demo".into(),
-                area_m2: 100.0,
-                p_rd_pa: 5.0e5,
-                h_rd_n: 4.0e5,
-                k_foundation: 5.0e5,
-                k_soil: 2.0e5,
-            },
-        }),
-        En1998Mutation::InsertRetainingWall(InsertRetainingWall {
-            index: Some(0usize),
-            wall: semio_s_artifact_norm_en1998_model::En1998RetainingWall {
-                id: "rw-demo".into(),
-                height_m: 4.0,
-                phi_deg: 30.0,
-                soil_gamma: 18000.0,
-                r: 1.5,
-                h_rd_n_per_m: 1.5e5,
-            },
-        }),
-        En1998Mutation::InsertTower(InsertTower {
-            index: Some(0usize),
-            tower: semio_s_artifact_norm_en1998_model::En1998Tower {
-                id: "tw-demo".into(),
-                height_m: 40.0,
-                m_rd_nm: 2.5e6,
-                is_chimney: true,
-                q_nominal: 2.5,
-                permanent_gk_n: 7.848e5,
-                correlated_occupancy: true,
-                variables: vec![],
-            },
-        }),
-        En1998Mutation::ChangeTowerMRdNm(ChangeTowerMRdNm { index: 0usize, new_m_rd_nm: 2.5e6 }),
-        En1998Mutation::RemoveBridge(RemoveBridge { index: 0usize }),
-        En1998Mutation::RemoveAssessment(RemoveAssessment { index: 0usize }),
-        En1998Mutation::RemoveSilo(RemoveSilo { index: 0usize }),
-        En1998Mutation::RemoveTank(RemoveTank { index: 0usize }),
-        En1998Mutation::RemoveFoundation(RemoveFoundation { index: 0usize }),
-        En1998Mutation::RemoveRetainingWall(RemoveRetainingWall { index: 0usize }),
-        En1998Mutation::RemoveTower(RemoveTower { index: 0usize }),
-    ]
-}
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-
-#[allow(unused_imports)]
 mod mutations_codec {
-use crate::mutations::*;
-use semio_s_artifact_norm_en1998_mutations::*;
-use semio_s_artifact_norm_en1998_diff::En1998Diff;
-use semio_s_artifact_norm_en1998_model::En1998Snapshot;
-use semio_s_artifact_norm_en1998_mut_buildings::change_annex;
-use semio_s_artifact_norm_en1998_mut_buildings::update_site;
-use semio_s_artifact_norm_en1998_mut_buildings::insert_building;
-use semio_s_artifact_norm_en1998_mut_buildings::remove_building;
-use semio_s_artifact_norm_en1998_mut_buildings::change_system_v_rd_n;
-use semio_s_artifact_norm_en1998_mut_buildings::change_storey_permanent_gk_n;
-use semio_s_artifact_norm_en1998_mut_buildings::change_storey_stiffness_x;
-use semio_s_artifact_norm_en1998_mut_buildings::change_storey_drift_xm;
-use semio_s_artifact_norm_en1998_mut_buildings::change_building_plan_regular;
-use semio_s_artifact_norm_en1998_mut_buildings::change_elevation_regular;
-use semio_s_artifact_norm_en1998_mut_members::change_member_detailing;
-use semio_s_artifact_norm_en1998_mut_members::change_masonry_wall_ratio;
-use semio_s_artifact_norm_en1998_mut_bridges_towers::insert_bridge;
-use semio_s_artifact_norm_en1998_mut_bridges_towers::change_bridge_v_rd_n;
-use semio_s_artifact_norm_en1998_mut_members::insert_assessment;
-use semio_s_artifact_norm_en1998_mut_members::change_assessment_rkn;
-use semio_s_artifact_norm_en1998_mut_silos_tanks::insert_silo;
-use semio_s_artifact_norm_en1998_mut_silos_tanks::insert_tank;
-use semio_s_artifact_norm_en1998_mut_foundations::insert_foundation;
-use semio_s_artifact_norm_en1998_mut_foundations::insert_retaining_wall;
-use semio_s_artifact_norm_en1998_mut_bridges_towers::insert_tower;
-use semio_s_artifact_norm_en1998_mut_bridges_towers::change_tower_m_rd_nm;
-use semio_s_artifact_norm_en1998_mut_bridges_towers::remove_bridge;
-use semio_s_artifact_norm_en1998_mut_members::remove_assessment;
-use semio_s_artifact_norm_en1998_mut_silos_tanks::remove_silo;
-use semio_s_artifact_norm_en1998_mut_silos_tanks::remove_tank;
-use semio_s_artifact_norm_en1998_mut_foundations::remove_foundation;
-use semio_s_artifact_norm_en1998_mut_foundations::remove_retaining_wall;
-use semio_s_artifact_norm_en1998_mut_bridges_towers::remove_tower;
+use crate::En1998Mutation;
 
 /// 📥️ Decodes one committed mutation JSON document into [`En1998Mutation`] — the bridge the repository test host reaches, since it links no codec of its own.
 pub fn decode_en1998_mutation_json(text: &str) -> Result<En1998Mutation, String> {
     semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())
 }
 }
-pub use crate::mutations::mutations_codec::*;
+pub use crate::text::mutations_codec::*;
 
 /// 📜️ Describes the artifact mutation dialect.
 pub const MUTATION_GRAMMAR_SEMIO: &str = include_str!("📖️mutations.grammar.semio");

@@ -1,0 +1,20 @@
+{
+  "InsertAction": {
+    "memberId": "wall-W1",
+    "index": 1,
+    "action": {
+      "id": "G-new",
+      "kind": "Permanent",
+      "category": "SelfWeight",
+      "source": "External",
+      "gKLine": 0.0,
+      "qKLine": 0.0,
+      "pointForce": 0.0,
+      "mK": 100000.0,
+      "nK": 30000.0,
+      "vK": 50000.0,
+      "tK": 0.0,
+      "vKPunch": 0.0
+    }
+  }
+}

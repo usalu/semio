@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-plated-patch-moment-res/schema.json",
+  "title": "ChangePlatedPatchMomentRes",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newPatchMomentResistance"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Plated panel",
+          "de": "Plattenfeld"
+        },
+        "description": {
+          "en": "The plated panel this mutation addresses, by id.",
+          "de": "Das adressierte Element (Plattenfeld), per Kennung."
+        },
+        "ref": {
+          "kind": "plated"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newPatchMomentResistance": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Moment resistance M_c,Rd",
+          "de": "Momententragfähigkeit M_c,Rd"
+        },
+        "widget": "stepper",
+        "unit": "N·m",
+        "displayUnit": "kN·m",
+        "displayFactor": 0.001,
+        "precision": 1,
+        "step": 1000,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

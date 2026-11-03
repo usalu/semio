@@ -1,0 +1,5 @@
+syntax = "proto3";
+package semio.s.norm.en1992.mutation.remove_concrete_grade;
+message RemoveConcreteGrade {
+  uint64 index = 1;
+}

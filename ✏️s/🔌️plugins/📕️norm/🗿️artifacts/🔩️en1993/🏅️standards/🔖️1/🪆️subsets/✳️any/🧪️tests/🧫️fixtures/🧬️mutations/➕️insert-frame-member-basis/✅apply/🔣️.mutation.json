@@ -1,0 +1,10 @@
+{
+  "InsertFrameMemberBasis": {
+    "index": 1,
+    "frameMemberBasis": {
+      "id": "frame-member-basis-2",
+      "memberId": "member-b1",
+      "basis": "Explicit"
+    }
+  }
+}

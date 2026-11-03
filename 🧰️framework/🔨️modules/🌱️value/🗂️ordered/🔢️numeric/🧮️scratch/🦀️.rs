@@ -60,7 +60,7 @@ impl<K:Copy+Ord,V:Copy> NumericIndex<K,V>{
  pub fn reset(&mut self){self.generation=self.generation.checked_add(1).expect("numeric scratch generation exhausted");}
  pub fn terminal_is_empty(&self)->bool{self.nodes.terminal_is_empty()}
  pub fn next_close_release_byte_demand(&self)->Result<usize,PagedListError>{if self.nodes.is_empty(){self.nodes.next_release_allocation_bytes()}else{Ok(0)}}
- pub fn next_close_copy_byte_demand(&self)->usize{if self.nodes.is_empty(){0}else{std::mem::size_of::<Node<K,V>>()}}
+ pub fn next_close_copy_byte_demand(&self)->usize{if self.nodes.is_empty(){0}else{size_of::<Node<K,V>>()}}
  /// ❄️ Cold scalar disposal; retained callers separately admit the funded copy demand.
  pub fn close_copy_step(&mut self,maximum_items:usize,maximum_release_bytes:usize)->Result<semio_framework_value_persistent::list::PagedListProgress,PagedListError>{self.close_copy_step_funded(maximum_items,usize::MAX,maximum_release_bytes)}
  pub fn close_copy_step_funded(&mut self,maximum_items:usize,maximum_copy_bytes:usize,maximum_release_bytes:usize)->Result<semio_framework_value_persistent::list::PagedListProgress,PagedListError>{if maximum_items==0||maximum_copy_bytes<self.next_close_copy_byte_demand(){return Ok(semio_framework_value_persistent::list::PagedListProgress::default())}self.root=None;if self.nodes.pop().is_some(){return Ok(semio_framework_value_persistent::list::PagedListProgress{progressed:true,..Default::default()})}self.nodes.release_empty_page(maximum_release_bytes)}

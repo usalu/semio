@@ -1,0 +1,39 @@
+{
+  "annex": null,
+  "reliabilityClass": "RC2",
+  "materials": null,
+  "sections": null,
+  "members": null,
+  "connections": null,
+  "fireScenarios": null,
+  "fatigueDetails": null,
+  "coldFormed": null,
+  "shells": null,
+  "placements": null,
+  "weldRuns": null,
+  "outlineVertices": null,
+  "fatigueCategories": null,
+  "patchLoads": {
+    "removed": [],
+    "inserted": [
+      {
+        "index": 1,
+        "row": {
+          "id": "patch-1-2",
+          "subjectId": "purlin-1",
+          "position": "end",
+          "x": 0.0,
+          "bearingLength": 0.05,
+          "webHeight": 0.0,
+          "webAngle": 0.0,
+          "cornerRadius": 0.004,
+          "load": 12000.0
+        }
+      }
+    ],
+    "moved": [],
+    "modified": []
+  },
+  "ringStiffeners": null,
+  "transverseStiffeners": null
+}

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeSheetMaterialId",
+  "coldFormedId": "sheet-pass",
+  "newMaterialId": "mat-6082-alt"
+}

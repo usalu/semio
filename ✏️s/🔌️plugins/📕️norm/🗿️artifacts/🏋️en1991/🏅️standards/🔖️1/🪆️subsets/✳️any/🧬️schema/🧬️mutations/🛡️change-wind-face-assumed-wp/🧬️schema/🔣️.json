@@ -5,26 +5,26 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "index",
+    "id",
     "newAssumedWp"
   ],
   "properties": {
-    "index": {
-      "type": "integer",
-      "minimum": 0,
+    "id": {
+      "type": "string",
       "x-semio-ui": {
-        "widget": "stepper",
-        "role": "value",
+        "widget": "reference",
+        "role": "target",
         "label": {
           "en": "Wind-loaded face",
           "de": "Windbeanspruchte Fläche"
         },
         "description": {
-          "en": "Zero-based position of the wind-loaded face in its list.",
-          "de": "Nullbasierte Position der windbeanspruchten Fläche in der Liste."
+          "en": "The wind-loaded face this mutation addresses, by id.",
+          "de": "Das adressierte Element (Windbeanspruchte Fläche), per Kennung."
         },
-        "step": 1,
-        "precision": 0,
+        "ref": {
+          "kind": "wind-face"
+        },
         "group": "target",
         "order": 10
       }

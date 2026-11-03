@@ -1,0 +1,6 @@
+{
+  "mutation": "changeGroundReadingMeasurement",
+  "investigationId": "investigation-1",
+  "id": "investigation-reading-1",
+  "newMeasurement": 4000000.0
+}

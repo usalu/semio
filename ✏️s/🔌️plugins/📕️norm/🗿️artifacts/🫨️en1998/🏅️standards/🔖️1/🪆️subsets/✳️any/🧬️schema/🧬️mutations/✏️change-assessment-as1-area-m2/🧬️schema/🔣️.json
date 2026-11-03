@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-assessment-as1-area-m2/schema.json",
+  "title": "ChangeAssessmentAs1AreaM2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newTensionSteelAreaM2"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeAssessmentAs1AreaM2"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Assessment",
+          "de": "Bewertung"
+        },
+        "description": {
+          "en": "The assessment this mutation addresses, by id.",
+          "de": "Das adressierte Element (Bewertung), per Kennung."
+        },
+        "ref": {
+          "kind": "assessment"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newTensionSteelAreaM2": {
+      "type": "number",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Tension reinforcement area A_s1",
+          "de": "Zugbewehrungsfläche A_s1"
+        },
+        "group": "value",
+        "order": 20,
+        "widget": "stepper",
+        "step": 0.001,
+        "precision": 3
+      }
+    }
+  }
+}

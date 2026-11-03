@@ -1,0 +1,6 @@
+{
+  "ChangeFrameActionKind": {
+    "id": "frame-action-1",
+    "newKind": "NodalMoment"
+  }
+}

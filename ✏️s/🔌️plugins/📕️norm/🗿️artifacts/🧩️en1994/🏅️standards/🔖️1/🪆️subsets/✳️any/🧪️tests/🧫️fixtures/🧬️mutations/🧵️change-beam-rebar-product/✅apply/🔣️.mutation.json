@@ -1,0 +1,6 @@
+{
+  "ChangeBeamRebarProduct": {
+    "id": "beam-B1",
+    "newReinforcementProduct": "coldWorked"
+  }
+}

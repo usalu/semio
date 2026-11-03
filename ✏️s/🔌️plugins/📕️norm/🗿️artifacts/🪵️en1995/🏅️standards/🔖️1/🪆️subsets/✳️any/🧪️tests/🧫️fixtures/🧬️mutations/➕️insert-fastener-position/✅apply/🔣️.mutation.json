@@ -1,0 +1,11 @@
+{
+  "InsertFastenerPosition": {
+    "fastenerId": "fastener-1",
+    "index": 1,
+    "position": {
+      "id": "fastener-position-2",
+      "xM": 0.1,
+      "yM": 0.05
+    }
+  }
+}

@@ -17,14 +17,6 @@ pub mod change_layer_compressive_class;
 pub mod change_layer_lambda;
 #[path = "../🧽️change-layer-material-id/🦀️.rs"]
 pub mod change_layer_material_id;
-#[path = "../💧change-layer-mu/🦀️.rs"]
-pub mod change_layer_mu;
-#[path = "../📏️change-layer-thickness/🦀️.rs"]
-pub mod change_layer_thickness;
-#[path = "../➕️insert-layer/🦀️.rs"]
-pub mod insert_layer;
-#[path = "../➖️remove-layer/🦀️.rs"]
-pub mod remove_layer;
-#[path = "../🔀️reorder-layers/🦀️.rs"]
-pub mod reorder_layers;
 //#endregion 🪢️Mounts
+
+pub use semio_s_artifact_norm_din4108_mut_layers_more::{change_layer_mu, change_layer_thickness, insert_layer, remove_layer, reorder_layers};

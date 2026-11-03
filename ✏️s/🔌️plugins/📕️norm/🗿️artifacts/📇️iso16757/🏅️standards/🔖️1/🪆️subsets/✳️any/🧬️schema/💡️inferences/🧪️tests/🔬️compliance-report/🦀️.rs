@@ -129,7 +129,7 @@ async fn python_compliance_oracle_matches_default_and_broken_within_half_percent
             "report": serde_json::to_value(&report).expect("report"),
             "snapshot": serde_json::to_value(&doc).expect("snap"),
         });
-        let status = std::process::Command::new("python3")
+        let status = semio_s_plugin_norm_compliance::python_oracle::command()
             .arg("-c")
             .arg(
                 "import json,sys; from importlib.machinery import SourceFileLoader; mod=SourceFileLoader('iso16757_compliance', sys.argv[1]).load_module(); payload=json.load(sys.stdin); mod.assert_report_matches_fixture(payload['report'], payload['snapshot']); print('ok')",
@@ -168,7 +168,7 @@ async fn snapshot_validates_against_committed_json_schema() {
         let snap = serde_json::to_value(&doc).expect("snap");
         let tmp = std::env::temp_dir().join(format!("iso16757-snap-{}.json", std::process::id()));
         std::fs::write(&tmp, serde_json::to_string_pretty(&snap).unwrap()).unwrap();
-        let status = std::process::Command::new("python3")
+        let status = semio_s_plugin_norm_compliance::python_oracle::command()
             .arg("-c")
             .arg("import json,sys,jsonschema; s=json.load(open(sys.argv[1])); i=json.load(open(sys.argv[2])); jsonschema.validate(instance=i, schema=s); print('ok')")
             .arg(&schema_path)
@@ -187,7 +187,7 @@ async fn snapshot_validates_against_committed_json_schema() {
     bad["catalogue"] = serde_json::Value::String("not-a-catalogue-object".into());
     let tmp = std::env::temp_dir().join(format!("iso16757-snap-bad-{}.json", std::process::id()));
     std::fs::write(&tmp, serde_json::to_string_pretty(&bad).unwrap()).unwrap();
-    let status = std::process::Command::new("python3")
+    let status = semio_s_plugin_norm_compliance::python_oracle::command()
         .arg("-c")
         .arg(r#"import json,sys,jsonschema
 s=json.load(open(sys.argv[1])); i=json.load(open(sys.argv[2]))
@@ -464,9 +464,9 @@ async fn field_meta_covers_every_editable_leaf_on_default_snapshot() {
         match iso16757_field_meta(path) {
             None => missing.push(path.to_string()),
             Some(meta) => {
-                assert!(!meta.label_en.is_empty(), "{path} empty en");
-                assert!(!meta.label_de.is_empty(), "{path} empty de");
-                if let Some(choices) = meta.choices {
+                assert!(!meta.label.en.is_empty(), "{path} empty en");
+                assert!(!meta.label.de.is_empty(), "{path} empty de");
+                if let Some(choices) = meta.choices() {
                     for c in choices {
                         assert!(!c.label_en.is_empty(), "{path} choice en");
                         assert!(!c.label_de.is_empty(), "{path} choice de");
@@ -514,7 +514,7 @@ fn perturb_dsl_leaf(path: &str, value: &semio_framework_value::DslValue) -> Opti
         semio_framework_value::DslValue::Bool(b) => Some(semio_framework_value::DslValue::Bool(!*b)),
         semio_framework_value::DslValue::String(s) => {
             use semio_s_artifact_norm_iso16757_editor::field_meta::iso16757_field_meta;
-            if let Some(choices) = iso16757_field_meta(path).and_then(|m| m.choices) {
+            if let Some(choices) = iso16757_field_meta(path).and_then(|m| m.choices()) {
                 let alt = choices.iter().map(|c| c.value).find(|c| *c != s.as_str()).unwrap_or("x");
                 return Some(semio_framework_value::DslValue::String(alt.to_string()));
             }

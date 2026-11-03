@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-prestress-steel-name/schema.json",
+  "title": "ChangePrestressSteelName",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "gradeId",
+    "newName"
+  ],
+  "properties": {
+    "gradeId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Prestressing steel",
+          "de": "Spannstahl"
+        },
+        "description": {
+          "en": "The prestressing steel this mutation addresses, by id.",
+          "de": "Das adressierte Element (Spannstahl), per Kennung."
+        },
+        "ref": {
+          "kind": "grade"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newName": {
+      "type": "string",
+      "x-semio-ui": {
+        "label": {
+          "en": "name",
+          "de": "Name"
+        },
+        "widget": "text",
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

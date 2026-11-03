@@ -1,0 +1,200 @@
+{
+  "$schema": "../../../../../../../../../🔮️oracles/🏃️harness/🧬️schema/🔣️.json",
+  "schemaVersion": 1,
+  "artifact": "en1991",
+  "annex": "de",
+  "cases": [
+    {
+      "id": "en1991.mechanics.tandem-section-envelope-span-12_0-x-3_6",
+      "check": "mechanics.tandem-section-envelope",
+      "citation": {
+        "standard": "EN 1991-2",
+        "edition": "2003",
+        "clause": "EN 1991-2 4.3.2 Load Model 1 tandem system TS (two axles of Q_1k at 1.2 m) sweeping a simply supported span; largest moment and extreme shear forces at one section"
+      },
+      "inputs": {
+        "E": 33000000000.0,
+        "A": 0.15,
+        "I": 0.003125,
+        "Q": 300000.0,
+        "s": 1.2,
+        "step": 0.3,
+        "span": 12.0,
+        "x": 3.6
+      },
+      "expected": {
+        "M_env": {
+          "value": 1404000.0,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        },
+        "V_max": {
+          "value": 390000.0,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "V_min": {
+          "value": -150000.0,
+          "unit": "N",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-pynite",
+          "adapter": "pynite",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.mechanics.tandem-section-envelope-span-12_0-x-6_0",
+      "check": "mechanics.tandem-section-envelope",
+      "citation": {
+        "standard": "EN 1991-2",
+        "edition": "2003",
+        "clause": "EN 1991-2 4.3.2 Load Model 1 tandem system TS (two axles of Q_1k at 1.2 m) sweeping a simply supported span; largest moment and extreme shear forces at one section"
+      },
+      "inputs": {
+        "E": 33000000000.0,
+        "A": 0.15,
+        "I": 0.003125,
+        "Q": 300000.0,
+        "s": 1.2,
+        "step": 0.3,
+        "span": 12.0,
+        "x": 6.0
+      },
+      "expected": {
+        "M_env": {
+          "value": 1620000.0,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        },
+        "V_max": {
+          "value": 270000.0,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "V_min": {
+          "value": -270000.0,
+          "unit": "N",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-pynite",
+          "adapter": "pynite",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.mechanics.crane-runway-envelope-span-30_0-x-7_5",
+      "check": "mechanics.tandem-section-envelope",
+      "citation": {
+        "standard": "EN 1991-3",
+        "edition": "2003",
+        "clause": "EN 1991-3 2.7 load group 1: two crane wheels of phi_2 Q_r at the wheel base travelling along a simply supported runway girder; largest moment and extreme shear forces at one section (same influence-line sweep as the LM1 tandem)"
+      },
+      "inputs": {
+        "E": 33000000000.0,
+        "A": 0.15,
+        "I": 0.003125,
+        "Q": 200000.0,
+        "s": 3.6,
+        "step": 0.3,
+        "span": 30.0,
+        "x": 7.5
+      },
+      "expected": {
+        "M_env": {
+          "value": 2070000.0,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        },
+        "V_max": {
+          "value": 276000.0,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "V_min": {
+          "value": -76000.0,
+          "unit": "N",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-pynite",
+          "adapter": "pynite",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.mechanics.crane-runway-envelope-span-30_0-x-15_0",
+      "check": "mechanics.tandem-section-envelope",
+      "citation": {
+        "standard": "EN 1991-3",
+        "edition": "2003",
+        "clause": "EN 1991-3 2.7 load group 1: two crane wheels of phi_2 Q_r at the wheel base travelling along a simply supported runway girder; largest moment and extreme shear forces at one section (same influence-line sweep as the LM1 tandem)"
+      },
+      "inputs": {
+        "E": 33000000000.0,
+        "A": 0.15,
+        "I": 0.003125,
+        "Q": 200000.0,
+        "s": 3.6,
+        "step": 0.3,
+        "span": 30.0,
+        "x": 15.0
+      },
+      "expected": {
+        "M_env": {
+          "value": 2640000.0,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        },
+        "V_max": {
+          "value": 176000.0,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "V_min": {
+          "value": -176000.0,
+          "unit": "N",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-pynite",
+          "adapter": "pynite",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    }
+  ]
+}

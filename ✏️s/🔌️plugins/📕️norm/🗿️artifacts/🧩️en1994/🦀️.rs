@@ -18,25 +18,6 @@ pub fn package_descriptor() -> Result<semio_s_artifact_norm_contract::NormArtifa
 
 //#region 🔖️Types
 
-fn default_beam_actions(steel_a_m2: f64, spacing_m: f64, slab_thickness_m: f64, sheeting_h: f64) -> Vec<CharacteristicAction> {
-    let g_steel_line = steel_a_m2 * 7850.0 * 9.81;
-    let h_conc = (slab_thickness_m - sheeting_h).max(0.04);
-    let g_steel_area = g_steel_line / spacing_m.max(1e-6);
-    let g_wet_area = 25e3 * h_conc;
-    vec![
-        CharacteristicAction::permanent_area("G-steel", "construction", "self_steel", g_steel_area),
-        CharacteristicAction::permanent_area("G-wet", "construction", "wet_concrete", g_wet_area),
-        CharacteristicAction {
-            id: "Q-constr".into(), kind: "construction".into(), category: "construction_load".into(), stage: "construction".into(),
-            q_area_pa: 1.0e3, f_k_n: 0.0, delta_sigma_k_pa: 0.0, delta_tau_k_pa: 0.0,
-        },
-        CharacteristicAction::permanent_area("G-steel-comp", "composite", "self_steel", g_steel_area),
-        CharacteristicAction::permanent_area("G-slab", "composite", "slab", g_wet_area * 0.9),
-        CharacteristicAction::permanent_area("G-finishes", "composite", "finishes", 1.0e3),
-        CharacteristicAction::imposed_area("Q-office", "composite", "B", 2.0e3),
-    ]
-}
-
 //#endregion 🔖️Types
 
 //#region 🪪️Declaration

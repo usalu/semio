@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Language-agnostic EN 1990 combination oracle (kN-scale ActionSet)."""
+"""⚖️ Language-agnostic EN 1990 combination oracle (kN-scale ActionSet)."""
 
 def combination_6_10a(g_k, q_k, leading, gamma_g=1.35, gamma_q=1.5, psi0=None):
     s = gamma_g * g_k

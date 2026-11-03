@@ -1,0 +1,5 @@
+{
+  "mutation": "changeSectionFlangeThickness",
+  "sectionId": "sec-i120",
+  "newFlangeThickness": 0.02
+}

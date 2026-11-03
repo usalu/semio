@@ -1,0 +1,6 @@
+{
+  "ChangeRestraintTorsionalSpring": {
+    "id": "restraint-1",
+    "newTorsionalSpring": 1.5
+  }
+}

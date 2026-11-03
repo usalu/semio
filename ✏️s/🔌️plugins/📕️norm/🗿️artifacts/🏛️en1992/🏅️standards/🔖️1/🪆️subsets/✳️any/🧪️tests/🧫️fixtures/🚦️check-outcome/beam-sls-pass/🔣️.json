@@ -1,0 +1,153 @@
+{
+  "annex": "De",
+  "reliabilityClass": "RC2",
+  "title": "Simply supported beam within crack, deflection and l/d limits",
+  "designWorkingLifeYears": 50.0,
+  "deltaCDev": 0.01,
+  "cementType": "N",
+  "concreteGrades": [
+    {
+      "id": "c35",
+      "name": "C35/45",
+      "fCk": 35000000.0
+    }
+  ],
+  "reinforcementGrades": [
+    {
+      "id": "b500",
+      "name": "B500B",
+      "fYk": 500000000.0,
+      "eS": 200000000000.0,
+      "ductility": "b",
+      "k": 1.08,
+      "epsUk": 0.05
+    },
+    {
+      "id": "b500a",
+      "name": "B500A",
+      "fYk": 500000000.0,
+      "eS": 200000000000.0,
+      "ductility": "a",
+      "k": 1.05,
+      "epsUk": 0.025
+    },
+    {
+      "id": "b500c",
+      "name": "B500C",
+      "fYk": 550000000.0,
+      "eS": 200000000000.0,
+      "ductility": "c",
+      "k": 1.15,
+      "epsUk": 0.075
+    }
+  ],
+  "prestressSteels": [
+    {
+      "id": "yp1860",
+      "name": "Y1860S7",
+      "fPk": 1860000000.0,
+      "fP01k": 1700000000.0
+    },
+    {
+      "id": "yp1860b",
+      "name": "Y1770S7",
+      "fPk": 1770000000.0,
+      "fP01k": 1520000000.0
+    }
+  ],
+  "members": [
+    {
+      "id": "beam-B1",
+      "labelEn": "Beam B1",
+      "labelDe": "Balken B1",
+      "kind": "Beam",
+      "concreteGradeId": "c35",
+      "reinforcementGradeId": "b500",
+      "prestressSteelId": "",
+      "exposure": "Xc1",
+      "width": 0.3,
+      "height": 0.55,
+      "effectiveDepth": 0.5,
+      "cover": 0.04,
+      "span": 6.0,
+      "support": "SimplySupported",
+      "bucklingLength": 0.0,
+      "longitudinal": [
+        {
+          "id": "bot",
+          "diameter": 0.025,
+          "count": 4,
+          "position": "Bottom",
+          "anchorageLength": 0.7,
+          "lapLength": 0.85,
+          "bondCondition": "Good",
+          "aggregateSize": 0.016,
+          "lapShare": 1.0
+        }
+      ],
+      "stirrups": {
+        "diameter": 0.008,
+        "spacing": 0.15,
+        "legs": 2
+      },
+      "punching": null,
+      "prestress": null,
+      "fire": {
+        "rating": "R90",
+        "axisDistance": 0.04,
+        "slabSystem": "OneWay"
+      },
+      "actions": [
+        {
+          "id": "G",
+          "kind": "Permanent",
+          "category": "SelfWeight",
+          "source": "Udl",
+          "gKLine": 20000.0,
+          "qKLine": 0.0,
+          "pointForce": 0.0,
+          "mK": 0.0,
+          "nK": 0.0,
+          "vK": 0.0,
+          "tK": 0.0,
+          "vKPunch": 0.0
+        },
+        {
+          "id": "Q",
+          "kind": "Imposed",
+          "category": "Office",
+          "source": "Udl",
+          "gKLine": 0.0,
+          "qKLine": 15000.0,
+          "pointForce": 0.0,
+          "mK": 0.0,
+          "nK": 0.0,
+          "vK": 0.0,
+          "tK": 0.0,
+          "vKPunch": 0.0
+        }
+      ],
+      "useFem": false,
+      "udl": 0.0,
+      "deflectionSensitive": false,
+      "tightness": "Tc2",
+      "hdOverH": 8.0,
+      "liquidSigmaS": 280000000.0,
+      "liquidRhoPEff": 0.02,
+      "liquidFCtEff": 3200000.0,
+      "liquidSRMax": 0.22,
+      "bridgeSigmaC": 0.0,
+      "bridgeDeltaSigmaS": 0.0,
+      "relativeHumidity": 0.5,
+      "bearingWidth": 0.0,
+      "sectionPoints": [],
+      "bars": [],
+      "tendonPoints": [],
+      "openings": [],
+      "studRows": []
+    }
+  ],
+  "anchors": [],
+  "placements": [],
+  "cases": []
+}

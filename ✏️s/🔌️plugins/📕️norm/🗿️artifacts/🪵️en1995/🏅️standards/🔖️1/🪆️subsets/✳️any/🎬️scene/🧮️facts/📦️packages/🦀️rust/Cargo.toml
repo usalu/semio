@@ -1,0 +1,21 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-norm-en1995-scene-facts"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "EN 1995 scene facts"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-s-artifact-norm-en1995-model = { workspace = true }
+semio-s-artifact-norm-en1995-schema = { workspace = true }
+semio-s-plugin-norm-compliance = { workspace = true }

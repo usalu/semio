@@ -1,0 +1,103 @@
+{
+  "artifact": "en1993",
+  "reference": "frameMemberBases",
+  "collection": {
+    "name": "formingGains",
+    "entity": "FormingGain",
+    "emoji": "🥫",
+    "doc": "🥫 Enhanced yield strength of a cold-formed member from the work hardening of the bends (EN 1993-1-3 3.2.2): process, ultimate strength of the base material, gross area and number of 90 degree bends with a small radius.",
+    "label": {
+      "en": "Forming gains",
+      "de": "Kaltverfestigungen"
+    },
+    "id": {
+      "en": "Forming gain ID",
+      "de": "Kaltverfestigungs-ID"
+    },
+    "singular": {
+      "en": "forming gain",
+      "de": "Kaltverfestigung"
+    },
+    "kindSlug": "forming-gain",
+    "fields": [
+      {
+        "name": "member_id",
+        "type": "String",
+        "label": {
+          "en": "Cold-formed section",
+          "de": "Kaltprofil"
+        },
+        "doc": "🥫 Id of the cold-formed member whose f_y is checked against the enhanced yield strength.",
+        "sample": "cold-1"
+      },
+      {
+        "name": "forming",
+        "type": "enum",
+        "label": {
+          "en": "Forming process",
+          "de": "Umformverfahren"
+        },
+        "doc": "🏭 Cold roll forming or other forming (brake pressing) selects the coefficient k of f_ya.",
+        "sample": "RollForming",
+        "enum": {
+          "name": "FormingProcess",
+          "doc": "🏭 Forming process of a cold-formed section: cold roll forming or other forming.",
+          "values": [
+            {
+              "token": "RollForming",
+              "label": {
+                "en": "Cold roll forming",
+                "de": "Rollprofilieren"
+              }
+            },
+            {
+              "token": "OtherForming",
+              "label": {
+                "en": "Other forming",
+                "de": "Sonstiges Umformen"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "name": "ultimate_strength",
+        "type": "f64",
+        "label": {
+          "en": "Ultimate strength f_u",
+          "de": "Zugfestigkeit f_u"
+        },
+        "doc": "💪 Ultimate tensile strength of the base material before forming.",
+        "sample": 360000000.0,
+        "unit": "Pa"
+      },
+      {
+        "name": "gross_area",
+        "type": "f64",
+        "label": {
+          "en": "Gross area A_g",
+          "de": "Bruttoquerschnitt A_g"
+        },
+        "doc": "▭ Gross cross-section area A_g of the member.",
+        "sample": 0.0006,
+        "unit": "m2",
+        "precision": 6,
+        "step": 1e-05,
+        "range": [
+          0,
+          0.05
+        ]
+      },
+      {
+        "name": "bends",
+        "type": "u32",
+        "label": {
+          "en": "Bends n",
+          "de": "Anzahl der Biegungen n"
+        },
+        "doc": "🔢 Number of 90 degree bends with an inner radius r <= 5 t (bends of other angles count proportionally).",
+        "sample": 4
+      }
+    ]
+  }
+}

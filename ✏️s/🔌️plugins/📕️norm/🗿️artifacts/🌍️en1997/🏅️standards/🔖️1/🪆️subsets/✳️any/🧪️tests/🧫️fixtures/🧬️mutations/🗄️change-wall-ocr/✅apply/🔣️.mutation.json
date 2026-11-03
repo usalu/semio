@@ -1,0 +1,5 @@
+{
+  "mutation": "changeWallOcr",
+  "id": "wall-W1",
+  "newOcr": 2.0
+}

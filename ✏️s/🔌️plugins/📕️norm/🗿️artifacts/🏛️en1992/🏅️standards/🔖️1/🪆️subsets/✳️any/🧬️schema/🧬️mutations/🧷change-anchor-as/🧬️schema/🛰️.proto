@@ -1,5 +1,6 @@
 syntax = "proto3";
+package semio.s.norm.en1992.mutation.change_anchor_as;
 message ChangeAnchorAs {
-  string anchorId = 1;
-  double newValue = 2;
+  string anchor_id = 1;
+  double new_value = 2;
 }

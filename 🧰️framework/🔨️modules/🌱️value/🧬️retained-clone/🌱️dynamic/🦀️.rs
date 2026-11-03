@@ -110,7 +110,7 @@ impl DslValueRetainedCloneCursor {
         if !child.terminal_is_empty(){let step={let turn=child.close_step(RetainedCloneGrant {maximum_depth:grant.maximum_depth-1,..grant});work+=turn.work;turn.result}?;return Ok(RetainedCloneStep::Progress(step.progress()));}
         self.state.child.take();work+=1;self.state.draining=false;self.state.index+=usize::from(!self.state.closing);
         Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,released_bytes:size_of::<Self>(),..Default::default()}))
-    })();crate::RetainedWorkOutcome{result,work}}
+    })();RetainedWorkOutcome{result,work}}
 }
 
 impl RetainedClone for DslValue {
@@ -136,7 +136,7 @@ impl RetainedCloneCursor<DslValue> for DslValueRetainedCloneCursor {
         if self.state.child_value.is_some(){let state:&mut State=&mut self.state;let value=state.child_value.take().unwrap();match state.target.as_mut().unwrap(){DslValue::Array(values)=>values.push(value),DslValue::Object(values)=>values.push((state.key.take().unwrap(),value)),_=>unreachable!()}state.draining=true;work+=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}
         if let Some(child)=self.state.child.as_mut(){
             if !child.output_ready() {let projected=self.child_source(source)?;let step={let turn=self.state.child.as_mut().unwrap().advance(projected,body,RetainedCloneGrant {maximum_depth:grant.maximum_depth-1,..grant});work+=turn.work;turn.result}?;return Ok(RetainedCloneStep::Progress(step.progress()));}
-            let nested=super::nested_retained_clone_grant(grant)?;let turn=child.take(nested);work+=turn.work;let Some((value,progress))=turn.result? else{return Ok(RetainedCloneStep::Progress(Default::default()))};self.state.child_value=Some(value);
+            let nested=nested_retained_clone_grant(grant)?;let turn=child.take(nested);work+=turn.work;let Some((value,progress))=turn.result? else{return Ok(RetainedCloneStep::Progress(Default::default()))};self.state.child_value=Some(value);
             return Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(nested,progress,"dynamic child take")?));
         }
         work+=1;if self.state.phase==0 {
@@ -166,9 +166,9 @@ impl RetainedCloneCursor<DslValue> for DslValueRetainedCloneCursor {
         }
         let progress=RetainedCloneProgress {copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:demand.capacity_bytes,released_bytes:demand.release_bytes};
         Ok(if self.state.phase==2{RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})
-    })();crate::RetainedWorkOutcome{result,work}}
-    fn take_demand(&self)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::retained_clone::retained_clone_take_demand())}
-    fn take(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<Option<(DslValue,RetainedCloneProgress)>>{if !self.output_ready(){return crate::RetainedWorkOutcome{result:Ok(None),work:0}}let turn=crate::retained_clone::take_retained_clone_output(&mut self.state.target,grant);if matches!(&turn.result,Ok(Some(_))){self.state.spent = true;}turn}
+    })();RetainedWorkOutcome{result,work}}
+    fn take_demand(&self)->Result<crate::RetirementDemand,crate::ValueError>{Ok(retained_clone_take_demand())}
+    fn take(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<Option<(DslValue,RetainedCloneProgress)>>{if !self.output_ready(){return RetainedWorkOutcome{result:Ok(None),work:0}}let turn=take_retained_clone_output(&mut self.state.target,grant);if matches!(&turn.result,Ok(Some(_))){self.state.spent = true;}turn}
     fn begin_close(&mut self)->bool {if self.state.closing{return false;}self.state.closing=true;true}
     fn terminal_is_empty(&self)->bool {self.state.closing&&self.empty()}
     fn next_close_depth_demand(&self)->Result<usize,ValueError> {Ok(self.close_demands(0)?.depth)}
@@ -188,7 +188,7 @@ impl RetainedCloneCursor<DslValue> for DslValueRetainedCloneCursor {
         if let Some(step)={let turn=s.close.begin_granted(&mut s.child_value,grant);work+=turn.work;turn.result}?{return Ok(step);}
         if let Some(step)={let turn=s.close.begin_granted(&mut s.target,grant);work+=turn.work;turn.result}?{return Ok(step);}
         {let turn=close_retained_binding(&mut s.source,grant);work+=turn.work;turn.result}
-    })();crate::RetainedWorkOutcome{result,work}}
+    })();RetainedWorkOutcome{result,work}}
 }
 
 impl Drop for DslValueRetainedCloneCursor {

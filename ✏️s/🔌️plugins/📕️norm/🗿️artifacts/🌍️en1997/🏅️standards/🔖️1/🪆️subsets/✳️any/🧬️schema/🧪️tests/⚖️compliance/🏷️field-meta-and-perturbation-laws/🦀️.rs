@@ -24,9 +24,9 @@ fn default_snapshot_editable_leaves_have_meta() {
                 match lookup_field_meta(prefix) {
                     None => missing.push(prefix.to_string()),
                     Some(meta) => {
-                        assert!(!meta.label_en.is_empty(), "{prefix} empty en");
-                        assert!(!meta.label_de.is_empty(), "{prefix} empty de");
-                        if let Some(choices) = meta.choices {
+                        assert!(!meta.label.en.is_empty(), "{prefix} empty en");
+                        assert!(!meta.label.de.is_empty(), "{prefix} empty de");
+                        if let Some(choices) = meta.choices() {
                             for c in choices {
                                 assert!(!c.label_en.is_empty() && !c.label_de.is_empty());
                                 assert!(c.label_en != c.value || c.label_de != c.value, "{prefix} raw code labels");
@@ -85,10 +85,10 @@ fn bishop_slices_uses_slope_length_and_gwl() {
 #[test]
 fn undrained_cu_bearing_and_sliding_can_fail_with_remedies() {
     let mut doc = compliant_demo();
-    doc.layers[0].soil_type = "clay".into();
+    doc.layers[0].soil_type = semio_s_artifact_norm_en1997_model::SoilType::Clay;
     doc.layers[0].cohesion_undrained = 15_000.0;
     doc.layers[0].phi_prime_deg = 0.0;
-    doc.footings[0].load_cases[0].design_situation = "bsT".into();
+    doc.footings[0].load_cases[0].design_situation = semio_s_artifact_norm_en1997_model::SituationChoice::Transient;
     doc.footings[0].load_cases[0].vertical_permanent = 800_000.0;
     doc.footings[0].load_cases[0].horizontal_variable = 200_000.0;
     let report = check_project(&doc);
@@ -127,11 +127,12 @@ fn governing_layer_id_missing_fails_bishop() {
 #[test]
 fn pile_type_changes_design_compression_resistance() {
     let mut doc = compliant_demo();
-    doc.piles[0].pile_type = "bored".into();
+    doc.design_approach = semio_s_artifact_norm_en1997_model::ApproachChoice::Da1Geo;
+    doc.piles[0].pile_type = semio_s_artifact_norm_en1997_model::PileType::Bored;
     let r_bored = check_project(&doc).checks.iter().find(|c| c.id.contains("compression")).map(|c| c.limit.value).unwrap();
-    doc.piles[0].pile_type = "driven".into();
+    doc.piles[0].pile_type = semio_s_artifact_norm_en1997_model::PileType::Driven;
     let r_driven = check_project(&doc).checks.iter().find(|c| c.id.contains("compression")).map(|c| c.limit.value).unwrap();
-    doc.piles[0].pile_type = "cfa".into();
+    doc.piles[0].pile_type = semio_s_artifact_norm_en1997_model::PileType::Cfa;
     let r_cfa = check_project(&doc).checks.iter().find(|c| c.id.contains("compression")).map(|c| c.limit.value).unwrap();
     assert!(
         (r_bored - r_driven).abs() > 1.0 || (r_bored - r_cfa).abs() > 1.0,
@@ -140,24 +141,17 @@ fn pile_type_changes_design_compression_resistance() {
 }
 
 #[test]
-fn earth_pressure_invalid_mode_fails_and_movement_inconsistency_fails() {
+fn earth_pressure_movement_inconsistency_fails() {
     let mut doc = compliant_demo();
-    doc.retaining_walls[0].earth_pressure_mode = "bogus".into();
-    doc.retaining_walls[0].wall_movement = "free".into();
-    let report_bad = check_project(&doc);
-    let bad = report_bad.checks.iter().find(|c| c.id.contains("earthPressure")).unwrap();
-    assert_eq!(bad.status, CheckStatus::Fail);
-    assert!(!bad.remedies.is_empty());
-
-    doc.retaining_walls[0].earth_pressure_mode = "active".into();
-    doc.retaining_walls[0].wall_movement = "rigid".into();
+    doc.retaining_walls[0].earth_pressure_mode = semio_s_artifact_norm_en1997_model::EarthPressureMode::Active;
+    doc.retaining_walls[0].wall_movement = semio_s_artifact_norm_en1997_model::WallMovement::Rigid;
     let report_inc = check_project(&doc);
     let inconsistent = report_inc.checks.iter().find(|c| c.id.contains("earthPressure")).unwrap();
     assert_eq!(inconsistent.status, CheckStatus::Fail);
     assert!(inconsistent.remedies.iter().any(|r| r.target.path.contains("earthPressureMode") || r.target.path.contains("wallMovement")));
 
-    doc.retaining_walls[0].earth_pressure_mode = "active".into();
-    doc.retaining_walls[0].wall_movement = "free".into();
+    doc.retaining_walls[0].earth_pressure_mode = semio_s_artifact_norm_en1997_model::EarthPressureMode::Active;
+    doc.retaining_walls[0].wall_movement = semio_s_artifact_norm_en1997_model::WallMovement::Free;
     let report_ok = check_project(&doc);
     let ok = report_ok.checks.iter().find(|c| c.id.contains("earthPressure")).unwrap();
     assert_eq!(ok.status, CheckStatus::Pass);
@@ -177,12 +171,14 @@ fn wall_concrete_gamma_changes_sliding_vertical_action() {
 #[test]
 fn phi_investigation_correlation_numeric() {
     let cpt = part_2::phi_from_cpt_deg(8_000_000.0, 76_000.0);
-    let spt = part_2::phi_from_spt_deg(18.0);
-    assert!((cpt - 42.0).abs() < 0.05, "CPT φ′={cpt}");
-    assert!((spt - 32.325).abs() < 0.05, "SPT φ′={spt}");
+    let spt = part_2::phi_from_spt_deg(18.0, 76_000.0);
+    assert!((cpt - 39.19).abs() < 0.02, "Kulhawy-Mayne φ′={cpt}");
+    assert!((spt - 40.32).abs() < 0.02, "Hatanaka-Uchida φ′={spt}");
+    assert!((part_2::phi_from_cpt_deg(12e6, 100e3) - 40.47).abs() < 0.01, "EX97-14");
+    assert!((part_2::phi_from_spt_deg(20.0, 100e3) - 40.0).abs() < 1e-9, "EX97-14 (N1)60 = 20");
     let layer = semio_s_artifact_norm_en1997_model::SoilLayer {
         id: "t".into(),
-        soil_type: "sand".into(),
+        soil_type: semio_s_artifact_norm_en1997_model::SoilType::Sand,
         depth_top: 0.0,
         depth_bottom: 8.0,
         gamma: 19_000.0,
@@ -196,8 +192,8 @@ fn phi_investigation_correlation_numeric() {
         spt_n: 18.0,
     };
     let (phi_inv, src) = part_2::investigation_phi_deg(&layer, 76_000.0).expect("investigation");
-    assert_eq!(src, "spt");
-    assert!((phi_inv - spt).abs() < 1e-9);
+    assert_eq!(src, "cpt");
+    assert!((phi_inv - cpt).abs() < 1e-9);
     assert!(layer.phi_prime_deg > phi_inv);
 }
 
@@ -240,7 +236,7 @@ fn governing_design_situation_changes_with_load_case_situation() {
     assert!(!outline.governing_approach.is_empty());
 
     let lc = doc.footings[0].load_cases.first_mut().expect("lc");
-    lc.design_situation = "bsT".into();
+    lc.design_situation = semio_s_artifact_norm_en1997_model::SituationChoice::Transient;
     lc.vertical_variable *= 3.0;
     lc.horizontal_variable *= 3.0;
     let after = check_project(&doc);
@@ -467,6 +463,37 @@ fn perturb_every_editable_leaf_changes_some_check() {
             unchanged.push(path.clone());
         }
     }
+    let mut r4 = compliant_demo();
+    r4.design_approach = semio_s_artifact_norm_en1997_model::ApproachChoice::Da1Geo;
+    let mut r4_driven = r4.clone();
+    r4_driven.piles[0].pile_type = semio_s_artifact_norm_en1997_model::PileType::Driven;
+    let pile_type_matters_in_r4 = sig(&check_project(&r4)) != sig(&check_project(&r4_driven));
+    let mut at_rest = compliant_demo();
+    at_rest.retaining_walls[0].earth_pressure_mode = semio_s_artifact_norm_en1997_model::EarthPressureMode::AtRest;
+    at_rest.retaining_walls[0].wall_movement = semio_s_artifact_norm_en1997_model::WallMovement::Rigid;
+    let mut at_rest_ocr = at_rest.clone();
+    at_rest_ocr.retaining_walls[0].ocr = 2.5;
+    let ocr_matters_at_rest = sig(&check_project(&at_rest)) != sig(&check_project(&at_rest_ocr));
+    let mut deep = compliant_demo();
+    deep.footings[0].embedment = 9.0;
+    let deep_sig = sig(&check_project(&deep));
+    let deep_changes = |edit: &dyn Fn(&mut En1997Snapshot)| {
+        let mut d = deep.clone();
+        edit(&mut d);
+        sig(&check_project(&d)) != deep_sig
+    };
+    let gravel_leaf_matters_below_a_deep_base = |path: &str| match path {
+        "layers[1].soilType" => deep_changes(&|d| d.layers[1].soil_type = semio_s_artifact_norm_en1997_model::SoilType::Clay),
+        "layers[1].cohesionEffective" => deep_changes(&|d| d.layers[1].cohesion_effective = 50_000.0),
+        "layers[1].cohesionUndrained" => deep_changes(&|d| d.layers[1].cohesion_undrained = 50_000.0),
+        "layers[1].poissonRatio" => deep_changes(&|d| d.layers[1].poisson_ratio = 0.45),
+        _ => false,
+    };
+    unchanged.retain(|path| {
+        !(path == "piles[0].pileType" && pile_type_matters_in_r4)
+            && !(path == "retainingWalls[0].ocr" && ocr_matters_at_rest)
+            && !gravel_leaf_matters_below_a_deep_base(path)
+    });
     assert!(
         unchanged.is_empty(),
         "editable leaves that did not change any check: {unchanged:?}"

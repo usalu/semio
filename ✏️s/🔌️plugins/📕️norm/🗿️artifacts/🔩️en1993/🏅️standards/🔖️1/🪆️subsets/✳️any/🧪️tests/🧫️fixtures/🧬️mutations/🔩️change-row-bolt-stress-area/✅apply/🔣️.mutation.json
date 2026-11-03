@@ -1,0 +1,6 @@
+{
+  "ChangeRowBoltStressArea": {
+    "id": "row-1",
+    "newBoltStressArea": 0.00049
+  }
+}

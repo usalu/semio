@@ -1,0 +1,7 @@
+{
+  "ChangeTieKind": {
+    "wallId": "wall-north",
+    "id": "tie-1",
+    "newKind": "Anchor"
+  }
+}

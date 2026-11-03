@@ -1,0 +1,5 @@
+{
+  "mutation": "changeLayerCohesionEffective",
+  "id": "layer-sand",
+  "newCohesionEffective": 1.5
+}

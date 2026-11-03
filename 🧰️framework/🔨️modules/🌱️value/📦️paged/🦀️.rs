@@ -51,7 +51,7 @@ impl<const N: usize> PagedBytes<N> {
         self.bytes.push_reserved(byte).map_err(|_|ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"decoded octet lost its reserved page"))
     }
     /// 🛫️ Projects a borrowed octet source into canonical pages through its actual output control.
-    pub fn copy_encoded(source:&(impl crate::ByteReadSource+?Sized),control:&mut crate::NativeEncodeControl<'_>)->Result<Self,ValueError>{control.scoped_stage(|control|{control.begin_stage(source.byte_len())?;let mut output=Self::default();for index in 0..source.byte_len(){output.push_encoded(source.byte_at(index).ok_or_else(||ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"encoded octet source changed"))?,control)?;control.step()?;}Ok(output)})}
+    pub fn copy_encoded(source:&(impl ByteReadSource+?Sized),control:&mut crate::NativeEncodeControl<'_>)->Result<Self,ValueError>{control.scoped_stage(|control|{control.begin_stage(source.byte_len())?;let mut output=Self::default();for index in 0..source.byte_len(){output.push_encoded(source.byte_at(index).ok_or_else(||ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"encoded octet source changed"))?,control)?;control.step()?;}Ok(output)})}
 
     pub fn len(&self) -> usize {
         self.bytes.len()

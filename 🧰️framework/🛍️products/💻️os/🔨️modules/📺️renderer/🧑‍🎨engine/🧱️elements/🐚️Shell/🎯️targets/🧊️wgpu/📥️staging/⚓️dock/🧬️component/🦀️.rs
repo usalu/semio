@@ -60,6 +60,8 @@ pub struct ShellDockState {
     /// 🐛️ Last `[TRACE] ` dock-plan line, so the trace prints on CHANGE rather than once per frame.
     pub dock_plan_trace: Option<String>,
     pub layout_override: Option<semio_framework_ui_declaration::layout::WindowLayout>,
+    /// 📱️ The plugin hooks of the shell: device tracker, input modality, selection and the bottom sheet of the plugin's current layout choice.
+    pub shell_hooks: semio_framework::ShellHookDriver,
     pub split_resize_origin: Vec<f32>,
     pub split_resize_secondary_path: Option<Vec<usize>>,
     pub split_resize_secondary_index: usize,

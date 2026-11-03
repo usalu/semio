@@ -1,44 +1,180 @@
 syntax = "proto3";
-package semio.norm.en1990;
-
-enum AnnexChoice { ANNEX_CHOICE_UNSPECIFIED = 0; En = 1; De = 2; }
-message PermanentAction { string id = 1; string kind = 2; double gk = 3; }
-message VariableAction { string id = 1; string category = 2; double qk = 3; }
-message AccidentalAction { string id = 1; double ad = 2; }
-enum ImportanceClass { IMPORTANCE_CLASS_UNSPECIFIED = 0; I = 1; II = 2; III = 3; IV = 4; }
-message SeismicAction { string id = 1; double a_ek = 2; ImportanceClass importance_class = 3; }
+package semio.s.norm.en1990;
+message En1990Snapshot {
+  // @state artifact
+  string annex = 1;
+  // @state artifact
+  string project_id = 2;
+  // @state artifact
+  StructureKind structure_kind = 3;
+  // @state artifact
+  double altitude_m = 4;
+  // @state artifact
+  uint32 consequence_class = 5;
+  // @state artifact
+  string reliability_class = 6;
+  // @state artifact
+  uint32 design_working_life_category = 7;
+  // @state artifact
+  double design_working_life_years = 8;
+  // @state artifact
+  double reference_period_years = 9;
+  // @state artifact
+  SupervisionLevel supervision_level = 10;
+  // @state artifact
+  InspectionLevel inspection_level = 11;
+  // @state artifact
+  double beta_computed = 12;
+  // @state artifact
+  repeated PermanentAction permanents = 13;
+  // @state artifact
+  repeated VariableAction variables = 14;
+  // @state artifact
+  repeated AccidentalAction accidentals = 15;
+  // @state artifact
+  repeated SeismicAction seismics = 16;
+  // @state artifact
+  repeated Member members = 17;
+  // @state artifact
+  repeated BridgeSls bridge_sls = 18;
+  // @state artifact
+  repeated MemberEffect effects = 19;
+  // @state artifact
+  repeated FatigueSpectrum fatigue_spectra = 20;
+  // @state artifact
+  repeated ReliabilityAnalysis reliability_analyses = 21;
+  // @state artifact
+  repeated TestSeries test_series = 22;
+  // @state artifact
+  repeated Placement placements = 23;
+  // @state artifact
+  repeated CaseRow cases = 24;
+  // @state artifact
+  repeated FactorOverride factor_overrides = 25;
+  // @state artifact
+  repeated TrafficGroup traffic_groups = 26;
+}
+message PermanentAction {
+  string id = 1;
+  PermanentKind kind = 2;
+  double gk = 3;
+}
+message VariableAction {
+  string id = 1;
+  string category = 2;
+  double qk = 3;
+  string group = 4;
+}
+message AccidentalAction {
+  string id = 1;
+  double ad = 2;
+}
+message SeismicAction {
+  string id = 1;
+  double a_ek = 2;
+  ImportanceClass importance_class = 3;
+}
 message Member {
-  string id = 1; string label_en = 2; string label_de = 3;
-  double rd_str = 4; double rd_geo = 5; double rd_equ_stab = 6; double rd_equ_destab = 7; double rd_fat = 8;
-  double span = 9; double deflection_w = 10; double deflection_limit_ratio = 11;
-  double vibration_frequency = 12; double vibration_frequency_min = 13;
+  string id = 1;
+  string label_en = 2;
+  string label_de = 3;
+  double rd_str = 4;
+  double rd_geo = 5;
+  double rd_equ_stab = 6;
+  double rd_equ_destab = 7;
+  double rd_fat = 8;
+  double span = 9;
+  double precamber = 10;
+  double deflection_w1 = 11;
+  double deflection_w2 = 12;
+  double deflection_w3 = 13;
+  double deflection_limit_ratio = 14;
+  double deflection_limit_ratio_w3 = 15;
+  double sls_limit_char = 16;
+  double sls_limit_freq = 17;
+  double sls_limit_qp = 18;
+  double vibration_frequency = 19;
+  double vibration_frequency_min = 20;
+  double frame_height = 21;
+  double frame_drift = 22;
+  double storey_height = 23;
+  double storey_drift = 24;
+  double material_strength_k = 25;
+  double material_conversion_factor = 26;
+  double material_partial_factor = 27;
+  double material_design_strength = 28;
+  double nominal_dimension = 29;
+  double dimension_tolerance = 30;
+  double design_dimension = 31;
+  double member_alpha_cr = 32;
+  double second_order_analysis = 33;
+}
+message MemberEffect {
+  string member_id = 1;
+  string action_id = 2;
+  double influence = 3;
 }
 message BridgeSls {
-  string id = 1; string member_id = 2;
-  double deck_acceleration = 3; double deck_acceleration_limit = 4;
-  double deck_twist = 5; double deck_twist_limit = 6;
-  double bridge_deflection = 7; double bridge_deflection_limit = 8;
+  string id = 1;
+  string member_id = 2;
+  double deck_acceleration = 3;
+  double deck_acceleration_limit = 4;
+  double deck_twist = 5;
+  double deck_twist_limit = 6;
+  double bridge_deflection = 7;
+  double bridge_deflection_limit = 8;
+  double track_gauge = 9;
+  double line_speed = 10;
+  double ballast_depth = 11;
+  double deck_mass = 12;
+  double natural_frequency = 13;
+  double end_rotation = 14;
+  double basic_wind_speed = 15;
+  double damping_ratio = 16;
 }
-message MemberEffect { string member_id = 1; string action_id = 2; double influence = 3; }
-message En1990Snapshot {
-  AnnexChoice annex = 1;
-  string project_id = 2;
-  string structure_kind = 3;
-  double altitude_m = 4;
-  uint32 consequence_class = 5;
-  uint32 reliability_class = 6;
-  uint32 design_working_life_category = 7;
-  double design_working_life_years = 8;
-  double reference_period_years = 9;
-  string supervision_level = 10;
-  string inspection_level = 11;
-  double k_fi_declared = 12;
-  double beta_computed = 13;
-  repeated PermanentAction permanents = 14;
-  repeated VariableAction variables = 15;
-  repeated AccidentalAction accidentals = 16;
-  repeated SeismicAction seismics = 17;
-  repeated Member members = 18;
-  repeated BridgeSls bridge_sls = 19;
-  repeated MemberEffect effects = 20;
+message FatigueSpectrum {
+  string id = 1;
+  string member_id = 2;
+  double detail_category = 3;
+  double stress_range = 4;
+  double cycles = 5;
+}
+message ReliabilityAnalysis {
+  string id = 1;
+  DistributionKind resistance_distribution = 2;
+  double resistance_mean = 3;
+  double resistance_sd = 4;
+  DistributionKind action_distribution = 5;
+  double action_mean = 6;
+  double action_sd = 7;
+}
+message TestSeries {
+  string id = 1;
+  string quantity = 2;
+  TestDistribution distribution = 3;
+  uint32 sample_size = 4;
+  double mean = 5;
+  double std_dev = 6;
+  double variation_known = 7;
+  double conversion_factor = 8;
+  double required = 9;
+}
+message Placement {
+  string id = 1;
+  double x = 2;
+  double y = 3;
+  double z = 4;
+  double yaw = 5;
+}
+message FactorOverride {
+  string id = 1;
+  string factor = 2;
+  string target = 3;
+  double value = 4;
+  string justification = 5;
+}
+message TrafficGroup {
+  string id = 1;
+  string group = 2;
+  string variable_id = 3;
 }

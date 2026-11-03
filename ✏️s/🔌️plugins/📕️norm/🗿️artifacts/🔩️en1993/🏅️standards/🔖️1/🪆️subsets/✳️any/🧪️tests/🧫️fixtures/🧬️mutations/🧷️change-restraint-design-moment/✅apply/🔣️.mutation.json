@@ -1,0 +1,6 @@
+{
+  "ChangeRestraintDesignMoment": {
+    "id": "restraint-1",
+    "newDesignMoment": 200000.0
+  }
+}

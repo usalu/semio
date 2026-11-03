@@ -1,0 +1,5 @@
+{
+  "mutation": "changeBuildingDriftLimitClass",
+  "id": "bldg-office",
+  "newDriftLimitClass": "brittle"
+}

@@ -1,0 +1,7 @@
+syntax = "proto3";
+package semio.s.norm.en1992.mutation.insert_stud_row;
+message InsertStudRow {
+  string member_id = 1;
+  uint64 index = 2;
+  StudRow stud_row = 3;
+}

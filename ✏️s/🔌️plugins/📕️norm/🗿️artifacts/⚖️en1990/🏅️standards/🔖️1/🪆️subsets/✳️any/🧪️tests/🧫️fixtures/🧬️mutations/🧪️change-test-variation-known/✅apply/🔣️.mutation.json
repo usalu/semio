@@ -1,0 +1,5 @@
+{
+  "mutation": "changeTestVariationKnown",
+  "id": "tes-1",
+  "newVariationKnown": 2.0
+}

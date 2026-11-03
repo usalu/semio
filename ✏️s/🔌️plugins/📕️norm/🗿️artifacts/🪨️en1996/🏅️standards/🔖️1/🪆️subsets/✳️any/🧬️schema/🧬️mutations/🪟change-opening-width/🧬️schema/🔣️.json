@@ -5,53 +5,54 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "wallIndex",
-    "index",
+    "wallId",
+    "id",
     "newWidthM"
   ],
   "properties": {
-    "wallIndex": {
-      "type": "integer",
-      "minimum": 0,
+    "wallId": {
+      "type": "string",
       "x-semio-ui": {
-        "widget": "stepper",
-        "role": "value",
+        "widget": "reference",
+        "role": "target",
         "label": {
           "en": "Wall",
           "de": "Wand"
         },
         "description": {
-          "en": "Zero-based position of the wall in its list.",
-          "de": "Nullbasierte Position der Wand in der Liste."
+          "en": "The wall this mutation addresses, by id.",
+          "de": "Das adressierte Element (Wand), per Kennung."
         },
-        "step": 1,
-        "precision": 0,
+        "ref": {
+          "kind": "wall"
+        },
         "group": "target",
         "order": 10
       }
     },
-    "index": {
-      "type": "integer",
-      "minimum": 0,
+    "id": {
+      "type": "string",
       "x-semio-ui": {
-        "widget": "stepper",
-        "role": "value",
+        "widget": "reference",
+        "role": "target",
         "label": {
           "en": "Opening",
           "de": "Öffnung"
         },
         "description": {
-          "en": "Zero-based position of the opening within the wall in its list.",
-          "de": "Nullbasierte Position der Öffnung in der Wand in der Liste."
+          "en": "The opening this mutation addresses, by id.",
+          "de": "Das adressierte Element (Öffnung), per Kennung."
         },
-        "step": 1,
-        "precision": 0,
+        "ref": {
+          "kind": "opening"
+        },
         "group": "target",
         "order": 20
       }
     },
     "newWidthM": {
       "type": "number",
+      "maximum": 10000,
       "minimum": 0,
       "x-semio-ui": {
         "widget": "stepper",

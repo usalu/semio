@@ -1,0 +1,6 @@
+{
+  "ChangeCraneHoistRatedLoad": {
+    "id": "crane-hoist-1",
+    "newRatedLoad": 3.0
+  }
+}

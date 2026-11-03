@@ -58,6 +58,13 @@ fn normalized_host_maps_table_stepper_navigation_keys_without_text_fallback() {
 }
 
 #[test]
+fn normalized_host_maps_the_context_menu_key_and_f10_for_the_keyboard_secondary_click() {
+    assert_eq!(key_action_from_dispatch("ContextMenu", true), Some(semio_framework_ui_wgpu_input::KeyAction::ContextMenu));
+    assert_eq!(key_action_from_dispatch("ContextMenu", false), None);
+    assert_eq!(key_action_from_dispatch("F10", true), Some(semio_framework_ui_wgpu_input::KeyAction::Function(10)));
+}
+
+#[test]
 fn normalized_native_ime_commit_preserves_the_exact_unicode_payload() {
     let text = "日本é";
     assert_eq!(ime_event_from_winit(&winit::event::Ime::Commit(text.into())), ui_render::ImeEvent::Commit { text: text.into() });

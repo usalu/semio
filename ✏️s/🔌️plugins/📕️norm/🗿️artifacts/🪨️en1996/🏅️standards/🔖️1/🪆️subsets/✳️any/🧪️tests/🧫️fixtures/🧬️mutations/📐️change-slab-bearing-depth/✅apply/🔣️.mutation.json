@@ -1,0 +1,6 @@
+{
+  "ChangeSlabBearingDepth": {
+    "id": "wall-north",
+    "newSlabBearingDepthM": 0.15
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "ChangeJointKind": {
+    "id": "joint-j1",
+    "newKind": "Bolted"
+  }
+}

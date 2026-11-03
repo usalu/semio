@@ -1,0 +1,14 @@
+{
+  "InsertFrameNode": {
+    "index": 1,
+    "frameNode": {
+      "id": "node-a-2",
+      "label": "Base left",
+      "x": 0.0,
+      "z": 0.0,
+      "support": "Fixed",
+      "loadX": 0.0,
+      "loadZ": 0.0
+    }
+  }
+}

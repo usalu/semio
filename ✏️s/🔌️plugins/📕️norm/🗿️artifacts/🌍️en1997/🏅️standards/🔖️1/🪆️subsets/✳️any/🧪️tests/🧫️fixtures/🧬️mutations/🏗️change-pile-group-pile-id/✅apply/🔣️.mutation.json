@@ -1,0 +1,5 @@
+{
+  "mutation": "changePileGroupPileId",
+  "id": "group-G1",
+  "newPileId": "pile-P1-alt"
+}

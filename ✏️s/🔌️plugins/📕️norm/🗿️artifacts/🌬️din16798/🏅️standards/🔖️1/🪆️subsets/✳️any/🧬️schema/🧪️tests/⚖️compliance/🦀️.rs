@@ -9,7 +9,6 @@ use semio_s_artifact_norm_din16798_editor::field_meta::din16798_field_meta;
 use semio_s_artifact_norm_din16798_model::Din16798Snapshot;
 use semio_framework_value::ToValue;
 use std::path::PathBuf;
-use std::process::Command;
 
 fn family_any_dir() -> PathBuf {
     fixture_path!("../../🏅️standards/🔖️1/🪆️subsets/✳️any")
@@ -203,8 +202,8 @@ fn default_snapshot_editable_leaves_have_en_de_field_meta() {
     assert!(din16798_field_meta("ventSystems").is_some());
     for path in &paths {
         let meta = din16798_field_meta(path).unwrap_or_else(|| panic!("missing field meta for editable leaf '{path}'"));
-        assert!(!meta.label_en.trim().is_empty(), "{path} missing label_en");
-        assert!(!meta.label_de.trim().is_empty(), "{path} missing label_de");
+        assert!(!meta.label.en.trim().is_empty(), "{path} missing label_en");
+        assert!(!meta.label.de.trim().is_empty(), "{path} missing label_de");
         let leaf = path.rsplit(['.', '[']).next().unwrap_or(path).trim_end_matches(']');
         let needs_unit = matches!(
             leaf,
@@ -239,9 +238,9 @@ fn default_snapshot_editable_leaves_have_en_de_field_meta() {
                 | "turbulenceIntensityPercent"
         );
         if needs_unit {
-            assert!(meta.unit.is_some(), "{path} requires a unit");
+            assert!(meta.unit().is_some(), "{path} requires a unit");
         }
-        if let Some(choices) = meta.choices {
+        if let Some(choices) = meta.choices() {
             for choice in choices.iter() {
                 assert!(!choice.label_en.is_empty() && !choice.label_de.is_empty(), "{path} choice missing labels");
                 assert!(choice.label_en != choice.value || choice.value.len() <= 2, "{path} choice label_en must not be bare wire token '{}'", choice.value);
@@ -337,7 +336,7 @@ fn python_oracle_matches_rust_q_sfp_co2_within_half_percent() {
         std::fs::write(&snap_path, serde_json::to_string_pretty(&doc).expect("snap json")).unwrap();
         std::fs::write(&report_path, serde_json::to_string_pretty(&report).expect("report json")).unwrap();
         let oracle = family_any_dir().join("🧬️schema/🧪️tests/⚖️compliance/🐍️.py");
-        let output = Command::new("python3")
+        let output = semio_s_plugin_norm_compliance::python_oracle::command()
             .arg(&oracle)
             .arg("--report")
             .arg(&snap_path)
@@ -365,7 +364,7 @@ fn jsonschema_validates_compliant_and_noncompliant_snapshots() {
     for (name, doc) in [("compliant", Din16798Snapshot::compliant_office()), ("noncompliant", Din16798Snapshot::noncompliant_office())] {
         let snap = tmp.join(format!("{name}.schema.snap.json"));
         std::fs::write(&snap, serde_json::to_string_pretty(&doc).unwrap()).unwrap();
-        let output = Command::new("python3").arg(&validate).arg(&schema).arg(&snap).output().expect("jsonschema spawn");
+        let output = semio_s_plugin_norm_compliance::python_oracle::command().arg(&validate).arg(&schema).arg(&snap).output().expect("jsonschema spawn");
         assert!(
             output.status.success(),
             "{name} jsonschema: {}{}",
@@ -687,7 +686,7 @@ fn oda4_requires_stricter_filter_than_oda3() {
     assert_eq!(filt4, "ePM1_80_G");
     assert_eq!(part_3::filter_rank(filt4), rank4);
     let meta = din16798_field_meta("odaClass").expect("odaClass meta");
-    let choices = meta.choices.expect("odaClass choices");
+    let choices = meta.choices().expect("odaClass choices");
     assert!(choices.iter().any(|c| c.value == "ODA4"), "ODA4 must be a field-meta choice");
 }
 

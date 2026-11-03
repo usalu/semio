@@ -1,0 +1,8 @@
+{
+  "ChangeConcentratedForce": {
+    "wallId": "wall-concentrated",
+    "loadCaseId": "ulsinz",
+    "id": "beam-B",
+    "newForceN": 42000.0
+  }
+}

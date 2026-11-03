@@ -1,0 +1,6 @@
+{
+  "ChangeCfMomentResistance": {
+    "id": "cf-1",
+    "newMomentResistance": 1.5
+  }
+}

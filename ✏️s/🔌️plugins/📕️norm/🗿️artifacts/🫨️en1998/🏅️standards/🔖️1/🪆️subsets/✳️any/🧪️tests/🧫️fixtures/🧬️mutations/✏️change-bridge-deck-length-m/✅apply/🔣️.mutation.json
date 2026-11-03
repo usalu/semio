@@ -1,0 +1,5 @@
+{
+  "mutation": "changeBridgeDeckLengthM",
+  "id": "br-1",
+  "newDeckLengthM": 1.5
+}

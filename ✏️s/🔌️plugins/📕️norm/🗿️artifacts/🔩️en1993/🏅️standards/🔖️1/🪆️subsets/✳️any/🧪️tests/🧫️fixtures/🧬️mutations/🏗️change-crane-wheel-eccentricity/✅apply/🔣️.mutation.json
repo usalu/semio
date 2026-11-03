@@ -1,0 +1,6 @@
+{
+  "ChangeCraneWheelEccentricity": {
+    "id": "crane-1",
+    "newWheelEccentricity": 1.5
+  }
+}

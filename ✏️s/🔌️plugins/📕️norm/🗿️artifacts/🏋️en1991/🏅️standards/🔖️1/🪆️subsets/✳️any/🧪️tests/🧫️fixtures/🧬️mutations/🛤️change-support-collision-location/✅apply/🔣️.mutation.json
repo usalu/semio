@@ -1,0 +1,6 @@
+{
+  "ChangeSupportCollisionLocation": {
+    "id": "support-collision-1",
+    "newLocation": "deck-changed"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "ChangeBridgeSurfacingThickness": {
+    "id": "br-1",
+    "newSurfacingThickness": 1.5
+  }
+}

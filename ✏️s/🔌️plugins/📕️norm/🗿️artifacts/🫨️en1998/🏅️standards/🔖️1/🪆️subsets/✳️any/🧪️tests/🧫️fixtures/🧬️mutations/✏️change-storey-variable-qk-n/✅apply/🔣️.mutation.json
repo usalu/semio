@@ -1,0 +1,7 @@
+{
+  "mutation": "changeStoreyVariableQkN",
+  "buildingId": "bldg-office",
+  "storeyId": "s1",
+  "id": "s1-q",
+  "newQkN": 3433500.0
+}

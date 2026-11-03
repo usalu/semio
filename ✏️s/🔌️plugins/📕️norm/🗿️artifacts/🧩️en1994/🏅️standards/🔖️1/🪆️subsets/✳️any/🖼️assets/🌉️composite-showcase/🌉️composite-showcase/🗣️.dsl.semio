@@ -1,0 +1,401 @@
+semio norm.en1994.dsl v1
+annex=de structure-kind=bridge steel-f-y-pa=355000000Pa
+beams [id:TEXT span-m:QTY spacing-m:QTY support:ENUM construction:ENUM steel:REC slab-thickness-m:QTY concrete-f-ck-pa:QTY concrete-e-cm-pa:QTY sheeting:REC transverse-as-m2-per-m:NUM ltb-length-m:QTY as-hogging-m2-per-m:NUM bar-spacing-m:QTY wk-limit-m:QTY n-cycles:NUM adjacent-span-m:QTY patch-bearing-length-m:QTY bridge-lanes:UINT cracked-length-fraction:NUM stud-transverse-spacing-m:QTY stud-edge-distance-m:QTY transverse-as-top-m2-per-m:QTY end-plate-width-m:QTY end-plate-height-m:QTY end-zone-length-m:QTY reinforcement-product:ENUM actions:TABLE] {
+  girder-G1 25m 3.5m simply-supported propped {designation=PLATE-GIRDER-1000 height-m=1m width-m=0.4m tw-m=0.016m tf-m=0.03m a-m2=0.03904m2 w-pl-y-m3=0.015174m3 i-y-m4=0.006754m4 a-v-m2=0.016m2 r-m=0m} 0.25m 30000000Pa 33000000000Pa {profile=trapezoidal height-m=0.055m rib-width-m=0.1m thickness-m=0.0009m ribs-parallel-to-beam=false} 0.0021 5m 0.0012 0.15m 0.0003m 2000000 0m 0.1m 2 0.15 0.1m 0.04m 0.001m2/m 0.3m 0.3m 0.5m hot-rolled [ {id=G-steel kind=permanent category=self_steel stage=construction q-area-pa=860Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} {id=G-wet kind=permanent category=wet_concrete stage=construction q-area-pa=4750Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} {id=Q-constr kind=construction category=construction stage=construction q-area-pa=1000Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} {id=G-steel-comp kind=permanent category=self_steel stage=composite q-area-pa=860Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} {id=G-slab kind=permanent category=slab stage=composite q-area-pa=4275Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} {id=G-surfacing kind=permanent category=finishes stage=composite q-area-pa=2300Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} {id=Q-footway kind=imposed category=B stage=composite q-area-pa=2000Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} {id=FLM3 kind=fatigue category=flm3 stage=composite q-area-pa=0Pa f-k-n=0N delta-sigma-k-pa=65000000Pa delta-tau-k-pa=40000000Pa x-m=0m} ]
+  beam-B1-propped 8m 3m simply-supported propped {designation=HEB300 height-m=0.3m width-m=0.3m tw-m=0.011m tf-m=0.019m a-m2=0.0149m2 w-pl-y-m3=0.001867m3 i-y-m4=0.0002517m4 a-v-m2=0.0045m2 r-m=0.027m} 0.14m 30000000Pa 33000000000Pa {profile=trapezoidal height-m=0.055m rib-width-m=0.1m thickness-m=0.0009m ribs-parallel-to-beam=false} 0.00025 4m 0.0005 0.15m 0.0003m 2000000 0m 0.1m 0 0.15 0m 0m 0m2/m 0m 0m 0m hot-rolled [ {id=G-steel kind=permanent category=self_steel stage=construction q-area-pa=382.47555000000006Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} {id=G-wet kind=permanent category=wet_concrete stage=construction q-area-pa=2125.0000000000005Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} {id=Q-constr kind=construction category=construction stage=construction q-area-pa=1000Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} {id=G-steel-comp kind=permanent category=self_steel stage=composite q-area-pa=382.47555000000006Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} {id=G-slab kind=permanent category=slab stage=composite q-area-pa=1912.5000000000005Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} {id=G-finishes kind=permanent category=finishes stage=composite q-area-pa=1000Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} {id=Q-office kind=imposed category=B stage=composite q-area-pa=2000Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} {id=P-equipment kind=imposed category=B stage=composite q-area-pa=0Pa f-k-n=20000N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} ]
+  beam-B2-unpropped 8m 3m simply-supported unpropped {designation=HEB300 height-m=0.3m width-m=0.3m tw-m=0.011m tf-m=0.019m a-m2=0.0149m2 w-pl-y-m3=0.001867m3 i-y-m4=0.0002517m4 a-v-m2=0.0045m2 r-m=0.027m} 0.14m 30000000Pa 33000000000Pa {profile=trapezoidal height-m=0.055m rib-width-m=0.1m thickness-m=0.0009m ribs-parallel-to-beam=false} 0.00025 5m 0.0005 0.15m 0.0003m 2000000 0m 0.1m 0 0.15 0m 0m 0m2/m 0m 0m 0m hot-rolled [ {id=G-steel kind=permanent category=self_steel stage=construction q-area-pa=382.47555000000006Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} {id=G-wet kind=permanent category=wet_concrete stage=construction q-area-pa=2125.0000000000005Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} {id=Q-constr kind=construction category=construction stage=construction q-area-pa=1000Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} {id=G-steel-comp kind=permanent category=self_steel stage=composite q-area-pa=382.47555000000006Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} {id=G-slab kind=permanent category=slab stage=composite q-area-pa=1912.5000000000005Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} {id=G-finishes kind=permanent category=finishes stage=composite q-area-pa=1000Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} {id=Q-office kind=imposed category=B stage=composite q-area-pa=2000Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} ]
+  beam-B3-end-span 10m 3m end-span propped {designation=HEB300 height-m=0.3m width-m=0.3m tw-m=0.011m tf-m=0.019m a-m2=0.0149m2 w-pl-y-m3=0.001867m3 i-y-m4=0.0002517m4 a-v-m2=0.0045m2 r-m=0.027m} 0.14m 30000000Pa 33000000000Pa {profile=trapezoidal height-m=0.055m rib-width-m=0.1m thickness-m=0.0009m ribs-parallel-to-beam=false} 0.00025 4m 0.0005 0.15m 0.0003m 2000000 8m 0.1m 0 0.15 0m 0m 0m2/m 0m 0m 0m hot-rolled [ {id=G-steel kind=permanent category=self_steel stage=construction q-area-pa=382.47555000000006Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} {id=G-wet kind=permanent category=wet_concrete stage=construction q-area-pa=2125.0000000000005Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} {id=Q-constr kind=construction category=construction stage=construction q-area-pa=1000Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} {id=G-steel-comp kind=permanent category=self_steel stage=composite q-area-pa=382.47555000000006Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} {id=G-slab kind=permanent category=slab stage=composite q-area-pa=1912.5000000000005Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} {id=G-finishes kind=permanent category=finishes stage=composite q-area-pa=1000Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} {id=Q-office kind=imposed category=B stage=composite q-area-pa=2000Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} ]
+  beam-B4-interior-span 10m 3m interior-span propped {designation=HEB300 height-m=0.3m width-m=0.3m tw-m=0.011m tf-m=0.019m a-m2=0.0149m2 w-pl-y-m3=0.001867m3 i-y-m4=0.0002517m4 a-v-m2=0.0045m2 r-m=0.027m} 0.14m 30000000Pa 33000000000Pa {profile=trapezoidal height-m=0.055m rib-width-m=0.1m thickness-m=0.0009m ribs-parallel-to-beam=false} 0.00025 4m 0.0005 0.15m 0.0003m 2000000 8m 0.1m 0 0.15 0m 0m 0m2/m 0m 0m 0m hot-rolled [ {id=G-steel kind=permanent category=self_steel stage=construction q-area-pa=382.47555000000006Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} {id=G-wet kind=permanent category=wet_concrete stage=construction q-area-pa=2125.0000000000005Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} {id=Q-constr kind=construction category=construction stage=construction q-area-pa=1000Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} {id=G-steel-comp kind=permanent category=self_steel stage=composite q-area-pa=382.47555000000006Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} {id=G-slab kind=permanent category=slab stage=composite q-area-pa=1912.5000000000005Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} {id=G-finishes kind=permanent category=finishes stage=composite q-area-pa=1000Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} {id=Q-office kind=imposed category=B stage=composite q-area-pa=2000Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} ]
+  beam-B5-two-span 9m 3m continuous2-span propped {designation=HEB300 height-m=0.3m width-m=0.3m tw-m=0.011m tf-m=0.019m a-m2=0.0149m2 w-pl-y-m3=0.001867m3 i-y-m4=0.0002517m4 a-v-m2=0.0045m2 r-m=0.027m} 0.14m 30000000Pa 33000000000Pa {profile=trapezoidal height-m=0.055m rib-width-m=0.1m thickness-m=0.0009m ribs-parallel-to-beam=false} 0.00025 4m 0.0005 0.15m 0.0003m 2000000 9m 0.1m 0 0.15 0m 0m 0m2/m 0m 0m 0m hot-rolled [ {id=G-steel kind=permanent category=self_steel stage=construction q-area-pa=382.47555000000006Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} {id=G-wet kind=permanent category=wet_concrete stage=construction q-area-pa=2125.0000000000005Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} {id=Q-constr kind=construction category=construction stage=construction q-area-pa=1000Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} {id=G-steel-comp kind=permanent category=self_steel stage=composite q-area-pa=382.47555000000006Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} {id=G-slab kind=permanent category=slab stage=composite q-area-pa=1912.5000000000005Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} {id=G-finishes kind=permanent category=finishes stage=composite q-area-pa=1000Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} {id=Q-office kind=imposed category=B stage=composite q-area-pa=2000Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} ]
+  beam-B6-cantilever 4m 3m cantilever propped {designation=HEB300 height-m=0.3m width-m=0.3m tw-m=0.011m tf-m=0.019m a-m2=0.0149m2 w-pl-y-m3=0.001867m3 i-y-m4=0.0002517m4 a-v-m2=0.0045m2 r-m=0.027m} 0.14m 30000000Pa 33000000000Pa {profile=trapezoidal height-m=0.055m rib-width-m=0.1m thickness-m=0.0009m ribs-parallel-to-beam=false} 0.00025 4m 0.0005 0.15m 0.0003m 2000000 0m 0.1m 0 0.15 0m 0m 0m2/m 0m 0m 0m hot-rolled [ {id=G-steel kind=permanent category=self_steel stage=construction q-area-pa=382.47555000000006Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} {id=G-wet kind=permanent category=wet_concrete stage=construction q-area-pa=2125.0000000000005Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} {id=Q-constr kind=construction category=construction stage=construction q-area-pa=1000Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} {id=G-steel-comp kind=permanent category=self_steel stage=composite q-area-pa=382.47555000000006Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} {id=G-slab kind=permanent category=slab stage=composite q-area-pa=1912.5000000000005Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} {id=G-finishes kind=permanent category=finishes stage=composite q-area-pa=1000Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} {id=Q-office kind=imposed category=B stage=composite q-area-pa=2000Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} ]
+}
+columns [id:TEXT kind:ENUM length-m:QTY outer-size-m:QTY wall-thickness-m:QTY steel-a-m2:QTY steel-f-y-pa:QTY concrete-a-m2:QTY concrete-f-ck-pa:QTY reinforcement-as-m2:QTY reinforcement-f-yk-pa:QTY i-m4:QTY buckling-curve:ENUM introduced-force-n:QTY section-height-m:QTY section-width-m:QTY section-tw-m:QTY section-tf-m:QTY rebar-cover-m:QTY reinforcement-product:ENUM actions:TABLE] {
+  col-C1-filled concrete-filled 3.5m 0.3m 0.01m 0.0084m2 355000000Pa 0.072m2 30000000Pa 0.0012m2 500000000Pa 0.00021m4 a 0N 0m 0m 0m 0m 0m hot-rolled [ {id=G-col kind=permanent category=self stage=composite n-k-n=1200000N m-k-nm=20000} {id=Q-col kind=imposed category=B stage=composite n-k-n=400000N m-k-nm=15000} ]
+  col-C2-encased encased 3.5m 0.45m 0.019m 0.0149m2 355000000Pa 0.1864m2 30000000Pa 0.0012m2 500000000Pa 0.0002517m4 a 0N 0.3m 0.3m 0.011m 0.019m 0.05m hot-rolled [ {id=G-col kind=permanent category=self stage=composite n-k-n=1200000N m-k-nm=20000} {id=Q-col kind=imposed category=B stage=composite n-k-n=400000N m-k-nm=15000} ]
+  col-C3-partially-encased partially-encased 3.5m 0.4m 0.019m 0.0149m2 355000000Pa 0.14390000000000003m2 30000000Pa 0.0012m2 500000000Pa 0.0002517m4 a 0N 0.3m 0.3m 0.011m 0.019m 0.05m hot-rolled [ {id=G-col kind=permanent category=self stage=composite n-k-n=1200000N m-k-nm=20000} {id=Q-col kind=imposed category=B stage=composite n-k-n=400000N m-k-nm=15000} ]
+}
+slabs [id:TEXT span-m:QTY support:ENUM sheeting:REC concrete-thickness-m:QTY f-ck-pa:QTY m-factor:NUM k-factor:NUM as-m2-per-m:NUM actions:TABLE] {
+  slab-S1-simple 3m simply-supported {profile=trapezoidal height-m=0.055m rib-width-m=0.1m thickness-m=0.0009m ribs-parallel-to-beam=false} 0.14m 30000000Pa 180 0.05 0.00025 [ {id=G-slab kind=permanent category=self stage=composite q-area-pa=3500Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m y-m=0m} {id=Q-slab kind=imposed category=B stage=composite q-area-pa=2000Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m y-m=0m} ]
+  slab-S2-continuous 3m continuous2-span {profile=trapezoidal height-m=0.055m rib-width-m=0.1m thickness-m=0.0009m ribs-parallel-to-beam=false} 0.14m 30000000Pa 180 0.05 0.00025 [ {id=G-slab kind=permanent category=self stage=composite q-area-pa=3500Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m y-m=0m} {id=Q-slab kind=imposed category=B stage=composite q-area-pa=2000Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m y-m=0m} ]
+  slab-S3-point-load 3m simply-supported {profile=trapezoidal height-m=0.055m rib-width-m=0.1m thickness-m=0.0009m ribs-parallel-to-beam=false} 0.14m 30000000Pa 180 0.05 0.00025 [ {id=G-slab kind=permanent category=self stage=composite q-area-pa=3500Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m y-m=0m} {id=Q-slab kind=imposed category=B stage=composite q-area-pa=2000Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m y-m=0m} {id=P-wheel kind=imposed category=B stage=composite q-area-pa=0Pa f-k-n=10000N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m y-m=0m} ]
+}
+placements [id:TEXT x:NUM y:NUM z:NUM yaw:NUM] {
+  girder-G1 0 1.75 0 0
+}
+fire-rating=r60 insulation-thickness-m=0.025m fatigue-detail=reinforcement reliability-class=rc2
+studs [id:TEXT beam-id:TEXT x-m:NUM diameter-m:NUM height-m:NUM f-u-pa:NUM] {
+  girder-G1-stud-0 girder-G1 0.6 0.022 0.15 450000000
+  girder-G1-stud-1 girder-G1 0.8 0.022 0.15 450000000
+  girder-G1-stud-2 girder-G1 1 0.022 0.15 450000000
+  girder-G1-stud-3 girder-G1 1.2 0.022 0.15 450000000
+  girder-G1-stud-4 girder-G1 1.4 0.022 0.15 450000000
+  girder-G1-stud-5 girder-G1 1.6 0.022 0.15 450000000
+  girder-G1-stud-6 girder-G1 1.8 0.022 0.15 450000000
+  girder-G1-stud-7 girder-G1 2 0.022 0.15 450000000
+  girder-G1-stud-8 girder-G1 2.2 0.022 0.15 450000000
+  girder-G1-stud-9 girder-G1 2.4 0.022 0.15 450000000
+  girder-G1-stud-10 girder-G1 2.6 0.022 0.15 450000000
+  girder-G1-stud-11 girder-G1 2.8 0.022 0.15 450000000
+  girder-G1-stud-12 girder-G1 3 0.022 0.15 450000000
+  girder-G1-stud-13 girder-G1 3.2 0.022 0.15 450000000
+  girder-G1-stud-14 girder-G1 3.4 0.022 0.15 450000000
+  girder-G1-stud-15 girder-G1 3.6 0.022 0.15 450000000
+  girder-G1-stud-16 girder-G1 3.8 0.022 0.15 450000000
+  girder-G1-stud-17 girder-G1 4 0.022 0.15 450000000
+  girder-G1-stud-18 girder-G1 4.2 0.022 0.15 450000000
+  girder-G1-stud-19 girder-G1 4.4 0.022 0.15 450000000
+  girder-G1-stud-20 girder-G1 4.6 0.022 0.15 450000000
+  girder-G1-stud-21 girder-G1 4.8 0.022 0.15 450000000
+  girder-G1-stud-22 girder-G1 5 0.022 0.15 450000000
+  girder-G1-stud-23 girder-G1 5.2 0.022 0.15 450000000
+  girder-G1-stud-24 girder-G1 5.4 0.022 0.15 450000000
+  girder-G1-stud-25 girder-G1 5.6 0.022 0.15 450000000
+  girder-G1-stud-26 girder-G1 5.8 0.022 0.15 450000000
+  girder-G1-stud-27 girder-G1 6 0.022 0.15 450000000
+  girder-G1-stud-28 girder-G1 6.2 0.022 0.15 450000000
+  girder-G1-stud-29 girder-G1 6.4 0.022 0.15 450000000
+  girder-G1-stud-30 girder-G1 6.6 0.022 0.15 450000000
+  girder-G1-stud-31 girder-G1 6.8 0.022 0.15 450000000
+  girder-G1-stud-32 girder-G1 7 0.022 0.15 450000000
+  girder-G1-stud-33 girder-G1 7.2 0.022 0.15 450000000
+  girder-G1-stud-34 girder-G1 7.4 0.022 0.15 450000000
+  girder-G1-stud-35 girder-G1 7.6 0.022 0.15 450000000
+  girder-G1-stud-36 girder-G1 7.8 0.022 0.15 450000000
+  girder-G1-stud-37 girder-G1 8 0.022 0.15 450000000
+  girder-G1-stud-38 girder-G1 8.2 0.022 0.15 450000000
+  girder-G1-stud-39 girder-G1 8.4 0.022 0.15 450000000
+  girder-G1-stud-40 girder-G1 8.6 0.022 0.15 450000000
+  girder-G1-stud-41 girder-G1 8.8 0.022 0.15 450000000
+  girder-G1-stud-42 girder-G1 9 0.022 0.15 450000000
+  girder-G1-stud-43 girder-G1 9.2 0.022 0.15 450000000
+  girder-G1-stud-44 girder-G1 9.4 0.022 0.15 450000000
+  girder-G1-stud-45 girder-G1 9.6 0.022 0.15 450000000
+  girder-G1-stud-46 girder-G1 9.8 0.022 0.15 450000000
+  girder-G1-stud-47 girder-G1 10 0.022 0.15 450000000
+  girder-G1-stud-48 girder-G1 10.2 0.022 0.15 450000000
+  girder-G1-stud-49 girder-G1 10.4 0.022 0.15 450000000
+  girder-G1-stud-50 girder-G1 10.6 0.022 0.15 450000000
+  girder-G1-stud-51 girder-G1 10.8 0.022 0.15 450000000
+  girder-G1-stud-52 girder-G1 11 0.022 0.15 450000000
+  girder-G1-stud-53 girder-G1 11.2 0.022 0.15 450000000
+  girder-G1-stud-54 girder-G1 11.4 0.022 0.15 450000000
+  girder-G1-stud-55 girder-G1 11.6 0.022 0.15 450000000
+  girder-G1-stud-56 girder-G1 11.8 0.022 0.15 450000000
+  girder-G1-stud-57 girder-G1 12 0.022 0.15 450000000
+  girder-G1-stud-58 girder-G1 12.2 0.022 0.15 450000000
+  girder-G1-stud-59 girder-G1 12.4 0.022 0.15 450000000
+  girder-G1-stud-60 girder-G1 12.6 0.022 0.15 450000000
+  girder-G1-stud-61 girder-G1 12.8 0.022 0.15 450000000
+  girder-G1-stud-62 girder-G1 13 0.022 0.15 450000000
+  girder-G1-stud-63 girder-G1 13.2 0.022 0.15 450000000
+  girder-G1-stud-64 girder-G1 13.4 0.022 0.15 450000000
+  girder-G1-stud-65 girder-G1 13.6 0.022 0.15 450000000
+  girder-G1-stud-66 girder-G1 13.8 0.022 0.15 450000000
+  girder-G1-stud-67 girder-G1 14 0.022 0.15 450000000
+  girder-G1-stud-68 girder-G1 14.2 0.022 0.15 450000000
+  girder-G1-stud-69 girder-G1 14.4 0.022 0.15 450000000
+  girder-G1-stud-70 girder-G1 14.6 0.022 0.15 450000000
+  girder-G1-stud-71 girder-G1 14.8 0.022 0.15 450000000
+  girder-G1-stud-72 girder-G1 15 0.022 0.15 450000000
+  girder-G1-stud-73 girder-G1 15.2 0.022 0.15 450000000
+  girder-G1-stud-74 girder-G1 15.4 0.022 0.15 450000000
+  girder-G1-stud-75 girder-G1 15.6 0.022 0.15 450000000
+  girder-G1-stud-76 girder-G1 15.8 0.022 0.15 450000000
+  girder-G1-stud-77 girder-G1 16 0.022 0.15 450000000
+  girder-G1-stud-78 girder-G1 16.2 0.022 0.15 450000000
+  girder-G1-stud-79 girder-G1 16.4 0.022 0.15 450000000
+  girder-G1-stud-80 girder-G1 16.6 0.022 0.15 450000000
+  girder-G1-stud-81 girder-G1 16.8 0.022 0.15 450000000
+  girder-G1-stud-82 girder-G1 17 0.022 0.15 450000000
+  girder-G1-stud-83 girder-G1 17.2 0.022 0.15 450000000
+  girder-G1-stud-84 girder-G1 17.4 0.022 0.15 450000000
+  girder-G1-stud-85 girder-G1 17.6 0.022 0.15 450000000
+  girder-G1-stud-86 girder-G1 17.8 0.022 0.15 450000000
+  girder-G1-stud-87 girder-G1 18 0.022 0.15 450000000
+  girder-G1-stud-88 girder-G1 18.2 0.022 0.15 450000000
+  girder-G1-stud-89 girder-G1 18.4 0.022 0.15 450000000
+  girder-G1-stud-90 girder-G1 18.6 0.022 0.15 450000000
+  girder-G1-stud-91 girder-G1 18.8 0.022 0.15 450000000
+  girder-G1-stud-92 girder-G1 19 0.022 0.15 450000000
+  girder-G1-stud-93 girder-G1 19.2 0.022 0.15 450000000
+  girder-G1-stud-94 girder-G1 19.4 0.022 0.15 450000000
+  girder-G1-stud-95 girder-G1 19.6 0.022 0.15 450000000
+  girder-G1-stud-96 girder-G1 19.8 0.022 0.15 450000000
+  girder-G1-stud-97 girder-G1 20 0.022 0.15 450000000
+  girder-G1-stud-98 girder-G1 20.2 0.022 0.15 450000000
+  girder-G1-stud-99 girder-G1 20.4 0.022 0.15 450000000
+  girder-G1-stud-100 girder-G1 20.6 0.022 0.15 450000000
+  girder-G1-stud-101 girder-G1 20.8 0.022 0.15 450000000
+  girder-G1-stud-102 girder-G1 21 0.022 0.15 450000000
+  girder-G1-stud-103 girder-G1 21.2 0.022 0.15 450000000
+  girder-G1-stud-104 girder-G1 21.4 0.022 0.15 450000000
+  girder-G1-stud-105 girder-G1 21.6 0.022 0.15 450000000
+  girder-G1-stud-106 girder-G1 21.8 0.022 0.15 450000000
+  girder-G1-stud-107 girder-G1 22 0.022 0.15 450000000
+  girder-G1-stud-108 girder-G1 22.2 0.022 0.15 450000000
+  girder-G1-stud-109 girder-G1 22.4 0.022 0.15 450000000
+  girder-G1-stud-110 girder-G1 22.6 0.022 0.15 450000000
+  girder-G1-stud-111 girder-G1 22.8 0.022 0.15 450000000
+  girder-G1-stud-112 girder-G1 23 0.022 0.15 450000000
+  girder-G1-stud-113 girder-G1 23.2 0.022 0.15 450000000
+  girder-G1-stud-114 girder-G1 23.4 0.022 0.15 450000000
+  girder-G1-stud-115 girder-G1 23.6 0.022 0.15 450000000
+  girder-G1-stud-116 girder-G1 23.8 0.022 0.15 450000000
+  girder-G1-stud-117 girder-G1 24 0.022 0.15 450000000
+  girder-G1-stud-118 girder-G1 24.2 0.022 0.15 450000000
+  girder-G1-stud-119 girder-G1 24.4 0.022 0.15 450000000
+  beam-B1-propped-stud-0 beam-B1-propped 0.1 0.019 0.095 450000000
+  beam-B1-propped-stud-1 beam-B1-propped 0.3 0.019 0.095 450000000
+  beam-B1-propped-stud-2 beam-B1-propped 0.5 0.019 0.095 450000000
+  beam-B1-propped-stud-3 beam-B1-propped 0.7 0.019 0.095 450000000
+  beam-B1-propped-stud-4 beam-B1-propped 0.9 0.019 0.095 450000000
+  beam-B1-propped-stud-5 beam-B1-propped 1.1 0.019 0.095 450000000
+  beam-B1-propped-stud-6 beam-B1-propped 1.3 0.019 0.095 450000000
+  beam-B1-propped-stud-7 beam-B1-propped 1.5 0.019 0.095 450000000
+  beam-B1-propped-stud-8 beam-B1-propped 1.7 0.019 0.095 450000000
+  beam-B1-propped-stud-9 beam-B1-propped 1.9 0.019 0.095 450000000
+  beam-B1-propped-stud-10 beam-B1-propped 2.1 0.019 0.095 450000000
+  beam-B1-propped-stud-11 beam-B1-propped 2.3 0.019 0.095 450000000
+  beam-B1-propped-stud-12 beam-B1-propped 2.5 0.019 0.095 450000000
+  beam-B1-propped-stud-13 beam-B1-propped 2.7 0.019 0.095 450000000
+  beam-B1-propped-stud-14 beam-B1-propped 2.9 0.019 0.095 450000000
+  beam-B1-propped-stud-15 beam-B1-propped 3.1 0.019 0.095 450000000
+  beam-B1-propped-stud-16 beam-B1-propped 3.3 0.019 0.095 450000000
+  beam-B1-propped-stud-17 beam-B1-propped 3.5 0.019 0.095 450000000
+  beam-B1-propped-stud-18 beam-B1-propped 3.7 0.019 0.095 450000000
+  beam-B1-propped-stud-19 beam-B1-propped 3.9 0.019 0.095 450000000
+  beam-B1-propped-stud-20 beam-B1-propped 4.1 0.019 0.095 450000000
+  beam-B1-propped-stud-21 beam-B1-propped 4.3 0.019 0.095 450000000
+  beam-B1-propped-stud-22 beam-B1-propped 4.5 0.019 0.095 450000000
+  beam-B1-propped-stud-23 beam-B1-propped 4.7 0.019 0.095 450000000
+  beam-B1-propped-stud-24 beam-B1-propped 4.9 0.019 0.095 450000000
+  beam-B1-propped-stud-25 beam-B1-propped 5.1 0.019 0.095 450000000
+  beam-B1-propped-stud-26 beam-B1-propped 5.3 0.019 0.095 450000000
+  beam-B1-propped-stud-27 beam-B1-propped 5.5 0.019 0.095 450000000
+  beam-B1-propped-stud-28 beam-B1-propped 5.7 0.019 0.095 450000000
+  beam-B1-propped-stud-29 beam-B1-propped 5.9 0.019 0.095 450000000
+  beam-B1-propped-stud-30 beam-B1-propped 6.1 0.019 0.095 450000000
+  beam-B1-propped-stud-31 beam-B1-propped 6.3 0.019 0.095 450000000
+  beam-B1-propped-stud-32 beam-B1-propped 6.5 0.019 0.095 450000000
+  beam-B1-propped-stud-33 beam-B1-propped 6.7 0.019 0.095 450000000
+  beam-B1-propped-stud-34 beam-B1-propped 6.9 0.019 0.095 450000000
+  beam-B1-propped-stud-35 beam-B1-propped 7.1 0.019 0.095 450000000
+  beam-B1-propped-stud-36 beam-B1-propped 7.3 0.019 0.095 450000000
+  beam-B1-propped-stud-37 beam-B1-propped 7.5 0.019 0.095 450000000
+  beam-B1-propped-stud-38 beam-B1-propped 7.7 0.019 0.095 450000000
+  beam-B1-propped-stud-39 beam-B1-propped 7.9 0.019 0.095 450000000
+  beam-B2-unpropped-stud-0 beam-B2-unpropped 0.1 0.019 0.095 450000000
+  beam-B2-unpropped-stud-1 beam-B2-unpropped 0.3 0.019 0.095 450000000
+  beam-B2-unpropped-stud-2 beam-B2-unpropped 0.5 0.019 0.095 450000000
+  beam-B2-unpropped-stud-3 beam-B2-unpropped 0.7 0.019 0.095 450000000
+  beam-B2-unpropped-stud-4 beam-B2-unpropped 0.9 0.019 0.095 450000000
+  beam-B2-unpropped-stud-5 beam-B2-unpropped 1.1 0.019 0.095 450000000
+  beam-B2-unpropped-stud-6 beam-B2-unpropped 1.3 0.019 0.095 450000000
+  beam-B2-unpropped-stud-7 beam-B2-unpropped 1.5 0.019 0.095 450000000
+  beam-B2-unpropped-stud-8 beam-B2-unpropped 1.7 0.019 0.095 450000000
+  beam-B2-unpropped-stud-9 beam-B2-unpropped 1.9 0.019 0.095 450000000
+  beam-B2-unpropped-stud-10 beam-B2-unpropped 2.1 0.019 0.095 450000000
+  beam-B2-unpropped-stud-11 beam-B2-unpropped 2.3 0.019 0.095 450000000
+  beam-B2-unpropped-stud-12 beam-B2-unpropped 2.5 0.019 0.095 450000000
+  beam-B2-unpropped-stud-13 beam-B2-unpropped 2.7 0.019 0.095 450000000
+  beam-B2-unpropped-stud-14 beam-B2-unpropped 2.9 0.019 0.095 450000000
+  beam-B2-unpropped-stud-15 beam-B2-unpropped 3.1 0.019 0.095 450000000
+  beam-B2-unpropped-stud-16 beam-B2-unpropped 3.3 0.019 0.095 450000000
+  beam-B2-unpropped-stud-17 beam-B2-unpropped 3.5 0.019 0.095 450000000
+  beam-B2-unpropped-stud-18 beam-B2-unpropped 3.7 0.019 0.095 450000000
+  beam-B2-unpropped-stud-19 beam-B2-unpropped 3.9 0.019 0.095 450000000
+  beam-B2-unpropped-stud-20 beam-B2-unpropped 4.1 0.019 0.095 450000000
+  beam-B2-unpropped-stud-21 beam-B2-unpropped 4.3 0.019 0.095 450000000
+  beam-B2-unpropped-stud-22 beam-B2-unpropped 4.5 0.019 0.095 450000000
+  beam-B2-unpropped-stud-23 beam-B2-unpropped 4.7 0.019 0.095 450000000
+  beam-B2-unpropped-stud-24 beam-B2-unpropped 4.9 0.019 0.095 450000000
+  beam-B2-unpropped-stud-25 beam-B2-unpropped 5.1 0.019 0.095 450000000
+  beam-B2-unpropped-stud-26 beam-B2-unpropped 5.3 0.019 0.095 450000000
+  beam-B2-unpropped-stud-27 beam-B2-unpropped 5.5 0.019 0.095 450000000
+  beam-B2-unpropped-stud-28 beam-B2-unpropped 5.7 0.019 0.095 450000000
+  beam-B2-unpropped-stud-29 beam-B2-unpropped 5.9 0.019 0.095 450000000
+  beam-B2-unpropped-stud-30 beam-B2-unpropped 6.1 0.019 0.095 450000000
+  beam-B2-unpropped-stud-31 beam-B2-unpropped 6.3 0.019 0.095 450000000
+  beam-B2-unpropped-stud-32 beam-B2-unpropped 6.5 0.019 0.095 450000000
+  beam-B2-unpropped-stud-33 beam-B2-unpropped 6.7 0.019 0.095 450000000
+  beam-B2-unpropped-stud-34 beam-B2-unpropped 6.9 0.019 0.095 450000000
+  beam-B2-unpropped-stud-35 beam-B2-unpropped 7.1 0.019 0.095 450000000
+  beam-B2-unpropped-stud-36 beam-B2-unpropped 7.3 0.019 0.095 450000000
+  beam-B2-unpropped-stud-37 beam-B2-unpropped 7.5 0.019 0.095 450000000
+  beam-B2-unpropped-stud-38 beam-B2-unpropped 7.7 0.019 0.095 450000000
+  beam-B2-unpropped-stud-39 beam-B2-unpropped 7.9 0.019 0.095 450000000
+  beam-B3-end-span-stud-0 beam-B3-end-span 1.1 0.019 0.095 450000000
+  beam-B3-end-span-stud-1 beam-B3-end-span 1.3 0.019 0.095 450000000
+  beam-B3-end-span-stud-2 beam-B3-end-span 1.5 0.019 0.095 450000000
+  beam-B3-end-span-stud-3 beam-B3-end-span 1.7 0.019 0.095 450000000
+  beam-B3-end-span-stud-4 beam-B3-end-span 1.9 0.019 0.095 450000000
+  beam-B3-end-span-stud-5 beam-B3-end-span 2.1 0.019 0.095 450000000
+  beam-B3-end-span-stud-6 beam-B3-end-span 2.3 0.019 0.095 450000000
+  beam-B3-end-span-stud-7 beam-B3-end-span 2.5 0.019 0.095 450000000
+  beam-B3-end-span-stud-8 beam-B3-end-span 2.7 0.019 0.095 450000000
+  beam-B3-end-span-stud-9 beam-B3-end-span 2.9 0.019 0.095 450000000
+  beam-B3-end-span-stud-10 beam-B3-end-span 3.1 0.019 0.095 450000000
+  beam-B3-end-span-stud-11 beam-B3-end-span 3.3 0.019 0.095 450000000
+  beam-B3-end-span-stud-12 beam-B3-end-span 3.5 0.019 0.095 450000000
+  beam-B3-end-span-stud-13 beam-B3-end-span 3.7 0.019 0.095 450000000
+  beam-B3-end-span-stud-14 beam-B3-end-span 3.9 0.019 0.095 450000000
+  beam-B3-end-span-stud-15 beam-B3-end-span 4.1 0.019 0.095 450000000
+  beam-B3-end-span-stud-16 beam-B3-end-span 4.3 0.019 0.095 450000000
+  beam-B3-end-span-stud-17 beam-B3-end-span 4.5 0.019 0.095 450000000
+  beam-B3-end-span-stud-18 beam-B3-end-span 4.7 0.019 0.095 450000000
+  beam-B3-end-span-stud-19 beam-B3-end-span 4.9 0.019 0.095 450000000
+  beam-B3-end-span-stud-20 beam-B3-end-span 5.1 0.019 0.095 450000000
+  beam-B3-end-span-stud-21 beam-B3-end-span 5.3 0.019 0.095 450000000
+  beam-B3-end-span-stud-22 beam-B3-end-span 5.5 0.019 0.095 450000000
+  beam-B3-end-span-stud-23 beam-B3-end-span 5.7 0.019 0.095 450000000
+  beam-B3-end-span-stud-24 beam-B3-end-span 5.9 0.019 0.095 450000000
+  beam-B3-end-span-stud-25 beam-B3-end-span 6.1 0.019 0.095 450000000
+  beam-B3-end-span-stud-26 beam-B3-end-span 6.3 0.019 0.095 450000000
+  beam-B3-end-span-stud-27 beam-B3-end-span 6.5 0.019 0.095 450000000
+  beam-B3-end-span-stud-28 beam-B3-end-span 6.7 0.019 0.095 450000000
+  beam-B3-end-span-stud-29 beam-B3-end-span 6.9 0.019 0.095 450000000
+  beam-B3-end-span-stud-30 beam-B3-end-span 7.1 0.019 0.095 450000000
+  beam-B3-end-span-stud-31 beam-B3-end-span 7.3 0.019 0.095 450000000
+  beam-B3-end-span-stud-32 beam-B3-end-span 7.5 0.019 0.095 450000000
+  beam-B3-end-span-stud-33 beam-B3-end-span 7.7 0.019 0.095 450000000
+  beam-B3-end-span-stud-34 beam-B3-end-span 7.9 0.019 0.095 450000000
+  beam-B3-end-span-stud-35 beam-B3-end-span 8.1 0.019 0.095 450000000
+  beam-B3-end-span-stud-36 beam-B3-end-span 8.3 0.019 0.095 450000000
+  beam-B3-end-span-stud-37 beam-B3-end-span 8.5 0.019 0.095 450000000
+  beam-B3-end-span-stud-38 beam-B3-end-span 8.7 0.019 0.095 450000000
+  beam-B3-end-span-stud-39 beam-B3-end-span 8.9 0.019 0.095 450000000
+  beam-B4-interior-span-stud-0 beam-B4-interior-span 9.1 0.019 0.095 450000000
+  beam-B4-interior-span-stud-1 beam-B4-interior-span 9.3 0.019 0.095 450000000
+  beam-B4-interior-span-stud-2 beam-B4-interior-span 9.5 0.019 0.095 450000000
+  beam-B4-interior-span-stud-3 beam-B4-interior-span 9.7 0.019 0.095 450000000
+  beam-B4-interior-span-stud-4 beam-B4-interior-span 9.9 0.019 0.095 450000000
+  beam-B4-interior-span-stud-5 beam-B4-interior-span 10.1 0.019 0.095 450000000
+  beam-B4-interior-span-stud-6 beam-B4-interior-span 10.3 0.019 0.095 450000000
+  beam-B4-interior-span-stud-7 beam-B4-interior-span 10.5 0.019 0.095 450000000
+  beam-B4-interior-span-stud-8 beam-B4-interior-span 10.7 0.019 0.095 450000000
+  beam-B4-interior-span-stud-9 beam-B4-interior-span 10.9 0.019 0.095 450000000
+  beam-B4-interior-span-stud-10 beam-B4-interior-span 11.1 0.019 0.095 450000000
+  beam-B4-interior-span-stud-11 beam-B4-interior-span 11.3 0.019 0.095 450000000
+  beam-B4-interior-span-stud-12 beam-B4-interior-span 11.5 0.019 0.095 450000000
+  beam-B4-interior-span-stud-13 beam-B4-interior-span 11.7 0.019 0.095 450000000
+  beam-B4-interior-span-stud-14 beam-B4-interior-span 11.9 0.019 0.095 450000000
+  beam-B4-interior-span-stud-15 beam-B4-interior-span 12.1 0.019 0.095 450000000
+  beam-B4-interior-span-stud-16 beam-B4-interior-span 12.3 0.019 0.095 450000000
+  beam-B4-interior-span-stud-17 beam-B4-interior-span 12.5 0.019 0.095 450000000
+  beam-B4-interior-span-stud-18 beam-B4-interior-span 12.7 0.019 0.095 450000000
+  beam-B4-interior-span-stud-19 beam-B4-interior-span 12.9 0.019 0.095 450000000
+  beam-B4-interior-span-stud-20 beam-B4-interior-span 13.1 0.019 0.095 450000000
+  beam-B4-interior-span-stud-21 beam-B4-interior-span 13.3 0.019 0.095 450000000
+  beam-B4-interior-span-stud-22 beam-B4-interior-span 13.5 0.019 0.095 450000000
+  beam-B4-interior-span-stud-23 beam-B4-interior-span 13.7 0.019 0.095 450000000
+  beam-B4-interior-span-stud-24 beam-B4-interior-span 13.9 0.019 0.095 450000000
+  beam-B4-interior-span-stud-25 beam-B4-interior-span 14.1 0.019 0.095 450000000
+  beam-B4-interior-span-stud-26 beam-B4-interior-span 14.3 0.019 0.095 450000000
+  beam-B4-interior-span-stud-27 beam-B4-interior-span 14.5 0.019 0.095 450000000
+  beam-B4-interior-span-stud-28 beam-B4-interior-span 14.7 0.019 0.095 450000000
+  beam-B4-interior-span-stud-29 beam-B4-interior-span 14.9 0.019 0.095 450000000
+  beam-B4-interior-span-stud-30 beam-B4-interior-span 15.1 0.019 0.095 450000000
+  beam-B4-interior-span-stud-31 beam-B4-interior-span 15.3 0.019 0.095 450000000
+  beam-B4-interior-span-stud-32 beam-B4-interior-span 15.5 0.019 0.095 450000000
+  beam-B4-interior-span-stud-33 beam-B4-interior-span 15.7 0.019 0.095 450000000
+  beam-B4-interior-span-stud-34 beam-B4-interior-span 15.9 0.019 0.095 450000000
+  beam-B4-interior-span-stud-35 beam-B4-interior-span 16.1 0.019 0.095 450000000
+  beam-B4-interior-span-stud-36 beam-B4-interior-span 16.3 0.019 0.095 450000000
+  beam-B4-interior-span-stud-37 beam-B4-interior-span 16.5 0.019 0.095 450000000
+  beam-B4-interior-span-stud-38 beam-B4-interior-span 16.7 0.019 0.095 450000000
+  beam-B4-interior-span-stud-39 beam-B4-interior-span 16.9 0.019 0.095 450000000
+  beam-B5-two-span-stud-0 beam-B5-two-span 0.6 0.019 0.095 450000000
+  beam-B5-two-span-stud-1 beam-B5-two-span 0.8 0.019 0.095 450000000
+  beam-B5-two-span-stud-2 beam-B5-two-span 1 0.019 0.095 450000000
+  beam-B5-two-span-stud-3 beam-B5-two-span 1.2 0.019 0.095 450000000
+  beam-B5-two-span-stud-4 beam-B5-two-span 1.4 0.019 0.095 450000000
+  beam-B5-two-span-stud-5 beam-B5-two-span 1.6 0.019 0.095 450000000
+  beam-B5-two-span-stud-6 beam-B5-two-span 1.8 0.019 0.095 450000000
+  beam-B5-two-span-stud-7 beam-B5-two-span 2 0.019 0.095 450000000
+  beam-B5-two-span-stud-8 beam-B5-two-span 2.2 0.019 0.095 450000000
+  beam-B5-two-span-stud-9 beam-B5-two-span 2.4 0.019 0.095 450000000
+  beam-B5-two-span-stud-10 beam-B5-two-span 2.6 0.019 0.095 450000000
+  beam-B5-two-span-stud-11 beam-B5-two-span 2.8 0.019 0.095 450000000
+  beam-B5-two-span-stud-12 beam-B5-two-span 3 0.019 0.095 450000000
+  beam-B5-two-span-stud-13 beam-B5-two-span 3.2 0.019 0.095 450000000
+  beam-B5-two-span-stud-14 beam-B5-two-span 3.4 0.019 0.095 450000000
+  beam-B5-two-span-stud-15 beam-B5-two-span 3.6 0.019 0.095 450000000
+  beam-B5-two-span-stud-16 beam-B5-two-span 3.8 0.019 0.095 450000000
+  beam-B5-two-span-stud-17 beam-B5-two-span 4 0.019 0.095 450000000
+  beam-B5-two-span-stud-18 beam-B5-two-span 4.2 0.019 0.095 450000000
+  beam-B5-two-span-stud-19 beam-B5-two-span 4.4 0.019 0.095 450000000
+  beam-B5-two-span-stud-20 beam-B5-two-span 4.6 0.019 0.095 450000000
+  beam-B5-two-span-stud-21 beam-B5-two-span 4.8 0.019 0.095 450000000
+  beam-B5-two-span-stud-22 beam-B5-two-span 5 0.019 0.095 450000000
+  beam-B5-two-span-stud-23 beam-B5-two-span 5.2 0.019 0.095 450000000
+  beam-B5-two-span-stud-24 beam-B5-two-span 5.4 0.019 0.095 450000000
+  beam-B5-two-span-stud-25 beam-B5-two-span 5.6 0.019 0.095 450000000
+  beam-B5-two-span-stud-26 beam-B5-two-span 5.8 0.019 0.095 450000000
+  beam-B5-two-span-stud-27 beam-B5-two-span 6 0.019 0.095 450000000
+  beam-B5-two-span-stud-28 beam-B5-two-span 6.2 0.019 0.095 450000000
+  beam-B5-two-span-stud-29 beam-B5-two-span 6.4 0.019 0.095 450000000
+  beam-B5-two-span-stud-30 beam-B5-two-span 6.6 0.019 0.095 450000000
+  beam-B5-two-span-stud-31 beam-B5-two-span 6.8 0.019 0.095 450000000
+  beam-B5-two-span-stud-32 beam-B5-two-span 7 0.019 0.095 450000000
+  beam-B5-two-span-stud-33 beam-B5-two-span 7.2 0.019 0.095 450000000
+  beam-B5-two-span-stud-34 beam-B5-two-span 7.4 0.019 0.095 450000000
+  beam-B5-two-span-stud-35 beam-B5-two-span 7.6 0.019 0.095 450000000
+  beam-B5-two-span-stud-36 beam-B5-two-span 7.8 0.019 0.095 450000000
+  beam-B5-two-span-stud-37 beam-B5-two-span 8 0.019 0.095 450000000
+  beam-B5-two-span-stud-38 beam-B5-two-span 8.2 0.019 0.095 450000000
+  beam-B5-two-span-stud-39 beam-B5-two-span 8.4 0.019 0.095 450000000
+  beam-B6-cantilever-stud-0 beam-B6-cantilever 2.1 0.019 0.095 450000000
+  beam-B6-cantilever-stud-1 beam-B6-cantilever 2.3 0.019 0.095 450000000
+  beam-B6-cantilever-stud-2 beam-B6-cantilever 2.5 0.019 0.095 450000000
+  beam-B6-cantilever-stud-3 beam-B6-cantilever 2.7 0.019 0.095 450000000
+  beam-B6-cantilever-stud-4 beam-B6-cantilever 2.9 0.019 0.095 450000000
+  beam-B6-cantilever-stud-5 beam-B6-cantilever 3.1 0.019 0.095 450000000
+  beam-B6-cantilever-stud-6 beam-B6-cantilever 3.3 0.019 0.095 450000000
+  beam-B6-cantilever-stud-7 beam-B6-cantilever 3.5 0.019 0.095 450000000
+  beam-B6-cantilever-stud-8 beam-B6-cantilever 3.7 0.019 0.095 450000000
+  beam-B6-cantilever-stud-9 beam-B6-cantilever 3.9 0.019 0.095 450000000
+  beam-B6-cantilever-stud-10 beam-B6-cantilever 4.1 0.019 0.095 450000000
+  beam-B6-cantilever-stud-11 beam-B6-cantilever 4.3 0.019 0.095 450000000
+  beam-B6-cantilever-stud-12 beam-B6-cantilever 4.5 0.019 0.095 450000000
+  beam-B6-cantilever-stud-13 beam-B6-cantilever 4.7 0.019 0.095 450000000
+  beam-B6-cantilever-stud-14 beam-B6-cantilever 4.9 0.019 0.095 450000000
+  beam-B6-cantilever-stud-15 beam-B6-cantilever 5.1 0.019 0.095 450000000
+  beam-B6-cantilever-stud-16 beam-B6-cantilever 5.3 0.019 0.095 450000000
+  beam-B6-cantilever-stud-17 beam-B6-cantilever 5.5 0.019 0.095 450000000
+  beam-B6-cantilever-stud-18 beam-B6-cantilever 5.7 0.019 0.095 450000000
+  beam-B6-cantilever-stud-19 beam-B6-cantilever 5.9 0.019 0.095 450000000
+  beam-B6-cantilever-stud-20 beam-B6-cantilever 6.1 0.019 0.095 450000000
+  beam-B6-cantilever-stud-21 beam-B6-cantilever 6.3 0.019 0.095 450000000
+  beam-B6-cantilever-stud-22 beam-B6-cantilever 6.5 0.019 0.095 450000000
+  beam-B6-cantilever-stud-23 beam-B6-cantilever 6.7 0.019 0.095 450000000
+  beam-B6-cantilever-stud-24 beam-B6-cantilever 6.9 0.019 0.095 450000000
+  beam-B6-cantilever-stud-25 beam-B6-cantilever 7.1 0.019 0.095 450000000
+  beam-B6-cantilever-stud-26 beam-B6-cantilever 7.3 0.019 0.095 450000000
+  beam-B6-cantilever-stud-27 beam-B6-cantilever 7.5 0.019 0.095 450000000
+  beam-B6-cantilever-stud-28 beam-B6-cantilever 7.7 0.019 0.095 450000000
+  beam-B6-cantilever-stud-29 beam-B6-cantilever 7.9 0.019 0.095 450000000
+  beam-B6-cantilever-stud-30 beam-B6-cantilever 8.1 0.019 0.095 450000000
+  beam-B6-cantilever-stud-31 beam-B6-cantilever 8.3 0.019 0.095 450000000
+  beam-B6-cantilever-stud-32 beam-B6-cantilever 8.5 0.019 0.095 450000000
+  beam-B6-cantilever-stud-33 beam-B6-cantilever 8.7 0.019 0.095 450000000
+  beam-B6-cantilever-stud-34 beam-B6-cantilever 8.9 0.019 0.095 450000000
+  beam-B6-cantilever-stud-35 beam-B6-cantilever 9.1 0.019 0.095 450000000
+  beam-B6-cantilever-stud-36 beam-B6-cantilever 9.3 0.019 0.095 450000000
+  beam-B6-cantilever-stud-37 beam-B6-cantilever 9.5 0.019 0.095 450000000
+  beam-B6-cantilever-stud-38 beam-B6-cantilever 9.7 0.019 0.095 450000000
+  beam-B6-cantilever-stud-39 beam-B6-cantilever 9.9 0.019 0.095 450000000
+}
+cases [id:TEXT label-en:TEXT label-de:TEXT entry-id:TEXT numbers:TABLE texts:TABLE] {
+  case-c94-01 "Headed stud resistance with profiled sheeting" "Dübeltragfähigkeit mit Profilblech" C94-01 [ {id=b_0 value=0.1} {id=d_stud value=0.019} {id=fck value=25000000} {id=fu_stud value=450000000} {id=gamma_v value=1.25} {id=h_p value=0.06} {id=h_sc value=0.125} {id=n_r value=1} {id=p_ed value=60000} {id=t_sheet value=0.001} ] [ {id=ribs value=transverse} ]
+  case-c94-02 "Patch loading of a web with bending interaction" "Lasteinleitung in den Steg mit Biegeinteraktion" C94-02 [ {id=a_panel value=2} {id=b_f value=0.2} {id=f_ed value=150000} {id=fyf value=355000000} {id=fyw value=355000000} {id=gamma_m1 value=1} {id=h_w value=0.5} {id=m_ed value=100000} {id=m_rd value=400000} {id=s_s value=0.1} {id=t_f value=0.015} {id=t_w value=0.01} ] [ ]
+  case-c94-03 "Load introduction into a composite column" "Lasteinleitung in eine Verbundstütze" C94-03 [ {id=d_min value=0.3} {id=l_col value=3.5} {id=n_intro value=150000} {id=p_rd value=80000} {id=perimeter value=1.2} ] [ {id=kind value=concrete_encased} ]
+  case-c94-04 "Deflection of a simply supported composite beam" "Durchbiegung eines Verbundträgers als Einfeldträger" C94-04 [ {id=g_line value=10000} {id=i_long value=0.0004} {id=i_short value=0.0006} {id=l_span value=8} {id=q_line value=15000} {id=span_ratio value=250} ] [ ]
+  case-c94-05 "Deflection of a two-span composite beam" "Durchbiegung eines zweifeldrigen Verbundträgers" C94-05 [ {id=g_line value=10000} {id=i_long value=0.0004} {id=i_short value=0.0006} {id=l_span value=8} {id=q_line value=15000} {id=span_ratio value=250} ] [ ]
+  case-c94-06 "Steel strength at elevated temperature" "Stahlfestigkeit bei erhöhter Temperatur" C94-06 [ {id=fy value=355000000} {id=sigma_ed value=100000000} {id=theta_a value=550} ] [ ]
+  case-c94-07 "Sagging plastic moment resistance with full shear connection" "Plastische Momententragfähigkeit im Feld bei vollständiger Verdübelung" C94-07 [ {id=b_eff value=2} {id=fck value=25000000} {id=fyd value=355000000} {id=gamma_c value=1.5} {id=h_c value=0.12} {id=m_ed value=100000} {id=sec_a value=0.0085} {id=sec_b value=0.18} {id=sec_h value=0.4} {id=sec_iy value=0.000231} {id=sec_tf value=0.0135} {id=sec_tw value=0.0086} {id=ys value=0.15} ] [ ]
+  case-c94-08 "Hogging plastic moment resistance" "Plastische Momententragfähigkeit über der Stütze" C94-08 [ {id=as_rebar value=0.004} {id=fsd value=435000000} {id=fyd value=355000000} {id=m_ed value=100000} {id=sec_a value=0.0085} {id=sec_b value=0.18} {id=sec_h value=0.4} {id=sec_iy value=0.000231} {id=sec_tf value=0.0135} {id=sec_tw value=0.0086} {id=y_r value=0.04} {id=ys value=0.15} ] [ ]
+  case-c94-09 "Natural frequency of a composite floor beam" "Eigenfrequenz eines Verbunddeckenträgers" C94-09 [ {id=f_min value=3} {id=g_line value=10000} {id=i_short value=0.0006} {id=l_span value=8} {id=psi_vib value=0.3} {id=q_line value=15000} ] [ ]
+  case-c94-10 "Lateral-torsional buckling of a continuous composite beam over the support" "Biegedrillknicken eines Durchlaufverbundträgers über der Stütze" C94-10 [ {id=a_beam value=3} {id=fy value=355000000} {id=gamma_m1 value=1} {id=i2_slab value=0.00004} {id=k_alpha value=2} {id=l_ltb value=6} {id=m_ed value=100000} {id=sec_a value=0.0085} {id=sec_b value=0.18} {id=sec_h value=0.4} {id=sec_iy value=0.000231} {id=sec_tf value=0.0135} {id=sec_tw value=0.0086} ] [ {id=steel_kind value=rolled} ]
+  case-c94-11 "Deflection with creep and shrinkage of a composite beam" "Durchbiegung eines Verbundträgers mit Kriechen und Schwinden" C94-11 [ {id=b_eff value=2} {id=eps_cs value=0.0003} {id=fck value=25000000} {id=g_line value=10000} {id=h_c value=0.12} {id=l_span value=8} {id=phi_t value=2.5} {id=psi_l value=1.1} {id=q_line value=15000} {id=sec_a value=0.0085} {id=sec_b value=0.18} {id=sec_h value=0.4} {id=sec_iy value=0.000231} {id=sec_tf value=0.0135} {id=sec_tw value=0.0086} {id=span_ratio value=250} {id=ys value=0.15} ] [ ]
+  case-c94-12 "Protected steel temperature against the critical temperature" "Temperatur des bekleideten Stahls gegen die kritische Temperatur" C94-12 [ {id=am_v value=150} {id=c_p value=1000} {id=d_p value=0.02} {id=lambda_p value=0.12} {id=mu0 value=0.5} {id=rho_p value=800} {id=t_fire value=3600} ] [ ]
+}

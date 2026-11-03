@@ -1,0 +1,5 @@
+type InsertTendonPoint {
+  memberId: String!
+  index: Int!
+  tendonPoint: TendonPoint!
+}

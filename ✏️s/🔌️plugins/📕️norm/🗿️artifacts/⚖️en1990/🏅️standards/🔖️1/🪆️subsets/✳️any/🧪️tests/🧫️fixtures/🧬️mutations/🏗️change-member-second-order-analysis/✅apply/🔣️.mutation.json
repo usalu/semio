@@ -1,0 +1,5 @@
+{
+  "mutation": "changeMemberSecondOrderAnalysis",
+  "id": "beam-B1",
+  "newSecondOrderAnalysis": 1.5
+}

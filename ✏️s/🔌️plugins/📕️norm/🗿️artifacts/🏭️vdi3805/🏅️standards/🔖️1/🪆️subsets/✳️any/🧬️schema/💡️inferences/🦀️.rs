@@ -20,8 +20,8 @@ use ::framework_schema::ArtifactSchema;
 /// `💡️inferences/` (currently: `outline`, backed by the `🧾outline/` slug dir — this document's
 /// own field/section structure, since a norm compliance record IS the document it describes).
 #[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.norm.vdi3805.inference")]
 pub struct Vdi3805Inference {
@@ -58,7 +58,7 @@ pub fn vdi3805_artifact_inference_descriptor() -> ::semio_framework_schema_regis
     ::semio_framework_schema_registry::ArtifactInferenceDescriptor {
         id: "s.norm.vdi3805.inference",
         inference: ::semio_framework_schema_registry::FacetLeaves {
-            rust: concat!(include_str!("🦀️.rs"), include_str!("🧰️check-evidence/🦀️.rs"), include_str!("🧱️sheet-checks/🦀️.rs"), include_str!("🧱️sheet-checks/🚰️valve-radiator-and-pump-checks/🦀️.rs"), include_str!("🧱️sheet-checks/🔥️heat-generator-and-operative-sheet-checks/🦀️.rs"), include_str!("📚️document-checks/🦀️.rs"), include_str!("📚️document-checks/🗃️catalog-integrity/🦀️.rs"), include_str!("📚️document-checks/🗂️file-header-and-historical-checks/🦀️.rs"), include_str!("📏️parts/🦀️.rs"), include_str!("🧾outline/🦀️.rs")),
+            rust: concat!(include_str!("🦀️.rs"), include_str!("🧰️check-evidence/🦀️.rs"), include_str!("🧱️sheet-checks/🦀️.rs"), include_str!("🧱️sheet-checks/🚰️valve-radiator-and-pump-checks/🦀️.rs"), include_str!("🧱️sheet-checks/🔥️heat-generator-and-operative-sheet-checks/🦀️.rs"), include_str!("📚️document-checks/🦀️.rs"), include_str!("📚️document-checks/🗃️catalog/🦀️.rs"), include_str!("📚️document-checks/🗂️file-header-and-historical-checks/🦀️.rs"), include_str!("📏️parts/🦀️.rs"), include_str!("🧾outline/🦀️.rs")),
             typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto")
         },
     }

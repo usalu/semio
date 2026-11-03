@@ -1,0 +1,6 @@
+{
+  "ChangeInPlaneShear": {
+    "id": "wall-north",
+    "newInPlaneShearN": 15000.0
+  }
+}

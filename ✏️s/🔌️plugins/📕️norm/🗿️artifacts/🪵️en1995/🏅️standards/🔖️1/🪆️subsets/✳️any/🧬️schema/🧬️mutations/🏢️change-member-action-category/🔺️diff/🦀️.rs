@@ -11,5 +11,5 @@ pub fn diff(payload: &ChangeMemberActionCategory, base: &En1995Snapshot) -> prot
     };
     let member = &base.members[idx];
     let action = &member.actions[action_idx];
-    protocol::MutationOutcome::new(En1995Diff { members: En1995MemberDelta::modification(&member.id, En1995MemberPatch { actions: En1995MemberActionDelta::modification(&action.id, En1995MemberActionPatch { category: Some(payload.new_value.clone()), ..Default::default() }), ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(En1995Diff { members: En1995MemberDelta::modification(&member.id, En1995MemberPatch { actions: En1995MemberActionDelta::modification(&action.id, En1995MemberActionPatch { category: Some(payload.new_value), ..Default::default() }), ..Default::default() }), ..Default::default() })
 }

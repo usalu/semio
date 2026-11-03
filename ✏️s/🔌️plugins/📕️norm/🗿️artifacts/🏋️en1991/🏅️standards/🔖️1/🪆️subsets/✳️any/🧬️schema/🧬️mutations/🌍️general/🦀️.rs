@@ -17,14 +17,6 @@ pub mod change_annex;
 pub mod change_depth;
 #[path = "../🧱change-height/🦀️.rs"]
 pub mod change_height;
-#[path = "../🏙️change-storey-count/🦀️.rs"]
-pub mod change_storey_count;
-#[path = "../🌉change-structure-kind/🦀️.rs"]
-pub mod change_structure_kind;
-#[path = "../🏠change-width/🦀️.rs"]
-pub mod change_width;
-#[path = "../➕️insert-accidental-cases/🦀️.rs"]
-pub mod insert_accidental_cases;
-#[path = "../➖️remove-accidental-cases/🦀️.rs"]
-pub mod remove_accidental_cases;
 //#endregion 🪢️Mounts
+
+pub use semio_s_artifact_norm_en1991_mut_general_more::{change_storey_count, change_structure_kind, change_width, insert_accidental_case, remove_accidental_case};

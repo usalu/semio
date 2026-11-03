@@ -1,0 +1,6 @@
+{
+  "ChangeBeamEndPlateHeightM": {
+    "id": "beam-B1",
+    "newEndPlateHeightM": 0.5
+  }
+}

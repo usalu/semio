@@ -140,7 +140,7 @@ export function isJustifiedMutationDecision(decision: NoOracleDecision): boolean
 export type OracleHostPackage = Readonly<{ implementation: Implementation; package: string; path?: string; version?: string; module?: string; rationale?: string }>;
 
 /** 🧱️ A local package the generated SUBJECT host links beside the owner's own package — a subject spanning several packages. */
-export type SubjectHostPackage = Readonly<{ implementation: Implementation; package: string; path: string; rationale: string }>;
+export type SubjectHostPackage = Readonly<{ implementation: Implementation; package: string; path: string; rationale: string; features?: readonly string[] }>;
 
 /** ☁️ The name a host imports a contributed package by — the declared module, else the package name. */
 export function oracleHostModule(entry: OracleHostPackage): string {

@@ -1,0 +1,86 @@
+{
+  "annex": null,
+  "reliabilityClass": "RC2",
+  "materials": null,
+  "sections": null,
+  "members": null,
+  "connections": {
+    "removed": [],
+    "inserted": [
+      {
+        "index": 1,
+        "row": {
+          "id": "support-weld-2",
+          "memberId": "purlin-1",
+          "materialId": "mat-6082",
+          "kind": "combined",
+          "actions": [
+            {
+              "id": "G-conn",
+              "kind": "permanent",
+              "category": "selfWeight",
+              "source": "external",
+              "gKLine": 800.0,
+              "qKLine": 0.0,
+              "nK": 1500.0,
+              "vYK": 200.0,
+              "vZK": 3500.0,
+              "mYK": 400.0,
+              "mZK": 150.0,
+              "torsionK": 0.0,
+              "localLoadK": 0.0
+            },
+            {
+              "id": "Q-conn",
+              "kind": "snow",
+              "category": "snow",
+              "source": "external",
+              "gKLine": 0.0,
+              "qKLine": 600.0,
+              "nK": 800.0,
+              "vYK": 150.0,
+              "vZK": 2500.0,
+              "mYK": 250.0,
+              "mZK": 100.0,
+              "torsionK": 0.0,
+              "localLoadK": 0.0
+            }
+          ],
+          "bolts": {
+            "material": "8.8",
+            "diameter": 0.012,
+            "rows": 2,
+            "boltsPerRow": 2,
+            "edgeDistance": 0.024,
+            "pitch": 0.036,
+            "gauge": 0.016,
+            "plateThickness": 0.008
+          },
+          "welds": {
+            "fillerAlloy": "4043",
+            "throat": 0.005,
+            "length": 0.16,
+            "betaW": 0.63,
+            "hazExtent": 0.025
+          },
+          "loadEccentricity": 0.0,
+          "holeStagger": 0.0,
+          "forceMethod": "elastic"
+        }
+      }
+    ],
+    "moved": [],
+    "modified": []
+  },
+  "fireScenarios": null,
+  "fatigueDetails": null,
+  "coldFormed": null,
+  "shells": null,
+  "placements": null,
+  "weldRuns": null,
+  "outlineVertices": null,
+  "fatigueCategories": null,
+  "patchLoads": null,
+  "ringStiffeners": null,
+  "transverseStiffeners": null
+}

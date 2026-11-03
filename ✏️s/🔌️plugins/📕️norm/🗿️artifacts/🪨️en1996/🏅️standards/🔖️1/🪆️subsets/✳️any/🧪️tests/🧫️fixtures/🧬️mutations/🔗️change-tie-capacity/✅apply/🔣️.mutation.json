@@ -1,0 +1,7 @@
+{
+  "ChangeTieCapacity": {
+    "wallId": "wall-north",
+    "id": "tie-1",
+    "newCapacityN": 12000.0
+  }
+}

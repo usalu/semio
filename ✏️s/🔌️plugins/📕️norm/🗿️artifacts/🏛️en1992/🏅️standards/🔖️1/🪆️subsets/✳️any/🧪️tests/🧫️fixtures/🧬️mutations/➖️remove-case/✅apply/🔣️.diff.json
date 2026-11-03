@@ -1,0 +1,25 @@
+{
+  "annex": null,
+  "reliabilityClass": null,
+  "title": null,
+  "designWorkingLifeYears": null,
+  "deltaCDev": null,
+  "cementType": null,
+  "concreteGrades": null,
+  "reinforcementGrades": null,
+  "prestressSteels": null,
+  "members": null,
+  "anchors": null,
+  "placements": null,
+  "cases": {
+    "removed": [
+      {
+        "id": "case-m04",
+        "index": 0
+      }
+    ],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  }
+}

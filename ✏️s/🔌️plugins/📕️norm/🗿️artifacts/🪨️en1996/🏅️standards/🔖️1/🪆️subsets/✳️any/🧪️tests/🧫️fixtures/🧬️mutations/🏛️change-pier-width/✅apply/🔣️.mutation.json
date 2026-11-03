@@ -1,0 +1,7 @@
+{
+  "ChangePierWidth": {
+    "wallId": "wall-north",
+    "id": "pier-1",
+    "newWidthM": 0.9
+  }
+}

@@ -1,0 +1,184 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/compliance/spec-trace/schema.json",
+  "title": "SpecTrace",
+  "description": "Traceability of one norm artifact: every id of its target spec maps to a clause, an optional snapshot entity and exactly one realisation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "code",
+    "standard",
+    "spec",
+    "specIds",
+    "items"
+  ],
+  "properties": {
+    "code": {
+      "type": "string",
+      "pattern": "^en[0-9]{4}$"
+    },
+    "standard": {
+      "type": "string",
+      "minLength": 1
+    },
+    "spec": {
+      "type": "string",
+      "minLength": 1
+    },
+    "specIds": {
+      "type": "array",
+      "uniqueItems": true,
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "items": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/Item"
+      }
+    }
+  },
+  "definitions": {
+    "Item": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "clause",
+        "entity",
+        "realisation",
+        "description"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "clause": {
+          "type": "string",
+          "minLength": 1
+        },
+        "entity": {
+          "type": "string"
+        },
+        "realisation": {
+          "$ref": "#/definitions/Realisation"
+        },
+        "description": {
+          "$ref": "#/definitions/Text"
+        }
+      }
+    },
+    "Text": {
+      "description": "Bilingual text: both languages are mandatory and neither is the default.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "en",
+        "de"
+      ],
+      "properties": {
+        "en": {
+          "type": "string",
+          "minLength": 1
+        },
+        "de": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "Realisation": {
+      "oneOf": [
+        {
+          "$ref": "#/definitions/CheckRealisation"
+        },
+        {
+          "$ref": "#/definitions/DataRealisation"
+        },
+        {
+          "$ref": "#/definitions/DesignCaseRealisation"
+        },
+        {
+          "$ref": "#/definitions/NotModelledRealisation"
+        }
+      ]
+    },
+    "CheckRealisation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "checks"
+      ],
+      "properties": {
+        "kind": {
+          "const": "check"
+        },
+        "checks": {
+          "type": "array",
+          "uniqueItems": true,
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "DataRealisation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "path"
+      ],
+      "properties": {
+        "kind": {
+          "const": "data"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "DesignCaseRealisation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "entry"
+      ],
+      "properties": {
+        "kind": {
+          "const": "design-case"
+        },
+        "entry": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "NotModelledRealisation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "reason"
+      ],
+      "properties": {
+        "kind": {
+          "const": "not-modelled"
+        },
+        "reason": {
+          "$ref": "#/definitions/Text"
+        }
+      }
+    }
+  }
+}

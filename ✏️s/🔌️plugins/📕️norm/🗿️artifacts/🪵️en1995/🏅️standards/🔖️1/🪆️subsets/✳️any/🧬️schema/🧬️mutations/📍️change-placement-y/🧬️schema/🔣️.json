@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-placement-y/schema.json",
+  "title": "ChangePlacementY",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newValue"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Placement",
+          "de": "Platzierung"
+        },
+        "description": {
+          "en": "The persisted placement this mutation addresses.",
+          "de": "Die persistierte Platzierung, die diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "placement"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newValue": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Origin y",
+          "de": "Ursprung y"
+        },
+        "unit": "m",
+        "step": 0.01,
+        "precision": 3,
+        "group": "pose",
+        "order": 20
+      }
+    }
+  }
+}

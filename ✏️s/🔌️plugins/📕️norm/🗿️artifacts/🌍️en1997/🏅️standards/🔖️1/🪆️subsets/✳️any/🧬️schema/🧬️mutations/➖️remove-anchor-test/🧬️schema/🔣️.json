@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/remove-anchor-test/schema.json",
+  "title": "RemoveAnchorTest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "anchorId",
+    "index"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "removeAnchorTest"
+    },
+    "anchorId": {
+      "type": "string",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Anchor",
+          "de": "Anker"
+        },
+        "description": {
+          "en": "The anchor that owns the row, by id.",
+          "de": "Das Elternelement (Anker), per Kennung."
+        },
+        "group": "target",
+        "order": 10,
+        "widget": "reference",
+        "ref": {
+          "kind": "anchor"
+        }
+      }
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Zero-based list position of the row.",
+          "de": "Nullbasierte Listenposition der Zeile."
+        },
+        "group": "target",
+        "order": 20,
+        "widget": "stepper",
+        "step": 1,
+        "precision": 0
+      }
+    }
+  }
+}

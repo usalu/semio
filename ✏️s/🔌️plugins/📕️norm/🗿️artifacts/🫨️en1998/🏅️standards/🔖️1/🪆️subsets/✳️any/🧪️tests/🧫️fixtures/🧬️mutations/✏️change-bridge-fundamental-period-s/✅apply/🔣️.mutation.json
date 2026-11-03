@@ -1,0 +1,5 @@
+{
+  "mutation": "changeBridgeFundamentalPeriodS",
+  "id": "br-1",
+  "newFundamentalPeriodS": 2.4
+}

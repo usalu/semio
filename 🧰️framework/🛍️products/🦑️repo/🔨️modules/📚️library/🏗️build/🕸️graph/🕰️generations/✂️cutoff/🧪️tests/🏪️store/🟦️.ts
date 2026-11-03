@@ -69,7 +69,7 @@ test("a verification scoped to some projects asks only the derived questions tho
  const scoped=await store.plan({current:await store.read(),identity:IDENTITY,changes:[],only:new Set(["p2"])});
  expect(counters.derived,"only the question p2 holds").toBe(1);expect(scoped.cutoff?.questions).toBe(1);expect(scoped.cutoff?.held).toBe(1);expect([...scoped.dirty]).toEqual([]);
  counters.derived=0;const whole=await store.plan({current:await store.read(),identity:IDENTITY,changes:[]});
- expect(counters.derived,"the deferred question is still stale for a whole verification").toBe(2);expect(whole.cutoff?.questions).toBe(2);
+ expect(counters.derived,"the deferred question is asked, the one answered by the scoped plan is taken from the memo").toBe(1);expect(whole.cutoff?.questions).toBe(2);expect(whole.cutoff?.reused).toBe(1);
  writeFileSync(join(root,"lib/c.ts"),"import ./d\n");counters.derived=0;
  const changed=await store.plan({current:await store.read(),identity:IDENTITY,changes:[],only:new Set(["p2"])});
  expect(counters.derived).toBe(1);expect([...changed.dirty]).toEqual(["p2"]);

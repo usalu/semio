@@ -7,7 +7,7 @@
   "aggregateVariant": "AddCurve",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
-  "binaryTag": 16,
+  "binaryTag": 15,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

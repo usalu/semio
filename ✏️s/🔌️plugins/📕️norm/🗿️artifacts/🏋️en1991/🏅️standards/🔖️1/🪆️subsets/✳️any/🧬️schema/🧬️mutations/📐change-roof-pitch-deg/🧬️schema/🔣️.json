@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-roof-pitch-deg/schema.json",
+  "title": "ChangeRoofPitchDeg",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newPitchDeg"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Roof",
+          "de": "Dach"
+        },
+        "description": {
+          "en": "The roof this mutation addresses, by id.",
+          "de": "Das adressierte Element (Dach), per Kennung."
+        },
+        "ref": {
+          "kind": "roof"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newPitchDeg": {
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Roof pitch",
+          "de": "Dachneigung"
+        },
+        "description": {
+          "en": "Value of the design; the checks and the 3D scene derive their actions from it.",
+          "de": "Wert des Entwurfs; Nachweise und 3D-Szene leiten ihre Einwirkungen daraus ab."
+        },
+        "unit": "deg",
+        "displayUnit": "°",
+        "displayFactor": 1,
+        "step": 1,
+        "precision": 1,
+        "group": "roofs",
+        "order": 20
+      },
+      "maximum": 90
+    }
+  }
+}

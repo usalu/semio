@@ -1,0 +1,6 @@
+{
+  "ChangeFatigueConsequence": {
+    "id": "fat-1",
+    "newConsequence": "SafeLife"
+  }
+}

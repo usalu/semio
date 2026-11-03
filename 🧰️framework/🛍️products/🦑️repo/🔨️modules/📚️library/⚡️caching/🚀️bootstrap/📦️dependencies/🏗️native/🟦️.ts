@@ -58,7 +58,7 @@ export async function prepareDependencies(kind: string, workspace: string, invoc
   }
   else if (kind === "cargo") { for (const owner of discoverCargoWorkspaces(workspace)) { await runPreparedCargoDependencyPairV1(workspace,owner.manifest,invocation,storage,runner,phase); } }
   else if (kind === "cargo-lock") { for (const owner of discoverCargoWorkspaces(workspace)) await run(...render("rust", "lock", { manifest: owner.manifest })); }
-  else if (kind === "go") await run(...render("go", "sync"), false, { ...(await goEnvironment(process.env)), GOWORK: join(workspace, "go.work") });
+  else if (kind === "go") await run(...render("go", "sync"), false, { ...(await goEnvironment(boundedEnvironment)), GOWORK: join(workspace, "go.work") });
   else if (kind === "dotnet") {
     const sdk = (await run("dotnet", ["--version"], true)).trim();
     if (sdk !== NATIVE_TOOLCHAINS_V1.dotnet.sdk) throw new Error(toolchainMessageV1("pin", { tool: ".NET SDK", actual: sdk, expected: NATIVE_TOOLCHAINS_V1.dotnet.sdk, source: NATIVE_TOOLCHAINS_V1.dotnet.file }, environment));

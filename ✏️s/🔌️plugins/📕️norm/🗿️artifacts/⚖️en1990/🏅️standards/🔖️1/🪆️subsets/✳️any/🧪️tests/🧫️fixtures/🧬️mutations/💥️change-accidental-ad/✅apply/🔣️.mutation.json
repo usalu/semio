@@ -1,0 +1,5 @@
+{
+  "mutation": "changeAccidentalAd",
+  "id": "A-impact",
+  "newAd": 100000.0
+}

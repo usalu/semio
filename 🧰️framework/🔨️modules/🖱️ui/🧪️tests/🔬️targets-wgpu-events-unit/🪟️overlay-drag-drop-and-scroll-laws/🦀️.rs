@@ -120,6 +120,32 @@ fn drag_session_promotes_after_threshold_and_commits_on_an_accepting_drop_target
 }
 
 #[test]
+fn a_synthetic_pointer_drag_of_one_row_over_another_marks_the_hover_target_and_commits_the_drop_on_it() {
+    let mut tree = UiTree::new();
+    let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+    let rows: Vec<NodeId> = (0..3u32).map(|n| leaf(&mut tree, Some(root), n + 1, stack_ui(), (0.0, n as f32 * 30.0, 200.0, 30.0))).collect();
+    rows.iter().for_each(|row| set_flag(&mut tree, *row, NodeFlags::DROP_TARGET));
+    set_flag(&mut tree, rows[2], NodeFlags::DRAG_SOURCE);
+    let mut router = EventRouter::new("main");
+    let mut payload = DragPayload::new();
+    payload.insert("application/x-semio-tree-row".into(), "{\"id\":\"b3\"}".into());
+    router.set_drag_payload(rows[2], payload.clone());
+
+    router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 75.0, button: PointerButton::Primary, modifiers: Default::default() });
+    assert_eq!(router.capture(), Some((rows[2], CaptureKind::Press)));
+    router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 10.0, y: 50.0, modifiers: Default::default() });
+    assert_eq!(router.capture(), Some((rows[2], CaptureKind::Drag)), "moving past the threshold promotes the press to a drag");
+    router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 10.0, y: 40.0, modifiers: Default::default() });
+    router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 10.0, y: 10.0, modifiers: Default::default() });
+    assert_eq!(router.drag_session().and_then(|drag| drag.drop_target), Some(rows[0]), "the row under the pointer is the hover marker target");
+
+    let commands = router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: 10.0, y: 10.0, button: PointerButton::Primary, modifiers: Default::default() });
+    let drops: Vec<_> = commands.iter().filter_map(|cmd| match cmd { UiCommand::DropCommitted { source, target, payload, .. } => Some((*source, *target, payload.clone())), _ => None }).collect();
+    assert_eq!(drops, vec![(rows[2], rows[0], payload)], "release commits exactly one drop on the hovered row, carrying the dragged row payload");
+    assert!(router.drag_session().is_none() && router.capture().is_none());
+}
+
+#[test]
 fn drag_session_cancels_when_released_over_no_accepting_drop_target() {
     let mut tree = UiTree::new();
     let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0_f32, 200.0));

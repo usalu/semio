@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-joint-slip-factor-ks/schema.json",
+  "title": "ChangeJointSlipFactorKs",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newSlipFactorKs"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Joint",
+          "de": "Anschluss"
+        },
+        "description": {
+          "en": "The joint this mutation addresses, by id.",
+          "de": "Das adressierte Element (Anschluss), per Kennung."
+        },
+        "ref": {
+          "kind": "joint"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newSlipFactorKs": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Hole-type factor k_s",
+          "de": "Lochbeiwert k_s"
+        },
+        "widget": "stepper",
+        "precision": 2,
+        "step": 0.01,
+        "snaps": [
+          0.63,
+          0.7,
+          0.76,
+          0.85,
+          1
+        ],
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

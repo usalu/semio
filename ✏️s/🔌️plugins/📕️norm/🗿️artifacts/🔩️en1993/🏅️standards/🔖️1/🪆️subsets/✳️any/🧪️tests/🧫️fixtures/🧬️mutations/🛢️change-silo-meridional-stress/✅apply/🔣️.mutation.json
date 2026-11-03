@@ -1,0 +1,6 @@
+{
+  "ChangeSiloMeridionalStress": {
+    "id": "silo-1",
+    "newMeridionalStress": 1.5
+  }
+}

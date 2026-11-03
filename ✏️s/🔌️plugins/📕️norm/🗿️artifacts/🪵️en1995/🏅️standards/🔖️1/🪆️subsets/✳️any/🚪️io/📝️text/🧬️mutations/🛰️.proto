@@ -1,66 +1,7 @@
-// 🧬️ EN 1995 mutation schema — hierarchical timber subject.
 syntax = "proto3";
-package semio.s.norm.en1995.mutation;
-
-message ChangeAnnex {
-  // @state artifact
-  string new_annex = 1;
-}
-
-message InsertMember {
-  // @state artifact
-  uint32 index = 1;
-  // @state artifact
-  bytes member = 2;
-}
-
-message RemoveMember {
-  // @state artifact
-  uint32 index = 1;
-}
-
-message ChangeMemberH {
-  // @state artifact
-  uint32 index = 1;
-  // @state artifact
-  double new_h_m = 2;
-}
-
-message ChangeMemberB {
-  // @state artifact
-  uint32 index = 1;
-  // @state artifact
-  double new_b_m = 2;
-}
-
-message ChangeMemberStrengthClass {
-  // @state artifact
-  uint32 index = 1;
-  // @state artifact
-  string new_strength_class = 2;
-}
-
-message ChangeConnectionNumber {
-  // @state artifact
-  uint32 index = 1;
-  // @state artifact
-  uint32 new_number = 2;
-}
-
-message InsertConnection {
-  // @state artifact
-  uint32 index = 1;
-  // @state artifact
-  bytes connection = 2;
-}
-
-message RemoveConnection {
-  // @state artifact
-  uint32 index = 1;
-}
-
+package semio.s.norm.en1995.mutations;
 message En1995Mutation {
-  oneof payload {
+  oneof kind {
     ChangeAnnex change_annex = 1;
     InsertMember insert_member = 2;
     RemoveMember remove_member = 3;
@@ -71,4 +12,37 @@ message En1995Mutation {
     InsertConnection insert_connection = 8;
     RemoveConnection remove_connection = 9;
   }
+}
+message ChangeAnnex {
+  AnnexChoice new_annex = 1;
+}
+message InsertMember {
+  uint64 index = 1;
+  TimberMember member = 2;
+}
+message RemoveMember {
+  uint64 index = 1;
+}
+message ChangeMemberH {
+  string member_id = 1;
+  double new_value = 2;
+}
+message ChangeMemberB {
+  string member_id = 1;
+  double new_value = 2;
+}
+message ChangeMemberStrengthClass {
+  string member_id = 1;
+  StrengthClass new_value = 2;
+}
+message ChangeConnectionNumber {
+  string connection_id = 1;
+  uint32 new_value = 2;
+}
+message InsertConnection {
+  uint64 index = 1;
+  TimberConnection connection = 2;
+}
+message RemoveConnection {
+  uint64 index = 1;
 }

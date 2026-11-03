@@ -5,26 +5,26 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "index",
+    "id",
     "newAssumedForce"
   ],
   "properties": {
-    "index": {
-      "type": "integer",
-      "minimum": 0,
+    "id": {
+      "type": "string",
       "x-semio-ui": {
-        "widget": "stepper",
-        "role": "value",
+        "widget": "reference",
+        "role": "target",
         "label": {
           "en": "Accidental design situation",
           "de": "Außergewöhnliche Bemessungssituation"
         },
         "description": {
-          "en": "Zero-based position of the accidental design situation in its list.",
-          "de": "Nullbasierte Position der außergewöhnlichen Bemessungssituation in der Liste."
+          "en": "The accidental design situation this mutation addresses, by id.",
+          "de": "Das adressierte Element (Außergewöhnliche Bemessungssituation), per Kennung."
         },
-        "step": 1,
-        "precision": 0,
+        "ref": {
+          "kind": "accidental-case"
+        },
         "group": "target",
         "order": 10
       }

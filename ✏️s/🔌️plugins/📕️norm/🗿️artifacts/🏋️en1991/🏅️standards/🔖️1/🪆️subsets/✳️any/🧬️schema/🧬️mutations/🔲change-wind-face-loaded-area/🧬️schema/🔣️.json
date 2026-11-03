@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-wind-face-loaded-area/schema.json",
+  "title": "ChangeWindFaceLoadedArea",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newLoadedArea"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Wind face",
+          "de": "Windfläche"
+        },
+        "description": {
+          "en": "The wind face this mutation addresses, by id.",
+          "de": "Das adressierte Element (Windfläche), per Kennung."
+        },
+        "ref": {
+          "kind": "wind-face"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newLoadedArea": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Loaded area A",
+          "de": "Belastete Fläche A"
+        },
+        "description": {
+          "en": "Value of the design; the checks and the 3D scene derive their actions from it.",
+          "de": "Wert des Entwurfs; Nachweise und 3D-Szene leiten ihre Einwirkungen daraus ab."
+        },
+        "unit": "m2",
+        "displayUnit": "m²",
+        "displayFactor": 1,
+        "step": 1,
+        "precision": 1,
+        "group": "windFaces",
+        "order": 20
+      },
+      "minimum": 0
+    }
+  }
+}

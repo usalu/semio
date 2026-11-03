@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-reinforcement-eps-uk/schema.json",
+  "title": "ChangeReinforcementEpsUk",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "gradeId",
+    "newEpsUk"
+  ],
+  "properties": {
+    "gradeId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Reinforcement grade",
+          "de": "Betonstahlsorte"
+        },
+        "description": {
+          "en": "The reinforcement grade this mutation addresses, by id.",
+          "de": "Das adressierte Element (Betonstahlsorte), per Kennung."
+        },
+        "ref": {
+          "kind": "grade"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newEpsUk": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "eps uk",
+          "de": "Charakteristische Dehnung ε_uk"
+        },
+        "widget": "stepper",
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

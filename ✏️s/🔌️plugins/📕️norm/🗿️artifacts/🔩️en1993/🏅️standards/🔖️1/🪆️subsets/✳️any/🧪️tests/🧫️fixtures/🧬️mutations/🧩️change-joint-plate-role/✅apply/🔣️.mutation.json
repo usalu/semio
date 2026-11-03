@@ -1,0 +1,6 @@
+{
+  "ChangeJointPlateRole": {
+    "id": "joint-plate-1",
+    "newRole": "alt"
+  }
+}

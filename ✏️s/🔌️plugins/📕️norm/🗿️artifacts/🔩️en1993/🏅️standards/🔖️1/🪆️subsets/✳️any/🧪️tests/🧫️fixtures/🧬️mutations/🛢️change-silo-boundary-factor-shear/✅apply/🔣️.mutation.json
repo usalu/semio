@@ -1,0 +1,6 @@
+{
+  "ChangeSiloBoundaryFactorShear": {
+    "id": "silo-1",
+    "newBoundaryFactorShear": 1.5
+  }
+}

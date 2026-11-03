@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-lane-lm1-lane/schema.json",
+  "title": "ChangeLaneLm1Lane",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newLm1Lane"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Bridge lane",
+          "de": "Brückenfahrstreifen"
+        },
+        "description": {
+          "en": "The bridge lane this mutation addresses, by id.",
+          "de": "Das adressierte Element (Brückenfahrstreifen), per Kennung."
+        },
+        "ref": {
+          "kind": "bridge-lane"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newLm1Lane": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255,
+      "x-semio-ui": {
+        "label": {
+          "en": "LM1 lane number",
+          "de": "LM1-Fahrstreifennummer"
+        },
+        "widget": "stepper",
+        "precision": 0,
+        "step": 1,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

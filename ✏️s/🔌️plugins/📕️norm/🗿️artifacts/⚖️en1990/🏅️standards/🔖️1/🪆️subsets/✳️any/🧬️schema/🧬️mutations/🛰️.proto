@@ -1,6 +1,637 @@
 syntax = "proto3";
-package semio.s.norm.en1990.mutation;
+package semio.s.norm.en1990;
 message En1990Mutation {
-  string kind = 1;
-  bytes payload_json = 2;
+  oneof kind {
+    ChangeAnnex change_annex = 1;
+    ChangeProjectId change_project_id = 2;
+    ChangeAltitudeM change_altitude_m = 3;
+    ChangeConsequenceClass change_consequence_class = 4;
+    ChangeReliabilityClass change_reliability_class = 5;
+    ChangeDesignWorkingLifeCategory change_design_working_life_category = 6;
+    ChangeDesignWorkingLifeYears change_design_working_life_years = 7;
+    ChangeReferencePeriodYears change_reference_period_years = 8;
+    ChangeSupervisionLevel change_supervision_level = 9;
+    ChangeInspectionLevel change_inspection_level = 10;
+    ChangeBetaComputed change_beta_computed = 11;
+    RemoveEffect remove_effect = 12;
+    RemoveMember remove_member = 13;
+    RemoveSeismic remove_seismic = 14;
+    RemoveAccidental remove_accidental = 15;
+    RemoveVariable remove_variable = 16;
+    RemovePermanent remove_permanent = 17;
+    InsertEffect insert_effect = 18;
+    InsertMember insert_member = 19;
+    InsertSeismic insert_seismic = 20;
+    InsertAccidental insert_accidental = 21;
+    InsertVariable insert_variable = 22;
+    InsertPermanent insert_permanent = 23;
+    ChangePermanentKind change_permanent_kind = 24;
+    ChangePermanentGk change_permanent_gk = 25;
+    ChangeVariableCategory change_variable_category = 26;
+    ChangeVariableQk change_variable_qk = 27;
+    ChangeVariableGroup change_variable_group = 28;
+    ChangeAccidentalAd change_accidental_ad = 29;
+    ChangeSeismicAEk change_seismic_a_ek = 30;
+    ChangeSeismicImportanceClass change_seismic_importance_class = 31;
+    ChangeMemberLabelEn change_member_label_en = 32;
+    ChangeMemberLabelDe change_member_label_de = 33;
+    ChangeMemberRdStr change_member_rd_str = 34;
+    ChangeMemberRdGeo change_member_rd_geo = 35;
+    ChangeMemberRdEquStab change_member_rd_equ_stab = 36;
+    ChangeMemberRdEquDestab change_member_rd_equ_destab = 37;
+    ChangeMemberRdFat change_member_rd_fat = 38;
+    ChangeMemberSpan change_member_span = 39;
+    ChangeMemberPrecamber change_member_precamber = 40;
+    ChangeMemberDeflectionW1 change_member_deflection_w1 = 41;
+    ChangeMemberDeflectionW2 change_member_deflection_w2 = 42;
+    ChangeMemberDeflectionW3 change_member_deflection_w3 = 43;
+    ChangeMemberDeflLimitRatio change_member_defl_limit_ratio = 44;
+    ChangeMemberDeflLimitRatioW3 change_member_defl_limit_ratio_w3 = 45;
+    ChangeMemberSlsLimitChar change_member_sls_limit_char = 46;
+    ChangeMemberSlsLimitFreq change_member_sls_limit_freq = 47;
+    ChangeMemberSlsLimitQp change_member_sls_limit_qp = 48;
+    ChangeMemberVibrationFrequency change_member_vibration_frequency = 49;
+    ChangeMemberVibFreqMin change_member_vib_freq_min = 50;
+    ChangeBridgeMemberId change_bridge_member_id = 51;
+    ChangeBridgeDeckAcceleration change_bridge_deck_acceleration = 52;
+    ChangeBridgeDeckAccelLimit change_bridge_deck_accel_limit = 53;
+    ChangeBridgeDeckTwist change_bridge_deck_twist = 54;
+    ChangeBridgeDeckTwistLimit change_bridge_deck_twist_limit = 55;
+    ChangeBridgeDeflection change_bridge_deflection = 56;
+    ChangeBridgeDeflectionLimit change_bridge_deflection_limit = 57;
+    ChangeEffectMemberId change_effect_member_id = 58;
+    ChangeEffectActionId change_effect_action_id = 59;
+    ChangeEffectInfluence change_effect_influence = 60;
+    ChangeFatigueMemberId change_fatigue_member_id = 61;
+    ChangeFatigueDetailCategory change_fatigue_detail_category = 62;
+    ChangeFatigueStressRange change_fatigue_stress_range = 63;
+    ChangeFatigueCycles change_fatigue_cycles = 64;
+    ChangeReliabilityResistanceDist change_reliability_resistance_dist = 65;
+    ChangeReliabilityResistanceMean change_reliability_resistance_mean = 66;
+    ChangeReliabilityResistanceSd change_reliability_resistance_sd = 67;
+    ChangeReliabilityActionDist change_reliability_action_dist = 68;
+    ChangeReliabilityActionMean change_reliability_action_mean = 69;
+    ChangeReliabilityActionSd change_reliability_action_sd = 70;
+    ChangeTestQuantity change_test_quantity = 71;
+    ChangeTestDistribution change_test_distribution = 72;
+    ChangeTestSampleSize change_test_sample_size = 73;
+    ChangeTestMean change_test_mean = 74;
+    ChangeTestStdDev change_test_std_dev = 75;
+    ChangeTestVariationKnown change_test_variation_known = 76;
+    ChangeTestConversionFactor change_test_conversion_factor = 77;
+    ChangeTestRequired change_test_required = 78;
+    ChangePlacementX change_placement_x = 79;
+    ChangePlacementY change_placement_y = 80;
+    ChangePlacementZ change_placement_z = 81;
+    ChangePlacementYaw change_placement_yaw = 82;
+    ChangeStructureKind change_structure_kind = 83;
+    InsertBridgeSls insert_bridge_sls = 84;
+    RemoveBridgeSls remove_bridge_sls = 85;
+    InsertFatigueSpectrum insert_fatigue_spectrum = 86;
+    RemoveFatigueSpectrum remove_fatigue_spectrum = 87;
+    InsertReliabilityAnalysis insert_reliability_analysis = 88;
+    RemoveReliabilityAnalysis remove_reliability_analysis = 89;
+    InsertTestSeries insert_test_series = 90;
+    RemoveTestSeries remove_test_series = 91;
+    InsertPlacement insert_placement = 92;
+    RemovePlacement remove_placement = 93;
+    InsertCase insert_case = 94;
+    RemoveCase remove_case = 95;
+    ChangeCaseNumber change_case_number = 96;
+    ChangeCaseText change_case_text = 97;
+    ChangeCaseLabelEn change_case_label_en = 98;
+    ChangeCaseLabelDe change_case_label_de = 99;
+    ChangeCaseEntryId change_case_entry_id = 100;
+    ChangeMemberFrameHeight change_member_frame_height = 101;
+    ChangeMemberFrameDrift change_member_frame_drift = 102;
+    ChangeMemberStoreyHeight change_member_storey_height = 103;
+    ChangeMemberStoreyDrift change_member_storey_drift = 104;
+    ChangeBridgeTrackGauge change_bridge_track_gauge = 105;
+    ChangeBridgeLineSpeed change_bridge_line_speed = 106;
+    ChangeBridgeBallastDepth change_bridge_ballast_depth = 107;
+    ChangeBridgeDeckMass change_bridge_deck_mass = 108;
+    ChangeBridgeNaturalFrequency change_bridge_natural_frequency = 109;
+    ChangeBridgeEndRotation change_bridge_end_rotation = 110;
+    ChangeBridgeBasicWindSpeed change_bridge_basic_wind_speed = 111;
+    ChangeMemberMaterialStrengthK change_member_material_strength_k = 112;
+    ChangeMemberMaterialConvFactor change_member_material_conv_factor = 113;
+    ChangeMemberMatPartialFactor change_member_mat_partial_factor = 114;
+    ChangeMemberMatDesignStrength change_member_mat_design_strength = 115;
+    ChangeMemberNominalDimension change_member_nominal_dimension = 116;
+    ChangeMemberDimensionTolerance change_member_dimension_tolerance = 117;
+    ChangeMemberDesignDimension change_member_design_dimension = 118;
+    ChangeMemberMemberAlphaCr change_member_member_alpha_cr = 119;
+    ChangeMemberSecondOrderAnalysis change_member_second_order_analysis = 120;
+    ChangeBridgeDampingRatio change_bridge_damping_ratio = 121;
+    ChangeFactorOverrideFactor change_factor_override_factor = 122;
+    ChangeFactorOverrideTarget change_factor_override_target = 123;
+    ChangeFactorOverrideValue change_factor_override_value = 124;
+    ChangeFactorOverrideJustif change_factor_override_justif = 125;
+    InsertFactorOverride insert_factor_override = 126;
+    RemoveFactorOverride remove_factor_override = 127;
+    ChangeTrafficGroupGroup change_traffic_group_group = 128;
+    ChangeTrafficGroupVariableId change_traffic_group_variable_id = 129;
+    InsertTrafficGroup insert_traffic_group = 130;
+    RemoveTrafficGroup remove_traffic_group = 131;
+  }
+}
+message ChangeAnnex {
+  AnnexChoice new_annex = 1;
+}
+message ChangeProjectId {
+  string new_project_id = 1;
+}
+message ChangeAltitudeM {
+  double new_altitude_m = 1;
+}
+message ChangeConsequenceClass {
+  uint32 new_consequence_class = 1;
+}
+message ChangeReliabilityClass {
+  string new_reliability_class = 1;
+}
+message ChangeDesignWorkingLifeCategory {
+  uint32 new_design_working_life_category = 1;
+}
+message ChangeDesignWorkingLifeYears {
+  double new_design_working_life_years = 1;
+}
+message ChangeReferencePeriodYears {
+  double new_reference_period_years = 1;
+}
+message ChangeSupervisionLevel {
+  SupervisionLevel new_supervision_level = 1;
+}
+message ChangeInspectionLevel {
+  InspectionLevel new_inspection_level = 1;
+}
+message ChangeBetaComputed {
+  double new_beta_computed = 1;
+}
+message RemoveEffect {
+  uint64 index = 1;
+}
+message RemoveMember {
+  uint64 index = 1;
+}
+message RemoveSeismic {
+  uint64 index = 1;
+}
+message RemoveAccidental {
+  uint64 index = 1;
+}
+message RemoveVariable {
+  uint64 index = 1;
+}
+message RemovePermanent {
+  uint64 index = 1;
+}
+message InsertEffect {
+  optional uint64 index = 1;
+  MemberEffect item = 2;
+}
+message InsertMember {
+  optional uint64 index = 1;
+  Member item = 2;
+}
+message InsertSeismic {
+  optional uint64 index = 1;
+  SeismicAction item = 2;
+}
+message InsertAccidental {
+  optional uint64 index = 1;
+  AccidentalAction item = 2;
+}
+message InsertVariable {
+  optional uint64 index = 1;
+  VariableAction item = 2;
+}
+message InsertPermanent {
+  optional uint64 index = 1;
+  PermanentAction item = 2;
+}
+message ChangePermanentKind {
+  string id = 1;
+  PermanentKind new_kind = 2;
+}
+message ChangePermanentGk {
+  string id = 1;
+  double new_gk = 2;
+}
+message ChangeVariableCategory {
+  string id = 1;
+  string new_category = 2;
+}
+message ChangeVariableQk {
+  string id = 1;
+  double new_qk = 2;
+}
+message ChangeVariableGroup {
+  string id = 1;
+  string new_group = 2;
+}
+message ChangeAccidentalAd {
+  string id = 1;
+  double new_ad = 2;
+}
+message ChangeSeismicAEk {
+  string id = 1;
+  double new_a_ek = 2;
+}
+message ChangeSeismicImportanceClass {
+  string id = 1;
+  string new_importance_class = 2;
+}
+message ChangeMemberLabelEn {
+  string id = 1;
+  string new_label_en = 2;
+}
+message ChangeMemberLabelDe {
+  string id = 1;
+  string new_label_de = 2;
+}
+message ChangeMemberRdStr {
+  string id = 1;
+  double new_rd_str = 2;
+}
+message ChangeMemberRdGeo {
+  string id = 1;
+  double new_rd_geo = 2;
+}
+message ChangeMemberRdEquStab {
+  string id = 1;
+  double new_rd_equ_stab = 2;
+}
+message ChangeMemberRdEquDestab {
+  string id = 1;
+  double new_rd_equ_destab = 2;
+}
+message ChangeMemberRdFat {
+  string id = 1;
+  double new_rd_fat = 2;
+}
+message ChangeMemberSpan {
+  string id = 1;
+  double new_span = 2;
+}
+message ChangeMemberPrecamber {
+  string id = 1;
+  double new_precamber = 2;
+}
+message ChangeMemberDeflectionW1 {
+  string id = 1;
+  double new_deflection_w1 = 2;
+}
+message ChangeMemberDeflectionW2 {
+  string id = 1;
+  double new_deflection_w2 = 2;
+}
+message ChangeMemberDeflectionW3 {
+  string id = 1;
+  double new_deflection_w3 = 2;
+}
+message ChangeMemberDeflLimitRatio {
+  string id = 1;
+  double new_deflection_limit_ratio = 2;
+}
+message ChangeMemberDeflLimitRatioW3 {
+  string id = 1;
+  double new_deflection_limit_ratio_w3 = 2;
+}
+message ChangeMemberSlsLimitChar {
+  string id = 1;
+  double new_sls_limit_char = 2;
+}
+message ChangeMemberSlsLimitFreq {
+  string id = 1;
+  double new_sls_limit_freq = 2;
+}
+message ChangeMemberSlsLimitQp {
+  string id = 1;
+  double new_sls_limit_qp = 2;
+}
+message ChangeMemberVibrationFrequency {
+  string id = 1;
+  double new_vibration_frequency = 2;
+}
+message ChangeMemberVibFreqMin {
+  string id = 1;
+  double new_vibration_frequency_min = 2;
+}
+message ChangeBridgeMemberId {
+  string id = 1;
+  string new_member_id = 2;
+}
+message ChangeBridgeDeckAcceleration {
+  string id = 1;
+  double new_deck_acceleration = 2;
+}
+message ChangeBridgeDeckAccelLimit {
+  string id = 1;
+  double new_deck_acceleration_limit = 2;
+}
+message ChangeBridgeDeckTwist {
+  string id = 1;
+  double new_deck_twist = 2;
+}
+message ChangeBridgeDeckTwistLimit {
+  string id = 1;
+  double new_deck_twist_limit = 2;
+}
+message ChangeBridgeDeflection {
+  string id = 1;
+  double new_bridge_deflection = 2;
+}
+message ChangeBridgeDeflectionLimit {
+  string id = 1;
+  double new_bridge_deflection_limit = 2;
+}
+message ChangeEffectMemberId {
+  uint64 index = 1;
+  string new_member_id = 2;
+}
+message ChangeEffectActionId {
+  uint64 index = 1;
+  string new_action_id = 2;
+}
+message ChangeEffectInfluence {
+  uint64 index = 1;
+  double new_influence = 2;
+}
+message ChangeFatigueMemberId {
+  string id = 1;
+  string new_member_id = 2;
+}
+message ChangeFatigueDetailCategory {
+  string id = 1;
+  double new_detail_category = 2;
+}
+message ChangeFatigueStressRange {
+  string id = 1;
+  double new_stress_range = 2;
+}
+message ChangeFatigueCycles {
+  string id = 1;
+  double new_cycles = 2;
+}
+message ChangeReliabilityResistanceDist {
+  string id = 1;
+  DistributionKind new_resistance_distribution = 2;
+}
+message ChangeReliabilityResistanceMean {
+  string id = 1;
+  double new_resistance_mean = 2;
+}
+message ChangeReliabilityResistanceSd {
+  string id = 1;
+  double new_resistance_sd = 2;
+}
+message ChangeReliabilityActionDist {
+  string id = 1;
+  DistributionKind new_action_distribution = 2;
+}
+message ChangeReliabilityActionMean {
+  string id = 1;
+  double new_action_mean = 2;
+}
+message ChangeReliabilityActionSd {
+  string id = 1;
+  double new_action_sd = 2;
+}
+message ChangeTestQuantity {
+  string id = 1;
+  string new_quantity = 2;
+}
+message ChangeTestDistribution {
+  string id = 1;
+  TestDistribution new_distribution = 2;
+}
+message ChangeTestSampleSize {
+  string id = 1;
+  uint32 new_sample_size = 2;
+}
+message ChangeTestMean {
+  string id = 1;
+  double new_mean = 2;
+}
+message ChangeTestStdDev {
+  string id = 1;
+  double new_std_dev = 2;
+}
+message ChangeTestVariationKnown {
+  string id = 1;
+  double new_variation_known = 2;
+}
+message ChangeTestConversionFactor {
+  string id = 1;
+  double new_conversion_factor = 2;
+}
+message ChangeTestRequired {
+  string id = 1;
+  double new_required = 2;
+}
+message ChangePlacementX {
+  string id = 1;
+  double new_x = 2;
+}
+message ChangePlacementY {
+  string id = 1;
+  double new_y = 2;
+}
+message ChangePlacementZ {
+  string id = 1;
+  double new_z = 2;
+}
+message ChangePlacementYaw {
+  string id = 1;
+  double new_yaw = 2;
+}
+message ChangeStructureKind {
+  StructureKind new_structure_kind = 1;
+}
+message InsertBridgeSls {
+  optional uint64 index = 1;
+  BridgeSls item = 2;
+}
+message RemoveBridgeSls {
+  uint64 index = 1;
+}
+message InsertFatigueSpectrum {
+  optional uint64 index = 1;
+  FatigueSpectrum item = 2;
+}
+message RemoveFatigueSpectrum {
+  uint64 index = 1;
+}
+message InsertReliabilityAnalysis {
+  optional uint64 index = 1;
+  ReliabilityAnalysis item = 2;
+}
+message RemoveReliabilityAnalysis {
+  uint64 index = 1;
+}
+message InsertTestSeries {
+  optional uint64 index = 1;
+  TestSeries item = 2;
+}
+message RemoveTestSeries {
+  uint64 index = 1;
+}
+message InsertPlacement {
+  optional uint64 index = 1;
+  Placement item = 2;
+}
+message RemovePlacement {
+  uint64 index = 1;
+}
+message InsertCase {
+  uint64 index = 1;
+  CaseRow case = 2;
+}
+message RemoveCase {
+  string id = 1;
+}
+message ChangeCaseNumber {
+  string case_id = 1;
+  string key = 2;
+  optional double value = 3;
+}
+message ChangeCaseText {
+  string case_id = 1;
+  string key = 2;
+  optional string value = 3;
+}
+message ChangeCaseLabelEn {
+  string case_id = 1;
+  string new_value = 2;
+}
+message ChangeCaseLabelDe {
+  string case_id = 1;
+  string new_value = 2;
+}
+message ChangeCaseEntryId {
+  string case_id = 1;
+  string new_value = 2;
+}
+message ChangeMemberFrameHeight {
+  string id = 1;
+  double new_frame_height = 2;
+}
+message ChangeMemberFrameDrift {
+  string id = 1;
+  double new_frame_drift = 2;
+}
+message ChangeMemberStoreyHeight {
+  string id = 1;
+  double new_storey_height = 2;
+}
+message ChangeMemberStoreyDrift {
+  string id = 1;
+  double new_storey_drift = 2;
+}
+message ChangeBridgeTrackGauge {
+  string id = 1;
+  double new_track_gauge = 2;
+}
+message ChangeBridgeLineSpeed {
+  string id = 1;
+  double new_line_speed = 2;
+}
+message ChangeBridgeBallastDepth {
+  string id = 1;
+  double new_ballast_depth = 2;
+}
+message ChangeBridgeDeckMass {
+  string id = 1;
+  double new_deck_mass = 2;
+}
+message ChangeBridgeNaturalFrequency {
+  string id = 1;
+  double new_natural_frequency = 2;
+}
+message ChangeBridgeEndRotation {
+  string id = 1;
+  double new_end_rotation = 2;
+}
+message ChangeBridgeBasicWindSpeed {
+  string id = 1;
+  double new_basic_wind_speed = 2;
+}
+message ChangeMemberMaterialStrengthK {
+  string id = 1;
+  double new_material_strength_k = 2;
+}
+message ChangeMemberMaterialConvFactor {
+  string id = 1;
+  double new_material_conversion_factor = 2;
+}
+message ChangeMemberMatPartialFactor {
+  string id = 1;
+  double new_material_partial_factor = 2;
+}
+message ChangeMemberMatDesignStrength {
+  string id = 1;
+  double new_material_design_strength = 2;
+}
+message ChangeMemberNominalDimension {
+  string id = 1;
+  double new_nominal_dimension = 2;
+}
+message ChangeMemberDimensionTolerance {
+  string id = 1;
+  double new_dimension_tolerance = 2;
+}
+message ChangeMemberDesignDimension {
+  string id = 1;
+  double new_design_dimension = 2;
+}
+message ChangeMemberMemberAlphaCr {
+  string id = 1;
+  double new_member_alpha_cr = 2;
+}
+message ChangeMemberSecondOrderAnalysis {
+  string id = 1;
+  double new_second_order_analysis = 2;
+}
+message ChangeBridgeDampingRatio {
+  string id = 1;
+  double new_damping_ratio = 2;
+}
+message ChangeFactorOverrideFactor {
+  string id = 1;
+  string new_factor = 2;
+}
+message ChangeFactorOverrideTarget {
+  string id = 1;
+  string new_target = 2;
+}
+message ChangeFactorOverrideValue {
+  string id = 1;
+  double new_value = 2;
+}
+message ChangeFactorOverrideJustif {
+  string id = 1;
+  string new_justification = 2;
+}
+message InsertFactorOverride {
+  optional uint64 index = 1;
+  FactorOverride item = 2;
+}
+message RemoveFactorOverride {
+  uint64 index = 1;
+}
+message ChangeTrafficGroupGroup {
+  string id = 1;
+  string new_group = 2;
+}
+message ChangeTrafficGroupVariableId {
+  string id = 1;
+  string new_variable_id = 2;
+}
+message InsertTrafficGroup {
+  optional uint64 index = 1;
+  TrafficGroup item = 2;
+}
+message RemoveTrafficGroup {
+  uint64 index = 1;
 }

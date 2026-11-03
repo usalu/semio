@@ -1,0 +1,7 @@
+syntax = "proto3";
+package semio.s.norm.en1992.mutation.change_action_category;
+message ChangeActionCategory {
+  string member_id = 1;
+  string action_id = 2;
+  PsiCategory new_category = 3;
+}

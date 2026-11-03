@@ -1,12 +1,21 @@
+//! 🪟 `change-opening-width` diff: patches `width_m` of the addressed opening row.
+
 use crate::change_opening_width::ChangeOpeningWidth;
-use semio_s_artifact_norm_en1996_diff::En1996Diff;
+use semio_s_artifact_norm_en1996_diff::{En1996Diff, En1996OpeningDelta, En1996OpeningPatch, En1996WallDelta, En1996WallPatch};
 use semio_s_artifact_norm_en1996_model::En1996Snapshot;
-use semio_s_artifact_norm_en1996_diff::{En1996OpeningDelta, En1996OpeningPatch, En1996WallDelta, En1996WallPatch};
+
 pub fn diff(payload: &ChangeOpeningWidth, base: &En1996Snapshot) -> protocol::MutationOutcome<En1996Diff> {
-    if payload.wall_index >= base.walls.len() || payload.index >= base.walls[payload.wall_index].openings.len() {
-        return protocol::MutationOutcome::fatal("mutation.invariant", String::from("Invalid opening index."), Vec::<String>::new());
+    if !payload.new_width_m.is_finite() {
+        return protocol::MutationOutcome::fatal("mutation.invariant", "The value must be finite.", Vec::<String>::new());
     }
-    let wall = &base.walls[payload.wall_index];
-    let opening = &wall.openings[payload.index];
-    protocol::MutationOutcome::new(En1996Diff { walls: En1996WallDelta::modification(&wall.id, En1996WallPatch { openings: En1996OpeningDelta::modification(&opening.id, En1996OpeningPatch { width_m: Some(payload.new_width_m), ..Default::default() }), ..Default::default() }), ..Default::default() })
+    let Some(r0) = base.walls.iter().find(|row| row.id == payload.wall_id) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("wall {} does not exist.", payload.wall_id), [payload.wall_id.clone()]);
+    };
+    let Some(r1) = r0.openings.iter().find(|row| row.id == payload.id) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("opening {} does not exist.", payload.id), [payload.id.clone()]);
+    };
+    if r1.width_m == payload.new_width_m {
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "The opening already has this value.");
+    }
+    protocol::MutationOutcome::new(En1996Diff { walls: En1996WallDelta::modification(&payload.wall_id, En1996WallPatch { openings: En1996OpeningDelta::modification(&payload.id, En1996OpeningPatch { width_m: Some(payload.new_width_m), ..Default::default() }), ..Default::default() }), ..Default::default() })
 }

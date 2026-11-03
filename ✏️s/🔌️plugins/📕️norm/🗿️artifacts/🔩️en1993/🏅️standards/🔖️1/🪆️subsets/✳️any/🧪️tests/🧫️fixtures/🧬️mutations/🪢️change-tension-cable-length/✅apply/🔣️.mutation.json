@@ -1,0 +1,6 @@
+{
+  "ChangeTensionCableLength": {
+    "id": "ten-1",
+    "newCableLength": 1.5
+  }
+}

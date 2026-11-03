@@ -1,0 +1,6 @@
+{
+  "mutation": "changeLoadCaseMomentPermanent",
+  "footingId": "footing-F1",
+  "id": "lc-bsP",
+  "newMomentPermanent": 60000.0
+}

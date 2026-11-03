@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-cutout-rod-resistance/schema.json",
+  "title": "ChangeCutoutRodResistance",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cutoutId",
+    "newValue"
+  ],
+  "properties": {
+    "cutoutId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Cutout",
+          "de": "Ausschnitt"
+        },
+        "description": {
+          "en": "The cutout this mutation addresses.",
+          "de": "Das Element, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "cutout"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newValue": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Axial rod resistance R_ax,k",
+          "de": "Axialer Stabwiderstand R_ax,k"
+        },
+        "unit": "N",
+        "displayUnit": "kN",
+        "displayFactor": 0.001,
+        "precision": 2,
+        "step": 100,
+        "group": "fields",
+        "order": 20
+      }
+    }
+  }
+}

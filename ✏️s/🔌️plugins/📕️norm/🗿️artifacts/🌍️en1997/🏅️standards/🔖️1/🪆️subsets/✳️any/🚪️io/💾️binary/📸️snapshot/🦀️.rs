@@ -42,5 +42,3 @@ pub fn encode_en1997_pack(snapshot: &En1997Snapshot) -> Vec<u8> {
 }
 }
 pub use crate::binary::snapshot::native_snapshot_codec::*;
-
-semio_s_plugin_norm_compliance::impl_norm_artifact_record!(@binary En1997Snapshot, extension="en1997", envelope_id="norm.en1997", sqlite=crate::sqlite::snapshot::codec);

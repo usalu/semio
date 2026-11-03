@@ -1,0 +1,3367 @@
+{
+  "$schema": "https://json.schemas.assets.semio-tech.com/s/norm/compliance/design-case/schema.json",
+  "artifact": "s.norm.en1991",
+  "inputs": [
+    {
+      "key": "a",
+      "scope": "",
+      "kind": "number",
+      "en": "Contact length a",
+      "de": "Aufstandslänge a",
+      "confidence": "high",
+      "note": "E11.08, E11.09, E2.03, E2.06",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 0.2
+    },
+    {
+      "key": "a",
+      "scope": "E3.03",
+      "kind": "number",
+      "en": "Distance a of the guide means",
+      "de": "Abstand a der Führungsmittel",
+      "confidence": "medium",
+      "note": "H_T = ξ M/a in e3_03",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 20.0
+    },
+    {
+      "key": "a_f",
+      "scope": "",
+      "kind": "number",
+      "en": "Floor area A_f",
+      "de": "Grundfläche A_f",
+      "confidence": "high",
+      "unit": "m²",
+      "unitId": "SquareMetre",
+      "example": 50.0
+    },
+    {
+      "key": "a_fr",
+      "scope": "",
+      "kind": "number",
+      "en": "Friction surface area A_fr",
+      "de": "Reibungsfläche A_fr",
+      "confidence": "high",
+      "unit": "m²",
+      "unitId": "SquareMetre",
+      "example": 10.0
+    },
+    {
+      "key": "a_over_u",
+      "scope": "",
+      "kind": "number",
+      "en": "Hydraulic radius A/U",
+      "de": "Hydraulischer Radius A/U",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 1.0
+    },
+    {
+      "key": "a_ref",
+      "scope": "",
+      "kind": "number",
+      "en": "Reference area A_ref",
+      "de": "Bezugsfläche A_ref",
+      "confidence": "high",
+      "unit": "m²",
+      "unitId": "SquareMetre"
+    },
+    {
+      "key": "a_t",
+      "scope": "",
+      "kind": "number",
+      "en": "Total enclosure area A_t",
+      "de": "Gesamtumfassungsfläche A_t",
+      "confidence": "high",
+      "unit": "m²",
+      "unitId": "SquareMetre"
+    },
+    {
+      "key": "a_v",
+      "scope": "",
+      "kind": "number",
+      "en": "Opening area A_v",
+      "de": "Öffnungsfläche A_v",
+      "confidence": "high",
+      "unit": "m²",
+      "unitId": "SquareMetre"
+    },
+    {
+      "key": "alarm",
+      "scope": "",
+      "kind": "number",
+      "en": "Automatic alarm (1) or not (0)",
+      "de": "Automatische Alarmierung (1) oder nicht (0)",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "min": 0.0,
+      "max": 1.0,
+      "example": 0.0
+    },
+    {
+      "key": "alpha",
+      "scope": "E13.03,E13.08,E13.13",
+      "kind": "number",
+      "en": "Roof pitch α",
+      "de": "Dachneigung α",
+      "confidence": "high",
+      "unit": "°",
+      "unitId": "Degree",
+      "example": 20.0
+    },
+    {
+      "key": "alpha",
+      "scope": "E15.03,E15.05,E15.06",
+      "kind": "number",
+      "en": "Thermal expansion coefficient α in 1/K",
+      "de": "Wärmeausdehnungskoeffizient α in 1/K",
+      "confidence": "high",
+      "note": "no 1/K unit in UnitId",
+      "unit": "1",
+      "unitId": "One",
+      "example": 1.2e-05
+    },
+    {
+      "key": "alpha",
+      "scope": "E2.14",
+      "kind": "number",
+      "en": "Classification factor α",
+      "de": "Klassifizierungsbeiwert α",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "min": 0.75,
+      "max": 1.46,
+      "example": 1.0
+    },
+    {
+      "key": "alpha",
+      "scope": "E2.15",
+      "kind": "number",
+      "en": "Classification factor α",
+      "de": "Klassifizierungsbeiwert α",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "example": 1.0
+    },
+    {
+      "key": "alpha_1",
+      "scope": "",
+      "kind": "number",
+      "en": "Roof pitch α₁",
+      "de": "Dachneigung α₁",
+      "confidence": "high",
+      "unit": "°",
+      "unitId": "Degree",
+      "example": 15.0
+    },
+    {
+      "key": "alpha_2",
+      "scope": "",
+      "kind": "number",
+      "en": "Roof pitch α₂",
+      "de": "Dachneigung α₂",
+      "confidence": "high",
+      "unit": "°",
+      "unitId": "Degree",
+      "example": 15.0
+    },
+    {
+      "key": "alpha_c",
+      "scope": "",
+      "kind": "number",
+      "en": "Convective heat transfer coefficient α_c",
+      "de": "Wärmeübergangskoeffizient α_c",
+      "confidence": "high",
+      "unit": "W/(m²·K)",
+      "unitId": "WattPerSquareMetreKelvin",
+      "example": 25.0
+    },
+    {
+      "key": "alpha_h",
+      "scope": "",
+      "kind": "number",
+      "en": "Horizontal opening factor α_h = A_h/A_f",
+      "de": "Beiwert horizontaler Öffnungen α_h = A_h/A_f",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "example": 0.0
+    },
+    {
+      "key": "alpha_v",
+      "scope": "",
+      "kind": "number",
+      "en": "Vertical opening factor α_v = A_v/A_f",
+      "de": "Beiwert vertikaler Öffnungen α_v = A_v/A_f",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "min": 0.025,
+      "max": 0.25,
+      "example": 0.1
+    },
+    {
+      "key": "altitude",
+      "scope": "",
+      "kind": "number",
+      "en": "Altitude above sea level",
+      "de": "Höhe über Meeresspiegel",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "area",
+      "scope": "",
+      "kind": "number",
+      "en": "Area A",
+      "de": "Fläche A",
+      "confidence": "high",
+      "note": "E11.04, E12.03, E14.08, E16.02",
+      "unit": "m²",
+      "unitId": "SquareMetre",
+      "example": 20.0
+    },
+    {
+      "key": "av_over_v",
+      "scope": "",
+      "kind": "number",
+      "en": "Vent area ratio A_v/V",
+      "de": "Entlastungsflächenverhältnis A_v/V",
+      "confidence": "high",
+      "unit": "1/m",
+      "unitId": "PerMetre",
+      "example": 0.1
+    },
+    {
+      "key": "axle",
+      "scope": "",
+      "kind": "number",
+      "en": "Axle load",
+      "de": "Achslast",
+      "confidence": "high",
+      "unit": "N",
+      "unitId": "Newton",
+      "example": 400000.0
+    },
+    {
+      "key": "axle_load",
+      "scope": "",
+      "kind": "number",
+      "en": "Axle load of the special vehicle",
+      "de": "Achslast des Sonderfahrzeugs",
+      "confidence": "high",
+      "unit": "N",
+      "unitId": "Newton",
+      "example": 300000.0
+    },
+    {
+      "key": "axles",
+      "scope": "",
+      "kind": "number",
+      "en": "Number of axle lines",
+      "de": "Anzahl der Achslinien",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "example": 6.0
+    },
+    {
+      "key": "b",
+      "scope": "E12.02",
+      "kind": "number",
+      "en": "Thermal absorptivity b of the enclosure",
+      "de": "Wärmeeindringkoeffizient b der Umfassung",
+      "confidence": "high",
+      "unit": "J/(m²·s½·K)",
+      "unitId": "JoulePerSquareMetreRootSecondKelvin",
+      "min": 100.0,
+      "max": 2200.0,
+      "example": 1000.0
+    },
+    {
+      "key": "b",
+      "scope": "E12.04",
+      "kind": "number",
+      "en": "Thermal absorptivity b of the enclosure",
+      "de": "Wärmeeindringkoeffizient b der Umfassung",
+      "confidence": "high",
+      "unit": "J/(m²·s½·K)",
+      "unitId": "JoulePerSquareMetreRootSecondKelvin",
+      "example": 1000.0
+    },
+    {
+      "key": "b",
+      "scope": "",
+      "kind": "number",
+      "en": "Width b",
+      "de": "Breite b",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "b1",
+      "scope": "",
+      "kind": "number",
+      "en": "Width b₁",
+      "de": "Breite b₁",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 5.0
+    },
+    {
+      "key": "b2",
+      "scope": "",
+      "kind": "number",
+      "en": "Width b₂",
+      "de": "Breite b₂",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 5.0
+    },
+    {
+      "key": "beta_3",
+      "scope": "",
+      "kind": "number",
+      "en": "Factor β₃",
+      "de": "Beiwert β₃",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "example": 0.5
+    },
+    {
+      "key": "c_d",
+      "scope": "",
+      "kind": "number",
+      "en": "Dynamic factor c_d",
+      "de": "Dynamikbeiwert c_d",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "c_dir",
+      "scope": "",
+      "kind": "number",
+      "en": "Direction factor c_dir",
+      "de": "Richtungsbeiwert c_dir",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "c_e",
+      "scope": "",
+      "kind": "number",
+      "en": "Exposure coefficient c_e",
+      "de": "Expositionsbeiwert c_e",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "c_esl",
+      "scope": "",
+      "kind": "number",
+      "en": "Exceptional snow load factor C_esl",
+      "de": "Beiwert C_esl der außergewöhnlichen Schneelast",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "c_f",
+      "scope": "",
+      "kind": "number",
+      "en": "Force coefficient c_f",
+      "de": "Kraftbeiwert c_f",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "c_f0",
+      "scope": "",
+      "kind": "number",
+      "en": "Force coefficient c_f,0",
+      "de": "Kraftbeiwert c_f,0",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "c_fr",
+      "scope": "",
+      "kind": "number",
+      "en": "Friction coefficient c_fr",
+      "de": "Reibungsbeiwert c_fr",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "c_fx",
+      "scope": "",
+      "kind": "number",
+      "en": "Force coefficient c_f,x",
+      "de": "Kraftbeiwert c_f,x",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "c_h",
+      "scope": "",
+      "kind": "number",
+      "en": "Discharge horizontal pressure factor C_h",
+      "de": "Entleerungs-Horizontaldruckbeiwert C_h",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "example": 1.15
+    },
+    {
+      "key": "c_o",
+      "scope": "",
+      "kind": "number",
+      "en": "Orography factor c_o",
+      "de": "Orographiebeiwert c_o",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "c_pe",
+      "scope": "",
+      "kind": "number",
+      "en": "External pressure coefficient c_pe",
+      "de": "Außendruckbeiwert c_pe",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "c_pi",
+      "scope": "",
+      "kind": "number",
+      "en": "Internal pressure coefficient c_pi",
+      "de": "Innendruckbeiwert c_pi",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "c_s",
+      "scope": "",
+      "kind": "number",
+      "en": "Size factor c_s",
+      "de": "Größenbeiwert c_s",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "c_season",
+      "scope": "",
+      "kind": "number",
+      "en": "Season factor c_season",
+      "de": "Jahreszeitenbeiwert c_season",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "c_t",
+      "scope": "",
+      "kind": "number",
+      "en": "Thermal coefficient C_t",
+      "de": "Temperaturbeiwert C_t",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "c_w",
+      "scope": "",
+      "kind": "number",
+      "en": "Discharge wall friction factor C_w",
+      "de": "Entleerungs-Wandreibungsbeiwert C_w",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "example": 1.1
+    },
+    {
+      "key": "capacity_t",
+      "scope": "",
+      "kind": "number",
+      "en": "Silo capacity",
+      "de": "Siloinhalt",
+      "confidence": "high",
+      "unit": "t",
+      "unitId": "Tonne",
+      "example": 500.0
+    },
+    {
+      "key": "category",
+      "scope": "",
+      "kind": "choice",
+      "en": "Use category",
+      "de": "Nutzungskategorie",
+      "confidence": "high",
+      "note": "union of the EN and DE category lists; the evaluator rejects those of the other annex",
+      "choices": [
+        {
+          "value": "A",
+          "en": "Category A",
+          "de": "Kategorie A"
+        },
+        {
+          "value": "A1",
+          "en": "Category A1",
+          "de": "Kategorie A1"
+        },
+        {
+          "value": "A2",
+          "en": "Category A2",
+          "de": "Kategorie A2"
+        },
+        {
+          "value": "A3",
+          "en": "Category A3",
+          "de": "Kategorie A3"
+        },
+        {
+          "value": "B",
+          "en": "Category B",
+          "de": "Kategorie B"
+        },
+        {
+          "value": "B1",
+          "en": "Category B1",
+          "de": "Kategorie B1"
+        },
+        {
+          "value": "B2",
+          "en": "Category B2",
+          "de": "Kategorie B2"
+        },
+        {
+          "value": "B3",
+          "en": "Category B3",
+          "de": "Kategorie B3"
+        },
+        {
+          "value": "C1",
+          "en": "Category C1",
+          "de": "Kategorie C1"
+        },
+        {
+          "value": "C2",
+          "en": "Category C2",
+          "de": "Kategorie C2"
+        },
+        {
+          "value": "C3",
+          "en": "Category C3",
+          "de": "Kategorie C3"
+        },
+        {
+          "value": "C4",
+          "en": "Category C4",
+          "de": "Kategorie C4"
+        },
+        {
+          "value": "C5",
+          "en": "Category C5",
+          "de": "Kategorie C5"
+        },
+        {
+          "value": "C6",
+          "en": "Category C6",
+          "de": "Kategorie C6"
+        },
+        {
+          "value": "D1",
+          "en": "Category D1",
+          "de": "Kategorie D1"
+        },
+        {
+          "value": "D2",
+          "en": "Category D2",
+          "de": "Kategorie D2"
+        },
+        {
+          "value": "D3",
+          "en": "Category D3",
+          "de": "Kategorie D3"
+        },
+        {
+          "value": "E1",
+          "en": "Category E1",
+          "de": "Kategorie E1"
+        },
+        {
+          "value": "T1",
+          "en": "Category T1",
+          "de": "Kategorie T1"
+        },
+        {
+          "value": "T2",
+          "en": "Category T2",
+          "de": "Kategorie T2"
+        },
+        {
+          "value": "Z",
+          "en": "Category Z",
+          "de": "Kategorie Z"
+        },
+        {
+          "value": "F",
+          "en": "Category F",
+          "de": "Kategorie F"
+        },
+        {
+          "value": "G",
+          "en": "Category G",
+          "de": "Kategorie G"
+        },
+        {
+          "value": "H",
+          "en": "Category H",
+          "de": "Kategorie H"
+        }
+      ],
+      "example": "B2"
+    },
+    {
+      "key": "ceiling_height",
+      "scope": "",
+      "kind": "number",
+      "en": "Ceiling height",
+      "de": "Deckenhöhe",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "charge_kg",
+      "scope": "",
+      "kind": "number",
+      "en": "Explosive charge",
+      "de": "Sprengstoffmenge",
+      "confidence": "high",
+      "unit": "kg",
+      "unitId": "Kilogram"
+    },
+    {
+      "key": "class",
+      "scope": "E11.07",
+      "kind": "number",
+      "en": "Forklift class FL (1 to 6)",
+      "de": "Gabelstaplerklasse FL (1 bis 6)",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "min": 1.0,
+      "max": 6.0,
+      "example": 2.0
+    },
+    {
+      "key": "consequence",
+      "scope": "E17.07",
+      "kind": "vector",
+      "en": "Consequence C(D) per hazard",
+      "de": "Folge C(D) je Gefahr",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "cover",
+      "scope": "",
+      "kind": "number",
+      "en": "Cover thickness",
+      "de": "Überdeckungsdicke",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 0.1
+    },
+    {
+      "key": "curve",
+      "scope": "",
+      "kind": "choice",
+      "en": "Temperature-time curve",
+      "de": "Temperatur-Zeit-Kurve",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "standard",
+          "en": "Standard (ISO 834) curve",
+          "de": "Einheits-Temperaturzeitkurve (ISO 834)"
+        },
+        {
+          "value": "external",
+          "en": "External fire curve",
+          "de": "Außenbrandkurve"
+        },
+        {
+          "value": "hydrocarbon",
+          "en": "Hydrocarbon curve",
+          "de": "Kohlenwasserstoffkurve"
+        }
+      ],
+      "example": "standard"
+    },
+    {
+      "key": "d",
+      "scope": "E12.05",
+      "kind": "number",
+      "en": "Diameter D of the fire",
+      "de": "Durchmesser D des Brandes",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 1.0
+    },
+    {
+      "key": "d",
+      "scope": "E14.07,E14.08",
+      "kind": "number",
+      "en": "Depth d of the building",
+      "de": "Tiefe d des Gebäudes",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 20.0
+    },
+    {
+      "key": "dc",
+      "scope": "",
+      "kind": "number",
+      "en": "Silo diameter d_c",
+      "de": "Silodurchmesser d_c",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "deck",
+      "scope": "",
+      "kind": "choice",
+      "en": "Bridge deck type",
+      "de": "Brückenüberbautyp",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "steel",
+          "en": "Steel deck",
+          "de": "Stahlüberbau"
+        },
+        {
+          "value": "composite",
+          "en": "Composite deck",
+          "de": "Verbundüberbau"
+        },
+        {
+          "value": "slab",
+          "en": "Concrete slab",
+          "de": "Betonplatte"
+        },
+        {
+          "value": "box",
+          "en": "Concrete box girder",
+          "de": "Betonhohlkasten"
+        },
+        {
+          "value": "beam",
+          "en": "Concrete beam",
+          "de": "Betonbalken"
+        }
+      ],
+      "example": "composite"
+    },
+    {
+      "key": "deck_type",
+      "scope": "E15.01",
+      "kind": "number",
+      "en": "Deck type (1 steel, 2 composite, 3 concrete)",
+      "de": "Überbautyp (1 Stahl, 2 Verbund, 3 Beton)",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "min": 1.0,
+      "max": 3.0,
+      "example": 3.0
+    },
+    {
+      "key": "delta",
+      "scope": "",
+      "kind": "number",
+      "en": "Logarithmic decrement δ",
+      "de": "Logarithmisches Dekrement δ",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "delta_b",
+      "scope": "",
+      "kind": "number",
+      "en": "Deformation of the barrier δ_b",
+      "de": "Verformung der Absturzsicherung δ_b",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 0.1
+    },
+    {
+      "key": "delta_c",
+      "scope": "",
+      "kind": "number",
+      "en": "Deformation of the vehicle δ_c",
+      "de": "Verformung des Fahrzeugs δ_c",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 0.1
+    },
+    {
+      "key": "delta_q2",
+      "scope": "",
+      "kind": "number",
+      "en": "Fire load factor δ_q2",
+      "de": "Brandlastfaktor δ_q2",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "delta_s",
+      "scope": "",
+      "kind": "number",
+      "en": "Structural damping decrement δ_s",
+      "de": "Strukturdämpfungsdekrement δ_s",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "depth",
+      "scope": "",
+      "kind": "number",
+      "en": "Depth",
+      "de": "Tiefe",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 5.0
+    },
+    {
+      "key": "direction",
+      "scope": "",
+      "kind": "choice",
+      "en": "Direction of the excitation",
+      "de": "Anregungsrichtung",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "vertical",
+          "en": "Vertical",
+          "de": "Vertikal"
+        },
+        {
+          "value": "horizontal",
+          "en": "Horizontal",
+          "de": "Horizontal"
+        },
+        {
+          "value": "jogging",
+          "en": "Jogging",
+          "de": "Joggen"
+        }
+      ],
+      "example": "vertical"
+    },
+    {
+      "key": "distance",
+      "scope": "",
+      "kind": "number",
+      "en": "Distance",
+      "de": "Abstand",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "dm_over_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Mass ratio Δm/m",
+      "de": "Massenverhältnis Δm/m",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "example": 0.5
+    },
+    {
+      "key": "dominant_ratio",
+      "scope": "",
+      "kind": "number",
+      "en": "Dominant opening ratio",
+      "de": "Verhältnis der dominanten Öffnung",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "dt",
+      "scope": "",
+      "kind": "number",
+      "en": "Temperature difference ΔT",
+      "de": "Temperaturdifferenz ΔT",
+      "confidence": "high",
+      "unit": "K",
+      "unitId": "Kelvin"
+    },
+    {
+      "key": "dt_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Temperature difference ΔT_M",
+      "de": "Temperaturunterschied ΔT_M",
+      "confidence": "high",
+      "unit": "K",
+      "unitId": "Kelvin"
+    },
+    {
+      "key": "dt_n",
+      "scope": "",
+      "kind": "number",
+      "en": "Uniform temperature difference ΔT_N",
+      "de": "Gleichmäßige Temperaturänderung ΔT_N",
+      "confidence": "high",
+      "unit": "K",
+      "unitId": "Kelvin"
+    },
+    {
+      "key": "duration_days",
+      "scope": "",
+      "kind": "number",
+      "en": "Duration in days",
+      "de": "Dauer in Tagen",
+      "confidence": "high",
+      "unit": "d",
+      "unitId": "Day"
+    },
+    {
+      "key": "e",
+      "scope": "E15.03,E15.05",
+      "kind": "number",
+      "en": "Modulus of elasticity E",
+      "de": "Elastizitätsmodul E",
+      "confidence": "high",
+      "unit": "Pa",
+      "unitId": "Pascal",
+      "example": 30000000000.0
+    },
+    {
+      "key": "e",
+      "scope": "E14.08",
+      "kind": "number",
+      "en": "Reference dimension e = min(b, 2h)",
+      "de": "Bezugsmaß e = min(b, 2h)",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 10.0
+    },
+    {
+      "key": "eccentricity",
+      "scope": "",
+      "kind": "number",
+      "en": "Eccentricity",
+      "de": "Exzentrizität",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 0.01
+    },
+    {
+      "key": "eps_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Surface emissivity ε_m",
+      "de": "Emissionsgrad ε_m",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "f_pl",
+      "scope": "",
+      "kind": "number",
+      "en": "Plastic resistance F_pl",
+      "de": "Plastische Tragfähigkeit F_pl",
+      "confidence": "high",
+      "unit": "N",
+      "unitId": "Newton",
+      "example": 1000000.0
+    },
+    {
+      "key": "finish",
+      "scope": "E11.02",
+      "kind": "number",
+      "en": "Finish load per metre of wall",
+      "de": "Ausbaulast je Meter Wand",
+      "confidence": "high",
+      "unit": "N/m",
+      "unitId": "NewtonPerMetre",
+      "example": 0.0
+    },
+    {
+      "key": "fire_area",
+      "scope": "",
+      "kind": "number",
+      "en": "Fire area",
+      "de": "Brandfläche",
+      "confidence": "high",
+      "unit": "m²",
+      "unitId": "SquareMetre"
+    },
+    {
+      "key": "floor_area",
+      "scope": "",
+      "kind": "number",
+      "en": "Floor area",
+      "de": "Geschossfläche",
+      "confidence": "high",
+      "unit": "m²",
+      "unitId": "SquareMetre"
+    },
+    {
+      "key": "frequency",
+      "scope": "",
+      "kind": "number",
+      "en": "Frequency",
+      "de": "Frequenz",
+      "confidence": "high",
+      "unit": "Hz",
+      "unitId": "Hertz"
+    },
+    {
+      "key": "g_k",
+      "scope": "",
+      "kind": "number",
+      "en": "Characteristic permanent action g_k",
+      "de": "Charakteristische ständige Einwirkung g_k",
+      "confidence": "high",
+      "note": "E17.06 divides by 1000 to kN/m²; E12.07 uses only the ratio",
+      "unit": "Pa",
+      "unitId": "Pascal",
+      "example": 5000.0
+    },
+    {
+      "key": "gamma",
+      "scope": "",
+      "kind": "number",
+      "en": "Unit weight γ",
+      "de": "Wichte γ",
+      "confidence": "high",
+      "note": "E11.01, E16.02, E4.01, E4.03 to E4.05, E4.08",
+      "unit": "N/m³",
+      "unitId": "NewtonPerCubicMetre",
+      "example": 25000.0
+    },
+    {
+      "key": "gamma_g",
+      "scope": "",
+      "kind": "number",
+      "en": "Partial factor γ_G",
+      "de": "Teilsicherheitsbeiwert γ_G",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "gamma_q",
+      "scope": "",
+      "kind": "number",
+      "en": "Partial factor γ_Q",
+      "de": "Teilsicherheitsbeiwert γ_Q",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "group",
+      "scope": "",
+      "kind": "choice",
+      "en": "Traffic load group",
+      "de": "Verkehrslastgruppe",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "gr1a",
+          "en": "Group 1a",
+          "de": "Gruppe 1a"
+        },
+        {
+          "value": "gr1b",
+          "en": "Group 1b",
+          "de": "Gruppe 1b"
+        },
+        {
+          "value": "gr2",
+          "en": "Group 2",
+          "de": "Gruppe 2"
+        },
+        {
+          "value": "gr3",
+          "en": "Group 3",
+          "de": "Gruppe 3"
+        },
+        {
+          "value": "gr4",
+          "en": "Group 4",
+          "de": "Gruppe 4"
+        },
+        {
+          "value": "gr5",
+          "en": "Group 5",
+          "de": "Gruppe 5"
+        }
+      ],
+      "example": "gr1a"
+    },
+    {
+      "key": "h",
+      "scope": "",
+      "kind": "number",
+      "en": "Height h",
+      "de": "Höhe h",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "h_eq",
+      "scope": "",
+      "kind": "number",
+      "en": "Equivalent opening height",
+      "de": "Äquivalente Öffnungshöhe",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "h_over_d",
+      "scope": "",
+      "kind": "number",
+      "en": "Ratio h/d",
+      "de": "Verhältnis h/d",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "hc",
+      "scope": "",
+      "kind": "number",
+      "en": "Silo height h_c",
+      "de": "Silohöhe h_c",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "heat_detection",
+      "scope": "",
+      "kind": "number",
+      "en": "Automatic heat detection (1) or not (0)",
+      "de": "Automatische Wärmemeldung (1) oder nicht (0)",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "min": 0.0,
+      "max": 1.0,
+      "example": 0.0
+    },
+    {
+      "key": "height",
+      "scope": "",
+      "kind": "number",
+      "en": "Height",
+      "de": "Höhe",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "hoist_class",
+      "scope": "",
+      "kind": "choice",
+      "en": "Hoisting class",
+      "de": "Hubklasse",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "HC1",
+          "en": "Hoisting class HC1",
+          "de": "Hubklasse HC1"
+        },
+        {
+          "value": "HC2",
+          "en": "Hoisting class HC2",
+          "de": "Hubklasse HC2"
+        },
+        {
+          "value": "HC3",
+          "en": "Hoisting class HC3",
+          "de": "Hubklasse HC3"
+        },
+        {
+          "value": "HC4",
+          "en": "Hoisting class HC4",
+          "de": "Hubklasse HC4"
+        }
+      ],
+      "example": "HC2"
+    },
+    {
+      "key": "hp_over_h",
+      "scope": "",
+      "kind": "number",
+      "en": "Parapet ratio h_p/h",
+      "de": "Attikaverhältnis h_p/h",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "i",
+      "scope": "",
+      "kind": "number",
+      "en": "Second moment of area I",
+      "de": "Flächenträgheitsmoment I",
+      "confidence": "high",
+      "unit": "m⁴",
+      "unitId": "MetreFourth",
+      "example": 0.001
+    },
+    {
+      "key": "k",
+      "scope": "E17.08",
+      "kind": "number",
+      "en": "Equivalent stiffness k of the vehicle",
+      "de": "Ersatzsteifigkeit k des Fahrzeugs",
+      "confidence": "high",
+      "unit": "N/m",
+      "unitId": "NewtonPerMetre",
+      "example": 300000.0
+    },
+    {
+      "key": "k",
+      "scope": "E4.03,E4.04,E4.05",
+      "kind": "number",
+      "en": "Lateral pressure ratio K",
+      "de": "Horizontaldruckverhältnis K",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "k_b",
+      "scope": "",
+      "kind": "number",
+      "en": "Conversion factor k_b",
+      "de": "Umrechnungsfaktor k_b",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "k_sur_cool",
+      "scope": "",
+      "kind": "number",
+      "en": "Surfacing factor for cooling",
+      "de": "Belagsfaktor Abkühlung",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "k_sur_heat",
+      "scope": "",
+      "kind": "number",
+      "en": "Surfacing factor for heating",
+      "de": "Belagsfaktor Erwärmung",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "key_area",
+      "scope": "",
+      "kind": "number",
+      "en": "Key element area",
+      "de": "Fläche des Schlüsselbauteils",
+      "confidence": "high",
+      "unit": "m²",
+      "unitId": "SquareMetre"
+    },
+    {
+      "key": "l",
+      "scope": "",
+      "kind": "number",
+      "en": "Tie length L",
+      "de": "Zuggliedlänge L",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 6.0
+    },
+    {
+      "key": "l_f",
+      "scope": "",
+      "kind": "number",
+      "en": "Influence length L_f",
+      "de": "Einflusslänge L_f",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 50.0
+    },
+    {
+      "key": "l_h",
+      "scope": "",
+      "kind": "number",
+      "en": "Flame height L_h",
+      "de": "Flammenhöhe L_h",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 5.0
+    },
+    {
+      "key": "l_phi",
+      "scope": "",
+      "kind": "number",
+      "en": "Determinant length L_Φ",
+      "de": "Maßgebende Länge L_Φ",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "lambda",
+      "scope": "",
+      "kind": "number",
+      "en": "Damage equivalence factor λ",
+      "de": "Schadensäquivalenzfaktor λ",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "example": 0.5
+    },
+    {
+      "key": "lane",
+      "scope": "",
+      "kind": "number",
+      "en": "Lane number (1 to 3)",
+      "de": "Fahrstreifennummer (1 bis 3)",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "min": 1.0,
+      "max": 3.0,
+      "example": 1.0
+    },
+    {
+      "key": "length",
+      "scope": "",
+      "kind": "number",
+      "en": "Length",
+      "de": "Länge",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "load",
+      "scope": "",
+      "kind": "number",
+      "en": "Load Q",
+      "de": "Last Q",
+      "confidence": "high",
+      "unit": "N",
+      "unitId": "Newton",
+      "example": 40000.0
+    },
+    {
+      "key": "loaded_length",
+      "scope": "",
+      "kind": "number",
+      "en": "Loaded length",
+      "de": "Belastete Länge",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "m_c",
+      "scope": "",
+      "kind": "number",
+      "en": "Crab mass m_c",
+      "de": "Katzmasse m_c",
+      "confidence": "high",
+      "unit": "kg",
+      "unitId": "Kilogram",
+      "example": 20000.0
+    },
+    {
+      "key": "m_drive",
+      "scope": "",
+      "kind": "number",
+      "en": "Moment M for the transverse force H_T = ξ M/a",
+      "de": "Moment M für die Querkraft H_T = ξ M/a",
+      "confidence": "medium",
+      "note": "unit follows from H_T = ξ M/a in N with a in m; not a count",
+      "unit": "N·m",
+      "unitId": "NewtonMetre",
+      "example": 100000.0
+    },
+    {
+      "key": "m_e",
+      "scope": "",
+      "kind": "number",
+      "en": "Equivalent mass per length m_e",
+      "de": "Äquivalente Masse je Länge m_e",
+      "confidence": "high",
+      "unit": "kg/m",
+      "unitId": "KilogramPerMetre",
+      "example": 100.0
+    },
+    {
+      "key": "margin_k",
+      "scope": "",
+      "kind": "number",
+      "en": "Temperature margin ΔT_margin",
+      "de": "Temperaturzuschlag ΔT_margin",
+      "confidence": "high",
+      "unit": "K",
+      "unitId": "Kelvin",
+      "example": 0.0
+    },
+    {
+      "key": "mass",
+      "scope": "",
+      "kind": "number",
+      "en": "Mass",
+      "de": "Masse",
+      "confidence": "high",
+      "unit": "kg",
+      "unitId": "Kilogram",
+      "example": 1500.0
+    },
+    {
+      "key": "material",
+      "scope": "",
+      "kind": "choice",
+      "en": "Material",
+      "de": "Werkstoff",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "concrete",
+          "en": "Concrete",
+          "de": "Beton"
+        },
+        {
+          "value": "reinforced_concrete",
+          "en": "Reinforced concrete",
+          "de": "Stahlbeton"
+        },
+        {
+          "value": "lightweight_concrete",
+          "en": "Lightweight concrete",
+          "de": "Leichtbeton"
+        },
+        {
+          "value": "steel",
+          "en": "Steel",
+          "de": "Stahl"
+        },
+        {
+          "value": "aluminium",
+          "en": "Aluminium",
+          "de": "Aluminium"
+        },
+        {
+          "value": "timber",
+          "en": "Timber",
+          "de": "Holz"
+        },
+        {
+          "value": "softwood",
+          "en": "Softwood",
+          "de": "Nadelholz"
+        },
+        {
+          "value": "hardwood",
+          "en": "Hardwood",
+          "de": "Laubholz"
+        },
+        {
+          "value": "glulam",
+          "en": "Glulam",
+          "de": "Brettschichtholz"
+        },
+        {
+          "value": "plywood",
+          "en": "Plywood",
+          "de": "Sperrholz"
+        },
+        {
+          "value": "masonry",
+          "en": "Masonry",
+          "de": "Mauerwerk"
+        },
+        {
+          "value": "brick",
+          "en": "Brick",
+          "de": "Ziegel"
+        },
+        {
+          "value": "calcium_silicate",
+          "en": "Calcium silicate",
+          "de": "Kalksandstein"
+        },
+        {
+          "value": "aerated_concrete",
+          "en": "Aerated concrete",
+          "de": "Porenbeton"
+        },
+        {
+          "value": "natural_stone",
+          "en": "Natural stone",
+          "de": "Naturstein"
+        },
+        {
+          "value": "mortar",
+          "en": "Mortar",
+          "de": "Mörtel"
+        },
+        {
+          "value": "cement_screed",
+          "en": "Cement screed",
+          "de": "Zementestrich"
+        },
+        {
+          "value": "asphalt",
+          "en": "Asphalt",
+          "de": "Asphalt"
+        },
+        {
+          "value": "plaster",
+          "en": "Plaster",
+          "de": "Putz"
+        },
+        {
+          "value": "glass",
+          "en": "Glass",
+          "de": "Glas"
+        },
+        {
+          "value": "water",
+          "en": "Water",
+          "de": "Wasser"
+        },
+        {
+          "value": "sand",
+          "en": "Sand",
+          "de": "Sand"
+        },
+        {
+          "value": "gravel",
+          "en": "Gravel",
+          "de": "Kies"
+        },
+        {
+          "value": "clay",
+          "en": "Clay",
+          "de": "Ton"
+        },
+        {
+          "value": "soil_fill",
+          "en": "Soil fill",
+          "de": "Bodenauffüllung"
+        }
+      ],
+      "example": "concrete"
+    },
+    {
+      "key": "material2",
+      "scope": "",
+      "kind": "choice",
+      "en": "Material of layer 2",
+      "de": "Werkstoff der Schicht 2",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "concrete",
+          "en": "Concrete",
+          "de": "Beton"
+        },
+        {
+          "value": "reinforced_concrete",
+          "en": "Reinforced concrete",
+          "de": "Stahlbeton"
+        },
+        {
+          "value": "lightweight_concrete",
+          "en": "Lightweight concrete",
+          "de": "Leichtbeton"
+        },
+        {
+          "value": "steel",
+          "en": "Steel",
+          "de": "Stahl"
+        },
+        {
+          "value": "aluminium",
+          "en": "Aluminium",
+          "de": "Aluminium"
+        },
+        {
+          "value": "timber",
+          "en": "Timber",
+          "de": "Holz"
+        },
+        {
+          "value": "softwood",
+          "en": "Softwood",
+          "de": "Nadelholz"
+        },
+        {
+          "value": "hardwood",
+          "en": "Hardwood",
+          "de": "Laubholz"
+        },
+        {
+          "value": "glulam",
+          "en": "Glulam",
+          "de": "Brettschichtholz"
+        },
+        {
+          "value": "plywood",
+          "en": "Plywood",
+          "de": "Sperrholz"
+        },
+        {
+          "value": "masonry",
+          "en": "Masonry",
+          "de": "Mauerwerk"
+        },
+        {
+          "value": "brick",
+          "en": "Brick",
+          "de": "Ziegel"
+        },
+        {
+          "value": "calcium_silicate",
+          "en": "Calcium silicate",
+          "de": "Kalksandstein"
+        },
+        {
+          "value": "aerated_concrete",
+          "en": "Aerated concrete",
+          "de": "Porenbeton"
+        },
+        {
+          "value": "natural_stone",
+          "en": "Natural stone",
+          "de": "Naturstein"
+        },
+        {
+          "value": "mortar",
+          "en": "Mortar",
+          "de": "Mörtel"
+        },
+        {
+          "value": "cement_screed",
+          "en": "Cement screed",
+          "de": "Zementestrich"
+        },
+        {
+          "value": "asphalt",
+          "en": "Asphalt",
+          "de": "Asphalt"
+        },
+        {
+          "value": "plaster",
+          "en": "Plaster",
+          "de": "Putz"
+        },
+        {
+          "value": "glass",
+          "en": "Glass",
+          "de": "Glas"
+        },
+        {
+          "value": "water",
+          "en": "Water",
+          "de": "Wasser"
+        },
+        {
+          "value": "sand",
+          "en": "Sand",
+          "de": "Sand"
+        },
+        {
+          "value": "gravel",
+          "en": "Gravel",
+          "de": "Kies"
+        },
+        {
+          "value": "clay",
+          "en": "Clay",
+          "de": "Ton"
+        },
+        {
+          "value": "soil_fill",
+          "en": "Soil fill",
+          "de": "Bodenauffüllung"
+        }
+      ],
+      "example": "concrete"
+    },
+    {
+      "key": "material3",
+      "scope": "",
+      "kind": "choice",
+      "en": "Material of layer 3",
+      "de": "Werkstoff der Schicht 3",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "concrete",
+          "en": "Concrete",
+          "de": "Beton"
+        },
+        {
+          "value": "reinforced_concrete",
+          "en": "Reinforced concrete",
+          "de": "Stahlbeton"
+        },
+        {
+          "value": "lightweight_concrete",
+          "en": "Lightweight concrete",
+          "de": "Leichtbeton"
+        },
+        {
+          "value": "steel",
+          "en": "Steel",
+          "de": "Stahl"
+        },
+        {
+          "value": "aluminium",
+          "en": "Aluminium",
+          "de": "Aluminium"
+        },
+        {
+          "value": "timber",
+          "en": "Timber",
+          "de": "Holz"
+        },
+        {
+          "value": "softwood",
+          "en": "Softwood",
+          "de": "Nadelholz"
+        },
+        {
+          "value": "hardwood",
+          "en": "Hardwood",
+          "de": "Laubholz"
+        },
+        {
+          "value": "glulam",
+          "en": "Glulam",
+          "de": "Brettschichtholz"
+        },
+        {
+          "value": "plywood",
+          "en": "Plywood",
+          "de": "Sperrholz"
+        },
+        {
+          "value": "masonry",
+          "en": "Masonry",
+          "de": "Mauerwerk"
+        },
+        {
+          "value": "brick",
+          "en": "Brick",
+          "de": "Ziegel"
+        },
+        {
+          "value": "calcium_silicate",
+          "en": "Calcium silicate",
+          "de": "Kalksandstein"
+        },
+        {
+          "value": "aerated_concrete",
+          "en": "Aerated concrete",
+          "de": "Porenbeton"
+        },
+        {
+          "value": "natural_stone",
+          "en": "Natural stone",
+          "de": "Naturstein"
+        },
+        {
+          "value": "mortar",
+          "en": "Mortar",
+          "de": "Mörtel"
+        },
+        {
+          "value": "cement_screed",
+          "en": "Cement screed",
+          "de": "Zementestrich"
+        },
+        {
+          "value": "asphalt",
+          "en": "Asphalt",
+          "de": "Asphalt"
+        },
+        {
+          "value": "plaster",
+          "en": "Plaster",
+          "de": "Putz"
+        },
+        {
+          "value": "glass",
+          "en": "Glass",
+          "de": "Glas"
+        },
+        {
+          "value": "water",
+          "en": "Water",
+          "de": "Wasser"
+        },
+        {
+          "value": "sand",
+          "en": "Sand",
+          "de": "Sand"
+        },
+        {
+          "value": "gravel",
+          "en": "Gravel",
+          "de": "Kies"
+        },
+        {
+          "value": "clay",
+          "en": "Clay",
+          "de": "Ton"
+        },
+        {
+          "value": "soil_fill",
+          "en": "Soil fill",
+          "de": "Bodenauffüllung"
+        }
+      ],
+      "example": "concrete"
+    },
+    {
+      "key": "member",
+      "scope": "",
+      "kind": "choice",
+      "en": "Member type",
+      "de": "Bauteilart",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "deck",
+          "en": "Bridge deck",
+          "de": "Brückenüberbau"
+        },
+        {
+          "value": "pier",
+          "en": "Pier",
+          "de": "Pfeiler"
+        }
+      ],
+      "example": "deck"
+    },
+    {
+      "key": "mode",
+      "scope": "",
+      "kind": "choice",
+      "en": "Mode shape of the structure",
+      "de": "Eigenform des Bauwerks",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "framed",
+          "en": "Framed structure",
+          "de": "Rahmentragwerk"
+        },
+        {
+          "value": "core",
+          "en": "Core structure",
+          "de": "Kernbauwerk"
+        },
+        {
+          "value": "cantilever",
+          "en": "Cantilever structure",
+          "de": "Kragbauwerk"
+        },
+        {
+          "value": "lattice",
+          "en": "Lattice structure",
+          "de": "Gittertragwerk"
+        }
+      ],
+      "example": "framed"
+    },
+    {
+      "key": "model",
+      "scope": "",
+      "kind": "choice",
+      "en": "Rail load model",
+      "de": "Eisenbahn-Lastmodell",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "sw0",
+          "en": "SW/0",
+          "de": "SW/0"
+        },
+        {
+          "value": "sw2",
+          "en": "SW/2",
+          "de": "SW/2"
+        }
+      ],
+      "example": "sw0"
+    },
+    {
+      "key": "mu",
+      "scope": "E13.01,E13.12",
+      "kind": "number",
+      "en": "Shape coefficient μ",
+      "de": "Formbeiwert μ",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "example": 0.8
+    },
+    {
+      "key": "mu",
+      "scope": "E4.03,E4.04,E4.05",
+      "kind": "number",
+      "en": "Wall friction coefficient μ",
+      "de": "Wandreibungsbeiwert μ",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "n",
+      "scope": "",
+      "kind": "number",
+      "en": "Natural frequency n of the structure",
+      "de": "Eigenfrequenz n des Bauwerks",
+      "confidence": "high",
+      "unit": "Hz",
+      "unitId": "Hertz",
+      "example": 1.0
+    },
+    {
+      "key": "n_1",
+      "scope": "",
+      "kind": "number",
+      "en": "Natural frequency n₁",
+      "de": "Eigenfrequenz n₁",
+      "confidence": "high",
+      "unit": "Hz",
+      "unitId": "Hertz"
+    },
+    {
+      "key": "n_years",
+      "scope": "",
+      "kind": "number",
+      "en": "Return period in years",
+      "de": "Wiederkehrperiode in Jahren",
+      "confidence": "high",
+      "unit": "a",
+      "unitId": "Year"
+    },
+    {
+      "key": "north_german_lowland",
+      "scope": "",
+      "kind": "number",
+      "en": "North German lowland (1) or not (0)",
+      "de": "Norddeutsches Tiefland (1) oder nicht (0)",
+      "confidence": "high",
+      "note": "flag",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "occupancy",
+      "scope": "",
+      "kind": "choice",
+      "en": "Occupancy",
+      "de": "Nutzung",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "dwelling",
+          "en": "Dwelling",
+          "de": "Wohnung"
+        },
+        {
+          "value": "residential",
+          "en": "Residential",
+          "de": "Wohngebäude"
+        },
+        {
+          "value": "office",
+          "en": "Office",
+          "de": "Büro"
+        },
+        {
+          "value": "hospital",
+          "en": "Hospital",
+          "de": "Krankenhaus"
+        },
+        {
+          "value": "school",
+          "en": "School",
+          "de": "Schule"
+        },
+        {
+          "value": "hotel",
+          "en": "Hotel",
+          "de": "Hotel"
+        },
+        {
+          "value": "library",
+          "en": "Library",
+          "de": "Bibliothek"
+        },
+        {
+          "value": "shopping",
+          "en": "Shopping",
+          "de": "Verkauf"
+        },
+        {
+          "value": "mall",
+          "en": "Shopping mall",
+          "de": "Einkaufszentrum"
+        },
+        {
+          "value": "theatre",
+          "en": "Theatre",
+          "de": "Theater"
+        },
+        {
+          "value": "transport",
+          "en": "Transport area",
+          "de": "Verkehrsbereich"
+        }
+      ],
+      "example": "office"
+    },
+    {
+      "key": "offsite_brigade",
+      "scope": "",
+      "kind": "number",
+      "en": "Off-site fire brigade (1) or not (0)",
+      "de": "Werkfeuerwehr extern (1) oder nicht (0)",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "min": 0.0,
+      "max": 1.0,
+      "example": 0.0
+    },
+    {
+      "key": "onsite_brigade",
+      "scope": "",
+      "kind": "number",
+      "en": "On-site fire brigade (1) or not (0)",
+      "de": "Werkfeuerwehr (1) oder nicht (0)",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "min": 0.0,
+      "max": 1.0,
+      "example": 0.0
+    },
+    {
+      "key": "p",
+      "scope": "",
+      "kind": "number",
+      "en": "Annual probability p",
+      "de": "Jährliche Wahrscheinlichkeit p",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "min": 0.0,
+      "max": 1.0,
+      "example": 0.02
+    },
+    {
+      "key": "p_d_h",
+      "scope": "E17.07",
+      "kind": "vector",
+      "en": "Probability of damage per hazard",
+      "de": "Schadenswahrscheinlichkeit je Gefahr",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "min": 0.0,
+      "max": 1.0
+    },
+    {
+      "key": "p_h",
+      "scope": "E17.07",
+      "kind": "vector",
+      "en": "Probability of the hazard",
+      "de": "Gefährdungswahrscheinlichkeit",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "min": 0.0,
+      "max": 1.0
+    },
+    {
+      "key": "p_v",
+      "scope": "",
+      "kind": "number",
+      "en": "Venting pressure p_v",
+      "de": "Entlastungsdruck p_v",
+      "confidence": "high",
+      "unit": "kPa",
+      "unitId": "Kilopascal",
+      "example": 5.0
+    },
+    {
+      "key": "pavement",
+      "scope": "",
+      "kind": "number",
+      "en": "Pavement thickness",
+      "de": "Belagdicke",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 0.1
+    },
+    {
+      "key": "phi",
+      "scope": "E14.03",
+      "kind": "number",
+      "en": "Upwind slope Φ = H/L",
+      "de": "Luvhangneigung Φ = H/L",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "example": 0.1
+    },
+    {
+      "key": "phi",
+      "scope": "E4.02,E4.03,E4.04,E4.05",
+      "kind": "number",
+      "en": "Angle of internal friction φ",
+      "de": "Innerer Reibungswinkel φ",
+      "confidence": "high",
+      "unit": "°",
+      "unitId": "Degree",
+      "example": 30.0
+    },
+    {
+      "key": "phi_1",
+      "scope": "",
+      "kind": "number",
+      "en": "Dynamic factor φ₁",
+      "de": "Dynamikfaktor φ₁",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "phi_7",
+      "scope": "",
+      "kind": "number",
+      "en": "Dynamic factor φ₇",
+      "de": "Dynamikfaktor φ₇",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "pitch",
+      "scope": "",
+      "kind": "number",
+      "en": "Roof pitch",
+      "de": "Dachneigung",
+      "confidence": "high",
+      "unit": "°",
+      "unitId": "Degree",
+      "example": 20.0
+    },
+    {
+      "key": "provided_tie",
+      "scope": "",
+      "kind": "number",
+      "en": "Provided tie force",
+      "de": "Vorhandene Zugankerkraft",
+      "confidence": "high",
+      "unit": "N",
+      "unitId": "Newton",
+      "example": 80000.0
+    },
+    {
+      "key": "psi",
+      "scope": "",
+      "kind": "number",
+      "en": "Combination factor ψ",
+      "de": "Kombinationsbeiwert ψ",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "psi_lambda",
+      "scope": "",
+      "kind": "number",
+      "en": "End-effect factor ψ_λ",
+      "de": "Endscheibenbeiwert ψ_λ",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "q_c",
+      "scope": "",
+      "kind": "number",
+      "en": "Crane load Q_c",
+      "de": "Kranlast Q_c",
+      "confidence": "high",
+      "unit": "N",
+      "unitId": "Newton",
+      "example": 100000.0
+    },
+    {
+      "key": "q_ca",
+      "scope": "",
+      "kind": "number",
+      "en": "Construction load Q_ca",
+      "de": "Baustellenlast Q_ca",
+      "confidence": "high",
+      "unit": "Pa",
+      "unitId": "Pascal",
+      "example": 1000.0
+    },
+    {
+      "key": "q_ca_concreting",
+      "scope": "",
+      "kind": "number",
+      "en": "Construction load during concreting",
+      "de": "Baustellenlast beim Betonieren",
+      "confidence": "high",
+      "unit": "Pa",
+      "unitId": "Pascal",
+      "example": 750.0
+    },
+    {
+      "key": "q_ci",
+      "scope": "E16.06",
+      "kind": "vector",
+      "en": "Construction load Q_c,i",
+      "de": "Baulast Q_c,i",
+      "confidence": "high",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "q_fd_mj",
+      "scope": "",
+      "kind": "number",
+      "en": "Design fire load density q_f,d",
+      "de": "Bemessungswert der Brandlastdichte q_f,d",
+      "confidence": "high",
+      "unit": "MJ/m²",
+      "unitId": "MegajoulePerSquareMetre"
+    },
+    {
+      "key": "q_fk_mj",
+      "scope": "",
+      "kind": "number",
+      "en": "Characteristic fire load density q_f,k",
+      "de": "Charakteristische Brandlastdichte q_f,k",
+      "confidence": "high",
+      "unit": "MJ/m²",
+      "unitId": "MegajoulePerSquareMetre"
+    },
+    {
+      "key": "q_h",
+      "scope": "",
+      "kind": "number",
+      "en": "Hoisted load Q_h",
+      "de": "Hublast Q_h",
+      "confidence": "high",
+      "unit": "N",
+      "unitId": "Newton",
+      "example": 50000.0
+    },
+    {
+      "key": "q_k",
+      "scope": "",
+      "kind": "number",
+      "en": "Characteristic imposed load q_k",
+      "de": "Charakteristische Nutzlast q_k",
+      "confidence": "high",
+      "note": "E17.06 divides by 1000 to kN/m²; E12.07 uses only the ratio",
+      "unit": "Pa",
+      "unitId": "Pascal",
+      "example": 3000.0
+    },
+    {
+      "key": "q_max",
+      "scope": "",
+      "kind": "number",
+      "en": "Maximum wheel load Q_max",
+      "de": "Maximale Radlast Q_max",
+      "confidence": "high",
+      "unit": "N",
+      "unitId": "Newton",
+      "example": 100000.0
+    },
+    {
+      "key": "q_p",
+      "scope": "",
+      "kind": "number",
+      "en": "Peak velocity pressure q_p",
+      "de": "Böengeschwindigkeitsdruck q_p",
+      "confidence": "high",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "q_v",
+      "scope": "",
+      "kind": "number",
+      "en": "Vertical load Q_v",
+      "de": "Vertikallast Q_v",
+      "confidence": "high",
+      "unit": "N",
+      "unitId": "Newton",
+      "example": 600000.0
+    },
+    {
+      "key": "q_vk",
+      "scope": "",
+      "kind": "number",
+      "en": "Characteristic vertical load Q_vk",
+      "de": "Charakteristische Vertikallast Q_vk",
+      "confidence": "high",
+      "unit": "N",
+      "unitId": "Newton",
+      "example": 1000000.0
+    },
+    {
+      "key": "q_w",
+      "scope": "",
+      "kind": "number",
+      "en": "Heat release rate Q",
+      "de": "Wärmefreisetzungsrate Q",
+      "confidence": "high",
+      "unit": "W",
+      "unitId": "Watt",
+      "example": 1000000.0
+    },
+    {
+      "key": "r",
+      "scope": "E12.05",
+      "kind": "number",
+      "en": "Horizontal distance r from the fire axis",
+      "de": "Horizontaler Abstand r von der Brandachse",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 2.0
+    },
+    {
+      "key": "r",
+      "scope": "E14.11",
+      "kind": "number",
+      "en": "Corner radius r",
+      "de": "Eckenradius r",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 0.0
+    },
+    {
+      "key": "r_acc",
+      "scope": "",
+      "kind": "number",
+      "en": "Accepted risk",
+      "de": "Akzeptiertes Risiko",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "example": 1e-05
+    },
+    {
+      "key": "radius",
+      "scope": "",
+      "kind": "number",
+      "en": "Radius",
+      "de": "Radius",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "resistance_min",
+      "scope": "",
+      "kind": "number",
+      "en": "Required fire resistance in minutes",
+      "de": "Geforderte Feuerwiderstandsdauer in Minuten",
+      "confidence": "high",
+      "unit": "min",
+      "unitId": "Minute"
+    },
+    {
+      "key": "rho",
+      "scope": "",
+      "kind": "number",
+      "en": "Air density ρ",
+      "de": "Luftdichte ρ",
+      "confidence": "high",
+      "note": "1.25 typical",
+      "unit": "kg/m³",
+      "unitId": "KilogramPerCubicMetre"
+    },
+    {
+      "key": "road",
+      "scope": "",
+      "kind": "choice",
+      "en": "Road type",
+      "de": "Straßenart",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "motorway",
+          "en": "Motorway",
+          "de": "Autobahn"
+        },
+        {
+          "value": "urban",
+          "en": "Urban road",
+          "de": "Innerortsstraße"
+        },
+        {
+          "value": "courtyard_cars",
+          "en": "Courtyard, cars",
+          "de": "Hof, Pkw"
+        },
+        {
+          "value": "courtyard_lorries",
+          "en": "Courtyard, lorries",
+          "de": "Hof, Lkw"
+        }
+      ],
+      "example": "motorway"
+    },
+    {
+      "key": "roof_type",
+      "scope": "",
+      "kind": "choice",
+      "en": "Roof type",
+      "de": "Dachform",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "flat",
+          "en": "Flat roof",
+          "de": "Flachdach"
+        },
+        {
+          "value": "monopitch",
+          "en": "Monopitch roof",
+          "de": "Pultdach"
+        },
+        {
+          "value": "duopitch",
+          "en": "Duopitch roof",
+          "de": "Satteldach"
+        },
+        {
+          "value": "hipped",
+          "en": "Hipped roof",
+          "de": "Walmdach"
+        }
+      ],
+      "example": "duopitch"
+    },
+    {
+      "key": "rpm",
+      "scope": "",
+      "kind": "number",
+      "en": "Rotational speed in rpm (1/min)",
+      "de": "Drehzahl in U/min",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "example": 1500.0
+    },
+    {
+      "key": "runway_beams",
+      "scope": "",
+      "kind": "number",
+      "en": "Number of runway beams",
+      "de": "Anzahl der Kranbahnträger",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "example": 2.0
+    },
+    {
+      "key": "s",
+      "scope": "E13.07,E13.08,E13.13",
+      "kind": "number",
+      "en": "Snow load s on the roof",
+      "de": "Schneelast s auf dem Dach",
+      "confidence": "high",
+      "unit": "Pa",
+      "unitId": "Pascal",
+      "example": 2000.0
+    },
+    {
+      "key": "s",
+      "scope": "E17.06",
+      "kind": "number",
+      "en": "Tie spacing s",
+      "de": "Zugliedabstand s",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 5.0
+    },
+    {
+      "key": "s",
+      "scope": "E14.03",
+      "kind": "number",
+      "en": "Orography scale factor s",
+      "de": "Orographie-Faktor s",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "example": 1.0
+    },
+    {
+      "key": "s_b",
+      "scope": "",
+      "kind": "number",
+      "en": "Buffer spring stiffness S_B",
+      "de": "Federsteifigkeit S_B des Puffers",
+      "confidence": "high",
+      "unit": "N/m",
+      "unitId": "NewtonPerMetre",
+      "example": 10000000.0
+    },
+    {
+      "key": "s_k",
+      "scope": "",
+      "kind": "number",
+      "en": "Characteristic ground snow load s_k",
+      "de": "Charakteristische Schneelast auf dem Boden s_k",
+      "confidence": "high",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "safe_access",
+      "scope": "",
+      "kind": "number",
+      "en": "Safe access routes (1) or not (0)",
+      "de": "Sichere Zugangswege (1) oder nicht (0)",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "min": 0.0,
+      "max": 1.0,
+      "example": 0.0
+    },
+    {
+      "key": "skew_rad",
+      "scope": "",
+      "kind": "number",
+      "en": "Skew angle",
+      "de": "Schräglaufwinkel",
+      "confidence": "high",
+      "unit": "rad",
+      "unitId": "Radian"
+    },
+    {
+      "key": "slab_thickness",
+      "scope": "",
+      "kind": "number",
+      "en": "Slab thickness",
+      "de": "Plattendicke",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "smoke_detection",
+      "scope": "",
+      "kind": "number",
+      "en": "Automatic smoke detection (1) or not (0)",
+      "de": "Automatische Rauchmeldung (1) oder nicht (0)",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "min": 0.0,
+      "max": 1.0,
+      "example": 0.0
+    },
+    {
+      "key": "span",
+      "scope": "",
+      "kind": "number",
+      "en": "Span",
+      "de": "Spannweite",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "speed",
+      "scope": "",
+      "kind": "number",
+      "en": "Speed",
+      "de": "Geschwindigkeit",
+      "confidence": "high",
+      "unit": "m/s",
+      "unitId": "MetrePerSecond"
+    },
+    {
+      "key": "sprinkler",
+      "scope": "",
+      "kind": "number",
+      "en": "Sprinkler system (1) or not (0)",
+      "de": "Sprinkleranlage (1) oder nicht (0)",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "min": 0.0,
+      "max": 1.0,
+      "example": 0.0
+    },
+    {
+      "key": "st",
+      "scope": "",
+      "kind": "number",
+      "en": "Strouhal number St",
+      "de": "Strouhal-Zahl St",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "standoff",
+      "scope": "",
+      "kind": "number",
+      "en": "Stand-off distance",
+      "de": "Abstand der Detonation",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "state",
+      "scope": "",
+      "kind": "choice",
+      "en": "Snow state",
+      "de": "Schneezustand",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "fresh",
+          "en": "Fresh snow",
+          "de": "Neuschnee"
+        },
+        {
+          "value": "settled_days",
+          "en": "Settled snow, days old",
+          "de": "Setzungsschnee, Tage alt"
+        },
+        {
+          "value": "settled_months",
+          "en": "Settled snow, months old",
+          "de": "Setzungsschnee, Monate alt"
+        },
+        {
+          "value": "wet",
+          "en": "Wet snow",
+          "de": "Nassschnee"
+        }
+      ],
+      "example": "fresh"
+    },
+    {
+      "key": "storeys",
+      "scope": "",
+      "kind": "number",
+      "en": "Number of storeys",
+      "de": "Anzahl der Geschosse",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "structure",
+      "scope": "",
+      "kind": "choice",
+      "en": "Structure type",
+      "de": "Bauwerksart",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "concrete",
+          "en": "Concrete",
+          "de": "Beton"
+        },
+        {
+          "value": "steel",
+          "en": "Steel",
+          "de": "Stahl"
+        },
+        {
+          "value": "mixed",
+          "en": "Mixed",
+          "de": "Gemischt"
+        }
+      ],
+      "example": "concrete"
+    },
+    {
+      "key": "sum_q_r",
+      "scope": "",
+      "kind": "number",
+      "en": "Sum of wheel loads ΣQ_r",
+      "de": "Summe der Radlasten ΣQ_r",
+      "confidence": "high",
+      "unit": "N",
+      "unitId": "Newton",
+      "example": 400000.0
+    },
+    {
+      "key": "surfacing",
+      "scope": "",
+      "kind": "choice",
+      "en": "Surfacing type",
+      "de": "Belagart",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "unsurfaced",
+          "en": "Unsurfaced",
+          "de": "Ohne Belag"
+        },
+        {
+          "value": "waterproofed",
+          "en": "Waterproofed",
+          "de": "Abgedichtet"
+        },
+        {
+          "value": "50mm",
+          "en": "50 mm surfacing",
+          "de": "Belag 50 mm"
+        },
+        {
+          "value": "100mm",
+          "en": "100 mm surfacing",
+          "de": "Belag 100 mm"
+        },
+        {
+          "value": "150mm",
+          "en": "150 mm surfacing",
+          "de": "Belag 150 mm"
+        },
+        {
+          "value": "ballast",
+          "en": "Ballast",
+          "de": "Schotter"
+        }
+      ],
+      "example": "50mm"
+    },
+    {
+      "key": "t_0_c",
+      "scope": "",
+      "kind": "number",
+      "en": "Initial temperature T₀",
+      "de": "Anfangstemperatur T₀",
+      "confidence": "high",
+      "unit": "°C",
+      "unitId": "Celsius"
+    },
+    {
+      "key": "t_f_c",
+      "scope": "",
+      "kind": "number",
+      "en": "Fire temperature",
+      "de": "Branddrucktemperatur",
+      "confidence": "high",
+      "unit": "°C",
+      "unitId": "Celsius"
+    },
+    {
+      "key": "t_lim_min",
+      "scope": "",
+      "kind": "number",
+      "en": "Limiting time t_lim in minutes",
+      "de": "Grenzzeit t_lim in Minuten",
+      "confidence": "high",
+      "unit": "min",
+      "unitId": "Minute"
+    },
+    {
+      "key": "t_max_c",
+      "scope": "",
+      "kind": "number",
+      "en": "Maximum shade air temperature",
+      "de": "Höchste Lufttemperatur im Schatten",
+      "confidence": "high",
+      "unit": "°C",
+      "unitId": "Celsius"
+    },
+    {
+      "key": "t_min",
+      "scope": "",
+      "kind": "number",
+      "en": "Time in minutes",
+      "de": "Zeit in Minuten",
+      "confidence": "high",
+      "unit": "min",
+      "unitId": "Minute",
+      "example": 30.0
+    },
+    {
+      "key": "t_min_c",
+      "scope": "",
+      "kind": "number",
+      "en": "Minimum shade air temperature",
+      "de": "Niedrigste Lufttemperatur im Schatten",
+      "confidence": "high",
+      "unit": "°C",
+      "unitId": "Celsius"
+    },
+    {
+      "key": "temps_c",
+      "scope": "E12.10",
+      "kind": "vector",
+      "en": "Temperature series (vector)",
+      "de": "Temperaturreihe (Vektor)",
+      "confidence": "high",
+      "unit": "°C",
+      "unitId": "Celsius"
+    },
+    {
+      "key": "terrain",
+      "scope": "",
+      "kind": "number",
+      "en": "Terrain category (0 to 4)",
+      "de": "Geländekategorie (0 bis 4)",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "min": 0.0,
+      "max": 4.0,
+      "example": 2.0
+    },
+    {
+      "key": "theta_g_c",
+      "scope": "",
+      "kind": "number",
+      "en": "Gas temperature θ_g",
+      "de": "Gastemperatur θ_g",
+      "confidence": "high",
+      "unit": "°C",
+      "unitId": "Celsius"
+    },
+    {
+      "key": "theta_m_c",
+      "scope": "",
+      "kind": "number",
+      "en": "Surface temperature θ_m",
+      "de": "Oberflächentemperatur θ_m",
+      "confidence": "high",
+      "unit": "°C",
+      "unitId": "Celsius"
+    },
+    {
+      "key": "thickness",
+      "scope": "",
+      "kind": "number",
+      "en": "Layer thickness",
+      "de": "Schichtdicke",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "thickness2",
+      "scope": "",
+      "kind": "number",
+      "en": "Thickness of layer 2",
+      "de": "Dicke der Schicht 2",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "thickness3",
+      "scope": "",
+      "kind": "number",
+      "en": "Thickness of layer 3",
+      "de": "Dicke der Schicht 3",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "times_min",
+      "scope": "E12.10",
+      "kind": "vector",
+      "en": "Time series in minutes (vector)",
+      "de": "Zeitreihe in Minuten (Vektor)",
+      "confidence": "high",
+      "unit": "min",
+      "unitId": "Minute"
+    },
+    {
+      "key": "tyres",
+      "scope": "",
+      "kind": "choice",
+      "en": "Tyre type",
+      "de": "Reifenart",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "pneumatic",
+          "en": "Pneumatic tyres",
+          "de": "Luftreifen"
+        },
+        {
+          "value": "solid",
+          "en": "Solid tyres",
+          "de": "Vollgummireifen"
+        }
+      ],
+      "example": "pneumatic"
+    },
+    {
+      "key": "v",
+      "scope": "",
+      "kind": "number",
+      "en": "Coefficient of variation V of the annual maxima",
+      "de": "Variationskoeffizient V der Jahresmaxima",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "example": 0.4
+    },
+    {
+      "key": "v_1",
+      "scope": "",
+      "kind": "number",
+      "en": "Buffer impact speed v₁",
+      "de": "Pufferanprallgeschwindigkeit v₁",
+      "confidence": "high",
+      "unit": "m/s",
+      "unitId": "MetrePerSecond",
+      "example": 0.7
+    },
+    {
+      "key": "v_b",
+      "scope": "",
+      "kind": "number",
+      "en": "Basic wind velocity v_b",
+      "de": "Basiswindgeschwindigkeit v_b",
+      "confidence": "high",
+      "unit": "m/s",
+      "unitId": "MetrePerSecond"
+    },
+    {
+      "key": "v_b0",
+      "scope": "",
+      "kind": "number",
+      "en": "Fundamental basic wind velocity v_b,0",
+      "de": "Basiswindgeschwindigkeit v_b,0",
+      "confidence": "high",
+      "unit": "m/s",
+      "unitId": "MetrePerSecond"
+    },
+    {
+      "key": "v_h",
+      "scope": "",
+      "kind": "number",
+      "en": "Hoisting speed v_h",
+      "de": "Hubgeschwindigkeit v_h",
+      "confidence": "high",
+      "unit": "m/s",
+      "unitId": "MetrePerSecond"
+    },
+    {
+      "key": "v_kmh",
+      "scope": "",
+      "kind": "number",
+      "en": "Speed in km/h",
+      "de": "Geschwindigkeit in km/h",
+      "confidence": "high",
+      "unit": "km/h",
+      "unitId": "KilometrePerHour"
+    },
+    {
+      "key": "v_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Mean wind velocity v_m",
+      "de": "Mittlere Windgeschwindigkeit v_m",
+      "confidence": "high",
+      "unit": "m/s",
+      "unitId": "MetrePerSecond"
+    },
+    {
+      "key": "wall_gamma",
+      "scope": "",
+      "kind": "number",
+      "en": "Unit weight of the wall material",
+      "de": "Wichte des Wandbaustoffs",
+      "confidence": "high",
+      "unit": "N/m³",
+      "unitId": "NewtonPerCubicMetre",
+      "example": 18000.0
+    },
+    {
+      "key": "wall_height",
+      "scope": "",
+      "kind": "number",
+      "en": "Wall height",
+      "de": "Wandhöhe",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "wall_load",
+      "scope": "",
+      "kind": "number",
+      "en": "Wall load per metre",
+      "de": "Wandlast je Meter",
+      "confidence": "high",
+      "unit": "N/m",
+      "unitId": "NewtonPerMetre",
+      "example": 3000.0
+    },
+    {
+      "key": "wall_thickness",
+      "scope": "",
+      "kind": "number",
+      "en": "Wall thickness",
+      "de": "Wanddicke",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "water_supplies",
+      "scope": "",
+      "kind": "number",
+      "en": "Number of water supplies (0 to 2)",
+      "de": "Anzahl der Löschwasserversorgungen (0 bis 2)",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "min": 0.0,
+      "max": 2.0,
+      "example": 0.0
+    },
+    {
+      "key": "weight",
+      "scope": "",
+      "kind": "number",
+      "en": "Weight",
+      "de": "Gewicht",
+      "confidence": "high",
+      "unit": "N",
+      "unitId": "Newton",
+      "example": 30000.0
+    },
+    {
+      "key": "wheels",
+      "scope": "",
+      "kind": "number",
+      "en": "Number of wheels",
+      "de": "Anzahl der Räder",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "example": 4.0
+    },
+    {
+      "key": "width",
+      "scope": "",
+      "kind": "number",
+      "en": "Width",
+      "de": "Breite",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "xi",
+      "scope": "",
+      "kind": "number",
+      "en": "Factor ξ",
+      "de": "Beiwert ξ",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "example": 0.2
+    },
+    {
+      "key": "y_allowed",
+      "scope": "",
+      "kind": "number",
+      "en": "Allowed displacement",
+      "de": "Zulässige Verschiebung",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 0.5
+    },
+    {
+      "key": "y_el",
+      "scope": "",
+      "kind": "number",
+      "en": "Elastic displacement",
+      "de": "Elastische Verschiebung",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 0.1
+    },
+    {
+      "key": "z",
+      "scope": "E13.02",
+      "kind": "number",
+      "en": "CEN snow zone number Z",
+      "de": "CEN-Schneezonenzahl Z",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "example": 3.0
+    },
+    {
+      "key": "z",
+      "scope": "",
+      "kind": "number",
+      "en": "Height z",
+      "de": "Höhe z",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "z_g",
+      "scope": "",
+      "kind": "number",
+      "en": "Height z_g",
+      "de": "Höhe z_g",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 3.0
+    },
+    {
+      "key": "z_prime",
+      "scope": "",
+      "kind": "number",
+      "en": "Height z'",
+      "de": "Höhe z'",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre",
+      "example": 0.0
+    },
+    {
+      "key": "zone",
+      "scope": "E13.01,E13.02,E13.09",
+      "kind": "choice",
+      "en": "Snow load zone",
+      "de": "Schneelastzone",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "1",
+          "en": "Snow load zone 1",
+          "de": "Schneelastzone 1"
+        },
+        {
+          "value": "1a",
+          "en": "Snow load zone 1a",
+          "de": "Schneelastzone 1a"
+        },
+        {
+          "value": "2",
+          "en": "Snow load zone 2",
+          "de": "Schneelastzone 2"
+        },
+        {
+          "value": "2a",
+          "en": "Snow load zone 2a",
+          "de": "Schneelastzone 2a"
+        },
+        {
+          "value": "3",
+          "en": "Snow load zone 3",
+          "de": "Schneelastzone 3"
+        }
+      ],
+      "example": "2"
+    },
+    {
+      "key": "zone",
+      "scope": "E14.01,E14.02",
+      "kind": "number",
+      "en": "Wind zone (1 to 4)",
+      "de": "Windzone (1 bis 4)",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "min": 1.0,
+      "max": 4.0,
+      "example": 2.0
+    },
+    {
+      "key": "zone",
+      "scope": "E14.08",
+      "kind": "choice",
+      "en": "Zone of the face",
+      "de": "Bereich der Fläche",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "A",
+          "en": "Zone A",
+          "de": "Bereich A"
+        },
+        {
+          "value": "B",
+          "en": "Zone B",
+          "de": "Bereich B"
+        },
+        {
+          "value": "C",
+          "en": "Zone C",
+          "de": "Bereich C"
+        },
+        {
+          "value": "D",
+          "en": "Zone D",
+          "de": "Bereich D"
+        },
+        {
+          "value": "E",
+          "en": "Zone E",
+          "de": "Bereich E"
+        },
+        {
+          "value": "F",
+          "en": "Zone F",
+          "de": "Bereich F"
+        },
+        {
+          "value": "G",
+          "en": "Zone G",
+          "de": "Bereich G"
+        },
+        {
+          "value": "H",
+          "en": "Zone H",
+          "de": "Bereich H"
+        },
+        {
+          "value": "I",
+          "en": "Zone I",
+          "de": "Bereich I"
+        },
+        {
+          "value": "J",
+          "en": "Zone J",
+          "de": "Bereich J"
+        }
+      ],
+      "example": "A"
+    },
+    {
+      "key": "cen_zone",
+      "scope": "",
+      "kind": "choice",
+      "en": "CEN snow zone",
+      "de": "CEN-Schneezone",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "alpine",
+          "en": "Alpine region",
+          "de": "Alpenregion"
+        },
+        {
+          "value": "central_east",
+          "en": "Central East",
+          "de": "Mittel-Ost"
+        },
+        {
+          "value": "mediterranean",
+          "en": "Mediterranean region",
+          "de": "Mittelmeerregion"
+        }
+      ],
+      "example": "central_east"
+    },
+    {
+      "key": "coast",
+      "scope": "E14.02",
+      "kind": "number",
+      "en": "Coastal profile (1) or inland (0)",
+      "de": "Küstenprofil (1) oder Binnenland (0)",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "min": 0.0,
+      "max": 1.0,
+      "example": 0.0
+    }
+  ]
+}

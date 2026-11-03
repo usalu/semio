@@ -1,0 +1,16 @@
+{
+  "mutation": "insertSystem",
+  "buildingId": "bldg-office",
+  "index": 1,
+  "system": {
+    "id": "sys-x-2",
+    "direction": "x",
+    "systemType": "frame",
+    "material": "rc",
+    "ductilityClass": "dch",
+    "q0": 4.5,
+    "alphaUOverAlpha1": 1.3,
+    "kW": 1.0,
+    "baseShearResistanceN": 1200000.0
+  }
+}

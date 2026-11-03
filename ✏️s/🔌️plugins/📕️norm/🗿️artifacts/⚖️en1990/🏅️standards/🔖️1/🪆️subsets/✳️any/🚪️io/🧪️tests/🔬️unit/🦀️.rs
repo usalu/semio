@@ -11,7 +11,7 @@ use store::os_store::test_support::{self, ExampleAsset, IoFidelityClass, SubsetR
 
 #[semio_framework_async_macros::async_test]
 async fn dsl_and_pack_wire_roundtrip_default() {
-    let snapshot = En1990Snapshot::default();
+    let snapshot = En1990Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De);
     let dsl = en1990_to_dsl_bytes(&snapshot);
     let reparsed = en1990_from_dsl_bytes(&dsl).expect("dsl roundtrip");
     assert_eq!(reparsed, snapshot);
@@ -68,7 +68,7 @@ impl SubsetRoundtripSpec for En1990AnyRoundtrip {
         let schema = fixture_path!("../../../🧬️schema/📸️snapshot/🔣️.json");
         let tmp = std::env::temp_dir().join("en1990-validate-instance.json");
         std::fs::write(&tmp, text).map_err(|e| vec![e.to_string()])?;
-        let out = std::process::Command::new("python3")
+        let out = semio_s_plugin_norm_compliance::python_oracle::command()
             .arg("-c")
             .arg("import json,sys,jsonschema; s=json.load(open(sys.argv[1])); i=json.load(open(sys.argv[2])); jsonschema.validate(instance=i, schema=s); print('ok')")
             .arg(&schema)

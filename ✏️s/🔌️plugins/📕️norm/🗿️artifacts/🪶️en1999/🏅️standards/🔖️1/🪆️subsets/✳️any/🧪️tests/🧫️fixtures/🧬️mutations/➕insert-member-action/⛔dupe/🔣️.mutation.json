@@ -1,0 +1,20 @@
+{
+  "mutation": "insertMemberAction",
+  "memberId": "purlin-1",
+  "index": 0,
+  "action": {
+    "id": "G",
+    "kind": "permanent",
+    "category": "selfWeight",
+    "source": "udl",
+    "gKLine": 400.0,
+    "qKLine": 0.0,
+    "nK": 2000.0,
+    "vYK": 0.0,
+    "vZK": 0.0,
+    "mYK": 0.0,
+    "mZK": 0.0,
+    "torsionK": 0.0,
+    "localLoadK": 0.0
+  }
+}

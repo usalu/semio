@@ -1,0 +1,5 @@
+{
+  "mutation": "changeBuildingAccidentalEccRatio",
+  "id": "bldg-office",
+  "newAccidentalEccentricityRatio": 0.1
+}

@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-fastener-load-angle/schema.json",
+  "title": "ChangeFastenerLoadAngle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "fastenerId",
+    "newValue"
+  ],
+  "properties": {
+    "fastenerId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Fastener",
+          "de": "Verbindungsmittel"
+        },
+        "description": {
+          "en": "The fastener this mutation addresses.",
+          "de": "Das Element, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "fastener"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newValue": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Load to grain angle α",
+          "de": "Winkel α zwischen Kraft und Faser"
+        },
+        "unit": "rad",
+        "displayUnit": "°",
+        "displayFactor": 57.29577951308232,
+        "precision": 2,
+        "step": 0.0174532925,
+        "group": "fields",
+        "order": 20
+      }
+    }
+  }
+}

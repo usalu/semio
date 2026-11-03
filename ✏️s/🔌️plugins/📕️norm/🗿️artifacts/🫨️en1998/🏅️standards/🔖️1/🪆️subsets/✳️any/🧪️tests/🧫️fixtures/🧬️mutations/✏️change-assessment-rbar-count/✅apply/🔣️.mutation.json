@@ -1,0 +1,5 @@
+{
+  "mutation": "changeAssessmentRbarCount",
+  "id": "as-1",
+  "newRestrainedBarCount": 1.5
+}

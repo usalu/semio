@@ -1,0 +1,6 @@
+{
+  "ChangeTensionCableHorizForce": {
+    "id": "ten-1",
+    "newCableHorizontalForce": 1.5
+  }
+}

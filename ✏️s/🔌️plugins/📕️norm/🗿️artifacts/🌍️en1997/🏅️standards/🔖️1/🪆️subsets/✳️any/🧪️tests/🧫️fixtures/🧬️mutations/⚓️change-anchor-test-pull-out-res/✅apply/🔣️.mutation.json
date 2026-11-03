@@ -1,0 +1,6 @@
+{
+  "mutation": "changeAnchorTestPullOutRes",
+  "anchorId": "anchor-A1",
+  "id": "atest-1",
+  "newPullOutResistance": 1300000.0
+}

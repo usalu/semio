@@ -6,50 +6,50 @@
   "additionalProperties": false,
   "required": [
     "mutation",
-    "buildingIndex",
-    "systemIndex",
+    "buildingId",
+    "id",
     "newBaseShearResistanceN"
   ],
   "properties": {
     "mutation": {
       "const": "changeSystemVRdN"
     },
-    "buildingIndex": {
-      "type": "integer",
-      "minimum": 0,
+    "buildingId": {
+      "type": "string",
       "x-semio-ui": {
-        "widget": "stepper",
-        "role": "value",
+        "widget": "reference",
+        "role": "target",
         "label": {
           "en": "Building",
           "de": "Gebäude"
         },
         "description": {
-          "en": "Zero-based position of the building in its list.",
-          "de": "Nullbasierte Position des Gebäudes in der Liste."
+          "en": "The building this mutation addresses, by id.",
+          "de": "Das adressierte Element (Gebäude), per Kennung."
         },
-        "step": 1,
-        "precision": 0,
+        "ref": {
+          "kind": "building"
+        },
         "group": "target",
         "order": 10
       }
     },
-    "systemIndex": {
-      "type": "integer",
-      "minimum": 0,
+    "id": {
+      "type": "string",
       "x-semio-ui": {
-        "widget": "stepper",
-        "role": "value",
+        "widget": "reference",
+        "role": "target",
         "label": {
           "en": "Structural system",
           "de": "Tragsystem"
         },
         "description": {
-          "en": "Zero-based position of the structural system within the building in its list.",
-          "de": "Nullbasierte Position des Tragsystems im Gebäude in der Liste."
+          "en": "The structural system this mutation addresses, by id.",
+          "de": "Das adressierte Element (Tragsystem), per Kennung."
         },
-        "step": 1,
-        "precision": 0,
+        "ref": {
+          "kind": "system"
+        },
         "group": "target",
         "order": 20
       }

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeMemberTransverseWeld",
+  "memberId": "purlin-1",
+  "newTransverseWeld": true
+}

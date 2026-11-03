@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/remove-bearing/schema.json",
+  "title": "RemoveBearing",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "removeBearing"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Bearing",
+          "de": "Lager"
+        },
+        "description": {
+          "en": "The bearing this mutation addresses, by id.",
+          "de": "Das adressierte Element (Lager), per Kennung."
+        },
+        "ref": {
+          "kind": "bearing"
+        },
+        "group": "target",
+        "order": 10
+      }
+    }
+  }
+}

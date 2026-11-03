@@ -1,0 +1,6 @@
+{
+  "ChangeDeckBarResistance": {
+    "deckId": "deck-1",
+    "newValue": 1050000001.0
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "artifact": "en1993",
+  "reference": "frameMemberBases",
+  "collection": {
+    "name": "materialDuctility",
+    "entity": "MaterialDuctility",
+    "emoji": "🧪",
+    "doc": "🧪 Elongation at failure and ultimate strain of a steel material (EN 1993-1-1 3.2.2): the values of the material certificate that, with f_u/f_y, decide whether a material is ductile enough for plastic global analysis.",
+    "label": {
+      "en": "Material ductility",
+      "de": "Werkstoffduktilität"
+    },
+    "id": {
+      "en": "Ductility ID",
+      "de": "Duktilitäts-ID"
+    },
+    "singular": {
+      "en": "material ductility",
+      "de": "Werkstoffduktilität"
+    },
+    "kindSlug": "material-ductility",
+    "fields": [
+      {
+        "name": "material_id",
+        "type": "String",
+        "label": {
+          "en": "Material",
+          "de": "Werkstoff"
+        },
+        "doc": "🧪 Id of the steel material the certificate values belong to.",
+        "sample": "steel-s355"
+      },
+      {
+        "name": "elongation",
+        "type": "f64",
+        "label": {
+          "en": "Elongation at failure",
+          "de": "Bruchdehnung"
+        },
+        "doc": "📏 Elongation at failure of the material as a fraction (0.15 = 15 %).",
+        "sample": 0.2,
+        "unit": "",
+        "precision": 3,
+        "step": 0.005,
+        "range": [
+          0,
+          1
+        ]
+      },
+      {
+        "name": "ultimate_strain",
+        "type": "f64",
+        "label": {
+          "en": "Ultimate strain eps_u",
+          "de": "Gleichmaßdehnung eps_u"
+        },
+        "doc": "📏 Strain eps_u at the ultimate strength f_u as a fraction.",
+        "sample": 0.15,
+        "unit": "",
+        "precision": 3,
+        "step": 0.005,
+        "range": [
+          0,
+          1
+        ]
+      }
+    ]
+  }
+}

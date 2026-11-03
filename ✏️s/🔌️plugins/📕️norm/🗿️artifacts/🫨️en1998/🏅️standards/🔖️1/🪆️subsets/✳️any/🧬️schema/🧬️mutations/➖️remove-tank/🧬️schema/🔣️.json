@@ -6,28 +6,28 @@
   "additionalProperties": false,
   "required": [
     "mutation",
-    "index"
+    "id"
   ],
   "properties": {
     "mutation": {
       "const": "removeTank"
     },
-    "index": {
-      "type": "integer",
-      "minimum": 0,
+    "id": {
+      "type": "string",
       "x-semio-ui": {
-        "widget": "stepper",
-        "role": "value",
+        "widget": "reference",
+        "role": "target",
         "label": {
           "en": "Tank",
           "de": "Tank"
         },
         "description": {
-          "en": "Zero-based position of the tank in its list.",
-          "de": "Nullbasierte Position des Tanks in der Liste."
+          "en": "The tank this mutation addresses, by id.",
+          "de": "Das adressierte Element (Tank), per Kennung."
         },
-        "step": 1,
-        "precision": 0,
+        "ref": {
+          "kind": "tank"
+        },
         "group": "target",
         "order": 10
       }

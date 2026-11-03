@@ -325,4 +325,78 @@ pub fn retained_node_has_visible_focus(window_id: &str, node_id: NodeId, expecte
             engine.window_has_focus(window_id) && engine.tree(window_id).and_then(|tree| tree.node(node_id)).is_some_and(|node| &node.key == expected_key && RetainedNodeFocusKind::from_node(&node.spec.0) == expected_kind)
         })
 }
+/// ✏️ One control a tree row holds, as the retained document describes it: the key its author gave it, the document node id an accessibility event addresses it by, the kind name the row-control law reads (`text`, `longText`, `number`, `date`, `color`, `file` for an input; `button`, `toggle`, `select`, `slider`, `stepper` or `other`) and whether it is disabled.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RetainedRowControl {
+    pub key: String,
+    pub node_id: u64,
+    pub kind: String,
+    pub disabled: bool,
+}
+
+/// ✏️ The controls of one tree row in row order (a nested row's controls are its own), with the window that presents the row and the generation an accessibility event must carry.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RetainedRowControls {
+    pub window_id: String,
+    pub window_generation: u64,
+    pub controls: Vec<RetainedRowControl>,
+}
+
+fn row_control_kind(component: &ui_contract::Component) -> &'static str {
+    match component {
+        ui_contract::Component::Input(input) => match input.kind {
+            ui_contract::InputKind::Text => "text",
+            ui_contract::InputKind::LongText => "longText",
+            ui_contract::InputKind::Number => "number",
+            ui_contract::InputKind::Date => "date",
+            ui_contract::InputKind::Color => "color",
+            ui_contract::InputKind::File => "file",
+        },
+        ui_contract::Component::Button(_) => "button",
+        ui_contract::Component::Toggle(_) => "toggle",
+        ui_contract::Component::Select(_) => "select",
+        ui_contract::Component::Slider(_) => "slider",
+        ui_contract::Component::NumberStepper(_) => "stepper",
+        _ => "other",
+    }
+}
+
+/// 🔎️ The controls of the tree row authored as `row_key`, from the first window (in id order) whose document holds such a row; `None` while no window presents it. Backs the `focusRowControl` verb; the rule that picks the cell is [`semio_framework::plan_row_control_focus`].
+pub fn retained_row_controls(row_key: &str) -> Option<RetainedRowControls> {
+    UI_ENGINE.with(|cell| {
+        let engine = cell.borrow();
+        let mut windows: Vec<&str> = engine.window_ids().collect();
+        windows.sort_unstable();
+        windows.into_iter().find_map(|window_id| {
+            let window_generation = engine.surface_generation(window_id)?;
+            let document = engine.tree(window_id)?.document()?;
+            let row = document.nodes.values().find(|record| record.key.as_str() == row_key && matches!(record.component, ui_contract::Component::TreeItem(_)))?;
+            let mut controls = Vec::new();
+            let mut pending = vec![(row.id, 0usize)];
+            while let Some((id, depth)) = pending.pop() {
+                let Some(record) = document.record(id) else { continue };
+                if depth > 0 && matches!(record.component, ui_contract::Component::TreeItem(_)) {
+                    continue;
+                }
+                if depth > 0 && !matches!(record.component, ui_contract::Component::Container(_)) {
+                    controls.push(RetainedRowControl { key: record.key.as_str().to_string(), node_id: record.id.0, kind: row_control_kind(&record.component).to_string(), disabled: record.disabled });
+                }
+                let children: Vec<_> = record.children.iter().map(|child| *child).collect();
+                pending.extend(children.into_iter().rev().map(|child| (child, depth + 1)));
+            }
+            Some(RetainedRowControls { window_id: window_id.to_string(), window_generation, controls })
+        })
+    })
+}
+
+/// ⌨️ The authored key of the tree row that holds the keyboard focus of `window_id`: `Some` while the focused node is a tree row itself, `None` when it is a control inside a row (that control owns the key) or anything else.
+pub fn retained_focused_row_key(window_id: &str, node_id: NodeId) -> Option<String> {
+    UI_ENGINE.with(|cell| {
+        let engine = cell.borrow();
+        let tree = engine.tree(window_id)?;
+        let record = tree.document()?.record(tree.document_id(node_id)?)?;
+        matches!(record.component, ui_contract::Component::TreeItem(_)).then(|| record.key.as_str().to_string())
+    })
+}
+
 //#endregion RetainedEngineCutover

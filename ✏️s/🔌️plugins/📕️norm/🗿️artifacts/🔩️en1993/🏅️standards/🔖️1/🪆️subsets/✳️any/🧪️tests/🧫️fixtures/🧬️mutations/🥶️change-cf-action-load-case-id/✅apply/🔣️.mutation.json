@@ -1,0 +1,7 @@
+{
+  "ChangeCfActionLoadCaseId": {
+    "id": "cf-1",
+    "elementId": "cf-g",
+    "newLoadCaseId": "g-permanent-alt"
+  }
+}

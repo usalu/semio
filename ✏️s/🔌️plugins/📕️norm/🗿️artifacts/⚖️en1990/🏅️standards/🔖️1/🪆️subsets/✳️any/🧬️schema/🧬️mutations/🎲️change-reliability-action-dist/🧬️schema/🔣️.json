@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/mutation/change-reliability-action-dist/schema.json",
+  "title": "ChangeReliabilityActionDist",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newActionDistribution"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeReliabilityActionDist"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Reliability analysis",
+          "de": "Zuverlässigkeitsanalyse"
+        },
+        "description": {
+          "en": "The reliability analysis this mutation addresses, by id.",
+          "de": "Das adressierte Element (Zuverlässigkeitsanalyse), per Kennung."
+        },
+        "ref": {
+          "kind": "reliability-analysis"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newActionDistribution": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/$defs/DistributionKind",
+      "x-semio-ui": {
+        "label": {
+          "en": "Action distribution",
+          "de": "Verteilung der Einwirkung"
+        },
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-hollow-brace2-angle/schema.json",
+  "title": "ChangeHollowBrace2Angle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newBrace2Angle"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Hollow joint",
+          "de": "Hohlprofilknoten"
+        },
+        "description": {
+          "en": "The hollow joint this mutation addresses, by id.",
+          "de": "Das adressierte Element (Hohlprofilknoten), per Kennung."
+        },
+        "ref": {
+          "kind": "hollow-joint"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newBrace2Angle": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Brace 2 angle θ_2",
+          "de": "Streben-2-Winkel θ_2"
+        },
+        "widget": "stepper",
+        "unit": "°",
+        "precision": 1,
+        "step": 1,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

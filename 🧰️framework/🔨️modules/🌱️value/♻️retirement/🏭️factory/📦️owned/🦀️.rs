@@ -85,7 +85,7 @@ impl<T:Send+'static> FactoryOwnedSourceAuthority<T> {
 }
 struct OwnedSourceRetirement<T:Send+'static>(FactoryOwnedRetirement<T>);
 impl<T:Send+'static> crate::retirement::RetirementCursor for OwnedSourceRetirement<T> {
- fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{self.0.demands(body)}
+ fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.0.demands(body)}
     fn close_step(&mut self,grant:RetainedCloneGrant)->crate::retirement::RetirementStep { let turn=ErasedSnapshotRetirement::close_step(&mut self.0,grant);match turn.result { Err(error)=>crate::retirement::RetirementStep::Failure(error,turn.work),Ok(RetainedCloneStep::Complete(progress))if progress==RetainedCloneProgress::default()=>crate::retirement::RetirementStep::Complete(turn.work),Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>crate::retirement::RetirementStep::Progress(progress,turn.work) } }
     fn terminal_is_empty(&self)->bool { self.0.terminal_is_empty() }
     fn next_work_byte_demand(&self)->Result<usize,ValueError> { self.0.next_copy_byte_demand() }

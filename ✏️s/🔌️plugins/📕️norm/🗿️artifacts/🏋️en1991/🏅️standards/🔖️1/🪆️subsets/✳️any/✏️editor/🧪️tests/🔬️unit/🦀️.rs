@@ -45,9 +45,9 @@ pub(crate) mod context {
         let mut action_meta = meta("local");
         if command.command_id() == "setSelectedCheckIndex" {
             action_meta.view_state = Some(ViewModel {
-                window_id: Some(results::WINDOW_RESULTS.into()),
-                focused_window_id: Some(results::WINDOW_RESULTS.into()),
-                window_instances: vec![ViewWindowInstance { id: results::WINDOW_RESULTS.into(), window_kind_id: results::WINDOW_RESULTS.into() }],
+                window_id: Some(checks::WINDOW_CHECKS.into()),
+                focused_window_id: Some(checks::WINDOW_CHECKS.into()),
+                window_instances: vec![ViewWindowInstance { id: checks::WINDOW_CHECKS.into(), window_kind_id: checks::WINDOW_CHECKS.into() }],
                 ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
             });
         }
@@ -78,13 +78,13 @@ fn retained_command_dispositions_match_the_language_neutral_oracle() {
     let mut classified = 0usize;
     for window in definition.window_kinds.iter() {
         let dispatchable = semio_framework::window_kind_actions(&definition, window);
-        for id in semio_s_plugin_norm_app_surface::NORM_RETAINED_TOOL_IDS {
+        for id in semio_s_plugin_norm_app_surface::NORM_EDITOR_TOOL_IDS {
             let action = dispatchable.iter().find(|action| action.id == *id).unwrap_or_else(|| panic!("window {} must dispatch {id}", window.id));
             assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated);
             classified += 1;
         }
     }
-    assert_eq!(classified, definition.window_kinds.len() * semio_s_plugin_norm_app_surface::NORM_RETAINED_TOOL_IDS.len());
+    assert_eq!(classified, definition.window_kinds.len() * semio_s_plugin_norm_app_surface::NORM_EDITOR_TOOL_IDS.len());
 }
 
 //#region ðï¸CommandSurface
@@ -92,7 +92,6 @@ fn retained_command_dispositions_match_the_language_neutral_oracle() {
 /// that is not listed here fails `command_ids_cover_every_row`.
 fn every_command() -> Vec<En1991Command> {
     vec![
-        En1991Command::Evaluate(evaluate::Evaluate {}),
         En1991Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) }),
     ]
 }
@@ -105,14 +104,14 @@ async fn command_ids_cover_every_row_and_are_unique() {
     sorted.sort_unstable();
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-    assert_eq!(ids, vec!["evaluate", "setSelectedCheckIndex"]);
+    assert_eq!(ids, vec!["setSelectedCheckIndex"]);
 }
 
 /// 🧷️ The permanent wire guard: every row round-trips textâbinary and prints under its own declared
 /// kebab wire keyword (which is deliberately NOT the camelCase `command_id`).
 #[semio_framework_async_macros::async_test]
 async fn every_command_round_trips_text_and_binary_under_its_declared_wire_keyword() {
-    let keywords = ["evaluate", "selected-check"];
+    let keywords = ["selected-check"];
     for (command, keyword) in every_command().into_iter().zip(keywords) {
         store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         let printed = protocol::OpText::print_op(&command);
@@ -120,17 +119,16 @@ async fn every_command_round_trips_text_and_binary_under_its_declared_wire_keywo
     }
 }
 
-/// 🧷️ Pins the exact pre-migration bytes for the rows whose shape the `app_commands!` decomposition
+/// 🧷️ Pins the exact wire bytes for the rows whose shape the `app_commands!` decomposition
 /// could have silently rewritten â the fieldless `Evaluate` (was a unit variant) and both `Option`
-/// cases of `SetSelectedCheckIndex`. Hex copied verbatim from the ticket's
-/// `ð§ªï¸wire-baseline-before.txt`; these bytes are identical for all fifteen norm apps because none
+/// cases of `SetSelectedCheckIndex`. Hex is the pinned baseline;
+/// these bytes are identical for all fifteen norm apps because none
 /// of the three payload shapes involves the per-standard `En1991Snapshot`.
 #[semio_framework_async_macros::async_test]
-async fn optional_field_rows_keep_their_pre_migration_bytes() {
+async fn optional_field_rows_keep_their_pinned_wire_bytes() {
     let hex = |command: &En1991Command| protocol::OpBinary::encode_op(command).expect("encode").iter().map(|byte| format!("{byte:02x}")).collect::<String>();
-    assert_eq!(hex(&En1991Command::Evaluate(evaluate::Evaluate {})), "01010000");
-    assert_eq!(hex(&En1991Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) })), "01020001000402");
-    assert_eq!(hex(&En1991Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: None })), "01020000");
+    assert_eq!(hex(&En1991Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) })), "01010001000402");
+    assert_eq!(hex(&En1991Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: None })), "01010000");
 }
 //#endregion ðï¸CommandSurface
 
@@ -139,7 +137,7 @@ async fn optional_field_rows_keep_their_pre_migration_bytes() {
 async fn the_manifest_stitches_every_taxonomy_node() {
     let definition = create_en1991_app();
     assert_eq!(definition.modes.len(), 1);
-    assert_eq!(definition.window_kinds.len(), 2);
+    assert_eq!(definition.window_kinds.len(), 5);
     for body_key in [document_panel::BODY_ARTIFACT, catalogue_panel::BODY_CATALOGUE, inspection_panel::BODY_INSPECTION] {
         assert!(definition.panel_tabs.iter().any(|tab| tab.body_key.as_deref() == Some(body_key)), "panel tab {body_key} is stitched into the manifest");
     }
@@ -166,7 +164,7 @@ async fn an_unknown_body_key_falls_back_to_a_text_node() {
 #[semio_framework_async_macros::async_test]
 async fn every_declared_body_key_renders() {
     let mut app = context::app_with_registry().await;
-    for body_key in [inputs::BODY_INPUTS, results::BODY_RESULTS, document_panel::BODY_ARTIFACT, catalogue_panel::BODY_CATALOGUE, inspection_panel::BODY_INSPECTION] {
+    for body_key in [outliner::BODY_OUTLINER, properties::BODY_PROPERTIES, viewport::BODY_VIEWPORT, diagrams::BODY_DIAGRAMS, checks::BODY_CHECKS, document_panel::BODY_ARTIFACT, catalogue_panel::BODY_CATALOGUE, inspection_panel::BODY_INSPECTION] {
         assert!(!context::render(&mut app, body_key).await.contains("Unknown body"), "{body_key} must render its own node");
     }
     context::close(&mut app);
@@ -174,27 +172,6 @@ async fn every_declared_body_key_renders() {
 //#endregion ðï¸Manifest
 
 //#region ðï¸Behavior
-#[semio_framework_async_macros::async_test]
-async fn evaluate_commits_a_host_backed_report() {
-    let mut app = context::app_with_registry().await;
-    context::dispatch(&mut app, En1991Command::Evaluate(evaluate::Evaluate {})).await;
-    let mut host = NormHost::<En1991Family>::from_artifact(app.snapshot().expect("projection"));
-    if host.report().checks.is_empty() {
-        host.evaluate();
-    }
-    assert!(!host.report().checks.is_empty());
-    context::close(&mut app);
-}
-
-#[semio_framework_async_macros::async_test]
-async fn evaluate_recommits_the_current_projection_without_changing_it() {
-    let mut app = context::app_with_registry().await;
-    let before = app.snapshot().expect("projection");
-    context::dispatch(&mut app, En1991Command::Evaluate(evaluate::Evaluate {})).await;
-    assert_eq!(before, app.snapshot().expect("projection"));
-    context::close(&mut app);
-}
-
 /// 🧮️ `setSelectedCheckIndex` is Results-window-config-only â it must dispatch cleanly and never touch the document.
 #[semio_framework_async_macros::async_test]
 async fn selected_check_index_is_a_config_only_edit() {
@@ -246,4 +223,73 @@ async fn report_out_exports_the_computed_check_report() {
 }
 //#endregion ðï¸Behavior
 
+//#region 🛰️LiveWiring
+#[semio_framework_async_macros::async_test]
+async fn render_right_after_an_edit_shows_updated_checks_without_evaluate() {
+    let mut app = context::app_with_registry().await;
+    context::dispatch(&mut app, En1991Command::SetField(set_field::SetField { path: "altitude".into(), value_json: "321.0".into() })).await;
+    let edited = app.snapshot().expect("projection");
+    let expected = semio_s_artifact_norm_en1991_inferences::evaluate(&edited);
+    assert_eq!(*<En1991Family as semio_s_plugin_norm_compliance::NormFamily>::live_report(&edited), expected, "the retained session equals the full fold");
+    let worst = expected.checks.iter().max_by(|a, b| a.utilization.total_cmp(&b.utilization)).expect("the edited document still has checks");
+    let rendered = context::render(&mut app, checks::BODY_CHECKS).await;
+    assert!(!rendered.contains("No checks computed"), "no evaluate command was dispatched: {rendered}");
+    let escaped = worst.title.en.replace('\\', "\\\\").replace('"', "\\\"");
+    assert!(rendered.contains(&escaped), "the checks window shows the edited report: {rendered}");
+    context::close(&mut app);
+}
+
+#[test]
+fn a_picked_entity_selects_its_governing_check_in_every_window() {
+    let report = semio_s_artifact_norm_en1991_inferences::evaluate(&En1991Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De));
+    let entity = report.checks.iter().find(|check| !check.subject.entity_id.is_empty() && check.status != semio_s_plugin_norm_compliance::CheckStatus::NotApplicable).map(|check| check.subject.entity_id.clone()).expect("a check with an entity");
+    let live = semio_s_plugin_norm_app_surface::LiveView::<En1991Family>::new(En1991Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De), None, &[entity.clone()]);
+    assert!(live.selection.contains(&entity));
+    assert_eq!(live.focus.as_deref(), Some(entity.as_str()));
+    assert!(live.selection.checks_selected().is_some());
+    assert!(live.selection.outliner_state().selected.contains(&entity));
+}
+//#endregion 🛰️LiveWiring
+
 semio_framework_plugin::history_edit_acceptance_law!("norm", crate::En1991PlayApp, || semio_framework_plugin::App { definition: crate::create_en1991_app(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");
+
+//#region ♿️ScreenReader
+/// ♿️ Every check row, scene entity, handle and diagram of the default document has an accessible node (label, role, value or position) in English and German.
+#[test]
+fn the_default_document_publishes_an_accessible_node_for_every_check_handle_and_diagram() {
+    let document = En1991Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De);
+    let report = <En1991Family as semio_s_plugin_norm_compliance::NormFamily>::live_report(&document);
+    let scene = viewport::scene_of(&document, &report);
+    let entities: Vec<_> = scene.entities.iter().map(|e| e.entity.clone()).collect();
+    let handles = viewport::handles_of(&document, &entities);
+    let diagrams = semio_s_artifact_norm_en1991_scene::diagrams(&document, &report, None);
+    let counts = semio_s_plugin_norm_app_surface::assert_default_document_nodes(&report, &scene, &handles, &diagrams);
+    assert_eq!((counts.checks, counts.entities, counts.handles, counts.diagrams), (report.checks.len(), scene.entities.len(), handles.len(), diagrams.len()));
+}
+//#endregion ♿️ScreenReader
+
+/// 🎪️ The bridge-showcase DSL asset is offered by the palette with an English and a German title, decodes to the committed showcase document, evaluates and projects scene entities and diagrams without panicking.
+#[test]
+fn the_bridge_showcase_asset_decodes_to_the_showcase_fixture_and_evaluates_with_scene_and_diagrams() {
+    let source = <En1991PlayApp as semio_framework_plugin::ArtifactEditor>::examples().into_iter().find(|example| example.id() == "bridge-showcase").expect("the palette offers the showcase asset");
+    for locale in [semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Locale::De] {
+        assert!(!source.label().resolve(semio_framework_ui_locale::Terminology::Native, locale).trim().is_empty());
+    }
+    let document = semio_s_artifact_norm_en1991_io::text::snapshot::decode_en1991_dsl(&source.document()).expect("the showcase asset parses");
+    assert_eq!(document, En1991Snapshot::full_showcase());
+    let report = <En1991Family as semio_s_plugin_norm_compliance::NormFamily>::evaluate(&document);
+    assert!(!report.checks.is_empty());
+    let scene = viewport::scene_of(&document, &report);
+    assert!(!scene.entities.is_empty());
+    assert!(!semio_s_artifact_norm_en1991_scene::diagrams(&document, &report, None).is_empty());
+}
+
+/// 📍️ The insert palette offers a placement tool and every tool carries an English and a German label.
+#[test]
+fn the_insert_palette_offers_placements_with_both_labels() {
+    let specs = viewport::insert_specs();
+    let placement = specs.iter().find(|spec| spec.collection == "placements").expect("placement tool in the palette");
+    assert_eq!(placement.id, "placement");
+    assert!(specs.iter().all(|spec| !spec.label_en.is_empty() && !spec.label_de.is_empty()));
+    assert!(specs.iter().all(|spec| spec.id != "case"));
+}

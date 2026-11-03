@@ -1,0 +1,5 @@
+{
+  "mutation": "changeConnWeldsLength",
+  "connectionId": "support-weld",
+  "newWeldsLength": 0.32
+}

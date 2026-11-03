@@ -1,0 +1,16 @@
+{
+  "InsertAccidentalCase": {
+    "index": 1,
+    "item": {
+      "id": "explosion-1",
+      "impact": [],
+      "explosion": [
+        {
+          "explosionMass": 5.0,
+          "standoff": 10.0,
+          "assumedPressure": 20000.0
+        }
+      ]
+    }
+  }
+}

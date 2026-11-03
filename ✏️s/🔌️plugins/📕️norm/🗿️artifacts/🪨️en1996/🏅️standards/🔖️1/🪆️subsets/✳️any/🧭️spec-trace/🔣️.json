@@ -1,0 +1,608 @@
+{
+ "code": "en1996",
+ "standard": "EN 1996",
+ "spec": "📐️specs/en1995-en1996-target.md",
+ "specIds": [
+  "M-01",
+  "M-02",
+  "M-03",
+  "M-04",
+  "M-05",
+  "M-06",
+  "M-07",
+  "M-10",
+  "M-11",
+  "M-12",
+  "M-13",
+  "M-14",
+  "M-15",
+  "M-16",
+  "M-20",
+  "M-21",
+  "M-30",
+  "M-31",
+  "M-32",
+  "M-33",
+  "M-34",
+  "M-40",
+  "M-41",
+  "M-42",
+  "M-43",
+  "M-50",
+  "M-51",
+  "M-52",
+  "M-60",
+  "M-61",
+  "M-70",
+  "M-80",
+  "M-81",
+  "M-82",
+  "M-83",
+  "M-90",
+  "M-91"
+ ],
+ "items": [
+  {
+   "id": "M-01",
+   "clause": "3.1, EN 772-1",
+   "entity": "walls",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "m-01."
+    ]
+   },
+   "description": {
+    "en": "Normalised unit strength f_b = δ f_b,decl from unit height and width with the shape factor δ, per wall (3.1, EN 772-1)",
+    "de": "Normierte Steindruckfestigkeit f_b = δ f_b,decl aus Steinhöhe und -breite mit dem Formbeiwert δ je Wand (3.1, EN 772-1)"
+   }
+  },
+  {
+   "id": "M-02",
+   "clause": "3.6.1.2",
+   "entity": "walls",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "m-02."
+    ]
+   },
+   "description": {
+    "en": "Characteristic compressive strength f_k = K f_b^α f_m^β and design value f_d = f_k/γ_M per wall from units, mortar and the annex partial factor (3.6.1.2)",
+    "de": "Charakteristische Druckfestigkeit f_k = K f_b^α f_m^β und Bemessungswert f_d = f_k/γ_M je Wand aus Steinen, Mörtel und dem Teilsicherheitsbeiwert des Anhangs (3.6.1.2)"
+   }
+  },
+  {
+   "id": "M-03",
+   "clause": "3.6.2",
+   "entity": "walls",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "m-03."
+    ]
+   },
+   "description": {
+    "en": "Characteristic shear strength f_vk = f_vk0 + 0.4 σ_d per wall at its minimum design compression (3.6.2)",
+    "de": "Charakteristische Schubfestigkeit f_vk = f_vk0 + 0,4 σ_d je Wand bei ihrer minimalen Bemessungsdruckspannung (3.6.2)"
+   }
+  },
+  {
+   "id": "M-04",
+   "clause": "3.6.3",
+   "entity": "walls",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "m-04."
+    ]
+   },
+   "description": {
+    "en": "Characteristic flexural strengths f_xk1 and f_xk2 per wall from its mortar and unit material (3.6.3)",
+    "de": "Charakteristische Biegezugfestigkeiten f_xk1 und f_xk2 je Wand aus Mörtel und Steinmaterial (3.6.3)"
+   }
+  },
+  {
+   "id": "M-05",
+   "clause": "3.6.2 / 3.6.4",
+   "entity": "bars",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "m-05."
+    ]
+   },
+   "description": {
+    "en": "Anchorage of reinforcement bars (kind Anchorage) with the required bond length l_b = φ f_yd/(4 f_bd) against the provided bar length; the initial shear strength of this clause is the check of M-03 (f_bok unverified, ndp.en1996.m05.fbok) (3.6.2, 3.6.4)",
+    "de": "Verankerung von Bewehrungsstäben (Art Anchorage) mit der erforderlichen Verbundlänge l_b = φ f_yd/(4 f_bd) gegen die vorhandene Stablänge; die Anfangsscherfestigkeit dieses Abschnitts ist die Prüfung von M-03 (f_bok ungeprüft, ndp.en1996.m05.fbok) (3.6.2, 3.6.4)"
+   }
+  },
+  {
+   "id": "M-06",
+   "clause": "3.7",
+   "entity": "walls",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "m-06."
+    ]
+   },
+   "description": {
+    "en": "Elastic modulus E = K_E f_k of every wall from f_k and the unit material (3.7)",
+    "de": "Elastizitätsmodul E = K_E f_k jeder Wand aus f_k und Steinmaterial (3.7)"
+   }
+  },
+  {
+   "id": "M-07",
+   "clause": "Table 2.3",
+   "entity": "walls",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "m-07."
+    ]
+   },
+   "description": {
+    "en": "Partial factor γ_M of the masonry class and the design situation of the document (Table 2.3)",
+    "de": "Teilsicherheitsbeiwert γ_M der Mauerwerksklasse und der Bemessungssituation des Dokuments (Tabelle 2.3)"
+   }
+  },
+  {
+   "id": "M-10",
+   "clause": "5.5.1.2",
+   "entity": "walls",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1996.5.5.1.slenderness"
+    ]
+   },
+   "description": {
+    "en": "Effective height h_ef = ρ_n h from the restraint at two, three or four edges (supportSides, slabBearingDepthM, heights) (5.5.1.2)",
+    "de": "Knicklänge h_ef = ρ_n h aus der Halterung an zwei, drei oder vier Rändern (supportSides, slabBearingDepthM, heights) (5.5.1.2)"
+   }
+  },
+  {
+   "id": "M-11",
+   "clause": "5.5.1.4",
+   "entity": "walls",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1996.5.5.1.slenderness"
+    ]
+   },
+   "description": {
+    "en": "Slenderness h_ef/t_ef of every wall against the limit of 27 (5.5.1.4)",
+    "de": "Schlankheit h_ef/t_ef jeder Wand gegen die Grenze 27 (5.5.1.4)"
+   }
+  },
+  {
+   "id": "M-12",
+   "clause": "6.1.2.2",
+   "entity": "walls",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1996.6.1.2.eccentricity"
+    ]
+   },
+   "description": {
+    "en": "Eccentricity e_i ≥ 0.05 t and reduction Φ_i = 1 − 2 e_i/t at head and foot of every wall and load case (6.1.2.2)",
+    "de": "Ausmitte e_i ≥ 0,05 t und Abminderung Φ_i = 1 − 2 e_i/t am Wandkopf und Wandfuß jeder Wand und jedes Lastfalls (6.1.2.2)"
+   }
+  },
+  {
+   "id": "M-13",
+   "clause": "6.1.2.2, Annex G",
+   "entity": "walls",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1996.6.1.2.compression.mid"
+    ]
+   },
+   "description": {
+    "en": "Mid-height reduction factor Φ_m = A_1 exp(−u²/2) with creep eccentricity e_k, per wall and load case (6.1.2.2, Annex G)",
+    "de": "Abminderungsbeiwert in halber Höhe Φ_m = A_1 exp(−u²/2) mit Kriechausmitte e_k je Wand und Lastfall (6.1.2.2, Anhang G)"
+   }
+  },
+  {
+   "id": "M-14",
+   "clause": "6.1.3",
+   "entity": "loadCases.concentrated",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1996.6.1.3.concentrated",
+     "en1996.6.1.3.area"
+    ]
+   },
+   "description": {
+    "en": "Concentrated loads N_Edc ≤ β A_b f_d as typed rows of the load cases (ConcentratedLoad) with bearing check and area rule (6.1.3)",
+    "de": "Einzellasten N_Edc ≤ β A_b f_d als typisierte Zeilen der Lastfälle (ConcentratedLoad) mit Pressungsnachweis und Flächenregel (6.1.3)"
+   }
+  },
+  {
+   "id": "M-15",
+   "clause": "5.5, 6.1, Annex",
+   "entity": "lintels",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1996.5.5.lintel-cover",
+     "en1996.5.4.extent"
+    ]
+   },
+   "description": {
+    "en": "Openings, piers and lintels as typed rows of the wall: the lintel must span its opening and every member must lie inside the wall; unverified NDP basis for the loads (5.5, 6.1, Annex)",
+    "de": "Öffnungen, Pfeiler und Stürze als typisierte Zeilen der Wand: der Sturz muss seine Öffnung überspannen und jedes Bauteil muss innerhalb der Wand liegen; ungeprüfte NDP-Grundlage für die Lasten (5.5, 6.1, Anhang)"
+   }
+  },
+  {
+   "id": "M-16",
+   "clause": "2",
+   "entity": "loadCases",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "M-16"
+    ]
+   },
+   "description": {
+    "en": "Vertical resistance of every wall and load case with wind pressure, including the wind eccentricity e_he (6.1.2(2), Annex A)",
+    "de": "Vertikaltragfähigkeit jeder Wand und jedes Lastfalls mit Winddruck, einschließlich der Windausmitte e_he (6.1.2(2), Anhang A)"
+   }
+  },
+  {
+   "id": "M-20",
+   "clause": "6.2",
+   "entity": "walls",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "m-20."
+    ]
+   },
+   "description": {
+    "en": "In-plane shear resistance V_Rd = f_vd t l_c of every wall with a declared inPlaneShearN, including flange walls and the in-plane moment (6.2)",
+    "de": "Schubtragfähigkeit in Wandebene V_Rd = f_vd t l_c jeder Wand mit angegebenem inPlaneShearN, einschließlich der Flanschwände und des Moments in Wandebene (6.2)"
+   }
+  },
+  {
+   "id": "M-21",
+   "clause": "5.4, 8.5",
+   "entity": "walls",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "M-21"
+    ]
+   },
+   "description": {
+    "en": "Bracing layout of the shear walls with plan positions and declared in-plane shear: centre of stiffness, torsion and governing wall under the rigid or flexible diaphragm rule of the document (5.4, 8.5)",
+    "de": "Aussteifungsanordnung der Schubwände mit Grundrisslage und deklarierter Scheibenschubkraft: Steifigkeitsmittelpunkt, Torsion und maßgebende Wand nach der starren oder biegeweichen Deckenscheibe des Dokuments (5.4, 8.5)"
+   }
+  },
+  {
+   "id": "M-30",
+   "clause": "6.3, 6.3.1",
+   "entity": "walls",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1996.6.3.flexure"
+    ]
+   },
+   "description": {
+    "en": "One-way lateral flexure M_Ed = w_Ed h²/8 against M_Rd = (f_xd1 + σ_d) t²/6 per wall and load case (wind, earth pressure) (6.3, 6.3.1)",
+    "de": "Einachsige Biegung quer zur Wandebene M_Ed = w_Ed h²/8 gegen M_Rd = (f_xd1 + σ_d) t²/6 je Wand und Lastfall (Wind, Erddruck) (6.3, 6.3.1)"
+   }
+  },
+  {
+   "id": "M-31",
+   "clause": "6.3.2, Annex E",
+   "entity": "loadCases",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "m-31."
+    ]
+   },
+   "description": {
+    "en": "Two-way bending by yield lines M_Ed1, M_Ed2 against f_xd1 Z and f_xd2 Z per wall and load case with wind pressure, edges from supportSides, Annex E coefficient unverified (6.3.2, Annex E)",
+    "de": "Zweiachsige Biegung nach Bruchlinientheorie M_Ed1, M_Ed2 gegen f_xd1 Z und f_xd2 Z je Wand und Lastfall mit Winddruck, Ränder aus supportSides, Beiwert aus Anhang E ungeprüft (6.3.2, Anhang E)"
+   }
+  },
+  {
+   "id": "M-32",
+   "clause": "6.3.3, Annex E.? and NA-DE",
+   "entity": "loadCases",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "m-32."
+    ]
+   },
+   "description": {
+    "en": "Lateral load capacity with arching over the storey height per wall and load case with wind pressure, the alternative to M-30 (6.3.3, NA-DE)",
+    "de": "Querlasttragfähigkeit mit Gewölbewirkung über die Geschosshöhe je Wand und Lastfall mit Winddruck, die Alternative zu M-30 (6.3.3, NA-DE)"
+   }
+  },
+  {
+   "id": "M-33",
+   "clause": "-",
+   "entity": "loadCases",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "M-33"
+    ]
+   },
+   "description": {
+    "en": "Wind pressure q_p c_pe on every wall and load case as the lateral action of M-30 to M-32",
+    "de": "Winddruck q_p c_pe auf jede Wand und jeden Lastfall als Horizontalwirkung von M-30 bis M-32"
+   }
+  },
+  {
+   "id": "M-34",
+   "clause": "6.3 + EN 1996-3 4.? and NA-DE",
+   "entity": "walls",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1996.3.basement"
+    ]
+   },
+   "description": {
+    "en": "Basement walls as the walls with isBasement under earth pressure, with the simplified conditions on wall height, soil height and thickness (6.3, EN 1996-3 4, NA-DE)",
+    "de": "Kellerwände als die Wände mit isBasement unter Erddruck, mit den vereinfachten Bedingungen an Wandhöhe, Anschütthöhe und Dicke (6.3, EN 1996-3 4, NA-DE)"
+   }
+  },
+  {
+   "id": "M-40",
+   "clause": "6.6.1, 6.6.2",
+   "entity": "walls",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "M-40"
+    ]
+   },
+   "description": {
+    "en": "Bending of reinforced walls (reinforced, vertical steel, design yield strength and effective depth d declared) with M_Rd = A_s f_yd z, z = d (1 − 0.5 A_s f_yd/(b d f_d)) ≤ 0.95 d and M_Rd ≤ 0.4 f_d b d², no depth is assumed (6.6.1, 6.6.2)",
+    "de": "Biegung bewehrter Wände (reinforced, vertikaler Stahl, Bemessungswert der Streckgrenze und Nutzhöhe d angegeben) mit M_Rd = A_s f_yd z, z = d (1 − 0,5 A_s f_yd/(b d f_d)) ≤ 0,95 d und M_Rd ≤ 0,4 f_d b d², keine Nutzhöhe wird angenommen (6.6.1, 6.6.2)"
+   }
+  },
+  {
+   "id": "M-41",
+   "clause": "6.7.2",
+   "entity": "bars",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "M-41"
+    ]
+   },
+   "description": {
+    "en": "Shear resistance of walls with shear reinforcement bars (kind Shear) and a declared in-plane shear, V_Rd2 = A_sw f_yd 0.9 d/s ≤ 0.25 f_d b d (6.7.2)",
+    "de": "Schubtragfähigkeit von Wänden mit Schubbewehrungsstäben (kind Shear) und angegebener Schubbeanspruchung in Wandebene, V_Rd2 = A_sw f_yd 0,9 d/s ≤ 0,25 f_d b d (6.7.2)"
+   }
+  },
+  {
+   "id": "M-42",
+   "clause": "6.7",
+   "entity": "bars",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "M-42"
+    ]
+   },
+   "description": {
+    "en": "Deep-beam bars (kind DeepBeam) of walls with a declared in-plane moment, lever arm z = 0.7 l and F_s = M/z (6.7)",
+    "de": "Wandträgerstäbe (kind DeepBeam) von Wänden mit angegebenem Moment in Wandebene, Hebelarm z = 0,7 l und F_s = M/z (6.7)"
+   }
+  },
+  {
+   "id": "M-43",
+   "clause": "EN 1996-1-1 8.7, Annex",
+   "entity": "confined",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "M-43"
+    ]
+   },
+   "description": {
+    "en": "Confining columns and tie beams: minimum area, reinforcement, spacing and shear (EN 1996-1-1 8.7, Annex)",
+    "de": "Einfassende Pfeiler und Ringbalken: Mindestquerschnitt, Bewehrung, Abstände und Querkraft (EN 1996-1-1 8.7, Anhang)"
+   }
+  },
+  {
+   "id": "M-50",
+   "clause": "8.5.2.3, EN 1996-2 3.?",
+   "entity": "ties",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "m-50."
+    ]
+   },
+   "description": {
+    "en": "Cavity wall ties (kind WallTie): tie density of at least 2.5 ties/m² and tie capacity against the wind pressure (8.5.2.3, EN 1996-2 3)",
+    "de": "Hohlwandanker (kind WallTie): Ankerdichte von mindestens 2,5 Ankern/m² und Ankertragfähigkeit gegen den Winddruck (8.5.2.3, EN 1996-2 3)"
+   }
+  },
+  {
+   "id": "M-51",
+   "clause": "8.5.1, Annex D",
+   "entity": "ties",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "m-51."
+    ]
+   },
+   "description": {
+    "en": "Anchors and ring ties (kinds Anchor, RingTie): anchor force, spacing and ring tie force of at least 30 kN (8.5.1, Annex D)",
+    "de": "Anker und Ringanker (kinds Anchor, RingTie): Ankerkraft, Abstand und Ringankerkraft von mindestens 30 kN (8.5.1, Anhang D)"
+   }
+  },
+  {
+   "id": "M-52",
+   "clause": "EN 1996-2 2.?",
+   "entity": "movementJoints",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1996.8.5.joint-spacing"
+    ]
+   },
+   "description": {
+    "en": "Movement joints as typed rows (MovementJoint) checked against the recommended panel width of the wall material; unverified NDP basis m52.joints (EN 1996-2 2)",
+    "de": "Bewegungsfugen als typisierte Zeilen (MovementJoint), geprüft gegen die empfohlene Feldbreite des Wandmaterials; ungeprüfte NDP-Grundlage m52.joints (EN 1996-2 2)"
+   }
+  },
+  {
+   "id": "M-60",
+   "clause": "EN 1996-2, EN 1996-1-1 section 4",
+   "entity": "walls",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1996.2.durability"
+    ]
+   },
+   "description": {
+    "en": "Exposure class MX and mortar class suitability of every wall; unverified NDP basis durability.mortar (EN 1996-2, EN 1996-1-1 section 4)",
+    "de": "Expositionsklasse MX und Eignung der Mörtelklasse jeder Wand; ungeprüfte NDP-Grundlage durability.mortar (EN 1996-2, EN 1996-1-1 Abschnitt 4)"
+   }
+  },
+  {
+   "id": "M-61",
+   "clause": "EN 1996-1-1 7, 8.5.1",
+   "entity": "lintels",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "m-61."
+    ]
+   },
+   "description": {
+    "en": "Lintel deflection δ ≤ l/500 and span-to-depth limit of every lintel row (EN 1996-1-1 7, 8.5.1)",
+    "de": "Sturzdurchbiegung δ ≤ l/500 und Grenzwert des Verhältnisses Stützweite zu Höhe jeder Sturzzeile (EN 1996-1-1 7, 8.5.1)"
+   }
+  },
+  {
+   "id": "M-70",
+   "clause": "EN 1996-2 3, 8",
+   "entity": "chases",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1996.8.6.chase-depth",
+     "en1996.8.6.chase-width",
+     "en1996.8.6.chase-distance",
+     "en1996.8.6.chase-cumulative",
+     "en1996.8.6.chase-extent",
+     "en1996.2.bedjoint"
+    ]
+   },
+   "description": {
+    "en": "Chases and recesses as typed rows (WallChase) checked against the wall, and the bed joint thickness against its mortar type; chases against Tables 8.1 and 8.2 of EN 1996-1-1 8.6.2 (unverified registry rows ndp.en1996.chase.*)",
+    "de": "Schlitze und Aussparungen als typisierte Zeilen (WallChase), geprüft gegen die Wand, und die Lagerfugendicke gegen ihren Mörteltyp; Schlitze nach den Tabellen 8.1 und 8.2 der EN 1996-1-1 8.6.2 (ungeprüfte Registerzeilen ndp.en1996.chase.*)"
+   }
+  },
+  {
+   "id": "M-80",
+   "clause": "EN 1996-3 4.1, NA-DE 4.1",
+   "entity": "walls",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1996.3.simplified"
+    ]
+   },
+   "description": {
+    "en": "Applicability limits of the simplified method per wall (height, floor span, storey height, imposed load, thickness); the check is not applicable, with the reasons, when a limit is exceeded (EN 1996-3 4.1, NA-DE 4.1)",
+    "de": "Anwendungsgrenzen des vereinfachten Verfahrens je Wand (Höhe, Deckenspannweite, Geschosshöhe, Nutzlast, Dicke); der Nachweis ist mit Begründung nicht anwendbar, wenn eine Grenze überschritten wird (EN 1996-3 4.1, NA-DE 4.1)"
+   }
+  },
+  {
+   "id": "M-81",
+   "clause": "EN 1996-3 4.2, NA-DE 4.2",
+   "entity": "walls",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1996.3.simplified"
+    ]
+   },
+   "description": {
+    "en": "Simplified vertical resistance N_Rd = Φ_s A f_d of every wall within the applicability limits, with Φ_s = 0.85 − 0.0011 (h_ef/t)² (EN 1996-3 4.2, NA-DE 4.2)",
+    "de": "Vereinfachte Vertikaltragfähigkeit N_Rd = Φ_s A f_d jeder Wand innerhalb der Anwendungsgrenzen, mit Φ_s = 0,85 − 0,0011 (h_ef/t)² (EN 1996-3 4.2, NA-DE 4.2)"
+   }
+  },
+  {
+   "id": "M-82",
+   "clause": "EN 1996-3 4.4 / NA 4.?",
+   "entity": "walls",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "M-82"
+    ]
+   },
+   "description": {
+    "en": "Simplified shear resistance V_Rd = f_vd t l_c of the shear walls with a declared in-plane shear (EN 1996-3 4.4, NA)",
+    "de": "Vereinfachte Schubtragfähigkeit V_Rd = f_vd t l_c der Schubwände mit angegebener Schubbeanspruchung in Wandebene (EN 1996-3 4.4, NA)"
+   }
+  },
+  {
+   "id": "M-83",
+   "clause": "-",
+   "entity": "loadCases",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "M-83"
+    ]
+   },
+   "description": {
+    "en": "Simplified lateral loading of every wall and load case with wind pressure from f_xk1 and the minimum compression (EN 1996-3)",
+    "de": "Vereinfachte Querbelastung jeder Wand und jedes Lastfalls mit Winddruck aus f_xk1 und der Mindestdruckspannung (EN 1996-3)"
+   }
+  },
+  {
+   "id": "M-90",
+   "clause": "EN 1996-1-2 Annex B.? / NA-DE",
+   "entity": "walls",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1996.1-2.fire"
+    ]
+   },
+   "description": {
+    "en": "Tabulated minimum thickness t_min and load ratio μ_fi of every wall with a fire class REI; the table rows are unverified NDP (m90.fire, fire.<material>.rei<n>) (EN 1996-1-2 Annex B, NA-DE)",
+    "de": "Tabellierte Mindestdicke t_min und Ausnutzungsgrad μ_fi jeder Wand mit Feuerwiderstandsklasse REI; die Tabellenzeilen sind ungeprüfte NDP (m90.fire, fire.<material>.rei<n>) (EN 1996-1-2 Anhang B, NA-DE)"
+   }
+  },
+  {
+   "id": "M-91",
+   "clause": "EN 1996-1-2 3.3 / Annex C",
+   "entity": "walls",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "m-91."
+    ]
+   },
+   "description": {
+    "en": "Fire resistance with the declared isotherm depth a_θ of every wall (EN 1996-1-2 3.3, Annex C)",
+    "de": "Feuerwiderstand mit der angegebenen Isothermentiefe a_θ jeder Wand (EN 1996-1-2 3.3, Anhang C)"
+   }
+  }
+ ]
+}

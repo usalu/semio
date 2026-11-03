@@ -1,0 +1,6 @@
+{
+  "mutation": "changeProfileBaseResistance",
+  "pileId": "pile-P1",
+  "id": "test-1",
+  "newBaseResistance": 1700000.0
+}

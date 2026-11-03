@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-bridge-permanent-gk-n/schema.json",
+  "title": "ChangeBridgePermanentGkN",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newPermanentGkN"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeBridgePermanentGkN"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Bridge",
+          "de": "Brücke"
+        },
+        "description": {
+          "en": "The bridge this mutation addresses, by id.",
+          "de": "Das adressierte Element (Brücke), per Kennung."
+        },
+        "ref": {
+          "kind": "bridge"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newPermanentGkN": {
+      "type": "number",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Permanent action ΣG_k",
+          "de": "Ständige Einwirkung ΣG_k"
+        },
+        "group": "value",
+        "order": 20,
+        "widget": "stepper",
+        "step": 0.001,
+        "precision": 3
+      }
+    }
+  }
+}

@@ -331,6 +331,11 @@ struct InputSchemaReader<'r> {
     findings: Option<std::cell::RefCell<Vec<InputSchemaError>>>,
 }
 
+/// 🕳️ Placeholder label that stands in for a label whose failure was just recorded as a finding; it is never reached without that finding.
+fn recorded_finding_label() -> LocalizedLabel {
+    LocalizedLabel::data("")
+}
+
 impl<'r> InputSchemaReader<'r> {
     fn parse(schema_json: &str, resolver: &'r dyn InputSchemaResolver, collect: bool) -> Result<Self, InputSchemaError> {
         let root = semio_framework_pack_json::parse(schema_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| input_error(InputSchemaErrorCode::Malformed, "", error.to_string()))?;
@@ -540,7 +545,7 @@ impl<'r> InputSchemaReader<'r> {
             Some(label) => input_localized_text(label).map_err(|code| input_error(code, &selector, "label names every locale")),
             None => input_label_glossary().get(&key).cloned().ok_or_else(|| input_error(InputSchemaErrorCode::LabelMissing, &selector, format!("{key} has no x-semio-ui.label and no glossary label"))),
         };
-        let label = self.recover(label, LocalizedLabel::default)?;
+        let label = self.recover(label, recorded_finding_label)?;
         let description = discriminator.ui("description").map(|description| input_localized_text(description).map_err(|code| input_error(code, &selector, "description names every locale"))).transpose();
         let description = self.recover(description, || None)?;
         let options = variants
@@ -550,7 +555,7 @@ impl<'r> InputSchemaReader<'r> {
                     Some(label) => input_localized_text(label).map_err(|code| input_error(code, &selector, format!("variant {} names every locale", variant.value))),
                     None => input_label_glossary().get(&variant.value).cloned().ok_or_else(|| input_error(InputSchemaErrorCode::OptionLabelMissing, &selector, format!("variant {} has no x-semio-ui.label and no glossary label", variant.value))),
                 };
-                Ok(ActionArgOption { value: variant.value.clone(), label: self.recover(label, LocalizedLabel::default)? })
+                Ok(ActionArgOption { value: variant.value.clone(), label: self.recover(label, recorded_finding_label)? })
             })
             .collect::<Result<Vec<_>, InputSchemaError>>()?;
         let presentation = (options.len() <= 4).then_some(ArgPresentation::Segmented);
@@ -604,7 +609,7 @@ impl<'r> InputSchemaReader<'r> {
             Some(label) => input_localized_text(label).map_err(|code| input_error(code, pointer, "label names every locale")),
             None => input_label_glossary().get(key).cloned().ok_or_else(|| input_error(InputSchemaErrorCode::LabelMissing, pointer, format!("{key} has no x-semio-ui.label and no glossary label"))),
         };
-        let label = self.recover(label, LocalizedLabel::default)?;
+        let label = self.recover(label, recorded_finding_label)?;
         let description = input.ui("description").map(|description| input_localized_text(description).map_err(|code| input_error(code, pointer, "description names every locale"))).transpose();
         let description = self.recover(description, || None)?;
         let group = match input.ui("group") {

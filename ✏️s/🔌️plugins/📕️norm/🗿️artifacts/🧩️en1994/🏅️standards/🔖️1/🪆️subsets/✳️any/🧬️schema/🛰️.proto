@@ -1,9 +1,228 @@
 syntax = "proto3";
+package semio.s.norm.en1994;
 message En1994Artifact {
-  string annex = 1;
-  string structure_kind = 2;
+  // @state artifact
+  AnnexChoice annex = 1;
+  // @state artifact
+  StructureKind structure_kind = 2;
+  // @state artifact
   double steel_f_y_pa = 3;
-  string fire_rating = 4;
-  double insulation_thickness_m = 5;
-  string fatigue_detail = 6;
+  // @state artifact
+  repeated CompositeBeam beams = 4;
+  // @state artifact
+  repeated CompositeColumn columns = 5;
+  // @state artifact
+  repeated CompositeSlab slabs = 6;
+  // @state artifact
+  repeated Placement placements = 7;
+  // @state artifact
+  FireRating fire_rating = 8;
+  // @state artifact
+  double insulation_thickness_m = 9;
+  // @state artifact
+  FatigueDetail fatigue_detail = 10;
+  // @state artifact
+  string reliability_class = 11;
+  // @state artifact
+  repeated Stud studs = 12;
+  // @state artifact
+  repeated CaseRow cases = 13;
+}
+enum FatigueDetail {
+  FATIGUE_DETAIL_STUD_WELDED = 0;
+  FATIGUE_DETAIL_SHEAR_CONNECTOR = 1;
+  FATIGUE_DETAIL_REINFORCEMENT = 2;
+  FATIGUE_DETAIL_FLANGE_BUTT_WELD = 3;
+}
+enum FireRating {
+  FIRE_RATING_UNRATED = 0;
+  FIRE_RATING_R30 = 1;
+  FIRE_RATING_R60 = 2;
+  FIRE_RATING_R90 = 3;
+  FIRE_RATING_R120 = 4;
+}
+enum StructureKind {
+  STRUCTURE_KIND_BUILDING = 0;
+  STRUCTURE_KIND_BRIDGE = 1;
+}
+enum ActionStage {
+  ACTION_STAGE_CONSTRUCTION = 0;
+  ACTION_STAGE_COMPOSITE = 1;
+  ACTION_STAGE_ANY = 2;
+}
+enum ActionKind {
+  ACTION_KIND_PERMANENT = 0;
+  ACTION_KIND_IMPOSED = 1;
+  ACTION_KIND_SNOW = 2;
+  ACTION_KIND_WIND = 3;
+  ACTION_KIND_CONSTRUCTION = 4;
+  ACTION_KIND_FATIGUE = 5;
+}
+message CharacteristicAction {
+  string id = 1;
+  ActionKind kind = 2;
+  string category = 3;
+  ActionStage stage = 4;
+  double q_area_pa = 5;
+  double f_k_n = 6;
+  double delta_sigma_k_pa = 7;
+  double delta_tau_k_pa = 8;
+  double x_m = 9;
+}
+message SlabAction {
+  string id = 1;
+  ActionKind kind = 2;
+  string category = 3;
+  ActionStage stage = 4;
+  double q_area_pa = 5;
+  double f_k_n = 6;
+  double delta_sigma_k_pa = 7;
+  double delta_tau_k_pa = 8;
+  double x_m = 9;
+  double y_m = 10;
+}
+message SteelSection {
+  string designation = 1;
+  double height_m = 2;
+  double width_m = 3;
+  double tw_m = 4;
+  double tf_m = 5;
+  double a_m2 = 6;
+  double w_pl_y_m3 = 7;
+  double i_y_m4 = 8;
+  double a_v_m2 = 9;
+  double r_m = 10;
+}
+enum SheetingProfile {
+  SHEETING_PROFILE_TRAPEZOIDAL = 0;
+  SHEETING_PROFILE_RE_ENTRANT = 1;
+}
+message ProfiledSheeting {
+  SheetingProfile profile = 1;
+  double height_m = 2;
+  double rib_width_m = 3;
+  double thickness_m = 4;
+  bool ribs_parallel_to_beam = 5;
+}
+enum ConstructionMethod {
+  CONSTRUCTION_METHOD_PROPPED = 0;
+  CONSTRUCTION_METHOD_UNPROPPED = 1;
+}
+enum SupportCondition {
+  SUPPORT_CONDITION_SIMPLY_SUPPORTED = 0;
+  SUPPORT_CONDITION_CONTINUOUS2_SPAN = 1;
+  SUPPORT_CONDITION_END_SPAN = 2;
+  SUPPORT_CONDITION_INTERIOR_SPAN = 3;
+  SUPPORT_CONDITION_CANTILEVER = 4;
+}
+enum ReinforcementProduct {
+  REINFORCEMENT_PRODUCT_HOT_ROLLED = 0;
+  REINFORCEMENT_PRODUCT_COLD_WORKED = 1;
+}
+message CompositeBeam {
+  string id = 1;
+  double span_m = 2;
+  double spacing_m = 3;
+  SupportCondition support = 4;
+  ConstructionMethod construction = 5;
+  SteelSection steel = 6;
+  double slab_thickness_m = 7;
+  double concrete_f_ck_pa = 8;
+  double concrete_e_cm_pa = 9;
+  ProfiledSheeting sheeting = 10;
+  double transverse_as_m2_per_m = 11;
+  double ltb_length_m = 12;
+  double as_hogging_m2_per_m = 13;
+  double bar_spacing_m = 14;
+  double wk_limit_m = 15;
+  double n_cycles = 16;
+  double adjacent_span_m = 17;
+  double patch_bearing_length_m = 18;
+  uint32 bridge_lanes = 19;
+  double cracked_length_fraction = 20;
+  double stud_transverse_spacing_m = 21;
+  double stud_edge_distance_m = 22;
+  double transverse_as_top_m2_per_m = 23;
+  double end_plate_width_m = 24;
+  double end_plate_height_m = 25;
+  double end_zone_length_m = 26;
+  ReinforcementProduct reinforcement_product = 27;
+  repeated CharacteristicAction actions = 28;
+}
+enum BucklingCurve {
+  BUCKLING_CURVE_A = 0;
+  BUCKLING_CURVE_B = 1;
+  BUCKLING_CURVE_C = 2;
+  BUCKLING_CURVE_D = 3;
+}
+enum ColumnKind {
+  COLUMN_KIND_ENCASED = 0;
+  COLUMN_KIND_CONCRETE_FILLED = 1;
+  COLUMN_KIND_PARTIALLY_ENCASED = 2;
+}
+message CompositeColumn {
+  string id = 1;
+  ColumnKind kind = 2;
+  double length_m = 3;
+  double outer_size_m = 4;
+  double wall_thickness_m = 5;
+  double steel_a_m2 = 6;
+  double steel_f_y_pa = 7;
+  double concrete_a_m2 = 8;
+  double concrete_f_ck_pa = 9;
+  double reinforcement_as_m2 = 10;
+  double reinforcement_f_yk_pa = 11;
+  double i_m4 = 12;
+  BucklingCurve buckling_curve = 13;
+  double introduced_force_n = 14;
+  double section_height_m = 15;
+  double section_width_m = 16;
+  double section_tw_m = 17;
+  double section_tf_m = 18;
+  double rebar_cover_m = 19;
+  ReinforcementProduct reinforcement_product = 20;
+  repeated ColumnAction actions = 21;
+}
+message CompositeSlab {
+  string id = 1;
+  double span_m = 2;
+  SupportCondition support = 3;
+  ProfiledSheeting sheeting = 4;
+  double concrete_thickness_m = 5;
+  double f_ck_pa = 6;
+  double m_factor = 7;
+  double k_factor = 8;
+  double as_m2_per_m = 9;
+  repeated SlabAction actions = 10;
+}
+message Placement {
+  string id = 1;
+  double x = 2;
+  double y = 3;
+  double z = 4;
+  double yaw = 5;
+}
+message Stud {
+  string id = 1;
+  string beam_id = 2;
+  double x_m = 3;
+  double diameter_m = 4;
+  double height_m = 5;
+  double f_u_pa = 6;
+}
+message CaseNumber {
+  string id = 1;
+  double value = 2;
+}
+message CaseText {
+  string id = 1;
+  string value = 2;
+}
+message CaseRow {
+  string id = 1;
+  string label_en = 2;
+  string label_de = 3;
+  string entry_id = 4;
+  repeated CaseNumber numbers = 5;
+  repeated CaseText texts = 6;
 }

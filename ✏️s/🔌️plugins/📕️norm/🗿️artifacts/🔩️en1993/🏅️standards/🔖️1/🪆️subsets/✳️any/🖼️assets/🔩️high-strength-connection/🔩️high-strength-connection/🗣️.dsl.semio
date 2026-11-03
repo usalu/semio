@@ -1,13 +1,13 @@
 semio norm.en1993.dsl v1
 annex=en
-materials [id:TEXT grade:TEXT fy:NUM fu:NUM e-modulus:NUM g-modulus:NUM subgrade:TEXT kind:TEXT] {
-  mat-s460 S460 460000000.0 550000000.0 210000000000.0 81000000000.0 K2 carbon
+materials [id:TEXT grade:TEXT fy:NUM fu:NUM e-modulus:NUM g-modulus:NUM subgrade:TEXT kind:TEXT ramberg-osgood-n:NUM] {
+  mat-s460 S460 460000000 550000000 210000000000 81000000000 K2 carbon 0
 }
-sections [id:TEXT designation:TEXT kind:TEXT h:NUM b:NUM tw:NUM tf:NUM r:NUM area:NUM shear-area-y:NUM shear-area-z:NUM iy:NUM iz:NUM it:NUM iw:NUM w-el-y:NUM w-el-z:NUM w-pl-y:NUM w-pl-z:NUM area-net:NUM] {
-  sec-heb260 "HEB 260" rolledI 0.26 0.26 0.01 0.0175 0.024 0.0118 0.00589 0.00276 0.0001492 5.135e-05 8.53e-07 7.45e-06 0.001149 0.000395 0.001288 0.000602 0.0106
+sections [id:TEXT designation:TEXT kind:TEXT h:NUM b:NUM tw:NUM tf:NUM r:NUM area:NUM shear-area-y:NUM shear-area-z:NUM iy:NUM iz:NUM it:NUM iw:NUM w-el-y:NUM w-el-z:NUM w-pl-y:NUM w-pl-z:NUM area-net:NUM fabrication:TEXT] {
+  sec-heb260 "HEB 260" rolled-i 0.26 0.26 0.01 0.0175 0.024 0.0118 0.00589 0.00276 0.0001492 0.00005135 0.000001259 0.0000007362 0.001149 0.000395 0.001288 0.000602 Unset 0.0106
 }
-members [id:TEXT label:TEXT member-type:TEXT section-id:TEXT material-id:TEXT length:NUM buckling-length-y:NUM buckling-length-z:NUM ltb-length:NUM ltb-restraint-spacing:NUM load-application:TEXT end-moment-ratio-psi:NUM moment-diagram:TEXT deflection-limit-ratio:NUM analysis:TEXT] {
-  member-b1 "HSS beam-column B1" beamColumn sec-heb260 mat-s460 6 12 12 12 12 shearCenter -1 linear 300 elastic
+members [id:TEXT label:TEXT member-type:TEXT section-id:TEXT material-id:TEXT length:NUM buckling-length-y:NUM buckling-length-z:NUM ltb-length:NUM ltb-restraint-spacing:NUM load-application:TEXT end-moment-ratio-psi:NUM moment-diagram:TEXT deflection-limit-ratio:NUM analysis:TEXT stainless-forming:TEXT design-temperature:NUM toughness-stress-ratio:NUM radiation-shift:NUM stress-shift:NUM margin-shift:NUM strain-rate-shift:NUM cold-forming-radius:NUM web-material-id:TEXT torsion-load:TEXT torque-position:NUM warping-support:ENUM] {
+  member-b1 "HSS beam-column B1" beam-column sec-heb260 mat-s460 6 12 12 12 12 shear-center -1 linear 300 elastic unset 0 0.75 0 0 0 0 0 "" point 0.5 fork
 }
 load-cases [id:TEXT name:TEXT kind:TEXT category:TEXT] {
   g-permanent "Permanent G" permanent self
@@ -17,37 +17,76 @@ member-actions [id:TEXT member-id:TEXT load-case-id:TEXT action:REC] {
   act-b1-g member-b1 g-permanent {n=2100000 vy=0 vz=296000 my=333000 mz=0 t=0}
   act-b1-q member-b1 q-imposed {n=0 vy=0 vz=0 my=0 mz=0 t=0}
 }
-joints [id:TEXT kind:TEXT member-id:TEXT bolt-class:TEXT bolt-diameter:NUM bolt-rows:UINT bolts-per-row:UINT pitch:NUM gauge:NUM end-distance:NUM edge-distance:NUM shear-planes:UINT plate-thickness:NUM plate-fu:NUM weld-throat:NUM weld-length:NUM weld-fu:NUM weld-grade:TEXT actions:TABLE category:TEXT friction-mu:NUM preload-force:NUM slip-factor-ks:NUM friction-surfaces:UINT] {
-  joint-j1 bolted member-b1 "10.9" 0.024 2 2 0.07 0.07 0.03 0.04 1 0.012 550000000.0 0 0 550000000.0 S460 [ {id=jf-1 load-case-id=g-permanent shear=213333 tension=0} ] A 0.5 0 1 1
-  joint-w1 welded member-b1 "" 0 0 0 0 0 0 0 0 0 0 0.003 0.08 550000000.0 S460 [ {id=jf-w1 load-case-id=g-permanent shear=100000 tension=0} ] A 0.5 0 1 1
+joints [id:TEXT kind:TEXT member-id:TEXT bolt-class:TEXT bolt-diameter:NUM bolt-rows:UINT bolts-per-row:UINT pitch:NUM gauge:NUM end-distance:NUM edge-distance:NUM shear-planes:UINT plate-thickness:NUM plate-fu:NUM weld-throat:NUM weld-length:NUM weld-fu:NUM weld-grade:TEXT actions:TABLE category:TEXT friction-mu:NUM preload-force:NUM slip-factor-ks:NUM friction-surfaces:UINT plate-fy:NUM plate-width:NUM bolt-to-web:NUM extension-to-flange:NUM extension-edge:NUM alpha-factor:NUM bolt-stress-area:NUM bolt-grip-length:NUM column-flange-thickness:NUM column-web-thickness:NUM column-web-depth:NUM column-web-shear-area:NUM column-root-radius:NUM column-fy:NUM column-web-stress:NUM beam-flange-thickness:NUM compression-lever:NUM moment-demand:NUM beam-moment-resistance:NUM column-moment-resistance:NUM beam-inertia:NUM beam-span:NUM braced-frame:UINT stiffness-ratio:NUM transformation-parameter:NUM assumed-class:TEXT base-plate-length:NUM concrete-fcd:NUM concrete-modulus:NUM concrete-area-a0:NUM concrete-area-a1:NUM joint-coefficient:NUM anchor-area:NUM anchor-length:NUM base-normal-force:NUM base-moment:NUM base-lever-left:NUM base-lever-right:NUM beam-web-thickness:QTY beam-web-fy:QTY weld-force-longitudinal:QTY weld-force-transverse:QTY] {
+  joint-j1 bolted member-b1 "10.9" 0.024 2 2 0.07 0.07 0.03 0.04 1 0.012 550000000 0 0 550000000 S460 0m 0Pa 0N 0N [ {id=jf-1 load-case-id=g-permanent shear=213333 tension=0} ] a 0.5 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 unset 0 0 0 0 0 0 0 0 0 0 0 0
+  joint-w1 welded member-b1 "" 0 0 0 0 0 0 0 0 0 0 0.003 0.08 550000000 S460 0m 0Pa 0N 0N [ {id=jf-w1 load-case-id=g-permanent shear=100000 tension=0} ] a 0.5 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 unset 0 0 0 0 0 0 0 0 0 0 0 0
 }
-fatigue-details [id:TEXT member-id:TEXT category:UINT method:TEXT spectrum:TABLE] {
-  fat-1 member-b1 90 safe_life [ {id=fb-1 delta-sigma=95000000.0 cycles=2000000.0} ]
+fatigue-details [id:TEXT member-id:TEXT category:UINT method:TEXT spectrum:TABLE stress-history:TEXT consequence:TEXT] {
+  fat-1 member-b1 90 safe-life Low [ {id=fb-1 delta-sigma=95000000 cycles=2000000} ] ""
 }
 fire-exposures [id:TEXT member-id:TEXT rating:TEXT protection-thickness:NUM section-factor:NUM mu0:NUM design-temperature:NUM protection-conductivity:NUM protection-density:NUM protection-specific-heat:NUM] {
-  fire-1 member-b1 r30 0.008 180 0.75 550.0 0.2 800 1700
+  fire-1 member-b1 r30 0.008 180 0.75 550 0.2 800 1700
 }
-cold-formed-members [id:TEXT b-bar:NUM thickness:NUM k-sigma:NUM psi:NUM fy:NUM gross-resistance:NUM actions:TABLE] {
-  cf-1 0.08 0.003 4.0 1.0 350000000.0 80000.0 [ {id=cf-g load-case-id=g-permanent force=20000.0} ]
+cold-formed-members [id:TEXT b-bar:NUM thickness:NUM k-sigma:NUM psi:NUM fy:NUM gross-resistance:NUM actions:TABLE flange-width:NUM lip-length:NUM web-height:NUM web-slope:NUM opposite-flange-width:NUM spring-factor:NUM corner-radius:NUM flange-stress:NUM shear-force:NUM support-reaction:NUM support-length:NUM crippling-category:UINT stiffened-support:UINT bending-moment:NUM moment-resistance:NUM sheeting-stiffness:NUM required-restraint-stiffness:NUM purlin-span:NUM purlin-load:NUM purlin-lateral-ratio:NUM] {
+  cf-1 0.08 0.003 4 1 350000000 80000 [ {id=cf-g load-case-id=g-permanent force=20000} ] 0 0 0 90 0 1 0 0 0 0 0 2 0 0 0 0 0 0 0 0
 }
-plated-panels [id:TEXT a:NUM b:NUM thickness:NUM fy:NUM k-sigma:NUM actions:TABLE] {
-  pp-1 1.2 0.6 0.012 355000000.0 4.0 [ {id=pp-g load-case-id=g-permanent force=50000000.0} ]
+plated-panels [id:TEXT a:NUM b:NUM thickness:NUM fy:NUM k-sigma:NUM actions:TABLE stiffener-inertia:NUM stiffener-area:NUM stiffener-eccentricity:NUM stiffener-alpha:NUM compression-stress:NUM half-width:NUM equivalent-span:NUM hogging:UINT patch-type:TEXT patch-force:NUM patch-length:NUM patch-offset:NUM flange-thickness:NUM flange-width:NUM flange-fy:NUM longitudinal-offset:NUM longitudinal-inertia:NUM patch-moment:NUM patch-moment-resistance:NUM bending-moment:NUM plastic-moment:NUM flange-moment:NUM shear-force:NUM transverse-stiffener-inertia:NUM flange-induced-k:NUM flange-area:NUM stress-x:NUM stress-z:NUM shear-stress:NUM alpha-cr:NUM corrugation-flat:NUM corrugation-projection:NUM corrugation-depth:NUM web-height:NUM stiffener-spacing:NUM stiffener-shape:ENUM stiffener-depth:NUM stiffener-thickness:NUM stiffener-flange-width:NUM stiffener-flange-thickness:NUM lateral-pressure:NUM lateral-pressure-coefficient:NUM steel-grade:TEXT steel-subgrade:TEXT design-temperature:NUM] {
+  pp-1 1.2 0.6 0.012 355000000 4   0 [ {id=pp-g load-case-id=g-permanent force=50000000} ] 0 0 0 0.34 0 0 0 0 unset 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 none 0 0 0 0 0 0
 }
-silo-shells [id:TEXT thickness:NUM radius:NUM depth:NUM k:NUM gamma:NUM fy:NUM] {
-  silo-1 0.008 3.0 6.0 0.5 9000.0 355000000.0
+silo-shells [id:TEXT thickness:NUM radius:NUM depth:NUM k:NUM gamma:NUM fy:NUM length:NUM fabrication-class:TEXT meridional-stress:NUM hoop-stress:NUM shell-shear-stress:NUM boundary-factor-axial:NUM boundary-factor-hoop:NUM boundary-factor-shear:NUM wall-friction:NUM plan-area:NUM plan-perimeter:NUM liquid-density:NUM liquid-height:NUM course-elevation:NUM internal-pressure:NUM external-pressure:NUM temperature-change:NUM ring-spacing:NUM ring-area:NUM ring-inertia:NUM ring-offset:NUM] {
+  silo-1 0.008 3 6 0.5 9000 355000000 0 unset 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 }
-tension-components [id:TEXT f-uk:NUM f-k:NUM actions:TABLE] {
-  ten-1 500000.0 400000.0 [ {id=ten-g load-case-id=g-permanent force=100000.0} ]
+tension-components [id:TEXT f-uk:NUM f-k:NUM actions:TABLE partial-factor:NUM cable-length:NUM cable-weight:NUM cable-horizontal-force:NUM cable-modulus:NUM cable-stress:NUM cable-unit-weight:NUM thread-factor:NUM rod-stress-area:NUM rod-fu:NUM pin-diameter:NUM pin-plate-thickness:NUM pin-gap:NUM pin-outer-thickness:NUM pin-inner-thickness:NUM pin-fup:NUM pin-fyp:NUM pin-plate-fy:NUM] {
+  ten-1 500000 400000 [ {id=ten-g load-case-id=g-permanent force=100000} ] 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 }
-bridge-fatigue [id:TEXT member-id:TEXT lambda:NUM phi2:NUM delta-sigma-p:NUM category:UINT method:TEXT] {
-  br-1 member-b1 0.8 1.0 40000000.0 71 damage_tolerant
+bridge-fatigue [id:TEXT member-id:TEXT lambda:NUM phi2:NUM delta-sigma-p:NUM category:UINT method:TEXT heavy-vehicle-weight:NUM reference-weight:NUM observed-traffic:NUM design-life:NUM second-lane-traffic:NUM second-lane-weight:NUM lambda-1:NUM lambda-max:NUM detail-id:TEXT plate-thickness:NUM deck-thickness:NUM trough-spacing:NUM trough-width:NUM trough-thickness:NUM crossbeam-spacing:NUM surfacing-thickness:NUM wheel-load:NUM wheel-patch:NUM consequence:TEXT] {
+  br-1 member-b1 0.8 1 40000000 71 damage-tolerant 0 0 0 0 0 0 0 0 "" 0 0 0 0 0 0 0 0 0 Low
 }
-tower-legs [id:TEXT member-id:TEXT force-coefficient:NUM dynamic-factor:NUM actions:TABLE] {
-  tw-1 member-b1 1.0 1.0 [ {id=tw-g load-case-id=g-permanent force=500000.0} {id=tw-w load-case-id=w-wind force=200000.0} ]
+tower-legs [id:TEXT member-id:TEXT force-coefficient:NUM dynamic-factor:NUM actions:TABLE lattice-kind:TEXT slenderness:NUM diameter:NUM height:NUM bending-stiffness:NUM mass-per-length:NUM strouhal:NUM log-decrement:NUM air-density:NUM mean-wind-speed:NUM crossing-rate:NUM design-life:NUM k-factor:NUM kw-factor:NUM lateral-force-coefficient:NUM permitted-amplitude-ratio:NUM ring-mode:NUM shell-thickness:NUM guy-area:NUM guy-angle:NUM guy-length:NUM] {
+  tw-1 member-b1 1 1 [ {id=tw-g load-case-id=g-permanent force=500000} {id=tw-w load-case-id=w-wind force=200000} ] unset 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 }
-piles [id:TEXT section-id:TEXT material-id:TEXT driving-stress:NUM embedded-length:NUM shaft-perimeter:NUM actions:TABLE] {
-  pile-1 sec-heb240 mat-s355 200000000.0 8.0 0.96 [ {id=pile-g load-case-id=g-permanent force=800000.0} ]
+piles [id:TEXT section-id:TEXT material-id:TEXT driving-stress:NUM embedded-length:NUM shaft-perimeter:NUM actions:TABLE environment:TEXT design-life:NUM wall-thickness:NUM interlock-bending-factor:NUM interlock-stiffness-factor:NUM section-modulus:NUM shear-area:NUM design-moment:NUM design-shear:NUM interlock-shear:NUM] {
+  pile-1 sec-heb240 mat-s355 200000000 8 0.96 [ {id=pile-g load-case-id=g-permanent force=800000} ] unset 0 0 0 0 0 0 0 0 0
 }
-crane-runways [id:TEXT member-id:TEXT wheel-contact-length:NUM dispersion:NUM web-thickness:NUM fy:NUM phi:NUM actions:TABLE] {
-  crane-1 member-b1 0.1 0.05 0.01 355000000.0 1.25 [ {id=cr-q load-case-id=q-imposed force=50000.0} ]
+crane-runways [id:TEXT member-id:TEXT wheel-contact-length:NUM dispersion:NUM web-thickness:NUM fy:NUM phi:NUM actions:TABLE max-wheel-load:NUM load-factor:NUM rail-inertia:NUM rail-fixed:UINT flange-effective-width:NUM flange-thickness:NUM wheel-eccentricity:NUM torsion-constant:NUM longitudinal-stress:NUM rail-radius:NUM rail-contact-width:NUM crane-nu:NUM crane-kq:NUM damage-exponent:NUM stress-range:NUM detail-category-stress:NUM fatigue-phi:NUM] {
+  crane-1 member-b1 0.1 0.05 0.01 355000000 1.25 [ {id=cr-q load-case-id=q-imposed force=50000} ] 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+}
+storeys [id:TEXT member-id:TEXT label:TEXT height:NUM vertical-load:NUM horizontal-load:NUM drift:NUM columns:UINT plastic-analysis:UINT building-height:NUM bracing-load:NUM bracing-length:NUM bracing-deflection:NUM] {
+}
+restraints [id:TEXT member-id:TEXT label:TEXT start-support:TEXT end-support:TEXT intermediate-position:NUM torsional-spring:NUM lateral-spring-position:NUM lateral-spring-stiffness:NUM load-height:NUM load-distribution:TEXT design-moment:NUM design-axial:NUM general-method:UINT hinge-to-restraint:NUM] {
+}
+built-up-members [id:TEXT member-id:TEXT label:TEXT kind:TEXT chord-area:NUM chord-inertia:NUM chord-distance:NUM panel-spacing:NUM planes:UINT batten-inertia:NUM diagonal-area:NUM diagonal-length:NUM design-axial:NUM design-moment:NUM back-to-back:UINT min-radius:NUM chain-spacing:NUM chord-shape:TEXT chord-depth:NUM chord-width:NUM chord-flange-thickness:NUM chord-web-thickness:NUM] {
+}
+weld-groups [id:TEXT member-id:TEXT label:TEXT pattern:TEXT throat:NUM width:NUM depth:NUM shear-force:NUM eccentricity:NUM steel-fu:NUM beta-w:NUM] {
+}
+parametric-sections [id:TEXT section-id:TEXT label:TEXT shape:TEXT height:NUM width:NUM web-thickness:NUM flange-thickness:NUM tolerance:NUM] {
+}
+hollow-joints [id:TEXT member-id:TEXT label:TEXT chord-width:NUM chord-height:NUM chord-thickness:NUM chord-fy:NUM chord-stress:NUM brace1-width:NUM brace1-height:NUM brace1-thickness:NUM brace1-angle:NUM brace1-force:NUM brace2-width:NUM brace2-height:NUM brace2-thickness:NUM brace2-angle:NUM brace2-force:NUM gap:NUM brace-fy:NUM] {
+}
+joint-rows [id:TEXT joint-id:TEXT label:TEXT row-type:TEXT lever:NUM bolt-to-web:NUM edge-distance:NUM extension-to-flange:NUM extension-edge:NUM alpha-factor:NUM pitch-to-previous:NUM bolts:UINT bolt-diameter:NUM bolt-stress-area:NUM grip-length:NUM bolt-class:TEXT group-with-previous:UINT] {
+}
+frame-nodes [id:TEXT label:TEXT x:NUM z:NUM support:TEXT load-x:NUM load-z:NUM] {
+}
+frame-bars [id:TEXT member-id:TEXT label:TEXT start-node-id:TEXT end-node-id:TEXT release-start:TEXT release-end:TEXT] {
+}
+placements [id:TEXT x:NUM y:NUM z:NUM yaw:NUM] {
+}
+reliability-class=rc2
+joint-plates [id:TEXT joint-id:TEXT label:TEXT role:TEXT plate-height:NUM plate-width:NUM plate-thickness:NUM plate-count:UINT plate-fy:NUM plate-fu:NUM bolt-class:TEXT bolt-diameter:NUM hole-diameter:NUM bolt-rows:UINT bolts-per-row:UINT pitch:NUM gauge:NUM end-distance:NUM edge-distance:NUM shear-planes:UINT eccentricity:NUM weld-throat:NUM weld-fu:NUM weld-beta-w:NUM group-method:TEXT] {
+}
+foundation-blocks [id:TEXT joint-id:TEXT label:TEXT block-length:NUM block-width:NUM block-depth:NUM concrete-fck:NUM grout-fck:NUM grout-thickness:NUM anchor-count:UINT anchor-class:TEXT anchor-diameter:NUM anchor-stress-area:NUM anchor-embedment:NUM anchor-edge-distance:NUM] {
+}
+frame-actions [id:TEXT load-case-id:TEXT target-id:TEXT kind:TEXT fx:QTY fz:QTY my:NUM start-ratio:NUM end-ratio:NUM] {
+}
+frame-member-bases [id:TEXT member-id:TEXT basis:TEXT] {
+}
+fatigue-stresses [id:TEXT detail-id:TEXT max-case-id:TEXT min-case-id:TEXT fibre-z:QTY fibre-y:QTY relief:TEXT concentration:NUM thickness:QTY cycles:NUM] {
+}
+buckling-lengths [id:TEXT member-id:TEXT plane:TEXT sway:TEXT restraint-a:TEXT column-stiffness-a:NUM beam-stiffness-a:NUM restraint-b:TEXT column-stiffness-b:NUM beam-stiffness-b:NUM] {
+}
+forming-gains [id:TEXT member-id:TEXT forming:TEXT ultimate-strength:QTY gross-area:QTY bends:UINT used-yield:QTY] {
+}
+material-ductility [id:TEXT material-id:TEXT elongation:NUM ultimate-strain:NUM] {
+}
+fastened-joints [id:TEXT member-id:TEXT kind:TEXT diameter:QTY washer-diameter:QTY count:UINT per-row:UINT head-thickness:QTY base-thickness:QTY head-strength:QTY base-strength:QTY end-distance:QTY edge-distance:QTY pitch:QTY gauge:QTY sheet-width:QTY shear-force:QTY tension-force:QTY shear-resistance:QTY] {
 }

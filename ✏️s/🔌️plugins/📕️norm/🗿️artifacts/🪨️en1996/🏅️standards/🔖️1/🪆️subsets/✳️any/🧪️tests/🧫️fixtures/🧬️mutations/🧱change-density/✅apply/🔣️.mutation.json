@@ -1,0 +1,6 @@
+{
+  "ChangeDensity": {
+    "id": "wall-north",
+    "newDensityKgM3": 1600.0
+  }
+}

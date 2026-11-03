@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-site-s-ap-r/schema.json",
+  "title": "ChangeSiteSApR",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "newSApR"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeSiteSApR"
+    },
+    "newSApR": {
+      "type": "number",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Plateau spectral acceleration S_aP,R",
+          "de": "Plateau-Spektralbeschleunigung S_aP,R"
+        },
+        "group": "value",
+        "order": 10,
+        "widget": "stepper",
+        "step": 0.05,
+        "precision": 2
+      }
+    }
+  }
+}

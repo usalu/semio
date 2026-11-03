@@ -1,0 +1,95 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/app/norm/viewport/window-config/mutation/change-viewport-view/schema.json",
+  "title": "ChangeViewportView",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "hiddenLayers"
+  ],
+  "properties": {
+    "cameraPreset": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Camera",
+          "de": "Kamera"
+        },
+        "description": {
+          "en": "Named camera preset; empty keeps the free camera.",
+          "de": "Benannte Kameravoreinstellung; leer behält die freie Kamera."
+        },
+        "group": "viewport",
+        "order": 10
+      }
+    },
+    "hiddenLayers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Hidden layers",
+          "de": "Ausgeblendete Ebenen"
+        },
+        "description": {
+          "en": "Layer ids hidden in the viewport.",
+          "de": "Im Modellfenster ausgeblendete Ebenen."
+        },
+        "group": "viewport",
+        "order": 20
+      },
+      "x-semio-rust": {
+        "type": "Vec<String>"
+      }
+    },
+    "colourMap": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Colour map",
+          "de": "Farbskala"
+        },
+        "description": {
+          "en": "Colour ramp of the scalar fields.",
+          "de": "Farbverlauf der Skalarfelder."
+        },
+        "group": "viewport",
+        "order": 30
+      }
+    },
+    "unitSystem": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Units",
+          "de": "Einheiten"
+        },
+        "description": {
+          "en": "Unit system of the inspector: si or engineering.",
+          "de": "Einheitensystem des Inspektors: si oder engineering."
+        },
+        "group": "viewport",
+        "order": 40
+      }
+    }
+  }
+}

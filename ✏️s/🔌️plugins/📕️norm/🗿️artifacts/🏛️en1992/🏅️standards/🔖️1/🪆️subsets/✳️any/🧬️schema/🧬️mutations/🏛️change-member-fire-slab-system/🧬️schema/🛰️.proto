@@ -1,0 +1,6 @@
+syntax = "proto3";
+package semio.s.norm.en1992.mutation.change_member_fire_slab_system;
+message ChangeMemberFireSlabSystem {
+  string member_id = 1;
+  SlabFireSystem new_fire_slab_system = 2;
+}

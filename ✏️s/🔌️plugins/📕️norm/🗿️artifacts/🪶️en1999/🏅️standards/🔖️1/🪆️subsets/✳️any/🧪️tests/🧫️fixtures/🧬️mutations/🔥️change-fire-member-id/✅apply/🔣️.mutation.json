@@ -1,0 +1,5 @@
+{
+  "mutation": "changeFireMemberId",
+  "fireScenarioId": "fire-1",
+  "newMemberId": "post-chs"
+}

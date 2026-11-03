@@ -1,0 +1,6 @@
+{
+  "ChangeFloorPermanentLoad": {
+    "floorId": "floor-1",
+    "newValue": 1501.0
+  }
+}

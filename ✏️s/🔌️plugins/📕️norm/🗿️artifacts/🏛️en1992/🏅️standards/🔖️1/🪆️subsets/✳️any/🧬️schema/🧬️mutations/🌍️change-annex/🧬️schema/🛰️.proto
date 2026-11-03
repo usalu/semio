@@ -1,4 +1,5 @@
 syntax = "proto3";
+package semio.s.norm.en1992.mutation.change_annex;
 message ChangeAnnex {
-  string newAnnex = 1;
+  AnnexChoice new_annex = 1;
 }

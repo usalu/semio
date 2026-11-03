@@ -1,0 +1,6 @@
+{
+  "ChangeJointConcreteAreaA1": {
+    "id": "joint-j1",
+    "newConcreteAreaA1": 1.5
+  }
+}

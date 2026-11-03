@@ -1,0 +1,6 @@
+{
+  "ChangeLaneWidth": {
+    "id": "lane-1",
+    "newWidth": 3.0
+  }
+}

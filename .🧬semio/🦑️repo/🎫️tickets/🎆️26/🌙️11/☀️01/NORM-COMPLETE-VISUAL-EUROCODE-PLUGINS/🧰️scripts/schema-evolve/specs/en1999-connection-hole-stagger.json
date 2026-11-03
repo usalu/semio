@@ -1,0 +1,29 @@
+{
+  "artifact": "en1999",
+  "leaf": {
+    "kindSlug": "conn",
+    "default": 0.0,
+    "field": {
+      "name": "hole_stagger",
+      "type": "f64",
+      "unit": "m",
+      "label": {
+        "en": "Hole stagger s (0 = aligned hole lines)",
+        "de": "Lochversatz s (0 = fluchtende Lochlinien)"
+      },
+      "doc": "🕳️ Longitudinal offset s of the holes of every second bolt line across the load (EN 1999-1-1 6.2.2: staggered holes reduce the net-section deduction by s²·t/(4·p) per diagonal); 0 = all bolt lines aligned.",
+      "precision": 3,
+      "step": 0.005,
+      "range": [
+        0,
+        0.5
+      ]
+    },
+    "entity": {
+      "singular": {
+        "en": "connection",
+        "de": "Anschluss"
+      }
+    }
+  }
+}

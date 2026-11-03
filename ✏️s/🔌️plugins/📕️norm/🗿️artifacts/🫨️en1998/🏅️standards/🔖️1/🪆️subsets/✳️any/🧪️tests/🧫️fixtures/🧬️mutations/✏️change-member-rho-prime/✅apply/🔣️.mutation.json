@@ -1,0 +1,6 @@
+{
+  "mutation": "changeMemberRhoPrime",
+  "buildingId": "bldg-office",
+  "id": "col-c1",
+  "newRhoPrime": 1.5
+}

@@ -1,0 +1,6 @@
+{
+  "ChangeSiloHoopStress": {
+    "id": "silo-1",
+    "newHoopStress": 1.5
+  }
+}

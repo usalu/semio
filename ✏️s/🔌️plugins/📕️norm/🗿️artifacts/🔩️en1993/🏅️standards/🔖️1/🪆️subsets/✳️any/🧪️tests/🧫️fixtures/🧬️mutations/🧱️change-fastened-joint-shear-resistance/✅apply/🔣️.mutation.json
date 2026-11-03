@@ -1,0 +1,6 @@
+{
+  "ChangeFastenedJointShearResistance": {
+    "id": "fastened-joint-1",
+    "newShearResistance": 1.5
+  }
+}

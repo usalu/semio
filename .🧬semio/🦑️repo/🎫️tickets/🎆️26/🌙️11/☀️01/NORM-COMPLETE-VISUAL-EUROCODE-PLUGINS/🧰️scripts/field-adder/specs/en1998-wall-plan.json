@@ -1,0 +1,21 @@
+{
+ "artifact": "en1998",
+ "fields": [
+  {
+   "entity": "member",
+   "field": "wall_start_x_m",
+   "default": 0.0,
+   "unit": "Metre",
+   "en": "Plan x of the wall start point in the building plan (the wall runs from here along its direction by its length)",
+   "de": "Grundriss-x des Wandanfangspunkts im Gebäudegrundriss (die Wand verläuft von hier in ihrer Richtung um ihre Länge)"
+  },
+  {
+   "entity": "member",
+   "field": "wall_start_y_m",
+   "default": 0.0,
+   "unit": "Metre",
+   "en": "Plan y of the wall start point in the building plan (the wall runs from here along its direction by its length)",
+   "de": "Grundriss-y des Wandanfangspunkts im Gebäudegrundriss (die Wand verläuft von hier in ihrer Richtung um ihre Länge)"
+  }
+ ]
+}

@@ -1,0 +1,6 @@
+{
+  "mutation": "changeSystemMaterial",
+  "buildingId": "bldg-office",
+  "id": "sys-x",
+  "newMaterial": "steel"
+}

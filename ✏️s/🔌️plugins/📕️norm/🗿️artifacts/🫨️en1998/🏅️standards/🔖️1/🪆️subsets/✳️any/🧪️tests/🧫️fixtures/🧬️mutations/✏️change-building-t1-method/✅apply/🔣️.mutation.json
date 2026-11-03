@@ -1,0 +1,5 @@
+{
+  "mutation": "changeBuildingT1Method",
+  "id": "bldg-office",
+  "newT1Method": "rayleigh"
+}

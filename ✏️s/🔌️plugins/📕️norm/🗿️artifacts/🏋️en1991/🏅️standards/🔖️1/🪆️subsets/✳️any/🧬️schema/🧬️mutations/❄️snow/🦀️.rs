@@ -19,8 +19,6 @@ pub mod change_north_german_lowland_snow;
 pub mod change_roof_assumed_sk;
 #[path = "../🗺️change-snow-zone/🦀️.rs"]
 pub mod change_snow_zone;
-#[path = "../➕️insert-roofs/🦀️.rs"]
-pub mod insert_roofs;
-#[path = "../➖️remove-roofs/🦀️.rs"]
-pub mod remove_roofs;
 //#endregion 🪢️Mounts
+
+pub use semio_s_artifact_norm_en1991_mut_snow_roofs::{insert_roof, remove_roof, change_roof_pitch_deg, change_roof_parapet_height, change_roof_drift_obstruction_height};

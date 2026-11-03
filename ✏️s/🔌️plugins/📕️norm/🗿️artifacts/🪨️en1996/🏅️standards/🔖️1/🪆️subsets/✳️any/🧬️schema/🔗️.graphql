@@ -1,4 +1,16 @@
-type En1996Wall {
+type En1996Snapshot {
+  annex: String!
+  masonryClass: String!
+  designSituation: String!
+  storeys: Int!
+  walls: [MasonryWall!]!
+  placements: [Placement!]!
+  cases: [CaseRow!]!
+  chases: [WallChase!]!
+  movementJoints: [MovementJoint!]!
+  reliabilityClass: String!
+}
+type MasonryWall {
   id: String!
   labelEn: String!
   labelDe: String!
@@ -7,7 +19,7 @@ type En1996Wall {
   heightM: Float!
   lengthM: Float!
   supportSides: Int!
-  openings: [JSON!]!
+  openings: [WallOpening!]!
   slabBearingDepthM: Float!
   eccentricityTopM: Float!
   eccentricityBottomM: Float!
@@ -19,7 +31,7 @@ type En1996Wall {
   unitHeightM: Float!
   mortarType: String!
   mortarClass: String!
-  fMPa: Float!
+  mortarStrengthPa: Float!
   bedJointThicknessM: Float!
   reinforced: Boolean!
   asVerticalM2: Float!
@@ -28,13 +40,160 @@ type En1996Wall {
   fireReiMin: Int!
   exposure: String!
   mu: Float!
-  loadCases: [JSON!]!
+  densityKgM3: Float!
+  phiInfinity: Float!
+  isBasement: Boolean!
+  loadCases: [WallLoadCase!]!
+  piers: [WallPier!]!
+  lintels: [WallLintel!]!
+  ties: [WallTie!]!
+  prestress: [WallPrestress!]!
+  confined: [ConfinedElement!]!
+  flanges: [ShearFlange!]!
+  bars: [WallBar!]!
+  frostClass: String!
+  coverM: Float!
+  deflectionLimit: Float!
+  soilHeightM: Float!
+  soilDensityKgM3: Float!
+  isothermDepthM: Float!
+  planXM: Float!
+  planYM: Float!
+  planAngleDeg: Float!
+  inPlaneShearN: Float!
+  inPlaneMomentNm: Float!
+  bracingSystem: String!
+  diaphragmStiffnessNPerM: Float!
+  webSpacingM: Float!
 }
-
-type En1996Artifact @state {
-  annex: String! @state(lane: ARTIFACT)
-  masonryClass: String! @state(lane: ARTIFACT)
-  designSituation: String! @state(lane: ARTIFACT)
-  storeys: Int! @state(lane: ARTIFACT)
-  walls: [En1996Wall!]! @state(lane: ARTIFACT)
+type Placement {
+  id: String!
+  x: Float!
+  y: Float!
+  z: Float!
+  yaw: Float!
+}
+type CaseRow {
+  id: String!
+  labelEn: String!
+  labelDe: String!
+  entryId: String!
+  numbers: [CaseNumber!]!
+  texts: [CaseText!]!
+}
+type WallChase {
+  id: String!
+  wallId: String!
+  kind: String!
+  xM: Float!
+  yM: Float!
+  widthM: Float!
+  lengthM: Float!
+  depthM: Float!
+}
+type MovementJoint {
+  id: String!
+  wallId: String!
+  positionM: Float!
+}
+type CaseNumber {
+  id: String!
+  value: Float!
+}
+type CaseText {
+  id: String!
+  value: String!
+}
+type WallOpening {
+  id: String!
+  widthM: Float!
+  heightM: Float!
+  sillHeightM: Float!
+  positionM: Float!
+}
+enum LoadCaseSituation {
+  persistent
+  transient
+  accidental
+  seismic
+}
+enum ImposedCategory {
+  a
+  b
+  c
+  d
+  e
+  f
+  g
+  h
+}
+type WallLoadCase {
+  id: String!
+  designSituation: LoadCaseSituation!
+  imposedCategory: ImposedCategory!
+  gKSlabN: Float!
+  qKImposedPa: Float!
+  tributaryAreaM2: Float!
+  slabSpanM: Float!
+  qKSnowPa: Float!
+  qPWindPa: Float!
+  cPe: Float!
+  hKEarthN: Float!
+  concentrated: [ConcentratedLoad!]!
+}
+type WallPier {
+  id: String!
+  positionM: Float!
+  widthM: Float!
+}
+type WallLintel {
+  id: String!
+  positionM: Float!
+  spanM: Float!
+  depthM: Float!
+  bearingLengthM: Float!
+}
+type WallTie {
+  id: String!
+  kind: String!
+  positionM: Float!
+  levelM: Float!
+  capacityN: Float!
+}
+type WallPrestress {
+  id: String!
+  forceN: Float!
+  areaM2: Float!
+  fPkPa: Float!
+  positionM: Float!
+  eccentricityM: Float!
+  lossRatio: Float!
+}
+type ConfinedElement {
+  id: String!
+  positionM: Float!
+  widthM: Float!
+  depthM: Float!
+  asM2: Float!
+}
+type ShearFlange {
+  id: String!
+  lengthM: Float!
+  thicknessM: Float!
+  positionM: Float!
+}
+type WallBar {
+  id: String!
+  kind: String!
+  diameterM: Float!
+  lengthM: Float!
+  spacingM: Float!
+}
+type ConcentratedLoad {
+  id: String!
+  forceN: Float!
+  bearingAreaM2: Float!
+  bearingLengthM: Float!
+  distanceA1M: Float!
+  positionM: Float!
 }

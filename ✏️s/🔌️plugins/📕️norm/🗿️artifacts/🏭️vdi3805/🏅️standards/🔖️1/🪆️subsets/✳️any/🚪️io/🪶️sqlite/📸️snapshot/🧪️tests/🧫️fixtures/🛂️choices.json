@@ -22,7 +22,8 @@
     "heatTransferCoefficient",
     "airPermeability",
     "ventilationRate",
-    "acceleration"
+    "acceleration",
+    "velocity"
   ],
   "unsigned64Words": [
     "0",

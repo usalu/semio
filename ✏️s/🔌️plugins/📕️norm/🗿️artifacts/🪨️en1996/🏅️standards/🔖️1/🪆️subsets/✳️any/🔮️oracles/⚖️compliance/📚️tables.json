@@ -1,0 +1,450 @@
+{
+  "_source": "Second keying pass of the normative tables, keyed independently of the Rust tables. Every row is unverified against the standard text: see UNVERIFIED_NDP in the Rust normative-tables module.",
+  "shapeFactor": {
+    "heightsMm": [
+      50,
+      65,
+      100,
+      150,
+      200,
+      250
+    ],
+    "leastDimensionsMm": [
+      50,
+      100,
+      150,
+      200,
+      250
+    ],
+    "delta": [
+      [
+        0.85,
+        0.75,
+        0.7,
+        0.7,
+        0.7
+      ],
+      [
+        0.95,
+        0.85,
+        0.75,
+        0.7,
+        0.65
+      ],
+      [
+        1.15,
+        1.0,
+        0.9,
+        0.8,
+        0.75
+      ],
+      [
+        1.3,
+        1.2,
+        1.1,
+        1.0,
+        0.95
+      ],
+      [
+        1.45,
+        1.35,
+        1.25,
+        1.15,
+        1.1
+      ],
+      [
+        1.55,
+        1.45,
+        1.35,
+        1.25,
+        1.15
+      ]
+    ]
+  },
+  "fk": {
+    "en": {
+      "gp": {
+        "clay": [
+          0.55,
+          0.45,
+          0.35,
+          0.35
+        ],
+        "calcium_silicate": [
+          0.55,
+          0.45,
+          0.45,
+          0.45
+        ],
+        "concrete": [
+          0.55,
+          0.45,
+          0.45,
+          0.45
+        ],
+        "aerated": [
+          0.55,
+          0.55,
+          0.55,
+          0.55
+        ],
+        "alpha": 0.7,
+        "beta": 0.3
+      },
+      "tl": {
+        "clay": [
+          0.75,
+          0.7,
+          0.5,
+          0.35
+        ],
+        "calcium_silicate": [
+          0.8,
+          0.65,
+          0.8,
+          0.8
+        ],
+        "concrete": [
+          0.8,
+          0.8,
+          0.8,
+          0.8
+        ],
+        "aerated": [
+          0.8,
+          0.8,
+          0.8,
+          0.8
+        ],
+        "alpha": 0.85,
+        "beta": 0.0
+      },
+      "lw": {
+        "clay": [
+          0.3,
+          0.3,
+          0.25,
+          0.25
+        ],
+        "calcium_silicate": [
+          0.45,
+          0.45,
+          0.45,
+          0.45
+        ],
+        "concrete": [
+          0.45,
+          0.45,
+          0.45,
+          0.45
+        ],
+        "aerated": [
+          0.45,
+          0.45,
+          0.45,
+          0.45
+        ],
+        "alpha": 0.7,
+        "beta": 0.3
+      }
+    },
+    "de": {
+      "gp": {
+        "clay": [
+          0.6,
+          0.5,
+          0.45,
+          0.4
+        ],
+        "calcium_silicate": [
+          0.6,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "concrete": [
+          0.6,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "aerated": [
+          0.6,
+          0.6,
+          0.6,
+          0.6
+        ],
+        "alpha": 0.65,
+        "beta": 0.25
+      },
+      "tl": {
+        "clay": [
+          0.7,
+          0.7,
+          0.7,
+          0.7
+        ],
+        "calcium_silicate": [
+          0.7,
+          0.7,
+          0.7,
+          0.7
+        ],
+        "concrete": [
+          0.7,
+          0.7,
+          0.7,
+          0.7
+        ],
+        "aerated": [
+          0.7,
+          0.7,
+          0.7,
+          0.7
+        ],
+        "alpha": 0.85,
+        "beta": 0.0
+      },
+      "lw": {
+        "clay": [
+          0.6,
+          0.5,
+          0.45,
+          0.4
+        ],
+        "calcium_silicate": [
+          0.6,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "concrete": [
+          0.6,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "aerated": [
+          0.6,
+          0.6,
+          0.6,
+          0.6
+        ],
+        "alpha": 0.65,
+        "beta": 0.25
+      }
+    }
+  },
+  "fvk0Mpa": {
+    "en": {
+      "clay": {
+        "gp": [
+          0.3,
+          0.2,
+          0.1
+        ],
+        "tl": 0.3,
+        "lw": 0.15
+      },
+      "other": {
+        "gp": [
+          0.2,
+          0.15,
+          0.1
+        ],
+        "tl": {
+          "calcium_silicate": 0.4,
+          "aerated": 0.3,
+          "concrete": 0.3
+        },
+        "lw": 0.15
+      }
+    },
+    "de": {
+      "gp": [
+        0.26,
+        0.22,
+        0.18,
+        0.08
+      ],
+      "tl": 0.22,
+      "lw": 0.15
+    }
+  },
+  "fxkMpa": {
+    "clay": {
+      "fxk1": [
+        0.1,
+        0.1
+      ],
+      "fxk2": [
+        0.2,
+        0.4
+      ]
+    },
+    "calcium_silicate": {
+      "fxk1": [
+        0.05,
+        0.1
+      ],
+      "fxk2": [
+        0.2,
+        0.4
+      ]
+    },
+    "concrete": {
+      "fxk1": [
+        0.05,
+        0.1
+      ],
+      "fxk2": [
+        0.2,
+        0.4
+      ]
+    },
+    "aerated": {
+      "fxk1": [
+        0.05,
+        0.1
+      ],
+      "fxk2": [
+        0.2,
+        0.2
+      ]
+    }
+  },
+  "psi": {
+    "A": [
+      0.7,
+      0.5,
+      0.3
+    ],
+    "B": [
+      0.7,
+      0.5,
+      0.3
+    ],
+    "C": [
+      0.7,
+      0.7,
+      0.6
+    ],
+    "D": [
+      0.7,
+      0.7,
+      0.6
+    ],
+    "E": [
+      1.0,
+      0.9,
+      0.8
+    ],
+    "F": [
+      0.7,
+      0.7,
+      0.6
+    ],
+    "G": [
+      0.7,
+      0.5,
+      0.3
+    ],
+    "H": [
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  "fireMm": {
+    "classes": [
+      30,
+      60,
+      90,
+      120,
+      180,
+      240
+    ],
+    "clay": [
+      100,
+      100,
+      150,
+      175,
+      240,
+      240
+    ],
+    "calcium_silicate": [
+      90,
+      115,
+      140,
+      175,
+      240,
+      300
+    ],
+    "aerated": [
+      115,
+      140,
+      175,
+      200,
+      250,
+      300
+    ],
+    "concrete": [
+      90,
+      100,
+      140,
+      170,
+      240,
+      300
+    ]
+  },
+  "gammaM": {
+    "en": [
+      1.5,
+      1.7,
+      2.0,
+      2.2,
+      2.5
+    ],
+    "de": [
+      1.5,
+      1.7,
+      1.7,
+      2.0,
+      2.0
+    ],
+    "deAccidental": 1.3
+  },
+  "mortarRequirementMpa": {
+    "mx1": 1.0,
+    "mx2": 2.5,
+    "mx3": 5.0,
+    "mx4": 10.0
+  },
+  "fvltShare": {
+    "solid": 0.032,
+    "perforated": 0.026,
+    "hollow": 0.02
+  },
+  "bond": {
+    "fbokMPa": 2.0
+  },
+  "bracing": {
+    "shearModulusRatio": 0.4
+  },
+  "chase": {
+    "_source": "EN 1996-1-1 8.6.2 Tables 8.1 and 8.2 and their notes, keyed independently of the Rust registry rows; recalled, unverified against the print.",
+    "tLowerMm": 85,
+    "bandUpperMm": [115, 175, 225, 300],
+    "verticalDepthMm": [30, 30, 30, 30, 30],
+    "verticalWidthMm": [100, 125, 150, 175, 200],
+    "horizontalDepthUnlimitedMm": [0, 0, 0, 10, 15],
+    "horizontalDepthShortMm": [0, 15, 20, 25, 30],
+    "shortLengthMm": 1250,
+    "verticalSpacingMm": 225,
+    "recessSpacingFactor": 2,
+    "horizontalOpeningMm": 500,
+    "horizontalSpacingFactor": 2,
+    "widthRatio": 0.13,
+    "lowThird": { "tMinMm": 225, "depthMm": 80, "widthMm": 120, "heightRatio": 0.3333333333333333 }
+  }
+}

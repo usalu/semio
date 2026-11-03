@@ -68,17 +68,21 @@ fn section(value: &Value) -> UiTreeSectionNode {
     }
 }
 
-fn tree_node(value: &Value) -> UiNode {
-    UiNode::Tree(UiTreeNode { presentation: Default::default(), sections: value["sections"].as_array().expect("sections").iter().map(section).collect(), presence: UiPresence::default(), drop_action: None, menu: None, interaction_domain: None })
+fn tree_node(value: &Value, presentation: ui_contract::TreePresentation) -> UiNode {
+    UiNode::Tree(UiTreeNode { presentation, sections: value["sections"].as_array().expect("sections").iter().map(section).collect(), presence: UiPresence::default(), drop_action: None, menu: None, interaction_domain: None })
 }
 
 /// 📐️ Mounts the case's authored tree and runs the REAL retained layout end to end — admit, shape,
 /// measure, arrange, publish — so every rect asserted below is one `events::hit_test` reads.
 fn laid_out_with_flow(case: &Value, block_reversed: bool) -> (UiTree, NodeId) {
+    laid_out_presented(case, block_reversed, ui_contract::TreePresentation::Standard)
+}
+
+fn laid_out_presented(case: &Value, block_reversed: bool, presentation: ui_contract::TreePresentation) -> (UiTree, NodeId) {
     let width = case["treeWidth"].as_f64().expect("treeWidth") as f32;
     let height = case["treeHeight"].as_f64().expect("treeHeight") as f32;
     let mut tree = UiTree::new();
-    tree.apply_tree(&tree_node(&case["tree"]));
+    tree.apply_tree(&tree_node(&case["tree"], presentation));
     let root = tree.root.unwrap_or_else(|| panic!("tree row law root"));
     let identity = MountedLayoutIdentity { surface: UiSurfaceToken::new(1, 1), generation: 5, revision: 7, theme_revision: 11, viewport_revision: 13 };
     let mut job = MountedLayoutJob::try_new(&tree, root, identity, Theme::default(), width, height, block_reversed, ui_contract::FlowInline::Ltr).unwrap_or_else(|fault| panic!("tree row law job: {fault:?}"));
@@ -199,4 +203,31 @@ fn upward_flow_reverses_sections_and_rows_while_leaving_section_triggers_on_the_
     assert_eq!(tree.mounted_layout(generations).expect("generations layout").1, Theme::default().tree_row_height, "first authored section follows it");
     assert_eq!(tree.mounted_layout(gen_b).expect("gen-b layout").1, 0.0, "last authored row paints first inside the section");
     assert_eq!(tree.mounted_layout(gen_a).expect("gen-a layout").1, Theme::default().tree_row_height, "the first authored row remains directly above the section trigger band");
+}
+
+#[test]
+fn a_touch_tree_lays_every_row_out_at_least_44_pixels_tall_and_the_standard_tree_does_not() {
+    let law = law();
+    let entry = case(&law, "one-labelled-section-of-three-flat-rows");
+    let (standard, standard_root) = laid_out_presented(entry, false, ui_contract::TreePresentation::Standard);
+    let (touch, touch_root) = laid_out_presented(entry, false, ui_contract::TreePresentation::Touch);
+    for rect in entry["rects"].as_array().expect("rects").iter().filter(|rect| rect["path"].as_array().is_some_and(|path| path.len() == 2)) {
+        let standard_id = node_at_path(&standard, standard_root, &rect["path"]);
+        let touch_id = node_at_path(&touch, touch_root, &rect["path"]);
+        let standard_height = standard.mounted_layout(standard_id).expect("standard row layout").3;
+        let touch_height = touch.mounted_layout(touch_id).expect("touch row layout").3;
+        assert!(close(standard_height, 24.0), "the standard row stays {standard_height} px");
+        assert!(touch_height >= semio_framework_ui_wgpu_layout::layout::TREE_ROW_TOUCH_MIN_PX, "the touch row {:?} is {touch_height} px tall", rect["path"]);
+    }
+    assert!(touch.mounted_layout(touch_root).expect("touch tree layout").3 >= 3.0 * 44.0, "three touch rows stack to at least 132 px");
+}
+
+#[test]
+fn the_touch_row_metric_is_the_theme_row_raised_to_44_pixels() {
+    let theme = Theme::default();
+    let touch = semio_framework_ui_wgpu_layout::layout::TreeRowMetrics::for_presentation(&theme, ui_contract::TreePresentation::Touch);
+    assert_eq!(touch.row_height, theme.tree_row_height.max(44.0));
+    assert_eq!(touch.header_height, touch.row_height, "a section header is as tall as a row");
+    let taller = Theme { tree_row_height: 60.0, ..Theme::default() };
+    assert_eq!(semio_framework_ui_wgpu_layout::layout::TreeRowMetrics::for_presentation(&taller, ui_contract::TreePresentation::Touch).row_height, 60.0, "a theme with taller rows keeps them");
 }

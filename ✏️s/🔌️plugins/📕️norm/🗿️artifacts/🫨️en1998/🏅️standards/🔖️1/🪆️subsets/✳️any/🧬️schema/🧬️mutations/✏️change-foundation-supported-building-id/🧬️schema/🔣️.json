@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-foundation-supported-building-id/schema.json",
+  "title": "ChangeFoundationSupportedBuildingId",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newSupportedBuildingId"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeFoundationSupportedBuildingId"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Foundation",
+          "de": "Gründung"
+        },
+        "description": {
+          "en": "The foundation this mutation addresses, by id.",
+          "de": "Das adressierte Element (Gründung), per Kennung."
+        },
+        "ref": {
+          "kind": "foundation"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newSupportedBuildingId": {
+      "type": "string",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Supported building id",
+          "de": "Gestütztes Gebäude"
+        },
+        "group": "value",
+        "order": 20,
+        "widget": "text"
+      }
+    }
+  }
+}

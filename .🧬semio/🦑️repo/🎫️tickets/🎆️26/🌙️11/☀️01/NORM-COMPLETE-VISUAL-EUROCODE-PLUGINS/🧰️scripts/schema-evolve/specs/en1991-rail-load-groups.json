@@ -1,0 +1,150 @@
+{
+  "artifact": "en1991",
+  "reference": "rotatingMachines",
+  "collection": {
+    "name": "railLoadGroups",
+    "entity": "RailLoadGroup",
+    "emoji": "🛤️",
+    "doc": "🛤️ Rail load group of EN 1991-2, Table 6.11 (gr11 to gr31): the component factors entered from the table and the group actions of the LM71 axle, the LM71 distributed load, the longitudinal and the lateral force the design assumes.",
+    "label": {
+      "en": "Rail load groups",
+      "de": "Eisenbahn-Lastgruppen"
+    },
+    "id": {
+      "en": "Load group ID",
+      "de": "Lastgruppen-ID"
+    },
+    "singular": {
+      "en": "rail load group",
+      "de": "Eisenbahn-Lastgruppe"
+    },
+    "kindSlug": "rail-load-group",
+    "fields": [
+      {
+        "name": "load_group",
+        "type": "String",
+        "label": {
+          "en": "Load group (gr11 to gr31)",
+          "de": "Lastgruppe (gr11 bis gr31)"
+        },
+        "doc": "🛤️ gr11 | gr12 | ... | gr31 of Table 6.11 (anything else is an invalid input).",
+        "sample": "gr11"
+      },
+      {
+        "name": "factor_vertical",
+        "type": "f64",
+        "label": {
+          "en": "Vertical component factor",
+          "de": "Faktor der Vertikalkomponente"
+        },
+        "doc": "⬇️ Factor of the vertical loads (LM71, SW/0) of the group, entered from Table 6.11.",
+        "sample": 1.0,
+        "range": [
+          0,
+          1
+        ],
+        "step": 0.05,
+        "precision": 2
+      },
+      {
+        "name": "factor_longitudinal",
+        "type": "f64",
+        "label": {
+          "en": "Longitudinal component factor",
+          "de": "Faktor der Längskomponente"
+        },
+        "doc": "↔️ Factor of the traction and braking force of the group, entered from Table 6.11.",
+        "sample": 0.5,
+        "range": [
+          0,
+          1
+        ],
+        "step": 0.05,
+        "precision": 2
+      },
+      {
+        "name": "factor_lateral",
+        "type": "f64",
+        "label": {
+          "en": "Lateral component factor",
+          "de": "Faktor der Querkomponente"
+        },
+        "doc": "↕️ Factor of the lateral force (nosing) of the group, entered from Table 6.11.",
+        "sample": 1.0,
+        "range": [
+          0,
+          1
+        ],
+        "step": 0.05,
+        "precision": 2
+      },
+      {
+        "name": "assumed_axle_load",
+        "type": "f64",
+        "label": {
+          "en": "Assumed group axle load",
+          "de": "Angesetzte Gruppen-Achslast"
+        },
+        "doc": "🏋️ LM71 axle load [N] of the group the design assumes (factor times alpha times 250 kN).",
+        "sample": 250000.0,
+        "unit": "N",
+        "range": [
+          0,
+          1000000
+        ]
+      },
+      {
+        "name": "assumed_udl",
+        "type": "f64",
+        "label": {
+          "en": "Assumed group distributed load",
+          "de": "Angesetzte Gruppen-Streckenlast"
+        },
+        "doc": "📏 LM71 distributed load [N/m] of the group the design assumes.",
+        "sample": 80000.0,
+        "unit": "N/m",
+        "range": [
+          0,
+          500000
+        ]
+      },
+      {
+        "name": "assumed_longitudinal",
+        "type": "f64",
+        "label": {
+          "en": "Assumed group longitudinal force",
+          "de": "Angesetzte Gruppen-Längskraft"
+        },
+        "doc": "↔️ Traction or braking force [N] of the group the design assumes.",
+        "sample": 1200000.0,
+        "unit": "N",
+        "range": [
+          0,
+          6000000
+        ]
+      },
+      {
+        "name": "assumed_lateral",
+        "type": "f64",
+        "label": {
+          "en": "Assumed group lateral force",
+          "de": "Angesetzte Gruppen-Querkraft"
+        },
+        "doc": "↕️ Lateral force (nosing) [N] of the group the design assumes.",
+        "sample": 100000.0,
+        "unit": "N",
+        "range": [
+          0,
+          1000000
+        ]
+      }
+    ]
+  },
+  "kit": {
+    "id": "railLoadGroup",
+    "en": "Rail load group",
+    "de": "Eisenbahn-Lastgruppe",
+    "icon": "layers",
+    "scene_kind": "Load"
+  }
+}

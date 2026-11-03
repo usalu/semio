@@ -1,0 +1,6 @@
+{
+  "ChangeSiloTemperatureChange": {
+    "id": "silo-1",
+    "newTemperatureChange": 1.5
+  }
+}

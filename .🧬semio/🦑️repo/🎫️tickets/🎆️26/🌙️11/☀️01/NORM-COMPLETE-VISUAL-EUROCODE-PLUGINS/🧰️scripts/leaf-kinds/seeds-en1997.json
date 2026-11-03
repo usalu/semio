@@ -1,0 +1,23 @@
+{
+  "investigations": {
+    "id": "investigation-1",
+    "positionX": 12.5,
+    "positionY": 8.0,
+    "groundLevel": 100.0,
+    "depth": 12.0,
+    "kind": "borehole",
+    "readings": [
+      {
+        "id": "investigation-reading-1",
+        "depth": 1.0,
+        "measurement": 2000000.0
+      }
+    ]
+  },
+  "characteristicBases": {
+    "id": "characteristic-basis-1",
+    "layerId": "sand-1",
+    "parameter": "undrainedStrength",
+    "basis": "derived"
+  }
+}

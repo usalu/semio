@@ -1,0 +1,5 @@
+{
+  "mutation": "changeAssessmentLimitState",
+  "id": "as-1",
+  "newLimitState": "sd"
+}

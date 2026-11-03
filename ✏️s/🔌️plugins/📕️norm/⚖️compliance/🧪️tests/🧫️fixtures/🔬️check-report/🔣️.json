@@ -1,7 +1,7 @@
 {
   "summary": {
-    "total": 2,
-    "pass": 1,
+    "total": 4,
+    "pass": 2,
     "warning": 0,
     "fail": 1,
     "notApplicable": 0,
@@ -10,14 +10,18 @@
     "parts": [
       {
         "part": "DIN 4108-2",
-        "pass": 1,
+        "pass": 2,
         "warning": 0,
         "fail": 1,
         "notApplicable": 0,
         "worstUtilization": 1.1666666666666667,
-        "complies": false
+        "complies": false,
+        "unverified": 1,
+        "info": 0
       }
-    ]
+    ],
+    "unverified": 1,
+    "info": 0
   },
   "checks": [
     {
@@ -81,7 +85,10 @@
           },
           "applicable": true
         }
-      ]
+      ],
+      "ndps": [],
+      "stations": [],
+      "stationField": ""
     },
     {
       "id": "din4108.2.psi.pass",
@@ -118,7 +125,132 @@
       },
       "utilization": 0.4,
       "annex": "De",
-      "remedies": []
+      "remedies": [],
+      "ndps": [],
+      "stations": [],
+      "stationField": ""
+    },
+    {
+      "id": "din4108.2.psi.stations",
+      "part": "DIN 4108-2",
+      "clause": {
+        "family": "DIN 4108",
+        "part": "2",
+        "section": "6.4"
+      },
+      "subject": {
+        "entityId": "",
+        "path": "",
+        "label": {
+          "en": "Building",
+          "de": "Gebäude"
+        }
+      },
+      "status": "Pass",
+      "title": {
+        "en": "Thermal bridge ψ",
+        "de": "Wärmebrücke ψ"
+      },
+      "explanation": {
+        "en": "Within limit.",
+        "de": "Innerhalb der Grenze."
+      },
+      "computed": {
+        "kind": "Dimensionless",
+        "value": 0.0
+      },
+      "limit": {
+        "kind": "Dimensionless",
+        "value": 0.0
+      },
+      "utilization": 0.7,
+      "annex": "De",
+      "remedies": [],
+      "ndps": [],
+      "stations": [
+        {
+          "at": [
+            0.0
+          ],
+          "utilization": 0.2,
+          "values": [
+            {
+              "kind": "Moment",
+              "value": 20000.0
+            },
+            {
+              "kind": "Moment",
+              "value": 100000.0
+            }
+          ]
+        },
+        {
+          "at": [
+            0.5
+          ],
+          "utilization": 0.7,
+          "values": [
+            {
+              "kind": "Moment",
+              "value": 70000.0
+            },
+            {
+              "kind": "Moment",
+              "value": 100000.0
+            }
+          ]
+        },
+        {
+          "at": [
+            1.0
+          ],
+          "utilization": 0.4,
+          "values": []
+        }
+      ],
+      "stationField": ""
+    },
+    {
+      "id": "din4108.2.psi.unverified",
+      "part": "DIN 4108-2",
+      "clause": {
+        "family": "DIN 4108",
+        "part": "2",
+        "section": "6.3"
+      },
+      "subject": {
+        "entityId": "",
+        "path": "",
+        "label": {
+          "en": "Building",
+          "de": "Gebäude"
+        }
+      },
+      "status": "UnverifiedBasis",
+      "title": {
+        "en": "Thermal bridge ψ",
+        "de": "Wärmebrücke ψ"
+      },
+      "explanation": {
+        "en": "Within limit. Unverified basis, not a compliant verdict: ndp.en1992.e-12.1.",
+        "de": "Innerhalb der Grenze. Ungeprüfte Grundlage, kein Konformitätsnachweis: ndp.en1992.e-12.1."
+      },
+      "computed": {
+        "kind": "Dimensionless",
+        "value": 0.4
+      },
+      "limit": {
+        "kind": "Dimensionless",
+        "value": 1.0
+      },
+      "utilization": 0.4,
+      "annex": "De",
+      "remedies": [],
+      "ndps": [
+        "ndp.en1992.e-12.1"
+      ],
+      "stations": [],
+      "stationField": ""
     }
   ]
 }

@@ -1,0 +1,5 @@
+{
+  "mutation": "changePileGroupSingleRes",
+  "id": "group-G1",
+  "newSingleResistance": 2800000.0
+}

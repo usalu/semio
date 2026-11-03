@@ -1,0 +1,6 @@
+{
+  "mutation": "changeMemberWallStoreyId",
+  "buildingId": "bldg-office",
+  "id": "col-c1",
+  "newWallStoreyId": "s2"
+}

@@ -1,0 +1,7 @@
+{
+  "ChangeAnchorActionVKPunch": {
+    "anchorId": "anc-1",
+    "actionId": "G",
+    "newVKPunch": 1.5
+  }
+}

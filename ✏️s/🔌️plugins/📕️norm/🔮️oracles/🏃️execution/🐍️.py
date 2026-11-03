@@ -35,7 +35,7 @@ camelCase payload spellings the fifteen norm subsets committed — never from a 
 out of `🧬️mutations/**`.
 
 ⚠️ Honest boundary, the CARRIER. `.dsl.semio` has no specification here: every norm subset's committed
-`🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio` is the repository-wide placeholder whose whole
+`🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio` is the repository-wide rule whose whole
 body is `payload = OCTET+`, and the framework's own DSL notation module publishes no grammar document
 either. `identity_handler` below therefore reads the committed artifact at the CARRIER level — the
 envelope preamble and the ordered `key=value` fields as written — a shape derived from those
@@ -83,7 +83,7 @@ _load("semio_norm_vocabulary_verbs", "🔧️verbs")
 _load("semio_norm_vocabulary_carrier", "📝️carrier")
 
 from semio_norm_vocabulary_document import unwrap, derived_view, Refused
-from semio_norm_vocabulary_verbs import apply_mutation, inverse_mutation
+from semio_norm_vocabulary_verbs import apply_mutation, declare_kinds, inverse_mutation
 from semio_norm_vocabulary_carrier import parse_dsl, carrier_projection, print_dsl
 # endregion 🔖️Imports
 
@@ -207,10 +207,10 @@ def vector(subset, ctx, row):
     directory, fixture = subset.vectors[row]
     stem = "%s/%s/%s" % (subset.vector_root, directory, fixture)
     return (
-        read_json(ctx, "%s/📸️snapshot/⬅️before/🔣️.json" % stem),
-        read_json(ctx, "%s/🦠️mutation/🔣️.json" % stem),
-        read_json(ctx, "%s/📸️snapshot/➡️after/🔣️.json" % stem),
-        read_json(ctx, "%s/🎯️outcome/🔣️.json" % stem),
+        read_json(ctx, "%s/🔣️.before.json" % stem),
+        read_json(ctx, "%s/🔣️.mutation.json" % stem),
+        read_json(ctx, "%s/🔣️.after.json" % stem),
+        read_json(ctx, "%s/🔣️.outcome.json" % stem),
     )
 
 
@@ -305,10 +305,29 @@ def identity_handler(subset):
 
 
 # region 🔖️Registration
+TAXONOMY = ("🧪️tests", "🧫️fixtures", "📇️mutation-leaf-taxonomy-v1", "🔣️.json")
+
+
+def declare_edit_rules(subset):
+    """📜️ Declares the subset's kinds from the `edit` rules of the committed mutation-leaf taxonomy, found by walking up from this file; the rules name the field a kind writes, so no kind depends on a noun-to-field name guess."""
+    artifact = subset.standard.lower().replace(" ", "")
+    folder = os.path.dirname(os.path.abspath(__file__))
+    while True:
+        path = os.path.join(folder, *TAXONOMY)
+        if os.path.isfile(path):
+            with open(path, encoding="utf-8") as handle:
+                declare_kinds([row for row in json.load(handle)["rows"] if row["artifact"].endswith(artifact)])
+            return
+        if os.path.dirname(folder) == folder:
+            return
+        folder = os.path.dirname(folder)
+
+
 def build_adapter(subset):
     """🧭️ Registration is by FULL expanded scenario id, so this mirrors the feature's `Examples` tables
     exactly. Oracle role only: registering these handlers as subjects as well would make the reference
     its own subject and manufacture a guaranteed-green self-comparison."""
+    declare_edit_rules(subset)
     built = Adapter("python")
     for kind in subset.kinds:
         built = built.oracle("mutate-" + kind, mutate_handler(subset, kind)).oracle("inverse-" + kind, inverse_handler(subset, kind))

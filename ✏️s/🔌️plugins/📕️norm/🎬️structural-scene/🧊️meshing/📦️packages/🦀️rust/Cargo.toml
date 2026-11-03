@@ -1,0 +1,26 @@
+[package]
+workspace = "../../../.."
+name = "semio-s-plugin-norm-structural-scene-meshing"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Structural scene meshing: colour maps and tessellation"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-plugin-norm-compliance = { workspace = true }
+semio-s-plugin-norm-structural-scene-foundation = { path = "../../../🧱️foundation/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+serde_json = { workspace = true }
+semio-s-plugin-norm-compliance = { workspace = true, features = ["test-support", "compliance-testing"] }

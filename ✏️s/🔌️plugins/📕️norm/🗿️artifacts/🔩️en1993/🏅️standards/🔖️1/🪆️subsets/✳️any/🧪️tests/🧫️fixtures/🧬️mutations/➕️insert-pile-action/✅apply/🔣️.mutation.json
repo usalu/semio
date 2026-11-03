@@ -1,0 +1,11 @@
+{
+  "InsertPileAction": {
+    "id": "pile-1",
+    "index": 2,
+    "element": {
+      "id": "pile-g-2",
+      "loadCaseId": "g-permanent",
+      "force": 200000.0
+    }
+  }
+}

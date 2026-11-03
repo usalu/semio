@@ -1,0 +1,10 @@
+{
+  "InsertConcreteGrade": {
+    "index": 1,
+    "concreteGrade": {
+      "id": "c35-new",
+      "name": "C35/45",
+      "fCk": 35000000.0
+    }
+  }
+}

@@ -1,0 +1,222 @@
+{
+ "artifact": "en1990",
+ "conversions": [
+  {
+   "hosts": [
+    "ReliabilityAnalysis.resistance_distribution",
+    "ReliabilityAnalysis.action_distribution"
+   ],
+   "enum": "DistributionKind",
+   "doc": "📈 Probability distribution family of a basic variable (EN 1990 Annex C).",
+   "default": "Normal",
+   "variants": [
+    [
+     "Normal",
+     [
+      "normal"
+     ],
+     "Normal",
+     "Normal"
+    ],
+    [
+     "Lognormal",
+     [
+      "lognormal"
+     ],
+     "Lognormal",
+     "Lognormal"
+    ],
+    [
+     "Gumbel",
+     [
+      "gumbel"
+     ],
+     "Gumbel",
+     "Gumbel"
+    ],
+    [
+     "Weibull",
+     [
+      "weibull"
+     ],
+     "Weibull",
+     "Weibull"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "TestSeries.distribution"
+   ],
+   "enum": "TestDistribution",
+   "doc": "🧪 Distribution assumed for the design value derived from tests (EN 1990 D.7.2).",
+   "default": "Normal",
+   "variants": [
+    [
+     "Normal",
+     [
+      "normal"
+     ],
+     "Normal (D.7.2 a)",
+     "Normal (D.7.2 a)"
+    ],
+    [
+     "Lognormal",
+     [
+      "lognormal"
+     ],
+     "Lognormal (D.7.2 b)",
+     "Lognormal (D.7.2 b)"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "PermanentAction.kind"
+   ],
+   "enum": "PermanentKind",
+   "doc": "⚖️ Kind of a permanent action: unfavourable, favourable or prestress.",
+   "default": "GSup",
+   "variants": [
+    [
+     "GSup",
+     [
+      "g_sup"
+     ],
+     "G_sup (unfavourable)",
+     "G_sup (ungünstig)"
+    ],
+    [
+     "GInf",
+     [
+      "g_inf"
+     ],
+     "G_inf (favourable)",
+     "G_inf (günstig)"
+    ],
+    [
+     "Prestress",
+     [
+      "prestress"
+     ],
+     "Prestress",
+     "Vorspannung"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "En1990Snapshot.structure_kind"
+   ],
+   "enum": "StructureKind",
+   "doc": "🏗 Kind of structure: building or bridge type, selecting the action sets and the ψ factors (EN 1990 Annex A1/A2).",
+   "default": "Building",
+   "variants": [
+    [
+     "Building",
+     [
+      "building",
+      "building-alt",
+      "custom"
+     ],
+     "Building",
+     "Gebäude"
+    ],
+    [
+     "RoadBridge",
+     [
+      "road_bridge"
+     ],
+     "Road bridge",
+     "Straßenbrücke"
+    ],
+    [
+     "Footbridge",
+     [
+      "footbridge"
+     ],
+     "Footbridge",
+     "Fußgängerbrücke"
+    ],
+    [
+     "RailBridge",
+     [
+      "rail_bridge"
+     ],
+     "Railway bridge",
+     "Eisenbahnbrücke"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "En1990Snapshot.supervision_level"
+   ],
+   "enum": "SupervisionLevel",
+   "doc": "🧐 Design supervision level DSL1 to DSL3 (EN 1990 Annex B Table B4).",
+   "default": "Dsl2",
+   "variants": [
+    [
+     "Dsl1",
+     [
+      "DSL1"
+     ],
+     "DSL1 — reduced supervision",
+     "DSL1 — verminderte Überwachung"
+    ],
+    [
+     "Dsl2",
+     [
+      "DSL2",
+      ""
+     ],
+     "DSL2 — normal supervision",
+     "DSL2 — normale Überwachung"
+    ],
+    [
+     "Dsl3",
+     [
+      "DSL3"
+     ],
+     "DSL3 — extended supervision",
+     "DSL3 — erweiterte Überwachung"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "En1990Snapshot.inspection_level"
+   ],
+   "enum": "InspectionLevel",
+   "doc": "🔍 Inspection level IL1 to IL3 during execution (EN 1990 Annex B Table B5).",
+   "default": "Il2",
+   "variants": [
+    [
+     "Il1",
+     [
+      "IL1"
+     ],
+     "IL1 — reduced inspection",
+     "IL1 — verminderte Inspektion"
+    ],
+    [
+     "Il2",
+     [
+      "IL2"
+     ],
+     "IL2 — normal inspection",
+     "IL2 — normale Inspektion"
+    ],
+    [
+     "Il3",
+     [
+      "IL3"
+     ],
+     "IL3 — extended inspection",
+     "IL3 — erweiterte Inspektion"
+    ]
+   ]
+  }
+ ],
+ "wire": "camel"
+}

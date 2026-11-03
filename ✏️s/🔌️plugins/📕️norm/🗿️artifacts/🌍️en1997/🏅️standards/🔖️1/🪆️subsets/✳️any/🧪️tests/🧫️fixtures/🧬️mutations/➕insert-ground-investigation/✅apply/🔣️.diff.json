@@ -1,0 +1,58 @@
+{
+  "structureId": null,
+  "geotechnicalCategory": null,
+  "designSituation": null,
+  "designApproach": null,
+  "annex": null,
+  "groundwaterLevel": null,
+  "investigationDepth": null,
+  "layers": null,
+  "footings": null,
+  "piles": null,
+  "retainingWalls": null,
+  "slopes": null,
+  "upliftCases": null,
+  "anchors": null,
+  "embeddedWalls": null,
+  "pileGroups": null,
+  "labTests": null,
+  "layerWaters": null,
+  "placements": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "cases": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "investigations": {
+    "removed": [],
+    "inserted": [
+      {
+        "index": 1,
+        "row": {
+          "id": "investigation-2",
+          "positionX": 12.5,
+          "positionY": 8.0,
+          "groundLevel": 100.0,
+          "depth": 12.0,
+          "kind": "borehole",
+          "readings": [
+            {
+              "id": "investigation-reading-1",
+              "depth": 1.0,
+              "measurement": 2000000.0
+            }
+          ]
+        }
+      }
+    ],
+    "moved": [],
+    "modified": []
+  },
+  "characteristicBases": null
+}

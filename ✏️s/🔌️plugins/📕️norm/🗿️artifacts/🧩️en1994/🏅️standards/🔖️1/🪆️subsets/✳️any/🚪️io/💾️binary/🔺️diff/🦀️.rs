@@ -3,4 +3,4 @@
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 
-semio_framework_os_kernel::diff_binary!(semio_s_artifact_norm_en1994_diff::En1994Diff);
+semio_framework_os_kernel::diff_binary!(crate::En1994Diff);

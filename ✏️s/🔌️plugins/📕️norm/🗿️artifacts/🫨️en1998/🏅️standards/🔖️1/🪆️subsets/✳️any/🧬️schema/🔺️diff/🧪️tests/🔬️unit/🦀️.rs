@@ -5,12 +5,12 @@ use protocol::os_spr::protocol_laws::{assert_diff_algebra_inverse_law, assert_mu
 use protocol::DiffAlgebra;
 
 fn base() -> En1998Snapshot {
-    En1998Snapshot::default()
+    En1998Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De)
 }
 
 fn changed() -> En1998Snapshot {
     let mut other = base();
-    other.annex = "en".into();
+    other.annex = semio_s_plugin_norm_compliance::AnnexChoice::En;
     other.site.a_gr += 0.1;
     other.buildings[0].plan_regular = !other.buildings[0].plan_regular;
     other.buildings[0].storeys.remove(1);

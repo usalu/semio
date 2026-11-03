@@ -1,0 +1,6 @@
+{
+  "mutation": "changeMemberFastenerDiameterMm",
+  "buildingId": "bldg-office",
+  "id": "col-c1",
+  "newFastenerDiameterMm": 1.5
+}

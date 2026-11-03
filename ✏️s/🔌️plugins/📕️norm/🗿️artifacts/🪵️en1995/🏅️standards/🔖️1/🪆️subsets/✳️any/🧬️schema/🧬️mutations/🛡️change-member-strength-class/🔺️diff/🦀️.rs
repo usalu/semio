@@ -7,5 +7,5 @@ pub fn diff(payload: &ChangeMemberStrengthClass, base: &En1995Snapshot) -> proto
         return protocol::MutationOutcome::fatal("mutation.invariant", "Unknown member id.", vec![payload.member_id.clone()]);
     };
     let member = &base.members[idx];
-    protocol::MutationOutcome::new(En1995Diff { members: En1995MemberDelta::modification(&member.id, En1995MemberPatch { strength_class: Some(payload.new_value.clone()), ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(En1995Diff { members: En1995MemberDelta::modification(&member.id, En1995MemberPatch { strength_class: Some(payload.new_value), ..Default::default() }), ..Default::default() })
 }

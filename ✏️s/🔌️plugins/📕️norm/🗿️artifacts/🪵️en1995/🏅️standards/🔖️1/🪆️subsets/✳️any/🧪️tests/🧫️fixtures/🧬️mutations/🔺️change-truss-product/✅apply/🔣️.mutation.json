@@ -1,0 +1,6 @@
+{
+  "ChangeTrussProduct": {
+    "trussId": "truss-1",
+    "newValue": "engineered"
+  }
+}

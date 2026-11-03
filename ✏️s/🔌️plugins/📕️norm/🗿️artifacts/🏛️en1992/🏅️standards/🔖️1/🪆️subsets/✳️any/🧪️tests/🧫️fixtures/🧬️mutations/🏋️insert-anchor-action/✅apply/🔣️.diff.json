@@ -1,0 +1,64 @@
+{
+  "annex": null,
+  "reliabilityClass": null,
+  "title": null,
+  "designWorkingLifeYears": null,
+  "deltaCDev": null,
+  "cementType": null,
+  "concreteGrades": null,
+  "reinforcementGrades": null,
+  "prestressSteels": null,
+  "members": null,
+  "anchors": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "anc-1",
+        "patch": {
+          "hEf": null,
+          "cracked": null,
+          "fUk": null,
+          "fYk": null,
+          "aS": null,
+          "d": null,
+          "c1": null,
+          "fCk": null,
+          "headDiameter": null,
+          "actions": {
+            "removed": [],
+            "inserted": [
+              {
+                "index": 1,
+                "row": {
+                  "id": "G-new",
+                  "kind": "Permanent",
+                  "category": "SelfWeight",
+                  "source": "External",
+                  "gKLine": 0.0,
+                  "qKLine": 0.0,
+                  "pointForce": 0.0,
+                  "mK": 0.0,
+                  "nK": 8000.0,
+                  "vK": 4000.0,
+                  "tK": 0.0,
+                  "vKPunch": 0.0
+                }
+              }
+            ],
+            "moved": [],
+            "modified": []
+          }
+        }
+      }
+    ]
+  },
+  "placements": null,
+  "cases": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  }
+}

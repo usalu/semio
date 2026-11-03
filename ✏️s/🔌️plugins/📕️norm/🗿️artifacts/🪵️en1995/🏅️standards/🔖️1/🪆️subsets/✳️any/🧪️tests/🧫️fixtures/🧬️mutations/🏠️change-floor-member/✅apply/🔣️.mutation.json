@@ -1,0 +1,6 @@
+{
+  "ChangeFloorMember": {
+    "floorId": "floor-1",
+    "newValue": "changed-beam-B1"
+  }
+}

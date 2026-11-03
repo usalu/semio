@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-cf-support-reaction/schema.json",
+  "title": "ChangeCfSupportReaction",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newSupportReaction"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Cold-formed member",
+          "de": "Kaltprofil"
+        },
+        "description": {
+          "en": "The cold-formed member this mutation addresses, by id.",
+          "de": "Das adressierte Element (Kaltprofil), per Kennung."
+        },
+        "ref": {
+          "kind": "cold-formed"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newSupportReaction": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Support reaction F_Ed",
+          "de": "Auflagerkraft F_Ed"
+        },
+        "widget": "stepper",
+        "unit": "N",
+        "displayUnit": "kN",
+        "displayFactor": 0.001,
+        "precision": 1,
+        "step": 1000,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

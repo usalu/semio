@@ -1,22 +1,22 @@
 /** 🔁️ The devcontainer's start and attach lifecycle (`.devcontainer/devcontainer.json` `postStartCommand` /
  * `postAttachCommand` → `repo run workspace:setup-devcontainer-start|attach`), with one
- * owned, testable implementation. Start: emoji font fallback, ownership of the persisted home volumes and submodules,
+ * owned, testable implementation. Start: the headless display named by `DISPLAY`, emoji font fallback, ownership of the persisted home volumes and submodules,
  * Claude Code auth storage, git `safe.directory` for the bind-mounted checkout, the SSH commit-signing agent. Attach: the
  * optional F3D viewer. Every external program
  * runs through an injected {@link LifecycleHost} (one argv, never a shell), so each step is exercised against recording
  * hosts on any machine; failures of optional steps are reported and never block the container.
  * https://containers.dev/implementors/json_reference/#lifecycle-scripts */
-import { spawnSync } from "node:child_process";
-import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, symlinkSync, unlinkSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { spawn, spawnSync } from "node:child_process";
+import { accessSync, constants, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, symlinkSync, unlinkSync, writeFileSync } from "node:fs";
+import { homedir, tmpdir, userInfo } from "node:os";
+import { delimiter, join } from "node:path";
 
 /** 📟️ What one external program answered. */
 export type LifecycleAnswer = Readonly<{ status: number; stdout: string; stderr: string }>;
 
 /** 🧩️ Everything the lifecycle touches outside plain files: programs, downloads, time and the log. */
 export type LifecycleHost = Readonly<{
-  run: (command: string, args: readonly string[], options?: Readonly<{ input?: string; cwd?: string; env?: Readonly<Record<string, string>> }>) => LifecycleAnswer;
+  run: (command: string, args: readonly string[], options?: Readonly<{ input?: string; cwd?: string; env?: Readonly<Record<string, string>>; background?: boolean }>) => LifecycleAnswer;
   download: (url: string, destination: string) => Promise<void>;
   fetchJson: (url: string) => Promise<unknown>;
   log: (line: string) => void;
@@ -25,11 +25,25 @@ export type LifecycleHost = Readonly<{
 /** 🗂️ Where the lifecycle works: the checkout, the container user's home, its account, the environment and the CPU. */
 export type LifecycleContext = Readonly<{ workspace: string; home: string; user: string; env: Readonly<Record<string, string | undefined>>; arch: string }>;
 
+/** 🧭 Resolves a program the way a shell would, so a background start can refuse a missing command without waiting on it. */
+function commandCanStart(command: string, env: NodeJS.ProcessEnv): boolean {
+  const candidate = command.includes("/") || command.includes("\\") ? command : "";
+  const names = candidate ? [candidate] : (env.PATH ?? "").split(delimiter).filter(Boolean).map((directory) => join(directory, command));
+  return names.some((path) => { try { accessSync(path, constants.X_OK); return true; } catch { return false; } });
+}
+
 /** 🖥️ The real host: `spawnSync` without a shell, `fetch` for downloads, and stdout for the log. */
 export function processLifecycleHost(): LifecycleHost {
   return {
     run: (command, args, options = {}) => {
-      const answer = spawnSync(command, [...args], { encoding: "utf8", input: options.input, cwd: options.cwd, env: options.env ? { ...process.env, ...options.env } : process.env, shell: false });
+      const env = options.env ? { ...process.env, ...options.env } : process.env;
+      if (options.background) {
+        if (!commandCanStart(command, env)) return { status: -1, stdout: "", stderr: `missing ${command}` };
+        const child = spawn(command, [...args], { detached: true, stdio: "ignore", cwd: options.cwd, env, shell: false });
+        child.unref();
+        return { status: 0, stdout: "", stderr: "" };
+      }
+      const answer = spawnSync(command, [...args], { encoding: "utf8", input: options.input, cwd: options.cwd, env, shell: false });
       return { status: answer.error ? -1 : (answer.status ?? -1), stdout: answer.stdout ?? "", stderr: answer.error ? String(answer.error) : (answer.stderr ?? "") };
     },
     download: async (url, destination) => {
@@ -46,9 +60,9 @@ export function processLifecycleHost(): LifecycleHost {
   };
 }
 
-/** 🐳️ The context of the running container: `containerWorkspaceFolder` (else the repository root), `$HOME`, `$USER`. */
+/** 🐳️ The context of the running container: `containerWorkspaceFolder` (else the repository root), `$HOME` and `$USER`, or the account database when those are unset. */
 export function processLifecycleContext(repoRoot: string): LifecycleContext {
-  return { workspace: process.env.containerWorkspaceFolder ?? repoRoot, home: process.env.HOME ?? "/home/vscode", user: process.env.USER ?? "vscode", env: process.env, arch: process.arch };
+  return { workspace: process.env.containerWorkspaceFolder ?? repoRoot, home: process.env.HOME || homedir(), user: process.env.USER || userInfo().username, env: process.env, arch: process.arch };
 }
 
 //#region 🔤️EmojiFonts
@@ -104,8 +118,8 @@ export const EMOJI_FONTCONFIG = `<?xml version="1.0" encoding="UTF-8"?>
 
 /** 🖋️ Installs {@link EMOJI_FONTCONFIG} system-wide and rebuilds the font cache. */
 export function configureEmojiFonts(host: LifecycleHost): boolean {
-  const written = host.run("sudo", ["mkdir", "-p", "/etc/fonts"]).status === 0 && host.run("sudo", ["tee", "/etc/fonts/local.conf"], { input: EMOJI_FONTCONFIG }).status === 0;
-  const cached = written && host.run("sudo", ["fc-cache", "-f"]).status === 0;
+  const written = host.run("sudo", ["-n", "mkdir", "-p", "/etc/fonts"]).status === 0 && host.run("sudo", ["-n", "tee", "/etc/fonts/local.conf"], { input: EMOJI_FONTCONFIG }).status === 0;
+  const cached = written && host.run("sudo", ["-n", "fc-cache", "-f"]).status === 0;
   host.log(cached ? "✅️ Emoji font fallback configured." : "⚠️  Emoji font fallback could not be configured.");
   return cached;
 }
@@ -124,8 +138,8 @@ export function submodulePaths(host: LifecycleHost, workspace: string): string[]
 
 /** 🏠️ Hands every persisted home volume and every submodule checkout to the container user. */
 export function ownPersistedState(host: LifecycleHost, context: LifecycleContext): void {
-  for (const directory of PERSISTED_HOME_DIRECTORIES) host.run("sudo", ["chown", "-R", `${context.user}:${context.user}`, join(context.home, directory)]);
-  for (const path of submodulePaths(host, context.workspace)) host.run("sudo", ["chown", "-R", `${context.user}:${context.user}`, join(context.workspace, path)]);
+  for (const directory of PERSISTED_HOME_DIRECTORIES) host.run("sudo", ["-n", "chown", "-R", `${context.user}:${context.user}`, join(context.home, directory)]);
+  for (const path of submodulePaths(host, context.workspace)) host.run("sudo", ["-n", "chown", "-R", `${context.user}:${context.user}`, join(context.workspace, path)]);
   host.log("✅️ Fixed ownership for persisted volume mounts and submodules.");
 }
 //#endregion 🔒️Ownership
@@ -240,8 +254,8 @@ async function installDebianPackage(host: LifecycleHost, url: string, name: stri
   try {
     const file = join(directory, `${name}.deb`);
     await host.download(url, file);
-    host.run("sudo", ["apt-get", "update"]);
-    return host.run("sudo", ["apt-get", "install", "-y", file]).status === 0;
+    host.run("sudo", ["-n", "apt-get", "update"]);
+    return host.run("sudo", ["-n", "apt-get", "install", "-y", file]).status === 0;
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }
@@ -260,7 +274,19 @@ export async function installF3d(host: LifecycleHost, context: LifecycleContext)
 
 //#region 🔁️Lifecycle
 /** ▶️ `setup devcontainer start`: fonts, ownership, Claude auth storage, git trust, commit signing. */
+
+/** 🖥️ Starts the headless X server `DISPLAY` names when that socket is not already present. A missing server is reported and does not stop the container. */
+export function ensureHeadlessDisplay(host: LifecycleHost, context: LifecycleContext): void {
+  const display = context.env.DISPLAY ?? "", match = /^:(\d+)$/u.exec(display);
+  if (!match) return;
+  const socket = `/tmp/.X11-unix/X${match[1]}`;
+  if (host.run("test", ["-S", socket]).status === 0) return;
+  const started = host.run("Xvfb", [display, "-screen", "0", "1920x1080x24", "-nolisten", "tcp"], { background: true });
+  host.log(started.status === 0 ? `✅️ Headless display ${display} is accepting connections.` : `⚠️  Headless display ${display} did not start.`);
+}
+
 export function devcontainerStart(host: LifecycleHost, context: LifecycleContext): void {
+  ensureHeadlessDisplay(host, context);
   ownPersistedState(host, context);
   configureEmojiFonts(host);
   normalizeClaudeAuth(context.home);

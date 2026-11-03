@@ -1,0 +1,6 @@
+{
+  "ChangeCraneStressRange": {
+    "id": "crane-1",
+    "newStressRange": 1.5
+  }
+}

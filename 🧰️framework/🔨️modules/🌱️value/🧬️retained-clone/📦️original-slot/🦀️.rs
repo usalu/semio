@@ -73,7 +73,7 @@ static ORIGINAL_SLOT_ISSUANCE:std::sync::atomic::AtomicU64=std::sync::atomic::At
 impl<T> RetainedOriginalSlot<T>{
  pub fn new(original:T)->Self{let mut slot=Self::vacant();slot.original=Some(original);slot}
  /// 🪹️ Admits a fresh sealed resident address without inventing a semantic payload.
- pub fn vacant()->Self{Self{original:None,read:None,issuance:ORIGINAL_SLOT_ISSUANCE.fetch_update(std::sync::atomic::Ordering::Relaxed,std::sync::atomic::Ordering::Relaxed,|issuance|issuance.checked_add(1)).expect("original slot issuance exhausted"),generation:0}}
+ pub fn vacant()->Self{Self{original:None,read:None,issuance:ORIGINAL_SLOT_ISSUANCE.try_update(std::sync::atomic::Ordering::Relaxed,std::sync::atomic::Ordering::Relaxed,|issuance|issuance.checked_add(1)).expect("original slot issuance exhausted"),generation:0}}
  /// 🪟️ Exclusive mutation borrows are available only while the original slot has no immutable source loan.
  pub fn get_mut_unissued(&mut self)->Option<&mut T>{if self.read.is_some(){None}else{self.original.as_mut()}}
  pub fn get(&self)->&T{self.original.as_ref().unwrap_or_else(||self.read.as_ref().expect("original slot retains value or source").get())}

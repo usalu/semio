@@ -1,0 +1,12 @@
+{
+  "InsertPlacement": {
+    "index": 1,
+    "item": {
+      "id": "beam-B1-b",
+      "x": 3.0,
+      "y": 4.0,
+      "z": 0.0,
+      "yaw": 1.5
+    }
+  }
+}

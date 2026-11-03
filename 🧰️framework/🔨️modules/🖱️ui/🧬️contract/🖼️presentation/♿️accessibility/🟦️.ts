@@ -73,6 +73,8 @@ function containerRoleName(role: ContainerRole | undefined): string {
       return "form";
     case "toolbar":
       return "toolbar";
+    case "sheet":
+      return "complementary";
     default:
       return "group";
   }

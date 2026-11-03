@@ -1,3 +1,4 @@
+import {linuxHostLibcV1} from "../../../🎛️commands/🔧️setup/🟦️.ts";
 import {createHash} from "node:crypto";
 import {chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync} from "node:fs";
 import {homedir} from "node:os";
@@ -47,7 +48,7 @@ function provisionedLocation(root: string, toolsRoot: string, platform: NodeJS.P
   try {
     if (locate.family === "native") return join(preparedNativeToolV1(locate.tool, host, toolsRoot), locate.executable + suffix);
     if (locate.family === "bun") {
-      const musl = platform === "linux" && !(process.report?.getReport?.() as {header?: {glibcVersionRuntime?: string}} | undefined)?.header?.glibcVersionRuntime;
+      const musl = platform === "linux" && linuxHostLibcV1() === "musl";
       return join(toolsRoot, "bun", bunDistribution(pin, platform, architecture, musl).sha256, locate.executable + suffix);
     }
     if (locate.family === "bazel") return join(toolsRoot, "bazel", "bin", bazelDistribution(platform, architecture).sha256.slice(0, 16), locate.executable + suffix);

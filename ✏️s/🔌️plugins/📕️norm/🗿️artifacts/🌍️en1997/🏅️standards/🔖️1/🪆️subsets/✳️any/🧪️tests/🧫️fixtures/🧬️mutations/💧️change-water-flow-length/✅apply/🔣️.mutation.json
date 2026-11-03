@@ -1,0 +1,5 @@
+{
+  "mutation": "changeWaterFlowLength",
+  "id": "water-gravel",
+  "newFlowLength": 12.0
+}

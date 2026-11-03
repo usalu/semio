@@ -1,0 +1,6 @@
+{
+  "ChangeSiloBoundaryFactorAxial": {
+    "id": "silo-1",
+    "newBoundaryFactorAxial": 2.0
+  }
+}

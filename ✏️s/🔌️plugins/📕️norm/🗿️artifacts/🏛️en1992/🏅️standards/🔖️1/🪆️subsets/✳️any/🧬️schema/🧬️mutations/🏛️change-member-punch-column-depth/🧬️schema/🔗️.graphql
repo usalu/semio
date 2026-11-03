@@ -1,0 +1,4 @@
+type ChangeMemberPunchColumnDepth {
+  memberId: String!
+  newPunchingColumnDepth: Float!
+}

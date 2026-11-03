@@ -1,0 +1,738 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/compliance/design-case/schema.json",
+  "title": "InputVocabulary",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "artifact",
+    "inputs"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "artifact": {
+      "type": "string"
+    },
+    "inputs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/InputSpec"
+      }
+    }
+  },
+  "definitions": {
+    "InputKind": {
+      "type": "string",
+      "enum": [
+        "number",
+        "vector",
+        "series",
+        "choice",
+        "text"
+      ]
+    },
+    "InputChoice": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value",
+        "en",
+        "de"
+      ],
+      "properties": {
+        "value": {
+          "type": "string",
+          "minLength": 1,
+          "x-semio-rust": {
+            "type": "&'static str"
+          }
+        },
+        "en": {
+          "type": "string",
+          "minLength": 1,
+          "x-semio-rust": {
+            "type": "&'static str"
+          }
+        },
+        "de": {
+          "type": "string",
+          "minLength": 1,
+          "x-semio-rust": {
+            "type": "&'static str"
+          }
+        }
+      },
+      "x-semio-rust": {
+        "doc": [
+          "🔽️ One selectable value of a choice input with its bilingual label."
+        ],
+        "derive": [
+          "Clone",
+          "Copy",
+          "Debug",
+          "PartialEq",
+          "Eq"
+        ]
+      }
+    },
+    "InputSpec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "key",
+        "scope",
+        "kind",
+        "en",
+        "de"
+      ],
+      "properties": {
+        "key": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "scope": {
+          "type": "string",
+          "description": "Comma separated catalogue ids the row applies to; empty applies to every entry."
+        },
+        "kind": {
+          "$ref": "#/definitions/InputKind"
+        },
+        "en": {
+          "type": "string",
+          "minLength": 1
+        },
+        "de": {
+          "type": "string",
+          "minLength": 1
+        },
+        "unit": {
+          "type": "string",
+          "description": "Unit symbol of the compliance unit vocabulary in which a number is stored."
+        },
+        "unitId": {
+          "type": "string",
+          "description": "Variant name of the compliance UnitId."
+        },
+        "min": {
+          "type": "number"
+        },
+        "max": {
+          "type": "number"
+        },
+        "confidence": {
+          "type": "string",
+          "enum": [
+            "high",
+            "medium",
+            "low"
+          ],
+          "description": "How certain the unit, bounds and labels are: derived from the evaluator code and a spec table (high), from names and clause context (medium), from the key name only (low)."
+        },
+        "note": {
+          "type": "string",
+          "description": "Why the unit or label was inferred; the review hint for the owner."
+        },
+        "lever": {
+          "type": "boolean",
+          "description": "Raising the input raises the capacity roughly in proportion; used for sizing remedies."
+        },
+        "example": {
+          "description": "Value seeded when a case is added: a number for number inputs, a choice value for choices.",
+          "type": [
+            "number",
+            "string"
+          ]
+        },
+        "choices": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/InputChoice"
+          }
+        }
+      }
+    },
+    "CaseEntryGeometry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "width",
+        "height"
+      ],
+      "properties": {
+        "width": {
+          "type": "string"
+        },
+        "height": {
+          "type": "string"
+        }
+      }
+    },
+    "CaseEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "part",
+        "clause",
+        "en",
+        "de",
+        "inputs"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "x-semio-rust": {
+            "type": "&'static str"
+          }
+        },
+        "part": {
+          "type": "string",
+          "x-semio-rust": {
+            "type": "&'static str"
+          }
+        },
+        "clause": {
+          "type": "string",
+          "x-semio-rust": {
+            "type": "&'static str"
+          }
+        },
+        "en": {
+          "type": "string",
+          "minLength": 1,
+          "x-semio-rust": {
+            "type": "&'static str"
+          }
+        },
+        "de": {
+          "type": "string",
+          "minLength": 1,
+          "x-semio-rust": {
+            "type": "&'static str"
+          }
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-semio-rust": {
+            "type": "&'static [&'static str]"
+          }
+        },
+        "geometry": {
+          "$ref": "#/definitions/CaseEntryGeometry",
+          "x-semio-rust": {
+            "type": "CaseGeometry"
+          }
+        }
+      },
+      "x-semio-rust": {
+        "doc": [
+          "🗂️ One catalogue entry as the bridge sees it: identity, clause, bilingual title, declared input keys and optional geometry."
+        ],
+        "derive": [
+          "Clone",
+          "Copy",
+          "Debug",
+          "PartialEq"
+        ]
+      }
+    },
+    "CaseNumber": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "value"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "value": {
+          "type": "number"
+        }
+      }
+    },
+    "CaseText": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "value"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      }
+    },
+    "CaseRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "labelEn",
+        "labelDe",
+        "entryId",
+        "numbers",
+        "texts"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "labelEn": {
+          "type": "string"
+        },
+        "labelDe": {
+          "type": "string"
+        },
+        "entryId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "numbers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CaseNumber"
+          }
+        },
+        "texts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CaseText"
+          }
+        }
+      }
+    },
+    "CaseNumberPatch": {
+      "title": "CaseNumberPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CaseNumber/properties/value"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "CaseNumberRemoval": {
+      "title": "CaseNumberRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "CaseNumberInsertion": {
+      "title": "CaseNumberInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "$ref": "#/definitions/CaseNumber"
+        }
+      }
+    },
+    "CaseNumberRelocation": {
+      "title": "CaseNumberRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "CaseNumberModification": {
+      "title": "CaseNumberModification",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/definitions/CaseNumberPatch"
+        }
+      }
+    },
+    "CaseNumberDelta": {
+      "title": "CaseNumberDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "inserted",
+        "moved",
+        "modified"
+      ],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CaseNumberRemoval"
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CaseNumberInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CaseNumberRelocation"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CaseNumberModification"
+          }
+        }
+      }
+    },
+    "CaseTextPatch": {
+      "title": "CaseTextPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CaseText/properties/value"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "CaseTextRemoval": {
+      "title": "CaseTextRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "CaseTextInsertion": {
+      "title": "CaseTextInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "$ref": "#/definitions/CaseText"
+        }
+      }
+    },
+    "CaseTextRelocation": {
+      "title": "CaseTextRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "CaseTextModification": {
+      "title": "CaseTextModification",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/definitions/CaseTextPatch"
+        }
+      }
+    },
+    "CaseTextDelta": {
+      "title": "CaseTextDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "inserted",
+        "moved",
+        "modified"
+      ],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CaseTextRemoval"
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CaseTextInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CaseTextRelocation"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CaseTextModification"
+          }
+        }
+      }
+    },
+    "CaseRowPatch": {
+      "title": "CaseRowPatch",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "labelEn": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CaseRow/properties/labelEn"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "labelDe": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CaseRow/properties/labelDe"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "entryId": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/CaseRow/properties/entryId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "numbers": {
+          "$ref": "#/definitions/CaseNumberDelta"
+        },
+        "texts": {
+          "$ref": "#/definitions/CaseTextDelta"
+        }
+      }
+    },
+    "CaseRowRemoval": {
+      "title": "CaseRowRemoval",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "index"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "CaseRowInsertion": {
+      "title": "CaseRowInsertion",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "row"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "$ref": "#/definitions/CaseRow"
+        }
+      }
+    },
+    "CaseRowRelocation": {
+      "title": "CaseRowRelocation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "from": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "to": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "CaseRowModification": {
+      "title": "CaseRowModification",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "patch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "patch": {
+          "$ref": "#/definitions/CaseRowPatch"
+        }
+      }
+    },
+    "CaseRowDelta": {
+      "title": "CaseRowDelta",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "removed",
+        "inserted",
+        "moved",
+        "modified"
+      ],
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CaseRowRemoval"
+          }
+        },
+        "inserted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CaseRowInsertion"
+          }
+        },
+        "moved": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CaseRowRelocation"
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CaseRowModification"
+          }
+        }
+      }
+    }
+  },
+  "x-semio-twin": {
+    "emoji": "🗂️",
+    "summary": "the typed input vocabulary of an artifact's catalogue, plus the neutral design-case rows artifacts embed"
+  }
+}

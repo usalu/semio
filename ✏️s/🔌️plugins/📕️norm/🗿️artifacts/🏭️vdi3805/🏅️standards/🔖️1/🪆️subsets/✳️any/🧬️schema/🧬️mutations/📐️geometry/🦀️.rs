@@ -9,22 +9,8 @@ extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
 //#region 🪢️Mounts
-#[path = "../📈️add-curve/🦀️.rs"]
-pub mod add_curve;
-#[path = "../🧊️add-geometry/🦀️.rs"]
-pub mod add_geometry;
-#[path = "../🔌️add-geometry-connection/🦀️.rs"]
-pub mod add_geometry_connection;
 #[path = "../📍️change-curve-points/🦀️.rs"]
 pub mod change_curve_points;
-#[path = "../🧮️change-geometry-parameters/🦀️.rs"]
-pub mod change_geometry_parameters;
-#[path = "../📉️remove-curve/🦀️.rs"]
-pub mod remove_curve;
-#[path = "../🚮️remove-geometry/🦀️.rs"]
-pub mod remove_geometry;
-#[path = "../✂️remove-geometry-connection/🦀️.rs"]
-pub mod remove_geometry_connection;
-#[path = "../📐️resize-geometry/🦀️.rs"]
-pub mod resize_geometry;
 //#endregion 🪢️Mounts
+
+pub use semio_s_artifact_norm_vdi3805_mut_geometry_more::{change_geometry_parameters, remove_curve, remove_geometry, remove_geometry_connection, resize_geometry, add_curve, add_geometry, add_geometry_connection};

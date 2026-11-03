@@ -1,0 +1,5 @@
+type ChangeAnchorActionKind {
+  anchorId: String!
+  actionId: String!
+  newKind: ActionKind!
+}

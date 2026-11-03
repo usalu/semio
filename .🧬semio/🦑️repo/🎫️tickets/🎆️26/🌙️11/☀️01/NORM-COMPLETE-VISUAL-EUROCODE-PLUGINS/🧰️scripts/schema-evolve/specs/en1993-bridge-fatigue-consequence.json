@@ -1,0 +1,14 @@
+{
+  "artifact": "en1993",
+  "leaf": {
+    "kindSlug": "bridge",
+    "default": "Low",
+    "field": {
+      "name": "consequence",
+      "type": "enum",
+      "label": {"en": "Consequence class of failure", "de": "Schadensfolgeklasse"},
+      "doc": "🌉 Consequence class of a fatigue failure of the bridge detail for the partial factor γ_Mf of EN 1993-1-9 Table 3.1: with the assessment method it selects one of the four registry rows ndp.en1993.1-9.gamma-mf.<method>.<consequence>.",
+      "enum": {"name": "FatigueConsequence"}
+    }
+  }
+}

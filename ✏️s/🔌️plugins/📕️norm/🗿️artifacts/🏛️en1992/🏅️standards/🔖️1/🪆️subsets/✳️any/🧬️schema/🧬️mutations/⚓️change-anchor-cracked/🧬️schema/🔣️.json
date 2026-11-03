@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-anchor-cracked/schema.json",
+  "title": "ChangeAnchorCracked",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "anchorId",
+    "newCracked"
+  ],
+  "properties": {
+    "anchorId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Anchor",
+          "de": "Dübel"
+        },
+        "description": {
+          "en": "The anchor this mutation addresses, by id.",
+          "de": "Das adressierte Element (Dübel), per Kennung."
+        },
+        "ref": {
+          "kind": "anchor"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newCracked": {
+      "type": "boolean",
+      "x-semio-ui": {
+        "label": {
+          "en": "Cracked concrete",
+          "de": "Gerissener Beton"
+        },
+        "widget": "toggle",
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

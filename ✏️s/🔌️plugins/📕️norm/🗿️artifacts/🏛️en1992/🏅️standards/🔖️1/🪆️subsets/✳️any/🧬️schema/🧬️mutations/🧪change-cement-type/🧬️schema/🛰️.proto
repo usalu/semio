@@ -1,4 +1,5 @@
 syntax = "proto3";
+package semio.s.norm.en1992.mutation.change_cement_type;
 message ChangeCementType {
-  string newCementType = 1;
+  CementClass new_cement_type = 1;
 }

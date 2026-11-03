@@ -1,0 +1,6 @@
+{
+  "ChangeMemberRadiationShift": {
+    "id": "member-b1",
+    "newRadiationShift": 1.5
+  }
+}

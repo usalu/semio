@@ -1,0 +1,6 @@
+{
+  "ChangeRotatingMachineEccentricity": {
+    "id": "rotating-machine-1",
+    "newEccentricity": 3.0
+  }
+}

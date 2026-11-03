@@ -1,0 +1,46 @@
+//! ✏️ `change-tower-base-rot-stiff-nm` mutation leaf.
+
+use semio_s_artifact_norm_en1998_model::En1998Snapshot;
+
+#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[mutation_leaf(contract = ::protocol)]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
+#[value(rename_all = "camelCase")]
+pub struct ChangeTowerBaseRotStiffNm {
+    pub id: String,
+    pub new_base_rotational_stiffness_nm: f64,
+}
+
+impl<Op> protocol::MutationKind<En1998Snapshot, Op> for ChangeTowerBaseRotStiffNm where Op: protocol::Mutation<En1998Snapshot, Diff = semio_s_artifact_norm_en1998_diff::En1998Diff> + From<crate::change_tower_base_rot_stiff_nm::ChangeTowerBaseRotStiffNm> {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor {
+        verb: "change",
+        entity: "tower-base-rotational-stiffness-nm",
+        kind: "change-tower-base-rot-stiff-nm",
+        record: "ChangeTowerBaseRotStiffNm",
+    };
+
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
+        semio_framework_ui_locale::LocalizedLabel::native("Change Rotational stiffness of the foundation under the tower base in N·m per rad (0 = fixed base)", "Drehfedersteifigkeit der Gründung unter dem Turmfuß in N·m je rad (0 = Einspannung) ändern")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["change-tower-base-rot-stiff-nm".into()]
+    }
+}
+
+impl<Op> protocol::ColdMutationKind<En1998Snapshot, Op> for ChangeTowerBaseRotStiffNm where Op: protocol::ColdMutation<En1998Snapshot, ReferenceDiff = semio_s_artifact_norm_en1998_diff::En1998Diff> + From<crate::change_tower_base_rot_stiff_nm::ChangeTowerBaseRotStiffNm> {
+    fn diff(&self, base: &En1998Snapshot) -> protocol::MutationOutcome<<Op as protocol::ColdMutation<En1998Snapshot>>::ReferenceDiff> {
+        crate::change_tower_base_rot_stiff_nm::diff::diff(self, base)
+    }
+    fn inverse(&self, base: &En1998Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        crate::change_tower_base_rot_stiff_nm::inverse::inverse(self, base)
+    }
+}
+
+//#region 🪢️Mounts
+#[path = "🔺️diff/🦀️.rs"]
+pub mod diff;
+#[path = "↩️inverse/🦀️.rs"]
+pub mod inverse;
+//#endregion 🪢️Mounts

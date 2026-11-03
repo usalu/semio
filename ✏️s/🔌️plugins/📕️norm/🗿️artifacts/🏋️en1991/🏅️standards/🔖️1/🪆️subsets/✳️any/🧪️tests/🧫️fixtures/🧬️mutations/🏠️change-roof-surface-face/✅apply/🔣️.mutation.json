@@ -1,0 +1,6 @@
+{
+  "ChangeRoofSurfaceFace": {
+    "id": "roof-surface-1",
+    "newFace": "x-alt"
+  }
+}

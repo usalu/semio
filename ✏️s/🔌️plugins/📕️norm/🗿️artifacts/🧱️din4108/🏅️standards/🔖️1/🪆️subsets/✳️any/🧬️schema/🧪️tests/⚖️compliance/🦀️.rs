@@ -10,7 +10,6 @@ use semio_s_artifact_norm_din4108_model::{Din4108Snapshot, EnvelopeElement, Laye
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 use std::path::PathBuf;
-use std::process::Command;
 
 fn family_any_dir() -> PathBuf {
     fixture_path!("../../🏅️standards/🔖️1/🪆️subsets/✳️any")
@@ -243,8 +242,8 @@ async fn field_meta_covers_every_editable_leaf_on_default_snapshot() {
         let meta = din4108_field_meta(&wild)
             .or_else(|| din4108_field_meta(path))
             .unwrap_or_else(|| panic!("missing field meta for editable leaf '{path}' (wild='{wild}')"));
-        assert!(!meta.label_en.trim().is_empty(), "{path} missing label_en");
-        assert!(!meta.label_de.trim().is_empty(), "{path} missing label_de");
+        assert!(!meta.label.en.trim().is_empty(), "{path} missing label_en");
+        assert!(!meta.label.de.trim().is_empty(), "{path} missing label_de");
         let leaf = path.rsplit(['.', '[']).next().unwrap_or(path).trim_end_matches(']');
         let needs_unit = matches!(
             leaf,
@@ -269,9 +268,9 @@ async fn field_meta_covers_every_editable_leaf_on_default_snapshot() {
                 | "lengthM"
         );
         if needs_unit {
-            assert!(meta.unit.is_some(), "{path} requires SI unit");
+            assert!(meta.unit().is_some(), "{path} requires SI unit");
         }
-        if let Some(choices) = meta.choices {
+        if let Some(choices) = meta.choices() {
             for choice in choices.iter() {
                 assert!(!choice.label_en.is_empty() && !choice.label_de.is_empty(), "{path} choice missing labels");
                 assert!(
@@ -373,7 +372,7 @@ async fn python_oracle_matches_rust_u_s_r_frsi_glaser_within_half_percent() {
         let report_path = tmp.join(format!("{name}.report.json"));
         std::fs::write(&snap_path, serde_json::to_string_pretty(&doc).expect("snap")).unwrap();
         std::fs::write(&report_path, serde_json::to_string_pretty(&report).expect("report")).unwrap();
-        let output = Command::new("python3")
+        let output = semio_s_plugin_norm_compliance::python_oracle::command()
             .arg(&oracle)
             .arg("--report")
             .arg(&snap_path)
@@ -401,7 +400,7 @@ async fn jsonschema_validates_default_and_failing_snapshots() {
         let snap = tmp.join(format!("{name}.schema.snap.json"));
         let json = serde_json::to_string_pretty(&doc).unwrap();
         std::fs::write(&snap, &json).unwrap();
-        let output = Command::new("python3").arg(&validate).arg(&schema).arg(&snap).output().expect("jsonschema spawn");
+        let output = semio_s_plugin_norm_compliance::python_oracle::command().arg(&validate).arg(&schema).arg(&snap).output().expect("jsonschema spawn");
         assert!(
             output.status.success(),
             "{name} jsonschema: {}",
@@ -480,7 +479,7 @@ fn perturb_json_leaf(value: &mut serde_json::Value, path: &str) -> bool {
         }
         serde_json::Value::String(s) => {
             if let Some(m) = meta {
-                if let Some(choices) = m.choices {
+                if let Some(choices) = m.choices() {
                     if let Some(alt) = choices.iter().map(|c| c.value).find(|v| *v != s.as_str()) {
                         *s = alt.to_string();
                         return true;

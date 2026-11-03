@@ -1,0 +1,5 @@
+{
+  "mutation": "changeFatigueDeltaSigmaC",
+  "fatigueDetailId": "fat-1",
+  "newDeltaSigmaC": 142000000.0
+}

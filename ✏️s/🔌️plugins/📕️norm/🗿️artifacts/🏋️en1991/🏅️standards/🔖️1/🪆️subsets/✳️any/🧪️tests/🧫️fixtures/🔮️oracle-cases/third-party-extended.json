@@ -1,0 +1,173 @@
+{
+  "$schema": "../../../../../../../../../🔮️oracles/🏃️harness/🧬️schema/🔣️.json",
+  "schemaVersion": 1,
+  "artifact": "en1991",
+  "annex": "de",
+  "cases": [
+    {
+      "id": "en1991.4.janssen-wheat-deep",
+      "check": "en1991.4.janssen-pressure",
+      "citation": {
+        "standard": "EN 1991-4",
+        "edition": "2004",
+        "clause": "EN 1991-4 5.2.1.2 Eq. 5.3, 5.4 (slice equilibrium)"
+      },
+      "inputs": {
+        "gamma": 9000.0,
+        "a_m": 1.0,
+        "mu": 0.4,
+        "K": 0.5,
+        "depth": 6.0
+      },
+      "expected": {
+        "p_hf": {
+          "value": 15723.130231973892,
+          "unit": "Pa",
+          "profile": "numerical-v1"
+        },
+        "p_vf": {
+          "value": 31446.260463947783,
+          "unit": "Pa",
+          "profile": "numerical-v1"
+        },
+        "p_wf": {
+          "value": 6289.252092789557,
+          "unit": "Pa",
+          "profile": "numerical-v1"
+        },
+        "p_ho": {
+          "value": 22500.0,
+          "unit": "Pa",
+          "profile": "numerical-v1"
+        },
+        "z_o": {
+          "value": 5.0,
+          "unit": "m",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.4.janssen-cement-shallow",
+      "check": "en1991.4.janssen-pressure",
+      "citation": {
+        "standard": "EN 1991-4",
+        "edition": "2004",
+        "clause": "EN 1991-4 5.2.1.2 Eq. 5.3, 5.4 (slice equilibrium)"
+      },
+      "inputs": {
+        "gamma": 16000.0,
+        "a_m": 0.75,
+        "mu": 0.5,
+        "K": 0.45,
+        "depth": 2.0
+      },
+      "expected": {
+        "p_hf": {
+          "value": 10828.52073374275,
+          "unit": "Pa",
+          "profile": "numerical-v1"
+        },
+        "p_vf": {
+          "value": 24063.379408317218,
+          "unit": "Pa",
+          "profile": "numerical-v1"
+        },
+        "p_wf": {
+          "value": 5414.260366871375,
+          "unit": "Pa",
+          "profile": "numerical-v1"
+        },
+        "p_ho": {
+          "value": 24000.0,
+          "unit": "Pa",
+          "profile": "numerical-v1"
+        },
+        "z_o": {
+          "value": 3.3333333333333335,
+          "unit": "m",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.4.janssen-deep-asymptote",
+      "check": "en1991.4.janssen-pressure",
+      "citation": {
+        "standard": "EN 1991-4",
+        "edition": "2004",
+        "clause": "EN 1991-4 5.2.1.2 Eq. 5.3, 5.4 (slice equilibrium)"
+      },
+      "inputs": {
+        "gamma": 8000.0,
+        "a_m": 1.2,
+        "mu": 0.35,
+        "K": 0.55,
+        "depth": 30.0
+      },
+      "expected": {
+        "p_hf": {
+          "value": 27205.645289431286,
+          "unit": "Pa",
+          "profile": "numerical-v1"
+        },
+        "p_vf": {
+          "value": 49464.80961714779,
+          "unit": "Pa",
+          "profile": "numerical-v1"
+        },
+        "p_wf": {
+          "value": 9521.97585130095,
+          "unit": "Pa",
+          "profile": "numerical-v1"
+        },
+        "p_ho": {
+          "value": 27428.57142857143,
+          "unit": "Pa",
+          "profile": "numerical-v1"
+        },
+        "z_o": {
+          "value": 6.233766233766233,
+          "unit": "m",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    }
+  ]
+}

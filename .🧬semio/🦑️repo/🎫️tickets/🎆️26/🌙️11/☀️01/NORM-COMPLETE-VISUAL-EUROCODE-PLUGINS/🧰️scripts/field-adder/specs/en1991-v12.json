@@ -1,0 +1,212 @@
+{
+ "artifact": "en1991",
+ "collections": [
+  {
+   "camel": "footbridges",
+   "entity": "Footbridge",
+   "table": "footbridge",
+   "after": "craneHoists",
+   "emoji": "🚶",
+   "doc": "Footbridge deck with loaded length, width and first vertical natural frequency: uniform load q_fk = 2.0 + 120/(L + 30) kN/m² within 2.5 to 5.0 (EN 1991-2, 5.3.2.1), horizontal force Q_flk and the walking-resonance range of the vertical mode (5.7).",
+   "label_en": "Footbridges",
+   "label_de": "Fußgängerbrücken",
+   "id_en": "Footbridge id",
+   "id_de": "Fußgängerbrücken-Id",
+   "fields": [
+    {
+     "name": "loaded_length",
+     "ty": "f64",
+     "en": "Loaded length L",
+     "de": "Belastete Länge L",
+     "unit": "m",
+     "step": 1
+    },
+    {
+     "name": "deck_width",
+     "ty": "f64",
+     "en": "Deck width b",
+     "de": "Deckbreite b",
+     "unit": "m",
+     "step": 0.1
+    },
+    {
+     "name": "natural_frequency",
+     "ty": "f64",
+     "en": "First vertical natural frequency f_v",
+     "de": "Erste vertikale Eigenfrequenz f_v",
+     "unit": "Hz",
+     "step": 0.05
+    }
+   ],
+   "kit": {
+    "id": "footbridge",
+    "en": "Footbridge",
+    "de": "Fußgängerbrücke",
+    "icon": "footprints",
+    "scene_kind": "Surface"
+   }
+  },
+  {
+   "camel": "railDynamics",
+   "entity": "RailDynamic",
+   "table": "rail_dynamic",
+   "after": "footbridges",
+   "emoji": "🚆",
+   "doc": "Railway span with its determinant length L_Φ and track maintenance: the dynamic factor Φ_2 (careful maintenance) or Φ_3 (standard maintenance) of EN 1991-2, 6.4.5.2.",
+   "label_en": "Rail dynamic factors",
+   "label_de": "Dynamische Beiwerte Eisenbahn",
+   "id_en": "Rail span id",
+   "id_de": "Eisenbahnfeld-Id",
+   "fields": [
+    {
+     "name": "determinant_length",
+     "ty": "f64",
+     "en": "Determinant length L_Φ",
+     "de": "Maßgebende Länge L_Φ",
+     "unit": "m",
+     "step": 1
+    },
+    {
+     "name": "maintenance",
+     "ty": "String",
+     "en": "Track maintenance (careful or standard)",
+     "de": "Gleisunterhaltung (sorgfältig oder normal)"
+    }
+   ],
+   "kit": {
+    "id": "railDynamic",
+    "en": "Rail span",
+    "de": "Eisenbahnfeld",
+    "icon": "train-track",
+    "scene_kind": "Surface"
+   }
+  },
+  {
+   "camel": "loadDispersals",
+   "entity": "LoadDispersal",
+   "table": "load_dispersal",
+   "after": "railDynamics",
+   "emoji": "📐",
+   "doc": "Wheel load spreading at 45 degrees through pavement and half the slab to the mid-plane (EN 1991-2, 4.3.6): the footprint used by punching checks.",
+   "label_en": "Load dispersals",
+   "label_de": "Lastausbreitungen",
+   "id_en": "Dispersal id",
+   "id_de": "Lastausbreitungs-Id",
+   "fields": [
+    {
+     "name": "wheel_length",
+     "ty": "f64",
+     "en": "Wheel contact length",
+     "de": "Radaufstandslänge",
+     "unit": "m",
+     "step": 0.05
+    },
+    {
+     "name": "wheel_width",
+     "ty": "f64",
+     "en": "Wheel contact width",
+     "de": "Radaufstandsbreite",
+     "unit": "m",
+     "step": 0.05
+    },
+    {
+     "name": "pavement_thickness",
+     "ty": "f64",
+     "en": "Pavement thickness t_p",
+     "de": "Belagdicke t_p",
+     "unit": "m",
+     "step": 0.01
+    },
+    {
+     "name": "slab_thickness",
+     "ty": "f64",
+     "en": "Slab thickness t_s",
+     "de": "Plattendicke t_s",
+     "unit": "m",
+     "step": 0.01
+    }
+   ],
+   "kit": {
+    "id": "loadDispersal",
+    "en": "Load dispersal",
+    "de": "Lastausbreitung",
+    "icon": "scan",
+    "scene_kind": "Surface"
+   }
+  },
+  {
+   "camel": "bulkSolids",
+   "entity": "BulkSolid",
+   "table": "bulk_solid",
+   "after": "loadDispersals",
+   "emoji": "🌾",
+   "doc": "Bulk solid with its angle of internal friction: the lateral pressure ratio K = 1 - sin(phi_i) and its mean K_m = 1.1 K (EN 1991-4, Annex E).",
+   "label_en": "Bulk solids",
+   "label_de": "Schüttgüter",
+   "id_en": "Bulk solid id",
+   "id_de": "Schüttgut-Id",
+   "fields": [
+    {
+     "name": "internal_friction",
+     "ty": "f64",
+     "en": "Angle of internal friction φ_i",
+     "de": "Innerer Reibungswinkel φ_i",
+     "unit": "rad",
+     "step": 0.0174532925
+    }
+   ],
+   "kit": {
+    "id": "bulkSolid",
+    "en": "Bulk solid",
+    "de": "Schüttgut",
+    "icon": "wheat",
+    "scene_kind": "Surface"
+   }
+  },
+  {
+   "camel": "rotatingMachines",
+   "entity": "RotatingMachine",
+   "table": "rotating_machine",
+   "after": "bulkSolids",
+   "emoji": "⚙️",
+   "doc": "Rotating machine with unbalanced mass, eccentricity and rotation frequency: the equivalent static force F_dyn = m e omega^2 (EN 1991-3, 5).",
+   "label_en": "Rotating machines",
+   "label_de": "Rotierende Maschinen",
+   "id_en": "Machine id",
+   "id_de": "Maschinen-Id",
+   "fields": [
+    {
+     "name": "mass",
+     "ty": "f64",
+     "en": "Rotating (unbalanced) mass m",
+     "de": "Rotierende (unwuchtige) Masse m",
+     "unit": "kg",
+     "step": 1
+    },
+    {
+     "name": "eccentricity",
+     "ty": "f64",
+     "en": "Eccentricity e",
+     "de": "Exzentrizität e",
+     "unit": "m",
+     "step": 0.001
+    },
+    {
+     "name": "frequency",
+     "ty": "f64",
+     "en": "Rotation frequency f",
+     "de": "Drehfrequenz f",
+     "unit": "Hz",
+     "step": 0.5
+    }
+   ],
+   "kit": {
+    "id": "rotatingMachine",
+    "en": "Rotating machine",
+    "de": "Rotierende Maschine",
+    "icon": "cog",
+    "scene_kind": "Surface"
+   }
+  }
+ ]
+}

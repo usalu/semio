@@ -1,0 +1,6 @@
+{
+  "ChangeTowerBendingStiffness": {
+    "id": "tw-1",
+    "newBendingStiffness": 1.5
+  }
+}

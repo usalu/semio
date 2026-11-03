@@ -16,6 +16,9 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-s-artifact-norm-en1995-spec-trace = { workspace = true }
+semio-s-artifact-norm-en1995-schema-timber = { workspace = true }
+serde = { workspace = true, optional = true }
 semio-framework-dsl-record = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-dsl-record-derive = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
@@ -26,9 +29,13 @@ semio-framework-schema-state = { path = "../../../../../../../../../../../../�
 semio-framework-value = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-norm-en1995-diff = { workspace = true }
+semio-s-artifact-norm-en1995-kernel = { workspace = true }
 semio-s-artifact-norm-en1995-model = { workspace = true }
 semio-s-artifact-norm-en1995-mutations = { workspace = true }
 semio-s-plugin-norm-compliance = { workspace = true }
+
+[features]
+test-support = ["dep:serde", "semio-s-artifact-norm-en1995-diff/test-support", "semio-s-artifact-norm-en1995-model/test-support", "semio-s-artifact-norm-en1995-mutations/test-support", "semio-s-plugin-norm-compliance/test-support"]
 
 [dev-dependencies]
 semio-s-artifact-norm-en1995-examples = { workspace = true }

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeMemberDimensionTolerance",
+  "id": "beam-B1",
+  "newDimensionTolerance": 1.5
+}

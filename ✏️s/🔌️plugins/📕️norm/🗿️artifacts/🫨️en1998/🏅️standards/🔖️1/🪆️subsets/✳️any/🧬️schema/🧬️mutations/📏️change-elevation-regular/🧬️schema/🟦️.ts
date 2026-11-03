@@ -1,12 +1,12 @@
 /** 📏️ `change-elevation-regular` wire twin: the leaf payload `ChangeElevationRegular`, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
- * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
+ * by `repo ./📜️script.ts schema twins generate`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
-import { normWireBoolean, normWireInteger, normWireLiteral, normWireObject, normWireRange, type NormWireReader, normWireRequired } from "@semio-tech/norm-js/registry/contract";
+import { normWireBoolean, normWireLiteral, normWireObject, normWireRequired, normWireString, type NormWireReader } from "@semio-tech/norm-js/registry/contract";
 
 export interface ChangeElevationRegular {
   mutation: "changeElevationRegular";
-  buildingIndex: number;
+  id: string;
   newElevationRegular: boolean;
 }
 
-export const parseChangeElevationRegular: NormWireReader<ChangeElevationRegular> = normWireObject<ChangeElevationRegular>({ mutation: normWireRequired(normWireLiteral("changeElevationRegular")), buildingIndex: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), newElevationRegular: normWireRequired(normWireBoolean) });
+export const parseChangeElevationRegular: NormWireReader<ChangeElevationRegular> = normWireObject<ChangeElevationRegular>({ mutation: normWireRequired(normWireLiteral("changeElevationRegular")), id: normWireRequired(normWireString), newElevationRegular: normWireRequired(normWireBoolean) });

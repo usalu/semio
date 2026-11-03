@@ -1,3 +1,4 @@
+import {spawnSync} from "node:child_process";
 import {accessSync,constants,statSync} from "node:fs";
 import {delimiter,isAbsolute,join} from "node:path";
 import policy from "./🔣️.json" with {type:"json"};
@@ -6,6 +7,7 @@ import policy from "./🔣️.json" with {type:"json"};
 export interface BrowserSystemPortV1 {
  readonly platform:string;
  readonly root:boolean;
+ readonly escalate:boolean;
  resolve(name:string):string|null;
  isFile(path:string):boolean;
 }
@@ -14,21 +16,26 @@ export type BrowserDependencyCommandV1=(command:string,args:readonly string[],en
 
 /** 🖥️ Resolves executable host tools using only the caller's explicit environment. */
 export function browserSystemPortV1(environment:Readonly<Record<string,string|undefined>>):BrowserSystemPortV1 {
- return {platform:process.platform,root:process.getuid?.()===0,resolve(name){
+ const resolve=(name:string):string|null=>{
   for(const directory of (environment.PATH??"").split(delimiter)){
    if(!isAbsolute(directory))continue;
    const path=join(directory,name);
    try{accessSync(path,constants.X_OK);if(statSync(path).isFile())return path;}catch(error){if(!["ENOENT","ENOTDIR","EACCES"].includes((error as NodeJS.ErrnoException).code??""))throw error;}
   }
   return null;
- },isFile(path){try{return statSync(path).isFile();}catch(error){if(["ENOENT","ENOTDIR"].includes((error as NodeJS.ErrnoException).code??""))return false;throw error;}}};
+ };
+ const root=process.getuid?.()===0;
+ const sudo=process.platform==="linux"&&!root?resolve("sudo"):null;
+ let escalate=process.platform!=="linux"||root;
+ if(sudo){try{escalate=spawnSync(sudo,["-n","true"],{stdio:"ignore"}).status===0;}catch{escalate=false;}}
+ return {platform:process.platform,root,escalate,resolve,isFile(path){try{return statSync(path).isFile();}catch(error){if(["ENOENT","ENOTDIR"].includes((error as NodeJS.ErrnoException).code??""))return false;throw error;}}};
 }
 
-/** 🌐️ Installs required Linux libraries before downloading Chromium through the same bounded command port. */
+/** 🌐️ Installs Linux browser libraries when noninteractive privileges exist, then downloads Chromium through the same bounded command port. */
 export async function prepareBrowserDependenciesV1(port:BrowserSystemPortV1,execute:BrowserDependencyCommandV1,runtime:string,cli:string,environment:Readonly<Record<string,string|undefined>>,signal:AbortSignal,offline:boolean):Promise<void> {
  signal.throwIfAborted();
  if(offline)throw Error("Browser provisioning requires online authority");
- if(port.platform==="linux"){
+ if(port.platform==="linux"&&port.escalate!==false){
   if(!port.isFile(cli))throw Error("Playwright CLI required");
   let manager:string|undefined,executable:string|null=null;
   for(const candidate of policy.order){const resolved=port.resolve(candidate);if(resolved){manager=candidate;executable=resolved;break;}}
@@ -46,6 +53,7 @@ export async function prepareBrowserDependenciesV1(port:BrowserSystemPortV1,exec
   await execute(command,args,bounded);
   signal.throwIfAborted();
  }
+ if(port.platform==="linux"&&port.escalate===false&&!port.isFile(cli))throw Error("Playwright CLI required");
  await execute(runtime,[cli,"install","chromium"],environment);
  signal.throwIfAborted();
 }

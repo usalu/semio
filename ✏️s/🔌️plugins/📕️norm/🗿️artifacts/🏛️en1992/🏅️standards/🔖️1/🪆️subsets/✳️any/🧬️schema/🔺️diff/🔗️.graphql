@@ -1,254 +1,490 @@
-# 🧬️ En1992 diff schema — keyed sparse diff: scalar setters, id/index/key keyed row diffs and per-field section patches.
+scalar JSON
 
-type En1992ConcreteGradesPatch {
-  fCk: Float
+type En1992Diff {
+  annex: JSON
+  title: JSON
+  designWorkingLifeYears: JSON
+  deltaCDev: JSON
+  cementType: JSON
+  concreteGrades: En1992ConcreteGradesRows
+  reinforcementGrades: En1992ReinforcementGradesRows
+  prestressSteels: En1992PrestressSteelsRows
+  members: En1992MembersRows
+  anchors: En1992AnchorsRows
+  placements: En1992PlacementsRows
+  cases: CaseRowDelta!
+  reliabilityClass: JSON
 }
-
-type En1992ConcreteGradesRemoved {
-  id: String!
-  index: Int!
-}
-
-type En1992ConcreteGradesInserted {
-  index: Int!
-  row: ConcreteGrade!
-}
-
-type En1992ConcreteGradesMoved {
-  id: String!
-  from: Int!
-  to: Int!
-}
-
-type En1992ConcreteGradesModified {
-  id: String!
-  patch: En1992ConcreteGradesPatch!
-}
-
-type En1992ConcreteGradesRows {
-  removed: [En1992ConcreteGradesRemoved!]!
-  inserted: [En1992ConcreteGradesInserted!]!
-  moved: [En1992ConcreteGradesMoved!]!
-  modified: [En1992ConcreteGradesModified!]!
-}
-
-type En1992ReinforcementGradesPatch {
-  fYk: Float
-}
-
-type En1992ReinforcementGradesRemoved {
-  id: String!
-  index: Int!
-}
-
-type En1992ReinforcementGradesInserted {
-  index: Int!
-  row: ReinforcementGrade!
-}
-
-type En1992ReinforcementGradesMoved {
-  id: String!
-  from: Int!
-  to: Int!
-}
-
-type En1992ReinforcementGradesModified {
-  id: String!
-  patch: En1992ReinforcementGradesPatch!
-}
-
-type En1992ReinforcementGradesRows {
-  removed: [En1992ReinforcementGradesRemoved!]!
-  inserted: [En1992ReinforcementGradesInserted!]!
-  moved: [En1992ReinforcementGradesMoved!]!
-  modified: [En1992ReinforcementGradesModified!]!
-}
-
-type En1992PrestressSteelsPatch {
-  name: String
-  fPk: Float
-  fP01k: Float
-}
-
-type En1992PrestressSteelsRemoved {
-  id: String!
-  index: Int!
-}
-
-type En1992PrestressSteelsInserted {
-  index: Int!
-  row: PrestressSteel!
-}
-
-type En1992PrestressSteelsMoved {
-  id: String!
-  from: Int!
-  to: Int!
-}
-
-type En1992PrestressSteelsModified {
-  id: String!
-  patch: En1992PrestressSteelsPatch!
-}
-
-type En1992PrestressSteelsRows {
-  removed: [En1992PrestressSteelsRemoved!]!
-  inserted: [En1992PrestressSteelsInserted!]!
-  moved: [En1992PrestressSteelsMoved!]!
-  modified: [En1992PrestressSteelsModified!]!
-}
-
-type En1992MembersLongitudinalPatch {
-  diameter: Float
-  count: Int
-}
-
-type En1992MembersLongitudinalRemoved {
-  id: String!
-  index: Int!
-}
-
-type En1992MembersLongitudinalInserted {
-  index: Int!
-  row: BarLayer!
-}
-
-type En1992MembersLongitudinalMoved {
-  id: String!
-  from: Int!
-  to: Int!
-}
-
-type En1992MembersLongitudinalModified {
-  id: String!
-  patch: En1992MembersLongitudinalPatch!
-}
-
-type En1992MembersLongitudinalRows {
-  removed: [En1992MembersLongitudinalRemoved!]!
-  inserted: [En1992MembersLongitudinalInserted!]!
-  moved: [En1992MembersLongitudinalMoved!]!
-  modified: [En1992MembersLongitudinalModified!]!
-}
-
-type En1992MembersActionsPatch {
-  mK: Float
-  nK: Float
-  vK: Float
-}
-
-type En1992MembersActionsRemoved {
-  id: String!
-  index: Int!
-}
-
-type En1992MembersActionsInserted {
+type En1992AnchorsActionsInserted {
   index: Int!
   row: LoadCaseActions!
 }
-
-type En1992MembersActionsMoved {
+type En1992AnchorsActionsModified {
+  id: String!
+  patch: En1992AnchorsActionsPatch!
+}
+type En1992AnchorsActionsMoved {
   id: String!
   from: Int!
   to: Int!
 }
-
-type En1992MembersActionsModified {
-  id: String!
-  patch: En1992MembersActionsPatch!
+type En1992AnchorsActionsPatch {
+  kind: JSON
+  category: JSON
+  source: JSON
+  gKLine: JSON
+  qKLine: JSON
+  pointForce: JSON
+  mK: JSON
+  nK: JSON
+  vK: JSON
+  tK: JSON
+  vKPunch: JSON
 }
-
-type En1992MembersActionsRows {
-  removed: [En1992MembersActionsRemoved!]!
-  inserted: [En1992MembersActionsInserted!]!
-  moved: [En1992MembersActionsMoved!]!
-  modified: [En1992MembersActionsModified!]!
-}
-
-type En1992MembersPatch {
-  exposure: ExposureClass
-  width: Float
-  height: Float
-  effectiveDepth: Float
-  cover: Float
-  span: Float
-  fireRating: FireRating
-  fireAxisDistance: Float
-  stirrupsSpacing: Float
-  longitudinal: En1992MembersLongitudinalRows
-  actions: En1992MembersActionsRows
-}
-
-type En1992MembersRemoved {
+type En1992AnchorsActionsRemoved {
   id: String!
   index: Int!
 }
-
-type En1992MembersInserted {
-  index: Int!
-  row: RcMember!
+type En1992AnchorsActionsRows {
+  removed: [En1992AnchorsActionsRemoved!]!
+  inserted: [En1992AnchorsActionsInserted!]!
+  moved: [En1992AnchorsActionsMoved!]!
+  modified: [En1992AnchorsActionsModified!]!
 }
-
-type En1992MembersMoved {
-  id: String!
-  from: Int!
-  to: Int!
-}
-
-type En1992MembersModified {
-  id: String!
-  patch: En1992MembersPatch!
-}
-
-type En1992MembersRows {
-  removed: [En1992MembersRemoved!]!
-  inserted: [En1992MembersInserted!]!
-  moved: [En1992MembersMoved!]!
-  modified: [En1992MembersModified!]!
-}
-
-type En1992AnchorsPatch {
-  hEf: Float
-  aS: Float
-}
-
-type En1992AnchorsRemoved {
-  id: String!
-  index: Int!
-}
-
 type En1992AnchorsInserted {
   index: Int!
   row: Anchor!
 }
-
+type En1992AnchorsModified {
+  id: String!
+  patch: En1992AnchorsPatch!
+}
 type En1992AnchorsMoved {
   id: String!
   from: Int!
   to: Int!
 }
-
-type En1992AnchorsModified {
-  id: String!
-  patch: En1992AnchorsPatch!
+type En1992AnchorsPatch {
+  hEf: JSON
+  cracked: JSON
+  fUk: JSON
+  fYk: JSON
+  aS: JSON
+  d: JSON
+  c1: JSON
+  fCk: JSON
+  headDiameter: JSON
+  actions: En1992AnchorsActionsRows
 }
-
+type En1992AnchorsRemoved {
+  id: String!
+  index: Int!
+}
 type En1992AnchorsRows {
   removed: [En1992AnchorsRemoved!]!
   inserted: [En1992AnchorsInserted!]!
   moved: [En1992AnchorsMoved!]!
   modified: [En1992AnchorsModified!]!
 }
-
-type En1992Diff {
-  annex: AnnexChoice @state(class: ARTIFACT)
-  title: String @state(class: ARTIFACT)
-  designWorkingLifeYears: Float @state(class: ARTIFACT)
-  deltaCDev: Float @state(class: ARTIFACT)
-  cementType: String @state(class: ARTIFACT)
-  concreteGrades: En1992ConcreteGradesRows @state(class: ARTIFACT)
-  reinforcementGrades: En1992ReinforcementGradesRows @state(class: ARTIFACT)
-  prestressSteels: En1992PrestressSteelsRows @state(class: ARTIFACT)
-  members: En1992MembersRows @state(class: ARTIFACT)
-  anchors: En1992AnchorsRows @state(class: ARTIFACT)
+type En1992ConcreteGradesInserted {
+  index: Int!
+  row: ConcreteGrade!
+}
+type En1992ConcreteGradesModified {
+  id: String!
+  patch: En1992ConcreteGradesPatch!
+}
+type En1992ConcreteGradesMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1992ConcreteGradesPatch {
+  name: JSON
+  fCk: JSON
+}
+type En1992ConcreteGradesRemoved {
+  id: String!
+  index: Int!
+}
+type En1992ConcreteGradesRows {
+  removed: [En1992ConcreteGradesRemoved!]!
+  inserted: [En1992ConcreteGradesInserted!]!
+  moved: [En1992ConcreteGradesMoved!]!
+  modified: [En1992ConcreteGradesModified!]!
+}
+type En1992MembersActionsInserted {
+  index: Int!
+  row: LoadCaseActions!
+}
+type En1992MembersActionsModified {
+  id: String!
+  patch: En1992MembersActionsPatch!
+}
+type En1992MembersActionsMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1992MembersActionsPatch {
+  kind: JSON
+  category: JSON
+  source: JSON
+  gKLine: JSON
+  qKLine: JSON
+  pointForce: JSON
+  mK: JSON
+  nK: JSON
+  vK: JSON
+  tK: JSON
+  vKPunch: JSON
+}
+type En1992MembersActionsRemoved {
+  id: String!
+  index: Int!
+}
+type En1992MembersActionsRows {
+  removed: [En1992MembersActionsRemoved!]!
+  inserted: [En1992MembersActionsInserted!]!
+  moved: [En1992MembersActionsMoved!]!
+  modified: [En1992MembersActionsModified!]!
+}
+type En1992MembersBarsInserted {
+  index: Int!
+  row: BarPoint!
+}
+type En1992MembersBarsModified {
+  id: String!
+  patch: En1992MembersBarsPatch!
+}
+type En1992MembersBarsMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1992MembersBarsPatch {
+  layerId: JSON
+  y: JSON
+  z: JSON
+  diameter: JSON
+  length: JSON
+  bend: JSON
+}
+type En1992MembersBarsRemoved {
+  id: String!
+  index: Int!
+}
+type En1992MembersBarsRows {
+  removed: [En1992MembersBarsRemoved!]!
+  inserted: [En1992MembersBarsInserted!]!
+  moved: [En1992MembersBarsMoved!]!
+  modified: [En1992MembersBarsModified!]!
+}
+type En1992MembersInserted {
+  index: Int!
+  row: RcMember!
+}
+type En1992MembersLongitudinalInserted {
+  index: Int!
+  row: BarLayer!
+}
+type En1992MembersLongitudinalModified {
+  id: String!
+  patch: En1992MembersLongitudinalPatch!
+}
+type En1992MembersLongitudinalMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1992MembersLongitudinalPatch {
+  diameter: JSON
+  count: JSON
+  position: JSON
+  anchorageLength: JSON
+  lapLength: JSON
+  bondCondition: JSON
+  aggregateSize: JSON
+  lapShare: JSON
+}
+type En1992MembersLongitudinalRemoved {
+  id: String!
+  index: Int!
+}
+type En1992MembersLongitudinalRows {
+  removed: [En1992MembersLongitudinalRemoved!]!
+  inserted: [En1992MembersLongitudinalInserted!]!
+  moved: [En1992MembersLongitudinalMoved!]!
+  modified: [En1992MembersLongitudinalModified!]!
+}
+type En1992MembersModified {
+  id: String!
+  patch: En1992MembersPatch!
+}
+type En1992MembersMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1992MembersPatch {
+  labelEn: JSON
+  labelDe: JSON
+  kind: JSON
+  concreteGradeId: JSON
+  reinforcementGradeId: JSON
+  prestressSteelId: JSON
+  exposure: JSON
+  width: JSON
+  height: JSON
+  effectiveDepth: JSON
+  cover: JSON
+  span: JSON
+  support: JSON
+  bucklingLength: JSON
+  stirrupsDiameter: JSON
+  stirrupsSpacing: JSON
+  stirrupsLegs: JSON
+  punchingColumnWidth: JSON
+  punchingColumnDepth: JSON
+  punchingColumnPosition: JSON
+  punchingAsw: JSON
+  prestressForce: JSON
+  prestressArea: JSON
+  prestressEccentricity: JSON
+  prestressLossRatio: JSON
+  fireRating: JSON
+  fireAxisDistance: JSON
+  fireSlabSystem: JSON
+  useFem: JSON
+  udl: JSON
+  deflectionSensitive: JSON
+  hdOverH: JSON
+  liquidSigmaS: JSON
+  liquidRhoPEff: JSON
+  liquidFCtEff: JSON
+  liquidSRMax: JSON
+  bridgeSigmaC: JSON
+  bridgeDeltaSigmaS: JSON
+  relativeHumidity: JSON
+  bearingWidth: JSON
+  tightness: JSON
+  clearTightness: Boolean
+  longitudinal: En1992MembersLongitudinalRows
+  actions: En1992MembersActionsRows
+  sectionPoints: En1992MembersSectionPointsRows
+  bars: En1992MembersBarsRows
+  tendonPoints: En1992MembersTendonPointsRows
+  studRows: En1992MembersStudRowsRows
+}
+type En1992MembersRemoved {
+  id: String!
+  index: Int!
+}
+type En1992MembersRows {
+  removed: [En1992MembersRemoved!]!
+  inserted: [En1992MembersInserted!]!
+  moved: [En1992MembersMoved!]!
+  modified: [En1992MembersModified!]!
+}
+type En1992MembersSectionPointsInserted {
+  index: Int!
+  row: SectionPoint!
+}
+type En1992MembersSectionPointsModified {
+  id: String!
+  patch: En1992MembersSectionPointsPatch!
+}
+type En1992MembersSectionPointsMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1992MembersSectionPointsPatch {
+  y: JSON
+  z: JSON
+}
+type En1992MembersSectionPointsRemoved {
+  id: String!
+  index: Int!
+}
+type En1992MembersSectionPointsRows {
+  removed: [En1992MembersSectionPointsRemoved!]!
+  inserted: [En1992MembersSectionPointsInserted!]!
+  moved: [En1992MembersSectionPointsMoved!]!
+  modified: [En1992MembersSectionPointsModified!]!
+}
+type En1992MembersStudRowsInserted {
+  index: Int!
+  row: StudRow!
+}
+type En1992MembersStudRowsModified {
+  id: String!
+  patch: En1992MembersStudRowsPatch!
+}
+type En1992MembersStudRowsMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1992MembersStudRowsPatch {
+  angle: JSON
+  count: JSON
+  spacingFirst: JSON
+  spacingRadial: JSON
+  diameter: JSON
+}
+type En1992MembersStudRowsRemoved {
+  id: String!
+  index: Int!
+}
+type En1992MembersStudRowsRows {
+  removed: [En1992MembersStudRowsRemoved!]!
+  inserted: [En1992MembersStudRowsInserted!]!
+  moved: [En1992MembersStudRowsMoved!]!
+  modified: [En1992MembersStudRowsModified!]!
+}
+type En1992MembersTendonPointsInserted {
+  index: Int!
+  row: TendonPoint!
+}
+type En1992MembersTendonPointsModified {
+  id: String!
+  patch: En1992MembersTendonPointsPatch!
+}
+type En1992MembersTendonPointsMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1992MembersTendonPointsPatch {
+  x: JSON
+  y: JSON
+  z: JSON
+}
+type En1992MembersTendonPointsRemoved {
+  id: String!
+  index: Int!
+}
+type En1992MembersTendonPointsRows {
+  removed: [En1992MembersTendonPointsRemoved!]!
+  inserted: [En1992MembersTendonPointsInserted!]!
+  moved: [En1992MembersTendonPointsMoved!]!
+  modified: [En1992MembersTendonPointsModified!]!
+}
+type En1992PlacementsInserted {
+  index: Int!
+  row: LoadCaseActions!
+}
+type En1992PlacementsModified {
+  id: String!
+  patch: En1992PlacementsPatch!
+}
+type En1992PlacementsMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1992PlacementsPatch {
+  x: JSON
+  y: JSON
+  z: JSON
+  yaw: JSON
+}
+type En1992PlacementsRemoved {
+  id: String!
+  index: Int!
+}
+type En1992PlacementsRows {
+  removed: [En1992PlacementsRemoved!]!
+  inserted: [En1992PlacementsInserted!]!
+  moved: [En1992PlacementsMoved!]!
+  modified: [En1992PlacementsModified!]!
+}
+type En1992PrestressSteelsInserted {
+  index: Int!
+  row: PrestressSteel!
+}
+type En1992PrestressSteelsModified {
+  id: String!
+  patch: En1992PrestressSteelsPatch!
+}
+type En1992PrestressSteelsMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1992PrestressSteelsPatch {
+  name: JSON
+  fPk: JSON
+  fP01k: JSON
+}
+type En1992PrestressSteelsRemoved {
+  id: String!
+  index: Int!
+}
+type En1992PrestressSteelsRows {
+  removed: [En1992PrestressSteelsRemoved!]!
+  inserted: [En1992PrestressSteelsInserted!]!
+  moved: [En1992PrestressSteelsMoved!]!
+  modified: [En1992PrestressSteelsModified!]!
+}
+type En1992ReinforcementGradesInserted {
+  index: Int!
+  row: ReinforcementGrade!
+}
+type En1992ReinforcementGradesModified {
+  id: String!
+  patch: En1992ReinforcementGradesPatch!
+}
+type En1992ReinforcementGradesMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1992ReinforcementGradesPatch {
+  name: JSON
+  fYk: JSON
+  eS: JSON
+  ductility: JSON
+  k: JSON
+  epsUk: JSON
+}
+type En1992ReinforcementGradesRemoved {
+  id: String!
+  index: Int!
+}
+type En1992ReinforcementGradesRows {
+  removed: [En1992ReinforcementGradesRemoved!]!
+  inserted: [En1992ReinforcementGradesInserted!]!
+  moved: [En1992ReinforcementGradesMoved!]!
+  modified: [En1992ReinforcementGradesModified!]!
+}
+type En1992MembersOpeningsInserted {
+  index: Int!
+  row: LoadCaseActions!
+}
+type En1992MembersOpeningsModified {
+  id: String!
+  patch: En1992MembersOpeningsPatch!
+}
+type En1992MembersOpeningsMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1992MembersOpeningsPatch {
+  x: JSON
+  y: JSON
+  width: JSON
+  depth: JSON
+}
+type En1992MembersOpeningsRemoved {
+  id: String!
+  index: Int!
+}
+type En1992MembersOpeningsRows {
+  removed: [En1992MembersOpeningsRemoved!]!
+  inserted: [En1992MembersOpeningsInserted!]!
+  moved: [En1992MembersOpeningsMoved!]!
+  modified: [En1992MembersOpeningsModified!]!
 }

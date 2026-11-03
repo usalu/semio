@@ -1,0 +1,5 @@
+{
+  "mutation": "changeBuildingPlanEnvGapRatio",
+  "id": "bldg-office",
+  "newPlanEnvelopeGapRatio": 1.5
+}

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeWaterWellRadius",
+  "id": "water-gravel",
+  "newWellRadius": 1.5
+}

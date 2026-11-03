@@ -1,0 +1,7 @@
+{
+  "ChangeCfActionForce": {
+    "id": "cf-1",
+    "elementId": "cf-g",
+    "newForce": 30000.0
+  }
+}

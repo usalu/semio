@@ -303,6 +303,7 @@ pub fn key_action_from_dispatch(key: &str, pressed: bool) -> Option<semio_framew
         "PageUp" => Some(K::PageUp),
         "PageDown" => Some(K::PageDown),
         "Tab" => Some(K::Tab),
+        "ContextMenu" => Some(K::ContextMenu),
         _ if key.len() >= 2 && key.starts_with('F') && key[1..].chars().all(|c| c.is_ascii_digit()) => key[1..].parse::<u8>().ok().map(K::Function),
         _ if key.chars().count() == 1 => Some(K::Char(key.to_string())),
         _ => None,

@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-sheet-welded/schema.json",
+  "title": "ChangeSheetWelded",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "coldFormedId",
+    "newWelded"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeSheetWelded"
+    },
+    "coldFormedId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Cold formed",
+          "de": "Kaltgeformtes Blech"
+        },
+        "description": {
+          "en": "The cold formed this mutation addresses, by id.",
+          "de": "Das adressierte Element (Kaltgeformtes Blech), per Kennung."
+        },
+        "ref": {
+          "kind": "cold-formed"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newWelded": {
+      "type": "boolean",
+      "x-semio-ui": {
+        "label": {
+          "en": "Welded",
+          "de": "Geschweißt"
+        },
+        "widget": "toggle",
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

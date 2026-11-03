@@ -19,7 +19,7 @@ async fn inference_determinism_law() {
     use semio_s_artifact_norm_en1992_inferences::En1992Inference;
     use semio_s_artifact_norm_en1992_model::En1992Snapshot;
     use protocol::Inference;
-    let snapshot = En1992Snapshot::default();
+    let snapshot = En1992Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De);
     assert_eq!(En1992Inference::infer(&snapshot).expect("valid materialized inference fixture"), En1992Inference::infer(&snapshot).expect("valid materialized inference fixture"));
 }
 
@@ -28,5 +28,5 @@ async fn inference_default_law() {
     use semio_s_artifact_norm_en1992_inferences::En1992Inference;
     use semio_s_artifact_norm_en1992_model::En1992Snapshot;
     use protocol::Inference;
-    assert_eq!(En1992Inference::infer(&En1992Snapshot::default()).expect("valid materialized inference fixture"), En1992Inference::default());
+    assert_eq!(En1992Inference::infer(&En1992Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De)).expect("valid materialized inference fixture"), En1992Inference::default());
 }

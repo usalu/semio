@@ -1,0 +1,6 @@
+{
+  "ChangeBeamSheetingRibsParallel": {
+    "id": "beam-B1",
+    "newRibsParallelToBeam": true
+  }
+}

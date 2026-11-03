@@ -1,0 +1,6 @@
+syntax = "proto3";
+package semio.s.norm.en1992.mutation.change_member_stirrups_legs;
+message ChangeMemberStirrupsLegs {
+  string member_id = 1;
+  uint32 new_stirrups_legs = 2;
+}

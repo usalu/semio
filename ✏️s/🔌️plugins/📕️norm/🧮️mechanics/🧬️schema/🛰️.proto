@@ -1,0 +1,277 @@
+syntax = "proto3";
+package semio.norm.mechanics;
+
+message Pair {
+  double x = 1;
+  double y = 2;
+}
+
+enum LoadFrame {
+  GLOBAL = 0;
+  LOCAL = 1;
+}
+
+enum MassType {
+  CONSISTENT = 0;
+  LUMPED = 1;
+}
+
+message Node {
+  string id = 1;
+  double x = 2;
+  double y = 3;
+  double z = 4;
+}
+
+message Material {
+  string id = 1;
+  double e = 2;
+  double g = 3;
+  double rho = 4;
+}
+
+message Section {
+  string id = 1;
+  double a = 2;
+  double iy = 3;
+  double iz = 4;
+  double j = 5;
+  double iw = 6;
+  double asy = 7;
+  double asz = 8;
+}
+
+message Member {
+  string id = 1;
+  string nodeI = 2;
+  string nodeJ = 3;
+  string material = 4;
+  string section = 5;
+  double roll = 6;
+  repeated bool releaseI = 7;
+  repeated bool releaseJ = 8;
+  bool shearDeformable = 9;
+}
+
+message Support {
+  string node = 1;
+  repeated bool fixed = 2;
+  repeated double spring = 3;
+  repeated double prescribed = 4;
+}
+
+message NodalLoad {
+  string node = 1;
+  repeated double force = 2;
+}
+
+message DistributedLoad {
+  string member = 1;
+  LoadFrame frame = 2;
+  repeated double start = 3;
+  repeated double end = 4;
+}
+
+message TemperatureLoad {
+  string member = 1;
+  double alpha = 2;
+  double uniform = 3;
+  double gradientY = 4;
+  double gradientZ = 5;
+}
+
+message LoadCase {
+  string id = 1;
+  repeated NodalLoad nodal = 2;
+  repeated DistributedLoad distributed = 3;
+  repeated TemperatureLoad temperature = 4;
+  repeated double acceleration = 5;
+}
+
+message NodalMass {
+  string node = 1;
+  repeated double mass = 2;
+}
+
+message Model {
+  repeated Node nodes = 1;
+  repeated Material materials = 2;
+  repeated Section sections = 3;
+  repeated Member members = 4;
+  repeated Support supports = 5;
+  repeated LoadCase loadCases = 6;
+  repeated NodalMass masses = 7;
+  bool selfMass = 8;
+}
+
+message NodeDisplacement {
+  string node = 1;
+  repeated double u = 2;
+}
+
+message Reaction {
+  string node = 1;
+  repeated double force = 2;
+}
+
+message DiagramPoint {
+  double x = 1;
+  double n = 2;
+  double vy = 3;
+  double vz = 4;
+  double t = 5;
+  double my = 6;
+  double mz = 7;
+}
+
+message MemberForces {
+  string member = 1;
+  double length = 2;
+  repeated double endI = 3;
+  repeated double endJ = 4;
+  repeated DiagramPoint diagram = 5;
+}
+
+message StaticResult {
+  string case = 1;
+  repeated NodeDisplacement displacements = 2;
+  repeated Reaction reactions = 3;
+  repeated MemberForces members = 4;
+}
+
+message BucklingMode {
+  double alphaCr = 1;
+  repeated NodeDisplacement shape = 2;
+}
+
+message BucklingResult {
+  string case = 1;
+  repeated BucklingMode modes = 2;
+}
+
+message ModalMode {
+  double omega = 1;
+  double frequencyHz = 2;
+  repeated double participation = 3;
+  repeated double effectiveMass = 4;
+  repeated double effectiveMassRatio = 5;
+  repeated NodeDisplacement shape = 6;
+}
+
+message ModalResult {
+  repeated double totalMass = 1;
+  repeated ModalMode modes = 2;
+}
+
+message LtbEnd {
+  bool lateral = 1;
+  bool twist = 2;
+  bool minorRotation = 3;
+  bool warping = 4;
+}
+
+message LtbRestraint {
+  double x = 1;
+  bool lateral = 2;
+  bool twist = 3;
+}
+
+message LtbMember {
+  double length = 1;
+  double e = 2;
+  double g = 3;
+  double iz = 4;
+  double iw = 5;
+  double j = 6;
+  double polarRadiusSq = 7;
+  double wagner = 8;
+  double axial = 9;
+  LtbEnd endI = 10;
+  LtbEnd endJ = 11;
+  repeated LtbRestraint restraints = 12;
+  Vec<(f64 moment = 13;
+  Vec<(f64 lineLoad = 14;
+  Vec<(f64 pointLoads = 15;
+  double loadHeight = 16;
+  uint64 elements = 17;
+}
+
+message LtbShapePoint {
+  double x = 1;
+  double lateral = 2;
+  double twist = 3;
+}
+
+message LtbResult {
+  double alphaCr = 1;
+  double mcr = 2;
+  repeated LtbShapePoint shape = 3;
+}
+
+enum SectionMethod {
+  FINITE_ELEMENT = 0;
+  THIN_WALLED = 1;
+}
+
+message SectionOptions {
+  double cellsAcrossWall = 1;
+  double maxEdge = 2;
+  uint64 maxTriangles = 3;
+}
+
+message ThinWall {
+  double y1 = 1;
+  double z1 = 2;
+  double y2 = 3;
+  double z2 = 4;
+  double thickness = 5;
+}
+
+message SectionConstants {
+  double area = 1;
+  double centroidY = 2;
+  double centroidZ = 3;
+  double iy = 4;
+  double iz = 5;
+  double iyz = 6;
+  double iMajor = 7;
+  double iMinor = 8;
+  double j = 9;
+  double iw = 10;
+  double shearCentreY = 11;
+  double shearCentreZ = 12;
+  double aVy = 13;
+  double aVz = 14;
+  double wElYPos = 15;
+  double wElYNeg = 16;
+  double wElZPos = 17;
+  double wElZNeg = 18;
+  double wPlY = 19;
+  double wPlZ = 20;
+  double poisson = 21;
+  SectionMethod method = 22;
+  uint64 triangles = 23;
+  uint64 nodes = 24;
+  double maxEdge = 25;
+}
+
+message Progress {
+  string stage = 1;
+  double fraction = 2;
+}
+
+enum MechanicsErrorKind {
+  CANCELLED = 0;
+  INVALID = 1;
+  SINGULAR = 2;
+  UNSTABLE = 3;
+  NO_POSITIVE_EIGENVALUE = 4;
+  NO_CONVERGENCE = 5;
+}
+
+message MechanicsError {
+  MechanicsErrorKind kind = 1;
+  string message = 2;
+  string node = 3;
+  uint64 dof = 4;
+}

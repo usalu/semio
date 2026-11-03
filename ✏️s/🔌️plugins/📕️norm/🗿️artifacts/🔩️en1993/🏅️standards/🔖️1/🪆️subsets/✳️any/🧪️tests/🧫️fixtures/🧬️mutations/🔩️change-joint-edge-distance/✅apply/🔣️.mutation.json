@@ -1,0 +1,6 @@
+{
+  "ChangeJointEdgeDistance": {
+    "id": "joint-j1",
+    "newEdgeDistance": 0.08
+  }
+}

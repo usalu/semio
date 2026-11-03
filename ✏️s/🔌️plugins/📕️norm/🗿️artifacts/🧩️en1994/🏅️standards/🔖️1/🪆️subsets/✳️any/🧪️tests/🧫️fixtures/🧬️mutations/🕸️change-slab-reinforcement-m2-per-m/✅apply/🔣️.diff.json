@@ -1,0 +1,44 @@
+{
+  "annex": null,
+  "reliabilityClass": "RC2",
+  "cases": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "structureKind": null,
+  "steelFYPa": null,
+  "beams": null,
+  "columns": null,
+  "slabs": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "slab-S1",
+        "patch": {
+          "spanM": null,
+          "support": null,
+          "sheetingProfile": null,
+          "sheetingHeightM": null,
+          "sheetingRibWidthM": null,
+          "sheetingThicknessM": null,
+          "sheetingRibsParallelToBeam": null,
+          "concreteThicknessM": null,
+          "fCkPa": null,
+          "mFactor": null,
+          "kFactor": null,
+          "asM2PerM": 0.0003125,
+          "actions": null
+        }
+      }
+    ]
+  },
+  "placements": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "studs": null,
+  "fireRating": null,
+  "insulationThicknessM": null,
+  "fatigueDetail": null
+}

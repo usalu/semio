@@ -1,0 +1,107 @@
+{
+  "annex": null,
+  "reliabilityClass": null,
+  "members": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "connections": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "placements": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "tapers": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "cutouts": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "fasteners": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "panels": {
+    "removed": [],
+    "inserted": [
+      {
+        "index": 0,
+        "row": {
+          "id": "panel-1",
+          "strengthClass": "c24",
+          "layers": [
+            {
+              "id": "layer-1",
+              "thicknessM": 0.04,
+              "orientation": "longitudinal",
+              "grade": "C24"
+            },
+            {
+              "id": "layer-2",
+              "thicknessM": 0.04,
+              "orientation": "transverse",
+              "grade": "C24"
+            },
+            {
+              "id": "layer-3",
+              "thicknessM": 0.04,
+              "orientation": "longitudinal",
+              "grade": "C24"
+            },
+            {
+              "id": "layer-4",
+              "thicknessM": 0.04,
+              "orientation": "transverse",
+              "grade": "C24"
+            },
+            {
+              "id": "layer-5",
+              "thicknessM": 0.04,
+              "orientation": "longitudinal",
+              "grade": "C24"
+            }
+          ],
+          "spanM": 5.0,
+          "widthM": 1.0,
+          "loadPa": 5000.0,
+          "fireDurationS": 3600.0
+        }
+      }
+    ],
+    "moved": [],
+    "modified": []
+  },
+  "floors": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "diaphragms": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "trusses": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "bracings": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "decks": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "ulsEquation": null,
+  "cases": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-member-kind/schema.json",
+  "title": "ChangeMemberKind",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "memberId",
+    "newKind"
+  ],
+  "properties": {
+    "memberId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Member",
+          "de": "Bauteil"
+        },
+        "description": {
+          "en": "The member this mutation addresses, by id.",
+          "de": "Das adressierte Element (Bauteil), per Kennung."
+        },
+        "ref": {
+          "kind": "member"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newKind": {
+      "type": "string",
+      "enum": [
+        "Beam",
+        "Slab",
+        "Column",
+        "Wall",
+        "FlatSlab",
+        "RibbedSlab",
+        "TensionMember",
+        "Bridge",
+        "LiquidRetaining"
+      ],
+      "x-semio-ui": {
+        "label": {
+          "en": "kind",
+          "de": "Art"
+        },
+        "widget": "select",
+        "role": "value",
+        "group": "value",
+        "order": 20
+      },
+      "x-semio-rust": {
+        "type": "semio_s_artifact_norm_en1992_model::MemberKind"
+      }
+    }
+  }
+}

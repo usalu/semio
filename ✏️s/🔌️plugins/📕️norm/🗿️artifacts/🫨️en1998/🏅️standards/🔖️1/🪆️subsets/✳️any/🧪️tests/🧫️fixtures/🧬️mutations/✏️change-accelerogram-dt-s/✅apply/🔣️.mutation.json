@@ -1,0 +1,5 @@
+{
+  "mutation": "changeAccelerogramDtS",
+  "id": "acc-1",
+  "newDtS": 0.04
+}

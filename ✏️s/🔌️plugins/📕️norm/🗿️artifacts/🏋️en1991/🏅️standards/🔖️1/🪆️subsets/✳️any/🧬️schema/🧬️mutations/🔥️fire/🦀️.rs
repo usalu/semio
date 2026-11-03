@@ -17,12 +17,6 @@ pub mod change_assumed_h_net;
 pub mod change_assumed_qf_d;
 #[path = "../📉change-fire-curve/🦀️.rs"]
 pub mod change_fire_curve;
-#[path = "../⏱️change-fire-duration/🦀️.rs"]
-pub mod change_fire_duration;
-#[path = "../⛽change-fire-load-density-qf/🦀️.rs"]
-pub mod change_fire_load_density_qf;
-#[path = "../🔥change-fire-mode/🦀️.rs"]
-pub mod change_fire_mode;
-#[path = "../🏢change-fire-occupancy/🦀️.rs"]
-pub mod change_fire_occupancy;
 //#endregion 🪢️Mounts
+
+pub use semio_s_artifact_norm_en1991_mut_fire_more::{change_fire_duration, change_fire_load_density_qf, change_fire_mode, change_fire_occupancy, change_fire_load_basis};

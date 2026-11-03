@@ -1,0 +1,7 @@
+{
+  "ChangeTendonPointX": {
+    "memberId": "wall-W1",
+    "tendonPointId": "tp-1",
+    "newX": 1.5
+  }
+}

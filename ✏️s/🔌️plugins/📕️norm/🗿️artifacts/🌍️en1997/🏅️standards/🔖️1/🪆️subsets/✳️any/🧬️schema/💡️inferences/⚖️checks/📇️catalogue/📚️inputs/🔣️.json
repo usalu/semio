@@ -1,0 +1,2893 @@
+{
+  "$schema": "https://json.schemas.assets.semio-tech.com/s/norm/compliance/design-case/schema.json",
+  "artifact": "s.norm.en1997",
+  "inputs": [
+    {
+      "key": "a",
+      "scope": "GI-02",
+      "kind": "number",
+      "en": "Net area ratio a of the cone",
+      "de": "Flächenverhältnis a der Spitze",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "a",
+      "scope": "SLS-01,SLS-01B",
+      "kind": "number",
+      "en": "Footing dimension a (radius or width)",
+      "de": "Fundamentmaß a (Radius oder Breite)",
+      "confidence": "medium",
+      "note": "ex09 uses 1.5 with circle",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "a_d",
+      "scope": "",
+      "kind": "number",
+      "en": "Design anchor action A_d",
+      "de": "Bemessungsankerkraft A_d",
+      "confidence": "medium",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "a_eff",
+      "scope": "",
+      "kind": "number",
+      "en": "Effective base area A'",
+      "de": "Effektive Sohlfläche A'",
+      "confidence": "high",
+      "unit": "m²",
+      "unitId": "SquareMetre"
+    },
+    {
+      "key": "a_k",
+      "scope": "ANC-03",
+      "kind": "number",
+      "en": "Characteristic anchor force A_k",
+      "de": "Charakteristische Ankerkraft A_k",
+      "confidence": "medium",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "a_toe",
+      "scope": "RW-11",
+      "kind": "number",
+      "en": "Toe length",
+      "de": "Länge der Fußspitze",
+      "confidence": "medium",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "alpha_deg",
+      "scope": "",
+      "kind": "number",
+      "en": "Wall or base inclination α",
+      "de": "Neigung α der Wand oder Sohle",
+      "confidence": "medium",
+      "unit": "°",
+      "unitId": "Degree"
+    },
+    {
+      "key": "alpha_e",
+      "scope": "",
+      "kind": "number",
+      "en": "Oedometric modulus factor α",
+      "de": "Beiwert α des Steifemoduls",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "alpha_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Rheological factor α (Ménard)",
+      "de": "Rheologiebeiwert α (Ménard)",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "approach",
+      "scope": "",
+      "kind": "choice",
+      "en": "Design approach",
+      "de": "Nachweisverfahren",
+      "confidence": "high",
+      "note": "values of parse_design_approach",
+      "choices": [
+        {
+          "value": "da1str",
+          "en": "DA1 combination 1 (structural)",
+          "de": "DA1 Kombination 1 (Tragwerk)"
+        },
+        {
+          "value": "da1geo",
+          "en": "DA1 combination 2 (geotechnical)",
+          "de": "DA1 Kombination 2 (Geotechnik)"
+        },
+        {
+          "value": "da2",
+          "en": "DA2",
+          "de": "DA2"
+        },
+        {
+          "value": "da2star",
+          "en": "DA2*",
+          "de": "DA2*"
+        },
+        {
+          "value": "da3",
+          "en": "DA3",
+          "de": "DA3"
+        },
+        {
+          "value": "geo3",
+          "en": "GEO3 (German NA)",
+          "de": "GEO3 (Nationaler Anhang)"
+        }
+      ],
+      "example": "da1str"
+    },
+    {
+      "key": "aquifer",
+      "scope": "",
+      "kind": "choice",
+      "en": "Aquifer type",
+      "de": "Grundwasserleiter",
+      "confidence": "high",
+      "note": "unconfined default, confined branch",
+      "choices": [
+        {
+          "value": "unconfined",
+          "en": "Unconfined aquifer",
+          "de": "Freier Grundwasserleiter"
+        },
+        {
+          "value": "confined",
+          "en": "Confined aquifer",
+          "de": "Gespannter Grundwasserleiter"
+        }
+      ],
+      "example": "unconfined"
+    },
+    {
+      "key": "arc_deg",
+      "scope": "",
+      "kind": "number",
+      "en": "Slip arc angle",
+      "de": "Bogenwinkel der Gleitfläche",
+      "confidence": "medium",
+      "unit": "°",
+      "unitId": "Degree"
+    },
+    {
+      "key": "area",
+      "scope": "",
+      "kind": "number",
+      "en": "Plan area A",
+      "de": "Grundfläche A",
+      "confidence": "high",
+      "unit": "m²",
+      "unitId": "SquareMetre"
+    },
+    {
+      "key": "arm_g",
+      "scope": "",
+      "kind": "number",
+      "en": "Lever arm of the permanent earth thrust",
+      "de": "Hebelarm des ständigen Erddrucks",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "arm_q",
+      "scope": "",
+      "kind": "number",
+      "en": "Lever arm of the variable earth thrust",
+      "de": "Hebelarm des veränderlichen Erddrucks",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "b",
+      "scope": "",
+      "kind": "number",
+      "en": "Width b",
+      "de": "Breite b",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "b_crest",
+      "scope": "EMB-01",
+      "kind": "number",
+      "en": "Crest width",
+      "de": "Kronenbreite",
+      "confidence": "medium",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "beta",
+      "scope": "PILE-05",
+      "kind": "number",
+      "en": "Skin friction coefficient β",
+      "de": "Mantelreibungsbeiwert β",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "beta_deg",
+      "scope": "",
+      "kind": "number",
+      "en": "Ground or slope inclination β",
+      "de": "Geländeneigung β",
+      "confidence": "high",
+      "unit": "°",
+      "unitId": "Degree"
+    },
+    {
+      "key": "block_b",
+      "scope": "",
+      "kind": "number",
+      "en": "Block width of the pile group",
+      "de": "Blockbreite der Pfahlgruppe",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "block_l",
+      "scope": "",
+      "kind": "number",
+      "en": "Block length of the pile group",
+      "de": "Blocklänge der Pfahlgruppe",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "c",
+      "scope": "",
+      "kind": "number",
+      "en": "Cohesion c",
+      "de": "Kohäsion c",
+      "confidence": "high",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "c_alpha",
+      "scope": "",
+      "kind": "number",
+      "en": "Secondary compression index C_α",
+      "de": "Kriechbeiwert C_α",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "c_assumed",
+      "scope": "GI-17",
+      "kind": "number",
+      "en": "Assumed cohesion c′",
+      "de": "Angesetzte Kohäsion c′",
+      "confidence": "high",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "c_bligh",
+      "scope": "HYD-02",
+      "kind": "number",
+      "en": "Required Bligh ratio",
+      "de": "Erforderliches Bligh-Verhältnis",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "c_k",
+      "scope": "",
+      "kind": "number",
+      "en": "Characteristic cohesion c_k",
+      "de": "Charakteristische Kohäsion c_k",
+      "confidence": "high",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "c_lane",
+      "scope": "HYD-02",
+      "kind": "number",
+      "en": "Required Lane ratio",
+      "de": "Erforderliches Lane-Verhältnis",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "cb",
+      "scope": "",
+      "kind": "number",
+      "en": "Borehole diameter correction C_B",
+      "de": "Bohrlochkorrektur C_B",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "cc",
+      "scope": "",
+      "kind": "number",
+      "en": "Compression index C_c",
+      "de": "Kompressionsbeiwert C_c",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "cells",
+      "scope": "HYD-03",
+      "kind": "number",
+      "en": "Flow net cells across the embedment",
+      "de": "Strömungsnetzzellen über die Einbindung",
+      "confidence": "medium",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "cr",
+      "scope": "",
+      "kind": "number",
+      "en": "Rod length correction C_R",
+      "de": "Gestängekorrektur C_R",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "cs",
+      "scope": "GI-06",
+      "kind": "number",
+      "en": "Sampler correction C_S",
+      "de": "Probenehmerkorrektur C_S",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "cs",
+      "scope": "SLS-02",
+      "kind": "number",
+      "en": "Swelling index C_s",
+      "de": "Schwellbeiwert C_s",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "cu_b",
+      "scope": "",
+      "kind": "number",
+      "en": "Undrained shear strength at the base",
+      "de": "Undränierte Scherfestigkeit an der Sohle",
+      "confidence": "medium",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "cu_h_sum",
+      "scope": "",
+      "kind": "number",
+      "en": "Sum of c_u over the pile length (c_u·h)",
+      "de": "Summe c_u über die Pfahllänge",
+      "confidence": "low",
+      "note": "name only",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "cu_k",
+      "scope": "",
+      "kind": "number",
+      "en": "Characteristic undrained shear strength c_u,k",
+      "de": "Charakteristische undränierte Scherfestigkeit c_u,k",
+      "confidence": "high",
+      "note": "ex02 uses 60e3",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "cv",
+      "scope": "",
+      "kind": "number",
+      "en": "Coefficient of consolidation c_v in m²/s",
+      "de": "Konsolidierungsbeiwert c_v in m²/s",
+      "confidence": "medium",
+      "note": "no m²/s unit in UnitId",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "d",
+      "scope": "",
+      "kind": "number",
+      "en": "Depth or diameter d",
+      "de": "Tiefe oder Durchmesser d",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "d10",
+      "scope": "",
+      "kind": "number",
+      "en": "Grain size d₁₀",
+      "de": "Korngröße d₁₀",
+      "confidence": "medium",
+      "note": "SI m assumed",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "d15_b",
+      "scope": "",
+      "kind": "number",
+      "en": "Grain size d₁₅ of the base filter",
+      "de": "Korngröße d₁₅ des Filters",
+      "confidence": "medium",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "d15_f",
+      "scope": "",
+      "kind": "number",
+      "en": "Grain size d₁₅ of the filter",
+      "de": "Korngröße d₁₅ der Filterschicht",
+      "confidence": "medium",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "d30",
+      "scope": "",
+      "kind": "number",
+      "en": "Grain size d₃₀",
+      "de": "Korngröße d₃₀",
+      "confidence": "medium",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "d60",
+      "scope": "",
+      "kind": "number",
+      "en": "Grain size d₆₀",
+      "de": "Korngröße d₆₀",
+      "confidence": "medium",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "d85_b",
+      "scope": "",
+      "kind": "number",
+      "en": "Grain size d₈₅ of the base soil",
+      "de": "Korngröße d₈₅ des Bodens",
+      "confidence": "medium",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "d_b",
+      "scope": "",
+      "kind": "number",
+      "en": "Investigation depth below the base",
+      "de": "Erkundungstiefe unter der Sohle",
+      "confidence": "medium",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "d_embed",
+      "scope": "",
+      "kind": "number",
+      "en": "Embedment of the wall d",
+      "de": "Einbindetiefe der Wand d",
+      "confidence": "medium",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "d_toe",
+      "scope": "RW-11",
+      "kind": "number",
+      "en": "Soil height over the toe",
+      "de": "Bodenhöhe über der Fußspitze",
+      "confidence": "medium",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "delta_a_deg",
+      "scope": "",
+      "kind": "number",
+      "en": "Active wall friction angle δ_a",
+      "de": "Aktiver Wandreibungswinkel δ_a",
+      "confidence": "high",
+      "unit": "°",
+      "unitId": "Degree"
+    },
+    {
+      "key": "delta_deg",
+      "scope": "",
+      "kind": "number",
+      "en": "Wall friction angle δ",
+      "de": "Wandreibungswinkel δ",
+      "confidence": "high",
+      "unit": "°",
+      "unitId": "Degree"
+    },
+    {
+      "key": "delta_h",
+      "scope": "",
+      "kind": "number",
+      "en": "Head difference Δh",
+      "de": "Potentialdifferenz Δh",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "delta_p_deg",
+      "scope": "",
+      "kind": "number",
+      "en": "Passive wall friction angle δ_p",
+      "de": "Passiver Wandreibungswinkel δ_p",
+      "confidence": "high",
+      "unit": "°",
+      "unitId": "Degree"
+    },
+    {
+      "key": "dsigma",
+      "scope": "",
+      "kind": "number",
+      "en": "Stress increment Δσ",
+      "de": "Spannungszuwachs Δσ",
+      "confidence": "high",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "e",
+      "scope": "PILE-04",
+      "kind": "number",
+      "en": "Eccentricity or lever arm e",
+      "de": "Exzentrizität oder Hebelarm e",
+      "confidence": "low",
+      "note": "name only",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "e0",
+      "scope": "",
+      "kind": "number",
+      "en": "Initial void ratio e₀",
+      "de": "Anfangsporenzahl e₀",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "e1",
+      "scope": "ANC-03",
+      "kind": "number",
+      "en": "Dimension e₁",
+      "de": "Maß e₁",
+      "confidence": "low",
+      "note": "used with gamma and phi",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "e1",
+      "scope": "GI-10",
+      "kind": "series",
+      "en": "Void ratio at step 1 (series)",
+      "de": "Porenzahl der Laststufe 1 (Reihe)",
+      "confidence": "medium",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "e1",
+      "scope": "SLS-01,PILE-12",
+      "kind": "series",
+      "en": "Constrained modulus of layer 1 (series e1…en)",
+      "de": "Steifemodul der Schicht 1 (Reihe e1…en)",
+      "confidence": "high",
+      "note": "series",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "e2",
+      "scope": "ANC-03",
+      "kind": "number",
+      "en": "Dimension e₂",
+      "de": "Maß e₂",
+      "confidence": "low",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "e_h_d",
+      "scope": "",
+      "kind": "number",
+      "en": "Design horizontal earth thrust E_h,d",
+      "de": "Bemessungswert des horizontalen Erddrucks E_h,d",
+      "confidence": "medium",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "e_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Modulus E (Ménard or elastic)",
+      "de": "Modul E (Ménard oder elastisch)",
+      "confidence": "high",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "e_oed",
+      "scope": "",
+      "kind": "number",
+      "en": "Oedometric modulus E_oed",
+      "de": "Steifemodul E_oed",
+      "confidence": "high",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "e_p_k",
+      "scope": "",
+      "kind": "number",
+      "en": "Characteristic passive thrust E_p,k",
+      "de": "Charakteristischer Erdwiderstand E_p,k",
+      "confidence": "high",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "ea",
+      "scope": "",
+      "kind": "number",
+      "en": "Axial stiffness EA",
+      "de": "Dehnsteifigkeit EA",
+      "confidence": "high",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "eah_g",
+      "scope": "",
+      "kind": "number",
+      "en": "Permanent horizontal earth thrust E_ah,G",
+      "de": "Ständiger horizontaler Erddruck E_ah,G",
+      "confidence": "high",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "eah_q",
+      "scope": "",
+      "kind": "number",
+      "en": "Variable horizontal earth thrust E_ah,Q",
+      "de": "Veränderlicher horizontaler Erddruck E_ah,Q",
+      "confidence": "high",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "eav",
+      "scope": "",
+      "kind": "number",
+      "en": "Vertical component of the earth thrust",
+      "de": "Vertikalkomponente des Erddrucks",
+      "confidence": "high",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "ei",
+      "scope": "",
+      "kind": "number",
+      "en": "Flexural stiffness EI in N·m²",
+      "de": "Biegesteifigkeit EI in N·m²",
+      "confidence": "medium",
+      "note": "no N·m² unit in UnitId",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "empirical",
+      "scope": "",
+      "kind": "number",
+      "en": "Empirical resistance (1) or not (0)",
+      "de": "Erfahrungswerte (1) oder nicht (0)",
+      "confidence": "high",
+      "note": "flag read as > 0.5",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "er",
+      "scope": "",
+      "kind": "number",
+      "en": "Energy ratio E_r",
+      "de": "Energieverhältnis E_r",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "eta_h",
+      "scope": "",
+      "kind": "number",
+      "en": "Hammer efficiency η_h",
+      "de": "Wirkungsgrad η_h des Rammbärs",
+      "confidence": "medium",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "eta_kranz",
+      "scope": "",
+      "kind": "number",
+      "en": "Kranz safety factor η",
+      "de": "Sicherheit η nach Kranz",
+      "confidence": "medium",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "f",
+      "scope": "",
+      "kind": "number",
+      "en": "Influence factor f",
+      "de": "Einflussbeiwert f",
+      "confidence": "medium",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "f_cd",
+      "scope": "",
+      "kind": "number",
+      "en": "Design pile compression action F_c,d",
+      "de": "Bemessungsdruckkraft F_c,d",
+      "confidence": "high",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "f_star",
+      "scope": "",
+      "kind": "number",
+      "en": "Apparent friction coefficient f*",
+      "de": "Scheinbarer Reibungsbeiwert f*",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "f_td",
+      "scope": "",
+      "kind": "number",
+      "en": "Design pile tension action F_t,d",
+      "de": "Bemessungszugkraft F_t,d",
+      "confidence": "high",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "fs",
+      "scope": "",
+      "kind": "number",
+      "en": "CPT sleeve friction f_s",
+      "de": "Mantelreibung f_s des Drucksondierens",
+      "confidence": "high",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "g_dst",
+      "scope": "",
+      "kind": "number",
+      "en": "Destabilising permanent action G_dst",
+      "de": "Destabilisierende ständige Einwirkung G_dst",
+      "confidence": "high",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "g_pile",
+      "scope": "",
+      "kind": "number",
+      "en": "Pile self-weight G",
+      "de": "Pfahleigengewicht G",
+      "confidence": "high",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "g_stb",
+      "scope": "",
+      "kind": "number",
+      "en": "Stabilising permanent action G_stb",
+      "de": "Stabilisierende ständige Einwirkung G_stb",
+      "confidence": "high",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "gamma",
+      "scope": "",
+      "kind": "number",
+      "en": "Unit weight γ",
+      "de": "Wichte γ",
+      "confidence": "high",
+      "note": "SI tests use 19e3",
+      "unit": "N/m³",
+      "unitId": "NewtonPerCubicMetre",
+      "example": 19000.0
+    },
+    {
+      "key": "gamma1",
+      "scope": "G-01",
+      "kind": "series",
+      "en": "Unit weight γ of layer 1 (series γ1…γn)",
+      "de": "Wichte γ der Schicht 1 (Reihe γ1…γn)",
+      "confidence": "medium",
+      "note": "series by layers",
+      "unit": "N/m³",
+      "unitId": "NewtonPerCubicMetre"
+    },
+    {
+      "key": "gamma1",
+      "scope": "GEO-F01,GEO-F03",
+      "kind": "number",
+      "en": "Unit weight γ₁ below the foundation level",
+      "de": "Wichte γ₁ unter der Gründungssohle",
+      "confidence": "medium",
+      "note": "assumed below; gamma2 above",
+      "unit": "N/m³",
+      "unitId": "NewtonPerCubicMetre"
+    },
+    {
+      "key": "gamma2",
+      "scope": "GEO-F01,GEO-F02,GEO-F03",
+      "kind": "number",
+      "en": "Unit weight γ₂ above the foundation level",
+      "de": "Wichte γ₂ über der Gründungssohle",
+      "confidence": "high",
+      "note": "ex02 uses 19e3",
+      "unit": "N/m³",
+      "unitId": "NewtonPerCubicMetre"
+    },
+    {
+      "key": "gamma_c",
+      "scope": "RW-11",
+      "kind": "number",
+      "en": "Unit weight of concrete",
+      "de": "Wichte des Betons",
+      "confidence": "medium",
+      "unit": "N/m³",
+      "unitId": "NewtonPerCubicMetre"
+    },
+    {
+      "key": "gamma_prime",
+      "scope": "",
+      "kind": "number",
+      "en": "Buoyant unit weight γ'",
+      "de": "Wichte unter Auftrieb γ'",
+      "confidence": "high",
+      "unit": "N/m³",
+      "unitId": "NewtonPerCubicMetre"
+    },
+    {
+      "key": "gamma_s",
+      "scope": "ANC-04",
+      "kind": "number",
+      "en": "Partial factor γ_s of the tendon",
+      "de": "Teilsicherheitsbeiwert γ_s des Zugglieds",
+      "confidence": "medium",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "gamma_sat",
+      "scope": "",
+      "kind": "number",
+      "en": "Saturated unit weight γ_sat",
+      "de": "Wichte unter Auftrieb γ_sat",
+      "confidence": "high",
+      "unit": "N/m³",
+      "unitId": "NewtonPerCubicMetre"
+    },
+    {
+      "key": "gamma_sat1",
+      "scope": "G-01",
+      "kind": "series",
+      "en": "Saturated unit weight of layer 1 (series)",
+      "de": "Gesättigte Wichte der Schicht 1 (Reihe)",
+      "confidence": "medium",
+      "note": "series by layers",
+      "unit": "N/m³",
+      "unitId": "NewtonPerCubicMetre"
+    },
+    {
+      "key": "gamma_w",
+      "scope": "",
+      "kind": "number",
+      "en": "Unit weight of water γ_w",
+      "de": "Wichte des Wassers γ_w",
+      "confidence": "high",
+      "unit": "N/m³",
+      "unitId": "NewtonPerCubicMetre",
+      "example": 10000.0
+    },
+    {
+      "key": "gk",
+      "scope": "",
+      "kind": "number",
+      "en": "Geotechnical category",
+      "de": "Geotechnische Kategorie",
+      "confidence": "high",
+      "note": "1 to 3",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "gwl_level",
+      "scope": "",
+      "kind": "number",
+      "en": "Groundwater level",
+      "de": "Grundwasserstand",
+      "confidence": "medium",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "h",
+      "scope": "",
+      "kind": "number",
+      "en": "Height or thickness h",
+      "de": "Höhe oder Dicke h",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "h1",
+      "scope": "G-01,SLS-01,PILE-05,PILE-12",
+      "kind": "series",
+      "en": "Thickness of layer 1 (series h1…hn)",
+      "de": "Dicke der Schicht 1 (Reihe h1…hn)",
+      "confidence": "high",
+      "note": "series",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "h1",
+      "scope": "GI-16",
+      "kind": "number",
+      "en": "Water level h₁ at observation well 1",
+      "de": "Wasserstand h₁ im Beobachtungsbrunnen 1",
+      "confidence": "medium",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "h2",
+      "scope": "GI-16",
+      "kind": "number",
+      "en": "Water level h₂ at observation well 2",
+      "de": "Wasserstand h₂ im Beobachtungsbrunnen 2",
+      "confidence": "medium",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "h_aquifer",
+      "scope": "",
+      "kind": "number",
+      "en": "Aquifer head h",
+      "de": "Wasserstand im Grundwasserleiter",
+      "confidence": "medium",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "h_d",
+      "scope": "",
+      "kind": "number",
+      "en": "Pile depth or head height h",
+      "de": "Pfahllänge oder Kopfhöhe",
+      "confidence": "low",
+      "note": "PILE-04",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "h_dr",
+      "scope": "",
+      "kind": "number",
+      "en": "Drainage path length h_dr",
+      "de": "Dränweglänge h_dr",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "h_dr_lab",
+      "scope": "SLS-05",
+      "kind": "number",
+      "en": "Drainage path of the oedometer specimen",
+      "de": "Dränweg der Ödometerprobe",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "h_drop",
+      "scope": "",
+      "kind": "number",
+      "en": "Drop height of the hammer",
+      "de": "Fallhöhe des Rammbärs",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "h_g",
+      "scope": "",
+      "kind": "number",
+      "en": "Horizontal permanent action H_G",
+      "de": "Horizontale ständige Einwirkung H_G",
+      "confidence": "high",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "h_q",
+      "scope": "",
+      "kind": "number",
+      "en": "Horizontal variable action H_Q",
+      "de": "Horizontale veränderliche Einwirkung H_Q",
+      "confidence": "high",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "h_well",
+      "scope": "",
+      "kind": "number",
+      "en": "Water level in the well",
+      "de": "Wasserstand im Brunnen",
+      "confidence": "medium",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "hb_d",
+      "scope": "",
+      "kind": "number",
+      "en": "Design horizontal force H_B,d (in b)",
+      "de": "Bemessungshorizontalkraft H_B,d (in b-Richtung)",
+      "confidence": "high",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "head",
+      "scope": "",
+      "kind": "number",
+      "en": "Hydraulic head",
+      "de": "Wasserdruckhöhe",
+      "confidence": "medium",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "hl_d",
+      "scope": "",
+      "kind": "number",
+      "en": "Design horizontal force H_L,d (in l)",
+      "de": "Bemessungshorizontalkraft H_L,d (in l-Richtung)",
+      "confidence": "high",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "i_exit",
+      "scope": "HYD-02",
+      "kind": "number",
+      "en": "Exit gradient i",
+      "de": "Austrittsgefälle i",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "include_depth",
+      "scope": "",
+      "kind": "number",
+      "en": "Include the depth factors d_q, d_c (1) or not (0); not in EN 1997-1 Annex D, Hansen/DIN 4017 convention",
+      "de": "Tiefenfaktoren d_q, d_c berücksichtigen (1) oder nicht (0); nicht in EN 1997-1 Anhang D, Hansen/DIN-4017-Konvention",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "k",
+      "scope": "DEW-01,DEW-02,HYD-03",
+      "kind": "number",
+      "en": "Permeability k",
+      "de": "Durchlässigkeit k",
+      "confidence": "high",
+      "unit": "m/s",
+      "unitId": "MetrePerSecond"
+    },
+    {
+      "key": "k",
+      "scope": "RW-09",
+      "kind": "number",
+      "en": "Earth pressure coefficient k",
+      "de": "Erddruckbeiwert k",
+      "confidence": "medium",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "k_p",
+      "scope": "",
+      "kind": "number",
+      "en": "Pressuremeter factor k_p",
+      "de": "Pressiometerbeiwert k_p",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "k_s",
+      "scope": "",
+      "kind": "number",
+      "en": "Modulus of subgrade reaction k_s",
+      "de": "Bettungsmodul k_s",
+      "confidence": "medium",
+      "note": "N/m³ assumed",
+      "unit": "N/m³",
+      "unitId": "NewtonPerCubicMetre"
+    },
+    {
+      "key": "ka",
+      "scope": "",
+      "kind": "number",
+      "en": "Active earth pressure coefficient K_a",
+      "de": "Aktiver Erddruckbeiwert K_a",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "kh",
+      "scope": "",
+      "kind": "number",
+      "en": "Horizontal seismic coefficient k_h",
+      "de": "Horizontaler Erdbebenbeiwert k_h",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "kind",
+      "scope": "",
+      "kind": "choice",
+      "en": "Wall type",
+      "de": "Wandart",
+      "confidence": "medium",
+      "note": "free_earth and cantilever read; propped assumed",
+      "choices": [
+        {
+          "value": "free_earth",
+          "en": "Free earth support",
+          "de": "Freie Auflagerung"
+        },
+        {
+          "value": "cantilever",
+          "en": "Cantilever wall",
+          "de": "Eingespannte Wand"
+        },
+        {
+          "value": "propped",
+          "en": "Propped wall",
+          "de": "Gestützte Wand"
+        },
+        {
+          "value": "fixed_earth",
+          "en": "Fixed earth support (Blum)",
+          "de": "Volle Einspannung (Blum)"
+        }
+      ],
+      "example": "free_earth"
+    },
+    {
+      "key": "kv",
+      "scope": "",
+      "kind": "number",
+      "en": "Vertical seismic coefficient k_v",
+      "de": "Vertikaler Erdbebenbeiwert k_v",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "l",
+      "scope": "",
+      "kind": "number",
+      "en": "Length l",
+      "de": "Länge l",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "l_eff",
+      "scope": "",
+      "kind": "number",
+      "en": "Buckling length",
+      "de": "Knicklänge",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "l_f",
+      "scope": "",
+      "kind": "number",
+      "en": "Fixed length",
+      "de": "Verpresslänge",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "l_flow",
+      "scope": "",
+      "kind": "number",
+      "en": "Flow path length",
+      "de": "Sickerweglänge",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "l_free",
+      "scope": "",
+      "kind": "number",
+      "en": "Free length",
+      "de": "Freie Länge",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "l_min",
+      "scope": "",
+      "kind": "number",
+      "en": "Minimum free length",
+      "de": "Mindestfreilänge",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "lh1",
+      "scope": "HYD-02",
+      "kind": "series",
+      "en": "Horizontal creep segment 1 (series)",
+      "de": "Waagerechter Sickerwegabschnitt 1 (Reihe)",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "limit_den",
+      "scope": "",
+      "kind": "number",
+      "en": "Limit denominator 1/x of the angular distortion",
+      "de": "Grenznenner 1/x der Winkelverdrehung",
+      "confidence": "medium",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "lv1",
+      "scope": "HYD-02",
+      "kind": "series",
+      "en": "Vertical creep segment 1 (series)",
+      "de": "Senkrechter Sickerwegabschnitt 1 (Reihe)",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "m",
+      "scope": "PILE-06,PILE-12",
+      "kind": "number",
+      "en": "Number of pile rows m",
+      "de": "Anzahl Pfahlreihen m",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "m_dst_g",
+      "scope": "",
+      "kind": "number",
+      "en": "Destabilising permanent moment",
+      "de": "Destabilisierendes ständiges Moment",
+      "confidence": "high",
+      "unit": "N·m",
+      "unitId": "NewtonMetre"
+    },
+    {
+      "key": "m_dst_q",
+      "scope": "",
+      "kind": "number",
+      "en": "Destabilising variable moment",
+      "de": "Destabilisierendes veränderliches Moment",
+      "confidence": "high",
+      "unit": "N·m",
+      "unitId": "NewtonMetre"
+    },
+    {
+      "key": "m_stb_g",
+      "scope": "",
+      "kind": "number",
+      "en": "Stabilising permanent moment",
+      "de": "Stabilisierendes ständiges Moment",
+      "confidence": "high",
+      "unit": "N·m",
+      "unitId": "NewtonMetre"
+    },
+    {
+      "key": "m_tension",
+      "scope": "",
+      "kind": "number",
+      "en": "Moment of the anchor tension",
+      "de": "Moment der Ankerkraft",
+      "confidence": "medium",
+      "unit": "N·m",
+      "unitId": "NewtonMetre"
+    },
+    {
+      "key": "mb_d",
+      "scope": "",
+      "kind": "number",
+      "en": "Design moment M_B,d about the b axis",
+      "de": "Bemessungsmoment M_B,d um die b-Achse",
+      "confidence": "high",
+      "unit": "N·m",
+      "unitId": "NewtonMetre"
+    },
+    {
+      "key": "ml_d",
+      "scope": "",
+      "kind": "number",
+      "en": "Design moment M_L,d about the l axis",
+      "de": "Bemessungsmoment M_L,d um die l-Achse",
+      "confidence": "high",
+      "unit": "N·m",
+      "unitId": "NewtonMetre"
+    },
+    {
+      "key": "mobilisation",
+      "scope": "",
+      "kind": "number",
+      "en": "Mobilisation ratio of the passive resistance",
+      "de": "Mobilisierungsgrad des Erdwiderstands",
+      "confidence": "high",
+      "note": "clamped 0 to 1",
+      "unit": "1",
+      "unitId": "One",
+      "min": 0.0,
+      "max": 1.0,
+      "example": 1.0
+    },
+    {
+      "key": "mode",
+      "scope": "",
+      "kind": "choice",
+      "en": "Characteristic value mode",
+      "de": "Modus des charakteristischen Werts",
+      "confidence": "high",
+      "note": "c.so(\"mode\") mean or local",
+      "choices": [
+        {
+          "value": "mean",
+          "en": "Mean value of the sample",
+          "de": "Mittelwert der Stichprobe"
+        },
+        {
+          "value": "local",
+          "en": "Local (lowest value) derivation",
+          "de": "Lokale Ableitung (niedrigster Wert)"
+        }
+      ],
+      "example": "mean"
+    },
+    {
+      "key": "mx",
+      "scope": "",
+      "kind": "number",
+      "en": "Moment M_x on the pile group",
+      "de": "Moment M_x auf die Pfahlgruppe",
+      "confidence": "high",
+      "unit": "N·m",
+      "unitId": "NewtonMetre"
+    },
+    {
+      "key": "my",
+      "scope": "",
+      "kind": "number",
+      "en": "Moment M_y on the pile group",
+      "de": "Moment M_y auf die Pfahlgruppe",
+      "confidence": "high",
+      "unit": "N·m",
+      "unitId": "NewtonMetre"
+    },
+    {
+      "key": "n",
+      "scope": "GI-06",
+      "kind": "number",
+      "en": "SPT blow count N",
+      "de": "SPT-Schlagzahl N",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "n",
+      "scope": "PILE-06,PILE-12",
+      "kind": "number",
+      "en": "Number of pile columns n",
+      "de": "Anzahl Pfahlspalten n",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "n",
+      "scope": "PILE-09",
+      "kind": "number",
+      "en": "Axial pile force N",
+      "de": "Pfahlnormalkraft N",
+      "confidence": "medium",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "n10",
+      "scope": "",
+      "kind": "number",
+      "en": "Dynamic probing blow count N₁₀",
+      "de": "Schlagzahl N₁₀ der Rammsondierung",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "n1_60",
+      "scope": "",
+      "kind": "number",
+      "en": "Corrected SPT blow count (N₁)₆₀",
+      "de": "Korrigierte SPT-Schlagzahl (N₁)₆₀",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "n_ed",
+      "scope": "",
+      "kind": "number",
+      "en": "Design axial force N_Ed",
+      "de": "Bemessungsnormalkraft N_Ed",
+      "confidence": "high",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "n_slope",
+      "scope": "EMB-01",
+      "kind": "number",
+      "en": "Slope inclination n (horizontal per 1 vertical)",
+      "de": "Böschungsneigung n (horizontal je 1 vertikal)",
+      "confidence": "medium",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "nc",
+      "scope": "",
+      "kind": "number",
+      "en": "Bearing capacity factor N_c",
+      "de": "Tragfähigkeitsbeiwert N_c",
+      "confidence": "medium",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "nkt",
+      "scope": "",
+      "kind": "number",
+      "en": "Cone factor N_kt",
+      "de": "Kegelfaktor N_kt",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "nu",
+      "scope": "",
+      "kind": "number",
+      "en": "Poisson ratio ν",
+      "de": "Querdehnzahl ν",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One",
+      "min": 0.0,
+      "max": 0.5,
+      "example": 0.3
+    },
+    {
+      "key": "ocr",
+      "scope": "",
+      "kind": "number",
+      "en": "Overconsolidation ratio OCR",
+      "de": "Überkonsolidierungsgrad OCR",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "p",
+      "scope": "",
+      "kind": "number",
+      "en": "Uniform pressure p",
+      "de": "Gleichmäßiger Druck p",
+      "confidence": "high",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "p1",
+      "scope": "GI-11",
+      "kind": "series",
+      "en": "Mean stress p of test 1 (series)",
+      "de": "Mittlere Spannung p des Versuchs 1 (Reihe)",
+      "confidence": "medium",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "p1_h1",
+      "scope": "PILE-11",
+      "kind": "series",
+      "en": "Layer thickness of profile 1 (series)",
+      "de": "Schichtdicke des Profils 1 (Reihe)",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "p1_qb",
+      "scope": "PILE-11",
+      "kind": "number",
+      "en": "Unit base resistance of profile 1",
+      "de": "Spitzendruck des Profils 1",
+      "confidence": "high",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "p1_qs1",
+      "scope": "PILE-11",
+      "kind": "series",
+      "en": "Unit shaft resistance of profile 1 (series)",
+      "de": "Mantelreibung des Profils 1 (Reihe)",
+      "confidence": "high",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "p_le",
+      "scope": "",
+      "kind": "number",
+      "en": "Net limit pressure p_le*",
+      "de": "Netto-Grenzdruck p_le*",
+      "confidence": "high",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "p_t_k",
+      "scope": "",
+      "kind": "number",
+      "en": "Characteristic tendon strength P_t,k",
+      "de": "Charakteristische Zuggliedtragkraft P_t,k",
+      "confidence": "high",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "passive_share",
+      "scope": "",
+      "kind": "number",
+      "en": "Share of the passive thrust",
+      "de": "Anteil des Erdwiderstands",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "phi1",
+      "scope": "G-01",
+      "kind": "series",
+      "en": "Friction angle of layer 1 (series)",
+      "de": "Reibungswinkel der Schicht 1 (Reihe)",
+      "confidence": "medium",
+      "unit": "°",
+      "unitId": "Degree"
+    },
+    {
+      "key": "phi_assumed_deg",
+      "scope": "GI-17",
+      "kind": "number",
+      "en": "Assumed friction angle φ′",
+      "de": "Angesetzter Reibungswinkel φ′",
+      "confidence": "high",
+      "unit": "°",
+      "unitId": "Degree"
+    },
+    {
+      "key": "phi_base_deg",
+      "scope": "",
+      "kind": "number",
+      "en": "Friction angle at the base φ",
+      "de": "Reibungswinkel in der Sohlfuge φ",
+      "confidence": "medium",
+      "unit": "°",
+      "unitId": "Degree"
+    },
+    {
+      "key": "phi_deg",
+      "scope": "",
+      "kind": "number",
+      "en": "Friction angle φ",
+      "de": "Reibungswinkel φ",
+      "confidence": "high",
+      "note": "r0:90",
+      "unit": "°",
+      "unitId": "Degree"
+    },
+    {
+      "key": "phi_k_deg",
+      "scope": "",
+      "kind": "number",
+      "en": "Characteristic friction angle φ_k",
+      "de": "Charakteristischer Reibungswinkel φ_k",
+      "confidence": "high",
+      "unit": "°",
+      "unitId": "Degree"
+    },
+    {
+      "key": "prop_depth",
+      "scope": "",
+      "kind": "number",
+      "en": "Prop depth below the crest",
+      "de": "Stützentiefe unter der Oberkante",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "px",
+      "scope": "",
+      "kind": "number",
+      "en": "Plan dimension p_x",
+      "de": "Grundrissmaß p_x",
+      "confidence": "low",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "py",
+      "scope": "",
+      "kind": "number",
+      "en": "Plan dimension p_y",
+      "de": "Grundrissmaß p_y",
+      "confidence": "low",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "q",
+      "scope": "",
+      "kind": "number",
+      "en": "Surcharge q",
+      "de": "Auflast q",
+      "confidence": "high",
+      "note": "10e3 in tests",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "q",
+      "scope": "GI-16",
+      "kind": "number",
+      "en": "Pumping rate Q",
+      "de": "Pumpmenge Q",
+      "confidence": "high",
+      "unit": "m³/s",
+      "unitId": "CubicMetrePerSecond"
+    },
+    {
+      "key": "q1",
+      "scope": "GI-11",
+      "kind": "series",
+      "en": "Deviator stress q of test 1 (series)",
+      "de": "Deviatorspannung q des Versuchs 1 (Reihe)",
+      "confidence": "medium",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "q_dst",
+      "scope": "",
+      "kind": "number",
+      "en": "Destabilising variable action Q_dst",
+      "de": "Destabilisierende veränderliche Einwirkung Q_dst",
+      "confidence": "medium",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "q_total",
+      "scope": "",
+      "kind": "number",
+      "en": "Total traffic surcharge",
+      "de": "Gesamte Verkehrsauflast",
+      "confidence": "medium",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "q_well",
+      "scope": "",
+      "kind": "number",
+      "en": "Well discharge Q",
+      "de": "Brunnenergiebigkeit Q",
+      "confidence": "medium",
+      "unit": "m³/s",
+      "unitId": "CubicMetrePerSecond"
+    },
+    {
+      "key": "qc",
+      "scope": "",
+      "kind": "number",
+      "en": "CPT cone resistance q_c",
+      "de": "Spitzendruck q_c",
+      "confidence": "high",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "qt",
+      "scope": "",
+      "kind": "number",
+      "en": "Corrected cone resistance q_t",
+      "de": "Korrigierter Spitzendruck q_t",
+      "confidence": "high",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "qw1",
+      "scope": "DEW-02",
+      "kind": "series",
+      "en": "Discharge of well 1 (series)",
+      "de": "Förderleistung des Brunnens 1 (Reihe)",
+      "confidence": "medium",
+      "unit": "m³/s",
+      "unitId": "CubicMetrePerSecond"
+    },
+    {
+      "key": "r",
+      "scope": "",
+      "kind": "number",
+      "en": "Radius r",
+      "de": "Radius r",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "r1",
+      "scope": "GI-16",
+      "kind": "number",
+      "en": "Distance r₁ of observation well 1",
+      "de": "Abstand r₁ des Beobachtungsbrunnens 1",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "r2",
+      "scope": "GI-16",
+      "kind": "number",
+      "en": "Distance r₂ of observation well 2",
+      "de": "Abstand r₂ des Beobachtungsbrunnens 2",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "r_c_d",
+      "scope": "",
+      "kind": "number",
+      "en": "Design pile compression resistance R_c,d",
+      "de": "Bemessungswiderstand R_c,d",
+      "confidence": "high",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "r_d",
+      "scope": "",
+      "kind": "number",
+      "en": "Design resistance R_d",
+      "de": "Bemessungswiderstand R_d",
+      "confidence": "high",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "r_influence",
+      "scope": "",
+      "kind": "number",
+      "en": "Radius of influence",
+      "de": "Reichweite",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "r_well",
+      "scope": "",
+      "kind": "number",
+      "en": "Well radius",
+      "de": "Brunnenradius",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "ra1",
+      "scope": "ANC-01",
+      "kind": "series",
+      "en": "Anchor resistance of test 1 (series)",
+      "de": "Ankerwiderstand des Versuchs 1 (Reihe)",
+      "confidence": "high",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "radius",
+      "scope": "",
+      "kind": "number",
+      "en": "Radius",
+      "de": "Radius",
+      "confidence": "medium",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "raft_depth_factor",
+      "scope": "PILE-12",
+      "kind": "number",
+      "en": "Depth of the equivalent raft as a fraction of the pile length (2/3)",
+      "de": "Tiefe des Ersatzfundaments als Anteil der Pfahllänge (2/3)",
+      "confidence": "low",
+      "note": "textbook equivalent-raft convention, not an EN 1997 value",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "rb1",
+      "scope": "PILE-02",
+      "kind": "series",
+      "en": "Base resistance of profile 1 (series)",
+      "de": "Spitzenwiderstand des Profils 1 (Reihe)",
+      "confidence": "high",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "rb_max",
+      "scope": "",
+      "kind": "number",
+      "en": "Ultimate base resistance",
+      "de": "Grenzspitzenwiderstand",
+      "confidence": "high",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "rigid_factor",
+      "scope": "",
+      "kind": "number",
+      "en": "Rigidity factor",
+      "de": "Steifigkeitsbeiwert",
+      "confidence": "medium",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "rm1",
+      "scope": "PILE-01,PILE-08",
+      "kind": "series",
+      "en": "Measured resistance of test 1 (series)",
+      "de": "Gemessener Widerstand des Versuchs 1 (Reihe)",
+      "confidence": "high",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "row",
+      "scope": "",
+      "kind": "number",
+      "en": "Pile row number",
+      "de": "Pfahlreihennummer",
+      "confidence": "medium",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "rs1",
+      "scope": "PILE-02",
+      "kind": "series",
+      "en": "Shaft resistance of profile 1 (series)",
+      "de": "Mantelwiderstand des Profils 1 (Reihe)",
+      "confidence": "high",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "rs_max",
+      "scope": "",
+      "kind": "number",
+      "en": "Ultimate shaft resistance",
+      "de": "Grenzmantelwiderstand",
+      "confidence": "high",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "rt1",
+      "scope": "PILE-03",
+      "kind": "series",
+      "en": "Tension resistance of test 1 (series)",
+      "de": "Zugwiderstand des Versuchs 1 (Reihe)",
+      "confidence": "high",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "rt_k",
+      "scope": "",
+      "kind": "number",
+      "en": "Characteristic tension resistance",
+      "de": "Charakteristischer Zugwiderstand",
+      "confidence": "high",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "ru",
+      "scope": "",
+      "kind": "number",
+      "en": "Pore pressure ratio r_u",
+      "de": "Porenwasserdruckverhältnis r_u",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "s",
+      "scope": "PILE-06,PILE-12",
+      "kind": "number",
+      "en": "Pile spacing s",
+      "de": "Pfahlabstand s",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "s",
+      "scope": "RW-09",
+      "kind": "number",
+      "en": "Spacing s",
+      "de": "Abstand s",
+      "confidence": "low",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "s_a",
+      "scope": "",
+      "kind": "number",
+      "en": "Settlement of point A",
+      "de": "Setzung des Punktes A",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "s_b",
+      "scope": "",
+      "kind": "number",
+      "en": "Settlement of point B",
+      "de": "Setzung des Punktes B",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "s_crit_factor",
+      "scope": "PILE-10",
+      "kind": "number",
+      "en": "Failure settlement factor s_g/D",
+      "de": "Grenzsetzungsfaktor s_g/D",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "s_e",
+      "scope": "",
+      "kind": "number",
+      "en": "Elastic set per blow",
+      "de": "Elastische Zusammendrückung je Schlag",
+      "confidence": "medium",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "s_final",
+      "scope": "SLS-05",
+      "kind": "number",
+      "en": "Final primary consolidation settlement",
+      "de": "Endwert der Konsolidationssetzung",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "s_lim",
+      "scope": "",
+      "kind": "number",
+      "en": "Limit settlement",
+      "de": "Grenzsetzung",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "s_ref_b",
+      "scope": "",
+      "kind": "number",
+      "en": "Reference base settlement",
+      "de": "Referenzsetzung am Fuß",
+      "confidence": "medium",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "s_ref_s",
+      "scope": "",
+      "kind": "number",
+      "en": "Reference shaft settlement",
+      "de": "Referenzsetzung am Mantel",
+      "confidence": "medium",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "s_res_lim",
+      "scope": "SLS-05",
+      "kind": "number",
+      "en": "Admissible residual settlement at time t",
+      "de": "Zulässige Restsetzung zur Zeit t",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "s_set",
+      "scope": "",
+      "kind": "number",
+      "en": "Set per blow",
+      "de": "Eindringung je Schlag",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "s_v",
+      "scope": "",
+      "kind": "number",
+      "en": "Vertical reinforcement spacing",
+      "de": "Vertikaler Bewehrungsabstand",
+      "confidence": "medium",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "seepage",
+      "scope": "",
+      "kind": "number",
+      "en": "Seepage parallel to slope (1) or not (0)",
+      "de": "Hangparallele Sickerströmung (1) oder nicht (0)",
+      "confidence": "high",
+      "note": "flag read as > 0.5",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "shape",
+      "scope": "SLS-01",
+      "kind": "choice",
+      "en": "Footing shape",
+      "de": "Fundamentform",
+      "confidence": "medium",
+      "note": "default rect",
+      "choices": [
+        {
+          "value": "rect",
+          "en": "Rectangular footing",
+          "de": "Rechteckfundament"
+        },
+        {
+          "value": "circle",
+          "en": "Circular footing",
+          "de": "Kreisfundament"
+        },
+        {
+          "value": "circle_flexible",
+          "en": "Flexible circular footing",
+          "de": "Biegeweiches Kreisfundament"
+        },
+        {
+          "value": "circle_rigid",
+          "en": "Rigid circular footing",
+          "de": "Starres Kreisfundament"
+        },
+        {
+          "value": "factor",
+          "en": "Influence factor",
+          "de": "Einflussbeiwert"
+        }
+      ],
+      "example": "rect"
+    },
+    {
+      "key": "shape",
+      "scope": "SLS-01B",
+      "kind": "choice",
+      "en": "Footing shape",
+      "de": "Fundamentform",
+      "confidence": "high",
+      "note": "match arm values in sls_01b",
+      "choices": [
+        {
+          "value": "rect",
+          "en": "Rectangular footing",
+          "de": "Rechteckfundament"
+        },
+        {
+          "value": "circle",
+          "en": "Circular footing",
+          "de": "Kreisfundament"
+        },
+        {
+          "value": "circle_flexible",
+          "en": "Flexible circular footing",
+          "de": "Biegeweiches Kreisfundament"
+        },
+        {
+          "value": "circle_rigid",
+          "en": "Rigid circular footing",
+          "de": "Starres Kreisfundament"
+        },
+        {
+          "value": "factor",
+          "en": "Influence factor",
+          "de": "Einflussbeiwert"
+        }
+      ],
+      "example": "circle_flexible"
+    },
+    {
+      "key": "sigma0",
+      "scope": "",
+      "kind": "number",
+      "en": "Stress σ₀ at the footing base",
+      "de": "Spannung σ₀ in der Sohle",
+      "confidence": "high",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "sigma1",
+      "scope": "GI-10",
+      "kind": "series",
+      "en": "Vertical stress of step 1 (series)",
+      "de": "Vertikalspannung der Laststufe 1 (Reihe)",
+      "confidence": "high",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "sigma1",
+      "scope": "GI-12",
+      "kind": "series",
+      "en": "Normal stress of test 1 (series)",
+      "de": "Normalspannung des Versuchs 1 (Reihe)",
+      "confidence": "high",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "sigma_p",
+      "scope": "",
+      "kind": "number",
+      "en": "Preconsolidation pressure σ'_p",
+      "de": "Vorbelastungsdruck σ'_p",
+      "confidence": "high",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "sigma_rd",
+      "scope": "RW-11",
+      "kind": "number",
+      "en": "Design bearing pressure σ_R,d",
+      "de": "Bemessungssohlwiderstand σ_R,d",
+      "confidence": "medium",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "sigma_v",
+      "scope": "",
+      "kind": "number",
+      "en": "Vertical stress σ_v",
+      "de": "Vertikalspannung σ_v",
+      "confidence": "high",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "sigma_v0",
+      "scope": "",
+      "kind": "number",
+      "en": "Total vertical stress σ_v0",
+      "de": "Totale Vertikalspannung σ_v0",
+      "confidence": "high",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "sigma_v0_eff",
+      "scope": "",
+      "kind": "number",
+      "en": "Effective vertical stress σ'_v0",
+      "de": "Effektive Vertikalspannung σ'_v0",
+      "confidence": "high",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "situation",
+      "scope": "",
+      "kind": "choice",
+      "en": "Design situation",
+      "de": "Bemessungssituation",
+      "confidence": "high",
+      "note": "BS-P, BS-T, BS-A as used by resolve_params",
+      "choices": [
+        {
+          "value": "bsP",
+          "en": "Persistent (BS-P)",
+          "de": "Ständig (BS-P)"
+        },
+        {
+          "value": "bsT",
+          "en": "Transient (BS-T)",
+          "de": "Vorübergehend (BS-T)"
+        },
+        {
+          "value": "bsA",
+          "en": "Accidental (BS-A)",
+          "de": "Außergewöhnlich (BS-A)"
+        }
+      ],
+      "example": "bsP"
+    },
+    {
+      "key": "slices",
+      "scope": "",
+      "kind": "number",
+      "en": "Number of slices",
+      "de": "Anzahl Lamellen",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "spread",
+      "scope": "PILE-12",
+      "kind": "number",
+      "en": "Load spread of the equivalent raft, horizontal per vertical (1:4 = 0.25)",
+      "de": "Lastausbreitung des Ersatzfundaments, horizontal je vertikal (1:4 = 0,25)",
+      "confidence": "low",
+      "note": "textbook equivalent-raft convention, not an EN 1997 value",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "stiff",
+      "scope": "",
+      "kind": "number",
+      "en": "Stiff structure (1) or not (0)",
+      "de": "Steifes Tragwerk (1) oder nicht (0)",
+      "confidence": "high",
+      "note": "flag read as > 0.5",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "strip_a",
+      "scope": "",
+      "kind": "number",
+      "en": "Strip load distance a",
+      "de": "Abstand a der Streifenlast",
+      "confidence": "medium",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "strip_b",
+      "scope": "",
+      "kind": "number",
+      "en": "Strip load width b",
+      "de": "Breite b der Streifenlast",
+      "confidence": "medium",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "strip_q",
+      "scope": "",
+      "kind": "number",
+      "en": "Strip surcharge q",
+      "de": "Streifenlast q",
+      "confidence": "medium",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "strip_z",
+      "scope": "",
+      "kind": "number",
+      "en": "Depth z of the strip load check",
+      "de": "Tiefe z der Streifenlastbetrachtung",
+      "confidence": "medium",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "sv1",
+      "scope": "PILE-05",
+      "kind": "series",
+      "en": "Vertical stress of layer 1 (series)",
+      "de": "Vertikalspannung der Schicht 1 (Reihe)",
+      "confidence": "medium",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "sx",
+      "scope": "",
+      "kind": "number",
+      "en": "Pile spacing s_x",
+      "de": "Pfahlabstand s_x",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "sy",
+      "scope": "",
+      "kind": "number",
+      "en": "Pile spacing s_y",
+      "de": "Pfahlabstand s_y",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "t",
+      "scope": "RW-03",
+      "kind": "number",
+      "en": "Embedment depth t",
+      "de": "Einbindetiefe t",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "t",
+      "scope": "SLS-02,SLS-05",
+      "kind": "number",
+      "en": "Time t",
+      "de": "Zeit t",
+      "confidence": "high",
+      "unit": "s",
+      "unitId": "Second"
+    },
+    {
+      "key": "t1",
+      "scope": "SLS-03",
+      "kind": "number",
+      "en": "Time t₁",
+      "de": "Zeit t₁",
+      "confidence": "high",
+      "unit": "s",
+      "unitId": "Second"
+    },
+    {
+      "key": "t2",
+      "scope": "SLS-03",
+      "kind": "number",
+      "en": "Time t₂",
+      "de": "Zeit t₂",
+      "confidence": "high",
+      "unit": "s",
+      "unitId": "Second"
+    },
+    {
+      "key": "t90",
+      "scope": "",
+      "kind": "number",
+      "en": "Time t₉₀ of 90 % consolidation",
+      "de": "Zeit t₉₀ bei 90 % Konsolidierung",
+      "confidence": "medium",
+      "unit": "s",
+      "unitId": "Second"
+    },
+    {
+      "key": "t90_lab",
+      "scope": "SLS-05",
+      "kind": "number",
+      "en": "Laboratory time to 90 % consolidation t90 (Casagrande or Taylor)",
+      "de": "Laborzeit bis 90 % Konsolidation t90 (Casagrande oder Taylor)",
+      "confidence": "high",
+      "unit": "s",
+      "unitId": "Second"
+    },
+    {
+      "key": "t_base",
+      "scope": "RW-11",
+      "kind": "number",
+      "en": "Base slab thickness",
+      "de": "Fundamentplattendicke",
+      "confidence": "medium",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "t_layer",
+      "scope": "",
+      "kind": "number",
+      "en": "Layer thickness below the dredge level",
+      "de": "Schichtdicke unter der Baugrubensohle",
+      "confidence": "medium",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "t_provided",
+      "scope": "RW-12",
+      "kind": "number",
+      "en": "Provided embedment",
+      "de": "Vorhandene Einbindetiefe",
+      "confidence": "medium",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "t_soft",
+      "scope": "EMB-01",
+      "kind": "number",
+      "en": "Thickness of the soft layer",
+      "de": "Dicke der weichen Schicht",
+      "confidence": "medium",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "t_stem",
+      "scope": "RW-11",
+      "kind": "number",
+      "en": "Stem thickness",
+      "de": "Schaftdicke",
+      "confidence": "medium",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "t_w",
+      "scope": "ANC-03",
+      "kind": "number",
+      "en": "Wall thickness or wedge width t",
+      "de": "Wand- oder Keilbreite t",
+      "confidence": "low",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "tau1",
+      "scope": "GI-12",
+      "kind": "series",
+      "en": "Shear stress of test 1 (series)",
+      "de": "Schubspannung des Versuchs 1 (Reihe)",
+      "confidence": "high",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "tau_f",
+      "scope": "",
+      "kind": "number",
+      "en": "Fixed-length skin friction τ_f",
+      "de": "Mantelreibung τ_f der Verpresslänge",
+      "confidence": "high",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "tendon",
+      "scope": "",
+      "kind": "choice",
+      "en": "Tendon type",
+      "de": "Ankerart",
+      "confidence": "high",
+      "note": "strand default, bar branch",
+      "choices": [
+        {
+          "value": "strand",
+          "en": "Strand tendon",
+          "de": "Litzenanker"
+        },
+        {
+          "value": "bar",
+          "en": "Bar tendon",
+          "de": "Stabanker"
+        }
+      ],
+      "example": "strand"
+    },
+    {
+      "key": "theta_deg",
+      "scope": "ANC-03",
+      "kind": "number",
+      "en": "Anchor inclination θ",
+      "de": "Ankerneigung θ",
+      "confidence": "medium",
+      "unit": "°",
+      "unitId": "Degree"
+    },
+    {
+      "key": "thickness",
+      "scope": "",
+      "kind": "number",
+      "en": "Aquifer or layer thickness",
+      "de": "Mächtigkeit",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "tq1",
+      "scope": "PILE-10",
+      "kind": "series",
+      "en": "Load of load-test step 1 (series)",
+      "de": "Last der Laststufe 1 (Reihe)",
+      "confidence": "high",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "ts1",
+      "scope": "PILE-10",
+      "kind": "series",
+      "en": "Settlement of load-test step 1 (series)",
+      "de": "Setzung des Laststufe 1 (Reihe)",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "u2",
+      "scope": "",
+      "kind": "number",
+      "en": "CPT pore pressure u₂",
+      "de": "Porenwasserdruck u₂ des Drucksondierens",
+      "confidence": "high",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "v",
+      "scope": "",
+      "kind": "number",
+      "en": "Vertical load V",
+      "de": "Vertikallast V",
+      "confidence": "high",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "v_d",
+      "scope": "",
+      "kind": "number",
+      "en": "Design vertical force V_d",
+      "de": "Bemessungsvertikalkraft V_d",
+      "confidence": "high",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "v_k",
+      "scope": "",
+      "kind": "number",
+      "en": "Characteristic vertical force V_k",
+      "de": "Charakteristische Vertikalkraft V_k",
+      "confidence": "high",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "v_known",
+      "scope": "",
+      "kind": "number",
+      "en": "Known coefficient of variation",
+      "de": "Bekannter Variationskoeffizient",
+      "confidence": "high",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "w",
+      "scope": "",
+      "kind": "number",
+      "en": "Weight W",
+      "de": "Gewicht W",
+      "confidence": "medium",
+      "note": "N assumed, per metre run unclear",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "width",
+      "scope": "SLOPE-05",
+      "kind": "number",
+      "en": "Extrusion width of the slip body",
+      "de": "Breite des Gleitkörpers",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "x1",
+      "scope": "DEW-02",
+      "kind": "series",
+      "en": "x coordinate of well 1 (series)",
+      "de": "x-Koordinate des Brunnens 1 (Reihe)",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "x1",
+      "scope": "G-02,GI-13",
+      "kind": "series",
+      "en": "Sample value 1 (series x1…xn)",
+      "de": "Stichprobenwert 1 (Reihe x1…xn)",
+      "confidence": "high",
+      "note": "series",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "x_m",
+      "scope": "ANC-03",
+      "kind": "number",
+      "en": "Horizontal distance x",
+      "de": "Horizontalabstand x",
+      "confidence": "low",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "x_v",
+      "scope": "",
+      "kind": "number",
+      "en": "Lever arm of the vertical thrust",
+      "de": "Hebelarm der Vertikalkomponente",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "x_w",
+      "scope": "",
+      "kind": "number",
+      "en": "Lever arm of the weight",
+      "de": "Hebelarm des Gewichts",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "xc",
+      "scope": "",
+      "kind": "number",
+      "en": "Slip circle centre x",
+      "de": "Gleitkreismittelpunkt x",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "xi_a",
+      "scope": "",
+      "kind": "number",
+      "en": "Correlation factor ξ_a",
+      "de": "Streuungsfaktor ξ_a",
+      "confidence": "medium",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "y1",
+      "scope": "DEW-02",
+      "kind": "series",
+      "en": "y coordinate of well 1 (series)",
+      "de": "y-Koordinate des Brunnens 1 (Reihe)",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "y_lim",
+      "scope": "",
+      "kind": "number",
+      "en": "Limit pile head displacement",
+      "de": "Grenzverschiebung des Pfahlkopfs",
+      "confidence": "medium",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "yc",
+      "scope": "",
+      "kind": "number",
+      "en": "Slip circle centre y",
+      "de": "Gleitkreismittelpunkt y",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "z",
+      "scope": "",
+      "kind": "number",
+      "en": "Depth z",
+      "de": "Tiefe z",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "z_have",
+      "scope": "",
+      "kind": "number",
+      "en": "Investigated depth present",
+      "de": "Vorhandene Erkundungstiefe",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "z_m",
+      "scope": "ANC-03",
+      "kind": "number",
+      "en": "Depth z of the anchor force plane",
+      "de": "Tiefe z der Ankerkraftebene",
+      "confidence": "low",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "z_start",
+      "scope": "",
+      "kind": "number",
+      "en": "Start depth of the first layer",
+      "de": "Starttiefe der ersten Schicht",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "z_w",
+      "scope": "",
+      "kind": "number",
+      "en": "Depth of the water table",
+      "de": "Tiefe des Wasserspiegels",
+      "confidence": "high",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "z_wf",
+      "scope": "RW-12",
+      "kind": "number",
+      "en": "Depth of the water level in front of the wall",
+      "de": "Tiefe des Wasserspiegels vor der Wand",
+      "confidence": "medium",
+      "unit": "m",
+      "unitId": "Metre"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "queries": {
+    "forcedColors": "(forced-colors: active)",
+    "prefersContrastMore": "(prefers-contrast: more)",
+    "prefersDark": "(prefers-color-scheme: dark)",
+    "prefersReducedMotion": "(prefers-reduced-motion: reduce)"
+  },
+  "wire": "{\"forcedColors\":true,\"prefersContrastMore\":false,\"prefersDark\":true,\"prefersReducedMotion\":true}",
+  "calm": { "forcedColors": false, "prefersContrastMore": false, "prefersDark": false, "prefersReducedMotion": false },
+  "reports": [
+    { "id": "the first report always counts", "prefs": { "forcedColors": false, "prefersContrastMore": false, "prefersDark": false, "prefersReducedMotion": false }, "changed": true },
+    { "id": "an unchanged report is silent", "prefs": { "forcedColors": false, "prefersContrastMore": false, "prefersDark": false, "prefersReducedMotion": false }, "changed": false },
+    { "id": "high contrast is a change", "prefs": { "forcedColors": true, "prefersContrastMore": false, "prefersDark": false, "prefersReducedMotion": false }, "changed": true },
+    { "id": "reduced motion on top is a change", "prefs": { "forcedColors": true, "prefersContrastMore": false, "prefersDark": false, "prefersReducedMotion": true }, "changed": true },
+    { "id": "the same again is silent", "prefs": { "forcedColors": true, "prefersContrastMore": false, "prefersDark": false, "prefersReducedMotion": true }, "changed": false },
+    { "id": "dark and more contrast is a change", "prefs": { "forcedColors": false, "prefersContrastMore": true, "prefersDark": true, "prefersReducedMotion": false }, "changed": true }
+  ],
+  "rendering": [
+    { "id": "calm", "prefs": { "forcedColors": false, "prefersContrastMore": false, "prefersDark": false, "prefersReducedMotion": false }, "attributes": { "data-forced-colors": null, "data-contrast": null, "data-reduced-motion": null, "data-color-scheme": "light" } },
+    { "id": "high contrast", "prefs": { "forcedColors": true, "prefersContrastMore": false, "prefersDark": false, "prefersReducedMotion": false }, "attributes": { "data-forced-colors": "active", "data-contrast": "more", "data-reduced-motion": null, "data-color-scheme": "light" } },
+    { "id": "more contrast", "prefs": { "forcedColors": false, "prefersContrastMore": true, "prefersDark": false, "prefersReducedMotion": false }, "attributes": { "data-forced-colors": null, "data-contrast": "more", "data-reduced-motion": null, "data-color-scheme": "light" } },
+    { "id": "dark and reduced motion", "prefs": { "forcedColors": false, "prefersContrastMore": false, "prefersDark": true, "prefersReducedMotion": true }, "attributes": { "data-forced-colors": null, "data-contrast": null, "data-reduced-motion": "reduce", "data-color-scheme": "dark" } }
+  ]
+}

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeSheetSpan",
+  "coldFormedId": "sheet-pass",
+  "newSpan": 2.0
+}

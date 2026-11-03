@@ -1,0 +1,5 @@
+{
+  "mutation": "changeConnKind",
+  "connectionId": "support-weld",
+  "newKind": "combined"
+}

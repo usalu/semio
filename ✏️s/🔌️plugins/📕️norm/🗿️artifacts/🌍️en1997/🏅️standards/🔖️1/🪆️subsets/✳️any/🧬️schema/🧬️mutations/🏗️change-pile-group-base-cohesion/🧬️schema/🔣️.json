@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-pile-group-base-cohesion/schema.json",
+  "title": "ChangePileGroupBaseCohesion",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newBaseCohesion"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changePileGroupBaseCohesion"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Pile group",
+          "de": "Pfahlgruppe"
+        },
+        "description": {
+          "en": "The pile group this mutation addresses, by id.",
+          "de": "Die adressierte Zeile (Pfahlgruppe), per Kennung."
+        },
+        "ref": {
+          "kind": "pile-group"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newBaseCohesion": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Block base c_u",
+          "de": "Blocksohle c_u"
+        },
+        "widget": "stepper",
+        "unit": "Pa",
+        "displayUnit": "kN/m²",
+        "displayFactor": 0.001,
+        "precision": 2,
+        "step": 1000,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

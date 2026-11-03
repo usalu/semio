@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-wall-stem-thickness/schema.json",
+  "title": "ChangeWallStemThickness",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newStemThickness"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeWallStemThickness"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Retaining wall",
+          "de": "Stützwand"
+        },
+        "description": {
+          "en": "The retaining wall this mutation addresses, by id.",
+          "de": "Die adressierte Zeile (Stützwand), per Kennung."
+        },
+        "ref": {
+          "kind": "retaining-wall"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newStemThickness": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "stem thickness",
+          "de": "Schaftdicke"
+        },
+        "widget": "stepper",
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

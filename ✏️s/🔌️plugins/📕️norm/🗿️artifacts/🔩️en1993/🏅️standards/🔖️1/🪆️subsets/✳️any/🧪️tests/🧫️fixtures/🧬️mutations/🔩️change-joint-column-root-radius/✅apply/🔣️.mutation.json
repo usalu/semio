@@ -1,0 +1,6 @@
+{
+  "ChangeJointColumnRootRadius": {
+    "id": "joint-j1",
+    "newColumnRootRadius": 1.5
+  }
+}

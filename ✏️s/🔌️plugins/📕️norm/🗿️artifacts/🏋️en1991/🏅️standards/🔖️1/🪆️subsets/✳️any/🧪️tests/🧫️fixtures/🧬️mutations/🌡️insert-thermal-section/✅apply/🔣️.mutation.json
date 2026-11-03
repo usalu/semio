@@ -1,0 +1,14 @@
+{
+  "InsertThermalSection": {
+    "index": 1,
+    "item": {
+      "id": "thermal-section-1-new",
+      "deckType": 1,
+      "surfacing": 1,
+      "length": 1.5,
+      "depth": 1.5,
+      "alphaMicro": 1.5,
+      "assumedRange": 1.5
+    }
+  }
+}

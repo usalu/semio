@@ -92,7 +92,6 @@ fn retained_command_dispositions_match_the_language_neutral_oracle() {
 /// that is not listed here fails `command_ids_cover_every_row`.
 fn every_command() -> Vec<Din4108Command> {
     vec![
-        Din4108Command::Evaluate(evaluate::Evaluate {}),
         Din4108Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) }),
         Din4108Command::SetField(set_field::SetField { path: "airtightnessN50".into(), value_json: "1.5".into() }),
         Din4108Command::InsertItem(insert_item::InsertItem { path: "zones".into(), index: 0, value_json: None }),
@@ -109,14 +108,14 @@ async fn command_ids_cover_every_row_and_are_unique() {
     sorted.sort_unstable();
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-    assert_eq!(ids, vec!["evaluate", "setSelectedCheckIndex", "setField", "insertItem", "removeItem", "applyRemedy"]);
+    assert_eq!(ids, vec!["setSelectedCheckIndex", "setField", "insertItem", "removeItem", "applyRemedy"]);
 }
 
 /// 🧷️ The permanent wire guard: every row round-trips textâbinary and prints under its own declared
 /// kebab wire keyword (which is deliberately NOT the camelCase `command_id`).
 #[semio_framework_async_macros::async_test]
 async fn every_command_round_trips_text_and_binary_under_its_declared_wire_keyword() {
-    let keywords = ["evaluate", "selected-check", "set-field", "insert-item", "remove-item", "apply-remedy"];
+    let keywords = ["selected-check", "set-field", "insert-item", "remove-item", "apply-remedy"];
     for (command, keyword) in every_command().into_iter().zip(keywords) {
         store::os_store::test_support::assert_op_text_binary_equivalence(&command);
         let printed = protocol::OpText::print_op(&command);
@@ -132,9 +131,8 @@ async fn every_command_round_trips_text_and_binary_under_its_declared_wire_keywo
 #[semio_framework_async_macros::async_test]
 async fn optional_field_rows_keep_their_pre_migration_bytes() {
     let hex = |command: &Din4108Command| protocol::OpBinary::encode_op(command).expect("encode").iter().map(|byte| format!("{byte:02x}")).collect::<String>();
-    assert_eq!(hex(&Din4108Command::Evaluate(evaluate::Evaluate {})), "01010000");
-    assert_eq!(hex(&Din4108Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) })), "01020001000402");
-    assert_eq!(hex(&Din4108Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: None })), "01020000");
+    assert_eq!(hex(&Din4108Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: Some(2) })), "01010001000402");
+    assert_eq!(hex(&Din4108Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index: None })), "01010000");
 }
 //#endregion ðï¸CommandSurface
 
@@ -182,7 +180,7 @@ async fn every_declared_body_key_renders() {
 async fn evaluate_commits_a_host_backed_report() {
     let mut app = context::app_with_registry().await;
     context::settle(&mut app).await;
-    let mut host = NormHost::<Din4108Family>::from_artifact(app.snapshot().expect("projection"));
+    let mut host = NormHost::<Din4108Family>::live(app.snapshot().expect("projection"));
     host.evaluate();
     assert!(!host.report().checks.is_empty());
     context::close(&mut app);
@@ -198,15 +196,6 @@ async fn host_updates_report_after_document_replace() {
     host.replace_document(document);
     host.evaluate();
     assert!(!host.report().complies());
-}
-
-#[semio_framework_async_macros::async_test]
-async fn evaluate_recommits_the_current_projection_without_changing_it() {
-    let mut app = context::app_with_registry().await;
-    let before = app.snapshot().expect("projection");
-    context::dispatch(&mut app, Din4108Command::Evaluate(evaluate::Evaluate {})).await;
-    assert_eq!(before, app.snapshot().expect("projection"));
-    context::close(&mut app);
 }
 
 /// 🧵️ Three-way drift guard between the retained id list, the publication contracts and the proof
@@ -260,7 +249,7 @@ async fn undo_redo_round_trips_through_the_wrapper() {
 #[semio_framework_async_macros::async_test]
 async fn report_out_exports_the_computed_check_report() {
     let mut app = context::app_with_registry().await;
-    let mut host = NormHost::<Din4108Family>::from_artifact(app.snapshot().expect("projection"));
+    let mut host = NormHost::<Din4108Family>::live(app.snapshot().expect("projection"));
     host.evaluate();
     let media = ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::artifact_app_laws::export_fixture_media(&mut app.0, "report:out", app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close)).expect("export report:out");
     let semio_framework_plugin::MediaPayload::Structured { schema, json } = media.payload else { panic!("expected a structured payload") };

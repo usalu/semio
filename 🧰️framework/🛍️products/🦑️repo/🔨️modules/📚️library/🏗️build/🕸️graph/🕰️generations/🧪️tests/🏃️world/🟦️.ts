@@ -5,6 +5,9 @@ import {lstat,mkdir,readFile,readdir,rm,writeFile,utimes} from "node:fs/promises
 import {basename,dirname,join,posix} from "node:path";
 import {renderGenerationMessageV1} from "../../🔌️load/🟨️.mjs";
 import {createGraphPhaseClockV1} from "../../../⏱️phases/🟨️.mjs";
+import {createEdgeReadsRecorderV1,type EdgeReadsV1} from "../../🧵️edge-reads/🟨️.mjs";
+import {environmentDigestV1,environmentPartsV1} from "../../🌍️environment/🟨️.mjs";
+import {edgeConsumersOfPartV1,previousEnvironmentOwnersV1} from "../../../🟦️.ts";
 import {canonicalJsonV1,createFileLeasePortV1,createFrontierV1,createGenerationStoreV1,diffFrontiersV1,type FrontierV1,type GenerationComputeResultV1,type GenerationComputeSpecV1,type GenerationMembershipV1,type GenerationRowV1,type GenerationStoreV1} from "../../🟨️.mjs";
 
 export const IDENTITY=createHash("sha256").update("synthetic-identity-v1").digest("hex");
@@ -48,29 +51,37 @@ const fileRow=(path:string,bytes:Uint8Array|undefined):GenerationRowV1=>({kind:"
 export type StampTableV1=Record<string,{stamp:string;scope:"project"|"environment"|"all"}>;
 const stampRows=(stamps?:StampTableV1):GenerationRowV1[]=>Object.entries(stamps??{}).filter(([,row])=>row.scope==="project"||row.scope==="all").map(([path,row])=>({kind:"stamp",path,fact:row.stamp}));
 
-export function environmentDigest(owners:readonly Owner[]):string{
- return sha(canonicalJsonV1({owners:owners.map(owner=>[owner.name,owner.root]).sort((a,b)=>a[0]<b[0]?-1:1),packages:owners.filter(owner=>owner.package).map(owner=>[owner.package,owner.name]).sort((a,b)=>a[0]!<b[0]!?-1:1)}));
+export function environmentParts(owners:readonly Owner[]){
+ const listed=owners.filter(owner=>!owner.broken);
+ return environmentPartsV1({owners:listed.map(owner=>[owner.name,owner.root,null] as [string,string,string|null]),packages:listed.filter(owner=>owner.package).map(owner=>[owner.package!,owner.name] as [string,string]),modules:[],workspaces:[],lock:null,taxonomy:null});
 }
 
-async function inferOwner(dir:string,owner:Owner,owners:readonly Owner[],stamps?:StampTableV1):Promise<{name:string;root:string;kind:"project"|"unavailable";node:unknown;edges:unknown[];targets:string[];config:string;rows:GenerationRowV1[]}>{
+export function environmentDigest(owners:readonly Owner[]):string{return environmentDigestV1(environmentParts(owners));}
+
+async function inferOwner(dir:string,owner:Owner,owners:readonly Owner[],stamps?:StampTableV1):Promise<{name:string;root:string;kind:"project"|"unavailable";node:unknown;edges:unknown[];targets:string[];config:string;rows:GenerationRowV1[];reads?:EdgeReadsV1}>{
  const rows:GenerationRowV1[]=stampRows(stamps),config=await readFile(join(dir,owner.config));rows.push(fileRow(owner.config,config));
  if(owner.broken)return{name:owner.name,root:owner.root,kind:"unavailable",node:{root:owner.root,project:owner.name,source:owner.config,sha256:sha(config),reason:"broken"},edges:[],targets:[],config:owner.config,rows};
  const sourceDir=owner.root+"/src";let names:string[]|null=null;
  try{names=(await readdir(join(dir,sourceDir))).sort();}catch{}
  rows.push({kind:"readdir",path:sourceDir,fact:names});
- const sources:{path:string;sha256:string}[]=[],edges=new Map<string,unknown>(),byPackage=new Map(owners.filter(row=>row.package).map(row=>[row.package!,row.name])),byRoot=[...owners].sort((a,b)=>b.root.length-a.root.length);
+ const recorder=createEdgeReadsRecorderV1(),reader=recorder.owner(owner.name),sources:{path:string;sha256:string}[]=[],edges=new Map<string,unknown>(),byPackage=new Map(owners.filter(row=>row.package).map(row=>[row.package!,row.name])),byRoot=[...owners].sort((a,b)=>b.root.length-a.root.length);
  for(const name of(names??[]).filter(name=>name.endsWith(".ts"))){
   const path=sourceDir+"/"+name,bytes=await readFile(join(dir,path));rows.push(fileRow(path,bytes));sources.push({path,sha256:sha(bytes)});
   for(const line of bytes.toString("utf8").split("\n")){
    const match=/^import "(.*)";$/u.exec(line);if(!match)continue;const spec=match[1]!;let target:string|undefined;
-   if(spec.startsWith("@syn/"))target=byPackage.get(spec);
-   else if(spec.startsWith(".")){const resolved=posix.normalize(posix.join(posix.dirname(path),spec));target=byRoot.find(row=>resolved.startsWith(row.root+"/"))?.name;}
+   if(spec.startsWith("@syn/")){reader.package(spec);target=byPackage.get(spec);}
+   else if(spec.startsWith(".")){const resolved=posix.normalize(posix.join(posix.dirname(path),spec));target=byRoot.find(row=>resolved.startsWith(row.root+"/"))?.name;if(target===undefined)reader.path(posix.dirname(resolved));else if(target!==owner.name)reader.owner(target);}
    if(target&&target!==owner.name){const edge={source:owner.name,sourceFile:path,target,type:"static"};edges.set(canonicalJsonV1(edge),edge);}
   }
  }
  const uses:{path:string;sha256:string|null}[]=[];
  for(const path of owner.uses){let bytes:Buffer|undefined;try{bytes=await readFile(join(dir,path));}catch{}rows.push(fileRow(path,bytes));uses.push({path,sha256:bytes?sha(bytes):null});}
- return{name:owner.name,root:owner.root,kind:"project",node:{name:owner.name,root:owner.root,package:owner.package??null,sources,uses},edges:[...edges.values()].sort((a,b)=>canonicalJsonV1(a)<canonicalJsonV1(b)?-1:1),targets:["build"],config:owner.config,rows};
+ return{name:owner.name,root:owner.root,kind:"project",node:{name:owner.name,root:owner.root,package:owner.package??null,sources,uses},edges:[...edges.values()].sort((a,b)=>canonicalJsonV1(a)<canonicalJsonV1(b)?-1:1),targets:["build"],config:owner.config,rows,reads:recorder.finish(owner.name)!};
+}
+
+/** 🎯️ The owners the recorded lookups of the previous generation say may not keep their edges under the present owner table (undefined: nothing is known, everyone is refreshed). */
+function consumersOf(spec:GenerationComputeSpecV1,owners:readonly Owner[],inferred:ReadonlySet<string>,roots:ReadonlySet<string>){
+ return edgeConsumersOfPartV1({previousEnvironment:spec.previousEnv,previousParts:spec.previousParts,previousOwners:previousEnvironmentOwnersV1(spec.stubs),parts:environmentParts(owners),stubs:Object.fromEntries(Object.entries(spec.stubs).filter(([name])=>!spec.removed.includes(name))) as never,inferred,roots});
 }
 
 /** 🧪️ The compute port of the synthetic workspace: refreshes exactly the owners the store names and, when the environment moved, the edges of every other owner. */
@@ -79,14 +90,18 @@ export function createCompute(dir:string,log:{full:string[];edges:string[];cold:
   signal?.throwIfAborted();
   const{owners,rows:envRows}=await readOwners(dir),envDigest=environmentDigest(owners);
   const roots=new Set([...spec.owners.map(name=>spec.stubs[name]!.root),...spec.discover.map(path=>dirname(path))]);
-  const full=spec.cold?owners:owners.filter(owner=>roots.has(owner.root)),fullNames=new Set(full.map(owner=>owner.name)),results:GenerationComputeResultV1["owners"]=[];
+  const full=spec.cold?owners:owners.filter(owner=>roots.has(owner.root)),fullNames=new Set(full.map(owner=>owner.name)),results:GenerationComputeResultV1["owners"]=[],carried:string[]=[];
   const entry={full:full.map(owner=>owner.name).sort(),edges:[] as string[],cold:spec.cold,envStale:spec.envStale,calls:1};
-  for(const owner of full){signal?.throwIfAborted();if(ownerDelayMs)await new Promise(resolve=>setTimeout(resolve,ownerDelayMs));results.push(await inferOwner(dir,owner,owners,stamps));}
+  for(const owner of full){signal?.throwIfAborted();if(ownerDelayMs)await new Promise(resolve=>setTimeout(resolve,ownerDelayMs));const inferred=await inferOwner(dir,owner,owners,stamps);results.push(inferred.reads?{...inferred,reads:inferred.reads}:inferred);}
   if(!spec.cold&&envDigest!==spec.previousEnv){
-   for(const owner of owners)if(!fullNames.has(owner.name)){signal?.throwIfAborted();const inferred=await inferOwner(dir,owner,owners,stamps);results.push({name:owner.name,partial:"edges",edges:inferred.edges});entry.edges.push(owner.name);}
+   const consumers=consumersOf(spec,owners,fullNames,roots);
+   for(const owner of owners)if(!fullNames.has(owner.name)){
+    if(!owner.broken&&consumers!==undefined&&!consumers.has(owner.name)){carried.push(owner.name);continue;}
+    signal?.throwIfAborted();const inferred=await inferOwner(dir,owner,owners,stamps);results.push({name:owner.name,partial:"edges",edges:inferred.edges,...(inferred.reads?{reads:inferred.reads}:{})});entry.edges.push(owner.name);
+   }
   }
   log.push(entry);
-  return{owners:results,env:{digest:envDigest,rows:envRows},global:{version:1,externalNodes:{},edges:[],unavailable:[]}};
+  return{owners:results,carried,env:{digest:envDigest,rows:envRows,parts:environmentParts(owners)},global:{version:1,externalNodes:{},edges:[],unavailable:[]}};
  };
 }
 
@@ -109,9 +124,9 @@ export function createMembership(dir:string,counter?:{walks:number}){
   const capturedAt=Date.now(),files:string[]=[],dirs:string[]=[],directories:[string,number,number][]=[],members:[string,number][]=[];
   await walk(dir,"pkg",files,dirs);
   for(const path of dirs){const status=await lstat(join(dir,path));directories.push([path,status.mtimeMs,status.ino]);}
-  for(const path of files)if(path.endsWith("/project.json")||path.endsWith(".ts")){const status=await lstat(join(dir,path));members.push([path,status.mode]);}
+  for(const path of files)if(path.endsWith("/project.json")||path.endsWith("/Cargo.toml")||path.endsWith(".ts")){const status=await lstat(join(dir,path));members.push([path,status.mode]);}
   const frontier=createFrontierV1({directories,members,capturedAt}),digest=sha(canonicalJsonV1(frontier.members));
-  const changes=previous?diffFrontiersV1(previous.frontier,frontier).map(change=>({...change,...(change.path.endsWith("/project.json")?{config:true}:{})})):[];
+  const changes=previous?diffFrontiersV1(previous.frontier,frontier).map(change=>({...change,...(change.path.endsWith("/project.json")?{config:true}:{}),...(change.path.endsWith("/Cargo.toml")?{pending:true}:{})})):[];
   return{digest,frontier,changes};
  };
 }
@@ -177,16 +192,16 @@ export function createPartDiscover(dir:string,log:{full:string[];edges:string[];
   signal?.throwIfAborted();
   const{owners,rows:envRows}=await readOwners(dir),envDigest=environmentDigest(owners);
   const roots=new Set([...spec.owners.map(name=>spec.stubs[name]!.root),...spec.discover.map(path=>dirname(path))]);
-  const full=spec.cold?owners:owners.filter(owner=>roots.has(owner.root)),fullNames=new Set(full.map(owner=>owner.name));
+  const full=spec.cold?owners:owners.filter(owner=>roots.has(owner.root)),fullNames=new Set(full.map(owner=>owner.name)),carried:string[]=[],edgeReads=new Map<string,EdgeReadsV1>();
   const inferred=[];for(const owner of full){signal?.throwIfAborted();if(ownerDelayMs)await new Promise(resolve=>setTimeout(resolve,ownerDelayMs));inferred.push(await inferOwner(dir,owner,owners,stamps));}
   const edgeOnly:{name:string}[]=[],extra:Awaited<ReturnType<typeof inferOwner>>[]=[];
-  if(!spec.cold&&envDigest!==spec.previousEnv)for(const owner of owners)if(!fullNames.has(owner.name)){signal?.throwIfAborted();extra.push(await inferOwner(dir,owner,owners,stamps));edgeOnly.push({name:owner.name});}
+  if(!spec.cold&&envDigest!==spec.previousEnv){const consumers=consumersOf(spec,owners,fullNames,roots);for(const owner of owners)if(!fullNames.has(owner.name)){if(!owner.broken&&consumers!==undefined&&!consumers.has(owner.name)){carried.push(owner.name);continue;}signal?.throwIfAborted();const done=await inferOwner(dir,owner,owners,stamps);extra.push(done);edgeOnly.push({name:owner.name});if(done.reads)edgeReads.set(owner.name,done.reads);}}
   log.push({full:inferred.map(row=>row.name).sort(),edges:edgeOnly.map(row=>row.name).sort(),cold:spec.cold});
   const capture=[...inferred,...extra].flatMap(row=>row.rows);
   return{
-   owners:inferred.map(row=>({name:row.name,root:row.root,config:row.config,...(row.kind==="unavailable"?{unavailable:row.node}:{node:row.node}),nodeRows:row.rows})),
-   edgeOnly,edges:[...inferred,...extra].flatMap(row=>row.edges) as never[],externalNodes:{},parseUnavailable:[],
-   rows:capture,env:{digest:envDigest,rows:envRows},replaceTags:[],
+   owners:inferred.map(row=>({name:row.name,root:row.root,config:row.config,...(row.kind==="unavailable"?{unavailable:row.node}:{node:row.node}),...(row.reads?{reads:row.reads}:{}),nodeRows:row.rows})),
+   edgeOnly,carried,readsOf:(name:string)=>edgeReads.get(name),edges:[...inferred,...extra].flatMap(row=>row.edges) as never[],externalNodes:{},parseUnavailable:[],
+   rows:capture,env:{digest:envDigest,rows:envRows,parts:environmentParts(owners)},replaceTags:[],
   };
  };
 }

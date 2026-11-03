@@ -1,0 +1,6 @@
+{
+  "ChangeSiloRingSpacing": {
+    "id": "silo-1",
+    "newRingSpacing": 1.5
+  }
+}

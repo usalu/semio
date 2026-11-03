@@ -9,9 +9,8 @@
   ],
   "properties": {
     "newFireOccupancy": {
-      "type": "string",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/FireOccupancy",
       "x-semio-ui": {
-        "widget": "text",
         "role": "value",
         "label": {
           "en": "Occupancy for fire design",

@@ -15,6 +15,8 @@ include!("🧮️design-approach-and-resistance-laws/🦀️.rs");
 
 include!("🔮️oracle-and-remedy-laws/🦀️.rs");
 
+include!("🌐️entity-check-laws/🦀️.rs");
+
 #[test]
 fn compliant_dsl_asset_complies() {
     let text = include_str!("../../../🖼️assets/🏗️compliant/🗣️.dsl.semio");
@@ -31,3 +33,16 @@ fn noncompliant_dsl_asset_has_multiple_fails() {
 }
 
 include!("🏷️field-meta-and-perturbation-laws/🦀️.rs");
+
+include!("📇️catalogue-laws/🦀️.rs");
+
+#[test]
+fn annex_switch_reads_the_registry_and_changes_only_the_expected_values() {
+    use semio_s_artifact_norm_en1997_checks::resolve_upl_params;
+    let (en, de) = (resolve_upl_params(AnnexChoice::En, "persistent"), resolve_upl_params(AnnexChoice::De, "persistent"));
+    assert_eq!((en.gamma_hyd, de.gamma_hyd), (1.35, 1.8));
+    assert_eq!((en.gamma_g_stb, en.gamma_g_dst), (de.gamma_g_stb, de.gamma_g_dst));
+    let (g_en, g_de) = (resolve_params(DesignApproach::Da2, AnnexChoice::En, "persistent"), resolve_params(DesignApproach::Da2, AnnexChoice::De, "persistent"));
+    assert_eq!((g_en.gamma_g, g_en.gamma_q), (g_de.gamma_g, g_de.gamma_q));
+    assert_eq!(resolve_params(DesignApproach::Da2, AnnexChoice::De, "transient").gamma_g, 1.2);
+}

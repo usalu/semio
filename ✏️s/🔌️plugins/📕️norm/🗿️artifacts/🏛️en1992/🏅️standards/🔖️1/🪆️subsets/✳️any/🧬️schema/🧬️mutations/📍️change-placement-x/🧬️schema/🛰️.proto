@@ -1,0 +1,6 @@
+syntax = "proto3";
+package semio.s.norm.en1992.mutation.change_placement_x;
+message ChangePlacementX {
+  string id = 1;
+  double new_x = 2;
+}

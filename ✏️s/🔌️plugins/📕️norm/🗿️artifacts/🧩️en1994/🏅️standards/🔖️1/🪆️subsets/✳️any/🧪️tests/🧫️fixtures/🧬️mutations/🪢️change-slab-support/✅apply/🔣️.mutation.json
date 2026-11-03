@@ -1,0 +1,6 @@
+{
+  "ChangeSlabSupport": {
+    "id": "slab-S1",
+    "newSupport": "continuous2Span"
+  }
+}

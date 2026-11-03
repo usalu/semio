@@ -1,0 +1,6 @@
+{
+  "ChangeRoofPitchDeg": {
+    "id": "roof-main",
+    "newPitchDeg": 20.0
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-deck-shear-stress/schema.json",
+  "title": "ChangeDeckShearStress",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "deckId",
+    "newValue"
+  ],
+  "properties": {
+    "deckId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Deck",
+          "de": "Fahrbahnplatte"
+        },
+        "description": {
+          "en": "The deck this mutation addresses.",
+          "de": "Das Element, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "deck"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newValue": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Shear stress to transfer τ_h",
+          "de": "Zu übertragende Schubspannung τ_h"
+        },
+        "unit": "Pa",
+        "displayUnit": "N/mm²",
+        "displayFactor": 0.000001,
+        "precision": 3,
+        "step": 50000,
+        "group": "fields",
+        "order": 20
+      }
+    }
+  }
+}

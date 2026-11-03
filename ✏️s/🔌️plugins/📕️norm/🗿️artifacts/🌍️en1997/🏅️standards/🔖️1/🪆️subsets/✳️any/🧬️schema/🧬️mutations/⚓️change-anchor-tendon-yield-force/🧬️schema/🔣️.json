@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-anchor-tendon-yield-force/schema.json",
+  "title": "ChangeAnchorTendonYieldForce",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newTendonYieldForce"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeAnchorTendonYieldForce"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Anchor",
+          "de": "Anker"
+        },
+        "description": {
+          "en": "The anchor this mutation addresses, by id.",
+          "de": "Die adressierte Zeile (Anker), per Kennung."
+        },
+        "ref": {
+          "kind": "anchor"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newTendonYieldForce": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Characteristic tendon force P_t,k",
+          "de": "Charakteristische Zuggliedkraft P_t,k"
+        },
+        "widget": "stepper",
+        "unit": "N",
+        "displayUnit": "kN",
+        "displayFactor": 0.001,
+        "precision": 2,
+        "step": 1000,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

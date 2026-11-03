@@ -44,7 +44,13 @@
         "gcc-c++",
         "libicu-devel",
         "xdg-utils",
-        "vulkan-loader"
+        "vulkan-loader",
+        "python3-lldb",
+        "mesa-vulkan-drivers",
+        "google-noto-color-emoji-fonts",
+        "google-noto-sans-fonts",
+        "google-noto-serif-fonts",
+        "google-noto-sans-mono-fonts"
       ]
     },
     {
@@ -53,7 +59,12 @@
         "build-essential",
         "libicu-dev",
         "xdg-utils",
-        "libvulkan1"
+        "libvulkan1",
+        "python3-lldb",
+        "mesa-vulkan-drivers",
+        "fonts-noto-color-emoji",
+        "fonts-noto",
+        "fonts-noto-mono"
       ]
     },
     {
@@ -62,7 +73,10 @@
         "base-devel",
         "icu",
         "xdg-utils",
-        "vulkan-icd-loader"
+        "vulkan-icd-loader",
+        "vulkan-swrast",
+        "noto-fonts-emoji",
+        "noto-fonts"
       ]
     },
     {
@@ -71,7 +85,8 @@
         "gcc",
         "libicu-devel",
         "xdg-utils",
-        "libvulkan1"
+        "libvulkan1",
+        "libvulkan_lvp"
       ]
     }
   ],
@@ -83,6 +98,18 @@
   "imageRequiredPackages": [
     "libvulkan1",
     "mesa-vulkan-drivers",
-    "xdg-utils"
-  ]
+    "xdg-utils",
+    "python3-lldb"
+  ],
+  "pkgConfig": {
+    "version": "0.7.0",
+    "modversion": "1.2.3",
+    "cflags": "-I/opt/base/include -I/opt/demo/include",
+    "libs": "-L/opt/base/lib -lbase -L/opt/demo/lib -ldemo",
+    "prefix": "/opt/demo",
+    "libsOnlyL": "-lbase -ldemo",
+    "libsOnlyLdir": "-L/opt/base/lib -L/opt/demo/lib",
+    "cflagsOnlyI": "-I/opt/base/include -I/opt/demo/include",
+    "definedPrefix": "/override"
+  }
 }

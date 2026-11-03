@@ -1,0 +1,5 @@
+{
+  "mutation": "changeSoilLayerThicknessM",
+  "id": "sl-1",
+  "newThicknessM": 4.0
+}

@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-conn-action-mzk/schema.json",
+  "title": "ChangeConnActionMZK",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "connectionId",
+    "actionId",
+    "newMZK"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeConnActionMZK"
+    },
+    "connectionId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Connection",
+          "de": "Anschluss"
+        },
+        "description": {
+          "en": "The connection this mutation addresses, by id.",
+          "de": "Das adressierte Element (Anschluss), per Kennung."
+        },
+        "ref": {
+          "kind": "connection"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "actionId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Action",
+          "de": "Einwirkung"
+        },
+        "description": {
+          "en": "The action this mutation addresses, by id.",
+          "de": "Das adressierte Element (Einwirkung), per Kennung."
+        },
+        "ref": {
+          "kind": "action"
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "newMZK": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Characteristic bending moment M_z,k",
+          "de": "Charakteristisches Biegemoment M_z,k"
+        },
+        "widget": "stepper",
+        "unit": "N·m",
+        "displayUnit": "kN·m",
+        "displayFactor": 0.001,
+        "precision": 2,
+        "step": 100,
+        "role": "value",
+        "group": "value",
+        "order": 30
+      }
+    }
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-characteristic-basis-layer-id/schema.json",
+  "title": "ChangeCharacteristicBasisLayerId",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newLayerId"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeCharacteristicBasisLayerId"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Characteristic value basis",
+          "de": "Grundlage des charakteristischen Werts"
+        },
+        "description": {
+          "en": "The characteristic value basis this mutation addresses, by id.",
+          "de": "Die adressierte Zeile (Grundlage des charakteristischen Werts), per Kennung."
+        },
+        "ref": {
+          "kind": "characteristic-basis"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newLayerId": {
+      "type": "string",
+      "x-semio-ui": {
+        "label": {
+          "en": "Layer",
+          "de": "Schicht"
+        },
+        "widget": "text",
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

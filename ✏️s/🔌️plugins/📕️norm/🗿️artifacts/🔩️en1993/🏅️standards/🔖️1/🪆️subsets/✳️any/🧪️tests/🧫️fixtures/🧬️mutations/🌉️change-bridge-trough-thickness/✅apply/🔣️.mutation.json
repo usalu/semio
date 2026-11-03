@@ -1,0 +1,6 @@
+{
+  "ChangeBridgeTroughThickness": {
+    "id": "br-1",
+    "newTroughThickness": 1.5
+  }
+}

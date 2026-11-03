@@ -1,0 +1,5 @@
+{
+  "mutation": "changeReliabilityActionDist",
+  "id": "rel-1",
+  "newActionDistribution": "lognormal"
+}

@@ -8,12 +8,6 @@
   },
   "publicationContracts": [
     {
-      "toolId": "evaluate",
-      "lanes": [
-        "host-only"
-      ]
-    },
-    {
       "toolId": "setSelectedCheckIndex",
       "lanes": [
         "window-config"
@@ -45,16 +39,6 @@
     }
   ],
   "routes": [
-    {
-      "id": "evaluate",
-      "emittedLanes": [],
-      "publicationLanes": [
-        "host-only"
-      ],
-      "execution": "bounded",
-      "admission": "migrated",
-      "reducer": "🎮️commands/🧮️evaluate — the report is derived on every read, so the reducer emits nothing"
-    },
     {
       "id": "setSelectedCheckIndex",
       "emittedLanes": [
@@ -195,9 +179,9 @@
   ],
   "expected": {
     "apps": 15,
-    "routesPerApp": 6,
-    "identities": 90,
-    "retained": 90,
+    "routesPerApp": 5,
+    "identities": 75,
+    "retained": 75,
     "batchOnlyPendingRewrite": 0
   },
   "oracle": {
@@ -205,5 +189,110 @@
     "scope": "test-only-existing-dependency",
     "ownedInterface": "NormRetainedDispositionOracle",
     "runtimeDependency": false
+  },
+  "live": {
+    "apps": [
+      "en1990",
+      "en1991",
+      "en1992",
+      "en1993",
+      "en1994",
+      "en1995",
+      "en1996",
+      "en1997",
+      "en1998",
+      "en1999"
+    ],
+    "routes": [
+      {
+        "id": "setFields",
+        "publicationLanes": [
+          "artifact",
+          "transient",
+          "presence"
+        ],
+        "reducer": "one batched edit of all resolved leaf writes; a gesture commits only on release or Enter"
+      },
+      {
+        "id": "previewRemedy",
+        "publicationLanes": [
+          "transient",
+          "presence"
+        ],
+        "reducer": "ghost preview in the transient lane, or the insert-tool cursor ghost"
+      },
+      {
+        "id": "clearPreview",
+        "publicationLanes": [
+          "transient",
+          "presence"
+        ],
+        "reducer": "drops drag and ghost previews"
+      },
+      {
+        "id": "cancelEvaluation",
+        "publicationLanes": [
+          "transient",
+          "presence"
+        ],
+        "reducer": "supersedes the live evaluation in flight"
+      },
+      {
+        "id": "evaluateUnits",
+        "publicationLanes": [
+          "transient",
+          "presence"
+        ],
+        "reducer": "settles the retained live evaluation"
+      },
+      {
+        "id": "viewportAct",
+        "publicationLanes": [
+          "transient"
+        ],
+        "reducer": "folds the viewport field, track, seek, play and speed events into the ephemeral view lane"
+      },
+      {
+        "id": "copyEntities",
+        "publicationLanes": [
+          "transient"
+        ],
+        "reducer": "names the rows of a selection as a clip; the document is not touched, the host keeps the clip text"
+      },
+      {
+        "id": "duplicateEntities",
+        "publicationLanes": [
+          "artifact"
+        ],
+        "reducer": "duplicate_edits of the selected rows with fresh ids, resolved by the family edit rules into one batched edit"
+      },
+      {
+        "id": "pasteEntities",
+        "publicationLanes": [
+          "artifact"
+        ],
+        "reducer": "paste_edits of a clip with fresh ids, resolved by the family edit rules into one batched edit"
+      },
+      {
+        "id": "moveEntity",
+        "publicationLanes": [
+          "artifact"
+        ],
+        "reducer": "move_item_edit of the row to a position, onto another row or one step, resolved by the family edit rules into one MoveItem edit"
+      },
+      {
+        "id": "deleteEntities",
+        "executes": "🗑️delete-entities",
+        "publicationLanes": [
+          "artifact"
+        ],
+        "reducer": "delete_edits of the selected rows, the last position first, resolved by the family edit rules into the per-kind remove mutations of one batched edit"
+      }
+    ],
+    "expected": {
+      "apps": 10,
+      "routesPerApp": 16,
+      "identities": 160
+    }
   }
 }

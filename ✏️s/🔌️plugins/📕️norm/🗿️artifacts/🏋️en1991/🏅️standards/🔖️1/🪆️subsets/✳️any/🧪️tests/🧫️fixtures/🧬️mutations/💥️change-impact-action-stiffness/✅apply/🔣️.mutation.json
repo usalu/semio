@@ -1,0 +1,6 @@
+{
+  "ChangeImpactActionStiffness": {
+    "id": "impact-action-1",
+    "newStiffness": 3.0
+  }
+}

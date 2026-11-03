@@ -1,0 +1,13 @@
+{
+  "InsertHelicopter": {
+    "index": 1,
+    "item": {
+      "id": "helicopter-1-new",
+      "mass": 1.5,
+      "x": 1.5,
+      "y": 1.5,
+      "height": 1.5,
+      "assumedForce": 1.5
+    }
+  }
+}

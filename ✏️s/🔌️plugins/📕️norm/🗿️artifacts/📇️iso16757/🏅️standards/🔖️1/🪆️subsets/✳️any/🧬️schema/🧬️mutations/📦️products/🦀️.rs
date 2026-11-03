@@ -56,4 +56,4 @@ pub mod retire_product_group {
 }
 //#endregion 🪢️Mounts
 
-pub use semio_s_artifact_norm_iso16757_mut_products_2::{introduce_product_class, introduce_product_series, rename_product_group, retire_product_class, retire_product_series};
+pub use semio_s_artifact_norm_iso16757_mut_products_taxonomy::{introduce_product_class, introduce_product_series, rename_product_group, retire_product_class, retire_product_series};

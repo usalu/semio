@@ -1,0 +1,5 @@
+{
+  "mutation": "changeBuildingColMomentSumNm",
+  "id": "bldg-office",
+  "newColumnMomentSumNm": 1.5
+}

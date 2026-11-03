@@ -1,0 +1,5 @@
+{
+  "mutation": "changeSheetWelded",
+  "coldFormedId": "sheet-pass",
+  "newWelded": true
+}

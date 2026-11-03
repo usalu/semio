@@ -64,11 +64,11 @@ Feature: Apply every typed block5d part-kind mutation twice — once in Rust, on
       """
       {
         "kind": "<id>",
-        "before": "shared://🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json",
-        "mutation": "shared://🧬️mutations/<vector>/🦠️mutation/🔣️.json",
-        "diff": "shared://🧬️mutations/<vector>/🔺️diff/🔣️.json",
-        "outcome": "shared://🧬️mutations/<vector>/🎯️outcome/🔣️.json",
-        "after": "shared://🧬️mutations/<vector>/📸️snapshot/➡️after/🔣️.json"
+        "before": "shared://🧬️mutations/<vector>/🔣️.before.json",
+        "mutation": "shared://🧬️mutations/<vector>/🔣️.mutation.json",
+        "diff": "shared://🧬️mutations/<vector>/🔣️.diff.json",
+        "outcome": "shared://🧬️mutations/<vector>/🔣️.outcome.json",
+        "after": "shared://🧬️mutations/<vector>/🔣️.after.json"
       }
       """
     Then the committed mutation payload declares the <id> kind
@@ -125,11 +125,11 @@ Feature: Apply every typed block5d part-kind mutation twice — once in Rust, on
       """
       {
         "kind": "<id>",
-        "before": "shared://🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json",
-        "mutation": "shared://🧬️mutations/<vector>/🦠️mutation/🔣️.json",
-        "diff": "shared://🧬️mutations/<vector>/🔺️diff/🔣️.json",
-        "outcome": "shared://🧬️mutations/<vector>/🎯️outcome/🔣️.json",
-        "after": "shared://🧬️mutations/<vector>/📸️snapshot/➡️after/🔣️.json"
+        "before": "shared://🧬️mutations/<vector>/🔣️.before.json",
+        "mutation": "shared://🧬️mutations/<vector>/🔣️.mutation.json",
+        "diff": "shared://🧬️mutations/<vector>/🔣️.diff.json",
+        "outcome": "shared://🧬️mutations/<vector>/🔣️.outcome.json",
+        "after": "shared://🧬️mutations/<vector>/🔣️.after.json"
       }
       """
     Then every field where the after-snapshot differs from the before-snapshot is declared by the committed diff
@@ -182,6 +182,6 @@ Feature: Apply every typed block5d part-kind mutation twice — once in Rust, on
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the fully populated part-kind definition with both facets
-    Given the committed before-snapshot shared://🧬️mutations/✏️rename-part-kind/🧪️renames/📸️snapshot/⬅️before/🔣️.json
+    Given the committed before-snapshot shared://🧬️mutations/✏️rename-part-kind/🧪️renames/🔣️.before.json
     When it is parsed by the platform's own dependency-free JSON reader, re-serialized and parsed again
     Then the document is unchanged and the re-serialized bytes are not the committed bytes

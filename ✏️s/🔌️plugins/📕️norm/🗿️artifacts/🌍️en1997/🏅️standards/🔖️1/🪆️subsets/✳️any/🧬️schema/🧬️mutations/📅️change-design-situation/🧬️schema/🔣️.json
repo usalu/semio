@@ -13,9 +13,8 @@
       "const": "changeDesignSituation"
     },
     "newDesignSituation": {
-      "type": "string",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/snapshot.json#/$defs/SituationChoice",
       "x-semio-ui": {
-        "widget": "text",
         "role": "value",
         "label": {
           "en": "Design situation",

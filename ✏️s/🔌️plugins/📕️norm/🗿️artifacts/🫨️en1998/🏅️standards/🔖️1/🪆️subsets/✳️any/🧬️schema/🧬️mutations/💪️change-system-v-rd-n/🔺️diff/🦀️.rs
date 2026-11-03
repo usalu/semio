@@ -1,17 +1,21 @@
-//! 💪️ `change-system-v-rd-n` diff — patches the one field of the nested row at the indexes; a missing building or system is a `mutation.target-missing`.
+//! 💪️ `change-system-v-rd-n` diff: patches `base_shear_resistance_n` of the addressed system row.
 
 use crate::change_system_v_rd_n::ChangeSystemVRdN;
 use semio_s_artifact_norm_en1998_diff::{En1998BuildingDelta, En1998BuildingPatch, En1998Diff, En1998SystemDelta, En1998SystemPatch};
 use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 
 pub fn diff(payload: &ChangeSystemVRdN, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
-    let Some(building) = base.buildings.get(payload.building_index) else {
-        return protocol::MutationOutcome::error("mutation.target-missing", "building missing", Vec::<String>::new());
+    if !payload.new_base_shear_resistance_n.is_finite() {
+        return protocol::MutationOutcome::fatal("mutation.invariant", "The value must be finite.", Vec::<String>::new());
+    }
+    let Some(r0) = base.buildings.iter().find(|row| row.id == payload.building_id) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("building {} does not exist.", payload.building_id), [payload.building_id.clone()]);
     };
-    let Some(row) = building.systems.get(payload.system_index) else {
-        return protocol::MutationOutcome::error("mutation.target-missing", "system missing", Vec::<String>::new());
+    let Some(r1) = r0.systems.iter().find(|row| row.id == payload.id) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("system {} does not exist.", payload.id), [payload.id.clone()]);
     };
-    let nested = En1998SystemDelta::modification(&row.id, En1998SystemPatch { base_shear_resistance_n: Some(payload.new_base_shear_resistance_n), ..Default::default() });
-    let patch = En1998BuildingPatch { systems: nested, ..Default::default() };
-    protocol::MutationOutcome::new(En1998Diff { buildings: En1998BuildingDelta::modification(&building.id, patch), ..Default::default() })
+    if r1.base_shear_resistance_n == payload.new_base_shear_resistance_n {
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "The system already has this value.");
+    }
+    protocol::MutationOutcome::new(En1998Diff { buildings: En1998BuildingDelta::modification(&payload.building_id, En1998BuildingPatch { systems: En1998SystemDelta::modification(&payload.id, En1998SystemPatch { base_shear_resistance_n: Some(payload.new_base_shear_resistance_n), ..Default::default() }), ..Default::default() }), ..Default::default() })
 }

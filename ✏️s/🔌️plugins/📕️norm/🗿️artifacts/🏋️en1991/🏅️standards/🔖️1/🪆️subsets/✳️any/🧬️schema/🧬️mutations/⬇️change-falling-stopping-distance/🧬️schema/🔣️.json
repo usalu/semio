@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-falling-stopping-distance/schema.json",
+  "title": "ChangeFallingStoppingDistance",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newStoppingDistance"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Falling load",
+          "de": "Fallende Last"
+        },
+        "description": {
+          "en": "The falling load this mutation addresses, by id.",
+          "de": "Das adressierte Element (Fallende Last), per Kennung."
+        },
+        "ref": {
+          "kind": "falling-load"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newStoppingDistance": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Stopping distance s",
+          "de": "Bremsweg s"
+        },
+        "widget": "stepper",
+        "unit": "m",
+        "precision": 2,
+        "step": 0.01,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

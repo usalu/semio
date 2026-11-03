@@ -1,0 +1,6 @@
+{
+  "ChangeRestraintMemberId": {
+    "id": "restraint-1",
+    "newMemberId": "member-b1-alt"
+  }
+}

@@ -17,12 +17,21 @@ const SECTION_FIELDS: &[&str] = &[
     "retaining_walls",
     "slopes",
     "uplift_cases",
+    "anchors",
+    "embedded_walls",
+    "pile_groups",
+    "lab_tests",
+    "layer_waters",
+    "characteristic_bases",
+    "investigations",
+    "placements",
+    "cases",
 ];
 
 /// 🧾 EN 1997 document outline and governing design-situation summary.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct En1997Outline {
     pub section_outline: Vec<String>,
@@ -46,7 +55,16 @@ impl En1997Outline {
             + snapshot.piles.len()
             + snapshot.retaining_walls.len()
             + snapshot.slopes.len()
-            + snapshot.uplift_cases.len()) as u32;
+            + snapshot.uplift_cases.len()
+            + snapshot.anchors.len()
+            + snapshot.embedded_walls.len()
+            + snapshot.pile_groups.len()
+            + snapshot.lab_tests.len()
+            + snapshot.layer_waters.len()
+            + snapshot.characteristic_bases.len()
+            + snapshot.investigations.len()
+            + snapshot.placements.len()
+            + snapshot.cases.len()) as u32;
         let report = semio_s_artifact_norm_en1997_checks::check_project(snapshot);
         let check_count = report.checks.len() as u32;
         let pass_count = report.checks.iter().filter(|c| c.status == CheckStatus::Pass).count() as u32;
@@ -73,8 +91,8 @@ impl En1997Outline {
                 };
                 (c.explanation.en.clone(), c.utilization, sit)
             }
-            Some(c) => (c.id.clone(), c.utilization, snapshot.design_situation.clone()),
-            None => (String::new(), 0.0, snapshot.design_situation.clone()),
+            Some(c) => (c.id.clone(), c.utilization, snapshot.design_situation.as_str().to_string()),
+            None => (String::new(), 0.0, snapshot.design_situation.as_str().to_string()),
         };
         Self {
             section_outline,
@@ -86,7 +104,7 @@ impl En1997Outline {
             governing_clause,
             governing_utilization,
             governing_situation,
-            governing_approach: snapshot.design_approach.clone(),
+            governing_approach: snapshot.design_approach.as_str().to_string(),
         }
     }
 }

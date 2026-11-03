@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-patch-position/schema.json",
+  "title": "ChangePatchPosition",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "patchLoadId",
+    "newPosition"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changePatchPosition"
+    },
+    "patchLoadId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Patch load",
+          "de": "Stegeinzellast"
+        },
+        "description": {
+          "en": "The patch load this mutation addresses, by id.",
+          "de": "Das adressierte Element (Stegeinzellast), per Kennung."
+        },
+        "ref": {
+          "kind": "patch-load"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newPosition": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/$defs/PatchLoadPosition",
+      "x-semio-ui": {
+        "label": {
+          "en": "Load position",
+          "de": "Lastlage"
+        },
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

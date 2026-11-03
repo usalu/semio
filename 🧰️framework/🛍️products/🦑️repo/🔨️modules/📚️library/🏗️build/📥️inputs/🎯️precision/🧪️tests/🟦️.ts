@@ -14,7 +14,7 @@ import schema from "../🧬️schema/🔣️.json" with {type: "json"};
 import rules from "../🔣️.json" with {type: "json"};
 
 const here = import.meta.dir;
-const findRoot = (directory: string): string => (existsSync(join(directory, "nx.json")) ? directory : dirname(directory) === directory ? process.env.SEMIO_WORKSPACE_ROOT ?? "/Users/ueli/Documents/semio" : findRoot(dirname(directory)));
+const findRoot = (directory: string): string => (existsSync(join(directory, "nx.json")) ? directory : dirname(directory) === directory ? (() => { const named = process.env.SEMIO_WORKSPACE_ROOT; if (named) return named; throw Error("Workspace root was not found"); })() : findRoot(dirname(directory)));
 const workspace = findRoot(here);
 const files = fixture.workspace.files as Record<string, string>;
 const SPEC = /(?:from\s*|import\s*\(\s*|import\s*)["'](\.{1,2}\/[^"']+)["']/gu;

@@ -1,0 +1,77 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/insert-anchor-test/schema.json",
+  "title": "InsertAnchorTest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "anchorId",
+    "index",
+    "anchorTest"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "insertAnchorTest"
+    },
+    "anchorId": {
+      "type": "string",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Anchor",
+          "de": "Anker"
+        },
+        "description": {
+          "en": "The anchor that owns the row, by id.",
+          "de": "Das Elternelement (Anker), per Kennung."
+        },
+        "group": "target",
+        "order": 10,
+        "widget": "reference",
+        "ref": {
+          "kind": "anchor"
+        }
+      }
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Zero-based list position of the row.",
+          "de": "Nullbasierte Listenposition der Zeile."
+        },
+        "group": "target",
+        "order": 20,
+        "widget": "stepper",
+        "step": 1,
+        "precision": 0
+      }
+    },
+    "anchorTest": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/snapshot.json#/$defs/AnchorTest",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Anchor test",
+          "de": "Ankerprüfung"
+        },
+        "description": {
+          "en": "The complete anchor test record to insert.",
+          "de": "Der vollständige einzufügende Datensatz (Ankerprüfung)."
+        },
+        "group": "record",
+        "order": 30
+      },
+      "x-semio-rust": {
+        "type": "semio_s_artifact_norm_en1997_model::AnchorTest"
+      }
+    }
+  }
+}

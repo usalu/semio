@@ -1,0 +1,6 @@
+{
+  "ChangeJointColumnFlangeThickness": {
+    "id": "joint-j1",
+    "newColumnFlangeThickness": 1.5
+  }
+}

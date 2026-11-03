@@ -1,0 +1,16 @@
+{
+  "InsertParametricSection": {
+    "index": 1,
+    "parametricSection": {
+      "id": "param-1-2",
+      "sectionId": "sec-heb240",
+      "label": "Parametric HEB 240",
+      "shape": "WeldedI",
+      "height": 0.24,
+      "width": 0.24,
+      "webThickness": 0.01,
+      "flangeThickness": 0.017,
+      "tolerance": 0.05
+    }
+  }
+}

@@ -725,13 +725,13 @@ configuration files (`~/.cargo/config.toml`, global git config); it does set the
 that relies on that switch fail past 260 characters, and Rust build outputs reach 240+ characters below the clone root (the script's own warning), so
 keep the clone root short (for example `C:\src\semio`).
 
-The script installs Bun, Node.js, Go, uv and rustup from checksum-verified downloads (pins in `🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🧬️schema/🔣️.json`; it runs no installer script from the network) and the same baseline toolchain the devcontainer provides on a fresh machine, the rest through winget when missing and not version-pinned:
+The script installs Node.js, uv and rustup from checksum-verified downloads (pins in `🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🧬️schema/🔣️.json`; it runs no installer script from the network). The same manifest installs the .NET SDK pinned in `global.json`. The launcher it builds provisions the pinned JavaScript runtime and Go. Winget installs the remaining baseline packages when they are missing:
 
-- Git, Git LFS, GitHub CLI, ripgrep, jq, SQLite
-- Node.js 24.15.0, Go 1.26.9, Python 3.14, uv, rustup, .NET SDK 8/9/10
-- F3D for product previews
-- Gemini CLI, TypeScript LSP, Pyright
-- dashboard-declared agent client configuration, Python/Rust/Playwright setup and Bun/uv dependencies
+- Git, Git LFS, GitHub CLI, ripgrep, jq, SQLite, Python 3.14
+- .NET SDK 9 and 10, the Visual Studio C++ Build Tools, and F3D
+- the native debugger's LLVM and Python packages
+
+`workspace:setup` then prepares Python, Rust, Playwright, and the dashboard-declared agent clients.
 
 After the bootstrap completes, start `repo dashboard` and choose **New Task** for the same registered operations as in the devcontainer. The script also keeps `PLAYWRIGHT_BROWSERS_PATH` on the repo-local shared cache so Playwright downloads stay warm across runs.
 
@@ -742,8 +742,7 @@ Native macOS and Linux bootstrap from a fresh clone with the checked-in shell sc
 bash "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh" setup
 ```
 
-It installs the native C/C++ toolchain through `apt-get`, `dnf`, `pacman` or `zypper` (Homebrew on macOS), the
-repository-pinned Bun, rustup with the `rust-toolchain.toml` toolchain, Go, the .NET 8 SDK and uv, then runs
+It installs the native C/C++ toolchain through `apt-get`, `dnf`, `pacman` or `zypper` when those can run without a password prompt (Homebrew on macOS). On Linux, a missing compiler or `pkg-config` — an immutable root such as SteamOS, or no passwordless `sudo` — is filled by pinned Zig (`cc`/`c++` for the host glibc triple) and a user-local `pkg-config` in `~/.local`, with no machine-specific path written into the checkout. Browser libraries are installed only when the package manager can run without a password; Chromium is still downloaded. Native debugger setup continues when LLDB cannot be installed. It also installs Node.js, rustup with the `rust-toolchain.toml` toolchain, the .NET SDK pinned in `global.json`, and uv. The launcher installs its JavaScript runtime and the pinned Go toolchain and links `go` into `~/.local/bin`. On Linux the script writes `CMAKE_PRESET=linux-prototype` and `PLAYWRIGHT_BROWSERS_PATH` to `~/.config/environment.d/semio.conf` and creates that Playwright directory inside the checkout. It then runs
 `repo run workspace:setup`. Linux links with the `rust-lld` that ships inside the pinned toolchain, so no distribution
 linker package is required.
 

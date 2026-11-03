@@ -9,7 +9,7 @@ import document from "../../🔣️.json" with {type: "json"};
 import corpus from "./🔣️.json" with {type: "json"};
 import corpusSchema from "./🧬️schema/🔣️.json" with {type: "json"};
 
-const findRoot = (directory: string): string => (existsSync(join(directory, "nx.json")) ? directory : dirname(directory) === directory ? process.env.SEMIO_WORKSPACE_ROOT ?? "/Users/ueli/Documents/semio" : findRoot(dirname(directory)));
+const findRoot = (directory: string): string => (existsSync(join(directory, "nx.json")) ? directory : dirname(directory) === directory ? (() => { const named = process.env.SEMIO_WORKSPACE_ROOT; if (named) return named; throw Error("Workspace root was not found"); })() : findRoot(dirname(directory)));
 const workspace = findRoot(import.meta.dir);
 const tree = corpus.tree as Record<string, string>;
 const directories = new Set(Object.keys(tree).flatMap((path) => path.split("/").slice(0, -1).map((_, index, parts) => parts.slice(0, index + 1).join("/"))));

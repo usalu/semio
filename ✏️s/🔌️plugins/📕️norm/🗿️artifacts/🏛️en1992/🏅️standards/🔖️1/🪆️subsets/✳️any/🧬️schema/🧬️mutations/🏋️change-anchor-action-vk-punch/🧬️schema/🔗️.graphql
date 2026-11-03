@@ -1,0 +1,5 @@
+type ChangeAnchorActionVKPunch {
+  anchorId: String!
+  actionId: String!
+  newVKPunch: Float!
+}

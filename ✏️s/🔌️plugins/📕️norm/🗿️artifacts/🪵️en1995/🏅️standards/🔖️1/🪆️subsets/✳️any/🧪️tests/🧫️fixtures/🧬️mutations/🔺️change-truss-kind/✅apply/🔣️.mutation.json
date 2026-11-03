@@ -1,0 +1,6 @@
+{
+  "ChangeTrussKind": {
+    "trussId": "truss-1",
+    "newValue": "pratt"
+  }
+}

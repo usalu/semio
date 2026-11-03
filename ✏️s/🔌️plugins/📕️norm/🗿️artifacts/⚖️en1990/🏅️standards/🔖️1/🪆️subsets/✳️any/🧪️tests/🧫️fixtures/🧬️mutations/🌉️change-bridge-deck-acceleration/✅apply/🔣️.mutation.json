@@ -1,0 +1,5 @@
+{
+  "mutation": "changeBridgeDeckAcceleration",
+  "id": "bri-1",
+  "newDeckAcceleration": 2.0
+}

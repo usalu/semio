@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-foundation-pile-length-m/schema.json",
+  "title": "ChangeFoundationPileLengthM",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newPileLengthM"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeFoundationPileLengthM"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Foundation",
+          "de": "Gründung"
+        },
+        "description": {
+          "en": "The foundation this mutation addresses, by id.",
+          "de": "Das adressierte Element (Gründung), per Kennung."
+        },
+        "ref": {
+          "kind": "foundation"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newPileLengthM": {
+      "type": "number",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Pile length L",
+          "de": "Pfahllänge L"
+        },
+        "group": "value",
+        "order": 20,
+        "widget": "stepper",
+        "step": 0.001,
+        "precision": 3
+      }
+    }
+  }
+}

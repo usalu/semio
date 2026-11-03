@@ -1,0 +1,6 @@
+{
+  "ChangeTensionPartialFactor": {
+    "id": "ten-1",
+    "newPartialFactor": 1.5
+  }
+}

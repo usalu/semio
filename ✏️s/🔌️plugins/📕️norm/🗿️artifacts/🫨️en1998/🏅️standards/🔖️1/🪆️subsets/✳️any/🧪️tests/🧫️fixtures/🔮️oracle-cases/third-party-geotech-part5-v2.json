@@ -1,0 +1,249 @@
+{
+  "$schema": "../../../../../../../../../🔮️oracles/🏃️harness/🧬️schema/🔣️.json",
+  "schemaVersion": 1,
+  "artifact": "en1998",
+  "annex": "De",
+  "cases": [
+    {
+      "id": "en1998.5.mononobe-okabe-vertical-wall",
+      "check": "en1998.5.mononobe-okabe",
+      "citation": {
+        "standard": "EN 1998-5",
+        "edition": "2004",
+        "clause": "Annex E: pseudo-static active thrust of Mononobe and Okabe on a vertical wall with horizontal backfill, more onerous sign of the vertical coefficient, critical wedge angle from the maximised force polygon",
+        "annex": "en"
+      },
+      "inputs": {
+        "gamma": 18000.0,
+        "H": 4.0,
+        "phi": 33.0,
+        "delta": 11.0,
+        "k_h": 0.15,
+        "k_v": 0.075
+      },
+      "expected": {
+        "E_ae": {
+          "value": 55887.905008391106,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "K_ae": {
+          "value": 0.3610329780903818,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "rho_deg": {
+          "value": 52.554017161795,
+          "unit": "deg",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1998.5.wall-water-permeable",
+      "check": "en1998.5.wall-water",
+      "citation": {
+        "standard": "EN 1998-5",
+        "edition": "2004",
+        "clause": "Annex E: backfill of high permeability, the water moves against the grains: dry weight as inertia in the submerged layer, hydrostatic thrust and Westergaard thrust 7/12 k_h gamma_w H_w^2",
+        "annex": "en"
+      },
+      "inputs": {
+        "gamma": 18000.0,
+        "H": 4.0,
+        "H_w": 3.0,
+        "gamma_sat": 20000.0,
+        "phi": 32.0,
+        "k_h": 0.2,
+        "permeable": 1.0
+      },
+      "expected": {
+        "H_soil": {
+          "value": 62745.6715906535,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "H_static": {
+          "value": 44145.0,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "H_dynamic": {
+          "value": 10300.5,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "H_total": {
+          "value": 117191.17159065351,
+          "unit": "N",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1998.5.wall-water-low-permeability",
+      "check": "en1998.5.wall-water",
+      "citation": {
+        "standard": "EN 1998-5",
+        "edition": "2004",
+        "clause": "Annex E: backfill of low permeability, the water moves with the soil: saturated weight as inertia in the submerged layer, hydrostatic thrust, no separate hydrodynamic thrust",
+        "annex": "en"
+      },
+      "inputs": {
+        "gamma": 18000.0,
+        "H": 4.0,
+        "H_w": 3.0,
+        "gamma_sat": 20000.0,
+        "phi": 32.0,
+        "k_h": 0.2,
+        "permeable": 0.0
+      },
+      "expected": {
+        "H_soil": {
+          "value": 67580.83743643275,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "H_static": {
+          "value": 44145.0,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "H_dynamic": {
+          "value": 0.0,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "H_total": {
+          "value": 111725.83743643275,
+          "unit": "N",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1998.5.seismic-slope-bishop-grid",
+      "check": "en1998.5.seismic-slope",
+      "citation": {
+        "standard": "EN 1998-5",
+        "edition": "2004",
+        "clause": "4.1.3.3: pseudo-static slope stability, F_H = 0.5 alpha S W with the topographic amplification S_T and F_V = ±0.33 F_H at the slice centroids, simplified Bishop factor with the M2 strengths for the given circle and the least factor of a grid of circles",
+        "annex": "en"
+      },
+      "inputs": {
+        "H": 8.0,
+        "beta": 30.0,
+        "xc": 4.0,
+        "yc": 12.0,
+        "R": 13.0,
+        "gamma": 19000.0,
+        "phi": 32.0,
+        "c": 5000.0,
+        "gamma_phi": 1.25,
+        "gamma_c": 1.25,
+        "a_g": 1.6,
+        "S": 1.15,
+        "S_T": 1.2,
+        "factor": 0.5,
+        "share": 0.33
+      },
+      "expected": {
+        "F_static": {
+          "value": 2.431154945580974,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "F_given": {
+          "value": 1.8089034680170362,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "F_critical": {
+          "value": 1.061331022730807,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "F_s": {
+          "value": 1.061331022730807,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "k_h": {
+          "value": 0.11253822629969418,
+          "unit": "1",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1998.5.tie-beam-ground-c",
+      "check": "en1998.5.tie-beam",
+      "citation": {
+        "standard": "EN 1998-5",
+        "edition": "2004",
+        "clause": "5.4.1.2: tie force N = 0.4 alpha S N_Ed of ground type C against the steel resistance A_s f_yd",
+        "annex": "en"
+      },
+      "inputs": {
+        "ground_index": 1.0,
+        "a_g": 1.6,
+        "S": 1.15,
+        "N_Ed": 3000000.0,
+        "A_s": 0.0012,
+        "f_yd": 434800000.0
+      },
+      "expected": {
+        "N_tie": {
+          "value": 225076.45259938837,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "N_Rd": {
+          "value": 521759.99999999994,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "utilisation": {
+          "value": 0.43137927897766865,
+          "unit": "1",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        }
+      ]
+    }
+  ]
+}

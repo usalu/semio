@@ -260,6 +260,31 @@ fn text_fields_answer_the_shared_text_keyboard_law_rows() {
     }
 }
 
+/// ✏️ The cell of a table-twin row: a blur-committing field in a tree row answers the rows of `🐚️Shell/🧪️tests/🧫️fixtures/🎯️focus-row-control` — Escape drops the typed draft and shows the committed value again (nothing dispatched), Enter commits the draft — the same rows the React cell answers.
+#[test]
+fn a_row_cell_reverts_to_its_committed_value_on_escape_and_commits_on_enter_like_the_language_agnostic_rows() {
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../../../🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🧪️tests/🧫️fixtures/🎯️focus-row-control/🔣️.json")).expect("focus-row-control fixture");
+    for row in fixture["cells"].as_array().expect("cell rows") {
+        let case = row["id"].as_str().expect("id");
+        let (kind, committed, typed, pressed) = (row["kind"].as_str().unwrap(), row["committed"].as_str().unwrap(), row["typed"].as_str().unwrap(), row["key"].as_str().unwrap());
+        let mut tree = UiTree::new();
+        let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 100.0));
+        let cell = leaf(&mut tree, Some(root), 1, draft_field(kind, committed), (0.0, 0.0, 120.0, 24.0));
+        let mut router = EventRouter::new("main");
+        router.focus.set_focus(&mut tree, Some(cell), true);
+        router.dispatch(&mut tree, root, &UiEvent::TextInput { text: typed.into() });
+        let commands = router.dispatch(&mut tree, root, &UiEvent::KeyDown { key: pressed.into(), modifiers: Default::default() });
+        let shown = tree.node(cell).and_then(|node| node.state.edit.as_ref()).map(|edit| edit.text.clone());
+        assert_eq!(shown.as_deref(), row["shown"].as_str(), "{case}: the cell shows");
+        let dispatched = dispatched_values(&commands);
+        match &row["dispatched"] {
+            serde_json::Value::Null => assert!(dispatched.is_empty(), "{case}: nothing is dispatched"),
+            serde_json::Value::Number(number) => assert_eq!(dispatched, vec![DslValue::Object(vec![("value".into(), DslValue::float(number.as_f64().unwrap()))])], "{case}"),
+            text => assert_eq!(dispatched, vec![DslValue::Object(vec![("value".into(), DslValue::String(text.as_str().unwrap().into()))])], "{case}"),
+        }
+    }
+}
+
 /// 📜️ A multi-line draft commits whole — every line — when focus leaves, and its single-row field shows the line that
 /// holds the caret with the caret's place inside that line.
 #[test]

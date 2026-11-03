@@ -14,12 +14,6 @@ pub mod remove_cold_formed_member;
 pub mod remove_plated_panel;
 #[path = "../➖️remove-silo-shell/🦀️.rs"]
 pub mod remove_silo_shell;
-#[path = "../🥶️update-cold-formed-inputs/🦀️.rs"]
-pub mod update_cold_formed_inputs;
-#[path = "../🧱️update-plated-inputs/🦀️.rs"]
-pub mod update_plated_inputs;
-#[path = "../🛢️update-silo-shell-inputs/🦀️.rs"]
-pub mod update_silo_shell_inputs;
 //#endregion 🪢️Mounts
 
 

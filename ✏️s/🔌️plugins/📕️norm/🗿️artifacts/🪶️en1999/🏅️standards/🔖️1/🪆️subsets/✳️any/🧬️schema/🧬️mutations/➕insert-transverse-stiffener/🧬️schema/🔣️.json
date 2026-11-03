@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/insert-transverse-stiffener/schema.json",
+  "title": "InsertTransverseStiffener",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "index",
+    "transverseStiffener"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "insertTransverseStiffener"
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Zero-based list position at which the record is inserted.",
+          "de": "Nullbasierte Listenposition, an der der Datensatz eingefügt wird."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
+    },
+    "transverseStiffener": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/$defs/TransverseStiffener",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Transverse stiffener",
+          "de": "Quersteife"
+        },
+        "description": {
+          "en": "The complete transverse stiffener record to add.",
+          "de": "Der vollständige hinzuzufügende Datensatz: Quersteife."
+        },
+        "group": "record",
+        "order": 20
+      },
+      "x-semio-rust": {
+        "type": "TransverseStiffener"
+      }
+    }
+  }
+}

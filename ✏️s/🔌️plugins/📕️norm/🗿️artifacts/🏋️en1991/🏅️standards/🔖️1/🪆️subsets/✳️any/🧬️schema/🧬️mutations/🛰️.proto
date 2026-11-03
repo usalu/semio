@@ -1,69 +1,1271 @@
 syntax = "proto3";
-package semio.s.norm.en1991.mutation;
-
+package semio.s.norm.en1991;
 message En1991Mutation {
-  // @state artifact
-  double area_m2 = 1;
-  // @state artifact
-  string category = 2;
-  // @state artifact
-  string annex = 3;
-  // @state artifact
-  string self_weight_material = 4;
-  // @state artifact
-  double self_weight_thickness_m = 5;
-  // @state artifact
-  double assumed_g_k_kn_m2 = 6;
-  // @state artifact
-  string fire_curve = 7;
-  // @state artifact
-  double fire_resistance_min = 8;
-  // @state artifact
-  double fire_member_capacity_c = 9;
-  // @state artifact
-  uint32 snow_zone = 10;
-  // @state artifact
-  double snow_altitude_m = 11;
-  // @state artifact
-  double en_s_k_kn_m2 = 12;
-  // @state artifact
-  uint32 wind_zone = 13;
-  // @state artifact
-  double en_v_b_m_s = 14;
-  // @state artifact
-  double delta_t_k = 15;
-  // @state artifact
-  string construction_activity = 16;
-  // @state artifact
-  double accidental_mass_t = 17;
-  // @state artifact
-  double accidental_speed_km_h = 18;
-  // @state artifact
-  uint32 bridge_lane = 19;
-  // @state artifact
-  double bridge_span_m = 20;
-  // @state artifact
-  double bridge_lane_width_m = 21;
-  // @state artifact
-  double bridge_moment_resistance_knm = 22;
-  // @state artifact
-  string crane_class = 23;
-  // @state artifact
-  string hoist_class = 24;
-  // @state artifact
-  double hoisting_speed_m_s = 25;
-  // @state artifact
-  double silo_bulk_density_kn_m3 = 26;
-  // @state artifact
-  double silo_height_m = 27;
-  // @state artifact
-  double silo_hydraulic_radius_m = 28;
-  // @state artifact
-  double silo_mu = 29;
-  // @state artifact
-  double silo_k = 30;
-  // @state artifact
-  double c_s = 31;
-  // @state artifact
-  double c_d = 32;
+  oneof kind {
+    ChangeAnnex change_annex = 1;
+    ChangeSnowZone change_snow_zone = 2;
+    ChangeAltitude change_altitude = 3;
+    ChangeEnSk change_en_sk = 4;
+    ChangeNorthGermanLowlandSnow change_north_german_lowland_snow = 5;
+    ChangeWindZone change_wind_zone = 6;
+    ChangeEnVb change_en_vb = 7;
+    ChangeTerrainCategory change_terrain_category = 8;
+    ChangeMixedTerrainUpwind change_mixed_terrain_upwind = 9;
+    ChangeMixedTerrainDistance change_mixed_terrain_distance = 10;
+    ChangeOrographyFactor change_orography_factor = 11;
+    ChangeCoastOrIsland change_coast_or_island = 12;
+    ChangeAirDensity change_air_density = 13;
+    ChangeHeight change_height = 14;
+    ChangeWidth change_width = 15;
+    ChangeDepth change_depth = 16;
+    ChangeAssumedDeltaT change_assumed_delta_t = 17;
+    ChangeConstructionActivity change_construction_activity = 18;
+    ChangeAssumedConstructionQk change_assumed_construction_qk = 19;
+    ChangeStructureKind change_structure_kind = 20;
+    ChangeBridgeLane change_bridge_lane = 21;
+    ChangeBridgeSpan change_bridge_span = 22;
+    ChangeBridgeTandemX change_bridge_tandem_x = 23;
+    ChangeBridgeCurveRadius change_bridge_curve_radius = 24;
+    ChangeRailAlpha change_rail_alpha = 25;
+    ChangeAssumedRailLm71 change_assumed_rail_lm71 = 26;
+    ChangeAssumedRailLm71Udl change_assumed_rail_lm71_udl = 27;
+    ChangeAssumedRailSw0 change_assumed_rail_sw0 = 28;
+    ChangeAssumedRailSw2 change_assumed_rail_sw2 = 29;
+    ChangeCraneX change_crane_x = 30;
+    ChangeCraneRunwayLength change_crane_runway_length = 31;
+    ChangeCraneWheelBase change_crane_wheel_base = 32;
+    ChangeSiloDiameter change_silo_diameter = 33;
+    ChangeSiloEccentricity change_silo_eccentricity = 34;
+    ChangeSiloHopperAngleDeg change_silo_hopper_angle_deg = 35;
+    ChangeBridgeLaneWidth change_bridge_lane_width = 36;
+    ChangeAssumedBridgeTandem change_assumed_bridge_tandem = 37;
+    ChangeAssumedBridgeUdl change_assumed_bridge_udl = 38;
+    ChangeAssumedBridgeLm2 change_assumed_bridge_lm2 = 39;
+    ChangeAssumedBridgeFootway change_assumed_bridge_footway = 40;
+    ChangeStoreyCount change_storey_count = 41;
+    ChangeTMax change_t_max = 42;
+    ChangeTMin change_t_min = 43;
+    ChangeInitialTemperature change_initial_temperature = 44;
+    ChangeThermalElementType change_thermal_element_type = 45;
+    ChangeThermalBridgeType change_thermal_bridge_type = 46;
+    ChangeLinearTemperatureGradient change_linear_temperature_gradient = 47;
+    ChangeFireMode change_fire_mode = 48;
+    ChangeFireLoadBasis change_fire_load_basis = 49;
+    ChangeFireCurve change_fire_curve = 50;
+    ChangeFireDuration change_fire_duration = 51;
+    ChangeAssumedGasTemperature change_assumed_gas_temperature = 52;
+    ChangeAssumedHNet change_assumed_h_net = 53;
+    ChangeFireCompartmentArea change_fire_compartment_area = 54;
+    ChangeFireCompartmentHeight change_fire_compartment_height = 55;
+    ChangeFireOpeningFactor change_fire_opening_factor = 56;
+    ChangeFireThermalInertia change_fire_thermal_inertia = 57;
+    ChangeFireOccupancy change_fire_occupancy = 58;
+    ChangeFireLoadDensityQf change_fire_load_density_qf = 59;
+    ChangeAssumedQfD change_assumed_qf_d = 60;
+    ChangeAssumedBridgeLm3 change_assumed_bridge_lm3 = 61;
+    ChangeAssumedBridgeLm4 change_assumed_bridge_lm4 = 62;
+    ChangeBridgeLoadGroup change_bridge_load_group = 63;
+    ChangeCraneClaimed change_crane_claimed = 64;
+    ChangeCraneClass change_crane_class = 65;
+    ChangeHoistClass change_hoist_class = 66;
+    ChangeHoistingSpeed change_hoisting_speed = 67;
+    ChangeAssumedCraneWheel change_assumed_crane_wheel = 68;
+    ChangeAssumedCraneHorizontal change_assumed_crane_horizontal = 69;
+    ChangeSiloClaimed change_silo_claimed = 70;
+    ChangeSiloKind change_silo_kind = 71;
+    ChangeSiloBulkDensity change_silo_bulk_density = 72;
+    ChangeSiloHeight change_silo_height = 73;
+    ChangeSiloHydraulicRadius change_silo_hydraulic_radius = 74;
+    ChangeSiloMu change_silo_mu = 75;
+    ChangeSiloK change_silo_k = 76;
+    ChangeAssumedSiloPressure change_assumed_silo_pressure = 77;
+    ChangeAssumedSiloPatch change_assumed_silo_patch = 78;
+    ChangeAssumedSiloWallFriction change_assumed_silo_wall_friction = 79;
+    ChangeFloorAssumedQk change_floor_assumed_qk = 80;
+    ChangeSelfWeightAssumedGk change_self_weight_assumed_gk = 81;
+    ChangeRoofAssumedSk change_roof_assumed_sk = 82;
+    ChangeWindFaceAssumedWp change_wind_face_assumed_wp = 83;
+    ChangeAccidentalAssumedForce change_accidental_assumed_force = 84;
+    InsertFloor insert_floor = 85;
+    RemoveFloor remove_floor = 86;
+    InsertSelfWeightElement insert_self_weight_element = 87;
+    RemoveSelfWeightElement remove_self_weight_element = 88;
+    InsertRoof insert_roof = 89;
+    RemoveRoof remove_roof = 90;
+    InsertWindFace insert_wind_face = 91;
+    RemoveWindFace remove_wind_face = 92;
+    InsertAccidentalCase insert_accidental_case = 93;
+    RemoveAccidentalCase remove_accidental_case = 94;
+    ChangeRoofPitchDeg change_roof_pitch_deg = 95;
+    ChangeRoofParapetHeight change_roof_parapet_height = 96;
+    ChangeRoofDriftObstructionHeight change_roof_drift_obstruction_height = 97;
+    ChangeFloorArea change_floor_area = 98;
+    ChangeSelfWeightThickness change_self_weight_thickness = 99;
+    ChangeWindFaceZ change_wind_face_z = 100;
+    ChangeWindFaceLoadedArea change_wind_face_loaded_area = 101;
+    ChangeLaneWidth change_lane_width = 102;
+    ChangeLaneOffset change_lane_offset = 103;
+    ChangeLaneLm1Lane change_lane_lm1_lane = 104;
+    InsertBridgeLane insert_bridge_lane = 105;
+    RemoveBridgeLane remove_bridge_lane = 106;
+    ChangeStageActivity change_stage_activity = 107;
+    ChangeStageDurationDays change_stage_duration_days = 108;
+    ChangeStageReturnYears change_stage_return_years = 109;
+    ChangeStageAssumedQk change_stage_assumed_qk = 110;
+    InsertConstructionStage insert_construction_stage = 111;
+    RemoveConstructionStage remove_construction_stage = 112;
+    ChangeRoofSurfaceFace change_roof_surface_face = 113;
+    ChangeRoofSurfaceShape change_roof_surface_shape = 114;
+    ChangeRoofSurfacePitchDeg change_roof_surface_pitch_deg = 115;
+    ChangeRoofSurfaceExtent change_roof_surface_extent = 116;
+    InsertRoofSurface insert_roof_surface = 117;
+    RemoveRoofSurface remove_roof_surface = 118;
+    ChangePlacementX change_placement_x = 119;
+    ChangePlacementY change_placement_y = 120;
+    ChangePlacementZ change_placement_z = 121;
+    ChangePlacementYaw change_placement_yaw = 122;
+    InsertPlacement insert_placement = 123;
+    RemovePlacement remove_placement = 124;
+    InsertCase insert_case = 125;
+    RemoveCase remove_case = 126;
+    ChangeCaseNumber change_case_number = 127;
+    ChangeCaseText change_case_text = 128;
+    ChangeCaseLabelEn change_case_label_en = 129;
+    ChangeCaseLabelDe change_case_label_de = 130;
+    ChangeCaseEntryId change_case_entry_id = 131;
+    ChangeFloorCategory change_floor_category = 132;
+    ChangeFloorAssumedQkConc change_floor_assumed_qk_conc = 133;
+    ChangeFloorAssumedPartitions change_floor_assumed_partitions = 134;
+    ChangeSelfWeightMaterial change_self_weight_material = 135;
+    ChangeRoofRoofType change_roof_roof_type = 136;
+    ChangeRoofCE change_roof_c_e = 137;
+    ChangeRoofCT change_roof_c_t = 138;
+    ChangeRoofHasParapet change_roof_has_parapet = 139;
+    ChangeRoofMultiSpan change_roof_multi_span = 140;
+    ChangeWindFaceZone change_wind_face_zone = 141;
+    ChangeWindFaceCPe10 change_wind_face_c_pe10 = 142;
+    ChangeWindFaceCPe1 change_wind_face_c_pe1 = 143;
+    ChangeWindFaceCPi change_wind_face_c_pi = 144;
+    ChangeWindFaceCS change_wind_face_c_s = 145;
+    ChangeWindFaceCD change_wind_face_c_d = 146;
+    ChangeSpecialVehicleDesignation change_special_vehicle_designation = 147;
+    ChangeSpecialVehicleX change_special_vehicle_x = 148;
+    ChangeSpecialVehicleY change_special_vehicle_y = 149;
+    InsertSpecialVehicle insert_special_vehicle = 150;
+    RemoveSpecialVehicle remove_special_vehicle = 151;
+    ChangeWindBridgeDeckWidth change_wind_bridge_deck_width = 152;
+    ChangeWindBridgeDeckDepth change_wind_bridge_deck_depth = 153;
+    ChangeWindBridgeParapetKind change_wind_bridge_parapet_kind = 154;
+    ChangeWindBridgeParapetHeight change_wind_bridge_parapet_height = 155;
+    ChangeWindBridgeTrafficKind change_wind_bridge_traffic_kind = 156;
+    ChangeWindBridgeGroundHeight change_wind_bridge_ground_height = 157;
+    ChangeWindBridgeSpan change_wind_bridge_span = 158;
+    ChangeWindBridgeAssumedForce change_wind_bridge_assumed_force = 159;
+    InsertWindBridge insert_wind_bridge = 160;
+    RemoveWindBridge remove_wind_bridge = 161;
+    ChangeDynamicElementHeight change_dynamic_element_height = 162;
+    ChangeDynamicElementWidth change_dynamic_element_width = 163;
+    ChangeDynamicFirstFrequency change_dynamic_first_frequency = 164;
+    ChangeDynamicLogDecrement change_dynamic_log_decrement = 165;
+    ChangeDynamicMassPerLength change_dynamic_mass_per_length = 166;
+    ChangeDynamicElementStrouhal change_dynamic_element_strouhal = 167;
+    ChangeDynamicAssumedCscd change_dynamic_assumed_cscd = 168;
+    InsertDynamicElement insert_dynamic_element = 169;
+    RemoveDynamicElement remove_dynamic_element = 170;
+    ChangeImpactActionKind change_impact_action_kind = 171;
+    ChangeImpactActionMass change_impact_action_mass = 172;
+    ChangeImpactActionSpeed change_impact_action_speed = 173;
+    ChangeImpactActionStiffness change_impact_action_stiffness = 174;
+    ChangeImpactActionHeight change_impact_action_height = 175;
+    ChangeImpactActionX change_impact_action_x = 176;
+    ChangeImpactActionY change_impact_action_y = 177;
+    ChangeImpactActionAssumedForce change_impact_action_assumed_force = 178;
+    InsertImpactAction insert_impact_action = 179;
+    RemoveImpactAction remove_impact_action = 180;
+    ChangeInternalExplosionVolume change_internal_explosion_volume = 181;
+    ChangeExplosionVentArea change_explosion_vent_area = 182;
+    ChangeExplosionVentPressure change_explosion_vent_pressure = 183;
+    ChangeExplosionAssumedPressure change_explosion_assumed_pressure = 184;
+    InsertInternalExplosion insert_internal_explosion = 185;
+    RemoveInternalExplosion remove_internal_explosion = 186;
+    ChangeThermalSectionDeckType change_thermal_section_deck_type = 187;
+    ChangeThermalSectionSurfacing change_thermal_section_surfacing = 188;
+    ChangeThermalSectionLength change_thermal_section_length = 189;
+    ChangeThermalSectionDepth change_thermal_section_depth = 190;
+    ChangeThermalSectionAlphaMicro change_thermal_section_alpha_micro = 191;
+    ChangeThermalAssumedRange change_thermal_assumed_range = 192;
+    InsertThermalSection insert_thermal_section = 193;
+    RemoveThermalSection remove_thermal_section = 194;
+    ChangeAccidentalVehicleMass change_accidental_vehicle_mass = 195;
+    ChangeAccidentalVehicleSpeed change_accidental_vehicle_speed = 196;
+    ChangeAccidentalExplosionMass change_accidental_explosion_mass = 197;
+    ChangeAccidentalStandoff change_accidental_standoff = 198;
+    ChangeAccidentalAssumedPressure change_accidental_assumed_pressure = 199;
+    ChangeHelicopterMass change_helicopter_mass = 200;
+    ChangeHelicopterX change_helicopter_x = 201;
+    ChangeHelicopterY change_helicopter_y = 202;
+    ChangeHelicopterHeight change_helicopter_height = 203;
+    ChangeHelicopterAssumedForce change_helicopter_assumed_force = 204;
+    InsertHelicopter insert_helicopter = 205;
+    RemoveHelicopter remove_helicopter = 206;
+    ChangeTieRunKind change_tie_run_kind = 207;
+    ChangeTieRunSpacing change_tie_run_spacing = 208;
+    ChangeTieRunSpan change_tie_run_span = 209;
+    ChangeTieRunDeadLoad change_tie_run_dead_load = 210;
+    ChangeTieRunImposedLoad change_tie_run_imposed_load = 211;
+    ChangeTieRunPsi change_tie_run_psi = 212;
+    ChangeTieRunX change_tie_run_x = 213;
+    ChangeTieRunY change_tie_run_y = 214;
+    ChangeTieRunProvidedForce change_tie_run_provided_force = 215;
+    InsertTieRun insert_tie_run = 216;
+    RemoveTieRun remove_tie_run = 217;
+    ChangeConstructionLoadStage change_construction_load_stage = 218;
+    ChangeConstructionLoadKind change_construction_load_kind = 219;
+    ChangeConstructionLoadMagnitude change_construction_load_magnitude = 220;
+    InsertConstructionLoad insert_construction_load = 221;
+    RemoveConstructionLoad remove_construction_load = 222;
+    ChangeFallingMass change_falling_mass = 223;
+    ChangeFallingDropHeight change_falling_drop_height = 224;
+    ChangeFallingStoppingDistance change_falling_stopping_distance = 225;
+    ChangeFallingX change_falling_x = 226;
+    ChangeFallingY change_falling_y = 227;
+    ChangeFallingAssumedForce change_falling_assumed_force = 228;
+    InsertFalling insert_falling = 229;
+    RemoveFalling remove_falling = 230;
+    ChangeImperfectionHeight change_imperfection_height = 231;
+    ChangeImperfectionTolerance change_imperfection_tolerance = 232;
+    ChangeImperfectionVerticalLoad change_imperfection_vertical_load = 233;
+    ChangeImperfectionX change_imperfection_x = 234;
+    ChangeImperfectionY change_imperfection_y = 235;
+    ChangeImperfectionAssumedForce change_imperfection_assumed_force = 236;
+    InsertImperfection insert_imperfection = 237;
+    RemoveImperfection remove_imperfection = 238;
+    ChangeDerailmentDistance change_derailment_distance = 239;
+    ChangeDerailmentDesignForceX change_derailment_design_force_x = 240;
+    ChangeDerailmentDesignForceY change_derailment_design_force_y = 241;
+    ChangeDerailmentX change_derailment_x = 242;
+    ChangeDerailmentY change_derailment_y = 243;
+    ChangeDerailmentAssumedForce change_derailment_assumed_force = 244;
+    InsertDerailment insert_derailment = 245;
+    RemoveDerailment remove_derailment = 246;
+    ChangeCraneHoistRatedLoad change_crane_hoist_rated_load = 247;
+    ChangeCraneHoistReleaseFraction change_crane_hoist_release_fraction = 248;
+    ChangeCraneHoistReleaseDevice change_crane_hoist_release_device = 249;
+    InsertCraneHoist insert_crane_hoist = 250;
+    RemoveCraneHoist remove_crane_hoist = 251;
+    ChangeFootbridgeLoadedLength change_footbridge_loaded_length = 252;
+    ChangeFootbridgeDeckWidth change_footbridge_deck_width = 253;
+    ChangeFootbridgeNaturalFrequency change_footbridge_natural_frequency = 254;
+    InsertFootbridge insert_footbridge = 255;
+    RemoveFootbridge remove_footbridge = 256;
+    ChangeRailDynamicDeterminantLength change_rail_dynamic_determinant_length = 257;
+    ChangeRailDynamicMaintenance change_rail_dynamic_maintenance = 258;
+    InsertRailDynamic insert_rail_dynamic = 259;
+    RemoveRailDynamic remove_rail_dynamic = 260;
+    ChangeLoadDispersalWheelLength change_load_dispersal_wheel_length = 261;
+    ChangeLoadDispersalWheelWidth change_load_dispersal_wheel_width = 262;
+    ChangeLoadDispersalPavingThickness change_load_dispersal_paving_thickness = 263;
+    ChangeLoadDispersalSlabThickness change_load_dispersal_slab_thickness = 264;
+    InsertLoadDispersal insert_load_dispersal = 265;
+    RemoveLoadDispersal remove_load_dispersal = 266;
+    ChangeBulkSolidInternalFriction change_bulk_solid_internal_friction = 267;
+    InsertBulkSolid insert_bulk_solid = 268;
+    RemoveBulkSolid remove_bulk_solid = 269;
+    ChangeRotatingMachineMass change_rotating_machine_mass = 270;
+    ChangeRotatingMachineEccentricity change_rotating_machine_eccentricity = 271;
+    ChangeRotatingMachineFrequency change_rotating_machine_frequency = 272;
+    InsertRotatingMachine insert_rotating_machine = 273;
+    RemoveRotatingMachine remove_rotating_machine = 274;
+  }
+}
+message ChangeAnnex {
+  AnnexChoice new_annex = 1;
+}
+message ChangeSnowZone {
+  string new_snow_zone = 1;
+}
+message ChangeAltitude {
+  double new_altitude = 1;
+}
+message ChangeEnSk {
+  double new_en_sk = 1;
+}
+message ChangeNorthGermanLowlandSnow {
+  bool new_north_german_lowland_snow = 1;
+}
+message ChangeWindZone {
+  uint32 new_wind_zone = 1;
+}
+message ChangeEnVb {
+  double new_en_vb = 1;
+}
+message ChangeTerrainCategory {
+  uint32 new_terrain_category = 1;
+}
+message ChangeMixedTerrainUpwind {
+  uint32 new_mixed_terrain_upwind = 1;
+}
+message ChangeMixedTerrainDistance {
+  double new_mixed_terrain_distance = 1;
+}
+message ChangeOrographyFactor {
+  double new_orography_factor = 1;
+}
+message ChangeCoastOrIsland {
+  bool new_coast_or_island = 1;
+}
+message ChangeAirDensity {
+  double new_air_density = 1;
+}
+message ChangeHeight {
+  double new_height = 1;
+}
+message ChangeWidth {
+  double new_width = 1;
+}
+message ChangeDepth {
+  double new_depth = 1;
+}
+message ChangeAssumedDeltaT {
+  double new_assumed_delta_t = 1;
+}
+message ChangeConstructionActivity {
+  string new_construction_activity = 1;
+}
+message ChangeAssumedConstructionQk {
+  double new_assumed_construction_qk = 1;
+}
+message ChangeStructureKind {
+  StructureKind new_structure_kind = 1;
+}
+message ChangeBridgeLane {
+  uint32 new_bridge_lane = 1;
+}
+message ChangeBridgeSpan {
+  double new_bridge_span = 1;
+}
+message ChangeBridgeTandemX {
+  double new_bridge_tandem_x = 1;
+}
+message ChangeBridgeCurveRadius {
+  double new_bridge_curve_radius = 1;
+}
+message ChangeRailAlpha {
+  double new_rail_alpha = 1;
+}
+message ChangeAssumedRailLm71 {
+  double new_assumed_rail_lm71 = 1;
+}
+message ChangeAssumedRailLm71Udl {
+  double new_assumed_rail_lm71_udl = 1;
+}
+message ChangeAssumedRailSw0 {
+  double new_assumed_rail_sw0 = 1;
+}
+message ChangeAssumedRailSw2 {
+  double new_assumed_rail_sw2 = 1;
+}
+message ChangeCraneX {
+  double new_crane_x = 1;
+}
+message ChangeCraneRunwayLength {
+  double new_crane_runway_length = 1;
+}
+message ChangeCraneWheelBase {
+  double new_crane_wheel_base = 1;
+}
+message ChangeSiloDiameter {
+  double new_silo_diameter = 1;
+}
+message ChangeSiloEccentricity {
+  double new_silo_eccentricity = 1;
+}
+message ChangeSiloHopperAngleDeg {
+  double new_silo_hopper_angle_deg = 1;
+}
+message ChangeBridgeLaneWidth {
+  double new_bridge_lane_width = 1;
+}
+message ChangeAssumedBridgeTandem {
+  double new_assumed_bridge_tandem = 1;
+}
+message ChangeAssumedBridgeUdl {
+  double new_assumed_bridge_udl = 1;
+}
+message ChangeAssumedBridgeLm2 {
+  double new_assumed_bridge_lm2 = 1;
+}
+message ChangeAssumedBridgeFootway {
+  double new_assumed_bridge_footway = 1;
+}
+message ChangeStoreyCount {
+  uint32 new_storey_count = 1;
+}
+message ChangeTMax {
+  double new_t_max = 1;
+}
+message ChangeTMin {
+  double new_t_min = 1;
+}
+message ChangeInitialTemperature {
+  double new_t0 = 1;
+}
+message ChangeThermalElementType {
+  string new_thermal_element_type = 1;
+}
+message ChangeThermalBridgeType {
+  uint32 new_thermal_bridge_type = 1;
+}
+message ChangeLinearTemperatureGradient {
+  double new_delta_t_m = 1;
+}
+message ChangeFireMode {
+  FireMode new_fire_mode = 1;
+}
+message ChangeFireLoadBasis {
+  FireLoadBasis new_fire_load_basis = 1;
+}
+message ChangeFireCurve {
+  FireCurve new_fire_curve = 1;
+}
+message ChangeFireDuration {
+  double new_fire_duration = 1;
+}
+message ChangeAssumedGasTemperature {
+  double new_assumed_gas_temperature = 1;
+}
+message ChangeAssumedHNet {
+  double new_assumed_h_net = 1;
+}
+message ChangeFireCompartmentArea {
+  double new_fire_compartment_area = 1;
+}
+message ChangeFireCompartmentHeight {
+  double new_fire_compartment_height = 1;
+}
+message ChangeFireOpeningFactor {
+  double new_fire_opening_factor = 1;
+}
+message ChangeFireThermalInertia {
+  double new_fire_thermal_inertia = 1;
+}
+message ChangeFireOccupancy {
+  FireOccupancy new_fire_occupancy = 1;
+}
+message ChangeFireLoadDensityQf {
+  double new_fire_load_density_qf = 1;
+}
+message ChangeAssumedQfD {
+  double new_assumed_qf_d = 1;
+}
+message ChangeAssumedBridgeLm3 {
+  double new_assumed_bridge_lm3 = 1;
+}
+message ChangeAssumedBridgeLm4 {
+  double new_assumed_bridge_lm4 = 1;
+}
+message ChangeBridgeLoadGroup {
+  string new_bridge_load_group = 1;
+}
+message ChangeCraneClaimed {
+  bool new_crane_claimed = 1;
+}
+message ChangeCraneClass {
+  string new_crane_class = 1;
+}
+message ChangeHoistClass {
+  string new_hoist_class = 1;
+}
+message ChangeHoistingSpeed {
+  double new_hoisting_speed = 1;
+}
+message ChangeAssumedCraneWheel {
+  double new_assumed_crane_wheel = 1;
+}
+message ChangeAssumedCraneHorizontal {
+  double new_assumed_crane_horizontal = 1;
+}
+message ChangeSiloClaimed {
+  bool new_silo_claimed = 1;
+}
+message ChangeSiloKind {
+  string new_silo_kind = 1;
+}
+message ChangeSiloBulkDensity {
+  double new_silo_bulk_density = 1;
+}
+message ChangeSiloHeight {
+  double new_silo_height = 1;
+}
+message ChangeSiloHydraulicRadius {
+  double new_silo_hydraulic_radius = 1;
+}
+message ChangeSiloMu {
+  double new_silo_mu = 1;
+}
+message ChangeSiloK {
+  double new_silo_k = 1;
+}
+message ChangeAssumedSiloPressure {
+  double new_assumed_silo_pressure = 1;
+}
+message ChangeAssumedSiloPatch {
+  double new_assumed_silo_patch = 1;
+}
+message ChangeAssumedSiloWallFriction {
+  double new_assumed_silo_wall_friction = 1;
+}
+message ChangeFloorAssumedQk {
+  string id = 1;
+  double new_assumed_qk = 2;
+}
+message ChangeSelfWeightAssumedGk {
+  string id = 1;
+  double new_assumed_gk = 2;
+}
+message ChangeRoofAssumedSk {
+  string id = 1;
+  double new_assumed_sk = 2;
+}
+message ChangeWindFaceAssumedWp {
+  string id = 1;
+  double new_assumed_wp = 2;
+}
+message ChangeAccidentalAssumedForce {
+  string id = 1;
+  double new_assumed_force = 2;
+}
+message InsertFloor {
+  uint64 index = 1;
+  FloorArea item = 2;
+}
+message RemoveFloor {
+  string id = 1;
+}
+message InsertSelfWeightElement {
+  uint64 index = 1;
+  SelfWeightElement item = 2;
+}
+message RemoveSelfWeightElement {
+  string id = 1;
+}
+message InsertRoof {
+  uint64 index = 1;
+  RoofArea item = 2;
+}
+message RemoveRoof {
+  string id = 1;
+}
+message InsertWindFace {
+  uint64 index = 1;
+  WindFace item = 2;
+}
+message RemoveWindFace {
+  string id = 1;
+}
+message InsertAccidentalCase {
+  uint64 index = 1;
+  AccidentalCase item = 2;
+}
+message RemoveAccidentalCase {
+  string id = 1;
+}
+message ChangeRoofPitchDeg {
+  string id = 1;
+  double new_pitch_deg = 2;
+}
+message ChangeRoofParapetHeight {
+  string id = 1;
+  double new_parapet_height = 2;
+}
+message ChangeRoofDriftObstructionHeight {
+  string id = 1;
+  double new_drift_obstruction_height = 2;
+}
+message ChangeFloorArea {
+  string id = 1;
+  double new_area = 2;
+}
+message ChangeSelfWeightThickness {
+  string id = 1;
+  double new_thickness = 2;
+}
+message ChangeWindFaceZ {
+  string id = 1;
+  double new_z = 2;
+}
+message ChangeWindFaceLoadedArea {
+  string id = 1;
+  double new_loaded_area = 2;
+}
+message ChangeLaneWidth {
+  string id = 1;
+  double new_width = 2;
+}
+message ChangeLaneOffset {
+  string id = 1;
+  double new_offset = 2;
+}
+message ChangeLaneLm1Lane {
+  string id = 1;
+  uint32 new_lm1_lane = 2;
+}
+message InsertBridgeLane {
+  uint64 index = 1;
+  BridgeLane item = 2;
+}
+message RemoveBridgeLane {
+  string id = 1;
+}
+message ChangeStageActivity {
+  string id = 1;
+  string new_activity = 2;
+}
+message ChangeStageDurationDays {
+  string id = 1;
+  double new_duration_days = 2;
+}
+message ChangeStageReturnYears {
+  string id = 1;
+  double new_return_years = 2;
+}
+message ChangeStageAssumedQk {
+  string id = 1;
+  double new_assumed_qk = 2;
+}
+message InsertConstructionStage {
+  uint64 index = 1;
+  ConstructionStage item = 2;
+}
+message RemoveConstructionStage {
+  string id = 1;
+}
+message ChangeRoofSurfaceFace {
+  string id = 1;
+  string new_face = 2;
+}
+message ChangeRoofSurfaceShape {
+  string id = 1;
+  string new_shape = 2;
+}
+message ChangeRoofSurfacePitchDeg {
+  string id = 1;
+  double new_pitch_deg = 2;
+}
+message ChangeRoofSurfaceExtent {
+  string id = 1;
+  double new_extent = 2;
+}
+message InsertRoofSurface {
+  uint64 index = 1;
+  RoofSurface item = 2;
+}
+message RemoveRoofSurface {
+  string id = 1;
+}
+message ChangePlacementX {
+  string id = 1;
+  double new_x = 2;
+}
+message ChangePlacementY {
+  string id = 1;
+  double new_y = 2;
+}
+message ChangePlacementZ {
+  string id = 1;
+  double new_z = 2;
+}
+message ChangePlacementYaw {
+  string id = 1;
+  double new_yaw = 2;
+}
+message InsertPlacement {
+  uint64 index = 1;
+  Placement item = 2;
+}
+message RemovePlacement {
+  string id = 1;
+}
+message InsertCase {
+  uint64 index = 1;
+  CaseRow case = 2;
+}
+message RemoveCase {
+  string id = 1;
+}
+message ChangeCaseNumber {
+  string case_id = 1;
+  string key = 2;
+  optional double value = 3;
+}
+message ChangeCaseText {
+  string case_id = 1;
+  string key = 2;
+  optional string value = 3;
+}
+message ChangeCaseLabelEn {
+  string case_id = 1;
+  string new_value = 2;
+}
+message ChangeCaseLabelDe {
+  string case_id = 1;
+  string new_value = 2;
+}
+message ChangeCaseEntryId {
+  string case_id = 1;
+  string new_value = 2;
+}
+message ChangeFloorCategory {
+  string id = 1;
+  string new_category = 2;
+}
+message ChangeFloorAssumedQkConc {
+  string id = 1;
+  double new_assumed_qk_concentrated = 2;
+}
+message ChangeFloorAssumedPartitions {
+  string id = 1;
+  double new_assumed_partitions = 2;
+}
+message ChangeSelfWeightMaterial {
+  string id = 1;
+  string new_material = 2;
+}
+message ChangeRoofRoofType {
+  string id = 1;
+  string new_roof_type = 2;
+}
+message ChangeRoofCE {
+  string id = 1;
+  double new_c_e = 2;
+}
+message ChangeRoofCT {
+  string id = 1;
+  double new_c_t = 2;
+}
+message ChangeRoofHasParapet {
+  string id = 1;
+  bool new_has_parapet = 2;
+}
+message ChangeRoofMultiSpan {
+  string id = 1;
+  bool new_multi_span = 2;
+}
+message ChangeWindFaceZone {
+  string id = 1;
+  string new_zone = 2;
+}
+message ChangeWindFaceCPe10 {
+  string id = 1;
+  double new_c_pe10 = 2;
+}
+message ChangeWindFaceCPe1 {
+  string id = 1;
+  double new_c_pe1 = 2;
+}
+message ChangeWindFaceCPi {
+  string id = 1;
+  double new_c_pi = 2;
+}
+message ChangeWindFaceCS {
+  string id = 1;
+  double new_c_s = 2;
+}
+message ChangeWindFaceCD {
+  string id = 1;
+  double new_c_d = 2;
+}
+message ChangeSpecialVehicleDesignation {
+  string id = 1;
+  string new_designation = 2;
+}
+message ChangeSpecialVehicleX {
+  string id = 1;
+  double new_x = 2;
+}
+message ChangeSpecialVehicleY {
+  string id = 1;
+  double new_y = 2;
+}
+message InsertSpecialVehicle {
+  uint64 index = 1;
+  SpecialVehicle item = 2;
+}
+message RemoveSpecialVehicle {
+  string id = 1;
+}
+message ChangeWindBridgeDeckWidth {
+  string id = 1;
+  double new_deck_width = 2;
+}
+message ChangeWindBridgeDeckDepth {
+  string id = 1;
+  double new_deck_depth = 2;
+}
+message ChangeWindBridgeParapetKind {
+  string id = 1;
+  uint32 new_parapet_kind = 2;
+}
+message ChangeWindBridgeParapetHeight {
+  string id = 1;
+  double new_parapet_height = 2;
+}
+message ChangeWindBridgeTrafficKind {
+  string id = 1;
+  uint32 new_traffic_kind = 2;
+}
+message ChangeWindBridgeGroundHeight {
+  string id = 1;
+  double new_height_above_ground = 2;
+}
+message ChangeWindBridgeSpan {
+  string id = 1;
+  double new_span = 2;
+}
+message ChangeWindBridgeAssumedForce {
+  string id = 1;
+  double new_assumed_force = 2;
+}
+message InsertWindBridge {
+  uint64 index = 1;
+  WindBridge item = 2;
+}
+message RemoveWindBridge {
+  string id = 1;
+}
+message ChangeDynamicElementHeight {
+  string id = 1;
+  double new_height = 2;
+}
+message ChangeDynamicElementWidth {
+  string id = 1;
+  double new_width = 2;
+}
+message ChangeDynamicFirstFrequency {
+  string id = 1;
+  double new_first_frequency = 2;
+}
+message ChangeDynamicLogDecrement {
+  string id = 1;
+  double new_log_decrement = 2;
+}
+message ChangeDynamicMassPerLength {
+  string id = 1;
+  double new_mass_per_length = 2;
+}
+message ChangeDynamicElementStrouhal {
+  string id = 1;
+  double new_strouhal = 2;
+}
+message ChangeDynamicAssumedCscd {
+  string id = 1;
+  double new_assumed_cscd = 2;
+}
+message InsertDynamicElement {
+  uint64 index = 1;
+  DynamicElement item = 2;
+}
+message RemoveDynamicElement {
+  string id = 1;
+}
+message ChangeImpactActionKind {
+  string id = 1;
+  uint32 new_kind = 2;
+}
+message ChangeImpactActionMass {
+  string id = 1;
+  double new_mass = 2;
+}
+message ChangeImpactActionSpeed {
+  string id = 1;
+  double new_speed = 2;
+}
+message ChangeImpactActionStiffness {
+  string id = 1;
+  double new_stiffness = 2;
+}
+message ChangeImpactActionHeight {
+  string id = 1;
+  double new_height = 2;
+}
+message ChangeImpactActionX {
+  string id = 1;
+  double new_x = 2;
+}
+message ChangeImpactActionY {
+  string id = 1;
+  double new_y = 2;
+}
+message ChangeImpactActionAssumedForce {
+  string id = 1;
+  double new_assumed_force = 2;
+}
+message InsertImpactAction {
+  uint64 index = 1;
+  ImpactAction item = 2;
+}
+message RemoveImpactAction {
+  string id = 1;
+}
+message ChangeInternalExplosionVolume {
+  string id = 1;
+  double new_volume = 2;
+}
+message ChangeExplosionVentArea {
+  string id = 1;
+  double new_vent_area = 2;
+}
+message ChangeExplosionVentPressure {
+  string id = 1;
+  double new_vent_pressure = 2;
+}
+message ChangeExplosionAssumedPressure {
+  string id = 1;
+  double new_assumed_pressure = 2;
+}
+message InsertInternalExplosion {
+  uint64 index = 1;
+  InternalExplosion item = 2;
+}
+message RemoveInternalExplosion {
+  string id = 1;
+}
+message ChangeThermalSectionDeckType {
+  string id = 1;
+  uint32 new_deck_type = 2;
+}
+message ChangeThermalSectionSurfacing {
+  string id = 1;
+  uint32 new_surfacing = 2;
+}
+message ChangeThermalSectionLength {
+  string id = 1;
+  double new_length = 2;
+}
+message ChangeThermalSectionDepth {
+  string id = 1;
+  double new_depth = 2;
+}
+message ChangeThermalSectionAlphaMicro {
+  string id = 1;
+  double new_alpha_micro = 2;
+}
+message ChangeThermalAssumedRange {
+  string id = 1;
+  double new_assumed_range = 2;
+}
+message InsertThermalSection {
+  uint64 index = 1;
+  ThermalSection item = 2;
+}
+message RemoveThermalSection {
+  string id = 1;
+}
+message ChangeAccidentalVehicleMass {
+  string id = 1;
+  double new_vehicle_mass = 2;
+}
+message ChangeAccidentalVehicleSpeed {
+  string id = 1;
+  double new_vehicle_speed = 2;
+}
+message ChangeAccidentalExplosionMass {
+  string id = 1;
+  double new_explosion_mass = 2;
+}
+message ChangeAccidentalStandoff {
+  string id = 1;
+  double new_standoff = 2;
+}
+message ChangeAccidentalAssumedPressure {
+  string id = 1;
+  double new_assumed_pressure = 2;
+}
+message ChangeHelicopterMass {
+  string id = 1;
+  double new_mass = 2;
+}
+message ChangeHelicopterX {
+  string id = 1;
+  double new_x = 2;
+}
+message ChangeHelicopterY {
+  string id = 1;
+  double new_y = 2;
+}
+message ChangeHelicopterHeight {
+  string id = 1;
+  double new_height = 2;
+}
+message ChangeHelicopterAssumedForce {
+  string id = 1;
+  double new_assumed_force = 2;
+}
+message InsertHelicopter {
+  uint64 index = 1;
+  HelicopterLanding item = 2;
+}
+message RemoveHelicopter {
+  string id = 1;
+}
+message ChangeTieRunKind {
+  string id = 1;
+  uint32 new_kind = 2;
+}
+message ChangeTieRunSpacing {
+  string id = 1;
+  double new_spacing = 2;
+}
+message ChangeTieRunSpan {
+  string id = 1;
+  double new_span = 2;
+}
+message ChangeTieRunDeadLoad {
+  string id = 1;
+  double new_dead_load = 2;
+}
+message ChangeTieRunImposedLoad {
+  string id = 1;
+  double new_imposed_load = 2;
+}
+message ChangeTieRunPsi {
+  string id = 1;
+  double new_psi = 2;
+}
+message ChangeTieRunX {
+  string id = 1;
+  double new_x = 2;
+}
+message ChangeTieRunY {
+  string id = 1;
+  double new_y = 2;
+}
+message ChangeTieRunProvidedForce {
+  string id = 1;
+  double new_provided_force = 2;
+}
+message InsertTieRun {
+  uint64 index = 1;
+  TieRun item = 2;
+}
+message RemoveTieRun {
+  string id = 1;
+}
+message ChangeConstructionLoadStage {
+  string id = 1;
+  string new_stage = 2;
+}
+message ChangeConstructionLoadKind {
+  string id = 1;
+  uint32 new_kind = 2;
+}
+message ChangeConstructionLoadMagnitude {
+  string id = 1;
+  double new_magnitude = 2;
+}
+message InsertConstructionLoad {
+  uint64 index = 1;
+  ConstructionLoad item = 2;
+}
+message RemoveConstructionLoad {
+  string id = 1;
+}
+message ChangeFallingMass {
+  string id = 1;
+  double new_mass = 2;
+}
+message ChangeFallingDropHeight {
+  string id = 1;
+  double new_drop_height = 2;
+}
+message ChangeFallingStoppingDistance {
+  string id = 1;
+  double new_stopping_distance = 2;
+}
+message ChangeFallingX {
+  string id = 1;
+  double new_x = 2;
+}
+message ChangeFallingY {
+  string id = 1;
+  double new_y = 2;
+}
+message ChangeFallingAssumedForce {
+  string id = 1;
+  double new_assumed_force = 2;
+}
+message InsertFalling {
+  uint64 index = 1;
+  FallingLoad item = 2;
+}
+message RemoveFalling {
+  string id = 1;
+}
+message ChangeImperfectionHeight {
+  string id = 1;
+  double new_height = 2;
+}
+message ChangeImperfectionTolerance {
+  string id = 1;
+  double new_tolerance = 2;
+}
+message ChangeImperfectionVerticalLoad {
+  string id = 1;
+  double new_vertical_load = 2;
+}
+message ChangeImperfectionX {
+  string id = 1;
+  double new_x = 2;
+}
+message ChangeImperfectionY {
+  string id = 1;
+  double new_y = 2;
+}
+message ChangeImperfectionAssumedForce {
+  string id = 1;
+  double new_assumed_force = 2;
+}
+message InsertImperfection {
+  uint64 index = 1;
+  ExecutionImperfection item = 2;
+}
+message RemoveImperfection {
+  string id = 1;
+}
+message ChangeDerailmentDistance {
+  string id = 1;
+  double new_distance = 2;
+}
+message ChangeDerailmentDesignForceX {
+  string id = 1;
+  double new_design_force_x = 2;
+}
+message ChangeDerailmentDesignForceY {
+  string id = 1;
+  double new_design_force_y = 2;
+}
+message ChangeDerailmentX {
+  string id = 1;
+  double new_x = 2;
+}
+message ChangeDerailmentY {
+  string id = 1;
+  double new_y = 2;
+}
+message ChangeDerailmentAssumedForce {
+  string id = 1;
+  double new_assumed_force = 2;
+}
+message InsertDerailment {
+  uint64 index = 1;
+  DerailmentCase item = 2;
+}
+message RemoveDerailment {
+  string id = 1;
+}
+message ChangeCraneHoistRatedLoad {
+  string id = 1;
+  double new_rated_load = 2;
+}
+message ChangeCraneHoistReleaseFraction {
+  string id = 1;
+  double new_release_fraction = 2;
+}
+message ChangeCraneHoistReleaseDevice {
+  string id = 1;
+  string new_release_device = 2;
+}
+message InsertCraneHoist {
+  uint64 index = 1;
+  CraneHoist item = 2;
+}
+message RemoveCraneHoist {
+  string id = 1;
+}
+message ChangeFootbridgeLoadedLength {
+  string id = 1;
+  double new_loaded_length = 2;
+}
+message ChangeFootbridgeDeckWidth {
+  string id = 1;
+  double new_deck_width = 2;
+}
+message ChangeFootbridgeNaturalFrequency {
+  string id = 1;
+  double new_natural_frequency = 2;
+}
+message InsertFootbridge {
+  uint64 index = 1;
+  Footbridge item = 2;
+}
+message RemoveFootbridge {
+  string id = 1;
+}
+message ChangeRailDynamicDeterminantLength {
+  string id = 1;
+  double new_determinant_length = 2;
+}
+message ChangeRailDynamicMaintenance {
+  string id = 1;
+  string new_maintenance = 2;
+}
+message InsertRailDynamic {
+  uint64 index = 1;
+  RailDynamic item = 2;
+}
+message RemoveRailDynamic {
+  string id = 1;
+}
+message ChangeLoadDispersalWheelLength {
+  string id = 1;
+  double new_wheel_length = 2;
+}
+message ChangeLoadDispersalWheelWidth {
+  string id = 1;
+  double new_wheel_width = 2;
+}
+message ChangeLoadDispersalPavingThickness {
+  string id = 1;
+  double new_pavement_thickness = 2;
+}
+message ChangeLoadDispersalSlabThickness {
+  string id = 1;
+  double new_slab_thickness = 2;
+}
+message InsertLoadDispersal {
+  uint64 index = 1;
+  LoadDispersal item = 2;
+}
+message RemoveLoadDispersal {
+  string id = 1;
+}
+message ChangeBulkSolidInternalFriction {
+  string id = 1;
+  double new_internal_friction = 2;
+}
+message InsertBulkSolid {
+  uint64 index = 1;
+  BulkSolid item = 2;
+}
+message RemoveBulkSolid {
+  string id = 1;
+}
+message ChangeRotatingMachineMass {
+  string id = 1;
+  double new_mass = 2;
+}
+message ChangeRotatingMachineEccentricity {
+  string id = 1;
+  double new_eccentricity = 2;
+}
+message ChangeRotatingMachineFrequency {
+  string id = 1;
+  double new_frequency = 2;
+}
+message InsertRotatingMachine {
+  uint64 index = 1;
+  RotatingMachine item = 2;
+}
+message RemoveRotatingMachine {
+  string id = 1;
 }

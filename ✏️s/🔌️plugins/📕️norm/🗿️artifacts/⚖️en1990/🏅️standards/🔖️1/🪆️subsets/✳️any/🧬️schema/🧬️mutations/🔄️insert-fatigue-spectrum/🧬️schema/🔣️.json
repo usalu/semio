@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/mutation/insert-fatigue-spectrum/schema.json",
+  "title": "InsertFatigueSpectrum",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "item"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "insertFatigueSpectrum"
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Zero-based list position at which the record is inserted.",
+          "de": "Nullbasierte Listenposition, an der der Datensatz eingefügt wird."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 100
+      }
+    },
+    "item": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/$defs/FatigueSpectrum",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Fatigue spectrum",
+          "de": "Ermüdungskollektiv"
+        },
+        "description": {
+          "en": "The complete fatigue spectrum record to insert.",
+          "de": "Der vollständige einzufügende Datensatz (Ermüdungskollektiv)."
+        },
+        "group": "record",
+        "order": 110
+      },
+      "x-semio-rust": {
+        "type": "semio_s_artifact_norm_en1990_model::FatigueSpectrum"
+      }
+    }
+  }
+}

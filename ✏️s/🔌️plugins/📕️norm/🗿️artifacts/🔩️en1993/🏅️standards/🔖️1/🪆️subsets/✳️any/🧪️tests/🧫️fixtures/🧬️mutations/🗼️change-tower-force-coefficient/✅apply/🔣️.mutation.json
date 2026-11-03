@@ -1,0 +1,6 @@
+{
+  "ChangeTowerForceCoefficient": {
+    "id": "tw-1",
+    "newForceCoefficient": 2.0
+  }
+}

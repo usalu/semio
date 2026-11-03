@@ -45,7 +45,7 @@ if (import.meta.vitest) {
 export type { AccessibilitySpec, ActionDescriptor, BuiltNode, Component, InputKind, LayoutSpec, NamedLayout, PatchRejection, StyleSpec, UiDocumentLimits, UiIntent, UiNodeRecord, UiPatch, UiSnapshot } from "./🏷️ui-contract-and-canvas-types/🟦️.ts";
 export { argControl } from "./🎬️action-types-and-semantics/🟦️.ts";
 export type { ActionArgDef } from "./🎬️action-types-and-semantics/🟦️.ts";
-export { EXPORT_ARTIFACT_DOCUMENT_ACTION_ID, IMPORT_ARTIFACT_DOCUMENT_ACTION_ID } from "./🔘️definitions-action-ids-and-shell-brand/🟦️.ts";
+export { EXPORT_ARTIFACT_DOCUMENT_ACTION_ID, FOCUS_WINDOW_ACTION_ID, FOCUS_ROW_CONTROL_ACTION_ID, FOCUS_ROW_CONTROL_ARG_ROW, FOCUS_ROW_CONTROL_EDITABLE_KINDS, FOCUS_ROW_CONTROL_KEY, FOCUS_WINDOW_ARG_FALLBACK, FOCUS_WINDOW_ARG_KIND, IMPORT_ARTIFACT_DOCUMENT_ACTION_ID } from "./🔘️definitions-action-ids-and-shell-brand/🟦️.ts";
 export { faultNoticeText, fillFaultNotice, isFaultNoticeCode, validateFaultNotices } from "./🔁️host-effects-choices-and-fault-notices/🟦️.ts";
 export type { FaultNoticeDefinition } from "./🔁️host-effects-choices-and-fault-notices/🟦️.ts";
 export { inputLabelGlossary, inputNumericTransport, inputShape, mutationInputAudit, mutationInputDefs, mutationInputInstance } from "./📥️mutation-input-schema/🟦️.ts";

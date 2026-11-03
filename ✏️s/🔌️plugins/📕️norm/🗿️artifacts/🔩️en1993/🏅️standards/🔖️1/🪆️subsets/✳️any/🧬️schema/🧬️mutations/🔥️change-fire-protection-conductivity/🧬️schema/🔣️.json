@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-fire-protection-conductivity/schema.json",
+  "title": "ChangeFireProtectionConductivity",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newProtectionConductivity"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Fire exposure",
+          "de": "Brandbeanspruchung"
+        },
+        "description": {
+          "en": "The fire exposure this mutation addresses, by id.",
+          "de": "Das adressierte Element (Brandbeanspruchung), per Kennung."
+        },
+        "ref": {
+          "kind": "fire-exposure"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newProtectionConductivity": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Thermal conductivity of the protection λ_p",
+          "de": "Wärmeleitfähigkeit der Bekleidung λ_p"
+        },
+        "widget": "stepper",
+        "unit": "W/(m·K)",
+        "precision": 3,
+        "step": 0.005,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

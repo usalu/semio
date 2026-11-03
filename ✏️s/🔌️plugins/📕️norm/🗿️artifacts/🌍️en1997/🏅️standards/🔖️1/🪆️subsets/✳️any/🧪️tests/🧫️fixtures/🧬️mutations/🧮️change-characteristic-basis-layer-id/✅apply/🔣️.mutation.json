@@ -1,0 +1,5 @@
+{
+  "mutation": "changeCharacteristicBasisLayerId",
+  "id": "characteristic-basis-1",
+  "newLayerId": "sand-1-alt"
+}

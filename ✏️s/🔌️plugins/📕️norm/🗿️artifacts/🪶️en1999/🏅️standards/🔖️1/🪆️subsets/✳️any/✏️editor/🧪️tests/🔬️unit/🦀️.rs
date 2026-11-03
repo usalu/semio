@@ -41,9 +41,9 @@ pub(crate) mod context {
         let mut action_meta = meta("local");
         if command.command_id() == "setSelectedCheckIndex" {
             action_meta.view_state = Some(ViewModel {
-                window_id: Some(results::WINDOW_RESULTS.into()),
-                focused_window_id: Some(results::WINDOW_RESULTS.into()),
-                window_instances: vec![ViewWindowInstance { id: results::WINDOW_RESULTS.into(), window_kind_id: results::WINDOW_RESULTS.into() }],
+                window_id: Some(checks::WINDOW_CHECKS.into()),
+                focused_window_id: Some(checks::WINDOW_CHECKS.into()),
+                window_instances: vec![ViewWindowInstance { id: checks::WINDOW_CHECKS.into(), window_kind_id: checks::WINDOW_CHECKS.into() }],
                 ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
             });
         }
@@ -68,4 +68,92 @@ fn editor_module_links() {
     let _ = create_en1999_app();
 }
 
+#[test]
+fn the_manifest_declares_the_four_visual_windows_and_no_json_window() {
+    let definition = create_en1999_app();
+    let ids: Vec<&str> = definition.window_kinds.iter().map(|window| window.id.as_str()).collect();
+    for expected in [properties::WINDOW_PROPERTIES, viewport::WINDOW_VIEWPORT, diagrams::WINDOW_DIAGRAMS, checks::WINDOW_CHECKS] {
+        assert!(ids.contains(&expected), "window {expected} missing in {ids:?}");
+    }
+    assert_eq!(ids.len(), 4);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn every_declared_body_key_renders_without_json() {
+    let mut app = context::app_with_registry().await;
+    for body_key in [outliner::BODY_OUTLINER, properties::BODY_PROPERTIES, viewport::BODY_VIEWPORT, diagrams::BODY_DIAGRAMS, checks::BODY_CHECKS] {
+        let rendered = context::render(&mut app, body_key).await;
+        assert!(!rendered.contains("Unknown body"), "{body_key} must render its own node");
+        assert!(!rendered.contains("\"annex\""), "{body_key} must not dump the document as JSON");
+    }
+    context::close(&mut app);
+}
+
+//#region 🛰️LiveWiring
+#[semio_framework_async_macros::async_test]
+async fn render_right_after_an_edit_shows_updated_checks_without_evaluate() {
+    let mut app = context::app_with_registry().await;
+    context::dispatch(&mut app, En1999Command::SetField(set_field::SetField { path: "annex".into(), value_json: "\"de\"".into() })).await;
+    let edited = app.snapshot().expect("projection");
+    let expected = semio_s_artifact_norm_en1999_inferences::evaluate(&edited);
+    assert_eq!(*<En1999Family as semio_s_plugin_norm_compliance::NormFamily>::live_report(&edited), expected, "the retained session equals the full fold");
+    let worst = expected.checks.iter().max_by(|a, b| a.utilization.total_cmp(&b.utilization)).expect("the edited document still has checks");
+    let rendered = context::render(&mut app, checks::BODY_CHECKS).await;
+    assert!(!rendered.contains("No checks computed"), "no evaluate command was dispatched: {rendered}");
+    let escaped = worst.title.en.replace('\\', "\\\\").replace('"', "\\\"");
+    assert!(rendered.contains(&escaped), "the checks window shows the edited report: {rendered}");
+    context::close(&mut app);
+}
+
+#[test]
+fn a_picked_entity_selects_its_governing_check_in_every_window() {
+    let report = semio_s_artifact_norm_en1999_inferences::evaluate(&En1999Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De));
+    let entity = report.checks.iter().find(|check| !check.subject.entity_id.is_empty() && check.status != semio_s_plugin_norm_compliance::CheckStatus::NotApplicable).map(|check| check.subject.entity_id.clone()).expect("a check with an entity");
+    let live = semio_s_plugin_norm_app_surface::LiveView::<En1999Family>::new(En1999Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De), None, &[entity.clone()]);
+    assert!(live.selection.contains(&entity));
+    assert_eq!(live.focus.as_deref(), Some(entity.as_str()));
+    assert!(live.selection.checks_selected().is_some());
+    assert!(live.selection.outliner_state().selected.contains(&entity));
+}
+//#endregion 🛰️LiveWiring
+
 semio_framework_plugin::history_edit_acceptance_law!("norm", crate::En1999PlayApp, || semio_framework_plugin::App { definition: crate::create_en1999_app(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");
+
+#[test]
+fn the_new_document_palette_offers_the_full_showcase_and_its_dsl_round_trips_to_the_committed_fixture() {
+    let source = <En1999PlayApp as semio_framework_plugin::ArtifactEditor>::examples().into_iter().find(|example| example.id() == "full-showcase").expect("the palette offers the full showcase");
+    let showcase = En1999Snapshot::full_showcase();
+    assert_eq!(semio_s_artifact_norm_en1999_io::text::snapshot::decode_en1999_dsl(&source.document()).expect("the palette entry parses"), showcase);
+    assert_eq!(semio_s_artifact_norm_en1999_io::text::snapshot::decode_en1999_snapshot_json(&semio_s_artifact_norm_en1999_io::text::snapshot::encode_en1999_snapshot_json(&showcase)).expect("the JSON twin parses"), showcase);
+}
+
+//#region ♿️ScreenReader
+/// ♿️ Every check row, scene entity, handle and diagram of the default document has an accessible node (label, role, value or position) in English and German.
+#[test]
+fn the_default_document_publishes_an_accessible_node_for_every_check_handle_and_diagram() {
+    let document = En1999Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De);
+    let report = <En1999Family as semio_s_plugin_norm_compliance::NormFamily>::live_report(&document);
+    let scene = viewport::scene_of(&document, &report);
+    let entities: Vec<_> = scene.entities.iter().map(|e| e.entity.clone()).collect();
+    let handles = viewport::handles_of(&document, &entities);
+    let diagrams = semio_s_artifact_norm_en1999_scene::diagrams(&document, &report, None);
+    let counts = semio_s_plugin_norm_app_surface::assert_default_document_nodes(&report, &scene, &handles, &diagrams);
+    assert_eq!((counts.checks, counts.entities, counts.handles, counts.diagrams), (report.checks.len(), scene.entities.len(), handles.len(), diagrams.len()));
+}
+//#endregion ♿️ScreenReader
+
+/// 🎪️ The aluminium-showcase DSL asset is offered by the palette with an English and a German title, decodes to the committed showcase document, evaluates and projects scene entities and diagrams without panicking.
+#[test]
+fn the_aluminium_showcase_asset_decodes_to_the_showcase_fixture_and_evaluates_with_scene_and_diagrams() {
+    let source = <En1999PlayApp as semio_framework_plugin::ArtifactEditor>::examples().into_iter().find(|example| example.id() == "aluminium-showcase").expect("the palette offers the showcase asset");
+    for locale in [semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Locale::De] {
+        assert!(!source.label().resolve(semio_framework_ui_locale::Terminology::Native, locale).trim().is_empty());
+    }
+    let document = semio_s_artifact_norm_en1999_io::text::snapshot::decode_en1999_dsl(&source.document()).expect("the showcase asset parses");
+    assert_eq!(document, En1999Snapshot::full_showcase());
+    let report = <En1999Family as semio_s_plugin_norm_compliance::NormFamily>::evaluate(&document);
+    assert!(!report.checks.is_empty());
+    let scene = viewport::scene_of(&document, &report);
+    assert!(!scene.entities.is_empty());
+    assert!(!semio_s_artifact_norm_en1999_scene::diagrams(&document, &report, None).is_empty());
+}

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeConnLoadEccentricity",
+  "aluminiumConnectionId": "connection",
+  "newLoadEccentricity": 0.06
+}

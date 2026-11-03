@@ -1,0 +1,6 @@
+{
+  "mutation": "changeActionCategory",
+  "memberId": "purlin-1",
+  "actionId": "G",
+  "newCategory": "selfWeight"
+}

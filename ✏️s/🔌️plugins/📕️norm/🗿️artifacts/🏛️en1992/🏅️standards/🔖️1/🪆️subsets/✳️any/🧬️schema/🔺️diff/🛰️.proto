@@ -1,245 +1,503 @@
 syntax = "proto3";
-package semio.s.norm.en1992.diff;
-
-message En1992ConcreteGradesPatch {
-  optional double f_ck = 1;
+package semio.s.norm.en1992;
+message En1992Diff {
+  // @state artifact
+  optional string annex = 1;
+  // @state artifact
+  optional string title = 2;
+  // @state artifact
+  optional double design_working_life_years = 3;
+  // @state artifact
+  optional double delta_c_dev = 4;
+  // @state artifact
+  optional string cement_type = 5;
+  // @state artifact
+  optional En1992ConcreteGradesRows concrete_grades = 6;
+  // @state artifact
+  optional En1992ReinforcementGradesRows reinforcement_grades = 7;
+  // @state artifact
+  optional En1992PrestressSteelsRows prestress_steels = 8;
+  // @state artifact
+  optional En1992MembersRows members = 9;
+  // @state artifact
+  optional En1992AnchorsRows anchors = 10;
+  // @state artifact
+  optional En1992PlacementsRows placements = 11;
+  // @state artifact
+  CaseRowDelta cases = 12;
+  // @state artifact
+  optional string reliability_class = 13;
 }
-
-message En1992ConcreteGradesRemoved {
-  string id = 1;
-  uint64 index = 2;
-}
-
-message En1992ConcreteGradesInserted {
+message En1992AnchorsActionsInserted {
   uint64 index = 1;
+  LoadCaseActions row = 2;
 }
-
-message En1992ConcreteGradesMoved {
+message En1992AnchorsActionsModified {
+  string id = 1;
+  En1992AnchorsActionsPatch patch = 2;
+}
+message En1992AnchorsActionsMoved {
   string id = 1;
   uint64 from = 2;
   uint64 to = 3;
 }
-
-message En1992ConcreteGradesModified {
-  string id = 1;
-  En1992ConcreteGradesPatch patch = 2;
+message En1992AnchorsActionsPatch {
+  optional string kind = 1;
+  optional string category = 2;
+  optional string source = 3;
+  optional double g_k_line = 4;
+  optional double q_k_line = 5;
+  optional double point_force = 6;
+  optional double m_k = 7;
+  optional double n_k = 8;
+  optional double v_k = 9;
+  optional double t_k = 10;
+  optional double v_k_punch = 11;
 }
-
-message En1992ConcreteGradesRows {
-  repeated En1992ConcreteGradesRemoved removed = 1;
-  repeated En1992ConcreteGradesInserted inserted = 2;
-  repeated En1992ConcreteGradesMoved moved = 3;
-  repeated En1992ConcreteGradesModified modified = 4;
-}
-
-message En1992ReinforcementGradesPatch {
-  optional double f_yk = 1;
-}
-
-message En1992ReinforcementGradesRemoved {
+message En1992AnchorsActionsRemoved {
   string id = 1;
   uint64 index = 2;
 }
-
-message En1992ReinforcementGradesInserted {
-  uint64 index = 1;
+message En1992AnchorsActionsRows {
+  repeated En1992AnchorsActionsRemoved removed = 1;
+  repeated En1992AnchorsActionsInserted inserted = 2;
+  repeated En1992AnchorsActionsMoved moved = 3;
+  repeated En1992AnchorsActionsModified modified = 4;
 }
-
-message En1992ReinforcementGradesMoved {
-  string id = 1;
-  uint64 from = 2;
-  uint64 to = 3;
-}
-
-message En1992ReinforcementGradesModified {
-  string id = 1;
-  En1992ReinforcementGradesPatch patch = 2;
-}
-
-message En1992ReinforcementGradesRows {
-  repeated En1992ReinforcementGradesRemoved removed = 1;
-  repeated En1992ReinforcementGradesInserted inserted = 2;
-  repeated En1992ReinforcementGradesMoved moved = 3;
-  repeated En1992ReinforcementGradesModified modified = 4;
-}
-
-message En1992PrestressSteelsPatch {
-  optional string name = 1;
-  optional double f_pk = 2;
-  optional double f_p0_1k = 3;
-}
-
-message En1992PrestressSteelsRemoved {
-  string id = 1;
-  uint64 index = 2;
-}
-
-message En1992PrestressSteelsInserted {
-  uint64 index = 1;
-}
-
-message En1992PrestressSteelsMoved {
-  string id = 1;
-  uint64 from = 2;
-  uint64 to = 3;
-}
-
-message En1992PrestressSteelsModified {
-  string id = 1;
-  En1992PrestressSteelsPatch patch = 2;
-}
-
-message En1992PrestressSteelsRows {
-  repeated En1992PrestressSteelsRemoved removed = 1;
-  repeated En1992PrestressSteelsInserted inserted = 2;
-  repeated En1992PrestressSteelsMoved moved = 3;
-  repeated En1992PrestressSteelsModified modified = 4;
-}
-
-message En1992MembersLongitudinalPatch {
-  optional double diameter = 1;
-  optional uint32 count = 2;
-}
-
-message En1992MembersLongitudinalRemoved {
-  string id = 1;
-  uint64 index = 2;
-}
-
-message En1992MembersLongitudinalInserted {
-  uint64 index = 1;
-}
-
-message En1992MembersLongitudinalMoved {
-  string id = 1;
-  uint64 from = 2;
-  uint64 to = 3;
-}
-
-message En1992MembersLongitudinalModified {
-  string id = 1;
-  En1992MembersLongitudinalPatch patch = 2;
-}
-
-message En1992MembersLongitudinalRows {
-  repeated En1992MembersLongitudinalRemoved removed = 1;
-  repeated En1992MembersLongitudinalInserted inserted = 2;
-  repeated En1992MembersLongitudinalMoved moved = 3;
-  repeated En1992MembersLongitudinalModified modified = 4;
-}
-
-message En1992MembersActionsPatch {
-  optional double m_k = 1;
-  optional double n_k = 2;
-  optional double v_k = 3;
-}
-
-message En1992MembersActionsRemoved {
-  string id = 1;
-  uint64 index = 2;
-}
-
-message En1992MembersActionsInserted {
-  uint64 index = 1;
-}
-
-message En1992MembersActionsMoved {
-  string id = 1;
-  uint64 from = 2;
-  uint64 to = 3;
-}
-
-message En1992MembersActionsModified {
-  string id = 1;
-  En1992MembersActionsPatch patch = 2;
-}
-
-message En1992MembersActionsRows {
-  repeated En1992MembersActionsRemoved removed = 1;
-  repeated En1992MembersActionsInserted inserted = 2;
-  repeated En1992MembersActionsMoved moved = 3;
-  repeated En1992MembersActionsModified modified = 4;
-}
-
-message En1992MembersPatch {
-  optional double width = 1;
-  optional double height = 2;
-  optional double effective_depth = 3;
-  optional double cover = 4;
-  optional double span = 5;
-  optional double fire_axis_distance = 6;
-  optional double stirrups_spacing = 7;
-  optional En1992MembersLongitudinalRows longitudinal = 8;
-  optional En1992MembersActionsRows actions = 9;
-}
-
-message En1992MembersRemoved {
-  string id = 1;
-  uint64 index = 2;
-}
-
-message En1992MembersInserted {
-  uint64 index = 1;
-}
-
-message En1992MembersMoved {
-  string id = 1;
-  uint64 from = 2;
-  uint64 to = 3;
-}
-
-message En1992MembersModified {
-  string id = 1;
-  En1992MembersPatch patch = 2;
-}
-
-message En1992MembersRows {
-  repeated En1992MembersRemoved removed = 1;
-  repeated En1992MembersInserted inserted = 2;
-  repeated En1992MembersMoved moved = 3;
-  repeated En1992MembersModified modified = 4;
-}
-
-message En1992AnchorsPatch {
-  optional double h_ef = 1;
-  optional double a_s = 2;
-}
-
-message En1992AnchorsRemoved {
-  string id = 1;
-  uint64 index = 2;
-}
-
 message En1992AnchorsInserted {
   uint64 index = 1;
+  Anchor row = 2;
 }
-
+message En1992AnchorsModified {
+  string id = 1;
+  En1992AnchorsPatch patch = 2;
+}
 message En1992AnchorsMoved {
   string id = 1;
   uint64 from = 2;
   uint64 to = 3;
 }
-
-message En1992AnchorsModified {
-  string id = 1;
-  En1992AnchorsPatch patch = 2;
+message En1992AnchorsPatch {
+  optional double h_ef = 1;
+  optional bool cracked = 2;
+  optional double f_uk = 3;
+  optional double f_yk = 4;
+  optional double a_s = 5;
+  optional double d = 6;
+  optional double c1 = 7;
+  optional double f_ck = 8;
+  optional double head_diameter = 9;
+  optional En1992AnchorsActionsRows actions = 10;
 }
-
+message En1992AnchorsRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
 message En1992AnchorsRows {
   repeated En1992AnchorsRemoved removed = 1;
   repeated En1992AnchorsInserted inserted = 2;
   repeated En1992AnchorsMoved moved = 3;
   repeated En1992AnchorsModified modified = 4;
 }
-
-message En1992Diff {
-  optional string title = 1;
-  optional double design_working_life_years = 2;
-  optional double delta_c_dev = 3;
-  optional string cement_type = 4;
-  optional En1992ConcreteGradesRows concrete_grades = 5;
-  optional En1992ReinforcementGradesRows reinforcement_grades = 6;
-  optional En1992PrestressSteelsRows prestress_steels = 7;
-  optional En1992MembersRows members = 8;
-  optional En1992AnchorsRows anchors = 9;
+message En1992ConcreteGradesInserted {
+  uint64 index = 1;
+  ConcreteGrade row = 2;
+}
+message En1992ConcreteGradesModified {
+  string id = 1;
+  En1992ConcreteGradesPatch patch = 2;
+}
+message En1992ConcreteGradesMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+message En1992ConcreteGradesPatch {
+  optional string name = 1;
+  optional double f_ck = 2;
+}
+message En1992ConcreteGradesRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
+message En1992ConcreteGradesRows {
+  repeated En1992ConcreteGradesRemoved removed = 1;
+  repeated En1992ConcreteGradesInserted inserted = 2;
+  repeated En1992ConcreteGradesMoved moved = 3;
+  repeated En1992ConcreteGradesModified modified = 4;
+}
+message En1992MembersActionsInserted {
+  uint64 index = 1;
+  LoadCaseActions row = 2;
+}
+message En1992MembersActionsModified {
+  string id = 1;
+  En1992MembersActionsPatch patch = 2;
+}
+message En1992MembersActionsMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+message En1992MembersActionsPatch {
+  optional string kind = 1;
+  optional string category = 2;
+  optional string source = 3;
+  optional double g_k_line = 4;
+  optional double q_k_line = 5;
+  optional double point_force = 6;
+  optional double m_k = 7;
+  optional double n_k = 8;
+  optional double v_k = 9;
+  optional double t_k = 10;
+  optional double v_k_punch = 11;
+}
+message En1992MembersActionsRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
+message En1992MembersActionsRows {
+  repeated En1992MembersActionsRemoved removed = 1;
+  repeated En1992MembersActionsInserted inserted = 2;
+  repeated En1992MembersActionsMoved moved = 3;
+  repeated En1992MembersActionsModified modified = 4;
+}
+message En1992MembersBarsInserted {
+  uint64 index = 1;
+  BarPoint row = 2;
+}
+message En1992MembersBarsModified {
+  string id = 1;
+  En1992MembersBarsPatch patch = 2;
+}
+message En1992MembersBarsMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+message En1992MembersBarsPatch {
+  optional string layer_id = 1;
+  optional double y = 2;
+  optional double z = 3;
+  optional double diameter = 4;
+  optional double length = 5;
+  optional string bend = 6;
+}
+message En1992MembersBarsRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
+message En1992MembersBarsRows {
+  repeated En1992MembersBarsRemoved removed = 1;
+  repeated En1992MembersBarsInserted inserted = 2;
+  repeated En1992MembersBarsMoved moved = 3;
+  repeated En1992MembersBarsModified modified = 4;
+}
+message En1992MembersInserted {
+  uint64 index = 1;
+  RcMember row = 2;
+}
+message En1992MembersLongitudinalInserted {
+  uint64 index = 1;
+  BarLayer row = 2;
+}
+message En1992MembersLongitudinalModified {
+  string id = 1;
+  En1992MembersLongitudinalPatch patch = 2;
+}
+message En1992MembersLongitudinalMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+message En1992MembersLongitudinalPatch {
+  optional double diameter = 1;
+  optional uint32 count = 2;
+  optional string position = 3;
+  optional double anchorage_length = 4;
+  optional double lap_length = 5;
+  optional string bond_condition = 6;
+  optional double aggregate_size = 7;
+  optional double lap_share = 8;
+}
+message En1992MembersLongitudinalRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
+message En1992MembersLongitudinalRows {
+  repeated En1992MembersLongitudinalRemoved removed = 1;
+  repeated En1992MembersLongitudinalInserted inserted = 2;
+  repeated En1992MembersLongitudinalMoved moved = 3;
+  repeated En1992MembersLongitudinalModified modified = 4;
+}
+message En1992MembersModified {
+  string id = 1;
+  En1992MembersPatch patch = 2;
+}
+message En1992MembersMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+message En1992MembersPatch {
+  optional string label_en = 1;
+  optional string label_de = 2;
+  optional string kind = 3;
+  optional string concrete_grade_id = 4;
+  optional string reinforcement_grade_id = 5;
+  optional string prestress_steel_id = 6;
+  optional string exposure = 7;
+  optional double width = 8;
+  optional double height = 9;
+  optional double effective_depth = 10;
+  optional double cover = 11;
+  optional double span = 12;
+  optional string support = 13;
+  optional double buckling_length = 14;
+  optional double stirrups_diameter = 15;
+  optional double stirrups_spacing = 16;
+  optional uint32 stirrups_legs = 17;
+  optional double punching_column_width = 18;
+  optional double punching_column_depth = 19;
+  optional string punching_column_position = 20;
+  optional double punching_asw = 21;
+  optional double prestress_force = 22;
+  optional double prestress_area = 23;
+  optional double prestress_eccentricity = 24;
+  optional double prestress_loss_ratio = 25;
+  optional string fire_rating = 26;
+  optional double fire_axis_distance = 27;
+  optional string fire_slab_system = 28;
+  optional bool use_fem = 29;
+  optional double udl = 30;
+  optional bool deflection_sensitive = 31;
+  optional double hd_over_h = 32;
+  optional double liquid_sigma_s = 33;
+  optional double liquid_rho_p_eff = 34;
+  optional double liquid_f_ct_eff = 35;
+  optional double liquid_s_r_max = 36;
+  optional double bridge_sigma_c = 37;
+  optional double bridge_delta_sigma_s = 38;
+  optional double relative_humidity = 39;
+  optional double bearing_width = 40;
+  optional bytes tightness = 41;
+  optional bool clear_tightness = 42;
+  optional En1992MembersLongitudinalRows longitudinal = 43;
+  optional En1992MembersActionsRows actions = 44;
+  optional En1992MembersSectionPointsRows section_points = 45;
+  optional En1992MembersBarsRows bars = 46;
+  optional En1992MembersTendonPointsRows tendon_points = 47;
+  optional En1992MembersStudRowsRows stud_rows = 48;
+}
+message En1992MembersRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
+message En1992MembersRows {
+  repeated En1992MembersRemoved removed = 1;
+  repeated En1992MembersInserted inserted = 2;
+  repeated En1992MembersMoved moved = 3;
+  repeated En1992MembersModified modified = 4;
+}
+message En1992MembersSectionPointsInserted {
+  uint64 index = 1;
+  SectionPoint row = 2;
+}
+message En1992MembersSectionPointsModified {
+  string id = 1;
+  En1992MembersSectionPointsPatch patch = 2;
+}
+message En1992MembersSectionPointsMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+message En1992MembersSectionPointsPatch {
+  optional double y = 1;
+  optional double z = 2;
+}
+message En1992MembersSectionPointsRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
+message En1992MembersSectionPointsRows {
+  repeated En1992MembersSectionPointsRemoved removed = 1;
+  repeated En1992MembersSectionPointsInserted inserted = 2;
+  repeated En1992MembersSectionPointsMoved moved = 3;
+  repeated En1992MembersSectionPointsModified modified = 4;
+}
+message En1992MembersStudRowsInserted {
+  uint64 index = 1;
+  StudRow row = 2;
+}
+message En1992MembersStudRowsModified {
+  string id = 1;
+  En1992MembersStudRowsPatch patch = 2;
+}
+message En1992MembersStudRowsMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+message En1992MembersStudRowsPatch {
+  optional double angle = 1;
+  optional uint32 count = 2;
+  optional double spacing_first = 3;
+  optional double spacing_radial = 4;
+  optional double diameter = 5;
+}
+message En1992MembersStudRowsRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
+message En1992MembersStudRowsRows {
+  repeated En1992MembersStudRowsRemoved removed = 1;
+  repeated En1992MembersStudRowsInserted inserted = 2;
+  repeated En1992MembersStudRowsMoved moved = 3;
+  repeated En1992MembersStudRowsModified modified = 4;
+}
+message En1992MembersTendonPointsInserted {
+  uint64 index = 1;
+  TendonPoint row = 2;
+}
+message En1992MembersTendonPointsModified {
+  string id = 1;
+  En1992MembersTendonPointsPatch patch = 2;
+}
+message En1992MembersTendonPointsMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+message En1992MembersTendonPointsPatch {
+  optional double x = 1;
+  optional double y = 2;
+  optional double z = 3;
+}
+message En1992MembersTendonPointsRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
+message En1992MembersTendonPointsRows {
+  repeated En1992MembersTendonPointsRemoved removed = 1;
+  repeated En1992MembersTendonPointsInserted inserted = 2;
+  repeated En1992MembersTendonPointsMoved moved = 3;
+  repeated En1992MembersTendonPointsModified modified = 4;
+}
+message En1992PlacementsInserted {
+  uint64 index = 1;
+  LoadCaseActions row = 2;
+}
+message En1992PlacementsModified {
+  string id = 1;
+  En1992PlacementsPatch patch = 2;
+}
+message En1992PlacementsMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+message En1992PlacementsPatch {
+  optional double x = 1;
+  optional double y = 2;
+  optional double z = 3;
+  optional double yaw = 4;
+}
+message En1992PlacementsRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
+message En1992PlacementsRows {
+  repeated En1992PlacementsRemoved removed = 1;
+  repeated En1992PlacementsInserted inserted = 2;
+  repeated En1992PlacementsMoved moved = 3;
+  repeated En1992PlacementsModified modified = 4;
+}
+message En1992PrestressSteelsInserted {
+  uint64 index = 1;
+  PrestressSteel row = 2;
+}
+message En1992PrestressSteelsModified {
+  string id = 1;
+  En1992PrestressSteelsPatch patch = 2;
+}
+message En1992PrestressSteelsMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+message En1992PrestressSteelsPatch {
+  optional string name = 1;
+  optional double f_pk = 2;
+  optional double f_p01k = 3;
+}
+message En1992PrestressSteelsRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
+message En1992PrestressSteelsRows {
+  repeated En1992PrestressSteelsRemoved removed = 1;
+  repeated En1992PrestressSteelsInserted inserted = 2;
+  repeated En1992PrestressSteelsMoved moved = 3;
+  repeated En1992PrestressSteelsModified modified = 4;
+}
+message En1992ReinforcementGradesInserted {
+  uint64 index = 1;
+  ReinforcementGrade row = 2;
+}
+message En1992ReinforcementGradesModified {
+  string id = 1;
+  En1992ReinforcementGradesPatch patch = 2;
+}
+message En1992ReinforcementGradesMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+message En1992ReinforcementGradesPatch {
+  optional string name = 1;
+  optional double f_yk = 2;
+  optional double e_s = 3;
+  optional string ductility = 4;
+  optional double k = 5;
+  optional double eps_uk = 6;
+}
+message En1992ReinforcementGradesRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
+message En1992ReinforcementGradesRows {
+  repeated En1992ReinforcementGradesRemoved removed = 1;
+  repeated En1992ReinforcementGradesInserted inserted = 2;
+  repeated En1992ReinforcementGradesMoved moved = 3;
+  repeated En1992ReinforcementGradesModified modified = 4;
+}
+message En1992MembersOpeningsInserted {
+  uint64 index = 1;
+  LoadCaseActions row = 2;
+}
+message En1992MembersOpeningsModified {
+  string id = 1;
+  En1992MembersOpeningsPatch patch = 2;
+}
+message En1992MembersOpeningsMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+message En1992MembersOpeningsPatch {
+  optional double x = 1;
+  optional double y = 2;
+  optional double width = 3;
+  optional double depth = 4;
+}
+message En1992MembersOpeningsRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
+message En1992MembersOpeningsRows {
+  repeated En1992MembersOpeningsRemoved removed = 1;
+  repeated En1992MembersOpeningsInserted inserted = 2;
+  repeated En1992MembersOpeningsMoved moved = 3;
+  repeated En1992MembersOpeningsModified modified = 4;
 }

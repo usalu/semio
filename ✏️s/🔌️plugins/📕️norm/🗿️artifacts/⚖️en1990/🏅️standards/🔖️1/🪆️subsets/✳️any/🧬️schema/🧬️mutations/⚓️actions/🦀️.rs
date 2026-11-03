@@ -9,10 +9,6 @@ extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
 //#region 🪢️Mounts
-#[path = "../⚓️change-permanents/🦀️.rs"]
-pub mod change_permanents;
-#[path = "../🏋️change-variables/🦀️.rs"]
-pub mod change_variables;
 #[path = "../➕insert-permanent/🦀️.rs"]
 pub mod insert_permanent;
 #[path = "../📥insert-variable/🦀️.rs"]

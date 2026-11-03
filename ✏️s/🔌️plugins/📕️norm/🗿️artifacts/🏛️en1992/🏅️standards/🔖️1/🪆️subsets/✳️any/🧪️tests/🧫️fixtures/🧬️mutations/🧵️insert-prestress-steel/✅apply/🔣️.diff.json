@@ -1,0 +1,35 @@
+{
+  "annex": null,
+  "reliabilityClass": null,
+  "title": null,
+  "designWorkingLifeYears": null,
+  "deltaCDev": null,
+  "cementType": null,
+  "concreteGrades": null,
+  "reinforcementGrades": null,
+  "prestressSteels": {
+    "removed": [],
+    "inserted": [
+      {
+        "index": 1,
+        "row": {
+          "id": "yp1860-new",
+          "name": "Y1860S7",
+          "fPk": 1860000000.0,
+          "fP01k": 1700000000.0
+        }
+      }
+    ],
+    "moved": [],
+    "modified": []
+  },
+  "members": null,
+  "anchors": null,
+  "placements": null,
+  "cases": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  }
+}

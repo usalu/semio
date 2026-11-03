@@ -107,6 +107,22 @@ describe.skipIf(python === null || windows)("the provisioning of a pinned archiv
     expect(fetches.length).toBe(before);
   });
 
+  test("extracts a gzip archive with Python when tar fails", async () => {
+    const root = fresh(), served = new Map([[url("cmake"), pin("cmake", {})]]), commands: string[] = [], base = portOf(served, "linux");
+    const binaries = await prepareNativeToolV1("cmake", host, root, {...base, run: async (command, args, cwd, signal) => { commands.push(command); if (command === "tar") throw new Error("tar missing"); return base.run(command, args, cwd, signal); }}, AbortSignal.timeout(60000));
+    expect(commands).toEqual(["tar", "python3"]);
+    expect(spawnSync(join(binaries, "cmake"), ["--version"], {encoding: "utf8"}).stdout).toContain(spec("cmake").version);
+    expect(lstatSync(join(nativeToolDirectoryV1("cmake", host, root), "doc")).isSymbolicLink()).toBe(true);
+  });
+
+  test("extracts a Linux zip with Python when unzip fails", async () => {
+    const root = fresh(), served = new Map([[url("ninja"), pin("ninja", {ninja: {members: [{path: "include/", text: ""}, {path: "ninja", text: shell(spec("ninja").version), executable: true}]}} )]]), commands: string[] = [], base = portOf(served, "linux");
+    const binaries = await prepareNativeToolV1("ninja", host, root, {...base, run: async (command, args, cwd, signal) => { commands.push(command); if (command === "unzip") throw new Error("unzip missing"); return base.run(command, args, cwd, signal); }}, AbortSignal.timeout(60000));
+    expect(commands).toEqual(["unzip", "python3"]);
+    expect(spawnSync(join(binaries, "ninja"), ["--version"], {encoding: "utf8"}).stdout).toContain(spec("ninja").version);
+    expect(existsSync(join(nativeToolDirectoryV1("ninja", host, root), "include"))).toBe(true);
+  });
+
   test("provisions the pinned Go and returns the environment every Go command runs under, whatever Go the machine has", async () => {
     const root = fresh(), served = new Map([[url("go"), pin("go", {})]]);
     const environment = await pinnedGoEnvironmentV1({PATH: ["/usr/bin", "/old/go/bin"].join(delimiter), GOROOT: "/old/go", GOFLAGS: "-mod=mod"}, root, portOf(served, "linux"), AbortSignal.timeout(60000), true, host);

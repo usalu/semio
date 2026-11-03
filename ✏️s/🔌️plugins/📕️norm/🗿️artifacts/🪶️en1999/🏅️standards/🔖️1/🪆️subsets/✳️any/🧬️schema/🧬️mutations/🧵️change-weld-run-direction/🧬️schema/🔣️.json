@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-weld-run-direction/schema.json",
+  "title": "ChangeWeldRunDirection",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "weldRunId",
+    "newDirection"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeWeldRunDirection"
+    },
+    "weldRunId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Weld run",
+          "de": "Schweißnaht"
+        },
+        "description": {
+          "en": "The weld run this mutation addresses, by id.",
+          "de": "Das adressierte Element (Schweißnaht), per Kennung."
+        },
+        "ref": {
+          "kind": "weld-run"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newDirection": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/$defs/WeldDirection",
+      "x-semio-ui": {
+        "label": {
+          "en": "Weld direction",
+          "de": "Schweißrichtung"
+        },
+        "role": "value",
+        "group": "value",
+        "order": 20
+      },
+      "x-semio-rust": {
+        "type": "WeldDirection"
+      }
+    }
+  }
+}

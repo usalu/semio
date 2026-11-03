@@ -16,6 +16,11 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+serde = { workspace = true, optional = true }
+semio-s-artifact-norm-vdi3805-model-proto = { workspace = true }
+semio-s-artifact-norm-vdi3805-model-json-schema = { workspace = true }
+semio-s-artifact-norm-vdi3805-model-graphql = { workspace = true }
+semio-s-artifact-norm-vdi3805-model-typescript = { workspace = true }
 semio-framework-dsl-record = { workspace = true }
 semio-framework-dsl-record-derive = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
@@ -30,6 +35,9 @@ semio-framework-value-native-owned = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-plugin-norm-app-surface = { workspace = true }
 semio-s-plugin-norm-compliance = { workspace = true }
+
+[features]
+test-support = ["dep:serde", "semio-s-plugin-norm-compliance/test-support"]
 
 [dev-dependencies]
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

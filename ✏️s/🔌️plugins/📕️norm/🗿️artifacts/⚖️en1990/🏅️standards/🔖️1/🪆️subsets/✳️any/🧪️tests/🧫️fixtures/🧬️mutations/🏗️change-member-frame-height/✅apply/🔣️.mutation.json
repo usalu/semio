@@ -1,0 +1,5 @@
+{
+  "mutation": "changeMemberFrameHeight",
+  "id": "beam-B1",
+  "newFrameHeight": 1.5
+}

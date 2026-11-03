@@ -1,0 +1,29 @@
+{
+ "artifact": "en1998",
+ "fields": [
+  {
+   "entity": "bridge",
+   "field": "importance_class",
+   "default": 2.0,
+   "unit": null,
+   "en": "Importance class of the bridge for γ_I (1 = I, 2 = II, 3 = III; EN 1998-2 2.1)",
+   "de": "Bedeutungsklasse der Brücke für γ_I (1 = I, 2 = II, 3 = III; EN 1998-2 2.1)"
+  },
+  {
+   "entity": "bridge",
+   "field": "vertical_period_s",
+   "default": 0.0,
+   "unit": "Second",
+   "en": "Fundamental period T_v of the deck in the vertical direction (0 = no vertical action; EN 1998-2 3.2)",
+   "de": "Grundschwingzeit T_v des Überbaus in vertikaler Richtung (0 = keine Vertikalwirkung; EN 1998-2 3.2)"
+  },
+  {
+   "entity": "bridge",
+   "field": "pier_cracked_inertia_ratio",
+   "default": 1.0,
+   "unit": null,
+   "en": "Cracked share I_eff / I_g of the gross pier inertia for the design displacement (required, 0 < share <= 1, zero leaves the piers without stiffness; EN 1998-2 2.3.6.1, declared from the cracked section analysis)",
+   "de": "Gerissener Anteil I_eff / I_g des Brutto-Trägheitsmoments der Pfeiler für die Bemessungsverschiebung (Pflichtangabe, 0 < Anteil <= 1, null lässt die Pfeiler ohne Steifigkeit; EN 1998-2 2.3.6.1, aus der Berechnung des gerissenen Querschnitts angegeben)"
+  }
+ ]
+}

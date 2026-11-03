@@ -1,0 +1,12 @@
+{
+  "InsertPanelLayer": {
+    "panelId": "panel-1",
+    "index": 1,
+    "layer": {
+      "id": "panel-layer-2",
+      "thicknessM": 0.04,
+      "orientation": "longitudinal",
+      "grade": "C24"
+    }
+  }
+}

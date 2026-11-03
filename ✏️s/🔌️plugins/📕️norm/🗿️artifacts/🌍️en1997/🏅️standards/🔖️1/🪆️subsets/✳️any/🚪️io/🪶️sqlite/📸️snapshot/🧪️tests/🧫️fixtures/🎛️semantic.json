@@ -1,21 +1,35 @@
 {
-  "schemaBytes": 8324,
+  "schemaBytes": 21418,
   "tableWidths": {
+    "en1997_anchor": 36,
+    "en1997_anchor_test": 7,
+    "en1997_case": 7,
+    "en1997_case_number": 7,
+    "en1997_case_text": 5,
+    "en1997_characteristic_basis": 7,
     "en1997_document": 12,
+    "en1997_embedded_wall": 35,
     "en1997_footing": 19,
     "en1997_foundation_load_case": 23,
-    "en1997_pile": 33,
+    "en1997_investigation": 17,
+    "en1997_investigation_reading": 10,
+    "en1997_lab_point": 10,
+    "en1997_lab_test": 33,
+    "en1997_layer_water": 29,
+    "en1997_pile": 76,
+    "en1997_pile_group": 28,
     "en1997_pile_test_profile": 10,
-    "en1997_retaining_wall": 42,
-    "en1997_slope": 14,
-    "en1997_soil_layer": 38,
+    "en1997_placement": 16,
+    "en1997_retaining_wall": 57,
+    "en1997_slope": 26,
+    "en1997_soil_layer": 41,
     "en1997_uplift_case": 19
   },
   "cases": [
     {
       "id": "full",
-      "rows": 9,
-      "valueBytes": 1602
+      "rows": 20,
+      "valueBytes": 3082
     },
     {
       "id": "emptyCollections",

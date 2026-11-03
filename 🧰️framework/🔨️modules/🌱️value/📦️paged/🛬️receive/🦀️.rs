@@ -21,7 +21,6 @@ impl<I:NativeValueSource+?Sized,const N:usize> Drop for PagedTextReceiver<I,N>{f
 
 
 #[path="🗂️map/🦀️.rs"]mod maps;
-pub use maps::PagedMapReceiver;
 
 macro_rules! native_empty_paged{($($ty:ty),*$(,)?)=>{$(impl<const N:usize> semio_framework_value_native_owned::native_decoding::owned::NativeDefaultValue for $ty{
  fn default_demand()->semio_framework_value::RetirementDemand{semio_framework_value_native_owned::native_decoding::owned::tree::fixed(0)}
@@ -31,8 +30,8 @@ impl<const N:usize> semio_framework_value_native_owned::native_decoding::owned::
 )*};}
 native_empty_paged!(PagedUtf8<N>,super::PagedBytes<N>);
 impl<V:crate::retirement::RetireOwned+Sync,const N:usize> semio_framework_value_native_owned::native_decoding::owned::NativeDefaultValue for super::PagedMap<V,N>{
- fn default_demand()->semio_framework_value::RetirementDemand{semio_framework_value_native_owned::native_decoding::owned::tree::fixed(0)}
- fn admit_default(output:&mut Option<Self>,g:semio_framework_value::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{if output.is_some(){return semio_framework_value::RetainedWorkOutcome{result:Ok(semio_framework_value::RetainedCloneStep::Complete(Default::default())),work:0}}let d=<Self as semio_framework_value_native_owned::native_decoding::owned::NativeDefaultValue>::default_demand();if !semio_framework_value::retained_clone::retained_clone_grant_admits(g,d){return semio_framework_value::RetainedWorkOutcome{result:Ok(semio_framework_value::RetainedCloneStep::Progress(Default::default())),work:0}}*output=Some(Self::default());semio_framework_value::RetainedWorkOutcome{result:Ok(semio_framework_value::RetainedCloneStep::Complete(semio_framework_value_native_owned::native_decoding::owned::tree::receipt(d))),work:1}}
+ fn default_demand()->RetirementDemand{fixed(0)}
+ fn admit_default(output:&mut Option<Self>,g:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{if output.is_some(){return semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}let d=<Self as semio_framework_value_native_owned::native_decoding::owned::NativeDefaultValue>::default_demand();if !retained_clone_grant_admits(g,d){return semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}*output=Some(Self::default());semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(receipt(d))),work:1}}
 }
 impl<V:crate::retirement::RetireOwned+Sync,const N:usize> semio_framework_value_native_owned::native_decoding::owned::NativeDefault for super::PagedMap<V,N>{type Cursor=semio_framework_value_native_owned::native_decoding::owned::NativeDefaultValueCursor<Self>;fn default_cursor()->Self::Cursor{semio_framework_value_native_owned::native_decoding::owned::NativeDefaultValueCursor::new()}}
 

@@ -1,0 +1,13 @@
+{
+  "InsertConfined": {
+    "wallId": "wall-north",
+    "index": 1,
+    "confined": {
+      "id": "column-2",
+      "positionM": 2.5,
+      "widthM": 0.25,
+      "depthM": 0.24,
+      "asM2": 0.0006
+    }
+  }
+}

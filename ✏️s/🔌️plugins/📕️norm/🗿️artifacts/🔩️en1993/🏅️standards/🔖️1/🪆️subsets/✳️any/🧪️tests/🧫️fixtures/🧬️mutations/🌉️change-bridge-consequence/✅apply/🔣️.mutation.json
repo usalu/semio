@@ -1,0 +1,6 @@
+{
+  "ChangeBridgeConsequence": {
+    "id": "br-1",
+    "newConsequence": "DamageTolerant"
+  }
+}

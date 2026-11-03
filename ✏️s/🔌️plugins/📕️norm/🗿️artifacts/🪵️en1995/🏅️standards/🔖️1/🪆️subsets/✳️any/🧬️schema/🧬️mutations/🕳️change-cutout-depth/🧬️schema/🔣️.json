@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-cutout-depth/schema.json",
+  "title": "ChangeCutoutDepth",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cutoutId",
+    "newValue"
+  ],
+  "properties": {
+    "cutoutId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Cutout",
+          "de": "Ausschnitt"
+        },
+        "description": {
+          "en": "The cutout this mutation addresses.",
+          "de": "Das Element, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "cutout"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newValue": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Notch depth",
+          "de": "Ausklinkungstiefe"
+        },
+        "unit": "m",
+        "displayUnit": "mm",
+        "displayFactor": 1000,
+        "precision": 1,
+        "step": 0.005,
+        "group": "fields",
+        "order": 20
+      }
+    }
+  }
+}

@@ -70,7 +70,7 @@ use semio_s_artifact_norm_iso16757_mut_definitions::retire_geometry_object;
 
 #[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
 #[mutations(snapshot = Iso16757Snapshot, diff = Iso16757Diff, schema = "s.norm.iso16757", reference = Iso16757Snapshot, reference_diff = Iso16757Diff)]
 pub enum Iso16757Mutation {
     ChangeExchangeProcess(change_exchange_process::mutation::ChangeExchangeProcess),

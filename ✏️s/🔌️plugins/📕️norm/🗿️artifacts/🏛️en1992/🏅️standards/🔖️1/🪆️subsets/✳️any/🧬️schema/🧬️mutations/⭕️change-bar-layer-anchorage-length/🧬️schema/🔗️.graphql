@@ -1,0 +1,5 @@
+type ChangeBarLayerAnchorageLength {
+  memberId: String!
+  layerId: String!
+  newAnchorageLength: Float!
+}

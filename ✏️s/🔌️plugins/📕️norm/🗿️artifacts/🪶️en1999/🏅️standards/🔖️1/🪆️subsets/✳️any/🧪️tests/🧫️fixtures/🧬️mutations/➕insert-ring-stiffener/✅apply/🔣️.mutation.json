@@ -1,0 +1,12 @@
+{
+  "mutation": "insertRingStiffener",
+  "index": 1,
+  "ringStiffener": {
+    "id": "ring-1-2",
+    "shellId": "shell-pass",
+    "x": 1.0,
+    "depth": 0.06,
+    "thickness": 0.006,
+    "internal": false
+  }
+}

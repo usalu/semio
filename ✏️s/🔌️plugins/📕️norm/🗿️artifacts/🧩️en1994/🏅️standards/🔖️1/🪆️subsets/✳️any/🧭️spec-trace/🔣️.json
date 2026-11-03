@@ -1,0 +1,887 @@
+{
+ "code": "en1994",
+ "standard": "EN 1994",
+ "spec": "📐️specs/en1994-en1999-target.md",
+ "specIds": [
+  "C-01",
+  "C-02",
+  "C-03",
+  "C-04",
+  "C-05",
+  "C-06",
+  "C-07",
+  "C-08",
+  "C-09",
+  "C-10",
+  "C-11",
+  "C-12",
+  "C-13",
+  "C-14",
+  "C-15",
+  "C-16",
+  "C-17",
+  "C-18",
+  "C-19",
+  "C-20",
+  "C-21",
+  "C-22",
+  "C-23",
+  "C-24",
+  "C-25",
+  "C-26",
+  "C-27",
+  "C-28",
+  "C-29",
+  "C-30",
+  "C-31",
+  "C-32",
+  "C-33",
+  "C-34",
+  "C-35",
+  "C-36",
+  "C-37",
+  "C-38",
+  "C-39",
+  "C-40",
+  "C-41",
+  "C-42",
+  "C-43",
+  "C-44",
+  "C-45",
+  "C-46",
+  "C-47",
+  "C-48",
+  "C-49",
+  "C-50",
+  "C-51",
+  "C-52",
+  "C-53",
+  "C-54"
+ ],
+ "items": [
+  {
+   "id": "C-01",
+   "clause": "3.1, 3.2, 3.3, 3.5",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1994.3.materials"
+    ]
+   },
+   "description": {
+    "en": "Material set of concrete (fck, fcm, fctm, Ecm per EN 1992-1-1 Table 3.1) and structural steel S235 to S460 (fy, fu by thickness) (3.1, 3.2, 3.3, 3.5)",
+    "de": "Werkstoffsatz aus Beton (fck, fcm, fctm, Ecm nach EN 1992-1-1 Tabelle 3.1) und Baustahl S235 bis S460 (fy, fu nach Dicke) (3.1, 3.2, 3.3, 3.5)"
+   }
+  },
+  {
+   "id": "C-02",
+   "clause": "5.5, Table 5.2",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1994.5.5.class"
+    ]
+   },
+   "description": {
+    "en": "Classification of the steel elements of composite members with ε = √(235/fy) and the c/t limits per class, considering encasement (5.5, Table 5.2)",
+    "de": "Klassifizierung der Stahlteile von Verbundbauteilen mit ε = √(235/fy) und den c/t-Grenzen je Klasse unter Berücksichtigung der Einbetonierung (5.5, Tabelle 5.2)"
+   }
+  },
+  {
+   "id": "C-03",
+   "clause": "5.4.1.2, Fig",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1994.5.4.1.2",
+     "en1994.5.4.1.2.beff",
+     "en1994.5.4.1.2.le"
+    ]
+   },
+   "description": {
+    "en": "Effective width of the concrete flange beff = b0 + Σ be,i from the zero-moment distance Le (5.4.1.2, Figure 5.1)",
+    "de": "Mittragende Breite des Betongurts beff = b0 + Σ be,i aus dem Momentennullpunktabstand Le (5.4.1.2, Bild 5.1)"
+   }
+  },
+  {
+   "id": "C-04",
+   "clause": "5.4.2",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1994.5.4.2.analysis"
+    ]
+   },
+   "description": {
+    "en": "Selection of the global analysis method: linear-elastic with cracked regions of 15 % of the span each side of internal supports, non-linear or rigid-plastic (5.4.2)",
+    "de": "Wahl des Berechnungsverfahrens: linear-elastisch mit gerissenen Bereichen von 15 % der Stützweite beidseits innerer Stützen, nichtlinear oder starr-plastisch (5.4.2)"
+   }
+  },
+  {
+   "id": "C-05",
+   "clause": "5.4.2.2, 3.1(4), 7.2.1(?)",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1994.7.3.1.deflection",
+     "en1994.7.2.2.stress"
+    ]
+   },
+   "description": {
+    "en": "modular ratios n_0, n_L, n_s for creep and shrinkage enter the deflection and stress checks; confirmed by reading the beam checks",
+    "de": "Verhältnisse der Elastizitätsmoduln n_0, n_L, n_s für Kriechen und Schwinden gehen in die Durchbiegungs- und Spannungsnachweise ein; durch Lesen der Trägernachweise bestätigt"
+   }
+  },
+  {
+   "id": "C-06",
+   "clause": "6.2.1.4, 7.2.1",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1994.7.2.2.stress"
+    ]
+   },
+   "description": {
+    "en": "the transformed section A*, y_b, I* of the uncracked and cracked state is evaluated for the SLS stress check; confirmed by reading",
+    "de": "der ideelle Querschnitt A*, y_b, I* im ungerissenen und gerissenen Zustand wird für den Spannungsnachweis im Grenzzustand der Gebrauchstauglichkeit ausgewertet; durch Lesen bestätigt"
+   }
+  },
+  {
+   "id": "C-07",
+   "clause": "6.2.1.2",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1994.6.2.1.3.mrd"
+    ]
+   },
+   "description": {
+    "en": "the sagging plastic resistance with full connection is the eta = 1 end of the mrd check (M_pl,Rd is reported in its explanation)",
+    "de": "die plastische Tragfähigkeit im Feldbereich bei voller Verdübelung ist das Ende eta = 1 des mrd-Nachweises (M_pl,Rd steht in dessen Erläuterung)"
+   }
+  },
+  {
+   "id": "C-08",
+   "clause": "6.2.1.2(2), 6.2.1.3",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1994.6.2.1.2.hogging"
+    ]
+   },
+   "description": {
+    "en": "hogging plastic resistance with bars in the effective width, by catalogue::plastic_hogging",
+    "de": "plastische Tragfähigkeit im Stützbereich mit Bewehrungsstäben in der mittragenden Breite, durch catalogue::plastic_hogging"
+   }
+  },
+  {
+   "id": "C-09",
+   "clause": "6.2.1.4, 7.2.1",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1994.6.2.1.3.mrd",
+     "en1994.7.2.2.stress"
+    ]
+   },
+   "description": {
+    "en": "class 3 and 4 sections use the staged elastic resistance inside the mrd check; the stress check uses the same transformed section",
+    "de": "Querschnitte der Klassen 3 und 4 nutzen die elastische Tragfähigkeit nach Bauzuständen im mrd-Nachweis; der Spannungsnachweis verwendet denselben ideellen Querschnitt"
+   }
+  },
+  {
+   "id": "C-10",
+   "clause": "6.2.1.4(6)",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1994.6.2.1.4.mkappa"
+    ]
+   },
+   "description": {
+    "en": "Non-linear bending resistance from parabola-rectangle concrete, bilinear steel and bilinear reinforcement with limited strains (6.2.1.4(6))",
+    "de": "Nichtlineare Biegetragfähigkeit aus Parabel-Rechteck-Beton, bilinearem Stahl und bilinearer Bewehrung mit begrenzten Dehnungen (6.2.1.4(6))"
+   }
+  },
+  {
+   "id": "C-11",
+   "clause": "-",
+   "entity": "",
+   "realisation": {
+    "kind": "data",
+    "path": "catalogue::plastic_sagging, catalogue::plastic_full and catalogue::plastic_hogging (layered strip integrators with split_force)"
+   },
+   "description": {
+    "en": "support function of C-07, C-08 and C-12; no check id of its own",
+    "de": "Hilfsfunktion von C-07, C-08 und C-12; keine eigene Nachweis-ID"
+   }
+  },
+  {
+   "id": "C-12",
+   "clause": "6.2.1.3(3..), 6.6.1.2",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1994.6.2.1.3.mrd"
+    ]
+   },
+   "description": {
+    "en": "partial connection by the stress-block method inside the mrd check (N_c = min(n P_Rd, N_cf))",
+    "de": "Teilverbund nach dem Spannungsblockverfahren im mrd-Nachweis (N_c = min(n P_Rd, N_cf))"
+   }
+  },
+  {
+   "id": "C-13",
+   "clause": "6.2.1.3(3), Fig",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1994.6.2.1.3.linear"
+    ]
+   },
+   "description": {
+    "en": "linear interpolation M_a,pl,Rd + eta (M_pl,Rd - M_a,pl,Rd)",
+    "de": "lineare Interpolation M_a,pl,Rd + eta (M_pl,Rd - M_a,pl,Rd)"
+   }
+  },
+  {
+   "id": "C-14",
+   "clause": "6.6.1.2",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1994.6.6.1.2.etamin"
+    ]
+   },
+   "description": {
+    "en": "Minimum degree of shear connection η from the span Le and fy for steel sections with equal flanges (6.6.1.2)",
+    "de": "Mindestverdübelungsgrad η aus Stützweite Le und fy für Stahlquerschnitte mit gleichen Flanschen (6.6.1.2)"
+   }
+  },
+  {
+   "id": "C-15",
+   "clause": "6.6.1.1, 6.6.1.2, 6.6.1.3",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1994.6.6.1.1.layout",
+     "en1994.6.6.3.1.prd"
+    ]
+   },
+   "description": {
+    "en": "layout fit of the persisted studs inside the span and required number n_req against the studs of the weaker half span",
+    "de": "Anordnung der gespeicherten Kopfbolzen innerhalb der Stützweite und erforderliche Anzahl n_req gegen die Bolzen der schwächeren Feldhälfte"
+   }
+  },
+  {
+   "id": "C-16",
+   "clause": "6.6.3.1",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1994.6.6.3.1.prd",
+     "en1994.6.6.2.perstud"
+    ]
+   },
+   "description": {
+    "en": "Stud shear resistance PRd = min(0.8 fu π d²/4 /γV; 0.29 α d² √(fck Ecm)/γV) (6.6.3.1) of every stud with its sheeting reduction k_t / k_l, and the longitudinal shear force per stud against it (6.6.2)",
+    "de": "Tragfähigkeit von Kopfbolzendübeln PRd = min(0,8 fu π d²/4 /γV; 0,29 α d² √(fck Ecm)/γV) (6.6.3.1) jedes Bolzens mit seiner Blechabminderung k_t / k_l und Längsschubkraft je Bolzen dagegen (6.6.2)"
+   }
+  },
+  {
+   "id": "C-17",
+   "clause": "6.6.4.1–6.6.4.2",
+   "entity": "",
+   "realisation": {
+    "kind": "data",
+    "path": "catalogue::stud_resistance_n and catalogue::sheeting_reduction"
+   },
+   "description": {
+    "en": "k_t and k_l of profiled sheeting feed the stud resistance check en1994.6.6.3.1.prd",
+    "de": "k_t und k_l des Profilblechs gehen in den Dübeltragfähigkeitsnachweis en1994.6.6.3.1.prd ein"
+   }
+  },
+  {
+   "id": "C-18",
+   "clause": "6.6.2, 6.6.3.1",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1994.6.6.3.1.prd"
+    ]
+   },
+   "description": {
+    "en": "the required connector force N_req of the force diagram against n P_Rd; the per-length shear flow itself is not a separate check",
+    "de": "die erforderliche Dübelkraft N_req des Kraftdiagramms gegen n P_Rd; der Schubfluss je Länge ist kein eigener Nachweis"
+   }
+  },
+  {
+   "id": "C-19",
+   "clause": "6.6.6.1–6.6.6.3, EN 1992-1-1 6.2.4",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1994.6.6.6.vlrd"
+    ]
+   },
+   "description": {
+    "en": "Longitudinal shear in the concrete slab vEd = (ΔFd/Δx)/Σ(length of shear surface) against the transverse reinforcement per shear surface (6.6.6, EN 1992-1-1 6.2.4)",
+    "de": "Längsschub im Betongurt vEd = (ΔFd/Δx)/Σ(Länge der Schubfläche) gegen die Querbewehrung je Schubfläche (6.6.6, EN 1992-1-1 6.2.4)"
+   }
+  },
+  {
+   "id": "C-20",
+   "clause": "6.6.5.1–6.6.5.5, 6.6.5.2",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1994.6.6.5.5.spacing",
+     "en1994.6.6.5.detailing"
+    ]
+   },
+   "description": {
+    "en": "stud spacing limits between the stud stations and edge/cover detailing",
+    "de": "Grenzwerte der Abstände zwischen den Bolzenstationen und konstruktive Durchbildung von Rand und Überdeckung"
+   }
+  },
+  {
+   "id": "C-21",
+   "clause": "6.8.3–6.8.7, 2:6.8",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1994.2.6.8.3.stud"
+    ]
+   },
+   "description": {
+    "en": "Fatigue of shear studs γFf Δτ,E,2 ≤ ΔτC/γMf,s with ΔτC = 90 MPa at 2e6 cycles (6.8.3-6.8.7)",
+    "de": "Ermüdung von Kopfbolzendübeln γFf Δτ,E,2 ≤ ΔτC/γMf,s mit ΔτC = 90 MPa bei 2e6 Lastwechseln (6.8.3-6.8.7)"
+   }
+  },
+  {
+   "id": "C-22",
+   "clause": "6.2.2",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1994.6.2.2.vpl"
+    ]
+   },
+   "description": {
+    "en": "Vertical shear resistance Vpl,a,Rd = Av fy/(√3 γM0) of the steel section with the shear buckling check for slender webs (6.2.2)",
+    "de": "Querkrafttragfähigkeit Vpl,a,Rd = Av fy/(√3 γM0) des Stahlquerschnitts mit dem Schubbeulnachweis für schlanke Stege (6.2.2)"
+   }
+  },
+  {
+   "id": "C-23",
+   "clause": "6.4",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1994.6.4.ltb"
+    ]
+   },
+   "description": {
+    "en": "restrained-compression-flange LTB of the inverted U-frame",
+    "de": "Biegedrillknicken des gehaltenen Druckflansches am umgekehrten U-Rahmen"
+   }
+  },
+  {
+   "id": "C-24",
+   "clause": "6.2.? EN 1993-1-5 chapter 6 for patch loading with composite effect",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1994.6.4.patch"
+    ]
+   },
+   "description": {
+    "en": "Web resistance Fn,Rd under concentrated loads and at stiffeners with composite effect per EN 1993-1-5 chapter 6 (6.2)",
+    "de": "Stegtragfähigkeit Fn,Rd unter Einzellasten und an Steifen mit Verbundwirkung nach EN 1993-1-5 Kapitel 6 (6.2)"
+   }
+  },
+  {
+   "id": "C-25",
+   "clause": "6.7.1",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1994.6.7.1.scope"
+    ]
+   },
+   "description": {
+    "en": "Scope of the simplified method for composite columns: doubly symmetric uniform section, steel contribution δ between 0.2 and 0.9, λ̄ ≤ 2.0 and reinforcement ratio 0.3 % to 6 % (6.7.1)",
+    "de": "Anwendungsgrenzen des vereinfachten Verfahrens für Verbundstützen: doppeltsymmetrischer gleichbleibender Querschnitt, Stahlanteil δ zwischen 0,2 und 0,9, λ̄ ≤ 2,0 und Bewehrungsgrad 0,3 % bis 6 % (6.7.1)"
+   }
+  },
+  {
+   "id": "C-26",
+   "clause": "6.7.3.2, 6.7.3.2(1),(6.30),",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1994.6.7.3.npl"
+    ]
+   },
+   "description": {
+    "en": "N_pl,Rd from the stored areas inside the axial resistance check",
+    "de": "N_pl,Rd aus den hinterlegten Flächen im Nachweis der Normalkrafttragfähigkeit"
+   }
+  },
+  {
+   "id": "C-27",
+   "clause": "6.7.3.3, 6.7.3.5",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1994.6.7.3.npl"
+    ]
+   },
+   "description": {
+    "en": "relative slenderness, chi and N_Rd = chi N_pl,Rd",
+    "de": "bezogener Schlankheitsgrad, chi und N_Rd = chi N_pl,Rd"
+   }
+  },
+  {
+   "id": "C-28",
+   "clause": "6.7.3.3(4)",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1994.6.7.3.npl",
+     "en1994.6.7.3.mn"
+    ]
+   },
+   "description": {
+    "en": "E_cm,eff for long-term effects feeds N_cr in both checks",
+    "de": "E_cm,eff für Langzeitwirkungen geht in N_cr beider Nachweise ein"
+   }
+  },
+  {
+   "id": "C-29",
+   "clause": "6.7.3.6",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1994.6.7.3.mn"
+    ]
+   },
+   "description": {
+    "en": "interaction polygon A, C, D, B and mu_d(N_Ed)",
+    "de": "Interaktionspolygon A, C, D, B und mu_d(N_Ed)"
+   }
+  },
+  {
+   "id": "C-30",
+   "clause": "6.7.3.4",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1994.6.7.3.mn"
+    ]
+   },
+   "description": {
+    "en": "second-order factor k = 1/(1 - N_Ed/N_cr,eff) on the first-order moment",
+    "de": "Faktor nach Theorie II. Ordnung k = 1/(1 - N_Ed/N_cr,eff) auf das Moment nach Theorie I. Ordnung"
+   }
+  },
+  {
+   "id": "C-31",
+   "clause": "6.7.4",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1994.6.7.4.introduction"
+    ]
+   },
+   "description": {
+    "en": "Introduction of loads into composite columns with the design shear strength τRd (Table 6.6) over the introduction length (6.7.4)",
+    "de": "Krafteinleitung in Verbundstützen mit der Bemessungsschubfestigkeit τRd (Tabelle 6.6) über die Krafteinleitungslänge (6.7.4)"
+   }
+  },
+  {
+   "id": "C-32",
+   "clause": "F:4.3",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1994.1-2.4.3.5.column"
+    ]
+   },
+   "description": {
+    "en": "composite column fire: the simple calculation model (the tabulated data are C-46, not modelled)",
+    "de": "Verbundstütze im Brandfall: das einfache Rechenmodell (die tabellierten Daten sind C-46, nicht modelliert)"
+   }
+  },
+  {
+   "id": "C-33",
+   "clause": "9.3.1",
+   "entity": "slabs",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1994.9.3.sheeting"
+    ]
+   },
+   "description": {
+    "en": "Profiled sheeting as formwork: ULS and SLS under wet concrete and construction load with the deflection limit L/180 (9.3.1)",
+    "de": "Profilblech als Schalung: Grenzzustände der Tragfähigkeit und Gebrauchstauglichkeit unter Frischbeton und Montagelast mit Durchbiegungsgrenze L/180 (9.3.1)"
+   }
+  },
+  {
+   "id": "C-34",
+   "clause": "9.7.2–9.7.3",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1994.9.7.2.mrd"
+    ]
+   },
+   "description": {
+    "en": "slab bending with partial connection (bond force from m-k)",
+    "de": "Deckenbiegung mit Teilverbund (Verbundkraft aus m-k)"
+   }
+  },
+  {
+   "id": "C-35",
+   "clause": "9.7.3(4)",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1994.9.7.3.mk"
+    ]
+   },
+   "description": {
+    "en": "m-k longitudinal shear",
+    "de": "Längsschub nach m-k"
+   }
+  },
+  {
+   "id": "C-36",
+   "clause": "-",
+   "entity": "slabs",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1994.9.7.2.mrd"
+    ]
+   },
+   "description": {
+    "en": "Partial connection method with τu,Rk from tests (Annex B.3.5), sharing the sagging resistance check of C-34",
+    "de": "Teilverbundverfahren mit τu,Rk aus Versuchen (Anhang B.3.5), das den Nachweis des positiven Moments von C-34 mitnutzt"
+   }
+  },
+  {
+   "id": "C-37",
+   "clause": "9.7.5",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1994.9.7.5",
+     "en1994.9.7.5.vrd"
+    ]
+   },
+   "description": {
+    "en": "Vertical shear of composite slabs Vv,Rd = bo dp τRd kv (1.2 + 40ρ) (9.7.5)",
+    "de": "Querkraft von Verbunddecken Vv,Rd = bo dp τRd kv (1,2 + 40ρ) (9.7.5)"
+   }
+  },
+  {
+   "id": "C-38",
+   "clause": "9.7.6",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1994.9.7.6.punching"
+    ]
+   },
+   "description": {
+    "en": "Punching shear of composite slabs against the critical perimeter Ccrit per EN 1992-1-1 6.4.4 (9.7.6)",
+    "de": "Durchstanzen von Verbunddecken gegen den kritischen Rundschnitt Ccrit nach EN 1992-1-1 6.4.4 (9.7.6)"
+   }
+  },
+  {
+   "id": "C-39",
+   "clause": "9.8",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1994.9.8.sls"
+    ]
+   },
+   "description": {
+    "en": "Serviceability of composite slabs: deflection, crack width over supports and minimum reinforcement of continuous slabs (9.8)",
+    "de": "Gebrauchstauglichkeit von Verbunddecken: Durchbiegung, Rissbreite über den Stützen und Mindestbewehrung durchlaufender Decken (9.8)"
+   }
+  },
+  {
+   "id": "C-40",
+   "clause": "7.3, 7.2",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1994.7.3.1.deflection",
+     "en1994.7.3.1.deflection-variable"
+    ]
+   },
+   "description": {
+    "en": "deflection with creep and shrinkage",
+    "de": "Durchbiegung mit Kriechen und Schwinden"
+   }
+  },
+  {
+   "id": "C-41",
+   "clause": "7.2.2",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1994.7.2.2.stress"
+    ]
+   },
+   "description": {
+    "en": "Stress limitation σc ≤ 0.6 fck and σs ≤ 0.8 fsk at SLS, summed stage-wise (7.2.2)",
+    "de": "Spannungsbegrenzung σc ≤ 0,6 fck und σs ≤ 0,8 fsk im Grenzzustand der Gebrauchstauglichkeit, bauzustandsweise summiert (7.2.2)"
+   }
+  },
+  {
+   "id": "C-42",
+   "clause": "7.4.2",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1994.7.4.crack"
+    ]
+   },
+   "description": {
+    "en": "minimum reinforcement and crack width are reported by the one crack check",
+    "de": "Mindestbewehrung und Rissbreite werden vom einen Rissnachweis ausgewiesen"
+   }
+  },
+  {
+   "id": "C-43",
+   "clause": "7.4.3",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1994.7.4.crack",
+     "en1994.7.4.3.tension-stiffening"
+    ]
+   },
+   "description": {
+    "en": "crack width and reinforcement stress with the tension-stiffening increment Δσ_s in the hogging zone, from the characteristic hogging moment of the span envelope (7.4.3; 1994-2 6.8.5.4 fatigue range in en1994.2.6.8.2.rebar)",
+    "de": "Rissbreite und Bewehrungsspannung mit Zugversteifungsanteil Δσ_s im Stützbereich aus dem charakteristischen Stützmoment der Feldumhüllenden (7.4.3; 1994-2 6.8.5.4 Schwingbreite in en1994.2.6.8.2.rebar)"
+   }
+  },
+  {
+   "id": "C-44",
+   "clause": "F:2",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1994.1-2.4.3.theta",
+     "en1994.1-2.4.3.mfi"
+    ]
+   },
+   "description": {
+    "en": "fire framework: combination 6.11b (part_en1990::fire_combination) and the ISO 834 curve (catalogue::iso834_c) feed the critical-temperature and fire-resistance checks",
+    "de": "Brandrahmen: Kombination 6.11b (part_en1990::fire_combination) und ISO-834-Kurve (catalogue::iso834_c) gehen in die Nachweise der kritischen Temperatur und der Feuerwiderstandsdauer ein"
+   }
+  },
+  {
+   "id": "C-45",
+   "clause": "F:3.2",
+   "entity": "",
+   "realisation": {
+    "kind": "data",
+    "path": "catalogue::ky_theta and catalogue::steel_specific_heat (steel); concrete and reinforcement property tables of F:3.2 are not modelled"
+   },
+   "description": {
+    "en": "steel strength reduction and specific heat only",
+    "de": "nur Abminderung der Stahlfestigkeit und spezifische Wärme"
+   }
+  },
+  {
+   "id": "C-46",
+   "clause": "F:4.2",
+   "entity": "",
+   "realisation": {
+    "kind": "not-modelled",
+    "reason": {
+     "en": "the cells of Tables 4.1 to 4.3 are not in the repository spec text (only their structure), so none are transcribed and none are guessed; en1994.1-2.4.2.table-column reports not applicable until a human registers verified rows under en1994.1-2.tables (catalogue::column_fire::COLUMN_TABLE is empty); the slab insulation criterion en1994.1-2.slab.insulation stays a separate idealisation",
+     "de": "die Zellen der Tabellen 4.1 bis 4.3 stehen nicht im Spezifikationstext des Repositorys (nur ihre Struktur), daher sind keine übertragen und keine geraten; en1994.1-2.4.2.table-column meldet nicht anwendbar, bis ein Mensch verifizierte Zeilen unter en1994.1-2.tables einträgt (catalogue::column_fire::COLUMN_TABLE ist leer); das Deckendämmkriterium en1994.1-2.slab.insulation bleibt eine eigene Idealisierung"
+    }
+   },
+   "description": {
+    "en": "Tabulated fire data: minimum dimensions of composite beams and columns by fire resistance class R30 to R180 and load level ηfi (F:4.2)",
+    "de": "Tabellierte Brandschutzdaten: Mindestabmessungen von Verbundträgern und -stützen nach Feuerwiderstandsklasse R30 bis R180 und Lastniveau ηfi (F:4.2)"
+   }
+  },
+  {
+   "id": "C-47",
+   "clause": "F:4.3",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1994.1-2.4.3.mfi",
+     "en1994.1-2.4.3.theta"
+    ]
+   },
+   "description": {
+    "en": "Simple fire calculation models: steel temperature θa of beams and k-reduced moment capacities Mfi,Rd,θ (F:4.3)",
+    "de": "Vereinfachte Brandberechnungsmodelle: Stahltemperatur θa von Trägern und mit k abgeminderte Momententragfähigkeiten Mfi,Rd,θ (F:4.3)"
+   }
+  },
+  {
+   "id": "C-48",
+   "clause": "2:2",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1994.2.lm1"
+    ]
+   },
+   "description": {
+    "en": "Bridge actions and combinations from the EN 1991-2 load models with shrinkage, temperature and construction stages (2:2)",
+    "de": "Brückeneinwirkungen und Kombinationen aus den Lastmodellen nach EN 1991-2 mit Schwinden, Temperatur und Bauzuständen (2:2)"
+   }
+  },
+  {
+   "id": "C-49",
+   "clause": "2:5.4",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1994.2.5.4.1.shear-lag"
+    ]
+   },
+   "description": {
+    "en": "Global analysis of composite bridges with shear lag effective width and cracked regions of 15 % each side of supports (2:5.4)",
+    "de": "Globale Berechnung von Verbundbrücken mit mittragender Breite infolge Schubverzerrung und gerissenen Bereichen von 15 % beidseits der Stützen (2:5.4)"
+   }
+  },
+  {
+   "id": "C-50",
+   "clause": "2:6.2",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1994.5.5.class",
+     "en1994.6.2.1.3.mrd"
+    ]
+   },
+   "description": {
+    "en": "bridge girders: plastic resistance only for classes 1 and 2, same checks as buildings",
+    "de": "Brückenträger: plastische Tragfähigkeit nur für die Klassen 1 und 2, dieselben Nachweise wie im Hochbau"
+   }
+  },
+  {
+   "id": "C-51",
+   "clause": "2:6.4",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1994.6.4.ltb"
+    ]
+   },
+   "description": {
+    "en": "bridge LTB through the same U-frame check",
+    "de": "Biegedrillknicken bei Brücken über denselben U-Rahmen-Nachweis"
+   }
+  },
+  {
+   "id": "C-52",
+   "clause": "2:6.8",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1994.2.6.8.2.delta-sigma",
+     "en1994.2.6.8.2.rebar",
+     "en1994.2.6.8.3.stud"
+    ]
+   },
+   "description": {
+    "en": "Fatigue of composite bridges: equivalent stress range Δσ,E2 = λ Φ2 Δσ with λ = λ1 λ2 λ3 λ4, reinforcement ΔσRsk with the tension-stiffening increment Δσ_s (6.8.5.4: σ_s,max,f = σ_s,0 + Δσ_s, factor ndp.en1994.2.fatigue-tension-stiffening) and shear studs with λv (2:6.8)",
+    "de": "Ermüdung von Verbundbrücken: äquivalente Spannungsschwingbreite Δσ,E2 = λ Φ2 Δσ mit λ = λ1 λ2 λ3 λ4, Bewehrung ΔσRsk mit Zugversteifungsanteil Δσ_s (6.8.5.4: σ_s,max,f = σ_s,0 + Δσ_s, Faktor ndp.en1994.2.fatigue-tension-stiffening) und Kopfbolzendübel mit λv (2:6.8)"
+   }
+  },
+  {
+   "id": "C-53",
+   "clause": "2:6.6.2",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1994.6.6.6.vlrd",
+     "en1994.2.6.6.6.transverse-min"
+    ]
+   },
+   "description": {
+    "en": "deck longitudinal shear and minimum transverse reinforcement",
+    "de": "Längsschub der Fahrbahnplatte und Mindestquerbewehrung"
+   }
+  },
+  {
+   "id": "C-54",
+   "clause": "2:6.6.5",
+   "entity": "",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1994.2.6.6.5.cross-spacing",
+     "en1994.2.6.6.5.edge",
+     "en1994.2.6.6.5.end-plate"
+    ]
+   },
+   "description": {
+    "en": "Bridge-specific stud detailing: transverse spacing, edge distance and end plates (2:6.6.5)",
+    "de": "Brückenspezifische Dübelausbildung: Querabstand, Randabstand und Endplatten (2:6.6.5)"
+   }
+  }
+ ]
+}

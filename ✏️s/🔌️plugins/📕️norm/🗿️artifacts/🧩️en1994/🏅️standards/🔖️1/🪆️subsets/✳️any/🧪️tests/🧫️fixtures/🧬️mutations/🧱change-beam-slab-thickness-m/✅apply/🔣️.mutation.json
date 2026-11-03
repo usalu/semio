@@ -1,0 +1,6 @@
+{
+  "ChangeBeamSlabThicknessM": {
+    "id": "beam-B1",
+    "newSlabThicknessM": 0.16
+  }
+}

@@ -1,31 +1,501 @@
-# 🧬️ En1990 mutation kinds (closed vocabulary).
-enum En1990MutationKind {
-  CHANGE_ANNEX
-  CHANGE_PROJECT_ID
-  CHANGE_CONSEQUENCE_CLASS
-  CHANGE_RELIABILITY_CLASS
-  CHANGE_DESIGN_WORKING_LIFE_CATEGORY
-  CHANGE_DESIGN_WORKING_LIFE_YEARS
-  CHANGE_REFERENCE_PERIOD_YEARS
-  CHANGE_SUPERVISION_LEVEL
-  CHANGE_INSPECTION_LEVEL
-  CHANGE_BETA_COMPUTED
-  CHANGE_PERMANENTS
-  CHANGE_VARIABLES
-  CHANGE_ACCIDENTALS
-  CHANGE_SEISMICS
-  CHANGE_MEMBERS
-  CHANGE_EFFECTS
-  INSERT_PERMANENT
-  REMOVE_PERMANENT
-  INSERT_VARIABLE
-  REMOVE_VARIABLE
-  INSERT_ACCIDENTAL
-  REMOVE_ACCIDENTAL
-  INSERT_SEISMIC
-  REMOVE_SEISMIC
-  INSERT_MEMBER
-  REMOVE_MEMBER
-  INSERT_EFFECT
-  REMOVE_EFFECT
+union En1990Mutation = ChangeAnnex | ChangeProjectId | ChangeAltitudeM | ChangeConsequenceClass | ChangeReliabilityClass | ChangeDesignWorkingLifeCategory | ChangeDesignWorkingLifeYears | ChangeReferencePeriodYears | ChangeSupervisionLevel | ChangeInspectionLevel | ChangeBetaComputed | RemoveEffect | RemoveMember | RemoveSeismic | RemoveAccidental | RemoveVariable | RemovePermanent | InsertEffect | InsertMember | InsertSeismic | InsertAccidental | InsertVariable | InsertPermanent | ChangePermanentKind | ChangePermanentGk | ChangeVariableCategory | ChangeVariableQk | ChangeVariableGroup | ChangeAccidentalAd | ChangeSeismicAEk | ChangeSeismicImportanceClass | ChangeMemberLabelEn | ChangeMemberLabelDe | ChangeMemberRdStr | ChangeMemberRdGeo | ChangeMemberRdEquStab | ChangeMemberRdEquDestab | ChangeMemberRdFat | ChangeMemberSpan | ChangeMemberPrecamber | ChangeMemberDeflectionW1 | ChangeMemberDeflectionW2 | ChangeMemberDeflectionW3 | ChangeMemberDeflLimitRatio | ChangeMemberDeflLimitRatioW3 | ChangeMemberSlsLimitChar | ChangeMemberSlsLimitFreq | ChangeMemberSlsLimitQp | ChangeMemberVibrationFrequency | ChangeMemberVibFreqMin | ChangeBridgeMemberId | ChangeBridgeDeckAcceleration | ChangeBridgeDeckAccelLimit | ChangeBridgeDeckTwist | ChangeBridgeDeckTwistLimit | ChangeBridgeDeflection | ChangeBridgeDeflectionLimit | ChangeEffectMemberId | ChangeEffectActionId | ChangeEffectInfluence | ChangeFatigueMemberId | ChangeFatigueDetailCategory | ChangeFatigueStressRange | ChangeFatigueCycles | ChangeReliabilityResistanceDist | ChangeReliabilityResistanceMean | ChangeReliabilityResistanceSd | ChangeReliabilityActionDist | ChangeReliabilityActionMean | ChangeReliabilityActionSd | ChangeTestQuantity | ChangeTestDistribution | ChangeTestSampleSize | ChangeTestMean | ChangeTestStdDev | ChangeTestVariationKnown | ChangeTestConversionFactor | ChangeTestRequired | ChangePlacementX | ChangePlacementY | ChangePlacementZ | ChangePlacementYaw | ChangeStructureKind | InsertBridgeSls | RemoveBridgeSls | InsertFatigueSpectrum | RemoveFatigueSpectrum | InsertReliabilityAnalysis | RemoveReliabilityAnalysis | InsertTestSeries | RemoveTestSeries | InsertPlacement | RemovePlacement | InsertCase | RemoveCase | ChangeCaseNumber | ChangeCaseText | ChangeCaseLabelEn | ChangeCaseLabelDe | ChangeCaseEntryId | ChangeMemberFrameHeight | ChangeMemberFrameDrift | ChangeMemberStoreyHeight | ChangeMemberStoreyDrift | ChangeBridgeTrackGauge | ChangeBridgeLineSpeed | ChangeBridgeBallastDepth | ChangeBridgeDeckMass | ChangeBridgeNaturalFrequency | ChangeBridgeEndRotation | ChangeBridgeBasicWindSpeed | ChangeMemberMaterialStrengthK | ChangeMemberMaterialConvFactor | ChangeMemberMatPartialFactor | ChangeMemberMatDesignStrength | ChangeMemberNominalDimension | ChangeMemberDimensionTolerance | ChangeMemberDesignDimension | ChangeMemberMemberAlphaCr | ChangeMemberSecondOrderAnalysis | ChangeBridgeDampingRatio | ChangeFactorOverrideFactor | ChangeFactorOverrideTarget | ChangeFactorOverrideValue | ChangeFactorOverrideJustif | InsertFactorOverride | RemoveFactorOverride | ChangeTrafficGroupGroup | ChangeTrafficGroupVariableId | InsertTrafficGroup | RemoveTrafficGroup
+type ChangeAnnex {
+  newAnnex: AnnexChoice!
+}
+type ChangeProjectId {
+  newProjectId: String!
+}
+type ChangeAltitudeM {
+  newAltitudeM: Float!
+}
+type ChangeConsequenceClass {
+  newConsequenceClass: Int!
+}
+type ChangeReliabilityClass {
+  newReliabilityClass: String!
+}
+type ChangeDesignWorkingLifeCategory {
+  newDesignWorkingLifeCategory: Int!
+}
+type ChangeDesignWorkingLifeYears {
+  newDesignWorkingLifeYears: Float!
+}
+type ChangeReferencePeriodYears {
+  newReferencePeriodYears: Float!
+}
+type ChangeSupervisionLevel {
+  newSupervisionLevel: SupervisionLevel!
+}
+type ChangeInspectionLevel {
+  newInspectionLevel: InspectionLevel!
+}
+type ChangeBetaComputed {
+  newBetaComputed: Float!
+}
+type RemoveEffect {
+  index: Int!
+}
+type RemoveMember {
+  index: Int!
+}
+type RemoveSeismic {
+  index: Int!
+}
+type RemoveAccidental {
+  index: Int!
+}
+type RemoveVariable {
+  index: Int!
+}
+type RemovePermanent {
+  index: Int!
+}
+type InsertEffect {
+  index: Int
+  item: MemberEffect!
+}
+type InsertMember {
+  index: Int
+  item: Member!
+}
+type InsertSeismic {
+  index: Int
+  item: SeismicAction!
+}
+type InsertAccidental {
+  index: Int
+  item: AccidentalAction!
+}
+type InsertVariable {
+  index: Int
+  item: VariableAction!
+}
+type InsertPermanent {
+  index: Int
+  item: PermanentAction!
+}
+type ChangePermanentKind {
+  id: String!
+  newKind: PermanentKind!
+}
+type ChangePermanentGk {
+  id: String!
+  newGk: Float!
+}
+type ChangeVariableCategory {
+  id: String!
+  newCategory: String!
+}
+type ChangeVariableQk {
+  id: String!
+  newQk: Float!
+}
+type ChangeVariableGroup {
+  id: String!
+  newGroup: String!
+}
+type ChangeAccidentalAd {
+  id: String!
+  newAd: Float!
+}
+type ChangeSeismicAEk {
+  id: String!
+  newAEk: Float!
+}
+type ChangeSeismicImportanceClass {
+  id: String!
+  newImportanceClass: String!
+}
+type ChangeMemberLabelEn {
+  id: String!
+  newLabelEn: String!
+}
+type ChangeMemberLabelDe {
+  id: String!
+  newLabelDe: String!
+}
+type ChangeMemberRdStr {
+  id: String!
+  newRdStr: Float!
+}
+type ChangeMemberRdGeo {
+  id: String!
+  newRdGeo: Float!
+}
+type ChangeMemberRdEquStab {
+  id: String!
+  newRdEquStab: Float!
+}
+type ChangeMemberRdEquDestab {
+  id: String!
+  newRdEquDestab: Float!
+}
+type ChangeMemberRdFat {
+  id: String!
+  newRdFat: Float!
+}
+type ChangeMemberSpan {
+  id: String!
+  newSpan: Float!
+}
+type ChangeMemberPrecamber {
+  id: String!
+  newPrecamber: Float!
+}
+type ChangeMemberDeflectionW1 {
+  id: String!
+  newDeflectionW1: Float!
+}
+type ChangeMemberDeflectionW2 {
+  id: String!
+  newDeflectionW2: Float!
+}
+type ChangeMemberDeflectionW3 {
+  id: String!
+  newDeflectionW3: Float!
+}
+type ChangeMemberDeflLimitRatio {
+  id: String!
+  newDeflectionLimitRatio: Float!
+}
+type ChangeMemberDeflLimitRatioW3 {
+  id: String!
+  newDeflectionLimitRatioW3: Float!
+}
+type ChangeMemberSlsLimitChar {
+  id: String!
+  newSlsLimitChar: Float!
+}
+type ChangeMemberSlsLimitFreq {
+  id: String!
+  newSlsLimitFreq: Float!
+}
+type ChangeMemberSlsLimitQp {
+  id: String!
+  newSlsLimitQp: Float!
+}
+type ChangeMemberVibrationFrequency {
+  id: String!
+  newVibrationFrequency: Float!
+}
+type ChangeMemberVibFreqMin {
+  id: String!
+  newVibrationFrequencyMin: Float!
+}
+type ChangeBridgeMemberId {
+  id: String!
+  newMemberId: String!
+}
+type ChangeBridgeDeckAcceleration {
+  id: String!
+  newDeckAcceleration: Float!
+}
+type ChangeBridgeDeckAccelLimit {
+  id: String!
+  newDeckAccelerationLimit: Float!
+}
+type ChangeBridgeDeckTwist {
+  id: String!
+  newDeckTwist: Float!
+}
+type ChangeBridgeDeckTwistLimit {
+  id: String!
+  newDeckTwistLimit: Float!
+}
+type ChangeBridgeDeflection {
+  id: String!
+  newBridgeDeflection: Float!
+}
+type ChangeBridgeDeflectionLimit {
+  id: String!
+  newBridgeDeflectionLimit: Float!
+}
+type ChangeEffectMemberId {
+  index: Int!
+  newMemberId: String!
+}
+type ChangeEffectActionId {
+  index: Int!
+  newActionId: String!
+}
+type ChangeEffectInfluence {
+  index: Int!
+  newInfluence: Float!
+}
+type ChangeFatigueMemberId {
+  id: String!
+  newMemberId: String!
+}
+type ChangeFatigueDetailCategory {
+  id: String!
+  newDetailCategory: Float!
+}
+type ChangeFatigueStressRange {
+  id: String!
+  newStressRange: Float!
+}
+type ChangeFatigueCycles {
+  id: String!
+  newCycles: Float!
+}
+type ChangeReliabilityResistanceDist {
+  id: String!
+  newResistanceDistribution: DistributionKind!
+}
+type ChangeReliabilityResistanceMean {
+  id: String!
+  newResistanceMean: Float!
+}
+type ChangeReliabilityResistanceSd {
+  id: String!
+  newResistanceSd: Float!
+}
+type ChangeReliabilityActionDist {
+  id: String!
+  newActionDistribution: DistributionKind!
+}
+type ChangeReliabilityActionMean {
+  id: String!
+  newActionMean: Float!
+}
+type ChangeReliabilityActionSd {
+  id: String!
+  newActionSd: Float!
+}
+type ChangeTestQuantity {
+  id: String!
+  newQuantity: String!
+}
+type ChangeTestDistribution {
+  id: String!
+  newDistribution: TestDistribution!
+}
+type ChangeTestSampleSize {
+  id: String!
+  newSampleSize: Int!
+}
+type ChangeTestMean {
+  id: String!
+  newMean: Float!
+}
+type ChangeTestStdDev {
+  id: String!
+  newStdDev: Float!
+}
+type ChangeTestVariationKnown {
+  id: String!
+  newVariationKnown: Float!
+}
+type ChangeTestConversionFactor {
+  id: String!
+  newConversionFactor: Float!
+}
+type ChangeTestRequired {
+  id: String!
+  newRequired: Float!
+}
+type ChangePlacementX {
+  id: String!
+  newX: Float!
+}
+type ChangePlacementY {
+  id: String!
+  newY: Float!
+}
+type ChangePlacementZ {
+  id: String!
+  newZ: Float!
+}
+type ChangePlacementYaw {
+  id: String!
+  newYaw: Float!
+}
+type ChangeStructureKind {
+  newStructureKind: StructureKind!
+}
+type InsertBridgeSls {
+  index: Int
+  item: BridgeSls!
+}
+type RemoveBridgeSls {
+  index: Int!
+}
+type InsertFatigueSpectrum {
+  index: Int
+  item: FatigueSpectrum!
+}
+type RemoveFatigueSpectrum {
+  index: Int!
+}
+type InsertReliabilityAnalysis {
+  index: Int
+  item: ReliabilityAnalysis!
+}
+type RemoveReliabilityAnalysis {
+  index: Int!
+}
+type InsertTestSeries {
+  index: Int
+  item: TestSeries!
+}
+type RemoveTestSeries {
+  index: Int!
+}
+type InsertPlacement {
+  index: Int
+  item: Placement!
+}
+type RemovePlacement {
+  index: Int!
+}
+type InsertCase {
+  index: Int!
+  case: CaseRow!
+}
+type RemoveCase {
+  id: String!
+}
+type ChangeCaseNumber {
+  caseId: String!
+  key: String!
+  value: Float
+}
+type ChangeCaseText {
+  caseId: String!
+  key: String!
+  value: String
+}
+type ChangeCaseLabelEn {
+  caseId: String!
+  newValue: String!
+}
+type ChangeCaseLabelDe {
+  caseId: String!
+  newValue: String!
+}
+type ChangeCaseEntryId {
+  caseId: String!
+  newValue: String!
+}
+type ChangeMemberFrameHeight {
+  id: String!
+  newFrameHeight: Float!
+}
+type ChangeMemberFrameDrift {
+  id: String!
+  newFrameDrift: Float!
+}
+type ChangeMemberStoreyHeight {
+  id: String!
+  newStoreyHeight: Float!
+}
+type ChangeMemberStoreyDrift {
+  id: String!
+  newStoreyDrift: Float!
+}
+type ChangeBridgeTrackGauge {
+  id: String!
+  newTrackGauge: Float!
+}
+type ChangeBridgeLineSpeed {
+  id: String!
+  newLineSpeed: Float!
+}
+type ChangeBridgeBallastDepth {
+  id: String!
+  newBallastDepth: Float!
+}
+type ChangeBridgeDeckMass {
+  id: String!
+  newDeckMass: Float!
+}
+type ChangeBridgeNaturalFrequency {
+  id: String!
+  newNaturalFrequency: Float!
+}
+type ChangeBridgeEndRotation {
+  id: String!
+  newEndRotation: Float!
+}
+type ChangeBridgeBasicWindSpeed {
+  id: String!
+  newBasicWindSpeed: Float!
+}
+type ChangeMemberMaterialStrengthK {
+  id: String!
+  newMaterialStrengthK: Float!
+}
+type ChangeMemberMaterialConvFactor {
+  id: String!
+  newMaterialConversionFactor: Float!
+}
+type ChangeMemberMatPartialFactor {
+  id: String!
+  newMaterialPartialFactor: Float!
+}
+type ChangeMemberMatDesignStrength {
+  id: String!
+  newMaterialDesignStrength: Float!
+}
+type ChangeMemberNominalDimension {
+  id: String!
+  newNominalDimension: Float!
+}
+type ChangeMemberDimensionTolerance {
+  id: String!
+  newDimensionTolerance: Float!
+}
+type ChangeMemberDesignDimension {
+  id: String!
+  newDesignDimension: Float!
+}
+type ChangeMemberMemberAlphaCr {
+  id: String!
+  newMemberAlphaCr: Float!
+}
+type ChangeMemberSecondOrderAnalysis {
+  id: String!
+  newSecondOrderAnalysis: Float!
+}
+type ChangeBridgeDampingRatio {
+  id: String!
+  newDampingRatio: Float!
+}
+type ChangeFactorOverrideFactor {
+  id: String!
+  newFactor: String!
+}
+type ChangeFactorOverrideTarget {
+  id: String!
+  newTarget: String!
+}
+type ChangeFactorOverrideValue {
+  id: String!
+  newValue: Float!
+}
+type ChangeFactorOverrideJustif {
+  id: String!
+  newJustification: String!
+}
+type InsertFactorOverride {
+  index: Int
+  item: FactorOverride!
+}
+type RemoveFactorOverride {
+  index: Int!
+}
+type ChangeTrafficGroupGroup {
+  id: String!
+  newGroup: String!
+}
+type ChangeTrafficGroupVariableId {
+  id: String!
+  newVariableId: String!
+}
+type InsertTrafficGroup {
+  index: Int
+  item: TrafficGroup!
+}
+type RemoveTrafficGroup {
+  index: Int!
 }

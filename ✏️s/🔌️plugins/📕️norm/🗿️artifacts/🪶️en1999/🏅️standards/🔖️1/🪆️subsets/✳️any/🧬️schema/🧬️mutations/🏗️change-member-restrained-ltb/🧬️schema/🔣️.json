@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-member-restrained-ltb/schema.json",
+  "title": "ChangeMemberRestrainedLtb",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "memberId",
+    "newRestrainedLtb"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeMemberRestrainedLtb"
+    },
+    "memberId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Member",
+          "de": "Bauteil"
+        },
+        "description": {
+          "en": "The member this mutation addresses, by id.",
+          "de": "Das adressierte Element (Bauteil), per Kennung."
+        },
+        "ref": {
+          "kind": "member"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newRestrainedLtb": {
+      "type": "boolean",
+      "x-semio-ui": {
+        "label": {
+          "en": "Laterally restrained",
+          "de": "Gegen Kippen gehalten"
+        },
+        "widget": "toggle",
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

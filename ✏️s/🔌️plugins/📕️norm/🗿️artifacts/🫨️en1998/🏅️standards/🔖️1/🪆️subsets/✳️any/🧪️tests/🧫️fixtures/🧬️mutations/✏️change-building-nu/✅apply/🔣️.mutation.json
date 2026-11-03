@@ -1,0 +1,5 @@
+{
+  "mutation": "changeBuildingNu",
+  "id": "bldg-office",
+  "newNu": 1.0
+}

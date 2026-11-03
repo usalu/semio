@@ -1,13 +1,13 @@
 /** ➕️ `insert-opening` wire twin: the leaf payload `InsertOpening`, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
- * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
+ * by `repo ./📜️script.ts schema twins generate`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
-import { normWireInteger, normWireObject, normWireRange, type NormWireReader, normWireRequired } from "@semio-tech/norm-js/registry/contract";
-import { parseWallOpening, type WallOpening } from "../../../📸️snapshot/🟦️.ts";
+import { normWireInteger, normWireObject, normWireRange, normWireRequired, normWireString, type NormWireReader } from "@semio-tech/norm-js/registry/contract";
+import { type WallOpening, parseWallOpening } from "../../../📸️snapshot/🟦️.ts";
 
 export interface InsertOpening {
-  wallIndex: number;
+  wallId: string;
   index: number;
   opening: WallOpening;
 }
 
-export const parseInsertOpening: NormWireReader<InsertOpening> = normWireObject<InsertOpening>({ wallIndex: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), opening: normWireRequired(parseWallOpening) });
+export const parseInsertOpening: NormWireReader<InsertOpening> = normWireObject<InsertOpening>({ wallId: normWireRequired(normWireString), index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), opening: normWireRequired(parseWallOpening) });

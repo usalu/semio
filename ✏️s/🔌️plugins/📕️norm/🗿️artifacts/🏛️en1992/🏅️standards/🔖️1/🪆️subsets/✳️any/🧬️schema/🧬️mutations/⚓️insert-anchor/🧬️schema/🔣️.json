@@ -43,6 +43,9 @@
         },
         "group": "record",
         "order": 20
+      },
+      "x-semio-rust": {
+        "type": "Anchor"
       }
     }
   }

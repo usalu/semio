@@ -1,0 +1,131 @@
+{
+  "annex": null,
+  "site": null,
+  "buildings": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "bridges": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "assessments": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "silos": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "tanks": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "foundations": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "fd-1",
+        "patch": {
+          "supportedBuildingId": null,
+          "areaM2": null,
+          "pRdPa": null,
+          "passiveResistanceN": null,
+          "kFoundation": null,
+          "kSoil": null,
+          "liqN160": null,
+          "liqFinesPercent": 1.5,
+          "liqDepthM": null,
+          "liqWaterDepthM": null,
+          "liqUnitWeightNM3": null,
+          "liqMagnitude": null,
+          "liqLayerThicknessM": null,
+          "footingWidthM": null,
+          "bearingAxialN": null,
+          "bearingShearN": null,
+          "bearingMomentNm": null,
+          "bearingNMaxN": null,
+          "soilFrictionAngleDeg": null,
+          "pileDiameterM": null,
+          "pileLengthM": null,
+          "pileModulusPa": null,
+          "pileSubgradeModulusNM3": null,
+          "pileHeadShearN": null,
+          "pileHeadFixed": null,
+          "pileInterfaceDepthM": null,
+          "pileUpperVsMS": null,
+          "pileLowerVsMS": null,
+          "pileMomentRdNm": null,
+          "baseFrictionAngleDeg": null,
+          "basePorePressurePa": null
+        }
+      }
+    ]
+  },
+  "retainingWalls": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "towers": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "joints": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "bearings": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "piers": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "accelerograms": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "diaphragms": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "soilLayers": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "placements": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  }
+}

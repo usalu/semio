@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-thermal-section-length/schema.json",
+  "title": "ChangeThermalSectionLength",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newLength"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Thermal section",
+          "de": "Temperaturquerschnitt"
+        },
+        "description": {
+          "en": "The thermal section this mutation addresses, by id.",
+          "de": "Das adressierte Element (Temperaturquerschnitt), per Kennung."
+        },
+        "ref": {
+          "kind": "thermal-section"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newLength": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Expansion length L",
+          "de": "Dehnlänge L"
+        },
+        "widget": "stepper",
+        "unit": "m",
+        "precision": 2,
+        "step": 1,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

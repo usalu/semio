@@ -1,0 +1,5 @@
+{
+  "mutation": "changeCaseEntryId",
+  "caseId": "case-psi",
+  "newValue": "E90.04"
+}

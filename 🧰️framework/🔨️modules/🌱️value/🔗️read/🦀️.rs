@@ -98,7 +98,7 @@ impl<T:RetireOwned+Sync> Drop for ReadOwnershipRegistry<T> {fn drop(&mut self){l
 
 struct RegistryRetirement<T:RetireOwned+Sync> {pub owner:ManuallyDrop<ReadOwnershipRegistry<T>>,active:Option<SharedControlledRetirement<T>>}
 impl<T:RetireOwned+Sync> RetirementCursor for RegistryRetirement<T> {
- fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{if self.terminal_is_empty(){return Ok(Default::default())}if let Some(owner)=self.active.as_ref(){if owner.terminal_is_empty(){Ok(RetirementDemand{depth:1,..Default::default()})}else{owner.next_demand(body)}}else{Ok(RetirementDemand{release_bytes:if unsafe{&*self.owner.state.state.get()}.free_len==READ_LEASE_CAPACITY&&!self.terminal_is_empty(){size_of::<[Option<Slot<T>>;READ_LEASE_CAPACITY]>()}else{0},depth:1,..Default::default()})}}
+ fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{if self.terminal_is_empty(){return Ok(Default::default())}if let Some(owner)=self.active.as_ref(){if owner.terminal_is_empty(){Ok(RetirementDemand{depth:1,..Default::default()})}else{owner.next_demand(body)}}else{Ok(RetirementDemand{release_bytes:if unsafe{&*self.owner.state.state.get()}.free_len==READ_LEASE_CAPACITY&&!self.terminal_is_empty(){size_of::<[Option<Slot<T>>;READ_LEASE_CAPACITY]>()}else{0},depth:1,..Default::default()})}}
     fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep {
         if self.terminal_is_empty(){return RetirementStep::Complete(0);}
         if grant.maximum_items==0{return RetirementStep::BudgetExhausted;}let demand=match RetirementCursor::next_demand(self,grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return RetirementStep::Failure(error,0)};if grant.maximum_depth<demand.depth||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return RetirementStep::BudgetExhausted;}
@@ -170,7 +170,7 @@ impl<T:RetireOwned+Sync> ReadLease<T> {
     }
 }
 impl<T:RetireOwned+Sync> ErasedSnapshotRetirement for ReadLease<T> {
- fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{self.demands(body)}
+ fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.demands(body)}
     fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome {
         if self.terminal_is_empty(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}
         if grant.maximum_items==0{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeWallWallMovement",
+  "id": "wall-W1",
+  "newWallMovement": "free"
+}

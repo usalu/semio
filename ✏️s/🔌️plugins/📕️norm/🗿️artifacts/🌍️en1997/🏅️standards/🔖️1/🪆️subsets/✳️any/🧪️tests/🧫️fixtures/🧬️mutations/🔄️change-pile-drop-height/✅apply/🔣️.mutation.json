@@ -1,0 +1,5 @@
+{
+  "mutation": "changePileDropHeight",
+  "id": "pile-P1",
+  "newDropHeight": 1.5
+}

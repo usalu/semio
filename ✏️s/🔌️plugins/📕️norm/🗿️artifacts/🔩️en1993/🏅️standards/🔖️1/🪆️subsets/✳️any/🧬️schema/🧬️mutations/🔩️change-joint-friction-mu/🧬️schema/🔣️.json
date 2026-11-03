@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-joint-friction-mu/schema.json",
+  "title": "ChangeJointFrictionMu",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newFrictionMu"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Joint",
+          "de": "Anschluss"
+        },
+        "description": {
+          "en": "The joint this mutation addresses, by id.",
+          "de": "Das adressierte Element (Anschluss), per Kennung."
+        },
+        "ref": {
+          "kind": "joint"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newFrictionMu": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Slip factor μ",
+          "de": "Reibungszahl μ"
+        },
+        "widget": "stepper",
+        "precision": 2,
+        "step": 0.01,
+        "snaps": [
+          0.2,
+          0.3,
+          0.4,
+          0.5
+        ],
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

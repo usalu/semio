@@ -1,0 +1,5 @@
+{
+  "mutation": "changePileGroupSpacing",
+  "id": "group-G1",
+  "newSpacing": 3.6
+}

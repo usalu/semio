@@ -1,0 +1,32 @@
+{
+ "artifact": "en1998",
+ "wire": "camel",
+ "conversions": [
+  {
+   "hosts": [
+    "En1998Pier.stiffness_basis"
+   ],
+   "enum": "PierStiffnessBasis",
+   "doc": "🧱 Basis of the effective stiffness EI_eff of a bridge pier (EN 1998-2 2.3.6.1, Annex C): the declared cracked share of the bridge, or M_y/phi_y computed from the pier section by the fibre kernel.",
+   "default": "Declared",
+   "variants": [
+    [
+     "Declared",
+     [
+      "declared"
+     ],
+     "Declared share",
+     "Angegebener Anteil"
+    ],
+    [
+     "Computed",
+     [
+      "computed"
+     ],
+     "Computed M_y/phi_y",
+     "Berechnet M_y/phi_y"
+    ]
+   ]
+  }
+ ]
+}

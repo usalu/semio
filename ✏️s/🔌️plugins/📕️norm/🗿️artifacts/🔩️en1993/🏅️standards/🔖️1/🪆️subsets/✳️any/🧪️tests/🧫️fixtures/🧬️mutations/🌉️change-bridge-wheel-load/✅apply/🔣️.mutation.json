@@ -1,0 +1,6 @@
+{
+  "ChangeBridgeWheelLoad": {
+    "id": "br-1",
+    "newWheelLoad": 1.5
+  }
+}

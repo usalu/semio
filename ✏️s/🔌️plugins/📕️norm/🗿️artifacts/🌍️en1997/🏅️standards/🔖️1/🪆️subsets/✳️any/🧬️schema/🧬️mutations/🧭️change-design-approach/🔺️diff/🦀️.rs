@@ -5,5 +5,5 @@ pub fn diff(payload: &ChangeDesignApproach, base: &En1997Snapshot) -> protocol::
     if base.design_approach == payload.new_design_approach {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "approach unchanged");
     }
-    protocol::MutationOutcome::new(En1997Diff { design_approach: Some(payload.new_design_approach.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1997Diff { design_approach: Some(payload.new_design_approach), ..Default::default() })
 }

@@ -1,0 +1,6 @@
+{
+  "ChangeCraneMaxWheelLoad": {
+    "id": "crane-1",
+    "newMaxWheelLoad": 1.5
+  }
+}

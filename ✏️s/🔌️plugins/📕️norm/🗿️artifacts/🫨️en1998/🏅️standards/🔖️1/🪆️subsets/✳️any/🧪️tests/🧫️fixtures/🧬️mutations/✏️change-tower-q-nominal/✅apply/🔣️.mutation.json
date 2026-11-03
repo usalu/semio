@@ -1,0 +1,5 @@
+{
+  "mutation": "changeTowerQNominal",
+  "id": "tw-1",
+  "newQNominal": 5.0
+}

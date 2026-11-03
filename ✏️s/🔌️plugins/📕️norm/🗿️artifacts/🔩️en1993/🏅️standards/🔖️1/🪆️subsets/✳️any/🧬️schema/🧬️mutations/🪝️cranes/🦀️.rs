@@ -17,8 +17,4 @@ pub mod insert_tension_component;
 pub mod remove_crane_runway;
 #[path = "../➖️remove-tension-component/🦀️.rs"]
 pub mod remove_tension_component;
-#[path = "../🏗️update-crane-inputs/🦀️.rs"]
-pub mod update_crane_inputs;
-#[path = "../🪢️update-tension-component-inputs/🦀️.rs"]
-pub mod update_tension_component_inputs;
 //#endregion 🪢️Mounts

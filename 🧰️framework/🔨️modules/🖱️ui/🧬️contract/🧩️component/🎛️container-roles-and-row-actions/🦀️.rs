@@ -15,6 +15,7 @@ pub enum ContainerRole {
     Field,
     Form,
     Toolbar,
+    Sheet,
 }
 
 /// ⌨️ The closed set of input kinds. Grepped from the fleet's actual `UiInputNode.input_kind` string

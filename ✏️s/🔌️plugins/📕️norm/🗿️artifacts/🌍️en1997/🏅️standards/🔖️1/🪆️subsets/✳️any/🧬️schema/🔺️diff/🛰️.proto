@@ -1,164 +1,583 @@
 syntax = "proto3";
-package semio.s.norm.en1997.diff;
-
-message En1997LayersPatch {
-  optional double oedometric_modulus = 1;
-  optional double phi_prime_deg = 2;
+package semio.s.norm.en1997;
+message En1997Diff {
+  // @state artifact
+  optional string structure_id = 1;
+  // @state artifact
+  optional uint32 geotechnical_category = 2;
+  // @state artifact
+  optional string design_situation = 3;
+  // @state artifact
+  optional string design_approach = 4;
+  // @state artifact
+  optional string annex = 5;
+  // @state artifact
+  optional double groundwater_level = 6;
+  // @state artifact
+  optional double investigation_depth = 7;
+  // @state artifact
+  optional En1997LayersRows layers = 8;
+  // @state artifact
+  optional En1997FootingsRows footings = 9;
+  // @state artifact
+  optional En1997PilesRows piles = 10;
+  // @state artifact
+  optional En1997RetainingWallsRows retaining_walls = 11;
+  // @state artifact
+  optional En1997SlopesRows slopes = 12;
+  // @state artifact
+  optional En1997UpliftCasesRows uplift_cases = 13;
+  // @state artifact
+  optional En1997AnchorsRows anchors = 14;
+  // @state artifact
+  optional En1997EmbeddedWallsRows embedded_walls = 15;
+  // @state artifact
+  optional En1997PileGroupsRows pile_groups = 16;
+  // @state artifact
+  optional En1997LabTestsRows lab_tests = 17;
+  // @state artifact
+  optional En1997LayerWatersRows layer_waters = 18;
+  // @state artifact
+  optional En1997PlacementsRows placements = 19;
+  // @state artifact
+  CaseRowDelta cases = 20;
+  // @state artifact
+  optional En1997InvestigationsRows investigations = 21;
+  // @state artifact
+  optional En1997CharacteristicBasesRows characteristic_bases = 22;
 }
-
-message En1997LayersRemoved {
-  string id = 1;
-  uint64 index = 2;
-}
-
-message En1997LayersInserted {
+message En1997AnchorsInserted {
   uint64 index = 1;
+  Anchor row = 2;
 }
-
-message En1997LayersMoved {
+message En1997AnchorsModified {
+  string id = 1;
+  En1997AnchorsPatch patch = 2;
+}
+message En1997AnchorsMoved {
   string id = 1;
   uint64 from = 2;
   uint64 to = 3;
 }
-
-message En1997LayersModified {
-  string id = 1;
-  En1997LayersPatch patch = 2;
+message En1997AnchorsPatch {
+  optional string wall_id = 1;
+  optional string tendon = 2;
+  optional double head_depth = 3;
+  optional double inclination_deg = 4;
+  optional double free_length = 5;
+  optional double fixed_length = 6;
+  optional double fixed_diameter = 7;
+  optional double bond_stress = 8;
+  optional double design_force = 9;
+  optional double tendon_yield_force = 10;
+  optional double min_free_length = 11;
+  optional double test_factor = 12;
+  En1997AnchorsTestsRows tests = 13;
 }
-
-message En1997LayersRows {
-  repeated En1997LayersRemoved removed = 1;
-  repeated En1997LayersInserted inserted = 2;
-  repeated En1997LayersMoved moved = 3;
-  repeated En1997LayersModified modified = 4;
-}
-
-message En1997FootingsPatch {
-  optional double width = 1;
-  optional double embedment = 2;
-}
-
-message En1997FootingsRemoved {
+message En1997AnchorsRemoved {
   string id = 1;
   uint64 index = 2;
 }
-
+message En1997AnchorsRows {
+  repeated En1997AnchorsRemoved removed = 1;
+  repeated En1997AnchorsInserted inserted = 2;
+  repeated En1997AnchorsMoved moved = 3;
+  repeated En1997AnchorsModified modified = 4;
+}
+message En1997AnchorsTestsInserted {
+  uint64 index = 1;
+  AnchorTest row = 2;
+}
+message En1997AnchorsTestsModified {
+  string id = 1;
+  En1997AnchorsTestsPatch patch = 2;
+}
+message En1997AnchorsTestsMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+message En1997AnchorsTestsPatch {
+  optional double pull_out_resistance = 1;
+}
+message En1997AnchorsTestsRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
+message En1997AnchorsTestsRows {
+  repeated En1997AnchorsTestsRemoved removed = 1;
+  repeated En1997AnchorsTestsInserted inserted = 2;
+  repeated En1997AnchorsTestsMoved moved = 3;
+  repeated En1997AnchorsTestsModified modified = 4;
+}
+message En1997EmbeddedWallsInserted {
+  uint64 index = 1;
+  EmbeddedWall row = 2;
+}
+message En1997EmbeddedWallsModified {
+  string id = 1;
+  En1997EmbeddedWallsPatch patch = 2;
+}
+message En1997EmbeddedWallsMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+message En1997EmbeddedWallsPatch {
+  optional string kind = 1;
+  optional double retained_height = 2;
+  optional double embedment = 3;
+  optional double prop_depth = 4;
+  optional double thickness = 5;
+  optional double backfill_gamma = 6;
+  optional double phi_deg = 7;
+  optional double delta_active_deg = 8;
+  optional double delta_passive_deg = 9;
+  optional double surcharge = 10;
+  optional double undrained_strength = 11;
+}
+message En1997EmbeddedWallsRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
+message En1997EmbeddedWallsRows {
+  repeated En1997EmbeddedWallsRemoved removed = 1;
+  repeated En1997EmbeddedWallsInserted inserted = 2;
+  repeated En1997EmbeddedWallsMoved moved = 3;
+  repeated En1997EmbeddedWallsModified modified = 4;
+}
 message En1997FootingsInserted {
   uint64 index = 1;
+  SpreadFoundation row = 2;
 }
-
+message En1997FootingsLoadCasesInserted {
+  uint64 index = 1;
+  FoundationLoadCase row = 2;
+}
+message En1997FootingsLoadCasesModified {
+  string id = 1;
+  En1997FootingsLoadCasesPatch patch = 2;
+}
+message En1997FootingsLoadCasesMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+message En1997FootingsLoadCasesPatch {
+  optional string design_situation = 1;
+  optional double vertical_permanent = 2;
+  optional double vertical_variable = 3;
+  optional double horizontal_permanent = 4;
+  optional double horizontal_variable = 5;
+  optional double moment_permanent = 6;
+  optional double moment_variable = 7;
+}
+message En1997FootingsLoadCasesRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
+message En1997FootingsLoadCasesRows {
+  repeated En1997FootingsLoadCasesRemoved removed = 1;
+  repeated En1997FootingsLoadCasesInserted inserted = 2;
+  repeated En1997FootingsLoadCasesMoved moved = 3;
+  repeated En1997FootingsLoadCasesModified modified = 4;
+}
+message En1997FootingsModified {
+  string id = 1;
+  En1997FootingsPatch patch = 2;
+}
 message En1997FootingsMoved {
   string id = 1;
   uint64 from = 2;
   uint64 to = 3;
 }
-
-message En1997FootingsModified {
-  string id = 1;
-  En1997FootingsPatch patch = 2;
+message En1997FootingsPatch {
+  optional double width = 1;
+  optional double length = 2;
+  optional double embedment = 3;
+  optional double base_inclination_deg = 4;
+  optional double settlement_limit = 5;
+  En1997FootingsLoadCasesRows load_cases = 6;
 }
-
+message En1997FootingsRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
 message En1997FootingsRows {
   repeated En1997FootingsRemoved removed = 1;
   repeated En1997FootingsInserted inserted = 2;
   repeated En1997FootingsMoved moved = 3;
   repeated En1997FootingsModified modified = 4;
 }
-
-message En1997PilesPatch {
-  optional double length = 1;
-  optional uint32 count = 2;
+message En1997LabTestsInserted {
+  uint64 index = 1;
+  LabTest row = 2;
 }
-
-message En1997PilesRemoved {
+message En1997LabTestsModified {
+  string id = 1;
+  En1997LabTestsPatch patch = 2;
+}
+message En1997LabTestsMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+message En1997LabTestsPatch {
+  optional string layer_id = 1;
+  optional string kind = 2;
+  optional double void_ratio = 3;
+  optional double preload_stress = 4;
+  optional double drainage_height = 5;
+  optional double consolidation_time = 6;
+  optional double compression_index = 7;
+  optional double swelling_index = 8;
+  optional double stress_increment = 9;
+  optional double secondary_compression_index = 10;
+  optional double design_life = 11;
+  En1997LabTestsPointsRows points = 12;
+}
+message En1997LabTestsPointsInserted {
+  uint64 index = 1;
+  LabPoint row = 2;
+}
+message En1997LabTestsPointsModified {
+  string id = 1;
+  En1997LabTestsPointsPatch patch = 2;
+}
+message En1997LabTestsPointsMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+message En1997LabTestsPointsPatch {
+  optional double normal_stress = 1;
+  optional double shear_stress = 2;
+}
+message En1997LabTestsPointsRemoved {
   string id = 1;
   uint64 index = 2;
 }
-
+message En1997LabTestsPointsRows {
+  repeated En1997LabTestsPointsRemoved removed = 1;
+  repeated En1997LabTestsPointsInserted inserted = 2;
+  repeated En1997LabTestsPointsMoved moved = 3;
+  repeated En1997LabTestsPointsModified modified = 4;
+}
+message En1997LabTestsRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
+message En1997LabTestsRows {
+  repeated En1997LabTestsRemoved removed = 1;
+  repeated En1997LabTestsInserted inserted = 2;
+  repeated En1997LabTestsMoved moved = 3;
+  repeated En1997LabTestsModified modified = 4;
+}
+message En1997LayerWatersInserted {
+  uint64 index = 1;
+  LayerWater row = 2;
+}
+message En1997LayerWatersModified {
+  string id = 1;
+  En1997LayerWatersPatch patch = 2;
+}
+message En1997LayerWatersMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+message En1997LayerWatersPatch {
+  optional string layer_id = 1;
+  optional double piezometric_depth = 2;
+  optional double permeability = 3;
+  optional double head_difference = 4;
+  optional double flow_length = 5;
+  optional double well_radius = 6;
+  optional double well_water_depth = 7;
+  optional double influence_radius = 8;
+  optional double well_capacity = 9;
+}
+message En1997LayerWatersRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
+message En1997LayerWatersRows {
+  repeated En1997LayerWatersRemoved removed = 1;
+  repeated En1997LayerWatersInserted inserted = 2;
+  repeated En1997LayerWatersMoved moved = 3;
+  repeated En1997LayerWatersModified modified = 4;
+}
+message En1997PlacementsInserted {
+  uint64 index = 1;
+  Placement row = 2;
+}
+message En1997PlacementsModified {
+  string id = 1;
+  En1997PlacementsPatch patch = 2;
+}
+message En1997PlacementsMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+message En1997PlacementsPatch {
+  optional double x = 1;
+  optional double y = 2;
+  optional double z = 3;
+  optional double yaw = 4;
+}
+message En1997PlacementsRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
+message En1997PlacementsRows {
+  repeated En1997PlacementsRemoved removed = 1;
+  repeated En1997PlacementsInserted inserted = 2;
+  repeated En1997PlacementsMoved moved = 3;
+  repeated En1997PlacementsModified modified = 4;
+}
+message En1997LayersInserted {
+  uint64 index = 1;
+  SoilLayer row = 2;
+}
+message En1997LayersModified {
+  string id = 1;
+  En1997LayersPatch patch = 2;
+}
+message En1997LayersMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+message En1997LayersPatch {
+  optional string soil_type = 1;
+  optional double depth_top = 2;
+  optional double depth_bottom = 3;
+  optional double gamma = 4;
+  optional double gamma_prime = 5;
+  optional double phi_prime_deg = 6;
+  optional double cohesion_effective = 7;
+  optional double cohesion_undrained = 8;
+  optional double oedometric_modulus = 9;
+  optional double poisson_ratio = 10;
+  optional double cpt_qc = 11;
+  optional double spt_n = 12;
+  optional double cpt_nkt = 13;
+}
+message En1997LayersRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
+message En1997LayersRows {
+  repeated En1997LayersRemoved removed = 1;
+  repeated En1997LayersInserted inserted = 2;
+  repeated En1997LayersMoved moved = 3;
+  repeated En1997LayersModified modified = 4;
+}
+message En1997PileGroupsInserted {
+  uint64 index = 1;
+  PileGroup row = 2;
+}
+message En1997PileGroupsModified {
+  string id = 1;
+  En1997PileGroupsPatch patch = 2;
+}
+message En1997PileGroupsMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+message En1997PileGroupsPatch {
+  optional string pile_id = 1;
+  optional uint32 rows = 2;
+  optional uint32 columns = 3;
+  optional double spacing = 4;
+  optional double cap_vertical = 5;
+  optional double cap_moment_x = 6;
+  optional double cap_moment_y = 7;
+  optional double single_resistance = 8;
+  optional double shaft_cohesion_sum = 9;
+  optional double base_cohesion = 10;
+}
+message En1997PileGroupsRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
+message En1997PileGroupsRows {
+  repeated En1997PileGroupsRemoved removed = 1;
+  repeated En1997PileGroupsInserted inserted = 2;
+  repeated En1997PileGroupsMoved moved = 3;
+  repeated En1997PileGroupsModified modified = 4;
+}
 message En1997PilesInserted {
   uint64 index = 1;
+  Pile row = 2;
 }
-
+message En1997PilesModified {
+  string id = 1;
+  En1997PilesPatch patch = 2;
+}
 message En1997PilesMoved {
   string id = 1;
   uint64 from = 2;
   uint64 to = 3;
 }
-
-message En1997PilesModified {
-  string id = 1;
-  En1997PilesPatch patch = 2;
+message En1997PilesPatch {
+  optional string pile_type = 1;
+  optional double diameter = 2;
+  optional double length = 3;
+  optional uint32 count = 4;
+  optional double alpha_s = 5;
+  optional double unit_shaft_resistance = 6;
+  optional double unit_base_resistance = 7;
+  optional double compression_permanent = 8;
+  optional double compression_variable = 9;
+  optional double tension_permanent = 10;
+  optional double tension_variable = 11;
+  optional double bending_stiffness_ei = 12;
+  optional double horizontal_subgrade_modulus = 13;
+  optional double lateral_head_load = 14;
+  optional double elastic_modulus = 15;
+  optional double settling_thickness = 16;
+  optional double negative_friction_beta = 17;
+  optional double dynamic_test_count = 18;
+  optional double dynamic_resistance_mean = 19;
+  optional double dynamic_resistance_min = 20;
+  optional double hammer_weight = 21;
+  optional double drop_height = 22;
+  optional double set_per_blow = 23;
+  optional double elastic_compression = 24;
+  optional double hammer_efficiency = 25;
+  optional string concrete_class = 26;
+  En1997PilesTestProfilesRows test_profiles = 27;
 }
-
+message En1997PilesRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
 message En1997PilesRows {
   repeated En1997PilesRemoved removed = 1;
   repeated En1997PilesInserted inserted = 2;
   repeated En1997PilesMoved moved = 3;
   repeated En1997PilesModified modified = 4;
 }
-
-message En1997RetainingWallsPatch {
-  optional double base_width = 1;
+message En1997PilesTestProfilesInserted {
+  uint64 index = 1;
+  PileTestProfile row = 2;
 }
-
-message En1997RetainingWallsRemoved {
+message En1997PilesTestProfilesModified {
+  string id = 1;
+  En1997PilesTestProfilesPatch patch = 2;
+}
+message En1997PilesTestProfilesMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+message En1997PilesTestProfilesPatch {
+  optional double shaft_resistance = 1;
+  optional double base_resistance = 2;
+}
+message En1997PilesTestProfilesRemoved {
   string id = 1;
   uint64 index = 2;
 }
-
+message En1997PilesTestProfilesRows {
+  repeated En1997PilesTestProfilesRemoved removed = 1;
+  repeated En1997PilesTestProfilesInserted inserted = 2;
+  repeated En1997PilesTestProfilesMoved moved = 3;
+  repeated En1997PilesTestProfilesModified modified = 4;
+}
 message En1997RetainingWallsInserted {
   uint64 index = 1;
+  RetainingWall row = 2;
 }
-
+message En1997RetainingWallsModified {
+  string id = 1;
+  En1997RetainingWallsPatch patch = 2;
+}
 message En1997RetainingWallsMoved {
   string id = 1;
   uint64 from = 2;
   uint64 to = 3;
 }
-
-message En1997RetainingWallsModified {
-  string id = 1;
-  En1997RetainingWallsPatch patch = 2;
+message En1997RetainingWallsPatch {
+  optional double height = 1;
+  optional double embedment = 2;
+  optional double base_width = 3;
+  optional double stem_thickness = 4;
+  optional double backfill_phi_deg = 5;
+  optional double backfill_gamma = 6;
+  optional double wall_friction_deg = 7;
+  optional string earth_pressure_mode = 8;
+  optional string wall_movement = 9;
+  optional double ocr = 10;
+  optional double concrete_gamma = 11;
+  optional double surcharge = 12;
+  optional double vertical_permanent = 13;
+  optional double horizontal_permanent = 14;
+  optional double seismic_kh = 15;
+  optional double seismic_kv = 16;
+  optional double reinforcement_spacing = 17;
+  optional double reinforcement_width = 18;
+  optional double reinforcement_friction = 19;
 }
-
+message En1997RetainingWallsRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
 message En1997RetainingWallsRows {
   repeated En1997RetainingWallsRemoved removed = 1;
   repeated En1997RetainingWallsInserted inserted = 2;
   repeated En1997RetainingWallsMoved moved = 3;
   repeated En1997RetainingWallsModified modified = 4;
 }
-
-message En1997SlopesPatch {
-  optional double angle_deg = 1;
-}
-
-message En1997SlopesRemoved {
-  string id = 1;
-  uint64 index = 2;
-}
-
 message En1997SlopesInserted {
   uint64 index = 1;
+  Slope row = 2;
 }
-
+message En1997SlopesModified {
+  string id = 1;
+  En1997SlopesPatch patch = 2;
+}
 message En1997SlopesMoved {
   string id = 1;
   uint64 from = 2;
   uint64 to = 3;
 }
-
-message En1997SlopesModified {
-  string id = 1;
-  En1997SlopesPatch patch = 2;
+message En1997SlopesPatch {
+  optional double angle_deg = 1;
+  optional double height = 2;
+  optional double length = 3;
+  optional string governing_layer_id = 4;
+  optional double circle_centre_x = 5;
+  optional double circle_centre_z = 6;
+  optional double circle_radius = 7;
+  optional double width = 8;
 }
-
+message En1997SlopesRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
 message En1997SlopesRows {
   repeated En1997SlopesRemoved removed = 1;
   repeated En1997SlopesInserted inserted = 2;
   repeated En1997SlopesMoved moved = 3;
   repeated En1997SlopesModified modified = 4;
 }
-
+message En1997UpliftCasesInserted {
+  uint64 index = 1;
+  UpliftCase row = 2;
+}
+message En1997UpliftCasesModified {
+  string id = 1;
+  En1997UpliftCasesPatch patch = 2;
+}
+message En1997UpliftCasesMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
 message En1997UpliftCasesPatch {
   optional double permanent_stabilizing = 1;
   optional double permanent_destabilizing = 2;
@@ -166,45 +585,99 @@ message En1997UpliftCasesPatch {
   optional double pore_pressure = 4;
   optional double total_stress = 5;
 }
-
 message En1997UpliftCasesRemoved {
   string id = 1;
   uint64 index = 2;
 }
-
-message En1997UpliftCasesInserted {
-  uint64 index = 1;
-}
-
-message En1997UpliftCasesMoved {
-  string id = 1;
-  uint64 from = 2;
-  uint64 to = 3;
-}
-
-message En1997UpliftCasesModified {
-  string id = 1;
-  En1997UpliftCasesPatch patch = 2;
-}
-
 message En1997UpliftCasesRows {
   repeated En1997UpliftCasesRemoved removed = 1;
   repeated En1997UpliftCasesInserted inserted = 2;
   repeated En1997UpliftCasesMoved moved = 3;
   repeated En1997UpliftCasesModified modified = 4;
 }
-
-message En1997Diff {
-  optional string structure_id = 1;
-  optional uint32 geotechnical_category = 2;
-  optional string design_situation = 3;
-  optional string design_approach = 4;
-  optional double groundwater_level = 5;
-  optional double investigation_depth = 6;
-  optional En1997LayersRows layers = 7;
-  optional En1997FootingsRows footings = 8;
-  optional En1997PilesRows piles = 9;
-  optional En1997RetainingWallsRows retaining_walls = 10;
-  optional En1997SlopesRows slopes = 11;
-  optional En1997UpliftCasesRows uplift_cases = 12;
+message En1997InvestigationsInserted {
+  uint64 index = 1;
+  Investigation row = 2;
+}
+message En1997InvestigationsModified {
+  string id = 1;
+  En1997InvestigationsPatch patch = 2;
+}
+message En1997InvestigationsMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+message En1997InvestigationsRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
+message En1997InvestigationsRows {
+  repeated En1997InvestigationsRemoved removed = 1;
+  repeated En1997InvestigationsInserted inserted = 2;
+  repeated En1997InvestigationsMoved moved = 3;
+  repeated En1997InvestigationsModified modified = 4;
+}
+message En1997InvestigationsReadingsInserted {
+  uint64 index = 1;
+  InvestigationReading row = 2;
+}
+message En1997InvestigationsReadingsModified {
+  string id = 1;
+  En1997InvestigationsReadingsPatch patch = 2;
+}
+message En1997InvestigationsReadingsMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+message En1997InvestigationsReadingsRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
+message En1997InvestigationsReadingsRows {
+  repeated En1997InvestigationsReadingsRemoved removed = 1;
+  repeated En1997InvestigationsReadingsInserted inserted = 2;
+  repeated En1997InvestigationsReadingsMoved moved = 3;
+  repeated En1997InvestigationsReadingsModified modified = 4;
+}
+message En1997InvestigationsReadingsPatch {
+  optional double depth = 1;
+  optional double measurement = 2;
+}
+message En1997InvestigationsPatch {
+  optional double position_x = 1;
+  optional double position_y = 2;
+  optional double ground_level = 3;
+  optional double depth = 4;
+  optional string kind = 5;
+  En1997InvestigationsReadingsRows readings = 6;
+}
+message En1997CharacteristicBasesInserted {
+  uint64 index = 1;
+  CharacteristicBasis row = 2;
+}
+message En1997CharacteristicBasesModified {
+  string id = 1;
+  En1997CharacteristicBasesPatch patch = 2;
+}
+message En1997CharacteristicBasesMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+message En1997CharacteristicBasesRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
+message En1997CharacteristicBasesRows {
+  repeated En1997CharacteristicBasesRemoved removed = 1;
+  repeated En1997CharacteristicBasesInserted inserted = 2;
+  repeated En1997CharacteristicBasesMoved moved = 3;
+  repeated En1997CharacteristicBasesModified modified = 4;
+}
+message En1997CharacteristicBasesPatch {
+  optional string layer_id = 1;
+  optional string parameter = 2;
+  optional string basis = 3;
 }

@@ -1,0 +1,6 @@
+{
+  "ChangeDeckBarProduct": {
+    "deckId": "deck-1",
+    "newValue": "smooth-bar"
+  }
+}

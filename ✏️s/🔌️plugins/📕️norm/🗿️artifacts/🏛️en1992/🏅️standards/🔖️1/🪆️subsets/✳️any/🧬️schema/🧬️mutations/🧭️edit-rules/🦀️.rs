@@ -1,11 +1,12 @@
 //! 🧭️ The `setField` / `insertItem` / `removeItem` / `applyRemedy` vocabulary of the En1992 editor: which value-tree path raises which concrete kind.
 
-use semio_s_plugin_norm_app_surface::{InsertItemRule, NormEdit, NormEditRules, SelectorKey, SetFieldRule};
+use semio_s_plugin_norm_app_surface::{IdRemoval, InsertItemRule, MoveItemRule, NormEdit, NormEditRules, RemoveItemRule, SelectorKey, SetFieldRule};
 use crate::En1992Mutation;
 use semio_s_artifact_norm_en1992_model::En1992Snapshot;
 
 /// 📚 Every path a En1992 editor edit resolves, one rule per kind that sets, inserts or removes through it.
 pub const EDIT_RULES: NormEditRules = NormEditRules {
+    move_item: &[MoveItemRule { path: "members", kind: "change-member-order", selectors: &[], from: "fromIndex", to: "toIndex" }],
     set_field: &[
         SetFieldRule { path: "members[].longitudinal[].count", kind: "change-bar-layer-count", selectors: &[SelectorKey::Id("memberId"), SelectorKey::Id("layerId")], value: "newCount" },
         SetFieldRule { path: "members[].width", kind: "change-member-width", selectors: &[SelectorKey::Id("memberId")], value: "newValue" },
@@ -15,6 +16,7 @@ pub const EDIT_RULES: NormEditRules = NormEditRules {
         SetFieldRule { path: "members[].longitudinal[].diameter", kind: "change-bar-layer-diameter", selectors: &[SelectorKey::Id("memberId"), SelectorKey::Id("layerId")], value: "newDiameter" },
         SetFieldRule { path: "members[].span", kind: "change-member-span", selectors: &[SelectorKey::Id("memberId")], value: "newValue" },
         SetFieldRule { path: "annex", kind: "change-annex", selectors: &[], value: "newAnnex" },
+        SetFieldRule { path: "reliabilityClass", kind: "change-reliability-class", selectors: &[], value: "newReliabilityClass" },
         SetFieldRule { path: "members[].exposure", kind: "change-member-exposure", selectors: &[SelectorKey::Id("memberId")], value: "newExposure" },
         SetFieldRule { path: "members[].actions[].nK", kind: "change-action-nk", selectors: &[SelectorKey::Id("memberId"), SelectorKey::Id("actionId")], value: "newValue" },
         SetFieldRule { path: "title", kind: "change-title", selectors: &[], value: "newTitle" },
@@ -30,45 +32,155 @@ pub const EDIT_RULES: NormEditRules = NormEditRules {
         SetFieldRule { path: "concreteGrades[].fCk", kind: "change-concrete-f-ck", selectors: &[SelectorKey::Id("gradeId")], value: "newFCk" },
         SetFieldRule { path: "anchors[].aS", kind: "change-anchor-as", selectors: &[SelectorKey::Id("anchorId")], value: "newValue" },
         SetFieldRule { path: "members[].stirrups.spacing", kind: "change-member-stirrup-spacing", selectors: &[SelectorKey::Id("memberId")], value: "newSpacing" },
+        SetFieldRule { path: "members[].bridgeDeltaSigmaS", kind: "change-member-bridge-delta-sigma-s", selectors: &[SelectorKey::Id("memberId")], value: "newValue" },
+        SetFieldRule { path: "members[].bridgeSigmaC", kind: "change-member-bridge-sigma-c", selectors: &[SelectorKey::Id("memberId")], value: "newValue" },
+        SetFieldRule { path: "members[].liquidSRMax", kind: "change-member-liquid-sr-max", selectors: &[SelectorKey::Id("memberId")], value: "newValue" },
+        SetFieldRule { path: "members[].liquidFCtEff", kind: "change-member-liquid-f-ct-eff", selectors: &[SelectorKey::Id("memberId")], value: "newValue" },
+        SetFieldRule { path: "members[].liquidRhoPEff", kind: "change-member-liquid-rho-p-eff", selectors: &[SelectorKey::Id("memberId")], value: "newValue" },
+        SetFieldRule { path: "members[].liquidSigmaS", kind: "change-member-liquid-sigma-s", selectors: &[SelectorKey::Id("memberId")], value: "newValue" },
+        SetFieldRule { path: "members[].hdOverH", kind: "change-member-hd-over-h", selectors: &[SelectorKey::Id("memberId")], value: "newValue" },
+        SetFieldRule { path: "members[].udl", kind: "change-member-udl", selectors: &[SelectorKey::Id("memberId")], value: "newValue" },
+        SetFieldRule { path: "members[].bucklingLength", kind: "change-member-buckling-length", selectors: &[SelectorKey::Id("memberId")], value: "newValue" },
+        SetFieldRule { path: "members[].relativeHumidity", kind: "change-member-relative-humidity", selectors: &[SelectorKey::Id("memberId")], value: "newValue" },
+        SetFieldRule { path: "members[].bearingWidth", kind: "change-member-bearing-width", selectors: &[SelectorKey::Id("memberId")], value: "newValue" },
+        SetFieldRule { path: "members[].tightness", kind: "change-member-tightness", selectors: &[SelectorKey::Id("memberId")], value: "newTightness" },
+        SetFieldRule { path: "members[].tightness", kind: "clear-member-tightness", selectors: &[SelectorKey::Id("memberId")], value: "" },
+        SetFieldRule { path: "concreteGrades[].name", kind: "change-concrete-name", selectors: &[SelectorKey::Id("gradeId")], value: "newName" },
+        SetFieldRule { path: "reinforcementGrades[].name", kind: "change-reinforcement-name", selectors: &[SelectorKey::Id("gradeId")], value: "newName" },
+        SetFieldRule { path: "reinforcementGrades[].eS", kind: "change-reinforcement-es", selectors: &[SelectorKey::Id("gradeId")], value: "newES" },
+        SetFieldRule { path: "reinforcementGrades[].ductility", kind: "change-reinforcement-ductility", selectors: &[SelectorKey::Id("gradeId")], value: "newDuctility" },
+        SetFieldRule { path: "reinforcementGrades[].k", kind: "change-reinforcement-k", selectors: &[SelectorKey::Id("gradeId")], value: "newK" },
+        SetFieldRule { path: "reinforcementGrades[].epsUk", kind: "change-reinforcement-eps-uk", selectors: &[SelectorKey::Id("gradeId")], value: "newEpsUk" },
+        SetFieldRule { path: "prestressSteels[].name", kind: "change-prestress-steel-name", selectors: &[SelectorKey::Id("gradeId")], value: "newName" },
+        SetFieldRule { path: "prestressSteels[].fPk", kind: "change-prestress-steel-f-pk", selectors: &[SelectorKey::Id("gradeId")], value: "newFPk" },
+        SetFieldRule { path: "prestressSteels[].fP01k", kind: "change-prestress-steel-fp01k", selectors: &[SelectorKey::Id("gradeId")], value: "newFP01k" },
+        SetFieldRule { path: "members[].labelEn", kind: "change-member-label-en", selectors: &[SelectorKey::Id("memberId")], value: "newLabelEn" },
+        SetFieldRule { path: "members[].labelDe", kind: "change-member-label-de", selectors: &[SelectorKey::Id("memberId")], value: "newLabelDe" },
+        SetFieldRule { path: "members[].kind", kind: "change-member-kind", selectors: &[SelectorKey::Id("memberId")], value: "newKind" },
+        SetFieldRule { path: "members[].concreteGradeId", kind: "change-member-concrete-grade-id", selectors: &[SelectorKey::Id("memberId")], value: "newConcreteGradeId" },
+        SetFieldRule { path: "members[].reinforcementGradeId", kind: "change-member-rebar-grade-id", selectors: &[SelectorKey::Id("memberId")], value: "newReinforcementGradeId" },
+        SetFieldRule { path: "members[].prestressSteelId", kind: "change-member-prestress-steel-id", selectors: &[SelectorKey::Id("memberId")], value: "newPrestressSteelId" },
+        SetFieldRule { path: "members[].support", kind: "change-member-support", selectors: &[SelectorKey::Id("memberId")], value: "newSupport" },
+        SetFieldRule { path: "members[].stirrups.diameter", kind: "change-member-stirrups-diameter", selectors: &[SelectorKey::Id("memberId")], value: "newStirrupsDiameter" },
+        SetFieldRule { path: "members[].stirrups.legs", kind: "change-member-stirrups-legs", selectors: &[SelectorKey::Id("memberId")], value: "newStirrupsLegs" },
+        SetFieldRule { path: "members[].punching.columnWidth", kind: "change-member-punch-column-width", selectors: &[SelectorKey::Id("memberId")], value: "newPunchingColumnWidth" },
+        SetFieldRule { path: "members[].punching.columnDepth", kind: "change-member-punch-column-depth", selectors: &[SelectorKey::Id("memberId")], value: "newPunchingColumnDepth" },
+        SetFieldRule { path: "members[].punching.columnPosition", kind: "change-member-punch-col-position", selectors: &[SelectorKey::Id("memberId")], value: "newPunchingColumnPosition" },
+        SetFieldRule { path: "members[].punching.asw", kind: "change-member-punching-asw", selectors: &[SelectorKey::Id("memberId")], value: "newPunchingAsw" },
+        SetFieldRule { path: "members[].prestress.force", kind: "change-member-prestress-force", selectors: &[SelectorKey::Id("memberId")], value: "newPrestressForce" },
+        SetFieldRule { path: "members[].prestress.area", kind: "change-member-prestress-area", selectors: &[SelectorKey::Id("memberId")], value: "newPrestressArea" },
+        SetFieldRule { path: "members[].prestress.eccentricity", kind: "change-member-prestress-ecc", selectors: &[SelectorKey::Id("memberId")], value: "newPrestressEccentricity" },
+        SetFieldRule { path: "members[].prestress.lossRatio", kind: "change-member-prestress-loss-ratio", selectors: &[SelectorKey::Id("memberId")], value: "newPrestressLossRatio" },
+        SetFieldRule { path: "members[].fire.slabSystem", kind: "change-member-fire-slab-system", selectors: &[SelectorKey::Id("memberId")], value: "newFireSlabSystem" },
+        SetFieldRule { path: "members[].useFem", kind: "change-member-use-fem", selectors: &[SelectorKey::Id("memberId")], value: "newUseFem" },
+        SetFieldRule { path: "members[].deflectionSensitive", kind: "change-member-deflection-sensitive", selectors: &[SelectorKey::Id("memberId")], value: "newDeflectionSensitive" },
+        SetFieldRule { path: "members[].longitudinal[].position", kind: "change-bar-layer-position", selectors: &[SelectorKey::Id("memberId"), SelectorKey::Id("layerId")], value: "newPosition" },
+        SetFieldRule { path: "members[].longitudinal[].anchorageLength", kind: "change-bar-layer-anchorage-length", selectors: &[SelectorKey::Id("memberId"), SelectorKey::Id("layerId")], value: "newAnchorageLength" },
+        SetFieldRule { path: "members[].longitudinal[].lapLength", kind: "change-bar-layer-lap-length", selectors: &[SelectorKey::Id("memberId"), SelectorKey::Id("layerId")], value: "newLapLength" },
+        SetFieldRule { path: "members[].longitudinal[].bondCondition", kind: "change-bar-layer-bond-condition", selectors: &[SelectorKey::Id("memberId"), SelectorKey::Id("layerId")], value: "newBondCondition" },
+        SetFieldRule { path: "members[].longitudinal[].aggregateSize", kind: "change-bar-layer-aggregate-size", selectors: &[SelectorKey::Id("memberId"), SelectorKey::Id("layerId")], value: "newAggregateSize" },
+        SetFieldRule { path: "members[].longitudinal[].lapShare", kind: "change-bar-layer-lap-share", selectors: &[SelectorKey::Id("memberId"), SelectorKey::Id("layerId")], value: "newLapShare" },
+        SetFieldRule { path: "members[].actions[].kind", kind: "change-action-kind", selectors: &[SelectorKey::Id("memberId"), SelectorKey::Id("actionId")], value: "newKind" },
+        SetFieldRule { path: "members[].actions[].category", kind: "change-action-category", selectors: &[SelectorKey::Id("memberId"), SelectorKey::Id("actionId")], value: "newCategory" },
+        SetFieldRule { path: "members[].actions[].source", kind: "change-action-source", selectors: &[SelectorKey::Id("memberId"), SelectorKey::Id("actionId")], value: "newSource" },
+        SetFieldRule { path: "members[].actions[].gKLine", kind: "change-action-gk-line", selectors: &[SelectorKey::Id("memberId"), SelectorKey::Id("actionId")], value: "newGKLine" },
+        SetFieldRule { path: "members[].actions[].qKLine", kind: "change-action-qk-line", selectors: &[SelectorKey::Id("memberId"), SelectorKey::Id("actionId")], value: "newQKLine" },
+        SetFieldRule { path: "members[].actions[].pointForce", kind: "change-action-point-force", selectors: &[SelectorKey::Id("memberId"), SelectorKey::Id("actionId")], value: "newPointForce" },
+        SetFieldRule { path: "members[].actions[].tK", kind: "change-action-tk", selectors: &[SelectorKey::Id("memberId"), SelectorKey::Id("actionId")], value: "newTK" },
+        SetFieldRule { path: "members[].actions[].vKPunch", kind: "change-action-vk-punch", selectors: &[SelectorKey::Id("memberId"), SelectorKey::Id("actionId")], value: "newVKPunch" },
+        SetFieldRule { path: "members[].sectionPoints[].y", kind: "change-section-point-y", selectors: &[SelectorKey::Id("memberId"), SelectorKey::Id("sectionPointId")], value: "newY" },
+        SetFieldRule { path: "members[].sectionPoints[].z", kind: "change-section-point-z", selectors: &[SelectorKey::Id("memberId"), SelectorKey::Id("sectionPointId")], value: "newZ" },
+        SetFieldRule { path: "members[].bars[].layerId", kind: "change-bar-point-layer-id", selectors: &[SelectorKey::Id("memberId"), SelectorKey::Id("barId")], value: "newLayerId" },
+        SetFieldRule { path: "members[].bars[].y", kind: "change-bar-point-y", selectors: &[SelectorKey::Id("memberId"), SelectorKey::Id("barId")], value: "newY" },
+        SetFieldRule { path: "members[].bars[].z", kind: "change-bar-point-z", selectors: &[SelectorKey::Id("memberId"), SelectorKey::Id("barId")], value: "newZ" },
+        SetFieldRule { path: "members[].bars[].diameter", kind: "change-bar-point-diameter", selectors: &[SelectorKey::Id("memberId"), SelectorKey::Id("barId")], value: "newDiameter" },
+        SetFieldRule { path: "members[].tendonPoints[].x", kind: "change-tendon-point-x", selectors: &[SelectorKey::Id("memberId"), SelectorKey::Id("tendonPointId")], value: "newX" },
+        SetFieldRule { path: "members[].tendonPoints[].y", kind: "change-tendon-point-y", selectors: &[SelectorKey::Id("memberId"), SelectorKey::Id("tendonPointId")], value: "newY" },
+        SetFieldRule { path: "members[].tendonPoints[].z", kind: "change-tendon-point-z", selectors: &[SelectorKey::Id("memberId"), SelectorKey::Id("tendonPointId")], value: "newZ" },
+        SetFieldRule { path: "anchors[].cracked", kind: "change-anchor-cracked", selectors: &[SelectorKey::Id("anchorId")], value: "newCracked" },
+        SetFieldRule { path: "anchors[].fUk", kind: "change-anchor-f-uk", selectors: &[SelectorKey::Id("anchorId")], value: "newFUk" },
+        SetFieldRule { path: "anchors[].fYk", kind: "change-anchor-f-yk", selectors: &[SelectorKey::Id("anchorId")], value: "newFYk" },
+        SetFieldRule { path: "anchors[].d", kind: "change-anchor-d", selectors: &[SelectorKey::Id("anchorId")], value: "newD" },
+        SetFieldRule { path: "anchors[].c1", kind: "change-anchor-c1", selectors: &[SelectorKey::Id("anchorId")], value: "newC1" },
+        SetFieldRule { path: "anchors[].fCk", kind: "change-anchor-f-ck", selectors: &[SelectorKey::Id("anchorId")], value: "newFCk" },
+        SetFieldRule { path: "anchors[].headDiameter", kind: "change-anchor-head-diameter", selectors: &[SelectorKey::Id("anchorId")], value: "newHeadDiameter" },
+        SetFieldRule { path: "anchors[].actions[].kind", kind: "change-anchor-action-kind", selectors: &[SelectorKey::Id("anchorId"), SelectorKey::Id("actionId")], value: "newKind" },
+        SetFieldRule { path: "anchors[].actions[].category", kind: "change-anchor-action-category", selectors: &[SelectorKey::Id("anchorId"), SelectorKey::Id("actionId")], value: "newCategory" },
+        SetFieldRule { path: "anchors[].actions[].source", kind: "change-anchor-action-source", selectors: &[SelectorKey::Id("anchorId"), SelectorKey::Id("actionId")], value: "newSource" },
+        SetFieldRule { path: "anchors[].actions[].gKLine", kind: "change-anchor-action-gk-line", selectors: &[SelectorKey::Id("anchorId"), SelectorKey::Id("actionId")], value: "newGKLine" },
+        SetFieldRule { path: "anchors[].actions[].qKLine", kind: "change-anchor-action-qk-line", selectors: &[SelectorKey::Id("anchorId"), SelectorKey::Id("actionId")], value: "newQKLine" },
+        SetFieldRule { path: "anchors[].actions[].pointForce", kind: "change-anchor-action-point-force", selectors: &[SelectorKey::Id("anchorId"), SelectorKey::Id("actionId")], value: "newPointForce" },
+        SetFieldRule { path: "anchors[].actions[].mK", kind: "change-anchor-action-mk", selectors: &[SelectorKey::Id("anchorId"), SelectorKey::Id("actionId")], value: "newMK" },
+        SetFieldRule { path: "anchors[].actions[].nK", kind: "change-anchor-action-nk", selectors: &[SelectorKey::Id("anchorId"), SelectorKey::Id("actionId")], value: "newNK" },
+        SetFieldRule { path: "anchors[].actions[].vK", kind: "change-anchor-action-vk", selectors: &[SelectorKey::Id("anchorId"), SelectorKey::Id("actionId")], value: "newVK" },
+        SetFieldRule { path: "anchors[].actions[].tK", kind: "change-anchor-action-tk", selectors: &[SelectorKey::Id("anchorId"), SelectorKey::Id("actionId")], value: "newTK" },
+        SetFieldRule { path: "anchors[].actions[].vKPunch", kind: "change-anchor-action-vk-punch", selectors: &[SelectorKey::Id("anchorId"), SelectorKey::Id("actionId")], value: "newVKPunch" },
+        SetFieldRule { path: "placements[].x", kind: "change-placement-x", selectors: &[SelectorKey::Id("id")], value: "newX" },
+        SetFieldRule { path: "placements[].y", kind: "change-placement-y", selectors: &[SelectorKey::Id("id")], value: "newY" },
+        SetFieldRule { path: "placements[].z", kind: "change-placement-z", selectors: &[SelectorKey::Id("id")], value: "newZ" },
+        SetFieldRule { path: "placements[].yaw", kind: "change-placement-yaw", selectors: &[SelectorKey::Id("id")], value: "newYaw" },
+        SetFieldRule { path: "cases[].labelEn", kind: "change-case-label-en", selectors: &[SelectorKey::Id("caseId")], value: "newValue" },
+        SetFieldRule { path: "cases[].labelDe", kind: "change-case-label-de", selectors: &[SelectorKey::Id("caseId")], value: "newValue" },
+        SetFieldRule { path: "cases[].entryId", kind: "change-case-entry-id", selectors: &[SelectorKey::Id("caseId")], value: "newValue" },
+        SetFieldRule { path: "cases[].numbers[].value", kind: "change-case-number", selectors: &[SelectorKey::Id("caseId"), SelectorKey::Id("key")], value: "value" },
+        SetFieldRule { path: "cases[].texts[].value", kind: "change-case-text", selectors: &[SelectorKey::Id("caseId"), SelectorKey::Id("key")], value: "value" },
+        SetFieldRule { path: "members[].bars[].length", kind: "change-bar-point-length", selectors: &[SelectorKey::Id("memberId"), SelectorKey::Id("barId")], value: "newLength" },
+        SetFieldRule { path: "members[].bars[].bend", kind: "change-bar-point-bend", selectors: &[SelectorKey::Id("memberId"), SelectorKey::Id("barId")], value: "newBend" },
+        SetFieldRule { path: "members[].punching.betaMethod", kind: "change-member-punching-beta-method", selectors: &[SelectorKey::Id("memberId")], value: "newPunchingBetaMethod" },
+        SetFieldRule { path: "members[].punching.momentC1", kind: "change-member-punching-moment-c1", selectors: &[SelectorKey::Id("memberId")], value: "newPunchingMomentC1" },
+        SetFieldRule { path: "members[].punching.momentC2", kind: "change-member-punching-moment-c2", selectors: &[SelectorKey::Id("memberId")], value: "newPunchingMomentC2" },
+        SetFieldRule { path: "members[].openings[].x", kind: "change-opening-x", selectors: &[SelectorKey::Id("memberId"), SelectorKey::Id("openingId")], value: "newX" },
+        SetFieldRule { path: "members[].openings[].y", kind: "change-opening-y", selectors: &[SelectorKey::Id("memberId"), SelectorKey::Id("openingId")], value: "newY" },
+        SetFieldRule { path: "members[].openings[].width", kind: "change-opening-width", selectors: &[SelectorKey::Id("memberId"), SelectorKey::Id("openingId")], value: "newWidth" },
+        SetFieldRule { path: "members[].openings[].depth", kind: "change-opening-depth", selectors: &[SelectorKey::Id("memberId"), SelectorKey::Id("openingId")], value: "newDepth" },
+        SetFieldRule { path: "members[].studRows[].angle", kind: "change-stud-row-angle", selectors: &[SelectorKey::Id("memberId"), SelectorKey::Id("studRowId")], value: "newAngle" },
+        SetFieldRule { path: "members[].studRows[].count", kind: "change-stud-row-count", selectors: &[SelectorKey::Id("memberId"), SelectorKey::Id("studRowId")], value: "newCount" },
+        SetFieldRule { path: "members[].studRows[].spacingFirst", kind: "change-stud-row-spacing-first", selectors: &[SelectorKey::Id("memberId"), SelectorKey::Id("studRowId")], value: "newSpacingFirst" },
+        SetFieldRule { path: "members[].studRows[].spacingRadial", kind: "change-stud-row-spacing-radial", selectors: &[SelectorKey::Id("memberId"), SelectorKey::Id("studRowId")], value: "newSpacingRadial" },
+        SetFieldRule { path: "members[].studRows[].diameter", kind: "change-stud-row-diameter", selectors: &[SelectorKey::Id("memberId"), SelectorKey::Id("studRowId")], value: "newDiameter" },
     ],
     insert_item: &[
         InsertItemRule { path: "anchors", kind: "insert-anchor", selectors: &[], index: "index", item: "anchor" },
         InsertItemRule { path: "members", kind: "insert-member", selectors: &[], index: "index", item: "member" },
+        InsertItemRule { path: "concreteGrades", kind: "insert-concrete-grade", selectors: &[], index: "index", item: "concreteGrade" },
+        InsertItemRule { path: "reinforcementGrades", kind: "insert-reinforcement-grade", selectors: &[], index: "index", item: "reinforcementGrade" },
+        InsertItemRule { path: "prestressSteels", kind: "insert-prestress-steel", selectors: &[], index: "index", item: "prestressSteel" },
+        InsertItemRule { path: "members[].longitudinal", kind: "insert-bar-layer", selectors: &[SelectorKey::Id("memberId")], index: "index", item: "barLayer" },
+        InsertItemRule { path: "members[].actions", kind: "insert-action", selectors: &[SelectorKey::Id("memberId")], index: "index", item: "action" },
+        InsertItemRule { path: "members[].sectionPoints", kind: "insert-section-point", selectors: &[SelectorKey::Id("memberId")], index: "index", item: "sectionPoint" },
+        InsertItemRule { path: "members[].bars", kind: "insert-bar-point", selectors: &[SelectorKey::Id("memberId")], index: "index", item: "barPoint" },
+        InsertItemRule { path: "members[].tendonPoints", kind: "insert-tendon-point", selectors: &[SelectorKey::Id("memberId")], index: "index", item: "tendonPoint" },
+        InsertItemRule { path: "anchors[].actions", kind: "insert-anchor-action", selectors: &[SelectorKey::Id("anchorId")], index: "index", item: "anchorAction" },
+        InsertItemRule { path: "placements", kind: "insert-placement", selectors: &[], index: "index", item: "placement" },
+        InsertItemRule { path: "cases", kind: "insert-case", selectors: &[], index: "index", item: "case" },
+        InsertItemRule { path: "members[].openings", kind: "insert-opening", selectors: &[SelectorKey::Id("memberId")], index: "index", item: "opening" },
+        InsertItemRule { path: "members[].studRows", kind: "insert-stud-row", selectors: &[SelectorKey::Id("memberId")], index: "index", item: "studRow" },
     ],
     remove_item: &[
 
+        RemoveItemRule { path: "concreteGrades", kind: "remove-concrete-grade", selectors: &[], index: "index" },
+        RemoveItemRule { path: "reinforcementGrades", kind: "remove-reinforcement-grade", selectors: &[], index: "index" },
+        RemoveItemRule { path: "prestressSteels", kind: "remove-prestress-steel", selectors: &[], index: "index" },
+        RemoveItemRule { path: "members[].longitudinal", kind: "remove-bar-layer", selectors: &[SelectorKey::Id("memberId")], index: "index" },
+        RemoveItemRule { path: "members[].actions", kind: "remove-action", selectors: &[SelectorKey::Id("memberId")], index: "index" },
+        RemoveItemRule { path: "members[].sectionPoints", kind: "remove-section-point", selectors: &[SelectorKey::Id("memberId")], index: "index" },
+        RemoveItemRule { path: "members[].bars", kind: "remove-bar-point", selectors: &[SelectorKey::Id("memberId")], index: "index" },
+        RemoveItemRule { path: "members[].tendonPoints", kind: "remove-tendon-point", selectors: &[SelectorKey::Id("memberId")], index: "index" },
+        RemoveItemRule { path: "anchors[].actions", kind: "remove-anchor-action", selectors: &[SelectorKey::Id("anchorId")], index: "index" },
+        RemoveItemRule { path: "placements", kind: "remove-placement", selectors: &[], index: "index" },
+        RemoveItemRule { path: "members[].openings", kind: "remove-opening", selectors: &[SelectorKey::Id("memberId")], index: "index" },
+        RemoveItemRule { path: "members[].studRows", kind: "remove-stud-row", selectors: &[SelectorKey::Id("memberId")], index: "index" },
     ],
 };
 
-/// 🆔️ A collection whose remove kind addresses the row by its id instead of its position.
-#[derive(Clone, Copy, Debug)]
-pub struct IdRemoval {
-    pub path: &'static str,
-    pub kind: &'static str,
-    pub id: &'static str,
-}
-
 /// 🆔️ Every collection of this family removed by row id.
 pub const ID_REMOVALS: &[IdRemoval] = &[
-        IdRemoval { path: "members", kind: "remove-member", id: "memberId" },
-        IdRemoval { path: "anchors", kind: "remove-anchor", id: "anchorId" },
+        IdRemoval { path: "cases", kind: "remove-case", selectors: &[], id: "id" },
+        IdRemoval { path: "members", kind: "remove-member", selectors: &[], id: "memberId" },
+        IdRemoval { path: "anchors", kind: "remove-anchor", selectors: &[], id: "anchorId" },
 ];
 
-/// 🎯️ Resolves an editor edit into concrete kind mutations: row-id removals first, every other path through [`EDIT_RULES`].
+/// 🎯️ Resolves an editor edit into concrete kind mutations: row-id removals by [`ID_REMOVALS`], every other path through [`EDIT_RULES`].
 pub fn resolve_edit(document: &En1992Snapshot, edit: &NormEdit) -> Result<Vec<En1992Mutation>, String> {
-    if let NormEdit::RemoveItem { path, index } = edit {
-        if let Some(rule) = ID_REMOVALS.iter().find(|rule| rule.path == path) {
-            let tree = semio_framework_value::ToValue::to_value(document);
-            let mut cursor = &tree;
-            for segment in path.split('.') {
-                let semio_framework_value::DslValue::Object(entries) = cursor else { return Err(format!("expected object before '{segment}' in path '{path}'")) };
-                cursor = &entries.iter().find(|(key, _)| key == segment).ok_or_else(|| format!("missing field '{segment}' in path '{path}'"))?.1;
-            }
-            let semio_framework_value::DslValue::Array(items) = cursor else { return Err(format!("'{path}' is not a list")) };
-            let semio_framework_value::DslValue::Object(row) = items.get(*index).ok_or_else(|| format!("'{path}' has no row {index}"))? else { return Err(format!("row {index} of '{path}' is not a record")) };
-            let id = row.iter().find(|(key, _)| key == "id").map(|(_, value)| value.clone()).ok_or_else(|| format!("row {index} of '{path}' has no id"))?;
-            return <En1992Mutation as protocol::Mutation<En1992Snapshot>>::from_payload_value(rule.kind, semio_framework_value::DslValue::object([(rule.id.to_string(), id)])).map(|mutation| vec![mutation]).map_err(|error| error.to_string());
-        }
-    }
-    EDIT_RULES.resolve(document, edit)
+    EDIT_RULES.resolve_with_id_removals(ID_REMOVALS, document, edit)
 }

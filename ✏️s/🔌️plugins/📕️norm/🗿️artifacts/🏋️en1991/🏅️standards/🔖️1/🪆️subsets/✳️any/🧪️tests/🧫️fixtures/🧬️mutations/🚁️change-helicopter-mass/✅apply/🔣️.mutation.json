@@ -1,0 +1,6 @@
+{
+  "ChangeHelicopterMass": {
+    "id": "helicopter-1",
+    "newMass": 3.0
+  }
+}

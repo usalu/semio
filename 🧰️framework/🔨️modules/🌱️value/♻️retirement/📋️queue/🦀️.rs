@@ -54,12 +54,12 @@ impl RetirementQueue {
         Ok(RetainedCloneProgress{copied_items:1,..Default::default()})
     })();RetainedWorkOutcome{result,work}}
     /// ⏭️ Quotes only the original active owner or its terminal frame and queue backing.
-    pub fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{
+    pub fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{
         if self.terminal_is_empty(){return Ok(Default::default());}
         match self.frames.get(self.frames.len().saturating_sub(1)){
-            Some(owner)if owner.terminal_is_empty()=>Ok(crate::RetirementDemand{release_bytes:size_of_val(owner.as_ref()),depth:self.frames.len(),..Default::default()}),
+            Some(owner)if owner.terminal_is_empty()=>Ok(RetirementDemand{release_bytes:size_of_val(owner.as_ref()),depth:self.frames.len(),..Default::default()}),
             Some(owner)=>{let mut d=owner.next_demand(body)?;d.depth=d.depth.checked_add(self.frames.len()).ok_or_else(||refusal(ValueRefusalKind::DepthLimit,"retirement queue nested depth overflow"))?;Ok(d)},
-            None=>Ok(crate::RetirementDemand{release_bytes:self.frames.next_release_allocation_bytes().map_err(ValueError::from)?,depth:1,..Default::default()}),
+            None=>Ok(RetirementDemand{release_bytes:self.frames.next_release_allocation_bytes().map_err(ValueError::from)?,depth:1,..Default::default()}),
         }
     }    pub fn next_copy_byte_demand(&self)->Result<usize,ValueError> {self.frames.get(self.frames.len().saturating_sub(1)).map_or(Ok(0),|owner|owner.next_copy_byte_demand())}
     pub fn next_capacity_byte_demand(&self,maximum_body_bytes:usize)->Result<usize,ValueError> {self.frames.get(self.frames.len().saturating_sub(1)).map_or(Ok(0),|owner|if owner.terminal_is_empty(){Ok(0)}else{owner.next_capacity_byte_demand(maximum_body_bytes)})}
@@ -120,7 +120,7 @@ impl RetireOwned for RetirementQueue {
     fn controlled_retirement_supported()->bool {true}
 }
 impl RetirementCursor for RetirementQueue {
- fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{RetirementQueue::next_demand(self,body)}
+ fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{RetirementQueue::next_demand(self,body)}
     fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep {
         let turn=self.step(grant);match turn.result {
             Err(error)=>RetirementStep::Failure(error,turn.work),

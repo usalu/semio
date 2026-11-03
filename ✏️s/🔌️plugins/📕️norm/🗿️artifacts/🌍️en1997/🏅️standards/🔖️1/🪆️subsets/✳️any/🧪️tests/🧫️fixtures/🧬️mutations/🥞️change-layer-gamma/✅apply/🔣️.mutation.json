@@ -1,0 +1,5 @@
+{
+  "mutation": "changeLayerGamma",
+  "id": "layer-sand",
+  "newGamma": 38000.0
+}

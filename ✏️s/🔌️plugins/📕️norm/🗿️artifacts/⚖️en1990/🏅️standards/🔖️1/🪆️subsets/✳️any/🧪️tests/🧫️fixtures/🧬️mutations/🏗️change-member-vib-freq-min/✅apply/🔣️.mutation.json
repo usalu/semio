@@ -1,0 +1,5 @@
+{
+  "mutation": "changeMemberVibFreqMin",
+  "id": "beam-B1",
+  "newVibrationFrequencyMin": 6.0
+}

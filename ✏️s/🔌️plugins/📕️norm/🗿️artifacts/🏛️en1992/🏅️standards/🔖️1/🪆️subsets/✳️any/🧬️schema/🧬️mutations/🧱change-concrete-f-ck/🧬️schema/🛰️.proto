@@ -1,5 +1,6 @@
 syntax = "proto3";
+package semio.s.norm.en1992.mutation.change_concrete_f_ck;
 message ChangeConcreteFCk {
-  string gradeId = 1;
-  double newFCk = 2;
+  string grade_id = 1;
+  double new_f_ck = 2;
 }

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeTestDistribution",
+  "id": "tes-1",
+  "newDistribution": "normal"
+}

@@ -1,0 +1,865 @@
+{
+  "annex": "En",
+  "reliabilityClass": "RC2",
+  "materials": [
+    {
+      "id": "mat-s460",
+      "grade": "S460",
+      "fy": 460000000.0,
+      "fu": 550000000.0,
+      "eModulus": 210000000000.0,
+      "gModulus": 81000000000.0,
+      "subgrade": "K2",
+      "kind": "Carbon",
+      "rambergOsgoodN": 0.0
+    }
+  ],
+  "sections": [
+    {
+      "id": "sec-heb260",
+      "designation": "HEB 260",
+      "kind": "RolledI",
+      "h": 0.26,
+      "b": 0.26,
+      "tw": 0.01,
+      "tf": 0.0175,
+      "r": 0.024,
+      "area": 0.0118,
+      "shearAreaY": 0.00589,
+      "shearAreaZ": 0.00276,
+      "iy": 0.0001492,
+      "iz": 5.135e-05,
+      "it": 1.259e-06,
+      "iw": 7.362e-07,
+      "wElY": 0.001149,
+      "wElZ": 0.000395,
+      "wPlY": 0.001288,
+      "wPlZ": 0.000602,
+      "areaNet": 0.0106,
+      "fabrication": "Unset"
+    }
+  ],
+  "members": [
+    {
+      "id": "member-b1",
+      "label": "HSS beam-column B1",
+      "memberType": "BeamColumn",
+      "sectionId": "sec-heb260",
+      "materialId": "mat-s460",
+      "length": 6,
+      "bucklingLengthY": 12,
+      "bucklingLengthZ": 12,
+      "ltbLength": 12,
+      "ltbRestraintSpacing": 12,
+      "loadApplication": "ShearCenter",
+      "endMomentRatioPsi": -1,
+      "momentDiagram": "Linear",
+      "deflectionLimitRatio": 300,
+      "analysis": "Elastic",
+      "stainlessForming": "Unset",
+      "designTemperature": 0.0,
+      "toughnessStressRatio": 0.75,
+      "radiationShift": 0.0,
+      "stressShift": 0.0,
+      "marginShift": 0.0,
+      "strainRateShift": 0.0,
+      "coldFormingRadius": 0.0,
+      "webMaterialId": "",
+      "torsionLoad": "Point",
+      "torquePosition": 0.5,
+      "warpingSupport": "Fork"
+    }
+  ],
+  "loadCases": [
+    {
+      "id": "g-permanent",
+      "name": "Permanent G",
+      "kind": "Permanent",
+      "category": "self"
+    },
+    {
+      "id": "q-imposed",
+      "name": "Imposed Q",
+      "kind": "Imposed",
+      "category": "office"
+    },
+    {
+      "id": "w-wind",
+      "name": "Wind",
+      "kind": "Wind",
+      "category": "wind"
+    }
+  ],
+  "memberActions": [
+    {
+      "id": "act-b1-g",
+      "memberId": "member-b1",
+      "loadCaseId": "g-permanent",
+      "action": {
+        "n": 2100000,
+        "vy": 0,
+        "vz": 296000,
+        "my": 333000,
+        "mz": 0,
+        "t": 0
+      }
+    },
+    {
+      "id": "act-b1-q",
+      "memberId": "member-b1",
+      "loadCaseId": "q-imposed",
+      "action": {
+        "n": 0,
+        "vy": 0,
+        "vz": 0,
+        "my": 0,
+        "mz": 0,
+        "t": 0
+      }
+    }
+  ],
+  "joints": [
+    {
+      "id": "joint-j1",
+      "kind": "Bolted",
+      "memberId": "member-b1",
+      "boltClass": "10.9",
+      "boltDiameter": 0.024,
+      "boltRows": 2,
+      "boltsPerRow": 2,
+      "pitch": 0.07,
+      "endDistance": 0.03,
+      "edgeDistance": 0.04,
+      "shearPlanes": 1,
+      "plateThickness": 0.012,
+      "plateFu": 550000000.0,
+      "weldThroat": 0,
+      "weldLength": 0,
+      "weldFu": 550000000.0,
+      "weldGrade": "S460",
+      "category": "A",
+      "frictionMu": 0.5,
+      "preloadForce": 0,
+      "slipFactorKs": 1,
+      "frictionSurfaces": 1,
+      "gauge": 0.07,
+      "actions": [
+        {
+          "id": "jf-1",
+          "loadCaseId": "g-permanent",
+          "shear": 213333,
+          "tension": 0
+        }
+      ],
+      "plateFy": 0.0,
+      "plateWidth": 0.0,
+      "boltToWeb": 0.0,
+      "extensionToFlange": 0.0,
+      "extensionEdge": 0.0,
+      "alphaFactor": 0.0,
+      "boltStressArea": 0.0,
+      "boltGripLength": 0.0,
+      "columnFlangeThickness": 0.0,
+      "columnWebThickness": 0.0,
+      "columnWebDepth": 0.0,
+      "columnWebShearArea": 0.0,
+      "columnRootRadius": 0.0,
+      "columnFy": 0.0,
+      "columnWebStress": 0.0,
+      "beamFlangeThickness": 0.0,
+      "compressionLever": 0.0,
+      "momentDemand": 0.0,
+      "beamMomentResistance": 0.0,
+      "columnMomentResistance": 0.0,
+      "beamInertia": 0.0,
+      "beamSpan": 0.0,
+      "bracedFrame": 0,
+      "stiffnessRatio": 0.0,
+      "transformationParameter": 0.0,
+      "assumedClass": "Unset",
+      "basePlateLength": 0.0,
+      "concreteFcd": 0.0,
+      "concreteModulus": 0.0,
+      "concreteAreaA0": 0.0,
+      "concreteAreaA1": 0.0,
+      "jointCoefficient": 0.0,
+      "anchorArea": 0.0,
+      "anchorLength": 0.0,
+      "baseNormalForce": 0.0,
+      "baseMoment": 0.0,
+      "baseLeverLeft": 0.0,
+      "baseLeverRight": 0.0,
+      "beamWebThickness": 0.0,
+      "beamWebFy": 0.0,
+      "weldForceLongitudinal": 0.0,
+      "weldForceTransverse": 0.0
+    },
+    {
+      "id": "joint-w1",
+      "kind": "Welded",
+      "memberId": "member-b1",
+      "boltClass": "",
+      "boltDiameter": 0,
+      "boltRows": 0,
+      "boltsPerRow": 0,
+      "pitch": 0,
+      "endDistance": 0,
+      "edgeDistance": 0,
+      "shearPlanes": 0,
+      "plateThickness": 0,
+      "plateFu": 0,
+      "weldThroat": 0.003,
+      "weldLength": 0.08,
+      "weldFu": 550000000.0,
+      "weldGrade": "S460",
+      "category": "A",
+      "frictionMu": 0.5,
+      "preloadForce": 0,
+      "slipFactorKs": 1,
+      "frictionSurfaces": 1,
+      "gauge": 0,
+      "actions": [
+        {
+          "id": "jf-1",
+          "loadCaseId": "g-permanent",
+          "shear": 100000,
+          "tension": 0
+        }
+      ],
+      "plateFy": 0.0,
+      "plateWidth": 0.0,
+      "boltToWeb": 0.0,
+      "extensionToFlange": 0.0,
+      "extensionEdge": 0.0,
+      "alphaFactor": 0.0,
+      "boltStressArea": 0.0,
+      "boltGripLength": 0.0,
+      "columnFlangeThickness": 0.0,
+      "columnWebThickness": 0.0,
+      "columnWebDepth": 0.0,
+      "columnWebShearArea": 0.0,
+      "columnRootRadius": 0.0,
+      "columnFy": 0.0,
+      "columnWebStress": 0.0,
+      "beamFlangeThickness": 0.0,
+      "compressionLever": 0.0,
+      "momentDemand": 0.0,
+      "beamMomentResistance": 0.0,
+      "columnMomentResistance": 0.0,
+      "beamInertia": 0.0,
+      "beamSpan": 0.0,
+      "bracedFrame": 0,
+      "stiffnessRatio": 0.0,
+      "transformationParameter": 0.0,
+      "assumedClass": "Unset",
+      "basePlateLength": 0.0,
+      "concreteFcd": 0.0,
+      "concreteModulus": 0.0,
+      "concreteAreaA0": 0.0,
+      "concreteAreaA1": 0.0,
+      "jointCoefficient": 0.0,
+      "anchorArea": 0.0,
+      "anchorLength": 0.0,
+      "baseNormalForce": 0.0,
+      "baseMoment": 0.0,
+      "baseLeverLeft": 0.0,
+      "baseLeverRight": 0.0,
+      "beamWebThickness": 0.0,
+      "beamWebFy": 0.0,
+      "weldForceLongitudinal": 0.0,
+      "weldForceTransverse": 0.0
+    }
+  ],
+  "fatigueDetails": [
+    {
+      "id": "fat-1",
+      "memberId": "member-b1",
+      "category": 90,
+      "method": "SafeLife",
+      "spectrum": [
+        {
+          "id": "fb-1",
+          "deltaSigma": 95000000.0,
+          "cycles": 2000000.0
+        }
+      ],
+      "stressHistory": "",
+      "consequence": "Low"
+    }
+  ],
+  "fireExposures": [
+    {
+      "id": "fire-1",
+      "memberId": "member-b1",
+      "rating": "R30",
+      "protectionThickness": 0.008,
+      "sectionFactor": 180,
+      "mu0": 0.75,
+      "protectionConductivity": 0.2,
+      "protectionDensity": 800,
+      "protectionSpecificHeat": 1700,
+      "designTemperature": 550.0
+    }
+  ],
+  "coldFormedMembers": [
+    {
+      "id": "cf-1",
+      "bBar": 0.08,
+      "thickness": 0.003,
+      "kSigma": 4.0,
+      "psi": 1.0,
+      "fy": 350000000.0,
+      "grossResistance": 80000.0,
+      "actions": [
+        {
+          "id": "cf-g",
+          "loadCaseId": "g-permanent",
+          "force": 15000.0
+        },
+        {
+          "id": "cf-q",
+          "loadCaseId": "q-imposed",
+          "force": 10000.0
+        }
+      ],
+      "flangeWidth": 0.0,
+      "lipLength": 0.0,
+      "webHeight": 0.0,
+      "webSlope": 90.0,
+      "oppositeFlangeWidth": 0.0,
+      "springFactor": 1.0,
+      "cornerRadius": 0.0,
+      "flangeStress": 0.0,
+      "shearForce": 0.0,
+      "supportReaction": 0.0,
+      "supportLength": 0.0,
+      "cripplingCategory": 2,
+      "stiffenedSupport": 0,
+      "bendingMoment": 0.0,
+      "momentResistance": 0.0,
+      "sheetingStiffness": 0.0,
+      "requiredRestraintStiffness": 0.0,
+      "purlinSpan": 0.0,
+      "purlinLoad": 0.0,
+      "purlinLateralRatio": 0.0
+    }
+  ],
+  "platedPanels": [
+    {
+      "id": "pp-1",
+      "a": 1.2,
+      "b": 0.6,
+      "thickness": 0.012,
+      "fy": 355000000.0,
+      "kSigma": 4.0,
+      "actions": [
+        {
+          "id": "pp-g",
+          "loadCaseId": "g-permanent",
+          "force": 80000000.0
+        },
+        {
+          "id": "pp-q",
+          "loadCaseId": "q-imposed",
+          "force": 40000000.0
+        }
+      ],
+      "stiffenerInertia": 0.0,
+      "stiffenerArea": 0.0,
+      "stiffenerEccentricity": 0.0,
+      "stiffenerAlpha": 0.34,
+      "compressionStress": 0.0,
+      "halfWidth": 0.0,
+      "equivalentSpan": 0.0,
+      "hogging": 0,
+      "patchType": "Unset",
+      "patchForce": 0.0,
+      "patchLength": 0.0,
+      "patchOffset": 0.0,
+      "flangeThickness": 0.0,
+      "flangeWidth": 0.0,
+      "flangeFy": 0.0,
+      "longitudinalOffset": 0.0,
+      "longitudinalInertia": 0.0,
+      "patchMoment": 0.0,
+      "patchMomentResistance": 0.0,
+      "bendingMoment": 0.0,
+      "plasticMoment": 0.0,
+      "flangeMoment": 0.0,
+      "shearForce": 0.0,
+      "transverseStiffenerInertia": 0.0,
+      "flangeInducedK": 0.0,
+      "flangeArea": 0.0,
+      "stressX": 0.0,
+      "stressZ": 0.0,
+      "shearStress": 0.0,
+      "alphaCr": 0.0,
+      "corrugationFlat": 0.0,
+      "corrugationProjection": 0.0,
+      "corrugationDepth": 0.0,
+      "webHeight": 0.0,
+      "stiffenerSpacing": 0.0,
+      "stiffenerShape": "None",
+      "stiffenerDepth": 0.0,
+      "stiffenerThickness": 0.0,
+      "stiffenerFlangeWidth": 0.0,
+      "stiffenerFlangeThickness": 0.0,
+      "lateralPressure": 0.0,
+      "lateralPressureCoefficient": 0.0,
+      "steelGrade": "",
+      "steelSubgrade": "",
+      "designTemperature": 0.0
+    }
+  ],
+  "siloShells": [
+    {
+      "id": "silo-1",
+      "thickness": 0.008,
+      "radius": 3.0,
+      "depth": 6.0,
+      "k": 0.5,
+      "gamma": 9000.0,
+      "fy": 355000000.0,
+      "length": 0.0,
+      "fabricationClass": "Unset",
+      "meridionalStress": 0.0,
+      "hoopStress": 0.0,
+      "shellShearStress": 0.0,
+      "boundaryFactorAxial": 1.0,
+      "boundaryFactorHoop": 0.0,
+      "boundaryFactorShear": 0.0,
+      "wallFriction": 0.0,
+      "planArea": 0.0,
+      "planPerimeter": 0.0,
+      "liquidDensity": 0.0,
+      "liquidHeight": 0.0,
+      "courseElevation": 0.0,
+      "internalPressure": 0.0,
+      "externalPressure": 0.0,
+      "temperatureChange": 0.0,
+      "ringSpacing": 0.0,
+      "ringArea": 0.0,
+      "ringInertia": 0.0,
+      "ringOffset": 0.0
+    }
+  ],
+  "tensionComponents": [
+    {
+      "id": "ten-1",
+      "fUk": 500000.0,
+      "fK": 400000.0,
+      "actions": [
+        {
+          "id": "ten-g",
+          "loadCaseId": "g-permanent",
+          "force": 120000.0
+        },
+        {
+          "id": "ten-q",
+          "loadCaseId": "q-imposed",
+          "force": 80000.0
+        }
+      ],
+      "partialFactor": 0.0,
+      "cableLength": 0.0,
+      "cableWeight": 0.0,
+      "cableHorizontalForce": 0.0,
+      "cableModulus": 0.0,
+      "cableStress": 0.0,
+      "cableUnitWeight": 0.0,
+      "threadFactor": 0.0,
+      "rodStressArea": 0.0,
+      "rodFu": 0.0,
+      "pinDiameter": 0.0,
+      "pinPlateThickness": 0.0,
+      "pinGap": 0.0,
+      "pinOuterThickness": 0.0,
+      "pinInnerThickness": 0.0,
+      "pinFup": 0.0,
+      "pinFyp": 0.0,
+      "pinPlateFy": 0.0
+    }
+  ],
+  "bridgeFatigue": [
+    {
+      "id": "br-1",
+      "memberId": "member-b1",
+      "lambda": 0.8,
+      "phi2": 1.0,
+      "deltaSigmaP": 40000000.0,
+      "category": 71,
+      "method": "DamageTolerant",
+      "heavyVehicleWeight": 0.0,
+      "referenceWeight": 0.0,
+      "observedTraffic": 0.0,
+      "designLife": 0.0,
+      "secondLaneTraffic": 0.0,
+      "secondLaneWeight": 0.0,
+      "lambda1": 0.0,
+      "lambdaMax": 0.0,
+      "detailId": "",
+      "plateThickness": 0.0,
+      "deckThickness": 0.0,
+      "troughSpacing": 0.0,
+      "troughWidth": 0.0,
+      "troughThickness": 0.0,
+      "crossbeamSpacing": 0.0,
+      "surfacingThickness": 0.0,
+      "wheelLoad": 0.0,
+      "wheelPatch": 0.0,
+      "consequence": "Low"
+    }
+  ],
+  "towerLegs": [
+    {
+      "id": "tw-1",
+      "memberId": "member-b1",
+      "forceCoefficient": 1.0,
+      "dynamicFactor": 1.0,
+      "actions": [
+        {
+          "id": "tw-g",
+          "loadCaseId": "g-permanent",
+          "force": 80000.0
+        },
+        {
+          "id": "tw-w",
+          "loadCaseId": "w-wind",
+          "force": 40000.0
+        }
+      ],
+      "latticeKind": "Unset",
+      "slenderness": 0.0,
+      "diameter": 0.0,
+      "height": 0.0,
+      "bendingStiffness": 0.0,
+      "massPerLength": 0.0,
+      "strouhal": 0.0,
+      "logDecrement": 0.0,
+      "airDensity": 0.0,
+      "meanWindSpeed": 0.0,
+      "crossingRate": 0.0,
+      "designLife": 0.0,
+      "kFactor": 0.0,
+      "kwFactor": 0.0,
+      "lateralForceCoefficient": 0.0,
+      "permittedAmplitudeRatio": 0.0,
+      "ringMode": 0.0,
+      "shellThickness": 0.0,
+      "guyArea": 0.0,
+      "guyAngle": 0.0,
+      "guyLength": 0.0
+    }
+  ],
+  "piles": [
+    {
+      "id": "pile-1",
+      "sectionId": "sec-heb240",
+      "materialId": "mat-s355",
+      "drivingStress": 200000000.0,
+      "embeddedLength": 8.0,
+      "shaftPerimeter": 0.96,
+      "actions": [
+        {
+          "id": "pile-g",
+          "loadCaseId": "g-permanent",
+          "force": 200000.0
+        },
+        {
+          "id": "pile-q",
+          "loadCaseId": "q-imposed",
+          "force": 100000.0
+        }
+      ],
+      "environment": "Unset",
+      "designLife": 0.0,
+      "wallThickness": 0.0,
+      "interlockBendingFactor": 0.0,
+      "interlockStiffnessFactor": 0.0,
+      "sectionModulus": 0.0,
+      "shearArea": 0.0,
+      "designMoment": 0.0,
+      "designShear": 0.0,
+      "interlockShear": 0.0
+    }
+  ],
+  "craneRunways": [
+    {
+      "id": "crane-1",
+      "memberId": "member-b1",
+      "wheelContactLength": 0.1,
+      "dispersion": 0.05,
+      "webThickness": 0.01,
+      "fy": 355000000.0,
+      "phi": 1.25,
+      "actions": [
+        {
+          "id": "cr-g",
+          "loadCaseId": "g-permanent",
+          "force": 20000.0
+        },
+        {
+          "id": "cr-q",
+          "loadCaseId": "q-imposed",
+          "force": 30000.0
+        }
+      ],
+      "maxWheelLoad": 0.0,
+      "loadFactor": 0.0,
+      "railInertia": 0.0,
+      "railFixed": 0,
+      "flangeEffectiveWidth": 0.0,
+      "flangeThickness": 0.0,
+      "wheelEccentricity": 0.0,
+      "torsionConstant": 0.0,
+      "longitudinalStress": 0.0,
+      "railRadius": 0.0,
+      "railContactWidth": 0.0,
+      "craneNu": 0.0,
+      "craneKq": 0.0,
+      "damageExponent": 0.0,
+      "stressRange": 0.0,
+      "detailCategoryStress": 0.0,
+      "fatiguePhi": 0.0
+    }
+  ],
+  "storeys": [
+    {
+      "id": "storey-1",
+      "memberId": "member-b1",
+      "label": "Storey 1",
+      "height": 4.0,
+      "verticalLoad": 400000.0,
+      "horizontalLoad": 20000.0,
+      "drift": 0.002,
+      "columns": 2,
+      "plasticAnalysis": 0,
+      "buildingHeight": 4.0,
+      "bracingLoad": 0.0,
+      "bracingLength": 0.0,
+      "bracingDeflection": 0.0
+    }
+  ],
+  "restraints": [
+    {
+      "id": "restraint-1",
+      "memberId": "member-b1",
+      "label": "Restraint 1",
+      "startSupport": "Fork",
+      "endSupport": "Fork",
+      "intermediatePosition": 0.0,
+      "torsionalSpring": 0.0,
+      "lateralSpringPosition": 0.0,
+      "lateralSpringStiffness": 0.0,
+      "loadHeight": 0.0,
+      "loadDistribution": "Udl",
+      "designMoment": 100000.0,
+      "designAxial": 0.0,
+      "generalMethod": 0,
+      "hingeToRestraint": 0.0
+    }
+  ],
+  "builtUpMembers": [
+    {
+      "chordShape": "Unset",
+      "chordDepth": 0.3,
+      "chordWidth": 0.1,
+      "chordFlangeThickness": 0.0165,
+      "chordWebThickness": 0.01,
+      "id": "built-up-1",
+      "memberId": "member-b1",
+      "label": "Built-up 1",
+      "kind": "Battened",
+      "chordArea": 0.00538,
+      "chordInertia": 1.336e-05,
+      "chordDistance": 0.3,
+      "panelSpacing": 0.8,
+      "planes": 2,
+      "battenInertia": 5e-06,
+      "diagonalArea": 0.0,
+      "diagonalLength": 0.0,
+      "designAxial": 400000.0,
+      "designMoment": 5000.0,
+      "backToBack": 0,
+      "minRadius": 0.0,
+      "chainSpacing": 0.0
+    }
+  ],
+  "weldGroups": [
+    {
+      "id": "weld-group-1",
+      "memberId": "member-b1",
+      "label": "Weld group 1",
+      "pattern": "TwoLines",
+      "throat": 0.005,
+      "width": 0.1,
+      "depth": 0.2,
+      "shearForce": 100000.0,
+      "eccentricity": 0.15,
+      "steelFu": 510000000.0,
+      "betaW": 0.9
+    }
+  ],
+  "parametricSections": [
+    {
+      "id": "param-1",
+      "sectionId": "sec-heb240",
+      "label": "Parametric HEB 240",
+      "shape": "WeldedI",
+      "height": 0.24,
+      "width": 0.24,
+      "webThickness": 0.01,
+      "flangeThickness": 0.017,
+      "tolerance": 0.05
+    }
+  ],
+  "hollowJoints": [
+    {
+      "id": "hollow-1",
+      "memberId": "member-b1",
+      "label": "K gap joint",
+      "chordWidth": 0.12,
+      "chordHeight": 0.12,
+      "chordThickness": 0.008,
+      "chordFy": 355000000.0,
+      "chordStress": 0.0,
+      "brace1Width": 0.08,
+      "brace1Height": 0.08,
+      "brace1Thickness": 0.005,
+      "brace1Angle": 45.0,
+      "brace1Force": 60000.0,
+      "brace2Width": 0.08,
+      "brace2Height": 0.08,
+      "brace2Thickness": 0.005,
+      "brace2Angle": 45.0,
+      "brace2Force": 60000.0,
+      "gap": 0.03,
+      "braceFy": 355000000.0
+    }
+  ],
+  "jointRows": [
+    {
+      "id": "row-1",
+      "jointId": "joint-ep",
+      "label": "Row 1 (extended)",
+      "rowType": "Extended",
+      "lever": 0.27,
+      "boltToWeb": 0.04,
+      "edgeDistance": 0.04,
+      "extensionToFlange": 0.04,
+      "extensionEdge": 0.04,
+      "alphaFactor": 6.5,
+      "pitchToPrevious": 0.0,
+      "bolts": 2,
+      "boltDiameter": 0.02,
+      "boltStressArea": 0.000245,
+      "gripLength": 0.05,
+      "boltClass": "10.9",
+      "groupWithPrevious": 0
+    },
+    {
+      "id": "row-2",
+      "jointId": "joint-ep",
+      "label": "Row 2 (first below the flange)",
+      "rowType": "FirstBelow",
+      "lever": 0.18,
+      "boltToWeb": 0.04,
+      "edgeDistance": 0.04,
+      "extensionToFlange": 0.0,
+      "extensionEdge": 0.0,
+      "alphaFactor": 6.5,
+      "pitchToPrevious": 0.09,
+      "bolts": 2,
+      "boltDiameter": 0.02,
+      "boltStressArea": 0.000245,
+      "gripLength": 0.05,
+      "boltClass": "10.9",
+      "groupWithPrevious": 0
+    }
+  ],
+  "frameNodes": [
+    {
+      "id": "node-a",
+      "label": "Base left",
+      "x": 0.0,
+      "z": 0.0,
+      "support": "Fixed",
+      "loadX": 0.0,
+      "loadZ": 0.0
+    },
+    {
+      "id": "node-b",
+      "label": "Eaves left",
+      "x": 0.0,
+      "z": 4.0,
+      "support": "Free",
+      "loadX": 20000.0,
+      "loadZ": -200000.0
+    },
+    {
+      "id": "node-c",
+      "label": "Eaves right",
+      "x": 6.0,
+      "z": 4.0,
+      "support": "Free",
+      "loadX": 0.0,
+      "loadZ": -200000.0
+    },
+    {
+      "id": "node-d",
+      "label": "Base right",
+      "x": 6.0,
+      "z": 0.0,
+      "support": "Fixed",
+      "loadX": 0.0,
+      "loadZ": 0.0
+    }
+  ],
+  "frameBars": [
+    {
+      "id": "bar-1",
+      "memberId": "member-b1",
+      "label": "Left column",
+      "startNodeId": "node-a",
+      "endNodeId": "node-b",
+      "releaseStart": "Rigid",
+      "releaseEnd": "Rigid"
+    },
+    {
+      "id": "bar-2",
+      "memberId": "member-b1",
+      "label": "Beam",
+      "startNodeId": "node-b",
+      "endNodeId": "node-c",
+      "releaseStart": "Rigid",
+      "releaseEnd": "Rigid"
+    },
+    {
+      "id": "bar-3",
+      "memberId": "member-b1",
+      "label": "Right column",
+      "startNodeId": "node-d",
+      "endNodeId": "node-c",
+      "releaseStart": "Rigid",
+      "releaseEnd": "Rigid"
+    }
+  ],
+  "placements": [
+    {
+      "id": "placement-1",
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0,
+      "yaw": 1.0
+    }
+  ],
+  "jointPlates": [],
+  "foundationBlocks": [],
+  "frameActions": [],
+  "frameMemberBases": [],
+  "fatigueStresses": [],
+  "bucklingLengths": [],
+  "formingGains": [],
+  "materialDuctility": [],
+  "fastenedJoints": []
+}

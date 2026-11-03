@@ -152,7 +152,7 @@ fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_dem
         original!(owner);
         if self.actor.0.has_owner() {
             let original = std::mem::take(&mut self.actor.0);
-            match semio_framework_value::retirement::admit_owned_retirement(original, child) .result {
+            match semio_framework_value::retirement::admit_owned_retirement(original, child).result {
                 Ok((owner, progress)) => { *self.active = Some(owner); semio_framework_value::retained_clone::admit_retained_clone_progress(child, progress, "hydration original actor birth")?; if progress.retained_capacity_bytes != demand.capacity_bytes { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "hydration actor birth differs from its original quote")); } return Ok(RetainedCloneStep::Progress(progress)); }
                 Err((error, original)) => { self.actor.0 = original; return Err(error); }
             }

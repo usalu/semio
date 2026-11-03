@@ -21,7 +21,7 @@ pub struct TreeProps {
     pub interaction_domain: Option<crate::UiText>,
 }
 
-/// 🌳️ A tree's inherited row and value-column presentation.
+/// 🌳️ A tree's inherited row and value-column presentation: `Compact` packs rows for measure panes, `Touch` makes every row at least 44 px tall (WCAG 2.5.5) so a finger hits it.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(crate = "::semio_framework_value", rename_all = "camelCase")]
@@ -29,6 +29,7 @@ pub enum TreePresentation {
     #[default]
     Standard,
     Compact,
+    Touch,
 }
 
 impl TreePresentation {

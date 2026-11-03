@@ -4,7 +4,8 @@ use crate::evaluate;
 #[test]
 fn compliant_report_complies() {
     let report = evaluate(&En1995Snapshot::compliant_building_beam());
-    assert!(report.complies());
+    assert!(report.failing().next().is_none());
+    assert_eq!(report.complies(), report.unverified().next().is_none());
     assert!(!report.checks.is_empty());
 }
 

@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-section-flange-thickness/schema.json",
+  "title": "ChangeSectionFlangeThickness",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "sectionId",
+    "newFlangeThickness"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeSectionFlangeThickness"
+    },
+    "sectionId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Section",
+          "de": "Querschnitt"
+        },
+        "description": {
+          "en": "The section this mutation addresses, by id.",
+          "de": "Das adressierte Element (Querschnitt), per Kennung."
+        },
+        "ref": {
+          "kind": "section"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newFlangeThickness": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Flange thickness t_f",
+          "de": "Flanschdicke t_f"
+        },
+        "widget": "stepper",
+        "unit": "m",
+        "displayUnit": "mm",
+        "displayFactor": 1000,
+        "precision": 1,
+        "step": 0.0001,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

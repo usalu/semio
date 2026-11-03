@@ -4,8 +4,8 @@ use super::*;
 
 /// 🔑️ A `geometry.objects` entry: its map key and value.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Iso16757GeometryObjectsEntry {
     pub key: String,
@@ -14,8 +14,8 @@ pub struct Iso16757GeometryObjectsEntry {
 
 /// 🔺️ Keyed diff of the `geometry.objects` map: added entries, removed keys and modified entry patches.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct Iso16757GeometryObjectsRows {
     pub added: Vec<Iso16757GeometryObjectsEntry>,
@@ -64,8 +64,8 @@ impl Iso16757GeometryObjectsRows {
 
 /// 📌️ A `selection.constraints` row inserted at final position `index`.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Iso16757SelectionConstraintsInserted {
     pub index: usize,
@@ -74,8 +74,8 @@ pub struct Iso16757SelectionConstraintsInserted {
 
 /// 🔺️ Positional diff of `selection.constraints` rows: removed base positions, inserted rows at final positions and modified base-position patches, each strictly ascending.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct Iso16757SelectionConstraintsRows {
     pub removed: Vec<usize>,
@@ -184,8 +184,8 @@ impl Iso16757SelectionConstraintsRows {
 
 /// 🔑️ A `part_number_inputs` entry: its map key and value.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Iso16757PartNumberInputsEntry {
     pub key: String,
@@ -194,8 +194,8 @@ pub struct Iso16757PartNumberInputsEntry {
 
 /// 🔺️ Keyed diff of the `part_number_inputs` map: added entries, removed keys and modified values.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct Iso16757PartNumberInputsRows {
     pub added: Vec<Iso16757PartNumberInputsEntry>,
@@ -260,8 +260,8 @@ impl Iso16757PartNumberInputsRows {
 
 /// 🩹️ Sparse per-field patch of the `script_limits` section.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct Iso16757ScriptLimitsPatch {
     pub max_steps: Option<u32>,

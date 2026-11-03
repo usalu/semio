@@ -1,0 +1,6 @@
+{
+  "ChangeConstructionLoadStage": {
+    "id": "construction-load-1",
+    "newStage": "x-alt"
+  }
+}

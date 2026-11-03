@@ -346,6 +346,13 @@ impl<'ctx> PointerCtx<'ctx> {
         if action == semio_framework_ui_wgpu_input::KeyAction::Escape {
             self.input.dismiss_dismissable_layers();
         }
+        if is_context_menu_chord(&action, modifiers) && !content_is_editing(input.focused_id.as_deref(), self.sync.sync_card_kind.is_some()) && self.dock.dock_drag.is_none() {
+            let (x, y) = self.keyboard_context_menu_anchor(input);
+            let hit = input.hit_at(x, y).cloned();
+            self.open_context_menu(x, y, hit).await;
+            self.settle.owe_settle();
+            return Ok(());
+        }
         let idle = input.focused_id.is_none() && self.input.overlay_state == OverlayState::None && self.sync.sync_card_kind.is_none() && self.dock.dock_drag.is_none();
         debug_log(&format!(
             "[TRACE] wgpu-shell chord gate action={action:?} idle={idle} focused={:?} overlay={:?} syncCard={} dockDrag={} menu={} window={:?} session={:?} editVerb={:?} appBinding={:?} reserved={} docked={}",
@@ -361,6 +368,50 @@ impl<'ctx> PointerCtx<'ctx> {
             is_reserved_shell_chord_in(&self.chrome.shortcut_table(), &action, modifiers),
             self.dock.dock.window_instances().len()
         ));
+        if idle {
+            if let Some(row_id) = self.row_control_focus_request(&action, modifiers) {
+                let controller_id = self.docs.session.as_ref().map(|session| session.app.controller_id.clone()).unwrap_or_default();
+                let args = semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "rowId": row_id });
+                let dispatched = self.as_actions().dispatch_action(ActionDescriptor { controller_id, action: semio_framework::FOCUS_ROW_CONTROL_ACTION_ID.into(), args }).await;
+                self.apply_pending_row_control_focus(input).await?;
+                self.settle.owe_settle();
+                return dispatched;
+            }
+        }
+        if idle {
+            if let Some(session) = self.docs.session.as_ref() {
+                let (plugin_id, controller_id) = (session.plugin_id.clone(), session.app.controller_id.clone());
+                let event = shell_key_event(self.windows.active_window_id.as_deref().unwrap_or_default(), &action, modifiers);
+                match self.dock.shell_hooks.handle_key(&plugin_id, &event) {
+                    semio_framework::ShellKeyOutcome::Consumed => {
+                        self.settle.owe_settle();
+                        return Ok(());
+                    }
+                    semio_framework::ShellKeyOutcome::Action { action } => {
+                        if self.dispatch_app_keybinding(ActionDescriptor { controller_id, action, args: None }).await? {
+                            self.as_actions().drain_gesture_bound_work().await;
+                            self.settle.owe_settle();
+                            return Ok(());
+                        }
+                    }
+                    semio_framework::ShellKeyOutcome::Select { domain_id, targets, merge } => {
+                        let targets = serde_json::to_string(&targets).unwrap_or_else(|_| "[]".to_owned());
+                        let args = semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "domainId": domain_id, "targets": targets, "merge": merge, "method": "pick" });
+                        self.as_actions().dispatch_action(ActionDescriptor { controller_id, action: "interactionSelect".into(), args }).await?;
+                        self.settle.owe_settle();
+                        return Ok(());
+                    }
+                    semio_framework::ShellKeyOutcome::Verb { action, args } => {
+                        let args = semio_framework::optional_json_to_dsl(serde_json::to_value(&args).ok());
+                        self.as_actions().dispatch_action(ActionDescriptor { controller_id, action, args }).await?;
+                        self.apply_pending_row_control_focus(input).await?;
+                        self.settle.owe_settle();
+                        return Ok(());
+                    }
+                    semio_framework::ShellKeyOutcome::Ignored => {}
+                }
+            }
+        }
         if idle {
             if let Some(shortcut) = shell_shortcut_for_in(&self.chrome.shortcut_table(), &action, modifiers) {
                 if shortcut.is_async() && self.apply_async_shell_shortcut(shortcut).await? {
@@ -442,6 +493,37 @@ impl<'ctx> PointerCtx<'ctx> {
         Ok(())
     }
 
+    /// 🖐️ A recognised touch gesture of a surface (a long press released in place, a double tap): offered to the plugin's touch hook and answered like a key, as an app action, an interaction selection or a framework verb.
+    pub async fn handle_touch_gesture(&mut self, gesture: semio_framework::ShellTouchGesture, x: f32, y: f32) -> Result<(), String> {
+        let Some(session) = self.docs.session.as_ref() else { return Ok(()) };
+        let (plugin_id, controller_id) = (session.plugin_id.clone(), session.app.controller_id.clone());
+        let scope = self.windows.active_window_id.clone().unwrap_or_default();
+        match self.dock.shell_hooks.handle_touch(&plugin_id, &scope, gesture, f64::from(x), f64::from(y)) {
+            semio_framework::ShellKeyOutcome::Consumed => {
+                self.settle.owe_settle();
+            }
+            semio_framework::ShellKeyOutcome::Action { action } => {
+                if self.dispatch_app_keybinding(ActionDescriptor { controller_id, action, args: None }).await? {
+                    self.as_actions().drain_gesture_bound_work().await;
+                    self.settle.owe_settle();
+                }
+            }
+            semio_framework::ShellKeyOutcome::Select { domain_id, targets, merge } => {
+                let targets = serde_json::to_string(&targets).unwrap_or_else(|_| "[]".to_owned());
+                let args = semio_framework_os_renderer_wgpu_host_base::action_args_json!({ "domainId": domain_id, "targets": targets, "merge": merge, "method": "pick" });
+                self.as_actions().dispatch_action(ActionDescriptor { controller_id, action: "interactionSelect".into(), args }).await?;
+                self.settle.owe_settle();
+            }
+            semio_framework::ShellKeyOutcome::Verb { action, args } => {
+                let args = semio_framework::optional_json_to_dsl(serde_json::to_value(&args).ok());
+                self.as_actions().dispatch_action(ActionDescriptor { controller_id, action, args }).await?;
+                self.settle.owe_settle();
+            }
+            semio_framework::ShellKeyOutcome::Ignored => {}
+        }
+        Ok(())
+    }
+
     /// ⌨️ Moves keyboard focus one stop along the ring: onto a chrome control (the accessibility focus the
     /// platform adapter and the mirror set, painted as the focus ring) or onto a dock window (the active
     /// window, whose own content focus takes the keyboard again).
@@ -475,4 +557,57 @@ impl<'ctx> PointerCtx<'ctx> {
         }
     }
 }
+
+impl<'ctx> PointerCtx<'ctx> {
+    /// ☰ Where a keyboard-opened context menu appears: the centre of the control that has keyboard focus, else the centre of the active window body, else the centre of the dock canvas, so the menu is always anchored to what the user is working on without any pointer position.
+    pub fn keyboard_context_menu_anchor(&self, input: &InputState<ActionDescriptor>) -> (f32, f32) {
+        let focused = self.input.accessibility_focused_control_id.as_deref().and_then(|id| input.hits().iter().rev().find(|hit| hit.control_id.as_deref() == Some(id)));
+        if let Some(hit) = focused {
+            return (hit.rect.x + hit.rect.w / 2.0, hit.rect.y + hit.rect.h / 2.0);
+        }
+        let body = self.windows.active_window_id.as_deref().and_then(|id| self.input.retained_window_body_rect(id)).unwrap_or(self.input.presented_input_geometry.dock_canvas_bounds);
+        (body.x + body.w / 2.0, body.y + body.h / 2.0)
+    }
+}
+impl<'ctx> PointerCtx<'ctx> {
+    /// ✏️ Focuses the cell a `focusRowControl` verb queued: the same accessibility focus a platform assistive technology sends, so the field takes the keyboard (its draft opens on the committed value) and its window becomes the active one. A cell that vanished before the focus (the row was republished) is dropped silently.
+    pub async fn apply_pending_row_control_focus(&mut self, input: &mut InputState<ActionDescriptor>) -> Result<(), String> {
+        let Some(pending) = self.input.pending_row_control_focus.take() else { return Ok(()) };
+        let target = ui_render::AccessibilityTarget { window_id: pending.window_id, window_generation: pending.window_generation, node_id: pending.node_id, node_key: pending.node_key };
+        self.input.accessibility_focused_control_id = None;
+        self.handle_accessibility_event(&target, &ui_render::AccessibilityEvent::Focus, input).await?;
+        Ok(())
+    }
+
+    /// ⌨️ `F2` on a focused tree row asks for the `focusRowControl` verb of that row; `None` while the key is not a bare `F2` or the keyboard is not on a row (a cell inside a row owns its own `F2`).
+    pub fn row_control_focus_request(&self, action: &semio_framework_ui_wgpu_input::KeyAction, modifiers: &PointerModifiers) -> Option<String> {
+        if !matches!(action, semio_framework_ui_wgpu_input::KeyAction::Function(2)) || modifiers.ctrl || modifiers.alt || modifiers.shift || modifiers.meta {
+            return None;
+        }
+        let (surface, node) = self.as_session().retained_keyboard_focus()?;
+        semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::retained_focused_row_key(&surface, node)
+    }
+}
+
 //#endregion ShellInput
+
+/// ☰ Whether a key press asks for the context menu of the focused element: the dedicated context-menu key or `Shift+F10`, the keyboard counterpart of a secondary click (WAI-ARIA authoring practices, menu button and context menu keys). Domain-neutral: the menu content is whatever the app's `context_menu` answers for the focused surface.
+pub fn is_context_menu_chord(action: &semio_framework_ui_wgpu_input::KeyAction, modifiers: &PointerModifiers) -> bool {
+    match action {
+        semio_framework_ui_wgpu_input::KeyAction::ContextMenu => true,
+        semio_framework_ui_wgpu_input::KeyAction::Function(10) => modifiers.shift && !modifiers.ctrl && !modifiers.alt && !modifiers.meta,
+        _ => false,
+    }
+}
+
+/// ⌨️ A key press as the plugin shell hook sees it: the active window id as scope, the key name the DOM spells and the modifiers.
+pub fn shell_key_event(scope: &str, action: &semio_framework_ui_wgpu_input::KeyAction, modifiers: &PointerModifiers) -> semio_framework::ShellKeyEvent {
+    use semio_framework_ui_wgpu_input::KeyAction;
+    let key = match action {
+        KeyAction::Char(text) => text.clone(),
+        KeyAction::Function(number) => format!("F{number}"),
+        KeyAction::Space(_) => " ".to_string(),
+        other => format!("{other:?}"),
+    };
+    semio_framework::ShellKeyEvent { scope: scope.to_string(), key, ctrl: modifiers.ctrl, alt: modifiers.alt, shift: modifiers.shift, meta: modifiers.meta }
+}

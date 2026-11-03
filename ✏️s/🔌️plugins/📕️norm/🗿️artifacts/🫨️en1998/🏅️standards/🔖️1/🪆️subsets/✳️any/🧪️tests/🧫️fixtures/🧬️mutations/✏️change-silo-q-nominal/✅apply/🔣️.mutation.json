@@ -1,0 +1,5 @@
+{
+  "mutation": "changeSiloQNominal",
+  "id": "si-1",
+  "newQNominal": 2.4
+}

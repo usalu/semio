@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/remove-imperfection/schema.json",
+  "title": "RemoveImperfection",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Execution imperfection",
+          "de": "Ausführungsimperfektion"
+        },
+        "description": {
+          "en": "The execution imperfection this mutation addresses, by id.",
+          "de": "Das adressierte Element (Ausführungsimperfektion), per Kennung."
+        },
+        "ref": {
+          "kind": "execution-imperfection"
+        },
+        "group": "target",
+        "order": 10
+      }
+    }
+  }
+}

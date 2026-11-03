@@ -4,7 +4,6 @@ use semio_framework_value_control_contract::{ValueError, ValueRefusalKind};
 pub use semio_framework_value_control_contract::{RetainedWorkOutcome,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
 use semio_framework_value_derive::{RetainedEquality, RetireOwned, ToValue};
 use semio_framework_value_intrinsic::{DslValue, FromValue, ToValue, ValueShape};
-use semio_framework_value_native_encoding::NativeEncodeControl;
 use semio_framework_value_retained_clone::retained_clone;
 use semio_framework_value_snapshot_projection::snapshot_projection;
 use semio_framework_value_retirement::{retirement, RetirementDemand};

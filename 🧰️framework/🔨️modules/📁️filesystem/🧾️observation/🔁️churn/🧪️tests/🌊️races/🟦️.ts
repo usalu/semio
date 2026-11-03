@@ -9,7 +9,7 @@ import schema from "../../🧬️schema/🌊️races.json";
 import churn from "../../🧬️schema/🔣️.json";
 import vectors from "./🔣️.json";
 import {testPythonV1} from "../../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
-import {decideFilesystemRaceV1,filesystemErrorFromTextV1,filesystemRaceOfErrorV1,filesystemRaceOfTextV1,filesystemRaceTableV1,observeRaceWorldV1,processRaceWorldV1,type RaceFactsV1,type RaceWorldV1} from "../../🌊️races/🟦️.ts";
+import {decideFilesystemRaceV1,filesystemShapeErrorV1,filesystemErrorFromTextV1,filesystemRaceOfErrorV1,filesystemRaceOfTextV1,filesystemRaceTableV1,observeRaceWorldV1,processRaceWorldV1,type RaceFactsV1,type RaceWorldV1} from "../../🌊️races/🟦️.ts";
 
 const python=testPythonV1(),here=dirname(fileURLToPath(import.meta.url)),table=filesystemRaceTableV1();
 const oracle=JSON.parse(Bun.spawnSync([python!,"-I",join(here,"🐍️.py"),join(here,"..","..","🧬️schema","🌊️races.json"),join(here,"🔣️.json")]).stdout.toString()) as {decide:Record<string,unknown>;observe:Record<string,unknown>;text:Record<string,unknown>;errnos:Record<string,string|null>};
@@ -114,4 +114,15 @@ test("the workspace root of the process comes from the environment when it names
  const empty=join(sandbox,"empty");mkdirSync(empty);
  const saved=process.cwd();try{process.chdir(join(root,"src"));expect(processRaceWorldV1({}).root).toBe(root);process.chdir(empty);expect(processRaceWorldV1({SEMIO_WORKSPACE_ROOT:empty}).root).toBeUndefined();}finally{process.chdir(saved);}
  expect(dirname(root)).toBe(sandbox);
+});
+
+test("the error of an unexpected shape names the path for a regular file too, and keeps the code the operating system gives for a directory or a symlink",()=>{
+ const regular={isDirectory:()=>false,isSymbolicLink:()=>false},directory={isDirectory:()=>true,isSymbolicLink:()=>false},link={isDirectory:()=>false,isSymbolicLink:()=>true},path="📁️filesystem/🧾️observation/🔁️churn/🌊️races/🟦️.ts";
+ const plain=filesystemShapeErrorV1(regular,path,"Bounded physical Source revision required") as Error&{code?:string;path?:string};
+ expect(plain.message).toBe("Bounded physical Source revision required: "+path);expect(plain.code).toBeUndefined();expect(plain.path).toBe(path);
+ expect((filesystemShapeErrorV1(regular,path,"Ancestry required","ENOTDIR") as Error&{code?:string}).code).toBe("ENOTDIR");
+ const dir=filesystemShapeErrorV1(directory,path,"Bounded required") as Error&{code?:string;syscall?:string};
+ expect(dir.message).toContain(path);expect(dir.code).toBe("EISDIR");expect(dir.syscall).toBe("lstat");
+ expect((filesystemShapeErrorV1(link,path,"Bounded required") as Error&{code?:string}).code).toBe("ELOOP");
+ expect(filesystemShapeErrorV1(regular,path,"Already names "+path).message).toBe("Already names "+path);
 });

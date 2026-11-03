@@ -1,0 +1,6 @@
+{
+  "ChangeDustExplosionVentArea": {
+    "id": "dust-explosion-1",
+    "newVentArea": 9.0
+  }
+}

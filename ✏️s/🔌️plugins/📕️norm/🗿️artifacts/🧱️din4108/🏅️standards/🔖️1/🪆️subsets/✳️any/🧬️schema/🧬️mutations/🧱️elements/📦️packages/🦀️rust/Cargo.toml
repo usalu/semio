@@ -16,8 +16,9 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+serde = { workspace = true, optional = true }
 semio-framework-pack-json = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
-semio-s-artifact-norm-din4108-mut-elements-2 = { workspace = true }
+semio-s-artifact-norm-din4108-mut-elements-rows = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-ui-locale = { workspace = true }
@@ -25,6 +26,9 @@ semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-norm-din4108-diff = { workspace = true }
 semio-s-artifact-norm-din4108-model = { workspace = true }
+
+[features]
+test-support = ["dep:serde", "semio-s-artifact-norm-din4108-diff/test-support", "semio-s-artifact-norm-din4108-model/test-support", "semio-s-artifact-norm-din4108-mut-elements-rows/test-support"]
 
 [dev-dependencies]
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

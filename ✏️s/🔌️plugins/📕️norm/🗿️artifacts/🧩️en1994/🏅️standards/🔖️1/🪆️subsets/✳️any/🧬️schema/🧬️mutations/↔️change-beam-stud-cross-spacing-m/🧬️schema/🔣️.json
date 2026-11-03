@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-beam-stud-cross-spacing-m/schema.json",
+  "title": "ChangeBeamStudCrossSpacingM",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newStudTransverseSpacingM"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Composite beam",
+          "de": "Verbundträger"
+        },
+        "description": {
+          "en": "The composite beam this mutation addresses, by id.",
+          "de": "Das adressierte Element (Verbundträger), per Kennung."
+        },
+        "ref": {
+          "kind": "beam"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newStudTransverseSpacingM": {
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Transverse centre-to-centre spacing of the stud rows (0 = not declared)",
+          "de": "Bolzenquerabstand der Bolzenreihen (0 = nicht angegeben)"
+        },
+        "unit": "m",
+        "step": 0.01,
+        "precision": 3,
+        "group": "beam",
+        "order": 20
+      }
+    }
+  }
+}

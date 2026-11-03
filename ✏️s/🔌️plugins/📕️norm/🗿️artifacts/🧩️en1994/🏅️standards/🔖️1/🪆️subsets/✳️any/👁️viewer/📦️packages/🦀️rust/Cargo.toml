@@ -16,6 +16,10 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework = { workspace = true }
+semio-framework-dsl-record = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-dsl-record-derive = { workspace = true }
+semio-framework-diagnostic = { workspace = true }
 semio-framework-2d-compute = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true }
@@ -26,7 +30,10 @@ semio-framework-value-derive = { workspace = true }
 semio-s-artifact-norm-en1994-inferences = { workspace = true }
 semio-s-artifact-norm-en1994-model = { workspace = true }
 semio-s-artifact-norm-en1994-mutations = { workspace = true }
+semio-s-artifact-norm-en1994-scene = { workspace = true }
 semio-s-plugin-norm-app-surface = { workspace = true }
+semio-s-plugin-norm-compliance = { workspace = true }
+semio-s-plugin-norm-structural-scene = { workspace = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }

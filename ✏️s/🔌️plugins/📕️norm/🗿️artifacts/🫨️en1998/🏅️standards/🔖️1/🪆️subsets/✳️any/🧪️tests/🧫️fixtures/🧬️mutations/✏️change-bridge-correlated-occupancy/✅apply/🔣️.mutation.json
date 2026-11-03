@@ -1,0 +1,5 @@
+{
+  "mutation": "changeBridgeCorrelatedOccupancy",
+  "id": "br-1",
+  "newCorrelatedOccupancy": false
+}

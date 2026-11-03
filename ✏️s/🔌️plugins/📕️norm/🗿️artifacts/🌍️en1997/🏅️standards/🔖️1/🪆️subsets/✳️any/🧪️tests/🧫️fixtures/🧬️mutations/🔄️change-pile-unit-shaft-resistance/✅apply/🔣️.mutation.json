@@ -1,0 +1,5 @@
+{
+  "mutation": "changePileUnitShaftResistance",
+  "id": "pile-P1",
+  "newUnitShaftResistance": 180000.0
+}

@@ -1,0 +1,6 @@
+{
+  "mutation": "changeElementWeldDirection",
+  "sectionId": "sec-i120",
+  "elementId": "flange-top",
+  "newWeldDirection": "longitudinal"
+}

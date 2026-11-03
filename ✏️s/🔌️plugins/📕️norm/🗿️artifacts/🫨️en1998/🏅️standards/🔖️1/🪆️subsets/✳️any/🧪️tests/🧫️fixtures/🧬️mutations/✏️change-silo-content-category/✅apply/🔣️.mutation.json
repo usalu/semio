@@ -1,0 +1,5 @@
+{
+  "mutation": "changeSiloContentCategory",
+  "id": "si-1",
+  "newContentCategory": "b"
+}

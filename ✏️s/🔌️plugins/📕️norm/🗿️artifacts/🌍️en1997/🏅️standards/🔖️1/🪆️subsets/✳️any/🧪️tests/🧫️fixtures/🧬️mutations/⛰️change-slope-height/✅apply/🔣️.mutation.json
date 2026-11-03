@@ -1,0 +1,5 @@
+{
+  "mutation": "changeSlopeHeight",
+  "id": "slope-S1",
+  "newHeight": 12.0
+}

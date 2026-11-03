@@ -57,17 +57,61 @@ const SECTION_FIELDS: &[&str] = &[
     "assumed_silo_pressure",
     "assumed_silo_patch",
     "assumed_silo_wall_friction",
+    "bridge_tandem_x",
+    "rail_alpha",
+    "assumed_rail_lm71",
+    "assumed_rail_lm71_udl",
+    "assumed_rail_sw0",
+    "assumed_rail_sw2",
+    "crane_x",
+    "crane_runway_length",
+    "crane_wheel_base",
+    "silo_diameter",
+    "silo_eccentricity",
+    "silo_hopper_angle_deg",
+    "bridge_curve_radius",
+    "fire_load_basis",
     "floors",
     "self_weight_elements",
     "roofs",
     "wind_faces",
     "accidental_cases",
+    "bridge_lanes",
+    "construction_stages",
+    "roof_surfaces",
+    "placements",
+    "special_vehicles",
+    "wind_bridges",
+    "dynamic_elements",
+    "impact_actions",
+    "internal_explosions",
+    "thermal_sections",
+    "cases",
+    "helicopter_landings",
+    "tie_runs",
+    "construction_loads",
+    "falling_loads",
+    "execution_imperfections",
+    "derailment_cases",
+    "crane_hoists",
+    "footbridges",
+    "rail_dynamics",
+    "load_dispersals",
+    "bulk_solids",
+    "rotating_machines",
+    "dust_explosions",
+    "rail_load_groups",
+    "rail_derailments",
+    "fatigue_models",
+    "support_collisions",
+    "local_fires",
+    "snow_guards",
 ];
 
 /// 🧾️ `En1991` document outline.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct En1991Outline {
     pub section_outline: Vec<String>,
@@ -83,14 +127,44 @@ impl En1991Outline {
             + snapshot.roofs.len()
             + snapshot.wind_faces.len()
             + snapshot.self_weight_elements.len()
-            + snapshot.accidental_cases.len()) as u32;
+            + snapshot.accidental_cases.len()
+            + snapshot.bridge_lanes.len()
+            + snapshot.construction_stages.len()
+            + snapshot.roof_surfaces.len()
+            + snapshot.placements.len()
+            + snapshot.special_vehicles.len()
+            + snapshot.wind_bridges.len()
+            + snapshot.dynamic_elements.len()
+            + snapshot.impact_actions.len()
+            + snapshot.internal_explosions.len()
+            + snapshot.thermal_sections.len()
+            + snapshot.cases.len()
+            + snapshot.helicopter_landings.len()
+            + snapshot.tie_runs.len()
+            + snapshot.construction_loads.len()
+            + snapshot.falling_loads.len()
+            + snapshot.execution_imperfections.len()
+            + snapshot.derailment_cases.len()
+            + snapshot.crane_hoists.len()
+            + snapshot.footbridges.len()
+            + snapshot.rail_dynamics.len()
+            + snapshot.load_dispersals.len()
+            + snapshot.bulk_solids.len()
+            + snapshot.rotating_machines.len()) as u32;
+            + snapshot.dust_explosions.len()) as u32;
+            + snapshot.rail_load_groups.len()) as u32;
+            + snapshot.rail_derailments.len()) as u32;
+            + snapshot.fatigue_models.len()) as u32;
+            + snapshot.support_collisions.len()) as u32;
+            + snapshot.local_fires.len()) as u32;
+            + snapshot.snow_guards.len()) as u32;
         Self { section_outline, field_count, entry_count }
     }
 }
 
 impl Default for En1991Outline {
     fn default() -> Self {
-        Self::compute(&En1991Snapshot::default())
+        Self::compute(&En1991Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De))
     }
 }
 //#endregion 🔖️Outline

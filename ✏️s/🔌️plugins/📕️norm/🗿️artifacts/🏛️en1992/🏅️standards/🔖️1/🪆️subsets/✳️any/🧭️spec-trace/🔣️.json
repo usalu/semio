@@ -1,0 +1,2393 @@
+{
+ "code": "en1992",
+ "standard": "EN 1992",
+ "spec": "📐️specs/en1992-target.md",
+ "specIds": [
+  "M-01",
+  "M-02",
+  "M-03",
+  "M-04",
+  "M-05",
+  "M-06",
+  "M-07",
+  "M-08",
+  "M-09",
+  "M-10",
+  "M-11",
+  "M-12",
+  "M-13",
+  "M-14",
+  "D-01",
+  "D-02",
+  "D-03",
+  "D-04",
+  "D-05",
+  "D-06",
+  "D-07",
+  "A-01",
+  "A-02",
+  "A-03",
+  "A-04",
+  "A-05",
+  "A-06",
+  "A-07",
+  "A-08",
+  "A-09",
+  "A-10",
+  "A-11",
+  "A-12",
+  "A-13",
+  "A-14",
+  "A-15",
+  "A-16",
+  "S-01",
+  "S-02",
+  "S-03",
+  "S-04",
+  "S-05",
+  "S-06",
+  "S-07",
+  "S-08",
+  "S-09",
+  "S-10",
+  "V-01",
+  "V-02",
+  "V-03",
+  "V-04",
+  "V-05",
+  "V-06",
+  "V-07",
+  "V-08",
+  "T-01",
+  "T-02",
+  "T-03",
+  "T-04",
+  "P-01",
+  "P-02",
+  "P-03",
+  "P-04",
+  "P-05",
+  "P-06",
+  "P-07",
+  "ST-01",
+  "ST-02",
+  "ST-03",
+  "ST-04",
+  "PA-01",
+  "B-01",
+  "B-02",
+  "B-03",
+  "B-04",
+  "B-05",
+  "B-06",
+  "B-07",
+  "B-08",
+  "B-09",
+  "SL-01",
+  "SL-02",
+  "SL-03",
+  "SL-04",
+  "SL-05",
+  "SL-06",
+  "SL-07",
+  "SL-08",
+  "SL-09",
+  "F-01",
+  "F-02",
+  "F-03",
+  "F-04",
+  "F-05",
+  "F-06",
+  "F-07",
+  "PR-01",
+  "PR-02",
+  "PR-03",
+  "PR-04",
+  "PR-05",
+  "PR-06",
+  "PR-07",
+  "PR-08",
+  "PR-09",
+  "PR-10",
+  "DT-01",
+  "DT-02",
+  "DT-03",
+  "DT-04",
+  "DT-05",
+  "DT-06",
+  "DT-07",
+  "DT-08",
+  "DT-09",
+  "DT-10",
+  "DT-11",
+  "DT-12",
+  "DT-13",
+  "DT-14",
+  "R-01",
+  "R-02",
+  "R-03",
+  "R-04",
+  "R-05",
+  "R-06",
+  "R-07",
+  "R-08",
+  "BR-01",
+  "BR-02",
+  "BR-03",
+  "BR-04",
+  "BR-05",
+  "BR-06",
+  "BR-07",
+  "BR-08",
+  "LQ-01",
+  "LQ-02",
+  "LQ-03",
+  "LQ-04",
+  "LQ-05",
+  "LQ-06",
+  "LQ-07",
+  "FA-01",
+  "FA-02",
+  "FA-03",
+  "FA-04",
+  "FA-05",
+  "FA-06",
+  "FA-07",
+  "FA-08",
+  "FA-09",
+  "FA-10",
+  "FA-11",
+  "FA-12",
+  "FA-13",
+  "FA-14",
+  "BR-09",
+  "LQ-08",
+  "DI-01"
+ ],
+ "items": [
+  {
+   "id": "M-01",
+   "clause": "2.4.2, 3.1.6",
+   "entity": "members[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992.materials.concrete."
+    ]
+   },
+   "description": {
+    "en": "Design strengths fcd = α_cc fck/γ_c and fctd = α_ct fctk,0.05/γ_c of concrete by design situation; realised as a check family",
+    "de": "Bemessungswerte fcd = α_cc fck/γ_c und fctd = α_ct fctk,0.05/γ_c der Betonfestigkeit je Bemessungssituation; umgesetzt als Nachweisfamilie"
+   }
+  },
+  {
+   "id": "M-02",
+   "clause": "Table 3.1",
+   "entity": "concreteGrades[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992.m-02.",
+     "en1992.3.1.scope."
+    ]
+   },
+   "description": {
+    "en": "Concrete property table of Table 3.1 (fcm = fck + 8, fctm, Ecm) per strength class; also carries the scope row for classes above C90/105 (3.1.1)",
+    "de": "Betonkennwerte nach Tabelle 3.1 (fcm = fck + 8, fctm, Ecm) je Festigkeitsklasse; trägt zusätzlich die Geltungsbereichszeile für Klassen oberhalb C90/105 (3.1.1)"
+   }
+  },
+  {
+   "id": "M-03",
+   "clause": "3.1.2(4) and Annex NA",
+   "entity": "concreteGrades[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992.m-03."
+    ]
+   },
+   "description": {
+    "en": "Cube strength fck,cube from the grade table and the strength gain fck(t) for t < 28 d per NA 3.1.2(5); realised as a check family",
+    "de": "Würfeldruckfestigkeit fck,cube aus der Festigkeitsklassentabelle und Festigkeitszuwachs fck(t) für t < 28 d nach NA 3.1.2(5); umgesetzt als Nachweisfamilie"
+   }
+  },
+  {
+   "id": "M-04",
+   "clause": "3.1.2(5-6)",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "M-04"
+   },
+   "description": {
+    "en": "Strength development fcm(t) = β_cc(t) fcm with β_cc(t) = exp(s(1 − √(28/t))) and the matching tensile strength; realised as a design case",
+    "de": "Festigkeitsentwicklung fcm(t) = β_cc(t) fcm mit β_cc(t) = exp(s(1 − √(28/t))) und zugehöriger Zugfestigkeit; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "M-05",
+   "clause": "3.1.5, Fig. 3.2",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "M-05"
+   },
+   "description": {
+    "en": "Parabola-rectangle diagram σ_c = fcd(1 − (1 − ε/ε_c2)^n) up to ε_c2, then fcd up to ε_cu2; realised as a design case",
+    "de": "Parabel-Rechteck-Diagramm σ_c = fcd(1 − (1 − ε/ε_c2)^n) bis ε_c2, danach fcd bis ε_cu2; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "M-06",
+   "clause": "3.1.5(1), Fig. 3.3",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "M-06"
+   },
+   "description": {
+    "en": "Bilinear concrete diagram σ_c = fcd ε/ε_c3 up to ε_c3, then fcd up to ε_cu3; realised as a design case",
+    "de": "Bilineares Betondiagramm σ_c = fcd ε/ε_c3 bis ε_c3, danach fcd bis ε_cu3; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "M-07",
+   "clause": "3.1.7(3), Fig. 3.5",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "M-07"
+   },
+   "description": {
+    "en": "Rectangular stress block of depth λx and stress η fcd with Fc = η fcd λ x b and lever arm z = d − λx/2; realised as a design case",
+    "de": "Rechteckspannungsblock der Höhe λx und Spannung η fcd mit Fc = η fcd λ x b und Hebelarm z = d − λx/2; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "M-08",
+   "clause": "3.2.7, Fig. 3.8",
+   "entity": "reinforcementGrades[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992.m-08.",
+     "en1992.materials.steel."
+    ]
+   },
+   "description": {
+    "en": "Reinforcing steel diagrams with inclined branch up to ε_ud = 0.9 ε_uk and horizontal branch (3.2.7); also carries the row for a missing reinforcement grade (3.2)",
+    "de": "Betonstahl-Diagramme mit geneigtem Ast bis ε_ud = 0,9 ε_uk und horizontalem Ast (3.2.7); trägt zusätzlich die Zeile für fehlende Betonstahlsorte (3.2)"
+   }
+  },
+  {
+   "id": "M-09",
+   "clause": "3.3",
+   "entity": "prestressSteels[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992.m-09."
+    ]
+   },
+   "description": {
+    "en": "Prestressing steel design diagram with inclined branch fpd = fp0.1k/γ_s up to ε_ud = 0.02 and elastic modulus Ep; realised as a check family",
+    "de": "Bemessungsdiagramm des Spannstahls mit geneigtem Ast fpd = fp0.1k/γ_s bis ε_ud = 0,02 und Elastizitätsmodul Ep; umgesetzt als Nachweisfamilie"
+   }
+  },
+  {
+   "id": "M-10",
+   "clause": "3.1.4, Annex B",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "M-10"
+   },
+   "description": {
+    "en": "Creep coefficient φ(∞,t0) taken from the Annex B.1 derivation A-01 for the effective modulus; realised as a design case",
+    "de": "Kriechzahl φ(∞,t0) aus der Herleitung A-01 nach Anhang B.1 für den effektiven Elastizitätsmodul; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "M-11",
+   "clause": "3.1.4(6), Annex B.2",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "M-11"
+   },
+   "description": {
+    "en": "Shrinkage strain ε_cs = ε_cd + ε_ca (drying plus autogenous, with β_ds(t,ts) and kh) as the materials view of the A-02 derivation, feeding the prestress losses PR-05 and the effective modulus S-12; realised as a design case with worked-example numbers in the demo catalogue",
+    "de": "Schwinddehnung ε_cs = ε_cd + ε_ca (Trocknungs- plus autogenes Schwinden, mit β_ds(t,ts) und kh) als Baustoffsicht der Herleitung A-02, speist die Spannkraftverluste PR-05 und den effektiven Elastizitätsmodul S-12; umgesetzt als Bemessungsfall mit Rechenbeispielwerten im Demo-Katalog"
+   }
+  },
+  {
+   "id": "M-12",
+   "clause": "3.1.4(2)",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "M-12"
+   },
+   "description": {
+    "en": "Effective modulus Ec,eff = Ecm/(1 + φ(∞,t0)) and modular ratio α_e,eff = Es/Ec,eff; realised as a design case",
+    "de": "Effektiver Elastizitätsmodul Ec,eff = Ecm/(1 + φ(∞,t0)) und Verhältnis α_e,eff = Es/Ec,eff; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "M-13",
+   "clause": "3.1.6(2), 2.3.1",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "M-13"
+   },
+   "description": {
+    "en": "Elevated-temperature and fatigue reduction factors of the materials, delegated to the entries F-01 to F-07 and R-01; realised as a design case",
+    "de": "Abminderungsfaktoren der Baustoffe für erhöhte Temperatur und Ermüdung, delegiert an die Einträge F-01 bis F-07 und R-01; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "M-14",
+   "clause": "7.1(2)",
+   "entity": "members[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992.m-14."
+    ]
+   },
+   "description": {
+    "en": "Cracking moment Mcr = fctm,fl Wc with fctm,fl = max((1.6 − h/1000) fctm, fctm) and the prestress term of Mcr,P; realised as a check family",
+    "de": "Rissmoment Mcr = fctm,fl Wc mit fctm,fl = max((1,6 − h/1000) fctm, fctm) und Vorspannanteil von Mcr,P; umgesetzt als Nachweisfamilie"
+   }
+  },
+  {
+   "id": "D-01",
+   "clause": "4.2",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "D-01"
+   },
+   "description": {
+    "en": "Exposure classes per member face (X0, XC, XD, XS, XF, XA and the DE moisture classes WO, WF, WA, WS) giving the governing class set; realised as a design case",
+    "de": "Expositionsklassen je Bauteilseite (X0, XC, XD, XS, XF, XA und die Feuchtigkeitsklassen WO, WF, WA, WS nach NA) mit der maßgebenden Klassenmenge; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "D-02",
+   "clause": "Table E.1DE (informative Annex E, normative in NA)",
+   "entity": "members[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992.4.2.min-class."
+    ]
+   },
+   "description": {
+    "en": "Minimum concrete strength class per exposure class from Table E.1DE, e.g. C16/20 for XC1 up to C35/45 for XD3; realised as a check family",
+    "de": "Mindestbetonfestigkeitsklasse je Expositionsklasse nach Tabelle E.1DE, z. B. C16/20 für XC1 bis C35/45 für XD3; umgesetzt als Nachweisfamilie"
+   }
+  },
+  {
+   "id": "D-03",
+   "clause": "4.4.1.2",
+   "entity": "members[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992.4.4.cover.",
+     "en1992.4.4.bar-cover."
+    ]
+   },
+   "description": {
+    "en": "Minimum cover cmin = max(cmin,b, cmin,dur + Δc,dur,γ − Δc,dur,st − Δc,dur,add, 10 mm) from bar diameter, structural class S1-S6 and exposure; realised as a check family",
+    "de": "Mindestbetondeckung cmin = max(cmin,b, cmin,dur + Δc,dur,γ − Δc,dur,st − Δc,dur,add, 10 mm) aus Stabdurchmesser, Bauwerksklasse S1-S6 und Exposition; umgesetzt als Nachweisfamilie"
+   }
+  },
+  {
+   "id": "D-04",
+   "clause": "4.4.1.1, 4.4.1.3",
+   "entity": "members[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992.4.4.cover."
+    ]
+   },
+   "description": {
+    "en": "Nominal cover cnom = cmin + Δc,dev with Δc,dev = 10 mm, compared with the provided cover; realised as a check family",
+    "de": "Nennmaß der Betondeckung cnom = cmin + Δc,dev mit Δc,dev = 10 mm, verglichen mit der vorhandenen Deckung; umgesetzt als Nachweisfamilie"
+   }
+  },
+  {
+   "id": "D-05",
+   "clause": "4.4.1.2(13)",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "D-05"
+   },
+   "description": {
+    "en": "Cover for bond cmin,b ≥ φ and increased nominal cover against prepared ground or soil (4.4.1.2(13), 4.4.1.3); realised as a design case",
+    "de": "Betondeckung für den Verbund cmin,b ≥ φ und vergrößertes Nennmaß gegen vorbereiteten Baugrund oder Erdreich (4.4.1.2(13), 4.4.1.3); umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "D-06",
+   "clause": "4.4.1.2, EN 1992-1-2",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "D-06"
+   },
+   "description": {
+    "en": "Cover for fire as axis distance, delegated to the fire entry R-01 (4.4.1.2, EN 1992-1-2); realised as a design case",
+    "de": "Betondeckung für den Brandfall als Achsabstand, delegiert an den Brandeintrag R-01 (4.4.1.2, EN 1992-1-2); umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "D-07",
+   "clause": "4.3",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "D-07"
+   },
+   "description": {
+    "en": "Design working life classes of EN 1990 Table 2.1 feeding the structural class correction of the nominal cover D-04; realised as a design case",
+    "de": "Nutzungsdauerklassen nach EN 1990 Tabelle 2.1, die die Korrektur der Bauwerksklasse für das Nennmaß D-04 speisen; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "A-01",
+   "clause": "Annex B.1",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "A-01"
+   },
+   "description": {
+    "en": "Creep coefficient φ(t,t0) per Annex B.1 from fcm, RH, notional size h0, loading age t0 and cement class; realised as a design case",
+    "de": "Kriechzahl φ(t,t0) nach Anhang B.1 aus fcm, RH, wirksamer Dicke h0, Belastungsalter t0 und Zementklasse; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "A-02",
+   "clause": "Annex B.2, 3.1.4(6)",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "A-02"
+   },
+   "description": {
+    "en": "Shrinkage strain ε_cs = ε_cd + ε_ca per Annex B.2 with β_ds(t,ts) and kh; realised as a design case",
+    "de": "Schwinddehnung ε_cs = ε_cd + ε_ca nach Anhang B.2 mit β_ds(t,ts) und kh; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "A-03",
+   "clause": "5.2, 5.3",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "A-03"
+   },
+   "description": {
+    "en": "Geometric imperfections θ_i = θ_0 α_h α_m with θ_0 = 1/200 and the eccentricity e_i of isolated members; realised as a design case",
+    "de": "Geometrische Imperfektionen θ_i = θ_0 α_h α_m mit θ_0 = 1/200 und Ausmitte e_i von Einzelbauteilen; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "A-04",
+   "clause": "5.3.2",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "A-04"
+   },
+   "description": {
+    "en": "Effective flange width beff = Σ beff,i + bw ≤ b with beff,i = 0.2 bi + 0.1 l0 ≤ 0.2 l0 and ≤ bi; realised as a design case",
+    "de": "Mitwirkende Plattenbreite beff = Σ beff,i + bw ≤ b mit beff,i = 0,2 bi + 0,1 l0 ≤ 0,2 l0 und ≤ bi; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "A-05",
+   "clause": "5.4",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "A-05"
+   },
+   "description": {
+    "en": "Linear elastic analysis with cracked or uncracked stiffness, feeding the redistribution of A-06; realised as a design case",
+    "de": "Linear-elastische Berechnung mit gerissener oder ungerissener Steifigkeit als Grundlage der Umlagerung nach A-06; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "A-06",
+   "clause": "5.5",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "A-06"
+   },
+   "description": {
+    "en": "Limited redistribution δ ≥ k1 + k2 xu/d for fck ≤ 50 and δ ≥ k3 + k4 xu/d for fck > 50; realised as a design case",
+    "de": "Begrenzte Umlagerung δ ≥ k1 + k2 xu/d für fck ≤ 50 und δ ≥ k3 + k4 xu/d für fck > 50; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "A-07",
+   "clause": "5.6",
+   "entity": "members[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992.annexC.ductility."
+    ]
+   },
+   "description": {
+    "en": "Plastic analysis with rotation capacity θ_pl,d ≤ k_λ θ_pl,d(tab), k_λ = √(λ/3), and xu/d limited to 0.25 or 0.15; realised as a check family",
+    "de": "Plastische Berechnung mit Rotationsvermögen θ_pl,d ≤ k_λ θ_pl,d(tab), k_λ = √(λ/3), und xu/d begrenzt auf 0,25 bzw. 0,15; umgesetzt als Nachweisfamilie"
+   }
+  },
+  {
+   "id": "A-08",
+   "clause": "5.7",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "A-08"
+   },
+   "description": {
+    "en": "Non-linear strain-compatible analysis with the global safety factor γ_R = 1.2 and Rd = Rm(fcm-based)/γ_R; realised as a design case",
+    "de": "Nichtlineare Berechnung mit verträglichen Dehnungen und globalem Sicherheitsbeiwert γ_R = 1,2 sowie Rd = Rm(auf fcm bezogen)/γ_R; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "A-09",
+   "clause": "5.8.2-5.8.3",
+   "entity": "members[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992.5.8.slender."
+    ]
+   },
+   "description": {
+    "en": "Slenderness λ = l0/i against the limit λ_lim = 20 A B C/√n; realised as a check family",
+    "de": "Schlankheit λ = l0/i gegen die Grenzschlankheit λ_lim = 20 A B C/√n; umgesetzt als Nachweisfamilie"
+   }
+  },
+  {
+   "id": "A-10",
+   "clause": "5.8.8",
+   "entity": "members[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992.5.8.slender."
+    ]
+   },
+   "description": {
+    "en": "Nominal curvature method with MEd = M0Ed + NEd e2, e2 = (1/r) l0²/c and 1/r = Kr Kφ (1/r0); realised as a check family",
+    "de": "Modellstützenverfahren mit Nennkrümmung: MEd = M0Ed + NEd e2, e2 = (1/r) l0²/c und 1/r = Kr Kφ (1/r0); umgesetzt als Nachweisfamilie"
+   }
+  },
+  {
+   "id": "A-11",
+   "clause": "5.8.7",
+   "entity": "members[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992.5.8.slender."
+    ]
+   },
+   "description": {
+    "en": "Nominal stiffness method with EI = Kc Ecd Ic + Ks Es Is and Ecd = Ecm/γ_cE, γ_cE = 1.2; realised as a check family",
+    "de": "Modellstützenverfahren mit Nennsteifigkeit: EI = Kc Ecd Ic + Ks Es Is und Ecd = Ecm/γ_cE, γ_cE = 1,2; umgesetzt als Nachweisfamilie"
+   }
+  },
+  {
+   "id": "A-12",
+   "clause": "5.8.9",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "A-12"
+   },
+   "description": {
+    "en": "Biaxial bending of slender columns by the section-level check S-05 with moments amplified per axis; realised as a design case",
+    "de": "Zweiachsige Biegung schlanker Stützen über den Querschnittsnachweis S-05 mit je Achse vergrößerten Momenten; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "A-13",
+   "clause": "5.8.5",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "A-13"
+   },
+   "description": {
+    "en": "General non-linear second-order method by curvature integration from the section M-N-κ relation, giving the collapse load factor; realised as a design case",
+    "de": "Allgemeines nichtlineares Verfahren nach Theorie II. Ordnung durch Krümmungsintegration aus der Momenten-Normalkraft-Krümmungs-Beziehung des Querschnitts mit Traglastfaktor; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "A-14",
+   "clause": "5.8.6 / 5.8.4",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "A-14"
+   },
+   "description": {
+    "en": "Global second-order effects of slender walls and lateral loads: Fv,Ed ≤ k1 Σ Ecd Ic/L² · nS/(nS + 1.6) with k1 = 0.31; realised as a design case",
+    "de": "Globale Effekte nach Theorie II. Ordnung bei schlanken Wänden und Horizontallasten: Fv,Ed ≤ k1 Σ Ecd Ic/L² · nS/(nS + 1,6) mit k1 = 0,31; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "A-15",
+   "clause": "5.9",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "A-15"
+   },
+   "description": {
+    "en": "Lateral instability of slender beams: l0t/b ≤ 50/(h/b)^(1/3) and h/b ≤ 2.5; realised as a design case",
+    "de": "Seitliches Ausweichen schlanker Träger: l0t/b ≤ 50/(h/b)^(1/3) und h/b ≤ 2,5; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "A-16",
+   "clause": "5.10",
+   "entity": "prestress",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992.a-16."
+    ]
+   },
+   "description": {
+    "en": "Prestress effects in the analysis, delegated to the prestress section P; realised as a check family",
+    "de": "Vorspannwirkungen in der Berechnung, delegiert an den Vorspannabschnitt P; umgesetzt als Nachweisfamilie"
+   }
+  },
+  {
+   "id": "S-01",
+   "clause": "6.1",
+   "entity": "members[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992.6.1.flexure.",
+     "en1992.uls.na."
+    ]
+   },
+   "description": {
+    "en": "Strain-compatibility integrator over the section polygon with bar and tendon lists (6.1); also carries the not-applicable row for a member without a ULS load case",
+    "de": "Dehnungsebenen-Integrator über Querschnittspolygon sowie Stab- und Spanngliedlisten (6.1); trägt zusätzlich die Zeile „nicht anwendbar“ für ein Bauteil ohne Lastfall im Grenzzustand der Tragfähigkeit"
+   }
+  },
+  {
+   "id": "S-02",
+   "clause": "6.1",
+   "entity": "members[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992.6.1.flexure."
+    ]
+   },
+   "description": {
+    "en": "Pure axial resistance NRd,0 = Ac fcd + As fyd in compression and NRd,t = −As fyd in tension; realised as a check family",
+    "de": "Zentrische Tragfähigkeit NRd,0 = Ac fcd + As fyd auf Druck und NRd,t = −As fyd auf Zug; umgesetzt als Nachweisfamilie"
+   }
+  },
+  {
+   "id": "S-03",
+   "clause": "6.1",
+   "entity": "members[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992.6.1.flexure."
+    ]
+   },
+   "description": {
+    "en": "Bending design of the singly reinforced rectangular beam with μ_Eds = MEds/(b d² fcd), ω = 1 − √(1 − 2μ) and As1; realised as a check family",
+    "de": "Biegebemessung des einfach bewehrten Rechteckbalkens mit μ_Eds = MEds/(b d² fcd), ω = 1 − √(1 − 2μ) und As1; umgesetzt als Nachweisfamilie"
+   }
+  },
+  {
+   "id": "S-04",
+   "clause": "6.1",
+   "entity": "members[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992.6.1.flexure."
+    ]
+   },
+   "description": {
+    "en": "Uniaxial N-M interaction: resistance MRd for a given NEd solved on the strain plane of S-01; realised as a check family",
+    "de": "Einachsige M-N-Interaktion: Tragmoment MRd bei gegebenem NEd, gelöst auf der Dehnungsebene nach S-01; umgesetzt als Nachweisfamilie"
+   }
+  },
+  {
+   "id": "S-05",
+   "clause": "6.1(109) Eq. 5.39",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "S-05"
+   },
+   "description": {
+    "en": "Simplified biaxial bending (MEdz/MRdz)^a + (MEdy/MRdy)^a ≤ 1.0 with exponent a interpolated from 1.0 to 2.0 over NEd/NRd; realised as a design case",
+    "de": "Vereinfachte zweiachsige Biegung (MEdz/MRdz)^a + (MEdy/MRdy)^a ≤ 1,0 mit über NEd/NRd von 1,0 bis 2,0 interpoliertem Exponenten a; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "S-06",
+   "clause": "6.1",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "S-06"
+   },
+   "description": {
+    "en": "Exact biaxial N-My-Mz interaction surface from S-01 over all neutral-axis angles and depths; realised as a design case",
+    "de": "Genaue N-My-Mz-Interaktionsfläche aus S-01 über alle Nulllinienwinkel und -tiefen; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "S-07",
+   "clause": "6.1",
+   "entity": "members[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992.6.1.flexure."
+    ]
+   },
+   "description": {
+    "en": "Flanged T, L and box sections: neutral axis in the flange reduces to S-03 with b = beff, otherwise web and flange are decomposed; realised as a check family",
+    "de": "Plattenbalken-, L- und Kastenquerschnitte: Nulllinie im Gurt führt auf S-03 mit b = beff, sonst Zerlegung in Steg und Gurt; umgesetzt als Nachweisfamilie"
+   }
+  },
+  {
+   "id": "S-08",
+   "clause": "6.1(4), 9.2.1.1",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "S-08"
+   },
+   "description": {
+    "en": "Minimum eccentricity e0 = max(h/30, 20 mm) giving MEd ≥ NEd e0; realised as a design case",
+    "de": "Mindestausmitte e0 = max(h/30, 20 mm) mit MEd ≥ NEd e0; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "S-09",
+   "clause": "6.1",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "S-09"
+   },
+   "description": {
+    "en": "Bearing capacity of unreinforced walls NRd = b hw fcd,pl Φ with fcd,pl = α_cc,pl fck/γ_c; realised as a design case",
+    "de": "Tragfähigkeit unbewehrter Wände NRd = b hw fcd,pl Φ mit fcd,pl = α_cc,pl fck/γ_c; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "S-10",
+   "clause": "6.1(6)",
+   "entity": "members[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992.6.1.flexure."
+    ]
+   },
+   "description": {
+    "en": "Bending of prestressed sections with the pre-strain Pm,t/(Ap Ep) and fpd = fp0.1k/γ_s; realised as a check family",
+    "de": "Biegung vorgespannter Querschnitte mit der Vordehnung Pm,t/(Ap Ep) und fpd = fp0,1k/γ_s; umgesetzt als Nachweisfamilie"
+   }
+  },
+  {
+   "id": "V-01",
+   "clause": "6.2.1",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "V-01"
+   },
+   "description": {
+    "en": "Shear design flow: VEd ≤ VRd,c without calculated shear reinforcement (V-02), otherwise V-03 or V-04; realised as a design case",
+    "de": "Ablauf des Querkraftnachweises: VEd ≤ VRd,c ohne rechnerische Querkraftbewehrung (V-02), sonst V-03 oder V-04; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "V-02",
+   "clause": "6.2.2",
+   "entity": "members[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992.6.2.shear."
+    ]
+   },
+   "description": {
+    "en": "Shear resistance without shear reinforcement VRd,c = [CRd,c k (100 ρ_l fck)^(1/3) + k1 σ_cp] bw d ≥ (vmin + k1 σ_cp) bw d; realised as a check family",
+    "de": "Querkrafttragfähigkeit ohne Querkraftbewehrung VRd,c = [CRd,c k (100 ρ_l fck)^(1/3) + k1 σ_cp] bw d ≥ (vmin + k1 σ_cp) bw d; umgesetzt als Nachweisfamilie"
+   }
+  },
+  {
+   "id": "V-03",
+   "clause": "6.2.3",
+   "entity": "members[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992.6.2.shear."
+    ]
+   },
+   "description": {
+    "en": "Shear resistance with shear reinforcement by the truss model with variable strut inclination cot θ, stirrup angle α, ν1 and α_cw; realised as a check family",
+    "de": "Querkrafttragfähigkeit mit Querkraftbewehrung nach dem Fachwerkmodell mit veränderlicher Druckstrebenneigung cot θ, Bügelwinkel α, ν1 und α_cw; umgesetzt als Nachweisfamilie"
+   }
+  },
+  {
+   "id": "V-04",
+   "clause": "6.2.3(103), (5)",
+   "entity": "members[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992.6.2.shear."
+    ]
+   },
+   "description": {
+    "en": "Shear with axial force and prestress through the compression stress σ_cp in α_cw; realised as a check family",
+    "de": "Querkraft mit Normalkraft und Vorspannung über die Betondruckspannung σ_cp in α_cw; umgesetzt als Nachweisfamilie"
+   }
+  },
+  {
+   "id": "V-05",
+   "clause": "6.2.5",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "V-05"
+   },
+   "description": {
+    "en": "Interface shear vEdi = β VEd/(z bi) ≤ vRdi = c fctd + μ σ_n + ρ fyd (μ sin α + cos α) ≤ 0.5 ν fcd; realised as a design case",
+    "de": "Schubkraftübertragung in Fugen vEdi = β VEd/(z bi) ≤ vRdi = c fctd + μ σ_n + ρ fyd (μ sin α + cos α) ≤ 0,5 ν fcd; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "V-06",
+   "clause": "6.2.4",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "V-06"
+   },
+   "description": {
+    "en": "Shear between web and flanges with flange link area and anchorage, following V-03; realised as a design case",
+    "de": "Schub zwischen Steg und Gurten mit Gurtbewehrungsquerschnitt und Verankerung, anschließend an V-03; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "V-07",
+   "clause": "6.2.2(2), 6.2.3",
+   "entity": "members[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992.6.2.shear."
+    ]
+   },
+   "description": {
+    "en": "Shear near supports under concentrated loads with VEd,red = β VEd, β = av/(2d), against VRd,c and 0.5 bw d ν fcd; realised as a check family",
+    "de": "Querkraft nahe dem Auflager bei Einzellasten mit VEd,red = β VEd, β = av/(2d), gegen VRd,c und 0,5 bw d ν fcd; umgesetzt als Nachweisfamilie"
+   }
+  },
+  {
+   "id": "V-08",
+   "clause": "6.2.3 DE",
+   "entity": "members[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992.6.3.interaction."
+    ]
+   },
+   "description": {
+    "en": "Combined shear and torsion, delegated to T-04; realised as a check family",
+    "de": "Kombination von Querkraft und Torsion, delegiert an T-04; umgesetzt als Nachweisfamilie"
+   }
+  },
+  {
+   "id": "T-01",
+   "clause": "6.3.2(1)",
+   "entity": "members[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992.6.3.torsion."
+    ]
+   },
+   "description": {
+    "en": "Thin-walled equivalent section with tef = A/u, Ak = (b − tef)(h − tef) and the perimeter uk; realised as a check family",
+    "de": "Dünnwandiger Ersatzquerschnitt mit tef = A/u, Ak = (b − tef)(h − tef) und Umfang uk; umgesetzt als Nachweisfamilie"
+   }
+  },
+  {
+   "id": "T-02",
+   "clause": "6.3.2",
+   "entity": "members[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992.6.3.torsion.",
+     "en1992.6.3.torsion-links.",
+     "en1992.6.3.torsion-longitudinal.",
+     "en1992.6.3.torsion-longitudinal-compression."
+    ]
+   },
+   "description": {
+    "en": "Torsion resistance with TRd,max = 2 ν α_cw fcd Ak tef sin θ cos θ and 1.0 ≤ cot θ ≤ 2.5, and the required ASw/s = TEd/(2 Ak fywd cot θ) and ΣAsl = TEd uk cot θ/(2 Ak fyd) (Eq. 6.28) against the provided link leg, with the longitudinal steel in addition to the bending steel of the tension chord (6.3.2(3)) and the other chord share in the compression chord; realised as a check family",
+    "de": "Torsionstragfähigkeit mit TRd,max = 2 ν α_cw fcd Ak tef sin θ cos θ und 1,0 ≤ cot θ ≤ 2,5 sowie erforderliches ASw/s = TEd/(2 Ak fywd cot θ) und ΣAsl = TEd uk cot θ/(2 Ak fyd) (Gl. 6.28) gegen vorhandenen Bügelschenkel, die Längsbewehrung zusätzlich zur Biegebewehrung des Zuggurts (6.3.2(3)) und den übrigen Anteil im Druckgurt; umgesetzt als Nachweisfamilie"
+   }
+  },
+  {
+   "id": "T-03",
+   "clause": "6.3.2(4)",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "T-03"
+   },
+   "description": {
+    "en": "Torsion in warped sections split into sub-sections proportional to stiffness, T_i = TEd Ti_i/Σ; realised as a design case",
+    "de": "Torsion in verwölbten Querschnitten, aufgeteilt in Teilquerschnitte proportional zur Steifigkeit, T_i = TEd Ti_i/Σ; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "T-04",
+   "clause": "6.3.2(103), (110)",
+   "entity": "members[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992.6.3.interaction."
+    ]
+   },
+   "description": {
+    "en": "Combined torsion and shear: TEd/TRd,c + VEd/VRd,c ≤ 1.0 and TEd/TRd,max + VEd/VRd,max ≤ 1.0 for solid sections; realised as a check family",
+    "de": "Kombination von Torsion und Querkraft: TEd/TRd,c + VEd/VRd,c ≤ 1,0 und TEd/TRd,max + VEd/VRd,max ≤ 1,0 für Vollquerschnitte; umgesetzt als Nachweisfamilie"
+   }
+  },
+  {
+   "id": "P-01",
+   "clause": "6.4.2",
+   "entity": "punching",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992.p-01."
+    ]
+   },
+   "description": {
+    "en": "Basic control perimeters of the column (rectangular, circular, polygon; interior, edge, corner) with the tangent rule for openings within 6d (members[].openings[]); realised as a check family and in the member punching checks",
+    "de": "Rundschnitte der Stütze (rechteckig, kreisförmig, Polygon; innen, Rand, Ecke) mit der Tangentenregel für Öffnungen innerhalb 6d (members[].openings[]); umgesetzt als Nachweisfamilie und in den Durchstanznachweisen der Bauteile"
+   }
+  },
+  {
+   "id": "P-02",
+   "clause": "6.4.3",
+   "entity": "members[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992.6.4.punching."
+    ]
+   },
+   "description": {
+    "en": "Load increase factor β = 1 + k (MEd/VEd)(u1/W1) with k from Table 6.1 (Eq. 6.39), Eq. 6.43 for moments about both axes, u1/u1* of edge and corner columns (Eq. 6.44 to 6.46) for an eccentricity towards the interior and the general Eq. 6.39 with the full u1 (never below u1/u1*, so punching is always verified) towards the free edge, from the persisted column moments (members[].punching.momentC1|momentC2), or the fixed values of 6.4.3(6) when the method is simplified; realised as a check family",
+    "de": "Lasterhöhungsfaktor β = 1 + k (MEd/VEd)(u1/W1) mit k nach Tabelle 6.1 (Gl. 6.39), Gl. 6.43 für Momente um beide Achsen, u1/u1* bei Rand- und Eckstützen (Gl. 6.44 bis 6.46) bei Ausmitte zum Innenbereich und die allgemeine Gl. 6.39 mit vollem u1 (nie unter u1/u1*, Durchstanzen wird also immer nachgewiesen) bei Ausmitte zum freien Rand, aus den gespeicherten Stützenmomenten (members[].punching.momentC1|momentC2) oder die festen Werte nach 6.4.3(6) bei vereinfachter Methode; umgesetzt als Nachweisfamilie"
+   }
+  },
+  {
+   "id": "P-03",
+   "clause": "6.4.4",
+   "entity": "members[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992.6.4.punching."
+    ]
+   },
+   "description": {
+    "en": "Punching without shear reinforcement vEd = β VEd/(u d) ≤ vRd,c = CRd,c k (100 ρ_l fck)^(1/3) + k1 σ_cp ≥ vmin + k1 σ_cp; realised as a check family",
+    "de": "Durchstanzen ohne Durchstanzbewehrung vEd = β VEd/(u d) ≤ vRd,c = CRd,c k (100 ρ_l fck)^(1/3) + k1 σ_cp ≥ vmin + k1 σ_cp; umgesetzt als Nachweisfamilie"
+   }
+  },
+  {
+   "id": "P-04",
+   "clause": "6.4.5",
+   "entity": "members[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992.6.4.punching.",
+     "en1992.6.4.punching-max.",
+     "en1992.6.4.uout.",
+     "en1992.9.4.3.studs."
+    ]
+   },
+   "description": {
+    "en": "Punching with shear reinforcement vRd,cs = 0.75 vRd,c + 1.5 (d/sr) Asw fywd,ef (1/(u1 d)) sin α and the stud layout rules s_0, s_r, s_t; realised as a check family",
+    "de": "Durchstanzen mit Durchstanzbewehrung vRd,cs = 0,75 vRd,c + 1,5 (d/sr) Asw fywd,ef (1/(u1 d)) sin α und Anordnungsregeln der Dübelleisten s_0, s_r, s_t; umgesetzt als Nachweisfamilie"
+   }
+  },
+  {
+   "id": "P-05",
+   "clause": "6.4.5(4)",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "P-05"
+   },
+   "description": {
+    "en": "Shear stud layout per the NA and the European technical assessment with vRd,max multipliers; realised as a design case",
+    "de": "Anordnung von Dübelleisten nach NA und europäischer technischer Bewertung mit vRd,max-Faktoren; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "P-06",
+   "clause": "6.4.6",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "P-06"
+   },
+   "description": {
+    "en": "Punching at foundations and base plates with VEd,red = VEd − ΔVEd, ΔVEd = σ_gd A_crit, checked at several perimeters; realised as a design case",
+    "de": "Durchstanzen bei Fundamenten und Fußplatten mit VEd,red = VEd − ΔVEd, ΔVEd = σ_gd A_crit, an mehreren Rundschnitten nachgewiesen; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "P-07",
+   "clause": "Annex (DE NA)",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "P-07"
+   },
+   "description": {
+    "en": "Punching of prestressed flat slabs with vRd,c + 0.1 σ_cp and the inclined-tendon contribution Vp = P sin α per the NA; realised as a design case",
+    "de": "Durchstanzen vorgespannter Flachdecken mit vRd,c + 0,1 σ_cp und dem Anteil geneigter Spannglieder Vp = P sin α nach NA; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "ST-01",
+   "clause": "6.5.2",
+   "entity": "members[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992.6.5.strut."
+    ]
+   },
+   "description": {
+    "en": "Concrete strut capacity σ_Rd,max = fcd without transverse tension, 0.6 ν' fcd with transverse tension, ν' = 1 − fck/250; realised as a check family on deep beams (strut width a sin θ of the bearing plate, transverse tension assumed) and as a design case",
+    "de": "Tragfähigkeit der Betondruckstreben σ_Rd,max = fcd ohne Querzug, 0,6 ν' fcd mit Querzug, ν' = 1 − fck/250; umgesetzt als Nachweisfamilie für wandartige Träger (Strebenbreite a sin θ der Auflagerplatte, Querzug angenommen) und als Bemessungsfall"
+   }
+  },
+  {
+   "id": "ST-02",
+   "clause": "6.5.3",
+   "entity": "members[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992.6.5.tie."
+    ]
+   },
+   "description": {
+    "en": "Tie reinforcement A_s,tie = Ftd/fyd with anchorage beyond the node, A_s,prov ≥ A_s,tie; realised as a check family on deep beams (L/h ≤ 3) and as a design case",
+    "de": "Zugstrebenbewehrung A_s,tie = Ftd/fyd mit Verankerung hinter dem Knoten, A_s,prov ≥ A_s,tie; umgesetzt als Nachweisfamilie für wandartige Träger (L/h ≤ 3) und als Bemessungsfall"
+   }
+  },
+  {
+   "id": "ST-03",
+   "clause": "6.5.4",
+   "entity": "members[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992.6.5.node-cct.",
+     "en1992.6.5.node-ccc."
+    ]
+   },
+   "description": {
+    "en": "Node capacity σ_Rd,max = k ν' fcd for compression nodes CCC (k1), compression-tension nodes CCT (k2) and tension nodes CTT (k3); realised as a check family on deep beams (support nodes CCT, load node CCC under the bearing plate; CTT not occurring in the three-node truss) and as a design case",
+    "de": "Knotentragfähigkeit σ_Rd,max = k ν' fcd für Druckknoten CCC (k1), Druck-Zug-Knoten CCT (k2) und Zugknoten CTT (k3); umgesetzt als Nachweisfamilie für wandartige Träger (Auflagerknoten CCT, Lastknoten CCC unter der Auflagerplatte; CTT tritt im Dreiknoten-Fachwerk nicht auf) und als Bemessungsfall"
+   }
+  },
+  {
+   "id": "ST-04",
+   "clause": "6.5.1",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "ST-04"
+   },
+   "description": {
+    "en": "Strut-and-tie model generated from the force flow of B/D regions with strut and tie forces and angle θ recomputed on node edits; realised as a design case",
+    "de": "Stabwerkmodell aus dem Kraftfluss der B- und D-Bereiche mit Strebenkräften, Zugkräften und Winkel θ, nach Knotenänderung neu berechnet; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "PA-01",
+   "clause": "6.7",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "PA-01"
+   },
+   "description": {
+    "en": "Partially loaded areas FRdu = Ac0 fcd √(Ac1/Ac0) ≤ 3.0 fcd Ac0 with splitting reinforcement; realised as a design case",
+    "de": "Teilflächenbelastung FRdu = Ac0 fcd √(Ac1/Ac0) ≤ 3,0 fcd Ac0 mit Spaltzugbewehrung; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "B-01",
+   "clause": "8.4.2",
+   "entity": "longitudinal[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992.b-01."
+    ]
+   },
+   "description": {
+    "en": "Ultimate bond stress fbd = 2.25 η1 η2 fctd with η1 = 1.0 or 0.7 and η2 = 1.0 for φ ≤ 32 mm; realised as a check family",
+    "de": "Verbundspannung fbd = 2,25 η1 η2 fctd mit η1 = 1,0 oder 0,7 und η2 = 1,0 für φ ≤ 32 mm; umgesetzt als Nachweisfamilie"
+   }
+  },
+  {
+   "id": "B-02",
+   "clause": "8.4.3",
+   "entity": "longitudinal[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992.b-02."
+    ]
+   },
+   "description": {
+    "en": "Basic required anchorage length lb,rqd = (φ/4)(σ_sd/fbd); realised as a check family",
+    "de": "Grundwert der Verankerungslänge lb,rqd = (φ/4)(σ_sd/fbd); umgesetzt als Nachweisfamilie"
+   }
+  },
+  {
+   "id": "B-03",
+   "clause": "8.4.4",
+   "entity": "members[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992.8.4.anchorage."
+    ]
+   },
+   "description": {
+    "en": "Design anchorage length lbd = α1 α2 α3 α4 α5 lb,rqd ≥ lb,min with lb,min = max(0.3 lb,rqd, 10φ, 100 mm) in tension; realised as a check family",
+    "de": "Bemessungswert der Verankerungslänge lbd = α1 α2 α3 α4 α5 lb,rqd ≥ lb,min mit lb,min = max(0,3 lb,rqd, 10φ, 100 mm) auf Zug; umgesetzt als Nachweisfamilie"
+   }
+  },
+  {
+   "id": "B-04",
+   "clause": "8.7.3",
+   "entity": "members[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992.8.7.lap."
+    ]
+   },
+   "description": {
+    "en": "Lap length l0 = α1 α2 α3 α5 α6 lb,rqd ≥ l0,min with α6 = (ρ1/25)^0.5 between 1.0 and 1.5; realised as a check family",
+    "de": "Übergreifungslänge l0 = α1 α2 α3 α5 α6 lb,rqd ≥ l0,min mit α6 = (ρ1/25)^0,5 zwischen 1,0 und 1,5; umgesetzt als Nachweisfamilie"
+   }
+  },
+  {
+   "id": "B-05",
+   "clause": "8.5",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "B-05"
+   },
+   "description": {
+    "en": "Bundled bars with equivalent diameter φ_n = φ √nb ≤ 55 mm and nb ≤ 4 or 3; realised as a design case",
+    "de": "Stabbündel mit Vergleichsdurchmesser φ_n = φ √nb ≤ 55 mm und nb ≤ 4 bzw. 3; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "B-06",
+   "clause": "8.8",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "B-06"
+   },
+   "description": {
+    "en": "Large-diameter bars above 32 mm with surface reinforcement As,surf ≥ 0.01 Act,ext and no laps without proof; realised as a design case",
+    "de": "Stäbe mit Durchmesser über 32 mm mit Oberflächenbewehrung As,surf ≥ 0,01 Act,ext und ohne Stöße ohne Nachweis; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "B-07",
+   "clause": "8.6, 8.9, 8.10",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "B-07"
+   },
+   "description": {
+    "en": "Mesh, bundles and prestress anchorage with the transmission length lpt = α1 α2 φ σ_pm0/fbpt; realised as a design case",
+    "de": "Matten, Bündel und Spannglied-Verankerung mit der Übertragungslänge lpt = α1 α2 φ σ_pm0/fbpt; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "B-08",
+   "clause": "8.4.5",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "B-08"
+   },
+   "description": {
+    "en": "Anchorage of links and shear reinforcement with hooks of at least 5φ or 10φ and 70 mm; realised as a design case",
+    "de": "Verankerung von Bügeln und Querkraftbewehrung mit Haken von mindestens 5φ bzw. 10φ und 70 mm; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "B-09",
+   "clause": "8.2",
+   "entity": "longitudinal[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992.b-09."
+    ]
+   },
+   "description": {
+    "en": "Clear bar spacing of at least max(k1 φ, dg + k2, 20 mm) with k1 = 1 and k2 = 5 mm; realised as a check family",
+    "de": "Lichter Stababstand von mindestens max(k1 φ, dg + k2, 20 mm) mit k1 = 1 und k2 = 5 mm; umgesetzt als Nachweisfamilie"
+   }
+  },
+  {
+   "id": "SL-01",
+   "clause": "7.2",
+   "entity": "members[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992.7.2.sigma-c.",
+     "en1992.7.2.creep.",
+     "en1992-2.7.2."
+    ]
+   },
+   "description": {
+    "en": "Concrete stress limitation σ_c ≤ k1 fck with k1 = 0.6 and the 0.45 fck limit for linear creep (7.2); also carries the quasi-permanent stress row for linear creep (7.2(3)) and the EN 1992-2 7.2 bridge concrete stress row",
+    "de": "Begrenzung der Betondruckspannung σ_c ≤ k1 fck mit k1 = 0,6 und der Grenze 0,45 fck für lineares Kriechen (7.2); trägt zusätzlich die Zeile der quasi-ständigen Spannung bei linearem Kriechen (7.2(3)) und die Brückenbetonspannungszeile nach EN 1992-2 7.2"
+   }
+  },
+  {
+   "id": "SL-02",
+   "clause": "7.2(5)",
+   "entity": "members[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992.7.2.sigma-s."
+    ]
+   },
+   "description": {
+    "en": "Steel stress limitation σ_s ≤ k3 fyk with k3 = 0.8 and σ_p ≤ k5 fpk with k5 = 0.75 after losses; realised as a check family",
+    "de": "Begrenzung der Stahlspannung σ_s ≤ k3 fyk mit k3 = 0,8 und σ_p ≤ k5 fpk mit k5 = 0,75 nach Verlusten; umgesetzt als Nachweisfamilie"
+   }
+  },
+  {
+   "id": "SL-03",
+   "clause": "7.2",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "SL-03"
+   },
+   "description": {
+    "en": "Stresses of the cracked section (state II) from the neutral axis x and the modular ratio α_e; realised as a design case",
+    "de": "Spannungen des gerissenen Querschnitts (Zustand II) aus Nulllinienlage x und Verhältnis α_e; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "SL-04",
+   "clause": "7.3.2",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "SL-04"
+   },
+   "description": {
+    "en": "Minimum reinforcement for crack control As,min σ_s = kc k fct,eff Act; realised as a design case",
+    "de": "Mindestbewehrung zur Rissbreitenbegrenzung As,min σ_s = kc k fct,eff Act; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "SL-05",
+   "clause": "7.3.3",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "SL-05"
+   },
+   "description": {
+    "en": "Crack control without direct calculation by limiting bar diameter and bar spacing against σ_s for wk = 0.4, 0.3 and 0.2 mm (Tables 7.2N, 7.3N); realised as a design case",
+    "de": "Rissbreitenbegrenzung ohne direkte Berechnung durch Begrenzung von Stabdurchmesser und Stababstand gegen σ_s für wk = 0,4, 0,3 und 0,2 mm (Tabellen 7.2N, 7.3N); umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "SL-06",
+   "clause": "7.3.4",
+   "entity": "members[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992.7.3.crack."
+    ]
+   },
+   "description": {
+    "en": "Crack width wk = sr,max (ε_sm − ε_cm) with ε_sm − ε_cm ≥ 0.6 σ_s/Es and kt = 0.6 short-term or 0.4 long-term; realised as a check family",
+    "de": "Rissbreite wk = sr,max (ε_sm − ε_cm) mit ε_sm − ε_cm ≥ 0,6 σ_s/Es und kt = 0,6 kurzzeitig bzw. 0,4 langzeitig; umgesetzt als Nachweisfamilie"
+   }
+  },
+  {
+   "id": "SL-07",
+   "clause": "7.4.2",
+   "entity": "members[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992.7.4.ld."
+    ]
+   },
+   "description": {
+    "en": "Deflection limitation by span-to-depth ratio l/d ≤ K [11 + 1.5 √fck ρ0/ρ + …] with ρ0 = √fck/1000; realised as a check family",
+    "de": "Durchbiegungsbegrenzung durch Biegeschlankheit l/d ≤ K [11 + 1,5 √fck ρ0/ρ + …] mit ρ0 = √fck/1000; umgesetzt als Nachweisfamilie"
+   }
+  },
+  {
+   "id": "SL-08",
+   "clause": "7.4.3",
+   "entity": "members[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992.7.4.deflection."
+    ]
+   },
+   "description": {
+    "en": "Deflection by calculation with the distribution coefficient ζ = 1 − β (σ_sr/σ_s)² interpolating between states I and II; realised as a check family",
+    "de": "Verformungsberechnung mit Verteilungsbeiwert ζ = 1 − β (σ_sr/σ_s)², der zwischen Zustand I und II interpoliert; umgesetzt als Nachweisfamilie"
+   }
+  },
+  {
+   "id": "SL-09",
+   "clause": "7.1",
+   "entity": "members[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992.5.10.decompression."
+    ]
+   },
+   "description": {
+    "en": "Decompression and tensile stress checks of prestressed members: σ_c ≤ 0 under the quasi-permanent combination for XD and XS and σ_c,t ≥ −fctm; realised as a check family",
+    "de": "Dekompressions- und Zugspannungsnachweise vorgespannter Bauteile: σ_c ≤ 0 unter der quasi-ständigen Kombination für XD und XS und σ_c,t ≥ −fctm; umgesetzt als Nachweisfamilie"
+   }
+  },
+  {
+   "id": "F-01",
+   "clause": "6.8.1-6.8.2",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "F-01"
+   },
+   "description": {
+    "en": "Fatigue verification framework: required unless exempt, by simplified Δσ_s,equ check or damage accumulation; realised as a design case",
+    "de": "Rahmen des Ermüdungsnachweises: erforderlich, sofern nicht ausgenommen, vereinfacht über Δσ_s,equ oder durch Schädigungsakkumulation; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "F-02",
+   "clause": "6.8.3",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "F-02"
+   },
+   "description": {
+    "en": "Fatigue stress ranges from Q_fat on the permanent state G_k + Pm of the cracked section; realised as a design case",
+    "de": "Spannungsschwingbreiten für die Ermüdung aus Q_fat auf dem ständigen Zustand G_k + Pm des gerissenen Querschnitts; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "F-03",
+   "clause": "6.8.4",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "F-03"
+   },
+   "description": {
+    "en": "S-N curves of reinforcing and prestressing steel with N* = 10^6, exponents k1, k2 and Δσ_Rsk(N*) of Table 6.3N; realised as a design case",
+    "de": "Wöhlerlinien von Betonstahl und Spannstahl mit N* = 10^6, Exponenten k1, k2 und Δσ_Rsk(N*) nach Tabelle 6.3N; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "F-04",
+   "clause": "6.8.5",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "F-04"
+   },
+   "description": {
+    "en": "Steel fatigue γ_F,fat Δσ_s,equ(N*) ≤ Δσ_Rsk(N*)/γ_s,fat or damage D_Ed = Σ n_i/N_i ≤ 1; realised as a design case",
+    "de": "Ermüdungsnachweis des Stahls γ_F,fat Δσ_s,equ(N*) ≤ Δσ_Rsk(N*)/γ_s,fat oder Schädigung D_Ed = Σ n_i/N_i ≤ 1; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "F-05",
+   "clause": "6.8.7",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "F-05"
+   },
+   "description": {
+    "en": "Concrete compression fatigue Ecd,max,equ + 0.43 √(1 − Requ) ≤ 1 with fcd,fat = k1 β_cc(t0) fcd (1 − fck/250); realised as a design case",
+    "de": "Ermüdung des Betons unter Druck Ecd,max,equ + 0,43 √(1 − Requ) ≤ 1 mit fcd,fat = k1 β_cc(t0) fcd (1 − fck/250); umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "F-06",
+   "clause": "6.8.7(2)",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "F-06"
+   },
+   "description": {
+    "en": "Shear fatigue of concrete without links VEd,max,equ/VRd,c ≤ 0.5 + 0.45 VEd,min,equ/VRd,c ≤ 0.9; realised as a design case",
+    "de": "Querkraftermüdung des Betons ohne Bügel VEd,max,equ/VRd,c ≤ 0,5 + 0,45 VEd,min,equ/VRd,c ≤ 0,9; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "F-07",
+   "clause": "6.8.6",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "F-07"
+   },
+   "description": {
+    "en": "Equivalent damage λ-method for bridges Δσ_s,equ = φ_fat Δσ_s,71 λ_s with λ_s = λ_s,1 λ_s,2 λ_s,3 λ_s,4 ≤ λ_s,max; realised as a design case",
+    "de": "Äquivalentes Schädigungsverfahren λ für Brücken Δσ_s,equ = φ_fat Δσ_s,71 λ_s mit λ_s = λ_s,1 λ_s,2 λ_s,3 λ_s,4 ≤ λ_s,max; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "PR-01",
+   "clause": "5.10.2.1",
+   "entity": "prestress",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992.pr-01.",
+     "en1992.integrity.prestressSteel."
+    ]
+   },
+   "description": {
+    "en": "Maximum stressing force Pmax = Ap σ_p,max with σ_p,max = min(k1 fpk, k2 fp0.1k); also carries the dangling and orphan prestressing steel reference rows (5.10)",
+    "de": "Höchstkraft Pmax = Ap σ_p,max mit σ_p,max = min(k1 fpk, k2 fp0,1k); trägt zusätzlich die Zeilen für hängende und verwaiste Spannstahl-Verweise (5.10)"
+   }
+  },
+  {
+   "id": "PR-02",
+   "clause": "5.10.3",
+   "entity": "prestress",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992.pr-02."
+    ]
+   },
+   "description": {
+    "en": "Initial prestress force Pm0 = Ap σ_pm0 with σ_pm0 ≤ min(k7 fpk, k8 fp0.1k); realised as a check family",
+    "de": "Anfangsvorspannkraft Pm0 = Ap σ_pm0 mit σ_pm0 ≤ min(k7 fpk, k8 fp0,1k); umgesetzt als Nachweisfamilie"
+   }
+  },
+  {
+   "id": "PR-03",
+   "clause": "5.10.4",
+   "entity": "members[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992.5.10.prestress."
+    ]
+   },
+   "description": {
+    "en": "Immediate losses in pre-tensioning from elastic shortening Δσ_el = α_e σ_c,p; realised as a check family",
+    "de": "Sofortige Verluste bei Vorspannung mit sofortigem Verbund aus elastischer Verkürzung Δσ_el = α_e σ_c,p; umgesetzt als Nachweisfamilie"
+   }
+  },
+  {
+   "id": "PR-04",
+   "clause": "5.10.5",
+   "entity": "members[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992.5.10.prestress."
+    ]
+   },
+   "description": {
+    "en": "Immediate losses in post-tensioning from friction ΔPμ(x) = Pmax (1 − e^(−μ(θ + kx))), wedge slip and elastic shortening; realised as a check family",
+    "de": "Sofortige Verluste bei Vorspannung mit nachträglichem Verbund aus Reibung ΔPμ(x) = Pmax (1 − e^(−μ(θ + kx))), Keilschlupf und elastischer Verkürzung; umgesetzt als Nachweisfamilie"
+   }
+  },
+  {
+   "id": "PR-05",
+   "clause": "5.10.6",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "PR-05"
+   },
+   "description": {
+    "en": "Time-dependent losses from shrinkage, creep and relaxation Δσ_p,c+s+r; realised as a design case",
+    "de": "Zeitabhängige Spannkraftverluste aus Schwinden, Kriechen und Relaxation Δσ_p,c+s+r; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "PR-06",
+   "clause": "5.10.8",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "PR-06"
+   },
+   "description": {
+    "en": "Ultimate bending of prestressed members from the pre-strain plus strain increment, with Δσ_p,ULS for unbonded tendons; realised as a design case",
+    "de": "Biegetragfähigkeit vorgespannter Bauteile aus Vordehnung und Dehnungszuwachs, bei Spanngliedern ohne Verbund mit Δσ_p,ULS; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "PR-07",
+   "clause": "5.10.9",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "PR-07"
+   },
+   "description": {
+    "en": "Prestress effects at ULS with γ_p = 1.0 and Pk,sup = rsup Pm,t, Pk,inf = rinf Pm,t; realised as a design case",
+    "de": "Vorspannwirkungen im Grenzzustand der Tragfähigkeit mit γ_p = 1,0 und Pk,sup = rsup Pm,t, Pk,inf = rinf Pm,t; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "PR-08",
+   "clause": "5.10.10",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "PR-08"
+   },
+   "description": {
+    "en": "Prestress deviation forces q = P/r (parabolic q = 8 P f/l²) and bursting reinforcement T = 0.25 (1 − a/h) P; realised as a design case",
+    "de": "Umlenkkräfte der Vorspannung q = P/r (parabolisch q = 8 P f/l²) und Spaltzugbewehrung T = 0,25 (1 − a/h) P; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "PR-09",
+   "clause": "8.10.3",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "PR-09"
+   },
+   "description": {
+    "en": "Anchorage zones of post-tensioned members: bursting T = 0.25 (1 − a/h) Pmax, spalling and local zone FRdu per PA-01; realised as a design case",
+    "de": "Verankerungsbereiche nachträglich vorgespannter Bauteile: Spaltzug T = 0,25 (1 − a/h) Pmax, Abplatzen und örtlicher Bereich FRdu nach PA-01; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "PR-10",
+   "clause": "5.10.2.2",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "PR-10"
+   },
+   "description": {
+    "en": "Concrete stress at release σ_c ≤ 0.6 fck(t) at transfer; realised as a design case",
+    "de": "Betonspannung beim Abspannen σ_c ≤ 0,6 fck(t) zum Zeitpunkt der Übertragung; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "DT-01",
+   "clause": "9.2.1.1",
+   "entity": "members[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992.9.minas.",
+     "en1992.9.maxas."
+    ]
+   },
+   "description": {
+    "en": "Minimum and maximum tension reinforcement of beams As,min = max(0.26 fctm/fyk bt d, 0.0013 bt d) and As,max = 0.04 Ac; realised as a check family",
+    "de": "Mindest- und Höchstzugbewehrung von Balken As,min = max(0,26 fctm/fyk bt d, 0,0013 bt d) und As,max = 0,04 Ac; umgesetzt als Nachweisfamilie"
+   }
+  },
+  {
+   "id": "DT-02",
+   "clause": "9.2.1.2-9.2.1.4",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "DT-02"
+   },
+   "description": {
+    "en": "Reinforcement at end supports As ≥ 0.25 As,span and the shift rule with a_l = z (cot θ − cot α)/2; realised as a design case",
+    "de": "Bewehrung an Endauflagern As ≥ 0,25 As,Feld und Versatzmaß a_l = z (cot θ − cot α)/2; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "DT-03",
+   "clause": "9.2.2",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "DT-03"
+   },
+   "description": {
+    "en": "Minimum shear reinforcement ratio ρ_w,min = 0.16 fctm/fyk and maximum spacing sl,max = 0.75 d (1 + cot α); realised as a design case",
+    "de": "Mindestquerkraftbewehrungsgrad ρ_w,min = 0,16 fctm/fyk und Höchstabstand sl,max = 0,75 d (1 + cot α); umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "DT-04",
+   "clause": "9.2.3",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "DT-04"
+   },
+   "description": {
+    "en": "Closed torsion links with spacing s ≤ min(u/8, sl,max, b); realised as a design case",
+    "de": "Geschlossene Torsionsbügel mit Abstand s ≤ min(u/8, sl,max, b); umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "DT-05",
+   "clause": "9.2.4",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "DT-05"
+   },
+   "description": {
+    "en": "Surface reinforcement As,surf,min = 0.01 Act,ext perpendicular to the main bars at spacing ≤ 150 mm; realised as a design case",
+    "de": "Oberflächenbewehrung As,surf,min = 0,01 Act,ext rechtwinklig zur Hauptbewehrung im Abstand ≤ 150 mm; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "DT-06",
+   "clause": "9.3.1",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "DT-06"
+   },
+   "description": {
+    "en": "Reinforcement of solid slabs: secondary reinforcement ≥ 0.2 As and maximum spacing min(3h, 400 mm) principal and min(3.5h, 450 mm) secondary; realised as a design case",
+    "de": "Bewehrung von Vollplatten: Querbewehrung ≥ 0,2 As und Höchstabstand min(3h, 400 mm) in Haupt- und min(3,5h, 450 mm) in Querrichtung; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "DT-07",
+   "clause": "9.3.2",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "DT-07"
+   },
+   "description": {
+    "en": "Shear reinforcement of slabs only for h ≥ 200 mm, with minimum links when VEd ≤ VRd,max/3 and none permitted if VEd ≤ VRd,c; realised as a design case",
+    "de": "Querkraftbewehrung von Platten nur für h ≥ 200 mm, mit Mindestbügeln bei VEd ≤ VRd,max/3 und ohne Bügel zulässig bei VEd ≤ VRd,c; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "DT-08",
+   "clause": "9.4",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "DT-08"
+   },
+   "description": {
+    "en": "Flat slab reinforcement at internal columns and edges: top bars within 0.125 of the panel width each side of the column and bottom bars through the column; realised as a design case",
+    "de": "Flachdeckenbewehrung an Innenstützen und Rändern: obere Bewehrung innerhalb 0,125 der Feldbreite beidseits der Stütze und untere Bewehrung durch die Stütze; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "DT-09",
+   "clause": "9.5",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "DT-09"
+   },
+   "description": {
+    "en": "Column detailing: minimum bar diameter, As,max = 0.04 Ac (0.08 Ac at laps), minimum bar count and link diameter and spacing; realised as a design case",
+    "de": "Stützenbewehrung: Mindeststabdurchmesser, As,max = 0,04 Ac (0,08 Ac in Stößen), Mindeststabanzahl sowie Bügeldurchmesser und -abstand; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "DT-10",
+   "clause": "9.6",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "DT-10"
+   },
+   "description": {
+    "en": "Wall detailing: vertical As,v,min = 0.002 Ac and maximum 0.04 Ac, horizontal As,h,min = max(0.25 As,v, 0.001 Ac), spacing ≤ min(3 tw, 400 mm); realised as a design case",
+    "de": "Wandbewehrung: Vertikalbewehrung As,v,min = 0,002 Ac und höchstens 0,04 Ac, Horizontalbewehrung As,h,min = max(0,25 As,v, 0,001 Ac), Abstand ≤ min(3 tw, 400 mm); umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "DT-11",
+   "clause": "9.7",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "DT-11"
+   },
+   "description": {
+    "en": "Deep beam surface reinforcement as orthogonal mesh of at least 0.001 Ac and 150 mm²/m with spacing ≤ min(2h, 300 mm) per face; realised as a design case",
+    "de": "Oberflächenbewehrung wandartiger Träger als orthogonales Netz von mindestens 0,001 Ac und 150 mm²/m im Abstand ≤ min(2h, 300 mm) je Seite; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "DT-12",
+   "clause": "9.8",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "DT-12"
+   },
+   "description": {
+    "en": "Foundation detailing: pile cap ties from the strut-and-tie model ST-04 with bands over piles, footings by Annex J and column joint by P-06 and B-03; realised as a design case",
+    "de": "Gründungsbewehrung: Zugbänder von Pfahlkappen aus dem Stabwerkmodell ST-04 mit Bändern über den Pfählen, Fundamente nach Anhang J und Stützenanschluss nach P-06 und B-03; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "DT-13",
+   "clause": "9.9",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "DT-13"
+   },
+   "description": {
+    "en": "Regions with discontinuity (Annex J nodes, corner joints, frame corners) with corner force Ftd and anchorage radius r ≥ φ_m; realised as a design case",
+    "de": "Diskontinuitätsbereiche (Anhang J: Knoten, Eckverbindungen, Rahmenecken) mit Eckkraft Ftd und Biegerollenradius r ≥ φ_m; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "DT-14",
+   "clause": "9.10",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "DT-14"
+   },
+   "description": {
+    "en": "Tying systems: peripheral ties Ftie,per = li q1 ≤ q2 (q1 = 10 kN/m, q2 = 70 kN), internal ties 20 kN/m and horizontal column and wall ties 150 kN/m; realised as a design case",
+    "de": "Zugankersysteme: Randanker Ftie,per = li q1 ≤ q2 (q1 = 10 kN/m, q2 = 70 kN), Innenanker 20 kN/m und horizontale Stützen- und Wandanker 150 kN/m; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "R-01",
+   "clause": "5.1-5.7",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "R-01"
+   },
+   "description": {
+    "en": "Tabulated fire design data per member type (columns, walls, tensile members, beams, slabs) with minimum width and axis distance for the fire resistance class; realised as a design case",
+    "de": "Tabellenverfahren der Brandbemessung je Bauteilart (Stützen, Wände, Zugglieder, Balken, Platten) mit Mindestbreite und Achsabstand für die Feuerwiderstandsklasse; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "R-02",
+   "clause": "Annex A",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "R-02"
+   },
+   "description": {
+    "en": "Temperature profiles of the standard fire θ_g = 20 + 345 log10(8t + 1) and the resulting section temperatures; realised as a design case",
+    "de": "Temperaturprofile des Normbrands θ_g = 20 + 345 log10(8t + 1) und die daraus folgenden Querschnittstemperaturen; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "R-03",
+   "clause": "4.2.3, Annex B",
+   "entity": "members[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992.1-2.nm.",
+     "en1992.1-2.a.",
+     "en1992.1-2.bmin."
+    ]
+   },
+   "description": {
+    "en": "500 °C isotherm method with the reduced section removing concrete above 500 °C and the damaged zone a500 (4.2.3, Annex B); also carries the axis-distance and minimum-width rows of the tabulated method (R-01, 5.1-5.7) that the same fire member check emits",
+    "de": "500-°C-Isothermen-Methode mit reduziertem Querschnitt ohne Beton über 500 °C und geschädigter Zone a500 (4.2.3, Anhang B); trägt zusätzlich die Zeilen für Achsabstand und Mindestbreite des Tabellenverfahrens (R-01, 5.1-5.7), die derselbe Brand-Bauteilnachweis ausgibt"
+   }
+  },
+  {
+   "id": "R-04",
+   "clause": "Annex B.2",
+   "entity": "members[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992.1-2.zone."
+    ]
+   },
+   "description": {
+    "en": "Zone method with mean strength factor kc,m = (1 − 0.2/n)(1/n) Σ kc(θ_i) and damage thickness az = w (1 − kc,m/kc(θ_M)); realised as a check family",
+    "de": "Zonenmethode mit mittlerem Festigkeitsbeiwert kc,m = (1 − 0,2/n)(1/n) Σ kc(θ_i) und Schädigungstiefe az = w (1 − kc,m/kc(θ_M)); umgesetzt als Nachweisfamilie"
+   }
+  },
+  {
+   "id": "R-05",
+   "clause": "Annex C.3.3",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "R-05"
+   },
+   "description": {
+    "en": "Simplified calculation of columns exposed to fire with M_Rd,fi(N_Ed,fi) at the fire slenderness λ_fi ≤ 80; realised as a design case",
+    "de": "Vereinfachte Berechnung brandbeanspruchter Stützen mit M_Rd,fi(N_Ed,fi) bei Brandschlankheit λ_fi ≤ 80; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "R-06",
+   "clause": "2.4.2, 4.2",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "R-06"
+   },
+   "description": {
+    "en": "Fire action Ed,fi = Σ γ_GA G_k + (ψ1,1 or ψ2,1) Q_k,1 + Σ ψ2,i Q_k,i + Ad(t) with γ_GA = 1.0 and η_fi; realised as a design case",
+    "de": "Brandeinwirkung Ed,fi = Σ γ_GA G_k + (ψ1,1 oder ψ2,1) Q_k,1 + Σ ψ2,i Q_k,i + Ad(t) mit γ_GA = 1,0 und η_fi; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "R-07",
+   "clause": "3.2, 3.3",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "R-07"
+   },
+   "description": {
+    "en": "Concrete and steel strength reduction factors kc(θ) and ks(θ) and strains at elevated temperature (Table 3.1); realised as a design case",
+    "de": "Festigkeitsabminderungsbeiwerte kc(θ) und ks(θ) und Dehnungen von Beton und Stahl bei erhöhter Temperatur (Tabelle 3.1); umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "R-08",
+   "clause": "4.5, 5.6",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "R-08"
+   },
+   "description": {
+    "en": "Shear, torsion and anchorage in fire on the reduced section, with spalling measures for fck > C80/95 such as polypropylene fibres; realised as a design case",
+    "de": "Querkraft, Torsion und Verankerung im Brandfall am reduzierten Querschnitt, mit Abplatzmaßnahmen für fck > C80/95 wie Polypropylenfasern; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "BR-01",
+   "clause": "3.1.2, 3.1.5 DE",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "BR-01"
+   },
+   "description": {
+    "en": "Bridge materials with α_cc = 0.85 for persistent situations, fck ≤ C70/85 and the fatigue strength fcd,fat of F-05; realised as a design case",
+    "de": "Baustoffe für Brücken mit α_cc = 0,85 in ständigen Situationen, fck ≤ C70/85 und der Ermüdungsfestigkeit fcd,fat nach F-05; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "BR-02",
+   "clause": "4.4.1.2",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "BR-02"
+   },
+   "description": {
+    "en": "Cover in bridges from the structural class for a 100 year design life, Δc,dev = 10 mm and the added chloride allowance for XD3 and XS3; realised as a design case",
+    "de": "Betondeckung bei Brücken aus der Bauwerksklasse für 100 Jahre Nutzungsdauer, Δc,dev = 10 mm und dem Zuschlag für Chloride bei XD3 und XS3; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "BR-03",
+   "clause": "6.2.2, 6.2.3",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "BR-03"
+   },
+   "description": {
+    "en": "Shear in bridges with CRd,c = 0.18/γ_c (EN) or 0.15/γ_c (DE), 1.0 ≤ cot θ ≤ 2.5 and α_cw = 1.0; realised as a design case",
+    "de": "Querkraft bei Brücken mit CRd,c = 0,18/γ_c (EN) bzw. 0,15/γ_c (DE), 1,0 ≤ cot θ ≤ 2,5 und α_cw = 1,0; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "BR-04",
+   "clause": "6.8",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "BR-04"
+   },
+   "description": {
+    "en": "Fatigue of bridges by the λ coefficients of F-07 for road and rail traffic and Δσ_Rsk, including tendons in curved ducts and couplers; realised as a design case",
+    "de": "Ermüdung von Brücken über die λ-Beiwerte nach F-07 für Straßen- und Eisenbahnverkehr und Δσ_Rsk, einschließlich Spannglieder in gekrümmten Hüllrohren und Kopplungen; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "BR-05",
+   "clause": "7.3",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "BR-05"
+   },
+   "description": {
+    "en": "Crack control in bridges: wk ≤ 0.2 mm for prestressed members or decompression for bonded tendons in XD and XS, with minimum reinforcement As,min; realised as a design case",
+    "de": "Rissbreitenbegrenzung bei Brücken: wk ≤ 0,2 mm bei vorgespannten Bauteilen oder Dekompression bei Spanngliedern mit Verbund in XD und XS, mit Mindestbewehrung As,min; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "BR-06",
+   "clause": "5.10",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "BR-06"
+   },
+   "description": {
+    "en": "Prestress in bridges: deviation forces of external tendons PR-08, hyperstatic effect M_sec = M_total − P e and staged time-dependent losses; realised as a design case",
+    "de": "Vorspannung bei Brücken: Umlenkkräfte externer Spannglieder PR-08, statisch unbestimmte Wirkung M_sec = M_total − P e und abschnittsweise zeitabhängige Verluste; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "BR-07",
+   "clause": "6.9",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "BR-07"
+   },
+   "description": {
+    "en": "Bearings, anchorage, diaphragms and cantilever slab punching under LM1 wheel loads of 0.4 x 0.4 m with 45° dispersion and β = 1.0; realised as a design case",
+    "de": "Lager, Verankerung, Querträger und Durchstanzen von Kragplatten unter LM1-Radlasten von 0,4 x 0,4 m mit 45°-Ausbreitung und β = 1,0; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "BR-08",
+   "clause": "12 (bridges)",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "BR-08"
+   },
+   "description": {
+    "en": "Piers and compression members of large geometry with biaxial effects and creep per A-09 to A-12 and k1 = √(fck/20); realised as a design case",
+    "de": "Pfeiler und Druckglieder großer Abmessung mit zweiachsigen Effekten und Kriechen nach A-09 bis A-12 und k1 = √(fck/20); umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "LQ-01",
+   "clause": "7.3.1",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "LQ-01"
+   },
+   "description": {
+    "en": "Tightness classes 0 to 3 with limiting crack width wk,lim by hD/h, from 0.2 mm at hD/h ≤ 5 down to 0.05 mm at hD/h ≥ 35 for class 1; realised as a design case",
+    "de": "Dichtheitsklassen 0 bis 3 mit Grenzrissbreite wk,lim in Abhängigkeit von hD/h, bei Klasse 1 von 0,2 mm bei hD/h ≤ 5 bis 0,05 mm bei hD/h ≥ 35; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "LQ-02",
+   "clause": "7.3.2",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "LQ-02"
+   },
+   "description": {
+    "en": "Minimum reinforcement and crack control of restrained members As,min = kc k fct,eff Act/σ_s with early-age fct,eff = fctm(t) at 3 d; realised as a design case",
+    "de": "Mindestbewehrung und Rissbreitenbegrenzung zwangbeanspruchter Bauteile As,min = kc k fct,eff Act/σ_s mit fct,eff = fctm(t) im Alter von 3 d; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "LQ-03",
+   "clause": "7.3.4",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "LQ-03"
+   },
+   "description": {
+    "en": "Crack width of liquid-retaining structures wk per SL-06 with kt = 0.4 and sr,max = 3.4c + 0.425 k1 k2 φ/ρ_p,eff under hydrostatic head hD; realised as a design case",
+    "de": "Rissbreite von Flüssigkeitsbehältern wk nach SL-06 mit kt = 0,4 und sr,max = 3,4c + 0,425 k1 k2 φ/ρ_p,eff unter hydrostatischer Druckhöhe hD; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "LQ-04",
+   "clause": "7.3.1(105)",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "LQ-04"
+   },
+   "description": {
+    "en": "Self-healing crack width limits of up to 0.2 mm at hD/h ≤ 5 for tightness class 1 (Table 7.105); realised as a design case",
+    "de": "Grenzrissbreiten bei Selbstheilung bis 0,2 mm bei hD/h ≤ 5 für Dichtheitsklasse 1 (Tabelle 7.105); umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "LQ-05",
+   "clause": "4.4",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "LQ-05"
+   },
+   "description": {
+    "en": "Cover of liquid tanks increased by Δc,dur,add and protective linings against aggressive liquids of the XA classes; realised as a design case",
+    "de": "Betondeckung von Flüssigkeitsbehältern, um Δc,dur,add erhöht, und Schutzschichten gegen angreifende Flüssigkeiten der XA-Klassen; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "LQ-06",
+   "clause": "7.4",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "LQ-06"
+   },
+   "description": {
+    "en": "Thermal and shrinkage restraint and hoop prestress of prestressed tanks with a compression zone of at least 1.0 MPa; realised as a design case",
+    "de": "Zwang aus Temperatur und Schwinden sowie Ringvorspannung vorgespannter Behälter mit einer Druckzone von mindestens 1,0 MPa; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "LQ-07",
+   "clause": "Section 8",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "LQ-07"
+   },
+   "description": {
+    "en": "Detailing checklist for joints, water bars and wall-slab corners of liquid-retaining structures (Section 8); realised as a design case",
+    "de": "Konstruktionscheckliste für Fugen, Fugenbänder und Wand-Platten-Ecken von Flüssigkeitsbehältern (Abschnitt 8); umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "FA-01",
+   "clause": "6.2.2",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "FA-01"
+   },
+   "description": {
+    "en": "Anchor load distribution NEd,i = NEd/n ± M Ai/I with shear shared equally over the anchors; realised as a design case",
+    "de": "Lastverteilung auf die Anker NEd,i = NEd/n ± M Ai/I mit gleichmäßig aufgeteilter Querkraft; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "FA-02",
+   "clause": "7.2.1.2",
+   "entity": "anchors[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992-4.steel.",
+     "en1992-4.na."
+    ]
+   },
+   "description": {
+    "en": "Steel failure of anchors in tension NRk,s = As fuk and NRd,s = NRk,s/γ_Ms (7.2.1.2); also carries the national annex edition row of the anchor checks",
+    "de": "Stahlversagen von Ankern auf Zug NRk,s = As fuk und NRd,s = NRk,s/γ_Ms (7.2.1.2); trägt zusätzlich die Zeile der Ausgabe des Nationalen Anhangs der Ankernachweise"
+   }
+  },
+  {
+   "id": "FA-03",
+   "clause": "7.2.1.3",
+   "entity": "anchors[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992-4.cone."
+    ]
+   },
+   "description": {
+    "en": "Concrete cone breakout in tension NRk,c = N0Rk,c (Ac,N/A0c,N) ψ_s,N ψ_re,N ψ_ec,N ψ_M,N with N0Rk,c = k1 √fck hef^1.5; realised as a check family",
+    "de": "Betonausbruch auf Zug NRk,c = N0Rk,c (Ac,N/A0c,N) ψ_s,N ψ_re,N ψ_ec,N ψ_M,N mit N0Rk,c = k1 √fck hef^1,5; umgesetzt als Nachweisfamilie"
+   }
+  },
+  {
+   "id": "FA-04",
+   "clause": "7.2.1.4",
+   "entity": "anchors[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992-4.pullout."
+    ]
+   },
+   "description": {
+    "en": "Pull-out failure NRk,p = k2 Ah fck with k2 = 7.5 cracked or 10.5 uncracked and the head bearing area Ah; realised as a check family",
+    "de": "Herausziehen NRk,p = k2 Ah fck mit k2 = 7,5 gerissen bzw. 10,5 ungerissen und der Kopfauflagerfläche Ah; umgesetzt als Nachweisfamilie"
+   }
+  },
+  {
+   "id": "FA-05",
+   "clause": "7.2.1.5",
+   "entity": "anchors[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992-4.splitting."
+    ]
+   },
+   "description": {
+    "en": "Splitting failure NRk,sp = N0Rk,sp (Ac,N/A0c,N) ψ_s,N ψ_re,N ψ_ec,N ψ_h,sp with N0Rk,sp = min(N0Rk,c, NRk,p); realised as a check family",
+    "de": "Spaltversagen NRk,sp = N0Rk,sp (Ac,N/A0c,N) ψ_s,N ψ_re,N ψ_ec,N ψ_h,sp mit N0Rk,sp = min(N0Rk,c, NRk,p); umgesetzt als Nachweisfamilie"
+   }
+  },
+  {
+   "id": "FA-06",
+   "clause": "7.2.1.6",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "FA-06"
+   },
+   "description": {
+    "en": "Side-face blow-out NRk,cb = N0Rk,cb (Ac,Nb/A0c,Nb) … with N0Rk,cb = 8.7 c1 √Ah √fck for c1 ≤ 0.5 hef; realised as a design case",
+    "de": "Seitlicher Betonausbruch NRk,cb = N0Rk,cb (Ac,Nb/A0c,Nb) … mit N0Rk,cb = 8,7 c1 √Ah √fck für c1 ≤ 0,5 hef; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "FA-07",
+   "clause": "7.2.2.2",
+   "entity": "anchors[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992-4.steel-shear."
+    ]
+   },
+   "description": {
+    "en": "Steel failure in shear without lever arm VRk,s = 0.5 As fuk and with lever arm VRk,s = α_M Mrk,s/lz; realised as a check family",
+    "de": "Stahlversagen auf Querzug ohne Hebelarm VRk,s = 0,5 As fuk und mit Hebelarm VRk,s = α_M Mrk,s/lz; umgesetzt als Nachweisfamilie"
+   }
+  },
+  {
+   "id": "FA-08",
+   "clause": "7.2.2.3",
+   "entity": "anchors[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992-4.pryout."
+    ]
+   },
+   "description": {
+    "en": "Concrete pry-out VRk,cp = k8 NRk,c with k8 = 1.0 for hef < 60 mm and 2.0 otherwise; realised as a check family",
+    "de": "Betonausbruch auf der lastabgewandten Seite VRk,cp = k8 NRk,c mit k8 = 1,0 für hef < 60 mm und sonst 2,0; umgesetzt als Nachweisfamilie"
+   }
+  },
+  {
+   "id": "FA-09",
+   "clause": "7.2.2.5",
+   "entity": "anchors[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992-4.edge."
+    ]
+   },
+   "description": {
+    "en": "Concrete edge failure in shear VRk,c = V0Rk,c (Ac,V/A0c,V) ψ_s,V ψ_h,V ψ_α,V ψ_ec,V ψ_re,V with V0Rk,c = k9 d_nom^α l_f^β √fck c1^1.5; realised as a check family",
+    "de": "Betonkantenbruch auf Querzug VRk,c = V0Rk,c (Ac,V/A0c,V) ψ_s,V ψ_h,V ψ_α,V ψ_ec,V ψ_re,V mit V0Rk,c = k9 d_nom^α l_f^β √fck c1^1,5; umgesetzt als Nachweisfamilie"
+   }
+  },
+  {
+   "id": "FA-10",
+   "clause": "7.2.3",
+   "entity": "anchors[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992-4.interaction."
+    ]
+   },
+   "description": {
+    "en": "Combined tension and shear (NEd/NRd,s)² + (VEd/VRd,s)² ≤ 1 for steel and (NEd/NRd)^1.5 + (VEd/VRd)^1.5 ≤ 1 for concrete; realised as a check family",
+    "de": "Kombination von Zug und Querzug (NEd/NRd,s)² + (VEd/VRd,s)² ≤ 1 für Stahl und (NEd/NRd)^1,5 + (VEd/VRd)^1,5 ≤ 1 für Beton; umgesetzt als Nachweisfamilie"
+   }
+  },
+  {
+   "id": "FA-11",
+   "clause": "7.2.1.2",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "FA-11"
+   },
+   "description": {
+    "en": "Group effects of anchor groups: overlapping cone footprints for Ac,N and the group eccentricity eN; realised as a design case",
+    "de": "Gruppenwirkung von Ankergruppen: überlappende Ausbruchkegelflächen für Ac,N und Gruppenausmitte eN; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "FA-12",
+   "clause": "5",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "FA-12"
+   },
+   "description": {
+    "en": "Fatigue and seismic categories C1 and C2 of anchors with ΔNRk,s,0,n per approval and the reductions α_gap, α_seis; realised as a design case",
+    "de": "Ermüdung und Erdbebenkategorien C1 und C2 von Ankern mit ΔNRk,s,0,n nach Zulassung und den Abminderungen α_gap, α_seis; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "FA-13",
+   "clause": "7.2.2.4",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "FA-13"
+   },
+   "description": {
+    "en": "Concrete pry-out of anchor groups, following FA-08; realised as a design case",
+    "de": "Betonausbruch auf der lastabgewandten Seite bei Ankergruppen, anschließend an FA-08; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "FA-14",
+   "clause": "6.3",
+   "entity": "cases",
+   "realisation": {
+    "kind": "design-case",
+    "entry": "FA-14"
+   },
+   "description": {
+    "en": "Anchor reinforcement taking up the anchor loads As,re = NEd,re/fyd, verified with the strut-and-tie model ST-04; realised as a design case",
+    "de": "Rückhängebewehrung zur Aufnahme der Ankerlasten As,re = NEd,re/fyd, nachgewiesen mit dem Stabwerkmodell ST-04; umgesetzt als Bemessungsfall"
+   }
+  },
+  {
+   "id": "BR-09",
+   "clause": "EN 1992-2 6.8.4",
+   "entity": "members[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992-2.6.8."
+    ]
+   },
+   "description": {
+    "en": "Bridge reinforcement fatigue stress range as a document check; the catalogue counterpart is BR-04.",
+    "de": "Spannungsschwingbreite der Brückenbewehrung als Dokumentnachweis; die Katalogentsprechung ist BR-04."
+   }
+  },
+  {
+   "id": "LQ-08",
+   "clause": "EN 1992-3 7.3",
+   "entity": "members[]",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1992-3.crack."
+    ]
+   },
+   "description": {
+    "en": "Liquid-retaining crack width as a document check; the catalogue counterpart is LQ-03.",
+    "de": "Rissbreite flüssigkeitsdichter Bauwerke als Dokumentnachweis; die Katalogentsprechung ist LQ-03."
+   }
+  },
+  {
+   "id": "DI-01",
+   "clause": "none (model integrity, EN 1992-1-1 NA edition)",
+   "entity": "annex",
+   "realisation": {
+    "kind": "data",
+    "path": "🧬️schema/💡️inferences/🦀️.rs push_duplicate_ids and na_edition_check"
+   },
+   "description": {
+    "en": "Document-level rows of the inference root: duplicate ids and the national annex edition; not reachable from the checks crate.",
+    "de": "Zeilen auf Dokumentebene der Ableitungswurzel: doppelte Kennungen und Ausgabe des Nationalen Anhangs; vom Nachweis-Crate aus nicht erreichbar."
+   }
+  }
+ ]
+}

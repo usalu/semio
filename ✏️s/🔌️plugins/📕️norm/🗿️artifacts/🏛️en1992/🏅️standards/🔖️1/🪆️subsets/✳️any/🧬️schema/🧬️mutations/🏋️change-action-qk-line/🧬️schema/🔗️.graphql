@@ -1,0 +1,5 @@
+type ChangeActionQKLine {
+  memberId: String!
+  actionId: String!
+  newQKLine: Float!
+}

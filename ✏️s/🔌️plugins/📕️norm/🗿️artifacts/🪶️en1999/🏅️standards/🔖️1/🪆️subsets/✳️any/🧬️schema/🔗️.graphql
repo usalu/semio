@@ -1,23 +1,286 @@
-type En1999Snapshot @state {
-  annex: String! @state(artifact)
-  materials: [AluminiumMaterial!]! @state(artifact)
-  sections: [AluminiumSection!]! @state(artifact)
-  members: [AluminiumMember!]! @state(artifact)
-  connections: [AluminiumConnection!]! @state(artifact)
-  fireScenarios: [FireScenario!]! @state(artifact)
-  fatigueDetails: [FatigueDetail!]! @state(artifact)
-  coldFormed: [ColdFormedSheet!]! @state(artifact)
-  shells: [AluminiumShell!]! @state(artifact)
+type En1999Artifact {
+  annex: String!
+  materials: [AluminiumMaterial!]!
+  sections: [AluminiumSection!]!
+  members: [AluminiumMember!]!
+  connections: [AluminiumConnection!]!
+  fireScenarios: [FireScenario!]!
+  fatigueDetails: [FatigueDetail!]!
+  coldFormed: [ColdFormedSheet!]!
+  shells: [AluminiumShell!]!
+  placements: [Placement!]!
+  weldRuns: [WeldRun!]!
+  outlineVertices: [SectionVertex!]!
+  fatigueCategories: [FatigueCategory!]!
+  patchLoads: [PatchLoad!]!
+  ringStiffeners: [RingStiffener!]!
+  transverseStiffeners: [TransverseStiffener!]!
+  reliabilityClass: String!
 }
-type AluminiumMaterial { id: String!, designation: String! }
-type PlateElement { id: String!, width: Float!, thickness: Float!, outstand: Boolean!, welded: Boolean!, weldPosition: Float! }
-type AluminiumSection { id: String!, kind: String!, height: Float!, width: Float!, flangeThickness: Float!, webThickness: Float!, outerDiameter: Float!, elements: [PlateElement!]! }
-type MemberAction { id: String!, kind: String!, category: String!, source: String!, gKLine: Float!, qKLine: Float!, nK: Float!, vYK: Float!, vZK: Float!, mYK: Float!, mZK: Float! }
-type AluminiumMember { id: String!, sectionId: String!, materialId: String!, length: Float!, support: String!, bucklingLengthY: Float!, bucklingLengthZ: Float!, bucklingLengthT: Float!, ltbLength: Float!, c1: Float!, restrainedLtb: Boolean!, actions: [MemberAction!]! }
-type BoltGroup { material: String!, diameter: Float!, rows: Int!, boltsPerRow: Int!, edgeDistance: Float!, pitch: Float!, gauge: Float!, plateThickness: Float! }
-type WeldGroup { fillerAlloy: String!, throat: Float!, length: Float!, betaW: Float!, hazExtent: Float! }
-type AluminiumConnection { id: String!, memberId: String!, materialId: String!, kind: String!, actions: [MemberAction!]!, bolts: BoltGroup!, welds: WeldGroup! }
-type FireScenario { id: String!, memberId: String!, thetaA: Float!, durationS: Float! }
-type FatigueDetail { id: String!, memberId: String!, detailCategory: String!, deltaSigmaC: Float!, deltaSigmaEd: Float!, nCycles: Float!, m1: Float!, m2: Float! }
-type ColdFormedSheet { id: String!, materialId: String!, thickness: Float!, width: Float!, span: Float!, welded: Boolean!, actions: [MemberAction!]! }
-type AluminiumShell { id: String!, materialId: String!, radius: Float!, thickness: Float!, length: Float!, actions: [MemberAction!]! }
+enum ProductForm {
+  sheet
+  extrudedProfile
+  extrudedTube
+  extrudedBar
+  drawnTube
+  forging
+}
+type AluminiumMaterial {
+  id: String!
+  designation: String!
+  productForm: ProductForm!
+}
+enum SectionKind {
+  extrudedI
+  channel
+  angle
+  rhs
+  box
+  chs
+  free
+}
+type AluminiumSection {
+  id: String!
+  kind: SectionKind!
+  height: Float!
+  width: Float!
+  flangeThickness: Float!
+  webThickness: Float!
+  outerDiameter: Float!
+  elements: [PlateElement!]!
+}
+type AluminiumMember {
+  id: String!
+  sectionId: String!
+  materialId: String!
+  length: Float!
+  support: String!
+  bucklingLengthY: Float!
+  bucklingLengthZ: Float!
+  bucklingLengthT: Float!
+  ltbLength: Float!
+  c1: Float!
+  restrainedLtb: Boolean!
+  bearingLength: Float!
+  transverseWeld: Boolean!
+  transverseWeldOffset: Float!
+  actions: [MemberAction!]!
+}
+enum ConnectionKind {
+  bolted
+  welded
+  combined
+  pinned
+}
+type AluminiumConnection {
+  id: String!
+  memberId: String!
+  materialId: String!
+  kind: ConnectionKind!
+  actions: [MemberAction!]!
+  bolts: BoltGroup!
+  welds: WeldGroup!
+  loadEccentricity: Float!
+  holeStagger: Float!
+  forceMethod: FastenerForceMethod!
+}
+type FireScenario {
+  id: String!
+  memberId: String!
+  thetaA: Float!
+  durationS: Float!
+}
+type FatigueDetail {
+  id: String!
+  memberId: String!
+  detailCategory: String!
+  deltaSigmaC: Float!
+  deltaSigmaEd: Float!
+  nCycles: Float!
+  m1: Float!
+  m2: Float!
+}
+type ColdFormedSheet {
+  id: String!
+  materialId: String!
+  thickness: Float!
+  width: Float!
+  span: Float!
+  welded: Boolean!
+  actions: [MemberAction!]!
+}
+enum FabricationClass {
+  a
+  b
+  c
+}
+type AluminiumShell {
+  id: String!
+  materialId: String!
+  radius: Float!
+  thickness: Float!
+  length: Float!
+  welded: Boolean!
+  fabricationClass: FabricationClass!
+  actions: [MemberAction!]!
+}
+type Placement {
+  id: String!
+  x: Float!
+  y: Float!
+  z: Float!
+  yaw: Float!
+}
+type WeldRun {
+  id: String!
+  memberId: String!
+  elementId: String!
+  start: Float!
+  length: Float!
+  offset: Float!
+  throat: Float!
+  process: WeldProcess!
+  tJunction: Boolean!
+  direction: WeldDirection!
+  hazExtent: Float!
+}
+enum OutlineRing {
+  outer
+  hole
+}
+type SectionVertex {
+  id: String!
+  sectionId: String!
+  ring: OutlineRing!
+  elementId: String!
+  y: Float!
+  z: Float!
+}
+enum DetailType {
+  plain
+  buttWeld
+  filletWeld
+  bolted
+  riveted
+  other
+}
+type FatigueCategory {
+  id: String!
+  memberId: String!
+  elementId: String!
+  detailCategory: String!
+  detailType: DetailType!
+  locationX: Float!
+  m1: Float!
+  m2: Float!
+}
+enum PatchLoadPosition {
+  end
+  interior
+}
+type PatchLoad {
+  id: String!
+  subjectId: String!
+  position: PatchLoadPosition!
+  x: Float!
+  bearingLength: Float!
+  webHeight: Float!
+  webAngle: Float!
+  cornerRadius: Float!
+  load: Float!
+}
+type RingStiffener {
+  id: String!
+  shellId: String!
+  x: Float!
+  depth: Float!
+  thickness: Float!
+  internal: Boolean!
+}
+enum StiffenerSides {
+  one
+  two
+}
+type TransverseStiffener {
+  id: String!
+  girderId: String!
+  position: Float!
+  width: Float!
+  thickness: Float!
+  sides: StiffenerSides!
+}
+enum ActionKind {
+  permanent
+  imposed
+  snow
+  wind
+  temperature
+  fire
+}
+enum ActionCategory {
+  selfWeight
+  office
+  snow
+  wind
+}
+enum ActionSource {
+  udl
+  external
+}
+type MemberAction {
+  id: String!
+  kind: ActionKind!
+  category: ActionCategory!
+  source: ActionSource!
+  gKLine: Float!
+  qKLine: Float!
+  nK: Float!
+  vYK: Float!
+  vZK: Float!
+  mYK: Float!
+  mZK: Float!
+  torsionK: Float!
+  localLoadK: Float!
+}
+type BoltGroup {
+  material: String!
+  diameter: Float!
+  rows: Int!
+  boltsPerRow: Int!
+  edgeDistance: Float!
+  pitch: Float!
+  gauge: Float!
+  plateThickness: Float!
+}
+type WeldGroup {
+  fillerAlloy: String!
+  throat: Float!
+  length: Float!
+  betaW: Float!
+  hazExtent: Float!
+}
+enum WeldProcess {
+  mig
+  tig
+}
+enum WeldDirection {
+  longitudinal
+  transverse
+}
+type PlateElement {
+  id: String!
+  width: Float!
+  thickness: Float!
+  outstand: Boolean!
+  welded: Boolean!
+  weldPosition: Float!
+  weldProcess: WeldProcess!
+  weldTJunction: Boolean!
+  weldDirection: WeldDirection!
+  edgeStiffenerDepth: Float!
+  edgeStiffenerThickness: Float!
+}
+enum FastenerForceMethod {
+  elastic
+  instantaneousCentre
+}

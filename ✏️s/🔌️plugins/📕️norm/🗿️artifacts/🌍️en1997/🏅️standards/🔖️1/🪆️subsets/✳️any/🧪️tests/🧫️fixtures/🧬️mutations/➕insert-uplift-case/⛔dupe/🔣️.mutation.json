@@ -1,0 +1,12 @@
+{
+  "mutation": "insertUpliftCase",
+  "index": 1,
+  "upliftCase": {
+    "id": "upl-U1-2",
+    "permanentStabilizing": 900000.0,
+    "permanentDestabilizing": 500000.0,
+    "variableDestabilizing": 50000.0,
+    "porePressure": 40000.0,
+    "totalStress": 120000.0
+  }
+}

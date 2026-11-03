@@ -1,0 +1,1469 @@
+{
+  "$schema": "../../../../../../../../../🔮️oracles/🏃️harness/🧬️schema/🔣️.json",
+  "schemaVersion": 1,
+  "artifact": "en1995",
+  "annex": "de",
+  "cases": [
+    {
+      "id": "en1995.338.strength-class-c14",
+      "check": "en1995.338.strength-class",
+      "citation": {
+        "standard": "EN 338",
+        "edition": "2016",
+        "clause": "EN 338 Table 1 softwood bending strength classes",
+        "table": "1"
+      },
+      "inputs": {
+        "strength_class": "C14"
+      },
+      "expected": {
+        "f_m_k": {
+          "value": 14000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_t_0_k": {
+          "value": 7200000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_t_90_k": {
+          "value": 400000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_c_0_k": {
+          "value": 16000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_c_90_k": {
+          "value": 2000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_v_k": {
+          "value": 3000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "g_mean": {
+          "value": 440000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "e_m_90_mean": {
+          "value": 230000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "rho_k": {
+          "value": 290.0,
+          "unit": "kg/m^3",
+          "profile": "table-exact-v1"
+        },
+        "rho_mean": {
+          "value": 350.0,
+          "unit": "kg/m^3",
+          "profile": "table-exact-v1"
+        },
+        "e_m_0_mean": {
+          "value": 7000000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "e_m_0_k": {
+          "value": 4700000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-blue-prints",
+          "adapter": "blueprints",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1995.338.strength-class-c16",
+      "check": "en1995.338.strength-class",
+      "citation": {
+        "standard": "EN 338",
+        "edition": "2016",
+        "clause": "EN 338 Table 1 softwood bending strength classes",
+        "table": "1"
+      },
+      "inputs": {
+        "strength_class": "C16"
+      },
+      "expected": {
+        "f_m_k": {
+          "value": 16000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_t_0_k": {
+          "value": 8500000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_t_90_k": {
+          "value": 400000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_c_0_k": {
+          "value": 17000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_c_90_k": {
+          "value": 2200000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_v_k": {
+          "value": 3200000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "g_mean": {
+          "value": 500000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "e_m_90_mean": {
+          "value": 270000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "rho_k": {
+          "value": 310.0,
+          "unit": "kg/m^3",
+          "profile": "table-exact-v1"
+        },
+        "rho_mean": {
+          "value": 370.0,
+          "unit": "kg/m^3",
+          "profile": "table-exact-v1"
+        },
+        "e_m_0_mean": {
+          "value": 8000000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "e_m_0_k": {
+          "value": 5400000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-blue-prints",
+          "adapter": "blueprints",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1995.338.strength-class-c18",
+      "check": "en1995.338.strength-class",
+      "citation": {
+        "standard": "EN 338",
+        "edition": "2016",
+        "clause": "EN 338 Table 1 softwood bending strength classes",
+        "table": "1"
+      },
+      "inputs": {
+        "strength_class": "C18"
+      },
+      "expected": {
+        "f_m_k": {
+          "value": 18000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_t_0_k": {
+          "value": 10000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_t_90_k": {
+          "value": 400000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_c_0_k": {
+          "value": 18000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_c_90_k": {
+          "value": 2200000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_v_k": {
+          "value": 3400000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "g_mean": {
+          "value": 560000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "e_m_90_mean": {
+          "value": 300000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "rho_k": {
+          "value": 320.0,
+          "unit": "kg/m^3",
+          "profile": "table-exact-v1"
+        },
+        "rho_mean": {
+          "value": 380.0,
+          "unit": "kg/m^3",
+          "profile": "table-exact-v1"
+        },
+        "e_m_0_mean": {
+          "value": 9000000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "e_m_0_k": {
+          "value": 6000000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-blue-prints",
+          "adapter": "blueprints",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1995.338.strength-class-c20",
+      "check": "en1995.338.strength-class",
+      "citation": {
+        "standard": "EN 338",
+        "edition": "2016",
+        "clause": "EN 338 Table 1 softwood bending strength classes",
+        "table": "1"
+      },
+      "inputs": {
+        "strength_class": "C20"
+      },
+      "expected": {
+        "f_m_k": {
+          "value": 20000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_t_0_k": {
+          "value": 11500000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_t_90_k": {
+          "value": 400000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_c_0_k": {
+          "value": 19000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_c_90_k": {
+          "value": 2300000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_v_k": {
+          "value": 3600000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "g_mean": {
+          "value": 590000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "e_m_90_mean": {
+          "value": 320000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "rho_k": {
+          "value": 330.0,
+          "unit": "kg/m^3",
+          "profile": "table-exact-v1"
+        },
+        "rho_mean": {
+          "value": 400.0,
+          "unit": "kg/m^3",
+          "profile": "table-exact-v1"
+        },
+        "e_m_0_mean": {
+          "value": 9500000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "e_m_0_k": {
+          "value": 6400000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-blue-prints",
+          "adapter": "blueprints",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1995.338.strength-class-c22",
+      "check": "en1995.338.strength-class",
+      "citation": {
+        "standard": "EN 338",
+        "edition": "2016",
+        "clause": "EN 338 Table 1 softwood bending strength classes",
+        "table": "1"
+      },
+      "inputs": {
+        "strength_class": "C22"
+      },
+      "expected": {
+        "f_m_k": {
+          "value": 22000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_t_0_k": {
+          "value": 13000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_t_90_k": {
+          "value": 400000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_c_0_k": {
+          "value": 20000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_c_90_k": {
+          "value": 2400000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_v_k": {
+          "value": 3800000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "g_mean": {
+          "value": 630000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "e_m_90_mean": {
+          "value": 330000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "rho_k": {
+          "value": 340.0,
+          "unit": "kg/m^3",
+          "profile": "table-exact-v1"
+        },
+        "rho_mean": {
+          "value": 410.0,
+          "unit": "kg/m^3",
+          "profile": "table-exact-v1"
+        },
+        "e_m_0_mean": {
+          "value": 10000000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "e_m_0_k": {
+          "value": 6700000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-blue-prints",
+          "adapter": "blueprints",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1995.338.strength-class-c24",
+      "check": "en1995.338.strength-class",
+      "citation": {
+        "standard": "EN 338",
+        "edition": "2016",
+        "clause": "EN 338 Table 1 softwood bending strength classes",
+        "table": "1"
+      },
+      "inputs": {
+        "strength_class": "C24"
+      },
+      "expected": {
+        "f_m_k": {
+          "value": 24000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_t_0_k": {
+          "value": 14500000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_t_90_k": {
+          "value": 400000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_c_0_k": {
+          "value": 21000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_c_90_k": {
+          "value": 2500000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_v_k": {
+          "value": 4000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "g_mean": {
+          "value": 690000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "e_m_90_mean": {
+          "value": 370000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "rho_k": {
+          "value": 350.0,
+          "unit": "kg/m^3",
+          "profile": "table-exact-v1"
+        },
+        "rho_mean": {
+          "value": 420.0,
+          "unit": "kg/m^3",
+          "profile": "table-exact-v1"
+        },
+        "e_m_0_mean": {
+          "value": 11000000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "e_m_0_k": {
+          "value": 7400000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-blue-prints",
+          "adapter": "blueprints",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1995.338.strength-class-c27",
+      "check": "en1995.338.strength-class",
+      "citation": {
+        "standard": "EN 338",
+        "edition": "2016",
+        "clause": "EN 338 Table 1 softwood bending strength classes",
+        "table": "1"
+      },
+      "inputs": {
+        "strength_class": "C27"
+      },
+      "expected": {
+        "f_m_k": {
+          "value": 27000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_t_0_k": {
+          "value": 16500000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_t_90_k": {
+          "value": 400000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_c_0_k": {
+          "value": 22000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_c_90_k": {
+          "value": 2500000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_v_k": {
+          "value": 4000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "g_mean": {
+          "value": 720000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "e_m_90_mean": {
+          "value": 380000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "rho_k": {
+          "value": 360.0,
+          "unit": "kg/m^3",
+          "profile": "table-exact-v1"
+        },
+        "rho_mean": {
+          "value": 430.0,
+          "unit": "kg/m^3",
+          "profile": "table-exact-v1"
+        },
+        "e_m_0_mean": {
+          "value": 11500000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "e_m_0_k": {
+          "value": 7700000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-blue-prints",
+          "adapter": "blueprints",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1995.338.strength-class-c30",
+      "check": "en1995.338.strength-class",
+      "citation": {
+        "standard": "EN 338",
+        "edition": "2016",
+        "clause": "EN 338 Table 1 softwood bending strength classes",
+        "table": "1"
+      },
+      "inputs": {
+        "strength_class": "C30"
+      },
+      "expected": {
+        "f_m_k": {
+          "value": 30000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_t_0_k": {
+          "value": 19000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_t_90_k": {
+          "value": 400000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_c_0_k": {
+          "value": 24000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_c_90_k": {
+          "value": 2700000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_v_k": {
+          "value": 4000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "g_mean": {
+          "value": 750000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "e_m_90_mean": {
+          "value": 400000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "rho_k": {
+          "value": 380.0,
+          "unit": "kg/m^3",
+          "profile": "table-exact-v1"
+        },
+        "rho_mean": {
+          "value": 460.0,
+          "unit": "kg/m^3",
+          "profile": "table-exact-v1"
+        },
+        "e_m_0_mean": {
+          "value": 12000000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "e_m_0_k": {
+          "value": 8000000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-blue-prints",
+          "adapter": "blueprints",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1995.338.strength-class-c35",
+      "check": "en1995.338.strength-class",
+      "citation": {
+        "standard": "EN 338",
+        "edition": "2016",
+        "clause": "EN 338 Table 1 softwood bending strength classes",
+        "table": "1"
+      },
+      "inputs": {
+        "strength_class": "C35"
+      },
+      "expected": {
+        "f_m_k": {
+          "value": 35000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_t_0_k": {
+          "value": 22500000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_t_90_k": {
+          "value": 400000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_c_0_k": {
+          "value": 25000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_c_90_k": {
+          "value": 2700000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_v_k": {
+          "value": 4000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "g_mean": {
+          "value": 810000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "e_m_90_mean": {
+          "value": 430000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "rho_k": {
+          "value": 390.0,
+          "unit": "kg/m^3",
+          "profile": "table-exact-v1"
+        },
+        "rho_mean": {
+          "value": 470.0,
+          "unit": "kg/m^3",
+          "profile": "table-exact-v1"
+        },
+        "e_m_0_mean": {
+          "value": 13000000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "e_m_0_k": {
+          "value": 8700000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-blue-prints",
+          "adapter": "blueprints",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1995.338.strength-class-c40",
+      "check": "en1995.338.strength-class",
+      "citation": {
+        "standard": "EN 338",
+        "edition": "2016",
+        "clause": "EN 338 Table 1 softwood bending strength classes",
+        "table": "1"
+      },
+      "inputs": {
+        "strength_class": "C40"
+      },
+      "expected": {
+        "f_m_k": {
+          "value": 40000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_t_0_k": {
+          "value": 26000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_t_90_k": {
+          "value": 400000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_c_0_k": {
+          "value": 27000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_c_90_k": {
+          "value": 2800000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_v_k": {
+          "value": 4000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "g_mean": {
+          "value": 880000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "e_m_90_mean": {
+          "value": 470000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "rho_k": {
+          "value": 400.0,
+          "unit": "kg/m^3",
+          "profile": "table-exact-v1"
+        },
+        "rho_mean": {
+          "value": 480.0,
+          "unit": "kg/m^3",
+          "profile": "table-exact-v1"
+        },
+        "e_m_0_mean": {
+          "value": 14000000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "e_m_0_k": {
+          "value": 9400000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-blue-prints",
+          "adapter": "blueprints",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1995.338.strength-class-c45",
+      "check": "en1995.338.strength-class",
+      "citation": {
+        "standard": "EN 338",
+        "edition": "2016",
+        "clause": "EN 338 Table 1 softwood bending strength classes",
+        "table": "1"
+      },
+      "inputs": {
+        "strength_class": "C45"
+      },
+      "expected": {
+        "f_m_k": {
+          "value": 45000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_t_0_k": {
+          "value": 30000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_t_90_k": {
+          "value": 400000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_c_0_k": {
+          "value": 29000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_c_90_k": {
+          "value": 2900000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_v_k": {
+          "value": 4000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "g_mean": {
+          "value": 940000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "e_m_90_mean": {
+          "value": 500000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "rho_k": {
+          "value": 410.0,
+          "unit": "kg/m^3",
+          "profile": "table-exact-v1"
+        },
+        "rho_mean": {
+          "value": 490.0,
+          "unit": "kg/m^3",
+          "profile": "table-exact-v1"
+        },
+        "e_m_0_mean": {
+          "value": 15000000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "e_m_0_k": {
+          "value": 10100000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-blue-prints",
+          "adapter": "blueprints",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1995.338.strength-class-c50",
+      "check": "en1995.338.strength-class",
+      "citation": {
+        "standard": "EN 338",
+        "edition": "2016",
+        "clause": "EN 338 Table 1 softwood bending strength classes",
+        "table": "1"
+      },
+      "inputs": {
+        "strength_class": "C50"
+      },
+      "expected": {
+        "f_m_k": {
+          "value": 50000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_t_0_k": {
+          "value": 33500000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_t_90_k": {
+          "value": 400000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_c_0_k": {
+          "value": 30000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_c_90_k": {
+          "value": 3000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_v_k": {
+          "value": 4000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "g_mean": {
+          "value": 1000000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "e_m_90_mean": {
+          "value": 530000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "rho_k": {
+          "value": 430.0,
+          "unit": "kg/m^3",
+          "profile": "table-exact-v1"
+        },
+        "rho_mean": {
+          "value": 520.0,
+          "unit": "kg/m^3",
+          "profile": "table-exact-v1"
+        },
+        "e_m_0_mean": {
+          "value": 16000000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "e_m_0_k": {
+          "value": 10700000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-blue-prints",
+          "adapter": "blueprints",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1995.338.strength-class-t14",
+      "check": "en1995.338.strength-class",
+      "citation": {
+        "standard": "EN 338",
+        "edition": "2016",
+        "clause": "EN 338 Table 2 softwood tension strength classes",
+        "table": "2"
+      },
+      "inputs": {
+        "strength_class": "T14"
+      },
+      "expected": {
+        "f_m_k": {
+          "value": 20500000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_t_0_k": {
+          "value": 14000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_t_90_k": {
+          "value": 400000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_c_0_k": {
+          "value": 21000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_c_90_k": {
+          "value": 2500000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_v_k": {
+          "value": 4000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "g_mean": {
+          "value": 690000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "rho_k": {
+          "value": 350.0,
+          "unit": "kg/m^3",
+          "profile": "table-exact-v1"
+        },
+        "rho_mean": {
+          "value": 420.0,
+          "unit": "kg/m^3",
+          "profile": "table-exact-v1"
+        },
+        "e_t_0_mean": {
+          "value": 11000000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "e_t_0_k": {
+          "value": 7400000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-blue-prints",
+          "adapter": "blueprints",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1995.338.strength-class-t22",
+      "check": "en1995.338.strength-class",
+      "citation": {
+        "standard": "EN 338",
+        "edition": "2016",
+        "clause": "EN 338 Table 2 softwood tension strength classes",
+        "table": "2"
+      },
+      "inputs": {
+        "strength_class": "T22"
+      },
+      "expected": {
+        "f_m_k": {
+          "value": 30500000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_t_0_k": {
+          "value": 22000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_t_90_k": {
+          "value": 400000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_c_0_k": {
+          "value": 26000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_c_90_k": {
+          "value": 2700000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_v_k": {
+          "value": 4000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "g_mean": {
+          "value": 810000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "rho_k": {
+          "value": 390.0,
+          "unit": "kg/m^3",
+          "profile": "table-exact-v1"
+        },
+        "rho_mean": {
+          "value": 470.0,
+          "unit": "kg/m^3",
+          "profile": "table-exact-v1"
+        },
+        "e_t_0_mean": {
+          "value": 13000000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "e_t_0_k": {
+          "value": 8700000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-blue-prints",
+          "adapter": "blueprints",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1995.338.strength-class-t30",
+      "check": "en1995.338.strength-class",
+      "citation": {
+        "standard": "EN 338",
+        "edition": "2016",
+        "clause": "EN 338 Table 2 softwood tension strength classes",
+        "table": "2"
+      },
+      "inputs": {
+        "strength_class": "T30"
+      },
+      "expected": {
+        "f_m_k": {
+          "value": 40000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_t_0_k": {
+          "value": 30000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_t_90_k": {
+          "value": 400000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_c_0_k": {
+          "value": 30000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_c_90_k": {
+          "value": 3000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_v_k": {
+          "value": 4000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "g_mean": {
+          "value": 970000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "rho_k": {
+          "value": 430.0,
+          "unit": "kg/m^3",
+          "profile": "table-exact-v1"
+        },
+        "rho_mean": {
+          "value": 520.0,
+          "unit": "kg/m^3",
+          "profile": "table-exact-v1"
+        },
+        "e_t_0_mean": {
+          "value": 15500000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "e_t_0_k": {
+          "value": 10400000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-blue-prints",
+          "adapter": "blueprints",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1995.338.strength-class-d24",
+      "check": "en1995.338.strength-class",
+      "citation": {
+        "standard": "EN 338",
+        "edition": "2016",
+        "clause": "EN 338 Table 3 hardwood strength classes",
+        "table": "3"
+      },
+      "inputs": {
+        "strength_class": "D24"
+      },
+      "expected": {
+        "f_m_k": {
+          "value": 24000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_t_0_k": {
+          "value": 14000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_t_90_k": {
+          "value": 600000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_c_0_k": {
+          "value": 21000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_c_90_k": {
+          "value": 4900000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_v_k": {
+          "value": 3700000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "g_mean": {
+          "value": 630000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "e_m_90_mean": {
+          "value": 670000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "rho_k": {
+          "value": 485.0,
+          "unit": "kg/m^3",
+          "profile": "table-exact-v1"
+        },
+        "rho_mean": {
+          "value": 580.0,
+          "unit": "kg/m^3",
+          "profile": "table-exact-v1"
+        },
+        "e_m_0_mean": {
+          "value": 10000000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "e_m_0_k": {
+          "value": 8400000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-blue-prints",
+          "adapter": "blueprints",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1995.338.strength-class-d40",
+      "check": "en1995.338.strength-class",
+      "citation": {
+        "standard": "EN 338",
+        "edition": "2016",
+        "clause": "EN 338 Table 3 hardwood strength classes",
+        "table": "3"
+      },
+      "inputs": {
+        "strength_class": "D40"
+      },
+      "expected": {
+        "f_m_k": {
+          "value": 40000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_t_0_k": {
+          "value": 24000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_t_90_k": {
+          "value": 600000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_c_0_k": {
+          "value": 27000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_c_90_k": {
+          "value": 5500000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_v_k": {
+          "value": 4200000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "g_mean": {
+          "value": 810000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "e_m_90_mean": {
+          "value": 870000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "rho_k": {
+          "value": 550.0,
+          "unit": "kg/m^3",
+          "profile": "table-exact-v1"
+        },
+        "rho_mean": {
+          "value": 660.0,
+          "unit": "kg/m^3",
+          "profile": "table-exact-v1"
+        },
+        "e_m_0_mean": {
+          "value": 13000000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "e_m_0_k": {
+          "value": 10900000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-blue-prints",
+          "adapter": "blueprints",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1995.338.strength-class-d70",
+      "check": "en1995.338.strength-class",
+      "citation": {
+        "standard": "EN 338",
+        "edition": "2016",
+        "clause": "EN 338 Table 3 hardwood strength classes",
+        "table": "3"
+      },
+      "inputs": {
+        "strength_class": "D70"
+      },
+      "expected": {
+        "f_m_k": {
+          "value": 70000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_t_0_k": {
+          "value": 42000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_t_90_k": {
+          "value": 600000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_c_0_k": {
+          "value": 36000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_c_90_k": {
+          "value": 12000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "f_v_k": {
+          "value": 5000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "g_mean": {
+          "value": 1250000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "e_m_90_mean": {
+          "value": 1330000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "rho_k": {
+          "value": 800.0,
+          "unit": "kg/m^3",
+          "profile": "table-exact-v1"
+        },
+        "rho_mean": {
+          "value": 960.0,
+          "unit": "kg/m^3",
+          "profile": "table-exact-v1"
+        },
+        "e_m_0_mean": {
+          "value": 20000000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        },
+        "e_m_0_k": {
+          "value": 16800000000.0,
+          "unit": "Pa",
+          "profile": "table-exact-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-blue-prints",
+          "adapter": "blueprints",
+          "kind": "third-party-library"
+        }
+      ]
+    }
+  ]
+}

@@ -81,7 +81,8 @@ pub fn catalogue_markdown() -> String {
 
 /// 📚️ Normative materials tables (EN 1992-1-1 Table 3.1 + B500).
 pub fn reference_tables() -> Vec<semio_s_plugin_norm_app_surface::CatalogueTable> {
-    use semio_s_plugin_norm_app_surface::{CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable};
+    use semio_s_artifact_norm_en1992_checks::spec_trace::TABLE as SPEC_TRACE;
+    use semio_s_plugin_norm_app_surface::{spec_trace_table, CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable};
     use semio_s_plugin_norm_compliance::ClauseId;
     let concrete_cols = vec![
         CatalogueColumn { id: "class", label_en: "Class", label_de: "Klasse", unit: None },
@@ -138,6 +139,7 @@ pub fn reference_tables() -> Vec<semio_s_plugin_norm_app_surface::CatalogueTable
             columns: steel_cols,
             rows: steel_rows,
         },
+        spec_trace_table(&SPEC_TRACE),
     ]
 }
 
@@ -148,7 +150,9 @@ pub fn render(
     controller_id: &'static str,
     windows: &semio_framework_plugin::TreeWindows<'_>,
 ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    semio_s_plugin_norm_app_surface::render_catalogue(&examples, &reference_tables(), locale, controller_id, windows)
+    let mut tables = reference_tables();
+    tables.push(semio_s_plugin_norm_app_surface::case_catalogue_table("en1992", &<semio_s_artifact_norm_en1992_checks::En1992Cases as semio_s_plugin_norm_compliance::design_case::CaseCatalogue>::entries(), "", locale));
+    semio_s_plugin_norm_app_surface::render_catalogue(&examples, &tables, locale, controller_id, windows)
 }
 //#endregion 🔖️Render
 

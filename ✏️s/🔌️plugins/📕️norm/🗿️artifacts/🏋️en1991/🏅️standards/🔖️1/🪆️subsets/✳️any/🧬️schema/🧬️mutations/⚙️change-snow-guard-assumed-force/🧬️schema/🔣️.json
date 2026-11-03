@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-snow-guard-assumed-force/schema.json",
+  "title": "ChangeSnowGuardAssumedForce",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newAssumedForce"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Snow guard",
+          "de": "Schneefanggitter"
+        },
+        "description": {
+          "en": "The snow guard this mutation addresses, by id.",
+          "de": "Das adressierte Element (Schneefanggitter), per Kennung."
+        },
+        "ref": {
+          "kind": "snow-guard"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newAssumedForce": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Rotation assumed_force f",
+          "de": "Angesetzte Linienkraft"
+        },
+        "widget": "stepper",
+        "role": "value",
+        "group": "value",
+        "order": 20,
+        "unit": "N/m",
+        "displayUnit": "kN/m",
+        "displayFactor": 0.001,
+        "precision": 1,
+        "step": 1000
+      }
+    }
+  }
+}

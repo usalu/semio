@@ -18,7 +18,7 @@ function contractRoles(): Set<string> {
   const roles = new Set<string>();
   const types = ["text", "button", "separator", "input", "select", "keyValueList", "slider", "ring", "numberStepper", "iconSelect", "progress", "tree", "treeSection", "treeItem", "image", "surface", "extension", "table", "tableRow"];
   for (const activatable of [false, true]) {
-    for (const role of ["plain", "group", "field", "section", "form", "toolbar"]) roles.add(uiAccessibilityRoleV1({ type: "container", role } as unknown as Component, activatable));
+    for (const role of ["plain", "group", "field", "section", "form", "toolbar", "sheet"]) roles.add(uiAccessibilityRoleV1({ type: "container", role } as unknown as Component, activatable));
     for (const appearance of ["checkbox", "switch"]) roles.add(uiAccessibilityRoleV1({ type: "toggle", appearance } as unknown as Component, activatable));
     for (const type of types) roles.add(uiAccessibilityRoleV1({ type } as unknown as Component, activatable));
   }

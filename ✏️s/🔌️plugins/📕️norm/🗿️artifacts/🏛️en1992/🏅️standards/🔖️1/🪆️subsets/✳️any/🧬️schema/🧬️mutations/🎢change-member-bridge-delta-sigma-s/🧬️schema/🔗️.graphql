@@ -1,0 +1,4 @@
+type ChangeMemberBridgeDeltaSigmaS {
+  memberId: String!
+  newValue: Float!
+}

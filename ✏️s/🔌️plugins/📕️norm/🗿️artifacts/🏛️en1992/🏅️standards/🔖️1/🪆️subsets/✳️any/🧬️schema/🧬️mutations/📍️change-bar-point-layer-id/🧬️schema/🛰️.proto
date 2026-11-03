@@ -1,0 +1,7 @@
+syntax = "proto3";
+package semio.s.norm.en1992.mutation.change_bar_point_layer_id;
+message ChangeBarPointLayerId {
+  string member_id = 1;
+  string bar_id = 2;
+  string new_layer_id = 3;
+}

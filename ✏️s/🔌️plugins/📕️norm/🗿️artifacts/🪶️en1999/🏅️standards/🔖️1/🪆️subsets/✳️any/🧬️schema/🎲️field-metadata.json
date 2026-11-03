@@ -27,6 +27,22 @@
       ]
     },
     {
+      "path": "materials[].productForm",
+      "label": {
+        "en": "Product form (Table 3.2)",
+        "de": "Erzeugnisform (Tabelle 3.2)"
+      },
+      "kind": "enum",
+      "choices": [
+        "sheet",
+        "extrudedProfile",
+        "extrudedTube",
+        "extrudedBar",
+        "drawnTube",
+        "forging"
+      ]
+    },
+    {
       "path": "sections[].elements[].thickness",
       "label": {
         "en": "Plate thickness t",
@@ -39,7 +55,7 @@
       "path": "members[].bucklingLengthY",
       "label": {
         "en": "Buckling length L_cr,y",
-        "de": "Knickl\u00e4nge L_cr,y"
+        "de": "Knicklänge L_cr,y"
       },
       "unit": "m",
       "kind": "length"
@@ -50,7 +66,7 @@
         "en": "Bending moment M_y,Ed",
         "de": "Biegemoment M_y,Ed"
       },
-      "unit": "N\u00b7m",
+      "unit": "N·m",
       "kind": "moment"
     },
     {
@@ -73,17 +89,17 @@
     {
       "path": "fireScenarios[].thetaA",
       "label": {
-        "en": "Aluminium temperature \u03b8_a",
-        "de": "Aluminiumtemperatur \u03b8_a"
+        "en": "Start temperature of the member θ_a",
+        "de": "Starttemperatur des Bauteils θ_a"
       },
-      "unit": "\u00b0C",
+      "unit": "°C",
       "kind": "temperature"
     },
     {
       "path": "fatigueDetails[].deltaSigmaEd",
       "label": {
-        "en": "Stress range \u0394\u03c3_Ed",
-        "de": "Spannungsschwingbreite \u0394\u03c3_Ed"
+        "en": "Stress range Δσ_Ed",
+        "de": "Spannungsschwingbreite Δσ_Ed"
       },
       "unit": "Pa",
       "kind": "stress"
@@ -105,6 +121,277 @@
       },
       "unit": "m",
       "kind": "length"
+    },
+    {
+      "path": "placements[].x",
+      "label": {
+        "en": "Placement x",
+        "de": "Platzierung x"
+      },
+      "unit": "m",
+      "kind": "length"
+    },
+    {
+      "path": "placements[].y",
+      "label": {
+        "en": "Placement y",
+        "de": "Platzierung y"
+      },
+      "unit": "m",
+      "kind": "length"
+    },
+    {
+      "path": "placements[].z",
+      "label": {
+        "en": "Placement z",
+        "de": "Platzierung z"
+      },
+      "unit": "m",
+      "kind": "length"
+    },
+    {
+      "path": "placements[].yaw",
+      "label": {
+        "en": "Placement yaw about Z",
+        "de": "Platzierung Gierwinkel um Z"
+      },
+      "unit": "rad",
+      "kind": "angle"
+    },
+    {
+      "path": "weldRuns[].start",
+      "label": {
+        "en": "Run start / position x_s",
+        "de": "Nahtanfang / Lage x_s"
+      },
+      "unit": "m",
+      "kind": "length"
+    },
+    {
+      "path": "weldRuns[].length",
+      "label": {
+        "en": "Run length",
+        "de": "Nahtlänge"
+      },
+      "unit": "m",
+      "kind": "length"
+    },
+    {
+      "path": "weldRuns[].offset",
+      "label": {
+        "en": "Weld position across the element",
+        "de": "Nahtlage quer zum Element"
+      },
+      "unit": "m",
+      "kind": "length"
+    },
+    {
+      "path": "weldRuns[].throat",
+      "label": {
+        "en": "Weld throat a",
+        "de": "Kehlnahtdicke a"
+      },
+      "unit": "m",
+      "kind": "length"
+    },
+    {
+      "path": "weldRuns[].hazExtent",
+      "label": {
+        "en": "HAZ extent b_haz override (0 = table)",
+        "de": "WEZ-Breite b_haz abweichend (0 = Tabelle)"
+      },
+      "unit": "m",
+      "kind": "length"
+    },
+    {
+      "path": "outlineVertices[].y",
+      "label": {
+        "en": "Vertex y",
+        "de": "Knoten y"
+      },
+      "unit": "m",
+      "kind": "length"
+    },
+    {
+      "path": "outlineVertices[].z",
+      "label": {
+        "en": "Vertex z",
+        "de": "Knoten z"
+      },
+      "unit": "m",
+      "kind": "length"
+    },
+    {
+      "path": "weldRuns[].process",
+      "label": {
+        "en": "Welding process",
+        "de": "Schweißverfahren"
+      },
+      "kind": "enum",
+      "choices": [
+        "mig",
+        "tig"
+      ]
+    },
+    {
+      "path": "weldRuns[].direction",
+      "label": {
+        "en": "Weld direction",
+        "de": "Schweißrichtung"
+      },
+      "kind": "enum",
+      "choices": [
+        "longitudinal",
+        "transverse"
+      ]
+    },
+    {
+      "path": "fatigueCategories[].detailType",
+      "label": {
+        "en": "Detail type",
+        "de": "Detailtyp"
+      },
+      "kind": "enum",
+      "choices": [
+        "plain",
+        "buttWeld",
+        "filletWeld",
+        "bolted",
+        "riveted",
+        "other"
+      ]
+    },
+    {
+      "path": "fatigueCategories[].locationX",
+      "label": {
+        "en": "Location x along the member",
+        "de": "Lage x am Bauteil"
+      },
+      "unit": "m",
+      "kind": "length"
+    },
+    {
+      "path": "patchLoads[].position",
+      "label": {
+        "en": "Load position",
+        "de": "Lastlage"
+      },
+      "kind": "enum",
+      "choices": [
+        "end",
+        "interior"
+      ]
+    },
+    {
+      "path": "patchLoads[].x",
+      "label": {
+        "en": "Position x",
+        "de": "Lage x"
+      },
+      "unit": "m",
+      "kind": "length"
+    },
+    {
+      "path": "patchLoads[].bearingLength",
+      "label": {
+        "en": "Bearing length s_s",
+        "de": "Lasteinleitungslänge s_s"
+      },
+      "unit": "m",
+      "kind": "length"
+    },
+    {
+      "path": "patchLoads[].webHeight",
+      "label": {
+        "en": "Web height h_w (0 = section)",
+        "de": "Steghöhe h_w (0 = Querschnitt)"
+      },
+      "unit": "m",
+      "kind": "length"
+    },
+    {
+      "path": "patchLoads[].webAngle",
+      "label": {
+        "en": "Web slope φ (0 = 90°)",
+        "de": "Stegneigung φ (0 = 90°)"
+      },
+      "unit": "rad",
+      "kind": "angle"
+    },
+    {
+      "path": "patchLoads[].cornerRadius",
+      "label": {
+        "en": "Corner radius r",
+        "de": "Eckradius r"
+      },
+      "unit": "m",
+      "kind": "length"
+    },
+    {
+      "path": "ringStiffeners[].x",
+      "label": {
+        "en": "Axial position x",
+        "de": "Axiale Lage x"
+      },
+      "unit": "m",
+      "kind": "length"
+    },
+    {
+      "path": "ringStiffeners[].depth",
+      "label": {
+        "en": "Ring depth",
+        "de": "Ringhöhe"
+      },
+      "unit": "m",
+      "kind": "length"
+    },
+    {
+      "path": "ringStiffeners[].thickness",
+      "label": {
+        "en": "Ring thickness",
+        "de": "Ringdicke"
+      },
+      "unit": "m",
+      "kind": "length"
+    },
+    {
+      "path": "transverseStiffeners[].position",
+      "label": {
+        "en": "Position along the girder",
+        "de": "Lage entlang des Trägers"
+      },
+      "unit": "m",
+      "kind": "length"
+    },
+    {
+      "path": "transverseStiffeners[].width",
+      "label": {
+        "en": "Stiffener width b_st",
+        "de": "Steifenbreite b_st"
+      },
+      "unit": "m",
+      "kind": "length"
+    },
+    {
+      "path": "transverseStiffeners[].thickness",
+      "label": {
+        "en": "Stiffener thickness t_st",
+        "de": "Steifendicke t_st"
+      },
+      "unit": "m",
+      "kind": "length"
+    },
+    {
+      "path": "transverseStiffeners[].sides",
+      "label": {
+        "en": "Sides of the web",
+        "de": "Stegseiten"
+      },
+      "kind": "enum",
+      "choices": [
+        "one",
+        "two"
+      ]
     }
   ]
 }

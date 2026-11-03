@@ -1,0 +1,20 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-s-artifact-norm-en1998-mutations-text-placements"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "EN 1998 placements mutation text codec"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-s-artifact-norm-en1998-mutations-text-kit = { workspace = true }
+semio-s-artifact-norm-en1998-mut-placements = { workspace = true }

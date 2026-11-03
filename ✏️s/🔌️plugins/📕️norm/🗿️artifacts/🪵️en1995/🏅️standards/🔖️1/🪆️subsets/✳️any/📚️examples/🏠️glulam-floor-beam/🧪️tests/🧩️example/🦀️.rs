@@ -8,14 +8,14 @@ fn decoded() -> En1995Snapshot {
 
 #[test]
 fn primary_asset_decodes_to_the_default_document() {
-    assert_eq!(decoded(), En1995Snapshot::default());
+    assert_eq!(decoded(), En1995Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De));
 }
 
 #[test]
 fn decoded_example_complies_including_connection_and_floor_vibration() {
     let snap = decoded();
-    let report = evaluate_structure(snap.annex, &snap.members, &snap.connections);
-    assert!(report.complies(), "fails: {:?}", report.failing().map(|c| c.id.clone()).collect::<Vec<_>>());
+    let report = evaluate_structure(&snap);
+    assert!(report.failing().next().is_none(), "fails: {:?}", report.failing().map(|c| c.id.clone()).collect::<Vec<_>>());
     for id in ["en1995.6.1.6.bending.beam-B1", "en1995.7.3.f1.beam-B1", "en1995.7.3.stiffness.beam-B1", "en1995.7.3.velocity.beam-B1", "en1995.8.spacing.a1.conn-C1"] {
         assert!(report.checks.iter().any(|c| c.id == id), "missing {id}");
     }

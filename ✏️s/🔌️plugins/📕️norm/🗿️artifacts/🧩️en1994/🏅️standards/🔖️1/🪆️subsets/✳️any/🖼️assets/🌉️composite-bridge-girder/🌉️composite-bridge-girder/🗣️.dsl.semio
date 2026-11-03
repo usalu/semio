@@ -1,9 +1,96 @@
 semio norm.en1994.dsl v1
-annex=en structure-kind=bridge steel-f-y-pa=355000000Pa fire-rating=r90 insulation-thickness-m=0.035m fatigue-detail=shear_connector
-beams [id:TEXT span-m:QTY spacing-m:QTY support:TEXT construction:TEXT steel:REC slab-thickness-m:QTY concrete-f-ck-pa:QTY concrete-e-cm-pa:QTY sheeting:REC studs:REC transverse-as-m2-per-m:NUM ltb-length-m:QTY as-hogging-m2-per-m:NUM bar-spacing-m:QTY wk-limit-m:QTY n-cycles:NUM actions:TABLE] {
-  girder-G1 20m 3.5m continuous_2_span propped {designation=HEB400 height-m=0.4m width-m=0.3m tw-m=0.0135m tf-m=0.024m a-m2=0.0198m2 w-pl-y-m3=0.003231m3 i-y-m4=0.0005768m4 a-v-m2=0.0061m2} 0.25m 35000000Pa 34000000000Pa {profile=trapezoidal height-m=0.08m rib-width-m=0.12m thickness-m=0.001m ribs-parallel-to-beam=false} {diameter-m=0.022m height-m=0.125m f-u-pa=450000000Pa count-per-rib=1 spacing-m=0.25m total-count=80} 0.0003 8m 0.0006 0.15m 0.0003m 2000000 [ {id=G-steel kind=permanent category=self_steel stage=construction q-area-pa=382.47555Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa} {id=G-wet kind=permanent category=wet_concrete stage=construction q-area-pa=2125.0Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa} {id=G-steel-comp kind=permanent category=self_steel stage=composite q-area-pa=382.47555Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa} {id=G-slab kind=permanent category=slab stage=composite q-area-pa=1912.5Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa} {id=Q-traffic kind=imposed category=LM1 stage=composite q-area-pa=5000Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa} {id=FLM3 kind=fatigue category=flm3 stage=composite q-area-pa=0Pa f-k-n=0N delta-sigma-k-pa=60000000Pa delta-tau-k-pa=50000000Pa} ]
+annex=en structure-kind=bridge steel-f-y-pa=355000000Pa
+beams [id:TEXT span-m:QTY spacing-m:QTY support:TEXT construction:TEXT steel:REC slab-thickness-m:QTY concrete-f-ck-pa:QTY concrete-e-cm-pa:QTY sheeting:REC transverse-as-m2-per-m:NUM ltb-length-m:QTY as-hogging-m2-per-m:NUM bar-spacing-m:QTY wk-limit-m:QTY n-cycles:NUM adjacent-span-m:QTY patch-bearing-length-m:QTY bridge-lanes:UINT cracked-length-fraction:NUM stud-transverse-spacing-m:QTY stud-edge-distance-m:QTY transverse-as-top-m2-per-m:QTY end-plate-width-m:QTY end-plate-height-m:QTY end-zone-length-m:QTY reinforcement-product:TEXT actions:TABLE] {
+  girder-G1 20m 3.5m continuous_2_span propped {designation=HEB400 height-m=0.4m width-m=0.3m tw-m=0.0135m tf-m=0.024m a-m2=0.0198m2 w-pl-y-m3=0.003231m3 i-y-m4=0.0005768m4 a-v-m2=0.0061m2 r-m=0.027m} 0.25m 35000000Pa 34000000000Pa {profile=trapezoidal height-m=0.08m rib-width-m=0.12m thickness-m=0.001m ribs-parallel-to-beam=false} 0.0003 8m 0.0006 0.15m 0.0003m 2000000 0m 0.1m 0 0.15 0m 0m 0m2/m 0m 0m 0m hot_rolled [ {id=G-steel kind=permanent category=self_steel stage=construction q-area-pa=382.47555Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} {id=G-wet kind=permanent category=wet_concrete stage=construction q-area-pa=2125.0Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} {id=G-steel-comp kind=permanent category=self_steel stage=composite q-area-pa=382.47555Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} {id=G-slab kind=permanent category=slab stage=composite q-area-pa=1912.5Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} {id=Q-traffic kind=imposed category=LM1 stage=composite q-area-pa=5000Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} {id=FLM3 kind=fatigue category=flm3 stage=composite q-area-pa=0Pa f-k-n=0N delta-sigma-k-pa=60000000Pa delta-tau-k-pa=50000000Pa x-m=0m} ]
 }
-columns [id:TEXT kind:TEXT length-m:QTY outer-size-m:QTY wall-thickness-m:QTY steel-a-m2:QTY steel-f-y-pa:QTY concrete-a-m2:QTY concrete-f-ck-pa:QTY reinforcement-as-m2:QTY reinforcement-f-yk-pa:QTY i-m4:QTY buckling-curve:TEXT actions:TABLE] {
+columns [id:TEXT kind:TEXT length-m:QTY outer-size-m:QTY wall-thickness-m:QTY steel-a-m2:QTY steel-f-y-pa:QTY concrete-a-m2:QTY concrete-f-ck-pa:QTY reinforcement-as-m2:QTY reinforcement-f-yk-pa:QTY i-m4:QTY buckling-curve:TEXT introduced-force-n:QTY section-height-m:QTY section-width-m:QTY section-tw-m:QTY section-tf-m:QTY rebar-cover-m:QTY reinforcement-product:TEXT actions:TABLE] {
 }
 slabs [id:TEXT span-m:QTY support:TEXT sheeting:REC concrete-thickness-m:QTY f-ck-pa:QTY m-factor:NUM k-factor:NUM as-m2-per-m:NUM actions:TABLE] {
+}
+placements [id:TEXT x:NUM y:NUM z:NUM yaw:NUM] {
+}
+fire-rating=r90 insulation-thickness-m=0.035m fatigue-detail=shear-connector reliability-class=rc2
+studs [id:TEXT beam-id:TEXT x-m:QTY diameter-m:QTY height-m:QTY f-u-pa:QTY] {
+  girder-G1-stud-0 girder-G1 0.125m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-1 girder-G1 0.375m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-2 girder-G1 0.625m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-3 girder-G1 0.875m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-4 girder-G1 1.125m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-5 girder-G1 1.375m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-6 girder-G1 1.625m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-7 girder-G1 1.875m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-8 girder-G1 2.125m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-9 girder-G1 2.375m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-10 girder-G1 2.625m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-11 girder-G1 2.875m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-12 girder-G1 3.125m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-13 girder-G1 3.375m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-14 girder-G1 3.625m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-15 girder-G1 3.875m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-16 girder-G1 4.125m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-17 girder-G1 4.375m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-18 girder-G1 4.625m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-19 girder-G1 4.875m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-20 girder-G1 5.125m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-21 girder-G1 5.375m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-22 girder-G1 5.625m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-23 girder-G1 5.875m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-24 girder-G1 6.125m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-25 girder-G1 6.375m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-26 girder-G1 6.625m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-27 girder-G1 6.875m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-28 girder-G1 7.125m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-29 girder-G1 7.375m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-30 girder-G1 7.625m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-31 girder-G1 7.875m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-32 girder-G1 8.125m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-33 girder-G1 8.375m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-34 girder-G1 8.625m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-35 girder-G1 8.875m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-36 girder-G1 9.125m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-37 girder-G1 9.375m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-38 girder-G1 9.625m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-39 girder-G1 9.875m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-40 girder-G1 10.125m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-41 girder-G1 10.375m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-42 girder-G1 10.625m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-43 girder-G1 10.875m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-44 girder-G1 11.125m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-45 girder-G1 11.375m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-46 girder-G1 11.625m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-47 girder-G1 11.875m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-48 girder-G1 12.125m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-49 girder-G1 12.375m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-50 girder-G1 12.625m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-51 girder-G1 12.875m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-52 girder-G1 13.125m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-53 girder-G1 13.375m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-54 girder-G1 13.625m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-55 girder-G1 13.875m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-56 girder-G1 14.125m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-57 girder-G1 14.375m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-58 girder-G1 14.625m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-59 girder-G1 14.875m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-60 girder-G1 15.125m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-61 girder-G1 15.375m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-62 girder-G1 15.625m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-63 girder-G1 15.875m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-64 girder-G1 16.125m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-65 girder-G1 16.375m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-66 girder-G1 16.625m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-67 girder-G1 16.875m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-68 girder-G1 17.125m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-69 girder-G1 17.375m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-70 girder-G1 17.625m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-71 girder-G1 17.875m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-72 girder-G1 18.125m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-73 girder-G1 18.375m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-74 girder-G1 18.625m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-75 girder-G1 18.875m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-76 girder-G1 19.125m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-77 girder-G1 19.375m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-78 girder-G1 19.625m 0.022m 0.125m 450000000Pa
+  girder-G1-stud-79 girder-G1 19.875m 0.022m 0.125m 450000000Pa
+}
+cases [id:TEXT label-en:TEXT label-de:TEXT entry-id:TEXT numbers:TABLE texts:TABLE] {
 }

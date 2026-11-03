@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-hollow-member-id/schema.json",
+  "title": "ChangeHollowMemberId",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newMemberId"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Hollow joint",
+          "de": "Hohlprofilknoten"
+        },
+        "description": {
+          "en": "The hollow joint this mutation addresses, by id.",
+          "de": "Das adressierte Element (Hohlprofilknoten), per Kennung."
+        },
+        "ref": {
+          "kind": "hollow-joint"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newMemberId": {
+      "type": "string",
+      "x-semio-ui": {
+        "label": {
+          "en": "Chord member id",
+          "de": "Gurt-Bauteil-Id"
+        },
+        "widget": "text",
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

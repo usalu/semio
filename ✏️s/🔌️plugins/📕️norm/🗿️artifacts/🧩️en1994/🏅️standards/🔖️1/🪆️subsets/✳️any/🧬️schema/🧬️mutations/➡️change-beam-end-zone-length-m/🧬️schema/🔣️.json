@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-beam-end-zone-length-m/schema.json",
+  "title": "ChangeBeamEndZoneLengthM",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newEndZoneLengthM"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Composite beam",
+          "de": "Verbundträger"
+        },
+        "description": {
+          "en": "The composite beam this mutation addresses, by id.",
+          "de": "Das adressierte Element (Verbundträger), per Kennung."
+        },
+        "ref": {
+          "kind": "beam"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newEndZoneLengthM": {
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Length of the end zone over which the studs act on the end plate",
+          "de": "Länge des Endbereichs der Bolzengruppe"
+        },
+        "unit": "m",
+        "step": 0.01,
+        "precision": 3,
+        "group": "beam",
+        "order": 20
+      }
+    }
+  }
+}

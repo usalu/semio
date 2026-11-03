@@ -15,7 +15,7 @@ extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
 use semio_s_plugin_norm_compliance::NormHost;
-use crate::commands::{apply_remedy, evaluate, insert_item, remove_item, selected_check, set_field};
+use crate::commands::{apply_remedy, insert_item, remove_item, selected_check, set_field};
 use crate::modes::edit as edit_mode;
 use crate::modes::edit::windows::{inputs, results};
 use crate::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
@@ -63,7 +63,6 @@ semio_framework_plugin::app_commands! {
     /// id and the kebab `#[dsl(key)]` wire keyword respectively â both copied verbatim off the
     /// pre-migration enum, never derived from one another.
     pub enum Vdi3805Command for Vdi3805Snapshot, Vdi3805Mutation, NoConfig, NoConfigMutation {
-        "evaluate" as "evaluate" => evaluate::Evaluate,
         "setSelectedCheckIndex" as "selected-check" => selected_check::SetSelectedCheckIndex,
         "setField" as "set-field" => set_field::SetField,
         "insertItem" as "insert-item" => insert_item::InsertItem,
@@ -143,7 +142,7 @@ impl ArtifactEditor for Vdi3805PlayApp {
         factory: "Vdi3805BoundedCommandJobFactory",
         factory_type: Vdi3805BoundedCommandJobFactory,
         contract: semio_s_plugin_norm_app_surface::norm_bounded_contract(),
-        tools: ["evaluate", "setSelectedCheckIndex", "setField", "insertItem", "removeItem", "applyRemedy"]
+        tools: ["setSelectedCheckIndex", "setField", "insertItem", "removeItem", "applyRemedy"]
     }
 
     /// 📎️ Norm application config and presence facets are both empty; Results windows register their own config.
@@ -182,7 +181,7 @@ impl ArtifactEditor for Vdi3805PlayApp {
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Vdi3805Snapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        let host = NormHost::<Vdi3805Family>::from_artifact(doc.snapshot.clone());
+        let host = NormHost::<Vdi3805Family>::live(doc.snapshot.clone());
         match body_key {
             inputs::BODY_INPUTS => inputs::render(doc.snapshot, view_state.locale, CONTROLLER_ID, &semio_framework_plugin::TreeWindows::for_body(view_state, inputs::BODY_INPUTS)),
             results::BODY_RESULTS => results::render(&host, &semio_framework_plugin::TreeWindows::for_body(view_state, results::BODY_RESULTS), view_state.locale, Some(CONTROLLER_ID)),
@@ -316,9 +315,7 @@ pub fn create_vdi3805_app() -> semio_framework_plugin::AppDefinition {
             .panel_tab_def(document_panel::definition())
             .panel_tab_def(catalogue_panel::definition())
             .panel_tab_def(inspection_panel::definition())
-            .action_with(semio_framework_plugin::ActionDefinition::new("evaluate", LocalizedLabel::native("Evaluate", "Auswerten"), semio_framework_plugin::ActionKind::View, "hash"))
             .view_action("setSelectedCheckIndex", LocalizedLabel::native("Set Selected Check", "Ausgewählte Prüfung setzen"))
-            .action_interactive_job("evaluate", InteractiveJobClassification::Migrated)
             .action_interactive_job("setSelectedCheckIndex", InteractiveJobClassification::Migrated)
             
             .action_with(
@@ -356,7 +353,6 @@ pub fn create_vdi3805_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("applyRemedy", InteractiveJobClassification::Migrated)
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
-            .action_describe("evaluate", LocalizedLabel::native("Recomputes every VDI 3805 (product data exchange in building services) check from the document's inputs and refreshes the results window; the document is not changed.", "Berechnet alle Nachweise nach VDI 3805 (Produktdatenaustausch in der Gebäudetechnik) aus den Eingaben des Dokuments neu und aktualisiert das Ergebnisfenster; das Dokument ändert sich nicht."))
             .action_describe("setSelectedCheckIndex", LocalizedLabel::native("Points the inspection panel at one computed check by its index in the results list; only the view changes.", "Richtet das Inspektionspanel anhand seines Index in der Ergebnisliste auf einen berechneten Nachweis aus; nur die Ansicht ändert sich."))
             .build_definition()
 }
@@ -383,8 +379,6 @@ pub mod field_meta;
 pub mod commands {
     #[path = "🎮️commands/🩹apply-remedy/🦀️.rs"]
     pub mod apply_remedy;
-    #[path = "🎮️commands/🧮️evaluate/🦀️.rs"]
-    pub mod evaluate;
     #[path = "🎮️commands/➕insert-item/🦀️.rs"]
     pub mod insert_item;
     #[path = "🎮️commands/➖remove-item/🦀️.rs"]

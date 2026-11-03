@@ -1,0 +1,7 @@
+{
+  "ChangeCraneActionLoadCaseId": {
+    "id": "crane-1",
+    "elementId": "cr-g",
+    "newLoadCaseId": "g-permanent-alt"
+  }
+}

@@ -1,0 +1,6 @@
+syntax = "proto3";
+package semio.s.norm.en1992.mutation.change_member_prestress_steel_id;
+message ChangeMemberPrestressSteelId {
+  string member_id = 1;
+  string new_prestress_steel_id = 2;
+}

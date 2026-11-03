@@ -1,0 +1,5 @@
+{
+  "mutation": "changeFatigueCycles",
+  "id": "fat-1",
+  "newCycles": 2.0
+}

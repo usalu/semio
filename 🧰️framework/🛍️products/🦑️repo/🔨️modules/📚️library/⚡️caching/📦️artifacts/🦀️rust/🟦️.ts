@@ -8,7 +8,10 @@ import { startNativeProgress } from "../../../../../../../🔨️modules/🏃️
 import { relative, resolve } from "node:path";
 import type { ArtifactRustPackageOptions } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️cargo/🟦️.ts";
 import { BundleScript, ScriptRouter, scriptInvocationBudget } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { runRepositoryCommand } from "../../../🏃️process/🎛️owned-execution/🟦️.ts";
+import { prepareCargoWorkspaceInvocation } from "../../../🗂️workspaces/🦀️cargo/🟦️.ts";
+import { repositoryCargoPreparationStorageV1 } from "../📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
+import { createIssuedResourceControlV1, createRenewableIssuedResourceControlV1, scriptInvocationEnvironment } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { buildPreparationBudgetMs, progressDeadlinePolicyV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { artifactRustCargoArguments, validateNativeCargoArguments } from "../🎛️native-input/🟦️.ts";
 import { buildRepositoryCargoArtifacts } from "../🏗️native-build/🟦️.ts";
 
@@ -47,7 +50,11 @@ export async function runArtifactRustPackageMain(packageRoot: string, cargoName:
   class CheckScript extends BundleScript {
     async run(segments: string[]): Promise<void> {
       const { cargoArgs } = artifactRustCargoArguments("check", segments);
-      await runRepositoryCommand(this.invocation,"cargo",["check", "--locked", "--manifest-path", resolve(this.root, "Cargo.toml"), ...(options.packages ?? []).flatMap((name) => ["-p", name]), ...cargoArgs],this.repoRoot,`artifact-rust:${cargoName}:check`,{version:1,maximumElapsedMilliseconds:0,output:null},{});
+      const args = ["check", "--locked", "--manifest-path", resolve(this.root, "Cargo.toml"), ...(options.packages ?? []).flatMap((name) => ["-p", name]), ...cargoArgs];
+      const { runRepositoryCargoCommandV1 } = await import("../../../🏃️process/🦀️cargo/🎟️admission/🟦️.ts");
+      const phaseControl = createIssuedResourceControlV1(this.invocation, `artifact-rust:${cargoName}:check`, 0);
+      await prepareCargoWorkspaceInvocation(repositoryCargoPreparationStorageV1(this.repoRoot), this.repoRoot, args, this.root, scriptInvocationEnvironment(this.invocation, process.env), createRenewableIssuedResourceControlV1(phaseControl, progressDeadlinePolicyV1("native-child", 0, process.env, { maximumMilliseconds: buildPreparationBudgetMs(process.env) }), 0));
+      await runRepositoryCargoCommandV1(this.invocation, phaseControl, this.repoRoot, args, this.root, process.env, 0);
     }
   }
   class TestScript extends BundleScript {

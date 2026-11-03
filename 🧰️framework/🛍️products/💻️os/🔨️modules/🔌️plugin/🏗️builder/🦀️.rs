@@ -185,6 +185,12 @@ impl<PA: PluginApp> PluginBuilder<NeedsVersion, PA> {
 }
 
 impl<PA: PluginApp> PluginBuilder<Ready, PA> {
+    /// 📱️ Registers the plugin's shell hooks (layout from the device, keys before the shell defaults, accessible names) process-wide under this plugin's id, so a shell that opens one of its apps consults them.
+    pub fn shell_hooks(self, hooks: std::sync::Arc<dyn semio_framework::PluginShellHooks>) -> Self {
+        semio_framework::register_shell_hooks(self.plugin_id.clone(), hooks);
+        self
+    }
+
     /// 📦️ Declares the canonical component package identity emitted by `describe()`.
     pub fn package_id(mut self, package_id: impl Into<String>) -> Self {
         self.package_id = Some(package_id.into());

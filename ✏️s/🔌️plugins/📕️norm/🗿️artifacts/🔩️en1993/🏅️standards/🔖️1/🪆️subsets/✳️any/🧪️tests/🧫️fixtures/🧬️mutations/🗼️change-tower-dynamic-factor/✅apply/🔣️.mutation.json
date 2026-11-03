@@ -1,0 +1,6 @@
+{
+  "ChangeTowerDynamicFactor": {
+    "id": "tw-1",
+    "newDynamicFactor": 2.0
+  }
+}

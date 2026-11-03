@@ -1,0 +1,13 @@
+//! ↩️ `change-explosion-vent-area` inverse: restores the previous `vent_area`.
+
+use crate::change_explosion_vent_area::ChangeExplosionVentArea;
+use semio_s_artifact_norm_en1991_model::En1991Snapshot;
+
+pub fn inverse<Op>(payload: &ChangeExplosionVentArea, base: &En1991Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_explosion_vent_area::ChangeExplosionVentArea> {
+    Ok(previous(payload, base).map(|restore| vec![Op::from(restore)]).unwrap_or_default())
+}
+
+fn previous(payload: &ChangeExplosionVentArea, base: &En1991Snapshot) -> Option<ChangeExplosionVentArea> {
+    let r0 = base.internal_explosions.iter().find(|row| row.id == payload.id)?;
+    Some(ChangeExplosionVentArea { id: payload.id.clone(), new_vent_area: r0.vent_area })
+}

@@ -1,0 +1,15 @@
+{
+  "mutation": "insertBearing",
+  "index": 1,
+  "bearing": {
+    "id": "bear-2",
+    "bridgeId": "br-1",
+    "pierId": "pier-2",
+    "device": "elastomeric",
+    "xM": 0.0,
+    "stiffnessNPerM": 20000000.0,
+    "dRdM": 0.2,
+    "seatLengthM": 0.6,
+    "minSupportLengthM": 0.4
+  }
+}

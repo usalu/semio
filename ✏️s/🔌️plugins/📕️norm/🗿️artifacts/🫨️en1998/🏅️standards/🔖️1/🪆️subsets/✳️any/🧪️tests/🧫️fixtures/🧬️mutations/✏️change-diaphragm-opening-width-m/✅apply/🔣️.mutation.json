@@ -1,0 +1,5 @@
+{
+  "mutation": "changeDiaphragmOpeningWidthM",
+  "id": "dia-1",
+  "newOpeningWidthM": 4.8
+}

@@ -73,6 +73,7 @@ fn container_role_name(role: crate::ContainerRole) -> &'static str {
         crate::ContainerRole::Section => "region",
         crate::ContainerRole::Form => "form",
         crate::ContainerRole::Toolbar => "toolbar",
+        crate::ContainerRole::Sheet => "complementary",
     }
 }
 
@@ -120,7 +121,7 @@ pub fn liveness_name(live: Liveness) -> &'static str {
 /// A hidden node is KEPT, carrying `hidden: true`, rather than dropped — that is what React does
 /// (`aria-hidden` on a rendered element), and a consumer that dropped it would silently disagree
 /// with the DOM renderer about what exists.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AccessibilityProjectionNode {
     pub node_id: u64,
@@ -290,7 +291,7 @@ pub fn accessibility_projection_node(record: &crate::UiNodeRecord, depth: usize)
     let focusable = accessibility_is_focusable(&record.component, activatable);
     let value = accessibility_value(&record.component);
     let label = record.accessibility.label.as_ref().or_else(|| match &record.component {
-        crate::Component::Container(props) if matches!(props.role, crate::ContainerRole::Section | crate::ContainerRole::Group) => props.label.as_ref(),
+        crate::Component::Container(props) if matches!(props.role, crate::ContainerRole::Section | crate::ContainerRole::Group | crate::ContainerRole::Sheet) => props.label.as_ref(),
         crate::Component::Button(props) => Some(&props.label),
         crate::Component::TreeSection(props) => props.label.as_ref(),
         crate::Component::TreeItem(props) => Some(&props.label),

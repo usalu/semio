@@ -59,6 +59,18 @@ export async function deriveEnvironmentV1({projects,workspaceManifests,lock,taxo
  const digests=[],digest=async path=>{const status=await stat(path),text=status?await read(path):undefined;const fact=text===undefined?{sha256:null}:{sha256:sha256(text),size:status.size,mtimeMs:status.mtimeMs};rows.push({kind:"digest",path,fact});return fact.sha256;};
  for(const path of[...workspaceManifests].sort()){const text=await read(path);if(text!==undefined&&text.includes("[workspace"))digests.push([path,await digest(path)]);}
  const lockDigest=lock?await digest(lock):null,taxonomyDigest=taxonomy?await digest(taxonomy):null;
- const sorted=list=>list.sort((a,b)=>canonicalJsonV1(a)<canonicalJsonV1(b)?-1:1);
- return{digest:sha256(canonicalJsonV1({owners:sorted(owners),packages:sorted(packages),modules:sorted(modules),workspaces:sorted(digests),lock:lockDigest,taxonomy:taxonomyDigest})),rows};
+ const parts=environmentPartsV1({owners,packages,modules,workspaces:digests,lock:lockDigest,taxonomy:taxonomyDigest});
+ return{digest:environmentDigestV1(parts),rows,parts};
+}
+
+const sortedParts=list=>[...list].sort((a,b)=>canonicalJsonV1(a)<canonicalJsonV1(b)?-1:1);
+
+/** 🌍️ The environment in its parts, each list in the canonical order of the digest: the owner table `[name, root, native root or null]`, the package and Go module names `[name, project]`, the workspace manifests `[path, sha256]`, the digest of the lock file and of the taxonomy (null when absent). The digest is a function of the parts alone, so a reader holding the parts of an older environment can compare them with the present ones part by part. */
+export function environmentPartsV1({owners,packages,modules,workspaces,lock,taxonomy}){
+ return{owners:sortedParts(owners),packages:sortedParts(packages),modules:sortedParts(modules),workspaces:sortedParts(workspaces),lock:lock??null,taxonomy:taxonomy??null};
+}
+
+/** 🔏️ The digest of an environment from its parts; equal parts give equal digests, and the digest of stored parts proves they are the ones an environment digest was made of. */
+export function environmentDigestV1(parts){
+ return sha256(canonicalJsonV1({owners:parts.owners,packages:parts.packages,modules:parts.modules,workspaces:parts.workspaces,lock:parts.lock,taxonomy:parts.taxonomy}));
 }

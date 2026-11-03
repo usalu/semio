@@ -1,9 +1,10 @@
 //! 📚️ EN 1994 play app panel — selectable examples plus normative γ/ψ/stud tables.
 
-use semio_s_plugin_norm_app_surface::{CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable};
+use semio_s_plugin_norm_app_surface::{spec_trace_table, CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable};
+use semio_s_artifact_norm_en1994_checks::spec_trace::TABLE as SPEC_TRACE;
 use semio_s_artifact_norm_en1994_checks::{part_1_1, part_en1990};
 use semio_s_plugin_norm_compliance::{AnnexChoice, ClauseId};
-use semio_s_artifact_norm_en1994_model::CompositeBeam;
+use semio_s_artifact_norm_en1994_model::{CompositeBeam, Stud};
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::PanelGroup;
 use semio_framework_plugin::PanelTabDefinition;
@@ -22,7 +23,7 @@ pub fn definition() -> PanelTabDefinition {
 
 /// 📚️ Normative reference tables (γ_G/γ_Q, ψ factors, stud spacing limits) shared with `evaluate()`.
 pub fn reference_tables() -> Vec<CatalogueTable> {
-    vec![partial_factors_gamma(), psi_factors_table(), stud_spacing_limits_table()]
+    vec![partial_factors_gamma(), psi_factors_table(), stud_spacing_limits_table(), spec_trace_table(&SPEC_TRACE)]
 }
 
 fn partial_factors_gamma() -> CatalogueTable {
@@ -40,17 +41,17 @@ fn partial_factors_gamma() -> CatalogueTable {
             CatalogueRow {
                 id: "en".into(),
                 cells: vec![
-                    CatalogueCell::text("EN recommended / EN empfohleniert"),
-                    CatalogueCell::number(part_en1990::gamma_g(AnnexChoice::En), 2),
-                    CatalogueCell::number(part_en1990::gamma_q(AnnexChoice::En), 2),
+                    CatalogueCell::localized("EN recommended values", "EN-Empfehlungen"),
+                    CatalogueCell::number(part_en1990::gamma_g(AnnexChoice::En, semio_s_plugin_norm_compliance::ReliabilityClass::RC2), 2),
+                    CatalogueCell::number(part_en1990::gamma_q(AnnexChoice::En, semio_s_plugin_norm_compliance::ReliabilityClass::RC2), 2),
                 ],
             },
             CatalogueRow {
                 id: "de".into(),
                 cells: vec![
-                    CatalogueCell::text("DE NA / DE NA"),
-                    CatalogueCell::number(part_en1990::gamma_g(AnnexChoice::De), 2),
-                    CatalogueCell::number(part_en1990::gamma_q(AnnexChoice::De), 2),
+                    CatalogueCell::localized("German NA", "Deutscher NA"),
+                    CatalogueCell::number(part_en1990::gamma_g(AnnexChoice::De, semio_s_plugin_norm_compliance::ReliabilityClass::RC2), 2),
+                    CatalogueCell::number(part_en1990::gamma_q(AnnexChoice::De, semio_s_plugin_norm_compliance::ReliabilityClass::RC2), 2),
                 ],
             },
         ],
@@ -88,7 +89,7 @@ fn psi_factors_table() -> CatalogueTable {
                 CatalogueRow {
                     id: (*id).into(),
                     cells: vec![
-                        CatalogueCell::text(format!("{en} / {de}")),
+                        CatalogueCell::localized(en.to_string(), de.to_string()),
                         CatalogueCell::number(p0, 2),
                         CatalogueCell::number(p1, 2),
                         CatalogueCell::number(p2, 2),
@@ -100,8 +101,8 @@ fn psi_factors_table() -> CatalogueTable {
 }
 
 fn stud_spacing_limits_table() -> CatalogueTable {
-    let beam = CompositeBeam::default_placeholder();
-    let (s_min, s_max) = part_1_1::stud_spacing_limits_m(&beam);
+    let beam = CompositeBeam::default_example();
+    let (s_min, s_max) = part_1_1::stud_spacing_limits_m(&beam, Stud::typical("", "", 0.0).diameter_m);
     CatalogueTable {
         id: "en1994-stud-spacing-limits",
         title_en: "Stud spacing limits",
@@ -116,7 +117,7 @@ fn stud_spacing_limits_table() -> CatalogueTable {
             CatalogueRow {
                 id: "s-min".into(),
                 cells: vec![
-                    CatalogueCell::text("s_min / s_min"),
+                    CatalogueCell::text("s_min"),
                     CatalogueCell::number(s_min, 4),
                     CatalogueCell::text(format!("{} × d", part_1_1::STUD_SPACING_MIN_DIAMETER_FACTOR)),
                 ],
@@ -124,7 +125,7 @@ fn stud_spacing_limits_table() -> CatalogueTable {
             CatalogueRow {
                 id: "s-max".into(),
                 cells: vec![
-                    CatalogueCell::text("s_max / s_max"),
+                    CatalogueCell::text("s_max"),
                     CatalogueCell::number(s_max, 4),
                     CatalogueCell::text(format!("min({} × h_c, {} m)", part_1_1::STUD_SPACING_MAX_HC_FACTOR, part_1_1::STUD_SPACING_MAX_ABS_M)),
                 ],
@@ -135,7 +136,9 @@ fn stud_spacing_limits_table() -> CatalogueTable {
 
 //#region 🔖️Render
 pub fn render(examples: Vec<semio_framework_plugin::ExampleSource>, locale: semio_framework_ui_locale::Locale, controller_id: &'static str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    semio_s_plugin_norm_app_surface::render_catalogue(&examples, &reference_tables(), locale, controller_id, &semio_framework_plugin::TreeWindows::unhosted())
+    let mut tables = reference_tables();
+    tables.push(semio_s_plugin_norm_app_surface::case_catalogue_table("en1994", &<semio_s_artifact_norm_en1994_checks::case_catalogue::En1994Cases as semio_s_plugin_norm_compliance::design_case::CaseCatalogue>::entries(), "", locale));
+    semio_s_plugin_norm_app_surface::render_catalogue(&examples, &tables, locale, controller_id, &semio_framework_plugin::TreeWindows::unhosted())
 }
 //#endregion 🔖️Render
 

@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-member-support/schema.json",
+  "title": "ChangeMemberSupport",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "memberId",
+    "newSupport"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeMemberSupport"
+    },
+    "memberId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Member",
+          "de": "Bauteil"
+        },
+        "description": {
+          "en": "The member this mutation addresses, by id.",
+          "de": "Das adressierte Element (Bauteil), per Kennung."
+        },
+        "ref": {
+          "kind": "member"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newSupport": {
+      "type": "string",
+      "enum": [
+        "simplySupported",
+        "continuous",
+        "cantilever"
+      ],
+      "x-semio-ui": {
+        "label": {
+          "en": "Support conditions",
+          "de": "Lagerungsbedingungen"
+        },
+        "widget": "select",
+        "role": "value",
+        "group": "value",
+        "order": 20
+      },
+      "x-semio-rust": {
+        "type": "semio_s_artifact_norm_en1999_model::SupportCondition"
+      }
+    }
+  }
+}

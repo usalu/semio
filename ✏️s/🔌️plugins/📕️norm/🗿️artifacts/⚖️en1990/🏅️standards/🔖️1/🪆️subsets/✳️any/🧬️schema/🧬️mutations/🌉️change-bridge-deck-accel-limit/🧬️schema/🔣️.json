@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/mutation/change-bridge-deck-accel-limit/schema.json",
+  "title": "ChangeBridgeDeckAccelLimit",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newDeckAccelerationLimit"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeBridgeDeckAccelLimit"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Bridge serviceability",
+          "de": "Brückengebrauchstauglichkeit"
+        },
+        "description": {
+          "en": "The bridge serviceability this mutation addresses, by id.",
+          "de": "Das adressierte Element (Brückengebrauchstauglichkeit), per Kennung."
+        },
+        "ref": {
+          "kind": "bridge-sls"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newDeckAccelerationLimit": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Admissible deck acceleration a_max",
+          "de": "Zulässige Überbaubeschleunigung a_max"
+        },
+        "widget": "stepper",
+        "unit": "m/s²",
+        "precision": 2,
+        "step": 0.05,
+        "snaps": [
+          3.5,
+          5
+        ],
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

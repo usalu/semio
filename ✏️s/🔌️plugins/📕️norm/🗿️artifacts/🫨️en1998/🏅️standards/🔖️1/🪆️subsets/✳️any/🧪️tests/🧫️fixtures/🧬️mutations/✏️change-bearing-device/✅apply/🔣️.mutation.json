@@ -1,0 +1,5 @@
+{
+  "mutation": "changeBearingDevice",
+  "id": "bear-1",
+  "newDevice": "sliding"
+}

@@ -1,0 +1,6 @@
+{
+  "ChangeReinforcementEpsUk": {
+    "gradeId": "b500",
+    "newEpsUk": 0.1
+  }
+}

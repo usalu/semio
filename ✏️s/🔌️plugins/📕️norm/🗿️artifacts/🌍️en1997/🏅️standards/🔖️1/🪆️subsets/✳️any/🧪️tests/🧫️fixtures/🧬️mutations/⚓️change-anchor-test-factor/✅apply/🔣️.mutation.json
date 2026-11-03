@@ -1,0 +1,5 @@
+{
+  "mutation": "changeAnchorTestFactor",
+  "id": "anchor-A1",
+  "newTestFactor": 2.2
+}

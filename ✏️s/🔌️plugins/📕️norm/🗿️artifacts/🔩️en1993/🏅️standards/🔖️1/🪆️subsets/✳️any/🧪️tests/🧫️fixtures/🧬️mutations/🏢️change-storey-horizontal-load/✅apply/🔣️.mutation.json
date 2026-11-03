@@ -1,0 +1,6 @@
+{
+  "ChangeStoreyHorizontalLoad": {
+    "id": "storey-1",
+    "newHorizontalLoad": 40000.0
+  }
+}

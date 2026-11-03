@@ -1,0 +1,5 @@
+{
+  "mutation": "changeWaterPiezometricDepth",
+  "id": "water-gravel",
+  "newPiezometricDepth": 8.0
+}

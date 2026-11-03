@@ -1,0 +1,78 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/remove-storey-variable/schema.json",
+  "title": "RemoveStoreyVariable",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "buildingId",
+    "storeyId",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "removeStoreyVariable"
+    },
+    "buildingId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Building",
+          "de": "Gebäude"
+        },
+        "description": {
+          "en": "The building this mutation addresses, by id.",
+          "de": "Das adressierte Element (Gebäude), per Kennung."
+        },
+        "ref": {
+          "kind": "building"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "storeyId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Storey",
+          "de": "Geschoss"
+        },
+        "description": {
+          "en": "The storey this mutation addresses, by id.",
+          "de": "Das adressierte Element (Geschoss), per Kennung."
+        },
+        "ref": {
+          "kind": "storey"
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Variable action",
+          "de": "Veränderliche Einwirkung"
+        },
+        "description": {
+          "en": "The variable action this mutation addresses, by id.",
+          "de": "Das adressierte Element (Veränderliche Einwirkung), per Kennung."
+        },
+        "ref": {
+          "kind": "variable-action"
+        },
+        "group": "target",
+        "order": 30
+      }
+    }
+  }
+}

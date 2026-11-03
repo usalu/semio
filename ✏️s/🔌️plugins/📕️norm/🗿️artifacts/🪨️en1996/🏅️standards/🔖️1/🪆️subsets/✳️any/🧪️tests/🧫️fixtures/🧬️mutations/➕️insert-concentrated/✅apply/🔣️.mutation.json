@@ -1,0 +1,15 @@
+{
+  "InsertConcentrated": {
+    "wallId": "wall-north",
+    "loadCaseId": "ulsinz",
+    "index": 0,
+    "load": {
+      "id": "beam-C",
+      "forceN": 20000.0,
+      "bearingAreaM2": 0.02,
+      "bearingLengthM": 0.15,
+      "distanceA1M": 0.0,
+      "positionM": 1.0
+    }
+  }
+}

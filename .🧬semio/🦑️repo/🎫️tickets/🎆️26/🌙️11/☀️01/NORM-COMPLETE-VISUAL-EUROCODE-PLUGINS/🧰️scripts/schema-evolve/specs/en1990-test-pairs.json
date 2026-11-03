@@ -1,0 +1,17 @@
+{
+  "artifact": "en1990",
+  "leaf": {
+    "kindSlug": "test",
+    "field": {
+      "name": "pairs",
+      "type": "String",
+      "label": {
+        "en": "Test pairs r_e:r_t (D.7.2)",
+        "de": "Versuchspaare r_e:r_t (D.7.2)"
+      },
+      "doc": "🧪 Experimental and theoretical resistance of the same specimen as r_e:r_t pairs separated by semicolons for the standard evaluation of Annex D.7.2; empty = not given, the summary statistics are used.",
+      "sample": ""
+    },
+    "default": ""
+  }
+}

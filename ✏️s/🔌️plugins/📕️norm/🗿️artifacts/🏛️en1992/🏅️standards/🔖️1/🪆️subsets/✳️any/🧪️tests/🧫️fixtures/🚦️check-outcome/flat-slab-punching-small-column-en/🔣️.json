@@ -1,0 +1,223 @@
+{
+  "annex": "En",
+  "reliabilityClass": "RC2",
+  "title": "Flat slab with punching reinforcement",
+  "designWorkingLifeYears": 50.0,
+  "deltaCDev": 0.01,
+  "cementType": "N",
+  "concreteGrades": [
+    {
+      "id": "c30",
+      "name": "C30/37",
+      "fCk": 30000000.0
+    }
+  ],
+  "reinforcementGrades": [
+    {
+      "id": "b500",
+      "name": "B500B",
+      "fYk": 500000000.0,
+      "eS": 200000000000.0,
+      "ductility": "b",
+      "k": 1.08,
+      "epsUk": 0.05
+    }
+  ],
+  "prestressSteels": [],
+  "members": [
+    {
+      "id": "slab-FS-small",
+      "labelEn": "Flat slab small interior column",
+      "labelDe": "Flachdecke kleine Innenstütze",
+      "kind": "FlatSlab",
+      "concreteGradeId": "c30",
+      "reinforcementGradeId": "b500",
+      "prestressSteelId": "",
+      "exposure": "Xc1",
+      "width": 1.0,
+      "height": 0.3,
+      "effectiveDepth": 0.255,
+      "cover": 0.025,
+      "span": 6.0,
+      "support": "Continuous",
+      "bucklingLength": 0.0,
+      "longitudinal": [
+        {
+          "id": "bot",
+          "diameter": 0.014,
+          "count": 8,
+          "position": "Bottom",
+          "anchorageLength": 0.65,
+          "lapLength": 0.85,
+          "bondCondition": "Good",
+          "aggregateSize": 0.016,
+          "lapShare": 1.0
+        }
+      ],
+      "stirrups": null,
+      "punching": {
+        "columnWidth": 0.2,
+        "columnDepth": 0.2,
+        "columnPosition": "Interior",
+        "asw": 0.0,
+        "betaMethod": "Simplified",
+        "momentC1": 0.0,
+        "momentC2": 0.0
+      },
+      "prestress": null,
+      "fire": {
+        "rating": "R60",
+        "axisDistance": 0.035,
+        "slabSystem": "OneWay"
+      },
+      "actions": [
+        {
+          "id": "G",
+          "kind": "Permanent",
+          "category": "SelfWeight",
+          "source": "External",
+          "gKLine": 0.0,
+          "qKLine": 0.0,
+          "pointForce": 0.0,
+          "mK": 30000.0,
+          "nK": 0.0,
+          "vK": 0.0,
+          "tK": 0.0,
+          "vKPunch": 300000.0
+        },
+        {
+          "id": "Q-office",
+          "kind": "Imposed",
+          "category": "Office",
+          "source": "External",
+          "gKLine": 0.0,
+          "qKLine": 0.0,
+          "pointForce": 0.0,
+          "mK": 15000.0,
+          "nK": 0.0,
+          "vK": 0.0,
+          "tK": 0.0,
+          "vKPunch": 110000.0
+        }
+      ],
+      "useFem": true,
+      "udl": 0.0,
+      "deflectionSensitive": false,
+      "tightness": null,
+      "hdOverH": 0.0,
+      "liquidSigmaS": 0.0,
+      "liquidRhoPEff": 0.0,
+      "liquidFCtEff": 0.0,
+      "liquidSRMax": 0.0,
+      "bridgeSigmaC": 0.0,
+      "bridgeDeltaSigmaS": 0.0,
+      "relativeHumidity": 0.5,
+      "bearingWidth": 0.0,
+      "sectionPoints": [],
+      "bars": [],
+      "tendonPoints": [],
+      "openings": [],
+      "studRows": [
+        {
+          "id": "r1",
+          "angle": 0.0,
+          "count": 4,
+          "spacingFirst": 0.1,
+          "spacingRadial": 0.14,
+          "diameter": 0.012
+        },
+        {
+          "id": "r2",
+          "angle": 0.5235987755982988,
+          "count": 4,
+          "spacingFirst": 0.1,
+          "spacingRadial": 0.14,
+          "diameter": 0.012
+        },
+        {
+          "id": "r3",
+          "angle": 1.0471975511965976,
+          "count": 4,
+          "spacingFirst": 0.1,
+          "spacingRadial": 0.14,
+          "diameter": 0.012
+        },
+        {
+          "id": "r4",
+          "angle": 1.5707963267948966,
+          "count": 4,
+          "spacingFirst": 0.1,
+          "spacingRadial": 0.14,
+          "diameter": 0.012
+        },
+        {
+          "id": "r5",
+          "angle": 2.0943951023931953,
+          "count": 4,
+          "spacingFirst": 0.1,
+          "spacingRadial": 0.14,
+          "diameter": 0.012
+        },
+        {
+          "id": "r6",
+          "angle": 2.6179938779914944,
+          "count": 4,
+          "spacingFirst": 0.1,
+          "spacingRadial": 0.14,
+          "diameter": 0.012
+        },
+        {
+          "id": "r7",
+          "angle": 3.141592653589793,
+          "count": 4,
+          "spacingFirst": 0.1,
+          "spacingRadial": 0.14,
+          "diameter": 0.012
+        },
+        {
+          "id": "r8",
+          "angle": 3.6651914291880923,
+          "count": 4,
+          "spacingFirst": 0.1,
+          "spacingRadial": 0.14,
+          "diameter": 0.012
+        },
+        {
+          "id": "r9",
+          "angle": 4.1887902047863905,
+          "count": 4,
+          "spacingFirst": 0.1,
+          "spacingRadial": 0.14,
+          "diameter": 0.012
+        },
+        {
+          "id": "r10",
+          "angle": 4.71238898038469,
+          "count": 4,
+          "spacingFirst": 0.1,
+          "spacingRadial": 0.14,
+          "diameter": 0.012
+        },
+        {
+          "id": "r11",
+          "angle": 5.235987755982989,
+          "count": 4,
+          "spacingFirst": 0.1,
+          "spacingRadial": 0.14,
+          "diameter": 0.012
+        },
+        {
+          "id": "r12",
+          "angle": 5.759586531581287,
+          "count": 4,
+          "spacingFirst": 0.1,
+          "spacingRadial": 0.14,
+          "diameter": 0.012
+        }
+      ]
+    }
+  ],
+  "anchors": [],
+  "placements": [],
+  "cases": []
+}

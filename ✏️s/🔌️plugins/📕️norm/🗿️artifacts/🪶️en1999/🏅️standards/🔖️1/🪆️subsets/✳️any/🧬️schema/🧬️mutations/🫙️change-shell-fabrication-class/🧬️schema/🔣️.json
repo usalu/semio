@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-shell-fabrication-class/schema.json",
+  "title": "ChangeShellFabricationClass",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "shellId",
+    "newFabricationClass"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeShellFabricationClass"
+    },
+    "shellId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Shell",
+          "de": "Schale"
+        },
+        "description": {
+          "en": "The shell this mutation addresses, by id.",
+          "de": "Das adressierte Element (Schale), per Kennung."
+        },
+        "ref": {
+          "kind": "shell"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newFabricationClass": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/$defs/FabricationClass",
+      "x-semio-ui": {
+        "label": {
+          "en": "fabrication class",
+          "de": "Ausführungsklasse"
+        },
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

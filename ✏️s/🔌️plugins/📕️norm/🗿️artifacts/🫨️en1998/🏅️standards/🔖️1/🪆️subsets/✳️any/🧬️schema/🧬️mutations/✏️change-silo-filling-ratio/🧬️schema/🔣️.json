@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-silo-filling-ratio/schema.json",
+  "title": "ChangeSiloFillingRatio",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newFillingRatio"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeSiloFillingRatio"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Silo",
+          "de": "Silo"
+        },
+        "description": {
+          "en": "The silo this mutation addresses, by id.",
+          "de": "Das adressierte Element (Silo), per Kennung."
+        },
+        "ref": {
+          "kind": "silo"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newFillingRatio": {
+      "type": "number",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Filling ratio",
+          "de": "Füllgrad"
+        },
+        "group": "value",
+        "order": 20,
+        "widget": "stepper",
+        "step": 0.001,
+        "precision": 3
+      }
+    }
+  }
+}

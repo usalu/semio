@@ -1,0 +1,6 @@
+syntax = "proto3";
+package semio.s.norm.en1992.mutation.change_anchor_cracked;
+message ChangeAnchorCracked {
+  string anchor_id = 1;
+  bool new_cracked = 2;
+}

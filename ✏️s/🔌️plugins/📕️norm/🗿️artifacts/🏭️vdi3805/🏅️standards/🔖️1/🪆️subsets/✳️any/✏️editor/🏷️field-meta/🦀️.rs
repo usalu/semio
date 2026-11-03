@@ -1,6 +1,6 @@
-//! 🏷️ VDI 3805 NormFieldMeta lookup — SI display units + en/de labels for the structured inputs editor.
+//! 🏷️ VDI 3805 FieldSpec lookup — SI display units + en/de labels for the structured inputs editor.
 
-use semio_s_plugin_norm_app_surface::{lookup_norm_field_meta, NormFieldChoice, NormFieldMeta};
+use semio_s_plugin_norm_app_surface::{lookup_norm_field_meta, NormFieldChoice, FieldSpec, UnitId};
 
 const PN: &[NormFieldChoice] = &[
     NormFieldChoice { value: "PN6", label_en: "PN 6", label_de: "PN 6" },
@@ -50,11 +50,14 @@ const ATTR_KIND: &[NormFieldChoice] = &[
     NormFieldChoice { value: "generic", label_en: "Generic product", label_de: "Generisches Produkt" },
 ];
 
-const fn m(label_en: &'static str, label_de: &'static str, unit: Option<&'static str>) -> NormFieldMeta {
-    NormFieldMeta { label_en, label_de, unit, choices: None }
+const fn m(label_en: &'static str, label_de: &'static str, unit: Option<UnitId>) -> FieldSpec {
+    match unit {
+        Some(unit) => FieldSpec::quantity(label_en, label_de, unit),
+        None => FieldSpec::new(label_en, label_de),
+    }
 }
 
-const TABLE: &[(&str, NormFieldMeta)] = &[
+const TABLE: &[(&str, FieldSpec)] = &[
     ("catalog", m("Catalogue", "Katalog", None)),
     ("catalog.file", m("Catalogue file header", "Katalogdateikopf", None)),
     ("catalog.file.headerVersion", m("Header version", "Kopfversion", None)),
@@ -68,9 +71,9 @@ const TABLE: &[(&str, NormFieldMeta)] = &[
     ("catalog.file.recordCount", m("Record count", "Satzanzahl", None)),
     ("catalog.file.extensions", m("Header extensions", "Kopferweiterungen", None)),
     ("catalog.file.extensions.fields", m("Extension fields", "Erweiterungsfelder", None)),
-    ("limits.maxFileBytes", m("Max file bytes", "Max. Dateibytes", Some("B"))),
+    ("limits.maxFileBytes", m("Max file bytes", "Max. Dateibytes", Some(UnitId::Byte))),
     ("limits.maxRecords", m("Max records", "Max. Datensätze", None)),
-    ("limits.maxFieldLength", m("Max field length", "Max. Feldlänge", Some("B"))),
+    ("limits.maxFieldLength", m("Max field length", "Max. Feldlänge", Some(UnitId::Byte))),
     ("limits.maxNestingDepth", m("Max nesting depth", "Max. Verschachtelungstiefe", None)),
     ("catalog.extensions", m("Catalogue extensions", "Katalogerweiterungen", None)),
     ("catalog.extensions.fields", m("Catalogue extension fields", "Katalog-Erweiterungsfelder", None)),
@@ -92,39 +95,39 @@ const TABLE: &[(&str, NormFieldMeta)] = &[
     ("catalog.products[].configuration.id", m("Configuration id", "Konfigurations-ID", None)),
     ("catalog.products[].configuration.geometryRef", m("Geometry reference", "Geometriereferenz", None)),
     ("catalog.products[].configuration.functionRefs[]", m("Curve reference", "Kennlinienreferenz", None)),
-    ("catalog.products[].configuration.attributes", NormFieldMeta { label_en: "Sheet attributes", label_de: "Blattattribute", unit: None, choices: Some(ATTR_KIND) }),
-    ("catalog.products[].configuration.attributes.kind", NormFieldMeta { label_en: "Attribute kind", label_de: "Attributart", unit: None, choices: Some(ATTR_KIND) }),
+    ("catalog.products[].configuration.attributes", FieldSpec::choice("Sheet attributes", "Blattattribute", ATTR_KIND)),
+    ("catalog.products[].configuration.attributes.kind", FieldSpec::choice("Attribute kind", "Attributart", ATTR_KIND)),
     ("catalog.products[].configuration.attributes.dn", m("Nominal diameter DN", "Nennweite DN", None)),
-    ("catalog.products[].configuration.attributes.kvsM3S", m("Flow coefficient kvs", "Durchflusskoeffizient kvs", Some("m³/s"))),
-    ("catalog.products[].configuration.attributes.pressureClass", NormFieldMeta { label_en: "Pressure class", label_de: "Druckstufe", unit: None, choices: Some(PN) }),
-    ("catalog.products[].configuration.attributes.connectionType", NormFieldMeta { label_en: "Connection type", label_de: "Anschlussart", unit: None, choices: Some(CONNECTION) }),
+    ("catalog.products[].configuration.attributes.kvsM3S", m("Flow coefficient kvs", "Durchflusskoeffizient kvs", Some(UnitId::CubicMetrePerSecond))),
+    ("catalog.products[].configuration.attributes.pressureClass", FieldSpec::choice("Pressure class", "Druckstufe", PN)),
+    ("catalog.products[].configuration.attributes.connectionType", FieldSpec::choice("Connection type", "Anschlussart", CONNECTION)),
     ("catalog.products[].configuration.attributes.authorityMin", m("Authority min", "Autorität min", None)),
     ("catalog.products[].configuration.attributes.authorityMax", m("Authority max", "Autorität max", None)),
-    ("catalog.products[].configuration.attributes.standardOutputW", m("Standard heat output Φ", "Normwärmeleistung Φ", Some("W"))),
+    ("catalog.products[].configuration.attributes.standardOutputW", m("Standard heat output Φ", "Normwärmeleistung Φ", Some(UnitId::Watt))),
     ("catalog.products[].configuration.attributes.heatExponentN", m("Heat exponent n", "Heizexponent n", None)),
-    ("catalog.products[].configuration.attributes.lengthM", m("Radiator length", "Heizkörperlänge", Some("m"))),
-    ("catalog.products[].configuration.attributes.heightM", m("Radiator height", "Heizkörperhöhe", Some("m"))),
-    ("catalog.products[].configuration.attributes.depthM", m("Radiator depth", "Heizkörpertiefe", Some("m"))),
-    ("catalog.products[].configuration.attributes.nominalFlowM3S", m("Nominal flow", "Nennvolumenstrom", Some("m³/s"))),
+    ("catalog.products[].configuration.attributes.lengthM", m("Radiator length", "Heizkörperlänge", Some(UnitId::Metre))),
+    ("catalog.products[].configuration.attributes.heightM", m("Radiator height", "Heizkörperhöhe", Some(UnitId::Metre))),
+    ("catalog.products[].configuration.attributes.depthM", m("Radiator depth", "Heizkörpertiefe", Some(UnitId::Metre))),
+    ("catalog.products[].configuration.attributes.nominalFlowM3S", m("Nominal flow", "Nennvolumenstrom", Some(UnitId::CubicMetrePerSecond))),
     ("catalog.products[].configuration.attributes.dnSuction", m("Suction DN", "Saugseitige DN", None)),
     ("catalog.products[].configuration.attributes.dnDischarge", m("Discharge DN", "Druckseitige DN", None)),
-    ("catalog.products[].configuration.attributes.nominalHeadM", m("Nominal head", "Nennförderhöhe", Some("m"))),
-    ("catalog.products[].configuration.attributes.motorPowerW", m("Motor power", "Motorleistung", Some("W"))),
+    ("catalog.products[].configuration.attributes.nominalHeadM", m("Nominal head", "Nennförderhöhe", Some(UnitId::Metre))),
+    ("catalog.products[].configuration.attributes.motorPowerW", m("Motor power", "Motorleistung", Some(UnitId::Watt))),
     ("catalog.products[].configuration.attributes.hydraulicEfficiency", m("Hydraulic efficiency", "Hydraulischer Wirkungsgrad", None)),
     ("catalog.products[].configuration.attributes.qhCurveRef", m("Q-H curve reference", "Q-H-Kennlinienreferenz", None)),
-    ("catalog.products[].configuration.attributes.nominalHeatOutputW", m("Nominal heat output", "Nennwärmeleistung", Some("W"))),
-    ("catalog.products[].configuration.attributes.fuelType", NormFieldMeta { label_en: "Fuel / energy type", label_de: "Brennstoff-/Energieträger", unit: None, choices: Some(FUEL) }),
-    ("catalog.products[].configuration.attributes.flowTempMaxC", m("Maximum flow temperature", "Maximale Vorlauftemperatur", Some("°C"))),
-    ("catalog.products[].configuration.attributes.returnTempMinC", m("Minimum return temperature", "Minimale Rücklauftemperatur", Some("°C"))),
+    ("catalog.products[].configuration.attributes.nominalHeatOutputW", m("Nominal heat output", "Nennwärmeleistung", Some(UnitId::Watt))),
+    ("catalog.products[].configuration.attributes.fuelType", FieldSpec::choice("Fuel / energy type", "Brennstoff-/Energieträger", FUEL)),
+    ("catalog.products[].configuration.attributes.flowTempMaxC", m("Maximum flow temperature", "Maximale Vorlauftemperatur", Some(UnitId::Celsius))),
+    ("catalog.products[].configuration.attributes.returnTempMinC", m("Minimum return temperature", "Minimale Rücklauftemperatur", Some(UnitId::Celsius))),
     ("catalog.products[].configuration.attributes.entries[]", m("Generic attribute", "Generisches Attribut", None)),
     ("catalog.products[].configuration.attributes.entries[].key", m("Attribute key", "Attributschlüssel", None)),
     ("catalog.products[].configuration.attributes.entries[].value", m("Attribute value", "Attributwert", None)),
     ("catalog.products[].configuration.attributes.entries[].unit", m("Attribute unit", "Attributeinheit", None)),
     ("catalog.products[].configuration.attributes.entries[].key", m("Attribute key", "Attributschlüssel", None)),
-    ("catalog.products[].configuration.attributes.filter_class", NormFieldMeta { label_en: "Filter class", label_de: "Filterklasse", unit: None, choices: Some(FILTER) }),
-    ("catalog.products[].configuration.attributes.type_code", NormFieldMeta { label_en: "Type code", label_de: "Typcode", unit: None, choices: Some(TYPE_CODE) }),
-    ("catalog.products[].configuration.attributes.entries[id=filter_class].value", NormFieldMeta { label_en: "Filter class", label_de: "Filterklasse", unit: None, choices: Some(FILTER) }),
-    ("catalog.products[].configuration.attributes.entries[id=type_code].value", NormFieldMeta { label_en: "Type code", label_de: "Typcode", unit: None, choices: Some(TYPE_CODE) }),
+    ("catalog.products[].configuration.attributes.filter_class", FieldSpec::choice("Filter class", "Filterklasse", FILTER)),
+    ("catalog.products[].configuration.attributes.type_code", FieldSpec::choice("Type code", "Typcode", TYPE_CODE)),
+    ("catalog.products[].configuration.attributes.entries[id=filter_class].value", FieldSpec::choice("Filter class", "Filterklasse", FILTER)),
+    ("catalog.products[].configuration.attributes.entries[id=type_code].value", FieldSpec::choice("Type code", "Typcode", TYPE_CODE)),
     ("catalog.products[].accessories[]", m("Accessory link", "Zubehörverknüpfung", None)),
     ("catalog.products[].accessories[].accessoryId", m("Accessory product id", "Zubehör-Produkt-ID", None)),
     ("catalog.products[].accessories[].required", m("Accessory required", "Zubehör erforderlich", None)),
@@ -136,17 +139,17 @@ const TABLE: &[(&str, NormFieldMeta)] = &[
     ("geometry", m("Geometry", "Geometrie", None)),
     ("geometry[].id", m("Geometry id", "Geometrie-ID", None)),
     ("geometry[].bbox", m("Bounding box", "Begrenzungsrahmen", None)),
-    ("geometry[].bbox.minX", m("BBox min X", "BBox min X", Some("m"))),
-    ("geometry[].bbox.minY", m("BBox min Y", "BBox min Y", Some("m"))),
-    ("geometry[].bbox.minZ", m("BBox min Z", "BBox min Z", Some("m"))),
-    ("geometry[].bbox.maxX", m("BBox max X", "BBox max X", Some("m"))),
-    ("geometry[].bbox.maxY", m("BBox max Y", "BBox max Y", Some("m"))),
-    ("geometry[].bbox.maxZ", m("BBox max Z", "BBox max Z", Some("m"))),
+    ("geometry[].bbox.minX", m("BBox min X", "BBox min X", Some(UnitId::Metre))),
+    ("geometry[].bbox.minY", m("BBox min Y", "BBox min Y", Some(UnitId::Metre))),
+    ("geometry[].bbox.minZ", m("BBox min Z", "BBox min Z", Some(UnitId::Metre))),
+    ("geometry[].bbox.maxX", m("BBox max X", "BBox max X", Some(UnitId::Metre))),
+    ("geometry[].bbox.maxY", m("BBox max Y", "BBox max Y", Some(UnitId::Metre))),
+    ("geometry[].bbox.maxZ", m("BBox max Z", "BBox max Z", Some(UnitId::Metre))),
     ("geometry[].connections[]", m("Geometry connection", "Geometrieanschluss", None)),
     ("geometry[].connections[].id", m("Connection id", "Anschluss-ID", None)),
-    ("geometry[].connections[].x", m("Connection X", "Anschluss X", Some("m"))),
-    ("geometry[].connections[].y", m("Connection Y", "Anschluss Y", Some("m"))),
-    ("geometry[].connections[].z", m("Connection Z", "Anschluss Z", Some("m"))),
+    ("geometry[].connections[].x", m("Connection X", "Anschluss X", Some(UnitId::Metre))),
+    ("geometry[].connections[].y", m("Connection Y", "Anschluss Y", Some(UnitId::Metre))),
+    ("geometry[].connections[].z", m("Connection Z", "Anschluss Z", Some(UnitId::Metre))),
     ("geometry[].connections[].nx", m("Connection normal X", "Anschlussnormale X", None)),
     ("geometry[].connections[].ny", m("Connection normal Y", "Anschlussnormale Y", None)),
     ("geometry[].connections[].nz", m("Connection normal Z", "Anschlussnormale Z", None)),
@@ -170,7 +173,7 @@ const TABLE: &[(&str, NormFieldMeta)] = &[
 ];
 
 /// 🏷️ Exact-path / `[]`-wildcard metadata for manufacturer-catalogue fields.
-pub fn vdi3805_field_meta(path: &str) -> Option<NormFieldMeta> {
+pub fn vdi3805_field_meta(path: &str) -> Option<FieldSpec> {
     if let Some(meta) = lookup_norm_field_meta(TABLE, path) {
         return Some(meta);
     }
@@ -195,12 +198,12 @@ pub fn vdi3805_field_meta(path: &str) -> Option<NormFieldMeta> {
     }
     if path.starts_with("geometry.") {
         if path.contains(".connections") {
-            return Some(NormFieldMeta { label_en: "Geometry connection", label_de: "Geometrieanschluss", unit: None, choices: None });
+            return Some(FieldSpec::new("Geometry connection", "Geometrieanschluss"));
         }
-        return Some(NormFieldMeta { label_en: "Geometry", label_de: "Geometrie", unit: None, choices: None });
+        return Some(FieldSpec::new("Geometry", "Geometrie"));
     }
     if path.starts_with("editionProfile.") {
-        return Some(NormFieldMeta { label_en: "Edition profile choice", label_de: "Ausgabenprofilwahl", unit: None, choices: None });
+        return Some(FieldSpec::new("Edition profile choice", "Ausgabenprofilwahl"));
     }
     None
 }

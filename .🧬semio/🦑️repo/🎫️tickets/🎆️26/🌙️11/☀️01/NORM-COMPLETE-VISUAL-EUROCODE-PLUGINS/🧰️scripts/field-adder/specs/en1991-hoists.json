@@ -1,0 +1,23 @@
+{
+  "artifact": "en1991",
+  "collections": [
+    {
+      "camel": "craneHoists",
+      "entity": "CraneHoist",
+      "table": "crane_hoist",
+      "after": "derailmentCases",
+      "emoji": "🏗️",
+      "doc": "Hoist of the crane with its rated load Q_H and the payload fraction released suddenly (EN 1991-3 2.5 and 2.9): the dynamic factor phi_3 = 1 - dm/m (1 + beta_3) and the test loads.",
+      "label_en": "Crane hoists",
+      "label_de": "Kranhubwerke",
+      "id_en": "Hoist id",
+      "id_de": "Hubwerk-Id",
+      "fields": [
+        {"name": "rated_load", "ty": "f64", "en": "Rated hoist load Q_H", "de": "Hublast Q_H", "unit": "N", "step": 1000},
+        {"name": "release_fraction", "ty": "f64", "en": "Suddenly released payload fraction Δm/m", "de": "Plötzlich abgeworfener Lastanteil Δm/m", "step": 0.05},
+        {"name": "release_device", "ty": "String", "en": "Release device (grab or magnet)", "de": "Abwurfeinrichtung (Greifer oder Magnet)"}
+      ],
+      "kit": {"id": "craneHoist", "en": "Crane hoist", "de": "Kranhubwerk", "icon": "anchor", "scene_kind": "Surface"}
+    }
+  ]
+}

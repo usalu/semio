@@ -1,0 +1,5 @@
+{
+  "mutation": "changeAssessmentChordDemandRad",
+  "id": "as-1",
+  "newChordRotationDemandRad": 1.5
+}

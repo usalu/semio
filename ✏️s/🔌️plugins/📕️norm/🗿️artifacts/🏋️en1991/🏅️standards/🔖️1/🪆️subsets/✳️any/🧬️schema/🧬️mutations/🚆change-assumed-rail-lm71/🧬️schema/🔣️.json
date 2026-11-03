@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-assumed-rail-lm71/schema.json",
+  "title": "ChangeAssumedRailLm71",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newAssumedRailLm71"
+  ],
+  "properties": {
+    "newAssumedRailLm71": {
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Assumed LM71 axle load",
+          "de": "Angesetzte LM71-Achslast"
+        },
+        "unit": "N",
+        "step": 5,
+        "precision": 1,
+        "group": "bridge",
+        "order": 10,
+        "displayUnit": "kN",
+        "displayFactor": 0.001
+      }
+    }
+  }
+}

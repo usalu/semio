@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-pile-group-cap-moment-x/schema.json",
+  "title": "ChangePileGroupCapMomentX",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newCapMomentX"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changePileGroupCapMomentX"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Pile group",
+          "de": "Pfahlgruppe"
+        },
+        "description": {
+          "en": "The pile group this mutation addresses, by id.",
+          "de": "Die adressierte Zeile (Pfahlgruppe), per Kennung."
+        },
+        "ref": {
+          "kind": "pile-group"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newCapMomentX": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Cap moment M_x",
+          "de": "Moment M_x"
+        },
+        "widget": "stepper",
+        "unit": "J",
+        "displayUnit": "kNm",
+        "displayFactor": 0.001,
+        "precision": 2,
+        "step": 1000,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

@@ -7,7 +7,7 @@
   "aggregateVariant": "RemoveSiloShell",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
-  "binaryTag": 39,
+  "binaryTag": 22,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

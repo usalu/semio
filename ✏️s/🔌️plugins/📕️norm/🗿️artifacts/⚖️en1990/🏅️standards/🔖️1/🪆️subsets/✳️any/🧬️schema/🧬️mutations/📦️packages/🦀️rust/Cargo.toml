@@ -20,6 +20,7 @@ name = "mutation_vectors"
 path = "../../🧪️tests/🔬️vectors/🦀️.rs"
 
 [dependencies]
+serde = { workspace = true, optional = true }
 semio-framework-os-command = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-os-store-one-item = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/📦️packages/🦀️rust" }
@@ -33,11 +34,40 @@ semio-framework-value-derive = { workspace = true }
 semio-s-artifact-norm-en1990-diff = { workspace = true }
 semio-s-artifact-norm-en1990-model = { workspace = true }
 semio-s-artifact-norm-en1990-mut-accidental = { workspace = true }
+semio-s-artifact-norm-en1990-mut-design-cases = { workspace = true }
 semio-s-artifact-norm-en1990-mut-actions = { workspace = true }
 semio-s-artifact-norm-en1990-mut-design-basis = { workspace = true }
 semio-s-artifact-norm-en1990-mut-members = { workspace = true }
+semio-s-artifact-norm-en1990-mut-traffic-groups = { workspace = true }
+semio-s-artifact-norm-en1990-mut-traffic-groups-rows = { workspace = true }
+semio-s-artifact-norm-en1990-mut-members-material = { workspace = true }
+semio-s-artifact-norm-en1990-mut-members-geometry = { workspace = true }
+semio-s-artifact-norm-en1990-mut-members-analysis = { workspace = true }
+semio-s-artifact-norm-en1990-mut-factor-overrides = { workspace = true }
+semio-s-artifact-norm-en1990-mut-factor-overrides-rows = { workspace = true }
+semio-s-artifact-norm-en1990-mut-members-horizontal = { workspace = true }
+semio-s-artifact-norm-en1990-mut-bridge-sls-rail = { workspace = true }
+semio-s-artifact-norm-en1990-mut-actions-fields = { workspace = true }
+semio-s-artifact-norm-en1990-mut-members-identity = { workspace = true }
+semio-s-artifact-norm-en1990-mut-members-resistance = { workspace = true }
+semio-s-artifact-norm-en1990-mut-members-deflection = { workspace = true }
+semio-s-artifact-norm-en1990-mut-members-vibration = { workspace = true }
+semio-s-artifact-norm-en1990-mut-bridge-sls = { workspace = true }
+semio-s-artifact-norm-en1990-mut-effects-fatigue = { workspace = true }
+semio-s-artifact-norm-en1990-mut-reliability-analyses = { workspace = true }
+semio-s-artifact-norm-en1990-mut-test-series = { workspace = true }
+semio-s-artifact-norm-en1990-mut-placements = { workspace = true }
+semio-s-artifact-norm-en1990-mut-design-basis-structure = { workspace = true }
+semio-s-artifact-norm-en1990-mut-bridge-fatigue-rows = { workspace = true }
+semio-s-artifact-norm-en1990-mut-analysis-rows = { workspace = true }
 semio-s-artifact-norm-en1990-mut-reliability = { workspace = true }
 semio-s-plugin-norm-app-surface = { workspace = true }
+semio-framework-diagnostic = { workspace = true }
+semio-s-artifact-norm-contract = { workspace = true }
+semio-s-plugin-norm-compliance = { workspace = true }
+
+[features]
+test-support = ["dep:serde", "semio-s-artifact-norm-en1990-diff/test-support", "semio-s-artifact-norm-en1990-model/test-support", "semio-s-artifact-norm-en1990-mut-accidental/test-support", "semio-s-artifact-norm-en1990-mut-actions/test-support", "semio-s-artifact-norm-en1990-mut-actions-fields/test-support", "semio-s-artifact-norm-en1990-mut-analysis-rows/test-support", "semio-s-artifact-norm-en1990-mut-bridge-fatigue-rows/test-support", "semio-s-artifact-norm-en1990-mut-bridge-sls/test-support", "semio-s-artifact-norm-en1990-mut-bridge-sls-rail/test-support", "semio-s-artifact-norm-en1990-mut-design-basis/test-support", "semio-s-artifact-norm-en1990-mut-design-basis-structure/test-support", "semio-s-artifact-norm-en1990-mut-design-cases/test-support", "semio-s-artifact-norm-en1990-mut-effects-fatigue/test-support", "semio-s-artifact-norm-en1990-mut-factor-overrides/test-support", "semio-s-artifact-norm-en1990-mut-factor-overrides-rows/test-support", "semio-s-artifact-norm-en1990-mut-members/test-support", "semio-s-artifact-norm-en1990-mut-members-analysis/test-support", "semio-s-artifact-norm-en1990-mut-members-deflection/test-support", "semio-s-artifact-norm-en1990-mut-members-geometry/test-support", "semio-s-artifact-norm-en1990-mut-members-horizontal/test-support", "semio-s-artifact-norm-en1990-mut-members-identity/test-support", "semio-s-artifact-norm-en1990-mut-members-material/test-support", "semio-s-artifact-norm-en1990-mut-members-resistance/test-support", "semio-s-artifact-norm-en1990-mut-members-vibration/test-support", "semio-s-artifact-norm-en1990-mut-placements/test-support", "semio-s-artifact-norm-en1990-mut-reliability/test-support", "semio-s-artifact-norm-en1990-mut-reliability-analyses/test-support", "semio-s-artifact-norm-en1990-mut-test-series/test-support", "semio-s-artifact-norm-en1990-mut-traffic-groups/test-support", "semio-s-artifact-norm-en1990-mut-traffic-groups-rows/test-support", "semio-s-plugin-norm-compliance/test-support"]
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }

@@ -1,0 +1,6 @@
+{
+  "ChangeRailLoadGroupFactorVertical": {
+    "id": "rail-load-group-1",
+    "newFactorVertical": 2.0
+  }
+}

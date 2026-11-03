@@ -1,0 +1,6 @@
+{
+  "ChangeBeamEndPlateWidthM": {
+    "id": "beam-B1",
+    "newEndPlateWidthM": 0.5
+  }
+}

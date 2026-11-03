@@ -1,0 +1,9 @@
+{
+  "mutation": "insertMaterial",
+  "index": 1,
+  "material": {
+    "id": "mat-6082-2",
+    "designation": "aw6082-t6",
+    "productForm": "extrudedProfile"
+  }
+}

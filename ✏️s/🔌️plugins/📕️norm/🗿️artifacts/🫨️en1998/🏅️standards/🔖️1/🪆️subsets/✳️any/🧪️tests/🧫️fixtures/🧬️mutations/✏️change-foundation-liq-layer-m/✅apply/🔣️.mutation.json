@@ -1,0 +1,5 @@
+{
+  "mutation": "changeFoundationLiqLayerM",
+  "id": "fd-1",
+  "newLiqLayerThicknessM": 1.5
+}

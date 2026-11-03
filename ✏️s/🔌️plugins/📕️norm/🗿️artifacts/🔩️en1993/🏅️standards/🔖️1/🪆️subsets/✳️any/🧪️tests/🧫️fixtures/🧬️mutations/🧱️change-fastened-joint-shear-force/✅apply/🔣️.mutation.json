@@ -1,0 +1,6 @@
+{
+  "ChangeFastenedJointShearForce": {
+    "id": "fastened-joint-1",
+    "newShearForce": 4001.0
+  }
+}

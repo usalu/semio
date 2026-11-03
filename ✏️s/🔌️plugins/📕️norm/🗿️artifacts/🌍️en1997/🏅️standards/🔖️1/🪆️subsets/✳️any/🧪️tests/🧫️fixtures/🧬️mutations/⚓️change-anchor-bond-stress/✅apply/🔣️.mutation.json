@@ -1,0 +1,5 @@
+{
+  "mutation": "changeAnchorBondStress",
+  "id": "anchor-A1",
+  "newBondStress": 400000.0
+}

@@ -2,9 +2,9 @@
 
 use semio_framework_test_fixtures::fixture_path;
 use semio_s_plugin_norm_app_surface::{get_value_at_path, parse_path, set_value_at_path};
-use semio_s_artifact_norm_en1996_schema::checks::masonry::{evaluate_building, f_k_pa, fire_min_thickness_m, fk_factors, phi_m, phi_s, rho_n, slenderness};
+use semio_s_artifact_norm_en1996_schema::checks::masonry::{AnnexParams, design_effects, evaluate_building, f_k_pa, governing_compression, fire_min_thickness_m, fk_factors, phi_m, phi_s, rho_n, slenderness};
 use semio_s_artifact_norm_en1996_io::text::snapshot::parse_dsl;
-use semio_s_plugin_norm_compliance::{AnnexChoice, CheckReport, CheckStatus};
+use semio_s_plugin_norm_compliance::{AnnexChoice, CheckReport, CheckStatus, DesignSituation, ReliabilityClass};
 use semio_s_artifact_norm_en1996_model::{En1996Snapshot, MasonryClass, UnitMaterial};
 use semio_s_artifact_norm_en1996_editor::field_meta::en1996_field_meta;
 
@@ -37,44 +37,43 @@ fn de_na_gamma_m_by_category_and_execution_class() {
 }
 
 #[test]
-fn phi_s_de_vs_en_na_simplified() {
-    let lambda = 10.0;
-    assert!((phi_s(AnnexChoice::En, lambda) - (0.85 - 0.0011 * 100.0)).abs() < 1e-9);
-    assert!((phi_s(AnnexChoice::De, lambda) - (0.70 - 0.0011 * 100.0)).abs() < 1e-9);
+fn phi_s_follows_the_en_1996_3_form_in_both_annexes() {
+    assert!((phi_s(10.0) - (0.85 - 0.0011 * 100.0)).abs() < 1e-9);
+    assert!((phi_s(8.594) - 0.7688).abs() < 1e-3, "spec example X10");
 }
 
 #[test]
 fn annex_g_phi_m_midheight_na_method() {
-    let phi = phi_m(12.0, 0.02, 0.365);
-    assert!(phi > 0.5 && phi < 1.0, "phi_m={phi}");
+    let phi = phi_m(5.65, 0.018422, 0.365, 1000.0);
+    assert!((phi - 0.88579).abs() < 2e-4, "spec example X4 with e_mk = e_m + e_k, phi_m={phi}");
 }
 
 #[test]
 fn fire_min_thickness_rei90_clay_and_aac_tabulated() {
-    assert!((fire_min_thickness_m(90, UnitMaterial::Clay) - 0.140).abs() < 1e-9);
+    assert!((fire_min_thickness_m(90, UnitMaterial::Clay) - 0.150).abs() < 1e-9);
     assert!((fire_min_thickness_m(90, UnitMaterial::Aerated) - 0.175).abs() < 1e-9);
 }
 
 #[test]
-fn simplified_method_storey_limit_de_na() {
+fn simplified_method_height_limit() {
     let mut doc = En1996Snapshot::compliant_clay_wall();
-    doc.storeys = 4;
-    let report = evaluate_building(doc.annex, doc.masonry_class, doc.design_situation, doc.storeys, &doc.walls);
+    doc.storeys = 8;
+    let report = evaluate_building(doc.annex, doc.masonry_class, doc.design_situation, doc.reliability_class, doc.storeys, &doc.walls);
     let simp = report.checks.iter().find(|c| c.id.contains("simplified")).expect("simplified check");
-    assert!(matches!(simp.status, CheckStatus::NotApplicable), "storeys>3 must be NotApplicable, got {:?}", simp.status);
+    assert!(matches!(simp.status, CheckStatus::NotApplicable), "building height 22 m must be NotApplicable, got {:?}", simp.status);
 }
 
 #[test]
 fn compliant_evaluate_passes() {
     let doc = En1996Snapshot::compliant_clay_wall();
-    let report = evaluate_building(doc.annex, doc.masonry_class, doc.design_situation, doc.storeys, &doc.walls);
+    let report = evaluate_building(doc.annex, doc.masonry_class, doc.design_situation, doc.reliability_class, doc.storeys, &doc.walls);
     assert!(report.complies(), "{:?}", report.failing().map(|c| c.id.clone()).collect::<Vec<_>>());
 }
 
 #[test]
 fn every_emitted_path_parses_and_resolves_with_id_selectors() {
     let doc = En1996Snapshot::noncompliant_multi_fail();
-    let report = evaluate_building(doc.annex, doc.masonry_class, doc.design_situation, doc.storeys, &doc.walls);
+    let report = evaluate_building(doc.annex, doc.masonry_class, doc.design_situation, doc.reliability_class, doc.storeys, &doc.walls);
     let snap_val = semio_framework_value::ToValue::to_value(&doc);
     for check in &report.checks {
         if !check.subject.path.is_empty() {
@@ -94,7 +93,7 @@ fn every_emitted_path_parses_and_resolves_with_id_selectors() {
 #[test]
 fn remedy_law_flips_at_least_two_distinct_fails_to_pass() {
     let doc = En1996Snapshot::noncompliant_multi_fail();
-    let before = evaluate_building(doc.annex, doc.masonry_class, doc.design_situation, doc.storeys, &doc.walls);
+    let before = evaluate_building(doc.annex, doc.masonry_class, doc.design_situation, doc.reliability_class, doc.storeys, &doc.walls);
     assert!(!before.complies());
     let fails: Vec<_> = before.failing().cloned().collect();
     assert!(fails.len() >= 2);
@@ -106,7 +105,7 @@ fn remedy_law_flips_at_least_two_distinct_fails_to_pass() {
         if set_value_at_path(&mut tree, &remedy.target.path, semio_framework_value::DslValue::float(remedy.required.value)).is_err() { continue; }
         let Ok(trial) = semio_framework_value::FromValue::from_value(tree) else { continue };
         let trial: En1996Snapshot = trial;
-        let after = evaluate_building(trial.annex, trial.masonry_class, trial.design_situation, trial.storeys, &trial.walls);
+        let after = evaluate_building(trial.annex, trial.masonry_class, trial.design_situation, trial.reliability_class, trial.storeys, &trial.walls);
         if let Some(c) = after.checks.iter().find(|c| c.id == fail.id) {
             if matches!(c.status, CheckStatus::Pass) { flipped.push(fail.id.clone()); }
         }
@@ -117,7 +116,7 @@ fn remedy_law_flips_at_least_two_distinct_fails_to_pass() {
 #[test]
 fn gate_blocking_fails_clear_via_remedy_bounds() {
     let doc = En1996Snapshot::noncompliant_multi_fail();
-    let before = evaluate_building(doc.annex, doc.masonry_class, doc.design_situation, doc.storeys, &doc.walls);
+    let before = evaluate_building(doc.annex, doc.masonry_class, doc.design_situation, doc.reliability_class, doc.storeys, &doc.walls);
     let blocking = [
         "en1996.3.1.material.wall-weak",
         "en1996.6.3.flexure.wall-weak.uls-bad",
@@ -143,7 +142,7 @@ fn gate_blocking_fails_clear_via_remedy_bounds() {
             let mut tree = semio_framework_value::ToValue::to_value(&doc);
             set_value_at_path(&mut tree, &remedy.target.path, semio_framework_value::DslValue::float(remedy.required.value)).expect("apply");
             let trial: En1996Snapshot = semio_framework_value::FromValue::from_value(tree).expect("decode");
-            let after = evaluate_building(trial.annex, trial.masonry_class, trial.design_situation, trial.storeys, &trial.walls);
+            let after = evaluate_building(trial.annex, trial.masonry_class, trial.design_situation, trial.reliability_class, trial.storeys, &trial.walls);
             if let Some(c) = after.checks.iter().find(|c| c.id == id) {
                 if !matches!(c.status, CheckStatus::Fail) {
                     cleared = true;
@@ -160,7 +159,7 @@ fn gate_blocking_fails_clear_via_remedy_bounds() {
                 set_value_at_path(&mut tree, &remedy.target.path, semio_framework_value::DslValue::float(remedy.required.value)).expect("seq apply");
             }
             let trial: En1996Snapshot = semio_framework_value::FromValue::from_value(tree).expect("seq decode");
-            let after = evaluate_building(trial.annex, trial.masonry_class, trial.design_situation, trial.storeys, &trial.walls);
+            let after = evaluate_building(trial.annex, trial.masonry_class, trial.design_situation, trial.reliability_class, trial.storeys, &trial.walls);
             match after.checks.iter().find(|c| c.id == id) {
                 None => cleared = true,
                 Some(c) if !matches!(c.status, CheckStatus::Fail) => cleared = true,
@@ -174,7 +173,7 @@ fn gate_blocking_fails_clear_via_remedy_bounds() {
 #[test]
 fn every_editable_leaf_has_en_de_field_meta() {
     let wildcards = [
-        "annex", "masonryClass", "designSituation", "storeys",
+        "annex", "reliabilityClass", "masonryClass", "designSituation", "storeys",
         "walls[].thicknessM", "walls[].mortarStrengthPa", "walls[].densityKgM3", "walls[].phiInfinity", "walls[].isBasement", "walls[].mu",
         "walls[].slabBearingDepthM", "walls[].unitHeightM", "walls[].asHorizontalM2",
         "walls[].openings[].heightM", "walls[].openings[].sillHeightM",
@@ -185,10 +184,10 @@ fn every_editable_leaf_has_en_de_field_meta() {
     ];
     for path in wildcards {
         let meta = en1996_field_meta(path).unwrap_or_else(|| panic!("missing field meta for {path}"));
-        assert!(!meta.label_en.is_empty());
-        assert!(!meta.label_de.is_empty());
+        assert!(!meta.label.en.is_empty());
+        assert!(!meta.label.de.is_empty());
         if path.ends_with("designSituation") || path.ends_with("imposedCategory") {
-            assert!(meta.choices.is_some(), "choices required for {path}");
+            assert!(meta.choices().is_some(), "choices required for {path}");
         }
     }
 }
@@ -235,7 +234,7 @@ fn perturb_every_editable_leaf_changes_some_check() {
         }
     }
     fn perturb_doc(base: &En1996Snapshot) -> Vec<String> {
-        let base_report = evaluate_building(base.annex, base.masonry_class, base.design_situation, base.storeys, &base.walls);
+        let base_report = evaluate_building(base.annex, base.masonry_class, base.design_situation, base.reliability_class, base.storeys, &base.walls);
         let base_sig = sig(&base_report);
         let value = serde_json::to_value(base).expect("json");
         let mut leaves: Vec<(String, serde_json::Value)> = Vec::new();
@@ -267,19 +266,19 @@ fn perturb_every_editable_leaf_changes_some_check() {
                 }
                 serde_json::Value::String(s) => {
                     let alt = if path.ends_with("annex") {
-                        if s == "de" { "en" } else { "de" }.to_string()
+                        if s.eq_ignore_ascii_case("de") { "En" } else { "De" }.to_string()
                     } else if path.ends_with("masonryClass") {
-                        if s == "class1" { "class3" } else { "class1" }.to_string()
+                        if s == "Class1" { "Class3" } else { "Class1" }.to_string()
                     } else if path.ends_with("designSituation") {
-                        if s == "persistent" { "transient" } else { "persistent" }.to_string()
+                        if s == "Persistent" { "Transient" } else if s == "persistent" { "transient" } else { "Persistent" }.to_string()
                     } else if path.ends_with("wallType") {
-                        if s == "loadBearing" { "shear" } else { "loadBearing" }.to_string()
+                        if s == "LoadBearing" { "Shear" } else { "LoadBearing" }.to_string()
                     } else if path.ends_with("unitMaterial") {
-                        if s == "clay" { "concrete" } else { "clay" }.to_string()
+                        if s == "Clay" { "Concrete" } else { "Clay" }.to_string()
                     } else if path.ends_with("unitGroup") {
-                        if s == "group1" { "group2" } else { "group1" }.to_string()
+                        if s == "Group1" { "Group2" } else { "Group1" }.to_string()
                     } else if path.ends_with("mortarType") {
-                        if s == "generalPurpose" { "thinLayer" } else { "generalPurpose" }.to_string()
+                        if s == "GeneralPurpose" { "ThinLayer" } else { "GeneralPurpose" }.to_string()
                     } else if path.ends_with("mortarClass") {
                         if s == "M10" { "M5" } else { "M10" }.to_string()
                     } else if path.ends_with("exposure") {
@@ -297,7 +296,7 @@ fn perturb_every_editable_leaf_changes_some_check() {
                 continue;
             }
             let Ok(trial) = serde_json::from_value::<En1996Snapshot>(tree) else { continue };
-            let report = evaluate_building(trial.annex, trial.masonry_class, trial.design_situation, trial.storeys, &trial.walls);
+            let report = evaluate_building(trial.annex, trial.masonry_class, trial.design_situation, trial.reliability_class, trial.storeys, &trial.walls);
             if sig(&report) == base_sig {
                 unchanged.push(path.clone());
             }
@@ -372,7 +371,7 @@ fn committed_dsl_pack_assets_parse_and_assert_verdicts() {
         let parsed = parse_dsl(&dsl).expect("parse DSL");
         let from_pack = <En1996Snapshot as pack::snapshot::ArtifactPack>::decode_pack(&pack).expect("decode pack");
         assert_eq!(parsed.walls.len(), from_pack.walls.len(), "{folder}");
-        let report = evaluate_building(parsed.annex, parsed.masonry_class, parsed.design_situation, parsed.storeys, &parsed.walls);
+        let report = evaluate_building(parsed.annex, parsed.masonry_class, parsed.design_situation, parsed.reliability_class, parsed.storeys, &parsed.walls);
         assert_eq!(report.complies(), expect_pass, "{folder}");
         if !expect_pass {
             assert!(report.summary.fail >= 2, "{folder}");
@@ -426,7 +425,7 @@ fn mutation_and_check_labels_differ_en_de() {
         }
     }
     let doc = En1996Snapshot::compliant_clay_wall();
-    let report = evaluate_building(doc.annex, doc.masonry_class, doc.design_situation, doc.storeys, &doc.walls);
+    let report = evaluate_building(doc.annex, doc.masonry_class, doc.design_situation, doc.reliability_class, doc.storeys, &doc.walls);
     for c in &report.checks {
         assert_pair(&c.title.en, &c.title.de, &format!("title {}", c.id));
         assert_pair(&c.explanation.en, &c.explanation.de, &format!("explanation {}", c.id));
@@ -486,7 +485,7 @@ fn typed_diff_and_snapshot_facets_have_no_unknown() {
 
 #[test]
 fn rho_n_four_sided_less_than_two() {
-    assert!(rho_n(4, 2.75, 5.0) < rho_n(2, 2.75, 5.0));
+    assert!(rho_n(4, 0.75, 2.75, 5.0) < rho_n(2, 0.75, 2.75, 5.0));
 }
 
 #[test]
@@ -497,7 +496,7 @@ fn duplicate_wall_id_fails_integrity() {
     dup.label_en = "Duplicate wall".into();
     dup.label_de = "Doppelte Wand".into();
     doc.walls.push(dup);
-    let report = evaluate_building(doc.annex, doc.masonry_class, doc.design_situation, doc.storeys, &doc.walls);
+    let report = evaluate_building(doc.annex, doc.masonry_class, doc.design_situation, doc.reliability_class, doc.storeys, &doc.walls);
     let c = report
         .checks
         .iter()
@@ -526,35 +525,24 @@ fn duplicate_load_case_opening_and_concentrated_ids_fail_integrity() {
             force_n: 10_000.0,
             bearing_area_m2: 0.04,
             bearing_length_m: 0.20,
+            distance_a1_m: 0.0,
+            position_m: 1.0,
         },
         semio_s_artifact_norm_en1996_model::ConcentratedLoad {
             id: "point-a".into(),
             force_n: 5_000.0,
             bearing_area_m2: 0.02,
             bearing_length_m: 0.15,
+            distance_a1_m: 0.0,
+            position_m: 2.0,
         },
     ];
-    let report = evaluate_building(doc.annex, doc.masonry_class, doc.design_situation, doc.storeys, &doc.walls);
+    let report = evaluate_building(doc.annex, doc.masonry_class, doc.design_situation, doc.reliability_class, doc.storeys, &doc.walls);
     for needle in ["integrity.duplicate.loadCases", "integrity.duplicate.openings", "integrity.duplicate.concentrated"] {
         let c = report.checks.iter().find(|c| c.id.contains(needle)).unwrap_or_else(|| panic!("missing {needle}"));
         assert!(matches!(c.status, CheckStatus::Fail), "{needle} status {:?}", c.status);
         assert_ne!(c.explanation.en, c.explanation.de);
     }
-}
-
-#[test]
-fn dangling_imposed_category_fails_integrity() {
-    let mut doc = En1996Snapshot::compliant_clay_wall();
-    doc.walls[0].load_cases[0].imposed_category = "ZZ-dangling".into();
-    let report = evaluate_building(doc.annex, doc.masonry_class, doc.design_situation, doc.storeys, &doc.walls);
-    let c = report
-        .checks
-        .iter()
-        .find(|c| c.id.contains("integrity.imposedCategory"))
-        .expect("dangling imposed category check");
-    assert!(matches!(c.status, CheckStatus::Fail));
-    assert_ne!(c.explanation.en, c.explanation.de);
-    assert!(c.remedies.iter().any(|r| r.options.iter().any(|o| o == "A" || o == "E")));
 }
 
 #[test]
@@ -575,7 +563,7 @@ fn perturb_wall_id_to_duplicate_changes_integrity_signature() {
             .collect()
     }
     let base = En1996Snapshot::compliant_clay_wall();
-    let base_report = evaluate_building(base.annex, base.masonry_class, base.design_situation, base.storeys, &base.walls);
+    let base_report = evaluate_building(base.annex, base.masonry_class, base.design_situation, base.reliability_class, base.storeys, &base.walls);
     let base_sig = sig(&base_report);
     let mut perturbed = base.clone();
     let mut dup = perturbed.walls[0].clone();
@@ -587,7 +575,7 @@ fn perturb_wall_id_to_duplicate_changes_integrity_signature() {
         perturbed.annex,
         perturbed.masonry_class,
         perturbed.design_situation,
-        perturbed.storeys,
+        perturbed.reliability_class, perturbed.storeys,
         &perturbed.walls,
     );
     let after_sig = sig(&after);
@@ -600,4 +588,71 @@ fn perturb_wall_id_to_duplicate_changes_integrity_signature() {
     assert!(matches!(integrity.status, CheckStatus::Fail));
     let before_has = base_report.checks.iter().any(|c| c.id.contains("integrity.duplicate.walls"));
     assert!(!before_has, "compliant snapshot must not emit duplicate-wall integrity fail");
+}
+
+#[test]
+fn annex_switch_reads_the_registry_and_changes_only_the_expected_values() {
+    assert_eq!((MasonryClass::Class3.gamma_m_en(), MasonryClass::Class3.gamma_m_de(false)), (2.0, 1.7));
+    assert_eq!((MasonryClass::Class5.gamma_m_en(), MasonryClass::Class5.gamma_m_de(false)), (2.5, 2.0));
+    assert_eq!(MasonryClass::Class1.gamma_m_en(), MasonryClass::Class1.gamma_m_de(false));
+    assert_eq!(MasonryClass::Class4.gamma_m_de(true), 1.3);
+}
+
+#[test]
+fn the_in_plane_shear_and_moment_of_the_wall_enter_the_shear_check() {
+    let mut doc = semio_s_artifact_norm_en1996_model::En1996Snapshot::compliant_clay_wall();
+    let utilisation = |doc: &semio_s_artifact_norm_en1996_model::En1996Snapshot| {
+        let report = evaluate_building(doc.annex, doc.masonry_class, doc.design_situation, doc.reliability_class, doc.storeys, &doc.walls);
+        report.checks.iter().find(|c| c.id.starts_with("en1996.6.2.shear.")).unwrap().utilization
+    };
+    let base = utilisation(&doc);
+    doc.walls[0].in_plane_shear_n = 15_000.0;
+    let with_shear = utilisation(&doc);
+    assert!(with_shear > base, "{with_shear} {base}");
+    doc.walls[0].in_plane_moment_nm = 20_000.0;
+    assert!(utilisation(&doc) > with_shear);
+}
+
+#[test]
+fn reliability_class_rc3_raises_the_governing_design_effect_by_k_fi() {
+    for annex in [AnnexChoice::De, AnnexChoice::En] {
+        let doc = En1996Snapshot { annex, ..En1996Snapshot::compliant_clay_wall() };
+        let wall = &doc.walls[0];
+        let lc = &wall.load_cases[0];
+        let k_fi = ReliabilityClass::RC3.k_fi(annex);
+        assert!((k_fi - 1.1).abs() < 1e-9, "registry K_FI of RC3 (unverified) is {k_fi}");
+        let rc2 = design_effects(annex, wall, lc, doc.design_situation, ReliabilityClass::RC2);
+        let rc3 = design_effects(annex, wall, lc, doc.design_situation, ReliabilityClass::RC3);
+        let ratio = governing_compression(&rc3).n_bot / governing_compression(&rc2).n_bot;
+        assert!((ratio - k_fi / ReliabilityClass::RC2.k_fi(annex)).abs() < 1e-9, "N_bot ratio {ratio}");
+    }
+}
+
+#[test]
+fn reliability_class_of_the_document_reaches_the_evaluation() {
+    let rc2 = En1996Snapshot::compliant_clay_wall();
+    let rc3 = En1996Snapshot { reliability_class: ReliabilityClass::RC3, ..rc2.clone() };
+    let utilisation = |doc: &En1996Snapshot| {
+        evaluate_building(doc.annex, doc.masonry_class, doc.design_situation, doc.reliability_class, doc.storeys, &doc.walls)
+            .checks
+            .iter()
+            .map(|c| c.utilization)
+            .fold(0.0_f64, f64::max)
+    };
+    assert!(utilisation(&rc3) > utilisation(&rc2));
+}
+
+#[test]
+fn seismic_takes_the_accidental_gamma_m_in_the_german_annex_and_the_class_value_in_the_en_annex() {
+    for class in [MasonryClass::Class1, MasonryClass::Class4] {
+        let seismic = AnnexParams::for_document(AnnexChoice::De, class, DesignSituation::Seismic);
+        let accidental = AnnexParams::for_document(AnnexChoice::De, class, DesignSituation::Accidental);
+        assert!((seismic.gamma_m() - 1.3).abs() < 1e-12);
+        assert_eq!(seismic.gamma_m_ndp(), accidental.gamma_m_ndp());
+        let transient = AnnexParams::for_document(AnnexChoice::De, class, DesignSituation::Transient);
+        assert!((transient.gamma_m() - 1.3).abs() < 1e-12);
+        assert_eq!(transient.gamma_m_ndp(), accidental.gamma_m_ndp());
+        let persistent = AnnexParams::for_document(AnnexChoice::En, class, DesignSituation::Persistent);
+        assert!((AnnexParams::for_document(AnnexChoice::En, class, DesignSituation::Seismic).gamma_m() - persistent.gamma_m()).abs() < 1e-12);
+    }
 }

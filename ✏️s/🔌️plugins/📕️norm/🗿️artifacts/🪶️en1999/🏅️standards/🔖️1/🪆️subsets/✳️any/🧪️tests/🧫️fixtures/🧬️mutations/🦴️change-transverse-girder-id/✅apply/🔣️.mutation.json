@@ -1,0 +1,5 @@
+{
+  "mutation": "changeTransverseGirderId",
+  "transverseStiffenerId": "stiffener-1",
+  "newGirderId": "post-chs"
+}

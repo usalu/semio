@@ -17,14 +17,6 @@ pub mod change_automation_class;
 pub mod change_building_category;
 #[path = "../🌉change-delta-u-wb/🦀️.rs"]
 pub mod change_delta_u_wb;
-#[path = "../⚖️change-geg-qp-factor/🦀️.rs"]
-pub mod change_geg_qp_factor;
-#[path = "../📦change-heated-volume-m3/🦀️.rs"]
-pub mod change_heated_volume_m3;
-#[path = "../🧮change-method/🦀️.rs"]
-pub mod change_method;
-#[path = "../📐️change-net-floor-area-m2/🦀️.rs"]
-pub mod change_net_floor_area_m2;
-#[path = "../🏷️change-use-class/🦀️.rs"]
-pub mod change_use_class;
 //#endregion 🪢️Mounts
+
+pub use semio_s_artifact_norm_din18599_mut_building_more::{change_geg_qp_factor, change_heated_volume_m3, change_method, change_net_floor_area_m2, change_use_class};

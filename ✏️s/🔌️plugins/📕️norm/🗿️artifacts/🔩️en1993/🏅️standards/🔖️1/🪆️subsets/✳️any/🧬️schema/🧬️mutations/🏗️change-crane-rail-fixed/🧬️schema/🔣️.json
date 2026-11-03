@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-crane-rail-fixed/schema.json",
+  "title": "ChangeCraneRailFixed",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newRailFixed"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Crane runway",
+          "de": "Kranbahn"
+        },
+        "description": {
+          "en": "The crane runway this mutation addresses, by id.",
+          "de": "Das adressierte Element (Kranbahn), per Kennung."
+        },
+        "ref": {
+          "kind": "crane"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newRailFixed": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295,
+      "x-semio-ui": {
+        "label": {
+          "en": "Rail fixed to the flange (0/1)",
+          "de": "Schiene am Flansch befestigt (0/1)"
+        },
+        "widget": "stepper",
+        "step": 1,
+        "precision": 0,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

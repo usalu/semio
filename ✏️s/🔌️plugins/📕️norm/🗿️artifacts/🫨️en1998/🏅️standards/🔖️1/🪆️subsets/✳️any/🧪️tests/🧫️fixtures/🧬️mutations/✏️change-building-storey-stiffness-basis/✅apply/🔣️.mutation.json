@@ -1,0 +1,5 @@
+{
+  "mutation": "changeBuildingStoreyStiffnessBasis",
+  "id": "bldg-office",
+  "newStoreyStiffnessBasis": "simplified"
+}

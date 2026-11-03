@@ -1,6 +1,20 @@
-# 🧬️ EN 1995 sparse diff GraphQL mirror
+scalar JSON
+
 type En1995Diff {
-  annex: String @state(class: ARTIFACT)
-  members: JSON @state(class: ARTIFACT)
-  connections: JSON @state(class: ARTIFACT)
+  annex: JSON
+  members: En1995MemberDelta!
+  connections: En1995ConnectionDelta!
+  placements: En1995PlacementDelta!
+  tapers: En1995TaperDelta!
+  cutouts: En1995CutoutDelta!
+  fasteners: En1995FastenerDelta!
+  panels: En1995PanelDelta!
+  floors: En1995FloorDelta!
+  diaphragms: En1995DiaphragmDelta!
+  trusses: En1995TrussDelta!
+  bracings: En1995BracingDelta!
+  decks: En1995DeckDelta!
+  ulsEquation: JSON
+  cases: CaseRowDelta!
+  reliabilityClass: JSON
 }

@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-section-iz/schema.json",
+  "title": "ChangeSectionIz",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newIz"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Section",
+          "de": "Querschnitt"
+        },
+        "description": {
+          "en": "The section this mutation addresses, by id.",
+          "de": "Das adressierte Element (Querschnitt), per Kennung."
+        },
+        "ref": {
+          "kind": "section"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newIz": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Second moment of area I_z",
+          "de": "Flächenträgheitsmoment I_z"
+        },
+        "widget": "stepper",
+        "unit": "m⁴",
+        "displayUnit": "cm⁴",
+        "displayFactor": 100000000,
+        "precision": 0,
+        "step": 1e-8,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

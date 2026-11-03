@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-retaining-wall-permeability-ms/schema.json",
+  "title": "ChangeRetainingWallPermeabilityMS",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "index",
+    "newPermeabilityMS"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeRetainingWallPermeabilityMS"
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Retaining wall",
+          "de": "Stützwand"
+        },
+        "description": {
+          "en": "Zero-based position of the retaining wall in its list.",
+          "de": "Nullbasierte Position in der Liste (Stützwand)."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newPermeabilityMS": {
+      "type": "number",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Permeability k of the backfill (0 = low permeability: the water moves with the soil)",
+          "de": "Durchlässigkeit k der Hinterfüllung (0 = geringe Durchlässigkeit: das Wasser bewegt sich mit dem Boden)"
+        },
+        "group": "value",
+        "order": 20,
+        "widget": "stepper",
+        "step": 0.001,
+        "precision": 3
+      }
+    }
+  }
+}

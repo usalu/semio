@@ -1,0 +1,778 @@
+{
+  "$schema": "../../../../../../../../../🔮️oracles/🏃️harness/🧬️schema/🔣️.json",
+  "schemaVersion": 1,
+  "artifact": "en1999",
+  "annex": "de",
+  "cases": [
+    {
+      "id": "en1999.section.i-extruded-200x100",
+      "check": "en1999.section.i",
+      "citation": {
+        "standard": "EN 1999-1-1",
+        "edition": "2004",
+        "clause": "6.1 section properties of extruded aluminium I-sections"
+      },
+      "inputs": {
+        "h": 0.2,
+        "b_t": 0.1,
+        "b_b": 0.1,
+        "t_ft": 0.01,
+        "t_fb": 0.01,
+        "tw": 0.006,
+        "r": 0.0
+      },
+      "expected": {
+        "A": {
+          "value": 0.003080000000000004,
+          "unit": "m^2",
+          "profile": "numerical-v1"
+        },
+        "Iy": {
+          "value": 2.0982666666666746e-05,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "Iz": {
+          "value": 1.6699066666666697e-06,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "It": {
+          "value": 7.754696340343729e-08,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "Iw": {
+          "value": 1.50224726622881e-08,
+          "unit": "m^6",
+          "profile": "numerical-v1"
+        },
+        "Wpl_y": {
+          "value": 0.0002386,
+          "unit": "m^3",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sectionproperties",
+          "adapter": "sectionproperties",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1999.section.rhs-extruded-sharp-120x80",
+      "check": "en1999.section.rhs-sharp",
+      "citation": {
+        "standard": "EN 1999-1-1",
+        "edition": "2004",
+        "clause": "6.1 section properties of extruded hollow sections (sharp corners)"
+      },
+      "inputs": {
+        "h": 0.12,
+        "b": 0.08,
+        "t": 0.005,
+        "r_out": 0.0
+      },
+      "expected": {
+        "A": {
+          "value": 0.0019,
+          "unit": "m^2",
+          "profile": "numerical-v1"
+        },
+        "Iy": {
+          "value": 3.7558333333333356e-06,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "Iz": {
+          "value": 1.975833333333332e-06,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "Wel_y": {
+          "value": 6.259722222222226e-05,
+          "unit": "m^3",
+          "profile": "numerical-v1"
+        },
+        "Wel_z": {
+          "value": 4.939583333333331e-05,
+          "unit": "m^3",
+          "profile": "numerical-v1"
+        },
+        "Wpl_y": {
+          "value": 7.625e-05,
+          "unit": "m^3",
+          "profile": "numerical-v1"
+        },
+        "Wpl_z": {
+          "value": 5.725e-05,
+          "unit": "m^3",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sectionproperties",
+          "adapter": "sectionproperties",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1999.section.chs-extruded-100x5",
+      "check": "en1999.section.chs",
+      "citation": {
+        "standard": "EN 1999-1-1",
+        "edition": "2004",
+        "clause": "6.1 section properties of extruded tubes"
+      },
+      "inputs": {
+        "d": 0.1,
+        "t": 0.005
+      },
+      "expected": {
+        "A": {
+          "value": 0.0014916572995535048,
+          "unit": "m^2",
+          "profile": "numerical-v1"
+        },
+        "Iy": {
+          "value": 1.6867597894021952e-06,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "Iz": {
+          "value": 1.6867597894021952e-06,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "It": {
+          "value": 3.3735195788043904e-06,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "Wel_y": {
+          "value": 3.3735195788043806e-05,
+          "unit": "m^3",
+          "profile": "numerical-v1"
+        },
+        "Wpl_y": {
+          "value": 4.5139464052633176e-05,
+          "unit": "m^3",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sectionproperties",
+          "adapter": "sectionproperties",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1999.section.channel-extruded-100",
+      "check": "en1999.section.channel",
+      "citation": {
+        "standard": "EN 1999-1-1",
+        "edition": "2004",
+        "clause": "6.1 section properties of extruded channels"
+      },
+      "inputs": {
+        "h": 0.1,
+        "b": 0.05,
+        "tf": 0.007,
+        "tw": 0.005,
+        "r": 0.004
+      },
+      "expected": {
+        "A": {
+          "value": 0.0011369131688157635,
+          "unit": "m^2",
+          "profile": "numerical-v1"
+        },
+        "Iy": {
+          "value": 1.7937152145811944e-06,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "Iz": {
+          "value": 2.823472262777773e-07,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "It": {
+          "value": 1.494950566254207e-08,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "Iw": {
+          "value": 4.3366986289885307e-10,
+          "unit": "m^6",
+          "profile": "numerical-v1"
+        },
+        "Wpl_y": {
+          "value": 4.208606378338022e-05,
+          "unit": "m^3",
+          "profile": "numerical-v1"
+        },
+        "y_sc": {
+          "value": -0.03253618952426458,
+          "unit": "m",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sectionproperties",
+          "adapter": "sectionproperties",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1999.section.tee-extruded-60",
+      "check": "en1999.section.tee",
+      "citation": {
+        "standard": "EN 1999-1-1",
+        "edition": "2004",
+        "clause": "6.1 section properties of extruded T-sections"
+      },
+      "inputs": {
+        "h": 0.06,
+        "b": 0.06,
+        "tf": 0.006,
+        "tw": 0.005,
+        "r": 0.003
+      },
+      "expected": {
+        "A": {
+          "value": 0.0006338886574588683,
+          "unit": "m^2",
+          "profile": "numerical-v1"
+        },
+        "Iy": {
+          "value": 2.0587438909091196e-07,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "Iz": {
+          "value": 1.0860289701261325e-07,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "It": {
+          "value": 6.899155763273127e-09,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "Wpl_y": {
+          "value": 8.34172015562361e-06,
+          "unit": "m^3",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sectionproperties",
+          "adapter": "sectionproperties",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1999.section.angle-extruded-60x6",
+      "check": "en1999.section.angle",
+      "citation": {
+        "standard": "EN 1999-1-1",
+        "edition": "2004",
+        "clause": "6.1 section properties of extruded angles"
+      },
+      "inputs": {
+        "h": 0.06,
+        "b": 0.06,
+        "t": 0.006,
+        "r_root": 0.006,
+        "r_toe": 0.003
+      },
+      "expected": {
+        "A": {
+          "value": 0.0006878886574588636,
+          "unit": "m^2",
+          "profile": "numerical-v1"
+        },
+        "Iy": {
+          "value": 2.3030113479270608e-07,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "Iz": {
+          "value": 2.3030113479270576e-07,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "I_major": {
+          "value": 3.6575622194196736e-07,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "I_minor": {
+          "value": 9.484604764344448e-08,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "It": {
+          "value": 8.619847530145082e-09,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sectionproperties",
+          "adapter": "sectionproperties",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1999.section.ehs-extruded-120x80",
+      "check": "en1999.section.ehs",
+      "citation": {
+        "standard": "EN 1999-1-1",
+        "edition": "2004",
+        "clause": "6.1 section properties of extruded elliptical tubes"
+      },
+      "inputs": {
+        "d_x": 0.12,
+        "d_y": 0.08,
+        "t": 0.005
+      },
+      "expected": {
+        "A": {
+          "value": 0.0014916572995534933,
+          "unit": "m^2",
+          "profile": "numerical-v1"
+        },
+        "Iy": {
+          "value": 1.162927438404354e-06,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "Iz": {
+          "value": 2.2105921404000324e-06,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "It": {
+          "value": 3.0151598078906767e-06,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sectionproperties",
+          "adapter": "sectionproperties",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1999.section.free-outline-with-hole",
+      "check": "en1999.section.polygon-holes",
+      "citation": {
+        "standard": "EN 1999-1-1",
+        "edition": "2004",
+        "clause": "6.1 section properties of a free extruded outline (polygon with a hole)"
+      },
+      "inputs": {
+        "outer": [
+          [
+            -0.05,
+            -0.025
+          ],
+          [
+            0.05,
+            -0.025
+          ],
+          [
+            0.05,
+            0.025
+          ],
+          [
+            -0.05,
+            0.025
+          ]
+        ],
+        "holes": [
+          [
+            [
+              -0.03,
+              -0.01
+            ],
+            [
+              -0.03,
+              0.01
+            ],
+            [
+              0.03,
+              0.01
+            ],
+            [
+              0.03,
+              -0.01
+            ]
+          ]
+        ]
+      },
+      "expected": {
+        "A": {
+          "value": 0.0038000000000000013,
+          "unit": "m^2",
+          "profile": "numerical-v1"
+        },
+        "Iy": {
+          "value": 1.0016666666666669e-06,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "Iz": {
+          "value": 3.8066666666666678e-06,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "Wel_y": {
+          "value": 4.0066666666666674e-05,
+          "unit": "m^3",
+          "profile": "numerical-v1"
+        },
+        "Wel_z": {
+          "value": 7.613333333333335e-05,
+          "unit": "m^3",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sectionproperties",
+          "adapter": "sectionproperties",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1999.section.free-outline-solid-torsion",
+      "check": "en1999.section.polygon-holes",
+      "citation": {
+        "standard": "EN 1999-1-1",
+        "edition": "2004",
+        "clause": "6.2.7 and 6.3.2 torsion constant and warping constant of a free outline: solid rectangle 70 x 140 mm"
+      },
+      "inputs": {
+        "outer": [
+          [
+            -0.035,
+            -0.07
+          ],
+          [
+            0.035,
+            -0.07
+          ],
+          [
+            0.035,
+            0.07
+          ],
+          [
+            -0.035,
+            0.07
+          ]
+        ],
+        "holes": [],
+        "mesh": 4e-06
+      },
+      "expected": {
+        "It": {
+          "value": 1.0981301120539516e-05,
+          "unit": "m^4",
+          "profile": "method-spread-v1"
+        },
+        "Iw": {
+          "value": 2.390942324661192e-09,
+          "unit": "m^6",
+          "profile": "method-spread-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sectionproperties",
+          "adapter": "sectionproperties",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1999.section.free-outline-box-torsion",
+      "check": "en1999.section.polygon-holes",
+      "citation": {
+        "standard": "EN 1999-1-1",
+        "edition": "2004",
+        "clause": "6.2.7 and 6.3.2 torsion constant and warping constant of a free outline: closed box 100 x 60 x 4 mm"
+      },
+      "inputs": {
+        "outer": [
+          [
+            -0.05,
+            -0.03
+          ],
+          [
+            0.05,
+            -0.03
+          ],
+          [
+            0.05,
+            0.03
+          ],
+          [
+            -0.05,
+            0.03
+          ]
+        ],
+        "holes": [
+          [
+            [
+              -0.046,
+              -0.026
+            ],
+            [
+              0.046,
+              -0.026
+            ],
+            [
+              0.046,
+              0.026
+            ],
+            [
+              -0.046,
+              0.026
+            ]
+          ]
+        ],
+        "mesh": 4e-06
+      },
+      "expected": {
+        "It": {
+          "value": 1.5618941036584884e-06,
+          "unit": "m^4",
+          "profile": "method-spread-v1"
+        },
+        "Iw": {
+          "value": 5.731584730389851e-11,
+          "unit": "m^6",
+          "profile": "method-spread-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sectionproperties",
+          "adapter": "sectionproperties",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1999.section.free-outline-i-torsion",
+      "check": "en1999.section.polygon-holes",
+      "citation": {
+        "standard": "EN 1999-1-1",
+        "edition": "2004",
+        "clause": "6.2.7 and 6.3.2 torsion constant and warping constant of a free outline: I section 100 x 120 mm, flanges 8 mm, web 6 mm"
+      },
+      "inputs": {
+        "outer": [
+          [
+            -0.05,
+            -0.06
+          ],
+          [
+            0.05,
+            -0.06
+          ],
+          [
+            0.05,
+            -0.052
+          ],
+          [
+            0.003,
+            -0.052
+          ],
+          [
+            0.003,
+            0.052
+          ],
+          [
+            0.05,
+            0.052
+          ],
+          [
+            0.05,
+            0.06
+          ],
+          [
+            -0.05,
+            0.06
+          ],
+          [
+            -0.05,
+            0.052
+          ],
+          [
+            -0.003,
+            0.052
+          ],
+          [
+            -0.003,
+            -0.052
+          ],
+          [
+            -0.05,
+            -0.052
+          ]
+        ],
+        "holes": [],
+        "mesh": 4e-06
+      },
+      "expected": {
+        "It": {
+          "value": 4.124326035984419e-08,
+          "unit": "m^4",
+          "profile": "method-spread-v1"
+        },
+        "Iw": {
+          "value": 4.1705313357823395e-09,
+          "unit": "m^6",
+          "profile": "method-spread-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sectionproperties",
+          "adapter": "sectionproperties",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1999.section.web-stiffener-two-sided-passing",
+      "check": "en1999.6.7.6.web-stiffener",
+      "citation": {
+        "standard": "EN 1999-1-1",
+        "edition": "2004",
+        "clause": "6.7.6 transverse web stiffener stiffness satisfied: two-sided 50 x 6 mm flat bar (effective web strip 15 eps t_w per side; structure constants recalled from EN 1993-1-5 9.1 and 9.3.3, unverified)"
+      },
+      "inputs": {
+        "strip": 0.24133936216582086,
+        "tw": 0.008,
+        "width": 0.05,
+        "thickness": 0.006,
+        "sides": "two",
+        "h_w": 0.12,
+        "a": 2.0,
+        "factor_short": 1.5,
+        "factor_long": 0.75,
+        "aspect": 1.4142135623730951
+      },
+      "expected": {
+        "A": {
+          "value": 0.00253071489732656,
+          "unit": "m^2",
+          "profile": "numerical-v1"
+        },
+        "I_st": {
+          "value": 6.398971461190749e-07,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "I_min": {
+          "value": 4.608e-08,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "stiffness_ratio": {
+          "value": 0.0720115729214789,
+          "unit": "1",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sectionproperties",
+          "adapter": "sectionproperties",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1999.section.web-stiffener-one-sided-failing",
+      "check": "en1999.6.7.6.web-stiffener",
+      "citation": {
+        "standard": "EN 1999-1-1",
+        "edition": "2004",
+        "clause": "6.7.6 transverse web stiffener stiffness violated: one-sided 10 x 1 mm flat bar (effective web strip 15 eps t_w per side; structure constants recalled from EN 1993-1-5 9.1 and 9.3.3, unverified)"
+      },
+      "inputs": {
+        "strip": 0.23633936216582085,
+        "tw": 0.008,
+        "width": 0.01,
+        "thickness": 0.001,
+        "sides": "one",
+        "h_w": 0.12,
+        "a": 2.0,
+        "factor_short": 1.5,
+        "factor_long": 0.75,
+        "aspect": 1.4142135623730951
+      },
+      "expected": {
+        "A": {
+          "value": 0.0019007148973265596,
+          "unit": "m^2",
+          "profile": "numerical-v1"
+        },
+        "I_st": {
+          "value": 1.0972884564640204e-08,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "I_min": {
+          "value": 4.608e-08,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "stiffness_ratio": {
+          "value": 4.199442701556475,
+          "unit": "1",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sectionproperties",
+          "adapter": "sectionproperties",
+          "kind": "third-party-library"
+        }
+      ]
+    }
+  ]
+}

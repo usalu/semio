@@ -1,0 +1,79 @@
+{
+  "annex": null,
+  "reliabilityClass": null,
+  "members": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "connections": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "placements": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "tapers": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "cutouts": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "cutout-1",
+        "patch": {
+          "memberId": null,
+          "kind": null,
+          "face": null,
+          "distanceM": null,
+          "lengthM": null,
+          "depthM": 1.09,
+          "centreHeightM": null,
+          "slope": null,
+          "rods": null,
+          "rodResistanceN": null
+        }
+      }
+    ]
+  },
+  "fasteners": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "panels": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "floors": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "diaphragms": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "trusses": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "bracings": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "decks": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "ulsEquation": null,
+  "cases": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  }
+}

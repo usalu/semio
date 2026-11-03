@@ -11,7 +11,7 @@ use semio_s_artifact_norm_en1993_model::En1993Snapshot;
 /// 🔩️ The high-strength-connection example fixture, handcrafted in `en1993`'s DSL
 /// (`pack::snapshot::ArtifactDsl`): an S460 high-strength steel member and bolted/welded connection
 /// worked example (4×M24 grade 10.9 bolts, safe-life fatigue assessment, subgrade K2 toughness)
-/// under the EN annex — distinct from `En1993Snapshot::default()`'s DE-annex/S355/2-bolt/damage-tolerant
+/// under the EN annex — distinct from `En1993Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De)`'s DE-annex/S355/2-bolt/damage-tolerant
 /// values so the grammar's non-default branches (annex, bolt count, fatigue method, HSS section
 /// class) are exercised too.
 pub const EN1993_HIGH_STRENGTH_CONNECTION_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🔩️high-strength-connection/🔩️high-strength-connection/🗣️.dsl.semio");
@@ -40,7 +40,7 @@ mod snapshot_codec {
 use crate::text::snapshot::*;
 use semio_s_artifact_norm_en1993_model::*;
 use semio_s_plugin_norm_compliance::AnnexChoice;
-use semio_s_artifact_norm_en1993_model::{BridgeFatigue, ColdFormedMember, CraneRunway, DesignAction, FatigueBand, FatigueDetail, FireExposure, ForceAction, JointForceAction, LoadCase, MemberAction, PlatedPanel, SiloShell, SteelJoint, SteelMaterial, SteelMember, SteelPile, SteelSection, TensionComponent, TowerLeg};
+use semio_s_artifact_norm_en1993_model::{BridgeFatigue, ColdFormedMember, CraneRunway, DesignAction, FatigueBand, FatigueDetail, FireExposure, ForceAction, JointForceAction, LoadCase, MemberAction, PlatedPanel, SiloShell, SteelJoint, SteelMaterial, SteelMember, SteelPile, SteelSection, Storey, Restraint, BuiltUpMember, WeldGroup, ParametricSection, HollowJoint, JointRow, FrameNode, FrameBar, Placement, JointPlate, FoundationBlock, TensionComponent, TowerLeg};
 use framework_schema::ArtifactSchema;
 
 /// 📤️ The canonical JSON projection of a [`En1993Snapshot`] — the surface
@@ -84,10 +84,8 @@ mod snapshot_wire_codec {
 use crate::text::snapshot::*;
 use semio_s_artifact_norm_en1993_model::*;
 use semio_s_plugin_norm_compliance::AnnexChoice;
-use semio_s_artifact_norm_en1993_model::{BridgeFatigue, ColdFormedMember, CraneRunway, DesignAction, FatigueBand, FatigueDetail, FireExposure, ForceAction, JointForceAction, LoadCase, MemberAction, PlatedPanel, SiloShell, SteelJoint, SteelMaterial, SteelMember, SteelPile, SteelSection, TensionComponent, TowerLeg};
+use semio_s_artifact_norm_en1993_model::{BridgeFatigue, ColdFormedMember, CraneRunway, DesignAction, FatigueBand, FatigueDetail, FireExposure, ForceAction, JointForceAction, LoadCase, MemberAction, PlatedPanel, SiloShell, SteelJoint, SteelMaterial, SteelMember, SteelPile, SteelSection, Storey, Restraint, BuiltUpMember, WeldGroup, ParametricSection, HollowJoint, JointRow, FrameNode, FrameBar, Placement, TensionComponent, TowerLeg};
 use framework_schema::ArtifactSchema;
 
 }
 #[cfg(test)] pub use crate::text::snapshot::snapshot_wire_codec::*;
-
-semio_s_plugin_norm_compliance::impl_norm_artifact_record!(@text En1993Snapshot, extension="en1993", envelope_id="norm.en1993");

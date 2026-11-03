@@ -1,0 +1,5 @@
+# Explicit allow list for golden, DSL, pack and fixture diffs after the first bless pass of an artifact.
+# Format: <code|*> <path-substring>   (one per line, substring of the absolute file path)
+# The first bless pass of each artifact (first green build) writes every golden, DSL and pack diff without a line here.
+# Later passes restore every real diff of a non-empty file unless a line matches, and write it to build-<code>/golden-diff-<n>.txt.
+# Review the diff, add the line, then run: post-build.sh <code> bless

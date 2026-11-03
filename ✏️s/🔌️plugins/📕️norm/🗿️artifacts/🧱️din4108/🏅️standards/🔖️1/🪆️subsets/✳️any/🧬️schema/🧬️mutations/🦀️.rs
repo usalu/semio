@@ -61,7 +61,7 @@ use semio_s_artifact_norm_din4108_mut_layers::change_layer_compressive_class;
 
 #[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
 #[mutations(snapshot = Din4108Snapshot, diff = Din4108Diff, schema = "s.norm.din4108", reference = Din4108Snapshot, reference_diff = Din4108Diff)]
 pub enum Din4108Mutation {
     ChangeClimateZone(change_climate_zone::ChangeClimateZone),

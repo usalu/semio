@@ -1,0 +1,5 @@
+{
+  "mutation": "changeRingShellId",
+  "ringStiffenerId": "ring-1",
+  "newShellId": "shell-pass"
+}

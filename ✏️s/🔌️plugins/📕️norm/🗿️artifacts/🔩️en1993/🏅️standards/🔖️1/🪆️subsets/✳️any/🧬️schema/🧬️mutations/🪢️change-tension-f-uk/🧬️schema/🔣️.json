@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-tension-f-uk/schema.json",
+  "title": "ChangeTensionFUk",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newFUk"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Tension component",
+          "de": "Zugglied"
+        },
+        "description": {
+          "en": "The tension component this mutation addresses, by id.",
+          "de": "Das adressierte Element (Zugglied), per Kennung."
+        },
+        "ref": {
+          "kind": "tension"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newFUk": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Characteristic breaking strength F_uk",
+          "de": "Charakteristische Bruchkraft F_uk"
+        },
+        "widget": "stepper",
+        "unit": "N",
+        "displayUnit": "kN",
+        "displayFactor": 0.001,
+        "precision": 2,
+        "step": 1000,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

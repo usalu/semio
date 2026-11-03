@@ -1,13 +1,18 @@
-//! 🧱️ `change-masonry-wall-ratio` diff — patches the one field of the building at the index; a missing building is a `mutation.target-missing`.
+//! 🧱️ `change-masonry-wall-ratio` diff: patches `masonry_wall_area_ratio` of the addressed building row.
 
 use crate::change_masonry_wall_ratio::ChangeMasonryWallRatio;
 use semio_s_artifact_norm_en1998_diff::{En1998BuildingDelta, En1998BuildingPatch, En1998Diff};
 use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 
 pub fn diff(payload: &ChangeMasonryWallRatio, base: &En1998Snapshot) -> protocol::MutationOutcome<En1998Diff> {
-    let Some(building) = base.buildings.get(payload.building_index) else {
-        return protocol::MutationOutcome::error("mutation.target-missing", "building", Vec::<String>::new());
+    if !payload.new_masonry_wall_area_ratio.is_finite() {
+        return protocol::MutationOutcome::fatal("mutation.invariant", "The value must be finite.", Vec::<String>::new());
+    }
+    let Some(r0) = base.buildings.iter().find(|row| row.id == payload.id) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("building {} does not exist.", payload.id), [payload.id.clone()]);
     };
-    let patch = En1998BuildingPatch { masonry_wall_area_ratio: Some(payload.new_masonry_wall_area_ratio), ..Default::default() };
-    protocol::MutationOutcome::new(En1998Diff { buildings: En1998BuildingDelta::modification(&building.id, patch), ..Default::default() })
+    if r0.masonry_wall_area_ratio == payload.new_masonry_wall_area_ratio {
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "The building already has this value.");
+    }
+    protocol::MutationOutcome::new(En1998Diff { buildings: En1998BuildingDelta::modification(&payload.id, En1998BuildingPatch { masonry_wall_area_ratio: Some(payload.new_masonry_wall_area_ratio), ..Default::default() }), ..Default::default() })
 }

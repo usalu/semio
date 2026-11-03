@@ -1,0 +1,44 @@
+{
+  "annex": null,
+  "reliabilityClass": "RC2",
+  "materials": null,
+  "sections": null,
+  "members": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "purlin-1",
+        "patch": {
+          "sectionId": null,
+          "materialId": null,
+          "length": null,
+          "support": null,
+          "bucklingLengthY": null,
+          "bucklingLengthZ": null,
+          "bucklingLengthT": null,
+          "ltbLength": null,
+          "c1": 2.264,
+          "restrainedLtb": null,
+          "bearingLength": null,
+          "transverseWeld": null,
+          "transverseWeldOffset": null,
+          "actions": null
+        }
+      }
+    ]
+  },
+  "connections": null,
+  "fireScenarios": null,
+  "fatigueDetails": null,
+  "coldFormed": null,
+  "shells": null,
+  "placements": null,
+  "weldRuns": null,
+  "outlineVertices": null,
+  "fatigueCategories": null,
+  "patchLoads": null,
+  "ringStiffeners": null,
+  "transverseStiffeners": null
+}

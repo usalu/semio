@@ -1,0 +1,10 @@
+{
+  "status": "rejected",
+  "code": "mutation.duplicate-id",
+  "messages": [
+    {
+      "level": "fatal",
+      "code": "mutation.duplicate-id"
+    }
+  ]
+}

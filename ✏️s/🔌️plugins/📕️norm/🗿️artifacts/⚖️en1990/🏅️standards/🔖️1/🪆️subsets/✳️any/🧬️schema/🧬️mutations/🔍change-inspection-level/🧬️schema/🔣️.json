@@ -13,7 +13,7 @@
       "const": "changeInspectionLevel"
     },
     "newInspectionLevel": {
-      "type": "string",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/$defs/InspectionLevel",
       "x-semio-ui": {
         "label": {
           "en": "Inspection level",
@@ -22,8 +22,7 @@
         "description": {
           "en": "IL1, IL2 or IL3 (EN 1990 Table B5).",
           "de": "IL1, IL2 oder IL3 (EN 1990 Tabelle B5)."
-        },
-        "widget": "text"
+        }
       }
     }
   }

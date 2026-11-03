@@ -1,0 +1,1121 @@
+{
+ "artifact": "en1993",
+ "conversions": [
+  {
+   "hosts": [
+    "PlatedPanel.stiffener_shape"
+   ],
+   "enum": "StiffenerShape",
+   "doc": "🧱️ Outline of a transverse stiffener of a plated panel (EN 1993-1-5 9.2.1): none, flat bar, tee or angle.",
+   "default": "None",
+   "variants": [
+    [
+     "None",
+     [
+      "",
+      "none"
+     ],
+     "No transverse stiffener",
+     "Keine Quersteife"
+    ],
+    [
+     "Flat",
+     [
+      "flat"
+     ],
+     "Flat bar",
+     "Flachstahl"
+    ],
+    [
+     "Tee",
+     [
+      "tee"
+     ],
+     "Tee section",
+     "T-Profil"
+    ],
+    [
+     "Angle",
+     [
+      "angle"
+     ],
+     "Angle section",
+     "Winkelprofil"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "SteelMember.warping_support"
+   ],
+   "enum": "WarpingSupport",
+   "doc": "🌀️ Torsion and warping end conditions of a member (EN 1993-1-1 6.2.7): fork, fixed, fixed-fork or cantilever.",
+   "default": "Fork",
+   "variants": [
+    [
+     "Fork",
+     [
+      "fork"
+     ],
+     "Fork supports",
+     "Gabellagerung"
+    ],
+    [
+     "Fixed",
+     [
+      "fixed"
+     ],
+     "Both ends restrained against warping",
+     "Beidseitig wölbbehindert"
+    ],
+    [
+     "FixedFork",
+     [
+      "fixed-fork"
+     ],
+     "Restrained at the start, fork at the end",
+     "Wölbbehindert am Anfang, Gabellagerung am Ende"
+    ],
+    [
+     "Cantilever",
+     [
+      "cantilever"
+     ],
+     "Cantilever, restrained at the start",
+     "Kragarm, am Anfang eingespannt"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "SteelMember.member_type"
+   ],
+   "enum": "SteelMemberType",
+   "doc": "🔩 Member type: beam or beam-column.",
+   "default": "Beam",
+   "variants": [
+    [
+     "Beam",
+     [
+      "beam"
+     ],
+     "Beam",
+     "Träger"
+    ],
+    [
+     "Column",
+     [
+      "column"
+     ],
+     "Column",
+     "Stütze"
+    ],
+    [
+     "BeamColumn",
+     [
+      "beamColumn",
+      "beamcolumn"
+     ],
+     "Beam-column",
+     "Biegedruckstab"
+    ],
+    [
+     "Brace",
+     [
+      "brace"
+     ],
+     "Brace",
+     "Verband"
+    ],
+    [
+     "Tie",
+     [
+      "tie"
+     ],
+     "Tie",
+     "Zugstab"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "SteelMember.load_application"
+   ],
+   "enum": "LoadApplication",
+   "doc": "⬇️ Level of the transverse load relative to the shear centre.",
+   "default": "ShearCenter",
+   "variants": [
+    [
+     "ShearCenter",
+     [
+      "shearCenter",
+      "shearcenter"
+     ],
+     "Shear centre",
+     "Schubmittelpunkt"
+    ],
+    [
+     "TopFlange",
+     [
+      "topFlange",
+      "topflange"
+     ],
+     "Top flange",
+     "Obergurt"
+    ],
+    [
+     "BottomFlange",
+     [
+      "bottomFlange",
+      "bottomflange"
+     ],
+     "Bottom flange",
+     "Untergurt"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "SteelMember.moment_diagram"
+   ],
+   "enum": "MomentDiagram",
+   "doc": "📈 Shape of the bending moment diagram between the lateral restraints.",
+   "default": "Linear",
+   "variants": [
+    [
+     "Linear",
+     [
+      "linear"
+     ],
+     "Linear",
+     "Linear"
+    ],
+    [
+     "Uniform",
+     [
+      "uniform"
+     ],
+     "Uniform",
+     "Gleichförmig"
+    ],
+    [
+     "Parabolic",
+     [
+      "parabolic"
+     ],
+     "Parabolic",
+     "Parabolisch"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "SteelMember.analysis"
+   ],
+   "enum": "AnalysisKind",
+   "doc": "🧮 Global analysis type (elastic or plastic).",
+   "default": "Elastic",
+   "variants": [
+    [
+     "Elastic",
+     [
+      "elastic"
+     ],
+     "Elastic",
+     "Elastisch"
+    ],
+    [
+     "Plastic",
+     [
+      "plastic"
+     ],
+     "Plastic",
+     "Plastisch"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "SteelMember.stainless_forming"
+   ],
+   "enum": "StainlessForming",
+   "doc": "🔩 Forming of a stainless steel member (EN 1993-1-4).",
+   "default": "Unset",
+   "variants": [
+    [
+     "Unset",
+     [
+      ""
+     ],
+     "None (not stainless)",
+     "Keiner (nicht nichtrostend)"
+    ],
+    [
+     "ColdFormedOpen",
+     [
+      "coldFormedOpen",
+      "coldformedopen"
+     ],
+     "Cold-formed open section",
+     "Kaltgeformtes offenes Profil"
+    ],
+    [
+     "WeldedOpen",
+     [
+      "weldedOpen",
+      "weldedopen"
+     ],
+     "Welded open section",
+     "Geschweißtes offenes Profil"
+    ],
+    [
+     "Hollow",
+     [
+      "hollow"
+     ],
+     "Hollow section",
+     "Hohlprofil"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "SteelMember.torsion_load"
+   ],
+   "enum": "TorsionLoad",
+   "doc": "🌀 Application of the torsion action on a fork-supported member.",
+   "default": "Point",
+   "variants": [
+    [
+     "Point",
+     [
+      "point"
+     ],
+     "Point torque",
+     "Einzeltorsionsmoment"
+    ],
+    [
+     "Udl",
+     [
+      "udl"
+     ],
+     "Uniform torque",
+     "Gleichmäßig verteiltes Torsionsmoment"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "PlatedPanel.patch_type"
+   ],
+   "enum": "PatchLoadType",
+   "doc": "📍 Patch load type of EN 1993-1-5 Figure 6.1.",
+   "default": "Unset",
+   "variants": [
+    [
+     "Unset",
+     [
+      ""
+     ],
+     "None",
+     "Keine"
+    ],
+    [
+     "Through",
+     [
+      "through"
+     ],
+     "Type a: through the flange",
+     "Typ a: über den Flansch"
+    ],
+    [
+     "OneFlangeNearEnd",
+     [
+      "oneFlangeNearEnd",
+      "oneflangenearend"
+     ],
+     "Type b: one flange near the end",
+     "Typ b: ein Flansch nahe dem Ende"
+    ],
+    [
+     "EndFlange",
+     [
+      "endFlange",
+      "endflange"
+     ],
+     "Type c: at the end",
+     "Typ c: am Ende"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "SiloShell.fabrication_class"
+   ],
+   "enum": "FabricationToleranceClass",
+   "doc": "🏭 Fabrication tolerance class of a silo shell.",
+   "default": "Unset",
+   "variants": [
+    [
+     "Unset",
+     [
+      ""
+     ],
+     "None",
+     "Keine"
+    ],
+    [
+     "A",
+     [
+      "A",
+      "a"
+     ],
+     "Class A — excellent",
+     "Klasse A — ausgezeichnet"
+    ],
+    [
+     "B",
+     [
+      "B",
+      "b"
+     ],
+     "Class B — high",
+     "Klasse B — hoch"
+    ],
+    [
+     "C",
+     [
+      "C",
+      "c"
+     ],
+     "Class C — normal",
+     "Klasse C — normal"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "SteelJoint.assumed_class"
+   ],
+   "enum": "StiffnessClass",
+   "doc": "🔗 Assumed stiffness class of a joint.",
+   "default": "Unset",
+   "variants": [
+    [
+     "Unset",
+     [
+      ""
+     ],
+     "None",
+     "Keine"
+    ],
+    [
+     "Rigid",
+     [
+      "rigid"
+     ],
+     "Rigid",
+     "Starr"
+    ],
+    [
+     "SemiRigid",
+     [
+      "semiRigid",
+      "semirigid"
+     ],
+     "Semi-rigid",
+     "Verformbar"
+    ],
+    [
+     "Pinned",
+     [
+      "pinned"
+     ],
+     "Nominally pinned",
+     "Gelenkig"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "TowerLeg.lattice_kind"
+   ],
+   "enum": "LatticeKind",
+   "doc": "🗼 Lattice member kind of a tower leg.",
+   "default": "Unset",
+   "variants": [
+    [
+     "Unset",
+     [
+      ""
+     ],
+     "None",
+     "Keine"
+    ],
+    [
+     "Leg",
+     [
+      "leg"
+     ],
+     "Leg",
+     "Eckstiel"
+    ],
+    [
+     "Diagonal",
+     [
+      "diagonal"
+     ],
+     "Diagonal",
+     "Diagonale"
+    ],
+    [
+     "Redundant",
+     [
+      "redundant"
+     ],
+     "Redundant member",
+     "Füllstab"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "SteelPile.environment"
+   ],
+   "enum": "SheetPileEnvironment",
+   "doc": "🌊 Corrosion environment of a sheet pile.",
+   "default": "Unset",
+   "variants": [
+    [
+     "Unset",
+     [
+      ""
+     ],
+     "None",
+     "Keine"
+    ],
+    [
+     "UndisturbedSoil",
+     [
+      "undisturbedSoil",
+      "undisturbedsoil"
+     ],
+     "Undisturbed natural soil",
+     "Ungestörter gewachsener Boden"
+    ],
+    [
+     "PollutedSoil",
+     [
+      "pollutedSoil",
+      "pollutedsoil"
+     ],
+     "Polluted soil",
+     "Belasteter Boden"
+    ],
+    [
+     "CompactedFill",
+     [
+      "compactedFill",
+      "compactedfill"
+     ],
+     "Compacted fill",
+     "Verdichtete Auffüllung"
+    ],
+    [
+     "NonCompactedFill",
+     [
+      "nonCompactedFill",
+      "noncompactedfill"
+     ],
+     "Non-compacted fill",
+     "Nicht verdichtete Auffüllung"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "Restraint.start_support",
+    "Restraint.end_support"
+   ],
+   "enum": "RestraintSupport",
+   "doc": "⚓ Support condition at the end of a restrained member.",
+   "default": "Fork",
+   "variants": [
+    [
+     "Fork",
+     [
+      "fork"
+     ],
+     "Fork (laterally and torsionally held, warping free)",
+     "Gabellagerung (seitlich und gegen Verdrehen gehalten, Wölbung frei)"
+    ],
+    [
+     "Fixed",
+     [
+      "fixed"
+     ],
+     "Fixed (warping and lateral rotation restrained)",
+     "Einspannung (Wölbung und seitliche Verdrehung behindert)"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "Restraint.load_distribution"
+   ],
+   "enum": "RestraintDistribution",
+   "doc": "📈 Load and moment distribution of a restrained member.",
+   "default": "Uniform",
+   "variants": [
+    [
+     "Uniform",
+     [
+      "uniform"
+     ],
+     "Uniform moment",
+     "Konstantes Moment"
+    ],
+    [
+     "Udl",
+     [
+      "udl"
+     ],
+     "Uniformly distributed load",
+     "Gleichstreckenlast"
+    ],
+    [
+     "Linear",
+     [
+      "linear"
+     ],
+     "Linear moment (end moment ratio of the member)",
+     "Linearer Momentenverlauf (Randmomentenverhältnis des Stabes)"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "BuiltUpMember.chord_shape"
+   ],
+   "enum": "ChordShape",
+   "doc": "⬜ Chord section outline shape of a built-up member.",
+   "default": "Unset",
+   "variants": [
+    [
+     "Unset",
+     [
+      ""
+     ],
+     "None (no outline)",
+     "Keine (keine Kontur)"
+    ],
+    [
+     "Channel",
+     [
+      "channel"
+     ],
+     "Channel (U)",
+     "U-Profil"
+    ],
+    [
+     "I",
+     [
+      "i"
+     ],
+     "I section",
+     "I-Profil"
+    ],
+    [
+     "Rhs",
+     [
+      "rhs"
+     ],
+     "Rectangular hollow section",
+     "Rechteckhohlprofil"
+    ],
+    [
+     "Chs",
+     [
+      "chs"
+     ],
+     "Circular hollow section",
+     "Kreishohlprofil"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "WeldGroup.pattern"
+   ],
+   "enum": "WeldPattern",
+   "doc": "〰 Weld pattern of a weld group.",
+   "default": "Line",
+   "variants": [
+    [
+     "Line",
+     [
+      "line"
+     ],
+     "Single line",
+     "Einzelnaht"
+    ],
+    [
+     "TwoLines",
+     [
+      "twoLines",
+      "twolines"
+     ],
+     "Two parallel lines",
+     "Zwei parallele Nähte"
+    ],
+    [
+     "Box",
+     [
+      "box"
+     ],
+     "Box (four sides)",
+     "Rechteckumfang (vier Seiten)"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "JointRow.row_type"
+   ],
+   "enum": "JointRowType",
+   "doc": "🔩 Row position of a bolt row.",
+   "default": "Extended",
+   "variants": [
+    [
+     "Extended",
+     [
+      "extended"
+     ],
+     "Extended part above the beam flange",
+     "Überstand oberhalb des Trägerflanschs"
+    ],
+    [
+     "FirstBelow",
+     [
+      "firstBelow",
+      "firstbelow"
+     ],
+     "First row below the tension flange",
+     "Erste Reihe unter dem Zugflansch"
+    ],
+    [
+     "Inner",
+     [
+      "inner"
+     ],
+     "Other inner row",
+     "Weitere innere Reihe"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "FrameNode.support"
+   ],
+   "enum": "FrameNodeSupport",
+   "doc": "⚓ Support of a frame node.",
+   "default": "Free",
+   "variants": [
+    [
+     "Free",
+     [
+      "free"
+     ],
+     "Free",
+     "Frei"
+    ],
+    [
+     "Pinned",
+     [
+      "pinned"
+     ],
+     "Pinned (translations fixed, rotation free)",
+     "Gelenkig (Verschiebungen gehalten, Drehung frei)"
+    ],
+    [
+     "Fixed",
+     [
+      "fixed"
+     ],
+     "Fixed (translations and rotation fixed)",
+     "Eingespannt (Verschiebungen und Drehung gehalten)"
+    ],
+    [
+     "Roller",
+     [
+      "roller"
+     ],
+     "Roller (vertical translation fixed)",
+     "Rollenlager (vertikale Verschiebung gehalten)"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "FrameBar.release_start",
+    "FrameBar.release_end"
+   ],
+   "enum": "FrameBarRelease",
+   "doc": "🔗 End connection of a frame bar.",
+   "default": "Rigid",
+   "variants": [
+    [
+     "Rigid",
+     [
+      "rigid"
+     ],
+     "Rigid",
+     "Biegesteif"
+    ],
+    [
+     "Pinned",
+     [
+      "pinned"
+     ],
+     "Hinge",
+     "Gelenk"
+    ],
+    [
+     "SemiRigid",
+     [
+      "semiRigid",
+      "semirigid"
+     ],
+     "Semi-rigid (secant stiffness S_j of the joint of the member)",
+     "Verformbar (Sekantensteifigkeit S_j des Anschlusses des Bauteils)"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "FireExposure.rating"
+   ],
+   "enum": "FireRating",
+   "doc": "🔥 Fire resistance rating.",
+   "default": "R30",
+   "variants": [
+    [
+     "R30",
+     [
+      "r30"
+     ],
+     "R30",
+     "R30"
+    ],
+    [
+     "R60",
+     [
+      "r60"
+     ],
+     "R60",
+     "R60"
+    ],
+    [
+     "R90",
+     [
+      "r90"
+     ],
+     "R90",
+     "R90"
+    ],
+    [
+     "R120",
+     [
+      "r120"
+     ],
+     "R120",
+     "R120"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "FatigueDetail.method",
+    "BridgeFatigue.method"
+   ],
+   "enum": "FatigueMethod",
+   "doc": "♻ Fatigue assessment method.",
+   "default": "DamageTolerant",
+   "variants": [
+    [
+     "DamageTolerant",
+     [
+      "damage_tolerant"
+     ],
+     "Damage tolerant",
+     "Schadenstolerant"
+    ],
+    [
+     "SafeLife",
+     [
+      "safe_life"
+     ],
+     "Safe life",
+     "Safe-Life"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "SteelMaterial.kind"
+   ],
+   "enum": "MaterialKind",
+   "doc": "🔩 Material family of a steel grade: carbon or stainless steel (EN 1993-1-1 / EN 1993-1-4).",
+   "default": "Carbon",
+   "variants": [
+    [
+     "Carbon",
+     [
+      "carbon"
+     ],
+     "Carbon steel",
+     "Baustahl"
+    ],
+    [
+     "Stainless",
+     [
+      "stainless"
+     ],
+     "Stainless steel",
+     "Nichtrostender Stahl"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "SteelSection.kind"
+   ],
+   "enum": "SectionKind",
+   "doc": "📐 Fabrication route of a steel section: rolled I, welded I or hollow section (EN 1993-1-1 6.3.2).",
+   "default": "RolledI",
+   "variants": [
+    [
+     "RolledI",
+     [
+      "rolledI"
+     ],
+     "Rolled I-section",
+     "Gewalzter I-Querschnitt"
+    ],
+    [
+     "WeldedI",
+     [
+      "weldedI"
+     ],
+     "Welded I-section",
+     "Geschweißter I-Querschnitt"
+    ],
+    [
+     "Hss",
+     [
+      "hss"
+     ],
+     "Hollow section",
+     "Hohlprofil"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "LoadCase.kind"
+   ],
+   "enum": "ActionKind",
+   "doc": "🏋 Kind of an action of a load case (EN 1990 Table A1.1).",
+   "default": "Permanent",
+   "variants": [
+    [
+     "Permanent",
+     [
+      "permanent"
+     ],
+     "Permanent (G)",
+     "Ständig (G)"
+    ],
+    [
+     "Imposed",
+     [
+      "imposed"
+     ],
+     "Imposed (Q)",
+     "Nutzlast (Q)"
+    ],
+    [
+     "Wind",
+     [
+      "wind"
+     ],
+     "Wind (W)",
+     "Wind (W)"
+    ],
+    [
+     "Snow",
+     [
+      "snow"
+     ],
+     "Snow (S)",
+     "Schnee (S)"
+    ],
+    [
+     "Accidental",
+     [
+      "accidental"
+     ],
+     "Accidental (A)",
+     "Außergewöhnlich (A)"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "SteelJoint.kind"
+   ],
+   "enum": "JointKind",
+   "doc": "🔗 Kind of a steel joint (EN 1993-1-8).",
+   "default": "Bolted",
+   "variants": [
+    [
+     "Bolted",
+     [
+      "bolted"
+     ],
+     "Bolted",
+     "Geschraubt"
+    ],
+    [
+     "Welded",
+     [
+      "welded"
+     ],
+     "Welded",
+     "Geschweißt"
+    ],
+    [
+     "EndPlate",
+     [
+      "endPlate"
+     ],
+     "End plate",
+     "Stirnplatte"
+    ],
+    [
+     "BasePlate",
+     [
+      "basePlate"
+     ],
+     "Base plate",
+     "Fußplatte"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "SteelJoint.category"
+   ],
+   "enum": "JointCategory",
+   "doc": "🔩 Category A, B or C of a bolted connection (EN 1993-1-8 Table 3.2).",
+   "default": "A",
+   "variants": [
+    [
+     "A",
+     [
+      "A",
+      "a"
+     ],
+     "Category A (bearing)",
+     "Kategorie A (Scherverbindung)"
+    ],
+    [
+     "B",
+     [
+      "B",
+      "b"
+     ],
+     "Category B (slip-resistant SLS)",
+     "Kategorie B (gleitfest GZG)"
+    ],
+    [
+     "C",
+     [
+      "C",
+      "c"
+     ],
+     "Category C (slip-resistant ULS)",
+     "Kategorie C (gleitfest GZT)"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "BuiltUpMember.kind"
+   ],
+   "enum": "BuiltUpKind",
+   "doc": "🪜 Kind of a built-up compression member: laced, battened or closely spaced (EN 1993-1-1 6.4).",
+   "default": "Battened",
+   "variants": [
+    [
+     "Laced",
+     [
+      "laced"
+     ],
+     "Laced",
+     "Gegliedert mit Gitter"
+    ],
+    [
+     "Battened",
+     [
+      "battened"
+     ],
+     "Battened",
+     "Gegliedert mit Bindeblechen"
+    ],
+    [
+     "Closely",
+     [
+      "closely"
+     ],
+     "Closely spaced",
+     "Eng gestellt"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "ParametricSection.shape"
+   ],
+   "enum": "ParametricShape",
+   "doc": "📏 Shape of a parametric steel section.",
+   "default": "WeldedI",
+   "variants": [
+    [
+     "WeldedI",
+     [
+      "weldedI"
+     ],
+     "Welded I-section",
+     "Geschweißter I-Querschnitt"
+    ],
+    [
+     "Rhs",
+     [
+      "rhs"
+     ],
+     "Rectangular hollow section",
+     "Rechteck-Hohlprofil"
+    ],
+    [
+     "Chs",
+     [
+      "chs"
+     ],
+     "Circular hollow section",
+     "Kreis-Hohlprofil"
+    ]
+   ]
+  }
+ ]
+}

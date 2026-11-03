@@ -20,8 +20,8 @@ use framework_schema::ArtifactSchema;
 /// `💡️inferences/` (currently: `outline`, backed by the `🧾outline/` slug dir — this document's
 /// own field/section structure, since a norm compliance record IS the document it describes).
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.norm.en1997.inference")]
 pub struct En1997Inference {
@@ -31,7 +31,7 @@ pub struct En1997Inference {
 
 impl Default for En1997Inference {
     fn default() -> Self {
-        Self { outline:En1997Outline::compute(&En1997Snapshot::default()) }
+        Self { outline:En1997Outline::compute(&En1997Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De)) }
     }
 }
 
@@ -100,3 +100,7 @@ pub use crate::outline::En1997Outline;
 #[path = "🧾outline/🦀️.rs"]
 pub mod outline;
 //#endregion 🪢️Mounts
+
+//#region 🛰️LiveEvaluation
+semio_s_plugin_norm_compliance::live_report!(pub mod live(En1997Snapshot) = semio_s_artifact_norm_en1997_checks::En1997Units);
+//#endregion 🛰️LiveEvaluation

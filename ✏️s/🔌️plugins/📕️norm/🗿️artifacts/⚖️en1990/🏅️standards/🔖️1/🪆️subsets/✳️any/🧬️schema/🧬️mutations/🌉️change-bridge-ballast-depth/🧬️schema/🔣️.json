@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/mutation/change-bridge-ballast-depth/schema.json",
+  "title": "ChangeBridgeBallastDepth",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newBallastDepth"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeBridgeBallastDepth"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Bridge serviceability",
+          "de": "Brückengebrauchstauglichkeit"
+        },
+        "description": {
+          "en": "The bridge serviceability this mutation addresses, by id.",
+          "de": "Das adressierte Element (Brückengebrauchstauglichkeit), per Kennung."
+        },
+        "ref": {
+          "kind": "bridge-sls"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newBallastDepth": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Ballast depth (0 = slab track)",
+          "de": "Schotterhöhe (0 = feste Fahrbahn)"
+        },
+        "widget": "stepper",
+        "precision": 2,
+        "step": 0.01,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

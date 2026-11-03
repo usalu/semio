@@ -1,0 +1,5 @@
+{
+  "mutation": "changeConnBoltsPlateThickness",
+  "connectionId": "support-weld",
+  "newBoltsPlateThickness": 0.016
+}

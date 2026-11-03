@@ -1,0 +1,6 @@
+{
+  "ChangeRailDerailmentAssumedLineLoad": {
+    "id": "rail-derailment-1",
+    "newAssumedLineLoad": 50001.0
+  }
+}

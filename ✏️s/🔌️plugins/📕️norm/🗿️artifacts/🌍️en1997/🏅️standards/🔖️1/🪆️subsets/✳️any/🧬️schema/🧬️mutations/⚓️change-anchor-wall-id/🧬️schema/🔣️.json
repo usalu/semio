@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-anchor-wall-id/schema.json",
+  "title": "ChangeAnchorWallId",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newWallId"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeAnchorWallId"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Anchor",
+          "de": "Anker"
+        },
+        "description": {
+          "en": "The anchor this mutation addresses, by id.",
+          "de": "Die adressierte Zeile (Anker), per Kennung."
+        },
+        "ref": {
+          "kind": "anchor"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newWallId": {
+      "type": "string",
+      "x-semio-ui": {
+        "label": {
+          "en": "Supported wall id",
+          "de": "Gestützte Wand-ID"
+        },
+        "widget": "text",
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

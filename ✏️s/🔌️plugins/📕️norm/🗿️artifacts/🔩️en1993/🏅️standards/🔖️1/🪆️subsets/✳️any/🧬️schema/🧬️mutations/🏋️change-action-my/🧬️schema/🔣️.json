@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-action-my/schema.json",
+  "title": "ChangeActionMy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newActionMy"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Member action",
+          "de": "Bauteileinwirkung"
+        },
+        "description": {
+          "en": "The member action this mutation addresses, by id.",
+          "de": "Das adressierte Element (Bauteileinwirkung), per Kennung."
+        },
+        "ref": {
+          "kind": "member-action"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newActionMy": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Bending moment M_y,Ed",
+          "de": "Biegemoment M_y,Ed"
+        },
+        "widget": "stepper",
+        "unit": "N·m",
+        "displayUnit": "kN·m",
+        "displayFactor": 0.001,
+        "precision": 2,
+        "step": 1000,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeMasonryWallRatio",
+  "id": "bldg-office",
+  "newMasonryWallAreaRatio": 0.04
+}

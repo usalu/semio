@@ -1,0 +1,6 @@
+{
+  "ChangeRotatingMachineFrequency": {
+    "id": "rotating-machine-1",
+    "newFrequency": 3.0
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "ChangeSelfWeightAssumedGk": {
+    "id": "slab-rc",
+    "newAssumedGk": 5000.0
+  }
+}

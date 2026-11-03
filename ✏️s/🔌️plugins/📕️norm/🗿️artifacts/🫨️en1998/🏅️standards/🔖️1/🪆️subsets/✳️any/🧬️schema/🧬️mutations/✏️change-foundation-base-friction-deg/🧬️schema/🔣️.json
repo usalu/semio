@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-foundation-base-friction-deg/schema.json",
+  "title": "ChangeFoundationBaseFrictionDeg",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "index",
+    "newBaseFrictionAngleDeg"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeFoundationBaseFrictionDeg"
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Foundation",
+          "de": "Gründung"
+        },
+        "description": {
+          "en": "Zero-based position of the foundation in its list.",
+          "de": "Nullbasierte Position in der Liste (Gründung)."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newBaseFrictionAngleDeg": {
+      "type": "number",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Interface friction angle δ of the footing base for the seismic sliding resistance (V − u) tan δ / γ_Rd (0 = no friction credited)",
+          "de": "Sohlreibungswinkel δ der Fundamentsohle für den Gleitwiderstand (V − u) tan δ / γ_Rd (0 = keine Reibung angesetzt)"
+        },
+        "group": "value",
+        "order": 20,
+        "widget": "stepper",
+        "step": 0.001,
+        "precision": 3
+      }
+    }
+  }
+}

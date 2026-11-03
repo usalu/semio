@@ -1,49 +1,641 @@
 syntax = "proto3";
-package semio.s.norm.en1994.mutation;
-
+package semio.s.norm.en1994;
 message En1994Mutation {
-  // @state artifact
-  string annex = 1;
-  // @state artifact
-  double m_ed_knm = 2;
-  // @state artifact
-  double v_ed_kn = 3;
-  // @state artifact
-  double m_pla = 4;
-  // @state artifact
-  double m_pl_rd = 5;
-  // @state artifact
-  double eta = 6;
-  // @state artifact
-  double v_l_rd = 7;
-  // @state artifact
-  double insulation_thickness_mm = 8;
-  // @state artifact
-  string fire_rating = 9;
-  // @state artifact
-  string deck_type = 10;
-  // @state artifact
-  double delta_sigma_mpa = 11;
-  // @state artifact
-  string fatigue_detail = 12;
-  // @state artifact
-  double d_mm = 13;
-  // @state artifact
-  double h_sc_mm = 14;
-  // @state artifact
-  double f_ck_mpa = 15;
-  // @state artifact
-  double f_u_mpa = 16;
-  // @state artifact
-  double e_cm_mpa = 17;
-  // @state artifact
-  double v_ed_per_stud_kn = 18;
-  // @state artifact
-  double span_m = 19;
-  // @state artifact
-  double f_y_mpa = 20;
-  // @state artifact
-  double n_cycles_stud = 21;
-  // @state artifact
-  double delta_tau_stud_mpa = 22;
+  oneof kind {
+    ChangeAnnex change_annex = 1;
+    ChangeReliabilityClass change_reliability_class = 2;
+    ChangeStructureKind change_structure_kind = 3;
+    ChangeSteelFYPa change_steel_f_y_pa = 4;
+    ChangeFireRating change_fire_rating = 5;
+    ChangeInsulationThicknessM change_insulation_thickness_m = 6;
+    ChangeFatigueDetail change_fatigue_detail = 7;
+    InsertBeam insert_beam = 8;
+    RemoveBeam remove_beam = 9;
+    ChangeBeamActionQAreaPa change_beam_action_q_area_pa = 10;
+    ChangeBeamSpanM change_beam_span_m = 11;
+    ChangeBeamSlabThicknessM change_beam_slab_thickness_m = 12;
+    ChangeBeamTransverseAs change_beam_transverse_as = 13;
+    ChangeBeamConstruction change_beam_construction = 14;
+    InsertColumn insert_column = 15;
+    RemoveColumn remove_column = 16;
+    ChangeColumnActionForceN change_column_action_force_n = 17;
+    ChangeColumnKind change_column_kind = 18;
+    InsertSlab insert_slab = 19;
+    RemoveSlab remove_slab = 20;
+    ChangeSlabActionQAreaPa change_slab_action_q_area_pa = 21;
+    ChangeSlabThicknessM change_slab_thickness_m = 22;
+    ChangeBeamSpacingM change_beam_spacing_m = 23;
+    ChangeBeamSupport change_beam_support = 24;
+    ChangeBeamRebarProduct change_beam_rebar_product = 25;
+    ChangeBeamConcreteFCkPa change_beam_concrete_f_ck_pa = 26;
+    ChangeBeamConcreteECmPa change_beam_concrete_e_cm_pa = 27;
+    ChangeBeamLtbLengthM change_beam_ltb_length_m = 28;
+    ChangeBeamHoggingRebarM2PerM change_beam_hogging_rebar_m2_per_m = 29;
+    ChangeBeamBarSpacingM change_beam_bar_spacing_m = 30;
+    ChangeBeamCrackWidthLimitM change_beam_crack_width_limit_m = 31;
+    ChangeBeamFatigueCycles change_beam_fatigue_cycles = 32;
+    ChangeBeamSteelDesignation change_beam_steel_designation = 33;
+    ChangeBeamSteelHeightM change_beam_steel_height_m = 34;
+    ChangeBeamSteelWidthM change_beam_steel_width_m = 35;
+    ChangeBeamSteelWebThicknessM change_beam_steel_web_thickness_m = 36;
+    ChangeBeamSteelTfM change_beam_steel_tf_m = 37;
+    ChangeBeamSteelAreaM2 change_beam_steel_area_m2 = 38;
+    ChangeBeamSteelWPlYM3 change_beam_steel_w_pl_y_m3 = 39;
+    ChangeBeamSteelSecondMomentM4 change_beam_steel_second_moment_m4 = 40;
+    ChangeBeamSteelShearAreaM2 change_beam_steel_shear_area_m2 = 41;
+    ChangeBeamSteelRootRadiusM change_beam_steel_root_radius_m = 42;
+    ChangeBeamSheetingProfile change_beam_sheeting_profile = 43;
+    ChangeBeamSheetingHeightM change_beam_sheeting_height_m = 44;
+    ChangeBeamSheetingRibWidthM change_beam_sheeting_rib_width_m = 45;
+    ChangeBeamSheetingThicknessM change_beam_sheeting_thickness_m = 46;
+    ChangeBeamSheetingRibsParallel change_beam_sheeting_ribs_parallel = 47;
+    ChangeBeamActionKind change_beam_action_kind = 48;
+    ChangeBeamActionCategory change_beam_action_category = 49;
+    ChangeBeamActionStage change_beam_action_stage = 50;
+    ChangeBeamActionPointForceN change_beam_action_point_force_n = 51;
+    ChangeBeamActionDeltaSigmaPa change_beam_action_delta_sigma_pa = 52;
+    ChangeBeamActionDeltaTauPa change_beam_action_delta_tau_pa = 53;
+    ChangeColumnLengthM change_column_length_m = 54;
+    ChangeColumnOuterSizeM change_column_outer_size_m = 55;
+    ChangeColumnWallThicknessM change_column_wall_thickness_m = 56;
+    ChangeColumnSteelAreaM2 change_column_steel_area_m2 = 57;
+    ChangeColumnSteelFYPa change_column_steel_f_y_pa = 58;
+    ChangeColumnConcreteAreaM2 change_column_concrete_area_m2 = 59;
+    ChangeColumnConcreteFCkPa change_column_concrete_f_ck_pa = 60;
+    ChangeColumnRebarAreaM2 change_column_rebar_area_m2 = 61;
+    ChangeColumnRebarFYkPa change_column_rebar_f_yk_pa = 62;
+    ChangeColumnSecondMomentM4 change_column_second_moment_m4 = 63;
+    ChangeColumnBucklingCurve change_column_buckling_curve = 64;
+    ChangeColumnRebarProduct change_column_rebar_product = 65;
+    ChangeColumnActionKind change_column_action_kind = 66;
+    ChangeColumnActionCategory change_column_action_category = 67;
+    ChangeColumnActionStage change_column_action_stage = 68;
+    ChangeColumnActionMomentNm change_column_action_moment_nm = 69;
+    ChangeSlabSpanM change_slab_span_m = 70;
+    ChangeSlabSupport change_slab_support = 71;
+    ChangeSlabFCkPa change_slab_f_ck_pa = 72;
+    ChangeSlabMFactor change_slab_m_factor = 73;
+    ChangeSlabKFactor change_slab_k_factor = 74;
+    ChangeSlabReinforcementM2PerM change_slab_reinforcement_m2_per_m = 75;
+    ChangeSlabSheetingProfile change_slab_sheeting_profile = 76;
+    ChangeSlabSheetingHeightM change_slab_sheeting_height_m = 77;
+    ChangeSlabSheetingRibWidthM change_slab_sheeting_rib_width_m = 78;
+    ChangeSlabSheetingThicknessM change_slab_sheeting_thickness_m = 79;
+    ChangeSlabSheetingRibsParallel change_slab_sheeting_ribs_parallel = 80;
+    ChangeSlabActionKind change_slab_action_kind = 81;
+    ChangeSlabActionCategory change_slab_action_category = 82;
+    ChangeSlabActionStage change_slab_action_stage = 83;
+    ChangeSlabActionPointForceN change_slab_action_point_force_n = 84;
+    ChangeSlabActionDeltaSigmaPa change_slab_action_delta_sigma_pa = 85;
+    ChangeSlabActionDeltaTauPa change_slab_action_delta_tau_pa = 86;
+    ChangeBeamAdjacentSpanM change_beam_adjacent_span_m = 87;
+    ChangeBeamPatchBearingLengthM change_beam_patch_bearing_length_m = 88;
+    ChangeBeamBridgeLanes change_beam_bridge_lanes = 89;
+    ChangeColumnIntroducedForceN change_column_introduced_force_n = 90;
+    ChangeBeamCrackedLengthFraction change_beam_cracked_length_fraction = 91;
+    ChangeColumnSectionHeightM change_column_section_height_m = 92;
+    ChangeColumnSectionWidthM change_column_section_width_m = 93;
+    ChangeColumnSectionTwM change_column_section_tw_m = 94;
+    ChangeColumnSectionTfM change_column_section_tf_m = 95;
+    ChangeColumnRebarCoverM change_column_rebar_cover_m = 96;
+    ChangePlacementX change_placement_x = 97;
+    ChangePlacementY change_placement_y = 98;
+    ChangePlacementZ change_placement_z = 99;
+    ChangePlacementYaw change_placement_yaw = 100;
+    InsertPlacement insert_placement = 101;
+    RemovePlacement remove_placement = 102;
+    ChangeBeamStudCrossSpacingM change_beam_stud_cross_spacing_m = 103;
+    ChangeBeamStudEdgeDistanceM change_beam_stud_edge_distance_m = 104;
+    ChangeBeamTransverseAsTop change_beam_transverse_as_top = 105;
+    ChangeBeamEndPlateWidthM change_beam_end_plate_width_m = 106;
+    ChangeBeamEndPlateHeightM change_beam_end_plate_height_m = 107;
+    ChangeBeamEndZoneLengthM change_beam_end_zone_length_m = 108;
+    InsertBeamAction insert_beam_action = 109;
+    RemoveBeamAction remove_beam_action = 110;
+    InsertColumnAction insert_column_action = 111;
+    RemoveColumnAction remove_column_action = 112;
+    InsertSlabAction insert_slab_action = 113;
+    RemoveSlabAction remove_slab_action = 114;
+    ChangeBeamActionXM change_beam_action_x_m = 115;
+    ChangeSlabActionXM change_slab_action_x_m = 116;
+    ChangeSlabActionYM change_slab_action_y_m = 117;
+    InsertCase insert_case = 118;
+    RemoveCase remove_case = 119;
+    ChangeCaseNumber change_case_number = 120;
+    ChangeCaseText change_case_text = 121;
+    ChangeCaseLabelEn change_case_label_en = 122;
+    ChangeCaseLabelDe change_case_label_de = 123;
+    ChangeCaseEntryId change_case_entry_id = 124;
+  }
+}
+message ChangeAnnex {
+  AnnexChoice new_annex = 1;
+}
+message ChangeReliabilityClass {
+  string new_reliability_class = 1;
+}
+message ChangeStructureKind {
+  StructureKind new_structure_kind = 1;
+}
+message ChangeSteelFYPa {
+  double new_steel_f_y_pa = 1;
+}
+message ChangeFireRating {
+  FireRating new_fire_rating = 1;
+}
+message ChangeInsulationThicknessM {
+  double new_insulation_thickness_m = 1;
+}
+message ChangeFatigueDetail {
+  FatigueDetail new_fatigue_detail = 1;
+}
+message InsertBeam {
+  uint64 index = 1;
+  CompositeBeam beam = 2;
+}
+message RemoveBeam {
+  string id = 1;
+}
+message ChangeBeamActionQAreaPa {
+  string beam_id = 1;
+  string id = 2;
+  double new_q_area_pa = 3;
+}
+message ChangeBeamSpanM {
+  string id = 1;
+  double new_span_m = 2;
+}
+message ChangeBeamSlabThicknessM {
+  string id = 1;
+  double new_slab_thickness_m = 2;
+}
+message ChangeBeamTransverseAs {
+  string id = 1;
+  double new_transverse_as_m2_per_m = 2;
+}
+message ChangeBeamConstruction {
+  string id = 1;
+  ConstructionMethod new_construction = 2;
+}
+message InsertColumn {
+  uint64 index = 1;
+  CompositeColumn column = 2;
+}
+message RemoveColumn {
+  string id = 1;
+}
+message ChangeColumnActionForceN {
+  string column_id = 1;
+  string id = 2;
+  double new_n_k_n = 3;
+}
+message ChangeColumnKind {
+  string id = 1;
+  ColumnKind new_kind = 2;
+}
+message InsertSlab {
+  uint64 index = 1;
+  CompositeSlab slab = 2;
+}
+message RemoveSlab {
+  string id = 1;
+}
+message ChangeSlabActionQAreaPa {
+  string slab_id = 1;
+  string id = 2;
+  double new_q_area_pa = 3;
+}
+message ChangeSlabThicknessM {
+  string id = 1;
+  double new_concrete_thickness_m = 2;
+}
+message ChangeBeamSpacingM {
+  string id = 1;
+  double new_spacing_m = 2;
+}
+message ChangeBeamSupport {
+  string id = 1;
+  SupportCondition new_support = 2;
+}
+message ChangeBeamRebarProduct {
+  string id = 1;
+  ReinforcementProduct new_reinforcement_product = 2;
+}
+message ChangeBeamConcreteFCkPa {
+  string id = 1;
+  double new_concrete_f_ck_pa = 2;
+}
+message ChangeBeamConcreteECmPa {
+  string id = 1;
+  double new_concrete_e_cm_pa = 2;
+}
+message ChangeBeamLtbLengthM {
+  string id = 1;
+  double new_ltb_length_m = 2;
+}
+message ChangeBeamHoggingRebarM2PerM {
+  string id = 1;
+  double new_as_hogging_m2_per_m = 2;
+}
+message ChangeBeamBarSpacingM {
+  string id = 1;
+  double new_bar_spacing_m = 2;
+}
+message ChangeBeamCrackWidthLimitM {
+  string id = 1;
+  double new_wk_limit_m = 2;
+}
+message ChangeBeamFatigueCycles {
+  string id = 1;
+  double new_n_cycles = 2;
+}
+message ChangeBeamSteelDesignation {
+  string id = 1;
+  string new_designation = 2;
+}
+message ChangeBeamSteelHeightM {
+  string id = 1;
+  double new_height_m = 2;
+}
+message ChangeBeamSteelWidthM {
+  string id = 1;
+  double new_width_m = 2;
+}
+message ChangeBeamSteelWebThicknessM {
+  string id = 1;
+  double new_tw_m = 2;
+}
+message ChangeBeamSteelTfM {
+  string id = 1;
+  double new_tf_m = 2;
+}
+message ChangeBeamSteelAreaM2 {
+  string id = 1;
+  double new_a_m2 = 2;
+}
+message ChangeBeamSteelWPlYM3 {
+  string id = 1;
+  double new_w_pl_y_m3 = 2;
+}
+message ChangeBeamSteelSecondMomentM4 {
+  string id = 1;
+  double new_i_y_m4 = 2;
+}
+message ChangeBeamSteelShearAreaM2 {
+  string id = 1;
+  double new_a_v_m2 = 2;
+}
+message ChangeBeamSteelRootRadiusM {
+  string id = 1;
+  double new_r_m = 2;
+}
+message ChangeBeamSheetingProfile {
+  string id = 1;
+  SheetingProfile new_profile = 2;
+}
+message ChangeBeamSheetingHeightM {
+  string id = 1;
+  double new_height_m = 2;
+}
+message ChangeBeamSheetingRibWidthM {
+  string id = 1;
+  double new_rib_width_m = 2;
+}
+message ChangeBeamSheetingThicknessM {
+  string id = 1;
+  double new_thickness_m = 2;
+}
+message ChangeBeamSheetingRibsParallel {
+  string id = 1;
+  bool new_ribs_parallel_to_beam = 2;
+}
+message ChangeBeamActionKind {
+  string beam_id = 1;
+  string id = 2;
+  ActionKind new_kind = 3;
+}
+message ChangeBeamActionCategory {
+  string beam_id = 1;
+  string id = 2;
+  string new_category = 3;
+}
+message ChangeBeamActionStage {
+  string beam_id = 1;
+  string id = 2;
+  ActionStage new_stage = 3;
+}
+message ChangeBeamActionPointForceN {
+  string beam_id = 1;
+  string id = 2;
+  double new_f_k_n = 3;
+}
+message ChangeBeamActionDeltaSigmaPa {
+  string beam_id = 1;
+  string id = 2;
+  double new_delta_sigma_k_pa = 3;
+}
+message ChangeBeamActionDeltaTauPa {
+  string beam_id = 1;
+  string id = 2;
+  double new_delta_tau_k_pa = 3;
+}
+message ChangeColumnLengthM {
+  string id = 1;
+  double new_length_m = 2;
+}
+message ChangeColumnOuterSizeM {
+  string id = 1;
+  double new_outer_size_m = 2;
+}
+message ChangeColumnWallThicknessM {
+  string id = 1;
+  double new_wall_thickness_m = 2;
+}
+message ChangeColumnSteelAreaM2 {
+  string id = 1;
+  double new_steel_a_m2 = 2;
+}
+message ChangeColumnSteelFYPa {
+  string id = 1;
+  double new_steel_f_y_pa = 2;
+}
+message ChangeColumnConcreteAreaM2 {
+  string id = 1;
+  double new_concrete_a_m2 = 2;
+}
+message ChangeColumnConcreteFCkPa {
+  string id = 1;
+  double new_concrete_f_ck_pa = 2;
+}
+message ChangeColumnRebarAreaM2 {
+  string id = 1;
+  double new_reinforcement_as_m2 = 2;
+}
+message ChangeColumnRebarFYkPa {
+  string id = 1;
+  double new_reinforcement_f_yk_pa = 2;
+}
+message ChangeColumnSecondMomentM4 {
+  string id = 1;
+  double new_i_m4 = 2;
+}
+message ChangeColumnBucklingCurve {
+  string id = 1;
+  BucklingCurve new_buckling_curve = 2;
+}
+message ChangeColumnRebarProduct {
+  string id = 1;
+  ReinforcementProduct new_reinforcement_product = 2;
+}
+message ChangeColumnActionKind {
+  string column_id = 1;
+  string id = 2;
+  ActionKind new_kind = 3;
+}
+message ChangeColumnActionCategory {
+  string column_id = 1;
+  string id = 2;
+  string new_category = 3;
+}
+message ChangeColumnActionStage {
+  string column_id = 1;
+  string id = 2;
+  ActionStage new_stage = 3;
+}
+message ChangeColumnActionMomentNm {
+  string column_id = 1;
+  string id = 2;
+  double new_m_k_nm = 3;
+}
+message ChangeSlabSpanM {
+  string id = 1;
+  double new_span_m = 2;
+}
+message ChangeSlabSupport {
+  string id = 1;
+  SupportCondition new_support = 2;
+}
+message ChangeSlabFCkPa {
+  string id = 1;
+  double new_f_ck_pa = 2;
+}
+message ChangeSlabMFactor {
+  string id = 1;
+  double new_m_factor = 2;
+}
+message ChangeSlabKFactor {
+  string id = 1;
+  double new_k_factor = 2;
+}
+message ChangeSlabReinforcementM2PerM {
+  string id = 1;
+  double new_as_m2_per_m = 2;
+}
+message ChangeSlabSheetingProfile {
+  string id = 1;
+  SheetingProfile new_profile = 2;
+}
+message ChangeSlabSheetingHeightM {
+  string id = 1;
+  double new_height_m = 2;
+}
+message ChangeSlabSheetingRibWidthM {
+  string id = 1;
+  double new_rib_width_m = 2;
+}
+message ChangeSlabSheetingThicknessM {
+  string id = 1;
+  double new_thickness_m = 2;
+}
+message ChangeSlabSheetingRibsParallel {
+  string id = 1;
+  bool new_ribs_parallel_to_beam = 2;
+}
+message ChangeSlabActionKind {
+  string slab_id = 1;
+  string id = 2;
+  ActionKind new_kind = 3;
+}
+message ChangeSlabActionCategory {
+  string slab_id = 1;
+  string id = 2;
+  string new_category = 3;
+}
+message ChangeSlabActionStage {
+  string slab_id = 1;
+  string id = 2;
+  ActionStage new_stage = 3;
+}
+message ChangeSlabActionPointForceN {
+  string slab_id = 1;
+  string id = 2;
+  double new_f_k_n = 3;
+}
+message ChangeSlabActionDeltaSigmaPa {
+  string slab_id = 1;
+  string id = 2;
+  double new_delta_sigma_k_pa = 3;
+}
+message ChangeSlabActionDeltaTauPa {
+  string slab_id = 1;
+  string id = 2;
+  double new_delta_tau_k_pa = 3;
+}
+message ChangeBeamAdjacentSpanM {
+  string id = 1;
+  double new_adjacent_span_m = 2;
+}
+message ChangeBeamPatchBearingLengthM {
+  string id = 1;
+  double new_patch_bearing_length_m = 2;
+}
+message ChangeBeamBridgeLanes {
+  string id = 1;
+  uint32 new_bridge_lanes = 2;
+}
+message ChangeColumnIntroducedForceN {
+  string id = 1;
+  double new_introduced_force_n = 2;
+}
+message ChangeBeamCrackedLengthFraction {
+  string id = 1;
+  double new_cracked_length_fraction = 2;
+}
+message ChangeColumnSectionHeightM {
+  string id = 1;
+  double new_section_height_m = 2;
+}
+message ChangeColumnSectionWidthM {
+  string id = 1;
+  double new_section_width_m = 2;
+}
+message ChangeColumnSectionTwM {
+  string id = 1;
+  double new_section_tw_m = 2;
+}
+message ChangeColumnSectionTfM {
+  string id = 1;
+  double new_section_tf_m = 2;
+}
+message ChangeColumnRebarCoverM {
+  string id = 1;
+  double new_rebar_cover_m = 2;
+}
+message ChangePlacementX {
+  string id = 1;
+  double new_x = 2;
+}
+message ChangePlacementY {
+  string id = 1;
+  double new_y = 2;
+}
+message ChangePlacementZ {
+  string id = 1;
+  double new_z = 2;
+}
+message ChangePlacementYaw {
+  string id = 1;
+  double new_yaw = 2;
+}
+message InsertPlacement {
+  uint64 index = 1;
+  Placement item = 2;
+}
+message RemovePlacement {
+  string id = 1;
+}
+message ChangeBeamStudCrossSpacingM {
+  string id = 1;
+  double new_stud_transverse_spacing_m = 2;
+}
+message ChangeBeamStudEdgeDistanceM {
+  string id = 1;
+  double new_stud_edge_distance_m = 2;
+}
+message ChangeBeamTransverseAsTop {
+  string id = 1;
+  double new_transverse_as_top_m2_per_m = 2;
+}
+message ChangeBeamEndPlateWidthM {
+  string id = 1;
+  double new_end_plate_width_m = 2;
+}
+message ChangeBeamEndPlateHeightM {
+  string id = 1;
+  double new_end_plate_height_m = 2;
+}
+message ChangeBeamEndZoneLengthM {
+  string id = 1;
+  double new_end_zone_length_m = 2;
+}
+message InsertBeamAction {
+  string beam_id = 1;
+  uint64 index = 2;
+  CharacteristicAction action = 3;
+}
+message RemoveBeamAction {
+  string beam_id = 1;
+  string id = 2;
+}
+message InsertColumnAction {
+  string column_id = 1;
+  uint64 index = 2;
+  ColumnAction action = 3;
+}
+message RemoveColumnAction {
+  string column_id = 1;
+  string id = 2;
+}
+message InsertSlabAction {
+  string slab_id = 1;
+  uint64 index = 2;
+  SlabAction action = 3;
+}
+message RemoveSlabAction {
+  string slab_id = 1;
+  string id = 2;
+}
+message ChangeBeamActionXM {
+  string beam_id = 1;
+  string id = 2;
+  double new_x_m = 3;
+}
+message ChangeSlabActionXM {
+  string slab_id = 1;
+  string id = 2;
+  double new_x_m = 3;
+}
+message ChangeSlabActionYM {
+  string slab_id = 1;
+  string id = 2;
+  double new_y_m = 3;
+}
+message InsertCase {
+  uint64 index = 1;
+  CaseRow case = 2;
+}
+message RemoveCase {
+  string id = 1;
+}
+message ChangeCaseNumber {
+  string case_id = 1;
+  string key = 2;
+  optional double value = 3;
+}
+message ChangeCaseText {
+  string case_id = 1;
+  string key = 2;
+  optional string value = 3;
+}
+message ChangeCaseLabelEn {
+  string case_id = 1;
+  string new_value = 2;
+}
+message ChangeCaseLabelDe {
+  string case_id = 1;
+  string new_value = 2;
+}
+message ChangeCaseEntryId {
+  string case_id = 1;
+  string new_value = 2;
 }

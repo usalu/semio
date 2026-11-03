@@ -1,0 +1,6 @@
+{
+  "ChangeJointBaseMoment": {
+    "id": "joint-j1",
+    "newBaseMoment": 1.5
+  }
+}

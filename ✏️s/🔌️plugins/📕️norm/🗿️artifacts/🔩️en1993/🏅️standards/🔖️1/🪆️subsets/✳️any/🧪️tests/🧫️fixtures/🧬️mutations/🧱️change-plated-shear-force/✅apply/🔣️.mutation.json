@@ -1,0 +1,6 @@
+{
+  "ChangePlatedShearForce": {
+    "id": "pp-1",
+    "newShearForce": 1.5
+  }
+}

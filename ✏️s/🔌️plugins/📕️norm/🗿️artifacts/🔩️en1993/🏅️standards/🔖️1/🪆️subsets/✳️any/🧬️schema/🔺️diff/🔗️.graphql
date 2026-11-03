@@ -1,53 +1,62 @@
-# 🧬️ En1993 diff schema — sparse scalar fields plus keyed row deltas.
+scalar JSON
 
 type En1993Diff {
-  annex: String @state(class: ARTIFACT)
-  materials: En1993MaterialDelta! @state(class: ARTIFACT)
-  sections: En1993SectionDelta! @state(class: ARTIFACT)
-  members: En1993MemberDelta! @state(class: ARTIFACT)
-  loadCases: En1993LoadCaseDelta! @state(class: ARTIFACT)
-  memberActions: En1993MemberActionDelta! @state(class: ARTIFACT)
-  joints: En1993JointDelta! @state(class: ARTIFACT)
-  fatigueDetails: En1993FatigueDetailDelta! @state(class: ARTIFACT)
-  fireExposures: En1993FireExposureDelta! @state(class: ARTIFACT)
-  coldFormedMembers: En1993ColdFormedMemberDelta! @state(class: ARTIFACT)
-  platedPanels: En1993PlatedPanelDelta! @state(class: ARTIFACT)
-  siloShells: En1993SiloShellDelta! @state(class: ARTIFACT)
-  tensionComponents: En1993TensionComponentDelta! @state(class: ARTIFACT)
-  bridgeFatigue: En1993BridgeFatigueDelta! @state(class: ARTIFACT)
-  towerLegs: En1993TowerLegDelta! @state(class: ARTIFACT)
-  piles: En1993PileDelta! @state(class: ARTIFACT)
-  craneRunways: En1993CraneRunwayDelta! @state(class: ARTIFACT)
+  annex: JSON
+  materials: JSON!
+  sections: JSON!
+  members: JSON!
+  loadCases: JSON!
+  memberActions: JSON!
+  joints: JSON!
+  fatigueDetails: JSON!
+  fireExposures: JSON!
+  coldFormedMembers: JSON!
+  platedPanels: JSON!
+  siloShells: JSON!
+  tensionComponents: JSON!
+  bridgeFatigue: JSON!
+  towerLegs: JSON!
+  piles: JSON!
+  craneRunways: JSON!
+  storeys: JSON!
+  restraints: JSON!
+  builtUpMembers: JSON!
+  weldGroups: JSON!
+  parametricSections: JSON!
+  hollowJoints: JSON!
+  jointRows: JSON!
+  frameNodes: JSON!
+  frameBars: JSON!
+  placements: JSON!
+  reliabilityClass: JSON
+  jointPlates: JSON
+  foundationBlocks: JSON
+  frameActions: JSON
+  frameMemberBases: JSON
 }
-
 type En1993MaterialDelta {
   removed: [En1993MaterialRemoval!]!
   inserted: [En1993MaterialInsertion!]!
   moved: [En1993MaterialRelocation!]!
   modified: [En1993MaterialModification!]!
 }
-
 type En1993MaterialRemoval {
   id: String!
   index: Int!
 }
-
 type En1993MaterialInsertion {
   index: Int!
   row: SteelMaterial!
 }
-
 type En1993MaterialRelocation {
   id: String!
   from: Int!
   to: Int!
 }
-
 type En1993MaterialModification {
   id: String!
   patch: En1993MaterialPatch!
 }
-
 type En1993MaterialPatch {
   grade: String
   fy: Float
@@ -55,40 +64,35 @@ type En1993MaterialPatch {
   eModulus: Float
   gModulus: Float
   subgrade: String
-  kind: String
+  kind: JSON
+  rambergOsgoodN: Float
 }
-
 type En1993SectionDelta {
   removed: [En1993SectionRemoval!]!
   inserted: [En1993SectionInsertion!]!
   moved: [En1993SectionRelocation!]!
   modified: [En1993SectionModification!]!
 }
-
 type En1993SectionRemoval {
   id: String!
   index: Int!
 }
-
 type En1993SectionInsertion {
   index: Int!
   row: SteelSection!
 }
-
 type En1993SectionRelocation {
   id: String!
   from: Int!
   to: Int!
 }
-
 type En1993SectionModification {
   id: String!
   patch: En1993SectionPatch!
 }
-
 type En1993SectionPatch {
   designation: String
-  kind: String
+  kind: JSON
   h: Float
   b: Float
   tw: Float
@@ -107,38 +111,32 @@ type En1993SectionPatch {
   wPlZ: Float
   areaNet: Float
 }
-
 type En1993MemberDelta {
   removed: [En1993MemberRemoval!]!
   inserted: [En1993MemberInsertion!]!
   moved: [En1993MemberRelocation!]!
   modified: [En1993MemberModification!]!
 }
-
 type En1993MemberRemoval {
   id: String!
   index: Int!
 }
-
 type En1993MemberInsertion {
   index: Int!
   row: SteelMember!
 }
-
 type En1993MemberRelocation {
   id: String!
   from: Int!
   to: Int!
 }
-
 type En1993MemberModification {
   id: String!
   patch: En1993MemberPatch!
 }
-
 type En1993MemberPatch {
   label: String
-  memberType: String
+  memberType: JSON
   sectionId: String
   materialId: String
   length: Float
@@ -146,111 +144,105 @@ type En1993MemberPatch {
   bucklingLengthZ: Float
   ltbLength: Float
   ltbRestraintSpacing: Float
-  loadApplication: String
+  loadApplication: JSON
   endMomentRatioPsi: Float
-  momentDiagram: String
+  momentDiagram: JSON
   deflectionLimitRatio: Float
-  analysis: String
+  analysis: JSON
+  stainlessForming: JSON
+  designTemperature: Float
+  toughnessStressRatio: Float
+  radiationShift: Float
+  stressShift: Float
+  marginShift: Float
+  strainRateShift: Float
+  coldFormingRadius: Float
+  webMaterialId: String
+  torsionLoad: JSON
+  torquePosition: Float
+  warpingSupport: WarpingSupport
 }
-
 type En1993LoadCaseDelta {
   removed: [En1993LoadCaseRemoval!]!
   inserted: [En1993LoadCaseInsertion!]!
   moved: [En1993LoadCaseRelocation!]!
   modified: [En1993LoadCaseModification!]!
 }
-
 type En1993LoadCaseRemoval {
   id: String!
   index: Int!
 }
-
 type En1993LoadCaseInsertion {
   index: Int!
   row: LoadCase!
 }
-
 type En1993LoadCaseRelocation {
   id: String!
   from: Int!
   to: Int!
 }
-
 type En1993LoadCaseModification {
   id: String!
   patch: En1993LoadCasePatch!
 }
-
 type En1993LoadCasePatch {
   name: String
-  kind: String
+  kind: JSON
   category: String
 }
-
 type En1993MemberActionDelta {
   removed: [En1993MemberActionRemoval!]!
   inserted: [En1993MemberActionInsertion!]!
   moved: [En1993MemberActionRelocation!]!
   modified: [En1993MemberActionModification!]!
 }
-
 type En1993MemberActionRemoval {
   id: String!
   index: Int!
 }
-
 type En1993MemberActionInsertion {
   index: Int!
   row: MemberAction!
 }
-
 type En1993MemberActionRelocation {
   id: String!
   from: Int!
   to: Int!
 }
-
 type En1993MemberActionModification {
   id: String!
   patch: En1993MemberActionPatch!
 }
-
 type En1993MemberActionPatch {
   memberId: String
   loadCaseId: String
-  action: String
+  action: DesignAction
 }
-
 type En1993JointDelta {
   removed: [En1993JointRemoval!]!
   inserted: [En1993JointInsertion!]!
   moved: [En1993JointRelocation!]!
   modified: [En1993JointModification!]!
 }
-
 type En1993JointRemoval {
   id: String!
   index: Int!
 }
-
 type En1993JointInsertion {
   index: Int!
   row: SteelJoint!
 }
-
 type En1993JointRelocation {
   id: String!
   from: Int!
   to: Int!
 }
-
 type En1993JointModification {
   id: String!
   patch: En1993JointPatch!
 }
-
 type En1993JointPatch {
-  kind: String
+  kind: JSON
   memberId: String
   boltClass: String
   boltDiameter: Float
@@ -267,80 +259,107 @@ type En1993JointPatch {
   weldLength: Float
   weldFu: Float
   weldGrade: String
-  actions: String
-  category: String
+  actions: [JointForceAction!]
+  category: JSON
   frictionMu: Float
   preloadForce: Float
   slipFactorKs: Float
   frictionSurfaces: Int
+  plateFy: Float
+  plateWidth: Float
+  boltToWeb: Float
+  extensionToFlange: Float
+  extensionEdge: Float
+  alphaFactor: Float
+  boltStressArea: Float
+  boltGripLength: Float
+  columnFlangeThickness: Float
+  columnWebThickness: Float
+  columnWebDepth: Float
+  columnWebShearArea: Float
+  columnRootRadius: Float
+  columnFy: Float
+  columnWebStress: Float
+  beamFlangeThickness: Float
+  compressionLever: Float
+  momentDemand: Float
+  beamMomentResistance: Float
+  columnMomentResistance: Float
+  beamInertia: Float
+  beamSpan: Float
+  bracedFrame: Int
+  stiffnessRatio: Float
+  transformationParameter: Float
+  assumedClass: JSON
+  basePlateLength: Float
+  concreteFcd: Float
+  concreteModulus: Float
+  concreteAreaA0: Float
+  concreteAreaA1: Float
+  jointCoefficient: Float
+  anchorArea: Float
+  anchorLength: Float
+  baseNormalForce: Float
+  baseMoment: Float
+  baseLeverLeft: Float
+  baseLeverRight: Float
 }
-
 type En1993FatigueDetailDelta {
   removed: [En1993FatigueDetailRemoval!]!
   inserted: [En1993FatigueDetailInsertion!]!
   moved: [En1993FatigueDetailRelocation!]!
   modified: [En1993FatigueDetailModification!]!
 }
-
 type En1993FatigueDetailRemoval {
   id: String!
   index: Int!
 }
-
 type En1993FatigueDetailInsertion {
   index: Int!
   row: FatigueDetail!
 }
-
 type En1993FatigueDetailRelocation {
   id: String!
   from: Int!
   to: Int!
 }
-
 type En1993FatigueDetailModification {
   id: String!
   patch: En1993FatigueDetailPatch!
 }
-
 type En1993FatigueDetailPatch {
   memberId: String
   category: Int
-  method: String
-  spectrum: String
+  method: JSON
+  spectrum: [FatigueBand!]
+  stressHistory: String
 }
-
 type En1993FireExposureDelta {
   removed: [En1993FireExposureRemoval!]!
   inserted: [En1993FireExposureInsertion!]!
   moved: [En1993FireExposureRelocation!]!
   modified: [En1993FireExposureModification!]!
 }
-
 type En1993FireExposureRemoval {
   id: String!
   index: Int!
 }
-
 type En1993FireExposureInsertion {
   index: Int!
   row: FireExposure!
 }
-
 type En1993FireExposureRelocation {
   id: String!
   from: Int!
   to: Int!
 }
-
 type En1993FireExposureModification {
   id: String!
   patch: En1993FireExposurePatch!
 }
-
 type En1993FireExposurePatch {
   memberId: String
-  rating: String
+  rating: JSON
   protectionThickness: Float
   sectionFactor: Float
   mu0: Float
@@ -349,35 +368,29 @@ type En1993FireExposurePatch {
   protectionDensity: Float
   protectionSpecificHeat: Float
 }
-
 type En1993ColdFormedMemberDelta {
   removed: [En1993ColdFormedMemberRemoval!]!
   inserted: [En1993ColdFormedMemberInsertion!]!
   moved: [En1993ColdFormedMemberRelocation!]!
   modified: [En1993ColdFormedMemberModification!]!
 }
-
 type En1993ColdFormedMemberRemoval {
   id: String!
   index: Int!
 }
-
 type En1993ColdFormedMemberInsertion {
   index: Int!
   row: ColdFormedMember!
 }
-
 type En1993ColdFormedMemberRelocation {
   id: String!
   from: Int!
   to: Int!
 }
-
 type En1993ColdFormedMemberModification {
   id: String!
   patch: En1993ColdFormedMemberPatch!
 }
-
 type En1993ColdFormedMemberPatch {
   bBar: Float
   thickness: Float
@@ -385,74 +398,124 @@ type En1993ColdFormedMemberPatch {
   psi: Float
   fy: Float
   grossResistance: Float
-  actions: String
+  actions: [ForceAction!]
+  flangeWidth: Float
+  lipLength: Float
+  webHeight: Float
+  webSlope: Float
+  oppositeFlangeWidth: Float
+  springFactor: Float
+  cornerRadius: Float
+  flangeStress: Float
+  shearForce: Float
+  supportReaction: Float
+  supportLength: Float
+  cripplingCategory: Int
+  stiffenedSupport: Int
+  bendingMoment: Float
+  momentResistance: Float
+  sheetingStiffness: Float
+  requiredRestraintStiffness: Float
+  purlinSpan: Float
+  purlinLoad: Float
+  purlinLateralRatio: Float
 }
-
 type En1993PlatedPanelDelta {
   removed: [En1993PlatedPanelRemoval!]!
   inserted: [En1993PlatedPanelInsertion!]!
   moved: [En1993PlatedPanelRelocation!]!
   modified: [En1993PlatedPanelModification!]!
 }
-
 type En1993PlatedPanelRemoval {
   id: String!
   index: Int!
 }
-
 type En1993PlatedPanelInsertion {
   index: Int!
   row: PlatedPanel!
 }
-
 type En1993PlatedPanelRelocation {
   id: String!
   from: Int!
   to: Int!
 }
-
 type En1993PlatedPanelModification {
   id: String!
   patch: En1993PlatedPanelPatch!
 }
-
 type En1993PlatedPanelPatch {
   a: Float
   b: Float
   thickness: Float
   fy: Float
   kSigma: Float
-  actions: String
+  actions: [ForceAction!]
+  stiffenerInertia: Float
+  stiffenerArea: Float
+  stiffenerEccentricity: Float
+  stiffenerAlpha: Float
+  compressionStress: Float
+  halfWidth: Float
+  equivalentSpan: Float
+  hogging: Int
+  patchType: JSON
+  patchForce: Float
+  patchLength: Float
+  patchOffset: Float
+  flangeThickness: Float
+  flangeWidth: Float
+  flangeFy: Float
+  longitudinalOffset: Float
+  longitudinalInertia: Float
+  patchMoment: Float
+  patchMomentResistance: Float
+  bendingMoment: Float
+  plasticMoment: Float
+  flangeMoment: Float
+  shearForce: Float
+  transverseStiffenerInertia: Float
+  flangeInducedK: Float
+  flangeArea: Float
+  stressX: Float
+  stressZ: Float
+  shearStress: Float
+  alphaCr: Float
+  corrugationFlat: Float
+  corrugationProjection: Float
+  corrugationDepth: Float
+  webHeight: Float
+  stiffenerSpacing: Float
+  stiffenerShape: StiffenerShape
+  stiffenerDepth: Float
+  stiffenerThickness: Float
+  stiffenerFlangeWidth: Float
+  stiffenerFlangeThickness: Float
+  lateralPressure: Float
+  lateralPressureCoefficient: Float
 }
-
 type En1993SiloShellDelta {
   removed: [En1993SiloShellRemoval!]!
   inserted: [En1993SiloShellInsertion!]!
   moved: [En1993SiloShellRelocation!]!
   modified: [En1993SiloShellModification!]!
 }
-
 type En1993SiloShellRemoval {
   id: String!
   index: Int!
 }
-
 type En1993SiloShellInsertion {
   index: Int!
   row: SiloShell!
 }
-
 type En1993SiloShellRelocation {
   id: String!
   from: Int!
   to: Int!
 }
-
 type En1993SiloShellModification {
   id: String!
   patch: En1993SiloShellPatch!
 }
-
 type En1993SiloShellPatch {
   thickness: Float
   radius: Float
@@ -460,179 +523,237 @@ type En1993SiloShellPatch {
   k: Float
   gamma: Float
   fy: Float
+  length: Float
+  fabricationClass: JSON
+  meridionalStress: Float
+  hoopStress: Float
+  shellShearStress: Float
+  boundaryFactorAxial: Float
+  boundaryFactorHoop: Float
+  boundaryFactorShear: Float
+  wallFriction: Float
+  planArea: Float
+  planPerimeter: Float
+  liquidDensity: Float
+  liquidHeight: Float
+  courseElevation: Float
+  internalPressure: Float
+  externalPressure: Float
+  temperatureChange: Float
+  ringSpacing: Float
+  ringArea: Float
+  ringInertia: Float
+  ringOffset: Float
 }
-
 type En1993TensionComponentDelta {
   removed: [En1993TensionComponentRemoval!]!
   inserted: [En1993TensionComponentInsertion!]!
   moved: [En1993TensionComponentRelocation!]!
   modified: [En1993TensionComponentModification!]!
 }
-
 type En1993TensionComponentRemoval {
   id: String!
   index: Int!
 }
-
 type En1993TensionComponentInsertion {
   index: Int!
   row: TensionComponent!
 }
-
 type En1993TensionComponentRelocation {
   id: String!
   from: Int!
   to: Int!
 }
-
 type En1993TensionComponentModification {
   id: String!
   patch: En1993TensionComponentPatch!
 }
-
 type En1993TensionComponentPatch {
   fUk: Float
   fK: Float
-  actions: String
+  actions: [ForceAction!]
+  partialFactor: Float
+  cableLength: Float
+  cableWeight: Float
+  cableHorizontalForce: Float
+  cableModulus: Float
+  cableStress: Float
+  cableUnitWeight: Float
+  threadFactor: Float
+  rodStressArea: Float
+  rodFu: Float
+  pinDiameter: Float
+  pinPlateThickness: Float
+  pinGap: Float
+  pinOuterThickness: Float
+  pinInnerThickness: Float
+  pinFup: Float
+  pinFyp: Float
+  pinPlateFy: Float
 }
-
 type En1993BridgeFatigueDelta {
   removed: [En1993BridgeFatigueRemoval!]!
   inserted: [En1993BridgeFatigueInsertion!]!
   moved: [En1993BridgeFatigueRelocation!]!
   modified: [En1993BridgeFatigueModification!]!
 }
-
 type En1993BridgeFatigueRemoval {
   id: String!
   index: Int!
 }
-
 type En1993BridgeFatigueInsertion {
   index: Int!
   row: BridgeFatigue!
 }
-
 type En1993BridgeFatigueRelocation {
   id: String!
   from: Int!
   to: Int!
 }
-
 type En1993BridgeFatigueModification {
   id: String!
   patch: En1993BridgeFatiguePatch!
 }
-
 type En1993BridgeFatiguePatch {
   memberId: String
   lambda: Float
   phi2: Float
   deltaSigmaP: Float
   category: Int
-  method: String
+  method: JSON
+  heavyVehicleWeight: Float
+  referenceWeight: Float
+  observedTraffic: Float
+  designLife: Float
+  secondLaneTraffic: Float
+  secondLaneWeight: Float
+  lambda1: Float
+  lambdaMax: Float
+  detailId: String
+  plateThickness: Float
+  deckThickness: Float
+  troughSpacing: Float
+  troughWidth: Float
+  troughThickness: Float
+  crossbeamSpacing: Float
+  surfacingThickness: Float
+  wheelLoad: Float
+  wheelPatch: Float
 }
-
 type En1993TowerLegDelta {
   removed: [En1993TowerLegRemoval!]!
   inserted: [En1993TowerLegInsertion!]!
   moved: [En1993TowerLegRelocation!]!
   modified: [En1993TowerLegModification!]!
 }
-
 type En1993TowerLegRemoval {
   id: String!
   index: Int!
 }
-
 type En1993TowerLegInsertion {
   index: Int!
   row: TowerLeg!
 }
-
 type En1993TowerLegRelocation {
   id: String!
   from: Int!
   to: Int!
 }
-
 type En1993TowerLegModification {
   id: String!
   patch: En1993TowerLegPatch!
 }
-
 type En1993TowerLegPatch {
   memberId: String
   forceCoefficient: Float
   dynamicFactor: Float
-  actions: String
+  actions: [ForceAction!]
+  latticeKind: JSON
+  slenderness: Float
+  diameter: Float
+  height: Float
+  bendingStiffness: Float
+  massPerLength: Float
+  strouhal: Float
+  logDecrement: Float
+  airDensity: Float
+  meanWindSpeed: Float
+  crossingRate: Float
+  designLife: Float
+  kFactor: Float
+  kwFactor: Float
+  lateralForceCoefficient: Float
+  permittedAmplitudeRatio: Float
+  ringMode: Float
+  shellThickness: Float
+  guyArea: Float
+  guyAngle: Float
+  guyLength: Float
 }
-
 type En1993PileDelta {
   removed: [En1993PileRemoval!]!
   inserted: [En1993PileInsertion!]!
   moved: [En1993PileRelocation!]!
   modified: [En1993PileModification!]!
 }
-
 type En1993PileRemoval {
   id: String!
   index: Int!
 }
-
 type En1993PileInsertion {
   index: Int!
   row: SteelPile!
 }
-
 type En1993PileRelocation {
   id: String!
   from: Int!
   to: Int!
 }
-
 type En1993PileModification {
   id: String!
   patch: En1993PilePatch!
 }
-
 type En1993PilePatch {
   sectionId: String
   materialId: String
   drivingStress: Float
   embeddedLength: Float
   shaftPerimeter: Float
-  actions: String
+  actions: [ForceAction!]
+  environment: JSON
+  designLife: Float
+  wallThickness: Float
+  interlockBendingFactor: Float
+  interlockStiffnessFactor: Float
+  sectionModulus: Float
+  shearArea: Float
+  designMoment: Float
+  designShear: Float
+  interlockShear: Float
 }
-
 type En1993CraneRunwayDelta {
   removed: [En1993CraneRunwayRemoval!]!
   inserted: [En1993CraneRunwayInsertion!]!
   moved: [En1993CraneRunwayRelocation!]!
   modified: [En1993CraneRunwayModification!]!
 }
-
 type En1993CraneRunwayRemoval {
   id: String!
   index: Int!
 }
-
 type En1993CraneRunwayInsertion {
   index: Int!
   row: CraneRunway!
 }
-
 type En1993CraneRunwayRelocation {
   id: String!
   from: Int!
   to: Int!
 }
-
 type En1993CraneRunwayModification {
   id: String!
   patch: En1993CraneRunwayPatch!
 }
-
 type En1993CraneRunwayPatch {
   memberId: String
   wheelContactLength: Float
@@ -640,5 +761,535 @@ type En1993CraneRunwayPatch {
   webThickness: Float
   fy: Float
   phi: Float
-  actions: String
+  actions: [ForceAction!]
+  maxWheelLoad: Float
+  loadFactor: Float
+  railInertia: Float
+  railFixed: Int
+  flangeEffectiveWidth: Float
+  flangeThickness: Float
+  wheelEccentricity: Float
+  torsionConstant: Float
+  longitudinalStress: Float
+  railRadius: Float
+  railContactWidth: Float
+  craneNu: Float
+  craneKq: Float
+  damageExponent: Float
+  stressRange: Float
+  detailCategoryStress: Float
+  fatiguePhi: Float
+}
+type En1993StoreyDelta {
+  removed: [En1993StoreyRemoval!]!
+  inserted: [En1993StoreyInsertion!]!
+  moved: [En1993StoreyRelocation!]!
+  modified: [En1993StoreyModification!]!
+}
+type En1993StoreyRemoval {
+  id: String!
+  index: Int!
+}
+type En1993StoreyInsertion {
+  index: Int!
+  row: Storey!
+}
+type En1993StoreyRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1993StoreyModification {
+  id: String!
+  patch: En1993StoreyPatch!
+}
+type En1993StoreyPatch {
+  memberId: String
+  label: String
+  height: Float
+  verticalLoad: Float
+  horizontalLoad: Float
+  drift: Float
+  columns: Int
+  plasticAnalysis: Int
+  buildingHeight: Float
+  bracingLoad: Float
+  bracingLength: Float
+  bracingDeflection: Float
+}
+type En1993RestraintDelta {
+  removed: [En1993RestraintRemoval!]!
+  inserted: [En1993RestraintInsertion!]!
+  moved: [En1993RestraintRelocation!]!
+  modified: [En1993RestraintModification!]!
+}
+type En1993RestraintRemoval {
+  id: String!
+  index: Int!
+}
+type En1993RestraintInsertion {
+  index: Int!
+  row: Restraint!
+}
+type En1993RestraintRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1993RestraintModification {
+  id: String!
+  patch: En1993RestraintPatch!
+}
+type En1993RestraintPatch {
+  memberId: String
+  label: String
+  startSupport: JSON
+  endSupport: JSON
+  intermediatePosition: Float
+  torsionalSpring: Float
+  lateralSpringPosition: Float
+  lateralSpringStiffness: Float
+  loadHeight: Float
+  loadDistribution: JSON
+  designMoment: Float
+  designAxial: Float
+  generalMethod: Int
+  hingeToRestraint: Float
+}
+type En1993BuiltUpMemberDelta {
+  removed: [En1993BuiltUpMemberRemoval!]!
+  inserted: [En1993BuiltUpMemberInsertion!]!
+  moved: [En1993BuiltUpMemberRelocation!]!
+  modified: [En1993BuiltUpMemberModification!]!
+}
+type En1993BuiltUpMemberRemoval {
+  id: String!
+  index: Int!
+}
+type En1993BuiltUpMemberInsertion {
+  index: Int!
+  row: BuiltUpMember!
+}
+type En1993BuiltUpMemberRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1993BuiltUpMemberModification {
+  id: String!
+  patch: En1993BuiltUpMemberPatch!
+}
+type En1993BuiltUpMemberPatch {
+  memberId: String
+  label: String
+  kind: JSON
+  chordArea: Float
+  chordInertia: Float
+  chordDistance: Float
+  panelSpacing: Float
+  planes: Int
+  battenInertia: Float
+  diagonalArea: Float
+  diagonalLength: Float
+  designAxial: Float
+  designMoment: Float
+  backToBack: Int
+  minRadius: Float
+  chainSpacing: Float
+  chordShape: JSON
+  chordDepth: Float
+  chordWidth: Float
+  chordFlangeThickness: Float
+  chordWebThickness: Float
+}
+type En1993WeldGroupDelta {
+  removed: [En1993WeldGroupRemoval!]!
+  inserted: [En1993WeldGroupInsertion!]!
+  moved: [En1993WeldGroupRelocation!]!
+  modified: [En1993WeldGroupModification!]!
+}
+type En1993WeldGroupRemoval {
+  id: String!
+  index: Int!
+}
+type En1993WeldGroupInsertion {
+  index: Int!
+  row: WeldGroup!
+}
+type En1993WeldGroupRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1993WeldGroupModification {
+  id: String!
+  patch: En1993WeldGroupPatch!
+}
+type En1993WeldGroupPatch {
+  memberId: String
+  label: String
+  pattern: JSON
+  throat: Float
+  width: Float
+  depth: Float
+  shearForce: Float
+  eccentricity: Float
+  steelFu: Float
+  betaW: Float
+}
+type En1993ParametricSectionDelta {
+  removed: [En1993ParametricSectionRemoval!]!
+  inserted: [En1993ParametricSectionInsertion!]!
+  moved: [En1993ParametricSectionRelocation!]!
+  modified: [En1993ParametricSectionModification!]!
+}
+type En1993ParametricSectionRemoval {
+  id: String!
+  index: Int!
+}
+type En1993ParametricSectionInsertion {
+  index: Int!
+  row: ParametricSection!
+}
+type En1993ParametricSectionRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1993ParametricSectionModification {
+  id: String!
+  patch: En1993ParametricSectionPatch!
+}
+type En1993ParametricSectionPatch {
+  sectionId: String
+  label: String
+  shape: JSON
+  height: Float
+  width: Float
+  webThickness: Float
+  flangeThickness: Float
+  tolerance: Float
+}
+type En1993HollowJointDelta {
+  removed: [En1993HollowJointRemoval!]!
+  inserted: [En1993HollowJointInsertion!]!
+  moved: [En1993HollowJointRelocation!]!
+  modified: [En1993HollowJointModification!]!
+}
+type En1993HollowJointRemoval {
+  id: String!
+  index: Int!
+}
+type En1993HollowJointInsertion {
+  index: Int!
+  row: HollowJoint!
+}
+type En1993HollowJointRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1993HollowJointModification {
+  id: String!
+  patch: En1993HollowJointPatch!
+}
+type En1993HollowJointPatch {
+  memberId: String
+  label: String
+  chordWidth: Float
+  chordHeight: Float
+  chordThickness: Float
+  chordFy: Float
+  chordStress: Float
+  brace1Width: Float
+  brace1Height: Float
+  brace1Thickness: Float
+  brace1Angle: Float
+  brace1Force: Float
+  brace2Width: Float
+  brace2Height: Float
+  brace2Thickness: Float
+  brace2Angle: Float
+  brace2Force: Float
+  gap: Float
+  braceFy: Float
+}
+type En1993JointRowDelta {
+  removed: [En1993JointRowRemoval!]!
+  inserted: [En1993JointRowInsertion!]!
+  moved: [En1993JointRowRelocation!]!
+  modified: [En1993JointRowModification!]!
+}
+type En1993JointRowRemoval {
+  id: String!
+  index: Int!
+}
+type En1993JointRowInsertion {
+  index: Int!
+  row: JointRow!
+}
+type En1993JointRowRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1993JointRowModification {
+  id: String!
+  patch: En1993JointRowPatch!
+}
+type En1993JointRowPatch {
+  jointId: String
+  label: String
+  rowType: JSON
+  lever: Float
+  boltToWeb: Float
+  edgeDistance: Float
+  extensionToFlange: Float
+  extensionEdge: Float
+  alphaFactor: Float
+  pitchToPrevious: Float
+  bolts: Int
+  boltDiameter: Float
+  boltStressArea: Float
+  gripLength: Float
+  boltClass: String
+  groupWithPrevious: Int
+}
+type En1993FrameNodeDelta {
+  removed: [En1993FrameNodeRemoval!]!
+  inserted: [En1993FrameNodeInsertion!]!
+  moved: [En1993FrameNodeRelocation!]!
+  modified: [En1993FrameNodeModification!]!
+}
+type En1993FrameNodeRemoval {
+  id: String!
+  index: Int!
+}
+type En1993FrameNodeInsertion {
+  index: Int!
+  row: FrameNode!
+}
+type En1993FrameNodeRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1993FrameNodeModification {
+  id: String!
+  patch: En1993FrameNodePatch!
+}
+type En1993FrameNodePatch {
+  label: String
+  x: Float
+  z: Float
+  support: JSON
+  loadX: Float
+  loadZ: Float
+}
+type En1993FrameBarDelta {
+  removed: [En1993FrameBarRemoval!]!
+  inserted: [En1993FrameBarInsertion!]!
+  moved: [En1993FrameBarRelocation!]!
+  modified: [En1993FrameBarModification!]!
+}
+type En1993FrameBarRemoval {
+  id: String!
+  index: Int!
+}
+type En1993FrameBarInsertion {
+  index: Int!
+  row: FrameBar!
+}
+type En1993FrameBarRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1993FrameBarModification {
+  id: String!
+  patch: En1993FrameBarPatch!
+}
+type En1993FrameBarPatch {
+  memberId: String
+  label: String
+  startNodeId: String
+  endNodeId: String
+  releaseStart: JSON
+  releaseEnd: JSON
+}
+type En1993PlacementDelta {
+  removed: [En1993PlacementRemoval!]!
+  inserted: [En1993PlacementInsertion!]!
+  moved: [En1993PlacementRelocation!]!
+  modified: [En1993PlacementModification!]!
+}
+type En1993PlacementRemoval {
+  id: String!
+  index: Int!
+}
+type En1993PlacementInsertion {
+  index: Int!
+  row: Placement!
+}
+type En1993PlacementRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1993PlacementModification {
+  id: String!
+  patch: En1993PlacementPatch!
+}
+type En1993PlacementPatch {
+  x: Float
+  y: Float
+  z: Float
+  yaw: Float
+}
+type En1993JointPlateDelta {
+  removed: [En1993JointPlateRemoval!]!
+  inserted: [En1993JointPlateInsertion!]!
+  moved: [En1993JointPlateRelocation!]!
+  modified: [En1993JointPlateModification!]!
+}
+type En1993JointPlateRemoval {
+  id: String!
+  index: Int!
+}
+type En1993JointPlateInsertion {
+  index: Int!
+  row: JointPlate!
+}
+type En1993JointPlateRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1993JointPlateModification {
+  id: String!
+  patch: En1993JointPlatePatch!
+}
+type En1993JointPlatePatch {
+  jointId: String
+  label: String
+  role: String
+  plateHeight: Float
+  plateWidth: Float
+  plateThickness: Float
+  plateCount: Int
+  plateFy: Float
+  plateFu: Float
+  boltClass: String
+  boltDiameter: Float
+  holeDiameter: Float
+  boltRows: Int
+  boltsPerRow: Int
+  pitch: Float
+  gauge: Float
+  endDistance: Float
+  edgeDistance: Float
+  shearPlanes: Int
+  eccentricity: Float
+  weldThroat: Float
+  weldFu: Float
+  weldBetaW: Float
+}
+type En1993FoundationBlockDelta {
+  removed: [En1993FoundationBlockRemoval!]!
+  inserted: [En1993FoundationBlockInsertion!]!
+  moved: [En1993FoundationBlockRelocation!]!
+  modified: [En1993FoundationBlockModification!]!
+}
+type En1993FoundationBlockRemoval {
+  id: String!
+  index: Int!
+}
+type En1993FoundationBlockInsertion {
+  index: Int!
+  row: FoundationBlock!
+}
+type En1993FoundationBlockRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1993FoundationBlockModification {
+  id: String!
+  patch: En1993FoundationBlockPatch!
+}
+type En1993FoundationBlockPatch {
+  jointId: String
+  label: String
+  blockLength: Float
+  blockWidth: Float
+  blockDepth: Float
+  concreteFck: Float
+  groutFck: Float
+  groutThickness: Float
+  anchorCount: Int
+  anchorClass: String
+  anchorDiameter: Float
+  anchorStressArea: Float
+  anchorEmbedment: Float
+  anchorEdgeDistance: Float
+}
+type En1993FrameActionDelta {
+  removed: [En1993FrameActionRemoval!]!
+  inserted: [En1993FrameActionInsertion!]!
+  moved: [En1993FrameActionRelocation!]!
+  modified: [En1993FrameActionModification!]!
+}
+type En1993FrameActionRemoval {
+  id: String!
+  index: Int!
+}
+type En1993FrameActionInsertion {
+  index: Int!
+  row: FrameAction!
+}
+type En1993FrameActionRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1993FrameActionModification {
+  id: String!
+  patch: En1993FrameActionPatch!
+}
+type En1993FrameActionPatch {
+  loadCaseId: String
+  targetId: String
+  kind: String
+  fx: String
+  fz: String
+  my: String
+  startRatio: String
+  endRatio: String
+}
+type En1993FrameMemberBasisDelta {
+  removed: [En1993FrameMemberBasisRemoval!]!
+  inserted: [En1993FrameMemberBasisInsertion!]!
+  moved: [En1993FrameMemberBasisRelocation!]!
+  modified: [En1993FrameMemberBasisModification!]!
+}
+type En1993FrameMemberBasisRemoval {
+  id: String!
+  index: Int!
+}
+type En1993FrameMemberBasisInsertion {
+  index: Int!
+  row: FrameMemberBasis!
+}
+type En1993FrameMemberBasisRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1993FrameMemberBasisModification {
+  id: String!
+  patch: En1993FrameMemberBasisPatch!
+}
+type En1993FrameMemberBasisPatch {
+  memberId: String
+  basis: String
 }

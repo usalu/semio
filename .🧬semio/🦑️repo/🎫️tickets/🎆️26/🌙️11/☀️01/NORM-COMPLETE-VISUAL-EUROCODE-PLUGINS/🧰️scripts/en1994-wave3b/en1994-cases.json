@@ -1,0 +1,121 @@
+{
+ "artifact": "en1994",
+ "collection": {
+  "name": "cases",
+  "entity": "CaseRow",
+  "emoji": "🗂️",
+  "doc": "Design case of the EN 1994 catalogue (C94-01..12): one catalogue entry with its numeric and text inputs, evaluated by the shared design-case bridge.",
+  "label": {
+   "en": "Design cases",
+   "de": "Bemessungsfälle"
+  },
+  "id": {
+   "en": "Case ID",
+   "de": "Fall-ID"
+  },
+  "fields": [
+   {
+    "name": "label_en",
+    "type": "String",
+    "label": {
+     "en": "English label",
+     "de": "Englische Bezeichnung"
+    },
+    "doc": "🏷️ English label of the design case.",
+    "sample": "Floor vibration"
+   },
+   {
+    "name": "label_de",
+    "type": "String",
+    "label": {
+     "en": "German label",
+     "de": "Deutsche Bezeichnung"
+    },
+    "doc": "🏷️ German label of the design case.",
+    "sample": "Deckenschwingung"
+   },
+   {
+    "name": "entry_id",
+    "type": "String",
+    "label": {
+     "en": "Catalogue entry",
+     "de": "Katalogeintrag"
+    },
+    "doc": "📇 Verification id C94-nn of the EN 1994 catalogue.",
+    "sample": "C94-09"
+   }
+  ],
+  "nested": [
+   {
+    "name": "numbers",
+    "entity": "CaseNumber",
+    "emoji": "🔢",
+    "doc": "One numeric input of a design case.",
+    "label": {
+     "en": "Numeric inputs",
+     "de": "Zahlenwerte"
+    },
+    "id": {
+     "en": "Input key",
+     "de": "Eingabeschlüssel"
+    },
+    "fields": [
+     {
+      "name": "value",
+      "type": "f64",
+      "unit": "",
+      "label": {
+       "en": "Value",
+       "de": "Wert"
+      },
+      "doc": "🔢 Numeric input value in SI units.",
+      "sample": 1.0
+     }
+    ],
+    "singular": {
+     "en": "numeric input",
+     "de": "Zahlenwert"
+    },
+    "kindSlug": "case-number"
+   },
+   {
+    "name": "texts",
+    "entity": "CaseText",
+    "emoji": "🔤",
+    "doc": "One text input of a design case.",
+    "label": {
+     "en": "Text inputs",
+     "de": "Textwerte"
+    },
+    "id": {
+     "en": "Input key",
+     "de": "Eingabeschlüssel"
+    },
+    "fields": [
+     {
+      "name": "value",
+      "type": "String",
+      "label": {
+       "en": "Value",
+       "de": "Wert"
+      },
+      "doc": "🔤 Text or choice input value.",
+      "sample": "rolled"
+     }
+    ],
+    "singular": {
+     "en": "text input",
+     "de": "Textwert"
+    },
+    "kindSlug": "case-text"
+   }
+  ],
+  "singular": {
+   "en": "design case",
+   "de": "Bemessungsfall"
+  },
+  "kindSlug": "case"
+ },
+ "reference": "columns",
+ "nestedReference": "slabs"
+}

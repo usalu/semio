@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-sheet-action-nk/schema.json",
+  "title": "ChangeSheetActionNK",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "coldFormedId",
+    "actionId",
+    "newNK"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeSheetActionNK"
+    },
+    "coldFormedId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Cold formed",
+          "de": "Kaltgeformtes Blech"
+        },
+        "description": {
+          "en": "The cold formed this mutation addresses, by id.",
+          "de": "Das adressierte Element (Kaltgeformtes Blech), per Kennung."
+        },
+        "ref": {
+          "kind": "cold-formed"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "actionId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Action",
+          "de": "Einwirkung"
+        },
+        "description": {
+          "en": "The action this mutation addresses, by id.",
+          "de": "Das adressierte Element (Einwirkung), per Kennung."
+        },
+        "ref": {
+          "kind": "action"
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "newNK": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Characteristic axial force N_k",
+          "de": "Charakteristische Normalkraft N_k"
+        },
+        "widget": "stepper",
+        "unit": "N",
+        "displayUnit": "kN",
+        "displayFactor": 0.001,
+        "precision": 2,
+        "step": 100,
+        "role": "value",
+        "group": "value",
+        "order": 30
+      }
+    }
+  }
+}

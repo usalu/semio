@@ -1,0 +1,6 @@
+{
+  "ChangeTensionCableUnitWeight": {
+    "id": "ten-1",
+    "newCableUnitWeight": 1.5
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeFoundationSupportedBuildingId",
+  "id": "fd-1",
+  "newSupportedBuildingId": "bldg-office2"
+}

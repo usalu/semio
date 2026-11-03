@@ -1,0 +1,6 @@
+{
+  "ChangeBridgeWheelPatch": {
+    "id": "br-1",
+    "newWheelPatch": 1.5
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeVertexY",
+  "outlineVertexId": "v-1",
+  "newY": 1.5
+}

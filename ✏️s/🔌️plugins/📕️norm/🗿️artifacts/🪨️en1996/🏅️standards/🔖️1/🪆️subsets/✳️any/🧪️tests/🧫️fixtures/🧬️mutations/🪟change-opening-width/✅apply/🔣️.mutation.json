@@ -1,0 +1,7 @@
+{
+  "ChangeOpeningWidth": {
+    "wallId": "wall-openings",
+    "id": "win-1",
+    "newWidthM": 1.5
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "mutation": "insertLabPoint",
+  "labTestId": "lab-T1",
+  "index": 0,
+  "labPoint": {
+    "id": "pt-1-new",
+    "normalStress": 50000.0,
+    "shearStress": 32500.0
+  }
+}

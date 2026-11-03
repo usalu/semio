@@ -1,0 +1,6 @@
+{
+  "ChangeTowerPermittedAmplitudeRatio": {
+    "id": "tw-1",
+    "newPermittedAmplitudeRatio": 1.5
+  }
+}

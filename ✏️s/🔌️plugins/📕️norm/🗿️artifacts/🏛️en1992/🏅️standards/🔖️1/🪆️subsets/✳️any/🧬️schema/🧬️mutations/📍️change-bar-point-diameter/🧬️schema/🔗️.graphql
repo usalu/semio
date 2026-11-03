@@ -1,0 +1,5 @@
+type ChangeBarPointDiameter {
+  memberId: String!
+  barId: String!
+  newDiameter: Float!
+}

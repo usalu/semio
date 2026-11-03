@@ -1,0 +1,6 @@
+{
+  "ChangeMemberRebarGradeId": {
+    "memberId": "wall-W1",
+    "newReinforcementGradeId": "b500-alt"
+  }
+}

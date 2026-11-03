@@ -1,0 +1,301 @@
+[
+  {
+    "script": "field-adder/field_adder.py",
+    "args": [
+      "field-adder/specs/en1990-wave3.json"
+    ]
+  },
+  {
+    "script": "field-adder/field_adder.py",
+    "args": [
+      "field-adder/specs/en1990-wave4.json"
+    ]
+  },
+  {
+    "script": "field-adder/field_adder.py",
+    "args": [
+      "field-adder/specs/en1991-collections.json"
+    ]
+  },
+  {
+    "script": "field-adder/field_adder.py",
+    "args": [
+      "field-adder/specs/en1991-placements.json"
+    ]
+  },
+  {
+    "script": "field-adder/field_adder.py",
+    "args": [
+      "field-adder/specs/en1991-v6.json"
+    ]
+  },
+  {
+    "script": "field-adder/field_adder.py",
+    "args": [
+      "field-adder/specs/en1991-wave3.json"
+    ]
+  },
+  {
+    "script": "field-adder/field_adder.py",
+    "args": [
+      "field-adder/specs/en1994-wave2.json"
+    ]
+  },
+  {
+    "script": "field-adder/field_adder.py",
+    "args": [
+      "field-adder/specs/en1994-wave2b.json"
+    ]
+  },
+  {
+    "script": "field-adder/field_adder.py",
+    "args": [
+      "field-adder/specs/en1994-wave3.json"
+    ]
+  },
+  {
+    "script": "field-adder/field_adder.py",
+    "args": [
+      "field-adder/specs/en1996-v5.json"
+    ]
+  },
+  {
+    "script": "field-adder/field_adder.py",
+    "args": [
+      "field-adder/specs/en1997-slope-width.json"
+    ]
+  },
+  {
+    "script": "field-adder/field_adder.py",
+    "args": [
+      "field-adder/specs/en1997-v8-design-cases.json"
+    ]
+  },
+  {
+    "script": "field-adder/field_adder.py",
+    "args": [
+      "field-adder/specs/en1997-wave2-pile-wall.json"
+    ]
+  },
+  {
+    "script": "field-adder/field_adder.py",
+    "args": [
+      "field-adder/specs/en1998-masonry-walls.json"
+    ]
+  },
+  {
+    "script": "field-adder/field_adder.py",
+    "args": [
+      "field-adder/specs/en1998-site-ground.json"
+    ]
+  },
+  {
+    "script": "field-adder/field_adder.py",
+    "args": [
+      "field-adder/specs/en1998-v4.json"
+    ]
+  },
+  {
+    "script": "field-adder/field_adder.py",
+    "args": [
+      "field-adder/specs/en1998-v5.json"
+    ]
+  },
+  {
+    "script": "field-adder/field_adder.py",
+    "args": [
+      "field-adder/specs/en1998-wave2.json"
+    ]
+  },
+  {
+    "script": "field-adder/new_collection.py",
+    "args": [
+      "field-adder/specs/en1991-collections.json"
+    ]
+  },
+  {
+    "script": "field-adder/new_collection.py",
+    "args": [
+      "field-adder/specs/en1991-placements.json"
+    ]
+  },
+  {
+    "script": "field-adder/new_collection.py",
+    "args": [
+      "field-adder/specs/en1991-v6.json"
+    ]
+  },
+  {
+    "script": "field-adder/new_collection.py",
+    "args": [
+      "field-adder/specs/en1991-wave3.json"
+    ]
+  },
+  {
+    "script": "placements-adder/padd.py",
+    "args": [
+      "en1990"
+    ]
+  },
+  {
+    "script": "placements-adder/padd.py",
+    "args": [
+      "en1991"
+    ]
+  },
+  {
+    "script": "placements-adder/padd.py",
+    "args": [
+      "en1992"
+    ]
+  },
+  {
+    "script": "placements-adder/padd.py",
+    "args": [
+      "en1993"
+    ]
+  },
+  {
+    "script": "placements-adder/padd.py",
+    "args": [
+      "en1994"
+    ]
+  },
+  {
+    "script": "placements-adder/padd.py",
+    "args": [
+      "en1995"
+    ]
+  },
+  {
+    "script": "placements-adder/padd.py",
+    "args": [
+      "en1996"
+    ]
+  },
+  {
+    "script": "placements-adder/padd.py",
+    "args": [
+      "en1997"
+    ]
+  },
+  {
+    "script": "placements-adder/padd.py",
+    "args": [
+      "en1998"
+    ]
+  },
+  {
+    "script": "leaf-kinds/placements.py",
+    "args": [
+      "en1996"
+    ]
+  },
+  {
+    "script": "leaf-kinds/placements.py",
+    "args": [
+      "en1996",
+      "--apply"
+    ]
+  },
+  {
+    "script": "leaf-kinds/placements.py",
+    "args": [
+      "en1997"
+    ]
+  },
+  {
+    "script": "leaf-kinds/placements.py",
+    "args": [
+      "en1997",
+      "--apply"
+    ]
+  },
+  {
+    "script": "demo-values/demo_gen.py",
+    "args": [
+      "en1990"
+    ]
+  },
+  {
+    "script": "demo-values/demo_gen.py",
+    "args": [
+      "en1990",
+      "--check"
+    ]
+  },
+  {
+    "script": "demo-values/demo_gen.py",
+    "args": [
+      "en1991"
+    ]
+  },
+  {
+    "script": "demo-values/demo_gen.py",
+    "args": [
+      "en1991",
+      "--check"
+    ]
+  },
+  {
+    "script": "demo-values/demo_gen.py",
+    "args": [
+      "en1995"
+    ]
+  },
+  {
+    "script": "demo-values/demo_gen.py",
+    "args": [
+      "en1995",
+      "--check"
+    ]
+  },
+  {
+    "script": "demo-values/demo_gen.py",
+    "args": [
+      "en1996"
+    ]
+  },
+  {
+    "script": "demo-values/demo_gen.py",
+    "args": [
+      "en1996",
+      "--check"
+    ]
+  },
+  {
+    "script": "demo-values/demo_gen.py",
+    "args": [
+      "en1997"
+    ]
+  },
+  {
+    "script": "demo-values/demo_gen.py",
+    "args": [
+      "en1997",
+      "--check"
+    ]
+  },
+  {
+    "script": "kind-convention-v3/en1992_tightness_kinds.py",
+    "args": []
+  },
+  {
+    "script": "en1995-collections/enums.py",
+    "args": []
+  },
+  {
+    "script": "en1995-collections/kinds.py",
+    "args": []
+  },
+  {
+    "script": "en1995-collections/schema.py",
+    "args": []
+  },
+  {
+    "script": "leaf-kinds/en1992_run.py",
+    "args": [
+      "--apply"
+    ]
+  }
+]

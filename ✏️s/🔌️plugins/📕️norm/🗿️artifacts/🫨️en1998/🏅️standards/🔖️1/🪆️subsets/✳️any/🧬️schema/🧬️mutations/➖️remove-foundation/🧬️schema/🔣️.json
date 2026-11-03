@@ -6,28 +6,28 @@
   "additionalProperties": false,
   "required": [
     "mutation",
-    "index"
+    "id"
   ],
   "properties": {
     "mutation": {
       "const": "removeFoundation"
     },
-    "index": {
-      "type": "integer",
-      "minimum": 0,
+    "id": {
+      "type": "string",
       "x-semio-ui": {
-        "widget": "stepper",
-        "role": "value",
+        "widget": "reference",
+        "role": "target",
         "label": {
           "en": "Foundation",
           "de": "Gründung"
         },
         "description": {
-          "en": "Zero-based position of the foundation in its list.",
-          "de": "Nullbasierte Position der Gründung in der Liste."
+          "en": "The foundation this mutation addresses, by id.",
+          "de": "Das adressierte Element (Gründung), per Kennung."
         },
-        "step": 1,
-        "precision": 0,
+        "ref": {
+          "kind": "foundation"
+        },
         "group": "target",
         "order": 10
       }

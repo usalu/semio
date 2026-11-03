@@ -1,0 +1,29 @@
+{
+ "artifact": "en1998",
+ "fields": [
+  {
+   "entity": "member",
+   "field": "wall_length_m",
+   "default": 0.0,
+   "unit": "Metre",
+   "en": "Plan length l of the masonry wall in its own direction (0 = not a wall row)",
+   "de": "Grundrisslänge l der Mauerwerkswand in ihrer Richtung (0 = keine Wandzeile)"
+  },
+  {
+   "entity": "member",
+   "field": "wall_direction_rad",
+   "default": 0.0,
+   "unit": "Radian",
+   "en": "Direction of the wall axis from the plan x axis (0 = along x, 90° = along y)",
+   "de": "Richtung der Wandachse zur Grundriss-x-Achse (0 = entlang x, 90° = entlang y)"
+  },
+  {
+   "entity": "member",
+   "field": "wall_storey",
+   "default": 1.0,
+   "unit": null,
+   "en": "Storey number of the wall, counted from 1 at the base (0 = every storey)",
+   "de": "Geschossnummer der Wand, ab 1 am Fußpunkt gezählt (0 = jedes Geschoss)"
+  }
+ ]
+}

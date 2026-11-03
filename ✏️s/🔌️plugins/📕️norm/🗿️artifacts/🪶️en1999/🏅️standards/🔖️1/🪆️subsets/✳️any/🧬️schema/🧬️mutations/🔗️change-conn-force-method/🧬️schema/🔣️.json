@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-conn-force-method/schema.json",
+  "title": "ChangeConnForceMethod",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "connectionId",
+    "newForceMethod"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeConnForceMethod"
+    },
+    "connectionId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Connection",
+          "de": "Anschluss"
+        },
+        "description": {
+          "en": "The connection this mutation addresses, by id.",
+          "de": "Das adressierte Element (Anschluss), per Kennung."
+        },
+        "ref": {
+          "forceMethod": "connection"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newForceMethod": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/$defs/FastenerForceMethod",
+      "x-semio-ui": {
+        "label": {
+          "en": "forceMethod",
+          "de": "Anschluss"
+        },
+        "role": "value",
+        "group": "value",
+        "order": 20
+      },
+      "x-semio-rust": {
+        "type": "FastenerForceMethod"
+      }
+    }
+  }
+}

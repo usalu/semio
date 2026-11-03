@@ -1,0 +1,11 @@
+{
+  "mutation": "insertPlacement",
+  "index": 0,
+  "placement": {
+    "id": "purlin-1",
+    "x": 1.0,
+    "y": 2.0,
+    "z": 0.5,
+    "yaw": 0.25
+  }
+}

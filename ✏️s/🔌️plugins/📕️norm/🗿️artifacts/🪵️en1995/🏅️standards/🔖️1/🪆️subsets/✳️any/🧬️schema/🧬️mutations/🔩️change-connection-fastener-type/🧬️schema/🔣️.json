@@ -30,9 +30,8 @@
       }
     },
     "newValue": {
-      "type": "string",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/FastenerType",
       "x-semio-ui": {
-        "widget": "text",
         "role": "value",
         "label": {
           "en": "Fastener type",

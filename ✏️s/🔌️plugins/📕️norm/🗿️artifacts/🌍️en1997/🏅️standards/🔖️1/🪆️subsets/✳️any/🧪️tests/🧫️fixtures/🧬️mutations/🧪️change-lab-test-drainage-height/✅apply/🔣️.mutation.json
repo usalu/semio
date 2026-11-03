@@ -1,0 +1,5 @@
+{
+  "mutation": "changeLabTestDrainageHeight",
+  "id": "lab-T1",
+  "newDrainageHeight": 0.02
+}

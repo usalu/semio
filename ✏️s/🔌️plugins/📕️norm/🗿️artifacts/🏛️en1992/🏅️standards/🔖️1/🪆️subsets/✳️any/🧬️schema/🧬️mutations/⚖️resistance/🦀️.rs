@@ -17,12 +17,6 @@ pub mod change_action_nk;
 pub mod change_action_vk;
 #[path = "../#️⃣change-bar-layer-count/🦀️.rs"]
 pub mod change_bar_layer_count;
-#[path = "../⭕change-bar-layer-diameter/🦀️.rs"]
-pub mod change_bar_layer_diameter;
-#[path = "../🔥change-member-axis-distance/🦀️.rs"]
-pub mod change_member_axis_distance;
-#[path = "../🔥️change-member-fire-rating/🦀️.rs"]
-pub mod change_member_fire_rating;
-#[path = "../🪢change-member-stirrup-spacing/🦀️.rs"]
-pub mod change_member_stirrup_spacing;
 //#endregion 🪢️Mounts
+
+pub use semio_s_artifact_norm_en1992_mut_resistance_more::{change_bar_layer_diameter, change_member_axis_distance, change_member_fire_rating, change_member_stirrup_spacing};

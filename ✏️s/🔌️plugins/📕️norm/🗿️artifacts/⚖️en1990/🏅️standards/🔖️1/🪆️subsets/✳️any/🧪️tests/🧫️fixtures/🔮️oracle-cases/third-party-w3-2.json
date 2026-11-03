@@ -1,0 +1,256 @@
+{
+  "$schema": "../../../../../../../../../🔮️oracles/🏃️harness/🧬️schema/🔣️.json",
+  "schemaVersion": 1,
+  "artifact": "en1990",
+  "annex": "de",
+  "cases": [
+    {
+      "id": "en1990.mechanics.w3-2-span-envelope-equal-short",
+      "check": "mechanics.beam-span-envelope",
+      "citation": {
+        "standard": "EN 1990",
+        "edition": "2004",
+        "clause": "6.4.3.2 load arrangements; A1.3.1 permanent actions as individual actions with gamma_G,sup and gamma_G,inf (normative reading unverified against print)"
+      },
+      "inputs": {
+        "E": 33000000000.0,
+        "A": 0.15,
+        "I": 0.003125,
+        "spans": [
+          4.0,
+          4.0
+        ],
+        "g": 8000,
+        "q": 5000,
+        "gamma_G": 1.35,
+        "gamma_Q": 1.5,
+        "gamma_G_inf": 1.0
+      },
+      "expected": {
+        "M_sag_0": {
+          "value": 24631.164617486345,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        },
+        "M_sag_1": {
+          "value": 24631.16461748634,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        },
+        "M_hog_support": {
+          "value": 36600.0,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        },
+        "R_max_support": {
+          "value": 91500.0,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "R_min_0": {
+          "value": 9425.0,
+          "unit": "N",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-pynite",
+          "adapter": "pynite",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-anastruct",
+          "adapter": "anastruct",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1990.mechanics.w3-2-span-envelope-long-second-span",
+      "check": "mechanics.beam-span-envelope",
+      "citation": {
+        "standard": "EN 1990",
+        "edition": "2004",
+        "clause": "6.4.3.2 load arrangements; A1.3.1 permanent actions as individual actions with gamma_G,sup and gamma_G,inf (normative reading unverified against print)"
+      },
+      "inputs": {
+        "E": 33000000000.0,
+        "A": 0.15,
+        "I": 0.003125,
+        "spans": [
+          6.0,
+          9.0
+        ],
+        "g": 18000,
+        "q": 12000,
+        "gamma_G": 1.35,
+        "gamma_Q": 1.5,
+        "gamma_G_inf": 1.0
+      },
+      "expected": {
+        "M_sag_0": {
+          "value": 108902.13031914894,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        },
+        "M_sag_1": {
+          "value": 295820.91023936163,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        },
+        "M_hog_support": {
+          "value": 333112.5000000001,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        },
+        "R_max_support": {
+          "value": 409781.25,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "R_min_0": {
+          "value": 5771.249999999985,
+          "unit": "N",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-pynite",
+          "adapter": "pynite",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-anastruct",
+          "adapter": "anastruct",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1990.mechanics.w3-2-span-envelope-short-second-span",
+      "check": "mechanics.beam-span-envelope",
+      "citation": {
+        "standard": "EN 1990",
+        "edition": "2004",
+        "clause": "6.4.3.2 load arrangements; A1.3.1 permanent actions as individual actions with gamma_G,sup and gamma_G,inf (normative reading unverified against print)"
+      },
+      "inputs": {
+        "E": 33000000000.0,
+        "A": 0.15,
+        "I": 0.003125,
+        "spans": [
+          8.0,
+          5.0
+        ],
+        "g": 10000,
+        "q": 30000,
+        "gamma_G": 1.35,
+        "gamma_Q": 1.5,
+        "gamma_G_inf": 1.0
+      },
+      "expected": {
+        "M_sag_0": {
+          "value": 330011.1563610259,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        },
+        "M_sag_1": {
+          "value": 127926.53827978812,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        },
+        "M_hog_support": {
+          "value": 358312.5,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        },
+        "R_max_support": {
+          "value": 496701.5624999999,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "R_min_0": {
+          "value": 25057.091346153848,
+          "unit": "N",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-pynite",
+          "adapter": "pynite",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-anastruct",
+          "adapter": "anastruct",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1990.mechanics.w3-2-span-envelope-gamma-g-inf-09",
+      "check": "mechanics.beam-span-envelope",
+      "citation": {
+        "standard": "EN 1990",
+        "edition": "2004",
+        "clause": "6.4.3.2 load arrangements; A1.3.1 permanent actions as individual actions with gamma_G,sup and gamma_G,inf (normative reading unverified against print)"
+      },
+      "inputs": {
+        "E": 33000000000.0,
+        "A": 0.15,
+        "I": 0.003125,
+        "spans": [
+          7.0,
+          7.0
+        ],
+        "g": 14000,
+        "q": 20000,
+        "gamma_G": 1.35,
+        "gamma_Q": 1.5,
+        "gamma_G_inf": 0.9
+      },
+      "expected": {
+        "M_sag_0": {
+          "value": 212742.93879409513,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        },
+        "M_sag_1": {
+          "value": 212742.93879409507,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        },
+        "M_hog_support": {
+          "value": 299512.49999999994,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        },
+        "R_max_support": {
+          "value": 427875.0,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "R_min_0": {
+          "value": 17193.750000000004,
+          "unit": "N",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-pynite",
+          "adapter": "pynite",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-anastruct",
+          "adapter": "anastruct",
+          "kind": "third-party-library"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeBridgeNaturalFrequency",
+  "id": "bri-1",
+  "newNaturalFrequency": 2.0
+}

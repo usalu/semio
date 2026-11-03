@@ -1,0 +1,6 @@
+{
+  "mutation": "changeConnActionGKLine",
+  "connectionId": "support-weld",
+  "actionId": "G-conn",
+  "newGKLine": 1600.0
+}

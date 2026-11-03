@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-member-bearing-length/schema.json",
+  "title": "ChangeMemberBearingLength",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "memberId",
+    "newBearingLength"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeMemberBearingLength"
+    },
+    "memberId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Member",
+          "de": "Bauteil"
+        },
+        "description": {
+          "en": "The member this mutation addresses, by id.",
+          "de": "Das adressierte Element (Bauteil), per Kennung."
+        },
+        "ref": {
+          "kind": "member"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newBearingLength": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Stiff bearing length s_s",
+          "de": "Lasteinleitungslänge s_s"
+        },
+        "widget": "stepper",
+        "unit": "m",
+        "displayUnit": "mm",
+        "displayFactor": 1000,
+        "precision": 0,
+        "step": 5,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

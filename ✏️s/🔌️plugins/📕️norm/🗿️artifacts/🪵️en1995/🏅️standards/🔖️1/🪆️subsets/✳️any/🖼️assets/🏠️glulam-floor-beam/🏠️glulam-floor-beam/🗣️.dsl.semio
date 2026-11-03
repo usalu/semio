@@ -1,8 +1,33 @@
 semio norm.en1995.dsl v1
 annex=de
-members [id:TEXT label-en:TEXT label-de:TEXT role:ENUM strength-class:TEXT service-class:UINT support:ENUM b-m:QTY h-m:QTY span-m:QTY support-length-m:QTY bearing-length-m:QTY buckling-length-y-m:QTY buckling-length-z-m:QTY lateral-restraint-spacing-m:QTY notch-depth-m:QTY notch-distance-m:QTY m-crit-nm:NUM mass-kg-per-m:NUM mass-kg-per-m2:NUM damping-xi:NUM fire-duration-s:QTY bridge-n-obs:NUM bridge-t-l-years:NUM bridge-beta:NUM bridge-a:NUM bridge-b:NUM bridge-crowd-per-m2:NUM actions:TABLE] {
-  beam-B1 "Main glulam floor beam B1" "Hauptträger BSH Decke B1" floor GL28h 1 simply-supported 0.2m 0.4m 5m 0.15m 0.15m 5m 1.5m 1.5m 0m 0m 180000 120 450 0.04 0s 0 0 0 0 0 0 [ {id=g kind=permanent category="" load-duration=permanent q-line-n-per-m=2500 f-point-n=0N m-k-nm=0 v-k-n=0N n-k-n=0N n-t-k-n=0N f-c90-k-n=0N} {id=q kind=imposed category=A load-duration=medium q-line-n-per-m=3000 f-point-n=0N m-k-nm=0 v-k-n=0N n-k-n=0N n-t-k-n=0N f-c90-k-n=0N} ]
+members [id:TEXT label-en:TEXT label-de:TEXT role:ENUM strength-class:ENUM service-class:UINT support:ENUM b-m:QTY h-m:QTY span-m:QTY support-length-m:QTY bearing-length-m:QTY buckling-length-y-m:QTY buckling-length-z-m:QTY lateral-restraint-spacing-m:QTY notch-depth-m:QTY notch-distance-m:QTY mass-kg-per-m:NUM mass-kg-per-m2:NUM damping-xi:NUM fire-duration-s:QTY bridge-n-obs:NUM bridge-t-l-years:NUM bridge-beta:NUM bridge-a:NUM bridge-b:NUM bridge-crowd-per-m2:NUM actions:TABLE] {
+  beam-B1 "Main glulam floor beam B1" "Hauptträger BSH Decke B1" floor gl28h 1 simply-supported 0.2m 0.4m 5m 0.15m 0.15m 5m 1.5m 1.5m 0m 0m 120 450 0.04 0s 0 0 0 0 0 0 [ {id=g kind=permanent category=not-imposed load-duration=permanent q-line-n-per-m=2500N/m f-point-n=0N m-k-nm=0N*m v-k-n=0N n-k-n=0N n-t-k-n=0N f-c90-k-n=0N} {id=q kind=imposed category=a load-duration=medium q-line-n-per-m=3000N/m f-point-n=0N m-k-nm=0N*m v-k-n=0N n-k-n=0N n-t-k-n=0N f-c90-k-n=0N} ]
 }
-connections [id:TEXT label-en:TEXT label-de:TEXT fastener-type:TEXT strength-class:TEXT service-class:UINT diameter-m:QTY number:UINT rows:UINT spacing-m:QTY edge-distance-m:QTY end-distance-m:QTY t1-m:QTY t2-m:QTY steel-plate:BOOL steel-plate-thickness-m:QTY shear-planes:UINT f-u-k:QTY actions:TABLE] {
-  conn-C1 "Bolt group at support" "Schraubverbund am Auflager" bolt GL28h 1 0.012m 8 2 0.09m 0.048m 0.096m 0.2m 0.2m false 0m 1 400000000Pa [ {id=g kind=permanent load-duration=permanent f-k-n=8000N} {id=q kind=imposed load-duration=medium f-k-n=10000N} ]
+connections [id:TEXT label-en:TEXT label-de:TEXT fastener-type:ENUM strength-class:ENUM service-class:UINT diameter-m:QTY number:UINT rows:UINT spacing-m:QTY edge-distance-m:QTY end-distance-m:QTY t1-m:QTY t2-m:QTY steel-plate:BOOL steel-plate-thickness-m:QTY shear-planes:UINT f-u-k:QTY actions:TABLE] {
+  conn-C1 "Bolt group at support" "Schraubverbund am Auflager" bolt gl28h 1 0.012m 8 2 0.09m 0.048m 0.096m 0.2m 0.2m false 0m 1 400000000Pa [ {id=g kind=permanent load-duration=permanent f-k-n=8000N} {id=q kind=imposed load-duration=medium f-k-n=10000N} ]
 }
+uls-equation="6.10"
+cases [id:TEXT label-en:TEXT label-de:TEXT entry-id:TEXT numbers:TABLE texts:TABLE] {
+  case-kser "Slip modulus of the support dowels" "Verschiebungsmodul der Auflagerdübel" T-83 [ {id=d value=12} {id=rho_m1 value=420} ] [ {id=kind value=dowel} ]
+}
+placements [id:TEXT x:NUM y:NUM z:NUM yaw:NUM] {
+}
+tapers [id:TEXT member-id:TEXT kind:ENUM taper-angle-rad:NUM apex-depth-m:QTY inner-radius-m:QTY lamella-thickness-m:QTY apex-angle-rad:NUM tension-side:ENUM rods:UINT rod-resistance-n:QTY] {
+}
+cutouts [id:TEXT member-id:TEXT kind:ENUM face:ENUM distance-m:QTY length-m:QTY depth-m:QTY centre-height-m:QTY slope:NUM rods:UINT rod-resistance-n:QTY] {
+}
+fasteners [id:TEXT connection-id:TEXT member-id:TEXT columns:UINT lines:UINT spacing-parallel-m:QTY spacing-perpendicular-m:QTY end-distance-m:QTY edge-distance-m:QTY offset-x-m:QTY offset-y-m:QTY load-angle-rad:NUM positions:TABLE] {
+}
+panels [id:TEXT strength-class:ENUM layers:TABLE span-m:QTY width-m:QTY load-pa:QTY fire-duration-s:QTY] {
+}
+floors [id:TEXT member-id:TEXT span-m:QTY width-m:QTY joist-spacing-m:QTY ei-l-n-m2-per-m:NUM ei-b-n-m2-per-m:NUM mass-kg-per-m2:NUM damping-ratio:NUM permanent-load-pa:QTY imposed-load-pa:QTY psi-2:NUM] {
+}
+diaphragms [id:TEXT kind:ENUM method:ENUM panel-width-m:QTY wall-height-m:QTY fastener-spacing-m:QTY panels:UINT fastener-capacity-n:QTY shear-ed-n:QTY hold-down-n:QTY diaphragm-force-n:QTY diaphragm-length-m:QTY shear-resistance-n-per-m:QTY] {
+}
+trusses [id:TEXT kind:ENUM product:ENUM span-m:QTY height-m:QTY bays:UINT chord-width-m:QTY chord-depth-m:QTY web-width-m:QTY web-depth-m:QTY chord-force-n:QTY restraint-length-m:QTY bracing-capacity-n-per-m:QTY] {
+}
+bracings [id:TEXT kind:ENUM member-id:TEXT stabilised-count:UINT spacing-m:QTY length-m:QTY brace-width-m:QTY brace-depth-m:QTY compression-force-n:QTY resistance-n:QTY stiffness-n-per-m:QTY] {
+}
+decks [id:TEXT lamination-product:ENUM bar-product:ENUM span-m:QTY deck-width-m:QTY deck-depth-m:QTY lamination-width-m:QTY bar-spacing-m:QTY bar-diameter-m:QTY plate-side-m:QTY initial-prestress-pa:QTY loss-relaxation:NUM loss-creep:NUM loss-moisture:NUM bar-resistance-pa:QTY shear-stress-pa:QTY compression-perpendicular-pa:QTY wheel-load-n:QTY wheel-contact-m:QTY] {
+}
+reliability-class=rc2

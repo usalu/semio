@@ -1,0 +1,6 @@
+{
+  "ChangeJointWeldLength": {
+    "id": "joint-j1",
+    "newWeldLength": 1.5
+  }
+}

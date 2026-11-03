@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-built-up-diagonal-area/schema.json",
+  "title": "ChangeBuiltUpDiagonalArea",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newDiagonalArea"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Built-up member",
+          "de": "Zusammengesetzter Stab"
+        },
+        "description": {
+          "en": "The built-up member this mutation addresses, by id.",
+          "de": "Das adressierte Element (Zusammengesetzter Stab), per Kennung."
+        },
+        "ref": {
+          "kind": "built-up"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newDiagonalArea": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Diagonal area A_d",
+          "de": "Diagonalenfläche A_d"
+        },
+        "widget": "stepper",
+        "unit": "m²",
+        "precision": 6,
+        "step": 0.0001,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

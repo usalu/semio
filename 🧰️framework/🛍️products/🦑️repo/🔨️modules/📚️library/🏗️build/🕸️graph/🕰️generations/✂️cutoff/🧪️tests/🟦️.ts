@@ -92,6 +92,22 @@ test("without a computation every suspect changed and a failing computation chan
  await expect(settleSuspectsV1({index,suspects,derive:async()=>{throw Error("boom");},signal:controller.signal})).rejects.toBeDefined();
 });
 
+test("a plan that starts again asks only the questions whose last inputs changed, and the answers equal asking everything again",async()=>{
+ const world=worlds.find(row=>row.id==="support stale, same answer: cutoff")!,{index}=indexOf(world),selection=selectFactClassesV1(index);
+ const{stale}=await staleFactRowsV1(index,verifiableRowIdsV1(index,selection.ids),async rows=>rows.every(row=>row.path!=="s1")),{suspects}=splitStaleConsumersV1(index,selection.classes,stale);
+ const moved=new Set<string>(),asked:string[]=[],memo=new Map(),hold=async(rows:readonly{path:string}[])=>rows.every(row=>!moved.has(row.path));
+ const derive=async(row:{path:string;fact:unknown})=>{asked.push(row.path);return{fact:row.fact,rows:[raw("fresh-"+row.path)]};};
+ const first=await settleSuspectsV1({index,suspects,derive,memo,hold} as never);
+ expect(asked.length).toBe(suspects.size);expect(first.reused).toBe(0);
+ const second=await settleSuspectsV1({index,suspects,derive,memo,hold} as never);
+ expect(asked.length).toBe(suspects.size);expect(second.reused).toBe(suspects.size);expect([...second.held.keys()].sort()).toEqual([...first.held.keys()].sort());
+ for(const row of memo.values())for(const read of row.rows)moved.add(read.path);
+ const third=await settleSuspectsV1({index,suspects,derive,memo,hold} as never);
+ expect(asked.length).toBe(2*suspects.size);expect(third.reused).toBe(0);
+ const plain=await settleSuspectsV1({index,suspects,derive} as never);
+ expect([...third.held.keys()].sort()).toEqual([...plain.held.keys()].sort());expect([...third.changed.keys()].sort()).toEqual([...plain.changed.keys()].sort());
+});
+
 test("a held fact replaces its support, so the next verification finds nothing stale; the index equals a cold build of the same ownership",async()=>{
  const world=worlds.find(row=>row.id==="support stale, same answer: cutoff")!,first=await decide(world);
  expect(first.dirty).toEqual([]);expect(first.held).toEqual(["q1"]);

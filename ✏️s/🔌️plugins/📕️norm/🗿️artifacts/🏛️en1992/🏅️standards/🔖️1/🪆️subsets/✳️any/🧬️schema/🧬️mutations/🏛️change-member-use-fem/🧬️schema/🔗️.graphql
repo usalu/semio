@@ -1,0 +1,4 @@
+type ChangeMemberUseFem {
+  memberId: String!
+  newUseFem: Boolean!
+}

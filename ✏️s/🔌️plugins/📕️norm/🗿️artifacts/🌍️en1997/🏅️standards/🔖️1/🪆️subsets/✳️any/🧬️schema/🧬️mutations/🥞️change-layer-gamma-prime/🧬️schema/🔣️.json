@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-layer-gamma-prime/schema.json",
+  "title": "ChangeLayerGammaPrime",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newGammaPrime"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeLayerGammaPrime"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Soil layer",
+          "de": "Bodenschicht"
+        },
+        "description": {
+          "en": "The soil layer this mutation addresses, by id.",
+          "de": "Die adressierte Zeile (Bodenschicht), per Kennung."
+        },
+        "ref": {
+          "kind": "soil-layer"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newGammaPrime": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Buoyant unit weight γ′",
+          "de": "Wichte unter Auftrieb γ′"
+        },
+        "widget": "stepper",
+        "unit": "N/m³",
+        "displayUnit": "kN/m³",
+        "displayFactor": 0.001,
+        "precision": 1,
+        "step": 500,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

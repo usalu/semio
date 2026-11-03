@@ -1,6 +1,9 @@
 {
   "version": 1,
-  "labels": {"en": "Remedy", "de": "Abhilfe"},
+  "labels": {
+    "en": "Remedy",
+    "de": "Abhilfe"
+  },
   "exchange": {
     "en": "The filesystem that holds the workspace cannot swap two directories in one atomic step (typical for FAT and exFAT volumes, SMB and NFS shares, FUSE, 9p or virtiofs bind mounts, and HFS+). Put the repository, or at least its .cache directory, on a local APFS, ext4, xfs, btrfs, NTFS or ReFS volume and run repo preflight again.",
     "de": "Das Dateisystem des Arbeitsbereichs kann zwei Verzeichnisse nicht in einem atomaren Schritt vertauschen (typisch bei FAT- und exFAT-Laufwerken, SMB- und NFS-Freigaben, FUSE, 9p- oder virtiofs-Bind-Mounts und HFS+). Lege das Repository, mindestens aber das Verzeichnis .cache, auf ein lokales APFS-, ext4-, xfs-, btrfs-, NTFS- oder ReFS-Laufwerk und führe repo preflight erneut aus."
@@ -30,14 +33,14 @@
         "de": "Kein C-Compiler im PATH: installiere die Kommandozeilen-Entwicklerwerkzeuge mit xcode-select --install."
       },
       "linux": {
-        "en": "No C compiler is on the PATH: install your distribution's compiler package (build-essential on Debian and Ubuntu, gcc on Fedora, base-devel on Arch).",
-        "de": "Kein C-Compiler im PATH: installiere das Compiler-Paket deiner Distribution (build-essential unter Debian und Ubuntu, gcc unter Fedora, base-devel unter Arch)."
+        "en": "No C compiler is on the PATH. Run the repository bootstrap (bash 🧰framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh setup): it installs the distribution compiler when that needs no password, and otherwise links a pinned Zig compiler into ~/.local/bin.",
+        "de": "Kein C-Compiler im PATH. Führe das Bootstrap des Repositorys aus (bash 🧰framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh setup): es installiert den Compiler der Distribution, wenn dafür kein Passwort nötig ist, und verlinkt sonst einen gepinnten Zig-Compiler nach ~/.local/bin."
       }
     },
     "pkg-config": {
       "linux": {
-        "en": "pkg-config is missing: install the pkg-config package of your distribution (pkgconf on Fedora and Arch, pkg-config on Debian and Ubuntu).",
-        "de": "pkg-config fehlt: installiere das Paket pkg-config deiner Distribution (pkgconf unter Fedora und Arch, pkg-config unter Debian und Ubuntu)."
+        "en": "pkg-config is missing. Run the repository bootstrap (bash 🧰framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh setup): it installs the distribution package when that needs no password, and otherwise links a user-local pkg-config into ~/.local/bin.",
+        "de": "pkg-config fehlt. Führe das Bootstrap des Repositorys aus (bash 🧰framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh setup): es installiert das Paket der Distribution, wenn dafür kein Passwort nötig ist, und verlinkt sonst ein lokales pkg-config nach ~/.local/bin."
       }
     },
     "developer-tools": {

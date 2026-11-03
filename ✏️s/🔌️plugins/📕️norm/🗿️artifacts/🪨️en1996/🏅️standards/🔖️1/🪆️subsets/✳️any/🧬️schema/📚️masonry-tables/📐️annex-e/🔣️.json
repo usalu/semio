@@ -1,0 +1,223 @@
+{
+  "$comment": "EN 1996-1-1 Annex E bending moment coefficient cells per edge condition (F free, S simple, X fixed; canonical code: two horizontal edges then two vertical edges, each ordered F<S<X). No cell is keyed: enter alpha1 values only from the verified print and mirror them in KEYED of the rust module.",
+  "standard": "EN 1996-1-1 Annex E",
+  "status": "unverified",
+  "classes": [
+    {
+      "code": "FFFF",
+      "supportedEdges": 0,
+      "status": "unverified",
+      "cells": []
+    },
+    {
+      "code": "FFFS",
+      "supportedEdges": 1,
+      "status": "unverified",
+      "cells": []
+    },
+    {
+      "code": "FFFX",
+      "supportedEdges": 1,
+      "status": "unverified",
+      "cells": []
+    },
+    {
+      "code": "FFSS",
+      "supportedEdges": 2,
+      "status": "unverified",
+      "cells": []
+    },
+    {
+      "code": "FFSX",
+      "supportedEdges": 2,
+      "status": "unverified",
+      "cells": []
+    },
+    {
+      "code": "FFXX",
+      "supportedEdges": 2,
+      "status": "unverified",
+      "cells": []
+    },
+    {
+      "code": "FSFF",
+      "supportedEdges": 1,
+      "status": "unverified",
+      "cells": []
+    },
+    {
+      "code": "FSFS",
+      "supportedEdges": 2,
+      "status": "unverified",
+      "cells": []
+    },
+    {
+      "code": "FSFX",
+      "supportedEdges": 2,
+      "status": "unverified",
+      "cells": []
+    },
+    {
+      "code": "FSSS",
+      "supportedEdges": 3,
+      "status": "unverified",
+      "cells": []
+    },
+    {
+      "code": "FSSX",
+      "supportedEdges": 3,
+      "status": "unverified",
+      "cells": []
+    },
+    {
+      "code": "FSXX",
+      "supportedEdges": 3,
+      "status": "unverified",
+      "cells": []
+    },
+    {
+      "code": "FXFF",
+      "supportedEdges": 1,
+      "status": "unverified",
+      "cells": []
+    },
+    {
+      "code": "FXFS",
+      "supportedEdges": 2,
+      "status": "unverified",
+      "cells": []
+    },
+    {
+      "code": "FXFX",
+      "supportedEdges": 2,
+      "status": "unverified",
+      "cells": []
+    },
+    {
+      "code": "FXSS",
+      "supportedEdges": 3,
+      "status": "unverified",
+      "cells": []
+    },
+    {
+      "code": "FXSX",
+      "supportedEdges": 3,
+      "status": "unverified",
+      "cells": []
+    },
+    {
+      "code": "FXXX",
+      "supportedEdges": 3,
+      "status": "unverified",
+      "cells": []
+    },
+    {
+      "code": "SSFF",
+      "supportedEdges": 2,
+      "status": "unverified",
+      "cells": []
+    },
+    {
+      "code": "SSFS",
+      "supportedEdges": 3,
+      "status": "unverified",
+      "cells": []
+    },
+    {
+      "code": "SSFX",
+      "supportedEdges": 3,
+      "status": "unverified",
+      "cells": []
+    },
+    {
+      "code": "SSSS",
+      "supportedEdges": 4,
+      "status": "unverified",
+      "cells": []
+    },
+    {
+      "code": "SSSX",
+      "supportedEdges": 4,
+      "status": "unverified",
+      "cells": []
+    },
+    {
+      "code": "SSXX",
+      "supportedEdges": 4,
+      "status": "unverified",
+      "cells": []
+    },
+    {
+      "code": "SXFF",
+      "supportedEdges": 2,
+      "status": "unverified",
+      "cells": []
+    },
+    {
+      "code": "SXFS",
+      "supportedEdges": 3,
+      "status": "unverified",
+      "cells": []
+    },
+    {
+      "code": "SXFX",
+      "supportedEdges": 3,
+      "status": "unverified",
+      "cells": []
+    },
+    {
+      "code": "SXSS",
+      "supportedEdges": 4,
+      "status": "unverified",
+      "cells": []
+    },
+    {
+      "code": "SXSX",
+      "supportedEdges": 4,
+      "status": "unverified",
+      "cells": []
+    },
+    {
+      "code": "SXXX",
+      "supportedEdges": 4,
+      "status": "unverified",
+      "cells": []
+    },
+    {
+      "code": "XXFF",
+      "supportedEdges": 2,
+      "status": "unverified",
+      "cells": []
+    },
+    {
+      "code": "XXFS",
+      "supportedEdges": 3,
+      "status": "unverified",
+      "cells": []
+    },
+    {
+      "code": "XXFX",
+      "supportedEdges": 3,
+      "status": "unverified",
+      "cells": []
+    },
+    {
+      "code": "XXSS",
+      "supportedEdges": 4,
+      "status": "unverified",
+      "cells": []
+    },
+    {
+      "code": "XXSX",
+      "supportedEdges": 4,
+      "status": "unverified",
+      "cells": []
+    },
+    {
+      "code": "XXXX",
+      "supportedEdges": 4,
+      "status": "unverified",
+      "cells": []
+    }
+  ]
+}

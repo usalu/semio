@@ -1,0 +1,47 @@
+{
+  "structureId": null,
+  "geotechnicalCategory": null,
+  "designSituation": null,
+  "designApproach": null,
+  "annex": null,
+  "groundwaterLevel": null,
+  "investigationDepth": null,
+  "layers": null,
+  "footings": null,
+  "piles": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "pile-P1",
+        "patch": {
+          "lateralHeadLoad": 1.5,
+          "elasticModulus": 33000000000.0,
+          "settlingThickness": 0.0,
+          "negativeFrictionBeta": 0.0,
+          "dynamicTestCount": 0.0,
+          "dynamicResistanceMean": 0.0,
+          "dynamicResistanceMin": 0.0,
+          "hammerWeight": 0.0,
+          "dropHeight": 0.0,
+          "setPerBlow": 0.0,
+          "elasticCompression": 0.0,
+          "hammerEfficiency": 0.0,
+          "concreteClass": null
+        }
+      }
+    ]
+  },
+  "retainingWalls": null,
+  "slopes": null,
+  "upliftCases": null,
+  "anchors": null,
+  "embeddedWalls": null,
+  "pileGroups": null,
+  "labTests": null,
+  "layerWaters": null,
+  "cases": null,
+  "investigations": null,
+  "characteristicBases": null
+}

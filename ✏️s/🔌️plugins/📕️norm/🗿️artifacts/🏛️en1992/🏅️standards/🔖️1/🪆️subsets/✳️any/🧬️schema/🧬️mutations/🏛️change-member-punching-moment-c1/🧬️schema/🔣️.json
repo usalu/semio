@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-member-punching-moment-c1/schema.json",
+  "title": "ChangeMemberPunchingMomentC1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "memberId",
+    "newPunchingMomentC1"
+  ],
+  "properties": {
+    "memberId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Member",
+          "de": "Bauteil"
+        },
+        "description": {
+          "en": "The member this mutation addresses, by id.",
+          "de": "Das adressierte Element (Bauteil), per Kennung."
+        },
+        "ref": {
+          "kind": "member"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newPunchingMomentC1": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Unbalanced column moment M_Ed,1 (eccentricity along c₁)",
+          "de": "Stützenmoment M_Ed,1 (Ausmitte entlang c₁)"
+        },
+        "widget": "stepper",
+        "description": {
+          "en": "Design value; edge and corner columns: positive when the load shifts towards the slab interior. Used with the method from unbalanced moments.",
+          "de": "Bemessungswert; Rand- und Eckstützen: positiv, wenn sich die Last zum Deckeninneren verschiebt. Wirksam bei der Methode aus Stützenmomenten."
+        },
+        "unit": "N·m",
+        "displayUnit": "kN·m",
+        "displayFactor": 0.001,
+        "precision": 2,
+        "step": 1000,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

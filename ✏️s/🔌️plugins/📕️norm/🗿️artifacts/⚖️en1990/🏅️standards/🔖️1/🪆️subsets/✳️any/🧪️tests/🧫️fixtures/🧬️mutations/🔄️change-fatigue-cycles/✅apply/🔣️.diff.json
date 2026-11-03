@@ -1,0 +1,93 @@
+{
+  "annex": null,
+  "projectId": null,
+  "structureKind": null,
+  "altitudeM": null,
+  "consequenceClass": null,
+  "reliabilityClass": null,
+  "designWorkingLifeCategory": null,
+  "designWorkingLifeYears": null,
+  "referencePeriodYears": null,
+  "supervisionLevel": null,
+  "inspectionLevel": null,
+  "betaComputed": null,
+  "permanents": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "variables": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "accidentals": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "seismics": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "members": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "bridgeSls": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "effects": [],
+  "fatigueSpectra": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "fat-1",
+        "patch": {
+          "memberId": null,
+          "detailCategory": null,
+          "stressRange": null,
+          "cycles": 2.0
+        }
+      }
+    ]
+  },
+  "reliabilityAnalyses": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "testSeries": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "placements": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "cases": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "factorOverrides": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "trafficGroups": {"removed": [], "inserted": [], "moved": [], "modified": []}
+}

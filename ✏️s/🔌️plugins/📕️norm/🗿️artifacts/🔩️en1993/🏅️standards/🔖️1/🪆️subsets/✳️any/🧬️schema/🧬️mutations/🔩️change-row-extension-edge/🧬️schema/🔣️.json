@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-row-extension-edge/schema.json",
+  "title": "ChangeRowExtensionEdge",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newExtensionEdge"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Joint row",
+          "de": "Schraubenreihe"
+        },
+        "description": {
+          "en": "The joint row this mutation addresses, by id.",
+          "de": "Das adressierte Element (Schraubenreihe), per Kennung."
+        },
+        "ref": {
+          "kind": "joint-row"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newExtensionEdge": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Extension edge distance e_x",
+          "de": "Überstand Randabstand e_x"
+        },
+        "widget": "stepper",
+        "unit": "m",
+        "precision": 3,
+        "step": 0.005,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

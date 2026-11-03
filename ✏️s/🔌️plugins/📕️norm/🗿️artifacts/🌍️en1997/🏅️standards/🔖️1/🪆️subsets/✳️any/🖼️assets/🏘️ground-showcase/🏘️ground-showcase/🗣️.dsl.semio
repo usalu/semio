@@ -1,0 +1,137 @@
+semio norm.en1997.dsl v1
+structure-id=geo-showcase geotechnical-category=2 design-situation=persistent design-approach=da2 annex=de groundwater-level=4m investigation-depth=12m
+layers [id:TEXT soil-type:ENUM depth-top:QTY depth-bottom:QTY gamma:NUM gamma-prime:NUM phi-prime-deg:NUM cohesion-effective:QTY cohesion-undrained:QTY oedometric-modulus:QTY poisson-ratio:NUM cpt-qc:QTY spt-n:NUM cpt-nkt:NUM] {
+  layer-sand sand 0m 5m 19000 10000 32 0Pa 0Pa 40000000Pa 0.3 8000000Pa 18 0
+  layer-clay clay 5m 8m 18500 8500 24 5000Pa 60000Pa 8000000Pa 0.35 1200000Pa 8 15
+  layer-gravel gravel 8m 20m 20000 11000 35 0Pa 0Pa 60000000Pa 0.28 12000000Pa 28 0
+}
+footings [id:TEXT width:QTY length:QTY embedment:QTY base-inclination-deg:NUM settlement-limit:QTY load-cases:TABLE] {
+  footing-F1 2.5m 2.5m 1.5m 0 0.025m [ {id=lc-bsP design-situation=persistent vertical-permanent=400000N vertical-variable=150000N horizontal-permanent=20000N horizontal-variable=40000N moment-permanent=30000J moment-variable=50000J} ]
+  footing-F2 2m 2m 1.5m 0 0.025m [ {id=lc-bsP design-situation=persistent vertical-permanent=400000N vertical-variable=150000N horizontal-permanent=20000N horizontal-variable=40000N moment-permanent=30000J moment-variable=50000J} ]
+}
+piles [id:TEXT pile-type:ENUM diameter:QTY length:QTY count:UINT alpha-s:NUM unit-shaft-resistance:QTY unit-base-resistance:QTY compression-permanent:QTY compression-variable:QTY tension-permanent:QTY tension-variable:QTY bending-stiffness-ei:NUM horizontal-subgrade-modulus:NUM lateral-head-load:QTY elastic-modulus:QTY settling-thickness:QTY negative-friction-beta:NUM dynamic-test-count:NUM dynamic-resistance-mean:QTY dynamic-resistance-min:QTY hammer-weight:QTY drop-height:QTY set-per-blow:QTY elastic-compression:QTY hammer-efficiency:NUM concrete-class:ENUM test-profiles:TABLE] {
+  pile-P1 bored 0.6m 14m 1 0.7 90000Pa 3000000Pa 500000N 100000N 0N 0N 0 0 0N 33000000000Pa 0m 0 0 0N 0N 0N 0m 0m 0m 0 not-given [ {id=test-1 shaft-resistance=1600000N base-resistance=850000N} {id=test-2 shaft-resistance=1550000N base-resistance=820000N} {id=test-3 shaft-resistance=1650000N base-resistance=880000N} ]
+  pile-P2 driven 0.4m 12m 1 0.6 60000Pa 5000000Pa 350000N 80000N 50000N 30000N 100000000 5000000 15000N 30000000000Pa 3m 0.25 5 1400000N 1250000N 25000N 1m 0.004m 0.01m 0.8 c3037 [ {id=test-1 shaft-resistance=1100000N base-resistance=600000N} {id=test-2 shaft-resistance=1050000N base-resistance=620000N} ]
+}
+retaining-walls [id:TEXT height:QTY embedment:QTY base-width:QTY stem-thickness:QTY backfill-phi-deg:NUM backfill-gamma:NUM wall-friction-deg:NUM earth-pressure-mode:ENUM wall-movement:ENUM ocr:NUM concrete-gamma:NUM surcharge:QTY vertical-permanent:QTY horizontal-permanent:QTY seismic-kh:NUM seismic-kv:NUM reinforcement-spacing:QTY reinforcement-width:QTY reinforcement-friction:NUM] {
+  wall-W1 4m 1.2m 2.5m 0.35m 30 18000 20 active free 1 25000 10000Pa 320000N 40000N 0 0 0m 0m 0
+  wall-W2 5m 1m 3.5m 0.35m 30 18000 20 increased-active propped 1.5 25000 10000Pa 420000N 50000N 0.1 0.05 0.6m 0.1m 0.5
+}
+slopes [id:TEXT angle-deg:NUM height:QTY length:QTY governing-layer-id:TEXT circle-centre-x:QTY circle-centre-z:QTY circle-radius:QTY width:QTY] {
+  slope-S1 20 6m 14m layer-sand 0m 0m 0m 0m
+  slope-S2 26 8m 16m layer-clay 4m 12m 11m 1m
+}
+uplift-cases [id:TEXT permanent-stabilizing:QTY permanent-destabilizing:QTY variable-destabilizing:QTY pore-pressure:QTY total-stress:QTY] {
+  upl-U1 900000N 500000N 50000N 40000Pa 120000Pa
+  upl-U2 700000N 300000N 30000N 30000Pa 120000Pa
+}
+anchors [id:TEXT wall-id:TEXT tendon:ENUM head-depth:QTY inclination-deg:NUM free-length:QTY fixed-length:QTY fixed-diameter:QTY bond-stress:QTY design-force:QTY tendon-yield-force:QTY min-free-length:QTY test-factor:NUM tests:TABLE] {
+  anchor-A1 ewall-E1 strand 1m 15 8m 6m 0.15m 200000Pa 300000N 700000N 4.5m 1.1 [ {id=atest-1 pull-out-resistance=650000N} {id=atest-2 pull-out-resistance=640000N} {id=atest-3 pull-out-resistance=660000N} ]
+}
+embedded-walls [id:TEXT kind:ENUM retained-height:QTY embedment:QTY prop-depth:QTY thickness:QTY backfill-gamma:NUM phi-deg:NUM delta-active-deg:NUM delta-passive-deg:NUM surcharge:QTY undrained-strength:QTY] {
+  ewall-E1 free-earth 4m 6m 1m 0.6m 19000 32 16 10 10000Pa 0Pa
+  ewall-E2 cantilever 3m 5.5m 0m 0.5m 19000 32 16 10 10000Pa 60000Pa
+}
+pile-groups [id:TEXT pile-id:TEXT rows:UINT columns:UINT spacing:QTY cap-vertical:QTY cap-moment-x:QTY cap-moment-y:QTY single-resistance:QTY shaft-cohesion-sum:QTY base-cohesion:QTY] {
+  group-G1 pile-P1 2 2 1.8m 1800000N 100000J 60000J 1400000N 400000Pa 120000Pa
+  group-G2 pile-P2 1 3 1.2m 1500000N 80000J 0J 1100000N 300000Pa 90000Pa
+}
+lab-tests [id:TEXT layer-id:TEXT kind:ENUM void-ratio:NUM preload-stress:QTY drainage-height:QTY consolidation-time:NUM compression-index:NUM swelling-index:NUM stress-increment:QTY secondary-compression-index:NUM design-life:NUM points:TABLE] {
+  lab-T1 layer-sand direct-shear 0.65 100000Pa 0.01m 120 0 0 0Pa 0 0 [ {id=pt-1 normal-stress=50000Pa shear-stress=32500Pa} {id=pt-2 normal-stress=100000Pa shear-stress=65000Pa} {id=pt-3 normal-stress=200000Pa shear-stress=130000Pa} ]
+  lab-T2 layer-clay oedometer 0.9 80000Pa 0.01m 180 0.25 0.05 100000Pa 0.01 50 [ ]
+  lab-T3 layer-gravel triaxial 0.5 150000Pa 0.01m 90 0 0 0Pa 0 0 [ {id=pt-1 normal-stress=100000Pa shear-stress=70000Pa} {id=pt-2 normal-stress=200000Pa shear-stress=140000Pa} {id=pt-3 normal-stress=300000Pa shear-stress=210000Pa} ]
+}
+layer-waters [id:TEXT layer-id:TEXT piezometric-depth:QTY permeability:NUM head-difference:QTY flow-length:QTY well-radius:QTY well-water-depth:QTY influence-radius:QTY well-capacity:NUM] {
+  water-gravel layer-gravel 4m 0.001 1m 6m 0m 0m 0m 0
+  water-clay layer-clay 4m 0.000000001 0.8m 3m 0m 0m 0m 0
+  water-sand-well layer-sand 4m 0.0001 1m 6m 0.15m 3m 60m 0.01
+}
+placements [id:TEXT x:NUM y:NUM z:NUM yaw:NUM] {
+  place-0 0 0 0 0
+  place-1 12 0 0 0
+  place-2 24 0 0 0
+}
+cases [id:TEXT label-en:TEXT label-de:TEXT entry-id:TEXT numbers:TABLE texts:TABLE] {
+  case-rw-01 "Active earth pressure, Coulomb" "Aktiver Erddruck, Coulomb" RW-01 [ {id=delta_deg value=20} {id=gamma value=19000} {id=h value=5} {id=phi_deg value=30} {id=q value=10000} ] [ ]
+  case-rw-02 "Active earth pressure, Rankine" "Aktiver Erddruck, Rankine" RW-02 [ {id=c value=10000} {id=gamma value=19000} {id=h value=5} {id=phi_deg value=30} ] [ ]
+  case-rw-03 "Passive earth pressure, curved failure surface" "Passiver Erddruck, gekrümmte Gleitfläche" RW-03 [ {id=c value=0} {id=delta_deg value=0} {id=gamma value=18000} {id=mobilisation value=1} {id=phi_deg value=30} {id=q value=0} {id=t value=2} ] [ {id=approach value=da1str} {id=situation value=bsP} ]
+  case-rw-04 "At-rest earth pressure" Ruhedruck RW-04 [ {id=beta_deg value=10} {id=gamma value=18000} {id=h value=4} {id=ocr value=2} {id=phi_deg value=30} {id=q value=10000} ] [ ]
+  case-rw-05 "Surcharges and water pressure" "Auflasten und Wasserdruck" RW-05 [ {id=gamma value=18000} {id=gamma_sat value=20000} {id=gamma_w value=10000} {id=h value=6} {id=ka value=0.3} {id=q value=10000} {id=strip_a value=1} {id=strip_b value=2} {id=strip_q value=50000} {id=strip_z value=3} {id=z_w value=3} ] [ ]
+  case-rw-06 "Gravity and cantilever wall verifications" "Nachweise Schwergewichts- und Winkelstützwand" RW-06 [ {id=arm_g value=1.5} {id=arm_q value=2.2} {id=b value=3} {id=eah_g value=90000} {id=eah_q value=20000} {id=eav value=20000} {id=phi_base_deg value=30} {id=w value=300000} {id=x_v value=2.8} {id=x_w value=1.2} ] [ {id=approach value=da1str} {id=situation value=bsP} ]
+  case-rw-08 "Seismic active earth pressure, Mononobe-Okabe" "Seismischer aktiver Erddruck, Mononobe-Okabe" RW-08 [ {id=delta_deg value=11} {id=gamma value=18000} {id=h value=5} {id=kh value=0.15} {id=kv value=0.05} {id=phi_deg value=33} ] [ ]
+  case-rw-09 "Reinforced soil internal stability" "Innere Standsicherheit bewehrter Erde" RW-09 [ {id=b value=1} {id=f_star value=0.8} {id=k value=0.3} {id=s_v value=0.5} {id=sigma_v value=100000} ] [ ]
+  case-rw-10 "Traffic surcharge at the crest" "Verkehrslast an der Wandkrone" RW-10 [ {id=b value=3} {id=ka value=0.3} {id=q_total value=40000} {id=z value=2} ] [ ]
+  case-sls-01 "Settlement, stress-strain method" "Setzung, Spannungs-Dehnungs-Verfahren" SLS-01 [ {id=a value=1.5} {id=e1 value=8000000} {id=e2 value=12000000} {id=h1 value=2} {id=h2 value=2} {id=sigma0 value=200000} ] [ {id=shape value=circle} ]
+  case-sls-01b "Elastic settlement (Annex F.2)" "Elastische Setzung (Anhang F.2)" SLS-01B [ {id=a value=1.5} {id=e_m value=30000000} {id=nu value=0.3} {id=p value=200000} ] [ {id=shape value=circle_flexible} ]
+  case-sls-02 "Primary consolidation and time-settlement" "Primärkonsolidation und Zeit-Setzung" SLS-02 [ {id=cc value=0.3} {id=cv value=0.0000001} {id=dsigma value=80000} {id=e0 value=0.9} {id=h value=3} {id=h_dr value=1.5} {id=sigma0 value=60000} ] [ ]
+  case-sls-03 "Secondary settlement (creep)" "Sekundärsetzung (Kriechen)" SLS-03 [ {id=c_alpha value=0.01} {id=e0 value=0.9} {id=h value=3} {id=t1 value=10000000} {id=t2 value=3000000000} ] [ ]
+  case-sls-04 "Differential settlement and tilt" "Setzungsdifferenz und Schiefstellung" SLS-04 [ {id=l value=6} {id=limit_den value=500} {id=s_a value=0.03} {id=s_b value=0.012} ] [ ]
+  case-rw-11 "Gravity and cantilever wall with a heel" "Schwergewichts- und Winkelstützwand mit Ferse" RW-11 [ {id=a_toe value=0.6} {id=b value=3.2} {id=d_toe value=0.5} {id=gamma value=18000} {id=h value=4} {id=phi_deg value=32} {id=q value=10000} {id=sigma_rd value=400000} {id=t_base value=0.5} {id=t_stem value=0.4} ] [ {id=approach value=da1str} {id=situation value=bsP} ]
+  case-rw-12 "Embedded wall in soil and water, free, fixed earth support or cantilever" "Eingebettete Wand in Boden und Wasser, freie, volle Einspannung oder Kragwand" RW-12 [ {id=delta_a_deg value=16} {id=delta_p_deg value=0} {id=gamma value=18000} {id=gamma_sat value=20000} {id=gamma_w value=10000} {id=h value=5} {id=phi_deg value=32.5} {id=prop_depth value=1} {id=q value=10000} {id=t_provided value=5} {id=z_w value=2.5} {id=z_wf value=5.5} ] [ {id=approach value=da1str} {id=kind value=free_earth} {id=situation value=bsP} ]
+  case-g-01 "Soil layering, stress profile" "Baugrundmodell, Spannungsverlauf" G-01 [ {id=gamma1 value=18000} {id=gamma2 value=19000} {id=gamma_sat1 value=20000} {id=gamma_sat2 value=21000} {id=gamma_w value=10000} {id=h1 value=2} {id=h2 value=4} {id=phi1 value=30} {id=phi2 value=34} {id=z value=5} {id=z_w value=1.5} ] [ ]
+  case-g-02 "Characteristic values, statistical derivation" "Charakteristische Werte, statistische Auswertung" G-02 [ {id=x1 value=30} {id=x2 value=32} {id=x3 value=34} {id=x4 value=31} {id=x5 value=33} ] [ {id=mode value=mean} ]
+  case-gi-01 "Investigation extent" Erkundungsumfang GI-01 [ {id=b value=3} {id=gk value=3} {id=z_have value=5} ] [ ]
+  case-gi-02 "CPT soil classification" CPT-Klassifikation GI-02 [ {id=a value=0.8} {id=fs value=50000} {id=qc value=5000000} {id=sigma_v0 value=100000} {id=sigma_v0_eff value=60000} {id=u2 value=100000} ] [ ]
+  case-gi-03 "CPT undrained strength" "CPT undränierte Scherfestigkeit" GI-03 [ {id=nkt value=15} {id=qt value=2400000} {id=sigma_v0 value=60000} ] [ ]
+  case-gi-04 "CPT friction angle (Kulhawy-Mayne)" "CPT Reibungswinkel (Kulhawy-Mayne)" GI-04 [ {id=qc value=12000000} {id=sigma_v0_eff value=100000} ] [ ]
+  case-gi-05 "CPT oedometric modulus" "CPT Steifemodul" GI-05 [ {id=alpha_e value=4} {id=qc value=8000000} ] [ ]
+  case-gi-06 "SPT correction" SPT-Korrektur GI-06 [ {id=cb value=1.05} {id=cr value=0.85} {id=cs value=1} {id=er value=72} {id=n value=30} {id=sigma_v0_eff value=80000} ] [ ]
+  case-gi-07 "SPT friction angle (Hatanaka-Uchida)" "SPT Reibungswinkel (Hatanaka-Uchida)" GI-07 [ {id=n1_60 value=20} ] [ ]
+  case-gi-08 "SPT relative density (Skempton)" "SPT Lagerungsdichte (Skempton)" GI-08 [ {id=n1_60 value=24} ] [ ]
+  case-gi-09 "Dynamic probing friction angle" "Rammsondierung Reibungswinkel" GI-09 [ {id=n10 value=14} ] [ ]
+  case-gi-10 "Oedometer test evaluation" "Ödometerversuch Auswertung" GI-10 [ {id=e1 value=1} {id=e2 value=0.98} {id=e3 value=0.9} {id=e4 value=0.78} {id=e5 value=0.64} {id=h_dr value=0.01} {id=sigma1 value=10000} {id=sigma2 value=25000} {id=sigma3 value=100000} {id=sigma4 value=200000} {id=sigma5 value=400000} {id=t90 value=300} ] [ ]
+  case-gi-11 "Triaxial test, Mohr-Coulomb envelope" "Triaxialversuch, Mohr-Coulomb-Einhüllende" GI-11 [ {id=p1 value=100000} {id=p2 value=200000} {id=p3 value=300000} {id=q1 value=95000} {id=q2 value=170000} {id=q3 value=250000} ] [ ]
+  case-gi-12 "Direct shear test regression" "Rahmenscherversuch Regression" GI-12 [ {id=sigma1 value=50000} {id=sigma2 value=100000} {id=sigma3 value=200000} {id=sigma4 value=300000} {id=tau1 value=40000} {id=tau2 value=72000} {id=tau3 value=130000} {id=tau4 value=185000} ] [ ]
+  case-gi-13 "Characteristic value derivation" "Ableitung charakteristischer Werte" GI-13 [ {id=x1 value=25} {id=x2 value=26} {id=x3 value=24} {id=x4 value=27} ] [ {id=mode value=mean} ]
+  case-gi-17 "Laboratory series, characteristic strength parameters" "Laborversuchsserie, charakteristische Festigkeitsparameter" GI-17 [ {id=c_assumed value=10000} {id=phi_assumed_deg value=30} {id=sigma1 value=50000} {id=sigma2 value=100000} {id=sigma3 value=150000} {id=sigma4 value=200000} {id=sigma5 value=250000} {id=tau1 value=46500} {id=tau2 value=77000} {id=tau3 value=107000} {id=tau4 value=138500} {id=tau5 value=168000} ] [ {id=kind value=free_earth} ]
+  case-gi-14 "Pressuremeter (Menard)" "Pressiometer (Menard)" GI-14 [ {id=alpha_m value=0.5} {id=e_m value=15000000} {id=k_p value=1.3} {id=p_le value=1200000} ] [ ]
+  case-gi-15 "Grain-size classification and permeability" "Kornverteilung und Durchlässigkeit" GI-15 [ {id=d10 value=0.1} {id=d30 value=0.3} {id=d60 value=0.8} ] [ ]
+  case-gi-16 "Pumping test permeability" "Pumpversuch Durchlässigkeit" GI-16 [ {id=h1 value=8} {id=h2 value=9.5} {id=q value=0.01} {id=r1 value=10} {id=r2 value=40} ] [ ]
+  case-pile-01 "Pile compression from static load tests" "Pfahldruck aus statischen Probebelastungen" PILE-01 [ {id=f_cd value=1000000} {id=rm1 value=1450000} {id=rm2 value=1500000} {id=rm3 value=1650000} ] [ {id=approach value=da1str} {id=situation value=bsP} ]
+  case-pile-02 "Pile compression from ground tests" "Pfahldruck aus Baugrunderkundung" PILE-02 [ {id=f_cd value=900000} {id=rb1 value=400000} {id=rb2 value=450000} {id=rb3 value=420000} {id=rs1 value=900000} {id=rs2 value=950000} {id=rs3 value=870000} ] [ {id=approach value=da1str} {id=situation value=bsP} ]
+  case-pile-03 "Pile tension resistance" Pfahlzugwiderstand PILE-03 [ {id=f_td value=500000} {id=g_pile value=80000} {id=rt_k value=600000} ] [ {id=approach value=da1str} {id=situation value=bsP} ]
+  case-pile-04 "Transversely loaded piles" "Horizontal belastete Pfähle" PILE-04 [ {id=d value=0.6} {id=e value=0.5} {id=ei value=80000000} {id=gamma value=18000} {id=h_d value=120000} {id=k_s value=15000000} {id=l value=6} {id=phi_deg value=32} {id=row value=2} {id=y_lim value=0.02} ] [ ]
+  case-pile-05 "Negative skin friction" "Negative Mantelreibung" PILE-05 [ {id=beta value=0.25} {id=d value=0.5} {id=f_cd value=600000} {id=h1 value=3} {id=h2 value=2} {id=r_c_d value=1200000} {id=sv1 value=30000} {id=sv2 value=60000} ] [ {id=approach value=da1str} {id=situation value=bsP} ]
+  case-pile-06 "Pile group effects" Pfahlgruppenwirkung PILE-06 [ {id=block_b value=5} {id=block_l value=7} {id=cu_b value=100000} {id=cu_h_sum value=300000} {id=d value=0.5} {id=m value=3} {id=mx value=800000} {id=my value=300000} {id=n value=4} {id=r_c_d value=700000} {id=s value=1.8} {id=v value=6000000} ] [ ]
+  case-pile-07 "Structural pile interface, buckling" "Schnittstelle Pfahltragwerk, Knicken" PILE-07 [ {id=ei value=40000000} {id=l_eff value=6} {id=n_ed value=800000} ] [ ]
+  case-pile-08 "Dynamic tests and driving formulae" "Dynamische Tests und Rammformeln" PILE-08 [ {id=eta_h value=0.8} {id=f_cd value=900000} {id=h_drop value=1.2} {id=rm1 value=1500000} {id=rm2 value=1600000} {id=rm3 value=1550000} {id=rm4 value=1450000} {id=rm5 value=1650000} {id=rm6 value=1500000} {id=s_e value=0.012} {id=s_set value=0.003} {id=w value=40000} ] [ {id=approach value=da1str} {id=situation value=bsP} ]
+  case-pile-09 "Pile settlement, resistance-settlement" "Pfahlsetzung, Widerstands-Setzungs-Linie" PILE-09 [ {id=d value=0.6} {id=ea value=3000000000} {id=l value=15} {id=n value=700000} {id=rb_max value=400000} {id=rs_max value=500000} {id=s_lim value=0.02} ] [ ]
+  case-pile-10 "Pile load-settlement test, failure settlement criterion" "Pfahlprobebelastung, Grenzsetzungskriterium" PILE-10 [ {id=d value=0.6} {id=f_cd value=1000000} {id=rm1 value=1500000} {id=rm2 value=1650000} {id=tq1 value=400000} {id=tq2 value=800000} {id=tq3 value=1100000} {id=tq4 value=1350000} {id=tq5 value=1500000} {id=tq6 value=1580000} {id=ts1 value=0.002} {id=ts2 value=0.005} {id=ts3 value=0.01} {id=ts4 value=0.02} {id=ts5 value=0.04} {id=ts6 value=0.06} ] [ {id=approach value=da1str} {id=situation value=bsP} ]
+  case-pile-11 "Pile compression from ground-test profiles (unit resistances)" "Pfahldruck aus Erkundungsprofilen (Einheitswiderstände)" PILE-11 [ {id=d value=0.6} {id=f_cd value=1200000} {id=p1_h1 value=3} {id=p1_h2 value=5} {id=p1_qb value=3000000} {id=p1_qs1 value=40000} {id=p1_qs2 value=80000} ] [ {id=approach value=da1str} {id=situation value=bsP} ]
+  case-geo-f01 "Bearing resistance, drained (Annex D.4)" "Grundbruch, dräniert (Anhang D.4)" GEO-F01 [ {id=b value=2} {id=d value=1} {id=gamma1 value=18000} {id=gamma2 value=18000} {id=l value=1000000} {id=phi_k_deg value=30} {id=v_d value=555000000000} ] [ {id=approach value=da1str} {id=situation value=bsP} ]
+  case-geo-f02 "Bearing resistance, undrained (Annex D.3)" "Grundbruch, undräniert (Anhang D.3)" GEO-F02 [ {id=b value=3} {id=cu_k value=60000} {id=d value=1} {id=gamma2 value=19000} {id=l value=3} {id=v_d value=1000000} ] [ {id=approach value=da1str} {id=situation value=bsP} ]
+  case-geo-f03 "Bearing resistance, DIN 4017" "Grundbruch nach DIN 4017" GEO-F03 [ {id=b value=2.5} {id=c_k value=5000} {id=d value=1.2} {id=gamma1 value=19000} {id=gamma2 value=19000} {id=hb_d value=150000} {id=l value=4} {id=mb_d value=300000} {id=phi_k_deg value=30} {id=v_d value=1500000} ] [ {id=approach value=da1str} {id=situation value=bsP} ]
+  case-geo-f04 "Sliding resistance" Gleitwiderstand GEO-F04 [ {id=delta_deg value=30} {id=h_g value=100000} {id=h_q value=80000} {id=v_k value=800000} ] [ {id=approach value=da1str} {id=situation value=bsP} ]
+  case-equ-01 "Overturning, loss of static equilibrium (EQU)" "Kippen, Lagesicherheit (EQU)" EQU-01 [ {id=m_dst_g value=135000} {id=m_dst_q value=44000} {id=m_stb_g value=360000} ] [ {id=situation value=bsP} ]
+  case-upl-01 "Uplift by water pressure (UPL)" "Auftrieb (UPL)" UPL-01 [ {id=g_dst value=30} {id=g_stb value=33} {id=gamma_w value=10000} ] [ {id=situation value=bsP} ]
+  case-hyd-01 "Hydraulic heave (HYD)" "Hydraulischer Grundbruch (HYD)" HYD-01 [ {id=delta_h value=2.5} {id=gamma_prime value=9.5} {id=gamma_w value=10} {id=l_flow value=5} ] [ {id=situation value=bsP} ]
+  case-emb-01 "Embankment on soft ground: foundation failure, spreading and settlement" "Damm auf weichem Baugrund: Grundbruch, Seitenschub und Setzung" EMB-01 [ {id=b_crest value=10} {id=cu_k value=25000} {id=e_oed value=3000000} {id=gamma value=19000} {id=h value=4} {id=n_slope value=2} {id=phi_deg value=32} {id=q value=10000} {id=s_lim value=0.5} {id=t_soft value=8} ] [ {id=approach value=da1str} {id=situation value=bsP} ]
+  case-pf-01 "Partial factor set (A, M, R, EQU, UPL, HYD)" "Teilsicherheitsbeiwerte (A, M, R, EQU, UPL, HYD)" PF-01 [ ] [ {id=approach value=da2} {id=situation value=bsP} ]
+  case-hyd-03 "Seepage flow net: heave prism, exit gradient and discharge" "Strömungsnetz: Terzaghi-Prisma, Austrittsgefälle und Sickerwassermenge" HYD-03 [ {id=d_embed value=3} {id=delta_h value=2} {id=gamma_prime value=9500} {id=gamma_w value=10000} {id=k value=0.0001} {id=t_layer value=9} ] [ {id=situation value=bsP} ]
+  case-rw-07 "Embedded retaining walls" "Verankerte und eingespannte Wände" RW-07 [ {id=cu_k value=40000} {id=delta_a_deg value=10} {id=delta_p_deg value=0} {id=gamma value=18000} {id=h value=4} {id=nc value=5.7} {id=phi_deg value=32.5} {id=prop_depth value=0.5} {id=q value=5000} ] [ {id=approach value=da1str} {id=kind value=free_earth} {id=situation value=bsP} ]
+  case-anc-01 "Anchor pull-out from suitability tests" "Ankerherausziehwiderstand aus Eignungsprüfungen" ANC-01 [ {id=a_d value=450000} {id=ra1 value=600000} {id=ra2 value=650000} {id=ra3 value=620000} ] [ {id=approach value=da1str} {id=situation value=bsP} ]
+  case-anc-02 "Anchor fixed length, empirical" "Ankerverpresskörper, Erfahrungswerte" ANC-02 [ {id=a_d value=500000} {id=d value=0.15} {id=l_f value=7} {id=tau_f value=200000} ] [ {id=approach value=da1str} {id=situation value=bsP} ]
+  case-anc-03 "Anchor force, proof load and external stability (Kranz)" "Ankerkraft, Prüfkraft und äußere Standsicherheit (Kranz)" ANC-03 [ {id=a_k value=190000} {id=e1 value=50000} {id=e2 value=120000} {id=e_h_d value=200000} {id=gamma value=19000} {id=phi_deg value=30} {id=t_w value=8} {id=theta_deg value=15} {id=x_m value=9} {id=z_m value=10} ] [ ]
+  case-anc-04 "Anchor tendon and free length" "Ankerstahl und freie Länge" ANC-04 [ {id=a_d value=500000} {id=l_free value=6} {id=p_t_k value=900000} ] [ {id=tendon value=strand} ]
+  case-dew-01 "Single well discharge" Einzelbrunnen DEW-01 [ {id=h_aquifer value=10} {id=h_well value=6} {id=k value=0.0001} {id=q_well value=0.005} {id=r_well value=0.3} ] [ {id=aquifer value=unconfined} ]
+  case-dew-02 "Well group and drawdown superposition" "Brunnengruppe und Absenkungsüberlagerung" DEW-02 [ {id=area value=400} {id=h_aquifer value=10} {id=h_well value=5} {id=k value=0.0001} {id=px value=10} {id=py value=0} {id=qw1 value=0.004} {id=qw2 value=0.004} {id=r_well value=0.3} {id=thickness value=10} {id=x1 value=0} {id=x2 value=20} {id=y1 value=0} {id=y2 value=0} ] [ ]
+  case-dew-03 "Settlement from groundwater drawdown" "Setzung infolge Grundwasserabsenkung" DEW-03 [ {id=delta_h value=3} {id=e_oed value=20000000} {id=gamma_w value=10000} {id=h value=5} ] [ ]
+  case-slope-01 "Overall stability, simplified Bishop" "Gesamtstandsicherheit, Bishop" SLOPE-01 [ {id=arc_deg value=80} {id=beta_deg value=30} {id=cu_k value=40000} {id=gamma value=19000} {id=gwl_level value=2} {id=h value=6} {id=r value=6} {id=w value=720000} {id=x_w value=1.5} ] [ {id=approach value=da1str} {id=situation value=bsP} ]
+  case-slope-01b "Overall stability, Fellenius" "Gesamtstandsicherheit, Fellenius" SLOPE-01B [ {id=beta_deg value=30} {id=c_k value=5000} {id=gamma value=18000} {id=gwl_level value=2} {id=h value=6} {id=phi_k_deg value=30} {id=r value=11} {id=xc value=6} {id=yc value=10} ] [ {id=approach value=da1str} {id=situation value=bsP} ]
+  case-slope-02 "Overall stability, Janbu simplified" "Gesamtstandsicherheit, Janbu" SLOPE-02 [ {id=beta_deg value=30} {id=c_k value=5000} {id=gamma value=18000} {id=gwl_level value=2} {id=h value=6} {id=phi_k_deg value=30} {id=r value=11} {id=xc value=6} {id=yc value=10} ] [ {id=approach value=da1str} {id=situation value=bsP} ]
+  case-slope-03 "Infinite slope" "Unendlich langer Hang" SLOPE-03 [ {id=beta_deg value=25} {id=gamma value=19000} {id=gamma_w value=10000} {id=phi_k_deg value=30} {id=z value=2.5} ] [ {id=approach value=da1str} {id=situation value=bsP} ]
+  case-slope-04 "Plane wedge failure" "Ebener Gleitkeil" SLOPE-04 [ {id=beta_deg value=45} {id=c_k value=5000} {id=gamma value=18000} {id=h value=6} {id=phi_k_deg value=30} ] [ {id=approach value=da1str} {id=situation value=bsP} ]
+  case-slope-05 "Overall stability, extruded 3D slip body with end planes" "Gesamtstandsicherheit, extrudierter 3D-Gleitkörper mit Stirnflächen" SLOPE-05 [ {id=beta_deg value=30} {id=c_k value=5000} {id=gamma value=18000} {id=gamma_sat value=20000} {id=gwl_level value=1.5} {id=h value=6} {id=phi_k_deg value=30} {id=q value=10000} {id=r value=11} {id=width value=20} {id=xc value=6} {id=yc value=10} ] [ {id=approach value=da1str} {id=situation value=bsP} ]
+  case-hyd-02 "Piping and internal erosion: exit gradient and creep length" "Hydraulischer Grundbruch und innere Erosion: Austrittsgefälle und Sickerweg" HYD-02 [ {id=c_bligh value=9} {id=c_lane value=7} {id=delta_h value=1} {id=gamma_prime value=9500} {id=gamma_w value=10000} {id=k value=0.0001} {id=lh1 value=12} {id=lv1 value=2} {id=lv2 value=2} ] [ {id=situation value=bsP} ]
+}
+investigations [id:TEXT position-x:QTY position-y:QTY ground-level:QTY depth:QTY kind:ENUM readings:TABLE] {
+  cpt-1 0m 0m 0m 12m cpt [ {id=c1-1 depth=0.5m measurement=7500000} {id=c1-2 depth=1.5m measurement=8000000} {id=c1-3 depth=2.5m measurement=8500000} {id=c1-4 depth=3.5m measurement=8200000} {id=c1-5 depth=4.5m measurement=8800000} {id=c1-6 depth=5.5m measurement=1100000} {id=c1-7 depth=6.5m measurement=1200000} {id=c1-8 depth=7.5m measurement=1300000} {id=c1-9 depth=9m measurement=11500000} {id=c1-10 depth=11m measurement=12500000} ]
+  cpt-2 12m 0m 0m 12m cpt [ {id=c2-1 depth=0.5m measurement=7875000} {id=c2-2 depth=1.5m measurement=8400000} {id=c2-3 depth=2.5m measurement=8925000} {id=c2-4 depth=3.5m measurement=8610000} {id=c2-5 depth=4.5m measurement=9240000} {id=c2-6 depth=5.5m measurement=1155000} {id=c2-7 depth=6.5m measurement=1260000} {id=c2-8 depth=7.5m measurement=1365000} {id=c2-9 depth=9m measurement=12075000} {id=c2-10 depth=11m measurement=13125000} ]
+  spt-1 6m 8m 0m 12m spt [ {id=s1-1 depth=1.5m measurement=16} {id=s1-2 depth=3m measurement=18} {id=s1-3 depth=4.5m measurement=19} {id=s1-4 depth=6m measurement=8} {id=s1-5 depth=9m measurement=27} {id=s1-6 depth=12m measurement=29} ]
+  bh-1 6m -8m 0m 20m borehole [ ]
+}
+characteristic-bases [id:TEXT layer-id:TEXT parameter:ENUM basis:ENUM] {
+  cb-sand-phi layer-sand friction-angle derived
+  cb-clay-cu layer-clay undrained-strength derived
+  cb-gravel-phi layer-gravel friction-angle declared
+}

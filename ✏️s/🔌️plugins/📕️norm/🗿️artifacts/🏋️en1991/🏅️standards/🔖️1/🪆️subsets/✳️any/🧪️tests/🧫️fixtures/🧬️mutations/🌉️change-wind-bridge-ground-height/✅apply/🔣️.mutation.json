@@ -1,0 +1,6 @@
+{
+  "ChangeWindBridgeGroundHeight": {
+    "id": "wind-bridge-1",
+    "newHeightAboveGround": 3.0
+  }
+}

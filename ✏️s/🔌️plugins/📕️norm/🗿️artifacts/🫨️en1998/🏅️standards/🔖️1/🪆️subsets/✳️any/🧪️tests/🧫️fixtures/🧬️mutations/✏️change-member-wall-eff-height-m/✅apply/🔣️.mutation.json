@@ -1,0 +1,6 @@
+{
+  "mutation": "changeMemberWallEffHeightM",
+  "buildingId": "bldg-office",
+  "id": "col-c1",
+  "newWallEffectiveHeightM": 1.5
+}

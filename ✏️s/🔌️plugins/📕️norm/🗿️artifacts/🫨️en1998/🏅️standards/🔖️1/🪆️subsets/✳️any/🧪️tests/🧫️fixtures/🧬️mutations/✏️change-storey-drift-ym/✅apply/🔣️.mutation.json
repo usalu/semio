@@ -1,0 +1,6 @@
+{
+  "mutation": "changeStoreyDriftYM",
+  "buildingId": "bldg-office",
+  "id": "s2",
+  "newDriftYM": 0.018
+}

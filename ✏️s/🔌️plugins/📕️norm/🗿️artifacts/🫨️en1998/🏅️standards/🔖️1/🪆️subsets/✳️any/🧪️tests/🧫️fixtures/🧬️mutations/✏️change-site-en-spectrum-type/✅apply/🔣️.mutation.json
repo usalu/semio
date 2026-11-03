@@ -1,0 +1,4 @@
+{
+  "mutation": "changeSiteEnSpectrumType",
+  "newEnSpectrumType": "type2"
+}

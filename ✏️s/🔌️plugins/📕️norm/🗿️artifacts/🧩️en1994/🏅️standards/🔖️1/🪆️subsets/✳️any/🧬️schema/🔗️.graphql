@@ -1,22 +1,70 @@
-# 🧬️ En1994 snapshot — hierarchical SI subject.
-
+type En1994Artifact {
+  annex: AnnexChoice!
+  structureKind: StructureKind!
+  steelFYPa: Float!
+  beams: [CompositeBeam!]!
+  columns: [CompositeColumn!]!
+  slabs: [CompositeSlab!]!
+  placements: [Placement!]!
+  fireRating: FireRating!
+  insulationThicknessM: Float!
+  fatigueDetail: FatigueDetail!
+  reliabilityClass: String!
+  studs: [Stud!]!
+  cases: [CaseRow!]!
+}
+enum FatigueDetail {
+  studWelded
+  shearConnector
+  reinforcement
+  flangeButtWeld
+}
+enum FireRating {
+  unrated
+  r30
+  r60
+  r90
+  r120
+}
+enum StructureKind {
+  building
+  bridge
+}
+enum ActionStage {
+  construction
+  composite
+  any
+}
+enum ActionKind {
+  permanent
+  imposed
+  snow
+  wind
+  construction
+  fatigue
+}
 type CharacteristicAction {
   id: String!
-  kind: String!
+  kind: ActionKind!
   category: String!
-  stage: String!
+  stage: ActionStage!
   qAreaPa: Float!
   fKN: Float!
   deltaSigmaKPa: Float!
   deltaTauKPa: Float!
+  xM: Float!
 }
-type ColumnAction {
+type SlabAction {
   id: String!
-  kind: String!
+  kind: ActionKind!
   category: String!
-  stage: String!
-  nKN: Float!
-  mKNm: Float!
+  stage: ActionStage!
+  qAreaPa: Float!
+  fKN: Float!
+  deltaSigmaKPa: Float!
+  deltaTauKPa: Float!
+  xM: Float!
+  yM: Float!
 }
 type SteelSection {
   designation: String!
@@ -28,45 +76,78 @@ type SteelSection {
   wPlYM3: Float!
   iYM4: Float!
   aVM2: Float!
+  rM: Float!
+}
+enum SheetingProfile {
+  trapezoidal
+  reEntrant
 }
 type ProfiledSheeting {
-  profile: String!
+  profile: SheetingProfile!
   heightM: Float!
   ribWidthM: Float!
   thicknessM: Float!
   ribsParallelToBeam: Boolean!
 }
-type HeadedStuds {
-  diameterM: Float!
-  heightM: Float!
-  fUPa: Float!
-  countPerRib: Int!
-  spacingM: Float!
-  totalCount: Int!
+enum ConstructionMethod {
+  propped
+  unpropped
+}
+enum SupportCondition {
+  simplySupported
+  continuous2Span
+  endSpan
+  interiorSpan
+  cantilever
+}
+enum ReinforcementProduct {
+  hotRolled
+  coldWorked
 }
 type CompositeBeam {
   id: String!
   spanM: Float!
   spacingM: Float!
-  support: String!
-  construction: String!
+  support: SupportCondition!
+  construction: ConstructionMethod!
   steel: SteelSection!
   slabThicknessM: Float!
   concreteFCkPa: Float!
   concreteECmPa: Float!
   sheeting: ProfiledSheeting!
-  studs: HeadedStuds!
   transverseAsM2PerM: Float!
   ltbLengthM: Float!
   asHoggingM2PerM: Float!
   barSpacingM: Float!
   wkLimitM: Float!
   nCycles: Float!
+  adjacentSpanM: Float!
+  patchBearingLengthM: Float!
+  bridgeLanes: Int!
+  crackedLengthFraction: Float!
+  studTransverseSpacingM: Float!
+  studEdgeDistanceM: Float!
+  transverseAsTopM2PerM: Float!
+  endPlateWidthM: Float!
+  endPlateHeightM: Float!
+  endZoneLengthM: Float!
+  reinforcementProduct: ReinforcementProduct!
   actions: [CharacteristicAction!]!
+}
+enum BucklingCurve {
+  a
+  b
+  c
+  d
+}
+enum ColumnKind {
+  encased
+  concreteFilled
+  partiallyEncased
 }
 type CompositeColumn {
   id: String!
-  kind: String!
+  kind: ColumnKind!
   lengthM: Float!
   outerSizeM: Float!
   wallThicknessM: Float!
@@ -77,29 +158,56 @@ type CompositeColumn {
   reinforcementAsM2: Float!
   reinforcementFYkPa: Float!
   iM4: Float!
-  bucklingCurve: String!
+  bucklingCurve: BucklingCurve!
+  introducedForceN: Float!
+  sectionHeightM: Float!
+  sectionWidthM: Float!
+  sectionTwM: Float!
+  sectionTfM: Float!
+  rebarCoverM: Float!
+  reinforcementProduct: ReinforcementProduct!
   actions: [ColumnAction!]!
 }
 type CompositeSlab {
   id: String!
   spanM: Float!
-  support: String!
+  support: SupportCondition!
   sheeting: ProfiledSheeting!
   concreteThicknessM: Float!
   fCkPa: Float!
   mFactor: Float!
   kFactor: Float!
   asM2PerM: Float!
-  actions: [CharacteristicAction!]!
+  actions: [SlabAction!]!
 }
-type En1994Artifact {
-  annex: String!
-  structureKind: String!
-  steelFYPa: Float!
-  beams: [CompositeBeam!]!
-  columns: [CompositeColumn!]!
-  slabs: [CompositeSlab!]!
-  fireRating: String!
-  insulationThicknessM: Float!
-  fatigueDetail: String!
+type Placement {
+  id: String!
+  x: Float!
+  y: Float!
+  z: Float!
+  yaw: Float!
+}
+type Stud {
+  id: String!
+  beamId: String!
+  xM: Float!
+  diameterM: Float!
+  heightM: Float!
+  fUPa: Float!
+}
+type CaseNumber {
+  id: String!
+  value: Float!
+}
+type CaseText {
+  id: String!
+  value: String!
+}
+type CaseRow {
+  id: String!
+  labelEn: String!
+  labelDe: String!
+  entryId: String!
+  numbers: [CaseNumber!]!
+  texts: [CaseText!]!
 }

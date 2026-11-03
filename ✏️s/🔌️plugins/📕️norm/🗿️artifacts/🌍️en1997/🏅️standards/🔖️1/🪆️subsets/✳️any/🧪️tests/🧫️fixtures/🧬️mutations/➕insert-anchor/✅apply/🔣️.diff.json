@@ -1,0 +1,66 @@
+{
+  "structureId": null,
+  "geotechnicalCategory": null,
+  "designSituation": null,
+  "designApproach": null,
+  "annex": null,
+  "groundwaterLevel": null,
+  "investigationDepth": null,
+  "layers": null,
+  "footings": null,
+  "piles": null,
+  "retainingWalls": null,
+  "slopes": null,
+  "upliftCases": null,
+  "anchors": {
+    "removed": [],
+    "inserted": [
+      {
+        "index": 1,
+        "row": {
+          "id": "anchor-A1-2",
+          "wallId": "ewall-E1",
+          "tendon": "strand",
+          "headDepth": 1.0,
+          "inclinationDeg": 15.0,
+          "freeLength": 8.0,
+          "fixedLength": 6.0,
+          "fixedDiameter": 0.15,
+          "bondStress": 200000.0,
+          "designForce": 300000.0,
+          "tendonYieldForce": 700000.0,
+          "minFreeLength": 4.5,
+          "testFactor": 1.1,
+          "tests": [
+            {
+              "id": "atest-1",
+              "pullOutResistance": 650000.0
+            },
+            {
+              "id": "atest-2",
+              "pullOutResistance": 640000.0
+            },
+            {
+              "id": "atest-3",
+              "pullOutResistance": 660000.0
+            }
+          ]
+        }
+      }
+    ],
+    "moved": [],
+    "modified": []
+  },
+  "embeddedWalls": null,
+  "pileGroups": null,
+  "labTests": null,
+  "layerWaters": null,
+  "cases": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "investigations": null,
+  "characteristicBases": null
+}

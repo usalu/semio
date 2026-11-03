@@ -1,0 +1,6 @@
+{
+  "ChangeJointBoltClass": {
+    "id": "joint-j1",
+    "newBoltClass": "10.9-alt"
+  }
+}

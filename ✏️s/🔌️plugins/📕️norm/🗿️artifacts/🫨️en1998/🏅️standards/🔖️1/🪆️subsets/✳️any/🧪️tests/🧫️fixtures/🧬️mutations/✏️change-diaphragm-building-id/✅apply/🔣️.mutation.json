@@ -1,0 +1,5 @@
+{
+  "mutation": "changeDiaphragmBuildingId",
+  "id": "dia-1",
+  "newBuildingId": "bldg-office2"
+}

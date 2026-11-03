@@ -1,0 +1,17 @@
+{
+  "mutation": "insertPileGroup",
+  "index": 1,
+  "pileGroup": {
+    "id": "group-G1-2",
+    "pileId": "pile-P1",
+    "rows": 2,
+    "columns": 2,
+    "spacing": 1.8,
+    "capVertical": 1800000.0,
+    "capMomentX": 100000.0,
+    "capMomentY": 60000.0,
+    "singleResistance": 1400000.0,
+    "shaftCohesionSum": 400000.0,
+    "baseCohesion": 120000.0
+  }
+}

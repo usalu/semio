@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-joint-plate-bolt-rows/schema.json",
+  "title": "ChangeJointPlateBoltRows",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newBoltRows"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Joint plate",
+          "de": "Anschlussblech"
+        },
+        "description": {
+          "en": "The joint plate this mutation addresses, by id.",
+          "de": "Das adressierte Element (Anschlussblech), per Kennung."
+        },
+        "ref": {
+          "kind": "joint-plate"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newBoltRows": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "label": {
+          "en": "Bolt rows n_1 along the line of action",
+          "de": "Schraubenreihen n_1 in Kraftrichtung"
+        },
+        "widget": "stepper",
+        "step": 1,
+        "precision": 0,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

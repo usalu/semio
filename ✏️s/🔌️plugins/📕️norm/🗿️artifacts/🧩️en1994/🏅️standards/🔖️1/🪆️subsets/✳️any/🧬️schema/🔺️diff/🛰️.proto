@@ -1,95 +1,334 @@
 syntax = "proto3";
-package semio.s.norm.en1994.diff;
-
+package semio.s.norm.en1994;
+message En1994Diff {
+  // @state artifact
+  optional string annex = 1;
+  // @state artifact
+  optional string structure_kind = 2;
+  // @state artifact
+  optional double steel_f_y_pa = 3;
+  // @state artifact
+  optional En1994BeamsRows beams = 4;
+  // @state artifact
+  optional En1994ColumnsRows columns = 5;
+  // @state artifact
+  optional En1994SlabsRows slabs = 6;
+  // @state artifact
+  optional En1994PlacementsRows placements = 7;
+  // @state artifact
+  optional En1994StudsRows studs = 8;
+  // @state artifact
+  optional string fire_rating = 9;
+  // @state artifact
+  optional double insulation_thickness_m = 10;
+  // @state artifact
+  optional string fatigue_detail = 11;
+  // @state artifact
+  optional string reliability_class = 12;
+  // @state artifact
+  optional CaseRowDelta cases = 13;
+}
+message En1994BeamsActionsInserted {
+  uint64 index = 1;
+  CharacteristicAction row = 2;
+}
+message En1994BeamsActionsModified {
+  string id = 1;
+  En1994BeamsActionsPatch patch = 2;
+}
+message En1994BeamsActionsMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
 message En1994BeamsActionsPatch {
-  uint64 index = 1;
-  optional double q_area_pa = 2;
+  optional string kind = 1;
+  optional string category = 2;
+  optional string stage = 3;
+  optional double q_area_pa = 4;
+  optional double f_k_n = 5;
+  optional double delta_sigma_k_pa = 6;
+  optional double delta_tau_k_pa = 7;
+  optional double x_m = 8;
 }
-
+message En1994BeamsActionsRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
 message En1994BeamsActionsRows {
-  repeated En1994BeamsActionsPatch modified = 1;
+  repeated En1994BeamsActionsRemoved removed = 1;
+  repeated En1994BeamsActionsInserted inserted = 2;
+  repeated En1994BeamsActionsMoved moved = 3;
+  repeated En1994BeamsActionsModified modified = 4;
 }
-
-message En1994BeamsPatch {
-  uint64 index = 1;
-  optional double span_m = 2;
-  optional double slab_thickness_m = 3;
-  optional string construction = 4;
-  optional double transverse_as_m2_per_m = 5;
-  optional double studs_diameter_m = 6;
-  optional double studs_f_u_pa = 7;
-  optional double studs_spacing_m = 8;
-  optional uint32 studs_total_count = 9;
-  optional En1994BeamsActionsRows actions = 10;
-}
-
 message En1994BeamsInserted {
   uint64 index = 1;
+  CompositeBeam row = 2;
 }
-
+message En1994BeamsModified {
+  string id = 1;
+  En1994BeamsPatch patch = 2;
+}
+message En1994BeamsMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+message En1994BeamsPatch {
+  optional double span_m = 1;
+  optional double spacing_m = 2;
+  optional string support = 3;
+  optional string construction = 4;
+  optional SteelSection steel = 5;
+  optional double steel_height_m = 6;
+  optional double steel_width_m = 7;
+  optional double steel_tw_m = 8;
+  optional double steel_tf_m = 9;
+  optional double steel_a_m2 = 10;
+  optional double steel_w_pl_y_m3 = 11;
+  optional double steel_i_y_m4 = 12;
+  optional double steel_a_v_m2 = 13;
+  optional double steel_r_m = 14;
+  optional double slab_thickness_m = 15;
+  optional double concrete_f_ck_pa = 16;
+  optional double concrete_e_cm_pa = 17;
+  optional string sheeting_profile = 18;
+  optional double sheeting_height_m = 19;
+  optional double sheeting_rib_width_m = 20;
+  optional double sheeting_thickness_m = 21;
+  optional bool sheeting_ribs_parallel_to_beam = 22;
+  optional double transverse_as_m2_per_m = 23;
+  optional double ltb_length_m = 24;
+  optional double as_hogging_m2_per_m = 25;
+  optional double bar_spacing_m = 26;
+  optional double wk_limit_m = 27;
+  optional double n_cycles = 28;
+  optional double adjacent_span_m = 29;
+  optional double patch_bearing_length_m = 30;
+  optional uint32 bridge_lanes = 31;
+  optional double cracked_length_fraction = 32;
+  optional double stud_transverse_spacing_m = 33;
+  optional double stud_edge_distance_m = 34;
+  optional double transverse_as_top_m2_per_m = 35;
+  optional double end_plate_width_m = 36;
+  optional double end_plate_height_m = 37;
+  optional double end_zone_length_m = 38;
+  optional string reinforcement_product = 39;
+  optional En1994BeamsActionsRows actions = 40;
+}
+message En1994BeamsRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
 message En1994BeamsRows {
-  repeated uint64 removed = 1;
+  repeated En1994BeamsRemoved removed = 1;
   repeated En1994BeamsInserted inserted = 2;
-  repeated En1994BeamsPatch modified = 3;
+  repeated En1994BeamsMoved moved = 3;
+  repeated En1994BeamsModified modified = 4;
 }
-
+message En1994ColumnsActionsInserted {
+  uint64 index = 1;
+  ColumnAction row = 2;
+}
+message En1994ColumnsActionsModified {
+  string id = 1;
+  En1994ColumnsActionsPatch patch = 2;
+}
+message En1994ColumnsActionsMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
 message En1994ColumnsActionsPatch {
-  uint64 index = 1;
-  optional double n_k_n = 2;
+  optional string kind = 1;
+  optional string category = 2;
+  optional string stage = 3;
+  optional double n_k_n = 4;
+  optional double m_k_nm = 5;
 }
-
+message En1994ColumnsActionsRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
 message En1994ColumnsActionsRows {
-  repeated En1994ColumnsActionsPatch modified = 1;
+  repeated En1994ColumnsActionsRemoved removed = 1;
+  repeated En1994ColumnsActionsInserted inserted = 2;
+  repeated En1994ColumnsActionsMoved moved = 3;
+  repeated En1994ColumnsActionsModified modified = 4;
 }
-
-message En1994ColumnsPatch {
-  uint64 index = 1;
-  optional string kind = 2;
-  optional En1994ColumnsActionsRows actions = 3;
-}
-
 message En1994ColumnsInserted {
   uint64 index = 1;
+  CompositeColumn row = 2;
 }
-
+message En1994ColumnsModified {
+  string id = 1;
+  En1994ColumnsPatch patch = 2;
+}
+message En1994ColumnsMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+message En1994ColumnsPatch {
+  optional string kind = 1;
+  optional double length_m = 2;
+  optional double outer_size_m = 3;
+  optional double wall_thickness_m = 4;
+  optional double steel_a_m2 = 5;
+  optional double steel_f_y_pa = 6;
+  optional double concrete_a_m2 = 7;
+  optional double concrete_f_ck_pa = 8;
+  optional double reinforcement_as_m2 = 9;
+  optional double reinforcement_f_yk_pa = 10;
+  optional double i_m4 = 11;
+  optional string buckling_curve = 12;
+  optional double introduced_force_n = 13;
+  optional double section_height_m = 14;
+  optional double section_width_m = 15;
+  optional double section_tw_m = 16;
+  optional double section_tf_m = 17;
+  optional double rebar_cover_m = 18;
+  optional string reinforcement_product = 19;
+  optional En1994ColumnsActionsRows actions = 20;
+}
+message En1994ColumnsRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
 message En1994ColumnsRows {
-  repeated uint64 removed = 1;
+  repeated En1994ColumnsRemoved removed = 1;
   repeated En1994ColumnsInserted inserted = 2;
-  repeated En1994ColumnsPatch modified = 3;
+  repeated En1994ColumnsMoved moved = 3;
+  repeated En1994ColumnsModified modified = 4;
 }
-
+message En1994PlacementsInserted {
+  uint64 index = 1;
+  Placement row = 2;
+}
+message En1994PlacementsModified {
+  string id = 1;
+  En1994PlacementsPatch patch = 2;
+}
+message En1994PlacementsMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+message En1994PlacementsPatch {
+  optional double x = 1;
+  optional double y = 2;
+  optional double z = 3;
+  optional double yaw = 4;
+}
+message En1994PlacementsRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
+message En1994PlacementsRows {
+  repeated En1994PlacementsRemoved removed = 1;
+  repeated En1994PlacementsInserted inserted = 2;
+  repeated En1994PlacementsMoved moved = 3;
+  repeated En1994PlacementsModified modified = 4;
+}
+message En1994SlabsActionsInserted {
+  uint64 index = 1;
+  SlabAction row = 2;
+}
+message En1994SlabsActionsModified {
+  string id = 1;
+  En1994SlabsActionsPatch patch = 2;
+}
+message En1994SlabsActionsMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
 message En1994SlabsActionsPatch {
-  uint64 index = 1;
-  optional double q_area_pa = 2;
+  optional string kind = 1;
+  optional string category = 2;
+  optional string stage = 3;
+  optional double q_area_pa = 4;
+  optional double f_k_n = 5;
+  optional double delta_sigma_k_pa = 6;
+  optional double delta_tau_k_pa = 7;
+  optional double x_m = 8;
+  optional double y_m = 9;
 }
-
+message En1994SlabsActionsRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
 message En1994SlabsActionsRows {
-  repeated En1994SlabsActionsPatch modified = 1;
+  repeated En1994SlabsActionsRemoved removed = 1;
+  repeated En1994SlabsActionsInserted inserted = 2;
+  repeated En1994SlabsActionsMoved moved = 3;
+  repeated En1994SlabsActionsModified modified = 4;
 }
-
-message En1994SlabsPatch {
-  uint64 index = 1;
-  optional double concrete_thickness_m = 2;
-  optional En1994SlabsActionsRows actions = 3;
-}
-
 message En1994SlabsInserted {
   uint64 index = 1;
+  CompositeSlab row = 2;
 }
-
+message En1994SlabsModified {
+  string id = 1;
+  En1994SlabsPatch patch = 2;
+}
+message En1994SlabsMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+message En1994SlabsPatch {
+  optional double span_m = 1;
+  optional string support = 2;
+  optional string sheeting_profile = 3;
+  optional double sheeting_height_m = 4;
+  optional double sheeting_rib_width_m = 5;
+  optional double sheeting_thickness_m = 6;
+  optional bool sheeting_ribs_parallel_to_beam = 7;
+  optional double concrete_thickness_m = 8;
+  optional double f_ck_pa = 9;
+  optional double m_factor = 10;
+  optional double k_factor = 11;
+  optional double as_m2_per_m = 12;
+  optional En1994SlabsActionsRows actions = 13;
+}
+message En1994SlabsRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
 message En1994SlabsRows {
-  repeated uint64 removed = 1;
+  repeated En1994SlabsRemoved removed = 1;
   repeated En1994SlabsInserted inserted = 2;
-  repeated En1994SlabsPatch modified = 3;
+  repeated En1994SlabsMoved moved = 3;
+  repeated En1994SlabsModified modified = 4;
 }
-
-message En1994Diff {
-  optional string structure_kind = 1;
-  optional double steel_f_y_pa = 2;
-  optional En1994BeamsRows beams = 3;
-  optional En1994ColumnsRows columns = 4;
-  optional En1994SlabsRows slabs = 5;
-  optional string fire_rating = 6;
-  optional double insulation_thickness_m = 7;
-  optional string fatigue_detail = 8;
+message En1994StudsInserted {
+  uint64 index = 1;
+  Stud row = 2;
+}
+message En1994StudsModified {
+  string id = 1;
+  En1994StudsPatch patch = 2;
+}
+message En1994StudsMoved {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+message En1994StudsRemoved {
+  string id = 1;
+  uint64 index = 2;
+}
+message En1994StudsRows {
+  repeated En1994StudsRemoved removed = 1;
+  repeated En1994StudsInserted inserted = 2;
+  repeated En1994StudsMoved moved = 3;
+  repeated En1994StudsModified modified = 4;
+}
+message En1994StudsPatch {
+  optional string beam_id = 1;
+  optional double x_m = 2;
+  optional double diameter_m = 3;
+  optional double height_m = 4;
+  optional double f_u_pa = 5;
 }

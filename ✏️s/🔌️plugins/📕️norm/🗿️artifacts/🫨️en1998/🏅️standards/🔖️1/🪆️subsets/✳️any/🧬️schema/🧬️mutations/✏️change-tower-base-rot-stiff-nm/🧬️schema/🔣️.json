@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-tower-base-rot-stiff-nm/schema.json",
+  "title": "ChangeTowerBaseRotStiffNm",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newBaseRotationalStiffnessNm"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeTowerBaseRotStiffNm"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Tower",
+          "de": "Turm"
+        },
+        "description": {
+          "en": "The tower this mutation addresses, by id.",
+          "de": "Das adressierte Element (Turm), per Kennung."
+        },
+        "ref": {
+          "kind": "tower"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newBaseRotationalStiffnessNm": {
+      "type": "number",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Rotational stiffness of the foundation under the tower base in N·m per rad (0 = fixed base)",
+          "de": "Drehfedersteifigkeit der Gründung unter dem Turmfuß in N·m je rad (0 = Einspannung)"
+        },
+        "group": "value",
+        "order": 20,
+        "widget": "stepper",
+        "step": 0.001,
+        "precision": 3
+      }
+    }
+  }
+}

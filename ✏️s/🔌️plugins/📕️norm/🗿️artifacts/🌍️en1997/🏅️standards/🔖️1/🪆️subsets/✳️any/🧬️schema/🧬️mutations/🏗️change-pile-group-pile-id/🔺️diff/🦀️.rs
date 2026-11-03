@@ -1,0 +1,15 @@
+//! 🔺️ `change-pile-group-pile-id` diff: patches `pile_id` of the addressed pile group row.
+
+use crate::change_pile_group_pile_id::ChangePileGroupPileId;
+use semio_s_artifact_norm_en1997_diff::{En1997Diff, En1997PileGroupsPatch, En1997PileGroupsRows};
+use semio_s_artifact_norm_en1997_model::En1997Snapshot;
+
+pub fn diff(payload: &ChangePileGroupPileId, base: &En1997Snapshot) -> protocol::MutationOutcome<En1997Diff> {
+    let Some(r0) = base.pile_groups.iter().find(|row| row.id == payload.id) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("pile-group {} missing", payload.id), vec![payload.id.clone()]);
+    };
+    if r0.pile_id == payload.new_pile_id {
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "The pile group already has this value.");
+    }
+    protocol::MutationOutcome::new(En1997Diff { pile_groups: Some(En1997PileGroupsRows::modification(&payload.id, En1997PileGroupsPatch { pile_id: Some(payload.new_pile_id.clone()), ..Default::default() })), ..Default::default() })
+}

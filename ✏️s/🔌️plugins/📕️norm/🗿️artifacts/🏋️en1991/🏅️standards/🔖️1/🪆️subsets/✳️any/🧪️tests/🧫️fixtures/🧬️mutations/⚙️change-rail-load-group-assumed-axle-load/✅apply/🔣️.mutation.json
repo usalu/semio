@@ -1,0 +1,6 @@
+{
+  "ChangeRailLoadGroupAssumedAxleLoad": {
+    "id": "rail-load-group-1",
+    "newAssumedAxleLoad": 250001.0
+  }
+}

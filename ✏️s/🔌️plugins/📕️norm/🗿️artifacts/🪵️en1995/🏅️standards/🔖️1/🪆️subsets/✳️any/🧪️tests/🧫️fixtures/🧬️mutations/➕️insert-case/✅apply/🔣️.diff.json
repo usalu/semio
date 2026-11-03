@@ -1,0 +1,79 @@
+{
+  "annex": null,
+  "reliabilityClass": null,
+  "members": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "connections": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "placements": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "tapers": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "cutouts": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "fasteners": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "panels": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "floors": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "diaphragms": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "trusses": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "bracings": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "decks": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "ulsEquation": null,
+  "cases": {
+    "removed": [],
+    "inserted": [
+      {
+        "index": 1,
+        "row": {
+          "id": "case-t45",
+          "labelEn": "Notched support",
+          "labelDe": "Ausgeklinktes Auflager",
+          "entryId": "T-45",
+          "numbers": [
+            {
+              "id": "v_d",
+              "value": 20000.0
+            },
+            {
+              "id": "b",
+              "value": 120.0
+            },
+            {
+              "id": "h",
+              "value": 240.0
+            },
+            {
+              "id": "h_ef",
+              "value": 180.0
+            },
+            {
+              "id": "x",
+              "value": 30.0
+            },
+            {
+              "id": "sc",
+              "value": 1.0
+            }
+          ],
+          "texts": [
+            {
+              "id": "class",
+              "value": "C24"
+            },
+            {
+              "id": "duration",
+              "value": "medium"
+            }
+          ]
+        }
+      }
+    ],
+    "moved": [],
+    "modified": []
+  }
+}

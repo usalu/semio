@@ -1,0 +1,11 @@
+{
+  "InsertBridgeLane": {
+    "index": 1,
+    "item": {
+      "id": "lane-1-new",
+      "width": 1.5,
+      "offset": 1.5,
+      "lm1Lane": 1
+    }
+  }
+}

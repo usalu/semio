@@ -1,0 +1,69 @@
+{
+ "artifact": "en1998",
+ "fields": [
+  {
+   "entity": "site",
+   "field": "n_spt",
+   "default": 0.0,
+   "unit": null,
+   "en": "Time-averaged SPT blow count N_SPT of the top 30 m (0 = not given)",
+   "de": "Zeitlich gemittelte SPT-Schlagzahl N_SPT der obersten 30 m (0 = nicht angegeben)"
+  },
+  {
+   "entity": "site",
+   "field": "c_u_kpa",
+   "default": 0.0,
+   "unit": "Kilopascal",
+   "en": "Time-averaged undrained shear strength c_u in kPa of the top 30 m (0 = not given)",
+   "de": "Zeitlich gemittelte undränierte Scherfestigkeit c_u in kPa der obersten 30 m (0 = nicht angegeben)"
+  },
+  {
+   "entity": "site",
+   "field": "soft_clay_thickness_m",
+   "default": 0.0,
+   "unit": "Metre",
+   "en": "Thickness of a soft clay or silt layer with high plasticity index (S1 indicator, 0 = none)",
+   "de": "Mächtigkeit einer weichen Ton- oder Schluffschicht mit hoher Plastizitätszahl (S1-Kennzeichen, 0 = keine)"
+  },
+  {
+   "entity": "site",
+   "field": "soft_clay_pi",
+   "default": 0.0,
+   "unit": null,
+   "en": "Plasticity index PI of the soft clay layer in percent (S1 indicator)",
+   "de": "Plastizitätszahl PI der weichen Tonschicht in Prozent (S1-Kennzeichen)"
+  },
+  {
+   "entity": "site",
+   "field": "liquefiable_thickness_m",
+   "default": 0.0,
+   "unit": "Metre",
+   "en": "Thickness of liquefiable or sensitive soil deposits (S2 indicator, 0 = none)",
+   "de": "Mächtigkeit verflüssigungsfähiger oder empfindlicher Bodenablagerungen (S2-Kennzeichen, 0 = keine)"
+  },
+  {
+   "entity": "site",
+   "field": "alluvium_thickness_m",
+   "default": 0.0,
+   "unit": "Metre",
+   "en": "Thickness of the surface alluvium layer (E indicator, 0 = none)",
+   "de": "Mächtigkeit der oberflächennahen Alluvionsschicht (E-Kennzeichen, 0 = keine)"
+  },
+  {
+   "entity": "site",
+   "field": "alluvium_v_s_m_s",
+   "default": 0.0,
+   "unit": "MetrePerSecond",
+   "en": "Shear wave velocity of the surface alluvium (E indicator)",
+   "de": "Scherwellengeschwindigkeit der oberflächennahen Alluvionsschicht (E-Kennzeichen)"
+  },
+  {
+   "entity": "site",
+   "field": "below_alluvium_v_s_m_s",
+   "default": 0.0,
+   "unit": "MetrePerSecond",
+   "en": "Shear wave velocity of the substratum below the alluvium (E indicator)",
+   "de": "Scherwellengeschwindigkeit des Untergrunds unter der Alluvionsschicht (E-Kennzeichen)"
+  }
+ ]
+}

@@ -1,0 +1,37 @@
+{
+  "annex": null,
+  "reliabilityClass": "RC2",
+  "materials": null,
+  "sections": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "sec-i120",
+        "patch": {
+          "kind": null,
+          "height": null,
+          "width": null,
+          "flangeThickness": 0.02,
+          "webThickness": null,
+          "outerDiameter": null,
+          "elements": null
+        }
+      }
+    ]
+  },
+  "members": null,
+  "connections": null,
+  "fireScenarios": null,
+  "fatigueDetails": null,
+  "coldFormed": null,
+  "shells": null,
+  "placements": null,
+  "weldRuns": null,
+  "outlineVertices": null,
+  "fatigueCategories": null,
+  "patchLoads": null,
+  "ringStiffeners": null,
+  "transverseStiffeners": null
+}

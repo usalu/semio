@@ -1,0 +1,5 @@
+{
+  "mutation": "changeTankPermanentGkN",
+  "id": "tk-1",
+  "newPermanentGkN": 1600000.0
+}

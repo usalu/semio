@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-wind-face-c-pe1/schema.json",
+  "title": "ChangeWindFaceCPe1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newCPe1"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Wind face",
+          "de": "Windfläche"
+        },
+        "description": {
+          "en": "The wind face this mutation addresses, by id.",
+          "de": "Das adressierte Element (Windfläche), per Kennung."
+        },
+        "ref": {
+          "kind": "wind-face"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newCPe1": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "External pressure cpe,1",
+          "de": "Außendruckbeiwert cpe,1"
+        },
+        "widget": "stepper",
+        "precision": 2,
+        "step": 0.05,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

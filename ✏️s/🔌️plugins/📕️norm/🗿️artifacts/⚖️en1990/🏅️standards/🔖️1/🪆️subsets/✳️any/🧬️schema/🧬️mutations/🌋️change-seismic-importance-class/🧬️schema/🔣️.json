@@ -1,0 +1,59 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/mutation/change-seismic-importance-class/schema.json",
+  "title": "ChangeSeismicImportanceClass",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newImportanceClass"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeSeismicImportanceClass"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Seismic action",
+          "de": "Erdbebeneinwirkung"
+        },
+        "description": {
+          "en": "The seismic action this mutation addresses, by id.",
+          "de": "Das adressierte Element (Erdbebeneinwirkung), per Kennung."
+        },
+        "ref": {
+          "kind": "seismic"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newImportanceClass": {
+      "type": "string",
+      "enum": [
+        "I",
+        "II",
+        "III",
+        "IV"
+      ],
+      "x-semio-ui": {
+        "label": {
+          "en": "Importance class",
+          "de": "Bedeutungskategorie"
+        },
+        "widget": "select",
+        "role": "value",
+        "group": "value",
+        "order": 20
+      },
+      "x-semio-rust": {
+        "type": "semio_s_artifact_norm_en1990_model::ImportanceClass"
+      }
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/remove-bulk-solid/schema.json",
+  "title": "RemoveBulkSolid",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Bulk solid",
+          "de": "Schüttgut"
+        },
+        "description": {
+          "en": "The bulk solid this mutation addresses, by id.",
+          "de": "Das adressierte Element (Schüttgut), per Kennung."
+        },
+        "ref": {
+          "kind": "bulk-solid"
+        },
+        "group": "target",
+        "order": 10
+      }
+    }
+  }
+}

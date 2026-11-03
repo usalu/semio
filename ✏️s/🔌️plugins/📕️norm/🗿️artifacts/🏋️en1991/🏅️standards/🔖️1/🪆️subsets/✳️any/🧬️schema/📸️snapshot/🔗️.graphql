@@ -1,53 +1,113 @@
-# 🧬️ En1991Snapshot schema — every field with its state class.
-
 type En1991Snapshot {
-  annex: String! @state(class: ARTIFACT)
-  snowZone: String! @state(class: ARTIFACT)
-  altitude: Float! @state(class: ARTIFACT)
-  enSk: Float! @state(class: ARTIFACT)
-  northGermanLowlandSnow: Boolean! @state(class: ARTIFACT)
-  windZone: Int! @state(class: ARTIFACT)
-  enVb: Float! @state(class: ARTIFACT)
-  terrainCategory: Int! @state(class: ARTIFACT)
-  mixedTerrainUpwind: Int! @state(class: ARTIFACT)
-  mixedTerrainDistance: Float! @state(class: ARTIFACT)
-  orographyFactor: Float! @state(class: ARTIFACT)
-  coastOrIsland: Boolean! @state(class: ARTIFACT)
-  airDensity: Float! @state(class: ARTIFACT)
-  height: Float! @state(class: ARTIFACT)
-  width: Float! @state(class: ARTIFACT)
-  depth: Float! @state(class: ARTIFACT)
-  assumedDeltaT: Float! @state(class: ARTIFACT)
-  requiredDeltaT: Float! @state(class: ARTIFACT)
-  constructionActivity: String! @state(class: ARTIFACT)
-  assumedConstructionQk: Float! @state(class: ARTIFACT)
-  bridgeClaimed: Boolean! @state(class: ARTIFACT)
-  bridgeLane: Int! @state(class: ARTIFACT)
-  bridgeSpan: Float! @state(class: ARTIFACT)
-  bridgeLaneWidth: Float! @state(class: ARTIFACT)
-  assumedBridgeTandem: Float! @state(class: ARTIFACT)
-  assumedBridgeUdl: Float! @state(class: ARTIFACT)
-  assumedBridgeLm2: Float! @state(class: ARTIFACT)
-  assumedBridgeFootway: Float! @state(class: ARTIFACT)
-  craneClaimed: Boolean! @state(class: ARTIFACT)
-  craneClass: String! @state(class: ARTIFACT)
-  hoistClass: String! @state(class: ARTIFACT)
-  hoistingSpeed: Float! @state(class: ARTIFACT)
-  assumedCraneWheel: Float! @state(class: ARTIFACT)
-  assumedCraneHorizontal: Float! @state(class: ARTIFACT)
-  siloClaimed: Boolean! @state(class: ARTIFACT)
-  siloKind: String! @state(class: ARTIFACT)
-  siloBulkDensity: Float! @state(class: ARTIFACT)
-  siloHeight: Float! @state(class: ARTIFACT)
-  siloHydraulicRadius: Float! @state(class: ARTIFACT)
-  siloMu: Float! @state(class: ARTIFACT)
-  siloK: Float! @state(class: ARTIFACT)
-  assumedSiloPressure: Float! @state(class: ARTIFACT)
-  assumedSiloPatch: Float! @state(class: ARTIFACT)
-  assumedSiloWallFriction: Float! @state(class: ARTIFACT)
-  floors: [JSON!]! @state(class: ARTIFACT)
-  selfWeightElements: [JSON!]! @state(class: ARTIFACT)
-  roofs: [JSON!]! @state(class: ARTIFACT)
-  windFaces: [JSON!]! @state(class: ARTIFACT)
-  accidentalCases: [JSON!]! @state(class: ARTIFACT)
+  annex: String!
+  snowZone: String!
+  altitude: Float!
+  enSk: Float!
+  northGermanLowlandSnow: Boolean!
+  windZone: Int!
+  enVb: Float!
+  terrainCategory: Int!
+  mixedTerrainUpwind: Int!
+  mixedTerrainDistance: Float!
+  orographyFactor: Float!
+  coastOrIsland: Boolean!
+  airDensity: Float!
+  height: Float!
+  width: Float!
+  depth: Float!
+  assumedDeltaT: Float!
+  tMax: Float!
+  tMin: Float!
+  t0: Float!
+  thermalElementType: String!
+  thermalBridgeType: Int!
+  deltaTM: Float!
+  storeyCount: Int!
+  fireMode: String!
+  fireCurve: String!
+  fireDuration: Float!
+  assumedGasTemperature: Float!
+  assumedHNet: Float!
+  fireCompartmentArea: Float!
+  fireCompartmentHeight: Float!
+  fireOpeningFactor: Float!
+  fireThermalInertia: Float!
+  fireOccupancy: FireOccupancy!
+  fireLoadDensityQf: Float!
+  assumedQfD: Float!
+  constructionActivity: String!
+  assumedConstructionQk: Float!
+  structureKind: String!
+  bridgeLane: Int!
+  bridgeSpan: Float!
+  bridgeLaneWidth: Float!
+  assumedBridgeTandem: Float!
+  assumedBridgeUdl: Float!
+  assumedBridgeLm2: Float!
+  assumedBridgeFootway: Float!
+  assumedBridgeLm3: Float!
+  assumedBridgeLm4: Float!
+  bridgeLoadGroup: String!
+  craneClaimed: Boolean!
+  craneClass: String!
+  hoistClass: String!
+  hoistingSpeed: Float!
+  assumedCraneWheel: Float!
+  assumedCraneHorizontal: Float!
+  siloClaimed: Boolean!
+  siloKind: String!
+  siloBulkDensity: Float!
+  siloHeight: Float!
+  siloHydraulicRadius: Float!
+  siloMu: Float!
+  siloK: Float!
+  assumedSiloPressure: Float!
+  assumedSiloPatch: Float!
+  assumedSiloWallFriction: Float!
+  bridgeTandemX: Float!
+  railAlpha: Float!
+  assumedRailLm71: Float!
+  assumedRailLm71Udl: Float!
+  assumedRailSw0: Float!
+  assumedRailSw2: Float!
+  craneX: Float!
+  craneRunwayLength: Float!
+  craneWheelBase: Float!
+  siloDiameter: Float!
+  siloEccentricity: Float!
+  siloHopperAngleDeg: Float!
+  bridgeCurveRadius: Float!
+  fireLoadBasis: String!
+  floors: [FloorArea!]!
+  selfWeightElements: [SelfWeightElement!]!
+  roofs: [RoofArea!]!
+  windFaces: [WindFace!]!
+  accidentalCases: [AccidentalCase!]!
+  bridgeLanes: [BridgeLane!]!
+  constructionStages: [ConstructionStage!]!
+  roofSurfaces: [RoofSurface!]!
+  placements: [Placement!]!
+  specialVehicles: [SpecialVehicle!]!
+  windBridges: [WindBridge!]!
+  dynamicElements: [DynamicElement!]!
+  impactActions: [ImpactAction!]!
+  internalExplosions: [InternalExplosion!]!
+  thermalSections: [ThermalSection!]!
+  cases: [CaseRow!]!
+  helicopterLandings: [HelicopterLanding!]!
+  tieRuns: [TieRun!]!
+  constructionLoads: [ConstructionLoad!]!
+  fallingLoads: [FallingLoad!]!
+  executionImperfections: [ExecutionImperfection!]!
+  derailmentCases: [DerailmentCase!]!
+  craneHoists: [CraneHoist!]!
+  footbridges: [Footbridge!]!
+  railDynamics: [RailDynamic!]!
+  loadDispersals: [LoadDispersal!]!
+  bulkSolids: [BulkSolid!]!
+  rotatingMachines: [RotatingMachine!]!
+  fatigueModels: [FatigueModel!]!
+  supportCollisions: [SupportCollision!]!
+  localFires: [LocalFire!]!
+  snowGuards: [SnowGuard!]!
 }

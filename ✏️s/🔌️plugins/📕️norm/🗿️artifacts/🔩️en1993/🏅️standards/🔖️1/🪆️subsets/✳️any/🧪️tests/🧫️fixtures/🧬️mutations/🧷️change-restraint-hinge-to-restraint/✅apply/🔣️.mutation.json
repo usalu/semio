@@ -1,0 +1,6 @@
+{
+  "ChangeRestraintHingeToRestraint": {
+    "id": "restraint-1",
+    "newHingeToRestraint": 1.5
+  }
+}

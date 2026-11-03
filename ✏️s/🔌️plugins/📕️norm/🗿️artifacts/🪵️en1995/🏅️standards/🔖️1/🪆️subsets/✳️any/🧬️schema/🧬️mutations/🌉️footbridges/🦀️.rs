@@ -17,14 +17,6 @@ pub mod change_member_bridge_b;
 pub mod change_member_bridge_beta;
 #[path = "../🚶️change-member-bridge-crowd/🦀️.rs"]
 pub mod change_member_bridge_crowd;
-#[path = "../🌉️change-member-bridge-n-obs/🦀️.rs"]
-pub mod change_member_bridge_n_obs;
-#[path = "../🌉️change-member-bridge-tl-years/🦀️.rs"]
-pub mod change_member_bridge_tl_years;
-#[path = "../🌊️change-member-damping-xi/🦀️.rs"]
-pub mod change_member_damping_xi;
-#[path = "../⚖️change-member-mass-kg-per-m/🦀️.rs"]
-pub mod change_member_mass_kg_per_m;
-#[path = "../⚖️change-member-mass-kg-per-m2/🦀️.rs"]
-pub mod change_member_mass_kg_per_m2;
 //#endregion 🪢️Mounts
+
+pub use semio_s_artifact_norm_en1995_mut_footbridges_more::{change_member_bridge_n_obs, change_member_bridge_tl_years, change_member_damping_xi, change_member_mass_kg_per_m, change_member_mass_kg_per_m2};

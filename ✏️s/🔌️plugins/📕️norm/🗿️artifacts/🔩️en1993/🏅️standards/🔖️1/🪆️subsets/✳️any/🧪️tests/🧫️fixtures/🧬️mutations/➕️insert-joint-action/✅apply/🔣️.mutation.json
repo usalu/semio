@@ -1,0 +1,12 @@
+{
+  "InsertJointAction": {
+    "id": "joint-j1",
+    "index": 1,
+    "element": {
+      "id": "jf-1-2",
+      "loadCaseId": "g-permanent",
+      "shear": 213333,
+      "tension": 0
+    }
+  }
+}

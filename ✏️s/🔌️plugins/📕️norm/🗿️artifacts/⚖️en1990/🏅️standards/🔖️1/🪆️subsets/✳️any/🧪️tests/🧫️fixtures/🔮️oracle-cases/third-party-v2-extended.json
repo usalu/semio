@@ -1,0 +1,417 @@
+{
+  "$schema": "../../../../../../../../../🔮️oracles/🏃️harness/🧬️schema/🔣️.json",
+  "schemaVersion": 1,
+  "artifact": "en1990",
+  "annex": "de",
+  "cases": [
+    {
+      "id": "en1990.D.7.characteristic-from-tests-n5",
+      "check": "en1990.D.7.characteristic-from-tests",
+      "citation": {
+        "standard": "EN 1990",
+        "edition": "2004",
+        "clause": "Annex D.7.2 Table D1 k_n (5 % fractile, V_x unknown: Student prediction factor; known: 1.645 sqrt(1 + 1/n)); X_k and X_k_known carry a 0.2 percent tolerance because our k_n is the two-decimal printed Table D1 (k_n error up to 0.005 shifts X_k by up to 0.09 percent)",
+        "table": "D1",
+        "annex": "en"
+      },
+      "inputs": {
+        "n": 5,
+        "mean": 100.0,
+        "s": 12.0,
+        "sigma": 12.0
+      },
+      "expected": {
+        "k_n_unknown": {
+          "value": 2.3353211480320035,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "k_n_known": {
+          "value": 1.8018468705510173,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "X_k": {
+          "value": 71.97614622361596,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1",
+          "tolerance": 0.002
+        },
+        "X_k_known": {
+          "value": 78.37783755338779,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1",
+          "tolerance": 0.002
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-published-tables",
+          "adapter": "published",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1990.D.7.characteristic-from-tests-n10",
+      "check": "en1990.D.7.characteristic-from-tests",
+      "citation": {
+        "standard": "EN 1990",
+        "edition": "2004",
+        "clause": "Annex D.7.2 Table D1 k_n (5 % fractile, V_x unknown: Student prediction factor; known: 1.645 sqrt(1 + 1/n)); X_k and X_k_known carry a 0.2 percent tolerance because our k_n is the two-decimal printed Table D1 (k_n error up to 0.005 shifts X_k by up to 0.09 percent)",
+        "table": "D1",
+        "annex": "en"
+      },
+      "inputs": {
+        "n": 10,
+        "mean": 100.0,
+        "s": 12.0,
+        "sigma": 12.0
+      },
+      "expected": {
+        "k_n_unknown": {
+          "value": 1.9225850634649966,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "k_n_known": {
+          "value": 1.7251370378914699,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "X_k": {
+          "value": 76.92897923842004,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1",
+          "tolerance": 0.002
+        },
+        "X_k_known": {
+          "value": 79.29835554530236,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1",
+          "tolerance": 0.002
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-published-tables",
+          "adapter": "published",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1990.D.7.characteristic-from-tests-n30",
+      "check": "en1990.D.7.characteristic-from-tests",
+      "citation": {
+        "standard": "EN 1990",
+        "edition": "2004",
+        "clause": "Annex D.7.2 Table D1 k_n (5 % fractile, V_x unknown: Student prediction factor; known: 1.645 sqrt(1 + 1/n)); X_k and X_k_known carry a 0.2 percent tolerance because our k_n is the two-decimal printed Table D1 (k_n error up to 0.005 shifts X_k by up to 0.09 percent)",
+        "table": "D1",
+        "annex": "en"
+      },
+      "inputs": {
+        "n": 30,
+        "mean": 100.0,
+        "s": 12.0,
+        "sigma": 12.0
+      },
+      "expected": {
+        "k_n_unknown": {
+          "value": 1.7272136735331223,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "k_n_known": {
+          "value": 1.6720431321884592,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "X_k": {
+          "value": 79.27343591760254,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1",
+          "tolerance": 0.002
+        },
+        "X_k_known": {
+          "value": 79.9354824137385,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1",
+          "tolerance": 0.002
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-published-tables",
+          "adapter": "published",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1990.fatigue.miner-two-slope",
+      "check": "en1990.fatigue.miner",
+      "citation": {
+        "standard": "EN 1993-1-9",
+        "edition": "2004",
+        "clause": "Palmgren-Miner sum with the EN 1993-1-9 Figure 7.1 S-N curve of detail category 71 (m = 3 / m = 5)"
+      },
+      "inputs": {
+        "detail_category": 71000000.0,
+        "stress_range": [
+          120000000.0,
+          90000000.0,
+          60000000.0,
+          40000000.0,
+          20000000.0
+        ],
+        "cycles": [
+          10000.0,
+          100000.0,
+          500000.0,
+          2000000.0,
+          10000000.0
+        ]
+      },
+      "expected": {
+        "D": {
+          "value": 0.3814011241691566,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "dsigma_D": {
+          "value": 52313247.28069349,
+          "unit": "Pa",
+          "profile": "eurocode-quantities-v1"
+        },
+        "dsigma_L": {
+          "value": 28734634.67739296,
+          "unit": "Pa",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1990.fatigue.miner-below-limit",
+      "check": "en1990.fatigue.miner",
+      "citation": {
+        "standard": "EN 1993-1-9",
+        "edition": "2004",
+        "clause": "Palmgren-Miner sum, all bins below the cut-off dsigma_L give no damage"
+      },
+      "inputs": {
+        "detail_category": 71000000.0,
+        "stress_range": [
+          20000000.0,
+          15000000.0,
+          10000000.0,
+          8000000.0,
+          5000000.0
+        ],
+        "cycles": [
+          10000.0,
+          100000.0,
+          500000.0,
+          2000000.0,
+          10000000.0
+        ]
+      },
+      "expected": {
+        "D": {
+          "value": 0.0,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "dsigma_D": {
+          "value": 52313247.28069349,
+          "unit": "Pa",
+          "profile": "eurocode-quantities-v1"
+        },
+        "dsigma_L": {
+          "value": 28734634.67739296,
+          "unit": "Pa",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1990.C.form-lognormal-gumbel-moderate",
+      "check": "en1990.C.form-nonnormal",
+      "citation": {
+        "standard": "EN 1990",
+        "edition": "2004",
+        "clause": "Annex C.5 to C.7 FORM with non-normal variables: R lognormal, E Gumbel (maxima), Rackwitz-Fiessler transformation against the iso-probabilistic design point; beta_exact from the exact P_f integral"
+      },
+      "inputs": {
+        "mu_R": 300.0,
+        "sigma_R": 30.0,
+        "mu_E": 150.0,
+        "sigma_E": 30.0
+      },
+      "expected": {
+        "beta": {
+          "value": 2.8952141495016246,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "R_d": {
+          "value": 269.35251195071436,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "E_d": {
+          "value": 269.35251195071436,
+          "unit": "1",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation",
+          "check": "en1990.C.form-nonnormal-rf"
+        }
+      ]
+    },
+    {
+      "id": "en1990.C.form-vs-exact-moderate",
+      "check": "en1990.C.form-nonnormal",
+      "citation": {
+        "standard": "EN 1990",
+        "edition": "2004",
+        "clause": "Annex C: FORM beta against the exact reliability index of the same limit state (tolerance reflects the FORM linearisation)"
+      },
+      "inputs": {
+        "mu_R": 300.0,
+        "sigma_R": 30.0,
+        "mu_E": 150.0,
+        "sigma_E": 30.0
+      },
+      "expected": {
+        "beta_exact": {
+          "value": 2.8928505350095284,
+          "unit": "1",
+          "profile": "method-spread-v1",
+          "tolerance": 0.05
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1990.C.form-lognormal-gumbel-high-cov-action",
+      "check": "en1990.C.form-nonnormal",
+      "citation": {
+        "standard": "EN 1990",
+        "edition": "2004",
+        "clause": "Annex C.5 to C.7 FORM with non-normal variables: R lognormal, E Gumbel (maxima), Rackwitz-Fiessler transformation against the iso-probabilistic design point; beta_exact from the exact P_f integral"
+      },
+      "inputs": {
+        "mu_R": 420.0,
+        "sigma_R": 42.0,
+        "mu_E": 200.0,
+        "sigma_E": 60.0
+      },
+      "expected": {
+        "beta": {
+          "value": 2.440954261376047,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "R_d": {
+          "value": 388.92739310205434,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "E_d": {
+          "value": 388.9273931020543,
+          "unit": "1",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation",
+          "check": "en1990.C.form-nonnormal-rf"
+        }
+      ]
+    },
+    {
+      "id": "en1990.C.form-vs-exact-high-cov-action",
+      "check": "en1990.C.form-nonnormal",
+      "citation": {
+        "standard": "EN 1990",
+        "edition": "2004",
+        "clause": "Annex C: FORM beta against the exact reliability index of the same limit state (tolerance reflects the FORM linearisation)"
+      },
+      "inputs": {
+        "mu_R": 420.0,
+        "sigma_R": 42.0,
+        "mu_E": 200.0,
+        "sigma_E": 60.0
+      },
+      "expected": {
+        "beta_exact": {
+          "value": 2.4408548029956005,
+          "unit": "1",
+          "profile": "method-spread-v1",
+          "tolerance": 0.05
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    }
+  ]
+}

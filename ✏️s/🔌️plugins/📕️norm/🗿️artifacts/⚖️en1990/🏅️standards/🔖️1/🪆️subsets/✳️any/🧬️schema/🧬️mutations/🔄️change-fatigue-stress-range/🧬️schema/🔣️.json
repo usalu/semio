@@ -1,0 +1,59 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/mutation/change-fatigue-stress-range/schema.json",
+  "title": "ChangeFatigueStressRange",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newStressRange"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeFatigueStressRange"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Fatigue spectrum",
+          "de": "Ermüdungskollektiv"
+        },
+        "description": {
+          "en": "The fatigue spectrum this mutation addresses, by id.",
+          "de": "Das adressierte Element (Ermüdungskollektiv), per Kennung."
+        },
+        "ref": {
+          "kind": "fatigue-spectrum"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newStressRange": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Stress range Δσ",
+          "de": "Spannungsschwingbreite Δσ"
+        },
+        "widget": "stepper",
+        "description": {
+          "en": "Constant stress range of this bin.",
+          "de": "Konstante Spannungsschwingbreite dieser Klasse."
+        },
+        "unit": "Pa",
+        "displayUnit": "MPa",
+        "displayFactor": 0.000001,
+        "precision": 1,
+        "step": 1000000,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

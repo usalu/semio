@@ -1,0 +1,14 @@
+{
+  "InsertReinforcementGrade": {
+    "index": 1,
+    "reinforcementGrade": {
+      "id": "b500-new",
+      "name": "B500B",
+      "fYk": 500000000.0,
+      "eS": 200000000000.0,
+      "ductility": "b",
+      "k": 1.08,
+      "epsUk": 0.05
+    }
+  }
+}

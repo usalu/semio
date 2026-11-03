@@ -1,0 +1,5 @@
+{
+  "mutation": "changeVertexRing",
+  "outlineVertexId": "v-1",
+  "newRing": "hole"
+}

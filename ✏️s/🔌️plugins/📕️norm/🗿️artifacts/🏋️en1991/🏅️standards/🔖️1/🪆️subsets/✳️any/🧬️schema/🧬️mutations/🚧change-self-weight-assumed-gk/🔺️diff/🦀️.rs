@@ -1,15 +1,18 @@
-//! 🔺️ Diff for `change-self-weight-assumed-gk`.
+//! 🚧 `change-self-weight-assumed-gk` diff: patches `assumed_gk` of the addressed self weight element row.
+
 use crate::change_self_weight_assumed_gk::ChangeSelfWeightAssumedGk;
-use semio_s_artifact_norm_en1991_diff::En1991Diff;
+use semio_s_artifact_norm_en1991_diff::{En1991Diff, En1991SelfWeightElementDelta, En1991SelfWeightElementPatch};
 use semio_s_artifact_norm_en1991_model::En1991Snapshot;
-use semio_s_artifact_norm_en1991_diff::{En1991SelfWeightElementDelta, En1991SelfWeightElementPatch};
+
 pub fn diff(payload: &ChangeSelfWeightAssumedGk, base: &En1991Snapshot) -> protocol::MutationOutcome<En1991Diff> {
-    if payload.index >= base.self_weight_elements.len() {
-        return protocol::MutationOutcome::error("mutation.target-missing", "Index out of range.", [payload.index.to_string()]);
+    if !payload.new_assumed_gk.is_finite() {
+        return protocol::MutationOutcome::fatal("mutation.invariant", "The value must be finite.", Vec::<String>::new());
     }
-    if base.self_weight_elements[payload.index].assumed_gk == payload.new_assumed_gk {
-        return protocol::MutationOutcome::empty().warning("mutation.no-op", "Value unchanged.");
+    let Some(r0) = base.self_weight_elements.iter().find(|row| row.id == payload.id) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("self weight element {} does not exist.", payload.id), [payload.id.clone()]);
+    };
+    if r0.assumed_gk == payload.new_assumed_gk {
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "The self weight element already has this value.");
     }
-    let self_weight = &base.self_weight_elements[payload.index];
-    protocol::MutationOutcome::new(En1991Diff { self_weight_elements: En1991SelfWeightElementDelta::modification(&self_weight.id, En1991SelfWeightElementPatch { assumed_gk: Some(payload.new_assumed_gk), ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(En1991Diff { self_weight_elements: En1991SelfWeightElementDelta::modification(&payload.id, En1991SelfWeightElementPatch { assumed_gk: Some(payload.new_assumed_gk), ..Default::default() }), ..Default::default() })
 }

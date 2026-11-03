@@ -3,19 +3,82 @@ cargo-features = [ "trim-paths" ]
 [workspace]
 resolver = "2"
 members = [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🎬️scene/🧱️core/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️connection-more/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️members-more/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️member-more/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks/🧱️members/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️rows-transverse-stiffener/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦴️transverse-stiffener/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️rows-shell-action/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️rows-sheet-action/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️rows-section-element/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️rows-connection-action/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️rows-member-action/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🛰️proto-twin/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️json-schema-twin/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔗️graphql-twin/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️typescript-twin/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️rows-ring-stiffener/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️rows-patch-load/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️rows-fatigue-category/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⭕️ring-stiffener/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬇️patch-load-load/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬇️patch-load/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯️fatigue-category/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️collection-rows-connection-shell/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️scenario-rows/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛰️proto-twin/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔣️json-schema-twin/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️collection-rows/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️graphql-twin/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦️typescript-twin/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks/📏️parts/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🎬️scene/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📦️packages/🦀️rust",
-    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks/🌀️section-solver/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks/🔄️fatigue-math/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🔗️graphql-twin/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🔣️json-schema-twin/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🛰️proto-twin/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️typescript-twin/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚗️material/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❄️cold-formed-action-components/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❄️cold-formed-action/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❄️cold-formed/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏋️member-action-components/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏋️member-action/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️member-web-details/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️member/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️placement/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️members/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️section/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️fatigue-detail/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️connection-action-components/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️connection-action/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️connection-fasteners/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️connection/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥️fire-scenario/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔷️outline-vertex/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️detail-rows/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️section-element-stiffeners/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️section-element/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧵️weld-run-process/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧵️weld-run/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧾️inputs/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫙️shell-action-components/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫙️shell-action/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫙️shell/📦️packages/🦀️rust",
     "📦️packages/🦀️rust",
 ]
 exclude = [
@@ -89,6 +152,12 @@ path = "../../📇️registry/🧬️contract/🖥️app-surface/📦️packages
 [workspace.dependencies.semio-s-plugin-norm-compliance]
 path = "../../⚖️compliance/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-s-plugin-norm-structural-scene]
+path = "../../🎬️structural-scene/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-norm-mechanics]
+path = "../../🧮️mechanics/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-s-plugin-norm-results-config]
 path = "../../🪟️results/🎚️config/📦️packages/🦀️rust"
 
@@ -131,8 +200,26 @@ path = "📦️packages/🦀️rust"
 [workspace.dependencies.semio-s-artifact-norm-en1999-checks]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-s-artifact-norm-en1999-section-solver]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks/🌀️section-solver/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-fatigue-math]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks/🔄️fatigue-math/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-s-artifact-norm-en1999-diff]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-diff-typescript]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️typescript-twin/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-diff-graphql]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🔗️graphql-twin/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-diff-json-schema]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🔣️json-schema-twin/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-diff-proto]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🛰️proto-twin/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-norm-en1999-editor]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust"
@@ -158,6 +245,9 @@ path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️
 [workspace.dependencies.semio-s-artifact-norm-en1999-mutations]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-s-artifact-norm-en1999-scene]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🎬️scene/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-s-artifact-norm-en1999-schema]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust"
 
@@ -166,6 +256,169 @@ path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️
 
 [workspace.dependencies.semio-s-mutation-vectors]
 path = "../../../../🧪️tests/🧪️mutation-vectors/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-mut-material]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚗️material/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-mut-section]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️section/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-mut-section-element]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️section-element/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-mut-section-element-stiffeners]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️section-element-stiffeners/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-mut-member]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️member/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-mut-member-web-details]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️member-web-details/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-mut-member-action]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏋️member-action/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-mut-member-action-components]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏋️member-action-components/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-mut-connection]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️connection/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-mut-connection-fasteners]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️connection-fasteners/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-mut-connection-action]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️connection-action/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-mut-connection-action-components]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️connection-action-components/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-mut-fire-scenario]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥️fire-scenario/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-mut-fatigue-detail]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️fatigue-detail/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-mut-cold-formed]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❄️cold-formed/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-mut-cold-formed-action]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❄️cold-formed-action/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-mut-cold-formed-action-components]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❄️cold-formed-action-components/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-mut-shell]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫙️shell/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-mut-shell-action]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫙️shell-action/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-mut-shell-action-components]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫙️shell-action-components/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-mut-weld-run]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧵️weld-run/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-mut-weld-run-process]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧵️weld-run-process/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-mut-outline-vertex]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔷️outline-vertex/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-mut-placement]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️placement/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-mut-detail-rows]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️detail-rows/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-check-parts]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks/📏️parts/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-mutations-typescript]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦️typescript-twin/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-mutations-graphql]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️graphql-twin/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-mut-collection-rows]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️collection-rows/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-mutations-json-schema]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔣️json-schema-twin/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-mutations-proto]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛰️proto-twin/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-mut-scenario-rows]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️scenario-rows/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-mut-collection-rows-connection-shell]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️collection-rows-connection-shell/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-mut-fatigue-category]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯️fatigue-category/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-mut-patch-load]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬇️patch-load/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-mut-patch-load-load]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬇️patch-load-load/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-mut-ring-stiffener]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⭕️ring-stiffener/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-mut-rows-fatigue-category]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️rows-fatigue-category/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-mut-rows-patch-load]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️rows-patch-load/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-mut-rows-ring-stiffener]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️rows-ring-stiffener/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-model-typescript]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️typescript-twin/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-model-graphql]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔗️graphql-twin/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-model-json-schema]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️json-schema-twin/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-model-proto]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🛰️proto-twin/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-mut-rows-member-action]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️rows-member-action/📦️packages/🦀️rust"
+[workspace.dependencies.semio-s-artifact-norm-en1999-mut-rows-connection-action]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️rows-connection-action/📦️packages/🦀️rust"
+[workspace.dependencies.semio-s-artifact-norm-en1999-mut-rows-section-element]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️rows-section-element/📦️packages/🦀️rust"
+[workspace.dependencies.semio-s-artifact-norm-en1999-mut-rows-sheet-action]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️rows-sheet-action/📦️packages/🦀️rust"
+[workspace.dependencies.semio-s-artifact-norm-en1999-mut-rows-shell-action]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️rows-shell-action/📦️packages/🦀️rust"
+[workspace.dependencies.semio-s-artifact-norm-en1999-mut-transverse-stiffener]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦴️transverse-stiffener/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-mut-rows-transverse-stiffener]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️rows-transverse-stiffener/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-checks-members]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks/🧱️members/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-mut-member-more]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️member-more/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-mut-members-more]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏️members-more/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-mut-connection-more]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️connection-more/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1999-scene-core]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🎬️scene/🧱️core/📦️packages/🦀️rust"
 
 [workspace.lints.rust]
 unsafe_op_in_unsafe_fn = "warn"

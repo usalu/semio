@@ -1,0 +1,6 @@
+{
+  "mutation": "changeActionTorsionK",
+  "memberId": "purlin-1",
+  "actionId": "G",
+  "newTorsionK": 1.5
+}

@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-diaphragm-shear-str-mpa/schema.json",
+  "title": "ChangeDiaphragmShearStrMpa",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newShearStrengthMpa"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeDiaphragmShearStrMpa"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Diaphragm",
+          "de": "Scheibe"
+        },
+        "description": {
+          "en": "The diaphragm this mutation addresses, by id.",
+          "de": "Das adressierte Element (Scheibe), per Kennung."
+        },
+        "ref": {
+          "kind": "diaphragm"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newShearStrengthMpa": {
+      "type": "number",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Design in-plane shear strength of the diaphragm",
+          "de": "Bemessungswert der Scheibenschubfestigkeit"
+        },
+        "group": "value",
+        "order": 20,
+        "widget": "stepper",
+        "step": 0.001,
+        "precision": 3
+      }
+    }
+  }
+}

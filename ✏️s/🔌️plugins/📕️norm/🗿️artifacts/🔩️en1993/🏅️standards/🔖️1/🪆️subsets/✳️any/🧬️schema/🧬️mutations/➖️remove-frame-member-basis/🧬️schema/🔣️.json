@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/remove-frame-member-basis/schema.json",
+  "title": "RemoveFrameMemberBasis",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Member force basis",
+          "de": "Kraftgrundlage des Bauteils"
+        },
+        "description": {
+          "en": "Zero-based position of the member force basis in its list.",
+          "de": "Nullbasierte Position des Kraftgrundlage des Bauteilss in der Liste."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
+    }
+  }
+}

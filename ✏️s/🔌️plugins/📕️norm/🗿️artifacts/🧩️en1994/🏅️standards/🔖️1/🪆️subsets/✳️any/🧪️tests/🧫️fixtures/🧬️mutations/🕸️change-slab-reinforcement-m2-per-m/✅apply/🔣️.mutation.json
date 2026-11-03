@@ -1,0 +1,6 @@
+{
+  "ChangeSlabReinforcementM2PerM": {
+    "id": "slab-S1",
+    "newAsM2PerM": 0.0003125
+  }
+}

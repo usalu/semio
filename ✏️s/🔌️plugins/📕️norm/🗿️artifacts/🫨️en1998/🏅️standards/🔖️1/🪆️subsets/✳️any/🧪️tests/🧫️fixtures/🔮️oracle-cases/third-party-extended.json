@@ -1,0 +1,372 @@
+{
+  "$schema": "../../../../../../../../../🔮️oracles/🏃️harness/🧬️schema/🔣️.json",
+  "schemaVersion": 1,
+  "artifact": "en1998",
+  "annex": "De",
+  "cases": [
+    {
+      "id": "en1998.3.2.2.5.design-spectrum-rising-branch",
+      "check": "en1998.3.2.2.5.design-spectrum",
+      "citation": {
+        "standard": "EN 1998-1",
+        "edition": "2004",
+        "clause": "3.2.2.5(4) Eq. 3.13-3.16; 3.2.2.2 Eq. 3.2-3.5",
+        "annex": "En"
+      },
+      "inputs": {
+        "a_g": 1.5,
+        "S": 1.15,
+        "T_B": 0.15,
+        "T_C": 0.5,
+        "T_D": 2.0,
+        "q": 3.0,
+        "beta": 0.2,
+        "T": 0.08
+      },
+      "expected": {
+        "S_d": {
+          "value": 1.3033333333333332,
+          "unit": "m/s^2",
+          "profile": "eurocode-quantities-v1"
+        },
+        "S_e": {
+          "value": 3.105,
+          "unit": "m/s^2",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1998.3.2.2.5.design-spectrum-plateau",
+      "check": "en1998.3.2.2.5.design-spectrum",
+      "citation": {
+        "standard": "EN 1998-1",
+        "edition": "2004",
+        "clause": "3.2.2.5(4) Eq. 3.13-3.16; 3.2.2.2 Eq. 3.2-3.5",
+        "annex": "En"
+      },
+      "inputs": {
+        "a_g": 1.5,
+        "S": 1.15,
+        "T_B": 0.15,
+        "T_C": 0.5,
+        "T_D": 2.0,
+        "q": 3.0,
+        "beta": 0.2,
+        "T": 0.3
+      },
+      "expected": {
+        "S_d": {
+          "value": 1.4375,
+          "unit": "m/s^2",
+          "profile": "eurocode-quantities-v1"
+        },
+        "S_e": {
+          "value": 4.3125,
+          "unit": "m/s^2",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1998.3.2.2.5.design-spectrum-constant-velocity",
+      "check": "en1998.3.2.2.5.design-spectrum",
+      "citation": {
+        "standard": "EN 1998-1",
+        "edition": "2004",
+        "clause": "3.2.2.5(4) Eq. 3.13-3.16; 3.2.2.2 Eq. 3.2-3.5",
+        "annex": "En"
+      },
+      "inputs": {
+        "a_g": 1.5,
+        "S": 1.15,
+        "T_B": 0.15,
+        "T_C": 0.5,
+        "T_D": 2.0,
+        "q": 3.0,
+        "beta": 0.2,
+        "T": 1.0
+      },
+      "expected": {
+        "S_d": {
+          "value": 0.71875,
+          "unit": "m/s^2",
+          "profile": "eurocode-quantities-v1"
+        },
+        "S_e": {
+          "value": 2.15625,
+          "unit": "m/s^2",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1998.3.2.2.5.design-spectrum-constant-displacement",
+      "check": "en1998.3.2.2.5.design-spectrum",
+      "citation": {
+        "standard": "EN 1998-1",
+        "edition": "2004",
+        "clause": "3.2.2.5(4) Eq. 3.13-3.16; 3.2.2.2 Eq. 3.2-3.5",
+        "annex": "En"
+      },
+      "inputs": {
+        "a_g": 1.5,
+        "S": 1.15,
+        "T_B": 0.15,
+        "T_C": 0.5,
+        "T_D": 2.0,
+        "q": 3.0,
+        "beta": 0.2,
+        "T": 3.0
+      },
+      "expected": {
+        "S_d": {
+          "value": 0.3,
+          "unit": "m/s^2",
+          "profile": "eurocode-quantities-v1"
+        },
+        "S_e": {
+          "value": 0.4791666666666667,
+          "unit": "m/s^2",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1998.3.2.2.5.design-spectrum-lower-bound",
+      "check": "en1998.3.2.2.5.design-spectrum",
+      "citation": {
+        "standard": "EN 1998-1",
+        "edition": "2004",
+        "clause": "3.2.2.5(4) Eq. 3.13-3.16; 3.2.2.2 Eq. 3.2-3.5",
+        "annex": "En"
+      },
+      "inputs": {
+        "a_g": 1.5,
+        "S": 1.15,
+        "T_B": 0.15,
+        "T_C": 0.5,
+        "T_D": 2.0,
+        "q": 3.0,
+        "beta": 0.2,
+        "T": 4.5
+      },
+      "expected": {
+        "S_d": {
+          "value": 0.3,
+          "unit": "m/s^2",
+          "profile": "eurocode-quantities-v1"
+        },
+        "S_e": {
+          "value": 0.21296296296296297,
+          "unit": "m/s^2",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1998.4.3.3.shear-building-three-storey",
+      "check": "en1998.4.3.shear-building-modal",
+      "citation": {
+        "standard": "EN 1998-1",
+        "edition": "2004",
+        "clause": "4.3.3.1 modal response spectrum analysis; 4.3.3.2.2 Eq. 4.6 vs eigenvalue periods"
+      },
+      "inputs": {
+        "m": [
+          100000.0,
+          100000.0,
+          80000.0
+        ],
+        "k": [
+          60000000.0,
+          50000000.0,
+          40000000.0
+        ]
+      },
+      "expected": {
+        "T_1": {
+          "value": 0.5748599613287466,
+          "unit": "s",
+          "profile": "numerical-v1"
+        },
+        "T_2": {
+          "value": 0.22370669149151504,
+          "unit": "s",
+          "profile": "numerical-v1"
+        },
+        "T_3": {
+          "value": 0.1574899841718044,
+          "unit": "s",
+          "profile": "numerical-v1"
+        },
+        "Gamma_1": {
+          "value": 1.274091149158733,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "m_eff_1_fraction": {
+          "value": 0.8869325335722356,
+          "unit": "1",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1998.4.3.3.shear-building-three-storey-periods",
+      "check": "en1998.4.3.shear-building-modal",
+      "citation": {
+        "standard": "EN 1998-1",
+        "edition": "2004",
+        "clause": "4.3.3.1 modal response spectrum analysis periods"
+      },
+      "inputs": {
+        "m": [
+          100000.0,
+          100000.0,
+          80000.0
+        ],
+        "k": [
+          60000000.0,
+          50000000.0,
+          40000000.0
+        ]
+      },
+      "expected": {
+        "T_1": {
+          "value": 0.5748599613287466,
+          "unit": "s",
+          "profile": "numerical-v1"
+        },
+        "T_2": {
+          "value": 0.22370669149151504,
+          "unit": "s",
+          "profile": "numerical-v1"
+        },
+        "T_3": {
+          "value": 0.1574899841718044,
+          "unit": "s",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1998.4.3.3.shear-building-five-storey-periods",
+      "check": "en1998.4.3.shear-building-modal",
+      "citation": {
+        "standard": "EN 1998-1",
+        "edition": "2004",
+        "clause": "4.3.3.1 modal response spectrum analysis periods"
+      },
+      "inputs": {
+        "m": [
+          250000.0,
+          240000.0,
+          240000.0,
+          230000.0,
+          200000.0
+        ],
+        "k": [
+          180000000.0,
+          170000000.0,
+          160000000.0,
+          150000000.0,
+          120000000.0
+        ]
+      },
+      "expected": {
+        "T_1": {
+          "value": 0.8060159969644366,
+          "unit": "s",
+          "profile": "numerical-v1"
+        },
+        "T_2": {
+          "value": 0.29312982275645194,
+          "unit": "s",
+          "profile": "numerical-v1"
+        },
+        "T_3": {
+          "value": 0.19054736254428506,
+          "unit": "s",
+          "profile": "numerical-v1"
+        },
+        "T_4": {
+          "value": 0.14789555661134485,
+          "unit": "s",
+          "profile": "numerical-v1"
+        },
+        "T_5": {
+          "value": 0.12750899177585526,
+          "unit": "s",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    }
+  ]
+}

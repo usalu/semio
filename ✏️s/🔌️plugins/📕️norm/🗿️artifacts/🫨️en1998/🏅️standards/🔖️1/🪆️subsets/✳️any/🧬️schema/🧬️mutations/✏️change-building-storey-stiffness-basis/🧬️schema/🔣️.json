@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-building-storey-stiffness-basis/schema.json",
+  "title": "ChangeBuildingStoreyStiffnessBasis",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newStoreyStiffnessBasis"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeBuildingStoreyStiffnessBasis"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Building",
+          "de": "Gebäude"
+        },
+        "description": {
+          "en": "The building this mutation addresses, by id.",
+          "de": "Das adressierte Element (Gebäude), per Kennung."
+        },
+        "ref": {
+          "kind": "building"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newStoreyStiffnessBasis": {
+      "type": "string",
+      "enum": [
+        "simplified",
+        "declared"
+      ],
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Stiffness basis of the entered gross storey stiffnesses (EN 1998-1 4.3.1(6))",
+          "de": "Steifigkeitsbasis der eingegebenen Brutto-Geschosssteifigkeiten (EN 1998-1 4.3.1(6))"
+        },
+        "group": "value",
+        "order": 20,
+        "widget": "select"
+      },
+      "x-semio-rust": {
+        "type": "semio_s_artifact_norm_en1998_model::StiffnessBasis"
+      }
+    }
+  }
+}

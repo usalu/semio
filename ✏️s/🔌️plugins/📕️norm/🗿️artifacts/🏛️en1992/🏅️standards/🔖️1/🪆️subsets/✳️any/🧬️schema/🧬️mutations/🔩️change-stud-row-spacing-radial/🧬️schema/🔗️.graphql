@@ -1,0 +1,5 @@
+type ChangeStudRowSpacingRadial {
+  memberId: String!
+  studRowId: String!
+  newSpacingRadial: Float!
+}

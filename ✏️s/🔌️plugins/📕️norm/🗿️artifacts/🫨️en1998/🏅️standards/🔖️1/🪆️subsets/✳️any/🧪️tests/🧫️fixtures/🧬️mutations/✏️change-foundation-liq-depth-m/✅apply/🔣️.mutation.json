@@ -1,0 +1,5 @@
+{
+  "mutation": "changeFoundationLiqDepthM",
+  "id": "fd-1",
+  "newLiqDepthM": 1.5
+}

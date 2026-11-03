@@ -70,5 +70,3 @@ use framework_schema::ArtifactSchema;
 
 }
 #[cfg(test)] pub use crate::snapshot::snapshot_wire_codec::*;
-
-semio_s_plugin_norm_compliance::impl_norm_artifact_record!(@text En1997Snapshot, extension="en1997", envelope_id="norm.en1997");

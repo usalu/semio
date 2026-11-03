@@ -55,7 +55,7 @@ fn replies_carry_the_status_and_rows_fold_by_their_edit() {
     semio_framework_async::block_on(ActionsCtx::of(&mut shell).observe_invocation_history(Some(&closed)));
     assert!(shell.history.history_time_travel().is_none(), "a reply without a status closes the band");
 
-    let row = |seq: u64, edit: Option<&str>| HistoryEntry { seq, edit_id: edit.map(str::to_string), action_id: "apply".into(), label: LocalizedLabel::native("Apply", "Anwenden"), kind: "mutation".into(), applied: true, ..Default::default() };
+    let row = |seq: u64, edit: Option<&str>| HistoryEntry { edit_id: edit.map(str::to_string), applied: true, ..HistoryEntry::new(seq, "apply", LocalizedLabel::native("Apply", "Anwenden"), "mutation") };
     let mut entries = BTreeMap::new();
     let mut cursor = 0u64;
     assert!(fold_history_patch(&mut entries, &mut cursor, &HistoryPatch { cursor: 1, upserts: vec![row(1, Some("e1")), row(2, None)], ..Default::default() }, false));
@@ -116,7 +116,7 @@ fn a_typed_operation_that_ends_after_its_host_call_refreshes_and_publishes_its_r
     let mut shell = publication_shell();
     let before = history_rows_oldest_first(&shell.history.history_entries).len();
     let board = UiDirtyScope::Partial { window_bodies: vec!["board".into()], panel_bodies: Vec::new(), utilities: false, tools: false, engagements: false, measures: false, labels: false };
-    let row = HistoryEntry { seq: 41, action_id: "setActiveExample".into(), label: LocalizedLabel::native("Load example", "Beispiel laden"), kind: "command".into(), applied: true, ..Default::default() };
+    let row = HistoryEntry { applied: true, ..HistoryEntry::new(41, "setActiveExample", LocalizedLabel::native("Load example", "Beispiel laden"), "command") };
     PUBLISHED.with(|queue| {
         queue.borrow_mut().extend([
             OperationPublication { completed: false, ui_scope: board.clone(), history_patch: None, fault: None, resync: false },

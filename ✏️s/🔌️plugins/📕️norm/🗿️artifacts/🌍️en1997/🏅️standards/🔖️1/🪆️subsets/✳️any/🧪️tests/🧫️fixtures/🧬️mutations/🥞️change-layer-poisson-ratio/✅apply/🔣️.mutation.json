@@ -1,0 +1,5 @@
+{
+  "mutation": "changeLayerPoissonRatio",
+  "id": "layer-sand",
+  "newPoissonRatio": 0.6
+}

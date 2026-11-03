@@ -229,6 +229,20 @@ function Get-PinnedAsset {
     return $asset
 }
 
+function Get-PinnedGoDirectory {
+    param([string]$RepoRoot)
+
+    $asset = Get-PinnedAsset -Tool "go"
+    $share = Join-Path $env:LOCALAPPDATA "semio\go\v$($asset.version)\bin\go.exe"
+    if (Test-Path -LiteralPath $share -PathType Leaf) { return (Split-Path -Parent $share) }
+    $prefix = $asset.sha256.Substring(0, 16)
+    $partition = Join-Path $RepoRoot ".cache\b\t\m\native\go\$($asset.version)\win32-$($asset.arch)-$prefix\bin\go.exe"
+    if (Test-Path -LiteralPath $partition -PathType Leaf) { return (Split-Path -Parent $partition) }
+    $found = Get-FirstCommandPath @("go.exe")
+    if ($found) { return (Split-Path -Parent $found) }
+    return $null
+}
+
 function Get-InstalledVersion {
     param([string]$Command)
 
@@ -341,18 +355,32 @@ function Install-PinnedToolchain {
         throw "The Node.js pin $($node.version) in $script:PinsFile differs from package.json engines.node $($manifest.engines.node); update the pin."
     }
     $nodeRoot = Join-Path $toolsRoot "node\v$($node.version)"
-    if ((Get-InstalledVersion "node.exe") -ne $node.version) {
+    if ((Get-InstalledVersion "node.exe") -ne $node.version -or -not (Get-FirstCommandPath @("npm.cmd", "npm.exe"))) {
+        $npmInRoot = Join-Path $nodeRoot "npm.cmd"
+        if ((Test-Path -LiteralPath $nodeRoot) -and -not (Test-Path -LiteralPath $npmInRoot)) {
+            Remove-Item -LiteralPath $nodeRoot -Recurse -Force
+        }
         Write-Step "Installing Node.js $($node.version)..."
         Install-PinnedDirectory -Asset $node -Destination $nodeRoot -Child "node-v$($node.version)-win-$(Get-HostArchitecture)"
     }
     if (Test-Path -LiteralPath $nodeRoot) { $paths += $nodeRoot }
+    else {
+        $nodeFound = Get-FirstCommandPath @("node.exe")
+        if ($nodeFound -and (Get-InstalledVersion "node.exe") -eq $node.version) { $paths += (Split-Path -Parent $nodeFound) }
+    }
 
     $uv = Get-PinnedAsset -Tool "uv"
     $installedUv = Get-InstalledVersion "uv.exe"
     $uvBin = Join-HomePath @(".local", "bin")
-    if ($null -eq $installedUv -or [version]$installedUv -lt [version]$uv.version) {
+    if ($null -eq $installedUv -or [version]$installedUv -lt [version]$uv.version -or -not (Get-FirstCommandPath @("uvx.exe"))) {
         Write-Step "Installing uv $($uv.version)..."
         Install-PinnedExecutables -Asset $uv -Destination $uvBin -FileNames @("uv.exe", "uvx.exe")
+    }
+    if (-not (Test-Path -LiteralPath (Join-Path $uvBin "uv.exe")) -or -not (Test-Path -LiteralPath (Join-Path $uvBin "uvx.exe"))) {
+        foreach ($uvName in @("uv.exe", "uvx.exe")) {
+            $uvFound = Get-FirstCommandPath @($uvName)
+            if ($uvFound) { $paths += (Split-Path -Parent $uvFound) }
+        }
     }
 
     if (-not (Get-FirstCommandPath @("rustup.exe"))) {
@@ -517,7 +545,7 @@ $playwrightPath = Join-Path $repoRoot ".🧬semio\🦑️repo\⚡️cache\tools\
 Ensure-Directory -Path $playwrightPath
 Set-UserEnvironmentVariable -Name "DEVCONTAINER" -Value "false"
 Set-UserEnvironmentVariable -Name "VCPKG_ROOT" -Value (Join-Path $repoRoot ".🧬semio\🦑️repo\⚡️cache\vcpkg")
-Set-UserEnvironmentVariable -Name "CMAKE_PRESET" -Value "windows"
+Set-UserEnvironmentVariable -Name "CMAKE_PRESET" -Value "windows-prototype"
 Set-UserEnvironmentVariable -Name "DOTNET_CLI_TELEMETRY_OPTOUT" -Value "1"
 Set-UserEnvironmentVariable -Name "PLAYWRIGHT_BROWSERS_PATH" -Value $playwrightPath
 #endregion 🗂️UserState
@@ -529,7 +557,13 @@ if (-not $SkipGlobalCliInstall) {
     $uvPath = Get-CommandPathOrThrow -Label "uv" -Candidates @("uv.exe")
 
     Install-UvTool -ToolName "ruff" -UvPath $uvPath
-    Invoke-RepoCommand -FilePath $rustupPath -ArgumentList @("toolchain", "install", "--no-self-update") -WorkingDirectory $repoRoot
+    $previousRustupToolchain = $env:RUSTUP_TOOLCHAIN
+    Remove-Item Env:RUSTUP_TOOLCHAIN -ErrorAction SilentlyContinue
+    try {
+        Invoke-RepoCommand -FilePath $rustupPath -ArgumentList @("toolchain", "install", "--no-self-update") -WorkingDirectory $repoRoot
+    } finally {
+        if ($null -ne $previousRustupToolchain) { $env:RUSTUP_TOOLCHAIN = $previousRustupToolchain }
+    }
 }
 #endregion 🌐️GlobalCliInstall
 
@@ -542,13 +576,18 @@ if (-not $SkipRepoBootstrap) {
     Invoke-RepoCommand -FilePath (Join-Path $script:LauncherBin "repo.exe") -ArgumentList @("run", "repo-mcp:install") -WorkingDirectory $repoRoot
     $repoReceipt = Get-Content -Raw -LiteralPath (Join-Path $env:LOCALAPPDATA "Semio\repo\installed.json") | ConvertFrom-Json
     if ($repoReceipt.version -ne 1 -or $repoReceipt.platform -ne "win32" -or -not (Test-Path -LiteralPath $repoReceipt.executable -PathType Leaf)) { throw "Verified native repo installation receipt required." }
-    Set-UserPathPriority -PreferredEntries @($repoReceipt.directory)
+    $goDirectory = Get-PinnedGoDirectory -RepoRoot $repoRoot
+    Set-UserPathPriority -PreferredEntries @($repoReceipt.directory, $goDirectory)
     Refresh-CurrentProcessPath
     $repoPath = Get-CommandPathOrThrow -Label "repo" -Candidates @("repo.exe")
     if ([IO.Path]::GetFullPath($repoPath) -ine [IO.Path]::GetFullPath($repoReceipt.executable)) { throw "Current process PATH must select the installed native repository command." }
     Invoke-RepoCommand -FilePath $repoPath -ArgumentList @("--help") -WorkingDirectory $repoRoot
     Invoke-RepoCommand -FilePath $repoPath -ArgumentList @("run", "workspace:setup") -WorkingDirectory $repoRoot
-    Invoke-RepoCommand -FilePath $repoPath -ArgumentList @("run", "@semio-tech/repo-developer-tools:setup-debugger") -WorkingDirectory $repoRoot
+    try {
+        Invoke-RepoCommand -FilePath $repoPath -ArgumentList @("run", "@semio-tech/repo-developer-tools:setup-debugger") -WorkingDirectory $repoRoot
+    } catch {
+        Write-Step "Native debugger setup needs noninteractive install privileges or a working LLDB already on PATH. Setup continues."
+    }
 }
 #endregion 🧱️RepoBootstrap
 

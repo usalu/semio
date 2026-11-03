@@ -64,11 +64,11 @@ Feature: Apply every typed block3d object-kind mutation twice — once in Rust, 
       """
       {
         "kind": "<id>",
-        "before": "shared://🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json",
-        "mutation": "shared://🧬️mutations/<vector>/🦠️mutation/🔣️.json",
-        "diff": "shared://🧬️mutations/<vector>/🔺️diff/🔣️.json",
-        "outcome": "shared://🧬️mutations/<vector>/🎯️outcome/🔣️.json",
-        "after": "shared://🧬️mutations/<vector>/📸️snapshot/➡️after/🔣️.json"
+        "before": "shared://🧬️mutations/<vector>/🔣️.before.json",
+        "mutation": "shared://🧬️mutations/<vector>/🔣️.mutation.json",
+        "diff": "shared://🧬️mutations/<vector>/🔣️.diff.json",
+        "outcome": "shared://🧬️mutations/<vector>/🔣️.outcome.json",
+        "after": "shared://🧬️mutations/<vector>/🔣️.after.json"
       }
       """
     Then the committed mutation payload declares the <id> kind
@@ -121,11 +121,11 @@ Feature: Apply every typed block3d object-kind mutation twice — once in Rust, 
       """
       {
         "kind": "<id>",
-        "before": "shared://🧬️mutations/<vector>/📸️snapshot/⬅️before/🔣️.json",
-        "mutation": "shared://🧬️mutations/<vector>/🦠️mutation/🔣️.json",
-        "diff": "shared://🧬️mutations/<vector>/🔺️diff/🔣️.json",
-        "outcome": "shared://🧬️mutations/<vector>/🎯️outcome/🔣️.json",
-        "after": "shared://🧬️mutations/<vector>/📸️snapshot/➡️after/🔣️.json"
+        "before": "shared://🧬️mutations/<vector>/🔣️.before.json",
+        "mutation": "shared://🧬️mutations/<vector>/🔣️.mutation.json",
+        "diff": "shared://🧬️mutations/<vector>/🔣️.diff.json",
+        "outcome": "shared://🧬️mutations/<vector>/🔣️.outcome.json",
+        "after": "shared://🧬️mutations/<vector>/🔣️.after.json"
       }
       """
     Then every field where the after-snapshot differs from the before-snapshot is declared by the committed diff
@@ -174,6 +174,6 @@ Feature: Apply every typed block3d object-kind mutation twice — once in Rust, 
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the object-kind definition with its catalogue child and local extras
-    Given the committed before-snapshot shared://🧬️mutations/✏️rename-object-kind/🧪️renames/📸️snapshot/⬅️before/🔣️.json
+    Given the committed before-snapshot shared://🧬️mutations/✏️rename-object-kind/🧪️renames/🔣️.before.json
     When it is parsed by the platform's own dependency-free JSON reader, re-serialized and parsed again
     Then the document is unchanged and the re-serialized bytes are not the committed bytes

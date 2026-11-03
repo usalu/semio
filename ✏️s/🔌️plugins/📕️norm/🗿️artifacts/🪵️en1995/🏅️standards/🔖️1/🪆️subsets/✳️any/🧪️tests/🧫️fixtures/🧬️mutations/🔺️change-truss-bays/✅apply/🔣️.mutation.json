@@ -1,0 +1,6 @@
+{
+  "ChangeTrussBays": {
+    "trussId": "truss-1",
+    "newValue": 7
+  }
+}

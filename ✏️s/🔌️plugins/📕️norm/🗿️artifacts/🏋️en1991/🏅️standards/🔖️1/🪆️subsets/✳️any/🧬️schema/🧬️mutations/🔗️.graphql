@@ -1,36 +1,992 @@
-# 🧬️ En1991 mutation schema — artifact-lane fields only.
-
-type En1991Mutation {
-  areaM2: Float! @state(class: ARTIFACT)
-  category: String! @state(class: ARTIFACT)
-  annex: String! @state(class: ARTIFACT)
-  selfWeightMaterial: String! @state(class: ARTIFACT)
-  selfWeightThicknessM: Float! @state(class: ARTIFACT)
-  assumedGKKnM2: Float! @state(class: ARTIFACT)
-  fireCurve: String! @state(class: ARTIFACT)
-  fireResistanceMin: Float! @state(class: ARTIFACT)
-  fireMemberCapacityC: Float! @state(class: ARTIFACT)
-  snowZone: Int! @state(class: ARTIFACT)
-  snowAltitudeM: Float! @state(class: ARTIFACT)
-  enSKKnM2: Float! @state(class: ARTIFACT)
-  windZone: Int! @state(class: ARTIFACT)
-  enVBMS: Float! @state(class: ARTIFACT)
-  deltaTK: Float! @state(class: ARTIFACT)
-  constructionActivity: String! @state(class: ARTIFACT)
-  accidentalMassT: Float! @state(class: ARTIFACT)
-  accidentalSpeedKmH: Float! @state(class: ARTIFACT)
-  bridgeLane: Int! @state(class: ARTIFACT)
-  bridgeSpanM: Float! @state(class: ARTIFACT)
-  bridgeLaneWidthM: Float! @state(class: ARTIFACT)
-  bridgeMomentResistanceKnm: Float! @state(class: ARTIFACT)
-  craneClass: String! @state(class: ARTIFACT)
-  hoistClass: String! @state(class: ARTIFACT)
-  hoistingSpeedMS: Float! @state(class: ARTIFACT)
-  siloBulkDensityKnM3: Float! @state(class: ARTIFACT)
-  siloHeightM: Float! @state(class: ARTIFACT)
-  siloHydraulicRadiusM: Float! @state(class: ARTIFACT)
-  siloMu: Float! @state(class: ARTIFACT)
-  siloK: Float! @state(class: ARTIFACT)
-  cS: Float! @state(class: ARTIFACT)
-  cD: Float! @state(class: ARTIFACT)
+union En1991Mutation = ChangeAnnex | ChangeSnowZone | ChangeAltitude | ChangeEnSk | ChangeNorthGermanLowlandSnow | ChangeWindZone | ChangeEnVb | ChangeTerrainCategory | ChangeMixedTerrainUpwind | ChangeMixedTerrainDistance | ChangeOrographyFactor | ChangeCoastOrIsland | ChangeAirDensity | ChangeHeight | ChangeWidth | ChangeDepth | ChangeAssumedDeltaT | ChangeConstructionActivity | ChangeAssumedConstructionQk | ChangeStructureKind | ChangeBridgeLane | ChangeBridgeSpan | ChangeBridgeTandemX | ChangeBridgeCurveRadius | ChangeRailAlpha | ChangeAssumedRailLm71 | ChangeAssumedRailLm71Udl | ChangeAssumedRailSw0 | ChangeAssumedRailSw2 | ChangeCraneX | ChangeCraneRunwayLength | ChangeCraneWheelBase | ChangeSiloDiameter | ChangeSiloEccentricity | ChangeSiloHopperAngleDeg | ChangeBridgeLaneWidth | ChangeAssumedBridgeTandem | ChangeAssumedBridgeUdl | ChangeAssumedBridgeLm2 | ChangeAssumedBridgeFootway | ChangeStoreyCount | ChangeTMax | ChangeTMin | ChangeInitialTemperature | ChangeThermalElementType | ChangeThermalBridgeType | ChangeLinearTemperatureGradient | ChangeFireMode | ChangeFireLoadBasis | ChangeFireCurve | ChangeFireDuration | ChangeAssumedGasTemperature | ChangeAssumedHNet | ChangeFireCompartmentArea | ChangeFireCompartmentHeight | ChangeFireOpeningFactor | ChangeFireThermalInertia | ChangeFireOccupancy | ChangeFireLoadDensityQf | ChangeAssumedQfD | ChangeAssumedBridgeLm3 | ChangeAssumedBridgeLm4 | ChangeBridgeLoadGroup | ChangeCraneClaimed | ChangeCraneClass | ChangeHoistClass | ChangeHoistingSpeed | ChangeAssumedCraneWheel | ChangeAssumedCraneHorizontal | ChangeSiloClaimed | ChangeSiloKind | ChangeSiloBulkDensity | ChangeSiloHeight | ChangeSiloHydraulicRadius | ChangeSiloMu | ChangeSiloK | ChangeAssumedSiloPressure | ChangeAssumedSiloPatch | ChangeAssumedSiloWallFriction | ChangeFloorAssumedQk | ChangeSelfWeightAssumedGk | ChangeRoofAssumedSk | ChangeWindFaceAssumedWp | ChangeAccidentalAssumedForce | InsertFloor | RemoveFloor | InsertSelfWeightElement | RemoveSelfWeightElement | InsertRoof | RemoveRoof | InsertWindFace | RemoveWindFace | InsertAccidentalCase | RemoveAccidentalCase | ChangeRoofPitchDeg | ChangeRoofParapetHeight | ChangeRoofDriftObstructionHeight | ChangeFloorArea | ChangeSelfWeightThickness | ChangeWindFaceZ | ChangeWindFaceLoadedArea | ChangeLaneWidth | ChangeLaneOffset | ChangeLaneLm1Lane | InsertBridgeLane | RemoveBridgeLane | ChangeStageActivity | ChangeStageDurationDays | ChangeStageReturnYears | ChangeStageAssumedQk | InsertConstructionStage | RemoveConstructionStage | ChangeRoofSurfaceFace | ChangeRoofSurfaceShape | ChangeRoofSurfacePitchDeg | ChangeRoofSurfaceExtent | InsertRoofSurface | RemoveRoofSurface | ChangePlacementX | ChangePlacementY | ChangePlacementZ | ChangePlacementYaw | InsertPlacement | RemovePlacement | InsertCase | RemoveCase | ChangeCaseNumber | ChangeCaseText | ChangeCaseLabelEn | ChangeCaseLabelDe | ChangeCaseEntryId | ChangeFloorCategory | ChangeFloorAssumedQkConc | ChangeFloorAssumedPartitions | ChangeSelfWeightMaterial | ChangeRoofRoofType | ChangeRoofCE | ChangeRoofCT | ChangeRoofHasParapet | ChangeRoofMultiSpan | ChangeWindFaceZone | ChangeWindFaceCPe10 | ChangeWindFaceCPe1 | ChangeWindFaceCPi | ChangeWindFaceCS | ChangeWindFaceCD | ChangeSpecialVehicleDesignation | ChangeSpecialVehicleX | ChangeSpecialVehicleY | InsertSpecialVehicle | RemoveSpecialVehicle | ChangeWindBridgeDeckWidth | ChangeWindBridgeDeckDepth | ChangeWindBridgeParapetKind | ChangeWindBridgeParapetHeight | ChangeWindBridgeTrafficKind | ChangeWindBridgeGroundHeight | ChangeWindBridgeSpan | ChangeWindBridgeAssumedForce | InsertWindBridge | RemoveWindBridge | ChangeDynamicElementHeight | ChangeDynamicElementWidth | ChangeDynamicFirstFrequency | ChangeDynamicLogDecrement | ChangeDynamicMassPerLength | ChangeDynamicElementStrouhal | ChangeDynamicAssumedCscd | InsertDynamicElement | RemoveDynamicElement | ChangeImpactActionKind | ChangeImpactActionMass | ChangeImpactActionSpeed | ChangeImpactActionStiffness | ChangeImpactActionHeight | ChangeImpactActionX | ChangeImpactActionY | ChangeImpactActionAssumedForce | InsertImpactAction | RemoveImpactAction | ChangeInternalExplosionVolume | ChangeExplosionVentArea | ChangeExplosionVentPressure | ChangeExplosionAssumedPressure | InsertInternalExplosion | RemoveInternalExplosion | ChangeThermalSectionDeckType | ChangeThermalSectionSurfacing | ChangeThermalSectionLength | ChangeThermalSectionDepth | ChangeThermalSectionAlphaMicro | ChangeThermalAssumedRange | InsertThermalSection | RemoveThermalSection | ChangeAccidentalVehicleMass | ChangeAccidentalVehicleSpeed | ChangeAccidentalExplosionMass | ChangeAccidentalStandoff | ChangeAccidentalAssumedPressure | ChangeHelicopterMass | ChangeHelicopterX | ChangeHelicopterY | ChangeHelicopterHeight | ChangeHelicopterAssumedForce | InsertHelicopter | RemoveHelicopter | ChangeTieRunKind | ChangeTieRunSpacing | ChangeTieRunSpan | ChangeTieRunDeadLoad | ChangeTieRunImposedLoad | ChangeTieRunPsi | ChangeTieRunX | ChangeTieRunY | ChangeTieRunProvidedForce | InsertTieRun | RemoveTieRun | ChangeConstructionLoadStage | ChangeConstructionLoadKind | ChangeConstructionLoadMagnitude | InsertConstructionLoad | RemoveConstructionLoad | ChangeFallingMass | ChangeFallingDropHeight | ChangeFallingStoppingDistance | ChangeFallingX | ChangeFallingY | ChangeFallingAssumedForce | InsertFalling | RemoveFalling | ChangeImperfectionHeight | ChangeImperfectionTolerance | ChangeImperfectionVerticalLoad | ChangeImperfectionX | ChangeImperfectionY | ChangeImperfectionAssumedForce | InsertImperfection | RemoveImperfection | ChangeDerailmentDistance | ChangeDerailmentDesignForceX | ChangeDerailmentDesignForceY | ChangeDerailmentX | ChangeDerailmentY | ChangeDerailmentAssumedForce | InsertDerailment | RemoveDerailment | ChangeCraneHoistRatedLoad | ChangeCraneHoistReleaseFraction | ChangeCraneHoistReleaseDevice | InsertCraneHoist | RemoveCraneHoist | ChangeFootbridgeLoadedLength | ChangeFootbridgeDeckWidth | ChangeFootbridgeNaturalFrequency | InsertFootbridge | RemoveFootbridge | ChangeRailDynamicDeterminantLength | ChangeRailDynamicMaintenance | InsertRailDynamic | RemoveRailDynamic | ChangeLoadDispersalWheelLength | ChangeLoadDispersalWheelWidth | ChangeLoadDispersalPavingThickness | ChangeLoadDispersalSlabThickness | InsertLoadDispersal | RemoveLoadDispersal | ChangeBulkSolidInternalFriction | InsertBulkSolid | RemoveBulkSolid | ChangeRotatingMachineMass | ChangeRotatingMachineEccentricity | ChangeRotatingMachineFrequency | InsertRotatingMachine | RemoveRotatingMachine
+type ChangeAnnex {
+  newAnnex: AnnexChoice!
+}
+type ChangeSnowZone {
+  newSnowZone: String!
+}
+type ChangeAltitude {
+  newAltitude: Float!
+}
+type ChangeEnSk {
+  newEnSk: Float!
+}
+type ChangeNorthGermanLowlandSnow {
+  newNorthGermanLowlandSnow: Boolean!
+}
+type ChangeWindZone {
+  newWindZone: Int!
+}
+type ChangeEnVb {
+  newEnVb: Float!
+}
+type ChangeTerrainCategory {
+  newTerrainCategory: Int!
+}
+type ChangeMixedTerrainUpwind {
+  newMixedTerrainUpwind: Int!
+}
+type ChangeMixedTerrainDistance {
+  newMixedTerrainDistance: Float!
+}
+type ChangeOrographyFactor {
+  newOrographyFactor: Float!
+}
+type ChangeCoastOrIsland {
+  newCoastOrIsland: Boolean!
+}
+type ChangeAirDensity {
+  newAirDensity: Float!
+}
+type ChangeHeight {
+  newHeight: Float!
+}
+type ChangeWidth {
+  newWidth: Float!
+}
+type ChangeDepth {
+  newDepth: Float!
+}
+type ChangeAssumedDeltaT {
+  newAssumedDeltaT: Float!
+}
+type ChangeConstructionActivity {
+  newConstructionActivity: String!
+}
+type ChangeAssumedConstructionQk {
+  newAssumedConstructionQk: Float!
+}
+type ChangeStructureKind {
+  newStructureKind: StructureKind!
+}
+type ChangeBridgeLane {
+  newBridgeLane: Int!
+}
+type ChangeBridgeSpan {
+  newBridgeSpan: Float!
+}
+type ChangeBridgeTandemX {
+  newBridgeTandemX: Float!
+}
+type ChangeBridgeCurveRadius {
+  newBridgeCurveRadius: Float!
+}
+type ChangeRailAlpha {
+  newRailAlpha: Float!
+}
+type ChangeAssumedRailLm71 {
+  newAssumedRailLm71: Float!
+}
+type ChangeAssumedRailLm71Udl {
+  newAssumedRailLm71Udl: Float!
+}
+type ChangeAssumedRailSw0 {
+  newAssumedRailSw0: Float!
+}
+type ChangeAssumedRailSw2 {
+  newAssumedRailSw2: Float!
+}
+type ChangeCraneX {
+  newCraneX: Float!
+}
+type ChangeCraneRunwayLength {
+  newCraneRunwayLength: Float!
+}
+type ChangeCraneWheelBase {
+  newCraneWheelBase: Float!
+}
+type ChangeSiloDiameter {
+  newSiloDiameter: Float!
+}
+type ChangeSiloEccentricity {
+  newSiloEccentricity: Float!
+}
+type ChangeSiloHopperAngleDeg {
+  newSiloHopperAngleDeg: Float!
+}
+type ChangeBridgeLaneWidth {
+  newBridgeLaneWidth: Float!
+}
+type ChangeAssumedBridgeTandem {
+  newAssumedBridgeTandem: Float!
+}
+type ChangeAssumedBridgeUdl {
+  newAssumedBridgeUdl: Float!
+}
+type ChangeAssumedBridgeLm2 {
+  newAssumedBridgeLm2: Float!
+}
+type ChangeAssumedBridgeFootway {
+  newAssumedBridgeFootway: Float!
+}
+type ChangeStoreyCount {
+  newStoreyCount: Int!
+}
+type ChangeTMax {
+  newTMax: Float!
+}
+type ChangeTMin {
+  newTMin: Float!
+}
+type ChangeInitialTemperature {
+  newT0: Float!
+}
+type ChangeThermalElementType {
+  newThermalElementType: String!
+}
+type ChangeThermalBridgeType {
+  newThermalBridgeType: Int!
+}
+type ChangeLinearTemperatureGradient {
+  newDeltaTM: Float!
+}
+type ChangeFireMode {
+  newFireMode: FireMode!
+}
+type ChangeFireLoadBasis {
+  newFireLoadBasis: FireLoadBasis!
+}
+type ChangeFireCurve {
+  newFireCurve: FireCurve!
+}
+type ChangeFireDuration {
+  newFireDuration: Float!
+}
+type ChangeAssumedGasTemperature {
+  newAssumedGasTemperature: Float!
+}
+type ChangeAssumedHNet {
+  newAssumedHNet: Float!
+}
+type ChangeFireCompartmentArea {
+  newFireCompartmentArea: Float!
+}
+type ChangeFireCompartmentHeight {
+  newFireCompartmentHeight: Float!
+}
+type ChangeFireOpeningFactor {
+  newFireOpeningFactor: Float!
+}
+type ChangeFireThermalInertia {
+  newFireThermalInertia: Float!
+}
+type ChangeFireOccupancy {
+  newFireOccupancy: FireOccupancy!
+}
+type ChangeFireLoadDensityQf {
+  newFireLoadDensityQf: Float!
+}
+type ChangeAssumedQfD {
+  newAssumedQfD: Float!
+}
+type ChangeAssumedBridgeLm3 {
+  newAssumedBridgeLm3: Float!
+}
+type ChangeAssumedBridgeLm4 {
+  newAssumedBridgeLm4: Float!
+}
+type ChangeBridgeLoadGroup {
+  newBridgeLoadGroup: String!
+}
+type ChangeCraneClaimed {
+  newCraneClaimed: Boolean!
+}
+type ChangeCraneClass {
+  newCraneClass: String!
+}
+type ChangeHoistClass {
+  newHoistClass: String!
+}
+type ChangeHoistingSpeed {
+  newHoistingSpeed: Float!
+}
+type ChangeAssumedCraneWheel {
+  newAssumedCraneWheel: Float!
+}
+type ChangeAssumedCraneHorizontal {
+  newAssumedCraneHorizontal: Float!
+}
+type ChangeSiloClaimed {
+  newSiloClaimed: Boolean!
+}
+type ChangeSiloKind {
+  newSiloKind: String!
+}
+type ChangeSiloBulkDensity {
+  newSiloBulkDensity: Float!
+}
+type ChangeSiloHeight {
+  newSiloHeight: Float!
+}
+type ChangeSiloHydraulicRadius {
+  newSiloHydraulicRadius: Float!
+}
+type ChangeSiloMu {
+  newSiloMu: Float!
+}
+type ChangeSiloK {
+  newSiloK: Float!
+}
+type ChangeAssumedSiloPressure {
+  newAssumedSiloPressure: Float!
+}
+type ChangeAssumedSiloPatch {
+  newAssumedSiloPatch: Float!
+}
+type ChangeAssumedSiloWallFriction {
+  newAssumedSiloWallFriction: Float!
+}
+type ChangeFloorAssumedQk {
+  id: String!
+  newAssumedQk: Float!
+}
+type ChangeSelfWeightAssumedGk {
+  id: String!
+  newAssumedGk: Float!
+}
+type ChangeRoofAssumedSk {
+  id: String!
+  newAssumedSk: Float!
+}
+type ChangeWindFaceAssumedWp {
+  id: String!
+  newAssumedWp: Float!
+}
+type ChangeAccidentalAssumedForce {
+  id: String!
+  newAssumedForce: Float!
+}
+type InsertFloor {
+  index: Int!
+  item: FloorArea!
+}
+type RemoveFloor {
+  id: String!
+}
+type InsertSelfWeightElement {
+  index: Int!
+  item: SelfWeightElement!
+}
+type RemoveSelfWeightElement {
+  id: String!
+}
+type InsertRoof {
+  index: Int!
+  item: RoofArea!
+}
+type RemoveRoof {
+  id: String!
+}
+type InsertWindFace {
+  index: Int!
+  item: WindFace!
+}
+type RemoveWindFace {
+  id: String!
+}
+type InsertAccidentalCase {
+  index: Int!
+  item: AccidentalCase!
+}
+type RemoveAccidentalCase {
+  id: String!
+}
+type ChangeRoofPitchDeg {
+  id: String!
+  newPitchDeg: Float!
+}
+type ChangeRoofParapetHeight {
+  id: String!
+  newParapetHeight: Float!
+}
+type ChangeRoofDriftObstructionHeight {
+  id: String!
+  newDriftObstructionHeight: Float!
+}
+type ChangeFloorArea {
+  id: String!
+  newArea: Float!
+}
+type ChangeSelfWeightThickness {
+  id: String!
+  newThickness: Float!
+}
+type ChangeWindFaceZ {
+  id: String!
+  newZ: Float!
+}
+type ChangeWindFaceLoadedArea {
+  id: String!
+  newLoadedArea: Float!
+}
+type ChangeLaneWidth {
+  id: String!
+  newWidth: Float!
+}
+type ChangeLaneOffset {
+  id: String!
+  newOffset: Float!
+}
+type ChangeLaneLm1Lane {
+  id: String!
+  newLm1Lane: Int!
+}
+type InsertBridgeLane {
+  index: Int!
+  item: BridgeLane!
+}
+type RemoveBridgeLane {
+  id: String!
+}
+type ChangeStageActivity {
+  id: String!
+  newActivity: String!
+}
+type ChangeStageDurationDays {
+  id: String!
+  newDurationDays: Float!
+}
+type ChangeStageReturnYears {
+  id: String!
+  newReturnYears: Float!
+}
+type ChangeStageAssumedQk {
+  id: String!
+  newAssumedQk: Float!
+}
+type InsertConstructionStage {
+  index: Int!
+  item: ConstructionStage!
+}
+type RemoveConstructionStage {
+  id: String!
+}
+type ChangeRoofSurfaceFace {
+  id: String!
+  newFace: String!
+}
+type ChangeRoofSurfaceShape {
+  id: String!
+  newShape: String!
+}
+type ChangeRoofSurfacePitchDeg {
+  id: String!
+  newPitchDeg: Float!
+}
+type ChangeRoofSurfaceExtent {
+  id: String!
+  newExtent: Float!
+}
+type InsertRoofSurface {
+  index: Int!
+  item: RoofSurface!
+}
+type RemoveRoofSurface {
+  id: String!
+}
+type ChangePlacementX {
+  id: String!
+  newX: Float!
+}
+type ChangePlacementY {
+  id: String!
+  newY: Float!
+}
+type ChangePlacementZ {
+  id: String!
+  newZ: Float!
+}
+type ChangePlacementYaw {
+  id: String!
+  newYaw: Float!
+}
+type InsertPlacement {
+  index: Int!
+  item: Placement!
+}
+type RemovePlacement {
+  id: String!
+}
+type InsertCase {
+  index: Int!
+  case: CaseRow!
+}
+type RemoveCase {
+  id: String!
+}
+type ChangeCaseNumber {
+  caseId: String!
+  key: String!
+  value: Float
+}
+type ChangeCaseText {
+  caseId: String!
+  key: String!
+  value: String
+}
+type ChangeCaseLabelEn {
+  caseId: String!
+  newValue: String!
+}
+type ChangeCaseLabelDe {
+  caseId: String!
+  newValue: String!
+}
+type ChangeCaseEntryId {
+  caseId: String!
+  newValue: String!
+}
+type ChangeFloorCategory {
+  id: String!
+  newCategory: String!
+}
+type ChangeFloorAssumedQkConc {
+  id: String!
+  newAssumedQkConcentrated: Float!
+}
+type ChangeFloorAssumedPartitions {
+  id: String!
+  newAssumedPartitions: Float!
+}
+type ChangeSelfWeightMaterial {
+  id: String!
+  newMaterial: String!
+}
+type ChangeRoofRoofType {
+  id: String!
+  newRoofType: String!
+}
+type ChangeRoofCE {
+  id: String!
+  newCE: Float!
+}
+type ChangeRoofCT {
+  id: String!
+  newCT: Float!
+}
+type ChangeRoofHasParapet {
+  id: String!
+  newHasParapet: Boolean!
+}
+type ChangeRoofMultiSpan {
+  id: String!
+  newMultiSpan: Boolean!
+}
+type ChangeWindFaceZone {
+  id: String!
+  newZone: String!
+}
+type ChangeWindFaceCPe10 {
+  id: String!
+  newCPe10: Float!
+}
+type ChangeWindFaceCPe1 {
+  id: String!
+  newCPe1: Float!
+}
+type ChangeWindFaceCPi {
+  id: String!
+  newCPi: Float!
+}
+type ChangeWindFaceCS {
+  id: String!
+  newCS: Float!
+}
+type ChangeWindFaceCD {
+  id: String!
+  newCD: Float!
+}
+type ChangeSpecialVehicleDesignation {
+  id: String!
+  newDesignation: String!
+}
+type ChangeSpecialVehicleX {
+  id: String!
+  newX: Float!
+}
+type ChangeSpecialVehicleY {
+  id: String!
+  newY: Float!
+}
+type InsertSpecialVehicle {
+  index: Int!
+  item: SpecialVehicle!
+}
+type RemoveSpecialVehicle {
+  id: String!
+}
+type ChangeWindBridgeDeckWidth {
+  id: String!
+  newDeckWidth: Float!
+}
+type ChangeWindBridgeDeckDepth {
+  id: String!
+  newDeckDepth: Float!
+}
+type ChangeWindBridgeParapetKind {
+  id: String!
+  newParapetKind: Int!
+}
+type ChangeWindBridgeParapetHeight {
+  id: String!
+  newParapetHeight: Float!
+}
+type ChangeWindBridgeTrafficKind {
+  id: String!
+  newTrafficKind: Int!
+}
+type ChangeWindBridgeGroundHeight {
+  id: String!
+  newHeightAboveGround: Float!
+}
+type ChangeWindBridgeSpan {
+  id: String!
+  newSpan: Float!
+}
+type ChangeWindBridgeAssumedForce {
+  id: String!
+  newAssumedForce: Float!
+}
+type InsertWindBridge {
+  index: Int!
+  item: WindBridge!
+}
+type RemoveWindBridge {
+  id: String!
+}
+type ChangeDynamicElementHeight {
+  id: String!
+  newHeight: Float!
+}
+type ChangeDynamicElementWidth {
+  id: String!
+  newWidth: Float!
+}
+type ChangeDynamicFirstFrequency {
+  id: String!
+  newFirstFrequency: Float!
+}
+type ChangeDynamicLogDecrement {
+  id: String!
+  newLogDecrement: Float!
+}
+type ChangeDynamicMassPerLength {
+  id: String!
+  newMassPerLength: Float!
+}
+type ChangeDynamicElementStrouhal {
+  id: String!
+  newStrouhal: Float!
+}
+type ChangeDynamicAssumedCscd {
+  id: String!
+  newAssumedCscd: Float!
+}
+type InsertDynamicElement {
+  index: Int!
+  item: DynamicElement!
+}
+type RemoveDynamicElement {
+  id: String!
+}
+type ChangeImpactActionKind {
+  id: String!
+  newKind: Int!
+}
+type ChangeImpactActionMass {
+  id: String!
+  newMass: Float!
+}
+type ChangeImpactActionSpeed {
+  id: String!
+  newSpeed: Float!
+}
+type ChangeImpactActionStiffness {
+  id: String!
+  newStiffness: Float!
+}
+type ChangeImpactActionHeight {
+  id: String!
+  newHeight: Float!
+}
+type ChangeImpactActionX {
+  id: String!
+  newX: Float!
+}
+type ChangeImpactActionY {
+  id: String!
+  newY: Float!
+}
+type ChangeImpactActionAssumedForce {
+  id: String!
+  newAssumedForce: Float!
+}
+type InsertImpactAction {
+  index: Int!
+  item: ImpactAction!
+}
+type RemoveImpactAction {
+  id: String!
+}
+type ChangeInternalExplosionVolume {
+  id: String!
+  newVolume: Float!
+}
+type ChangeExplosionVentArea {
+  id: String!
+  newVentArea: Float!
+}
+type ChangeExplosionVentPressure {
+  id: String!
+  newVentPressure: Float!
+}
+type ChangeExplosionAssumedPressure {
+  id: String!
+  newAssumedPressure: Float!
+}
+type InsertInternalExplosion {
+  index: Int!
+  item: InternalExplosion!
+}
+type RemoveInternalExplosion {
+  id: String!
+}
+type ChangeThermalSectionDeckType {
+  id: String!
+  newDeckType: Int!
+}
+type ChangeThermalSectionSurfacing {
+  id: String!
+  newSurfacing: Int!
+}
+type ChangeThermalSectionLength {
+  id: String!
+  newLength: Float!
+}
+type ChangeThermalSectionDepth {
+  id: String!
+  newDepth: Float!
+}
+type ChangeThermalSectionAlphaMicro {
+  id: String!
+  newAlphaMicro: Float!
+}
+type ChangeThermalAssumedRange {
+  id: String!
+  newAssumedRange: Float!
+}
+type InsertThermalSection {
+  index: Int!
+  item: ThermalSection!
+}
+type RemoveThermalSection {
+  id: String!
+}
+type ChangeAccidentalVehicleMass {
+  id: String!
+  newVehicleMass: Float!
+}
+type ChangeAccidentalVehicleSpeed {
+  id: String!
+  newVehicleSpeed: Float!
+}
+type ChangeAccidentalExplosionMass {
+  id: String!
+  newExplosionMass: Float!
+}
+type ChangeAccidentalStandoff {
+  id: String!
+  newStandoff: Float!
+}
+type ChangeAccidentalAssumedPressure {
+  id: String!
+  newAssumedPressure: Float!
+}
+type ChangeHelicopterMass {
+  id: String!
+  newMass: Float!
+}
+type ChangeHelicopterX {
+  id: String!
+  newX: Float!
+}
+type ChangeHelicopterY {
+  id: String!
+  newY: Float!
+}
+type ChangeHelicopterHeight {
+  id: String!
+  newHeight: Float!
+}
+type ChangeHelicopterAssumedForce {
+  id: String!
+  newAssumedForce: Float!
+}
+type InsertHelicopter {
+  index: Int!
+  item: HelicopterLanding!
+}
+type RemoveHelicopter {
+  id: String!
+}
+type ChangeTieRunKind {
+  id: String!
+  newKind: Int!
+}
+type ChangeTieRunSpacing {
+  id: String!
+  newSpacing: Float!
+}
+type ChangeTieRunSpan {
+  id: String!
+  newSpan: Float!
+}
+type ChangeTieRunDeadLoad {
+  id: String!
+  newDeadLoad: Float!
+}
+type ChangeTieRunImposedLoad {
+  id: String!
+  newImposedLoad: Float!
+}
+type ChangeTieRunPsi {
+  id: String!
+  newPsi: Float!
+}
+type ChangeTieRunX {
+  id: String!
+  newX: Float!
+}
+type ChangeTieRunY {
+  id: String!
+  newY: Float!
+}
+type ChangeTieRunProvidedForce {
+  id: String!
+  newProvidedForce: Float!
+}
+type InsertTieRun {
+  index: Int!
+  item: TieRun!
+}
+type RemoveTieRun {
+  id: String!
+}
+type ChangeConstructionLoadStage {
+  id: String!
+  newStage: String!
+}
+type ChangeConstructionLoadKind {
+  id: String!
+  newKind: Int!
+}
+type ChangeConstructionLoadMagnitude {
+  id: String!
+  newMagnitude: Float!
+}
+type InsertConstructionLoad {
+  index: Int!
+  item: ConstructionLoad!
+}
+type RemoveConstructionLoad {
+  id: String!
+}
+type ChangeFallingMass {
+  id: String!
+  newMass: Float!
+}
+type ChangeFallingDropHeight {
+  id: String!
+  newDropHeight: Float!
+}
+type ChangeFallingStoppingDistance {
+  id: String!
+  newStoppingDistance: Float!
+}
+type ChangeFallingX {
+  id: String!
+  newX: Float!
+}
+type ChangeFallingY {
+  id: String!
+  newY: Float!
+}
+type ChangeFallingAssumedForce {
+  id: String!
+  newAssumedForce: Float!
+}
+type InsertFalling {
+  index: Int!
+  item: FallingLoad!
+}
+type RemoveFalling {
+  id: String!
+}
+type ChangeImperfectionHeight {
+  id: String!
+  newHeight: Float!
+}
+type ChangeImperfectionTolerance {
+  id: String!
+  newTolerance: Float!
+}
+type ChangeImperfectionVerticalLoad {
+  id: String!
+  newVerticalLoad: Float!
+}
+type ChangeImperfectionX {
+  id: String!
+  newX: Float!
+}
+type ChangeImperfectionY {
+  id: String!
+  newY: Float!
+}
+type ChangeImperfectionAssumedForce {
+  id: String!
+  newAssumedForce: Float!
+}
+type InsertImperfection {
+  index: Int!
+  item: ExecutionImperfection!
+}
+type RemoveImperfection {
+  id: String!
+}
+type ChangeDerailmentDistance {
+  id: String!
+  newDistance: Float!
+}
+type ChangeDerailmentDesignForceX {
+  id: String!
+  newDesignForceX: Float!
+}
+type ChangeDerailmentDesignForceY {
+  id: String!
+  newDesignForceY: Float!
+}
+type ChangeDerailmentX {
+  id: String!
+  newX: Float!
+}
+type ChangeDerailmentY {
+  id: String!
+  newY: Float!
+}
+type ChangeDerailmentAssumedForce {
+  id: String!
+  newAssumedForce: Float!
+}
+type InsertDerailment {
+  index: Int!
+  item: DerailmentCase!
+}
+type RemoveDerailment {
+  id: String!
+}
+type ChangeCraneHoistRatedLoad {
+  id: String!
+  newRatedLoad: Float!
+}
+type ChangeCraneHoistReleaseFraction {
+  id: String!
+  newReleaseFraction: Float!
+}
+type ChangeCraneHoistReleaseDevice {
+  id: String!
+  newReleaseDevice: String!
+}
+type InsertCraneHoist {
+  index: Int!
+  item: CraneHoist!
+}
+type RemoveCraneHoist {
+  id: String!
+}
+type ChangeFootbridgeLoadedLength {
+  id: String!
+  newLoadedLength: Float!
+}
+type ChangeFootbridgeDeckWidth {
+  id: String!
+  newDeckWidth: Float!
+}
+type ChangeFootbridgeNaturalFrequency {
+  id: String!
+  newNaturalFrequency: Float!
+}
+type InsertFootbridge {
+  index: Int!
+  item: Footbridge!
+}
+type RemoveFootbridge {
+  id: String!
+}
+type ChangeRailDynamicDeterminantLength {
+  id: String!
+  newDeterminantLength: Float!
+}
+type ChangeRailDynamicMaintenance {
+  id: String!
+  newMaintenance: String!
+}
+type InsertRailDynamic {
+  index: Int!
+  item: RailDynamic!
+}
+type RemoveRailDynamic {
+  id: String!
+}
+type ChangeLoadDispersalWheelLength {
+  id: String!
+  newWheelLength: Float!
+}
+type ChangeLoadDispersalWheelWidth {
+  id: String!
+  newWheelWidth: Float!
+}
+type ChangeLoadDispersalPavingThickness {
+  id: String!
+  newPavementThickness: Float!
+}
+type ChangeLoadDispersalSlabThickness {
+  id: String!
+  newSlabThickness: Float!
+}
+type InsertLoadDispersal {
+  index: Int!
+  item: LoadDispersal!
+}
+type RemoveLoadDispersal {
+  id: String!
+}
+type ChangeBulkSolidInternalFriction {
+  id: String!
+  newInternalFriction: Float!
+}
+type InsertBulkSolid {
+  index: Int!
+  item: BulkSolid!
+}
+type RemoveBulkSolid {
+  id: String!
+}
+type ChangeRotatingMachineMass {
+  id: String!
+  newMass: Float!
+}
+type ChangeRotatingMachineEccentricity {
+  id: String!
+  newEccentricity: Float!
+}
+type ChangeRotatingMachineFrequency {
+  id: String!
+  newFrequency: Float!
+}
+type InsertRotatingMachine {
+  index: Int!
+  item: RotatingMachine!
+}
+type RemoveRotatingMachine {
+  id: String!
 }

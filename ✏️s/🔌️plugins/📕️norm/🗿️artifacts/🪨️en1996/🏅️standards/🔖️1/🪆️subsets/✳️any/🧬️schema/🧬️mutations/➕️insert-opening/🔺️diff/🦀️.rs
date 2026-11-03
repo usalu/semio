@@ -1,14 +1,19 @@
+//! ➕️ `insert-opening` diff: inserts the opening row; an id the list holds is a `mutation.duplicate-id`.
+
 use crate::insert_opening::InsertOpening;
-use semio_s_artifact_norm_en1996_diff::En1996Diff;
+use semio_s_artifact_norm_en1996_diff::{En1996Diff, En1996OpeningDelta, En1996WallDelta, En1996WallPatch};
 use semio_s_artifact_norm_en1996_model::En1996Snapshot;
-use semio_s_artifact_norm_en1996_diff::{En1996OpeningDelta, En1996WallDelta, En1996WallPatch};
+
 pub fn diff(payload: &InsertOpening, base: &En1996Snapshot) -> protocol::MutationOutcome<En1996Diff> {
-    if payload.wall_index >= base.walls.len() || payload.index > base.walls[payload.wall_index].openings.len() {
-        return protocol::MutationOutcome::fatal("mutation.invariant", String::from("Invalid opening insert."), Vec::<String>::new());
+    let Some(r0) = base.walls.iter().find(|row| row.id == payload.wall_id) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("wall {} does not exist.", payload.wall_id), [payload.wall_id.clone()]);
+    };
+    if r0.openings.iter().any(|existing| existing.id == payload.opening.id) {
+        let key = payload.opening.id.clone();
+        return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("opening {key} already exists."), [key]);
     }
-    let wall = &base.walls[payload.wall_index];
-    if wall.openings.iter().any(|existing| existing.id == payload.opening.id) {
-        return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("Row id {} already exists.", payload.opening.id), [payload.opening.id.clone()]);
+    if payload.index > r0.openings.len() {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Insert index {} is past the end ({} rows).", payload.index, r0.openings.len()), Vec::<String>::new());
     }
-    protocol::MutationOutcome::new(En1996Diff { walls: En1996WallDelta::modification(&wall.id, En1996WallPatch { openings: En1996OpeningDelta::insertion(payload.index, payload.opening.clone()), ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(En1996Diff { walls: En1996WallDelta::modification(&payload.wall_id, En1996WallPatch { openings: En1996OpeningDelta::insertion(payload.index, payload.opening.clone()), ..Default::default() }), ..Default::default() })
 }

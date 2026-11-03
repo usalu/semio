@@ -36,10 +36,10 @@ fn field_meta_covers_every_editable_leaf_on_default_snapshot() {
     assert!(!paths.is_empty());
     for path in &paths {
         let meta = din4108_field_meta(path).unwrap_or_else(|| panic!("missing field meta for {path}"));
-        assert!(!meta.label_en.is_empty(), "{path} en");
-        assert!(!meta.label_de.is_empty(), "{path} de");
-        assert!(!meta.label_en.is_empty() && !meta.label_de.is_empty(), "{path}");
-        if let Some(choices) = meta.choices {
+        assert!(!meta.label.en.is_empty(), "{path} en");
+        assert!(!meta.label.de.is_empty(), "{path} de");
+        assert!(!meta.label.en.is_empty() && !meta.label.de.is_empty(), "{path}");
+        if let Some(choices) = meta.choices() {
             for c in choices {
                 assert_ne!(c.label_en, c.value, "{path} choice {} must be human en", c.value);
                 assert_ne!(c.label_de, c.value, "{path} choice {} must be human de", c.value);

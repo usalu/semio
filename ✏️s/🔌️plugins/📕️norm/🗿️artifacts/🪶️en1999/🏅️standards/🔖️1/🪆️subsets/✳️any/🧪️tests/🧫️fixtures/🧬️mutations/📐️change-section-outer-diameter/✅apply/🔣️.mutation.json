@@ -1,0 +1,5 @@
+{
+  "mutation": "changeSectionOuterDiameter",
+  "sectionId": "sec-i120",
+  "newOuterDiameter": 1.5
+}

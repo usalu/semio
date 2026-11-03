@@ -1,0 +1,16 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-s-plugin-norm-ndp-model"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Norm NDP registry row model: value, source, status and compact row constructors"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"

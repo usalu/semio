@@ -1,0 +1,5 @@
+{
+  "mutation": "changeTestQuantity",
+  "id": "tes-1",
+  "newQuantity": "normal-alt"
+}

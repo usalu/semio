@@ -12,8 +12,8 @@
   "cases": [
     {
       "id": "mixed",
-      "rows": 9,
-      "valueBytes": 1602
+      "rows": 20,
+      "valueBytes": 3192
     },
     {
       "id": "empty",
@@ -23,50 +23,50 @@
     {
       "id": "0000000000000000",
       "word": "0000000000000000",
-      "rows": 9,
-      "valueBytes": 1602
+      "rows": 20,
+      "valueBytes": 3192
     },
     {
       "id": "8000000000000000",
       "word": "8000000000000000",
-      "rows": 9,
-      "valueBytes": 1602
+      "rows": 20,
+      "valueBytes": 3192
     },
     {
       "id": "7ff0000000000000",
       "word": "7ff0000000000000",
-      "rows": 9,
-      "valueBytes": 2152
+      "rows": 20,
+      "valueBytes": 4272
     },
     {
       "id": "fff0000000000000",
       "word": "fff0000000000000",
-      "rows": 9,
-      "valueBytes": 2152
+      "rows": 20,
+      "valueBytes": 4272
     },
     {
       "id": "7ff8000000000042",
       "word": "7ff8000000000042",
-      "rows": 9,
-      "valueBytes": 997
+      "rows": 20,
+      "valueBytes": 2004
     },
     {
       "id": "7ff0000000000001",
       "word": "7ff0000000000001",
-      "rows": 9,
-      "valueBytes": 997
+      "rows": 20,
+      "valueBytes": 2004
     },
     {
       "id": "0000000000000001",
       "word": "0000000000000001",
-      "rows": 9,
-      "valueBytes": 1602
+      "rows": 20,
+      "valueBytes": 3192
     },
     {
       "id": "0010000000000000",
       "word": "0010000000000000",
-      "rows": 9,
-      "valueBytes": 1602
+      "rows": 20,
+      "valueBytes": 3192
     }
   ],
   "annexes": [
@@ -78,5 +78,7 @@
     "minusOne",
     "cumulativeRows"
   ],
-  "allocationPolicy": "independent native backing allowance"
+  "allocationPolicy": "independent native backing allowance",
+  "rcBytes": 3,
+  "pileClassBytes": 5
 }

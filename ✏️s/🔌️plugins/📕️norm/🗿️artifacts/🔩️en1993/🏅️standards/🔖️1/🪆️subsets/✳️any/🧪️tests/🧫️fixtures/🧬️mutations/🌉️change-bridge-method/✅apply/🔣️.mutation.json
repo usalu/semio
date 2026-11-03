@@ -1,0 +1,6 @@
+{
+  "ChangeBridgeMethod": {
+    "id": "br-1",
+    "newMethod": "DamageTolerant"
+  }
+}

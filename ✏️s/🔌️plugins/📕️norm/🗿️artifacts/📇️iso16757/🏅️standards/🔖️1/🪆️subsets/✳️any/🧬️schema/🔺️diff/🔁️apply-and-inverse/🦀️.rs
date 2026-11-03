@@ -4,8 +4,8 @@ use super::*;
 
 /// 🎁️ Carries the optional `SelectionRequest.series_id` value so an explicit `None` stays distinct from an untouched field.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct Iso16757SelectionSeriesIdValue {
     pub value: Option<String>,
@@ -13,8 +13,8 @@ pub struct Iso16757SelectionSeriesIdValue {
 
 /// 🎁️ Carries the optional `ProductClass.parent_id` value so an explicit `None` stays distinct from an untouched field.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct Iso16757ProductClassesPatchParentIdValue {
     pub value: Option<String>,
@@ -22,8 +22,8 @@ pub struct Iso16757ProductClassesPatchParentIdValue {
 
 /// 🎁️ Carries the optional `ProductSeries.geometry_id` value so an explicit `None` stays distinct from an untouched field.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct Iso16757ProductSeriesPatchGeometryIdValue {
     pub value: Option<String>,
@@ -31,8 +31,8 @@ pub struct Iso16757ProductSeriesPatchGeometryIdValue {
 
 /// 🎁️ Carries the optional `ProductIndex.variant_id` value so an explicit `None` stays distinct from an untouched field.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct Iso16757ProductIndexesPatchVariantIdValue {
     pub value: Option<String>,
@@ -40,8 +40,8 @@ pub struct Iso16757ProductIndexesPatchVariantIdValue {
 
 /// 🎁️ Carries the optional `PropertyDefinition.unit` value so an explicit `None` stays distinct from an untouched field.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct Iso16757PropertyDefinitionsPatchUnitValue {
     pub value: Option<semio_s_artifact_norm_iso16757_model::CatalogueUnit>,
@@ -49,8 +49,8 @@ pub struct Iso16757PropertyDefinitionsPatchUnitValue {
 
 /// 🎁️ Carries the optional `PropertyDefinition.dictionary_property_id` value so an explicit `None` stays distinct from an untouched field.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct Iso16757PropertyDefinitionsPatchDictionaryPropertyIdValue {
     pub value: Option<String>,
@@ -58,8 +58,8 @@ pub struct Iso16757PropertyDefinitionsPatchDictionaryPropertyIdValue {
 
 /// 🎁️ Carries the optional `Subject.parent_id` value so an explicit `None` stays distinct from an untouched field.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct Iso16757SubjectsPatchParentIdValue {
     pub value: Option<String>,

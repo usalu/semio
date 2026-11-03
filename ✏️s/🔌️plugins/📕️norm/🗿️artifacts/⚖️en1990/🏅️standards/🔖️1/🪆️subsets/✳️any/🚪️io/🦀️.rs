@@ -102,8 +102,7 @@ pub mod binary;
 
 pub use semio_s_artifact_norm_en1990_io_text as text;
 
-#[path = "🪶️sqlite/🦀️.rs"]
-pub mod sqlite;
+pub use semio_s_artifact_norm_en1990_model::sqlite;
 
 pub mod derived_construction {
     use semio_s_artifact_norm_en1990_diff::En1990Diff;
@@ -111,7 +110,7 @@ pub mod derived_construction {
     use semio_s_artifact_norm_en1990_model::En1990Snapshot;
     use semio_framework_plugin::ArtifactBuilder;
 
-    #[derive(Clone, Debug, Default)]
+    #[derive(Clone, Debug)]
     pub struct En1990BuilderConstruction {
         snapshot: En1990Snapshot,
         diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
@@ -122,7 +121,7 @@ pub mod derived_construction {
         type Mutation = En1990Mutation;
         type Diff = En1990Diff;
         fn empty() -> Self {
-            Self { snapshot: En1990Snapshot::default(), diagnostics: Vec::new() }
+            Self { snapshot: En1990Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De), diagnostics: Vec::new() }
         }
         fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }
@@ -215,4 +214,4 @@ semio_framework_plugin::derive_artifact_facets!(
     composer: En1990Composer,
 );
 
-pub use mutation_bridge::*;
+pub use semio_s_artifact_norm_en1990_mutations::mutation_bridge::*;

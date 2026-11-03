@@ -1,0 +1,6 @@
+{
+  "mutation": "changeConnActionVZK",
+  "connectionId": "support-weld",
+  "actionId": "G-conn",
+  "newVZK": 7000.0
+}

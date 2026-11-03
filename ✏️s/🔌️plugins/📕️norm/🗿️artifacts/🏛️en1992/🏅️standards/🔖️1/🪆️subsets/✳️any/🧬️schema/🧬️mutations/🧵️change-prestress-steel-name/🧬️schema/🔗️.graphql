@@ -1,0 +1,4 @@
+type ChangePrestressSteelName {
+  gradeId: String!
+  newName: String!
+}

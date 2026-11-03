@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-structure-id/schema.json",
+  "title": "ChangeStructureId",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "newStructureId"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeStructureId"
+    },
+    "newStructureId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Structure id",
+          "de": "Bauwerkskennung"
+        },
+        "description": {
+          "en": "The identifier of the geotechnical structure this document describes.",
+          "de": "Die Kennung des geotechnischen Bauwerks, das dieses Dokument beschreibt."
+        },
+        "group": "value",
+        "order": 10
+      }
+    }
+  }
+}

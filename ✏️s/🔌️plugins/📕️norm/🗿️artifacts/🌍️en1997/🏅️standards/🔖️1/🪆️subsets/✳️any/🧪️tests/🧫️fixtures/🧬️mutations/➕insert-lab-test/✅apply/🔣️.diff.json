@@ -1,0 +1,68 @@
+{
+  "structureId": null,
+  "geotechnicalCategory": null,
+  "designSituation": null,
+  "designApproach": null,
+  "annex": null,
+  "groundwaterLevel": null,
+  "investigationDepth": null,
+  "layers": null,
+  "footings": null,
+  "piles": null,
+  "retainingWalls": null,
+  "slopes": null,
+  "upliftCases": null,
+  "anchors": null,
+  "embeddedWalls": null,
+  "pileGroups": null,
+  "labTests": {
+    "removed": [],
+    "inserted": [
+      {
+        "index": 1,
+        "row": {
+          "id": "lab-T1-2",
+          "layerId": "layer-sand",
+          "kind": "directShear",
+          "voidRatio": 0.65,
+          "preloadStress": 100000.0,
+          "drainageHeight": 0.01,
+          "consolidationTime": 120.0,
+          "compressionIndex": 0.0,
+          "swellingIndex": 0.0,
+          "stressIncrement": 0.0,
+          "secondaryCompressionIndex": 0.0,
+          "designLife": 0.0,
+          "points": [
+            {
+              "id": "pt-1",
+              "normalStress": 50000.0,
+              "shearStress": 32500.0
+            },
+            {
+              "id": "pt-2",
+              "normalStress": 100000.0,
+              "shearStress": 65000.0
+            },
+            {
+              "id": "pt-3",
+              "normalStress": 200000.0,
+              "shearStress": 130000.0
+            }
+          ]
+        }
+      }
+    ],
+    "moved": [],
+    "modified": []
+  },
+  "layerWaters": null,
+  "cases": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "investigations": null,
+  "characteristicBases": null
+}

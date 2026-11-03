@@ -1,0 +1,25 @@
+{
+  "artifact": "en1998",
+  "leaf": {
+    "kindSlug": "foundation",
+    "donor": "change-foundation-pile-head-shear-n",
+    "after": "basePorePressurePa",
+    "default": 0.0,
+    "field": {
+      "name": "pile_axial_load_n",
+      "type": "f64",
+      "unit": "N",
+      "label": {
+        "en": "Pile axial load N_Ed",
+        "de": "Pfahlnormalkraft N_Ed"
+      },
+      "doc": "⬇️ Design axial force N_Ed [N] at the pile head; with the liquefied thickness it gives the buckling of the pile in liquefied soil (EN 1998-5 5.4.2).",
+      "precision": 1,
+      "step": 1000,
+      "range": [
+        0,
+        1000000000.0
+      ]
+    }
+  }
+}

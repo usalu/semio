@@ -1,0 +1,5 @@
+{
+  "mutation": "changeConnBoltsEdgeDistance",
+  "connectionId": "support-weld",
+  "newBoltsEdgeDistance": 0.048
+}

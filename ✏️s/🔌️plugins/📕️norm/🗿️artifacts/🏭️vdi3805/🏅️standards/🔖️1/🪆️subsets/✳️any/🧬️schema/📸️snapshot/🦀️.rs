@@ -12,8 +12,8 @@ use framework_schema::ArtifactSchema;
 use std::collections::BTreeMap;
 
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ArtifactSchema, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[dsl(id = "norm.vdi3805", layout = "lines")]
 #[artifact_schema(id = "s.norm.vdi3805")]
@@ -90,7 +90,7 @@ pub use reference_dataset::{
 
 //#region 🍃️FacetLeaves
 /// 🍃️ The five handcrafted leaves of the `snapshot` schema facet.
-pub const SNAPSHOT_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: concat!(include_str!("🦀️.rs"), include_str!("🔤️localized-text-and-units/🦀️.rs"), include_str!("🏷️product-identity-and-links/🦀️.rs"), include_str!("🛡️limits-and-code-tables/🦀️.rs"), include_str!("🗂️sheet-registry/🦀️.rs"), include_str!("🧾️record-families/🦀️.rs"), include_str!("🧮️sheet-attributes/🦀️.rs"), include_str!("📚️catalog-model/🦀️.rs"), include_str!("🩺️diagnostics-and-edition-profile/🦀️.rs"), include_str!("🧪️reference-fixture/🦀️.rs")), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };
+pub const SNAPSHOT_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: concat!(include_str!("🦀️.rs"), include_str!("🔤️localized-text-and-units/🦀️.rs"), include_str!("🏷️product-identity-and-links/🦀️.rs"), include_str!("🛡️limits-and-code-tables/🦀️.rs"), include_str!("🗂️sheet-registry/🦀️.rs"), include_str!("🧾️record-families/🦀️.rs"), include_str!("🧮️sheet-attributes/🦀️.rs"), include_str!("📚️catalog-model/🦀️.rs"), include_str!("🩺️diagnostics-and-edition-profile/🦀️.rs"), include_str!("🧪️reference-fixture/🦀️.rs")), typescript: semio_s_artifact_norm_vdi3805_model_typescript::LEAF, graphql: semio_s_artifact_norm_vdi3805_model_graphql::LEAF, json_schema: semio_s_artifact_norm_vdi3805_model_json_schema::LEAF, proto: semio_s_artifact_norm_vdi3805_model_proto::LEAF };
 //#endregion 🍃️FacetLeaves
 
 use semio_s_plugin_norm_app_surface as app_surface;

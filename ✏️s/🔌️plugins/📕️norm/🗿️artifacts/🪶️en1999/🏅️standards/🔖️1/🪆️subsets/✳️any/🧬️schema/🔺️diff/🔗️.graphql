@@ -1,363 +1,689 @@
-# 🧬️ En1999 diff schema — keyed sparse diff: scalar setters, id/index/key keyed row diffs and per-field section patches.
+scalar JSON
 
-type En1999MaterialsPatch {
-  designation: String
+type En1999Diff {
+  annex: JSON
+  materials: En1999MaterialsRows
+  sections: En1999SectionsRows
+  members: En1999MembersRows
+  connections: En1999ConnectionsRows
+  fireScenarios: En1999FireScenariosRows
+  fatigueDetails: En1999FatigueDetailsRows
+  coldFormed: En1999ColdFormedRows
+  shells: En1999ShellsRows
+  placements: En1999PlacementsRows
+  weldRuns: En1999WeldRunsRows
+  outlineVertices: En1999OutlineVerticesRows
+  fatigueCategories: En1999FatigueCategoriesRows
+  patchLoads: En1999PatchLoadsRows
+  ringStiffeners: En1999RingStiffenersRows
+  transverseStiffeners: En1999TransverseStiffenersRows
+  reliabilityClass: JSON
 }
-
-type En1999MaterialsRemoved {
-  id: String!
-  index: Int!
-}
-
-type En1999MaterialsInserted {
-  index: Int!
-  row: AluminiumMaterial!
-}
-
-type En1999MaterialsMoved {
-  id: String!
-  from: Int!
-  to: Int!
-}
-
-type En1999MaterialsModified {
-  id: String!
-  patch: En1999MaterialsPatch!
-}
-
-type En1999MaterialsRows {
-  removed: [En1999MaterialsRemoved!]!
-  inserted: [En1999MaterialsInserted!]!
-  moved: [En1999MaterialsMoved!]!
-  modified: [En1999MaterialsModified!]!
-}
-
-type En1999SectionsElementsPatch {
-  thickness: Float
-}
-
-type En1999SectionsElementsRemoved {
-  id: String!
-  index: Int!
-}
-
-type En1999SectionsElementsInserted {
-  index: Int!
-  row: PlateElement!
-}
-
-type En1999SectionsElementsMoved {
-  id: String!
-  from: Int!
-  to: Int!
-}
-
-type En1999SectionsElementsModified {
-  id: String!
-  patch: En1999SectionsElementsPatch!
-}
-
-type En1999SectionsElementsRows {
-  removed: [En1999SectionsElementsRemoved!]!
-  inserted: [En1999SectionsElementsInserted!]!
-  moved: [En1999SectionsElementsMoved!]!
-  modified: [En1999SectionsElementsModified!]!
-}
-
-type En1999SectionsPatch {
-  kind: String
-  height: Float
-  width: Float
-  flangeThickness: Float
-  webThickness: Float
-  outerDiameter: Float
-  elements: En1999SectionsElementsRows
-}
-
-type En1999SectionsRemoved {
-  id: String!
-  index: Int!
-}
-
-type En1999SectionsInserted {
-  index: Int!
-  row: AluminiumSection!
-}
-
-type En1999SectionsMoved {
-  id: String!
-  from: Int!
-  to: Int!
-}
-
-type En1999SectionsModified {
-  id: String!
-  patch: En1999SectionsPatch!
-}
-
-type En1999SectionsRows {
-  removed: [En1999SectionsRemoved!]!
-  inserted: [En1999SectionsInserted!]!
-  moved: [En1999SectionsMoved!]!
-  modified: [En1999SectionsModified!]!
-}
-
-type En1999MembersActionsPatch {
-  nK: Float
-  mYK: Float
-}
-
-type En1999MembersActionsRemoved {
-  id: String!
-  index: Int!
-}
-
-type En1999MembersActionsInserted {
+type En1999ColdFormedActionsInserted {
   index: Int!
   row: MemberAction!
 }
-
-type En1999MembersActionsMoved {
+type En1999ColdFormedActionsModified {
+  id: String!
+  patch: En1999ColdFormedActionsPatch!
+}
+type En1999ColdFormedActionsMoved {
   id: String!
   from: Int!
   to: Int!
 }
-
-type En1999MembersActionsModified {
-  id: String!
-  patch: En1999MembersActionsPatch!
+type En1999ColdFormedActionsPatch {
+  kind: JSON
+  category: JSON
+  source: JSON
+  gKLine: JSON
+  qKLine: JSON
+  nK: JSON
+  vYK: JSON
+  vZK: JSON
+  mYK: JSON
+  mZK: JSON
+  torsionK: JSON
+  localLoadK: JSON
 }
-
-type En1999MembersActionsRows {
-  removed: [En1999MembersActionsRemoved!]!
-  inserted: [En1999MembersActionsInserted!]!
-  moved: [En1999MembersActionsMoved!]!
-  modified: [En1999MembersActionsModified!]!
-}
-
-type En1999MembersPatch {
-  bucklingLengthY: Float
-  bucklingLengthZ: Float
-  bucklingLengthT: Float
-  ltbLength: Float
-  actions: En1999MembersActionsRows
-}
-
-type En1999MembersRemoved {
+type En1999ColdFormedActionsRemoved {
   id: String!
   index: Int!
 }
-
-type En1999MembersInserted {
-  index: Int!
-  row: AluminiumMember!
+type En1999ColdFormedActionsRows {
+  removed: [En1999ColdFormedActionsRemoved!]!
+  inserted: [En1999ColdFormedActionsInserted!]!
+  moved: [En1999ColdFormedActionsMoved!]!
+  modified: [En1999ColdFormedActionsModified!]!
 }
-
-type En1999MembersMoved {
-  id: String!
-  from: Int!
-  to: Int!
-}
-
-type En1999MembersModified {
-  id: String!
-  patch: En1999MembersPatch!
-}
-
-type En1999MembersRows {
-  removed: [En1999MembersRemoved!]!
-  inserted: [En1999MembersInserted!]!
-  moved: [En1999MembersMoved!]!
-  modified: [En1999MembersModified!]!
-}
-
-type En1999ConnectionsPatch {
-  weldsThroat: Float
-  boltsRows: Int
-  boltsBoltsPerRow: Int
-}
-
-type En1999ConnectionsRemoved {
-  id: String!
-  index: Int!
-}
-
-type En1999ConnectionsInserted {
-  index: Int!
-  row: AluminiumConnection!
-}
-
-type En1999ConnectionsMoved {
-  id: String!
-  from: Int!
-  to: Int!
-}
-
-type En1999ConnectionsModified {
-  id: String!
-  patch: En1999ConnectionsPatch!
-}
-
-type En1999ConnectionsRows {
-  removed: [En1999ConnectionsRemoved!]!
-  inserted: [En1999ConnectionsInserted!]!
-  moved: [En1999ConnectionsMoved!]!
-  modified: [En1999ConnectionsModified!]!
-}
-
-type En1999FireScenariosPatch {
-  memberId: String
-  thetaA: Float
-  durationS: Float
-}
-
-type En1999FireScenariosRemoved {
-  id: String!
-  index: Int!
-}
-
-type En1999FireScenariosInserted {
-  index: Int!
-  row: FireScenario!
-}
-
-type En1999FireScenariosMoved {
-  id: String!
-  from: Int!
-  to: Int!
-}
-
-type En1999FireScenariosModified {
-  id: String!
-  patch: En1999FireScenariosPatch!
-}
-
-type En1999FireScenariosRows {
-  removed: [En1999FireScenariosRemoved!]!
-  inserted: [En1999FireScenariosInserted!]!
-  moved: [En1999FireScenariosMoved!]!
-  modified: [En1999FireScenariosModified!]!
-}
-
-type En1999FatigueDetailsPatch {
-  memberId: String
-  detailCategory: String
-  deltaSigmaC: Float
-  deltaSigmaEd: Float
-  nCycles: Float
-  m1: Float
-  m2: Float
-}
-
-type En1999FatigueDetailsRemoved {
-  id: String!
-  index: Int!
-}
-
-type En1999FatigueDetailsInserted {
-  index: Int!
-  row: FatigueDetail!
-}
-
-type En1999FatigueDetailsMoved {
-  id: String!
-  from: Int!
-  to: Int!
-}
-
-type En1999FatigueDetailsModified {
-  id: String!
-  patch: En1999FatigueDetailsPatch!
-}
-
-type En1999FatigueDetailsRows {
-  removed: [En1999FatigueDetailsRemoved!]!
-  inserted: [En1999FatigueDetailsInserted!]!
-  moved: [En1999FatigueDetailsMoved!]!
-  modified: [En1999FatigueDetailsModified!]!
-}
-
-type En1999ColdFormedPatch {
-  materialId: String
-  thickness: Float
-  width: Float
-  span: Float
-  welded: Boolean
-  actions: [MemberAction!]
-}
-
-type En1999ColdFormedRemoved {
-  id: String!
-  index: Int!
-}
-
 type En1999ColdFormedInserted {
   index: Int!
   row: ColdFormedSheet!
 }
-
+type En1999ColdFormedModified {
+  id: String!
+  patch: En1999ColdFormedPatch!
+}
 type En1999ColdFormedMoved {
   id: String!
   from: Int!
   to: Int!
 }
-
-type En1999ColdFormedModified {
-  id: String!
-  patch: En1999ColdFormedPatch!
+type En1999ColdFormedPatch {
+  materialId: JSON
+  thickness: JSON
+  width: JSON
+  span: JSON
+  welded: JSON
+  actions: En1999ColdFormedActionsRows
 }
-
+type En1999ColdFormedRemoved {
+  id: String!
+  index: Int!
+}
 type En1999ColdFormedRows {
   removed: [En1999ColdFormedRemoved!]!
   inserted: [En1999ColdFormedInserted!]!
   moved: [En1999ColdFormedMoved!]!
   modified: [En1999ColdFormedModified!]!
 }
-
-type En1999ShellsPatch {
-  materialId: String
-  radius: Float
-  thickness: Float
-  length: Float
-  actions: [MemberAction!]
+type En1999ConnectionsActionsInserted {
+  index: Int!
+  row: MemberAction!
 }
-
-type En1999ShellsRemoved {
+type En1999ConnectionsActionsModified {
+  id: String!
+  patch: En1999ConnectionsActionsPatch!
+}
+type En1999ConnectionsActionsMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1999ConnectionsActionsPatch {
+  kind: JSON
+  category: JSON
+  source: JSON
+  gKLine: JSON
+  qKLine: JSON
+  nK: JSON
+  vYK: JSON
+  vZK: JSON
+  mYK: JSON
+  mZK: JSON
+  torsionK: JSON
+  localLoadK: JSON
+}
+type En1999ConnectionsActionsRemoved {
   id: String!
   index: Int!
 }
-
+type En1999ConnectionsActionsRows {
+  removed: [En1999ConnectionsActionsRemoved!]!
+  inserted: [En1999ConnectionsActionsInserted!]!
+  moved: [En1999ConnectionsActionsMoved!]!
+  modified: [En1999ConnectionsActionsModified!]!
+}
+type En1999ConnectionsInserted {
+  index: Int!
+  row: AluminiumConnection!
+}
+type En1999ConnectionsModified {
+  id: String!
+  patch: En1999ConnectionsPatch!
+}
+type En1999ConnectionsMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1999ConnectionsPatch {
+  memberId: JSON
+  materialId: JSON
+  kind: JSON
+  boltsMaterial: JSON
+  boltsDiameter: JSON
+  boltsRows: JSON
+  boltsBoltsPerRow: JSON
+  boltsEdgeDistance: JSON
+  boltsPitch: JSON
+  boltsGauge: JSON
+  boltsPlateThickness: JSON
+  weldsFillerAlloy: JSON
+  weldsThroat: JSON
+  weldsLength: JSON
+  weldsBetaW: JSON
+  weldsHazExtent: JSON
+  actions: En1999ConnectionsActionsRows
+  loadEccentricity: JSON
+  holeStagger: JSON
+  forceMethod: JSON
+}
+type En1999ConnectionsRemoved {
+  id: String!
+  index: Int!
+}
+type En1999ConnectionsRows {
+  removed: [En1999ConnectionsRemoved!]!
+  inserted: [En1999ConnectionsInserted!]!
+  moved: [En1999ConnectionsMoved!]!
+  modified: [En1999ConnectionsModified!]!
+}
+type En1999FatigueCategoriesInserted {
+  index: Int!
+  row: FatigueCategory!
+}
+type En1999FatigueCategoriesModified {
+  id: String!
+  patch: En1999FatigueCategoriesPatch!
+}
+type En1999FatigueCategoriesMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1999FatigueCategoriesPatch {
+  memberId: JSON
+  elementId: JSON
+  detailCategory: JSON
+  detailType: JSON
+  locationX: JSON
+  m1: JSON
+  m2: JSON
+}
+type En1999FatigueCategoriesRemoved {
+  id: String!
+  index: Int!
+}
+type En1999FatigueCategoriesRows {
+  removed: [En1999FatigueCategoriesRemoved!]!
+  inserted: [En1999FatigueCategoriesInserted!]!
+  moved: [En1999FatigueCategoriesMoved!]!
+  modified: [En1999FatigueCategoriesModified!]!
+}
+type En1999FatigueDetailsInserted {
+  index: Int!
+  row: FatigueDetail!
+}
+type En1999FatigueDetailsModified {
+  id: String!
+  patch: En1999FatigueDetailsPatch!
+}
+type En1999FatigueDetailsMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1999FatigueDetailsPatch {
+  memberId: JSON
+  detailCategory: JSON
+  deltaSigmaC: JSON
+  deltaSigmaEd: JSON
+  nCycles: JSON
+  m1: JSON
+  m2: JSON
+}
+type En1999FatigueDetailsRemoved {
+  id: String!
+  index: Int!
+}
+type En1999FatigueDetailsRows {
+  removed: [En1999FatigueDetailsRemoved!]!
+  inserted: [En1999FatigueDetailsInserted!]!
+  moved: [En1999FatigueDetailsMoved!]!
+  modified: [En1999FatigueDetailsModified!]!
+}
+type En1999FireScenariosInserted {
+  index: Int!
+  row: FireScenario!
+}
+type En1999FireScenariosModified {
+  id: String!
+  patch: En1999FireScenariosPatch!
+}
+type En1999FireScenariosMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1999FireScenariosPatch {
+  memberId: JSON
+  thetaA: JSON
+  durationS: JSON
+}
+type En1999FireScenariosRemoved {
+  id: String!
+  index: Int!
+}
+type En1999FireScenariosRows {
+  removed: [En1999FireScenariosRemoved!]!
+  inserted: [En1999FireScenariosInserted!]!
+  moved: [En1999FireScenariosMoved!]!
+  modified: [En1999FireScenariosModified!]!
+}
+type En1999MaterialsInserted {
+  index: Int!
+  row: AluminiumMaterial!
+}
+type En1999MaterialsModified {
+  id: String!
+  patch: En1999MaterialsPatch!
+}
+type En1999MaterialsMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1999MaterialsPatch {
+  designation: JSON
+  productForm: JSON
+}
+type En1999MaterialsRemoved {
+  id: String!
+  index: Int!
+}
+type En1999MaterialsRows {
+  removed: [En1999MaterialsRemoved!]!
+  inserted: [En1999MaterialsInserted!]!
+  moved: [En1999MaterialsMoved!]!
+  modified: [En1999MaterialsModified!]!
+}
+type En1999MembersActionsInserted {
+  index: Int!
+  row: MemberAction!
+}
+type En1999MembersActionsModified {
+  id: String!
+  patch: En1999MembersActionsPatch!
+}
+type En1999MembersActionsMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1999MembersActionsPatch {
+  kind: JSON
+  category: JSON
+  source: JSON
+  gKLine: JSON
+  qKLine: JSON
+  nK: JSON
+  vYK: JSON
+  vZK: JSON
+  mYK: JSON
+  mZK: JSON
+  torsionK: JSON
+  localLoadK: JSON
+}
+type En1999MembersActionsRemoved {
+  id: String!
+  index: Int!
+}
+type En1999MembersActionsRows {
+  removed: [En1999MembersActionsRemoved!]!
+  inserted: [En1999MembersActionsInserted!]!
+  moved: [En1999MembersActionsMoved!]!
+  modified: [En1999MembersActionsModified!]!
+}
+type En1999MembersInserted {
+  index: Int!
+  row: AluminiumMember!
+}
+type En1999MembersModified {
+  id: String!
+  patch: En1999MembersPatch!
+}
+type En1999MembersMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1999MembersPatch {
+  sectionId: JSON
+  materialId: JSON
+  length: JSON
+  support: JSON
+  bucklingLengthY: JSON
+  bucklingLengthZ: JSON
+  bucklingLengthT: JSON
+  ltbLength: JSON
+  c1: JSON
+  restrainedLtb: JSON
+  bearingLength: JSON
+  transverseWeld: JSON
+  transverseWeldOffset: JSON
+  actions: En1999MembersActionsRows
+}
+type En1999MembersRemoved {
+  id: String!
+  index: Int!
+}
+type En1999MembersRows {
+  removed: [En1999MembersRemoved!]!
+  inserted: [En1999MembersInserted!]!
+  moved: [En1999MembersMoved!]!
+  modified: [En1999MembersModified!]!
+}
+type En1999OutlineVerticesInserted {
+  index: Int!
+  row: SectionVertex!
+}
+type En1999OutlineVerticesModified {
+  id: String!
+  patch: En1999OutlineVerticesPatch!
+}
+type En1999OutlineVerticesMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1999OutlineVerticesPatch {
+  sectionId: JSON
+  ring: JSON
+  elementId: JSON
+  y: JSON
+  z: JSON
+}
+type En1999OutlineVerticesRemoved {
+  id: String!
+  index: Int!
+}
+type En1999OutlineVerticesRows {
+  removed: [En1999OutlineVerticesRemoved!]!
+  inserted: [En1999OutlineVerticesInserted!]!
+  moved: [En1999OutlineVerticesMoved!]!
+  modified: [En1999OutlineVerticesModified!]!
+}
+type En1999PatchLoadsInserted {
+  index: Int!
+  row: PatchLoad!
+}
+type En1999PatchLoadsModified {
+  id: String!
+  patch: En1999PatchLoadsPatch!
+}
+type En1999PatchLoadsMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1999PatchLoadsPatch {
+  subjectId: JSON
+  position: JSON
+  x: JSON
+  bearingLength: JSON
+  webHeight: JSON
+  webAngle: JSON
+  cornerRadius: JSON
+  load: JSON
+}
+type En1999PatchLoadsRemoved {
+  id: String!
+  index: Int!
+}
+type En1999PatchLoadsRows {
+  removed: [En1999PatchLoadsRemoved!]!
+  inserted: [En1999PatchLoadsInserted!]!
+  moved: [En1999PatchLoadsMoved!]!
+  modified: [En1999PatchLoadsModified!]!
+}
+type En1999PlacementsInserted {
+  index: Int!
+  row: Placement!
+}
+type En1999PlacementsModified {
+  id: String!
+  patch: En1999PlacementsPatch!
+}
+type En1999PlacementsMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1999PlacementsPatch {
+  x: JSON
+  y: JSON
+  z: JSON
+  yaw: JSON
+}
+type En1999PlacementsRemoved {
+  id: String!
+  index: Int!
+}
+type En1999PlacementsRows {
+  removed: [En1999PlacementsRemoved!]!
+  inserted: [En1999PlacementsInserted!]!
+  moved: [En1999PlacementsMoved!]!
+  modified: [En1999PlacementsModified!]!
+}
+type En1999RingStiffenersInserted {
+  index: Int!
+  row: RingStiffener!
+}
+type En1999RingStiffenersModified {
+  id: String!
+  patch: En1999RingStiffenersPatch!
+}
+type En1999RingStiffenersMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1999RingStiffenersPatch {
+  shellId: JSON
+  x: JSON
+  depth: JSON
+  thickness: JSON
+  internal: JSON
+}
+type En1999RingStiffenersRemoved {
+  id: String!
+  index: Int!
+}
+type En1999RingStiffenersRows {
+  removed: [En1999RingStiffenersRemoved!]!
+  inserted: [En1999RingStiffenersInserted!]!
+  moved: [En1999RingStiffenersMoved!]!
+  modified: [En1999RingStiffenersModified!]!
+}
+type En1999SectionsElementsInserted {
+  index: Int!
+  row: PlateElement!
+}
+type En1999SectionsElementsModified {
+  id: String!
+  patch: En1999SectionsElementsPatch!
+}
+type En1999SectionsElementsMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1999SectionsElementsPatch {
+  width: JSON
+  thickness: JSON
+  outstand: JSON
+  welded: JSON
+  weldPosition: JSON
+  weldProcess: JSON
+  weldTJunction: JSON
+  weldDirection: JSON
+  edgeStiffenerDepth: JSON
+  edgeStiffenerThickness: JSON
+}
+type En1999SectionsElementsRemoved {
+  id: String!
+  index: Int!
+}
+type En1999SectionsElementsRows {
+  removed: [En1999SectionsElementsRemoved!]!
+  inserted: [En1999SectionsElementsInserted!]!
+  moved: [En1999SectionsElementsMoved!]!
+  modified: [En1999SectionsElementsModified!]!
+}
+type En1999SectionsInserted {
+  index: Int!
+  row: AluminiumSection!
+}
+type En1999SectionsModified {
+  id: String!
+  patch: En1999SectionsPatch!
+}
+type En1999SectionsMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1999SectionsPatch {
+  kind: JSON
+  height: JSON
+  width: JSON
+  flangeThickness: JSON
+  webThickness: JSON
+  outerDiameter: JSON
+  elements: En1999SectionsElementsRows
+}
+type En1999SectionsRemoved {
+  id: String!
+  index: Int!
+}
+type En1999SectionsRows {
+  removed: [En1999SectionsRemoved!]!
+  inserted: [En1999SectionsInserted!]!
+  moved: [En1999SectionsMoved!]!
+  modified: [En1999SectionsModified!]!
+}
+type En1999ShellsActionsInserted {
+  index: Int!
+  row: MemberAction!
+}
+type En1999ShellsActionsModified {
+  id: String!
+  patch: En1999ShellsActionsPatch!
+}
+type En1999ShellsActionsMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1999ShellsActionsPatch {
+  kind: JSON
+  category: JSON
+  source: JSON
+  gKLine: JSON
+  qKLine: JSON
+  nK: JSON
+  vYK: JSON
+  vZK: JSON
+  mYK: JSON
+  mZK: JSON
+  torsionK: JSON
+  localLoadK: JSON
+}
+type En1999ShellsActionsRemoved {
+  id: String!
+  index: Int!
+}
+type En1999ShellsActionsRows {
+  removed: [En1999ShellsActionsRemoved!]!
+  inserted: [En1999ShellsActionsInserted!]!
+  moved: [En1999ShellsActionsMoved!]!
+  modified: [En1999ShellsActionsModified!]!
+}
 type En1999ShellsInserted {
   index: Int!
   row: AluminiumShell!
 }
-
+type En1999ShellsModified {
+  id: String!
+  patch: En1999ShellsPatch!
+}
 type En1999ShellsMoved {
   id: String!
   from: Int!
   to: Int!
 }
-
-type En1999ShellsModified {
-  id: String!
-  patch: En1999ShellsPatch!
+type En1999ShellsPatch {
+  materialId: JSON
+  radius: JSON
+  thickness: JSON
+  length: JSON
+  welded: JSON
+  fabricationClass: JSON
+  actions: En1999ShellsActionsRows
 }
-
+type En1999ShellsRemoved {
+  id: String!
+  index: Int!
+}
 type En1999ShellsRows {
   removed: [En1999ShellsRemoved!]!
   inserted: [En1999ShellsInserted!]!
   moved: [En1999ShellsMoved!]!
   modified: [En1999ShellsModified!]!
 }
-
-type En1999Diff {
-  annex: AnnexChoice @state(class: ARTIFACT)
-  materials: En1999MaterialsRows @state(class: ARTIFACT)
-  sections: En1999SectionsRows @state(class: ARTIFACT)
-  members: En1999MembersRows @state(class: ARTIFACT)
-  connections: En1999ConnectionsRows @state(class: ARTIFACT)
-  fireScenarios: En1999FireScenariosRows @state(class: ARTIFACT)
-  fatigueDetails: En1999FatigueDetailsRows @state(class: ARTIFACT)
-  coldFormed: En1999ColdFormedRows @state(class: ARTIFACT)
-  shells: En1999ShellsRows @state(class: ARTIFACT)
+type En1999TransverseStiffenersInserted {
+  index: Int!
+  row: TransverseStiffener!
+}
+type En1999TransverseStiffenersModified {
+  id: String!
+  patch: En1999TransverseStiffenersPatch!
+}
+type En1999TransverseStiffenersMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1999TransverseStiffenersPatch {
+  girderId: JSON
+  position: JSON
+  width: JSON
+  thickness: JSON
+  sides: JSON
+}
+type En1999TransverseStiffenersRemoved {
+  id: String!
+  index: Int!
+}
+type En1999TransverseStiffenersRows {
+  removed: [En1999TransverseStiffenersRemoved!]!
+  inserted: [En1999TransverseStiffenersInserted!]!
+  moved: [En1999TransverseStiffenersMoved!]!
+  modified: [En1999TransverseStiffenersModified!]!
+}
+type En1999WeldRunsInserted {
+  index: Int!
+  row: WeldRun!
+}
+type En1999WeldRunsModified {
+  id: String!
+  patch: En1999WeldRunsPatch!
+}
+type En1999WeldRunsMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1999WeldRunsPatch {
+  memberId: JSON
+  elementId: JSON
+  start: JSON
+  length: JSON
+  offset: JSON
+  throat: JSON
+  process: JSON
+  tJunction: JSON
+  direction: JSON
+  hazExtent: JSON
+}
+type En1999WeldRunsRemoved {
+  id: String!
+  index: Int!
+}
+type En1999WeldRunsRows {
+  removed: [En1999WeldRunsRemoved!]!
+  inserted: [En1999WeldRunsInserted!]!
+  moved: [En1999WeldRunsMoved!]!
+  modified: [En1999WeldRunsModified!]!
 }

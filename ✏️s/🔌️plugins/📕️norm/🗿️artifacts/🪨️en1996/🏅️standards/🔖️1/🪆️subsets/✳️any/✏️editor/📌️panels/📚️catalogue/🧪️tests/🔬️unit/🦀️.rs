@@ -1,6 +1,6 @@
 use crate::panels::catalogue::*;
 use semio_s_plugin_norm_app_surface::CatalogueCell;
-use semio_s_artifact_norm_en1996_schema::checks::masonry::{evaluate_building, fire_min_thickness_m};
+use semio_s_artifact_norm_en1996_schema::checks::masonry::{evaluate_building, f_vlt_mpa, fire_min_thickness_m};
 use crate::unit_tests::context;
 use semio_s_artifact_norm_en1996_model::{En1996Snapshot, UnitMaterial};
 
@@ -51,7 +51,7 @@ fn reference_tables_cells_match_evaluate_sources() {
         panic!("clay t_min cell must be Number");
     };
     assert_eq!(*t_min, fire_min_thickness_m(90, UnitMaterial::Clay));
-    assert!((*t_min - 0.140).abs() < 1e-12);
+    assert!((*t_min - 0.150).abs() < 1e-12);
 
     let gamma = tables.iter().find(|t| t.id == "de-gamma-m-by-class").expect("γ_M table");
     let class1 = gamma.rows.iter().find(|r| r.id == "Class1").expect("Class1 row");
@@ -65,14 +65,14 @@ fn reference_tables_cells_match_evaluate_sources() {
     let CatalogueCell::Number { value: psi0, .. } = &cat_e.cells[1] else {
         panic!("ψ₀ cell must be Number");
     };
-    assert_eq!(*psi0, semio_s_artifact_norm_en1996_schema::checks::masonry::psi0_imposed("E"));
+    assert_eq!(*psi0, semio_s_artifact_norm_en1996_schema::checks::masonry::psi0_imposed(semio_s_plugin_norm_compliance::AnnexChoice::De, "E"));
 
     let cap = tables.iter().find(|t| t.id == "f-vk-de-cap").expect("f_vk cap table");
     let row = &cap.rows[0];
     let CatalogueCell::Number { value: ratio, .. } = &row.cells[1] else {
         panic!("cap ratio cell must be Number");
     };
-    assert_eq!(*ratio, semio_s_artifact_norm_en1996_schema::checks::masonry::F_VLT_OVER_FB_DE);
+    assert_eq!(*ratio, f_vlt_mpa(semio_s_plugin_norm_compliance::AnnexChoice::De, semio_s_artifact_norm_en1996_model::UnitGroup::Group2, 1.0, 0.0));
 
     let fk = tables.iter().find(|t| t.id == "fk-factors-de-en").expect("f_k factors");
     let de_clay = fk.rows.iter().find(|r| r.id == "de-clay-g1-gp").expect("DE clay G1");
@@ -93,7 +93,7 @@ fn reference_tables_cells_match_evaluate_sources() {
     let mut matched = false;
     for mult in 1..=80 {
         doc.walls[0].load_cases[0].g_k_slab_n = base_g * (mult as f64);
-        let report = evaluate_building(doc.annex, doc.masonry_class, doc.design_situation, doc.storeys, &doc.walls);
+        let report = evaluate_building(doc.annex, doc.masonry_class, doc.design_situation, doc.reliability_class, doc.storeys, &doc.walls);
         let check = report
             .checks
             .iter()

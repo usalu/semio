@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-beam-adjacent-span-m/schema.json",
+  "title": "ChangeBeamAdjacentSpanM",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newAdjacentSpanM"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Composite beam",
+          "de": "Verbundträger"
+        },
+        "description": {
+          "en": "The composite beam this mutation addresses, by id.",
+          "de": "Das adressierte Element (Verbundträger), per Kennung."
+        },
+        "ref": {
+          "kind": "beam"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newAdjacentSpanM": {
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Adjacent span length for the equivalent span and statics (0 = equal to the span)",
+          "de": "Länge des Nachbarfelds für Ersatzstützweite und Statik (0 = gleich der Stützweite)"
+        },
+        "unit": "m",
+        "step": 0.01,
+        "precision": 3,
+        "group": "beam",
+        "order": 20
+      }
+    }
+  }
+}

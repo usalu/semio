@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/mutation/change-reliability-action-mean/schema.json",
+  "title": "ChangeReliabilityActionMean",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newActionMean"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeReliabilityActionMean"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Reliability analysis",
+          "de": "Zuverlässigkeitsanalyse"
+        },
+        "description": {
+          "en": "The reliability analysis this mutation addresses, by id.",
+          "de": "Das adressierte Element (Zuverlässigkeitsanalyse), per Kennung."
+        },
+        "ref": {
+          "kind": "reliability-analysis"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newActionMean": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Action mean μ_E",
+          "de": "Mittelwert der Einwirkung μ_E"
+        },
+        "widget": "stepper",
+        "unit": "N",
+        "displayUnit": "kN",
+        "displayFactor": 0.001,
+        "precision": 1,
+        "step": 1000,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

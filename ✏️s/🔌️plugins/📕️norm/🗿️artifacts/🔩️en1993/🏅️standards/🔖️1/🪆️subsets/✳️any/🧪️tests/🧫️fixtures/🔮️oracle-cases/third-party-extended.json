@@ -1,0 +1,554 @@
+{
+  "$schema": "../../../../../../../../../🔮️oracles/🏃️harness/🧬️schema/🔣️.json",
+  "schemaVersion": 1,
+  "artifact": "en1993",
+  "annex": "De",
+  "cases": [
+    {
+      "id": "en1993.section.tee-t150x150",
+      "check": "en1993.section.tee",
+      "citation": {
+        "standard": "EN 1993-1-1",
+        "edition": "2005",
+        "clause": "6.2 section constants (T-section)"
+      },
+      "inputs": {
+        "h": 0.15,
+        "b": 0.15,
+        "tf": 0.0107,
+        "tw": 0.0071,
+        "r": 0.012
+      },
+      "expected": {
+        "A": {
+          "value": 0.00265624851934187,
+          "unit": "m^2",
+          "profile": "numerical-v1"
+        },
+        "Iy": {
+          "value": 5.082771423172966e-06,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "Iz": {
+          "value": 3.0162733200909125e-06,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "It": {
+          "value": 9.050682278824504e-08,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "Wpl_y": {
+          "value": 7.712908850659145e-05,
+          "unit": "m^3",
+          "profile": "numerical-v1"
+        },
+        "Wpl_z": {
+          "value": 6.23313708374982e-05,
+          "unit": "m^3",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sectionproperties",
+          "adapter": "sectionproperties",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1993.section.mono-i-plate-girder",
+      "check": "en1993.section.mono-i",
+      "citation": {
+        "standard": "EN 1993-1-1",
+        "edition": "2005",
+        "clause": "5.5 and 6.2 section constants of welded mono-symmetric I-sections"
+      },
+      "inputs": {
+        "h": 0.8,
+        "b_t": 0.3,
+        "b_b": 0.4,
+        "t_ft": 0.02,
+        "t_fb": 0.03,
+        "tw": 0.012,
+        "r": 0.0
+      },
+      "expected": {
+        "A": {
+          "value": 0.027000000000000073,
+          "unit": "m^2",
+          "profile": "numerical-v1"
+        },
+        "Iy": {
+          "value": 0.0029294916666666396,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "Iz": {
+          "value": 0.00020510800000000048,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "It": {
+          "value": 4.674767341883659e-06,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "Iw": {
+          "value": 2.110370789456538e-05,
+          "unit": "m^6",
+          "profile": "numerical-v1"
+        },
+        "Wpl_y": {
+          "value": 0.007927500000000011,
+          "unit": "m^3",
+          "profile": "numerical-v1"
+        },
+        "Wpl_z": {
+          "value": 0.001677,
+          "unit": "m^3",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sectionproperties",
+          "adapter": "sectionproperties",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1993.section.mono-i-heavy-bottom-flange",
+      "check": "en1993.section.mono-i",
+      "citation": {
+        "standard": "EN 1993-1-1",
+        "edition": "2005",
+        "clause": "5.5 and 6.2 section constants of welded mono-symmetric I-sections"
+      },
+      "inputs": {
+        "h": 0.8,
+        "b_t": 0.25,
+        "b_b": 0.5,
+        "t_ft": 0.016,
+        "t_fb": 0.04,
+        "tw": 0.012,
+        "r": 0.0
+      },
+      "expected": {
+        "A": {
+          "value": 0.03292800000000002,
+          "unit": "m^2",
+          "profile": "numerical-v1"
+        },
+        "Iy": {
+          "value": 0.002852440432202159,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "Iz": {
+          "value": 0.0004376071360000069,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "It": {
+          "value": 1.0947091914390563e-05,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "Iw": {
+          "value": 1.1889030761466488e-05,
+          "unit": "m^6",
+          "profile": "numerical-v1"
+        },
+        "Wpl_y": {
+          "value": 0.006704209408000004,
+          "unit": "m^3",
+          "profile": "numerical-v1"
+        },
+        "Wpl_z": {
+          "value": 0.002776784,
+          "unit": "m^3",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sectionproperties",
+          "adapter": "sectionproperties",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1993.section.ehs-300x200x10",
+      "check": "en1993.section.ehs",
+      "citation": {
+        "standard": "EN 1993-1-1",
+        "edition": "2005",
+        "clause": "6.2 section constants (elliptical hollow section)"
+      },
+      "inputs": {
+        "d_x": 0.3,
+        "d_y": 0.2,
+        "t": 0.01
+      },
+      "expected": {
+        "A": {
+          "value": 0.007536794776691436,
+          "unit": "m^2",
+          "profile": "numerical-v1"
+        },
+        "Iy": {
+          "value": 3.7621757163799484e-05,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "Iz": {
+          "value": 7.105285551961741e-05,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "It": {
+          "value": 9.734143508608743e-05,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sectionproperties",
+          "adapter": "sectionproperties",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1993.section.rhs-sharp-200x100x8",
+      "check": "en1993.section.rhs-sharp",
+      "citation": {
+        "standard": "EN 1993-1-1",
+        "edition": "2005",
+        "clause": "6.2 section constants of a sharp-cornered rectangular hollow section (difference of two rectangles)"
+      },
+      "inputs": {
+        "h": 0.2,
+        "b": 0.1,
+        "t": 0.008,
+        "r_out": 0.0
+      },
+      "expected": {
+        "A": {
+          "value": 0.004544000000000011,
+          "unit": "m^2",
+          "profile": "numerical-v1"
+        },
+        "Iy": {
+          "value": 2.306013866666676e-05,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "Iz": {
+          "value": 7.5785386666666884e-06,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "Wel_y": {
+          "value": 0.00023060138666666744,
+          "unit": "m^3",
+          "profile": "numerical-v1"
+        },
+        "Wel_z": {
+          "value": 0.00015157077333333372,
+          "unit": "m^3",
+          "profile": "numerical-v1"
+        },
+        "Wpl_y": {
+          "value": 0.000289024,
+          "unit": "m^3",
+          "profile": "numerical-v1"
+        },
+        "Wpl_z": {
+          "value": 0.000175424,
+          "unit": "m^3",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sectionproperties",
+          "adapter": "sectionproperties",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1993.section.rhs-sharp-300x300x12",
+      "check": "en1993.section.rhs-sharp",
+      "citation": {
+        "standard": "EN 1993-1-1",
+        "edition": "2005",
+        "clause": "6.2 section constants of a sharp-cornered rectangular hollow section (difference of two rectangles)"
+      },
+      "inputs": {
+        "h": 0.3,
+        "b": 0.3,
+        "t": 0.012,
+        "r_out": 0.0
+      },
+      "expected": {
+        "A": {
+          "value": 0.013824000000000003,
+          "unit": "m^2",
+          "profile": "numerical-v1"
+        },
+        "Iy": {
+          "value": 0.00019143475199999947,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "Iz": {
+          "value": 0.00019143475200000053,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        },
+        "Wel_y": {
+          "value": 0.0012762316799999989,
+          "unit": "m^3",
+          "profile": "numerical-v1"
+        },
+        "Wel_z": {
+          "value": 0.0012762316800000065,
+          "unit": "m^3",
+          "profile": "numerical-v1"
+        },
+        "Wpl_y": {
+          "value": 0.001493856,
+          "unit": "m^3",
+          "profile": "numerical-v1"
+        },
+        "Wpl_z": {
+          "value": 0.001493856,
+          "unit": "m^3",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sectionproperties",
+          "adapter": "sectionproperties",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1993.6.7.nu-rd",
+      "check": "en1993.6.7.nu-rd",
+      "citation": {
+        "standard": "EN 1993-1-1",
+        "edition": "2005",
+        "clause": "6.2.3 Eq. 6.7"
+      },
+      "inputs": {
+        "a_net": 0.008,
+        "f_u": 490000000.0,
+        "gamma_m2": 1.25
+      },
+      "expected": {
+        "N_u_Rd": {
+          "value": 2822400.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-blue-prints",
+          "adapter": "blueprints",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1993.6.10.nc-rd",
+      "check": "en1993.6.10.nc-rd",
+      "citation": {
+        "standard": "EN 1993-1-1",
+        "edition": "2005",
+        "clause": "6.2.4 Eq. 6.10"
+      },
+      "inputs": {
+        "a": 0.0106,
+        "f_y": 355000000.0,
+        "gamma_m0": 1.0
+      },
+      "expected": {
+        "N_c_Rd": {
+          "value": 3763000.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-blue-prints",
+          "adapter": "blueprints",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1993.6.14.mc-rd-class3",
+      "check": "en1993.6.14.mc-rd-class3",
+      "citation": {
+        "standard": "EN 1993-1-1",
+        "edition": "2005",
+        "clause": "6.2.5 Eq. 6.14"
+      },
+      "inputs": {
+        "w_el_min": 0.001,
+        "f_y": 355000000.0,
+        "gamma_m0": 1.0
+      },
+      "expected": {
+        "M_c_Rd": {
+          "value": 355000.0,
+          "unit": "N*m",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-blue-prints",
+          "adapter": "blueprints",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1993.6.32.mnrd-rectangular",
+      "check": "en1993.6.32.mnrd-rectangular",
+      "citation": {
+        "standard": "EN 1993-1-1",
+        "edition": "2005",
+        "clause": "6.2.9.1 Eq. 6.32"
+      },
+      "inputs": {
+        "m_pl_rd": 100000.0,
+        "n_ed": 300000.0,
+        "n_pl_rd": 1000000.0
+      },
+      "expected": {
+        "M_N_Rd": {
+          "value": 91000.0,
+          "unit": "N*m",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-blue-prints",
+          "adapter": "blueprints",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1993.6.39.aw-hollow",
+      "check": "en1993.6.39.aw-hollow",
+      "citation": {
+        "standard": "EN 1993-1-1",
+        "edition": "2005",
+        "clause": "6.2.9.1 Eq. 6.39 a_w for hollow sections"
+      },
+      "inputs": {
+        "a": 0.0043781,
+        "b": 0.1,
+        "t": 0.008
+      },
+      "expected": {
+        "a_w": {
+          "value": 0.5,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-blue-prints",
+          "adapter": "blueprints",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1993.6.39.mnyrd-hollow",
+      "check": "en1993.6.39.mnyrd-hollow",
+      "citation": {
+        "standard": "EN 1993-1-1",
+        "edition": "2005",
+        "clause": "6.2.9.1 Eq. 6.39"
+      },
+      "inputs": {
+        "mpl_y_rd": 100000.0,
+        "n": 0.3,
+        "a_w": 0.4
+      },
+      "expected": {
+        "M_N_y_Rd": {
+          "value": 87500.0,
+          "unit": "N*m",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-blue-prints",
+          "adapter": "blueprints",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1993.6.21.tau-i",
+      "check": "en1993.6.21.tau-i",
+      "citation": {
+        "standard": "EN 1993-1-1",
+        "edition": "2005",
+        "clause": "6.2.6(4) Eq. 6.21"
+      },
+      "inputs": {
+        "v_ed": 200000.0,
+        "a_w": 0.002,
+        "a_f": 0.005
+      },
+      "expected": {
+        "tau_Ed": {
+          "value": 100000000.0,
+          "unit": "Pa",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-blue-prints",
+          "adapter": "blueprints",
+          "kind": "third-party-library"
+        }
+      ]
+    }
+  ]
+}

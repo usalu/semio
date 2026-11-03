@@ -1,0 +1,6 @@
+{
+  "ChangePlanAngle": {
+    "id": "wall-north",
+    "newPlanAngleDeg": 90.0
+  }
+}

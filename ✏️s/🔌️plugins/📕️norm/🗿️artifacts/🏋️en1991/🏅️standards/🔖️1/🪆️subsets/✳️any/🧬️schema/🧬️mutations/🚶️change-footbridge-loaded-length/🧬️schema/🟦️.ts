@@ -1,0 +1,11 @@
+/** 🚶 `change-footbridge-loaded-length` wire twin: the leaf payload `ChangeFootbridgeLoadedLength`, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
+ * by `repo ./📜️script.ts schema twins generate`; readers judge structure, the schema's bounds stay Ajv's.
+ * @see ./🔣️.json */
+import { normWireNumber, normWireObject, normWireRequired, normWireString, type NormWireReader } from "@semio-tech/norm-js/registry/contract";
+
+export interface ChangeFootbridgeLoadedLength {
+  id: string;
+  newLoadedLength: number;
+}
+
+export const parseChangeFootbridgeLoadedLength: NormWireReader<ChangeFootbridgeLoadedLength> = normWireObject<ChangeFootbridgeLoadedLength>({ id: normWireRequired(normWireString), newLoadedLength: normWireRequired(normWireNumber) });

@@ -1,0 +1,5 @@
+{
+  "mutation": "changePatchSubjectId",
+  "patchLoadId": "patch-1",
+  "newSubjectId": "post-chs"
+}

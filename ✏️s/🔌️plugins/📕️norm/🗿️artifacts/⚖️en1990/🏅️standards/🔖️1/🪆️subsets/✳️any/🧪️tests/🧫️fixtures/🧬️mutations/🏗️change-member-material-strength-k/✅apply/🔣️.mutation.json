@@ -1,0 +1,5 @@
+{
+  "mutation": "changeMemberMaterialStrengthK",
+  "id": "beam-B1",
+  "newMaterialStrengthK": 1.5
+}

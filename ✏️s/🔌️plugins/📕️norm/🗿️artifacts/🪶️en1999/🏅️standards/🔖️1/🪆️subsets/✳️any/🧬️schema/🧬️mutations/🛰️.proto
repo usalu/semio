@@ -1,160 +1,1075 @@
-// 🧬️ EN 1999 mutation schema — semantic kinds matching Rust `KINDS`.
 syntax = "proto3";
-package semio.s.norm.en1999.mutation;
-
-// kind: change-annex
+package semio.s.norm.en1999;
+message En1999Mutation {
+  oneof kind {
+    ChangeAnnex change_annex = 1;
+    InsertMember insert_member = 2;
+    RemoveMember remove_member = 3;
+    ChangeMemberNEd change_member_n_ed = 4;
+    ChangeMemberMYEd change_member_m_y_ed = 5;
+    ChangeMemberBucklingLength change_member_buckling_length = 6;
+    ChangeMaterialDesignation change_material_designation = 7;
+    ChangePlateThickness change_plate_thickness = 8;
+    ChangeWeldThroat change_weld_throat = 9;
+    ChangeBoltCount change_bolt_count = 10;
+    ChangeMaterialProductForm change_material_product_form = 11;
+    ChangeSectionKind change_section_kind = 12;
+    ChangeSectionHeight change_section_height = 13;
+    ChangeSectionWidth change_section_width = 14;
+    ChangeSectionFlangeThickness change_section_flange_thickness = 15;
+    ChangeSectionWebThickness change_section_web_thickness = 16;
+    ChangeSectionOuterDiameter change_section_outer_diameter = 17;
+    ChangeElementWidth change_element_width = 18;
+    ChangeElementOutstand change_element_outstand = 19;
+    ChangeElementWelded change_element_welded = 20;
+    ChangeElementWeldPosition change_element_weld_position = 21;
+    ChangeElementWeldProcess change_element_weld_process = 22;
+    ChangeElementWeldTJunction change_element_weld_t_junction = 23;
+    ChangeElementWeldDirection change_element_weld_direction = 24;
+    ChangeElementStiffenerDepth change_element_stiffener_depth = 25;
+    ChangeElementStiffenerThk change_element_stiffener_thk = 26;
+    ChangeMemberSectionId change_member_section_id = 27;
+    ChangeMemberMaterialId change_member_material_id = 28;
+    ChangeMemberLength change_member_length = 29;
+    ChangeMemberSupport change_member_support = 30;
+    ChangeMemberLtbLength change_member_ltb_length = 31;
+    ChangeMemberC1 change_member_c1 = 32;
+    ChangeMemberRestrainedLtb change_member_restrained_ltb = 33;
+    ChangeMemberBearingLength change_member_bearing_length = 34;
+    ChangeMemberTransverseWeld change_member_transverse_weld = 35;
+    ChangeMemberTWeldOffset change_member_t_weld_offset = 36;
+    ChangeActionKind change_action_kind = 37;
+    ChangeActionCategory change_action_category = 38;
+    ChangeActionSource change_action_source = 39;
+    ChangeActionGKLine change_action_g_k_line = 40;
+    ChangeActionQKLine change_action_q_k_line = 41;
+    ChangeActionVYK change_action_v_y_k = 42;
+    ChangeActionVZK change_action_v_z_k = 43;
+    ChangeActionMZK change_action_m_z_k = 44;
+    ChangeActionTorsionK change_action_torsion_k = 45;
+    ChangeActionLocalLoadK change_action_local_load_k = 46;
+    ChangeConnMemberId change_conn_member_id = 47;
+    ChangeConnMaterialId change_conn_material_id = 48;
+    ChangeConnKind change_conn_kind = 49;
+    ChangeConnForceMethod change_conn_force_method = 50;
+    ChangeConnBoltsMaterial change_conn_bolts_material = 51;
+    ChangeConnBoltsDiameter change_conn_bolts_diameter = 52;
+    ChangeConnBoltsEdgeDistance change_conn_bolts_edge_distance = 53;
+    ChangeConnBoltsPitch change_conn_bolts_pitch = 54;
+    ChangeConnBoltsGauge change_conn_bolts_gauge = 55;
+    ChangeConnBoltsPlateThickness change_conn_bolts_plate_thickness = 56;
+    ChangeConnWeldsFillerAlloy change_conn_welds_filler_alloy = 57;
+    ChangeConnWeldsLength change_conn_welds_length = 58;
+    ChangeConnWeldsBetaW change_conn_welds_beta_w = 59;
+    ChangeConnWeldsHazExtent change_conn_welds_haz_extent = 60;
+    ChangeConnActionKind change_conn_action_kind = 61;
+    ChangeConnActionCategory change_conn_action_category = 62;
+    ChangeConnActionSource change_conn_action_source = 63;
+    ChangeConnActionGKLine change_conn_action_g_k_line = 64;
+    ChangeConnActionQKLine change_conn_action_q_k_line = 65;
+    ChangeConnActionNK change_conn_action_n_k = 66;
+    ChangeConnActionVYK change_conn_action_v_y_k = 67;
+    ChangeConnActionVZK change_conn_action_v_z_k = 68;
+    ChangeConnActionMYK change_conn_action_m_y_k = 69;
+    ChangeConnActionMZK change_conn_action_m_z_k = 70;
+    ChangeConnActionTorsionK change_conn_action_torsion_k = 71;
+    ChangeConnActionLocalLoadK change_conn_action_local_load_k = 72;
+    ChangeFireMemberId change_fire_member_id = 73;
+    ChangeFireThetaA change_fire_theta_a = 74;
+    ChangeFireDurationS change_fire_duration_s = 75;
+    ChangeFatigueMemberId change_fatigue_member_id = 76;
+    ChangeFatigueDetailCategory change_fatigue_detail_category = 77;
+    ChangeFatigueDeltaSigmaC change_fatigue_delta_sigma_c = 78;
+    ChangeFatigueDeltaSigmaEd change_fatigue_delta_sigma_ed = 79;
+    ChangeFatigueNCycles change_fatigue_n_cycles = 80;
+    ChangeFatigueM1 change_fatigue_m1 = 81;
+    ChangeFatigueM2 change_fatigue_m2 = 82;
+    ChangeSheetMaterialId change_sheet_material_id = 83;
+    ChangeSheetThickness change_sheet_thickness = 84;
+    ChangeSheetWidth change_sheet_width = 85;
+    ChangeSheetSpan change_sheet_span = 86;
+    ChangeSheetWelded change_sheet_welded = 87;
+    ChangeSheetActionKind change_sheet_action_kind = 88;
+    ChangeSheetActionCategory change_sheet_action_category = 89;
+    ChangeSheetActionSource change_sheet_action_source = 90;
+    ChangeSheetActionGKLine change_sheet_action_g_k_line = 91;
+    ChangeSheetActionQKLine change_sheet_action_q_k_line = 92;
+    ChangeSheetActionNK change_sheet_action_n_k = 93;
+    ChangeSheetActionVYK change_sheet_action_v_y_k = 94;
+    ChangeSheetActionVZK change_sheet_action_v_z_k = 95;
+    ChangeSheetActionMYK change_sheet_action_m_y_k = 96;
+    ChangeSheetActionMZK change_sheet_action_m_z_k = 97;
+    ChangeSheetActionTorsionK change_sheet_action_torsion_k = 98;
+    ChangeSheetActionLocalLoadK change_sheet_action_local_load_k = 99;
+    ChangeShellMaterialId change_shell_material_id = 100;
+    ChangeShellRadius change_shell_radius = 101;
+    ChangeShellThickness change_shell_thickness = 102;
+    ChangeShellLength change_shell_length = 103;
+    ChangeShellWelded change_shell_welded = 104;
+    ChangeShellFabricationClass change_shell_fabrication_class = 105;
+    ChangeShellActionKind change_shell_action_kind = 106;
+    ChangeShellActionCategory change_shell_action_category = 107;
+    ChangeShellActionSource change_shell_action_source = 108;
+    ChangeShellActionGKLine change_shell_action_g_k_line = 109;
+    ChangeShellActionQKLine change_shell_action_q_k_line = 110;
+    ChangeShellActionNK change_shell_action_n_k = 111;
+    ChangeShellActionVYK change_shell_action_v_y_k = 112;
+    ChangeShellActionVZK change_shell_action_v_z_k = 113;
+    ChangeShellActionMYK change_shell_action_m_y_k = 114;
+    ChangeShellActionMZK change_shell_action_m_z_k = 115;
+    ChangeShellActionTorsionK change_shell_action_torsion_k = 116;
+    ChangeShellActionLocalLoadK change_shell_action_local_load_k = 117;
+    ChangeWeldRunMemberId change_weld_run_member_id = 118;
+    ChangeWeldRunElementId change_weld_run_element_id = 119;
+    ChangeWeldRunStart change_weld_run_start = 120;
+    ChangeWeldRunLength change_weld_run_length = 121;
+    ChangeWeldRunOffset change_weld_run_offset = 122;
+    ChangeWeldRunThroat change_weld_run_throat = 123;
+    ChangeWeldRunProcess change_weld_run_process = 124;
+    ChangeWeldRunTJunction change_weld_run_t_junction = 125;
+    ChangeWeldRunDirection change_weld_run_direction = 126;
+    ChangeWeldRunHazExtent change_weld_run_haz_extent = 127;
+    ChangeVertexSectionId change_vertex_section_id = 128;
+    ChangeVertexRing change_vertex_ring = 129;
+    ChangeVertexElementId change_vertex_element_id = 130;
+    ChangeVertexY change_vertex_y = 131;
+    ChangeVertexZ change_vertex_z = 132;
+    ChangePlacementX change_placement_x = 133;
+    ChangePlacementY change_placement_y = 134;
+    ChangePlacementZ change_placement_z = 135;
+    ChangePlacementYaw change_placement_yaw = 136;
+    InsertWeldRun insert_weld_run = 137;
+    RemoveWeldRun remove_weld_run = 138;
+    InsertOutlineVertex insert_outline_vertex = 139;
+    RemoveOutlineVertex remove_outline_vertex = 140;
+    InsertPlacement insert_placement = 141;
+    RemovePlacement remove_placement = 142;
+    InsertMaterial insert_material = 143;
+    RemoveMaterial remove_material = 144;
+    InsertSection insert_section = 145;
+    RemoveSection remove_section = 146;
+    InsertConnection insert_connection = 147;
+    RemoveConnection remove_connection = 148;
+    InsertFireScenario insert_fire_scenario = 149;
+    RemoveFireScenario remove_fire_scenario = 150;
+    InsertFatigueDetail insert_fatigue_detail = 151;
+    RemoveFatigueDetail remove_fatigue_detail = 152;
+    InsertColdFormedSheet insert_cold_formed_sheet = 153;
+    RemoveColdFormedSheet remove_cold_formed_sheet = 154;
+    InsertShell insert_shell = 155;
+    RemoveShell remove_shell = 156;
+    ChangeMemberBucklingLengthY change_member_buckling_length_y = 157;
+    ChangeMemberBucklingLengthT change_member_buckling_length_t = 158;
+    ChangeConnBoltsBoltsPerRow change_conn_bolts_bolts_per_row = 159;
+    ChangeCategoryMemberId change_category_member_id = 160;
+    ChangeCategoryElementId change_category_element_id = 161;
+    ChangeCategoryDetailCategory change_category_detail_category = 162;
+    ChangeCategoryDetailType change_category_detail_type = 163;
+    ChangeCategoryLocationX change_category_location_x = 164;
+    ChangeCategoryM1 change_category_m1 = 165;
+    ChangeCategoryM2 change_category_m2 = 166;
+    ChangePatchSubjectId change_patch_subject_id = 167;
+    ChangePatchPosition change_patch_position = 168;
+    ChangePatchX change_patch_x = 169;
+    ChangePatchBearingLength change_patch_bearing_length = 170;
+    ChangePatchWebHeight change_patch_web_height = 171;
+    ChangePatchWebAngle change_patch_web_angle = 172;
+    ChangePatchCornerRadius change_patch_corner_radius = 173;
+    ChangePatchLoad change_patch_load = 174;
+    ChangeRingShellId change_ring_shell_id = 175;
+    ChangeRingX change_ring_x = 176;
+    ChangeRingDepth change_ring_depth = 177;
+    ChangeRingThickness change_ring_thickness = 178;
+    ChangeRingInternal change_ring_internal = 179;
+    InsertFatigueCategory insert_fatigue_category = 180;
+    RemoveFatigueCategory remove_fatigue_category = 181;
+    InsertPatchLoad insert_patch_load = 182;
+    RemovePatchLoad remove_patch_load = 183;
+    InsertRingStiffener insert_ring_stiffener = 184;
+    RemoveRingStiffener remove_ring_stiffener = 185;
+    InsertMemberAction insert_member_action = 186;
+    RemoveMemberAction remove_member_action = 187;
+    InsertConnectionAction insert_connection_action = 188;
+    RemoveConnectionAction remove_connection_action = 189;
+    InsertSectionElement insert_section_element = 190;
+    RemoveSectionElement remove_section_element = 191;
+    InsertSheetAction insert_sheet_action = 192;
+    RemoveSheetAction remove_sheet_action = 193;
+    InsertShellAction insert_shell_action = 194;
+    RemoveShellAction remove_shell_action = 195;
+    ChangeTransverseGirderId change_transverse_girder_id = 196;
+    ChangeTransversePosition change_transverse_position = 197;
+    ChangeTransverseWidth change_transverse_width = 198;
+    ChangeTransverseThickness change_transverse_thickness = 199;
+    ChangeConnLoadEccentricity change_conn_load_eccentricity = 200;
+    ChangeConnHoleStagger change_conn_hole_stagger = 201;
+    ChangeTransverseSides change_transverse_sides = 202;
+    InsertTransverseStiffener insert_transverse_stiffener = 203;
+    RemoveTransverseStiffener remove_transverse_stiffener = 204;
+  }
+}
 message ChangeAnnex {
-  // @state artifact
-  string new_annex = 1;
+  AnnexChoice new_annex = 1;
 }
-
-// kind: change-materials
-message ChangeMaterials {
-  // @state artifact
-  bytes materials = 1;
-}
-
-// kind: change-sections
-message ChangeSections {
-  // @state artifact
-  bytes sections = 1;
-}
-
-// kind: change-members
-message ChangeMembers {
-  // @state artifact
-  bytes members = 1;
-}
-
-// kind: change-connections
-message ChangeConnections {
-  // @state artifact
-  bytes connections = 1;
-}
-
-// kind: change-fire-scenarios
-message ChangeFireScenarios {
-  // @state artifact
-  bytes fire_scenarios = 1;
-}
-
-// kind: change-fatigue-details
-message ChangeFatigueDetails {
-  // @state artifact
-  bytes fatigue_details = 1;
-}
-
-// kind: change-cold-formed
-message ChangeColdFormed {
-  // @state artifact
-  bytes cold_formed = 1;
-}
-
-// kind: change-shells
-message ChangeShells {
-  // @state artifact
-  bytes shells = 1;
-}
-
-// kind: add-member
-message AddMember {
-  // @state artifact
+message InsertMember {
   uint32 index = 1;
-  // @state artifact
-  bytes member = 2;
+  AluminiumMember member = 2;
 }
-
-// kind: remove-member
 message RemoveMember {
-  // @state artifact
   string id = 1;
 }
-
-// kind: change-member-n-ed
 message ChangeMemberNEd {
-  // @state artifact
   string member_id = 1;
-  // @state artifact
   string action_id = 2;
-  // @state artifact
   double new_n_k = 3;
 }
-
-// kind: change-member-my-ed
 message ChangeMemberMYEd {
-  // @state artifact
   string member_id = 1;
-  // @state artifact
   string action_id = 2;
-  // @state artifact
   double new_m_y_k = 3;
 }
-
-// kind: change-member-buckling-length
 message ChangeMemberBucklingLength {
-  // @state artifact
   string member_id = 1;
-  // @state artifact
   string axis = 2;
-  // @state artifact
   double new_length = 3;
 }
-
-// kind: change-material-designation
 message ChangeMaterialDesignation {
-  // @state artifact
   string material_id = 1;
-  // @state artifact
   string new_designation = 2;
 }
-
-// kind: change-plate-thickness
 message ChangePlateThickness {
-  // @state artifact
   string section_id = 1;
-  // @state artifact
   string element_id = 2;
-  // @state artifact
   double new_thickness = 3;
 }
-
-// kind: change-weld-throat
 message ChangeWeldThroat {
-  // @state artifact
   string connection_id = 1;
-  // @state artifact
   double new_throat = 2;
 }
-
-// kind: change-bolt-count
 message ChangeBoltCount {
-  // @state artifact
   string connection_id = 1;
-  // @state artifact
   uint32 new_rows = 2;
-  // @state artifact
   uint32 new_bolts_per_row = 3;
 }
-
-message En1999Mutation {
-  oneof payload {
-    ChangeAnnex change_annex = 1;
-    ChangeMaterials change_materials = 2;
-    ChangeSections change_sections = 3;
-    ChangeMembers change_members = 4;
-    ChangeConnections change_connections = 5;
-    ChangeFireScenarios change_fire_scenarios = 6;
-    ChangeFatigueDetails change_fatigue_details = 7;
-    ChangeColdFormed change_cold_formed = 8;
-    ChangeShells change_shells = 9;
-    AddMember add_member = 10;
-    RemoveMember remove_member = 11;
-    ChangeMemberNEd change_member_n_ed = 12;
-    ChangeMemberMYEd change_member_my_ed = 13;
-    ChangeMemberBucklingLength change_member_buckling_length = 14;
-    ChangeMaterialDesignation change_material_designation = 15;
-    ChangePlateThickness change_plate_thickness = 16;
-    ChangeWeldThroat change_weld_throat = 17;
-    ChangeBoltCount change_bolt_count = 18;
-  }
+message ChangeMaterialProductForm {
+  string material_id = 1;
+  ProductForm new_product_form = 2;
+}
+message ChangeSectionKind {
+  string section_id = 1;
+  SectionKind new_kind = 2;
+}
+message ChangeSectionHeight {
+  string section_id = 1;
+  double new_height = 2;
+}
+message ChangeSectionWidth {
+  string section_id = 1;
+  double new_width = 2;
+}
+message ChangeSectionFlangeThickness {
+  string section_id = 1;
+  double new_flange_thickness = 2;
+}
+message ChangeSectionWebThickness {
+  string section_id = 1;
+  double new_web_thickness = 2;
+}
+message ChangeSectionOuterDiameter {
+  string section_id = 1;
+  double new_outer_diameter = 2;
+}
+message ChangeElementWidth {
+  string section_id = 1;
+  string element_id = 2;
+  double new_width = 3;
+}
+message ChangeElementOutstand {
+  string section_id = 1;
+  string element_id = 2;
+  bool new_outstand = 3;
+}
+message ChangeElementWelded {
+  string section_id = 1;
+  string element_id = 2;
+  bool new_welded = 3;
+}
+message ChangeElementWeldPosition {
+  string section_id = 1;
+  string element_id = 2;
+  double new_weld_position = 3;
+}
+message ChangeElementWeldProcess {
+  string section_id = 1;
+  string element_id = 2;
+  WeldProcess new_weld_process = 3;
+}
+message ChangeElementWeldTJunction {
+  string section_id = 1;
+  string element_id = 2;
+  bool new_weld_t_junction = 3;
+}
+message ChangeElementWeldDirection {
+  string section_id = 1;
+  string element_id = 2;
+  WeldDirection new_weld_direction = 3;
+}
+message ChangeElementStiffenerDepth {
+  string section_id = 1;
+  string element_id = 2;
+  double new_edge_stiffener_depth = 3;
+}
+message ChangeElementStiffenerThk {
+  string section_id = 1;
+  string element_id = 2;
+  double new_edge_stiffener_thickness = 3;
+}
+message ChangeMemberSectionId {
+  string member_id = 1;
+  string new_section_id = 2;
+}
+message ChangeMemberMaterialId {
+  string member_id = 1;
+  string new_material_id = 2;
+}
+message ChangeMemberLength {
+  string member_id = 1;
+  double new_length = 2;
+}
+message ChangeMemberSupport {
+  string member_id = 1;
+  string new_support = 2;
+}
+message ChangeMemberLtbLength {
+  string member_id = 1;
+  double new_ltb_length = 2;
+}
+message ChangeMemberC1 {
+  string member_id = 1;
+  double new_c1 = 2;
+}
+message ChangeMemberRestrainedLtb {
+  string member_id = 1;
+  bool new_restrained_ltb = 2;
+}
+message ChangeMemberBearingLength {
+  string member_id = 1;
+  double new_bearing_length = 2;
+}
+message ChangeMemberTransverseWeld {
+  string member_id = 1;
+  bool new_transverse_weld = 2;
+}
+message ChangeMemberTWeldOffset {
+  string member_id = 1;
+  double new_transverse_weld_offset = 2;
+}
+message ChangeActionKind {
+  string member_id = 1;
+  string action_id = 2;
+  ActionKind new_kind = 3;
+}
+message ChangeActionCategory {
+  string member_id = 1;
+  string action_id = 2;
+  ActionCategory new_category = 3;
+}
+message ChangeActionSource {
+  string member_id = 1;
+  string action_id = 2;
+  ActionSource new_source = 3;
+}
+message ChangeActionGKLine {
+  string member_id = 1;
+  string action_id = 2;
+  double new_g_k_line = 3;
+}
+message ChangeActionQKLine {
+  string member_id = 1;
+  string action_id = 2;
+  double new_q_k_line = 3;
+}
+message ChangeActionVYK {
+  string member_id = 1;
+  string action_id = 2;
+  double new_v_y_k = 3;
+}
+message ChangeActionVZK {
+  string member_id = 1;
+  string action_id = 2;
+  double new_v_z_k = 3;
+}
+message ChangeActionMZK {
+  string member_id = 1;
+  string action_id = 2;
+  double new_m_z_k = 3;
+}
+message ChangeActionTorsionK {
+  string member_id = 1;
+  string action_id = 2;
+  double new_torsion_k = 3;
+}
+message ChangeActionLocalLoadK {
+  string member_id = 1;
+  string action_id = 2;
+  double new_local_load_k = 3;
+}
+message ChangeConnMemberId {
+  string connection_id = 1;
+  string new_member_id = 2;
+}
+message ChangeConnMaterialId {
+  string connection_id = 1;
+  string new_material_id = 2;
+}
+message ChangeConnKind {
+  string connection_id = 1;
+  ConnectionKind new_kind = 2;
+}
+message ChangeConnForceMethod {
+  string connection_id = 1;
+  FastenerForceMethod new_force_method = 2;
+}
+message ChangeConnBoltsMaterial {
+  string connection_id = 1;
+  string new_bolts_material = 2;
+}
+message ChangeConnBoltsDiameter {
+  string connection_id = 1;
+  double new_bolts_diameter = 2;
+}
+message ChangeConnBoltsEdgeDistance {
+  string connection_id = 1;
+  double new_bolts_edge_distance = 2;
+}
+message ChangeConnBoltsPitch {
+  string connection_id = 1;
+  double new_bolts_pitch = 2;
+}
+message ChangeConnBoltsGauge {
+  string connection_id = 1;
+  double new_bolts_gauge = 2;
+}
+message ChangeConnBoltsPlateThickness {
+  string connection_id = 1;
+  double new_bolts_plate_thickness = 2;
+}
+message ChangeConnWeldsFillerAlloy {
+  string connection_id = 1;
+  string new_welds_filler_alloy = 2;
+}
+message ChangeConnWeldsLength {
+  string connection_id = 1;
+  double new_welds_length = 2;
+}
+message ChangeConnWeldsBetaW {
+  string connection_id = 1;
+  double new_welds_beta_w = 2;
+}
+message ChangeConnWeldsHazExtent {
+  string connection_id = 1;
+  double new_welds_haz_extent = 2;
+}
+message ChangeConnActionKind {
+  string connection_id = 1;
+  string action_id = 2;
+  ActionKind new_kind = 3;
+}
+message ChangeConnActionCategory {
+  string connection_id = 1;
+  string action_id = 2;
+  ActionCategory new_category = 3;
+}
+message ChangeConnActionSource {
+  string connection_id = 1;
+  string action_id = 2;
+  ActionSource new_source = 3;
+}
+message ChangeConnActionGKLine {
+  string connection_id = 1;
+  string action_id = 2;
+  double new_g_k_line = 3;
+}
+message ChangeConnActionQKLine {
+  string connection_id = 1;
+  string action_id = 2;
+  double new_q_k_line = 3;
+}
+message ChangeConnActionNK {
+  string connection_id = 1;
+  string action_id = 2;
+  double new_n_k = 3;
+}
+message ChangeConnActionVYK {
+  string connection_id = 1;
+  string action_id = 2;
+  double new_v_y_k = 3;
+}
+message ChangeConnActionVZK {
+  string connection_id = 1;
+  string action_id = 2;
+  double new_v_z_k = 3;
+}
+message ChangeConnActionMYK {
+  string connection_id = 1;
+  string action_id = 2;
+  double new_m_y_k = 3;
+}
+message ChangeConnActionMZK {
+  string connection_id = 1;
+  string action_id = 2;
+  double new_m_z_k = 3;
+}
+message ChangeConnActionTorsionK {
+  string connection_id = 1;
+  string action_id = 2;
+  double new_torsion_k = 3;
+}
+message ChangeConnActionLocalLoadK {
+  string connection_id = 1;
+  string action_id = 2;
+  double new_local_load_k = 3;
+}
+message ChangeFireMemberId {
+  string fire_scenario_id = 1;
+  string new_member_id = 2;
+}
+message ChangeFireThetaA {
+  string fire_scenario_id = 1;
+  double new_theta_a = 2;
+}
+message ChangeFireDurationS {
+  string fire_scenario_id = 1;
+  double new_duration_s = 2;
+}
+message ChangeFatigueMemberId {
+  string fatigue_detail_id = 1;
+  string new_member_id = 2;
+}
+message ChangeFatigueDetailCategory {
+  string fatigue_detail_id = 1;
+  string new_detail_category = 2;
+}
+message ChangeFatigueDeltaSigmaC {
+  string fatigue_detail_id = 1;
+  double new_delta_sigma_c = 2;
+}
+message ChangeFatigueDeltaSigmaEd {
+  string fatigue_detail_id = 1;
+  double new_delta_sigma_ed = 2;
+}
+message ChangeFatigueNCycles {
+  string fatigue_detail_id = 1;
+  double new_n_cycles = 2;
+}
+message ChangeFatigueM1 {
+  string fatigue_detail_id = 1;
+  double new_m1 = 2;
+}
+message ChangeFatigueM2 {
+  string fatigue_detail_id = 1;
+  double new_m2 = 2;
+}
+message ChangeSheetMaterialId {
+  string cold_formed_id = 1;
+  string new_material_id = 2;
+}
+message ChangeSheetThickness {
+  string cold_formed_id = 1;
+  double new_thickness = 2;
+}
+message ChangeSheetWidth {
+  string cold_formed_id = 1;
+  double new_width = 2;
+}
+message ChangeSheetSpan {
+  string cold_formed_id = 1;
+  double new_span = 2;
+}
+message ChangeSheetWelded {
+  string cold_formed_id = 1;
+  bool new_welded = 2;
+}
+message ChangeSheetActionKind {
+  string cold_formed_id = 1;
+  string action_id = 2;
+  ActionKind new_kind = 3;
+}
+message ChangeSheetActionCategory {
+  string cold_formed_id = 1;
+  string action_id = 2;
+  ActionCategory new_category = 3;
+}
+message ChangeSheetActionSource {
+  string cold_formed_id = 1;
+  string action_id = 2;
+  ActionSource new_source = 3;
+}
+message ChangeSheetActionGKLine {
+  string cold_formed_id = 1;
+  string action_id = 2;
+  double new_g_k_line = 3;
+}
+message ChangeSheetActionQKLine {
+  string cold_formed_id = 1;
+  string action_id = 2;
+  double new_q_k_line = 3;
+}
+message ChangeSheetActionNK {
+  string cold_formed_id = 1;
+  string action_id = 2;
+  double new_n_k = 3;
+}
+message ChangeSheetActionVYK {
+  string cold_formed_id = 1;
+  string action_id = 2;
+  double new_v_y_k = 3;
+}
+message ChangeSheetActionVZK {
+  string cold_formed_id = 1;
+  string action_id = 2;
+  double new_v_z_k = 3;
+}
+message ChangeSheetActionMYK {
+  string cold_formed_id = 1;
+  string action_id = 2;
+  double new_m_y_k = 3;
+}
+message ChangeSheetActionMZK {
+  string cold_formed_id = 1;
+  string action_id = 2;
+  double new_m_z_k = 3;
+}
+message ChangeSheetActionTorsionK {
+  string cold_formed_id = 1;
+  string action_id = 2;
+  double new_torsion_k = 3;
+}
+message ChangeSheetActionLocalLoadK {
+  string cold_formed_id = 1;
+  string action_id = 2;
+  double new_local_load_k = 3;
+}
+message ChangeShellMaterialId {
+  string shell_id = 1;
+  string new_material_id = 2;
+}
+message ChangeShellRadius {
+  string shell_id = 1;
+  double new_radius = 2;
+}
+message ChangeShellThickness {
+  string shell_id = 1;
+  double new_thickness = 2;
+}
+message ChangeShellLength {
+  string shell_id = 1;
+  double new_length = 2;
+}
+message ChangeShellWelded {
+  string shell_id = 1;
+  bool new_welded = 2;
+}
+message ChangeShellFabricationClass {
+  string shell_id = 1;
+  FabricationClass new_fabrication_class = 2;
+}
+message ChangeShellActionKind {
+  string shell_id = 1;
+  string action_id = 2;
+  ActionKind new_kind = 3;
+}
+message ChangeShellActionCategory {
+  string shell_id = 1;
+  string action_id = 2;
+  ActionCategory new_category = 3;
+}
+message ChangeShellActionSource {
+  string shell_id = 1;
+  string action_id = 2;
+  ActionSource new_source = 3;
+}
+message ChangeShellActionGKLine {
+  string shell_id = 1;
+  string action_id = 2;
+  double new_g_k_line = 3;
+}
+message ChangeShellActionQKLine {
+  string shell_id = 1;
+  string action_id = 2;
+  double new_q_k_line = 3;
+}
+message ChangeShellActionNK {
+  string shell_id = 1;
+  string action_id = 2;
+  double new_n_k = 3;
+}
+message ChangeShellActionVYK {
+  string shell_id = 1;
+  string action_id = 2;
+  double new_v_y_k = 3;
+}
+message ChangeShellActionVZK {
+  string shell_id = 1;
+  string action_id = 2;
+  double new_v_z_k = 3;
+}
+message ChangeShellActionMYK {
+  string shell_id = 1;
+  string action_id = 2;
+  double new_m_y_k = 3;
+}
+message ChangeShellActionMZK {
+  string shell_id = 1;
+  string action_id = 2;
+  double new_m_z_k = 3;
+}
+message ChangeShellActionTorsionK {
+  string shell_id = 1;
+  string action_id = 2;
+  double new_torsion_k = 3;
+}
+message ChangeShellActionLocalLoadK {
+  string shell_id = 1;
+  string action_id = 2;
+  double new_local_load_k = 3;
+}
+message ChangeWeldRunMemberId {
+  string weld_run_id = 1;
+  string new_member_id = 2;
+}
+message ChangeWeldRunElementId {
+  string weld_run_id = 1;
+  string new_element_id = 2;
+}
+message ChangeWeldRunStart {
+  string weld_run_id = 1;
+  double new_start = 2;
+}
+message ChangeWeldRunLength {
+  string weld_run_id = 1;
+  double new_length = 2;
+}
+message ChangeWeldRunOffset {
+  string weld_run_id = 1;
+  double new_offset = 2;
+}
+message ChangeWeldRunThroat {
+  string weld_run_id = 1;
+  double new_throat = 2;
+}
+message ChangeWeldRunProcess {
+  string weld_run_id = 1;
+  WeldProcess new_process = 2;
+}
+message ChangeWeldRunTJunction {
+  string weld_run_id = 1;
+  bool new_t_junction = 2;
+}
+message ChangeWeldRunDirection {
+  string weld_run_id = 1;
+  WeldDirection new_direction = 2;
+}
+message ChangeWeldRunHazExtent {
+  string weld_run_id = 1;
+  double new_haz_extent = 2;
+}
+message ChangeVertexSectionId {
+  string outline_vertex_id = 1;
+  string new_section_id = 2;
+}
+message ChangeVertexRing {
+  string outline_vertex_id = 1;
+  OutlineRing new_ring = 2;
+}
+message ChangeVertexElementId {
+  string outline_vertex_id = 1;
+  string new_element_id = 2;
+}
+message ChangeVertexY {
+  string outline_vertex_id = 1;
+  double new_y = 2;
+}
+message ChangeVertexZ {
+  string outline_vertex_id = 1;
+  double new_z = 2;
+}
+message ChangePlacementX {
+  string id = 1;
+  double new_x = 2;
+}
+message ChangePlacementY {
+  string id = 1;
+  double new_y = 2;
+}
+message ChangePlacementZ {
+  string id = 1;
+  double new_z = 2;
+}
+message ChangePlacementYaw {
+  string id = 1;
+  double new_yaw = 2;
+}
+message InsertWeldRun {
+  uint32 index = 1;
+  WeldRun weld_run = 2;
+}
+message RemoveWeldRun {
+  string id = 1;
+}
+message InsertOutlineVertex {
+  uint32 index = 1;
+  SectionVertex outline_vertex = 2;
+}
+message RemoveOutlineVertex {
+  string id = 1;
+}
+message InsertPlacement {
+  uint32 index = 1;
+  Placement placement = 2;
+}
+message RemovePlacement {
+  string id = 1;
+}
+message InsertMaterial {
+  uint32 index = 1;
+  AluminiumMaterial material = 2;
+}
+message RemoveMaterial {
+  string id = 1;
+}
+message InsertSection {
+  uint32 index = 1;
+  AluminiumSection section = 2;
+}
+message RemoveSection {
+  string id = 1;
+}
+message InsertConnection {
+  uint32 index = 1;
+  AluminiumConnection connection = 2;
+}
+message RemoveConnection {
+  string id = 1;
+}
+message InsertFireScenario {
+  uint32 index = 1;
+  FireScenario fire_scenario = 2;
+}
+message RemoveFireScenario {
+  string id = 1;
+}
+message InsertFatigueDetail {
+  uint32 index = 1;
+  FatigueDetail fatigue_detail = 2;
+}
+message RemoveFatigueDetail {
+  string id = 1;
+}
+message InsertColdFormedSheet {
+  uint32 index = 1;
+  ColdFormedSheet cold_formed_sheet = 2;
+}
+message RemoveColdFormedSheet {
+  string id = 1;
+}
+message InsertShell {
+  uint32 index = 1;
+  AluminiumShell shell = 2;
+}
+message RemoveShell {
+  string id = 1;
+}
+message ChangeMemberBucklingLengthY {
+  string member_id = 1;
+  double new_buckling_length_y = 2;
+}
+message ChangeMemberBucklingLengthT {
+  string member_id = 1;
+  double new_buckling_length_t = 2;
+}
+message ChangeConnBoltsBoltsPerRow {
+  string connection_id = 1;
+  uint32 new_bolts_bolts_per_row = 2;
+}
+message ChangeCategoryMemberId {
+  string fatigue_category_id = 1;
+  string new_member_id = 2;
+}
+message ChangeCategoryElementId {
+  string fatigue_category_id = 1;
+  string new_element_id = 2;
+}
+message ChangeCategoryDetailCategory {
+  string fatigue_category_id = 1;
+  string new_detail_category = 2;
+}
+message ChangeCategoryDetailType {
+  string fatigue_category_id = 1;
+  DetailType new_detail_type = 2;
+}
+message ChangeCategoryLocationX {
+  string fatigue_category_id = 1;
+  double new_location_x = 2;
+}
+message ChangeCategoryM1 {
+  string fatigue_category_id = 1;
+  double new_m1 = 2;
+}
+message ChangeCategoryM2 {
+  string fatigue_category_id = 1;
+  double new_m2 = 2;
+}
+message ChangePatchSubjectId {
+  string patch_load_id = 1;
+  string new_subject_id = 2;
+}
+message ChangePatchPosition {
+  string patch_load_id = 1;
+  PatchLoadPosition new_position = 2;
+}
+message ChangePatchX {
+  string patch_load_id = 1;
+  double new_x = 2;
+}
+message ChangePatchBearingLength {
+  string patch_load_id = 1;
+  double new_bearing_length = 2;
+}
+message ChangePatchWebHeight {
+  string patch_load_id = 1;
+  double new_web_height = 2;
+}
+message ChangePatchWebAngle {
+  string patch_load_id = 1;
+  double new_web_angle = 2;
+}
+message ChangePatchCornerRadius {
+  string patch_load_id = 1;
+  double new_corner_radius = 2;
+}
+message ChangePatchLoad {
+  string patch_load_id = 1;
+  double new_load = 2;
+}
+message ChangeRingShellId {
+  string ring_stiffener_id = 1;
+  string new_shell_id = 2;
+}
+message ChangeRingX {
+  string ring_stiffener_id = 1;
+  double new_x = 2;
+}
+message ChangeRingDepth {
+  string ring_stiffener_id = 1;
+  double new_depth = 2;
+}
+message ChangeRingThickness {
+  string ring_stiffener_id = 1;
+  double new_thickness = 2;
+}
+message ChangeRingInternal {
+  string ring_stiffener_id = 1;
+  bool new_internal = 2;
+}
+message InsertFatigueCategory {
+  uint32 index = 1;
+  FatigueCategory fatigue_category = 2;
+}
+message RemoveFatigueCategory {
+  string id = 1;
+}
+message InsertPatchLoad {
+  uint32 index = 1;
+  PatchLoad patch_load = 2;
+}
+message RemovePatchLoad {
+  string id = 1;
+}
+message InsertRingStiffener {
+  uint32 index = 1;
+  RingStiffener ring_stiffener = 2;
+}
+message RemoveRingStiffener {
+  string id = 1;
+}
+message InsertMemberAction {
+  string member_id = 1;
+  uint32 index = 2;
+  MemberAction action = 3;
+}
+message RemoveMemberAction {
+  string member_id = 1;
+  string id = 2;
+}
+message InsertConnectionAction {
+  string connection_id = 1;
+  uint32 index = 2;
+  MemberAction action = 3;
+}
+message RemoveConnectionAction {
+  string connection_id = 1;
+  string id = 2;
+}
+message InsertSectionElement {
+  string section_id = 1;
+  uint32 index = 2;
+  PlateElement element = 3;
+}
+message RemoveSectionElement {
+  string section_id = 1;
+  string id = 2;
+}
+message InsertSheetAction {
+  string cold_formed_id = 1;
+  uint32 index = 2;
+  MemberAction action = 3;
+}
+message RemoveSheetAction {
+  string cold_formed_id = 1;
+  string id = 2;
+}
+message InsertShellAction {
+  string shell_id = 1;
+  uint32 index = 2;
+  MemberAction action = 3;
+}
+message RemoveShellAction {
+  string shell_id = 1;
+  string id = 2;
+}
+message ChangeTransverseGirderId {
+  string transverse_stiffener_id = 1;
+  string new_girder_id = 2;
+}
+message ChangeTransversePosition {
+  string transverse_stiffener_id = 1;
+  double new_position = 2;
+}
+message ChangeTransverseWidth {
+  string transverse_stiffener_id = 1;
+  double new_width = 2;
+}
+message ChangeTransverseThickness {
+  string transverse_stiffener_id = 1;
+  double new_thickness = 2;
+}
+message ChangeConnLoadEccentricity {
+  string aluminium_connection_id = 1;
+  double new_load_eccentricity = 2;
+}
+message ChangeConnHoleStagger {
+  string aluminium_connection_id = 1;
+  double new_hole_stagger = 2;
+}
+message ChangeTransverseSides {
+  string transverse_stiffener_id = 1;
+  StiffenerSides new_sides = 2;
+}
+message InsertTransverseStiffener {
+  uint32 index = 1;
+  TransverseStiffener transverse_stiffener = 2;
+}
+message RemoveTransverseStiffener {
+  string id = 1;
 }

@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-soil-layer-foundation-id/schema.json",
+  "title": "ChangeSoilLayerFoundationId",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newFoundationId"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeSoilLayerFoundationId"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Soil layer",
+          "de": "Bodenschicht"
+        },
+        "description": {
+          "en": "The soil layer this mutation addresses, by id.",
+          "de": "Das adressierte Element (Bodenschicht), per Kennung."
+        },
+        "ref": {
+          "kind": "soil-layer"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newFoundationId": {
+      "type": "string",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Owning foundation",
+          "de": "Zugehöriges Fundament"
+        },
+        "group": "value",
+        "order": 20,
+        "widget": "text"
+      }
+    }
+  }
+}

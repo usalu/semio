@@ -1,0 +1,85 @@
+{
+  "artifact": "en1991",
+  "collection": {
+    "name": "supportCollisions",
+    "entity": "SupportCollision",
+    "emoji": "🚛",
+    "doc": "🚛 Vehicle collision with a bridge support or soffit (EN 1991-2, 4.7): design force in driving direction and across it, height of the line of action and position along the bridge.",
+    "label": {
+      "en": "Support collisions",
+      "de": "Anpralle an Stützen"
+    },
+    "id": {
+      "en": "Collision ID",
+      "de": "Anprall-ID"
+    },
+    "singular": {
+      "en": "support collision",
+      "de": "Stützenanprall"
+    },
+    "kindSlug": "support-collision",
+    "fields": [
+      {
+        "name": "location",
+        "type": "String",
+        "label": {
+          "en": "Struck part (deck level | soffit)",
+          "de": "Getroffenes Bauteil (Deckebene | Unterseite)"
+        },
+        "doc": "🚛 deck | soffit (anything else is an invalid input).",
+        "sample": "deck"
+      },
+      {
+        "name": "assumed_force_x",
+        "type": "f64",
+        "label": {
+          "en": "Assumed force in driving direction",
+          "de": "Angesetzte Kraft in Fahrtrichtung"
+        },
+        "doc": "➡️ Design force F_dx [N] in driving direction.",
+        "sample": 1000000.0,
+        "unit": "N"
+      },
+      {
+        "name": "assumed_force_y",
+        "type": "f64",
+        "label": {
+          "en": "Assumed force across driving direction",
+          "de": "Angesetzte Kraft quer zur Fahrtrichtung"
+        },
+        "doc": "↔️ Design force F_dy [N] across the driving direction.",
+        "sample": 500000.0,
+        "unit": "N"
+      },
+      {
+        "name": "height",
+        "type": "f64",
+        "label": {
+          "en": "Height of the line of action",
+          "de": "Höhe der Wirkungslinie"
+        },
+        "doc": "↕️ Height [m] of the line of action above the carriageway.",
+        "sample": 1.25,
+        "unit": "m"
+      },
+      {
+        "name": "position_x",
+        "type": "f64",
+        "label": {
+          "en": "Position along the bridge",
+          "de": "Lage entlang der Brücke"
+        },
+        "doc": "↔️ Position [m] of the struck support from the bridge start.",
+        "sample": 10.0,
+        "unit": "m"
+      }
+    ]
+  },
+  "kit": {
+    "id": "supportCollision",
+    "en": "Support collision",
+    "de": "Stützenanprall",
+    "icon": "truck",
+    "scene_kind": "Load"
+  }
+}

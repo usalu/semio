@@ -34,6 +34,7 @@ pub fn ui_event_from_key_action(action: &semio_framework_ui_wgpu_input::KeyActio
         semio_framework_ui_wgpu_input::KeyAction::PageDown => Some(semio_framework_ui_wgpu_events::UiEvent::KeyDown { key: "PageDown".into(), modifiers: event_modifiers }),
         semio_framework_ui_wgpu_input::KeyAction::Function(number) => Some(semio_framework_ui_wgpu_events::UiEvent::KeyDown { key: format!("F{number}"), modifiers: event_modifiers }),
         semio_framework_ui_wgpu_input::KeyAction::Tab => Some(semio_framework_ui_wgpu_events::UiEvent::KeyDown { key: "Tab".into(), modifiers: event_modifiers }),
+        semio_framework_ui_wgpu_input::KeyAction::ContextMenu => Some(semio_framework_ui_wgpu_events::UiEvent::KeyDown { key: "ContextMenu".into(), modifiers: event_modifiers }),
         semio_framework_ui_wgpu_input::KeyAction::Space(true) if focused_select => Some(semio_framework_ui_wgpu_events::UiEvent::KeyDown { key: " ".into(), modifiers: event_modifiers }),
         semio_framework_ui_wgpu_input::KeyAction::Space(_) => None,
     }

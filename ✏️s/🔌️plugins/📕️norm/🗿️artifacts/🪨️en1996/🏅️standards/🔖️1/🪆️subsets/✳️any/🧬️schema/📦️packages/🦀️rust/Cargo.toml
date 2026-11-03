@@ -16,6 +16,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+serde = { workspace = true, optional = true }
 semio-framework-dsl-record = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-dsl-record-derive = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
@@ -26,13 +27,21 @@ semio-framework-schema-state = { path = "../../../../../../../../../../../../�
 semio-framework-value = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-norm-en1996-diff = { workspace = true }
+semio-s-artifact-norm-en1996-masonry = { workspace = true }
 semio-s-artifact-norm-en1996-model = { workspace = true }
 semio-s-artifact-norm-en1996-mutations = { workspace = true }
 semio-s-plugin-norm-compliance = { workspace = true }
 
+[features]
+test-support = ["dep:serde", "semio-s-artifact-norm-en1996-diff/test-support", "semio-s-artifact-norm-en1996-model/test-support", "semio-s-artifact-norm-en1996-mutations/test-support", "semio-s-plugin-norm-compliance/test-support"]
+
 [dev-dependencies]
+semio-s-plugin-norm-results-config = { workspace = true, features = ["test-support"] }
+semio-s-artifact-norm-en1996-mutations = { workspace = true, features = ["test-support"] }
+semio-s-artifact-norm-en1996-diff = { workspace = true, features = ["test-support"] }
+semio-s-artifact-norm-en1996-model = { workspace = true, features = ["test-support"] }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-test-fixtures = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
-semio-s-plugin-norm-compliance = { workspace = true, features = ["compliance-testing"] }
+semio-s-plugin-norm-compliance = { workspace = true, features = ["test-support", "compliance-testing"] }
 serde = { workspace = true }
 serde_json = { workspace = true }

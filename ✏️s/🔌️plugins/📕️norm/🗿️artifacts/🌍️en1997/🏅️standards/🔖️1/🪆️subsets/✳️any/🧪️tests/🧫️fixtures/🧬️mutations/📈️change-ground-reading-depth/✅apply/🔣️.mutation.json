@@ -1,0 +1,6 @@
+{
+  "mutation": "changeGroundReadingDepth",
+  "investigationId": "investigation-1",
+  "id": "investigation-reading-1",
+  "newDepth": 2.0
+}

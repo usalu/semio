@@ -15,7 +15,12 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[features]
+test-support = ["dep:serde", "semio-s-artifact-norm-en1990-model/test-support", "semio-s-plugin-norm-compliance/test-support"]
+oracle-wiring = ["dep:semio-s-plugin-norm-mechanics", "dep:serde_json", "semio-s-plugin-norm-compliance/compliance-testing"]
+
 [dependencies]
+serde = { workspace = true, optional = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-schema-composition = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
@@ -26,15 +31,17 @@ semio-framework-value-derive = { workspace = true }
 semio-s-artifact-norm-en1990-checks = { workspace = true }
 semio-s-artifact-norm-en1990-model = { workspace = true }
 semio-s-plugin-norm-compliance = { workspace = true }
+semio-s-plugin-norm-mechanics = { workspace = true, optional = true }
+serde_json = { workspace = true, optional = true }
 
 [dev-dependencies]
+semio-s-plugin-norm-results-config = { workspace = true, features = ["test-support"] }
+semio-s-artifact-norm-en1990-model = { workspace = true, features = ["test-support"] }
 semio-framework-async-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
-semio-s-artifact-norm-en1990-examples = { workspace = true }
-semio-s-artifact-norm-en1990-io = { workspace = true }
-semio-s-artifact-norm-en1990-schema = { workspace = true }
 semio-s-plugin-norm-app-surface = { workspace = true }
-semio-s-plugin-norm-compliance = { workspace = true, features = ["compliance-testing"] }
+semio-s-plugin-norm-compliance = { workspace = true, features = ["test-support", "compliance-testing"] }
+semio-s-plugin-norm-mechanics = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

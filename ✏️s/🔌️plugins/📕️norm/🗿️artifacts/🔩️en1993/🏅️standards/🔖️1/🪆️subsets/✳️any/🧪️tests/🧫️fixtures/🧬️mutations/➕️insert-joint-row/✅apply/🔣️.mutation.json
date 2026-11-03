@@ -1,0 +1,24 @@
+{
+  "InsertJointRow": {
+    "index": 1,
+    "jointRow": {
+      "id": "row-1-2",
+      "jointId": "joint-ep",
+      "label": "Row 1 (extended)",
+      "rowType": "Extended",
+      "lever": 0.27,
+      "boltToWeb": 0.04,
+      "edgeDistance": 0.04,
+      "extensionToFlange": 0.04,
+      "extensionEdge": 0.04,
+      "alphaFactor": 6.5,
+      "pitchToPrevious": 0.0,
+      "bolts": 2,
+      "boltDiameter": 0.02,
+      "boltStressArea": 0.000245,
+      "gripLength": 0.05,
+      "boltClass": "10.9",
+      "groupWithPrevious": 0
+    }
+  }
+}

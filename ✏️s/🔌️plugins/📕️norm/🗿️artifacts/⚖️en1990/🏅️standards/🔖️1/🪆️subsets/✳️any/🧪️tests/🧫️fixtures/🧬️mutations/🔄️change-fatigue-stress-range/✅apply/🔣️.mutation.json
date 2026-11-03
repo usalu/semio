@@ -1,0 +1,5 @@
+{
+  "mutation": "changeFatigueStressRange",
+  "id": "fat-1",
+  "newStressRange": 2.0
+}

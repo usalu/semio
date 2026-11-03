@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-bridge-fundamental-period-s/schema.json",
+  "title": "ChangeBridgeFundamentalPeriodS",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newFundamentalPeriodS"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeBridgeFundamentalPeriodS"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Bridge",
+          "de": "Brücke"
+        },
+        "description": {
+          "en": "The bridge this mutation addresses, by id.",
+          "de": "Das adressierte Element (Brücke), per Kennung."
+        },
+        "ref": {
+          "kind": "bridge"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newFundamentalPeriodS": {
+      "type": "number",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Fundamental period T",
+          "de": "Eigenperiode T"
+        },
+        "group": "value",
+        "order": 20,
+        "widget": "stepper",
+        "step": 0.001,
+        "precision": 3
+      }
+    }
+  }
+}

@@ -1,0 +1,292 @@
+{
+  "annex": "De",
+  "reliabilityClass": "RC3",
+  "materials": [
+    {
+      "id": "duplicate material 日本\u0000",
+      "designation": "unrecognized retained alloy",
+      "productForm": "extrudedTube"
+    },
+    {
+      "id": "duplicate material 日本\u0000",
+      "designation": "different ordered designation",
+      "productForm": "extrudedProfile"
+    }
+  ],
+  "sections": [
+    {
+      "id": "section",
+      "kind": "extrudedI",
+      "height": 1.1,
+      "width": 2.2,
+      "flangeThickness": 3.3,
+      "webThickness": 4.4,
+      "outerDiameter": 5.5,
+      "elements": [
+        {
+          "id": "plate",
+          "width": 6.6,
+          "thickness": 7.7,
+          "outstand": true,
+          "welded": false,
+          "weldPosition": 8.8,
+          "weldProcess": "mig",
+          "weldTJunction": false,
+          "weldDirection": "longitudinal",
+          "edgeStiffenerDepth": 0.0,
+          "edgeStiffenerThickness": 0.0
+        }
+      ]
+    }
+  ],
+  "members": [
+    {
+      "id": "member",
+      "sectionId": "missing section reference",
+      "materialId": "missing alloy reference",
+      "length": 9.9,
+      "support": "continuous",
+      "bucklingLengthY": 10.1,
+      "bucklingLengthZ": 11.2,
+      "bucklingLengthT": 12.3,
+      "ltbLength": 13.4,
+      "c1": 14.5,
+      "restrainedLtb": true,
+      "bearingLength": 0.0,
+      "transverseWeld": false,
+      "transverseWeldOffset": 0.0,
+      "actions": [
+        {
+          "id": "member action",
+          "kind": "permanent",
+          "category": "selfWeight",
+          "source": "udl",
+          "gKLine": 15.6,
+          "qKLine": 16.7,
+          "nK": 17.8,
+          "vYK": 18.9,
+          "vZK": 19.1,
+          "mYK": 20.2,
+          "mZK": 21.3,
+          "torsionK": 0.0,
+          "localLoadK": 0.0
+        }
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "connection",
+      "memberId": "unresolved member",
+      "materialId": "unresolved material",
+      "kind": "combined",
+      "actions": [
+        {
+          "id": "connection action",
+          "kind": "permanent",
+          "category": "selfWeight",
+          "source": "udl",
+          "gKLine": 22.4,
+          "qKLine": 23.5,
+          "nK": 24.6,
+          "vYK": 25.7,
+          "vZK": 26.8,
+          "mYK": 27.9,
+          "mZK": 28.1,
+          "torsionK": 0.0,
+          "localLoadK": 0.0
+        }
+      ],
+      "bolts": {
+        "material": "bolt material",
+        "diameter": 29.2,
+        "rows": 4294967295,
+        "boltsPerRow": 0,
+        "edgeDistance": 30.3,
+        "pitch": 31.4,
+        "gauge": 32.5,
+        "plateThickness": 33.6
+      },
+      "welds": {
+        "fillerAlloy": "filler alloy",
+        "throat": 34.7,
+        "length": 35.8,
+        "betaW": 36.9,
+        "hazExtent": 37.1
+      },
+      "loadEccentricity": 0.06,
+      "holeStagger": 0.0,
+      "forceMethod": "elastic"
+    }
+  ],
+  "fireScenarios": [
+    {
+      "id": "fire",
+      "memberId": "unresolved fire member",
+      "thetaA": 38.2,
+      "durationS": 39.3
+    }
+  ],
+  "fatigueDetails": [
+    {
+      "id": "fatigue",
+      "memberId": "unresolved fatigue member",
+      "detailCategory": "authored detail",
+      "deltaSigmaC": 40.4,
+      "deltaSigmaEd": 41.5,
+      "nCycles": 42.6,
+      "m1": 43.7,
+      "m2": 44.8
+    }
+  ],
+  "coldFormed": [
+    {
+      "id": "sheet",
+      "materialId": "unresolved sheet material",
+      "thickness": 45.9,
+      "width": 46.1,
+      "span": 47.2,
+      "welded": true,
+      "actions": [
+        {
+          "id": "sheet action",
+          "kind": "permanent",
+          "category": "selfWeight",
+          "source": "udl",
+          "gKLine": 48.3,
+          "qKLine": 49.4,
+          "nK": 50.5,
+          "vYK": 51.6,
+          "vZK": 52.7,
+          "mYK": 53.8,
+          "mZK": 54.9,
+          "torsionK": 0.0,
+          "localLoadK": 0.0
+        }
+      ]
+    }
+  ],
+  "shells": [
+    {
+      "id": "shell",
+      "materialId": "unresolved shell material",
+      "radius": 55.1,
+      "thickness": 56.2,
+      "length": 57.3,
+      "welded": false,
+      "fabricationClass": "b",
+      "actions": [
+        {
+          "id": "shell action",
+          "kind": "permanent",
+          "category": "selfWeight",
+          "source": "udl",
+          "gKLine": 58.4,
+          "qKLine": 59.5,
+          "nK": 60.6,
+          "vYK": 61.7,
+          "vZK": 62.8,
+          "mYK": 63.9,
+          "mZK": 64.1,
+          "torsionK": 0.0,
+          "localLoadK": 0.0
+        }
+      ]
+    }
+  ],
+  "placements": [
+    {
+      "id": "placed 日本",
+      "x": 1.5,
+      "y": -2.5,
+      "z": 0.0,
+      "yaw": 0.25
+    }
+  ],
+  "weldRuns": [
+    {
+      "id": "weld 日本",
+      "memberId": "member",
+      "elementId": "web",
+      "start": 0.5,
+      "length": 1.25,
+      "offset": 0.02,
+      "throat": 0.004,
+      "process": "tig",
+      "tJunction": true,
+      "direction": "longitudinal",
+      "hazExtent": 0.0
+    }
+  ],
+  "outlineVertices": [
+    {
+      "id": "v1",
+      "sectionId": "section",
+      "ring": "outer",
+      "elementId": "web",
+      "y": 0.0,
+      "z": 0.0
+    },
+    {
+      "id": "v2",
+      "sectionId": "section",
+      "ring": "outer",
+      "elementId": "",
+      "y": 0.1,
+      "z": 0.0
+    },
+    {
+      "id": "v3",
+      "sectionId": "section",
+      "ring": "outer",
+      "elementId": "",
+      "y": 0.05,
+      "z": 0.02
+    }
+  ],
+  "fatigueCategories": [
+    {
+      "id": "fat-site-1",
+      "memberId": "member",
+      "elementId": "web",
+      "detailCategory": "40",
+      "detailType": "buttWeld",
+      "locationX": 1.5,
+      "m1": 3.4,
+      "m2": 5.4
+    }
+  ],
+  "patchLoads": [
+    {
+      "id": "patch-1",
+      "subjectId": "member",
+      "position": "end",
+      "x": 0.0,
+      "bearingLength": 0.05,
+      "webHeight": 0.0,
+      "webAngle": 0.0,
+      "cornerRadius": 0.004,
+      "load": 12000.0
+    }
+  ],
+  "ringStiffeners": [
+    {
+      "id": "ring-1",
+      "shellId": "shell",
+      "x": 1.0,
+      "depth": 0.06,
+      "thickness": 0.006,
+      "internal": false
+    }
+  ],
+  "transverseStiffeners": [
+    {
+      "id": "stiffener-1",
+      "girderId": "purlin-1",
+      "position": 1.5,
+      "width": 0.08,
+      "thickness": 0.008,
+      "sides": "two"
+    }
+  ]
+}

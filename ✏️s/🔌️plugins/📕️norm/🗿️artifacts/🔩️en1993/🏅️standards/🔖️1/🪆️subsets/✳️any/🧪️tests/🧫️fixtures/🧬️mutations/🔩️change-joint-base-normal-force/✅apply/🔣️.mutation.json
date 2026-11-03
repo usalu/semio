@@ -1,0 +1,6 @@
+{
+  "ChangeJointBaseNormalForce": {
+    "id": "joint-j1",
+    "newBaseNormalForce": 1.5
+  }
+}

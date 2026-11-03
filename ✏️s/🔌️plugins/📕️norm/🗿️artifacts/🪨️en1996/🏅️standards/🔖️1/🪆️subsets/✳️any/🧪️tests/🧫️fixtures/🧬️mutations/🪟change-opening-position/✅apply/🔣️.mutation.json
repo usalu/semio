@@ -1,0 +1,7 @@
+{
+  "ChangeOpeningPosition": {
+    "wallId": "wall-north",
+    "id": "win-1",
+    "newPositionM": 2.0
+  }
+}

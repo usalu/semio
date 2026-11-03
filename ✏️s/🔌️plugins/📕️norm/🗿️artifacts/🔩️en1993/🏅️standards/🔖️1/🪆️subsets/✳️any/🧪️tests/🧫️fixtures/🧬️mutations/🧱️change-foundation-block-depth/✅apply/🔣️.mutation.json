@@ -1,0 +1,6 @@
+{
+  "ChangeFoundationBlockDepth": {
+    "id": "foundation-1",
+    "newBlockDepth": 2.0
+  }
+}

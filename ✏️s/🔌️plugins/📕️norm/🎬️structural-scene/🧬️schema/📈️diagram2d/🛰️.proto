@@ -1,0 +1,196 @@
+syntax = "proto3";
+package semio.norm.structuralscene;
+
+import "🛰️.proto";
+
+message Interval {
+  double min = 1;
+  double max = 2;
+}
+
+message Axis {
+  LocalizedCopy label = 1;
+  QuantityKind quantity = 2;
+  string unit = 3;
+  AxisScale scale = 4;
+ optional Interval domain = 5;
+  TickRule ticks = 6;
+}
+
+message Stroke {
+  double width_px = 1;
+  Dash dash = 2;
+  Tone tone = 3;
+}
+
+message Fill {
+  Tone tone = 1;
+  double opacity = 2;
+}
+
+message ScatterPoint {
+  Vec2 at = 1;
+  Tone tone = 2;
+ optional LocalizedCopy label = 3;
+}
+
+message Line2 {
+  Vec2 origin = 1;
+  Vec2 direction = 2;
+}
+
+message SectionProfile {
+ repeated Vec2 points = 1;
+  string unit = 2;
+}
+
+message DiagramMesh {
+ repeated Vec3 vertices = 1;
+ repeated Triangle triangles = 2;
+}
+
+message DiagramNote {
+  string id = 1;
+  Vec2 at = 2;
+  LocalizedCopy text = 3;
+  Tone tone = 4;
+}
+
+message Marker {
+  string id = 1;
+  Vec2 at = 2;
+  MarkerShape shape = 3;
+  Tone tone = 4;
+  LocalizedCopy label = 5;
+ optional double utilisation = 6;
+ optional string bound_check = 7;
+ optional FieldBinding binding = 8;
+}
+
+message DataColumn {
+  LocalizedCopy header = 1;
+  string unit = 2;
+ repeated double values = 3;
+}
+
+message DataTable {
+ repeated DataColumn columns = 1;
+}
+
+message Diagram2d {
+  string id = 1;
+  LocalizedCopy title = 2;
+  LocalizedCopy description = 3;
+ repeated Axis axes = 4;
+ repeated Series series = 5;
+ repeated Marker markers = 6;
+ repeated DiagramNote annotations = 7;
+ optional EntityRef focus = 8;
+  bool legend = 9;
+  DataTable table_twin = 10;
+}
+
+enum AxisScale {
+  AXIS_SCALE_LINEAR = 0;
+  AXIS_SCALE_LOG10 = 1;
+  AXIS_SCALE_SQRT = 2;
+}
+
+enum AxisRef {
+  AXIS_REF_X = 0;
+  AXIS_REF_Y = 1;
+}
+
+enum Dash {
+  DASH_SOLID = 0;
+  DASH_DASHED = 1;
+  DASH_DOTTED = 2;
+}
+
+enum MarkerShape {
+  MARKER_SHAPE_CIRCLE = 0;
+  MARKER_SHAPE_SQUARE = 1;
+  MARKER_SHAPE_DIAMOND = 2;
+  MARKER_SHAPE_TRIANGLE = 3;
+  MARKER_SHAPE_CROSS = 4;
+}
+
+message TickRule {
+  message StepData {
+    double step = 1;
+  }
+  message ExplicitData {
+    repeated double values = 1;
+  }
+  oneof kind {
+    Empty auto = 1;
+    StepData step = 2;
+    ExplicitData explicit = 3;
+  }
+}
+
+message Series {
+  message PolylineData {
+    string id = 1;
+    LocalizedCopy label = 2;
+    repeated Vec2 points = 3;
+    Stroke style = 4;
+  }
+  message PolygonData {
+    string id = 1;
+    LocalizedCopy label = 2;
+    repeated Vec2 ring = 3;
+    Fill fill = 4;
+    optional Hatch hatch = 5;
+  }
+  message BandData {
+    string id = 1;
+    LocalizedCopy label = 2;
+    repeated Vec2 lower = 3;
+    repeated Vec2 upper = 4;
+    Fill fill = 5;
+  }
+  message ScatterData {
+    string id = 1;
+    LocalizedCopy label = 2;
+    repeated ScatterPoint points = 3;
+  }
+  message LimitData {
+    string id = 1;
+    LocalizedCopy label = 2;
+    AxisRef axis = 3;
+    double value = 4;
+    Stroke style = 5;
+  }
+  message SectionData {
+    string id = 1;
+    LocalizedCopy label = 2;
+    SectionShape shape = 3;
+    optional SectionProfile strain = 4;
+    optional SectionProfile stress = 5;
+    optional Line2 neutral_axis = 6;
+  }
+  message RayData {
+    string id = 1;
+    LocalizedCopy label = 2;
+    Vec2 origin = 3;
+    Vec2 through = 4;
+    bool to_boundary = 5;
+    Stroke style = 6;
+  }
+  message Surface3Data {
+    string id = 1;
+    LocalizedCopy label = 2;
+    DiagramMesh mesh = 3;
+  }
+  oneof kind {
+    PolylineData polyline = 1;
+    PolygonData polygon = 2;
+    BandData band = 3;
+    ScatterData scatter = 4;
+    LimitData limit = 5;
+    SectionData section = 6;
+    RayData ray = 7;
+    Surface3Data surface3 = 8;
+  }
+}

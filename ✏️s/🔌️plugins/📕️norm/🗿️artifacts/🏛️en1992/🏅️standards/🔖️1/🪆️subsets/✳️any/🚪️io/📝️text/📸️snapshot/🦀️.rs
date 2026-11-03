@@ -5,7 +5,7 @@ use semio_s_artifact_norm_en1992_model::En1992Snapshot;
 /// 💧️ The liquid-retaining-fem-anchor example fixture, handcrafted in `en1992`'s DSL
 /// (`pack::snapshot::ArtifactDsl`): a liquid-retaining structure (EN 1992-3 tightness class TC2) section
 /// checked with a FEM-based analysis, an R90 fire rating, and a post-installed anchor in cracked
-/// concrete, under the EN annex — distinct from `En1992Snapshot::default()`'s DE-annex/TC1/R60/uncracked
+/// concrete, under the EN annex — distinct from `En1992Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De)`'s DE-annex/TC1/R60/uncracked
 /// values so the grammar's non-default branches (annex, fire rating, tightness class, `use_fem`,
 /// `anchor_cracked`) are exercised too.
 pub const EN1992_LIQUID_RETAINING_FEM_ANCHOR_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🛢️liquid-retaining-fem-anchor/🛢️liquid-retaining-fem-anchor/🗣️.dsl.semio");
@@ -44,7 +44,7 @@ mod snapshot_codec {
 use crate::text::snapshot::*;
 use semio_s_artifact_norm_en1992_model::*;
 use semio_s_plugin_norm_compliance::AnnexChoice;
-use semio_s_artifact_norm_en1992_model::{Anchor, BarLayer, ConcreteGrade, ExposureClass, FireRating, FireSpec, LoadCaseActions, MemberKind, PrestressSpec, PrestressSteel, PunchingSpec, RcMember, ReinforcementGrade, Stirrups, SupportCondition, TightnessClass};
+use semio_s_artifact_norm_en1992_model::{Anchor, BarLayer, ConcreteGrade, ExposureClass, FireRating, FireSpec, LoadCaseActions, MemberKind, PrestressSpec, Placement, PrestressSteel, PunchingSpec, RcMember, ReinforcementGrade, Stirrups, SupportCondition, TightnessClass};
 use framework_schema::ArtifactSchema;
 
 /// 📤️ Canonical JSON projection of [`En1992Snapshot`].
@@ -74,10 +74,8 @@ mod snapshot_wire_codec {
 use crate::text::snapshot::*;
 use semio_s_artifact_norm_en1992_model::*;
 use semio_s_plugin_norm_compliance::AnnexChoice;
-use semio_s_artifact_norm_en1992_model::{Anchor, BarLayer, ConcreteGrade, ExposureClass, FireRating, FireSpec, LoadCaseActions, MemberKind, PrestressSpec, PrestressSteel, PunchingSpec, RcMember, ReinforcementGrade, Stirrups, SupportCondition, TightnessClass};
+use semio_s_artifact_norm_en1992_model::{Anchor, BarLayer, ConcreteGrade, ExposureClass, FireRating, FireSpec, LoadCaseActions, MemberKind, PrestressSpec, Placement, PrestressSteel, PunchingSpec, RcMember, ReinforcementGrade, Stirrups, SupportCondition, TightnessClass};
 use framework_schema::ArtifactSchema;
 
 }
 #[cfg(test)] pub use crate::text::snapshot::snapshot_wire_codec::*;
-
-semio_s_plugin_norm_compliance::impl_norm_artifact_record!(@text En1992Snapshot, extension="en1992", envelope_id="norm.en1992");

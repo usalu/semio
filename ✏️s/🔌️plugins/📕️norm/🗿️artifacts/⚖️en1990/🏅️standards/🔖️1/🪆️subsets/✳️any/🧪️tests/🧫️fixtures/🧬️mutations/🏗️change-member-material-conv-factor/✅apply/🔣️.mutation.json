@@ -1,0 +1,5 @@
+{
+  "mutation": "changeMemberMaterialConvFactor",
+  "id": "beam-B1",
+  "newMaterialConversionFactor": 1.5
+}

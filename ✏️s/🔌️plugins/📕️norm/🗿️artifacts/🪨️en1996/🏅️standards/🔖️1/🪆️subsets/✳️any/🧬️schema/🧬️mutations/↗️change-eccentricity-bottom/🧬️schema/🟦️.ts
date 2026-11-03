@@ -1,11 +1,11 @@
 /** ↗️ `change-eccentricity-bottom` wire twin: the leaf payload `ChangeEccentricityBottom`, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
- * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
+ * by `repo ./📜️script.ts schema twins generate`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
-import { normWireInteger, normWireNumber, normWireObject, normWireRange, type NormWireReader, normWireRequired } from "@semio-tech/norm-js/registry/contract";
+import { normWireNumber, normWireObject, normWireRange, normWireRequired, normWireString, type NormWireReader } from "@semio-tech/norm-js/registry/contract";
 
 export interface ChangeEccentricityBottom {
-  index: number;
+  id: string;
   newEccentricityBottomM: number;
 }
 
-export const parseChangeEccentricityBottom: NormWireReader<ChangeEccentricityBottom> = normWireObject<ChangeEccentricityBottom>({ index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), newEccentricityBottomM: normWireRequired(normWireNumber) });
+export const parseChangeEccentricityBottom: NormWireReader<ChangeEccentricityBottom> = normWireObject<ChangeEccentricityBottom>({ id: normWireRequired(normWireString), newEccentricityBottomM: normWireRequired(normWireRange(normWireNumber, {"minimum":-10000,"maximum":10000})) });

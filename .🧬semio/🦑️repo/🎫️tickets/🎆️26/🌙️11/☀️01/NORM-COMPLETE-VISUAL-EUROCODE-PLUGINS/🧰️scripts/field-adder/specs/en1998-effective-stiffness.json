@@ -1,0 +1,21 @@
+{
+ "artifact": "en1998",
+ "fields": [
+  {
+   "entity": "member",
+   "field": "effective_stiffness_ratio",
+   "default": 1.0,
+   "unit": null,
+   "en": "Effective share of the gross wall stiffness (EN 1998-1 4.3.1(6)): 0 = simplified method with the cracked-stiffness factor of the registry, 0 < ratio <= 1 = effective stiffness declared from a more accurate analysis (1 = uncracked)",
+   "de": "Wirksamer Anteil der Bruttosteifigkeit der Wand (EN 1998-1 4.3.1(6)): 0 = vereinfachtes Verfahren mit dem Faktor der gerissenen Steifigkeit aus dem Register, 0 < Anteil <= 1 = aus genauerer Berechnung angegebene wirksame Steifigkeit (1 = ungerissen)"
+  },
+  {
+   "entity": "building",
+   "field": "storey_stiffness_ratio",
+   "default": 1.0,
+   "unit": null,
+   "en": "Effective share of the entered gross storey stiffnesses (EN 1998-1 4.3.1(6)): 0 = simplified method with the cracked-stiffness factor of the registry, 0 < ratio <= 1 = effective stiffness declared from a more accurate analysis (1 = entered values are already effective)",
+   "de": "Wirksamer Anteil der eingegebenen Brutto-Geschosssteifigkeiten (EN 1998-1 4.3.1(6)): 0 = vereinfachtes Verfahren mit dem Faktor der gerissenen Steifigkeit aus dem Register, 0 < Anteil <= 1 = aus genauerer Berechnung angegebene wirksame Steifigkeit (1 = eingegebene Werte sind bereits wirksam)"
+  }
+ ]
+}

@@ -1,0 +1,6 @@
+{
+  "ChangeTensionPinFup": {
+    "id": "ten-1",
+    "newPinFup": 1.5
+  }
+}

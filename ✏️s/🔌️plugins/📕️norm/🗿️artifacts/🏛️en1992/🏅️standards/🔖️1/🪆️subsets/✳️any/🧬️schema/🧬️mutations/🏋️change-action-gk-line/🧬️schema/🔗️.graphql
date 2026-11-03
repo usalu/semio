@@ -1,0 +1,5 @@
+type ChangeActionGKLine {
+  memberId: String!
+  actionId: String!
+  newGKLine: Float!
+}

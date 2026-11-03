@@ -1,0 +1,12 @@
+{
+  "InsertConstructionStage": {
+    "index": 1,
+    "item": {
+      "id": "stage-1-new",
+      "activity": "x",
+      "durationDays": 1.5,
+      "returnYears": 1.5,
+      "assumedQk": 1.5
+    }
+  }
+}

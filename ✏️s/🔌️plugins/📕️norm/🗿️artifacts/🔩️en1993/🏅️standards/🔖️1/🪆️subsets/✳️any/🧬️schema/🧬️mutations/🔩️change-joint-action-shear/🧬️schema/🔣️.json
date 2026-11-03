@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-joint-action-shear/schema.json",
+  "title": "ChangeJointActionShear",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "elementId",
+    "newShear"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Joint action",
+          "de": "Anschlusseinwirkung"
+        },
+        "description": {
+          "en": "The joint action this mutation addresses, by id.",
+          "de": "Das adressierte Element (Anschlusseinwirkung), per Kennung."
+        },
+        "ref": {
+          "kind": "joint-action"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "elementId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Joint action",
+          "de": "Anschlusseinwirkung"
+        },
+        "description": {
+          "en": "The joint action element this mutation addresses, by id.",
+          "de": "Das adressierte Element (Anschlusseinwirkung), per Kennung."
+        },
+        "ref": {
+          "kind": "joint-action"
+        },
+        "group": "target",
+        "order": 15
+      }
+    },
+    "newShear": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Shear force per joint",
+          "de": "Querkraft je Anschluss"
+        },
+        "widget": "stepper",
+        "unit": "N",
+        "displayUnit": "kN",
+        "displayFactor": 0.001,
+        "precision": 2,
+        "step": 1000,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

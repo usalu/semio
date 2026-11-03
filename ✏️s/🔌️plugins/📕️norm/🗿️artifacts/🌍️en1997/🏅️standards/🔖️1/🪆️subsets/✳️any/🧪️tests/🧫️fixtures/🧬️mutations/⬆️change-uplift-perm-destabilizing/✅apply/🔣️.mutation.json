@@ -1,0 +1,5 @@
+{
+  "mutation": "changeUpliftPermDestabilizing",
+  "id": "upl-U1",
+  "newPermanentDestabilizing": 1000000.0
+}

@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-water-layer-id/schema.json",
+  "title": "ChangeWaterLayerId",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newLayerId"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeWaterLayerId"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Layer water",
+          "de": "Schichtwasser"
+        },
+        "description": {
+          "en": "The layer water this mutation addresses, by id.",
+          "de": "Die adressierte Zeile (Schichtwasser), per Kennung."
+        },
+        "ref": {
+          "kind": "layer-water"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newLayerId": {
+      "type": "string",
+      "x-semio-ui": {
+        "label": {
+          "en": "Layer id",
+          "de": "Schicht-ID"
+        },
+        "widget": "text",
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

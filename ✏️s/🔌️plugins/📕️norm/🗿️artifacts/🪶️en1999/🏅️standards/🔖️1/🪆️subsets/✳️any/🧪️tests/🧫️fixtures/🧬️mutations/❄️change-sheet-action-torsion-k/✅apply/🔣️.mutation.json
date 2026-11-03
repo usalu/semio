@@ -1,0 +1,6 @@
+{
+  "mutation": "changeSheetActionTorsionK",
+  "coldFormedId": "sheet-pass",
+  "actionId": "G-sheet",
+  "newTorsionK": 1.5
+}

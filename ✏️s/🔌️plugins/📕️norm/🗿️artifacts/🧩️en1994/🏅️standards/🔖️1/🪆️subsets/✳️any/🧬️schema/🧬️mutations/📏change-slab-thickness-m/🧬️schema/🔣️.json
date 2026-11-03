@@ -5,26 +5,26 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "index",
+    "id",
     "newConcreteThicknessM"
   ],
   "properties": {
-    "index": {
-      "type": "integer",
-      "minimum": 0,
+    "id": {
+      "type": "string",
       "x-semio-ui": {
-        "widget": "stepper",
-        "role": "value",
+        "widget": "reference",
+        "role": "target",
         "label": {
           "en": "Composite slab",
           "de": "Verbunddecke"
         },
         "description": {
-          "en": "Zero-based position of the composite slab in its list.",
-          "de": "Nullbasierte Position der Verbunddecke in der Liste."
+          "en": "The composite slab this mutation addresses, by id.",
+          "de": "Das adressierte Element (Verbunddecke), per Kennung."
         },
-        "step": 1,
-        "precision": 0,
+        "ref": {
+          "kind": "slab"
+        },
         "group": "target",
         "order": 10
       }

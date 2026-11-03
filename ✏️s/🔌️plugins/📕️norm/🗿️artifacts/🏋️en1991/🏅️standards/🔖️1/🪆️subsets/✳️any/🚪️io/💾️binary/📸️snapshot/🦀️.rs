@@ -28,7 +28,7 @@ mod native_snapshot_codec {
 use crate::binary::snapshot::*;
 use crate::binary::snapshot::*;
 use semio_s_artifact_norm_en1991_model::*;
-use semio_s_artifact_norm_en1991_model::{AccidentalCase, FloorArea, RoofArea, SelfWeightElement, WindFace};
+use semio_s_artifact_norm_en1991_model::{AccidentalCase, FloorArea, RoofArea, SelfWeightElement, WindFace, BridgeLane, ConstructionStage, RoofSurface, SpecialVehicle, WindBridge, DynamicElement, ImpactAction, InternalExplosion, ThermalSection, HelicopterLanding, TieRun, ConstructionLoad, FallingLoad, ExecutionImperfection, DerailmentCase, CraneHoist, Footbridge, RailDynamic, LoadDispersal, BulkSolid, RotatingMachine};
 use framework_schema::ArtifactSchema;
 use crate::text::snapshot::*;
 /// 📦️ Decode `.pack.semio` envelope.
@@ -41,5 +41,3 @@ pub fn encode_en1991_pack(snapshot: &En1991Snapshot) -> Vec<u8> {
 }
 }
 pub use crate::binary::snapshot::native_snapshot_codec::*;
-
-semio_s_plugin_norm_compliance::impl_norm_artifact_record!(@binary En1991Snapshot, extension="en1991", envelope_id="norm.en1991", sqlite=crate::sqlite::snapshot::sqlite_codec);

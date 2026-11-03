@@ -101,6 +101,7 @@ pub fn key_event_matches_chord(action: &semio_framework_ui_wgpu_input::KeyAction
         semio_framework_ui_wgpu_input::KeyAction::PageDown => key_token == "pagedown",
         semio_framework_ui_wgpu_input::KeyAction::Function(number) => key_token == format!("f{number}"),
         semio_framework_ui_wgpu_input::KeyAction::Space(_) => key_token == "space",
+        semio_framework_ui_wgpu_input::KeyAction::ContextMenu => key_token == "contextmenu",
     }
 }
 

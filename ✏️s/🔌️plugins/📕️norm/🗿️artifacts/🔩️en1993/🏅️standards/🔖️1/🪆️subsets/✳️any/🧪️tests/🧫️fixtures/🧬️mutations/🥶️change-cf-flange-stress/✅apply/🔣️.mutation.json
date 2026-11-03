@@ -1,0 +1,6 @@
+{
+  "ChangeCfFlangeStress": {
+    "id": "cf-1",
+    "newFlangeStress": 1.5
+  }
+}

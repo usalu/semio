@@ -1,5 +1,5 @@
 //! 🧪️ Defining scene owners, original finite stock and exact child publication identity.
-use super::*;
+use crate::raster::*;
 #[path="../../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🛤️path/🎟️work/🧪️tests/🦀️.rs"]mod funding;
 fn raster_wallet()->funding::Wallet{let data:serde_json::Value=serde_json::from_str(include_str!("../../🎟️work/📐️.json")).unwrap();let s=&data["stock"];funding::Wallet::from_grant(semio_framework_value::RetainedCloneGrant{maximum_items:s["items"].as_u64().unwrap()as usize,maximum_copy_bytes:s["copy"].as_u64().unwrap()as usize,maximum_capacity_bytes:s["capacity"].as_u64().unwrap()as usize,maximum_release_bytes:s["release"].as_u64().unwrap()as usize,maximum_depth:s["depth"].as_u64().unwrap()as usize},data["maxTurns"].as_u64().unwrap()as usize)}
 fn scene(input:RasterSceneInput)->funding::Funded<RasterSceneJob>{funding::Funded::from_parts(RasterSceneJob::new(input),raster_wallet())}

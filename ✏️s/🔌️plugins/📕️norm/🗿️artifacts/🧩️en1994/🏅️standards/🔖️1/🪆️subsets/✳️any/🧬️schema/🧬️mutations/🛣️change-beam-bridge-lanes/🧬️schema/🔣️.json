@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-beam-bridge-lanes/schema.json",
+  "title": "ChangeBeamBridgeLanes",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newBridgeLanes"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Composite beam",
+          "de": "Verbundträger"
+        },
+        "description": {
+          "en": "The composite beam this mutation addresses, by id.",
+          "de": "Das adressierte Element (Verbundträger), per Kennung."
+        },
+        "ref": {
+          "kind": "beam"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newBridgeLanes": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Notional lanes loading the girder (0 = from the girder spacing)",
+          "de": "rechnerische Fahrstreifen am Träger (0 = aus dem Trägerabstand)"
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "beam",
+        "order": 20
+      }
+    }
+  }
+}

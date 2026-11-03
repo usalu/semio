@@ -1,0 +1,5 @@
+{
+  "mutation": "changeFatigueDetailCategory",
+  "fatigueDetailId": "fat-1",
+  "newDetailCategory": "71-alt"
+}

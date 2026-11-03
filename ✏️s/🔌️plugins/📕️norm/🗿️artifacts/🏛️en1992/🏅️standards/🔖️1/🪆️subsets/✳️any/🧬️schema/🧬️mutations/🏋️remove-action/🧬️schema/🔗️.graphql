@@ -1,0 +1,4 @@
+type RemoveAction {
+  memberId: String!
+  index: Int!
+}

@@ -1,0 +1,6 @@
+{
+  "ChangeSiloFabricationClass": {
+    "id": "silo-1",
+    "newFabricationClass": "Unset"
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeCategoryMemberId",
+  "fatigueCategoryId": "site-1",
+  "newMemberId": "post-chs"
+}

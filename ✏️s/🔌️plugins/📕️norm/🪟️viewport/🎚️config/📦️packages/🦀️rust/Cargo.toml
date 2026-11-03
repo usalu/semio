@@ -1,0 +1,47 @@
+[package]
+workspace = "../../../.."
+name = "semio-s-plugin-norm-viewport-config"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Norm viewport window config: schema, diff, mutations and codecs"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[[test]]
+name = "config_mutation"
+path = "../../🧪️tests/🎚️config/🦀️.rs"
+
+[dependencies]
+serde = { workspace = true, optional = true }
+pack = { workspace = true }
+semio-framework-diagnostic = { workspace = true }
+semio-framework-dsl-record = { workspace = true }
+semio-framework-dsl-record-derive = { workspace = true }
+semio-framework-os-command = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-os-store-one-item = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/📦️packages/🦀️rust" }
+semio-framework-pack-json = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-framework-schema-state = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
+semio-framework-ui-locale = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+
+[features]
+test-support = ["dep:serde"]
+
+[dev-dependencies]
+semio-framework-async-macros = { workspace = true }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+serde = { workspace = true }
+serde_json = { workspace = true }

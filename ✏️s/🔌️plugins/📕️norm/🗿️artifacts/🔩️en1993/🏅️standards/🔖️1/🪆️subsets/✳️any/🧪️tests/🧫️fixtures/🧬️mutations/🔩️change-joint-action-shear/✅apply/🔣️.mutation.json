@@ -1,0 +1,7 @@
+{
+  "ChangeJointActionShear": {
+    "id": "joint-j1",
+    "elementId": "jf-1",
+    "newShear": 426666.0
+  }
+}

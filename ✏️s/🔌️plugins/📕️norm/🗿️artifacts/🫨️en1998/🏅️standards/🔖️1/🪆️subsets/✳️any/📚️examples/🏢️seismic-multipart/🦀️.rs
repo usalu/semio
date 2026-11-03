@@ -16,7 +16,7 @@ pub fn label() -> LocalizedLabel {
 }
 
 pub fn snapshot() -> En1998Snapshot {
-    En1998Snapshot::compliant_de_multipart()
+    En1998Snapshot::compliant_de_multipart().with_example_joints(false)
 }
 
 pub fn source() -> ExampleSource {

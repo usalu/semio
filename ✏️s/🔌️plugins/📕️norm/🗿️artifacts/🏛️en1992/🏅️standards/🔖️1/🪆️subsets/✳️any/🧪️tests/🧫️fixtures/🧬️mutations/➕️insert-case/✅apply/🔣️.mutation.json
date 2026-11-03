@@ -1,0 +1,18 @@
+{
+  "InsertCase": {
+    "index": 99,
+    "case": {
+      "id": "case-m02",
+      "labelEn": "Concrete property table",
+      "labelDe": "Betonkennwerte",
+      "entryId": "M-02",
+      "numbers": [
+        {
+          "id": "fck",
+          "value": 30.0
+        }
+      ],
+      "texts": []
+    }
+  }
+}

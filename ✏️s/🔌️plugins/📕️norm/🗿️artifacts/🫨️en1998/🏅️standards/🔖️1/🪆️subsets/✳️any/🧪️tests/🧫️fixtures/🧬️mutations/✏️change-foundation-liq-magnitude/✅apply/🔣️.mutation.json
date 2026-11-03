@@ -1,0 +1,5 @@
+{
+  "mutation": "changeFoundationLiqMagnitude",
+  "id": "fd-1",
+  "newLiqMagnitude": 1.5
+}

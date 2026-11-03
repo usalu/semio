@@ -1,0 +1,6 @@
+{
+  "ChangeJointWeldForceLongitudinal": {
+    "id": "joint-j1",
+    "newWeldForceLongitudinal": 1.5
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-conn-welds-haz-extent/schema.json",
+  "title": "ChangeConnWeldsHazExtent",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "connectionId",
+    "newWeldsHazExtent"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeConnWeldsHazExtent"
+    },
+    "connectionId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Connection",
+          "de": "Anschluss"
+        },
+        "description": {
+          "en": "The connection this mutation addresses, by id.",
+          "de": "Das adressierte Element (Anschluss), per Kennung."
+        },
+        "ref": {
+          "kind": "connection"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newWeldsHazExtent": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Extent of the heat-affected zone b_haz",
+          "de": "Ausdehnung der Wärmeeinflusszone b_haz"
+        },
+        "widget": "stepper",
+        "unit": "m",
+        "displayUnit": "mm",
+        "displayFactor": 1000,
+        "precision": 1,
+        "step": 0.005,
+        "snaps": [
+          0.02,
+          0.03,
+          0.035,
+          0.04
+        ],
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

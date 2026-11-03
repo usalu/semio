@@ -1,0 +1,6 @@
+{
+  "ChangeChaseDepth": {
+    "id": "chase-1",
+    "newDepthM": 0.02
+  }
+}

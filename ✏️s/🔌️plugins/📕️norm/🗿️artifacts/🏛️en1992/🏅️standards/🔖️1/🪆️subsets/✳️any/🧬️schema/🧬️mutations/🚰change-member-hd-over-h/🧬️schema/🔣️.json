@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-member-hd-over-h/schema.json",
+  "title": "ChangeMemberHdOverH",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "memberId",
+    "newValue"
+  ],
+  "properties": {
+    "memberId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Member",
+          "de": "Bauteil"
+        },
+        "description": {
+          "en": "The reinforced concrete member this mutation addresses.",
+          "de": "Das Stahlbetonbauteil, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "member"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newValue": {
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Hydrostatic head to wall thickness h_D/h",
+          "de": "Verhältnis Wasserdruckhöhe zu Bauteildicke h_D/h"
+        },
+        "precision": 2,
+        "step": 0.5,
+        "snaps": [
+          5,
+          35
+        ],
+        "group": "member",
+        "order": 20
+      }
+    }
+  }
+}

@@ -1,0 +1,7 @@
+syntax = "proto3";
+package semio.s.norm.en1992.mutation.change_tendon_point_z;
+message ChangeTendonPointZ {
+  string member_id = 1;
+  string tendon_point_id = 2;
+  double new_z = 3;
+}

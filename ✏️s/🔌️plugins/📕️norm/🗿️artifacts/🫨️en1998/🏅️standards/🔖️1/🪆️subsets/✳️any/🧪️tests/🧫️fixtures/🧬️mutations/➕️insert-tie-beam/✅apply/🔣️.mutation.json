@@ -1,0 +1,16 @@
+{
+  "mutation": "insertTieBeam",
+  "index": 1,
+  "tieBeam": {
+    "id": "en1998-tie-beam-2",
+    "foundationAId": "F1",
+    "foundationBId": "F2",
+    "span": 6.0,
+    "width": 0.4,
+    "depth": 0.6,
+    "steelArea": 0.0012,
+    "steelDesignStrength": 434800000.0,
+    "relativeDisplacement": 0.01,
+    "displacementLimit": 0.03
+  }
+}

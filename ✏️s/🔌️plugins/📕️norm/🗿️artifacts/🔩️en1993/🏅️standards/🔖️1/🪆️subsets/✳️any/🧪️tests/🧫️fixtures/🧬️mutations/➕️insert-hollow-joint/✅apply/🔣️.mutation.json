@@ -1,0 +1,27 @@
+{
+  "InsertHollowJoint": {
+    "index": 1,
+    "hollowJoint": {
+      "id": "hollow-1-2",
+      "memberId": "member-b1",
+      "label": "K gap joint",
+      "chordWidth": 0.12,
+      "chordHeight": 0.12,
+      "chordThickness": 0.008,
+      "chordFy": 355000000.0,
+      "chordStress": 0.0,
+      "brace1Width": 0.08,
+      "brace1Height": 0.08,
+      "brace1Thickness": 0.005,
+      "brace1Angle": 45.0,
+      "brace1Force": 60000.0,
+      "brace2Width": 0.08,
+      "brace2Height": 0.08,
+      "brace2Thickness": 0.005,
+      "brace2Angle": 45.0,
+      "brace2Force": 60000.0,
+      "gap": 0.03,
+      "braceFy": 355000000.0
+    }
+  }
+}

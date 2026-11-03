@@ -1,79 +1,133 @@
-// 🧬️ En1998 diff
 syntax = "proto3";
-package semio.s.norm.en1998.diff;
-
-message En1998SystemRemoval {
-  string id = 1;
-  uint32 index = 2;
+package semio.s.norm.en1998;
+message En1998Diff {
+  // @state artifact
+  optional string annex = 1;
+  // @state artifact
+  optional bytes site = 2;
+  // @state artifact
+  bytes buildings = 3;
+  // @state artifact
+  bytes bridges = 4;
+  // @state artifact
+  bytes assessments = 5;
+  // @state artifact
+  bytes silos = 6;
+  // @state artifact
+  bytes tanks = 7;
+  // @state artifact
+  bytes foundations = 8;
+  // @state artifact
+  bytes retaining_walls = 9;
+  // @state artifact
+  bytes towers = 10;
+  // @state artifact
+  bytes soil_layers = 11;
+  // @state artifact
+  bytes diaphragms = 12;
+  // @state artifact
+  bytes accelerograms = 13;
+  // @state artifact
+  bytes piers = 14;
+  // @state artifact
+  bytes bearings = 15;
+  // @state artifact
+  bytes joints = 16;
+  // @state artifact
+  bytes tie_beams = 17;
+  // @state artifact
+  bytes slopes = 18;
+  // @state artifact
+  bytes placements = 19;
 }
-
-message En1998SystemInsertion {
-  uint32 index = 1;
-  bytes row = 2;
-}
-
-message En1998SystemRelocation {
-  string id = 1;
-  uint32 from = 2;
-  uint32 to = 3;
-}
-
-message En1998SystemModification {
-  string id = 1;
-  En1998SystemPatch patch = 2;
-}
-
 message En1998SystemDelta {
   repeated En1998SystemRemoval removed = 1;
   repeated En1998SystemInsertion inserted = 2;
   repeated En1998SystemRelocation moved = 3;
   repeated En1998SystemModification modified = 4;
 }
-
+message En1998SystemRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+message En1998SystemInsertion {
+  uint32 index = 1;
+  En1998System row = 2;
+}
+message En1998SystemRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+message En1998SystemModification {
+  string id = 1;
+  En1998SystemPatch patch = 2;
+}
 message En1998SystemPatch {
   optional string direction = 1;
   optional string system_type = 2;
   optional string material = 3;
   optional string ductility_class = 4;
   optional double q0 = 5;
-  optional double alpha_u_over_alpha_1 = 6;
+  optional double alpha_u_over_alpha1 = 6;
   optional double k_w = 7;
   optional double base_shear_resistance_n = 8;
 }
-
-message En1998StoreyRemoval {
-  string id = 1;
-  uint32 index = 2;
-}
-
-message En1998StoreyInsertion {
-  uint32 index = 1;
-  bytes row = 2;
-}
-
-message En1998StoreyRelocation {
-  string id = 1;
-  uint32 from = 2;
-  uint32 to = 3;
-}
-
-message En1998StoreyModification {
-  string id = 1;
-  En1998StoreyPatch patch = 2;
-}
-
 message En1998StoreyDelta {
   repeated En1998StoreyRemoval removed = 1;
   repeated En1998StoreyInsertion inserted = 2;
   repeated En1998StoreyRelocation moved = 3;
   repeated En1998StoreyModification modified = 4;
 }
-
+message En1998StoreyRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+message En1998StoreyInsertion {
+  uint32 index = 1;
+  En1998Storey row = 2;
+}
+message En1998StoreyRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+message En1998StoreyModification {
+  string id = 1;
+  En1998StoreyPatch patch = 2;
+}
+message En1998VariableActionDelta {
+  repeated En1998VariableActionRemoval removed = 1;
+  repeated En1998VariableActionInsertion inserted = 2;
+  repeated En1998VariableActionRelocation moved = 3;
+  repeated En1998VariableActionModification modified = 4;
+}
+message En1998VariableActionRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+message En1998VariableActionInsertion {
+  uint32 index = 1;
+  En1998VariableAction row = 2;
+}
+message En1998VariableActionRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+message En1998VariableActionModification {
+  string id = 1;
+  En1998VariableActionPatch patch = 2;
+}
+message En1998VariableActionPatch {
+  optional string category = 1;
+  optional double qk_n = 2;
+}
 message En1998StoreyPatch {
   optional double height_m = 1;
   optional double permanent_gk_n = 2;
   optional bool correlated_occupancy = 3;
-  optional bytes variables = 4;
+  En1998VariableActionDelta variables = 4;
   optional double stiffness_x = 5;
   optional double stiffness_y = 6;
   optional double centre_of_mass_x_m = 7;
@@ -84,35 +138,29 @@ message En1998StoreyPatch {
   optional double drift_y_m = 12;
   optional double shear_resistance_n = 13;
 }
-
-message En1998MemberRemoval {
-  string id = 1;
-  uint32 index = 2;
-}
-
-message En1998MemberInsertion {
-  uint32 index = 1;
-  bytes row = 2;
-}
-
-message En1998MemberRelocation {
-  string id = 1;
-  uint32 from = 2;
-  uint32 to = 3;
-}
-
-message En1998MemberModification {
-  string id = 1;
-  En1998MemberPatch patch = 2;
-}
-
 message En1998MemberDelta {
   repeated En1998MemberRemoval removed = 1;
   repeated En1998MemberInsertion inserted = 2;
   repeated En1998MemberRelocation moved = 3;
   repeated En1998MemberModification modified = 4;
 }
-
+message En1998MemberRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+message En1998MemberInsertion {
+  uint32 index = 1;
+  En1998Member row = 2;
+}
+message En1998MemberRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+message En1998MemberModification {
+  string id = 1;
+  En1998MemberPatch patch = 2;
+}
 message En1998MemberPatch {
   optional string material = 1;
   optional string role = 2;
@@ -122,36 +170,42 @@ message En1998MemberPatch {
   optional double rho_prime = 6;
   optional double omega_wd = 7;
   optional uint32 steel_section_class = 8;
+  optional double fastener_diameter_mm = 9;
+  optional double timber_thickness_mm = 10;
+  optional double wall_thickness_m = 11;
+  optional double wall_effective_height_m = 12;
+  optional double wall_length_m = 13;
+  optional double wall_direction_rad = 14;
+  optional string wall_storey_id = 15;
+  optional double wall_start_x_m = 16;
+  optional double wall_start_y_m = 17;
+  optional double wall_poisson_ratio = 18;
+  optional string effective_stiffness_basis = 19;
+  optional double effective_stiffness_ratio = 20;
 }
-
-message En1998BuildingRemoval {
-  string id = 1;
-  uint32 index = 2;
-}
-
-message En1998BuildingInsertion {
-  uint32 index = 1;
-  bytes row = 2;
-}
-
-message En1998BuildingRelocation {
-  string id = 1;
-  uint32 from = 2;
-  uint32 to = 3;
-}
-
-message En1998BuildingModification {
-  string id = 1;
-  En1998BuildingPatch patch = 2;
-}
-
 message En1998BuildingDelta {
   repeated En1998BuildingRemoval removed = 1;
   repeated En1998BuildingInsertion inserted = 2;
   repeated En1998BuildingRelocation moved = 3;
   repeated En1998BuildingModification modified = 4;
 }
-
+message En1998BuildingRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+message En1998BuildingInsertion {
+  uint32 index = 1;
+  En1998Building row = 2;
+}
+message En1998BuildingRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+message En1998BuildingModification {
+  string id = 1;
+  En1998BuildingPatch patch = 2;
+}
 message En1998BuildingPatch {
   optional string name = 1;
   optional double plan_width_m = 2;
@@ -170,36 +224,45 @@ message En1998BuildingPatch {
   optional bool claims_simple_masonry = 15;
   optional double masonry_wall_area_ratio = 16;
   optional double accidental_eccentricity_ratio = 17;
+  optional double setback_ratio = 18;
+  optional double plan_envelope_gap_ratio = 19;
+  optional double joint_gap_m = 20;
+  optional double nonstructural_weight_n = 21;
+  optional double nonstructural_height_m = 22;
+  optional double nonstructural_period_s = 23;
+  optional double nonstructural_q = 24;
+  optional double nonstructural_resistance_n = 25;
+  optional double column_moment_sum_nm = 26;
+  optional double beam_moment_sum_nm = 27;
+  optional double overturning_base_x_m = 28;
+  optional double overturning_base_y_m = 29;
+  optional double tie_down_moment_nm = 30;
+  optional string storey_stiffness_basis = 31;
+  optional double storey_stiffness_ratio = 32;
 }
-
-message En1998BridgeRemoval {
-  string id = 1;
-  uint32 index = 2;
-}
-
-message En1998BridgeInsertion {
-  uint32 index = 1;
-  bytes row = 2;
-}
-
-message En1998BridgeRelocation {
-  string id = 1;
-  uint32 from = 2;
-  uint32 to = 3;
-}
-
-message En1998BridgeModification {
-  string id = 1;
-  En1998BridgePatch patch = 2;
-}
-
 message En1998BridgeDelta {
   repeated En1998BridgeRemoval removed = 1;
   repeated En1998BridgeInsertion inserted = 2;
   repeated En1998BridgeRelocation moved = 3;
   repeated En1998BridgeModification modified = 4;
 }
-
+message En1998BridgeRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+message En1998BridgeInsertion {
+  uint32 index = 1;
+  En1998Bridge row = 2;
+}
+message En1998BridgeRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+message En1998BridgeModification {
+  string id = 1;
+  En1998BridgePatch patch = 2;
+}
 message En1998BridgePatch {
   optional double period_ratio = 1;
   optional double fundamental_period_s = 2;
@@ -207,73 +270,93 @@ message En1998BridgePatch {
   optional double bearing_d_rd_m = 4;
   optional double permanent_gk_n = 5;
   optional bool correlated_occupancy = 6;
-  optional bytes variables = 7;
+  En1998VariableActionDelta variables = 7;
+  optional double pier_height_m = 8;
+  optional double pier_moment_rd_nm = 9;
+  optional double pier_shear_rd_n = 10;
+  optional double deck_length_m = 11;
+  optional double deck_ei_nm2 = 12;
+  optional double importance_class = 13;
+  optional double vertical_period_s = 14;
+  optional double pier_cracked_inertia_ratio = 15;
 }
-
-message En1998AssessmentRemoval {
-  string id = 1;
-  uint32 index = 2;
-}
-
-message En1998AssessmentInsertion {
-  uint32 index = 1;
-  bytes row = 2;
-}
-
-message En1998AssessmentRelocation {
-  string id = 1;
-  uint32 from = 2;
-  uint32 to = 3;
-}
-
-message En1998AssessmentModification {
-  string id = 1;
-  En1998AssessmentPatch patch = 2;
-}
-
 message En1998AssessmentDelta {
   repeated En1998AssessmentRemoval removed = 1;
   repeated En1998AssessmentInsertion inserted = 2;
   repeated En1998AssessmentRelocation moved = 3;
   repeated En1998AssessmentModification modified = 4;
 }
-
+message En1998AssessmentRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+message En1998AssessmentInsertion {
+  uint32 index = 1;
+  En1998Assessment row = 2;
+}
+message En1998AssessmentRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+message En1998AssessmentModification {
+  string id = 1;
+  En1998AssessmentPatch patch = 2;
+}
 message En1998AssessmentPatch {
   optional string knowledge_level = 1;
   optional string limit_state = 2;
   optional string supported_building_id = 3;
   optional double r_k_n = 4;
   optional double gamma_el = 5;
+  optional double chord_rotation_demand_rad = 6;
+  optional double chord_rotation_yield_rad = 7;
+  optional double chord_rotation_ultimate_rad = 8;
+  optional double section_depth_m = 9;
+  optional double section_width_m = 10;
+  optional double effective_depth_m = 11;
+  optional double shear_span_m = 12;
+  optional double axial_force_n = 13;
+  optional double tension_steel_area_m2 = 14;
+  optional double compression_steel_area_m2 = 15;
+  optional double bar_diameter_mm = 16;
+  optional double steel_yield_mpa = 17;
+  optional double concrete_strength_mpa = 18;
+  optional double stirrup_leg_area_m2 = 19;
+  optional double stirrup_spacing_m = 20;
+  optional double stirrup_yield_mpa = 21;
+  optional double core_width_m = 22;
+  optional double core_depth_m = 23;
+  optional double restrained_bar_count = 24;
+  optional double restrained_bar_spacing_m = 25;
+  optional double diagonal_reinforcement_ratio = 26;
+  optional double shear_cracking_before_yield = 27;
+  optional double shear_force_demand_n = 28;
+  optional double intermediate_steel_area_m2 = 29;
 }
-
-message En1998SiloRemoval {
-  string id = 1;
-  uint32 index = 2;
-}
-
-message En1998SiloInsertion {
-  uint32 index = 1;
-  bytes row = 2;
-}
-
-message En1998SiloRelocation {
-  string id = 1;
-  uint32 from = 2;
-  uint32 to = 3;
-}
-
-message En1998SiloModification {
-  string id = 1;
-  En1998SiloPatch patch = 2;
-}
-
 message En1998SiloDelta {
   repeated En1998SiloRemoval removed = 1;
   repeated En1998SiloInsertion inserted = 2;
   repeated En1998SiloRelocation moved = 3;
   repeated En1998SiloModification modified = 4;
 }
-
+message En1998SiloRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+message En1998SiloInsertion {
+  uint32 index = 1;
+  En1998Silo row = 2;
+}
+message En1998SiloRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+message En1998SiloModification {
+  string id = 1;
+  En1998SiloPatch patch = 2;
+}
 message En1998SiloPatch {
   optional double height_m = 1;
   optional double radius_m = 2;
@@ -285,35 +368,29 @@ message En1998SiloPatch {
   optional double v_rd_n = 8;
   optional double q_nominal = 9;
 }
-
-message En1998TankRemoval {
-  string id = 1;
-  uint32 index = 2;
-}
-
-message En1998TankInsertion {
-  uint32 index = 1;
-  bytes row = 2;
-}
-
-message En1998TankRelocation {
-  string id = 1;
-  uint32 from = 2;
-  uint32 to = 3;
-}
-
-message En1998TankModification {
-  string id = 1;
-  En1998TankPatch patch = 2;
-}
-
 message En1998TankDelta {
   repeated En1998TankRemoval removed = 1;
   repeated En1998TankInsertion inserted = 2;
   repeated En1998TankRelocation moved = 3;
   repeated En1998TankModification modified = 4;
 }
-
+message En1998TankRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+message En1998TankInsertion {
+  uint32 index = 1;
+  En1998Tank row = 2;
+}
+message En1998TankRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+message En1998TankModification {
+  string id = 1;
+  En1998TankPatch patch = 2;
+}
 message En1998TankPatch {
   optional double height_m = 1;
   optional double radius_m = 2;
@@ -322,109 +399,121 @@ message En1998TankPatch {
   optional string content_category = 5;
   optional double filling_ratio = 6;
   optional double v_rd_n = 7;
+  optional double shell_strength_mpa = 8;
+  optional double shell_thickness_m = 9;
 }
-
-message En1998FoundationRemoval {
-  string id = 1;
-  uint32 index = 2;
-}
-
-message En1998FoundationInsertion {
-  uint32 index = 1;
-  bytes row = 2;
-}
-
-message En1998FoundationRelocation {
-  string id = 1;
-  uint32 from = 2;
-  uint32 to = 3;
-}
-
-message En1998FoundationModification {
-  string id = 1;
-  En1998FoundationPatch patch = 2;
-}
-
 message En1998FoundationDelta {
   repeated En1998FoundationRemoval removed = 1;
   repeated En1998FoundationInsertion inserted = 2;
   repeated En1998FoundationRelocation moved = 3;
   repeated En1998FoundationModification modified = 4;
 }
-
-message En1998FoundationPatch {
-  optional string supported_building_id = 1;
-  optional double area_m2 = 2;
-  optional double p_rd_pa = 3;
-  optional double h_rd_n = 4;
-  optional double k_foundation = 5;
-  optional double k_soil = 6;
-}
-
-message En1998RetainingWallRemoval {
+message En1998FoundationRemoval {
   string id = 1;
   uint32 index = 2;
 }
-
-message En1998RetainingWallInsertion {
+message En1998FoundationInsertion {
   uint32 index = 1;
-  bytes row = 2;
+  En1998Foundation row = 2;
 }
-
-message En1998RetainingWallRelocation {
+message En1998FoundationRelocation {
   string id = 1;
   uint32 from = 2;
   uint32 to = 3;
 }
-
-message En1998RetainingWallModification {
+message En1998FoundationModification {
   string id = 1;
-  En1998RetainingWallPatch patch = 2;
+  En1998FoundationPatch patch = 2;
 }
-
+message En1998FoundationPatch {
+  optional string supported_building_id = 1;
+  optional double area_m2 = 2;
+  optional double p_rd_pa = 3;
+  optional double passive_resistance_n = 4;
+  optional double k_foundation = 5;
+  optional double k_soil = 6;
+  optional double liq_n160 = 7;
+  optional double liq_fines_percent = 8;
+  optional double liq_depth_m = 9;
+  optional double liq_water_depth_m = 10;
+  optional double liq_unit_weight_n_m3 = 11;
+  optional double liq_magnitude = 12;
+  optional double liq_layer_thickness_m = 13;
+  optional double footing_width_m = 14;
+  optional double bearing_axial_n = 15;
+  optional double bearing_shear_n = 16;
+  optional double bearing_moment_nm = 17;
+  optional double bearing_n_max_n = 18;
+  optional double soil_friction_angle_deg = 19;
+  optional double pile_diameter_m = 20;
+  optional double pile_length_m = 21;
+  optional double pile_modulus_pa = 22;
+  optional double pile_subgrade_modulus_n_m3 = 23;
+  optional double pile_head_shear_n = 24;
+  optional double pile_head_fixed = 25;
+  optional double pile_interface_depth_m = 26;
+  optional double pile_upper_vs_m_s = 27;
+  optional double pile_lower_vs_m_s = 28;
+  optional double pile_moment_rd_nm = 29;
+  optional double base_friction_angle_deg = 30;
+  optional double base_pore_pressure_pa = 31;
+}
 message En1998RetainingWallDelta {
   repeated En1998RetainingWallRemoval removed = 1;
   repeated En1998RetainingWallInsertion inserted = 2;
   repeated En1998RetainingWallRelocation moved = 3;
   repeated En1998RetainingWallModification modified = 4;
 }
-
+message En1998RetainingWallRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+message En1998RetainingWallInsertion {
+  uint32 index = 1;
+  En1998RetainingWall row = 2;
+}
+message En1998RetainingWallRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+message En1998RetainingWallModification {
+  string id = 1;
+  En1998RetainingWallPatch patch = 2;
+}
 message En1998RetainingWallPatch {
   optional double height_m = 1;
   optional double phi_deg = 2;
   optional double soil_gamma = 3;
   optional double r = 4;
   optional double h_rd_n_per_m = 5;
+  optional double water_height_m = 6;
+  optional double saturated_gamma = 7;
+  optional double permeability_m_s = 8;
 }
-
-message En1998TowerRemoval {
-  string id = 1;
-  uint32 index = 2;
-}
-
-message En1998TowerInsertion {
-  uint32 index = 1;
-  bytes row = 2;
-}
-
-message En1998TowerRelocation {
-  string id = 1;
-  uint32 from = 2;
-  uint32 to = 3;
-}
-
-message En1998TowerModification {
-  string id = 1;
-  En1998TowerPatch patch = 2;
-}
-
 message En1998TowerDelta {
   repeated En1998TowerRemoval removed = 1;
   repeated En1998TowerInsertion inserted = 2;
   repeated En1998TowerRelocation moved = 3;
   repeated En1998TowerModification modified = 4;
 }
-
+message En1998TowerRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+message En1998TowerInsertion {
+  uint32 index = 1;
+  En1998Tower row = 2;
+}
+message En1998TowerRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+message En1998TowerModification {
+  string id = 1;
+  En1998TowerPatch patch = 2;
+}
 message En1998TowerPatch {
   optional double height_m = 1;
   optional double m_rd_nm = 2;
@@ -432,28 +521,306 @@ message En1998TowerPatch {
   optional double q_nominal = 4;
   optional double permanent_gk_n = 5;
   optional bool correlated_occupancy = 6;
-  optional bytes variables = 7;
+  En1998VariableActionDelta variables = 7;
+  optional double ei_nm2 = 8;
+  optional double base_rotational_stiffness_nm = 9;
 }
-
-message En1998Diff {
-  // @state artifact
-  optional string annex = 1;
-  // @state artifact
-  optional bytes site = 2;
-  // @state artifact
-  En1998BuildingDelta buildings = 3;
-  // @state artifact
-  En1998BridgeDelta bridges = 4;
-  // @state artifact
-  En1998AssessmentDelta assessments = 5;
-  // @state artifact
-  En1998SiloDelta silos = 6;
-  // @state artifact
-  En1998TankDelta tanks = 7;
-  // @state artifact
-  En1998FoundationDelta foundations = 8;
-  // @state artifact
-  En1998RetainingWallDelta retaining_walls = 9;
-  // @state artifact
-  En1998TowerDelta towers = 10;
+message En1998PlacementDelta {
+  repeated En1998PlacementRemoval removed = 1;
+  repeated En1998PlacementInsertion inserted = 2;
+  repeated En1998PlacementRelocation moved = 3;
+  repeated En1998PlacementModification modified = 4;
+}
+message En1998PlacementRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+message En1998PlacementInsertion {
+  uint32 index = 1;
+  En1998Placement row = 2;
+}
+message En1998PlacementRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+message En1998PlacementModification {
+  string id = 1;
+  En1998PlacementPatch patch = 2;
+}
+message En1998PlacementPatch {
+  optional double x = 1;
+  optional double y = 2;
+  optional double z = 3;
+  optional double yaw = 4;
+}
+message En1998SoilLayerDelta {
+  repeated En1998SoilLayerRemoval removed = 1;
+  repeated En1998SoilLayerInsertion inserted = 2;
+  repeated En1998SoilLayerRelocation moved = 3;
+  repeated En1998SoilLayerModification modified = 4;
+}
+message En1998SoilLayerRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+message En1998SoilLayerInsertion {
+  uint32 index = 1;
+  En1998SoilLayer row = 2;
+}
+message En1998SoilLayerRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+message En1998SoilLayerModification {
+  string id = 1;
+  En1998SoilLayerPatch patch = 2;
+}
+message En1998SoilLayerPatch {
+  optional string foundation_id = 1;
+  optional double thickness_m = 2;
+  optional double unit_weight_n_m3 = 3;
+  optional double shear_wave_velocity_m_s = 4;
+  optional double n160 = 5;
+  optional double fines_percent = 6;
+}
+message En1998DiaphragmDelta {
+  repeated En1998DiaphragmRemoval removed = 1;
+  repeated En1998DiaphragmInsertion inserted = 2;
+  repeated En1998DiaphragmRelocation moved = 3;
+  repeated En1998DiaphragmModification modified = 4;
+}
+message En1998DiaphragmRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+message En1998DiaphragmInsertion {
+  uint32 index = 1;
+  En1998Diaphragm row = 2;
+}
+message En1998DiaphragmRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+message En1998DiaphragmModification {
+  string id = 1;
+  En1998DiaphragmPatch patch = 2;
+}
+message En1998DiaphragmPatch {
+  optional string building_id = 1;
+  optional string storey_id = 2;
+  optional string material = 3;
+  optional double thickness_m = 4;
+  optional double span_m = 5;
+  optional double depth_m = 6;
+  optional double opening_width_m = 7;
+  optional double shear_strength_mpa = 8;
+  optional double chord_area_m2 = 9;
+  optional double chord_strength_mpa = 10;
+  optional double gamma_d = 11;
+}
+message En1998AccelerogramDelta {
+  repeated En1998AccelerogramRemoval removed = 1;
+  repeated En1998AccelerogramInsertion inserted = 2;
+  repeated En1998AccelerogramRelocation moved = 3;
+  repeated En1998AccelerogramModification modified = 4;
+}
+message En1998AccelerogramRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+message En1998AccelerogramInsertion {
+  uint32 index = 1;
+  En1998Accelerogram row = 2;
+}
+message En1998AccelerogramRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+message En1998AccelerogramModification {
+  string id = 1;
+  En1998AccelerogramPatch patch = 2;
+}
+message En1998AccelerogramPatch {
+  optional string building_id = 1;
+  optional string label = 2;
+  optional string samples = 3;
+  optional double dt_s = 4;
+  optional double scale_factor = 5;
+}
+message En1998PierDelta {
+  repeated En1998PierRemoval removed = 1;
+  repeated En1998PierInsertion inserted = 2;
+  repeated En1998PierRelocation moved = 3;
+  repeated En1998PierModification modified = 4;
+}
+message En1998PierRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+message En1998PierInsertion {
+  uint32 index = 1;
+  En1998Pier row = 2;
+}
+message En1998PierRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+message En1998PierModification {
+  string id = 1;
+  En1998PierPatch patch = 2;
+}
+message En1998PierPatch {
+  optional string bridge_id = 1;
+  optional double x_m = 2;
+  optional double height_m = 3;
+  optional double section_b_m = 4;
+  optional double section_h_m = 5;
+  optional double modulus_mpa = 6;
+  optional double moment_rd_nm = 7;
+  optional double shear_rd_n = 8;
+  optional string reinforcement_ratio = 9;
+  optional string cover_m = 10;
+  optional string concrete_fck_mpa = 11;
+  optional string steel_fyk_mpa = 12;
+  optional string axial_load_n = 13;
+  optional string stiffness_basis = 14;
+}
+message En1998BearingDelta {
+  repeated En1998BearingRemoval removed = 1;
+  repeated En1998BearingInsertion inserted = 2;
+  repeated En1998BearingRelocation moved = 3;
+  repeated En1998BearingModification modified = 4;
+}
+message En1998BearingRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+message En1998BearingInsertion {
+  uint32 index = 1;
+  En1998Bearing row = 2;
+}
+message En1998BearingRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+message En1998BearingModification {
+  string id = 1;
+  En1998BearingPatch patch = 2;
+}
+message En1998BearingPatch {
+  optional string bridge_id = 1;
+  optional string pier_id = 2;
+  optional string device = 3;
+  optional double x_m = 4;
+  optional double stiffness_n_per_m = 5;
+  optional double d_rd_m = 6;
+  optional double seat_length_m = 7;
+  optional double min_support_length_m = 8;
+}
+message En1998JointDelta {
+  repeated En1998JointRemoval removed = 1;
+  repeated En1998JointInsertion inserted = 2;
+  repeated En1998JointRelocation moved = 3;
+  repeated En1998JointModification modified = 4;
+}
+message En1998JointRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+message En1998JointInsertion {
+  uint32 index = 1;
+  En1998Joint row = 2;
+}
+message En1998JointRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+message En1998JointModification {
+  string id = 1;
+  En1998JointPatch patch = 2;
+}
+message En1998JointPatch {
+  optional string building_id = 1;
+  optional string storey_id = 2;
+  optional string column_id = 3;
+  optional string beam_id = 4;
+  optional double x_m = 5;
+  optional double y_m = 6;
+  optional double column_moment_rd_nm = 7;
+  optional double beam_moment_rd_nm = 8;
+}
+message En1998TieBeamDelta {
+  repeated En1998TieBeamRemoval removed = 1;
+  repeated En1998TieBeamInsertion inserted = 2;
+  repeated En1998TieBeamRelocation moved = 3;
+  repeated En1998TieBeamModification modified = 4;
+}
+message En1998TieBeamRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+message En1998TieBeamInsertion {
+  uint32 index = 1;
+  En1998TieBeam row = 2;
+}
+message En1998TieBeamRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+message En1998TieBeamModification {
+  string id = 1;
+  En1998TieBeamPatch patch = 2;
+}
+message En1998TieBeamPatch {
+  optional string foundation_a_id = 1;
+  optional string foundation_b_id = 2;
+  optional string span = 3;
+  optional string width = 4;
+  optional string depth = 5;
+  optional string steel_area = 6;
+  optional string steel_design_strength = 7;
+  optional string relative_displacement = 8;
+  optional string displacement_limit = 9;
+}
+message En1998SlopeDelta {
+  repeated En1998SlopeRemoval removed = 1;
+  repeated En1998SlopeInsertion inserted = 2;
+  repeated En1998SlopeRelocation moved = 3;
+  repeated En1998SlopeModification modified = 4;
+}
+message En1998SlopeRemoval {
+  string id = 1;
+  uint32 index = 2;
+}
+message En1998SlopeInsertion {
+  uint32 index = 1;
+  En1998Slope row = 2;
+}
+message En1998SlopeRelocation {
+  string id = 1;
+  uint32 from = 2;
+  uint32 to = 3;
+}
+message En1998SlopeModification {
+  string id = 1;
+  En1998SlopePatch patch = 2;
+}
+message En1998SlopePatch {
+  optional string governing_layer_id = 1;
+  optional string height = 2;
+  optional string angle = 3;
+  optional string friction_angle = 4;
+  optional string cohesion = 5;
+  optional string topographic_amplification = 6;
+  optional string circle_centre_x = 7;
+  optional string circle_centre_z = 8;
+  optional string circle_radius = 9;
 }

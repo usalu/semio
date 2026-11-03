@@ -1,0 +1,15 @@
+{
+  "mutation": "insertLoadCase",
+  "footingId": "footing-F1",
+  "index": 0,
+  "loadCase": {
+    "id": "lc-bsP-new",
+    "designSituation": "persistent",
+    "verticalPermanent": 400000.0,
+    "verticalVariable": 150000.0,
+    "horizontalPermanent": 20000.0,
+    "horizontalVariable": 40000.0,
+    "momentPermanent": 30000.0,
+    "momentVariable": 50000.0
+  }
+}

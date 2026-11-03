@@ -90,10 +90,10 @@ impl<T: RetainedClone, const N: usize> RetainedCloneCursor<[T; N]> for ArrayCurs
         }
         work+=1;*self.child = Some(T::retained_clone_cursor());
         Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }))
-    })();crate::RetainedWorkOutcome{result,work}}
+    })();RetainedWorkOutcome{result,work}}
 
-    fn take_demand(&self)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::retained_clone::retained_clone_take_demand())}
-    fn take(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<Option<([T; N],RetainedCloneProgress)>>{if !self.output_ready(){return crate::RetainedWorkOutcome{result:Ok(None),work:0}}let turn=crate::retained_clone::take_retained_clone_output(&mut *self.output,grant);if matches!(&turn.result,Ok(Some(_))){self.spent = true;}turn}
+    fn take_demand(&self)->Result<RetirementDemand,ValueError>{Ok(retained_clone_take_demand())}
+    fn take(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<Option<([T; N],RetainedCloneProgress)>>{if !self.output_ready(){return RetainedWorkOutcome{result:Ok(None),work:0}}let turn=take_retained_clone_output(&mut *self.output,grant);if matches!(&turn.result,Ok(Some(_))){self.spent = true;}turn}
 
     fn begin_close(&mut self) -> bool {
         if self.closing { return false; }
@@ -123,7 +123,7 @@ impl<T: RetainedClone, const N: usize> RetainedCloneCursor<[T; N]> for ArrayCurs
         }
         {let turn=self.close.begin_granted(&mut self.output,grant);work+=turn.work;if let Some(step)=turn.result?{return Ok(step)}}
         {let turn=close_retained_binding(&mut self.source,grant);work+=turn.work;turn.result}
-    })();crate::RetainedWorkOutcome{result,work}}
+    })();RetainedWorkOutcome{result,work}}
 
     fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.closing{return Ok(Default::default());}
         if let Some(child)=self.child.as_ref(){if !self.child_closing{return Ok(RetirementDemand{depth:1,..Default::default()});}return if child.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<T::Cursor>(),depth:1,..Default::default()})}else{nested_retained_clone_close_demands::<T>(child,body)};}

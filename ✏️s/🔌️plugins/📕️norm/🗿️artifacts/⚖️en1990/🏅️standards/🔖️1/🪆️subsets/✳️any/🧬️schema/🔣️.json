@@ -16,7 +16,6 @@
     "referencePeriodYears",
     "supervisionLevel",
     "inspectionLevel",
-    "kFiDeclared",
     "betaComputed",
     "permanents",
     "variables",
@@ -24,7 +23,14 @@
     "seismics",
     "members",
     "bridgeSls",
-    "effects"
+    "effects",
+    "fatigueSpectra",
+    "reliabilityAnalyses",
+    "testSeries",
+    "placements",
+    "cases",
+    "factorOverrides",
+    "trafficGroups"
   ],
   "properties": {
     "annex": {
@@ -33,15 +39,21 @@
         "En",
         "De"
       ],
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-rust": {
+        "type": "AnnexChoice"
+      }
     },
     "projectId": {
       "type": "string",
       "x-semio-state": "artifact"
     },
     "structureKind": {
-      "type": "string",
-      "x-semio-state": "artifact"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/$defs/StructureKind",
+      "x-semio-state": "artifact",
+      "x-semio-rust": {
+        "type": "semio_s_artifact_norm_en1990_model::StructureKind"
+      }
     },
     "altitudeM": {
       "type": "number",
@@ -54,10 +66,16 @@
       "x-semio-state": "artifact"
     },
     "reliabilityClass": {
-      "type": "integer",
-      "minimum": 0,
-      "maximum": 255,
-      "x-semio-state": "artifact"
+      "type": "string",
+      "enum": [
+        "RC1",
+        "RC2",
+        "RC3"
+      ],
+      "x-semio-state": "artifact",
+      "x-semio-rust": {
+        "type": "semio_s_artifact_norm_en1990_model::ReliabilityClass"
+      }
     },
     "designWorkingLifeCategory": {
       "type": "integer",
@@ -74,16 +92,18 @@
       "x-semio-state": "artifact"
     },
     "supervisionLevel": {
-      "type": "string",
-      "x-semio-state": "artifact"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/$defs/SupervisionLevel",
+      "x-semio-state": "artifact",
+      "x-semio-rust": {
+        "type": "semio_s_artifact_norm_en1990_model::SupervisionLevel"
+      }
     },
     "inspectionLevel": {
-      "type": "string",
-      "x-semio-state": "artifact"
-    },
-    "kFiDeclared": {
-      "type": "number",
-      "x-semio-state": "artifact"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/$defs/InspectionLevel",
+      "x-semio-state": "artifact",
+      "x-semio-rust": {
+        "type": "semio_s_artifact_norm_en1990_model::InspectionLevel"
+      }
     },
     "betaComputed": {
       "type": "number",
@@ -92,54 +112,145 @@
     "permanents": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/PermanentAction"
+        "$ref": "#/$defs/PermanentAction"
       },
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-rust": {
+        "type": "Vec<semio_s_artifact_norm_en1990_model::PermanentAction>"
+      }
     },
     "variables": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/VariableAction"
+        "$ref": "#/$defs/VariableAction"
       },
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-rust": {
+        "type": "Vec<semio_s_artifact_norm_en1990_model::VariableAction>"
+      }
     },
     "accidentals": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/AccidentalAction"
+        "$ref": "#/$defs/AccidentalAction"
       },
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-rust": {
+        "type": "Vec<semio_s_artifact_norm_en1990_model::AccidentalAction>"
+      }
     },
     "seismics": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/SeismicAction"
+        "$ref": "#/$defs/SeismicAction"
       },
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-rust": {
+        "type": "Vec<semio_s_artifact_norm_en1990_model::SeismicAction>"
+      }
     },
     "members": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/Member"
+        "$ref": "#/$defs/Member"
       },
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-rust": {
+        "type": "Vec<semio_s_artifact_norm_en1990_model::Member>"
+      }
     },
     "bridgeSls": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/BridgeSls"
+        "$ref": "#/$defs/BridgeSls"
       },
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-rust": {
+        "type": "Vec<semio_s_artifact_norm_en1990_model::BridgeSls>"
+      }
     },
     "effects": {
       "type": "array",
       "items": {
-        "$ref": "#/definitions/MemberEffect"
+        "$ref": "#/$defs/MemberEffect"
       },
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-rust": {
+        "type": "Vec<semio_s_artifact_norm_en1990_model::MemberEffect>"
+      }
+    },
+    "fatigueSpectra": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/FatigueSpectrum"
+      },
+      "x-semio-state": "artifact",
+      "x-semio-rust": {
+        "type": "Vec<semio_s_artifact_norm_en1990_model::FatigueSpectrum>"
+      }
+    },
+    "reliabilityAnalyses": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ReliabilityAnalysis"
+      },
+      "x-semio-state": "artifact",
+      "x-semio-rust": {
+        "type": "Vec<semio_s_artifact_norm_en1990_model::ReliabilityAnalysis>"
+      }
+    },
+    "testSeries": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/TestSeries"
+      },
+      "x-semio-state": "artifact",
+      "x-semio-rust": {
+        "type": "Vec<semio_s_artifact_norm_en1990_model::TestSeries>"
+      }
+    },
+    "placements": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Placement"
+      },
+      "x-semio-state": "artifact",
+      "x-semio-rust": {
+        "type": "Vec<semio_s_artifact_norm_en1990_model::Placement>"
+      }
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/CaseRow"
+      },
+      "x-semio-state": "artifact",
+      "x-semio-rust": {
+        "type": "Vec<semio_s_artifact_norm_en1990_model::CaseRow>"
+      }
+    },
+    "factorOverrides": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/FactorOverride"
+      },
+      "x-semio-state": "artifact",
+      "x-semio-rust": {
+        "type": "Vec<semio_s_artifact_norm_en1990_model::FactorOverride>"
+      }
+    },
+    "trafficGroups": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/TrafficGroup"
+      },
+      "x-semio-state": "artifact",
+      "x-semio-rust": {
+        "type": "Vec<semio_s_artifact_norm_en1990_model::TrafficGroup>"
+      }
     }
   },
-  "definitions": {
+  "$defs": {
     "PermanentAction": {
       "type": "object",
       "additionalProperties": false,
@@ -153,12 +264,7 @@
           "type": "string"
         },
         "kind": {
-          "type": "string",
-          "enum": [
-            "g_sup",
-            "g_inf",
-            "prestress"
-          ]
+          "type": "string"
         },
         "gk": {
           "type": "number"
@@ -171,7 +277,8 @@
       "required": [
         "id",
         "category",
-        "qk"
+        "qk",
+        "group"
       ],
       "properties": {
         "id": {
@@ -182,6 +289,9 @@
         },
         "qk": {
           "type": "number"
+        },
+        "group": {
+          "type": "string"
         }
       }
     },
@@ -240,10 +350,30 @@
         "rdEquDestab",
         "rdFat",
         "span",
-        "deflectionW",
+        "precamber",
+        "deflectionW1",
+        "deflectionW2",
+        "deflectionW3",
         "deflectionLimitRatio",
+        "deflectionLimitRatioW3",
+        "slsLimitChar",
+        "slsLimitFreq",
+        "slsLimitQp",
         "vibrationFrequency",
-        "vibrationFrequencyMin"
+        "vibrationFrequencyMin",
+        "frameHeight",
+        "frameDrift",
+        "storeyHeight",
+        "storeyDrift",
+        "materialStrengthK",
+        "materialConversionFactor",
+        "materialPartialFactor",
+        "materialDesignStrength",
+        "nominalDimension",
+        "dimensionTolerance",
+        "designDimension",
+        "memberAlphaCr",
+        "secondOrderAnalysis"
       ],
       "properties": {
         "id": {
@@ -273,10 +403,31 @@
         "span": {
           "type": "number"
         },
-        "deflectionW": {
+        "precamber": {
+          "type": "number"
+        },
+        "deflectionW1": {
+          "type": "number"
+        },
+        "deflectionW2": {
+          "type": "number"
+        },
+        "deflectionW3": {
           "type": "number"
         },
         "deflectionLimitRatio": {
+          "type": "number"
+        },
+        "deflectionLimitRatioW3": {
+          "type": "number"
+        },
+        "slsLimitChar": {
+          "type": "number"
+        },
+        "slsLimitFreq": {
+          "type": "number"
+        },
+        "slsLimitQp": {
           "type": "number"
         },
         "vibrationFrequency": {
@@ -284,6 +435,162 @@
         },
         "vibrationFrequencyMin": {
           "type": "number"
+        },
+        "frameHeight": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Frame height H (A1.4)",
+              "de": "Rahmenhöhe H (A1.4)"
+            },
+            "widget": "stepper",
+            "precision": 2,
+            "step": 0.01
+          }
+        },
+        "frameDrift": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Horizontal frame drift u",
+              "de": "Horizontale Rahmenverschiebung u"
+            },
+            "widget": "stepper",
+            "precision": 4,
+            "step": 0.001
+          }
+        },
+        "storeyHeight": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Storey height h (A1.4)",
+              "de": "Geschosshöhe h (A1.4)"
+            },
+            "widget": "stepper",
+            "precision": 2,
+            "step": 0.01
+          }
+        },
+        "storeyDrift": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Horizontal storey drift u_i",
+              "de": "Horizontale Geschossverschiebung u_i"
+            },
+            "widget": "stepper",
+            "precision": 4,
+            "step": 0.001
+          }
+        },
+        "materialStrengthK": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Characteristic material strength X_k (E90.10)",
+              "de": "Charakteristische Materialfestigkeit X_k (E90.10)"
+            },
+            "widget": "stepper",
+            "precision": 0,
+            "step": 500000
+          }
+        },
+        "materialConversionFactor": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Conversion factor η (0 = 1.0)",
+              "de": "Umrechnungsfaktor η (0 = 1,0)"
+            },
+            "widget": "stepper",
+            "precision": 3,
+            "step": 0.01
+          }
+        },
+        "materialPartialFactor": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Material partial factor γ_m",
+              "de": "Teilsicherheitsbeiwert des Materials γ_m"
+            },
+            "widget": "stepper",
+            "precision": 3,
+            "step": 0.01
+          }
+        },
+        "materialDesignStrength": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Declared design strength X_d",
+              "de": "Angesetzte Bemessungsfestigkeit X_d"
+            },
+            "widget": "stepper",
+            "precision": 0,
+            "step": 500000
+          }
+        },
+        "nominalDimension": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Nominal dimension a_nom (E90.11)",
+              "de": "Nennmaß a_nom (E90.11)"
+            },
+            "widget": "stepper",
+            "precision": 4,
+            "step": 0.001
+          }
+        },
+        "dimensionTolerance": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Dimension tolerance Δa",
+              "de": "Maßtoleranz Δa"
+            },
+            "widget": "stepper",
+            "precision": 4,
+            "step": 0.0005
+          }
+        },
+        "designDimension": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Declared design dimension a_d",
+              "de": "Angesetztes Bemessungsmaß a_d"
+            },
+            "widget": "stepper",
+            "precision": 4,
+            "step": 0.001
+          }
+        },
+        "memberAlphaCr": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Elastic critical load factor α_cr (0 = not declared, E90.12)",
+              "de": "Verzweigungslastfaktor α_cr (0 = nicht angegeben, E90.12)"
+            },
+            "widget": "stepper",
+            "precision": 2,
+            "step": 0.1
+          }
+        },
+        "secondOrderAnalysis": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Second-order analysis used (0 = first order, 1 = second order)",
+              "de": "Theorie 2. Ordnung angesetzt (0 = Theorie 1. Ordnung, 1 = 2. Ordnung)"
+            },
+            "widget": "stepper",
+            "precision": 0,
+            "step": 1
+          }
         }
       }
     },
@@ -318,7 +625,15 @@
         "deckTwist",
         "deckTwistLimit",
         "bridgeDeflection",
-        "bridgeDeflectionLimit"
+        "bridgeDeflectionLimit",
+        "trackGauge",
+        "lineSpeed",
+        "ballastDepth",
+        "deckMass",
+        "naturalFrequency",
+        "endRotation",
+        "basicWindSpeed",
+        "dampingRatio"
       ],
       "properties": {
         "id": {
@@ -344,8 +659,644 @@
         },
         "bridgeDeflectionLimit": {
           "type": "number"
+        },
+        "trackGauge": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Track gauge (0 = not declared)",
+              "de": "Spurweite (0 = nicht angegeben)"
+            },
+            "widget": "stepper",
+            "precision": 3,
+            "step": 0.001
+          }
+        },
+        "lineSpeed": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Maximum line speed (0 = not declared)",
+              "de": "Höchstgeschwindigkeit der Strecke (0 = nicht angegeben)"
+            },
+            "widget": "stepper",
+            "precision": 0,
+            "step": 5
+          }
+        },
+        "ballastDepth": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Ballast depth (0 = slab track)",
+              "de": "Schotterhöhe (0 = feste Fahrbahn)"
+            },
+            "widget": "stepper",
+            "precision": 2,
+            "step": 0.01
+          }
+        },
+        "deckMass": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Deck mass per length",
+              "de": "Deckmasse je Meter"
+            },
+            "widget": "stepper",
+            "precision": 0,
+            "step": 100
+          }
+        },
+        "naturalFrequency": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Deck natural frequency",
+              "de": "Eigenfrequenz des Decks"
+            },
+            "widget": "stepper",
+            "precision": 2,
+            "step": 0.1
+          }
+        },
+        "endRotation": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Deck end rotation",
+              "de": "Endverdrehung des Decks"
+            },
+            "widget": "stepper",
+            "precision": 5,
+            "step": 0.0001
+          }
+        },
+        "basicWindSpeed": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Basic wind speed v_b (0 = no F*_W cap)",
+              "de": "Basiswindgeschwindigkeit v_b (0 = keine F*_W-Kappung)"
+            },
+            "widget": "stepper",
+            "precision": 1,
+            "step": 0.5
+          }
+        },
+        "dampingRatio": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Deck damping ratio ζ (0 = registry default)",
+              "de": "Dämpfungsgrad ζ des Decks (0 = Registerwert)"
+            },
+            "widget": "stepper",
+            "precision": 4,
+            "step": 0.001
+          }
+        }
+      }
+    },
+    "FatigueSpectrum": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "memberId",
+        "detailCategory",
+        "stressRange",
+        "cycles"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "memberId": {
+          "type": "string"
+        },
+        "detailCategory": {
+          "type": "number"
+        },
+        "stressRange": {
+          "type": "number"
+        },
+        "cycles": {
+          "type": "number"
+        }
+      }
+    },
+    "ReliabilityAnalysis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "resistanceDistribution",
+        "resistanceMean",
+        "resistanceSd",
+        "actionDistribution",
+        "actionMean",
+        "actionSd"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "resistanceDistribution": {
+          "type": "string"
+        },
+        "resistanceMean": {
+          "type": "number"
+        },
+        "resistanceSd": {
+          "type": "number"
+        },
+        "actionDistribution": {
+          "type": "string"
+        },
+        "actionMean": {
+          "type": "number"
+        },
+        "actionSd": {
+          "type": "number"
+        }
+      }
+    },
+    "TestSeries": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "quantity",
+        "distribution",
+        "sampleSize",
+        "mean",
+        "stdDev",
+        "variationKnown",
+        "conversionFactor",
+        "required",
+        "pairs",
+        "theoryVariation"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "quantity": {
+          "type": "string"
+        },
+        "distribution": {
+          "type": "string"
+        },
+        "sampleSize": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "mean": {
+          "type": "number"
+        },
+        "stdDev": {
+          "type": "number"
+        },
+        "variationKnown": {
+          "type": "number"
+        },
+        "conversionFactor": {
+          "type": "number"
+        },
+        "required": {
+          "type": "number"
+        },
+        "pairs": {"type": "string"},
+        "theoryVariation": {"type": "number", "format": "double"}
+      }
+    },
+    "Placement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "x",
+        "y",
+        "z",
+        "yaw"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "reference",
+            "label": {
+              "en": "Placed entity",
+              "de": "Platziertes Element"
+            },
+            "ref": {
+              "kind": "entity"
+            }
+          }
+        },
+        "x": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Origin x",
+              "de": "Ursprung x"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "m",
+            "displayFactor": 1,
+            "precision": 3,
+            "step": 0.1
+          }
+        },
+        "y": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Origin y",
+              "de": "Ursprung y"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "m",
+            "displayFactor": 1,
+            "precision": 3,
+            "step": 0.1
+          }
+        },
+        "z": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Origin z",
+              "de": "Ursprung z"
+            },
+            "widget": "stepper",
+            "unit": "m",
+            "displayUnit": "m",
+            "displayFactor": 1,
+            "precision": 3,
+            "step": 0.1
+          }
+        },
+        "yaw": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Yaw about Z",
+              "de": "Gierwinkel um Z"
+            },
+            "widget": "stepper",
+            "unit": "rad",
+            "displayUnit": "°",
+            "displayFactor": 57.29577951308232,
+            "precision": 1,
+            "step": 0.0174532925
+          }
+        }
+      }
+    },
+    "FactorOverride": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "factor",
+        "target",
+        "value",
+        "justification"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "factor": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Factor kind",
+              "de": "Faktorart"
+            },
+            "widget": "select",
+            "options": {
+              "gamma": {
+                "en": "γ partial factor",
+                "de": "γ Teilsicherheitsbeiwert"
+              },
+              "psi0": {
+                "en": "ψ₀ combination value",
+                "de": "ψ₀ Kombinationsbeiwert"
+              },
+              "psi1": {
+                "en": "ψ₁ frequent value",
+                "de": "ψ₁ Beiwert für häufige Werte"
+              },
+              "psi2": {
+                "en": "ψ₂ quasi-permanent value",
+                "de": "ψ₂ Beiwert für quasi-ständige Werte"
+              },
+              "xi": {
+                "en": "ξ reduction factor",
+                "de": "ξ Abminderungsbeiwert"
+              },
+              "k_fi": {
+                "en": "K_FI consequence factor",
+                "de": "K_FI Zuverlässigkeitsfaktor"
+              }
+            },
+            "description": {
+              "en": "gamma, psi0, psi1, psi2, xi or k_fi: the annex factor this row replaces for the project.",
+              "de": "gamma, psi0, psi1, psi2, xi oder k_fi: der Anhangfaktor, den diese Zeile projektbezogen ersetzt."
+            }
+          }
+        },
+        "target": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Target action or group",
+              "de": "Zielwirkung oder -gruppe"
+            },
+            "widget": "text",
+            "description": {
+              "en": "Action id, exclusive group id or ψ category the factor applies to; empty = every action (xi, k_fi are always global).",
+              "de": "Einwirkungs-Id, Ausschlussgruppe oder ψ-Kategorie, auf die der Faktor wirkt; leer = alle Einwirkungen (xi, k_fi gelten immer global)."
+            }
+          }
+        },
+        "value": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Override value",
+              "de": "Überschreibungswert"
+            },
+            "widget": "stepper",
+            "precision": 3,
+            "step": 0.01
+          }
+        },
+        "justification": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Justification",
+              "de": "Begründung"
+            },
+            "widget": "text",
+            "description": {
+              "en": "Why the project deviates from the National Annex (required for every override).",
+              "de": "Warum das Projekt vom Nationalen Anhang abweicht (für jede Überschreibung erforderlich)."
+            }
+          }
+        }
+      }
+    },
+    "TrafficGroup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "group",
+        "variableId"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "group": {
+          "type": "string",
+          "enum": [
+            "GR1A",
+            "GR1B",
+            "GR2",
+            "GR3",
+            "GR4",
+            "GR5",
+            "GR6"
+          ],
+          "x-semio-ui": {
+            "label": {
+              "en": "Traffic load group",
+              "de": "Verkehrslastgruppe"
+            },
+            "widget": "select",
+            "options": {
+              "GR1A": {
+                "en": "gr1a tandem system, uniform load and footway",
+                "de": "gr1a Tandemsystem, Flächenlast und Gehweg"
+              },
+              "GR1B": {
+                "en": "gr1b single axle",
+                "de": "gr1b Einzelachse"
+              },
+              "GR2": {
+                "en": "gr2 horizontal forces",
+                "de": "gr2 Horizontalkräfte"
+              },
+              "GR3": {
+                "en": "gr3 pedestrian loads",
+                "de": "gr3 Fußgängerlasten"
+              },
+              "GR4": {
+                "en": "gr4 crowd loading",
+                "de": "gr4 Menschenansammlung"
+              },
+              "GR5": {
+                "en": "gr5 special vehicles",
+                "de": "gr5 Sonderfahrzeuge"
+              },
+              "GR6": {
+                "en": "gr6 (no normative table row registered, unverified)",
+                "de": "gr6 (keine normative Tabellenzeile registriert, ungeprüft)"
+              }
+            },
+            "description": {
+              "en": "Load group of EN 1991-2 Table 4.4a; the groups are mutually exclusive (EN 1990 A2.2.2).",
+              "de": "Lastgruppe nach EN 1991-2 Tabelle 4.4a; die Gruppen schließen sich gegenseitig aus (EN 1990 A2.2.2)."
+            }
+          }
+        },
+        "variableId": {
+          "type": "string",
+          "x-semio-ui": {
+            "label": {
+              "en": "Load component",
+              "de": "Lastbestandteil"
+            },
+            "widget": "reference",
+            "role": "value",
+            "ref": {
+              "kind": "variable"
+            },
+            "description": {
+              "en": "The variable action that is a component of this group.",
+              "de": "Die veränderliche Einwirkung, die Bestandteil dieser Gruppe ist."
+            }
+          }
+        }
+      }
+    },
+    "CaseNumber": {
+      "title": "CaseNumber",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "value"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Input key",
+              "de": "Eingabeschlüssel"
+            }
+          }
+        },
+        "value": {
+          "type": "number",
+          "x-semio-ui": {
+            "label": {
+              "en": "Value",
+              "de": "Wert"
+            },
+            "widget": "stepper",
+            "precision": 6,
+            "step": 0.1
+          }
+        }
+      }
+    },
+    "CaseText": {
+      "title": "CaseText",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "value"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Input key",
+              "de": "Eingabeschlüssel"
+            }
+          }
+        },
+        "value": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Value",
+              "de": "Wert"
+            }
+          }
+        }
+      }
+    },
+    "CaseRow": {
+      "title": "CaseRow",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "labelEn",
+        "labelDe",
+        "entryId",
+        "numbers",
+        "texts"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "labelEn": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "English label",
+              "de": "Englische Bezeichnung"
+            }
+          }
+        },
+        "labelDe": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "German label",
+              "de": "Deutsche Bezeichnung"
+            }
+          }
+        },
+        "entryId": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "label": {
+              "en": "Catalogue entry",
+              "de": "Katalogeintrag"
+            },
+            "description": {
+              "en": "Verification id T-nn of the EN 1990 catalogue.",
+              "de": "Nachweis-Id T-nn des EN-1990-Katalogs."
+            }
+          }
+        },
+        "numbers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CaseNumber"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Numeric inputs",
+              "de": "Zahlenwerte"
+            }
+          }
+        },
+        "texts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CaseText"
+          },
+          "x-semio-ui": {
+            "label": {
+              "en": "Text inputs",
+              "de": "Textwerte"
+            }
+          }
         }
       }
     }
+  },
+  "x-semio-rust": {
+    "doc": [
+      "🧬️ Full En1990 artifact state across the artifact and presence lanes."
+    ],
+    "derive": [
+      "Clone",
+      "Debug",
+      "PartialEq",
+      "ArtifactSchema",
+      "value_derive::ToValue",
+      "value_derive::FromValue"
+    ],
+    "artifactSchema": "s.norm.en1990",
+    "attributes": [
+      "#[cfg_attr(any(test, feature = \"test-support\"), derive(serde::Serialize, serde::Deserialize))]",
+      "#[cfg_attr(any(test, feature = \"test-support\"), serde(rename_all = \"camelCase\"))]",
+      "#[value(rename_all = \"camelCase\")]"
+    ]
   }
 }

@@ -1,0 +1,107 @@
+{
+  "annex": null,
+  "reliabilityClass": null,
+  "members": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "connections": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "placements": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "tapers": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "cutouts": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "fasteners": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "panels": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "floors": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "diaphragms": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "trusses": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "bracings": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "decks": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "deck-1",
+        "patch": {
+          "laminationProduct": "glulam",
+          "barProduct": null,
+          "spanM": null,
+          "deckWidthM": null,
+          "deckDepthM": null,
+          "laminationWidthM": null,
+          "barSpacingM": null,
+          "barDiameterM": null,
+          "plateSideM": null,
+          "initialPrestressPa": null,
+          "lossRelaxation": null,
+          "lossCreep": null,
+          "lossMoisture": null,
+          "barResistancePa": null,
+          "shearStressPa": null,
+          "compressionPerpendicularPa": null,
+          "wheelLoadN": null,
+          "wheelContactM": null
+        }
+      }
+    ]
+  },
+  "ulsEquation": null,
+  "cases": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  }
+}

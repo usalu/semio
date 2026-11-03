@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-rotating-machine-mass/schema.json",
+  "title": "ChangeRotatingMachineMass",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newMass"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Rotating machine",
+          "de": "Rotierende Maschine"
+        },
+        "description": {
+          "en": "The rotating machine this mutation addresses, by id.",
+          "de": "Das adressierte Element (Rotierende Maschine), per Kennung."
+        },
+        "ref": {
+          "kind": "rotating-machine"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newMass": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Rotating (unbalanced) mass m",
+          "de": "Rotierende (unwuchtige) Masse m"
+        },
+        "widget": "stepper",
+        "unit": "kg",
+        "displayUnit": "t",
+        "displayFactor": 0.001,
+        "precision": 0,
+        "step": 1,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeAssessmentRbarSpacingM",
+  "id": "as-1",
+  "newRestrainedBarSpacingM": 1.5
+}

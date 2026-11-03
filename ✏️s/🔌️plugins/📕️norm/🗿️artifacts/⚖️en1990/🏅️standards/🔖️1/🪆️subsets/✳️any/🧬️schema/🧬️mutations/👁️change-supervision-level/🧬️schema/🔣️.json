@@ -13,7 +13,7 @@
       "const": "changeSupervisionLevel"
     },
     "newSupervisionLevel": {
-      "type": "string",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/$defs/SupervisionLevel",
       "x-semio-ui": {
         "label": {
           "en": "Design supervision level",
@@ -22,8 +22,7 @@
         "description": {
           "en": "DSL1, DSL2 or DSL3 (EN 1990 Table B4).",
           "de": "DSL1, DSL2 oder DSL3 (EN 1990 Tabelle B4)."
-        },
-        "widget": "text"
+        }
       }
     }
   }

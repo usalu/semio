@@ -1,0 +1,121 @@
+{
+  "artifact": "en1998",
+  "collection": {
+    "name": "tieBeams",
+    "entity": "En1998TieBeam",
+    "emoji": "🔗",
+    "doc": "🔗 Foundation tie beam between two footings of the seismic design (EN 1998-5 5.4.1.2): the two foundations it joins, section, steel and the relative ground displacement it must follow.",
+    "label": {
+      "en": "Tie beams",
+      "de": "Fundamentbalken"
+    },
+    "id": {
+      "en": "Tie beam ID",
+      "de": "Fundamentbalken-ID"
+    },
+    "singular": {
+      "en": "tie beam",
+      "de": "Fundamentbalken"
+    },
+    "kindSlug": "tie-beam",
+    "fields": [
+      {
+        "name": "foundation_a_id",
+        "type": "String",
+        "label": {
+          "en": "First foundation",
+          "de": "Erstes Fundament"
+        },
+        "doc": "🧱 Id of the first foundation (footing) the tie beam is attached to.",
+        "sample": "F1"
+      },
+      {
+        "name": "foundation_b_id",
+        "type": "String",
+        "label": {
+          "en": "Second foundation",
+          "de": "Zweites Fundament"
+        },
+        "doc": "🧱 Id of the second foundation (footing) the tie beam is attached to.",
+        "sample": "F2"
+      },
+      {
+        "name": "span",
+        "type": "f64",
+        "label": {
+          "en": "Span",
+          "de": "Spannweite"
+        },
+        "doc": "↔️ Clear span [m] between the footings.",
+        "sample": 6.0,
+        "unit": "m"
+      },
+      {
+        "name": "width",
+        "type": "f64",
+        "label": {
+          "en": "Section width",
+          "de": "Querschnittsbreite"
+        },
+        "doc": "↔️ Section width [m].",
+        "sample": 0.4,
+        "unit": "m"
+      },
+      {
+        "name": "depth",
+        "type": "f64",
+        "label": {
+          "en": "Section depth",
+          "de": "Querschnittshöhe"
+        },
+        "doc": "↕️ Section depth [m].",
+        "sample": 0.6,
+        "unit": "m"
+      },
+      {
+        "name": "steel_area",
+        "type": "f64",
+        "label": {
+          "en": "Steel area",
+          "de": "Stahlquerschnitt"
+        },
+        "doc": "🔩 Tension steel area [m²] of the tie beam.",
+        "sample": 0.0012,
+        "unit": "m2"
+      },
+      {
+        "name": "steel_design_strength",
+        "type": "f64",
+        "label": {
+          "en": "Design steel strength",
+          "de": "Bemessungsfestigkeit Stahl"
+        },
+        "doc": "💪 Design yield strength f_yd [Pa] of the tie steel.",
+        "sample": 434800000.0,
+        "unit": "Pa"
+      },
+      {
+        "name": "relative_displacement",
+        "type": "f64",
+        "label": {
+          "en": "Relative ground displacement",
+          "de": "Relative Bodenverschiebung"
+        },
+        "doc": "↔️ Design relative displacement [m] of the two footings the tie beam has to follow.",
+        "sample": 0.01,
+        "unit": "m"
+      },
+      {
+        "name": "displacement_limit",
+        "type": "f64",
+        "label": {
+          "en": "Displacement limit",
+          "de": "Verschiebungsgrenze"
+        },
+        "doc": "🚧 Admissible relative displacement [m] of the tie beam (project value, the repository spec gives the term only elided).",
+        "sample": 0.03,
+        "unit": "m"
+      }
+    ]
+  }
+}

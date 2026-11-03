@@ -1,0 +1,5 @@
+{
+  "mutation": "changeBridgePierCrackedInertiaRatio",
+  "id": "br-1",
+  "newPierCrackedInertiaRatio": 0.5
+}

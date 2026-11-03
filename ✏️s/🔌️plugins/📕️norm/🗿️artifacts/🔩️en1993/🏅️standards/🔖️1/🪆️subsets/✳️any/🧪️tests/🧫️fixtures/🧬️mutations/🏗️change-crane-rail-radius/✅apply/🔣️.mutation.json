@@ -1,0 +1,6 @@
+{
+  "ChangeCraneRailRadius": {
+    "id": "crane-1",
+    "newRailRadius": 1.5
+  }
+}

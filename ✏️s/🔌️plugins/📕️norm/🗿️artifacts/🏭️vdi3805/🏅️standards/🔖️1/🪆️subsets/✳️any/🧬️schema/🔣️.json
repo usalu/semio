@@ -827,7 +827,8 @@
         "heatTransferCoefficient",
         "airPermeability",
         "ventilationRate",
-        "acceleration"
+        "acceleration",
+        "velocity"
       ]
     }
   }

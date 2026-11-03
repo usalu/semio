@@ -1,0 +1,39 @@
+# 🎚️ Viewport3dWindowConfig GraphQL twin, mirrors ../🦀️.rs. Vec3, LocalizedCopy and LoadKind come from the structural scene schema.
+enum CameraPreset { iso plan elevationFront elevationBack elevationLeft elevationRight }
+enum ColourRamp { viridis inferno coolwarm grayscale }
+enum LabelDensity { off low normal high }
+enum LengthUnit { millimetre metre }
+enum DeviceClass { desktop mobile tablet }
+
+type SectionPlane {
+  origin: Vec3!
+  normal: Vec3!
+  cap: Boolean!
+}
+
+type SavedView {
+  name: LocalizedCopy!
+  position: Vec3!
+  target: Vec3!
+}
+
+type Viewport3dWindowConfig {
+  preset: CameraPreset!
+  ramp: ColourRamp!
+  domainMax: Float!
+  sun: Boolean!
+  hiddenLayers: [String!]!
+  soloLayer: String
+  hiddenLoadKinds: [LoadKind!]!
+  loadGlyphScale: Float!
+  deformationScale: Float!
+  deformationPhase: Float!
+  playbackSpeed: Float!
+  activeField: String
+  section: SectionPlane
+  labelDensity: LabelDensity!
+  showDimensions: Boolean!
+  unit: LengthUnit!
+  device: DeviceClass!
+  savedViews: [SavedView!]!
+}

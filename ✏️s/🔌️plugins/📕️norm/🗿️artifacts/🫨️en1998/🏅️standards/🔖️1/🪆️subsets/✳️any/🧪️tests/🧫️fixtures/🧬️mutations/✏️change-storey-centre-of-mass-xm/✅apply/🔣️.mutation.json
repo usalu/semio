@@ -1,0 +1,6 @@
+{
+  "mutation": "changeStoreyCentreOfMassXM",
+  "buildingId": "bldg-office",
+  "id": "s2",
+  "newCentreOfMassXM": 24.0
+}

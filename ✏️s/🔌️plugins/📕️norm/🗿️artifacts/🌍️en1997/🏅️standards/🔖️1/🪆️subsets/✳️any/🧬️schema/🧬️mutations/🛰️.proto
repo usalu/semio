@@ -1,7 +1,1035 @@
 syntax = "proto3";
-package semio.s.norm.en1997.mutations;
-
+package semio.s.norm.en1997;
 message En1997Mutation {
-  string kind = 1;
-  bytes payload = 2;
+  oneof kind {
+    ChangeAnnex change_annex = 1;
+    ChangeGeotechnicalCategory change_geotechnical_category = 2;
+    ChangeDesignSituation change_design_situation = 3;
+    ChangeDesignApproach change_design_approach = 4;
+    ChangeGroundwaterLevel change_groundwater_level = 5;
+    ChangeInvestigationDepth change_investigation_depth = 6;
+    ChangeFootingWidth change_footing_width = 7;
+    ChangeFootingEmbedment change_footing_embedment = 8;
+    ChangePileLength change_pile_length = 9;
+    ChangePileCount change_pile_count = 10;
+    ChangeWallBaseWidth change_wall_base_width = 11;
+    ChangeSlopeAngle change_slope_angle = 12;
+    ChangeLayerPhiPrime change_layer_phi_prime = 13;
+    ChangeLayerOedometricModulus change_layer_oedometric_modulus = 14;
+    InsertLayer insert_layer = 15;
+    RemoveLayer remove_layer = 16;
+    InsertFooting insert_footing = 17;
+    RemoveFooting remove_footing = 18;
+    InsertPile insert_pile = 19;
+    RemovePile remove_pile = 20;
+    InsertRetainingWall insert_retaining_wall = 21;
+    RemoveRetainingWall remove_retaining_wall = 22;
+    InsertSlope insert_slope = 23;
+    RemoveSlope remove_slope = 24;
+    InsertUpliftCase insert_uplift_case = 25;
+    RemoveUpliftCase remove_uplift_case = 26;
+    InsertAnchor insert_anchor = 27;
+    RemoveAnchor remove_anchor = 28;
+    InsertEmbeddedWall insert_embedded_wall = 29;
+    RemoveEmbeddedWall remove_embedded_wall = 30;
+    InsertPileGroup insert_pile_group = 31;
+    RemovePileGroup remove_pile_group = 32;
+    InsertLabTest insert_lab_test = 33;
+    RemoveLabTest remove_lab_test = 34;
+    InsertLayerWater insert_layer_water = 35;
+    InsertCharacteristicBasis insert_characteristic_basis = 36;
+    InsertGroundInvestigation insert_ground_investigation = 37;
+    RemoveLayerWater remove_layer_water = 38;
+    RemoveCharacteristicBasis remove_characteristic_basis = 39;
+    RemoveGroundInvestigation remove_ground_investigation = 40;
+    ChangeLayerSoilType change_layer_soil_type = 41;
+    ChangeLayerDepthTop change_layer_depth_top = 42;
+    ChangeLayerDepthBottom change_layer_depth_bottom = 43;
+    ChangeLayerGamma change_layer_gamma = 44;
+    ChangeLayerGammaPrime change_layer_gamma_prime = 45;
+    ChangeLayerCohesionEffective change_layer_cohesion_effective = 46;
+    ChangeLayerCohesionUndrained change_layer_cohesion_undrained = 47;
+    ChangeLayerPoissonRatio change_layer_poisson_ratio = 48;
+    ChangeLayerCptQc change_layer_cpt_qc = 49;
+    ChangeLayerSptN change_layer_spt_n = 50;
+    ChangeFootingLength change_footing_length = 51;
+    ChangeFootingBaseInclDeg change_footing_base_incl_deg = 52;
+    ChangeFootingSettlementLimit change_footing_settlement_limit = 53;
+    ChangeLoadCaseDesignSituation change_load_case_design_situation = 54;
+    ChangeLoadCaseVerticalPerm change_load_case_vertical_perm = 55;
+    ChangeLoadCaseVerticalVar change_load_case_vertical_var = 56;
+    ChangeLoadCaseHorizPermanent change_load_case_horiz_permanent = 57;
+    ChangeLoadCaseHorizVariable change_load_case_horiz_variable = 58;
+    ChangeLoadCaseMomentPermanent change_load_case_moment_permanent = 59;
+    ChangeLoadCaseMomentVariable change_load_case_moment_variable = 60;
+    ChangePilePileType change_pile_pile_type = 61;
+    ChangePileDiameter change_pile_diameter = 62;
+    ChangePileAlphaS change_pile_alpha_s = 63;
+    ChangePileUnitShaftResistance change_pile_unit_shaft_resistance = 64;
+    ChangePileUnitBaseResistance change_pile_unit_base_resistance = 65;
+    ChangePileCompressionPermanent change_pile_compression_permanent = 66;
+    ChangePileCompressionVariable change_pile_compression_variable = 67;
+    ChangePileTensionPermanent change_pile_tension_permanent = 68;
+    ChangePileTensionVariable change_pile_tension_variable = 69;
+    ChangeProfileShaftResistance change_profile_shaft_resistance = 70;
+    ChangeProfileBaseResistance change_profile_base_resistance = 71;
+    ChangeWallHeight change_wall_height = 72;
+    ChangeWallEmbedment change_wall_embedment = 73;
+    ChangeWallStemThickness change_wall_stem_thickness = 74;
+    ChangeWallBackfillPhiDeg change_wall_backfill_phi_deg = 75;
+    ChangeWallBackfillGamma change_wall_backfill_gamma = 76;
+    ChangeWallWallFrictionDeg change_wall_wall_friction_deg = 77;
+    ChangeWallEarthPressureMode change_wall_earth_pressure_mode = 78;
+    ChangeWallWallMovement change_wall_wall_movement = 79;
+    ChangeWallOcr change_wall_ocr = 80;
+    ChangeWallConcreteGamma change_wall_concrete_gamma = 81;
+    ChangeWallSurcharge change_wall_surcharge = 82;
+    ChangeWallVerticalPermanent change_wall_vertical_permanent = 83;
+    ChangeWallHorizontalPermanent change_wall_horizontal_permanent = 84;
+    ChangeSlopeHeight change_slope_height = 85;
+    ChangeSlopeLength change_slope_length = 86;
+    ChangeSlopeGoverningLayerId change_slope_governing_layer_id = 87;
+    ChangeSlopeCircleCentreX change_slope_circle_centre_x = 88;
+    ChangeSlopeCircleCentreZ change_slope_circle_centre_z = 89;
+    ChangeSlopeCircleRadius change_slope_circle_radius = 90;
+    ChangeUpliftPermStabilizing change_uplift_perm_stabilizing = 91;
+    ChangeUpliftPermDestabilizing change_uplift_perm_destabilizing = 92;
+    ChangeUpliftVarDestabilizing change_uplift_var_destabilizing = 93;
+    ChangeUpliftPorePressure change_uplift_pore_pressure = 94;
+    ChangeUpliftTotalStress change_uplift_total_stress = 95;
+    ChangeAnchorWallId change_anchor_wall_id = 96;
+    ChangeAnchorTendon change_anchor_tendon = 97;
+    ChangeAnchorHeadDepth change_anchor_head_depth = 98;
+    ChangeAnchorInclinationDeg change_anchor_inclination_deg = 99;
+    ChangeAnchorFreeLength change_anchor_free_length = 100;
+    ChangeAnchorFixedLength change_anchor_fixed_length = 101;
+    ChangeAnchorFixedDiameter change_anchor_fixed_diameter = 102;
+    ChangeAnchorBondStress change_anchor_bond_stress = 103;
+    ChangeAnchorDesignForce change_anchor_design_force = 104;
+    ChangeAnchorTendonYieldForce change_anchor_tendon_yield_force = 105;
+    ChangeAnchorMinFreeLength change_anchor_min_free_length = 106;
+    ChangeAnchorTestFactor change_anchor_test_factor = 107;
+    ChangeAnchorTestPullOutRes change_anchor_test_pull_out_res = 108;
+    ChangeEmbWallKind change_emb_wall_kind = 109;
+    ChangeEmbWallRetainedHeight change_emb_wall_retained_height = 110;
+    ChangeEmbWallEmbedment change_emb_wall_embedment = 111;
+    ChangeEmbWallPropDepth change_emb_wall_prop_depth = 112;
+    ChangeEmbWallThickness change_emb_wall_thickness = 113;
+    ChangeEmbWallBackfillGamma change_emb_wall_backfill_gamma = 114;
+    ChangeEmbWallPhiDeg change_emb_wall_phi_deg = 115;
+    ChangeEmbWallDeltaActiveDeg change_emb_wall_delta_active_deg = 116;
+    ChangeEmbWallDeltaPassiveDeg change_emb_wall_delta_passive_deg = 117;
+    ChangeEmbWallSurcharge change_emb_wall_surcharge = 118;
+    ChangeEmbWallUndrStrength change_emb_wall_undr_strength = 119;
+    ChangePileGroupPileId change_pile_group_pile_id = 120;
+    ChangePileGroupRows change_pile_group_rows = 121;
+    ChangePileGroupColumns change_pile_group_columns = 122;
+    ChangePileGroupSpacing change_pile_group_spacing = 123;
+    ChangePileGroupCapVertical change_pile_group_cap_vertical = 124;
+    ChangePileGroupCapMomentX change_pile_group_cap_moment_x = 125;
+    ChangePileGroupCapMomentY change_pile_group_cap_moment_y = 126;
+    ChangePileGroupSingleRes change_pile_group_single_res = 127;
+    ChangePileGroupShaftCohSum change_pile_group_shaft_coh_sum = 128;
+    ChangePileGroupBaseCohesion change_pile_group_base_cohesion = 129;
+    ChangeLabTestLayerId change_lab_test_layer_id = 130;
+    ChangeLabTestKind change_lab_test_kind = 131;
+    ChangeLabTestVoidRatio change_lab_test_void_ratio = 132;
+    ChangeLabTestPreloadStress change_lab_test_preload_stress = 133;
+    ChangeLabTestDrainageHeight change_lab_test_drainage_height = 134;
+    ChangeLabTestConsolTime change_lab_test_consol_time = 135;
+    ChangeLabPointNormalStress change_lab_point_normal_stress = 136;
+    ChangeLabPointShearStress change_lab_point_shear_stress = 137;
+    ChangeWaterLayerId change_water_layer_id = 138;
+    ChangeWaterPiezometricDepth change_water_piezometric_depth = 139;
+    ChangeWaterPermeability change_water_permeability = 140;
+    ChangeWaterHeadDifference change_water_head_difference = 141;
+    ChangeWaterFlowLength change_water_flow_length = 142;
+    ChangeStructureId change_structure_id = 143;
+    InsertLoadCase insert_load_case = 144;
+    RemoveLoadCase remove_load_case = 145;
+    InsertTestProfile insert_test_profile = 146;
+    RemoveTestProfile remove_test_profile = 147;
+    InsertAnchorTest insert_anchor_test = 148;
+    RemoveAnchorTest remove_anchor_test = 149;
+    InsertLabPoint insert_lab_point = 150;
+    InsertGroundInvestigationReading insert_ground_investigation_reading = 151;
+    RemoveLabPoint remove_lab_point = 152;
+    RemoveGroundInvestigationReading remove_ground_investigation_reading = 153;
+    ChangePlacementX change_placement_x = 154;
+    ChangePlacementY change_placement_y = 155;
+    ChangePlacementZ change_placement_z = 156;
+    ChangePlacementYaw change_placement_yaw = 157;
+    InsertPlacement insert_placement = 158;
+    RemovePlacement remove_placement = 159;
+    InsertCase insert_case = 160;
+    RemoveCase remove_case = 161;
+    ChangeCaseNumber change_case_number = 162;
+    ChangeCaseText change_case_text = 163;
+    ChangeCaseLabelEn change_case_label_en = 164;
+    ChangeCaseLabelDe change_case_label_de = 165;
+    ChangeCaseEntryId change_case_entry_id = 166;
+    ChangeSlopeWidth change_slope_width = 167;
+    ChangePileBendingStiffnessEi change_pile_bending_stiffness_ei = 168;
+    ChangePileHorizBedModulus change_pile_horiz_bed_modulus = 169;
+    ChangePileLateralHeadLoad change_pile_lateral_head_load = 170;
+    ChangeWallSeismicKh change_wall_seismic_kh = 171;
+    ChangeWallSeismicKv change_wall_seismic_kv = 172;
+    ChangePileElasticModulus change_pile_elastic_modulus = 173;
+    ChangePileSettlingThickness change_pile_settling_thickness = 174;
+    ChangePileNegFrictionBeta change_pile_neg_friction_beta = 175;
+    ChangePileDynamicTestCount change_pile_dynamic_test_count = 176;
+    ChangePileDynamicResMean change_pile_dynamic_res_mean = 177;
+    ChangePileDynamicResMin change_pile_dynamic_res_min = 178;
+    ChangePileHammerWeight change_pile_hammer_weight = 179;
+    ChangePileDropHeight change_pile_drop_height = 180;
+    ChangePileSetPerBlow change_pile_set_per_blow = 181;
+    ChangePileElasticCompression change_pile_elastic_compression = 182;
+    ChangePileHammerEfficiency change_pile_hammer_efficiency = 183;
+    ChangeWallReinforcementSpacing change_wall_reinforcement_spacing = 184;
+    ChangeWallReinforcementWidth change_wall_reinforcement_width = 185;
+    ChangeWallRebarFriction change_wall_rebar_friction = 186;
+    ChangeLabTestCompressionIndex change_lab_test_compression_index = 187;
+    ChangeLabTestSwellingIndex change_lab_test_swelling_index = 188;
+    ChangeLabTestStressIncrement change_lab_test_stress_increment = 189;
+    ChangeLabTestSecComprIndex change_lab_test_sec_compr_index = 190;
+    ChangeLabTestDesignLife change_lab_test_design_life = 191;
+    ChangeWaterWellRadius change_water_well_radius = 192;
+    ChangeWaterWellWaterDepth change_water_well_water_depth = 193;
+    ChangeWaterInfluenceRadius change_water_influence_radius = 194;
+    ChangeWaterWellCapacity change_water_well_capacity = 195;
+    ChangePileConcreteClass change_pile_concrete_class = 196;
+    ChangeGroundInvestigationPositionX change_ground_investigation_position_x = 197;
+    ChangeGroundInvestigationPositionY change_ground_investigation_position_y = 198;
+    ChangeGroundInvestigationLevel change_ground_investigation_level = 199;
+    ChangeGroundInvestigationDepth change_ground_investigation_depth = 200;
+    ChangeGroundInvestigationKind change_ground_investigation_kind = 201;
+    ChangeGroundReadingDepth change_ground_reading_depth = 202;
+    ChangeGroundReadingMeasurement change_ground_reading_measurement = 203;
+    ChangeCharacteristicBasisLayerId change_characteristic_basis_layer_id = 204;
+    ChangeCharacteristicBasisParameter change_characteristic_basis_parameter = 205;
+    ChangeCharacteristicBasisBasis change_characteristic_basis_basis = 206;
+  }
+}
+message ChangeAnnex {
+  AnnexChoice new_annex = 1;
+}
+message ChangeGeotechnicalCategory {
+  uint32 new_geotechnical_category = 1;
+}
+message ChangeDesignSituation {
+  SituationChoice new_design_situation = 1;
+}
+message ChangeDesignApproach {
+  ApproachChoice new_design_approach = 1;
+}
+message ChangeGroundwaterLevel {
+  double new_groundwater_level = 1;
+}
+message ChangeInvestigationDepth {
+  double new_investigation_depth = 1;
+}
+message ChangeFootingWidth {
+  string id = 1;
+  double new_width = 2;
+}
+message ChangeFootingEmbedment {
+  string id = 1;
+  double new_embedment = 2;
+}
+message ChangePileLength {
+  string id = 1;
+  double new_length = 2;
+}
+message ChangePileCount {
+  string id = 1;
+  uint32 new_count = 2;
+}
+message ChangeWallBaseWidth {
+  string id = 1;
+  double new_base_width = 2;
+}
+message ChangeSlopeAngle {
+  string id = 1;
+  double new_angle_deg = 2;
+}
+message ChangeLayerPhiPrime {
+  string id = 1;
+  double new_phi_prime_deg = 2;
+}
+message ChangeLayerOedometricModulus {
+  string id = 1;
+  double new_oedometric_modulus = 2;
+}
+message InsertLayer {
+  uint64 index = 1;
+  SoilLayer layer = 2;
+}
+message RemoveLayer {
+  uint64 index = 1;
+}
+message InsertFooting {
+  uint64 index = 1;
+  SpreadFoundation footing = 2;
+}
+message RemoveFooting {
+  uint64 index = 1;
+}
+message InsertPile {
+  uint64 index = 1;
+  Pile pile = 2;
+}
+message RemovePile {
+  uint64 index = 1;
+}
+message InsertRetainingWall {
+  uint64 index = 1;
+  RetainingWall retaining_wall = 2;
+}
+message RemoveRetainingWall {
+  uint64 index = 1;
+}
+message InsertSlope {
+  uint64 index = 1;
+  Slope slope = 2;
+}
+message RemoveSlope {
+  uint64 index = 1;
+}
+message InsertUpliftCase {
+  uint64 index = 1;
+  UpliftCase uplift_case = 2;
+}
+message RemoveUpliftCase {
+  uint64 index = 1;
+}
+message InsertAnchor {
+  uint64 index = 1;
+  Anchor anchor = 2;
+}
+message RemoveAnchor {
+  uint64 index = 1;
+}
+message InsertEmbeddedWall {
+  uint64 index = 1;
+  EmbeddedWall embedded_wall = 2;
+}
+message RemoveEmbeddedWall {
+  uint64 index = 1;
+}
+message InsertPileGroup {
+  uint64 index = 1;
+  PileGroup pile_group = 2;
+}
+message RemovePileGroup {
+  uint64 index = 1;
+}
+message InsertLabTest {
+  uint64 index = 1;
+  LabTest lab_test = 2;
+}
+message RemoveLabTest {
+  uint64 index = 1;
+}
+message InsertLayerWater {
+  uint64 index = 1;
+  LayerWater layer_water = 2;
+}
+message InsertCharacteristicBasis {
+  uint64 index = 1;
+  CharacteristicBasis characteristic_basis = 2;
+}
+message InsertGroundInvestigation {
+  uint64 index = 1;
+  Investigation investigation = 2;
+}
+message RemoveLayerWater {
+  uint64 index = 1;
+}
+message RemoveCharacteristicBasis {
+  uint64 index = 1;
+}
+message RemoveGroundInvestigation {
+  uint64 index = 1;
+}
+message ChangeLayerSoilType {
+  string id = 1;
+  SoilType new_soil_type = 2;
+}
+message ChangeLayerDepthTop {
+  string id = 1;
+  double new_depth_top = 2;
+}
+message ChangeLayerDepthBottom {
+  string id = 1;
+  double new_depth_bottom = 2;
+}
+message ChangeLayerGamma {
+  string id = 1;
+  double new_gamma = 2;
+}
+message ChangeLayerGammaPrime {
+  string id = 1;
+  double new_gamma_prime = 2;
+}
+message ChangeLayerCohesionEffective {
+  string id = 1;
+  double new_cohesion_effective = 2;
+}
+message ChangeLayerCohesionUndrained {
+  string id = 1;
+  double new_cohesion_undrained = 2;
+}
+message ChangeLayerPoissonRatio {
+  string id = 1;
+  double new_poisson_ratio = 2;
+}
+message ChangeLayerCptQc {
+  string id = 1;
+  double new_cpt_qc = 2;
+}
+message ChangeLayerSptN {
+  string id = 1;
+  double new_spt_n = 2;
+}
+message ChangeFootingLength {
+  string id = 1;
+  double new_length = 2;
+}
+message ChangeFootingBaseInclDeg {
+  string id = 1;
+  double new_base_inclination_deg = 2;
+}
+message ChangeFootingSettlementLimit {
+  string id = 1;
+  double new_settlement_limit = 2;
+}
+message ChangeLoadCaseDesignSituation {
+  string footing_id = 1;
+  string id = 2;
+  SituationChoice new_design_situation = 3;
+}
+message ChangeLoadCaseVerticalPerm {
+  string footing_id = 1;
+  string id = 2;
+  double new_vertical_permanent = 3;
+}
+message ChangeLoadCaseVerticalVar {
+  string footing_id = 1;
+  string id = 2;
+  double new_vertical_variable = 3;
+}
+message ChangeLoadCaseHorizPermanent {
+  string footing_id = 1;
+  string id = 2;
+  double new_horizontal_permanent = 3;
+}
+message ChangeLoadCaseHorizVariable {
+  string footing_id = 1;
+  string id = 2;
+  double new_horizontal_variable = 3;
+}
+message ChangeLoadCaseMomentPermanent {
+  string footing_id = 1;
+  string id = 2;
+  double new_moment_permanent = 3;
+}
+message ChangeLoadCaseMomentVariable {
+  string footing_id = 1;
+  string id = 2;
+  double new_moment_variable = 3;
+}
+message ChangePilePileType {
+  string id = 1;
+  PileType new_pile_type = 2;
+}
+message ChangePileDiameter {
+  string id = 1;
+  double new_diameter = 2;
+}
+message ChangePileAlphaS {
+  string id = 1;
+  double new_alpha_s = 2;
+}
+message ChangePileUnitShaftResistance {
+  string id = 1;
+  double new_unit_shaft_resistance = 2;
+}
+message ChangePileUnitBaseResistance {
+  string id = 1;
+  double new_unit_base_resistance = 2;
+}
+message ChangePileCompressionPermanent {
+  string id = 1;
+  double new_compression_permanent = 2;
+}
+message ChangePileCompressionVariable {
+  string id = 1;
+  double new_compression_variable = 2;
+}
+message ChangePileTensionPermanent {
+  string id = 1;
+  double new_tension_permanent = 2;
+}
+message ChangePileTensionVariable {
+  string id = 1;
+  double new_tension_variable = 2;
+}
+message ChangeProfileShaftResistance {
+  string pile_id = 1;
+  string id = 2;
+  double new_shaft_resistance = 3;
+}
+message ChangeProfileBaseResistance {
+  string pile_id = 1;
+  string id = 2;
+  double new_base_resistance = 3;
+}
+message ChangeWallHeight {
+  string id = 1;
+  double new_height = 2;
+}
+message ChangeWallEmbedment {
+  string id = 1;
+  double new_embedment = 2;
+}
+message ChangeWallStemThickness {
+  string id = 1;
+  double new_stem_thickness = 2;
+}
+message ChangeWallBackfillPhiDeg {
+  string id = 1;
+  double new_backfill_phi_deg = 2;
+}
+message ChangeWallBackfillGamma {
+  string id = 1;
+  double new_backfill_gamma = 2;
+}
+message ChangeWallWallFrictionDeg {
+  string id = 1;
+  double new_wall_friction_deg = 2;
+}
+message ChangeWallEarthPressureMode {
+  string id = 1;
+  EarthPressureMode new_earth_pressure_mode = 2;
+}
+message ChangeWallWallMovement {
+  string id = 1;
+  WallMovement new_wall_movement = 2;
+}
+message ChangeWallOcr {
+  string id = 1;
+  double new_ocr = 2;
+}
+message ChangeWallConcreteGamma {
+  string id = 1;
+  double new_concrete_gamma = 2;
+}
+message ChangeWallSurcharge {
+  string id = 1;
+  double new_surcharge = 2;
+}
+message ChangeWallVerticalPermanent {
+  string id = 1;
+  double new_vertical_permanent = 2;
+}
+message ChangeWallHorizontalPermanent {
+  string id = 1;
+  double new_horizontal_permanent = 2;
+}
+message ChangeSlopeHeight {
+  string id = 1;
+  double new_height = 2;
+}
+message ChangeSlopeLength {
+  string id = 1;
+  double new_length = 2;
+}
+message ChangeSlopeGoverningLayerId {
+  string id = 1;
+  string new_governing_layer_id = 2;
+}
+message ChangeSlopeCircleCentreX {
+  string id = 1;
+  double new_circle_centre_x = 2;
+}
+message ChangeSlopeCircleCentreZ {
+  string id = 1;
+  double new_circle_centre_z = 2;
+}
+message ChangeSlopeCircleRadius {
+  string id = 1;
+  double new_circle_radius = 2;
+}
+message ChangeUpliftPermStabilizing {
+  string id = 1;
+  double new_permanent_stabilizing = 2;
+}
+message ChangeUpliftPermDestabilizing {
+  string id = 1;
+  double new_permanent_destabilizing = 2;
+}
+message ChangeUpliftVarDestabilizing {
+  string id = 1;
+  double new_variable_destabilizing = 2;
+}
+message ChangeUpliftPorePressure {
+  string id = 1;
+  double new_pore_pressure = 2;
+}
+message ChangeUpliftTotalStress {
+  string id = 1;
+  double new_total_stress = 2;
+}
+message ChangeAnchorWallId {
+  string id = 1;
+  string new_wall_id = 2;
+}
+message ChangeAnchorTendon {
+  string id = 1;
+  TendonType new_tendon = 2;
+}
+message ChangeAnchorHeadDepth {
+  string id = 1;
+  double new_head_depth = 2;
+}
+message ChangeAnchorInclinationDeg {
+  string id = 1;
+  double new_inclination_deg = 2;
+}
+message ChangeAnchorFreeLength {
+  string id = 1;
+  double new_free_length = 2;
+}
+message ChangeAnchorFixedLength {
+  string id = 1;
+  double new_fixed_length = 2;
+}
+message ChangeAnchorFixedDiameter {
+  string id = 1;
+  double new_fixed_diameter = 2;
+}
+message ChangeAnchorBondStress {
+  string id = 1;
+  double new_bond_stress = 2;
+}
+message ChangeAnchorDesignForce {
+  string id = 1;
+  double new_design_force = 2;
+}
+message ChangeAnchorTendonYieldForce {
+  string id = 1;
+  double new_tendon_yield_force = 2;
+}
+message ChangeAnchorMinFreeLength {
+  string id = 1;
+  double new_min_free_length = 2;
+}
+message ChangeAnchorTestFactor {
+  string id = 1;
+  double new_test_factor = 2;
+}
+message ChangeAnchorTestPullOutRes {
+  string anchor_id = 1;
+  string id = 2;
+  double new_pull_out_resistance = 3;
+}
+message ChangeEmbWallKind {
+  string id = 1;
+  EmbeddedWallKind new_kind = 2;
+}
+message ChangeEmbWallRetainedHeight {
+  string id = 1;
+  double new_retained_height = 2;
+}
+message ChangeEmbWallEmbedment {
+  string id = 1;
+  double new_embedment = 2;
+}
+message ChangeEmbWallPropDepth {
+  string id = 1;
+  double new_prop_depth = 2;
+}
+message ChangeEmbWallThickness {
+  string id = 1;
+  double new_thickness = 2;
+}
+message ChangeEmbWallBackfillGamma {
+  string id = 1;
+  double new_backfill_gamma = 2;
+}
+message ChangeEmbWallPhiDeg {
+  string id = 1;
+  double new_phi_deg = 2;
+}
+message ChangeEmbWallDeltaActiveDeg {
+  string id = 1;
+  double new_delta_active_deg = 2;
+}
+message ChangeEmbWallDeltaPassiveDeg {
+  string id = 1;
+  double new_delta_passive_deg = 2;
+}
+message ChangeEmbWallSurcharge {
+  string id = 1;
+  double new_surcharge = 2;
+}
+message ChangeEmbWallUndrStrength {
+  string id = 1;
+  double new_undrained_strength = 2;
+}
+message ChangePileGroupPileId {
+  string id = 1;
+  string new_pile_id = 2;
+}
+message ChangePileGroupRows {
+  string id = 1;
+  uint32 new_rows = 2;
+}
+message ChangePileGroupColumns {
+  string id = 1;
+  uint32 new_columns = 2;
+}
+message ChangePileGroupSpacing {
+  string id = 1;
+  double new_spacing = 2;
+}
+message ChangePileGroupCapVertical {
+  string id = 1;
+  double new_cap_vertical = 2;
+}
+message ChangePileGroupCapMomentX {
+  string id = 1;
+  double new_cap_moment_x = 2;
+}
+message ChangePileGroupCapMomentY {
+  string id = 1;
+  double new_cap_moment_y = 2;
+}
+message ChangePileGroupSingleRes {
+  string id = 1;
+  double new_single_resistance = 2;
+}
+message ChangePileGroupShaftCohSum {
+  string id = 1;
+  double new_shaft_cohesion_sum = 2;
+}
+message ChangePileGroupBaseCohesion {
+  string id = 1;
+  double new_base_cohesion = 2;
+}
+message ChangeLabTestLayerId {
+  string id = 1;
+  string new_layer_id = 2;
+}
+message ChangeLabTestKind {
+  string id = 1;
+  LabTestKind new_kind = 2;
+}
+message ChangeLabTestVoidRatio {
+  string id = 1;
+  double new_void_ratio = 2;
+}
+message ChangeLabTestPreloadStress {
+  string id = 1;
+  double new_preload_stress = 2;
+}
+message ChangeLabTestDrainageHeight {
+  string id = 1;
+  double new_drainage_height = 2;
+}
+message ChangeLabTestConsolTime {
+  string id = 1;
+  double new_consolidation_time = 2;
+}
+message ChangeLabPointNormalStress {
+  string lab_test_id = 1;
+  string id = 2;
+  double new_normal_stress = 3;
+}
+message ChangeLabPointShearStress {
+  string lab_test_id = 1;
+  string id = 2;
+  double new_shear_stress = 3;
+}
+message ChangeWaterLayerId {
+  string id = 1;
+  string new_layer_id = 2;
+}
+message ChangeWaterPiezometricDepth {
+  string id = 1;
+  double new_piezometric_depth = 2;
+}
+message ChangeWaterPermeability {
+  string id = 1;
+  double new_permeability = 2;
+}
+message ChangeWaterHeadDifference {
+  string id = 1;
+  double new_head_difference = 2;
+}
+message ChangeWaterFlowLength {
+  string id = 1;
+  double new_flow_length = 2;
+}
+message ChangeStructureId {
+  string new_structure_id = 1;
+}
+message InsertLoadCase {
+  string footing_id = 1;
+  uint64 index = 2;
+  FoundationLoadCase load_case = 3;
+}
+message RemoveLoadCase {
+  string footing_id = 1;
+  uint64 index = 2;
+}
+message InsertTestProfile {
+  string pile_id = 1;
+  uint64 index = 2;
+  PileTestProfile test_profile = 3;
+}
+message RemoveTestProfile {
+  string pile_id = 1;
+  uint64 index = 2;
+}
+message InsertAnchorTest {
+  string anchor_id = 1;
+  uint64 index = 2;
+  AnchorTest anchor_test = 3;
+}
+message RemoveAnchorTest {
+  string anchor_id = 1;
+  uint64 index = 2;
+}
+message InsertLabPoint {
+  string lab_test_id = 1;
+  uint64 index = 2;
+  LabPoint lab_point = 3;
+}
+message InsertGroundInvestigationReading {
+  string investigation_id = 1;
+  uint64 index = 2;
+  InvestigationReading investigation_reading = 3;
+}
+message RemoveLabPoint {
+  string lab_test_id = 1;
+  uint64 index = 2;
+}
+message RemoveGroundInvestigationReading {
+  string investigation_id = 1;
+  uint64 index = 2;
+}
+message ChangePlacementX {
+  string id = 1;
+  double new_x = 2;
+}
+message ChangePlacementY {
+  string id = 1;
+  double new_y = 2;
+}
+message ChangePlacementZ {
+  string id = 1;
+  double new_z = 2;
+}
+message ChangePlacementYaw {
+  string id = 1;
+  double new_yaw = 2;
+}
+message InsertPlacement {
+  uint64 index = 1;
+  Placement item = 2;
+}
+message RemovePlacement {
+  uint64 index = 1;
+}
+message InsertCase {
+  uint64 index = 1;
+  CaseRow case = 2;
+}
+message RemoveCase {
+  string id = 1;
+}
+message ChangeCaseNumber {
+  string case_id = 1;
+  string key = 2;
+  optional double value = 3;
+}
+message ChangeCaseText {
+  string case_id = 1;
+  string key = 2;
+  optional string value = 3;
+}
+message ChangeCaseLabelEn {
+  string case_id = 1;
+  string new_value = 2;
+}
+message ChangeCaseLabelDe {
+  string case_id = 1;
+  string new_value = 2;
+}
+message ChangeCaseEntryId {
+  string case_id = 1;
+  string new_value = 2;
+}
+message ChangeSlopeWidth {
+  string id = 1;
+  double new_width = 2;
+}
+message ChangePileBendingStiffnessEi {
+  string id = 1;
+  double new_bending_stiffness_ei = 2;
+}
+message ChangePileHorizBedModulus {
+  string id = 1;
+  double new_horizontal_subgrade_modulus = 2;
+}
+message ChangePileLateralHeadLoad {
+  string id = 1;
+  double new_lateral_head_load = 2;
+}
+message ChangeWallSeismicKh {
+  string id = 1;
+  double new_seismic_kh = 2;
+}
+message ChangeWallSeismicKv {
+  string id = 1;
+  double new_seismic_kv = 2;
+}
+message ChangePileElasticModulus {
+  string id = 1;
+  double new_elastic_modulus = 2;
+}
+message ChangePileSettlingThickness {
+  string id = 1;
+  double new_settling_thickness = 2;
+}
+message ChangePileNegFrictionBeta {
+  string id = 1;
+  double new_negative_friction_beta = 2;
+}
+message ChangePileDynamicTestCount {
+  string id = 1;
+  double new_dynamic_test_count = 2;
+}
+message ChangePileDynamicResMean {
+  string id = 1;
+  double new_dynamic_resistance_mean = 2;
+}
+message ChangePileDynamicResMin {
+  string id = 1;
+  double new_dynamic_resistance_min = 2;
+}
+message ChangePileHammerWeight {
+  string id = 1;
+  double new_hammer_weight = 2;
+}
+message ChangePileDropHeight {
+  string id = 1;
+  double new_drop_height = 2;
+}
+message ChangePileSetPerBlow {
+  string id = 1;
+  double new_set_per_blow = 2;
+}
+message ChangePileElasticCompression {
+  string id = 1;
+  double new_elastic_compression = 2;
+}
+message ChangePileHammerEfficiency {
+  string id = 1;
+  double new_hammer_efficiency = 2;
+}
+message ChangeWallReinforcementSpacing {
+  string id = 1;
+  double new_reinforcement_spacing = 2;
+}
+message ChangeWallReinforcementWidth {
+  string id = 1;
+  double new_reinforcement_width = 2;
+}
+message ChangeWallRebarFriction {
+  string id = 1;
+  double new_reinforcement_friction = 2;
+}
+message ChangeLabTestCompressionIndex {
+  string id = 1;
+  double new_compression_index = 2;
+}
+message ChangeLabTestSwellingIndex {
+  string id = 1;
+  double new_swelling_index = 2;
+}
+message ChangeLabTestStressIncrement {
+  string id = 1;
+  double new_stress_increment = 2;
+}
+message ChangeLabTestSecComprIndex {
+  string id = 1;
+  double new_secondary_compression_index = 2;
+}
+message ChangeLabTestDesignLife {
+  string id = 1;
+  double new_design_life = 2;
+}
+message ChangeWaterWellRadius {
+  string id = 1;
+  double new_well_radius = 2;
+}
+message ChangeWaterWellWaterDepth {
+  string id = 1;
+  double new_well_water_depth = 2;
+}
+message ChangeWaterInfluenceRadius {
+  string id = 1;
+  double new_influence_radius = 2;
+}
+message ChangeWaterWellCapacity {
+  string id = 1;
+  double new_well_capacity = 2;
+}
+message ChangePileConcreteClass {
+  string id = 1;
+  string new_concrete_class = 2;
+}
+message ChangeGroundInvestigationPositionX {
+  string id = 1;
+  double new_position_x = 2;
+}
+message ChangeGroundInvestigationPositionY {
+  string id = 1;
+  double new_position_y = 2;
+}
+message ChangeGroundInvestigationLevel {
+  string id = 1;
+  double new_ground_level = 2;
+}
+message ChangeGroundInvestigationDepth {
+  string id = 1;
+  double new_depth = 2;
+}
+message ChangeGroundInvestigationKind {
+  string id = 1;
+  string new_kind = 2;
+}
+message ChangeGroundReadingDepth {
+  string investigation_id = 1;
+  string id = 2;
+  double new_depth = 3;
+}
+message ChangeGroundReadingMeasurement {
+  string investigation_id = 1;
+  string id = 2;
+  double new_measurement = 3;
+}
+message ChangeCharacteristicBasisLayerId {
+  string id = 1;
+  string new_layer_id = 2;
+}
+message ChangeCharacteristicBasisParameter {
+  string id = 1;
+  string new_parameter = 2;
+}
+message ChangeCharacteristicBasisBasis {
+  string id = 1;
+  string new_basis = 2;
 }

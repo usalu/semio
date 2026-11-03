@@ -1,0 +1,5 @@
+{
+  "mutation": "changeTieBeamSteelDesignStrength",
+  "id": "en1998-tie-beam-1",
+  "newSteelDesignStrength": 434800000.0
+}

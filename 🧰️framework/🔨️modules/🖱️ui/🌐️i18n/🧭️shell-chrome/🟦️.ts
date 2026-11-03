@@ -93,6 +93,20 @@ export const shellChromeDe = {
     goHome: { label: { normal: "Nach Hause", beginner: "Nach Hause" } },
     spawnPrefix: { label: { normal: "Erzeugen", beginner: "Erzeugen" } },
   },
+  rowControlFocus: {
+    refused: { label: { normal: "Diese Zeile lässt sich nicht bearbeiten", beginner: "Diese Zeile lässt sich nicht bearbeiten" } },
+  },
+  windowFocus: {
+    raised: { label: { normal: "Fenster {{name}} fokussiert", beginner: "Fenster {{name}} fokussiert" } },
+    opened: { label: { normal: "Fenster {{name}} geöffnet und fokussiert", beginner: "Fenster {{name}} geöffnet und fokussiert" } },
+    refused: { label: { normal: "Das Fenster {{name}} kann hier nicht angezeigt werden", beginner: "Das Fenster {{name}} kann hier nicht angezeigt werden" } },
+    unavailable: { label: { normal: "Das Fenster {{name}} gehört nicht zum Layout {{device}}", beginner: "Das Fenster {{name}} gehört nicht zum Layout {{device}}" } },
+    device: {
+      desktop: { label: { normal: "Desktop", beginner: "Desktop" } },
+      mobile: { label: { normal: "Mobilgerät", beginner: "Mobilgerät" } },
+      tablet: { label: { normal: "Tablet", beginner: "Tablet" } },
+    },
+  },
   panel: {
     artifact: { label: { normal: "Dokument", beginner: "Dokument" } },
     catalogue: { label: { normal: "Katalog", beginner: "Katalog" } },
@@ -371,6 +385,20 @@ export const shellChromeEn = {
     redo: { label: { normal: "Redo", beginner: "Redo" } },
     goHome: { label: { normal: "Go Home", beginner: "Go Home" } },
     spawnPrefix: { label: { normal: "Spawn", beginner: "Spawn" } },
+  },
+  rowControlFocus: {
+    refused: { label: { normal: "This row has nothing to edit", beginner: "This row has nothing to edit" } },
+  },
+  windowFocus: {
+    raised: { label: { normal: "{{name}} window focused", beginner: "{{name}} window focused" } },
+    opened: { label: { normal: "{{name}} window opened and focused", beginner: "{{name}} window opened and focused" } },
+    refused: { label: { normal: "The {{name}} window cannot be shown here", beginner: "The {{name}} window cannot be shown here" } },
+    unavailable: { label: { normal: "The {{name}} window is not part of the {{device}} layout", beginner: "The {{name}} window is not part of the {{device}} layout" } },
+    device: {
+      desktop: { label: { normal: "desktop", beginner: "desktop" } },
+      mobile: { label: { normal: "mobile", beginner: "mobile" } },
+      tablet: { label: { normal: "tablet", beginner: "tablet" } },
+    },
   },
   panel: {
     artifact: { label: { normal: "Artifact", beginner: "Artifact" } },

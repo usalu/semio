@@ -53,7 +53,7 @@ use record_routing_and_actions::{
     record_consumes_subtree, record_intent_bindings, record_presence, row_activation,
     row_verb_action, stack_metrics, surface_kind, surface_plugin_id,
 };
-pub use record_routing_and_actions::component_scene_host_id;
+pub use record_routing_and_actions::{component_scene_host_id, tree_item_drop_action};
 
 #[path = "🖼️surface-scene-and-row-nodes/🦀️.rs"]
 mod surface_scene_and_row_nodes;

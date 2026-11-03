@@ -1,0 +1,5 @@
+{
+  "mutation": "changeEmbWallPropDepth",
+  "id": "ewall-E1",
+  "newPropDepth": 2.0
+}

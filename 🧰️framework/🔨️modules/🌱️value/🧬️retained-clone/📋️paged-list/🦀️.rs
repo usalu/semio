@@ -3,7 +3,7 @@
 use super::{close_retained_binding, RetainedClone, RetainedCloneBinding, RetainedCloneClose, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneStep, admit_retained_clone_progress};
 use semio_framework_value_paged_list::PagedList;
 use crate::{
-    retirement::{RetireOwned, RetirementCursor, RetirementStep},
+    retirement::{RetireOwned, RetirementStep},
 };
 use std::{
     mem::{ManuallyDrop, size_of},

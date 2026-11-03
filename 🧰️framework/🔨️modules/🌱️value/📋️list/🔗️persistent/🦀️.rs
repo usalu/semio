@@ -1,15 +1,14 @@
 //! 🔗️ Immutable shared fixed-fanout pages retain original readers while candidates replace only changed paths.
 use crate::{RetirementDemand,ValueError,ValueRefusalKind,retirement::RetireOwned,shared_issuance::{SealedShared,SharedIssuer},retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef}};
-use std::mem::size_of;
 /// 🌳️ Every branch and payload leaf has a fixed bounded page footprint.
 pub const PERSISTENT_PAGE_FANOUT:usize=16;
 #[derive(crate::RetireOwned)]#[value(crate="crate")]
-enum Page<T:crate::retirement::RetireOwned+Send+Sync+'static>{
+enum Page<T:RetireOwned+Send+Sync+'static>{
  Leaf{rows:[Option<SealedShared<T>>;PERSISTENT_PAGE_FANOUT],len:usize},
  Branch{children:[Option<SealedShared<Page<T>>>;PERSISTENT_PAGE_FANOUT],len:usize,height:u8},
 }
-fn page_len<T:crate::retirement::RetireOwned+Send+Sync+'static>(page:&Page<T>)->usize{match page{Page::Leaf{len,..}|Page::Branch{len,..}=>*len}}
-fn child_rank<T:crate::retirement::RetireOwned+Send+Sync+'static>(children:&[Option<SealedShared<Page<T>>>;PERSISTENT_PAGE_FANOUT],mut index:usize,insertion:bool)->Option<(usize,usize)>{let mut last=None;for(slot,child)in children.iter().enumerate(){let Some(child)=child else{break;};let len=page_len(child.get());if index<len{return Some((slot,index));}index=index.checked_sub(len)?;last=Some((slot,len));}if insertion&&index==0{last}else{None}}
+fn page_len<T:RetireOwned+Send+Sync+'static>(page:&Page<T>)->usize{match page{Page::Leaf{len,..}|Page::Branch{len,..}=>*len}}
+fn child_rank<T:RetireOwned+Send+Sync+'static>(children:&[Option<SealedShared<Page<T>>>;PERSISTENT_PAGE_FANOUT],mut index:usize,insertion:bool)->Option<(usize,usize)>{let mut last=None;for(slot,child)in children.iter().enumerate(){let Some(child)=child else{break;};let len=page_len(child.get());if index<len{return Some((slot,index));}index=index.checked_sub(len)?;last=Some((slot,len));}if insertion&&index==0{last}else{None}}
 #[path="🎮️splice/🦀️.rs"] pub mod splice;
 pub use splice::{PersistentSplice,PersistentSpliceKind};
 #[path="🔎️traversal/🦀️.rs"] mod traversal;
@@ -20,16 +19,16 @@ pub use retained_read::{PersistentListRead,PersistentListReadStep};
 pub use retained_build::PersistentListBuilder;
 /// 🪪️ Immutable page roots preserve original typed row issuers and every old reader.
 #[derive(crate::RetireOwned)]#[value(crate="crate")]
-pub struct PersistentList<T:crate::retirement::RetireOwned+Send+Sync+'static>{root:Option<SealedShared<Page<T>>>,len:usize,height:u8}
+pub struct PersistentList<T:RetireOwned+Send+Sync+'static>{root:Option<SealedShared<Page<T>>>,len:usize,height:u8}
 impl<T:RetireOwned+std::fmt::Debug+Send+Sync+'static> std::fmt::Debug for PersistentList<T>{fn fmt(&self,f:&mut std::fmt::Formatter<'_>)->std::fmt::Result{f.debug_list().entries(self.iter()).finish()}}
 impl<T:RetireOwned+PartialEq+Send+Sync+'static> PartialEq for PersistentList<T>{fn eq(&self,other:&Self)->bool{self.len==other.len&&self.iter().eq(other.iter())}}
 impl<T:RetireOwned+Eq+Send+Sync+'static> Eq for PersistentList<T>{}
 
 /// 🔗️ Cloning shares the immutable page root as one more alias; every live alias must be explicitly retired, exactly like `OrderedMap`.
-impl<T:crate::retirement::RetireOwned+Send+Sync+'static> Clone for PersistentList<T>{fn clone(&self)->Self{Self{root:self.root.clone(),len:self.len,height:self.height}}}
-impl<T:crate::retirement::RetireOwned+Send+Sync+'static> Default for PersistentList<T>{fn default()->Self{Self{root:None,len:0,height:0}}}
+impl<T:RetireOwned+Send+Sync+'static> Clone for PersistentList<T>{fn clone(&self)->Self{Self{root:self.root.clone(),len:self.len,height:self.height}}}
+impl<T:RetireOwned+Send+Sync+'static> Default for PersistentList<T>{fn default()->Self{Self{root:None,len:0,height:0}}}
 fn fits(d:RetirementDemand,g:RetainedCloneGrant)->bool{g.maximum_items>0&&g.maximum_copy_bytes>=d.copy_bytes&&g.maximum_capacity_bytes>=d.capacity_bytes&&g.maximum_release_bytes>=d.release_bytes&&g.maximum_depth>=d.depth}
-impl<T:crate::retirement::RetireOwned+Send+Sync+'static> PersistentList<T>{
+impl<T:RetireOwned+Send+Sync+'static> PersistentList<T>{
  /// 📏️ Root projection duplicates one fixed original authority without inspecting or cloning rows.
  pub fn projection_demand()->RetirementDemand{RetirementDemand{depth:1,..Default::default()}}
  /// 🧷️ A genuine original list source lends an independent immutable candidate root.
@@ -79,7 +78,7 @@ impl<T:crate::retirement::RetireOwned+Send+Sync+'static> PersistentList<T>{
 }
 
 /// 🧳️ One immutable replacement stages fixed page paths while keeping exact original list and row sources.
-pub struct PersistentSet<T:crate::retirement::RetireOwned+Send+Sync+'static>{
+pub struct PersistentSet<T:RetireOwned+Send+Sync+'static>{
  original:Option<crate::retained_clone::RetainedCloneBinding>,
  authored:Option<crate::retained_clone::RetainedCloneBinding>,
  page:std::mem::ManuallyDrop<Option<Page<T>>>,
@@ -87,7 +86,7 @@ pub struct PersistentSet<T:crate::retirement::RetireOwned+Send+Sync+'static>{
  retirement:crate::retained_clone::RetainedCloneClose,
  index:usize,len:usize,height:u8,level:u8,slot:usize,phase:u8,closing:bool,
 }
-impl<T:crate::retirement::RetireOwned+Send+Sync+'static> PersistentSet<T>{
+impl<T:RetireOwned+Send+Sync+'static> PersistentSet<T>{
  /// 🖱️ The fixed cursor has no heap birth and captures neither row nor original root.
  pub fn new(index:usize)->Self{Self{original:None,authored:None,page:std::mem::ManuallyDrop::new(None),candidate:std::mem::ManuallyDrop::new(None),retirement:Default::default(),index,len:0,height:0,level:0,slot:0,phase:0,closing:false}}
  fn page_at<'a>(&self,list:&'a PersistentList<T>)->Result<(&'a Page<T>,usize),ValueError>{
@@ -128,7 +127,7 @@ impl<T:crate::retirement::RetireOwned+Send+Sync+'static> PersistentSet<T>{
  pub fn close_step(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome{let mut work=0;let result=(||{use crate::retained_clone::{RetainedCloneStep,RetainedCloneBinding};if !self.closing{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"immutable candidate closure not started"))}if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}let d=self.close_demand(grant.maximum_copy_bytes)?;if !fits(d,grant){return Ok(RetainedCloneStep::Progress(Default::default()))}if !self.retirement.is_empty(){let turn=self.retirement.step_granted(grant);work=turn.work;return turn.result.map(|s|RetainedCloneStep::Progress(s.progress()))}if self.page.is_some(){let turn=self.retirement.begin_granted(&mut self.page,grant);work=turn.work;return turn.result.map(|s|s.unwrap_or(RetainedCloneStep::Progress(Default::default())))}if self.candidate.is_some(){let turn=self.retirement.begin_granted(&mut self.candidate,grant);work=turn.work;return turn.result.map(|s|s.unwrap_or(RetainedCloneStep::Progress(Default::default())))}let turn=RetainedCloneBinding::close_one(if self.authored.is_some(){&mut self.authored}else{&mut self.original},grant);work=turn.work;let step=turn.result?;Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})})();crate::RetainedWorkOutcome{result,work}}
  pub fn terminal_is_empty(&self)->bool{self.page.is_none()&&self.candidate.is_none()&&self.retirement.is_empty()&&self.original.is_none()&&self.authored.is_none()}
 }
-impl<T:crate::retirement::RetireOwned+Send+Sync+'static> Drop for PersistentSet<T>{fn drop(&mut self){let empty=self.terminal_is_empty();assert!(empty||std::thread::panicking(),"immutable candidate retains original pages and issuer bindings until funded closure");if empty{unsafe{std::mem::ManuallyDrop::drop(&mut self.page);std::mem::ManuallyDrop::drop(&mut self.candidate);}}}}
+impl<T:RetireOwned+Send+Sync+'static> Drop for PersistentSet<T>{fn drop(&mut self){let empty=self.terminal_is_empty();assert!(empty||std::thread::panicking(),"immutable candidate retains original pages and issuer bindings until funded closure");if empty{unsafe{std::mem::ManuallyDrop::drop(&mut self.page);std::mem::ManuallyDrop::drop(&mut self.candidate);}}}}
 
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]

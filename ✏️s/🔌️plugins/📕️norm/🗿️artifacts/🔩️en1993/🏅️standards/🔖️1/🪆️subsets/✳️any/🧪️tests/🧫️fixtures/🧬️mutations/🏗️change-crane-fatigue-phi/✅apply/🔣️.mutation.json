@@ -1,0 +1,6 @@
+{
+  "ChangeCraneFatiguePhi": {
+    "id": "crane-1",
+    "newFatiguePhi": 1.5
+  }
+}

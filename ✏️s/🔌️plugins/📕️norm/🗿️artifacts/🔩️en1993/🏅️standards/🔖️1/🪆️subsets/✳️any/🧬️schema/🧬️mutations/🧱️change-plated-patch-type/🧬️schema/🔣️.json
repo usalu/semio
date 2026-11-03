@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-plated-patch-type/schema.json",
+  "title": "ChangePlatedPatchType",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newPatchType"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Plated panel",
+          "de": "Plattenfeld"
+        },
+        "description": {
+          "en": "The plated panel this mutation addresses, by id.",
+          "de": "Das adressierte Element (Plattenfeld), per Kennung."
+        },
+        "ref": {
+          "kind": "plated"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newPatchType": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/PatchLoadType",
+      "x-semio-ui": {
+        "label": {
+          "en": "Patch load type (Figure 6.1)",
+          "de": "Lasteinleitungstyp (Bild 6.1)"
+        },
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

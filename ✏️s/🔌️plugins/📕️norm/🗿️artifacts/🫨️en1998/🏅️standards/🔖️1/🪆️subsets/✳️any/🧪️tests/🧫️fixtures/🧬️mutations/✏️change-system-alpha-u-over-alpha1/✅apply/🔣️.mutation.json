@@ -1,0 +1,6 @@
+{
+  "mutation": "changeSystemAlphaUOverAlpha1",
+  "buildingId": "bldg-office",
+  "id": "sys-x",
+  "newAlphaUOverAlpha1": 2.6
+}

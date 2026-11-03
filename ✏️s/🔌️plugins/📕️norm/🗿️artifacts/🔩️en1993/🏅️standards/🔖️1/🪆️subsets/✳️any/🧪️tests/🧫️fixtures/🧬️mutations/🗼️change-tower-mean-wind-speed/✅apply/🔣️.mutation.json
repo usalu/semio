@@ -1,0 +1,6 @@
+{
+  "ChangeTowerMeanWindSpeed": {
+    "id": "tw-1",
+    "newMeanWindSpeed": 1.5
+  }
+}

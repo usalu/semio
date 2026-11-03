@@ -1,0 +1,6 @@
+{
+  "ChangeRailDynamicMaintenance": {
+    "id": "rail-dynamic-1",
+    "newMaintenance": "x-alt"
+  }
+}

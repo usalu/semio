@@ -1,0 +1,5 @@
+{
+  "mutation": "changeBearingXM",
+  "id": "bear-1",
+  "newXM": 1.5
+}

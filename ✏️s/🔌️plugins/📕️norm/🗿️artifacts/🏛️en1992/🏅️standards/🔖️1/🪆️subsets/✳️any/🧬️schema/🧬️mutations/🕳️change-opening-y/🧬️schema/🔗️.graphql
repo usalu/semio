@@ -1,0 +1,5 @@
+type ChangeOpeningY {
+  memberId: String!
+  openingId: String!
+  newY: Float!
+}

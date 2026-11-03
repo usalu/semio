@@ -1,0 +1,115 @@
+syntax = "proto3";
+package semio.norm.structuralscene;
+
+import "🛰️.proto";
+
+message Affine {
+  double base = 1;
+  double k = 2;
+}
+
+message FieldBinding {
+  string path = 1;
+  Affine map = 2;
+  string unit = 3;
+ optional Quantise quantise = 4;
+}
+
+message SnapRule {
+ optional double grid = 1;
+ optional double increment = 2;
+ repeated double targets = 3;
+ repeated double catalogue = 4;
+  double tolerance = 5;
+}
+
+message Handle {
+  string id = 1;
+  EntityRef entity = 2;
+  HandleKind kind = 3;
+  Vec3 anchor = 4;
+  GripStyle grip = 5;
+ repeated FieldBinding writes = 6;
+  SnapRule snap = 7;
+ optional Interval limits = 8;
+  LocalizedCopy accessible_name = 9;
+}
+
+message HandleDrag {
+  string handle = 1;
+  double s = 2;
+  uint64 started_seq = 3;
+}
+
+message ResolvedWrite {
+  string path = 1;
+  double value = 2;
+  optional string token = 3;
+  string unit = 4;
+}
+
+message ChoiceToken {
+  string token = 1;
+  LocalizedCopy label = 2;
+}
+
+enum GripStyle {
+  GRIP_STYLE_ARROW = 0;
+  GRIP_STYLE_DIAMOND = 1;
+  GRIP_STYLE_RING = 2;
+}
+
+message Quantise {
+  message RoundData {
+    double step = 1;
+  }
+  message ChoiceData {
+    repeated double values = 1;
+  }
+  message DecadesData {
+    double per_decade = 1;
+  }
+  message TokenData {
+    repeated ChoiceToken tokens = 1;
+  }
+  oneof kind {
+    RoundData round = 1;
+    ChoiceData choice = 2;
+    Empty int = 3;
+    DecadesData decades = 4;
+    TokenData token = 5;
+  }
+}
+
+message HandleKind {
+  message TranslateData {
+    Vec3 axis = 1;
+  }
+  message TranslatePlaneData {
+    Vec3 normal = 1;
+  }
+  message ScalarAlongData {
+    Vec3 axis = 1;
+  }
+  message RadialData {
+    Vec3 centre = 1;
+  }
+  message AngularData {
+    Vec3 axis = 1;
+    Vec3 centre = 2;
+  }
+  message FaceOffsetData {
+    Vec3 normal = 1;
+  }
+  oneof kind {
+    TranslateData translate = 1;
+    TranslatePlaneData translate_plane = 2;
+    ScalarAlongData scalar_along = 3;
+    RadialData radial = 4;
+    AngularData angular = 5;
+    Empty dimension_line = 6;
+    Empty count_stepper = 7;
+    FaceOffsetData face_offset = 8;
+    Empty choice_stepper = 9;
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-pile-section-modulus/schema.json",
+  "title": "ChangePileSectionModulus",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newSectionModulus"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Pile",
+          "de": "Pfahl"
+        },
+        "description": {
+          "en": "The pile this mutation addresses, by id.",
+          "de": "Das adressierte Element (Pfahl), per Kennung."
+        },
+        "ref": {
+          "kind": "pile"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newSectionModulus": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Elastic section modulus W_el",
+          "de": "Elastisches Widerstandsmoment W_el"
+        },
+        "widget": "stepper",
+        "unit": "m³",
+        "precision": 7,
+        "step": 0.000001,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "ChangeCraneWheelContactLength": {
+    "id": "crane-1",
+    "newWheelContactLength": 0.2
+  }
+}

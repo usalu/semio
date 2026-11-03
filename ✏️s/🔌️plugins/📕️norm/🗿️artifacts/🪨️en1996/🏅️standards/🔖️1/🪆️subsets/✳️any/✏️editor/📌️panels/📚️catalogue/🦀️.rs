@@ -1,7 +1,8 @@
 //! 📚️ EN 1996 play app panel — examples plus DE/EN masonry reference tables.
 
-use semio_s_plugin_norm_app_surface::{CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable};
-use semio_s_artifact_norm_en1996_schema::checks::masonry::{fire_min_thickness_m, fk_factors, psi0_imposed, F_VLT_OVER_FB_DE};
+use semio_s_plugin_norm_app_surface::{spec_trace_table, CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable};
+use semio_s_artifact_norm_en1996_schema::spec_trace::TABLE as SPEC_TRACE;
+use semio_s_artifact_norm_en1996_schema::checks::masonry::{f_vlt_mpa, fire_min_thickness_m, fk_factors, psi0_imposed};
 use semio_s_plugin_norm_compliance::{AnnexChoice, ClauseId};
 use semio_s_artifact_norm_en1996_model::{MasonryClass, MortarType, UnitGroup, UnitMaterial};
 use semio_framework_ui_locale::LocalizedLabel;
@@ -24,7 +25,7 @@ fn column(id: &'static str, label_en: &'static str, label_de: &'static str, unit
     CatalogueColumn { id, label_en, label_de, unit }
 }
 
-/// 📚️ Normative reference tables sourced from the same helpers `evaluate()` reads.
+/// 📚️ Normative reference tables (the browser table of the design-case catalogue is appended by [`render`]) sourced from the same helpers `evaluate()` reads.
 pub fn reference_tables() -> Vec<CatalogueTable> {
     vec![
         gamma_m_de_table(),
@@ -32,6 +33,7 @@ pub fn reference_tables() -> Vec<CatalogueTable> {
         fire_min_thickness_rei90_table(),
         psi0_imposed_table(),
         f_vk_de_cap_table(),
+        spec_trace_table(&SPEC_TRACE),
     ]
 }
 
@@ -97,7 +99,7 @@ fn fk_factors_table() -> CatalogueTable {
                 CatalogueRow {
                     id: (*id).into(),
                     cells: vec![
-                        CatalogueCell::text(format!("{en} / {de}")),
+                        CatalogueCell::localized(en.to_string(), de.to_string()),
                         CatalogueCell::number(f.k, 2),
                         CatalogueCell::number(f.alpha, 2),
                         CatalogueCell::number(f.beta, 2),
@@ -117,8 +119,8 @@ fn fire_min_thickness_rei90_table() -> CatalogueTable {
     ];
     CatalogueTable {
         id: "fire-min-thickness-rei90",
-        title_en: "Minimum wall thickness for REI 90 (α = 1.0)",
-        title_de: "Mindestwanddicke für REI 90 (α = 1,0)",
+        title_en: "Minimum wall thickness for REI 90 (base row)",
+        title_de: "Mindestwanddicke für REI 90 (Grundzeile)",
         clause: ClauseId::new("EN 1996-1-2", "§4", "Table N.B"),
         columns: vec![
             column("row", "Unit material", "Steinmaterial", None),
@@ -131,7 +133,7 @@ fn fire_min_thickness_rei90_table() -> CatalogueTable {
                 CatalogueRow {
                     id: (*id).into(),
                     cells: vec![
-                        CatalogueCell::text(format!("{en} / {de}")),
+                        CatalogueCell::localized(en.to_string(), de.to_string()),
                         CatalogueCell::number(t, 3),
                     ],
                 }
@@ -147,6 +149,8 @@ fn psi0_imposed_table() -> CatalogueTable {
         ("C", "Category C congregation", "Kategorie C Versammlung"),
         ("D", "Category D retail", "Kategorie D Verkauf"),
         ("E", "Category E storage", "Kategorie E Lager"),
+        ("F", "Category F traffic", "Kategorie F Verkehr"),
+        ("G", "Category G traffic", "Kategorie G Verkehr"),
         ("H", "Category H roofs", "Kategorie H Dächer"),
     ];
     CatalogueTable {
@@ -163,8 +167,8 @@ fn psi0_imposed_table() -> CatalogueTable {
             .map(|(id, en, de)| CatalogueRow {
                 id: (*id).into(),
                 cells: vec![
-                    CatalogueCell::text(format!("{en} / {de}")),
-                    CatalogueCell::number(psi0_imposed(id), 1),
+                    CatalogueCell::localized(en.to_string(), de.to_string()),
+                    CatalogueCell::number(psi0_imposed(AnnexChoice::De, id), 1),
                 ],
             })
             .collect(),
@@ -174,7 +178,7 @@ fn psi0_imposed_table() -> CatalogueTable {
 fn f_vk_de_cap_table() -> CatalogueTable {
     CatalogueTable {
         id: "f-vk-de-cap",
-        title_en: "DE-NA shear cap ratio f_vlt / f_b",
+        title_en: "DE-NA shear cap ratio f_vlt / f_b at σ = 0",
         title_de: "DE-NA Schubdeckelverhältnis f_vlt / f_b",
         clause: ClauseId::new("DIN EN 1996-1-1/NA", "§6.2", "NA.6.2"),
         columns: vec![
@@ -184,8 +188,8 @@ fn f_vk_de_cap_table() -> CatalogueTable {
         rows: vec![CatalogueRow {
             id: "f-vlt-over-fb".into(),
             cells: vec![
-                CatalogueCell::text("DE-NA upper limit / DE-NA Obergrenze"),
-                CatalogueCell::number(F_VLT_OVER_FB_DE, 3),
+                CatalogueCell::localized("German NA upper limit", "Obergrenze des deutschen NA"),
+                CatalogueCell::number(f_vlt_mpa(AnnexChoice::De, UnitGroup::Group2, 1.0, 0.0), 4),
             ],
         }],
     }
@@ -193,7 +197,9 @@ fn f_vk_de_cap_table() -> CatalogueTable {
 
 //#region 🔖️Render
 pub fn render(examples: Vec<semio_framework_plugin::ExampleSource>, locale: semio_framework_ui_locale::Locale, controller_id: &'static str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    semio_s_plugin_norm_app_surface::render_catalogue(&examples, &reference_tables(), locale, controller_id, &semio_framework_plugin::TreeWindows::unhosted())
+    let mut tables = reference_tables();
+    tables.push(semio_s_plugin_norm_app_surface::case_catalogue_table("en1996", &<semio_s_artifact_norm_en1996_schema::checks::masonry::En1996Cases as semio_s_plugin_norm_compliance::design_case::CaseCatalogue>::entries(), "", locale));
+    semio_s_plugin_norm_app_surface::render_catalogue(&examples, &tables, locale, controller_id, &semio_framework_plugin::TreeWindows::unhosted())
 }
 //#endregion 🔖️Render
 

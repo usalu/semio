@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-bridge-deck-length-m/schema.json",
+  "title": "ChangeBridgeDeckLengthM",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newDeckLengthM"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeBridgeDeckLengthM"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Bridge",
+          "de": "Brücke"
+        },
+        "description": {
+          "en": "The bridge this mutation addresses, by id.",
+          "de": "Das adressierte Element (Brücke), per Kennung."
+        },
+        "ref": {
+          "kind": "bridge"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newDeckLengthM": {
+      "type": "number",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Deck length for the lumped mass model (0 = span of the supports)",
+          "de": "Überbaulänge für das Punktmassenmodell (0 = Spannweite der Auflager)"
+        },
+        "group": "value",
+        "order": 20,
+        "widget": "stepper",
+        "step": 0.001,
+        "precision": 3
+      }
+    }
+  }
+}

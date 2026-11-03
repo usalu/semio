@@ -1,0 +1,6 @@
+{
+  "ChangeJointBasePlateLength": {
+    "id": "joint-j1",
+    "newBasePlateLength": 1.5
+  }
+}

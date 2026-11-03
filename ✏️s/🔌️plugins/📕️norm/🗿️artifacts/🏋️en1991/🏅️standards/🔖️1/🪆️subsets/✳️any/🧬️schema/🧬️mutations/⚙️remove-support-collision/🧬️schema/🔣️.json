@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/remove-support-collision/schema.json",
+  "title": "RemoveSupportCollision",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Support collision",
+          "de": "Stützenanprall"
+        },
+        "description": {
+          "en": "The support collision this mutation addresses, by id.",
+          "de": "Das adressierte Element (Stützenanprall), per Kennung."
+        },
+        "ref": {
+          "kind": "support-collision"
+        },
+        "group": "target",
+        "order": 10
+      }
+    }
+  }
+}

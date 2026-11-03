@@ -1,0 +1,5 @@
+{
+  "mutation": "changeBridgeTrackGauge",
+  "id": "bri-1",
+  "newTrackGauge": 2.0
+}

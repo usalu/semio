@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/mutation/change-reliability-resistance-dist/schema.json",
+  "title": "ChangeReliabilityResistanceDist",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newResistanceDistribution"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeReliabilityResistanceDist"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Reliability analysis",
+          "de": "Zuverlässigkeitsanalyse"
+        },
+        "description": {
+          "en": "The reliability analysis this mutation addresses, by id.",
+          "de": "Das adressierte Element (Zuverlässigkeitsanalyse), per Kennung."
+        },
+        "ref": {
+          "kind": "reliability-analysis"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newResistanceDistribution": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/$defs/DistributionKind",
+      "x-semio-ui": {
+        "label": {
+          "en": "Resistance distribution",
+          "de": "Verteilung des Widerstands"
+        },
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

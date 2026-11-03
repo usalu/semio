@@ -6052,6 +6052,7 @@ dependencies = [
  "semio-s-artifact-norm-din16798-schema",
  "semio-s-plugin-norm-app-surface",
  "semio-s-plugin-norm-compliance",
+ "semio-s-plugin-norm-results-config",
  "serde_json",
 ]
 
@@ -6235,6 +6236,23 @@ dependencies = [
  "semio-framework-value-derive",
  "semio-s-artifact-norm-din16798-diff",
  "semio-s-artifact-norm-din16798-model",
+ "semio-s-artifact-norm-din16798-mut-building-more",
+ "semio-s-plugin-norm-compliance",
+ "serde",
+]
+
+[[package]]
+name = "semio-s-artifact-norm-din16798-mut-building-more"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-os-kernel",
+ "semio-framework-pack-json",
+ "semio-framework-schema",
+ "semio-framework-ui-locale",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-s-artifact-norm-din16798-diff",
+ "semio-s-artifact-norm-din16798-model",
  "semio-s-plugin-norm-compliance",
  "serde",
 ]
@@ -6264,6 +6282,22 @@ dependencies = [
  "semio-framework-value-derive",
  "semio-s-artifact-norm-din16798-diff",
  "semio-s-artifact-norm-din16798-model",
+ "semio-s-artifact-norm-din16798-mut-thermal-more",
+ "serde",
+]
+
+[[package]]
+name = "semio-s-artifact-norm-din16798-mut-thermal-more"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-os-kernel",
+ "semio-framework-pack-json",
+ "semio-framework-schema",
+ "semio-framework-ui-locale",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-s-artifact-norm-din16798-diff",
+ "semio-s-artifact-norm-din16798-model",
  "serde",
 ]
 
@@ -6286,6 +6320,22 @@ name = "semio-s-artifact-norm-din16798-mut-zones"
 version = "0.1.0"
 dependencies = [
  "semio-framework-os-kernel",
+ "semio-framework-schema",
+ "semio-framework-ui-locale",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-s-artifact-norm-din16798-diff",
+ "semio-s-artifact-norm-din16798-model",
+ "semio-s-artifact-norm-din16798-mut-zones-more",
+ "serde",
+]
+
+[[package]]
+name = "semio-s-artifact-norm-din16798-mut-zones-more"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-os-kernel",
+ "semio-framework-pack-json",
  "semio-framework-schema",
  "semio-framework-ui-locale",
  "semio-framework-value",
@@ -6422,6 +6472,7 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "serde",
 ]
 
 [[package]]

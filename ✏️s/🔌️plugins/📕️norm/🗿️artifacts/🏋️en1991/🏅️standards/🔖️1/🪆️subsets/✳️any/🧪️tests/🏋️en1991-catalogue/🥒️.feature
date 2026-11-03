@@ -1,0 +1,186 @@
+@capability-en1991-1-evaluate
+@oracle-en1991-1-compliance-independent
+@comparison-numerical-v1
+Feature: EN 1991 action catalogue worked examples
+  Every row evaluates one catalogue entry and compares one output with a hand-checked reference value (SI units, temperatures in kelvin).
+
+  @id-catalogue-example
+  @level-quick
+  @mode-differential
+  Scenario Outline: Catalogue entry <entry> output <key>
+    Given the catalogue entry "<entry>" for annex "<annex>" with inputs "<inputs>"
+    When the entry is evaluated
+    Then the output "<key>" equals <expected> within relative tolerance <tolerance>
+    Examples:
+      | id                    | entry  | annex | inputs                                                                             | key         | expected  | tolerance |
+      | e11-01-total-en       | E11.01 | en    | material:reinforced_concrete;thickness=0.2;material2:cement_screed;thickness2=0.06 | total       | 6320      | 1e-9      |
+      | e11-01-g-de           | E11.01 | de    | material:steel;thickness=0.01 | g           | 785       | 1e-9      |
+      | e11-04-alpha-a-en     | E11.04 | en    | category:C1;area=40;storeys=1 | alpha_a     | 0.75      | 1e-9      |
+      | e11-04-alpha-n-en     | E11.04 | en    | category:B;area=20;storeys=5 | alpha_n     | 0.82      | 1e-9      |
+      | e11-02-delta-q-de     | E11.02 | de    | wall_gamma=14000;wall_thickness=0.115;wall_height=2.6;finish=400 | delta_q     | 1200      | 1e-9      |
+      | e11-09-pressure-de    | E11.09 | de    | load=10000;a=0.2;b=0.2 | pressure    | 250000    | 1e-9      |
+      | e12-01-theta-g-de     | E12.01 | de    | curve:standard;t_min=60 | theta_g     | 1218.49   | 1e-5      |
+      | e12-01-theta-g-de-2   | E12.01 | de    | curve:hydrocarbon;t_min=30 | theta_g     | 1370.81   | 1e-5      |
+      | e12-01-theta-g-de-3   | E12.01 | de    | curve:external;t_min=5 | theta_g     | 861.61    | 1e-5      |
+      | e12-02-theta-max-de   | E12.02 | de    | a_f=50;a_t=184.84;a_v=5;h_eq=2;b=1160;q_fd_mj=336 | theta_max   | 1095.32   | 1e-5      |
+      | e12-03-q-fd-de        | E12.03 | de    | area=250;q_fk_mj=420;delta_q2=1 | q_fd        | 504000000 | 1e-9      |
+      | e12-04-t-ed-de        | E12.04 | de    | q_fd_mj=504;height=3;alpha_v=0.1;k_b=0.07 | t_ed        | 3515.61   | 1e-5      |
+      | e12-07-eta-fi-de      | E12.07 | de    | g_k=100;q_k=50;psi=0.5 | eta_fi      | 0.595238  | 1e-6      |
+      | e13-02-s-k-de         | E13.02 | de    | zone:2;altitude=300 | s_k         | 890.194   | 1e-6      |
+      | e13-02-s-k-de-2       | E13.02 | de    | zone:3;altitude=800 | s_k         | 4761.655  | 1e-6      |
+      | e13-02-s-k-de-3       | E13.02 | de    | zone:1a;altitude=50 | s_k         | 812.5     | 1e-9      |
+      | e13-03-mu1-de         | E13.03 | de    | alpha=40 | mu1         | 0.533333  | 1e-6      |
+      | e13-05-mu3-de         | E13.05 | de    | b=12;h=2 | mu3         | 1.86667   | 1e-5      |
+      | e13-06-mu2-de         | E13.06 | de    | h=1;s_k=850 | mu2         | 2         | 1e-12     |
+      | e13-06-mu2-en         | E13.06 | en    | h=1.5;s_k=1100 | mu2         | 2.727273  | 1e-6      |
+      | e13-07-s-e-de         | E13.07 | de    | s=900 | s_e         | 243       | 1e-9      |
+      | e13-08-f-s-de         | E13.08 | de    | s=1000;b=4;alpha=30 | F_s         | 2000      | 1e-9      |
+      | e13-06-mu-w-de        | E13.06 | de    | h=1;s_k=850;b1=8;b2=12 | mu_w        | 2         | 1e-12     |
+      | e13-06-mu-w-en        | E13.06 | en    | h=1.5;s_k=1100;b1=8;b2=12 | mu_w        | 2.727273  | 1e-6      |
+      | e13-06-mu-w-floor-wins | E13.06 | en    | h=0.3;s_k=1500;b1=1;b2=1 | mu_w        | 0.8       | 1e-12     |
+      | e13-13-s-e-de         | E13.13 | de    | s=900 | s_e         | 243       | 1e-9      |
+      | e13-13-f-s-de         | E13.13 | de    | s=1000;b=4;alpha=30 | F_s         | 2000      | 1e-9      |
+      | e14-01-q-b-de         | E14.01 | de    | zone=3 | q_b         | 472.7     | 2e-4      |
+      | e14-02-q-p-de         | E14.02 | de    | zone=2;z=30 | q_p         | 997.1     | 2e-4      |
+      | e14-05-q-p-en         | E14.05 | en    | z=10;terrain=3;v_b=25 | q_p         | 667.652   | 1e-5      |
+      | e14-05-q-p-en-2       | E14.05 | en    | z=10;terrain=2;v_b=25 | q_p         | 918.863   | 1e-5      |
+      | e14-05-q-p-en-3       | E14.05 | en    | z=10;terrain=2;v_b=25;c_o=1.3 | q_p         | 1348.91   | 1e-5      |
+      | e14-06-c-prob-en      | E14.06 | en    | p=0.2 | c_prob      | 0.854501  | 1e-5      |
+      | e14-07-b-en           | E14.07 | en    | b=30;h=12;d=20 | B           | 15.2      | 1e-12     |
+      | e14-08-c-pe10-0-en    | E14.08 | en    | zone:D;h_over_d=0.6 | c_pe10_0    | 0.746667  | 1e-5      |
+      | e14-08-c-pe-area-0-en | E14.08 | en    | zone:F;roof_type:flat;area=3;e=24;b=30;d=20 | c_pe_area_0 | -2.16602  | 1e-5      |
+      | e14-12-l-en           | E14.12 | en    | h=40;b=30;terrain=3;v_b=25;delta=0.1 | L           | 82.3388   | 1e-5      |
+      | e14-14-sc-en          | E14.14 | en    | b=0.5;n=1.5;delta_s=0.05;m_e=300 | Sc          | 96        | 1e-9      |
+      | e15-01-dt-exp-de      | E15.01 | de    | deck_type=1;t_min_c=-24;t_max_c=37 | dT_exp      | 43        | 1e-9      |
+      | e15-01-dl-exp-de      | E15.01 | de    | deck_type=3;t_min_c=-24;t_max_c=37 | dL_exp      | 0.029     | 1e-9      |
+      | e15-04-n-leading-de   | E15.04 | de    | dt_m=18;dt_n=43 | n_leading   | 56.5      | 1e-9      |
+      | e16-03-q-b-de         | E16.03 | de    | p=0.2;v_b=25 | q_b         | 285.223   | 1e-4      |
+      | e17-06-t-p-de         | E17.06 | de    | g_k=5000;q_k=3000;psi=0.3;s=6;l=7.2 | T_p         | 101952    | 1e-6      |
+      | e17-08-f-el-de        | E17.08 | de    | mass=1500;speed=15 | F_el        | 318198    | 1e-5      |
+      | e17-09-p-d2-de        | E17.09 | de    | p_v=5;av_over_v=0.04 | p_d2        | 30500     | 1e-12     |
+      | e2-01-w-rem-de        | E2.01  | de    | width=10.5 | w_rem       | 1.5       | 1e-12     |
+      | e2-07-q-lk-de         | E2.07  | de    | loaded_length=40 | Q_lk        | 468000    | 1e-9      |
+      | e2-16-phi-2-de        | E2.16  | de    | l_phi=20 | phi_2       | 1.15707   | 1e-5      |
+      | e2-17-q-tk-de         | E2.17  | de    | v_kmh=160;radius=1000;l_f=30;q_vk=1000000 | Q_tk        | 163526    | 1e-4      |
+      | e3-01-phi-2-de        | E3.01  | de    | hoist_class:HC3;v_h=0.25 | phi_2       | 1.2775    | 1e-12     |
+      | e3-02-q-r-max-de      | E3.02  | de    | q_c=300000;q_h=100000;wheels=2;hoist_class:HC2;v_h=0.25 | Q_r_max     | 224250    | 1e-9      |
+      | e4-03-p-hf-en         | E4.03  | en    | gamma=9000;phi=30;mu=0.4;dc=6;z=10 | p_hf        | 25964.1   | 1e-5      |
+      | e4-03-n-wf-en         | E4.03  | en    | gamma=9000;phi=30;mu=0.4;dc=6;z=10 | N_wf        | 64188.8   | 1e-5      |
+      | e4-02-mu-en           | E4.02  | en    | phi=30 | mu          | 0.414214  | 1e-5      |
+      | e15-03-sigma-de | E15.03 | de | alpha=1.2e-05;dt=15;e=30000000000 | sigma | 5400000 | 1e-5 |
+      | e15-05-m-de | E15.05 | de | alpha=1.2e-05;dt_m=10;e=30000000000;h=1.5;i=0.001;length=6 | M | 2400 | 1e-5 |
+      | e16-01-c-prob-de | E16.01 | de | duration_days=60;rho=1.25;v_b=25 | c_prob | 0.854500605479 | 1e-5 |
+      | e16-01-snow-factor-de | E16.01 | de | duration_days=60;rho=1.25;v_b=25 | snow_factor | 0.632221285013 | 1e-5 |
+      | e13-10-factor-de | E13.10 | de | n_years=50;v=0.4 | factor | 1 | 1e-5 |
+      | e12-05-l-f-de | E12.05 | de | ceiling_height=3;d=1;fire_area=20;l_h=5;q_w=1000000;r=2;z=3;z_prime=0 | L_f | 2.69759191863 | 1e-5 |
+      | e12-05-z-0-de | E12.05 | de | ceiling_height=3;d=1;fire_area=20;l_h=5;q_w=1000000;r=2;z=3;z_prime=0 | z_0 | 0.296228490111 | 1e-5 |
+      | e12-05-theta-de | E12.05 | de | ceiling_height=3;d=1;fire_area=20;l_h=5;q_w=1000000;r=2;z=3;z_prime=0 | theta | 703.716352303 | 1e-5 |
+      | e12-06-h-net-de | E12.06 | de | alpha_c=25;eps_m=0.8;theta_g_c=600;theta_m_c=300 | h_net | 28971.5333426 | 1e-5 |
+      | e12-09-phi-de | E12.09 | de | distance=10;height=4;width=4 | phi | 0.042038385739 | 1e-5 |
+      | e14-03-c-o-de | E14.03 | de | phi=0.1;s=1 | c_o | 1.2 | 1e-5 |
+      | e14-13-f-w-de | E14.13 | de | a_ref=30;c_e=1;c_fx=1.3;rho=1.25;v_b=25 | F_w | 15234.375 | 1e-5 |
+      | e14-16-re-de | E14.16 | de | a_fr=10;b=12;c_fr=0.04;q_p=800;rho=1.25 | Re | 28621670.112 | 1e-5 |
+      | e2-08-q-tk-de | E2.08 | de | q_v=600000;radius=300 | Q_tk | 80000 | 1e-5 |
+      | e2-12-q-fk-de | E2.12 | de | span=40;width=3 | q_fk | 3714.28571429 | 1e-5 |
+      | e3-03-k-de | E3.03 | de | a=20;m_c=20000;m_drive=100000;phi_7=1.5;runway_beams=2;s_b=10000000;skew_rad=0;sum_q_r=400000;v_1=0.7;xi=0.2 | K | 80000 | 1e-5 |
+      | e3-03-h-l-de | E3.03 | de | a=20;m_c=20000;m_drive=100000;phi_7=1.5;runway_beams=2;s_b=10000000;skew_rad=0;sum_q_r=400000;v_1=0.7;xi=0.2 | H_L | 60000 | 1e-5 |
+      | e3-03-f-skew-de | E3.03 | de | a=20;m_c=20000;m_drive=100000;phi_7=1.5;runway_beams=2;s_b=10000000;skew_rad=0;sum_q_r=400000;v_1=0.7;xi=0.2 | f_skew | 0 | 1e-5 |
+      | e3-03-h-b-de | E3.03 | de | a=20;m_c=20000;m_drive=100000;phi_7=1.5;runway_beams=2;s_b=10000000;skew_rad=0;sum_q_r=400000;v_1=0.7;xi=0.2 | H_B | 469574.275275 | 1e-5 |
+      | e3-03-h-t-de | E3.03 | de | a=20;m_c=20000;m_drive=100000;phi_7=1.5;runway_beams=2;s_b=10000000;skew_rad=0;sum_q_r=400000;v_1=0.7;xi=0.2 | H_T | 1000 | 1e-5 |
+      | e15-06-movement-de | E15.06 | de | alpha=1.2e-05;dt=15;length=6;margin_k=0 | movement | 0.00108 | 1e-5 |
+      | e13-01-s-de | E13.01 | de | altitude=300;c_e=1;c_t=1;mu=0.8;s_k=650;zone:2 | s | 520 | 1e-5 |
+      | e13-12-s-de | E13.12 | de | c_e=1;c_t=1;mu=0.8;s_k=650 | s | 520 | 1e-5 |
+      | e14-10-f-w-de | E14.10 | de | a_ref=30;c_d=0.95;c_f=1.3;c_s=0.9;h=10;q_p=800;z_g=3 | F_w | 26676 | 1e-5 |
+      | e14-10-z-e-de | E14.10 | de | a_ref=30;c_d=0.95;c_f=1.3;c_s=0.9;h=10;q_p=800;z_g=3 | z_e | 8 | 1e-5 |
+      | e14-11-f-w-de | E14.11 | de | a_ref=30;b=12;c_d=0.95;c_f=1.3;c_f0=1.3;c_s=0.9;length=20;psi_lambda=0.9;q_p=800;r=0 | F_w | 26676 | 1e-5 |
+      | e2-17-traction-de | E2.17 | de | v_kmh=160;radius=1000;l_f=30;q_vk=1000000;loaded_length=40 | traction | 1000000 | 1e-5 |
+      | e2-17-braking-de | E2.17 | de | v_kmh=160;radius=1000;l_f=30;q_vk=1000000;loaded_length=40 | braking | 800000 | 1e-5 |
+      | e11-03-q-k-de | E11.03 | de | depth=5;category:B2 | q_k | 3000 | 1e-5 |
+      | e11-03-q-k-de-uc | E11.03 | de | depth=5;category:B2 | Q_k | 1500 | 1e-5 |
+      | e11-03-line-de | E11.03 | de | depth=5;category:B2 | line | 15000 | 1e-5 |
+      | e11-05-q-k-de | E11.05 | de | delta_b=0.1;delta_c=0.1;mass=1500;speed=15;category:B2 | q_k | 500 | 1e-5 |
+      | e11-05-f-k-de | E11.05 | de | delta_b=0.1;delta_c=0.1;mass=1500;speed=15;category:B2 | F_k | 843750 | 1e-5 |
+      | e11-06-q-k-de | E11.06 | de |  | q_k | 0 | 1e-5 |
+      | e11-06-q-k-de-uc | E11.06 | de |  | Q_k | 1000 | 1e-5 |
+      | e11-07-axle-de | E11.07 | de | class=2;tyres:pneumatic | axle | 64400 | 1e-5 |
+      | e11-08-footprint-de | E11.08 | de | a=0.2;b=0.2;cover=0.1;load=40000;slab_thickness=0.25 | footprint | 0.4225 | 1e-5 |
+      | e11-08-pressure-de | E11.08 | de | a=0.2;b=0.2;cover=0.1;load=40000;slab_thickness=0.25 | pressure | 94674.556213 | 1e-5 |
+      | e15-02-dt-m-heat-de | E15.02 | de | k_sur_cool=1;k_sur_heat=1;deck:composite;surfacing:50mm | dT_M_heat | 15 | 1e-5 |
+      | e15-02-dt-m-cool-de | E15.02 | de | k_sur_cool=1;k_sur_heat=1;deck:composite;surfacing:50mm | dT_M_cool | 18 | 1e-5 |
+      | e15-07-t-min-de | E15.07 | de | altitude=300;t_max_c=35;t_min_c=-15 | t_min | 256.65 | 1e-5 |
+      | e15-07-t-max-de | E15.07 | de | altitude=300;t_max_c=35;t_min_c=-15 | t_max | 306.65 | 1e-5 |
+      | e15-08-t-0-de | E15.08 | de | t_0_c=10;t_max_c=35;t_min_c=-15 | t_0 | 283.15 | 1e-5 |
+      | e15-08-dt-con-de | E15.08 | de | t_0_c=10;t_max_c=35;t_min_c=-15 | dT_con | 25 | 1e-5 |
+      | e15-08-dt-exp-de | E15.08 | de | t_0_c=10;t_max_c=35;t_min_c=-15 | dT_exp | 25 | 1e-5 |
+      | e16-02-q-ca-de | E16.02 | de | area=20;gamma=25000;h=10;q_ca=1000;q_ca_concreting=750 | Q_ca | 20000 | 1e-5 |
+      | e16-02-p-fresh-de | E16.02 | de | area=20;gamma=25000;h=10;q_ca=1000;q_ca_concreting=750 | p_fresh | 250000 | 1e-5 |
+      | e16-02-p-total-de | E16.02 | de | area=20;gamma=25000;h=10;q_ca=1000;q_ca_concreting=750 | p_total | 250750 | 1e-5 |
+      | e17-01-f-dx-de | E17.01 | de | road:motorway | F_dx | 1000000 | 1e-5 |
+      | e17-01-f-dy-de | E17.01 | de | road:motorway | F_dy | 500000 | 1e-5 |
+      | e17-02-f-d-de | E17.02 | de | weight=30000 | F_d | 150000 | 1e-5 |
+      | e17-05-f-d-de | E17.05 | de | mass=1500 | F_d | 116189.500386 | 1e-5 |
+      | e17-10-p-so-de | E17.10 | de | charge_kg=100;standoff=30 | p_so | 20543.7321568 | 1e-5 |
+      | e13-04-mu1-de | E13.04 | de | alpha_1=15;alpha_2=15 | mu1 | 0.8 | 1e-5 |
+      | e13-04-mu2-de | E13.04 | de | alpha_1=15;alpha_2=15 | mu2 | 1.2 | 1e-5 |
+      | e13-09-s-ad-de | E13.09 | de | altitude=300;c_esl=2;north_german_lowland=1;s_k=650;zone:2 | s_Ad | 2047.44598338 | 1e-5 |
+      | e13-11-gamma-de | E13.11 | de | state:fresh | gamma | 1000 | 1e-5 |
+      | e12-08-flux-de | E12.08 | de | t_f_c=800 | flux | 75206.1672627 | 1e-5 |
+      | e14-04-i-v-de | E14.04 | de | c_o=1;terrain=2;z=10 | I_v | 0.188739165818 | 1e-5 |
+      | e14-09-w-0-de | E14.09 | de | c_d=0.95;c_pe=0.8;c_pi=-0.3;c_s=0.9;dominant_ratio=1;q_p=800 | w_0 | 410.4 | 1e-5 |
+      | e14-09-w-1-de | E14.09 | de | c_d=0.95;c_pe=0.8;c_pi=-0.3;c_s=0.9;dominant_ratio=1;q_p=800 | w_1 | 752.4 | 1e-5 |
+      | e14-09-w-governing-de | E14.09 | de | c_d=0.95;c_pe=0.8;c_pi=-0.3;c_s=0.9;dominant_ratio=1;q_p=800 | w_governing | 752.4 | 1e-5 |
+      | e14-09-dominant-2-de | E14.09 | de | c_pe=-1.2;dominant_ratio=2;q_p=800 | c_pi_dominant | -0.9 | 1e-9 |
+      | e14-09-dominant-interpolated-de | E14.09 | de | c_pe=-1.2;dominant_ratio=2.5;q_p=800 | c_pi_dominant | -0.99 | 1e-9 |
+      | e14-09-dominant-3-de | E14.09 | de | c_pe=-1.2;dominant_ratio=3;q_p=800 | c_pi_dominant | -1.08 | 1e-9 |
+      | e4-01-aac-below-100-de | E4.01 | de | capacity_t=99 | aac | 1 | 1e-9 |
+      | e4-01-aac-at-100-de | E4.01 | de | capacity_t=100 | aac | 2 | 1e-9 |
+      | e4-01-aac-at-10000-de | E4.01 | de | capacity_t=10000 | aac | 2 | 1e-9 |
+      | e4-01-aac-above-10000-de | E4.01 | de | capacity_t=10001 | aac | 3 | 1e-9 |
+      | e14-15-n-1-de | E14.15 | de | h=10;z=10;mode:framed;structure:concrete | n_1 | 4.6 | 1e-5 |
+      | e14-15-phi-de | E14.15 | de | h=10;z=10;mode:framed;structure:concrete | phi | 1 | 1e-5 |
+      | e14-15-delta-s-de | E14.15 | de | h=10;z=10;mode:framed;structure:concrete | delta_s | 0.1 | 1e-5 |
+      | e2-02-tandems-de | E2.02 | de | width=7 | tandems | 1000000 | 1e-5 |
+      | e2-02-udl-1-de | E2.02 | de | width=7 | udl_1 | 27000 | 1e-5 |
+      | e2-02-udl-2-de | E2.02 | de | width=7 | udl_2 | 7500 | 1e-5 |
+      | e2-02-udl-rest-de | E2.02 | de | width=7 | udl_rest | 2500 | 1e-5 |
+      | e2-03-axle-de | E2.03 | de | a=0.2;axle=400000;b=12 | axle | 400000 | 1e-5 |
+      | e2-03-wheel-pressure-de | E2.03 | de | a=0.2;axle=400000;b=12 | wheel_pressure | 83333.3333333 | 1e-5 |
+      | e2-04-total-de | E2.04 | de | axle_load=300000;axles=6 | total | 1800000 | 1e-5 |
+      | e2-05-q-fk-de | E2.05 | de |  | q_fk | 5000 | 1e-5 |
+      | e2-06-footprint-de | E2.06 | de | a=0.2;b=12;load=40000;pavement=0.1;slab_thickness=0.25 | footprint | 8.0925 | 1e-5 |
+      | e2-06-pressure-de | E2.06 | de | a=0.2;b=12;load=40000;pavement=0.1;slab_thickness=0.25 | pressure | 4942.84831634 | 1e-5 |
+      | e2-09-lm1-de | E2.09 | de | group:gr1a | lm1 | 1 | 1e-5 |
+      | e2-09-lm2-de | E2.09 | de | group:gr1a | lm2 | 0 | 1e-5 |
+      | e2-09-lm3-de | E2.09 | de | group:gr1a | lm3 | 0 | 1e-5 |
+      | e2-09-lm4-de | E2.09 | de | group:gr1a | lm4 | 0 | 1e-5 |
+      | e2-09-footway-de | E2.09 | de | group:gr1a | footway | 3000 | 1e-5 |
+      | e2-10-flm1-tandem-de | E2.10 | de | lane=1 | flm1_tandem | 210000 | 1e-5 |
+      | e2-10-flm1-udl-de | E2.10 | de | lane=1 | flm1_udl | 2700 | 1e-5 |
+      | e2-10-flm3-total-de | E2.10 | de | lane=1 | flm3_total | 480000 | 1e-5 |
+      | e2-11-f-dx-de | E2.11 | de | member:deck | F_dx | 500000 | 1e-5 |
+      | e2-11-f-dy-de | E2.11 | de | member:deck | F_dy | 250000 | 1e-5 |
+      | e2-13-resonance-de | E2.13 | de | frequency=2;direction:vertical | resonance | 2 | 1e-5 |
+      | e2-13-resonance-above-band-de | E2.13 | de | frequency=5.5;direction:vertical | resonance | 0 | 1e-9 |
+      | e2-13-resonance-horizontal-de | E2.13 | de | frequency=2.4;direction:horizontal | resonance | 2 | 1e-9 |
+      | e2-13-resonance-jogging-de | E2.13 | de | frequency=4;direction:jogging | resonance | 0 | 1e-9 |
+      | e2-14-axle-de | E2.14 | de | alpha=1 | axle | 250000 | 1e-5 |
+      | e2-14-udl-de | E2.14 | de | alpha=1 | udl | 80000 | 1e-5 |
+      | e2-15-udl-de | E2.15 | de | alpha=1;model:sw0 | udl | 133000 | 1e-5 |
+      | e2-15-total-de | E2.15 | de | alpha=1;model:sw0 | total | 1995000 | 1e-5 |
+      | e3-04-static-de | E3.04 | de | q_h=50000 | static | 62500 | 1e-5 |
+      | e3-04-dynamic-de | E3.04 | de | q_h=50000 | dynamic | 55000 | 1e-5 |
+      | e3-05-q-e-de | E3.05 | de | lambda=0.5;q_max=100000 | Q_e | 50000 | 1e-5 |
+      | e3-07-f-dyn-de | E3.07 | de | eccentricity=0.01;mass=1500;rpm=1500 | F_dyn | 370110.165041 | 1e-5 |
+      | e4-01-aac-de | E4.01 | de | capacity_t=500;dc=6;gamma=25000;hc=12 | aac | 2 | 1e-5 |
+      | e4-01-slenderness-de | E4.01 | de | capacity_t=500;dc=6;gamma=25000;hc=12 | slenderness | 2 | 1e-5 |
+      | e4-01-mass-de | E4.01 | de | capacity_t=500;dc=6;gamma=25000;hc=12 | mass | 864953.900128 | 1e-5 |
+      | e4-04-p-he-de | E4.04 | de | a_over_u=1;c_h=1.15;c_w=1.1;dc=6;gamma=25000;k=0.5;mu=0.4;phi=30;z=10 | p_he | 62147.7765166 | 1e-5 |
+      | e4-04-p-we-de | E4.04 | de | a_over_u=1;c_h=1.15;c_w=1.1;dc=6;gamma=25000;k=0.5;mu=0.4;phi=30;z=10 | p_we | 23778.2797107 | 1e-5 |
+      | e4-04-p-pf-de | E4.04 | de | a_over_u=1;c_h=1.15;c_w=1.1;dc=6;gamma=25000;k=0.5;mu=0.4;phi=30;z=10 | p_pf | 10808.3089594 | 1e-5 |
+      | e4-04-patch-width-de | E4.04 | de | a_over_u=1;c_h=1.15;c_w=1.1;dc=6;gamma=25000;k=0.5;mu=0.4;phi=30;z=10 | patch_width | 1.1780972451 | 1e-5 |
+      | e4-05-p-pf-de | E4.05 | de | a_over_u=1;dc=6;gamma=25000;k=0.5;mu=0.4;phi=30;z=10 | p_pf | 12591.5778673 | 1e-5 |
+      | e4-05-patch-width-de | E4.05 | de | a_over_u=1;dc=6;gamma=25000;k=0.5;mu=0.4;phi=30;z=10 | patch_width | 1.1780972451 | 1e-5 |
+      | e4-08-p-de | E4.08 | de | gamma=25000;z=10 | p | 250000 | 1e-5 |
+      | e16-06-q-c-sum-de | E16.06 | de | q_ci.0=20000;q_ci.1=15000;q_ci.2=30000 | Q_c_sum | 65000 | 1e-5 |
+      | e17-07-risk-de | E17.07 | de | consequence.0=2000000;consequence.1=5000000;p_d_h.0=0.1;p_d_h.1=0.05;p_h.0=0.01;p_h.1=0.001;r_acc=1e-05 | risk | 2250 | 1e-5 |
+      | e12-10-theta-g-de | E12.10 | de | t_min=30;temps_c.0=20;temps_c.1=400;temps_c.2=700;temps_c.3=900;temps_c.4=800;times_min.0=0;times_min.1=5;times_min.2=15;times_min.3=45;times_min.4=90 | theta_g | 1073.15 | 1e-5 |

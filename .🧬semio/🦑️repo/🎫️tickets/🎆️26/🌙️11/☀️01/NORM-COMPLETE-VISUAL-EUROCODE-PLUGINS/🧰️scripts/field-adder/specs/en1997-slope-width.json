@@ -1,0 +1,17 @@
+{
+ "artifact": "en1997",
+ "fields": [
+  {
+   "entity": "slopes",
+   "field": "width",
+   "after": "circle_radius",
+   "type": "f64",
+   "default": 0.0,
+   "unit": "m",
+   "doc": "⛰️ Width of the slope along its axis [m] for the extruded 3D slip body (SLOPE-05); 0 keeps the plane-strain check and draws the body over the slope length.",
+   "en": "Slope width along its axis (0 = plane strain)",
+   "de": "Böschungsbreite in Achsrichtung (0 = ebener Verformungszustand)",
+   "asset_value": 0
+  }
+ ]
+}

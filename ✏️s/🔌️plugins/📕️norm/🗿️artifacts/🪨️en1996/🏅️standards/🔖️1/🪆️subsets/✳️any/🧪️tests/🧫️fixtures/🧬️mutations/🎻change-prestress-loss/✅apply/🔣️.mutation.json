@@ -1,0 +1,7 @@
+{
+  "ChangePrestressLoss": {
+    "wallId": "wall-north",
+    "id": "tendon-1",
+    "newLossRatio": 0.2
+  }
+}

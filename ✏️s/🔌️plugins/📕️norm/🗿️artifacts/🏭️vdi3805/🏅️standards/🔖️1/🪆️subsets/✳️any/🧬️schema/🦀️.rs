@@ -17,8 +17,8 @@ use semio_s_artifact_norm_vdi3805_model::Vdi3805Snapshot;
 //#region 🔖️Artifact
 /// 🧬️ Full Vdi3805 artifact state across the artifact and presence lanes.
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.norm.vdi3805")]
 pub struct Vdi3805Artifact {

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeRetainingWallWaterHeightM",
+  "index": 0,
+  "newWaterHeightM": 1.5
+}

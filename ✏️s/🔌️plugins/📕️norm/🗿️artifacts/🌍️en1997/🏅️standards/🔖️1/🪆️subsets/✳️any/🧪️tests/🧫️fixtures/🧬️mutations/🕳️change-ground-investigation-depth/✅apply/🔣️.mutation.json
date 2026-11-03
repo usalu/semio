@@ -1,0 +1,5 @@
+{
+  "mutation": "changeGroundInvestigationDepth",
+  "id": "investigation-1",
+  "newDepth": 24.0
+}

@@ -1,78 +1,2464 @@
-# 🧬️ En1993 mutation schema — artifact-lane fields only.
-
-type En1993Mutation {
-  annex: String! @state(class: ARTIFACT)
-  nEdKn: Float! @state(class: ARTIFACT)
-  mEdKnm: Float! @state(class: ARTIFACT)
-  vEdKn: Float! @state(class: ARTIFACT)
-  aMm2: Float! @state(class: ARTIFACT)
-  aVMm2: Float! @state(class: ARTIFACT)
-  wPlMm3: Float! @state(class: ARTIFACT)
-  fYMpa: Float! @state(class: ARTIFACT)
-  fUMpa: Float! @state(class: ARTIFACT)
-  chi: Float! @state(class: ARTIFACT)
-  aNetMm2: Float! @state(class: ARTIFACT)
-  tensionNEdKn: Float! @state(class: ARTIFACT)
-  fireThicknessMm: Float! @state(class: ARTIFACT)
-  fireRating: String! @state(class: ARTIFACT)
-  fireMassivity: Float! @state(class: ARTIFACT)
-  fireMu0: Float! @state(class: ARTIFACT)
-  fireDesignTemperatureC: Float! @state(class: ARTIFACT)
-  cfBBarMm: Float! @state(class: ARTIFACT)
-  cfTMm: Float! @state(class: ARTIFACT)
-  cfKSigma: Float! @state(class: ARTIFACT)
-  cfPsi: Float! @state(class: ARTIFACT)
-  cfNEdKn: Float! @state(class: ARTIFACT)
-  cfGrossResistanceKn: Float! @state(class: ARTIFACT)
-  stainlessMEdKnm: Float! @state(class: ARTIFACT)
-  stainlessWPlMm3: Float! @state(class: ARTIFACT)
-  stainlessFYMpa: Float! @state(class: ARTIFACT)
-  platedLambdaP: Float! @state(class: ARTIFACT)
-  platedSigmaEdMpa: Float! @state(class: ARTIFACT)
-  siloTMm: Float! @state(class: ARTIFACT)
-  siloRMm: Float! @state(class: ARTIFACT)
-  shellSigmaXEdMpa: Float! @state(class: ARTIFACT)
-  siloK: Float! @state(class: ARTIFACT)
-  siloGammaKnM3: Float! @state(class: ARTIFACT)
-  siloDepthM: Float! @state(class: ARTIFACT)
-  boltFEdKn: Float! @state(class: ARTIFACT)
-  boltNBolts: Int! @state(class: ARTIFACT)
-  boltASMm2: Float! @state(class: ARTIFACT)
-  boltE1Mm: Float! @state(class: ARTIFACT)
-  boltE2Mm: Float! @state(class: ARTIFACT)
-  boltD0Mm: Float! @state(class: ARTIFACT)
-  boltDMm: Float! @state(class: ARTIFACT)
-  boltTMm: Float! @state(class: ARTIFACT)
-  boltFUMpa: Float! @state(class: ARTIFACT)
-  boltFUbMpa: Float! @state(class: ARTIFACT)
-  weldAMm: Float! @state(class: ARTIFACT)
-  weldLMm: Float! @state(class: ARTIFACT)
-  weldFUMpa: Float! @state(class: ARTIFACT)
-  weldSteelGrade: String! @state(class: ARTIFACT)
-  weldFEdKn: Float! @state(class: ARTIFACT)
-  deltaSigmaMpa: Float! @state(class: ARTIFACT)
-  fatigueCategory: Int! @state(class: ARTIFACT)
-  fatigueMethod: String! @state(class: ARTIFACT)
-  t10SteelSubgrade: String! @state(class: ARTIFACT)
-  t10ActualThicknessMm: Float! @state(class: ARTIFACT)
-  t10TEdC: Float! @state(class: ARTIFACT)
-  tensionComponentFUkKn: Float! @state(class: ARTIFACT)
-  tensionComponentFKKn: Float! @state(class: ARTIFACT)
-  tensionComponentNEdKn: Float! @state(class: ARTIFACT)
-  hssWElMm3: Float! @state(class: ARTIFACT)
-  hssFYMpa: Float! @state(class: ARTIFACT)
-  hssSectionClass: Int! @state(class: ARTIFACT)
-  hssMEdKnm: Float! @state(class: ARTIFACT)
-  bridgeLambda: Float! @state(class: ARTIFACT)
-  bridgePhi2: Float! @state(class: ARTIFACT)
-  bridgeDeltaSigmaPMpa: Float! @state(class: ARTIFACT)
-  towerWindFactor: Float! @state(class: ARTIFACT)
-  towerNEdKn: Float! @state(class: ARTIFACT)
-  pileSigmaMpa: Float! @state(class: ARTIFACT)
-  pileKRed: Float! @state(class: ARTIFACT)
-  pileNEdKn: Float! @state(class: ARTIFACT)
-  craneFZEdKn: Float! @state(class: ARTIFACT)
-  craneWheelContactLengthMm: Float! @state(class: ARTIFACT)
-  craneDispersionMm: Float! @state(class: ARTIFACT)
-  craneTWMm: Float! @state(class: ARTIFACT)
+union En1993Mutation = ChangeAnnex | ChangeReliabilityClass | InsertMaterial | RemoveMaterial | InsertSection | RemoveSection | InsertMember | RemoveMember | InsertLoadCase | RemoveLoadCase | InsertMemberAction | RemoveMemberAction | InsertJoint | RemoveJoint | InsertFatigueDetail | RemoveFatigueDetail | InsertFireExposure | RemoveFireExposure | InsertColdFormedMember | RemoveColdFormedMember | InsertPlatedPanel | RemovePlatedPanel | InsertSiloShell | RemoveSiloShell | InsertTensionComponent | RemoveTensionComponent | InsertBridgeFatigue | RemoveBridgeFatigue | InsertTowerLeg | RemoveTowerLeg | InsertPile | RemovePile | InsertCraneRunway | RemoveCraneRunway | InsertStorey | RemoveStorey | InsertRestraint | RemoveRestraint | InsertBuiltUpMember | RemoveBuiltUpMember | InsertWeldGroup | RemoveWeldGroup | InsertParametricSection | RemoveParametricSection | InsertHollowJoint | RemoveHollowJoint | InsertJointRow | RemoveJointRow | ChangeMaterialGrade | ChangeMaterialFy | ChangeMaterialFu | ChangeMaterialEModulus | ChangeMaterialGModulus | ChangeMaterialSubgrade | ChangeMaterialKind | ChangeSectionDesignation | ChangeSectionKind | ChangeSectionH | ChangeSectionB | ChangeSectionTw | ChangeSectionTf | ChangeSectionR | ChangeSectionArea | ChangeSectionShearAreaY | ChangeSectionShearAreaZ | ChangeSectionIy | ChangeSectionIz | ChangeSectionIt | ChangeSectionIw | ChangeSectionWElY | ChangeSectionWElZ | ChangeSectionWPlY | ChangeSectionWPlZ | ChangeSectionAreaNet | ChangeMemberLabel | ChangeMemberMemberType | ChangeMemberSectionId | ChangeMemberMaterialId | ChangeMemberLength | ChangeMemberBucklingLengthY | ChangeMemberBucklingLengthZ | ChangeMemberLtbLength | ChangeMemberLtbRestSpacing | ChangeMemberLoadApplication | ChangeMemberEndMomentRatioPsi | ChangeMemberMomentDiagram | ChangeMemberDeflLimitRatio | ChangeMemberAnalysis | ChangeMemberStainlessForming | ChangeMemberDesignTemperature | ChangeMemberToughStressRatio | ChangeMemberRadiationShift | ChangeMemberStressShift | ChangeMemberMarginShift | ChangeMemberStrainRateShift | ChangeMemberColdFormingRadius | ChangeLoadCaseName | ChangeLoadCaseKind | ChangeLoadCaseCategory | ChangeActionMemberId | ChangeActionLoadCaseId | ChangeActionN | ChangeActionVy | ChangeActionVz | ChangeActionMy | ChangeActionMz | ChangeActionT | ChangeJointKind | ChangeJointMemberId | ChangeJointBoltClass | ChangeJointBoltDiameter | ChangeJointBoltRows | ChangeJointBoltsPerRow | ChangeJointPitch | ChangeJointGauge | ChangeJointEndDistance | ChangeJointEdgeDistance | ChangeJointShearPlanes | ChangeJointPlateThickness | ChangeJointPlateFu | ChangeJointWeldThroat | ChangeJointWeldLength | ChangeJointWeldFu | ChangeJointWeldGrade | ChangeJointCategory | ChangeJointFrictionMu | ChangeJointPreloadForce | ChangeJointSlipFactorKs | ChangeJointFrictionSurfaces | ChangeJointPlateFy | ChangeJointPlateWidth | ChangeJointBoltToWeb | ChangeJointExtensionToFlange | ChangeJointExtensionEdge | ChangeJointAlphaFactor | ChangeJointBoltStressArea | ChangeJointBoltGripLength | ChangeJointColumnFlangeThk | ChangeJointColumnWebThickness | ChangeJointColumnWebDepth | ChangeJointColumnWebShearArea | ChangeJointColumnRootRadius | ChangeJointColumnFy | ChangeJointColumnWebStress | ChangeJointBeamFlangeThickness | ChangeJointCompressionLever | ChangeJointMomentDemand | ChangeJointBeamMomentRes | ChangeJointColumnMomentRes | ChangeJointBeamInertia | ChangeJointBeamSpan | ChangeJointBracedFrame | ChangeJointStiffnessRatio | ChangeJointXformParameter | ChangeJointAssumedClass | ChangeJointBasePlateLength | ChangeJointConcreteFcd | ChangeJointConcreteModulus | ChangeJointConcreteAreaA0 | ChangeJointConcreteAreaA1 | ChangeJointJointCoefficient | ChangeJointAnchorArea | ChangeJointAnchorLength | ChangeJointBaseNormalForce | ChangeJointBaseMoment | ChangeJointBaseLeverLeft | ChangeJointBaseLeverRight | ChangeFatigueMemberId | ChangeFatigueCategory | ChangeFatigueMethod | ChangeFireMemberId | ChangeFireRating | ChangeFireProtectionThickness | ChangeFireSectionFactor | ChangeFireMu0 | ChangeFireDesignTemperature | ChangeFireProtConductivity | ChangeFireProtectionDensity | ChangeFireProtSpecificHeat | ChangeCfBBar | ChangeCfThickness | ChangeCfKSigma | ChangeCfPsi | ChangeCfFy | ChangeCfGrossResistance | ChangeCfFlangeWidth | ChangeCfLipLength | ChangeCfWebHeight | ChangeCfWebSlope | ChangeCfOppositeFlangeWidth | ChangeCfSpringFactor | ChangeCfCornerRadius | ChangeCfFlangeStress | ChangeCfShearForce | ChangeCfSupportReaction | ChangeCfSupportLength | ChangeCfCripplingCategory | ChangeCfStiffenedSupport | ChangeCfBendingMoment | ChangeCfMomentResistance | ChangeCfSheetingStiffness | ChangeCfRequiredRestraintStiff | ChangePlatedA | ChangePlatedB | ChangePlatedThickness | ChangePlatedFy | ChangePlatedKSigma | ChangePlatedStiffenerInertia | ChangePlatedStiffenerArea | ChangePlatedStiffenerEcc | ChangePlatedStiffenerAlpha | ChangePlatedCompressionStress | ChangePlatedHalfWidth | ChangePlatedEquivalentSpan | ChangePlatedHogging | ChangePlatedPatchType | ChangePlatedPatchForce | ChangePlatedPatchLength | ChangePlatedPatchOffset | ChangePlatedFlangeThickness | ChangePlatedFlangeWidth | ChangePlatedFlangeFy | ChangePlatedLongitudinalOffset | ChangePlatedLongitudinalInertia | ChangePlatedPatchMoment | ChangePlatedPatchMomentRes | ChangePlatedBendingMoment | ChangePlatedPlasticMoment | ChangePlatedFlangeMoment | ChangePlatedShearForce | ChangePlatedTransStiffInert | ChangePlatedFlangeInducedK | ChangePlatedFlangeArea | ChangePlatedStressX | ChangePlatedStressZ | ChangePlatedShearStress | ChangePlatedAlphaCr | ChangeSiloThickness | ChangeSiloRadius | ChangeSiloDepth | ChangeSiloK | ChangeSiloGamma | ChangeSiloFy | ChangeSiloLength | ChangeSiloFabricationClass | ChangeSiloMeridionalStress | ChangeSiloHoopStress | ChangeSiloShellShearStress | ChangeSiloBoundaryFactorAxial | ChangeSiloBoundaryFactorHoop | ChangeSiloBoundaryFactorShear | ChangeSiloWallFriction | ChangeSiloPlanArea | ChangeSiloPlanPerimeter | ChangeSiloLiquidDensity | ChangeSiloLiquidHeight | ChangeSiloCourseElevation | ChangeSiloInternalPressure | ChangeSiloExternalPressure | ChangeSiloTemperatureChange | ChangeTensionFUk | ChangeTensionFK | ChangeTensionPartialFactor | ChangeTensionCableLength | ChangeTensionCableWeight | ChangeTensionCableHorizForce | ChangeTensionCableModulus | ChangeTensionCableStress | ChangeTensionCableUnitWeight | ChangeTensionThreadFactor | ChangeTensionRodStressArea | ChangeTensionRodFu | ChangeTensionPinDiameter | ChangeTensionPinPlateThickness | ChangeTensionPinGap | ChangeTensionPinOuterThickness | ChangeTensionPinInnerThickness | ChangeTensionPinFup | ChangeTensionPinFyp | ChangeTensionPinPlateFy | ChangeBridgeMemberId | ChangeBridgeLambda | ChangeBridgePhi2 | ChangeBridgeDeltaSigmaP | ChangeBridgeCategory | ChangeBridgeMethod | ChangeBridgeHeavyVehicleWeight | ChangeBridgeReferenceWeight | ChangeBridgeObservedTraffic | ChangeBridgeDesignLife | ChangeBridgeSecondLaneTraffic | ChangeBridgeSecondLaneWeight | ChangeBridgeLambda1 | ChangeBridgeLambdaMax | ChangeBridgeDetailId | ChangeBridgePlateThickness | ChangeTowerMemberId | ChangeTowerForceCoefficient | ChangeTowerDynamicFactor | ChangeTowerLatticeKind | ChangeTowerSlenderness | ChangeTowerDiameter | ChangeTowerHeight | ChangeTowerBendingStiffness | ChangeTowerMassPerLength | ChangeTowerStrouhal | ChangeTowerLogDecrement | ChangeTowerAirDensity | ChangeTowerMeanWindSpeed | ChangeTowerCrossingRate | ChangeTowerDesignLife | ChangeTowerKFactor | ChangeTowerKwFactor | ChangeTowerLateralForceCoef | ChangeTowerPermAmplitudeRatio | ChangeTowerRingMode | ChangeTowerShellThickness | ChangeTowerGuyArea | ChangeTowerGuyAngle | ChangeTowerGuyLength | ChangePileSectionId | ChangePileMaterialId | ChangePileDrivingStress | ChangePileEmbeddedLength | ChangePileShaftPerimeter | ChangePileEnvironment | ChangePileDesignLife | ChangePileWallThickness | ChangePileIlockBendingFactor | ChangePileInterlockStiffFactor | ChangePileSectionModulus | ChangePileShearArea | ChangePileDesignMoment | ChangePileDesignShear | ChangePileInterlockShear | ChangeCraneMemberId | ChangeCraneWheelContactLength | ChangeCraneDispersion | ChangeCraneWebThickness | ChangeCraneFy | ChangeCranePhi | ChangeCraneMaxWheelLoad | ChangeCraneLoadFactor | ChangeCraneRailInertia | ChangeCraneRailFixed | ChangeCraneFlangeEffWidth | ChangeCraneFlangeThickness | ChangeCraneWheelEccentricity | ChangeCraneTorsionConstant | ChangeCraneLongitudinalStress | ChangeCraneRailRadius | ChangeCraneRailContactWidth | ChangeCraneCraneNu | ChangeCraneCraneKq | ChangeCraneDamageExponent | ChangeCraneStressRange | ChangeCraneDetailCatStress | ChangeCraneFatiguePhi | ChangeStoreyMemberId | ChangeStoreyLabel | ChangeStoreyHeight | ChangeStoreyVerticalLoad | ChangeStoreyHorizontalLoad | ChangeStoreyDrift | ChangeStoreyColumns | ChangeStoreyPlasticAnalysis | ChangeStoreyBuildingHeight | ChangeStoreyBracingLoad | ChangeStoreyBracingLength | ChangeStoreyBracingDeflection | ChangeRestraintMemberId | ChangeRestraintLabel | ChangeRestraintStartSupport | ChangeRestraintEndSupport | ChangeRestIntermediatePosition | ChangeRestraintTorsionalSpring | ChangeRestLatSpringPosition | ChangeRestLateralSpringStiff | ChangeRestraintLoadHeight | ChangeRestraintLoadDistribution | ChangeRestraintDesignMoment | ChangeRestraintDesignAxial | ChangeRestraintGeneralMethod | ChangeRestHingeToRest | ChangeBuiltUpMemberId | ChangeBuiltUpLabel | ChangeBuiltUpKind | ChangeBuiltUpChordArea | ChangeBuiltUpChordInertia | ChangeBuiltUpChordDistance | ChangeBuiltUpPanelSpacing | ChangeBuiltUpPlanes | ChangeBuiltUpBattenInertia | ChangeBuiltUpDiagonalArea | ChangeBuiltUpDiagonalLength | ChangeBuiltUpDesignAxial | ChangeBuiltUpDesignMoment | ChangeBuiltUpBackToBack | ChangeBuiltUpMinRadius | ChangeBuiltUpChainSpacing | ChangeWeldMemberId | ChangeWeldLabel | ChangeWeldPattern | ChangeWeldThroat | ChangeWeldWidth | ChangeWeldDepth | ChangeWeldShearForce | ChangeWeldEccentricity | ChangeWeldSteelFu | ChangeWeldBetaW | ChangeParamSectionId | ChangeParamLabel | ChangeParamShape | ChangeParamHeight | ChangeParamWidth | ChangeParamWebThickness | ChangeParamFlangeThickness | ChangeParamTolerance | ChangeHollowMemberId | ChangeHollowLabel | ChangeHollowChordWidth | ChangeHollowChordHeight | ChangeHollowChordThickness | ChangeHollowChordFy | ChangeHollowChordStress | ChangeHollowBrace1Width | ChangeHollowBrace1Height | ChangeHollowBrace1Thickness | ChangeHollowBrace1Angle | ChangeHollowBrace1Force | ChangeHollowBrace2Width | ChangeHollowBrace2Height | ChangeHollowBrace2Thickness | ChangeHollowBrace2Angle | ChangeHollowBrace2Force | ChangeHollowGap | ChangeHollowBraceFy | ChangeRowJointId | ChangeRowLabel | ChangeRowRowType | ChangeRowLever | ChangeRowBoltToWeb | ChangeRowEdgeDistance | ChangeRowExtensionToFlange | ChangeRowExtensionEdge | ChangeRowAlphaFactor | ChangeRowPitchToPrevious | ChangeRowBolts | ChangeRowBoltDiameter | ChangeRowBoltStressArea | ChangeRowGripLength | ChangeRowBoltClass | ChangeRowGroupWithPrevious | InsertJointAction | RemoveJointAction | ChangeJointActionLoadCaseId | ChangeJointActionShear | ChangeJointActionTension | InsertFatigueBand | RemoveFatigueBand | ChangeFatigueBandDeltaSigma | ChangeFatigueBandCycles | InsertCfAction | RemoveCfAction | ChangeCfActionLoadCaseId | ChangeCfActionForce | InsertPlatedAction | RemovePlatedAction | ChangePlatedActionLoadCaseId | ChangePlatedActionForce | InsertTensionAction | RemoveTensionAction | ChangeTensionActionLoadCaseId | ChangeTensionActionForce | InsertTowerAction | RemoveTowerAction | ChangeTowerActionLoadCaseId | ChangeTowerActionForce | InsertPileAction | RemovePileAction | ChangePileActionLoadCaseId | ChangePileActionForce | InsertCraneAction | RemoveCraneAction | ChangeCraneActionLoadCaseId | ChangeCraneActionForce | InsertFrameNode | RemoveFrameNode | InsertFrameBar | RemoveFrameBar | InsertPlacement | RemovePlacement | ChangeMaterialRambergOsgoodN | ChangeFrameNodeLabel | ChangeFrameNodeX | ChangeFrameNodeZ | ChangeFrameNodeSupport | ChangeFrameNodeLoadX | ChangeFrameNodeLoadZ | ChangeFrameBarMemberId | ChangeFrameBarLabel | ChangeFrameBarStartNodeId | ChangeFrameBarEndNodeId | ChangeFrameBarReleaseStart | ChangeFrameBarReleaseEnd | ChangePlacementX | ChangePlacementY | ChangePlacementZ | ChangePlacementYaw | ChangeCfPurlinSpan | ChangeCfPurlinLoad | ChangeCfPurlinLateralRatio | ChangePlatedCorrugationFlat | ChangePlatedCorrProjection | ChangePlatedCorrugationDepth | ChangePlatedWebHeight | ChangeSiloRingSpacing | ChangeSiloRingArea | ChangeSiloRingInertia | ChangeSiloRingOffset | ChangeBridgeDeckThickness | ChangeBridgeTroughSpacing | ChangeBridgeTroughWidth | ChangeBridgeTroughThickness | ChangeBridgeCrossbeamSpacing | ChangeBridgeSurfacingThickness | ChangeBridgeWheelLoad | ChangeBridgeWheelPatch | ChangePlatedStiffenerSpacing | ChangeBuiltUpChordShape | ChangeBuiltUpChordDepth | ChangeBuiltUpChordWidth | ChangeBuiltUpChordFlangeThk | ChangeBuiltUpChordWebThk | ChangeMemberWebMaterialId | ChangeMemberTorsionLoad | ChangeMemberTorquePosition | ChangeFatigueStressHistory | ChangePlatedStiffenerShape | ChangePlatedStiffenerDepth | ChangePlatedStiffenerThickness | ChangePlatedStiffFlangeWidth | ChangePlatedStiffenerFlangeThk | ChangePlatedLateralPressure | ChangePlatedLatPressureCoef | ChangeMemberWarpingSupport | InsertJointPlate | RemoveJointPlate | InsertFoundationBlock | RemoveFoundationBlock | ChangeMemberLtbRestraintSpacing | ChangeMemberDeflectionLimitRatio | ChangeMemberToughnessStressRatio | ChangeJointColumnFlangeThickness | ChangeJointBeamMomentResistance | ChangeJointColumnMomentResistance | ChangeJointTransformationParameter | ChangeFireProtectionConductivity | ChangeFireProtectionSpecificHeat | ChangeCfRequiredRestraintStiffness | ChangePlatedStiffenerEccentricity | ChangePlatedPatchMomentResistance | ChangePlatedTransverseStiffenerInertia | ChangePlatedCorrugationProjection | ChangePlatedStiffenerFlangeWidth | ChangePlatedStiffenerFlangeThickness | ChangePlatedLateralPressureCoefficient | ChangeTensionCableHorizontalForce | ChangeTowerLateralForceCoefficient | ChangeTowerPermittedAmplitudeRatio | ChangePileInterlockBendingFactor | ChangePileInterlockStiffnessFactor | ChangeCraneFlangeEffectiveWidth | ChangeCraneDetailCategoryStress | ChangeRestraintIntermediatePosition | ChangeRestraintLatSpringPosition | ChangeRestraintLatSpringStiffness | ChangeRestraintHingeToRestraint | ChangeBuiltUpChordFlangeThickness | ChangeBuiltUpChordWebThickness | ChangeJointPlateJointId | ChangeJointPlateLabel | ChangeJointPlateRole | ChangeJointPlatePlateHeight | ChangeJointPlatePlateWidth | ChangeJointPlatePlateThickness | ChangeJointPlatePlateCount | ChangeJointPlatePlateFy | ChangeJointPlatePlateFu | ChangeJointPlateBoltClass | ChangeJointPlateBoltDiameter | ChangeJointPlateHoleDiameter | ChangeJointPlateBoltRows | ChangeJointPlateBoltsPerRow | ChangeJointPlatePitch | ChangeJointPlateGauge | ChangeJointPlateEndDistance | ChangeJointPlateEdgeDistance | ChangeJointPlateShearPlanes | ChangeJointPlateEccentricity | ChangeJointPlateWeldThroat | ChangeJointPlateWeldFu | ChangeJointPlateWeldBetaW | ChangeFoundationJointId | ChangeFoundationLabel | ChangeFoundationBlockLength | ChangeFoundationBlockWidth | ChangeFoundationBlockDepth | ChangeFoundationConcreteFck | ChangeFoundationGroutFck | ChangeFoundationGroutThickness | ChangeFoundationAnchorCount | ChangeFoundationAnchorClass | ChangeFoundationAnchorDiameter | ChangeFoundationAnchorStressArea | ChangeFoundationAnchorEmbedment | ChangeFoundationAnchorEdgeDistance
+type ChangeAnnex {
+  newAnnex: AnnexChoice!
+}
+type ChangeReliabilityClass {
+  newReliabilityClass: String!
+}
+type InsertMaterial {
+  index: Int
+  material: SteelMaterial!
+}
+type RemoveMaterial {
+  index: Int!
+}
+type InsertSection {
+  index: Int
+  section: SteelSection!
+}
+type RemoveSection {
+  index: Int!
+}
+type InsertMember {
+  index: Int
+  member: SteelMember!
+}
+type RemoveMember {
+  index: Int!
+}
+type InsertLoadCase {
+  index: Int
+  loadCase: LoadCase!
+}
+type RemoveLoadCase {
+  index: Int!
+}
+type InsertMemberAction {
+  index: Int
+  memberAction: MemberAction!
+}
+type RemoveMemberAction {
+  index: Int!
+}
+type InsertJoint {
+  index: Int
+  joint: SteelJoint!
+}
+type RemoveJoint {
+  index: Int!
+}
+type InsertFatigueDetail {
+  index: Int
+  fatigueDetail: FatigueDetail!
+}
+type RemoveFatigueDetail {
+  index: Int!
+}
+type InsertFireExposure {
+  index: Int
+  fireExposure: FireExposure!
+}
+type RemoveFireExposure {
+  index: Int!
+}
+type InsertColdFormedMember {
+  index: Int
+  coldFormedMember: ColdFormedMember!
+}
+type RemoveColdFormedMember {
+  index: Int!
+}
+type InsertPlatedPanel {
+  index: Int
+  platedPanel: PlatedPanel!
+}
+type RemovePlatedPanel {
+  index: Int!
+}
+type InsertSiloShell {
+  index: Int
+  siloShell: SiloShell!
+}
+type RemoveSiloShell {
+  index: Int!
+}
+type InsertTensionComponent {
+  index: Int
+  tensionComponent: TensionComponent!
+}
+type RemoveTensionComponent {
+  index: Int!
+}
+type InsertBridgeFatigue {
+  index: Int
+  bridgeFatigueItem: BridgeFatigue!
+}
+type RemoveBridgeFatigue {
+  index: Int!
+}
+type InsertTowerLeg {
+  index: Int
+  towerLeg: TowerLeg!
+}
+type RemoveTowerLeg {
+  index: Int!
+}
+type InsertPile {
+  index: Int
+  pile: SteelPile!
+}
+type RemovePile {
+  index: Int!
+}
+type InsertCraneRunway {
+  index: Int
+  craneRunway: CraneRunway!
+}
+type RemoveCraneRunway {
+  index: Int!
+}
+type InsertStorey {
+  index: Int
+  storey: Storey!
+}
+type RemoveStorey {
+  index: Int!
+}
+type InsertRestraint {
+  index: Int
+  restraint: Restraint!
+}
+type RemoveRestraint {
+  index: Int!
+}
+type InsertBuiltUpMember {
+  index: Int
+  builtUpMember: BuiltUpMember!
+}
+type RemoveBuiltUpMember {
+  index: Int!
+}
+type InsertWeldGroup {
+  index: Int
+  weldGroup: WeldGroup!
+}
+type RemoveWeldGroup {
+  index: Int!
+}
+type InsertParametricSection {
+  index: Int
+  parametricSection: ParametricSection!
+}
+type RemoveParametricSection {
+  index: Int!
+}
+type InsertHollowJoint {
+  index: Int
+  hollowJoint: HollowJoint!
+}
+type RemoveHollowJoint {
+  index: Int!
+}
+type InsertJointRow {
+  index: Int
+  jointRow: JointRow!
+}
+type RemoveJointRow {
+  index: Int!
+}
+type ChangeMaterialGrade {
+  id: String!
+  newGrade: String!
+}
+type ChangeMaterialFy {
+  id: String!
+  newFy: Float!
+}
+type ChangeMaterialFu {
+  id: String!
+  newFu: Float!
+}
+type ChangeMaterialEModulus {
+  id: String!
+  newEModulus: Float!
+}
+type ChangeMaterialGModulus {
+  id: String!
+  newGModulus: Float!
+}
+type ChangeMaterialSubgrade {
+  id: String!
+  newSubgrade: String!
+}
+type ChangeMaterialKind {
+  id: String!
+  newKind: MaterialKind!
+}
+type ChangeSectionDesignation {
+  id: String!
+  newDesignation: String!
+}
+type ChangeSectionKind {
+  id: String!
+  newKind: SectionKind!
+}
+type ChangeSectionH {
+  id: String!
+  newH: Float!
+}
+type ChangeSectionB {
+  id: String!
+  newB: Float!
+}
+type ChangeSectionTw {
+  id: String!
+  newTw: Float!
+}
+type ChangeSectionTf {
+  id: String!
+  newTf: Float!
+}
+type ChangeSectionR {
+  id: String!
+  newR: Float!
+}
+type ChangeSectionArea {
+  id: String!
+  newArea: Float!
+}
+type ChangeSectionShearAreaY {
+  id: String!
+  newShearAreaY: Float!
+}
+type ChangeSectionShearAreaZ {
+  id: String!
+  newShearAreaZ: Float!
+}
+type ChangeSectionIy {
+  id: String!
+  newIy: Float!
+}
+type ChangeSectionIz {
+  id: String!
+  newIz: Float!
+}
+type ChangeSectionIt {
+  id: String!
+  newIt: Float!
+}
+type ChangeSectionIw {
+  id: String!
+  newIw: Float!
+}
+type ChangeSectionWElY {
+  id: String!
+  newWElY: Float!
+}
+type ChangeSectionWElZ {
+  id: String!
+  newWElZ: Float!
+}
+type ChangeSectionWPlY {
+  id: String!
+  newWPlY: Float!
+}
+type ChangeSectionWPlZ {
+  id: String!
+  newWPlZ: Float!
+}
+type ChangeSectionAreaNet {
+  id: String!
+  newAreaNet: Float!
+}
+type ChangeMemberLabel {
+  id: String!
+  newLabel: String!
+}
+type ChangeMemberMemberType {
+  id: String!
+  newMemberType: SteelMemberType!
+}
+type ChangeMemberSectionId {
+  id: String!
+  newSectionId: String!
+}
+type ChangeMemberMaterialId {
+  id: String!
+  newMaterialId: String!
+}
+type ChangeMemberLength {
+  id: String!
+  newLength: Float!
+}
+type ChangeMemberBucklingLengthY {
+  id: String!
+  newBucklingLengthY: Float!
+}
+type ChangeMemberBucklingLengthZ {
+  id: String!
+  newBucklingLengthZ: Float!
+}
+type ChangeMemberLtbLength {
+  id: String!
+  newLtbLength: Float!
+}
+type ChangeMemberLtbRestSpacing {
+  id: String!
+  newLtbRestraintSpacing: Float!
+}
+type ChangeMemberLoadApplication {
+  id: String!
+  newLoadApplication: LoadApplication!
+}
+type ChangeMemberEndMomentRatioPsi {
+  id: String!
+  newEndMomentRatioPsi: Float!
+}
+type ChangeMemberMomentDiagram {
+  id: String!
+  newMomentDiagram: MomentDiagram!
+}
+type ChangeMemberDeflLimitRatio {
+  id: String!
+  newDeflectionLimitRatio: Float!
+}
+type ChangeMemberAnalysis {
+  id: String!
+  newAnalysis: AnalysisKind!
+}
+type ChangeMemberStainlessForming {
+  id: String!
+  newStainlessForming: StainlessForming!
+}
+type ChangeMemberDesignTemperature {
+  id: String!
+  newDesignTemperature: Float!
+}
+type ChangeMemberToughStressRatio {
+  id: String!
+  newToughnessStressRatio: Float!
+}
+type ChangeMemberRadiationShift {
+  id: String!
+  newRadiationShift: Float!
+}
+type ChangeMemberStressShift {
+  id: String!
+  newStressShift: Float!
+}
+type ChangeMemberMarginShift {
+  id: String!
+  newMarginShift: Float!
+}
+type ChangeMemberStrainRateShift {
+  id: String!
+  newStrainRateShift: Float!
+}
+type ChangeMemberColdFormingRadius {
+  id: String!
+  newColdFormingRadius: Float!
+}
+type ChangeLoadCaseName {
+  id: String!
+  newName: String!
+}
+type ChangeLoadCaseKind {
+  id: String!
+  newKind: ActionKind!
+}
+type ChangeLoadCaseCategory {
+  id: String!
+  newCategory: String!
+}
+type ChangeActionMemberId {
+  id: String!
+  newMemberId: String!
+}
+type ChangeActionLoadCaseId {
+  id: String!
+  newLoadCaseId: String!
+}
+type ChangeActionN {
+  id: String!
+  newActionN: Float!
+}
+type ChangeActionVy {
+  id: String!
+  newActionVy: Float!
+}
+type ChangeActionVz {
+  id: String!
+  newActionVz: Float!
+}
+type ChangeActionMy {
+  id: String!
+  newActionMy: Float!
+}
+type ChangeActionMz {
+  id: String!
+  newActionMz: Float!
+}
+type ChangeActionT {
+  id: String!
+  newActionT: Float!
+}
+type ChangeJointKind {
+  id: String!
+  newKind: JointKind!
+}
+type ChangeJointMemberId {
+  id: String!
+  newMemberId: String!
+}
+type ChangeJointBoltClass {
+  id: String!
+  newBoltClass: String!
+}
+type ChangeJointBoltDiameter {
+  id: String!
+  newBoltDiameter: Float!
+}
+type ChangeJointBoltRows {
+  id: String!
+  newBoltRows: Int!
+}
+type ChangeJointBoltsPerRow {
+  id: String!
+  newBoltsPerRow: Int!
+}
+type ChangeJointPitch {
+  id: String!
+  newPitch: Float!
+}
+type ChangeJointGauge {
+  id: String!
+  newGauge: Float!
+}
+type ChangeJointEndDistance {
+  id: String!
+  newEndDistance: Float!
+}
+type ChangeJointEdgeDistance {
+  id: String!
+  newEdgeDistance: Float!
+}
+type ChangeJointShearPlanes {
+  id: String!
+  newShearPlanes: Int!
+}
+type ChangeJointPlateThickness {
+  id: String!
+  newPlateThickness: Float!
+}
+type ChangeJointPlateFu {
+  id: String!
+  newPlateFu: Float!
+}
+type ChangeJointWeldThroat {
+  id: String!
+  newWeldThroat: Float!
+}
+type ChangeJointWeldLength {
+  id: String!
+  newWeldLength: Float!
+}
+type ChangeJointWeldFu {
+  id: String!
+  newWeldFu: Float!
+}
+type ChangeJointWeldGrade {
+  id: String!
+  newWeldGrade: String!
+}
+type ChangeJointCategory {
+  id: String!
+  newCategory: JointCategory!
+}
+type ChangeJointFrictionMu {
+  id: String!
+  newFrictionMu: Float!
+}
+type ChangeJointPreloadForce {
+  id: String!
+  newPreloadForce: Float!
+}
+type ChangeJointSlipFactorKs {
+  id: String!
+  newSlipFactorKs: Float!
+}
+type ChangeJointFrictionSurfaces {
+  id: String!
+  newFrictionSurfaces: Int!
+}
+type ChangeJointPlateFy {
+  id: String!
+  newPlateFy: Float!
+}
+type ChangeJointPlateWidth {
+  id: String!
+  newPlateWidth: Float!
+}
+type ChangeJointBoltToWeb {
+  id: String!
+  newBoltToWeb: Float!
+}
+type ChangeJointExtensionToFlange {
+  id: String!
+  newExtensionToFlange: Float!
+}
+type ChangeJointExtensionEdge {
+  id: String!
+  newExtensionEdge: Float!
+}
+type ChangeJointAlphaFactor {
+  id: String!
+  newAlphaFactor: Float!
+}
+type ChangeJointBoltStressArea {
+  id: String!
+  newBoltStressArea: Float!
+}
+type ChangeJointBoltGripLength {
+  id: String!
+  newBoltGripLength: Float!
+}
+type ChangeJointColumnFlangeThk {
+  id: String!
+  newColumnFlangeThickness: Float!
+}
+type ChangeJointColumnWebThickness {
+  id: String!
+  newColumnWebThickness: Float!
+}
+type ChangeJointColumnWebDepth {
+  id: String!
+  newColumnWebDepth: Float!
+}
+type ChangeJointColumnWebShearArea {
+  id: String!
+  newColumnWebShearArea: Float!
+}
+type ChangeJointColumnRootRadius {
+  id: String!
+  newColumnRootRadius: Float!
+}
+type ChangeJointColumnFy {
+  id: String!
+  newColumnFy: Float!
+}
+type ChangeJointColumnWebStress {
+  id: String!
+  newColumnWebStress: Float!
+}
+type ChangeJointBeamFlangeThickness {
+  id: String!
+  newBeamFlangeThickness: Float!
+}
+type ChangeJointCompressionLever {
+  id: String!
+  newCompressionLever: Float!
+}
+type ChangeJointMomentDemand {
+  id: String!
+  newMomentDemand: Float!
+}
+type ChangeJointBeamMomentRes {
+  id: String!
+  newBeamMomentResistance: Float!
+}
+type ChangeJointColumnMomentRes {
+  id: String!
+  newColumnMomentResistance: Float!
+}
+type ChangeJointBeamInertia {
+  id: String!
+  newBeamInertia: Float!
+}
+type ChangeJointBeamSpan {
+  id: String!
+  newBeamSpan: Float!
+}
+type ChangeJointBracedFrame {
+  id: String!
+  newBracedFrame: Int!
+}
+type ChangeJointStiffnessRatio {
+  id: String!
+  newStiffnessRatio: Float!
+}
+type ChangeJointXformParameter {
+  id: String!
+  newTransformationParameter: Float!
+}
+type ChangeJointAssumedClass {
+  id: String!
+  newAssumedClass: StiffnessClass!
+}
+type ChangeJointBasePlateLength {
+  id: String!
+  newBasePlateLength: Float!
+}
+type ChangeJointConcreteFcd {
+  id: String!
+  newConcreteFcd: Float!
+}
+type ChangeJointConcreteModulus {
+  id: String!
+  newConcreteModulus: Float!
+}
+type ChangeJointConcreteAreaA0 {
+  id: String!
+  newConcreteAreaA0: Float!
+}
+type ChangeJointConcreteAreaA1 {
+  id: String!
+  newConcreteAreaA1: Float!
+}
+type ChangeJointJointCoefficient {
+  id: String!
+  newJointCoefficient: Float!
+}
+type ChangeJointAnchorArea {
+  id: String!
+  newAnchorArea: Float!
+}
+type ChangeJointAnchorLength {
+  id: String!
+  newAnchorLength: Float!
+}
+type ChangeJointBaseNormalForce {
+  id: String!
+  newBaseNormalForce: Float!
+}
+type ChangeJointBaseMoment {
+  id: String!
+  newBaseMoment: Float!
+}
+type ChangeJointBaseLeverLeft {
+  id: String!
+  newBaseLeverLeft: Float!
+}
+type ChangeJointBaseLeverRight {
+  id: String!
+  newBaseLeverRight: Float!
+}
+type ChangeFatigueMemberId {
+  id: String!
+  newMemberId: String!
+}
+type ChangeFatigueCategory {
+  id: String!
+  newCategory: Int!
+}
+type ChangeFatigueMethod {
+  id: String!
+  newMethod: FatigueMethod!
+}
+type ChangeFireMemberId {
+  id: String!
+  newMemberId: String!
+}
+type ChangeFireRating {
+  id: String!
+  newRating: FireRating!
+}
+type ChangeFireProtectionThickness {
+  id: String!
+  newProtectionThickness: Float!
+}
+type ChangeFireSectionFactor {
+  id: String!
+  newSectionFactor: Float!
+}
+type ChangeFireMu0 {
+  id: String!
+  newMu0: Float!
+}
+type ChangeFireDesignTemperature {
+  id: String!
+  newDesignTemperature: Float!
+}
+type ChangeFireProtConductivity {
+  id: String!
+  newProtectionConductivity: Float!
+}
+type ChangeFireProtectionDensity {
+  id: String!
+  newProtectionDensity: Float!
+}
+type ChangeFireProtSpecificHeat {
+  id: String!
+  newProtectionSpecificHeat: Float!
+}
+type ChangeCfBBar {
+  id: String!
+  newBBar: Float!
+}
+type ChangeCfThickness {
+  id: String!
+  newThickness: Float!
+}
+type ChangeCfKSigma {
+  id: String!
+  newKSigma: Float!
+}
+type ChangeCfPsi {
+  id: String!
+  newPsi: Float!
+}
+type ChangeCfFy {
+  id: String!
+  newFy: Float!
+}
+type ChangeCfGrossResistance {
+  id: String!
+  newGrossResistance: Float!
+}
+type ChangeCfFlangeWidth {
+  id: String!
+  newFlangeWidth: Float!
+}
+type ChangeCfLipLength {
+  id: String!
+  newLipLength: Float!
+}
+type ChangeCfWebHeight {
+  id: String!
+  newWebHeight: Float!
+}
+type ChangeCfWebSlope {
+  id: String!
+  newWebSlope: Float!
+}
+type ChangeCfOppositeFlangeWidth {
+  id: String!
+  newOppositeFlangeWidth: Float!
+}
+type ChangeCfSpringFactor {
+  id: String!
+  newSpringFactor: Float!
+}
+type ChangeCfCornerRadius {
+  id: String!
+  newCornerRadius: Float!
+}
+type ChangeCfFlangeStress {
+  id: String!
+  newFlangeStress: Float!
+}
+type ChangeCfShearForce {
+  id: String!
+  newShearForce: Float!
+}
+type ChangeCfSupportReaction {
+  id: String!
+  newSupportReaction: Float!
+}
+type ChangeCfSupportLength {
+  id: String!
+  newSupportLength: Float!
+}
+type ChangeCfCripplingCategory {
+  id: String!
+  newCripplingCategory: Int!
+}
+type ChangeCfStiffenedSupport {
+  id: String!
+  newStiffenedSupport: Int!
+}
+type ChangeCfBendingMoment {
+  id: String!
+  newBendingMoment: Float!
+}
+type ChangeCfMomentResistance {
+  id: String!
+  newMomentResistance: Float!
+}
+type ChangeCfSheetingStiffness {
+  id: String!
+  newSheetingStiffness: Float!
+}
+type ChangeCfRequiredRestraintStiff {
+  id: String!
+  newRequiredRestraintStiffness: Float!
+}
+type ChangePlatedA {
+  id: String!
+  newA: Float!
+}
+type ChangePlatedB {
+  id: String!
+  newB: Float!
+}
+type ChangePlatedThickness {
+  id: String!
+  newThickness: Float!
+}
+type ChangePlatedFy {
+  id: String!
+  newFy: Float!
+}
+type ChangePlatedKSigma {
+  id: String!
+  newKSigma: Float!
+}
+type ChangePlatedStiffenerInertia {
+  id: String!
+  newStiffenerInertia: Float!
+}
+type ChangePlatedStiffenerArea {
+  id: String!
+  newStiffenerArea: Float!
+}
+type ChangePlatedStiffenerEcc {
+  id: String!
+  newStiffenerEccentricity: Float!
+}
+type ChangePlatedStiffenerAlpha {
+  id: String!
+  newStiffenerAlpha: Float!
+}
+type ChangePlatedCompressionStress {
+  id: String!
+  newCompressionStress: Float!
+}
+type ChangePlatedHalfWidth {
+  id: String!
+  newHalfWidth: Float!
+}
+type ChangePlatedEquivalentSpan {
+  id: String!
+  newEquivalentSpan: Float!
+}
+type ChangePlatedHogging {
+  id: String!
+  newHogging: Int!
+}
+type ChangePlatedPatchType {
+  id: String!
+  newPatchType: PatchLoadType!
+}
+type ChangePlatedPatchForce {
+  id: String!
+  newPatchForce: Float!
+}
+type ChangePlatedPatchLength {
+  id: String!
+  newPatchLength: Float!
+}
+type ChangePlatedPatchOffset {
+  id: String!
+  newPatchOffset: Float!
+}
+type ChangePlatedFlangeThickness {
+  id: String!
+  newFlangeThickness: Float!
+}
+type ChangePlatedFlangeWidth {
+  id: String!
+  newFlangeWidth: Float!
+}
+type ChangePlatedFlangeFy {
+  id: String!
+  newFlangeFy: Float!
+}
+type ChangePlatedLongitudinalOffset {
+  id: String!
+  newLongitudinalOffset: Float!
+}
+type ChangePlatedLongitudinalInertia {
+  id: String!
+  newLongitudinalInertia: Float!
+}
+type ChangePlatedPatchMoment {
+  id: String!
+  newPatchMoment: Float!
+}
+type ChangePlatedPatchMomentRes {
+  id: String!
+  newPatchMomentResistance: Float!
+}
+type ChangePlatedBendingMoment {
+  id: String!
+  newBendingMoment: Float!
+}
+type ChangePlatedPlasticMoment {
+  id: String!
+  newPlasticMoment: Float!
+}
+type ChangePlatedFlangeMoment {
+  id: String!
+  newFlangeMoment: Float!
+}
+type ChangePlatedShearForce {
+  id: String!
+  newShearForce: Float!
+}
+type ChangePlatedTransStiffInert {
+  id: String!
+  newTransverseStiffenerInertia: Float!
+}
+type ChangePlatedFlangeInducedK {
+  id: String!
+  newFlangeInducedK: Float!
+}
+type ChangePlatedFlangeArea {
+  id: String!
+  newFlangeArea: Float!
+}
+type ChangePlatedStressX {
+  id: String!
+  newStressX: Float!
+}
+type ChangePlatedStressZ {
+  id: String!
+  newStressZ: Float!
+}
+type ChangePlatedShearStress {
+  id: String!
+  newShearStress: Float!
+}
+type ChangePlatedAlphaCr {
+  id: String!
+  newAlphaCr: Float!
+}
+type ChangeSiloThickness {
+  id: String!
+  newThickness: Float!
+}
+type ChangeSiloRadius {
+  id: String!
+  newRadius: Float!
+}
+type ChangeSiloDepth {
+  id: String!
+  newDepth: Float!
+}
+type ChangeSiloK {
+  id: String!
+  newK: Float!
+}
+type ChangeSiloGamma {
+  id: String!
+  newGamma: Float!
+}
+type ChangeSiloFy {
+  id: String!
+  newFy: Float!
+}
+type ChangeSiloLength {
+  id: String!
+  newLength: Float!
+}
+type ChangeSiloFabricationClass {
+  id: String!
+  newFabricationClass: FabricationToleranceClass!
+}
+type ChangeSiloMeridionalStress {
+  id: String!
+  newMeridionalStress: Float!
+}
+type ChangeSiloHoopStress {
+  id: String!
+  newHoopStress: Float!
+}
+type ChangeSiloShellShearStress {
+  id: String!
+  newShellShearStress: Float!
+}
+type ChangeSiloBoundaryFactorAxial {
+  id: String!
+  newBoundaryFactorAxial: Float!
+}
+type ChangeSiloBoundaryFactorHoop {
+  id: String!
+  newBoundaryFactorHoop: Float!
+}
+type ChangeSiloBoundaryFactorShear {
+  id: String!
+  newBoundaryFactorShear: Float!
+}
+type ChangeSiloWallFriction {
+  id: String!
+  newWallFriction: Float!
+}
+type ChangeSiloPlanArea {
+  id: String!
+  newPlanArea: Float!
+}
+type ChangeSiloPlanPerimeter {
+  id: String!
+  newPlanPerimeter: Float!
+}
+type ChangeSiloLiquidDensity {
+  id: String!
+  newLiquidDensity: Float!
+}
+type ChangeSiloLiquidHeight {
+  id: String!
+  newLiquidHeight: Float!
+}
+type ChangeSiloCourseElevation {
+  id: String!
+  newCourseElevation: Float!
+}
+type ChangeSiloInternalPressure {
+  id: String!
+  newInternalPressure: Float!
+}
+type ChangeSiloExternalPressure {
+  id: String!
+  newExternalPressure: Float!
+}
+type ChangeSiloTemperatureChange {
+  id: String!
+  newTemperatureChange: Float!
+}
+type ChangeTensionFUk {
+  id: String!
+  newFUk: Float!
+}
+type ChangeTensionFK {
+  id: String!
+  newFK: Float!
+}
+type ChangeTensionPartialFactor {
+  id: String!
+  newPartialFactor: Float!
+}
+type ChangeTensionCableLength {
+  id: String!
+  newCableLength: Float!
+}
+type ChangeTensionCableWeight {
+  id: String!
+  newCableWeight: Float!
+}
+type ChangeTensionCableHorizForce {
+  id: String!
+  newCableHorizontalForce: Float!
+}
+type ChangeTensionCableModulus {
+  id: String!
+  newCableModulus: Float!
+}
+type ChangeTensionCableStress {
+  id: String!
+  newCableStress: Float!
+}
+type ChangeTensionCableUnitWeight {
+  id: String!
+  newCableUnitWeight: Float!
+}
+type ChangeTensionThreadFactor {
+  id: String!
+  newThreadFactor: Float!
+}
+type ChangeTensionRodStressArea {
+  id: String!
+  newRodStressArea: Float!
+}
+type ChangeTensionRodFu {
+  id: String!
+  newRodFu: Float!
+}
+type ChangeTensionPinDiameter {
+  id: String!
+  newPinDiameter: Float!
+}
+type ChangeTensionPinPlateThickness {
+  id: String!
+  newPinPlateThickness: Float!
+}
+type ChangeTensionPinGap {
+  id: String!
+  newPinGap: Float!
+}
+type ChangeTensionPinOuterThickness {
+  id: String!
+  newPinOuterThickness: Float!
+}
+type ChangeTensionPinInnerThickness {
+  id: String!
+  newPinInnerThickness: Float!
+}
+type ChangeTensionPinFup {
+  id: String!
+  newPinFup: Float!
+}
+type ChangeTensionPinFyp {
+  id: String!
+  newPinFyp: Float!
+}
+type ChangeTensionPinPlateFy {
+  id: String!
+  newPinPlateFy: Float!
+}
+type ChangeBridgeMemberId {
+  id: String!
+  newMemberId: String!
+}
+type ChangeBridgeLambda {
+  id: String!
+  newLambda: Float!
+}
+type ChangeBridgePhi2 {
+  id: String!
+  newPhi2: Float!
+}
+type ChangeBridgeDeltaSigmaP {
+  id: String!
+  newDeltaSigmaP: Float!
+}
+type ChangeBridgeCategory {
+  id: String!
+  newCategory: Int!
+}
+type ChangeBridgeMethod {
+  id: String!
+  newMethod: FatigueMethod!
+}
+type ChangeBridgeHeavyVehicleWeight {
+  id: String!
+  newHeavyVehicleWeight: Float!
+}
+type ChangeBridgeReferenceWeight {
+  id: String!
+  newReferenceWeight: Float!
+}
+type ChangeBridgeObservedTraffic {
+  id: String!
+  newObservedTraffic: Float!
+}
+type ChangeBridgeDesignLife {
+  id: String!
+  newDesignLife: Float!
+}
+type ChangeBridgeSecondLaneTraffic {
+  id: String!
+  newSecondLaneTraffic: Float!
+}
+type ChangeBridgeSecondLaneWeight {
+  id: String!
+  newSecondLaneWeight: Float!
+}
+type ChangeBridgeLambda1 {
+  id: String!
+  newLambda1: Float!
+}
+type ChangeBridgeLambdaMax {
+  id: String!
+  newLambdaMax: Float!
+}
+type ChangeBridgeDetailId {
+  id: String!
+  newDetailId: String!
+}
+type ChangeBridgePlateThickness {
+  id: String!
+  newPlateThickness: Float!
+}
+type ChangeTowerMemberId {
+  id: String!
+  newMemberId: String!
+}
+type ChangeTowerForceCoefficient {
+  id: String!
+  newForceCoefficient: Float!
+}
+type ChangeTowerDynamicFactor {
+  id: String!
+  newDynamicFactor: Float!
+}
+type ChangeTowerLatticeKind {
+  id: String!
+  newLatticeKind: LatticeKind!
+}
+type ChangeTowerSlenderness {
+  id: String!
+  newSlenderness: Float!
+}
+type ChangeTowerDiameter {
+  id: String!
+  newDiameter: Float!
+}
+type ChangeTowerHeight {
+  id: String!
+  newHeight: Float!
+}
+type ChangeTowerBendingStiffness {
+  id: String!
+  newBendingStiffness: Float!
+}
+type ChangeTowerMassPerLength {
+  id: String!
+  newMassPerLength: Float!
+}
+type ChangeTowerStrouhal {
+  id: String!
+  newStrouhal: Float!
+}
+type ChangeTowerLogDecrement {
+  id: String!
+  newLogDecrement: Float!
+}
+type ChangeTowerAirDensity {
+  id: String!
+  newAirDensity: Float!
+}
+type ChangeTowerMeanWindSpeed {
+  id: String!
+  newMeanWindSpeed: Float!
+}
+type ChangeTowerCrossingRate {
+  id: String!
+  newCrossingRate: Float!
+}
+type ChangeTowerDesignLife {
+  id: String!
+  newDesignLife: Float!
+}
+type ChangeTowerKFactor {
+  id: String!
+  newKFactor: Float!
+}
+type ChangeTowerKwFactor {
+  id: String!
+  newKwFactor: Float!
+}
+type ChangeTowerLateralForceCoef {
+  id: String!
+  newLateralForceCoefficient: Float!
+}
+type ChangeTowerPermAmplitudeRatio {
+  id: String!
+  newPermittedAmplitudeRatio: Float!
+}
+type ChangeTowerRingMode {
+  id: String!
+  newRingMode: Float!
+}
+type ChangeTowerShellThickness {
+  id: String!
+  newShellThickness: Float!
+}
+type ChangeTowerGuyArea {
+  id: String!
+  newGuyArea: Float!
+}
+type ChangeTowerGuyAngle {
+  id: String!
+  newGuyAngle: Float!
+}
+type ChangeTowerGuyLength {
+  id: String!
+  newGuyLength: Float!
+}
+type ChangePileSectionId {
+  id: String!
+  newSectionId: String!
+}
+type ChangePileMaterialId {
+  id: String!
+  newMaterialId: String!
+}
+type ChangePileDrivingStress {
+  id: String!
+  newDrivingStress: Float!
+}
+type ChangePileEmbeddedLength {
+  id: String!
+  newEmbeddedLength: Float!
+}
+type ChangePileShaftPerimeter {
+  id: String!
+  newShaftPerimeter: Float!
+}
+type ChangePileEnvironment {
+  id: String!
+  newEnvironment: SheetPileEnvironment!
+}
+type ChangePileDesignLife {
+  id: String!
+  newDesignLife: Float!
+}
+type ChangePileWallThickness {
+  id: String!
+  newWallThickness: Float!
+}
+type ChangePileIlockBendingFactor {
+  id: String!
+  newInterlockBendingFactor: Float!
+}
+type ChangePileInterlockStiffFactor {
+  id: String!
+  newInterlockStiffnessFactor: Float!
+}
+type ChangePileSectionModulus {
+  id: String!
+  newSectionModulus: Float!
+}
+type ChangePileShearArea {
+  id: String!
+  newShearArea: Float!
+}
+type ChangePileDesignMoment {
+  id: String!
+  newDesignMoment: Float!
+}
+type ChangePileDesignShear {
+  id: String!
+  newDesignShear: Float!
+}
+type ChangePileInterlockShear {
+  id: String!
+  newInterlockShear: Float!
+}
+type ChangeCraneMemberId {
+  id: String!
+  newMemberId: String!
+}
+type ChangeCraneWheelContactLength {
+  id: String!
+  newWheelContactLength: Float!
+}
+type ChangeCraneDispersion {
+  id: String!
+  newDispersion: Float!
+}
+type ChangeCraneWebThickness {
+  id: String!
+  newWebThickness: Float!
+}
+type ChangeCraneFy {
+  id: String!
+  newFy: Float!
+}
+type ChangeCranePhi {
+  id: String!
+  newPhi: Float!
+}
+type ChangeCraneMaxWheelLoad {
+  id: String!
+  newMaxWheelLoad: Float!
+}
+type ChangeCraneLoadFactor {
+  id: String!
+  newLoadFactor: Float!
+}
+type ChangeCraneRailInertia {
+  id: String!
+  newRailInertia: Float!
+}
+type ChangeCraneRailFixed {
+  id: String!
+  newRailFixed: Int!
+}
+type ChangeCraneFlangeEffWidth {
+  id: String!
+  newFlangeEffectiveWidth: Float!
+}
+type ChangeCraneFlangeThickness {
+  id: String!
+  newFlangeThickness: Float!
+}
+type ChangeCraneWheelEccentricity {
+  id: String!
+  newWheelEccentricity: Float!
+}
+type ChangeCraneTorsionConstant {
+  id: String!
+  newTorsionConstant: Float!
+}
+type ChangeCraneLongitudinalStress {
+  id: String!
+  newLongitudinalStress: Float!
+}
+type ChangeCraneRailRadius {
+  id: String!
+  newRailRadius: Float!
+}
+type ChangeCraneRailContactWidth {
+  id: String!
+  newRailContactWidth: Float!
+}
+type ChangeCraneCraneNu {
+  id: String!
+  newCraneNu: Float!
+}
+type ChangeCraneCraneKq {
+  id: String!
+  newCraneKq: Float!
+}
+type ChangeCraneDamageExponent {
+  id: String!
+  newDamageExponent: Float!
+}
+type ChangeCraneStressRange {
+  id: String!
+  newStressRange: Float!
+}
+type ChangeCraneDetailCatStress {
+  id: String!
+  newDetailCategoryStress: Float!
+}
+type ChangeCraneFatiguePhi {
+  id: String!
+  newFatiguePhi: Float!
+}
+type ChangeStoreyMemberId {
+  id: String!
+  newMemberId: String!
+}
+type ChangeStoreyLabel {
+  id: String!
+  newLabel: String!
+}
+type ChangeStoreyHeight {
+  id: String!
+  newHeight: Float!
+}
+type ChangeStoreyVerticalLoad {
+  id: String!
+  newVerticalLoad: Float!
+}
+type ChangeStoreyHorizontalLoad {
+  id: String!
+  newHorizontalLoad: Float!
+}
+type ChangeStoreyDrift {
+  id: String!
+  newDrift: Float!
+}
+type ChangeStoreyColumns {
+  id: String!
+  newColumns: Int!
+}
+type ChangeStoreyPlasticAnalysis {
+  id: String!
+  newPlasticAnalysis: Int!
+}
+type ChangeStoreyBuildingHeight {
+  id: String!
+  newBuildingHeight: Float!
+}
+type ChangeStoreyBracingLoad {
+  id: String!
+  newBracingLoad: Float!
+}
+type ChangeStoreyBracingLength {
+  id: String!
+  newBracingLength: Float!
+}
+type ChangeStoreyBracingDeflection {
+  id: String!
+  newBracingDeflection: Float!
+}
+type ChangeRestraintMemberId {
+  id: String!
+  newMemberId: String!
+}
+type ChangeRestraintLabel {
+  id: String!
+  newLabel: String!
+}
+type ChangeRestraintStartSupport {
+  id: String!
+  newStartSupport: RestraintSupport!
+}
+type ChangeRestraintEndSupport {
+  id: String!
+  newEndSupport: RestraintSupport!
+}
+type ChangeRestIntermediatePosition {
+  id: String!
+  newIntermediatePosition: Float!
+}
+type ChangeRestraintTorsionalSpring {
+  id: String!
+  newTorsionalSpring: Float!
+}
+type ChangeRestLatSpringPosition {
+  id: String!
+  newLateralSpringPosition: Float!
+}
+type ChangeRestLateralSpringStiff {
+  id: String!
+  newLateralSpringStiffness: Float!
+}
+type ChangeRestraintLoadHeight {
+  id: String!
+  newLoadHeight: Float!
+}
+type ChangeRestraintLoadDistribution {
+  id: String!
+  newLoadDistribution: RestraintDistribution!
+}
+type ChangeRestraintDesignMoment {
+  id: String!
+  newDesignMoment: Float!
+}
+type ChangeRestraintDesignAxial {
+  id: String!
+  newDesignAxial: Float!
+}
+type ChangeRestraintGeneralMethod {
+  id: String!
+  newGeneralMethod: Int!
+}
+type ChangeRestHingeToRest {
+  id: String!
+  newHingeToRestraint: Float!
+}
+type ChangeBuiltUpMemberId {
+  id: String!
+  newMemberId: String!
+}
+type ChangeBuiltUpLabel {
+  id: String!
+  newLabel: String!
+}
+type ChangeBuiltUpKind {
+  id: String!
+  newKind: BuiltUpKind!
+}
+type ChangeBuiltUpChordArea {
+  id: String!
+  newChordArea: Float!
+}
+type ChangeBuiltUpChordInertia {
+  id: String!
+  newChordInertia: Float!
+}
+type ChangeBuiltUpChordDistance {
+  id: String!
+  newChordDistance: Float!
+}
+type ChangeBuiltUpPanelSpacing {
+  id: String!
+  newPanelSpacing: Float!
+}
+type ChangeBuiltUpPlanes {
+  id: String!
+  newPlanes: Int!
+}
+type ChangeBuiltUpBattenInertia {
+  id: String!
+  newBattenInertia: Float!
+}
+type ChangeBuiltUpDiagonalArea {
+  id: String!
+  newDiagonalArea: Float!
+}
+type ChangeBuiltUpDiagonalLength {
+  id: String!
+  newDiagonalLength: Float!
+}
+type ChangeBuiltUpDesignAxial {
+  id: String!
+  newDesignAxial: Float!
+}
+type ChangeBuiltUpDesignMoment {
+  id: String!
+  newDesignMoment: Float!
+}
+type ChangeBuiltUpBackToBack {
+  id: String!
+  newBackToBack: Int!
+}
+type ChangeBuiltUpMinRadius {
+  id: String!
+  newMinRadius: Float!
+}
+type ChangeBuiltUpChainSpacing {
+  id: String!
+  newChainSpacing: Float!
+}
+type ChangeWeldMemberId {
+  id: String!
+  newMemberId: String!
+}
+type ChangeWeldLabel {
+  id: String!
+  newLabel: String!
+}
+type ChangeWeldPattern {
+  id: String!
+  newPattern: WeldPattern!
+}
+type ChangeWeldThroat {
+  id: String!
+  newThroat: Float!
+}
+type ChangeWeldWidth {
+  id: String!
+  newWidth: Float!
+}
+type ChangeWeldDepth {
+  id: String!
+  newDepth: Float!
+}
+type ChangeWeldShearForce {
+  id: String!
+  newShearForce: Float!
+}
+type ChangeWeldEccentricity {
+  id: String!
+  newEccentricity: Float!
+}
+type ChangeWeldSteelFu {
+  id: String!
+  newSteelFu: Float!
+}
+type ChangeWeldBetaW {
+  id: String!
+  newBetaW: Float!
+}
+type ChangeParamSectionId {
+  id: String!
+  newSectionId: String!
+}
+type ChangeParamLabel {
+  id: String!
+  newLabel: String!
+}
+type ChangeParamShape {
+  id: String!
+  newShape: ParametricShape!
+}
+type ChangeParamHeight {
+  id: String!
+  newHeight: Float!
+}
+type ChangeParamWidth {
+  id: String!
+  newWidth: Float!
+}
+type ChangeParamWebThickness {
+  id: String!
+  newWebThickness: Float!
+}
+type ChangeParamFlangeThickness {
+  id: String!
+  newFlangeThickness: Float!
+}
+type ChangeParamTolerance {
+  id: String!
+  newTolerance: Float!
+}
+type ChangeHollowMemberId {
+  id: String!
+  newMemberId: String!
+}
+type ChangeHollowLabel {
+  id: String!
+  newLabel: String!
+}
+type ChangeHollowChordWidth {
+  id: String!
+  newChordWidth: Float!
+}
+type ChangeHollowChordHeight {
+  id: String!
+  newChordHeight: Float!
+}
+type ChangeHollowChordThickness {
+  id: String!
+  newChordThickness: Float!
+}
+type ChangeHollowChordFy {
+  id: String!
+  newChordFy: Float!
+}
+type ChangeHollowChordStress {
+  id: String!
+  newChordStress: Float!
+}
+type ChangeHollowBrace1Width {
+  id: String!
+  newBrace1Width: Float!
+}
+type ChangeHollowBrace1Height {
+  id: String!
+  newBrace1Height: Float!
+}
+type ChangeHollowBrace1Thickness {
+  id: String!
+  newBrace1Thickness: Float!
+}
+type ChangeHollowBrace1Angle {
+  id: String!
+  newBrace1Angle: Float!
+}
+type ChangeHollowBrace1Force {
+  id: String!
+  newBrace1Force: Float!
+}
+type ChangeHollowBrace2Width {
+  id: String!
+  newBrace2Width: Float!
+}
+type ChangeHollowBrace2Height {
+  id: String!
+  newBrace2Height: Float!
+}
+type ChangeHollowBrace2Thickness {
+  id: String!
+  newBrace2Thickness: Float!
+}
+type ChangeHollowBrace2Angle {
+  id: String!
+  newBrace2Angle: Float!
+}
+type ChangeHollowBrace2Force {
+  id: String!
+  newBrace2Force: Float!
+}
+type ChangeHollowGap {
+  id: String!
+  newGap: Float!
+}
+type ChangeHollowBraceFy {
+  id: String!
+  newBraceFy: Float!
+}
+type ChangeRowJointId {
+  id: String!
+  newJointId: String!
+}
+type ChangeRowLabel {
+  id: String!
+  newLabel: String!
+}
+type ChangeRowRowType {
+  id: String!
+  newRowType: JointRowType!
+}
+type ChangeRowLever {
+  id: String!
+  newLever: Float!
+}
+type ChangeRowBoltToWeb {
+  id: String!
+  newBoltToWeb: Float!
+}
+type ChangeRowEdgeDistance {
+  id: String!
+  newEdgeDistance: Float!
+}
+type ChangeRowExtensionToFlange {
+  id: String!
+  newExtensionToFlange: Float!
+}
+type ChangeRowExtensionEdge {
+  id: String!
+  newExtensionEdge: Float!
+}
+type ChangeRowAlphaFactor {
+  id: String!
+  newAlphaFactor: Float!
+}
+type ChangeRowPitchToPrevious {
+  id: String!
+  newPitchToPrevious: Float!
+}
+type ChangeRowBolts {
+  id: String!
+  newBolts: Int!
+}
+type ChangeRowBoltDiameter {
+  id: String!
+  newBoltDiameter: Float!
+}
+type ChangeRowBoltStressArea {
+  id: String!
+  newBoltStressArea: Float!
+}
+type ChangeRowGripLength {
+  id: String!
+  newGripLength: Float!
+}
+type ChangeRowBoltClass {
+  id: String!
+  newBoltClass: String!
+}
+type ChangeRowGroupWithPrevious {
+  id: String!
+  newGroupWithPrevious: Int!
+}
+type InsertJointAction {
+  id: String!
+  index: Int
+  element: JointForceAction!
+}
+type RemoveJointAction {
+  id: String!
+  index: Int!
+}
+type ChangeJointActionLoadCaseId {
+  id: String!
+  elementId: String!
+  newLoadCaseId: String!
+}
+type ChangeJointActionShear {
+  id: String!
+  elementId: String!
+  newShear: Float!
+}
+type ChangeJointActionTension {
+  id: String!
+  elementId: String!
+  newTension: Float!
+}
+type InsertFatigueBand {
+  id: String!
+  index: Int
+  element: FatigueBand!
+}
+type RemoveFatigueBand {
+  id: String!
+  index: Int!
+}
+type ChangeFatigueBandDeltaSigma {
+  id: String!
+  elementId: String!
+  newDeltaSigma: Float!
+}
+type ChangeFatigueBandCycles {
+  id: String!
+  elementId: String!
+  newCycles: Float!
+}
+type InsertCfAction {
+  id: String!
+  index: Int
+  element: ForceAction!
+}
+type RemoveCfAction {
+  id: String!
+  index: Int!
+}
+type ChangeCfActionLoadCaseId {
+  id: String!
+  elementId: String!
+  newLoadCaseId: String!
+}
+type ChangeCfActionForce {
+  id: String!
+  elementId: String!
+  newForce: Float!
+}
+type InsertPlatedAction {
+  id: String!
+  index: Int
+  element: ForceAction!
+}
+type RemovePlatedAction {
+  id: String!
+  index: Int!
+}
+type ChangePlatedActionLoadCaseId {
+  id: String!
+  elementId: String!
+  newLoadCaseId: String!
+}
+type ChangePlatedActionForce {
+  id: String!
+  elementId: String!
+  newForce: Float!
+}
+type InsertTensionAction {
+  id: String!
+  index: Int
+  element: ForceAction!
+}
+type RemoveTensionAction {
+  id: String!
+  index: Int!
+}
+type ChangeTensionActionLoadCaseId {
+  id: String!
+  elementId: String!
+  newLoadCaseId: String!
+}
+type ChangeTensionActionForce {
+  id: String!
+  elementId: String!
+  newForce: Float!
+}
+type InsertTowerAction {
+  id: String!
+  index: Int
+  element: ForceAction!
+}
+type RemoveTowerAction {
+  id: String!
+  index: Int!
+}
+type ChangeTowerActionLoadCaseId {
+  id: String!
+  elementId: String!
+  newLoadCaseId: String!
+}
+type ChangeTowerActionForce {
+  id: String!
+  elementId: String!
+  newForce: Float!
+}
+type InsertPileAction {
+  id: String!
+  index: Int
+  element: ForceAction!
+}
+type RemovePileAction {
+  id: String!
+  index: Int!
+}
+type ChangePileActionLoadCaseId {
+  id: String!
+  elementId: String!
+  newLoadCaseId: String!
+}
+type ChangePileActionForce {
+  id: String!
+  elementId: String!
+  newForce: Float!
+}
+type InsertCraneAction {
+  id: String!
+  index: Int
+  element: ForceAction!
+}
+type RemoveCraneAction {
+  id: String!
+  index: Int!
+}
+type ChangeCraneActionLoadCaseId {
+  id: String!
+  elementId: String!
+  newLoadCaseId: String!
+}
+type ChangeCraneActionForce {
+  id: String!
+  elementId: String!
+  newForce: Float!
+}
+type InsertFrameNode {
+  index: Int
+  frameNode: FrameNode!
+}
+type RemoveFrameNode {
+  index: Int!
+}
+type InsertFrameBar {
+  index: Int
+  frameBar: FrameBar!
+}
+type RemoveFrameBar {
+  index: Int!
+}
+type InsertPlacement {
+  index: Int
+  placement: Placement!
+}
+type RemovePlacement {
+  index: Int!
+}
+type ChangeMaterialRambergOsgoodN {
+  id: String!
+  newRambergOsgoodN: Float!
+}
+type ChangeFrameNodeLabel {
+  id: String!
+  newLabel: String!
+}
+type ChangeFrameNodeX {
+  id: String!
+  newX: Float!
+}
+type ChangeFrameNodeZ {
+  id: String!
+  newZ: Float!
+}
+type ChangeFrameNodeSupport {
+  id: String!
+  newSupport: FrameNodeSupport!
+}
+type ChangeFrameNodeLoadX {
+  id: String!
+  newLoadX: Float!
+}
+type ChangeFrameNodeLoadZ {
+  id: String!
+  newLoadZ: Float!
+}
+type ChangeFrameBarMemberId {
+  id: String!
+  newMemberId: String!
+}
+type ChangeFrameBarLabel {
+  id: String!
+  newLabel: String!
+}
+type ChangeFrameBarStartNodeId {
+  id: String!
+  newStartNodeId: String!
+}
+type ChangeFrameBarEndNodeId {
+  id: String!
+  newEndNodeId: String!
+}
+type ChangeFrameBarReleaseStart {
+  id: String!
+  newReleaseStart: FrameBarRelease!
+}
+type ChangeFrameBarReleaseEnd {
+  id: String!
+  newReleaseEnd: FrameBarRelease!
+}
+type ChangePlacementX {
+  id: String!
+  newX: Float!
+}
+type ChangePlacementY {
+  id: String!
+  newY: Float!
+}
+type ChangePlacementZ {
+  id: String!
+  newZ: Float!
+}
+type ChangePlacementYaw {
+  id: String!
+  newYaw: Float!
+}
+type ChangeCfPurlinSpan {
+  id: String!
+  newPurlinSpan: Float!
+}
+type ChangeCfPurlinLoad {
+  id: String!
+  newPurlinLoad: Float!
+}
+type ChangeCfPurlinLateralRatio {
+  id: String!
+  newPurlinLateralRatio: Float!
+}
+type ChangePlatedCorrugationFlat {
+  id: String!
+  newCorrugationFlat: Float!
+}
+type ChangePlatedCorrProjection {
+  id: String!
+  newCorrugationProjection: Float!
+}
+type ChangePlatedCorrugationDepth {
+  id: String!
+  newCorrugationDepth: Float!
+}
+type ChangePlatedWebHeight {
+  id: String!
+  newWebHeight: Float!
+}
+type ChangeSiloRingSpacing {
+  id: String!
+  newRingSpacing: Float!
+}
+type ChangeSiloRingArea {
+  id: String!
+  newRingArea: Float!
+}
+type ChangeSiloRingInertia {
+  id: String!
+  newRingInertia: Float!
+}
+type ChangeSiloRingOffset {
+  id: String!
+  newRingOffset: Float!
+}
+type ChangeBridgeDeckThickness {
+  id: String!
+  newDeckThickness: Float!
+}
+type ChangeBridgeTroughSpacing {
+  id: String!
+  newTroughSpacing: Float!
+}
+type ChangeBridgeTroughWidth {
+  id: String!
+  newTroughWidth: Float!
+}
+type ChangeBridgeTroughThickness {
+  id: String!
+  newTroughThickness: Float!
+}
+type ChangeBridgeCrossbeamSpacing {
+  id: String!
+  newCrossbeamSpacing: Float!
+}
+type ChangeBridgeSurfacingThickness {
+  id: String!
+  newSurfacingThickness: Float!
+}
+type ChangeBridgeWheelLoad {
+  id: String!
+  newWheelLoad: Float!
+}
+type ChangeBridgeWheelPatch {
+  id: String!
+  newWheelPatch: Float!
+}
+type ChangePlatedStiffenerSpacing {
+  id: String!
+  newStiffenerSpacing: Float!
+}
+type ChangeBuiltUpChordShape {
+  id: String!
+  newChordShape: ChordShape!
+}
+type ChangeBuiltUpChordDepth {
+  id: String!
+  newChordDepth: Float!
+}
+type ChangeBuiltUpChordWidth {
+  id: String!
+  newChordWidth: Float!
+}
+type ChangeBuiltUpChordFlangeThk {
+  id: String!
+  newChordFlangeThickness: Float!
+}
+type ChangeBuiltUpChordWebThk {
+  id: String!
+  newChordWebThickness: Float!
+}
+type ChangeMemberWebMaterialId {
+  id: String!
+  newWebMaterialId: String!
+}
+type ChangeMemberTorsionLoad {
+  id: String!
+  newTorsionLoad: TorsionLoad!
+}
+type ChangeMemberTorquePosition {
+  id: String!
+  newTorquePosition: Float!
+}
+type ChangeFatigueStressHistory {
+  id: String!
+  newStressHistory: String!
+}
+type ChangePlatedStiffenerShape {
+  id: String!
+  newStiffenerShape: StiffenerShape!
+}
+type ChangePlatedStiffenerDepth {
+  id: String!
+  newStiffenerDepth: Float!
+}
+type ChangePlatedStiffenerThickness {
+  id: String!
+  newStiffenerThickness: Float!
+}
+type ChangePlatedStiffFlangeWidth {
+  id: String!
+  newStiffenerFlangeWidth: Float!
+}
+type ChangePlatedStiffenerFlangeThk {
+  id: String!
+  newStiffenerFlangeThickness: Float!
+}
+type ChangePlatedLateralPressure {
+  id: String!
+  newLateralPressure: Float!
+}
+type ChangePlatedLatPressureCoef {
+  id: String!
+  newLateralPressureCoefficient: Float!
+}
+type ChangeMemberWarpingSupport {
+  id: String!
+  newWarpingSupport: WarpingSupport!
+}
+type InsertJointPlate {
+  index: Int
+  jointPlate: JointPlate!
+}
+type RemoveJointPlate {
+  index: Int!
+}
+type InsertFoundationBlock {
+  index: Int
+  foundationBlock: FoundationBlock!
+}
+type RemoveFoundationBlock {
+  index: Int!
+}
+type ChangeMemberLtbRestraintSpacing {
+  id: String!
+  newLtbRestraintSpacing: Float!
+}
+type ChangeMemberDeflectionLimitRatio {
+  id: String!
+  newDeflectionLimitRatio: Float!
+}
+type ChangeMemberToughnessStressRatio {
+  id: String!
+  newToughnessStressRatio: Float!
+}
+type ChangeJointColumnFlangeThickness {
+  id: String!
+  newColumnFlangeThickness: Float!
+}
+type ChangeJointBeamMomentResistance {
+  id: String!
+  newBeamMomentResistance: Float!
+}
+type ChangeJointColumnMomentResistance {
+  id: String!
+  newColumnMomentResistance: Float!
+}
+type ChangeJointTransformationParameter {
+  id: String!
+  newTransformationParameter: Float!
+}
+type ChangeFireProtectionConductivity {
+  id: String!
+  newProtectionConductivity: Float!
+}
+type ChangeFireProtectionSpecificHeat {
+  id: String!
+  newProtectionSpecificHeat: Float!
+}
+type ChangeCfRequiredRestraintStiffness {
+  id: String!
+  newRequiredRestraintStiffness: Float!
+}
+type ChangePlatedStiffenerEccentricity {
+  id: String!
+  newStiffenerEccentricity: Float!
+}
+type ChangePlatedPatchMomentResistance {
+  id: String!
+  newPatchMomentResistance: Float!
+}
+type ChangePlatedTransverseStiffenerInertia {
+  id: String!
+  newTransverseStiffenerInertia: Float!
+}
+type ChangePlatedCorrugationProjection {
+  id: String!
+  newCorrugationProjection: Float!
+}
+type ChangePlatedStiffenerFlangeWidth {
+  id: String!
+  newStiffenerFlangeWidth: Float!
+}
+type ChangePlatedStiffenerFlangeThickness {
+  id: String!
+  newStiffenerFlangeThickness: Float!
+}
+type ChangePlatedLateralPressureCoefficient {
+  id: String!
+  newLateralPressureCoefficient: Float!
+}
+type ChangeTensionCableHorizontalForce {
+  id: String!
+  newCableHorizontalForce: Float!
+}
+type ChangeTowerLateralForceCoefficient {
+  id: String!
+  newLateralForceCoefficient: Float!
+}
+type ChangeTowerPermittedAmplitudeRatio {
+  id: String!
+  newPermittedAmplitudeRatio: Float!
+}
+type ChangePileInterlockBendingFactor {
+  id: String!
+  newInterlockBendingFactor: Float!
+}
+type ChangePileInterlockStiffnessFactor {
+  id: String!
+  newInterlockStiffnessFactor: Float!
+}
+type ChangeCraneFlangeEffectiveWidth {
+  id: String!
+  newFlangeEffectiveWidth: Float!
+}
+type ChangeCraneDetailCategoryStress {
+  id: String!
+  newDetailCategoryStress: Float!
+}
+type ChangeRestraintIntermediatePosition {
+  id: String!
+  newIntermediatePosition: Float!
+}
+type ChangeRestraintLatSpringPosition {
+  id: String!
+  newLateralSpringPosition: Float!
+}
+type ChangeRestraintLatSpringStiffness {
+  id: String!
+  newLateralSpringStiffness: Float!
+}
+type ChangeRestraintHingeToRestraint {
+  id: String!
+  newHingeToRestraint: Float!
+}
+type ChangeBuiltUpChordFlangeThickness {
+  id: String!
+  newChordFlangeThickness: Float!
+}
+type ChangeBuiltUpChordWebThickness {
+  id: String!
+  newChordWebThickness: Float!
+}
+type ChangeJointPlateJointId {
+  id: String!
+  newJointId: String!
+}
+type ChangeJointPlateLabel {
+  id: String!
+  newLabel: String!
+}
+type ChangeJointPlateRole {
+  id: String!
+  newRole: String!
+}
+type ChangeJointPlatePlateHeight {
+  id: String!
+  newPlateHeight: Float!
+}
+type ChangeJointPlatePlateWidth {
+  id: String!
+  newPlateWidth: Float!
+}
+type ChangeJointPlatePlateThickness {
+  id: String!
+  newPlateThickness: Float!
+}
+type ChangeJointPlatePlateCount {
+  id: String!
+  newPlateCount: Int!
+}
+type ChangeJointPlatePlateFy {
+  id: String!
+  newPlateFy: Float!
+}
+type ChangeJointPlatePlateFu {
+  id: String!
+  newPlateFu: Float!
+}
+type ChangeJointPlateBoltClass {
+  id: String!
+  newBoltClass: String!
+}
+type ChangeJointPlateBoltDiameter {
+  id: String!
+  newBoltDiameter: Float!
+}
+type ChangeJointPlateHoleDiameter {
+  id: String!
+  newHoleDiameter: Float!
+}
+type ChangeJointPlateBoltRows {
+  id: String!
+  newBoltRows: Int!
+}
+type ChangeJointPlateBoltsPerRow {
+  id: String!
+  newBoltsPerRow: Int!
+}
+type ChangeJointPlatePitch {
+  id: String!
+  newPitch: Float!
+}
+type ChangeJointPlateGauge {
+  id: String!
+  newGauge: Float!
+}
+type ChangeJointPlateEndDistance {
+  id: String!
+  newEndDistance: Float!
+}
+type ChangeJointPlateEdgeDistance {
+  id: String!
+  newEdgeDistance: Float!
+}
+type ChangeJointPlateShearPlanes {
+  id: String!
+  newShearPlanes: Int!
+}
+type ChangeJointPlateEccentricity {
+  id: String!
+  newEccentricity: Float!
+}
+type ChangeJointPlateWeldThroat {
+  id: String!
+  newWeldThroat: Float!
+}
+type ChangeJointPlateWeldFu {
+  id: String!
+  newWeldFu: Float!
+}
+type ChangeJointPlateWeldBetaW {
+  id: String!
+  newWeldBetaW: Float!
+}
+type ChangeFoundationJointId {
+  id: String!
+  newJointId: String!
+}
+type ChangeFoundationLabel {
+  id: String!
+  newLabel: String!
+}
+type ChangeFoundationBlockLength {
+  id: String!
+  newBlockLength: Float!
+}
+type ChangeFoundationBlockWidth {
+  id: String!
+  newBlockWidth: Float!
+}
+type ChangeFoundationBlockDepth {
+  id: String!
+  newBlockDepth: Float!
+}
+type ChangeFoundationConcreteFck {
+  id: String!
+  newConcreteFck: Float!
+}
+type ChangeFoundationGroutFck {
+  id: String!
+  newGroutFck: Float!
+}
+type ChangeFoundationGroutThickness {
+  id: String!
+  newGroutThickness: Float!
+}
+type ChangeFoundationAnchorCount {
+  id: String!
+  newAnchorCount: Int!
+}
+type ChangeFoundationAnchorClass {
+  id: String!
+  newAnchorClass: String!
+}
+type ChangeFoundationAnchorDiameter {
+  id: String!
+  newAnchorDiameter: Float!
+}
+type ChangeFoundationAnchorStressArea {
+  id: String!
+  newAnchorStressArea: Float!
+}
+type ChangeFoundationAnchorEmbedment {
+  id: String!
+  newAnchorEmbedment: Float!
+}
+type ChangeFoundationAnchorEdgeDistance {
+  id: String!
+  newAnchorEdgeDistance: Float!
 }

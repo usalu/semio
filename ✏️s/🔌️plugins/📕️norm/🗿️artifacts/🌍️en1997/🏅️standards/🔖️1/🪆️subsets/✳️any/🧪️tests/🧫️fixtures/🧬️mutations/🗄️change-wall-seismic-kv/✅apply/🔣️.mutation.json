@@ -1,0 +1,5 @@
+{
+  "mutation": "changeWallSeismicKv",
+  "id": "wall-W1",
+  "newSeismicKv": 1.5
+}

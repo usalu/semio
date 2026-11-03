@@ -96,8 +96,15 @@ pub(super) fn push_referential_integrity(report: &mut CheckReport, document: &En
     push_duplicate_ids(report, document, "variables", &document.variables.iter().map(|a| a.id.clone()).collect::<Vec<_>>(), &|id| format!("variables[id={id}].id"));
     push_duplicate_ids(report, document, "accidentals", &document.accidentals.iter().map(|a| a.id.clone()).collect::<Vec<_>>(), &|id| format!("accidentals[id={id}].id"));
     push_duplicate_ids(report, document, "seismics", &document.seismics.iter().map(|a| a.id.clone()).collect::<Vec<_>>(), &|id| format!("seismics[id={id}].id"));
+    push_duplicate_ids(report, document, "cases", &document.cases.iter().map(|a| a.id.clone()).collect::<Vec<_>>(), &|id| format!("cases[id={id}].id"));
     push_duplicate_ids(report, document, "members", &members, &|id| format!("members[id={id}].id"));
     push_duplicate_ids(report, document, "bridgeSls", &document.bridge_sls.iter().map(|s| s.id.clone()).collect::<Vec<_>>(), &|id| format!("bridgeSls[id={id}].id"));
+    push_duplicate_ids(report, document, "fatigueSpectra", &document.fatigue_spectra.iter().map(|s| s.id.clone()).collect::<Vec<_>>(), &|id| format!("fatigueSpectra[id={id}].id"));
+    push_duplicate_ids(report, document, "reliabilityAnalyses", &document.reliability_analyses.iter().map(|s| s.id.clone()).collect::<Vec<_>>(), &|id| format!("reliabilityAnalyses[id={id}].id"));
+    push_duplicate_ids(report, document, "testSeries", &document.test_series.iter().map(|s| s.id.clone()).collect::<Vec<_>>(), &|id| format!("testSeries[id={id}].id"));
+    push_duplicate_ids(report, document, "factorOverrides", &document.factor_overrides.iter().map(|s| s.id.clone()).collect::<Vec<_>>(), &|id| format!("factorOverrides[id={id}].id"));
+    push_duplicate_ids(report, document, "trafficGroups", &document.traffic_groups.iter().map(|s| s.id.clone()).collect::<Vec<_>>(), &|id| format!("trafficGroups[id={id}].id"));
+    push_duplicate_ids(report, document, "placements", &document.placements.iter().map(|s| s.id.clone()).collect::<Vec<_>>(), &|id| format!("placements[id={id}].id"));
 
     for (i, effect) in document.effects.iter().enumerate() {
         let base = format!("effects[{i}]");
@@ -128,19 +135,21 @@ pub(super) fn push_referential_integrity(report: &mut CheckReport, document: &En
         }
     }
 
-    if !document.effects.is_empty() {
-        for m in &document.members {
-            let wired = document.effects.iter().any(|e| e.member_id == m.id && action_set.contains(e.action_id.as_str()));
-            if !wired {
-                broken.insert(m.id.clone());
-            }
+    for spectrum in &document.fatigue_spectra {
+        if !member_set.contains(spectrum.member_id.as_str()) {
+            push_dangling_ref(report, document, format!("en1990.integrity.fatigueSpectra.{}.memberId", spectrum.id), format!("fatigueSpectra[id={}].memberId", spectrum.id), &spectrum.member_id, "Fatigue spectrum memberId", "Ermüdungskollektiv memberId", &spectrum.member_id, members.clone());
         }
+    }
+
+    if !document.effects.is_empty() {
+        let wired: std::collections::BTreeSet<&str> = document.effects.iter().filter(|e| action_set.contains(e.action_id.as_str())).map(|e| e.member_id.as_str()).collect();
+        broken.extend(document.members.iter().filter(|m| !wired.contains(m.id.as_str())).map(|m| m.id.clone()));
     }
     broken
 }
 
 pub(super) fn push_member_unassessable(report: &mut CheckReport, document: &En1990Snapshot, member: &Member) {
-    let path = member_path(document, &member.id, "id");
+    let path = member_path(&member.id, "id");
     report.push(
         CheckResult::assess(
             format!("en1990.integrity.member.{}.unassessable", member.id),
@@ -165,5 +174,20 @@ pub(super) fn push_member_unassessable(report: &mut CheckReport, document: &En19
         ))
         .build(),
     );
+}
+
+pub(super) fn push_member_without_actions(report: &mut CheckReport, document: &En1990Snapshot, member: &Member) {
+    report.push(not_applicable(
+        format!("en1990.actions.{}", member.id),
+        "EN 1990",
+        ClauseId::new("EN 1990", "§6.4", "actions"),
+        member_subject(member, "rdStr"),
+        copy("Member actions", "Bauteilwirkungen"),
+        document.annex,
+        copy(
+            format!("Member '{}' has no action with a non-zero effect; the combination checks are not assessed.", member.id),
+            format!("Bauteil '{}' hat keine Einwirkung mit nichtverschwindender Wirkung; die Kombinationsnachweise werden nicht bewertet.", member.id),
+        ),
+    ));
 }
 //#endregion 🔖️ComplianceReport

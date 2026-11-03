@@ -1,0 +1,232 @@
+{
+  "$schema": "../../../../../../../../../🔮️oracles/🏃️harness/🧬️schema/🔣️.json",
+  "schemaVersion": 1,
+  "artifact": "en1991",
+  "annex": "en",
+  "cases": [
+    {
+      "id": "en1991.2.tandem-travel-envelope-three-lanes",
+      "check": "en1991.2.tandem-travel-envelope",
+      "citation": {
+        "standard": "EN 1991-2",
+        "edition": "2005",
+        "clause": "EN 1991-2 4.3.2 tandem system TS on a simple span; axle spacing and lane loads from the registry (unverified); lanes side by side, no transverse distribution",
+        "annex": "en"
+      },
+      "inputs": {
+        "span": 20.0,
+        "spacing": 1.2,
+        "axle": 600000.0
+      },
+      "expected": {
+        "m_env": {
+          "value": 5640000.0,
+          "unit": "N*m",
+          "profile": "eurocode-quantities-v1"
+        },
+        "r_env": {
+          "value": 1164000.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.2.tandem-travel-envelope-short-span",
+      "check": "en1991.2.tandem-travel-envelope",
+      "citation": {
+        "standard": "EN 1991-2",
+        "edition": "2005",
+        "clause": "EN 1991-2 4.3.2 tandem system TS on a simple span; axle spacing and lane loads from the registry (unverified); lanes side by side, no transverse distribution",
+        "annex": "en"
+      },
+      "inputs": {
+        "span": 1.0,
+        "spacing": 1.2,
+        "axle": 300000.0
+      },
+      "expected": {
+        "m_env": {
+          "value": 75000.0,
+          "unit": "N*m",
+          "profile": "eurocode-quantities-v1"
+        },
+        "r_env": {
+          "value": 300000.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.snow.profile-mu-rising",
+      "check": "en1991.snow.profile-mu",
+      "citation": {
+        "standard": "EN 1991-1-3",
+        "edition": "2005",
+        "clause": "EN 1991-1-3 5.3.6 drift triangle; registry values unverified",
+        "annex": "en"
+      },
+      "inputs": {
+        "start": 6.0,
+        "length": 4.0,
+        "base": 0.8,
+        "peak": 2.0,
+        "x": 8.0,
+        "rising": 1.0
+      },
+      "expected": {
+        "mu": {
+          "value": 1.4,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.snow.profile-mu-falling",
+      "check": "en1991.snow.profile-mu",
+      "citation": {
+        "standard": "EN 1991-1-3",
+        "edition": "2005",
+        "clause": "EN 1991-1-3 5.3.6 drift triangle; registry values unverified",
+        "annex": "en"
+      },
+      "inputs": {
+        "start": 1.0,
+        "length": 2.0,
+        "base": 0.8,
+        "peak": 1.6,
+        "x": 2.0,
+        "rising": 0.0
+      },
+      "expected": {
+        "mu": {
+          "value": 1.2000000000000002,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.snow.profile-mu-outside",
+      "check": "en1991.snow.profile-mu",
+      "citation": {
+        "standard": "EN 1991-1-3",
+        "edition": "2005",
+        "clause": "EN 1991-1-3 5.3.6 drift triangle; registry values unverified",
+        "annex": "en"
+      },
+      "inputs": {
+        "start": 6.0,
+        "length": 4.0,
+        "base": 0.8,
+        "peak": 2.0,
+        "x": 3.0,
+        "rising": 1.0
+      },
+      "expected": {
+        "mu": {
+          "value": 0.8,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.wind.net-pressure-suction",
+      "check": "en1991.wind.net-pressure",
+      "citation": {
+        "standard": "EN 1991-1-4",
+        "edition": "2005",
+        "clause": "EN 1991-1-4 7.2.9 net pressure w = q_p (c_pe - c_pi) c_s c_d",
+        "annex": "en"
+      },
+      "inputs": {
+        "qp": 800.0,
+        "cpe": -1.2,
+        "cpi": 0.2,
+        "factor": 1.0
+      },
+      "expected": {
+        "w": {
+          "value": -1120.0,
+          "unit": "Pa",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    }
+  ]
+}

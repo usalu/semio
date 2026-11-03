@@ -19,7 +19,7 @@ pub trait NamedEditSource{
  fn admitted_base(&self)->Option<&AdmittedNamedKeyIndex>{None}
 }
 /// 🎟️ A contiguous borrowed source prices its actual fixed key header and original ranked coordinate.
-pub fn contiguous_named_key_demand<T:?Sized>(source:&T)->RetirementDemand{RetirementDemand{copy_bytes:std::mem::size_of_val(source)+size_of::<usize>()*2+size_of::<&str>()*2,depth:1,..Default::default()}}
+pub fn contiguous_named_key_demand<T:?Sized>(source:&T)->RetirementDemand{RetirementDemand{copy_bytes:size_of_val(source)+size_of::<usize>()*2+size_of::<&str>()*2,depth:1,..Default::default()}}
 /// 👁️ The borrowed key selector executes only after its original contiguous header quote is admitted.
 pub fn observe_contiguous_named_key<'a>(d:RetirementDemand,grant:RetainedCloneGrant,key:impl FnOnce()->crate::RetainedWorkOutcome<&'a str>)->crate::RetainedWorkOutcome<Option<(&'a str,RetainedCloneProgress)>>{if !retained_clone_grant_admits(grant,d){return crate::RetainedWorkOutcome{result:Ok(None),work:0}}let turn=key();crate::RetainedWorkOutcome{work:turn.work,result:turn.result.map(|key|Some((key,RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})))}}
 /// 🚫️ Semantic key conflicts settle before any candidate collection changes.

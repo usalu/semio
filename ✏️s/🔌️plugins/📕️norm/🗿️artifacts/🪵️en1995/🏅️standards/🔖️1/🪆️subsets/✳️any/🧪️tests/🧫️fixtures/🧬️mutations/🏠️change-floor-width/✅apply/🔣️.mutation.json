@@ -1,0 +1,6 @@
+{
+  "ChangeFloorWidth": {
+    "floorId": "floor-1",
+    "newValue": 8.5
+  }
+}

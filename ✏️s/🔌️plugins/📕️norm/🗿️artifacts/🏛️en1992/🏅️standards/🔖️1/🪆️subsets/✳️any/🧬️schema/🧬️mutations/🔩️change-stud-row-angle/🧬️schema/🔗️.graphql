@@ -1,0 +1,5 @@
+type ChangeStudRowAngle {
+  memberId: String!
+  studRowId: String!
+  newAngle: Float!
+}

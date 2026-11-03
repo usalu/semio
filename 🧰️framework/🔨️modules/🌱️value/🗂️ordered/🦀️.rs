@@ -99,8 +99,8 @@ pub struct OrderedMap<V> { root: ManuallyDrop<Root<V>> }
 impl<V> Default for OrderedMap<V> { fn default() -> Self { Self { root: ManuallyDrop::new(None) } } }
 impl<V> Clone for OrderedMap<V> { fn clone(&self) -> Self { Self { root: self.root.clone() } } }
 impl<V:crate::retirement::RetireOwned+Sync> semio_framework_value_retained_clone::RetainedAlias for OrderedMap<V>{
-    fn alias_demand(&self)->crate::RetirementDemand{crate::RetirementDemand{copy_bytes:2*std::mem::size_of::<Self>(),depth:1,..Default::default()}}
-    fn admit_alias(&self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<(Self,RetainedCloneProgress)>{let mut work=0;let result=(||{let d=semio_framework_value_retained_clone::RetainedAlias::alias_demand(self);if !crate::retained_clone::retained_clone_grant_admits(grant,d){return Err(crate::ValueError::literal(crate::ValueRefusalKind::WorkLimit,"original ordered alias requires its complete header quote"))}work=1;Ok((self.clone(),RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))})();crate::RetainedWorkOutcome{result,work}}
+    fn alias_demand(&self)->crate::RetirementDemand{crate::RetirementDemand{copy_bytes:2*size_of::<Self>(),depth:1,..Default::default()}}
+    fn admit_alias(&self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<(Self,RetainedCloneProgress)>{let mut work=0;let result=(||{let d=semio_framework_value_retained_clone::RetainedAlias::alias_demand(self);if !crate::retained_clone::retained_clone_grant_admits(grant,d){return Err(ValueError::literal(crate::ValueRefusalKind::WorkLimit,"original ordered alias requires its complete header quote"))}work=1;Ok((self.clone(),RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))})();crate::RetainedWorkOutcome{result,work}}
 }
 impl<V:crate::retirement::RetireOwned+Sync> semio_framework_value_retained_clone::RetainedClone for OrderedMap<V>{type Cursor=semio_framework_value_retained_clone::RetainedAliasCursor<Self>;fn retained_clone_cursor()->Self::Cursor{Default::default()}}
 impl<V> Drop for OrderedMap<V> {
@@ -297,7 +297,7 @@ impl<V> UpdateState<V> {
         if self.terminal_is_empty(){return RetirementStep::Complete;}
         if !self.closing || grant.maximum_items == 0 { return RetirementStep::Blocked; }
         if !self.retirement.is_empty() { let step=self.retirement.advance(grant);self.last_close_work=self.retirement.last_turn_work();return step; }
-        if grant.maximum_depth==0 {return RetirementStep::Failure(crate::ValueError::literal(crate::ValueRefusalKind::DepthLimit,"ordered close requires admitted metadata depth"));}
+        if grant.maximum_depth==0 {return RetirementStep::Failure(ValueError::literal(crate::ValueRefusalKind::DepthLimit,"ordered close requires admitted metadata depth"));}
         self.last_close_work=1;
         if let Some(node)=self.pending_node.as_mut(){if let Some(owner)=node.take_owner(){self.retirement.push(owner);}else{self.pending_node.take();}return RetirementStep::Progress{released_items:1,released_bytes:0};}
         if let Some(entry)=self.pending_entry.as_mut(){if let Some(owner)=entry.take_owner(){self.retirement.push(owner);}else{self.pending_entry.take();}return RetirementStep::Progress{released_items:1,released_bytes:0};}
@@ -334,16 +334,16 @@ pub struct UpdateCursor<V> { state: ManuallyDrop<UpdateState<V>> }
 impl<V> UpdateCursor<V> {
     fn new(base: OrderedMap<V>, key: SharedOwner<String>, value: Option<SharedOwner<V>>) -> Self { Self { state: ManuallyDrop::new(UpdateState::new(base, key, value)) } }
     pub fn next_copy_byte_demand(&self)->usize{0}
-    pub fn next_capacity_byte_demand(&self)->Result<usize,crate::ValueError>{if self.state.closing||self.state.is_complete(){return Ok(0)}Ok(if self.state.pending_entry.is_some(){crate::retirement::arc_custody::shared_allocation_bytes::<Entry<V>>()}else if self.state.pending_node.is_some(){crate::retirement::arc_custody::shared_allocation_bytes::<Node<V>>()}else{0})}
+    pub fn next_capacity_byte_demand(&self)->Result<usize,ValueError>{if self.state.closing||self.state.is_complete(){return Ok(0)}Ok(if self.state.pending_entry.is_some(){crate::retirement::arc_custody::shared_allocation_bytes::<Entry<V>>()}else if self.state.pending_node.is_some(){crate::retirement::arc_custody::shared_allocation_bytes::<Node<V>>()}else{0})}
     pub fn next_depth_demand(&self)->usize{if self.state.closing||self.state.is_complete(){0}else{self.state.retained_depth().saturating_add(self.state.admission_growth()).max(1)}}
     pub fn last_compared_bytes(&self)->usize{self.state.last_compared_bytes}
     /// ⏩️ Every selected metadata probe or actual shared allocation is independently funded before effects.
     pub fn advance(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome{
-        self.state.last_compared_bytes=0;if self.state.closing{return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}if self.state.is_complete(){return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}let capacity=match self.next_capacity_byte_demand(){Ok(capacity)=>capacity,Err(error)=>return crate::RetainedWorkOutcome{result:Err(error),work:0}};if grant.maximum_items==0||grant.maximum_capacity_bytes<capacity{return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}if grant.maximum_depth<self.next_depth_demand(){return crate::RetainedWorkOutcome{result:Err(crate::ValueError::literal(crate::ValueRefusalKind::DepthLimit,"ordered update exceeds admitted metadata depth")),work:0}}self.state.advance(grant)
+        self.state.last_compared_bytes=0;if self.state.closing{return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}if self.state.is_complete(){return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}let capacity=match self.next_capacity_byte_demand(){Ok(capacity)=>capacity,Err(error)=>return crate::RetainedWorkOutcome{result:Err(error),work:0}};if grant.maximum_items==0||grant.maximum_capacity_bytes<capacity{return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}if grant.maximum_depth<self.next_depth_demand(){return crate::RetainedWorkOutcome{result:Err(ValueError::literal(crate::ValueRefusalKind::DepthLimit,"ordered update exceeds admitted metadata depth")),work:0}}self.state.advance(grant)
     }
     /// 🛬️ Native receiving folds the actual child work and all physical refusals after retaining its real state.
     pub fn advance_insert_controlled(&mut self,grant:RetainedCloneGrant,control:&mut crate::NativeDecodeControl<'_>)->crate::RetainedWorkOutcome<RetainedCloneStep,semio_framework_value_native_decoding::native_decoding::OriginalReceivingPrimary>{
-        if !self.state.insert{return crate::RetainedWorkOutcome{result:Err(crate::ValueError::literal(crate::ValueRefusalKind::InvalidValue,"controlled native ordered update requires an insert").into()),work:0}}let capacity=match self.next_capacity_byte_demand(){Ok(bytes)=>bytes,Err(error)=>return crate::RetainedWorkOutcome{result:Err(error.into()),work:0}};if self.state.closing||self.state.is_complete()||grant.maximum_items==0||grant.maximum_capacity_bytes<capacity||grant.maximum_depth<self.next_depth_demand(){let turn=self.advance(grant);return crate::RetainedWorkOutcome{result:turn.result.map_err(Into::into),work:turn.work}}if control.owned_bytes().checked_add(capacity).is_none_or(|next|next>control.maximum_bytes()){return crate::RetainedWorkOutcome{result:Err(crate::ValueError::literal(crate::ValueRefusalKind::OwnershipLimit,"native decoding ownership exceeds caller limit").into()),work:0}}if let Err(error)=control.checkpoint(){return crate::RetainedWorkOutcome{result:Err(error.into()),work:0}}let turn=self.advance(grant);control.receive_retained_work(grant,turn)
+        if !self.state.insert{return crate::RetainedWorkOutcome{result:Err(ValueError::literal(crate::ValueRefusalKind::InvalidValue,"controlled native ordered update requires an insert").into()),work:0}}let capacity=match self.next_capacity_byte_demand(){Ok(bytes)=>bytes,Err(error)=>return crate::RetainedWorkOutcome{result:Err(error.into()),work:0}};if self.state.closing||self.state.is_complete()||grant.maximum_items==0||grant.maximum_capacity_bytes<capacity||grant.maximum_depth<self.next_depth_demand(){let turn=self.advance(grant);return crate::RetainedWorkOutcome{result:turn.result.map_err(Into::into),work:turn.work}}if control.owned_bytes().checked_add(capacity).is_none_or(|next|next>control.maximum_bytes()){return crate::RetainedWorkOutcome{result:Err(ValueError::literal(crate::ValueRefusalKind::OwnershipLimit,"native decoding ownership exceeds caller limit").into()),work:0}}if let Err(error)=control.checkpoint(){return crate::RetainedWorkOutcome{result:Err(error.into()),work:0}}let turn=self.advance(grant);control.receive_retained_work(grant,turn)
     }
     pub fn is_complete(&self) -> bool { self.state.is_complete() }
     pub fn take_result(&mut self) -> Option<OrderedMap<V>> { self.state.take_result() }
@@ -352,7 +352,7 @@ impl<V> UpdateCursor<V> {
     pub fn begin_close(&mut self) { self.state.begin_close(); }
     pub fn close_step(&mut self, grant: RetainedCloneGrant) -> RetirementStep<V> { self.state.close_step(grant) }
     pub fn last_close_work(&self)->u64{self.state.last_close_work}
-    pub fn next_close_byte_demand(&self)->Result<usize,crate::ValueError>{self.state.retirement.next_close_byte_demand()}
+    pub fn next_close_byte_demand(&self)->Result<usize,ValueError>{self.state.retirement.next_close_byte_demand()}
     pub fn next_close_copy_byte_demand(&self)->usize{self.state.retirement.next_copy_byte_demand()}
     pub fn next_close_depth_demand(&self)->usize{(self.state.retained_depth()+self.state.retirement.next_depth_demand()).max(usize::from(!self.terminal_is_empty()))}
     pub fn terminal_is_empty(&self) -> bool { self.state.terminal_is_empty() }
@@ -396,7 +396,7 @@ impl<V> LookupState<V> {
         if self.terminal_is_empty(){return RetirementStep::Complete;}
         if !self.closing || grant.maximum_items == 0 { return RetirementStep::Blocked; }
         if !self.retirement.is_empty() { let step=self.retirement.advance(grant);self.last_close_work=self.retirement.last_turn_work();return step; }
-        if grant.maximum_depth==0{return RetirementStep::Failure(crate::ValueError::literal(crate::ValueRefusalKind::DepthLimit,"ordered close requires admitted metadata depth"));}
+        if grant.maximum_depth==0{return RetirementStep::Failure(ValueError::literal(crate::ValueRefusalKind::DepthLimit,"ordered close requires admitted metadata depth"));}
         self.last_close_work=1;
         if let Some(node) = self.current.take().or_else(|| self.base.root.take()) { self.retirement.push(Owner::Node(node)); }
         else if let Some(key) = self.key.take() { self.retirement.push(Owner::Key(key)); }
@@ -424,7 +424,7 @@ impl<V> LookupCursor<V> {
     pub fn begin_close(&mut self) { self.state.closing = true; }
     pub fn close_step(&mut self, grant: RetainedCloneGrant) -> RetirementStep<V> { self.state.close_step(grant) }
     pub fn last_close_work(&self)->u64{self.state.last_close_work}
-    pub fn next_close_byte_demand(&self)->Result<usize,crate::ValueError>{self.state.retirement.next_close_byte_demand()}
+    pub fn next_close_byte_demand(&self)->Result<usize,ValueError>{self.state.retirement.next_close_byte_demand()}
     pub fn next_close_copy_byte_demand(&self)->usize{self.state.retirement.next_copy_byte_demand()}
     pub fn next_close_depth_demand(&self)->usize{self.state.retained_depth()+self.state.retirement.next_depth_demand()}
     pub fn terminal_is_empty(&self) -> bool { self.state.terminal_is_empty() }
@@ -442,7 +442,7 @@ enum Owner<V> {
     Node(Arc<Node<V>>), Entry(Arc<Entry<V>>), Key(SharedOwner<String>), Value(SharedOwner<V>),
 }
 /// 🪜️ OwnedValue transfers final payload ownership to the caller's domain retirement cursor.
-pub enum RetirementStep<V> { Blocked, Progress { released_items: usize, released_bytes: usize }, ProcessedBytes(usize), OwnedValue(V), Failure(crate::ValueError), Complete }
+pub enum RetirementStep<V> { Blocked, Progress { released_items: usize, released_bytes: usize }, ProcessedBytes(usize), OwnedValue(V), Failure(ValueError), Complete }
 
 #[must_use = "retirement owners must be drained before drop"]
 pub struct Retirement<V> {
@@ -490,7 +490,7 @@ impl<V> Retirement<V> {
         }
     }
     fn retained_depth(&self)->usize{self.length+usize::from(self.payload.is_some())+usize::from(self.key_bytes.is_some())}
-    pub fn next_close_byte_demand(&self) -> Result<usize, crate::ValueError> {
+    pub fn next_close_byte_demand(&self) -> Result<usize, ValueError> {
         if self.payload.is_some(){return Ok(0);}
         if let Some(bytes)=self.key_bytes.as_ref(){return Ok(if bytes.is_empty(){bytes.capacity()}else{0});}
         Ok(match self.length.checked_sub(1).and_then(|index| self.owners[index].as_ref()) {
@@ -508,7 +508,7 @@ impl<V> Retirement<V> {
         self.last_work=0;
         if self.is_empty(){return RetirementStep::Complete;}
         if grant.maximum_items == 0 { return RetirementStep::Blocked; }
-        if grant.maximum_depth<self.next_depth_demand(){return RetirementStep::Failure(crate::ValueError::literal(crate::ValueRefusalKind::DepthLimit,"ordered retirement frontier exceeds admitted depth"));}
+        if grant.maximum_depth<self.next_depth_demand(){return RetirementStep::Failure(ValueError::literal(crate::ValueRefusalKind::DepthLimit,"ordered retirement frontier exceeds admitted depth"));}
         if let Some(values)=self.key_bytes.as_mut(){if !values.is_empty(){let bytes=values.len();self.last_work=1;values.clear();return RetirementStep::ProcessedBytes(bytes);}}
         let demand=match self.next_close_byte_demand(){Ok(bytes)=>bytes,Err(error)=>return RetirementStep::Failure(error)};
         if demand>grant.maximum_release_bytes{return RetirementStep::Blocked;}

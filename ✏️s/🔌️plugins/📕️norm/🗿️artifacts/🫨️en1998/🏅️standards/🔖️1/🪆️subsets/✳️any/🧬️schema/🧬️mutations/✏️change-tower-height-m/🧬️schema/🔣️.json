@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-tower-height-m/schema.json",
+  "title": "ChangeTowerHeightM",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newHeightM"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeTowerHeightM"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Tower",
+          "de": "Turm"
+        },
+        "description": {
+          "en": "The tower this mutation addresses, by id.",
+          "de": "Das adressierte Element (Turm), per Kennung."
+        },
+        "ref": {
+          "kind": "tower"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newHeightM": {
+      "type": "number",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Tower height",
+          "de": "Turmhöhe"
+        },
+        "group": "value",
+        "order": 20,
+        "widget": "stepper",
+        "step": 0.001,
+        "precision": 3
+      }
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "InsertFootbridge": {
+    "index": 1,
+    "item": {
+      "id": "footbridge-1-new",
+      "loadedLength": 1.5,
+      "deckWidth": 1.5,
+      "naturalFrequency": 1.5,
+      "assumedServiceAxle": 0.0
+    }
+  }
+}

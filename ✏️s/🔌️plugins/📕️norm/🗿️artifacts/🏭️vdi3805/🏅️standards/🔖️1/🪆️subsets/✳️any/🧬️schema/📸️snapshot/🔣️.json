@@ -1660,7 +1660,8 @@
         "heatTransferCoefficient",
         "airPermeability",
         "ventilationRate",
-        "acceleration"
+        "acceleration",
+        "velocity"
       ],
       "x-semio-ui": {
         "options": {
@@ -1739,6 +1740,10 @@
           "acceleration": {
             "en": "Acceleration",
             "de": "Beschleunigung"
+          },
+          "velocity": {
+            "en": "Velocity",
+            "de": "Geschwindigkeit"
           }
         }
       }

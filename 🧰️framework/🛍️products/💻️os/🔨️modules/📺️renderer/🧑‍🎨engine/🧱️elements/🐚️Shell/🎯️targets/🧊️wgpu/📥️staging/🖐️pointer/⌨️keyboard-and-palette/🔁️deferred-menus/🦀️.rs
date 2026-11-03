@@ -73,6 +73,12 @@ impl<'ctx> PointerCtx<'ctx> {
         self.windows.arm_window_blur_host_event(&mut self.settle, &self.plugins, &self.docs);
         self.as_window_actions().arm_host_window_blur();
         let mut worked = self.step_import_transfers().await;
+        for (gesture, x, y) in std::mem::take(&mut self.settle.touch_gestures) {
+            worked = worked.saturating_add(1);
+            if let Err(error) = self.handle_touch_gesture(gesture, x, y).await {
+                debug_log(&format!("[TRACE] wgpu-shell touch gesture failed: {error}"));
+            }
+        }
         for _ in 0..SHELL_DEFERRED_CHAIN_ROUNDS {
             let actions = std::mem::take(&mut self.settle.deferred_actions);
             #[cfg(target_arch = "wasm32")]
@@ -131,7 +137,7 @@ impl<'ctx> PointerCtx<'ctx> {
         let parked = !self.plugins.pending_extension_invocations.is_empty() || !self.opening.pending_file_opens.is_empty();
         #[cfg(not(target_arch = "wasm32"))]
         let parked = false;
-        let armed_work = !self.settle.deferred_actions.is_empty() || self.opening.pending_shell_uri_apply || parked || host_window_blur_pending() || !self.opening.import_transfers.is_empty();
+        let armed_work = !self.settle.deferred_actions.is_empty() || !self.settle.touch_gestures.is_empty() || self.opening.pending_shell_uri_apply || parked || host_window_blur_pending() || !self.opening.import_transfers.is_empty();
         let computing = self.surfaces.live_compute_surfaces().any(|(surface_id, _)| !self.settle.settle_pump.watches.get(&surface_id).is_some_and(|watch| watch.standing));
         self.opening.icon_export.as_ref().is_some_and(IconExportBatch::running) || semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::ui_document_close_pending() || settle_pump_owes(self.settle.settling, self.docs.session.is_some(), armed_work, &self.settle.owed_refresh_scope, self.settle.settle_pump.owed, computing)
     }
@@ -254,7 +260,11 @@ impl<'ctx> PointerCtx<'ctx> {
     pub async fn open_context_menu(&mut self, x: f32, y: f32, hit: Option<HitTarget<ActionDescriptor>>) {
         let node_id = hit.as_ref().and_then(|hit| hit.control_id.as_deref().and_then(|id| id.rsplit_once(".node.").map(|(_, node_id)| node_id.to_string())));
         let edge_id = hit.as_ref().and_then(|hit| hit.control_id.as_deref().and_then(|id| id.rsplit_once(".edge.").map(|(_, edge_id)| edge_id.to_string())));
-        let ContextMenuSurfaceResolution { surface_id, kind, hits, selection: selection_groups, text: text_context } = self.input.resolve_context_menu_surface(x, y, node_id.as_deref(), edge_id.as_deref(), &self.surfaces);
+        let tree_item_id = hit.as_ref().and_then(|hit| hit.control_id.as_deref().and_then(tree_hit_item_id).map(str::to_string));
+        let ContextMenuSurfaceResolution { surface_id, kind, mut hits, selection: selection_groups, text: text_context } = self.input.resolve_context_menu_surface(x, y, node_id.as_deref(), edge_id.as_deref(), &self.surfaces);
+        if let Some(id) = tree_item_id.filter(|_| !hits.iter().any(|hit| hit.domain == CONTEXT_MENU_TREE_HIT_DOMAIN)) {
+            hits.insert(0, semio_framework_ui_declaration::ui::ContextMenuHit { domain: CONTEXT_MENU_TREE_HIT_DOMAIN.into(), id, label: None });
+        }
         let window_instance_id = self.input.context_window_instance_id(x, y).map(str::to_string);
         let is_de = self.prefs.locale_id == "de";
         let mut items = Vec::new();
@@ -341,3 +351,6 @@ impl<'ctx> PointerCtx<'ctx> {
 
 }
 //#endregion ShellInput
+
+/// 🌳️ The `ContextMenuHit` domain of a row of a tree (outliner, checks list, any panel tree): its id is the tree item id, so an app answers a secondary click or the context-menu key on a row with the menu of that row.
+pub const CONTEXT_MENU_TREE_HIT_DOMAIN: &str = "tree";

@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-wind-bridge-parapet-kind/schema.json",
+  "title": "ChangeWindBridgeParapetKind",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newParapetKind"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Bridge wind case",
+          "de": "Brückenwindfall"
+        },
+        "description": {
+          "en": "The bridge wind case this mutation addresses, by id.",
+          "de": "Das adressierte Element (Brückenwindfall), per Kennung."
+        },
+        "ref": {
+          "kind": "wind-bridge"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newParapetKind": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255,
+      "x-semio-ui": {
+        "label": {
+          "en": "Parapet kind (0 none, 1 open, 2 solid)",
+          "de": "Geländerart (0 keine, 1 offen, 2 geschlossen)"
+        },
+        "widget": "stepper",
+        "precision": 0,
+        "step": 1,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

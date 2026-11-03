@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-cf-purlin-load/schema.json",
+  "title": "ChangeCfPurlinLoad",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newPurlinLoad"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Cold-formed member",
+          "de": "Kaltprofil"
+        },
+        "description": {
+          "en": "The cold-formed member this mutation addresses, by id.",
+          "de": "Das adressierte Element (Kaltprofil), per Kennung."
+        },
+        "ref": {
+          "kind": "cold-formed"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newPurlinLoad": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Purlin vertical design load q_Ed",
+          "de": "Pfetten-Bemessungsstreckenlast q_Ed"
+        },
+        "widget": "stepper",
+        "unit": "N/m",
+        "precision": 1,
+        "step": 10,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

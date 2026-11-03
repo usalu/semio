@@ -29,7 +29,7 @@ import { setInteractiveJobPort } from "@semio-tech/ui/elements/Ports/interactive
 import { TURN_DIAGNOSTICS_KEY, setTurnDiagnostics, turnDiagnosticsEnabled } from "../⏱️turn-budget/🟦️.ts";
 import { resolveRuntimeDiagnosticsPreference, stampShardWorkerDiagnostics } from "@semio-tech/framework-actor/diagnostics";
 import { describeBrowserBootPhase } from "../🫀️boot-liveness/🟦️.ts";
-import { WGPU_PREFERS_DARK_MEDIA_QUERY, readWgpuHostStorageSnapshot, resolveWgpuHostAppearance, resolveWgpuHostPlatform, wgpuReadinessBeacon, type WgpuBootDescriptor, type WgpuHostAppearance, type WgpuHostPlatform, type WgpuHostStorageSnapshot } from "../🧭️boot-descriptor/🟦️.ts";
+import { WGPU_PLATFORM_PREFS_MEDIA_QUERIES, WGPU_PREFERS_DARK_MEDIA_QUERY, readWgpuHostStorageSnapshot, resolveWgpuHostAppearance, resolveWgpuHostPlatform, resolveWgpuHostPlatformPrefs, wgpuReadinessBeacon, type WgpuBootDescriptor, type WgpuHostAppearance, type WgpuHostPlatform, type WgpuHostPlatformPrefs, type WgpuHostStorageSnapshot } from "../🧭️boot-descriptor/🟦️.ts";
 import { createAccessibilityMirror } from "../♿️accessibility-mirror/🟦️.ts";
 import { agentBridgeOfferScopeFromJsonV1, watchAgentBridgeOffer } from "@semio-tech/framework-os/modules/renderer/engine/elements/AgentBridge/offer";
 import { browserClipboardPasteCandidate, wireBrowserFullscreen, wireBrowserKeyboard } from "../🎮️input-wire/🟦️.ts";
@@ -50,6 +50,9 @@ function armUiTurnDiagnostics(): void {
     catch {
         setTurnDiagnostics(resolveRuntimeDiagnosticsPreference(undefined, serverDefault));
     }
+}
+function hostPlatformPrefs(): WgpuHostPlatformPrefs {
+    return resolveWgpuHostPlatformPrefs(window);
 }
 function hostAppearance(): WgpuHostAppearance {
     return resolveWgpuHostAppearance(window);
@@ -316,7 +319,7 @@ async function createWgpuBrowserHost(root: HTMLElement, options: WgpuBrowserHost
     const transport = new BrowserFrameTransport({
         originalWorkStock: rendererOriginalWorkStock(),
         worker,
-        boot: { catalog: options.catalog, nativeCatalog: options.nativeCatalog ?? emptyNativeCatalogV1(), bindingsModuleUrl: options.rendererModuleUrl ?? RENDERER_MODULE_URL, bindingsWasmUrl: options.rendererWasmUrl ?? RENDERER_WASM_URL, canvas: offscreen, width, height, dpr, plugins, pluginRegistrySelection: options.pluginRegistrySelection, locale: options.locale, introductionSuppressed: introductionSuppressed(options.suppressAutoIntroduction === true), descriptor, appearance: hostAppearance(), platform: hostPlatform(), storage: hostStorage() },
+        boot: { catalog: options.catalog, nativeCatalog: options.nativeCatalog ?? emptyNativeCatalogV1(), bindingsModuleUrl: options.rendererModuleUrl ?? RENDERER_MODULE_URL, bindingsWasmUrl: options.rendererWasmUrl ?? RENDERER_WASM_URL, canvas: offscreen, width, height, dpr, plugins, pluginRegistrySelection: options.pluginRegistrySelection, locale: options.locale, introductionSuppressed: introductionSuppressed(options.suppressAutoIntroduction === true), descriptor, appearance: hostAppearance(), platformPrefs: hostPlatformPrefs(), platform: hostPlatform(), storage: hostStorage() },
         requestAnimationFrame: (callback) => window.requestAnimationFrame(callback),
         cancelAnimationFrame: (handle) => window.cancelAnimationFrame(handle),
         hostIo: createWgpuPageHostIo(),
@@ -395,6 +398,9 @@ async function createWgpuBrowserHost(root: HTMLElement, options: WgpuBrowserHost
     const republishHostStorage = () => transport.setHostStorage(hostStorage());
     const darkQuery = window.matchMedia?.(WGPU_PREFERS_DARK_MEDIA_QUERY);
     darkQuery?.addEventListener("change", republishAppearance);
+    const republishPlatformPrefs = () => transport.setHostPlatformPrefs(hostPlatformPrefs());
+    const platformPrefsQueries = Object.values(WGPU_PLATFORM_PREFS_MEDIA_QUERIES).map((query) => window.matchMedia?.(query));
+    platformPrefsQueries.forEach((query) => query?.addEventListener("change", republishPlatformPrefs));
     window.addEventListener("storage", republishAppearance);
     window.addEventListener("storage", republishHostStorage);
     const stopAgentBridgeOffer = watchAgentBridgeOffer((offer) => transport.setHostAgentBridge(offer), { offerScope: async () => agentBridgeOfferScopeFromJsonV1(await transport.introspect("agent-bridge-scope")) });
@@ -410,6 +416,7 @@ async function createWgpuBrowserHost(root: HTMLElement, options: WgpuBrowserHost
         beacon.clear();
         resize.disconnect();
         darkQuery?.removeEventListener("change", republishAppearance);
+        platformPrefsQueries.forEach((query) => query?.removeEventListener("change", republishPlatformPrefs));
         window.removeEventListener("storage", republishAppearance);
         window.removeEventListener("storage", republishHostStorage);
         resolutionQuery?.removeEventListener("change", onResolutionChange);

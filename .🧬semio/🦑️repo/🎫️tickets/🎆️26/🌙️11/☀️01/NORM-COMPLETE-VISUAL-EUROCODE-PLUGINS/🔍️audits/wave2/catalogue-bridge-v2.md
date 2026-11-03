@@ -1,0 +1,20 @@
+# 🗂️ Catalogue bridge v2 (wave 2)
+
+Status: UNCOMPILED. Scripts: `🧰️scripts/catalogue-bridge-v2/` (lib, crates, leaves, twins, jsonspan, fixtures, harness, `en1995_*`, `en1997_*`, `shared_twins`). Per-code reports of the other four codes: `catalogue-bridge-v2-en1990|en1996|en1991|en1992.md` (written by the forked worker).
+
+## EN 1995 finish
+- `mut-cases` and `mut-case-inputs` deleted; 8 leaves (7 case kinds + `change-uls-equation`) in `semio-s-artifact-norm-en1995-mut-design-cases` (25 files, 445 lines; the earlier "32 files" claim was wrong, a leaf is 3 Rust files). Workspace, script.ts, build-owners, Cargo.lock, consumers and all `use` lines moved.
+- Twin definitions renamed to the shared names in snapshot, diff, sqlite ts and `insert-case` schema: `CaseRow`, `CaseNumber{Patch,...,Delta}`, `CaseText...`, `CaseRow{Patch,Removal,Insertion,Relocation,Modification,Delta}`. Shared twins (`⚖️compliance/🧰️design-case/🧬️schema/*`) renamed `DesignCase` -> `CaseRow` and gained the delta definitions (json, ts, graphql, proto).
+- Binary protocol: duplicate tag 71 fixed (set-case-number 72, set-case-text 73).
+- Clearing an input: `NormEditRules::resolve` falls back to `address_pending` when the addressed row id is absent, so `setField cases[id=C].numbers[id=k].value` creates a missing input and a `null` value clears it (kind `set-case-number` already maps `null` to removal); `resolve_set_fields` tolerates absent current values. Unit test `an_absent_row_is_addressed_by_its_id_so_the_set_kind_can_create_it`.
+
+## EN 1997: done (uncompiled)
+Model (`cases: Vec<CaseRow>` + demo case EQU-01), root artifact struct, 8 twins (snapshot/root json, ts, graphql, proto) and 4 diff twins (json `$defs` compact, ts compact, graphql, proto) with bare diff lane `cases: CaseRowDelta`; crate `semio-s-artifact-norm-en1997-mut-design-cases` (7 leaves: insert-case, remove-case, set-case-number, set-case-text, change-case-label-en/de, change-case-entry-id); root enum/KINDS/json/ts; DSL text variants (`value: Option<..>`), binary protocol records; edit rules (set/insert/remove); mutate harness rs/py/feature, oracle manifest, taxonomy, mutation and text unit tests; fixtures: 334 snapshot documents `cases: []`, 156 diff documents padded, 7 new apply vectors; SQLite: tables `en1997_case`, `_case_number`, `_case_text` (rs write/read/preflight, ts write/read, admission with field 19, 20 tables, schemaBytes 15894 and table widths in the semantic contract and test); checks (`evaluate_design_case` per case, duplicate ids), per-case live unit (`cases`), outline, field-meta (`case_input_field_meta` first), default utilisation diagram per case (projection-kit `case_diagram`), `catalogue_demo_cases()` (one seeded case per catalogue entry), `catalogue_demo_document()` and two tests (every entry evaluates; every case has a result in the document report).
+Open: 3D scene entity of a case; catalogue-browser insert palette (the 3D palette lists entity kinds; picking a catalogue entry needs a UI host around `case_catalogue_table`); sqlite fixture rows for a case (fixture keeps `cases: []` so `valueBytes` stay valid); en1997 binary protocol file lists 47 records for ~150 kinds (stale, owner/leaf-kinds regenerate from KINDS); 8 ts/proto diff twin duplicates created by leaf-kinds C (reported).
+
+## Units review
+Evidence read from evaluators for the guessed units: EN 1997 `m_dst_g/m_dst_q/m_stb_g/m_tension` are N·m (equ_01 `Outcome::moment`), `g_dst/q_dst/g_stb/r_d` N (upl_01 `Outcome::force`), `head` m with `gamma_w` N/m³ times area m² (upl_01 `water = h*gamma_w*area`) — consistent with the table; no unit changed. The remaining medium/low rows of the review list were not re-derived (no further evidence read in this pass).
+
+## Shared findings
+- `semio-s-plugin-norm-compliance` is over the 4000-line budget (4308 at 17:35), request filed.
+- Source-boundary scan of en1995 and en1997: clean. `repo ./📜️script.ts verify build-owners sync`: passed (before the forked worker added its crates; it re-runs it).

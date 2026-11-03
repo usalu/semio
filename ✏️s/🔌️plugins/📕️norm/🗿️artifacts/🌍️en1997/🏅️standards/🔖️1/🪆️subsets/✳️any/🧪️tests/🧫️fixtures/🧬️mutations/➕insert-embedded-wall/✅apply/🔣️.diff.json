@@ -1,0 +1,51 @@
+{
+  "structureId": null,
+  "geotechnicalCategory": null,
+  "designSituation": null,
+  "designApproach": null,
+  "annex": null,
+  "groundwaterLevel": null,
+  "investigationDepth": null,
+  "layers": null,
+  "footings": null,
+  "piles": null,
+  "retainingWalls": null,
+  "slopes": null,
+  "upliftCases": null,
+  "anchors": null,
+  "embeddedWalls": {
+    "removed": [],
+    "inserted": [
+      {
+        "index": 1,
+        "row": {
+          "id": "ewall-E1-2",
+          "kind": "freeEarth",
+          "retainedHeight": 4.0,
+          "embedment": 6.0,
+          "propDepth": 1.0,
+          "thickness": 0.6,
+          "backfillGamma": 19000.0,
+          "phiDeg": 32.0,
+          "deltaActiveDeg": 16.0,
+          "deltaPassiveDeg": 10.0,
+          "surcharge": 10000.0,
+          "undrainedStrength": 0.0
+        }
+      }
+    ],
+    "moved": [],
+    "modified": []
+  },
+  "pileGroups": null,
+  "labTests": null,
+  "layerWaters": null,
+  "cases": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "investigations": null,
+  "characteristicBases": null
+}

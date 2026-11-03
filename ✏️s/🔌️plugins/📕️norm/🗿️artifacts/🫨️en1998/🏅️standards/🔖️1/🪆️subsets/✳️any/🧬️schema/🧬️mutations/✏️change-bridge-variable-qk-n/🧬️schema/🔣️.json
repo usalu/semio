@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-bridge-variable-qk-n/schema.json",
+  "title": "ChangeBridgeVariableQkN",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "bridgeId",
+    "id",
+    "newQkN"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeBridgeVariableQkN"
+    },
+    "bridgeId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Bridge",
+          "de": "Brücke"
+        },
+        "description": {
+          "en": "The bridge this mutation addresses, by id.",
+          "de": "Das adressierte Element (Brücke), per Kennung."
+        },
+        "ref": {
+          "kind": "bridge"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Variable action",
+          "de": "Veränderliche Einwirkung"
+        },
+        "description": {
+          "en": "The variable action this mutation addresses, by id.",
+          "de": "Das adressierte Element (Veränderliche Einwirkung), per Kennung."
+        },
+        "ref": {
+          "kind": "variable-action"
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "newQkN": {
+      "type": "number",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Variable action Q_k",
+          "de": "Veränderliche Einwirkung Q_k"
+        },
+        "group": "value",
+        "order": 30,
+        "widget": "stepper",
+        "step": 0.001,
+        "precision": 3
+      }
+    }
+  }
+}

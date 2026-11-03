@@ -1,0 +1,5 @@
+{
+  "mutation": "changeTowerCorrelatedOccupancy",
+  "id": "tw-1",
+  "newCorrelatedOccupancy": false
+}

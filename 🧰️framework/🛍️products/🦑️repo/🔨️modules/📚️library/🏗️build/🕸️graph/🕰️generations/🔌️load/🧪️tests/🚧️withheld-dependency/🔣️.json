@@ -544,35 +544,35 @@
     {
       "name": "the partial graph withholds against the kept projects of the previous generation",
       "start": "export async function discoverBuildGraphPartV1(",
-      "end": "/** 🧺️ Keeps exactly the discovered files",
+      "end": "/** 🧳️ Keeps exactly the discovered files",
       "before": "const kept=stubs.filter(",
       "after": "withholdDanglingTestProjectsV1({"
     },
     {
       "name": "the partial graph withholds before it derives the environment and the file map",
       "start": "export async function discoverBuildGraphPartV1(",
-      "end": "/** 🧺️ Keeps exactly the discovered files",
+      "end": "/** 🧳️ Keeps exactly the discovered files",
       "before": "withholdDanglingTestProjectsV1({",
       "after": "const listed=["
     },
     {
       "name": "the partial graph withholds before the dependencies of the test projects are inferred",
       "start": "export async function discoverBuildGraphPartV1(",
-      "end": "/** 🧺️ Keeps exactly the discovered files",
+      "end": "/** 🧳️ Keeps exactly the discovered files",
       "before": "withholdDanglingTestProjectsV1({",
       "after": "tests.discoverTestBuildDependenciesV1("
     },
     {
       "name": "a withheld test project keeps its tag so the next run replaces it",
       "start": "export async function discoverBuildGraphPartV1(",
-      "end": "/** 🧺️ Keeps exactly the discovered files",
+      "end": "/** 🧳️ Keeps exactly the discovered files",
       "before": "tags[row.project!]",
       "after": "unavailable:row,nodeRows:nodeRows[row.project!]"
     },
     {
       "name": "a withheld test stub no longer hides files of a project that is back",
       "start": "export async function discoverBuildGraphPartV1(",
-      "end": "/** 🧺️ Keeps exactly the discovered files",
+      "end": "/** 🧳️ Keeps exactly the discovered files",
       "before": "!stub.tag&&stub.kind===\"unavailable\"",
       "after": "projectFileMap:Record<string,{file:string}[]>"
     }

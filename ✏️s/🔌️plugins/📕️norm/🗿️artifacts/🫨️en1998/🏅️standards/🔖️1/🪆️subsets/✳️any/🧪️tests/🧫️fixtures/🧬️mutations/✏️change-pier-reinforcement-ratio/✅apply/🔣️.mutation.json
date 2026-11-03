@@ -1,0 +1,5 @@
+{
+  "mutation": "changePierReinforcementRatio",
+  "id": "pier-1",
+  "newReinforcementRatio": 1.5
+}

@@ -1,0 +1,47 @@
+{
+  "artifact": "en1991",
+  "collections": [
+    {
+      "camel": "placements",
+      "entity": "Placement",
+      "table": "placement",
+      "after": "roofSurfaces",
+      "emoji": "📍️",
+      "doc": "Persisted pose of one scene entity (`id` is the entity id; SI: m, rad). Entities without a placement follow the documented default layout.",
+      "label_en": "Placements",
+      "label_de": "Platzierungen",
+      "id_en": "Placed entity id",
+      "id_de": "Platzierte Element-Id",
+      "fields": [
+        {
+          "name": "x",
+          "ty": "f64",
+          "unit": "m",
+          "en": "Placement x",
+          "de": "Platzierung x"
+        },
+        {
+          "name": "y",
+          "ty": "f64",
+          "unit": "m",
+          "en": "Placement y",
+          "de": "Platzierung y"
+        },
+        {
+          "name": "z",
+          "ty": "f64",
+          "unit": "m",
+          "en": "Placement z",
+          "de": "Platzierung z"
+        },
+        {
+          "name": "yaw",
+          "ty": "f64",
+          "unit": "rad",
+          "en": "Placement yaw about Z",
+          "de": "Platzierung Gierwinkel um Z"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "mutation": "insertReliabilityAnalysis",
+  "index": 1,
+  "item": {
+    "id": "rel-1-new",
+    "resistanceDistribution": "normal",
+    "resistanceMean": 1.0,
+    "resistanceSd": 1.0,
+    "actionDistribution": "normal",
+    "actionMean": 1.0,
+    "actionSd": 1.0
+  }
+}

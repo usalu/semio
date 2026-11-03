@@ -1,11 +1,11 @@
 /** 🧈 `change-fm` wire twin: the leaf payload `ChangeFm`, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
- * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
+ * by `repo ./📜️script.ts schema twins generate`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
-import { normWireInteger, normWireNumber, normWireObject, normWireRange, type NormWireReader, normWireRequired } from "@semio-tech/norm-js/registry/contract";
+import { normWireNumber, normWireObject, normWireRange, normWireRequired, normWireString, type NormWireReader } from "@semio-tech/norm-js/registry/contract";
 
 export interface ChangeFm {
-  index: number;
+  id: string;
   newMortarStrengthPa: number;
 }
 
-export const parseChangeFm: NormWireReader<ChangeFm> = normWireObject<ChangeFm>({ index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), newMortarStrengthPa: normWireRequired(normWireRange(normWireNumber, {"minimum":0})) });
+export const parseChangeFm: NormWireReader<ChangeFm> = normWireObject<ChangeFm>({ id: normWireRequired(normWireString), newMortarStrengthPa: normWireRequired(normWireRange(normWireNumber, {"minimum":0,"maximum":1000000000000})) });

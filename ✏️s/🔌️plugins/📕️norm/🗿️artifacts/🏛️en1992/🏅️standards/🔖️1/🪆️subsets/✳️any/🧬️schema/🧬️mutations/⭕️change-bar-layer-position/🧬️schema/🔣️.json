@@ -1,0 +1,69 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-bar-layer-position/schema.json",
+  "title": "ChangeBarLayerPosition",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "memberId",
+    "layerId",
+    "newPosition"
+  ],
+  "properties": {
+    "memberId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Member",
+          "de": "Bauteil"
+        },
+        "description": {
+          "en": "The member this mutation addresses, by id.",
+          "de": "Das adressierte Element (Bauteil), per Kennung."
+        },
+        "ref": {
+          "kind": "member"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "layerId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Bar layer",
+          "de": "Bewehrungslage"
+        },
+        "description": {
+          "en": "The bar layer this mutation addresses, by id.",
+          "de": "Das adressierte Element (Bewehrungslage), per Kennung."
+        },
+        "ref": {
+          "kind": "layer"
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "newPosition": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/$defs/BarPosition",
+      "x-semio-ui": {
+        "label": {
+          "en": "position",
+          "de": "Lage"
+        },
+        "role": "value",
+        "group": "value",
+        "order": 30
+      },
+      "x-semio-rust": {
+        "type": "BarPosition"
+      }
+    }
+  }
+}

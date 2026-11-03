@@ -1,0 +1,6 @@
+{
+  "ChangePlatedLongitudinalInertia": {
+    "id": "pp-1",
+    "newLongitudinalInertia": 1.5
+  }
+}

@@ -1,0 +1,601 @@
+{
+ "artifact": "en1998",
+ "conversions": [
+  {
+   "hosts": [
+    "En1998System.direction"
+   ],
+   "enum": "AnalysisDirection",
+   "doc": "🧭 Horizontal analysis direction of a lateral-force-resisting system (plan axis x or y).",
+   "default": "X",
+   "variants": [
+    [
+     "X",
+     [
+      "x"
+     ],
+     "X direction",
+     "Richtung X"
+    ],
+    [
+     "Y",
+     [
+      "y"
+     ],
+     "Y direction",
+     "Richtung Y"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "En1998Building.t1_method"
+   ],
+   "enum": "T1Method",
+   "doc": "⏱️ Method for the fundamental period T₁ (EN 1998-1 4.3.3.2.2): simplified Ct·H^¾, Rayleigh, or a given period.",
+   "default": "Ct",
+   "variants": [
+    [
+     "Ct",
+     [
+      "ct"
+     ],
+     "Simplified (Ct·H^¾)",
+     "Vereinfacht (Ct·H^¾)"
+    ],
+    [
+     "Rayleigh",
+     [
+      "rayleigh"
+     ],
+     "Rayleigh",
+     "Rayleigh"
+    ],
+    [
+     "Given",
+     [
+      "given"
+     ],
+     "Given period",
+     "Vorgegebene Periode"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "En1998Building.drift_limit_class"
+   ],
+   "enum": "DriftLimitClass",
+   "doc": "↔️ Non-structural element class for the damage-limitation drift limit (EN 1998-1 4.4.3.2).",
+   "default": "Ductile",
+   "variants": [
+    [
+     "Brittle",
+     [
+      "brittle",
+      ""
+     ],
+     "Brittle non-structural",
+     "Spröde nichttragend"
+    ],
+    [
+     "Ductile",
+     [
+      "ductile"
+     ],
+     "Ductile non-structural",
+     "Duktil nichttragend"
+    ],
+    [
+     "Isolated",
+     [
+      "isolated"
+     ],
+     "Isolated non-structural",
+     "Getrennt nichttragend"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "En1998Assessment.limit_state"
+   ],
+   "enum": "LimitState",
+   "doc": "🎯 Limit state of an existing-building assessment (EN 1998-3 2.1): NC, SD or DL.",
+   "default": "Sd",
+   "variants": [
+    [
+     "Nc",
+     [
+      "nc"
+     ],
+     "Near collapse (NC)",
+     "Nahe dem Kollaps (NC)"
+    ],
+    [
+     "Sd",
+     [
+      "sd"
+     ],
+     "Significant damage (SD)",
+     "Bedeutende Schädigung (SD)"
+    ],
+    [
+     "Dl",
+     [
+      "dl"
+     ],
+     "Damage limitation (DL)",
+     "Schadensbegrenzung (DL)"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "En1998Site.en_ground_type"
+   ],
+   "enum": "EnGroundType",
+   "doc": "🪨 EN 1998-1 ground type (Table 3.1) of the EN annex site.",
+   "default": "A",
+   "variants": [
+    [
+     "A",
+     [
+      "a",
+      "A"
+     ],
+     "Ground type A",
+     "Baugrundtyp A"
+    ],
+    [
+     "B",
+     [
+      "b",
+      "B"
+     ],
+     "Ground type B",
+     "Baugrundtyp B"
+    ],
+    [
+     "C",
+     [
+      "c",
+      "C"
+     ],
+     "Ground type C",
+     "Baugrundtyp C"
+    ],
+    [
+     "D",
+     [
+      "d",
+      "D"
+     ],
+     "Ground type D",
+     "Baugrundtyp D"
+    ],
+    [
+     "E",
+     [
+      "e",
+      "E"
+     ],
+     "Ground type E",
+     "Baugrundtyp E"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "En1998Site.en_spectrum_type"
+   ],
+   "enum": "EnSpectrumType",
+   "doc": "📈 EN 1998-1 3.2.2.2 elastic response spectrum type.",
+   "default": "Type1",
+   "variants": [
+    [
+     "Type1",
+     [
+      "type1",
+      ""
+     ],
+     "Type 1 spectrum",
+     "Spektrum Typ 1"
+    ],
+    [
+     "Type2",
+     [
+      "type2"
+     ],
+     "Type 2 spectrum",
+     "Spektrum Typ 2"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "En1998Site.importance_class"
+   ],
+   "enum": "ImportanceClass",
+   "doc": "🏛 Importance class I to IV of the building (EN 1998-1 4.2.5).",
+   "default": "II",
+   "variants": [
+    [
+     "I",
+     [
+      "i"
+     ],
+     "Class I",
+     "Bedeutungskategorie I"
+    ],
+    [
+     "II",
+     [
+      "ii"
+     ],
+     "Class II",
+     "Bedeutungskategorie II"
+    ],
+    [
+     "III",
+     [
+      "iii"
+     ],
+     "Class III",
+     "Bedeutungskategorie III"
+    ],
+    [
+     "IV",
+     [
+      "iv"
+     ],
+     "Class IV",
+     "Bedeutungskategorie IV"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "En1998System.system_type"
+   ],
+   "enum": "SystemType",
+   "doc": "🏗 Structural type of a lateral-force-resisting system (EN 1998-1 5.1.2, 6.3.1, 7.2.1).",
+   "default": "Frame",
+   "variants": [
+    [
+     "Frame",
+     [
+      "frame",
+      ""
+     ],
+     "Moment frame",
+     "Rahmen"
+    ],
+    [
+     "Wall",
+     [
+      "wall"
+     ],
+     "Wall system",
+     "Wandsystem"
+    ],
+    [
+     "Dual",
+     [
+      "dual"
+     ],
+     "Dual system",
+     "Dualsystem"
+    ],
+    [
+     "Masonry",
+     [
+      "masonry"
+     ],
+     "Masonry",
+     "Mauerwerk"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "En1998System.material",
+    "En1998Member.material"
+   ],
+   "enum": "StructuralMaterial",
+   "doc": "🧱 Structural material of a system or member.",
+   "default": "Rc",
+   "variants": [
+    [
+     "Rc",
+     [
+      "rc",
+      ""
+     ],
+     "Reinforced concrete",
+     "Stahlbeton"
+    ],
+    [
+     "Steel",
+     [
+      "steel"
+     ],
+     "Steel",
+     "Stahl"
+    ],
+    [
+     "Composite",
+     [
+      "composite"
+     ],
+     "Composite",
+     "Verbund"
+    ],
+    [
+     "Timber",
+     [
+      "timber"
+     ],
+     "Timber",
+     "Holz"
+    ],
+    [
+     "Masonry",
+     [
+      "masonry"
+     ],
+     "Masonry",
+     "Mauerwerk"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "En1998System.ductility_class"
+   ],
+   "enum": "DuctilityClass",
+   "doc": "📐 Ductility class DCL, DCM or DCH (EN 1998-1 5.2.1).",
+   "default": "Dcm",
+   "variants": [
+    [
+     "Dcl",
+     [
+      "dcl"
+     ],
+     "DCL (low)",
+     "DCL (niedrig)"
+    ],
+    [
+     "Dcm",
+     [
+      "dcm"
+     ],
+     "DCM (medium)",
+     "DCM (mittel)"
+    ],
+    [
+     "Dch",
+     [
+      "dch"
+     ],
+     "DCH (high)",
+     "DCH (hoch)"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "En1998Assessment.knowledge_level"
+   ],
+   "enum": "KnowledgeLevel",
+   "doc": "🔍 Knowledge level KL1 to KL3 of an existing building (EN 1998-3 3.3).",
+   "default": "Kl1",
+   "variants": [
+    [
+     "Kl1",
+     [
+      "kl1"
+     ],
+     "KL1 (limited knowledge)",
+     "KL1 (begrenzte Kenntnis)"
+    ],
+    [
+     "Kl2",
+     [
+      "kl2"
+     ],
+     "KL2 (normal knowledge)",
+     "KL2 (normale Kenntnis)"
+    ],
+    [
+     "Kl3",
+     [
+      "kl3"
+     ],
+     "KL3 (full knowledge)",
+     "KL3 (vollständige Kenntnis)"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "En1998Diaphragm.material"
+   ],
+   "enum": "DiaphragmMaterial",
+   "doc": "🧱 Material of a floor diaphragm.",
+   "default": "Concrete",
+   "variants": [
+    [
+     "Concrete",
+     [
+      "concrete"
+     ],
+     "Concrete",
+     "Beton"
+    ],
+    [
+     "Timber",
+     [
+      "timber"
+     ],
+     "Timber",
+     "Holz"
+    ],
+    [
+     "SteelDeck",
+     [
+      "steel-deck",
+      "steel",
+      "steeldeck"
+     ],
+     "Steel deck",
+     "Stahlprofiltafel"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "En1998Bearing.device"
+   ],
+   "enum": "BearingDevice",
+   "doc": "⚙ Bearing device type of a bridge bearing.",
+   "default": "Fixed",
+   "variants": [
+    [
+     "Fixed",
+     [
+      "fixed"
+     ],
+     "Fixed",
+     "Fest"
+    ],
+    [
+     "Elastomeric",
+     [
+      "elastomeric"
+     ],
+     "Elastomeric",
+     "Elastomer"
+    ],
+    [
+     "Sliding",
+     [
+      "sliding"
+     ],
+     "Sliding",
+     "Gleitend"
+    ],
+    [
+     "Isolator",
+     [
+      "isolator"
+     ],
+     "Isolator",
+     "Isolator"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "En1998VariableAction.category",
+    "En1998Silo.content_category",
+    "En1998Tank.content_category"
+   ],
+   "enum": "ImposedCategory",
+   "doc": "📦 Imposed-load or content category of an EN 1990 Table A1.1 action (psi_2 row).",
+   "default": "B",
+   "variants": [
+    [
+     "A",
+     [
+      "a",
+      "residential"
+     ],
+     "Residential (A)",
+     "Wohnen (A)"
+    ],
+    [
+     "B",
+     [
+      "b",
+      "office",
+      ""
+     ],
+     "Office (B)",
+     "Büro (B)"
+    ],
+    [
+     "C",
+     [
+      "c",
+      "congregation"
+     ],
+     "Congregation (C)",
+     "Versammlung (C)"
+    ],
+    [
+     "D",
+     [
+      "d",
+      "retail"
+     ],
+     "Retail (D)",
+     "Verkauf (D)"
+    ],
+    [
+     "E",
+     [
+      "e",
+      "storage"
+     ],
+     "Storage (E)",
+     "Lager (E)"
+    ],
+    [
+     "F",
+     [
+      "f",
+      "traffic"
+     ],
+     "Traffic (F)",
+     "Verkehr (F)"
+    ],
+    [
+     "G",
+     [
+      "g",
+      "vehicles"
+     ],
+     "Vehicles (G)",
+     "Fahrzeuge (G)"
+    ],
+    [
+     "H",
+     [
+      "h",
+      "roofs"
+     ],
+     "Roofs (H)",
+     "Dächer (H)"
+    ],
+    [
+     "Snow",
+     [
+      "snow"
+     ],
+     "Snow",
+     "Schnee"
+    ],
+    [
+     "Wind",
+     [
+      "wind"
+     ],
+     "Wind",
+     "Wind"
+    ]
+   ]
+  }
+ ],
+ "wire": "camel"
+}

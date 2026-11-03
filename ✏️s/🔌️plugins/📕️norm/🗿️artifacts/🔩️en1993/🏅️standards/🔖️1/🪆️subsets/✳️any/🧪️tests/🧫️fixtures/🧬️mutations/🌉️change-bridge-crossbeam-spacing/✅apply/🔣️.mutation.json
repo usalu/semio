@@ -1,0 +1,6 @@
+{
+  "ChangeBridgeCrossbeamSpacing": {
+    "id": "br-1",
+    "newCrossbeamSpacing": 1.5
+  }
+}

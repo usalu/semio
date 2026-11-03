@@ -1,0 +1,6 @@
+{
+  "ChangeRowJointId": {
+    "id": "row-1",
+    "newJointId": "joint-ep-alt"
+  }
+}

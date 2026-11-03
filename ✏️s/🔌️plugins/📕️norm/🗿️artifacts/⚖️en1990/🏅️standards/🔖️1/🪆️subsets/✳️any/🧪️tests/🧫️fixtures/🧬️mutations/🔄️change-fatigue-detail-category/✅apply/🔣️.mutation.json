@@ -1,0 +1,5 @@
+{
+  "mutation": "changeFatigueDetailCategory",
+  "id": "fat-1",
+  "newDetailCategory": 2.0
+}

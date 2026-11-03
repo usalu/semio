@@ -42,7 +42,7 @@
         "unit": "m²",
         "displayUnit": "cm²",
         "displayFactor": 10000,
-        "step": 1e-06,
+        "step": 0.000001,
         "precision": 2,
         "group": "anchor",
         "order": 20

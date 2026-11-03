@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-site-below-alluvium-vsms/schema.json",
+  "title": "ChangeSiteBelowAlluviumVSMS",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "newBelowAlluviumVSMS"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeSiteBelowAlluviumVSMS"
+    },
+    "newBelowAlluviumVSMS": {
+      "type": "number",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Shear wave velocity of the substratum below the alluvium (E indicator)",
+          "de": "Scherwellengeschwindigkeit des Untergrunds unter der Alluvionsschicht (E-Kennzeichen)"
+        },
+        "group": "value",
+        "order": 10,
+        "widget": "stepper",
+        "step": 0.001,
+        "precision": 3
+      }
+    }
+  }
+}

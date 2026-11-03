@@ -1,12 +1,36 @@
 syntax = "proto3";
-package semio.s.norm.en1995.diff;
+package semio.s.norm.en1995;
 message En1995Diff {
   // @state artifact
-  bytes artifact = 1;
+  optional string annex = 1;
   // @state artifact
-  string annex = 2;
+  En1995MemberDelta members = 2;
   // @state artifact
-  bytes members = 3;
+  En1995ConnectionDelta connections = 3;
   // @state artifact
-  bytes connections = 4;
+  En1995PlacementDelta placements = 4;
+  // @state artifact
+  En1995TaperDelta tapers = 5;
+  // @state artifact
+  En1995CutoutDelta cutouts = 6;
+  // @state artifact
+  En1995FastenerDelta fasteners = 7;
+  // @state artifact
+  En1995PanelDelta panels = 8;
+  // @state artifact
+  En1995FloorDelta floors = 9;
+  // @state artifact
+  En1995DiaphragmDelta diaphragms = 10;
+  // @state artifact
+  En1995TrussDelta trusses = 11;
+  // @state artifact
+  En1995BracingDelta bracings = 12;
+  // @state artifact
+  En1995DeckDelta decks = 13;
+  // @state artifact
+  optional string uls_equation = 14;
+  // @state artifact
+  CaseRowDelta cases = 15;
+  // @state artifact
+  optional string reliability_class = 16;
 }

@@ -1,0 +1,197 @@
+{
+  "annex": "De",
+  "reliabilityClass": "RC3",
+  "title": "Concrete \u0000日本",
+  "designWorkingLifeYears": 0.5,
+  "deltaCDev": 0.5,
+  "cementType": "N",
+  "concreteGrades": [
+    {
+      "id": "duplicate",
+      "name": "concrete",
+      "fCk": 0.5
+    }
+  ],
+  "reinforcementGrades": [
+    {
+      "id": "duplicate",
+      "name": "reinforcement",
+      "fYk": 0.5,
+      "eS": 0.5,
+      "ductility": "b",
+      "k": 0.5,
+      "epsUk": 0.5
+    }
+  ],
+  "prestressSteels": [
+    {
+      "id": "duplicate",
+      "name": "steel",
+      "fPk": 0.5,
+      "fP01k": 0.5
+    }
+  ],
+  "members": [
+    {
+      "id": "member",
+      "labelEn": "Member",
+      "labelDe": "Bauteil",
+      "kind": "RibbedSlab",
+      "concreteGradeId": "unknown concrete",
+      "reinforcementGradeId": "unknown rebar",
+      "prestressSteelId": "unknown prestress",
+      "exposure": "Xa3",
+      "width": 0.5,
+      "height": 0.5,
+      "effectiveDepth": 0.5,
+      "cover": 0.5,
+      "span": 0.5,
+      "support": "Fixed",
+      "bucklingLength": 0.5,
+      "longitudinal": [
+        {
+          "id": "bar",
+          "diameter": 0.5,
+          "count": 4294967295,
+          "position": "Bottom",
+          "anchorageLength": 0.5,
+          "lapLength": 0.5,
+          "bondCondition": "Poor",
+          "aggregateSize": 0.5,
+          "lapShare": 0.5
+        }
+      ],
+      "stirrups": {
+        "diameter": 0.5,
+        "spacing": 0.5,
+        "legs": 4294967295
+      },
+      "punching": {
+        "columnWidth": 0.5,
+        "columnDepth": 0.5,
+        "columnPosition": "Interior",
+        "asw": 0.5,
+        "betaMethod": "UnbalancedMoments",
+        "momentC1": 0.5,
+        "momentC2": 0.5
+      },
+      "prestress": {
+        "force": 0.5,
+        "area": 0.5,
+        "eccentricity": 0.5,
+        "lossRatio": 0.5
+      },
+      "fire": {
+        "rating": "R120",
+        "axisDistance": 0.5,
+        "slabSystem": "OneWay"
+      },
+      "actions": [
+        {
+          "id": "action\u0000日本",
+          "kind": "Permanent",
+          "category": "Office",
+          "source": "Udl",
+          "gKLine": 0.5,
+          "qKLine": 0.5,
+          "pointForce": 0.5,
+          "mK": 0.5,
+          "nK": 0.5,
+          "vK": 0.5,
+          "tK": 0.5,
+          "vKPunch": 0.5
+        }
+      ],
+      "useFem": true,
+      "udl": 0.5,
+      "deflectionSensitive": false,
+      "tightness": "Tc2",
+      "hdOverH": 0.5,
+      "liquidSigmaS": 0.5,
+      "liquidRhoPEff": 0.5,
+      "liquidFCtEff": 0.5,
+      "liquidSRMax": 0.5,
+      "bridgeSigmaC": 0.5,
+      "bridgeDeltaSigmaS": 0.5,
+      "relativeHumidity": 0.5,
+      "bearingWidth": 0.0,
+      "sectionPoints": [
+        {
+          "id": "p1",
+          "y": 0.5,
+          "z": 0.5
+        }
+      ],
+      "bars": [
+        {
+          "id": "b1",
+          "layerId": "l1",
+          "y": 0.5,
+          "z": 0.5,
+          "diameter": 0.5,
+          "length": 0.5,
+          "bend": "Auto"
+        }
+      ],
+      "tendonPoints": [
+        {
+          "id": "t1",
+          "x": 0.5,
+          "y": 0.5,
+          "z": 0.5
+        }
+      ],
+      "studRows": [
+        {
+          "id": "r1",
+          "angle": 0.75,
+          "count": 4294967295,
+          "spacingFirst": 0.5,
+          "spacingRadial": 0.25,
+          "diameter": 0.5
+        }
+      ],
+      "openings": []
+    }
+  ],
+  "anchors": [
+    {
+      "id": "anchor",
+      "hEf": 0.5,
+      "cracked": true,
+      "fUk": 0.5,
+      "fYk": 0.5,
+      "aS": 0.5,
+      "d": 0.5,
+      "c1": 0.5,
+      "fCk": 0.5,
+      "actions": [
+        {
+          "id": "action\u0000日本",
+          "kind": "Permanent",
+          "category": "Office",
+          "source": "Udl",
+          "gKLine": 0.5,
+          "qKLine": 0.5,
+          "pointForce": 0.5,
+          "mK": 0.5,
+          "nK": 0.5,
+          "vK": 0.5,
+          "tK": 0.5,
+          "vKPunch": 0.5
+        }
+      ],
+      "headDiameter": 0.5
+    }
+  ],
+  "placements": [
+    {
+      "id": "duplicate",
+      "x": 0.5,
+      "y": 0.5,
+      "z": 0.5,
+      "yaw": 0.5
+    }
+  ],
+  "cases": []
+}

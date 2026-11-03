@@ -1,0 +1,6 @@
+{
+  "mutation": "changeMemberEffectiveStiffnessBasis",
+  "buildingId": "bldg-office",
+  "id": "col-c1",
+  "newEffectiveStiffnessBasis": "simplified"
+}

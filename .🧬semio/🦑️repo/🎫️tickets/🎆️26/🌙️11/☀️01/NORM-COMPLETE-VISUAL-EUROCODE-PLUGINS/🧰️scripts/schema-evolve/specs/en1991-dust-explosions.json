@@ -1,0 +1,123 @@
+{
+  "artifact": "en1991",
+  "reference": "rotatingMachines",
+  "collection": {
+    "name": "dustExplosions",
+    "entity": "DustExplosion",
+    "emoji": "💥",
+    "doc": "💥 Dust explosion in a silo or bin (EN 1991-4 with the vent sizing of EN 14491): dust constant K_St, maximum explosion pressure, volume, vent area, static opening pressure and the reduced explosion pressure the structure is designed for.",
+    "label": {
+      "en": "Dust explosions",
+      "de": "Staubexplosionen"
+    },
+    "id": {
+      "en": "Dust explosion ID",
+      "de": "Staubexplosions-ID"
+    },
+    "singular": {
+      "en": "dust explosion",
+      "de": "Staubexplosion"
+    },
+    "kindSlug": "dust-explosion",
+    "fields": [
+      {
+        "name": "kst",
+        "type": "f64",
+        "label": {
+          "en": "Dust constant K_St",
+          "de": "Staubkennzahl K_St"
+        },
+        "doc": "💥 Dust explosion constant K_St [bar m/s] of the stored dust.",
+        "sample": 150.0,
+        "range": [
+          0,
+          600
+        ],
+        "step": 5,
+        "precision": 0
+      },
+      {
+        "name": "p_max",
+        "type": "f64",
+        "label": {
+          "en": "Maximum explosion pressure p_max",
+          "de": "Maximaler Explosionsdruck p_max"
+        },
+        "doc": "💥 Maximum explosion pressure p_max [Pa] of the dust in a closed vessel.",
+        "sample": 800000.0,
+        "unit": "Pa",
+        "range": [
+          0,
+          1500000
+        ]
+      },
+      {
+        "name": "volume",
+        "type": "f64",
+        "label": {
+          "en": "Volume V",
+          "de": "Volumen V"
+        },
+        "doc": "📦 Volume V [m³] of the silo or bin compartment.",
+        "sample": 100.0,
+        "unit": "m3",
+        "range": [
+          0,
+          20000
+        ]
+      },
+      {
+        "name": "vent_area",
+        "type": "f64",
+        "label": {
+          "en": "Vent area A_v",
+          "de": "Entlastungsfläche A_v"
+        },
+        "doc": "🪟 Vent area A_v [m²] of the explosion venting.",
+        "sample": 8.0,
+        "unit": "m2",
+        "range": [
+          0,
+          200
+        ]
+      },
+      {
+        "name": "static_opening_pressure",
+        "type": "f64",
+        "label": {
+          "en": "Static opening pressure p_stat",
+          "de": "Statischer Ansprechdruck p_stat"
+        },
+        "doc": "🔓 Static opening pressure p_stat [Pa] of the vent panels.",
+        "sample": 20000.0,
+        "unit": "Pa",
+        "range": [
+          0,
+          200000
+        ]
+      },
+      {
+        "name": "design_pressure",
+        "type": "f64",
+        "label": {
+          "en": "Reduced explosion pressure p_red",
+          "de": "Reduzierter Explosionsdruck p_red"
+        },
+        "doc": "🛡️ Reduced explosion pressure p_red [Pa] the structure is designed for.",
+        "sample": 50000.0,
+        "unit": "Pa",
+        "range": [
+          0,
+          500000
+        ]
+      }
+    ]
+  },
+  "kit": {
+    "id": "dustExplosion",
+    "en": "Dust explosion",
+    "de": "Staubexplosion",
+    "icon": "flame",
+    "scene_kind": "Load"
+  }
+}

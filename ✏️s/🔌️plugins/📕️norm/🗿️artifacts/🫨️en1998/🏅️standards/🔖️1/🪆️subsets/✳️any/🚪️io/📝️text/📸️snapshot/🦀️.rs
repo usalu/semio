@@ -12,7 +12,7 @@ use semio_s_artifact_norm_en1998_model::En1998Snapshot;
 /// high-importance dual-system RC building in seismic zone 3 on ground type D, resolved under the EN
 /// annex's Type 2 spectrum on EN ground type C, with an isolated-bridge bearing check, a near-collapse
 /// KL3 retrofit assessment, and companion silo/tank/tower/foundation/retaining-wall subsystem checks —
-/// distinct from `En1998Snapshot::default()`'s DE-annex/CC2/moment-frame/KL2/significant-damage values so the
+/// distinct from `En1998Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De)`'s DE-annex/CC2/moment-frame/KL2/significant-damage values so the
 /// grammar's non-default branches (annex, importance class, structural system, ground types, spectrum
 /// type, retrofit knowledge level and limit state, redundancy and chimney booleans) are exercised too.
 pub const EN1998_SEISMIC_RC_FRAME_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🏢️seismic-rc-frame/🏢️seismic-rc-frame/🗣️.dsl.semio");
@@ -42,7 +42,7 @@ pub type En1998SnapshotText = String;
 mod snapshot_codec {
 use crate::snapshot::*;
 use semio_s_artifact_norm_en1998_model::*;
-use semio_s_artifact_norm_en1998_model::{DeGroundCombo, DeSeismicZone, En1998Assessment, En1998Bridge, En1998Building, En1998Foundation, En1998RetainingWall, En1998Site, En1998Silo, En1998Storey, En1998VariableAction, En1998System, En1998Tank, En1998Tower, En1998Member};
+use semio_s_artifact_norm_en1998_model::{DeGroundCombo, En1998Assessment, En1998Bridge, En1998Building, En1998Foundation, En1998RetainingWall, En1998Site, En1998Silo, En1998Storey, En1998VariableAction, En1998System, En1998Tank, En1998Tower, En1998SoilLayer, En1998Diaphragm, En1998Accelerogram, En1998Pier, En1998Bearing, En1998Joint, En1998Member};
 use framework_schema::ArtifactSchema;
 
 pub fn encode_en1998_snapshot_json(snapshot: &En1998Snapshot) -> String {
@@ -67,10 +67,8 @@ pub use crate::snapshot::snapshot_codec::*;
 mod snapshot_wire_codec {
 use crate::snapshot::*;
 use semio_s_artifact_norm_en1998_model::*;
-use semio_s_artifact_norm_en1998_model::{DeGroundCombo, DeSeismicZone, En1998Assessment, En1998Bridge, En1998Building, En1998Foundation, En1998RetainingWall, En1998Site, En1998Silo, En1998Storey, En1998VariableAction, En1998System, En1998Tank, En1998Tower, En1998Member};
+use semio_s_artifact_norm_en1998_model::{DeGroundCombo, En1998Assessment, En1998Bridge, En1998Building, En1998Foundation, En1998RetainingWall, En1998Site, En1998Silo, En1998Storey, En1998VariableAction, En1998System, En1998Tank, En1998Tower, En1998SoilLayer, En1998Diaphragm, En1998Accelerogram, En1998Pier, En1998Bearing, En1998Joint, En1998Member};
 use framework_schema::ArtifactSchema;
 
 }
 #[cfg(test)] pub use crate::snapshot::snapshot_wire_codec::*;
-
-semio_s_plugin_norm_compliance::impl_norm_artifact_record!(@text En1998Snapshot, extension="en1998", envelope_id="norm.en1998");

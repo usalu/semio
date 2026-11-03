@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-seismic-slope-governing-layer-id/schema.json",
+  "title": "ChangeSeismicSlopeGoverningLayerId",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newGoverningLayerId"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeSeismicSlopeGoverningLayerId"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "SeismicSlope",
+          "de": "Gründung"
+        },
+        "description": {
+          "en": "The seismicSlope this mutation addresses, by id.",
+          "de": "Das adressierte Element (Gründung), per Kennung."
+        },
+        "ref": {
+          "kind": "seismicSlope"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newGoverningLayerId": {
+      "type": "string",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Supported building id",
+          "de": "Gestütztes Gebäude"
+        },
+        "group": "value",
+        "order": 20,
+        "widget": "text"
+      }
+    }
+  }
+}

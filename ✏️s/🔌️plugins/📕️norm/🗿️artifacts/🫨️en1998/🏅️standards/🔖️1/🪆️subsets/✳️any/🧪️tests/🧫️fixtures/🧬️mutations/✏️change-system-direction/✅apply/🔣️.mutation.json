@@ -1,0 +1,6 @@
+{
+  "mutation": "changeSystemDirection",
+  "buildingId": "bldg-office",
+  "id": "sys-x",
+  "newDirection": "y"
+}

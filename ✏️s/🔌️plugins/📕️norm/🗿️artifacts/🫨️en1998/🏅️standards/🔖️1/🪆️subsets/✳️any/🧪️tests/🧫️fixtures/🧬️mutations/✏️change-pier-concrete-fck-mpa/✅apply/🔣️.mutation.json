@@ -1,0 +1,5 @@
+{
+  "mutation": "changePierConcreteFckMpa",
+  "id": "pier-1",
+  "newConcreteFckMpa": 1.5
+}

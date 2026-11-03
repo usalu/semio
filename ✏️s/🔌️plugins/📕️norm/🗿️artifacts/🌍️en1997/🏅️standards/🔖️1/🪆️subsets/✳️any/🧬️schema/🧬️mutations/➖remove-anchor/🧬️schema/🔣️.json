@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/remove-anchor/schema.json",
+  "title": "RemoveAnchor",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "index"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "removeAnchor"
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Ground anchor",
+          "de": "Verpressanker"
+        },
+        "description": {
+          "en": "Zero-based position of the ground anchor in its list.",
+          "de": "Nullbasierte Position von Verpressanker in der Liste."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
+    }
+  }
+}

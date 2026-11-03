@@ -1,0 +1,121 @@
+{
+  "annex": null,
+  "projectId": null,
+  "structureKind": null,
+  "altitudeM": null,
+  "consequenceClass": null,
+  "reliabilityClass": null,
+  "designWorkingLifeCategory": null,
+  "designWorkingLifeYears": null,
+  "referencePeriodYears": null,
+  "supervisionLevel": null,
+  "inspectionLevel": null,
+  "betaComputed": null,
+  "permanents": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "variables": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "accidentals": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "seismics": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "members": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "beam-B1",
+        "patch": {
+          "labelEn": null,
+          "labelDe": null,
+          "rdStr": null,
+          "rdGeo": null,
+          "rdEquStab": null,
+          "rdEquDestab": null,
+          "rdFat": null,
+          "span": null,
+          "precamber": null,
+          "deflectionW1": null,
+          "deflectionW2": null,
+          "deflectionW3": null,
+          "deflectionLimitRatio": null,
+          "deflectionLimitRatioW3": null,
+          "slsLimitChar": null,
+          "slsLimitFreq": null,
+          "slsLimitQp": null,
+          "vibrationFrequency": null,
+          "vibrationFrequencyMin": null,
+          "frameHeight": null,
+          "frameDrift": null,
+          "storeyHeight": null,
+          "storeyDrift": 1.5,
+          "materialStrengthK": null,
+          "materialConversionFactor": null,
+          "materialPartialFactor": null,
+          "materialDesignStrength": null,
+          "nominalDimension": null,
+          "dimensionTolerance": null,
+          "designDimension": null,
+          "memberAlphaCr": null,
+          "secondOrderAnalysis": null
+        }
+      }
+    ]
+  },
+  "bridgeSls": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "effects": [],
+  "fatigueSpectra": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "reliabilityAnalyses": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "testSeries": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "placements": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "cases": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "factorOverrides": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "trafficGroups": {"removed": [], "inserted": [], "moved": [], "modified": []}
+}

@@ -1,0 +1,6 @@
+{
+  "ChangeJointBoltDiameter": {
+    "id": "joint-j1",
+    "newBoltDiameter": 0.048
+  }
+}

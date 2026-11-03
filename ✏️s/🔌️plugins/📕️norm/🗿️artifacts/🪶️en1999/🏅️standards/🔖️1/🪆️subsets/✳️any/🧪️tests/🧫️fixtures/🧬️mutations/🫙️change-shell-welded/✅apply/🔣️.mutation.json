@@ -1,0 +1,5 @@
+{
+  "mutation": "changeShellWelded",
+  "shellId": "shell-pass",
+  "newWelded": true
+}

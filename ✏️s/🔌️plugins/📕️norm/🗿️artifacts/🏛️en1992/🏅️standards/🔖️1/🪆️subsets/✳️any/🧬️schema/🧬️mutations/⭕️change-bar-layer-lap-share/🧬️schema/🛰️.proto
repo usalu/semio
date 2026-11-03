@@ -1,0 +1,7 @@
+syntax = "proto3";
+package semio.s.norm.en1992.mutation.change_bar_layer_lap_share;
+message ChangeBarLayerLapShare {
+  string member_id = 1;
+  string layer_id = 2;
+  double new_lap_share = 3;
+}

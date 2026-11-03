@@ -1,0 +1,5 @@
+{
+  "mutation": "changeDiaphragmStoreyId",
+  "id": "dia-1",
+  "newStoreyId": "x"
+}

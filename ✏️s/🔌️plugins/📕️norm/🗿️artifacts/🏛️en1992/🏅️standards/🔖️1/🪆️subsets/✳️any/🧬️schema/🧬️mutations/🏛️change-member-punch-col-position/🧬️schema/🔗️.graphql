@@ -1,0 +1,4 @@
+type ChangeMemberPunchColPosition {
+  memberId: String!
+  newPunchingColumnPosition: ColumnPosition!
+}

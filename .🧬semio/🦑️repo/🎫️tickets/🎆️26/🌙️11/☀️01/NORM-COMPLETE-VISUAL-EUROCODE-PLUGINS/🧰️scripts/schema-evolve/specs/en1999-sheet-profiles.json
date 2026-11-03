@@ -1,0 +1,87 @@
+{
+  "artifact": "en1999",
+  "collection": {
+    "name": "sheetProfiles",
+    "entity": "SheetProfile",
+    "emoji": "🪗️",
+    "doc": "🪗 Trapezoidal profile of a cold-formed sheet (EN 1999-1-4 5.5, 6.1): one rib of two webs between a top and a bottom flange, so that the bending, shear and deflection checks use the profiled section instead of the flat strip.",
+    "label": {
+      "en": "Sheet profiles",
+      "de": "Blechprofile"
+    },
+    "id": {
+      "en": "Profile ID",
+      "de": "Profil-ID"
+    },
+    "singular": {
+      "en": "sheet profile",
+      "de": "Blechprofil"
+    },
+    "kindSlug": "sheet-profile",
+    "fields": [
+      {
+        "name": "sheet_id",
+        "type": "String",
+        "label": {
+          "en": "Sheet",
+          "de": "Blech"
+        },
+        "doc": "🔗 Id of the cold-formed sheet that carries this profile; the sheet thickness is the profile thickness.",
+        "sample": "sheet-pass",
+        "settable": false
+      },
+      {
+        "name": "pitch",
+        "type": "f64",
+        "label": {
+          "en": "Rib pitch p",
+          "de": "Rippenabstand p"
+        },
+        "doc": "↔️ Pitch p [m] of one rib (top flange, web, bottom flange, web), measured between the mid-lines.",
+        "sample": 0.2,
+        "unit": "m",
+        "step": 0.005,
+        "precision": 3
+      },
+      {
+        "name": "top_flange",
+        "type": "f64",
+        "label": {
+          "en": "Top flange width b_t",
+          "de": "Obergurtbreite b_t"
+        },
+        "doc": "⬜️ Flat width b_t [m] of the top flange between the web corners (mid-line).",
+        "sample": 0.06,
+        "unit": "m",
+        "step": 0.001,
+        "precision": 3
+      },
+      {
+        "name": "bottom_flange",
+        "type": "f64",
+        "label": {
+          "en": "Bottom flange width b_b",
+          "de": "Untergurtbreite b_b"
+        },
+        "doc": "⬜️ Flat width b_b [m] of the bottom flange between the web corners (mid-line).",
+        "sample": 0.06,
+        "unit": "m",
+        "step": 0.001,
+        "precision": 3
+      },
+      {
+        "name": "web_height",
+        "type": "f64",
+        "label": {
+          "en": "Profile height h",
+          "de": "Profilhöhe h"
+        },
+        "doc": "↕️ Vertical distance h [m] between the mid-lines of the flanges; the web inclination follows from the pitch and the flange widths.",
+        "sample": 0.04,
+        "unit": "m",
+        "step": 0.001,
+        "precision": 3
+      }
+    ]
+  }
+}

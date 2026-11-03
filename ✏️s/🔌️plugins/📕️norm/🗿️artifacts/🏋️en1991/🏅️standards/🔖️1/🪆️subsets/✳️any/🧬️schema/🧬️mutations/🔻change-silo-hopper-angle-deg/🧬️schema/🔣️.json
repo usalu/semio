@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-silo-hopper-angle-deg/schema.json",
+  "title": "ChangeSiloHopperAngleDeg",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newSiloHopperAngleDeg"
+  ],
+  "properties": {
+    "newSiloHopperAngleDeg": {
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Hopper wall angle to horizontal",
+          "de": "Trichterneigung zur Horizontalen"
+        },
+        "unit": "1",
+        "step": 1,
+        "precision": 1,
+        "group": "silo",
+        "order": 10
+      },
+      "maximum": 90
+    }
+  }
+}

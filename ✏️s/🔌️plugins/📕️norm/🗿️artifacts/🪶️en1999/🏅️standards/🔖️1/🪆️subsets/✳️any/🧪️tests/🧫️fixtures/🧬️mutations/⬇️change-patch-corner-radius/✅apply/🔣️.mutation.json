@@ -1,0 +1,5 @@
+{
+  "mutation": "changePatchCornerRadius",
+  "patchLoadId": "patch-1",
+  "newCornerRadius": 0.008
+}

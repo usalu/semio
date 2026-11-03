@@ -1,0 +1,6 @@
+{
+  "ChangeCutoutMember": {
+    "cutoutId": "cutout-1",
+    "newValue": "changed-beam-B1"
+  }
+}

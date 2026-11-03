@@ -1,0 +1,131 @@
+{
+  "$schema": "../../../../../../../../../🔮️oracles/🏃️harness/🧬️schema/🔣️.json",
+  "schemaVersion": 1,
+  "artifact": "en1996",
+  "annex": "de",
+  "cases": [
+    {
+      "id": "en1996.6.6.1.flexure-reinforced-x9-catalogue",
+      "check": "en1996.6.6.1.flexure-reinforced",
+      "citation": {
+        "standard": "EN 1996-1-1",
+        "edition": "2004",
+        "clause": "6.6.1 reinforced masonry members subjected to bending; rectangular stress block"
+      },
+      "inputs": {
+        "f_d": 5957000.0,
+        "f_yd": 435000000.0,
+        "b": 1.0,
+        "h": 0.35,
+        "d": 0.3,
+        "As": 0.0006
+      },
+      "expected": {
+        "M_Rd": {
+          "value": 72582.45839956024,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        },
+        "x": {
+          "value": 0.05476779765216881,
+          "unit": "m",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-concreteproperties",
+          "adapter": "concreteproperties",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1996.6.6.1.flexure-reinforced-heavier-reinforcement",
+      "check": "en1996.6.6.1.flexure-reinforced",
+      "citation": {
+        "standard": "EN 1996-1-1",
+        "edition": "2004",
+        "clause": "6.6.1 reinforced masonry members subjected to bending; rectangular stress block"
+      },
+      "inputs": {
+        "f_d": 5957000.0,
+        "f_yd": 435000000.0,
+        "b": 1.0,
+        "h": 0.35,
+        "d": 0.3,
+        "As": 0.0015
+      },
+      "expected": {
+        "M_Rd": {
+          "value": 160014.2344700441,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        },
+        "x": {
+          "value": 0.1369188399253382,
+          "unit": "m",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-concreteproperties",
+          "adapter": "concreteproperties",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1996.6.6.1.flexure-reinforced-lower-strength-masonry",
+      "check": "en1996.6.6.1.flexure-reinforced",
+      "citation": {
+        "standard": "EN 1996-1-1",
+        "edition": "2004",
+        "clause": "6.6.1 reinforced masonry members subjected to bending; rectangular stress block"
+      },
+      "inputs": {
+        "f_d": 3000000.0,
+        "f_yd": 435000000.0,
+        "b": 1.0,
+        "h": 0.35,
+        "d": 0.3,
+        "As": 0.0004
+      },
+      "expected": {
+        "M_Rd": {
+          "value": 47154.1517360954,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        },
+        "x": {
+          "value": 0.07250053586341938,
+          "unit": "m",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-concreteproperties",
+          "adapter": "concreteproperties",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    }
+  ]
+}

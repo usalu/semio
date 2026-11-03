@@ -1,0 +1,15 @@
+{
+  "InsertPrestress": {
+    "wallId": "wall-north",
+    "index": 1,
+    "prestress": {
+      "id": "tendon-2",
+      "forceN": 90000.0,
+      "areaM2": 0.0002,
+      "fPkPa": 1770000000.0,
+      "positionM": 2.5,
+      "eccentricityM": 0.05,
+      "lossRatio": 0.2
+    }
+  }
+}

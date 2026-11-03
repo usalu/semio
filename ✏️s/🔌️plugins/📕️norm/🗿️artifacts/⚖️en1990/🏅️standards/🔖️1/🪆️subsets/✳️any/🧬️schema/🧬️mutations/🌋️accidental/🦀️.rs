@@ -9,10 +9,6 @@ extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
 //#region 🪢️Mounts
-#[path = "../💥change-accidentals/🦀️.rs"]
-pub mod change_accidentals;
-#[path = "../🌋️change-seismics/🦀️.rs"]
-pub mod change_seismics;
 #[path = "../💣insert-accidental/🦀️.rs"]
 pub mod insert_accidental;
 #[path = "../🌋insert-seismic/🦀️.rs"]

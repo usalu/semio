@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-fatigue-stress-relief/schema.json",
+  "title": "ChangeFatigueStressRelief",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newRelief"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Frame action",
+          "de": "Rahmeneinwirkung"
+        },
+        "description": {
+          "en": "The frame action this mutation addresses, by id.",
+          "de": "Das adressierte Element (Rahmeneinwirkung), per Kennung."
+        },
+        "ref": {
+          "relief": "fatigue-stress"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newRelief": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/StressRelief",
+      "x-semio-ui": {
+        "label": {
+          "en": "Relief",
+          "de": "Spannungsschwingbreite"
+        },
+        "role": "value",
+        "group": "value",
+        "order": 20
+      },
+      "x-semio-rust": {
+        "type": "semio_s_artifact_norm_en1993_model::StressRelief"
+      }
+    }
+  }
+}

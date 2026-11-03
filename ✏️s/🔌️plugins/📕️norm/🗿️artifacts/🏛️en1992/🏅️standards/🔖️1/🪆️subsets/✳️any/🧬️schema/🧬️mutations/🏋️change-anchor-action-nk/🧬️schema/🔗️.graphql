@@ -1,0 +1,5 @@
+type ChangeAnchorActionNK {
+  anchorId: String!
+  actionId: String!
+  newNK: Float!
+}

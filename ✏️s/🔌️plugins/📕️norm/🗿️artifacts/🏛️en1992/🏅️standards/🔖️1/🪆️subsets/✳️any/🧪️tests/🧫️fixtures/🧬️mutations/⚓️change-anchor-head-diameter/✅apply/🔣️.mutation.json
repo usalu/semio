@@ -1,0 +1,6 @@
+{
+  "ChangeAnchorHeadDiameter": {
+    "anchorId": "anc-1",
+    "newHeadDiameter": 1.5
+  }
+}

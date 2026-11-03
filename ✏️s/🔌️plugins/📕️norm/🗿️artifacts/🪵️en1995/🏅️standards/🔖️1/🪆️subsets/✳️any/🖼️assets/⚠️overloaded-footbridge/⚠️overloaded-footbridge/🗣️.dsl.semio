@@ -1,7 +1,31 @@
 semio norm.en1995.dsl v1
 annex=de
-members [id:TEXT label-en:TEXT label-de:TEXT role:ENUM strength-class:TEXT service-class:UINT support:ENUM b-m:QTY h-m:QTY span-m:QTY support-length-m:QTY bearing-length-m:QTY buckling-length-y-m:QTY buckling-length-z-m:QTY lateral-restraint-spacing-m:QTY notch-depth-m:QTY notch-distance-m:QTY m-crit-nm:NUM mass-kg-per-m:NUM mass-kg-per-m2:NUM damping-xi:NUM fire-duration-s:QTY bridge-n-obs:NUM bridge-t-l-years:NUM bridge-beta:NUM bridge-a:NUM bridge-b:NUM bridge-crowd-per-m2:NUM actions:TABLE] {
-  bridge-G2 "Overloaded footbridge girder G2" "Überlasteter Fußgängersteg G2" bridge GL24h 2 simply-supported 0.16m 0.4m 14m 0.2m 0.2m 14m 7m 7m 0m 0m 80000 60 0 0.005 0s 20000000 100 5 9 5.5 5 [ ]
+members [id:TEXT label-en:TEXT label-de:TEXT role:ENUM strength-class:ENUM service-class:UINT support:ENUM b-m:QTY h-m:QTY span-m:QTY support-length-m:QTY bearing-length-m:QTY buckling-length-y-m:QTY buckling-length-z-m:QTY lateral-restraint-spacing-m:QTY notch-depth-m:QTY notch-distance-m:QTY mass-kg-per-m:NUM mass-kg-per-m2:NUM damping-xi:NUM fire-duration-s:QTY bridge-n-obs:NUM bridge-t-l-years:NUM bridge-beta:NUM bridge-a:NUM bridge-b:NUM bridge-crowd-per-m2:NUM actions:TABLE] {
+  bridge-G2 "Overloaded footbridge girder G2" "Überlasteter Fußgängersteg G2" bridge gl24h 2 simply-supported 0.16m 0.4m 14m 0.2m 0.2m 14m 7m 7m 0m 0m 60 0 0.005 0s 20000000 100 5 9 5.5 5 [ ]
 }
-connections [id:TEXT label-en:TEXT label-de:TEXT fastener-type:TEXT strength-class:TEXT service-class:UINT diameter-m:QTY number:UINT rows:UINT spacing-m:QTY edge-distance-m:QTY end-distance-m:QTY t1-m:QTY t2-m:QTY steel-plate:BOOL steel-plate-thickness-m:QTY shear-planes:UINT f-u-k:QTY actions:TABLE] {
+connections [id:TEXT label-en:TEXT label-de:TEXT fastener-type:ENUM strength-class:ENUM service-class:UINT diameter-m:QTY number:UINT rows:UINT spacing-m:QTY edge-distance-m:QTY end-distance-m:QTY t1-m:QTY t2-m:QTY steel-plate:BOOL steel-plate-thickness-m:QTY shear-planes:UINT f-u-k:QTY actions:TABLE] {
 }
+uls-equation="6.10"
+cases [id:TEXT label-en:TEXT label-de:TEXT entry-id:TEXT numbers:TABLE texts:TABLE] {
+}
+placements [id:TEXT x:NUM y:NUM z:NUM yaw:NUM] {
+}
+tapers [id:TEXT member-id:TEXT kind:ENUM taper-angle-rad:NUM apex-depth-m:QTY inner-radius-m:QTY lamella-thickness-m:QTY apex-angle-rad:NUM tension-side:ENUM rods:UINT rod-resistance-n:QTY] {
+}
+cutouts [id:TEXT member-id:TEXT kind:ENUM face:ENUM distance-m:QTY length-m:QTY depth-m:QTY centre-height-m:QTY slope:NUM rods:UINT rod-resistance-n:QTY] {
+}
+fasteners [id:TEXT connection-id:TEXT member-id:TEXT columns:UINT lines:UINT spacing-parallel-m:QTY spacing-perpendicular-m:QTY end-distance-m:QTY edge-distance-m:QTY offset-x-m:QTY offset-y-m:QTY load-angle-rad:NUM positions:TABLE] {
+}
+panels [id:TEXT strength-class:ENUM layers:TABLE span-m:QTY width-m:QTY load-pa:QTY fire-duration-s:QTY] {
+}
+floors [id:TEXT member-id:TEXT span-m:QTY width-m:QTY joist-spacing-m:QTY ei-l-n-m2-per-m:NUM ei-b-n-m2-per-m:NUM mass-kg-per-m2:NUM damping-ratio:NUM permanent-load-pa:QTY imposed-load-pa:QTY psi-2:NUM] {
+}
+diaphragms [id:TEXT kind:ENUM method:ENUM panel-width-m:QTY wall-height-m:QTY fastener-spacing-m:QTY panels:UINT fastener-capacity-n:QTY shear-ed-n:QTY hold-down-n:QTY diaphragm-force-n:QTY diaphragm-length-m:QTY shear-resistance-n-per-m:QTY] {
+}
+trusses [id:TEXT kind:ENUM product:ENUM span-m:QTY height-m:QTY bays:UINT chord-width-m:QTY chord-depth-m:QTY web-width-m:QTY web-depth-m:QTY chord-force-n:QTY restraint-length-m:QTY bracing-capacity-n-per-m:QTY] {
+}
+bracings [id:TEXT kind:ENUM member-id:TEXT stabilised-count:UINT spacing-m:QTY length-m:QTY brace-width-m:QTY brace-depth-m:QTY compression-force-n:QTY resistance-n:QTY stiffness-n-per-m:QTY] {
+}
+decks [id:TEXT lamination-product:ENUM bar-product:ENUM span-m:QTY deck-width-m:QTY deck-depth-m:QTY lamination-width-m:QTY bar-spacing-m:QTY bar-diameter-m:QTY plate-side-m:QTY initial-prestress-pa:QTY loss-relaxation:NUM loss-creep:NUM loss-moisture:NUM bar-resistance-pa:QTY shear-stress-pa:QTY compression-perpendicular-pa:QTY wheel-load-n:QTY wheel-contact-m:QTY] {
+}
+reliability-class=rc2

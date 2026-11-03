@@ -1,0 +1,5 @@
+{
+  "mutation": "changeMemberTWeldOffset",
+  "memberId": "purlin-1",
+  "newTransverseWeldOffset": 1.5
+}

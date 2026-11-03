@@ -1,0 +1,6 @@
+syntax = "proto3";
+package semio.s.norm.en1992.mutation.change_member_tightness;
+message ChangeMemberTightness {
+  string member_id = 1;
+  TightnessClass new_tightness = 2;
+}

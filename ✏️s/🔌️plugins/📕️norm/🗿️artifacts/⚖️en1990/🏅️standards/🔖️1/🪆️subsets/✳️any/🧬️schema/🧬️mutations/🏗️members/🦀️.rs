@@ -9,12 +9,6 @@ extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
 //#region 🪢️Mounts
-#[path = "../🌉change-bridge-sls/🦀️.rs"]
-pub mod change_bridge_sls;
-#[path = "../🔗change-effects/🦀️.rs"]
-pub mod change_effects;
-#[path = "../🏗️change-members/🦀️.rs"]
-pub mod change_members;
 #[path = "../📎insert-effect/🦀️.rs"]
 pub mod insert_effect;
 #[path = "../🔩insert-member/🦀️.rs"]

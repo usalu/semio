@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-beam-cracked-length-fraction/schema.json",
+  "title": "ChangeBeamCrackedLengthFraction",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newCrackedLengthFraction"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Composite beam",
+          "de": "Verbundträger"
+        },
+        "description": {
+          "en": "The composite beam this mutation addresses, by id.",
+          "de": "Das adressierte Element (Verbundträger), per Kennung."
+        },
+        "ref": {
+          "kind": "beam"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newCrackedLengthFraction": {
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Cracked length fraction of each span at internal supports, cl. 5.4.2.3 (0 = uncracked analysis)",
+          "de": "gerissener Längenanteil je Feld an Innenstützen nach 5.4.2.3 (0 = ungerissene Berechnung)"
+        },
+        "step": 0.01,
+        "precision": 3,
+        "group": "beam",
+        "order": 20
+      }
+    }
+  }
+}

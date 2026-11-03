@@ -1,13 +1,15 @@
+use crate::modes::edit::windows::{checks, diagrams, outliner, properties, viewport};
 use crate::modes::edit::*;
 
-#[semio_framework_async_macros::async_test]
-async fn the_default_layout_lists_both_window_kinds() {
+#[test]
+fn the_default_layout_lists_all_five_window_kinds() {
     let json = serde_json::to_string(&layout()).expect("layout json");
-    assert!(json.contains(inputs::WINDOW_INPUTS), "layout must reference the inputs window kind: {json}");
-    assert!(json.contains(results::WINDOW_RESULTS), "layout must reference the results window kind: {json}");
+    for kind in [outliner::WINDOW_OUTLINER, properties::WINDOW_PROPERTIES, viewport::WINDOW_VIEWPORT, checks::WINDOW_CHECKS, diagrams::WINDOW_DIAGRAMS] {
+        assert!(json.contains(kind), "layout must reference {kind}: {json}");
+    }
 }
 
-#[semio_framework_async_macros::async_test]
-async fn the_mode_is_the_apps_default() {
+#[test]
+fn the_mode_is_the_apps_default() {
     assert_eq!(definition().id, semio_s_plugin_norm_app_surface::MODE_EDIT);
 }

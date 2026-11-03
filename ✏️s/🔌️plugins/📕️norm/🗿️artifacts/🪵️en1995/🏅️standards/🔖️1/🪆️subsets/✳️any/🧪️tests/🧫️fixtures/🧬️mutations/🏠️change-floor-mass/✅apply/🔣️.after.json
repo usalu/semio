@@ -1,0 +1,149 @@
+{
+  "annex": "De",
+  "reliabilityClass": "RC2",
+  "members": [
+    {
+      "id": "beam-B1",
+      "labelEn": "Main glulam floor beam B1",
+      "labelDe": "Hauptträger BSH Decke B1",
+      "role": "floor",
+      "strengthClass": "gl28h",
+      "serviceClass": 1,
+      "support": "simplySupported",
+      "bM": 0.2,
+      "hM": 0.4,
+      "spanM": 5.0,
+      "supportLengthM": 0.15,
+      "bearingLengthM": 0.15,
+      "bucklingLengthYM": 5.0,
+      "bucklingLengthZM": 1.5,
+      "lateralRestraintSpacingM": 1.5,
+      "notchDepthM": 0.0,
+      "notchDistanceM": 0.0,
+      "massKgPerM": 120.0,
+      "massKgPerM2": 450.0,
+      "dampingXi": 0.04,
+      "fireDurationS": 0.0,
+      "bridgeNObs": 0.0,
+      "bridgeTLYears": 0.0,
+      "bridgeBeta": 0.0,
+      "bridgeA": 0.0,
+      "bridgeB": 0.0,
+      "bridgeCrowdPerM2": 0.0,
+      "actions": [
+        {
+          "id": "g",
+          "kind": "permanent",
+          "category": "notImposed",
+          "loadDuration": "permanent",
+          "qLineNPerM": 2500.0,
+          "fPointN": 0.0,
+          "mKNm": 0.0,
+          "vKN": 0.0,
+          "nKN": 0.0,
+          "nTKN": 0.0,
+          "fC90KN": 0.0
+        },
+        {
+          "id": "q",
+          "kind": "imposed",
+          "category": "a",
+          "loadDuration": "medium",
+          "qLineNPerM": 3000.0,
+          "fPointN": 0.0,
+          "mKNm": 0.0,
+          "vKN": 0.0,
+          "nKN": 0.0,
+          "nTKN": 0.0,
+          "fC90KN": 0.0
+        }
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "conn-C1",
+      "labelEn": "Bolt group at support",
+      "labelDe": "Schraubverbund am Auflager",
+      "fastenerType": "bolt",
+      "strengthClass": "gl28h",
+      "serviceClass": 1,
+      "diameterM": 0.012,
+      "number": 8,
+      "rows": 2,
+      "spacingM": 0.09,
+      "edgeDistanceM": 0.048,
+      "endDistanceM": 0.096,
+      "t1M": 0.2,
+      "t2M": 0.2,
+      "steelPlate": false,
+      "steelPlateThicknessM": 0.0,
+      "shearPlanes": 1,
+      "fUK": 400000000.0,
+      "actions": [
+        {
+          "id": "g",
+          "kind": "permanent",
+          "loadDuration": "permanent",
+          "fKN": 8000.0
+        },
+        {
+          "id": "q",
+          "kind": "imposed",
+          "loadDuration": "medium",
+          "fKN": 10000.0
+        }
+      ]
+    }
+  ],
+  "placements": [],
+  "tapers": [],
+  "cutouts": [],
+  "fasteners": [],
+  "panels": [],
+  "floors": [
+    {
+      "id": "floor-1",
+      "memberId": "beam-B1",
+      "spanM": 4.0,
+      "widthM": 5.0,
+      "joistSpacingM": 0.625,
+      "eiLNM2PerM": 1000000.0,
+      "eiBNM2PerM": 200000.0,
+      "massKgPerM2": 226.0,
+      "dampingRatio": 0.02,
+      "permanentLoadPa": 1000.0,
+      "imposedLoadPa": 2000.0,
+      "psi2": 0.3
+    }
+  ],
+  "diaphragms": [],
+  "trusses": [],
+  "bracings": [],
+  "decks": [],
+  "ulsEquation": "eq610",
+  "cases": [
+    {
+      "id": "case-kser",
+      "labelEn": "Slip modulus of the support dowels",
+      "labelDe": "Verschiebungsmodul der Auflagerdübel",
+      "entryId": "T-83",
+      "numbers": [
+        {
+          "id": "d",
+          "value": 12.0
+        },
+        {
+          "id": "rho_m1",
+          "value": 420.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "kind",
+          "value": "dowel"
+        }
+      ]
+    }
+  ]
+}

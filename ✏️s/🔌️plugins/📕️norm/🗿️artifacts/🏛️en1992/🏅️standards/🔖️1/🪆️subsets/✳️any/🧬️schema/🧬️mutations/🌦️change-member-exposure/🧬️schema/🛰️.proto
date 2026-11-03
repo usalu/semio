@@ -1,5 +1,6 @@
 syntax = "proto3";
+package semio.s.norm.en1992.mutation.change_member_exposure;
 message ChangeMemberExposure {
-  string memberId = 1;
-  string newExposure = 2;
+  string member_id = 1;
+  ExposureClass new_exposure = 2;
 }

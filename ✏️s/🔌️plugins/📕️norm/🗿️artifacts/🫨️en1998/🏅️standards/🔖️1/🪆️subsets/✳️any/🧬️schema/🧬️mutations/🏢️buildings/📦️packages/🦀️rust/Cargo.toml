@@ -16,8 +16,15 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-s-artifact-norm-en1998-mut-buildings-more = { workspace = true }
+serde = { workspace = true, optional = true }
+semio-s-artifact-norm-en1998-mut-buildings-system = { workspace = true }
+semio-s-artifact-norm-en1998-mut-buildings-site = { workspace = true }
+semio-s-artifact-norm-en1998-mut-buildings-storey-stiffness = { workspace = true }
+semio-s-artifact-norm-en1998-mut-buildings-storey = { workspace = true }
+semio-s-artifact-norm-en1998-mut-buildings-annex-building = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
-semio-s-artifact-norm-en1998-mut-buildings-2 = { workspace = true }
+semio-s-artifact-norm-en1998-mut-buildings-lifecycle = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-ui-locale = { workspace = true }
@@ -25,6 +32,17 @@ semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-norm-en1998-diff = { workspace = true }
 semio-s-artifact-norm-en1998-model = { workspace = true }
+semio-s-artifact-norm-en1998-mut-buildings-envelope = { workspace = true }
+semio-s-artifact-norm-en1998-mut-site-ground = { workspace = true }
+semio-s-artifact-norm-en1998-mut-buildings-nonstructural = { workspace = true }
+semio-s-artifact-norm-en1998-mut-buildings-variables = { workspace = true }
+semio-s-artifact-norm-en1998-mut-diaphragms-core = { workspace = true }
+semio-s-artifact-norm-en1998-mut-diaphragms-resistance = { workspace = true }
+semio-s-artifact-norm-en1998-mut-accelerograms = { workspace = true }
+semio-s-artifact-norm-en1998-mut-buildings-overturning = { workspace = true }
+
+[features]
+test-support = ["dep:serde", "semio-s-artifact-norm-en1998-diff/test-support", "semio-s-artifact-norm-en1998-model/test-support", "semio-s-artifact-norm-en1998-mut-accelerograms/test-support", "semio-s-artifact-norm-en1998-mut-buildings-annex-building/test-support", "semio-s-artifact-norm-en1998-mut-buildings-envelope/test-support", "semio-s-artifact-norm-en1998-mut-buildings-lifecycle/test-support", "semio-s-artifact-norm-en1998-mut-buildings-more/test-support", "semio-s-artifact-norm-en1998-mut-buildings-nonstructural/test-support", "semio-s-artifact-norm-en1998-mut-buildings-overturning/test-support", "semio-s-artifact-norm-en1998-mut-buildings-site/test-support", "semio-s-artifact-norm-en1998-mut-buildings-storey/test-support", "semio-s-artifact-norm-en1998-mut-buildings-storey-stiffness/test-support", "semio-s-artifact-norm-en1998-mut-buildings-system/test-support", "semio-s-artifact-norm-en1998-mut-buildings-variables/test-support", "semio-s-artifact-norm-en1998-mut-diaphragms-core/test-support", "semio-s-artifact-norm-en1998-mut-diaphragms-resistance/test-support", "semio-s-artifact-norm-en1998-mut-site-ground/test-support"]
 
 [dev-dependencies]
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

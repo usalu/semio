@@ -1,0 +1,5 @@
+type ChangeActionKind {
+  memberId: String!
+  actionId: String!
+  newKind: ActionKind!
+}

@@ -1,0 +1,12 @@
+{
+  "InsertLoadDispersal": {
+    "index": 1,
+    "item": {
+      "id": "load-dispersal-1-new",
+      "wheelLength": 1.5,
+      "wheelWidth": 1.5,
+      "pavementThickness": 1.5,
+      "slabThickness": 1.5
+    }
+  }
+}

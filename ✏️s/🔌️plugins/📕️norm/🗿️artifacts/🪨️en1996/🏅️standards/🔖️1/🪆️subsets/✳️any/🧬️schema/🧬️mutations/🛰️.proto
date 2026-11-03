@@ -1,277 +1,771 @@
 syntax = "proto3";
 package semio.s.norm.en1996;
-
 message En1996Mutation {
   oneof kind {
-    ChangeAnnex change_annex = 1;
-    ChangeMasonryClass change_masonry_class = 2;
-    ChangeDesignSituation change_design_situation = 3;
-    ChangeStoreys change_storeys = 4;
-    InsertWall insert_wall = 5;
-    RemoveWall remove_wall = 6;
-    ChangeWallThickness change_wall_thickness = 7;
-    ChangeWallHeight change_wall_height = 8;
-    ChangeWallLength change_wall_length = 9;
-    ChangeWallType change_wall_type = 10;
-    ChangeSupportSides change_support_sides = 11;
-    ChangeSlabBearingDepth change_slab_bearing_depth = 12;
-    ChangeEccentricityTop change_eccentricity_top = 13;
-    ChangeEccentricityBottom change_eccentricity_bottom = 14;
-    ChangeUnitGroup change_unit_group = 15;
-    ChangeUnitMaterial change_unit_material = 16;
-    ChangeUnitFb change_unit_fb = 17;
-    ChangeUnitLength change_unit_length = 18;
-    ChangeUnitWidth change_unit_width = 19;
-    ChangeUnitHeight change_unit_height = 20;
-    ChangeMortarType change_mortar_type = 21;
-    ChangeMortarClass change_mortar_class = 22;
-    ChangeFm change_fm = 23;
-    ChangeBedJointThickness change_bed_joint_thickness = 24;
-    ChangeReinforced change_reinforced = 25;
-    ChangeAsVertical change_as_vertical = 26;
-    ChangeAsHorizontal change_as_horizontal = 27;
-    ChangeFYd change_f_yd = 28;
-    ChangeFireRei change_fire_rei = 29;
-    ChangeExposure change_exposure = 30;
-    ChangeMu change_mu = 31;
-    ChangeLoadCaseSituation change_load_case_situation = 32;
-    ChangeWallLabelDe change_wall_label_de = 33;
-    ChangeWallLabelEn change_wall_label_en = 34;
-    InsertOpening insert_opening = 35;
-    RemoveOpening remove_opening = 36;
-    ChangeOpeningWidth change_opening_width = 37;
-    ChangeOpeningHeight change_opening_height = 38;
-    ChangeOpeningSill change_opening_sill = 39;
-    InsertLoadCase insert_load_case = 40;
-    RemoveLoadCase remove_load_case = 41;
-    ChangeNEdTop change_n_ed_top = 42;
-    ChangeNEdMid change_n_ed_mid = 43;
-    ChangeNEdBottom change_n_ed_bottom = 44;
-    ChangeVEd change_v_ed = 45;
-    ChangeWEd change_w_ed = 46;
-    InsertConcentrated insert_concentrated = 47;
-    RemoveConcentrated remove_concentrated = 48;
-    ChangeConcentratedForce change_concentrated_force = 49;
-    ChangeConcentratedBearingArea change_concentrated_bearing_area = 50;
-    ChangeConcentratedBearingLength change_concentrated_bearing_length = 51;
+    ChangeConcentratedBearingLength change_concentrated_bearing_length = 1;
+    ChangeSlabSpan change_slab_span = 2;
+    ChangeWallLength change_wall_length = 3;
+    ChangeWallHeight change_wall_height = 4;
+    ChangeWallThickness change_wall_thickness = 5;
+    ChangeEccentricityBottom change_eccentricity_bottom = 6;
+    ChangeEccentricityTop change_eccentricity_top = 7;
+    ChangePhiInfinity change_phi_infinity = 8;
+    ChangeQKSnow change_q_k_snow = 9;
+    InsertConcentrated insert_concentrated = 10;
+    InsertLoadCase insert_load_case = 11;
+    InsertOpening insert_opening = 12;
+    InsertWall insert_wall = 13;
+    RemoveConcentrated remove_concentrated = 14;
+    RemoveLoadCase remove_load_case = 15;
+    RemoveOpening remove_opening = 16;
+    RemoveWall remove_wall = 17;
+    ChangeAnnex change_annex = 18;
+    ChangeReliabilityClass change_reliability_class = 19;
+    ChangeQPWind change_q_p_wind = 20;
+    ChangeDesignSituation change_design_situation = 21;
+    ChangeLoadCaseSituation change_load_case_situation = 22;
+    ChangeConcentratedForce change_concentrated_force = 23;
+    ChangeGKSlab change_g_k_slab = 24;
+    ChangeQKImposed change_q_k_imposed = 25;
+    ChangeIsBasement change_is_basement = 26;
+    ChangeStoreys change_storeys = 27;
+    ChangeMasonryClass change_masonry_class = 28;
+    ChangeImposedCategory change_imposed_category = 29;
+    ChangeWallLabelDe change_wall_label_de = 30;
+    ChangeWallLabelEn change_wall_label_en = 31;
+    ChangeExposure change_exposure = 32;
+    ChangeConcentratedBearingArea change_concentrated_bearing_area = 33;
+    ChangeSlabBearingDepth change_slab_bearing_depth = 34;
+    ChangeTributaryArea change_tributary_area = 35;
+    ChangeFireRei change_fire_rei = 36;
+    ChangeAsHorizontal change_as_horizontal = 37;
+    ChangeAsVertical change_as_vertical = 38;
+    ChangeFYd change_f_yd = 39;
+    ChangeReinforced change_reinforced = 40;
+    ChangeBedJointThickness change_bed_joint_thickness = 41;
+    ChangeFm change_fm = 42;
+    ChangeMortarClass change_mortar_class = 43;
+    ChangeMortarType change_mortar_type = 44;
+    ChangeCPe change_c_pe = 45;
+    ChangeDensity change_density = 46;
+    ChangeSupportSides change_support_sides = 47;
+    ChangeUnitFb change_unit_fb = 48;
+    ChangeUnitGroup change_unit_group = 49;
+    ChangeUnitHeight change_unit_height = 50;
+    ChangeUnitLength change_unit_length = 51;
+    ChangeUnitMaterial change_unit_material = 52;
+    ChangeUnitWidth change_unit_width = 53;
+    ChangeWallType change_wall_type = 54;
+    ChangeMu change_mu = 55;
+    ChangeOpeningHeight change_opening_height = 56;
+    ChangeOpeningSill change_opening_sill = 57;
+    ChangeOpeningWidth change_opening_width = 58;
+    ChangeHKEarth change_h_k_earth = 59;
+    ChangePierPosition change_pier_position = 60;
+    ChangePierWidth change_pier_width = 61;
+    InsertPier insert_pier = 62;
+    RemovePier remove_pier = 63;
+    ChangeLintelPosition change_lintel_position = 64;
+    ChangeLintelSpan change_lintel_span = 65;
+    ChangeLintelDepth change_lintel_depth = 66;
+    ChangeLintelBearingLength change_lintel_bearing_length = 67;
+    InsertLintel insert_lintel = 68;
+    RemoveLintel remove_lintel = 69;
+    ChangeTieKind change_tie_kind = 70;
+    ChangeTiePosition change_tie_position = 71;
+    ChangeTieLevel change_tie_level = 72;
+    ChangeTieCapacity change_tie_capacity = 73;
+    InsertTie insert_tie = 74;
+    RemoveTie remove_tie = 75;
+    ChangePrestressForce change_prestress_force = 76;
+    ChangePrestressArea change_prestress_area = 77;
+    ChangePrestressStrength change_prestress_strength = 78;
+    ChangePrestressPosition change_prestress_position = 79;
+    ChangePrestressEccentricity change_prestress_eccentricity = 80;
+    ChangePrestressLoss change_prestress_loss = 81;
+    InsertPrestress insert_prestress = 82;
+    RemovePrestress remove_prestress = 83;
+    ChangeConfinedPosition change_confined_position = 84;
+    ChangeConfinedWidth change_confined_width = 85;
+    ChangeConfinedDepth change_confined_depth = 86;
+    ChangeConfinedSteel change_confined_steel = 87;
+    InsertConfined insert_confined = 88;
+    RemoveConfined remove_confined = 89;
+    ChangeFlangeLength change_flange_length = 90;
+    ChangeFlangeThickness change_flange_thickness = 91;
+    ChangeFlangePosition change_flange_position = 92;
+    InsertFlange insert_flange = 93;
+    RemoveFlange remove_flange = 94;
+    ChangeBarKind change_bar_kind = 95;
+    ChangeBarDiameter change_bar_diameter = 96;
+    ChangeBarLength change_bar_length = 97;
+    ChangeBarSpacing change_bar_spacing = 98;
+    InsertBar insert_bar = 99;
+    RemoveBar remove_bar = 100;
+    ChangeFrostClass change_frost_class = 101;
+    ChangeCover change_cover = 102;
+    ChangeDeflectionLimit change_deflection_limit = 103;
+    ChangeSoilHeight change_soil_height = 104;
+    ChangeSoilDensity change_soil_density = 105;
+    ChangeIsothermDepth change_isotherm_depth = 106;
+    ChangePlanX change_plan_x = 107;
+    ChangePlanY change_plan_y = 108;
+    ChangePlanAngle change_plan_angle = 109;
+    ChangeInPlaneShear change_in_plane_shear = 110;
+    ChangeInPlaneMoment change_in_plane_moment = 111;
+    ChangeOpeningPosition change_opening_position = 112;
+    ChangeConcentratedPosition change_concentrated_position = 113;
+    ChangeConcentratedDistanceA1 change_concentrated_distance_a1 = 114;
+    ChangePlacementX change_placement_x = 115;
+    ChangePlacementY change_placement_y = 116;
+    ChangePlacementZ change_placement_z = 117;
+    ChangePlacementYaw change_placement_yaw = 118;
+    InsertPlacement insert_placement = 119;
+    RemovePlacement remove_placement = 120;
+    InsertCase insert_case = 121;
+    RemoveCase remove_case = 122;
+    ChangeCaseNumber change_case_number = 123;
+    ChangeCaseText change_case_text = 124;
+    ChangeCaseLabelEn change_case_label_en = 125;
+    ChangeCaseLabelDe change_case_label_de = 126;
+    ChangeCaseEntryId change_case_entry_id = 127;
+    ChangeBracingSystem change_bracing_system = 128;
+    ChangeDiaphragmStiffness change_diaphragm_stiffness = 129;
+    ChangeChaseWall change_chase_wall = 130;
+    ChangeChaseKind change_chase_kind = 131;
+    ChangeChaseX change_chase_x = 132;
+    ChangeChaseY change_chase_y = 133;
+    ChangeChaseWidth change_chase_width = 134;
+    ChangeChaseLength change_chase_length = 135;
+    ChangeChaseDepth change_chase_depth = 136;
+    InsertChase insert_chase = 137;
+    RemoveChase remove_chase = 138;
+    ChangeMovementJointWall change_movement_joint_wall = 139;
+    ChangeMovementJointPosition change_movement_joint_position = 140;
+    InsertMovementJoint insert_movement_joint = 141;
+    RemoveMovementJoint remove_movement_joint = 142;
   }
 }
-message ChangeAnnex {
-  string new_annex = 1;
+message ChangeConcentratedBearingLength {
+  string wall_id = 1;
+  string load_case_id = 2;
+  string id = 3;
+  double new_bearing_length_m = 4;
 }
-message ChangeMasonryClass {
-  string new_masonry_class = 1;
+message ChangeSlabSpan {
+  string wall_id = 1;
+  string id = 2;
+  double new_slab_span_m = 3;
+}
+message ChangeWallLength {
+  string id = 1;
+  double new_length_m = 2;
+}
+message ChangeWallHeight {
+  string id = 1;
+  double new_height_m = 2;
+}
+message ChangeWallThickness {
+  string id = 1;
+  double new_thickness_m = 2;
+}
+message ChangeEccentricityBottom {
+  string id = 1;
+  double new_eccentricity_bottom_m = 2;
+}
+message ChangeEccentricityTop {
+  string id = 1;
+  double new_eccentricity_top_m = 2;
+}
+message ChangePhiInfinity {
+  string id = 1;
+  double new_phi_infinity = 2;
+}
+message ChangeQKSnow {
+  string wall_id = 1;
+  string id = 2;
+  double new_q_k_snow_pa = 3;
+}
+message InsertConcentrated {
+  string wall_id = 1;
+  string load_case_id = 2;
+  uint64 index = 3;
+  ConcentratedLoad load = 4;
+}
+message InsertLoadCase {
+  string wall_id = 1;
+  uint64 index = 2;
+  WallLoadCase load_case = 3;
+}
+message InsertOpening {
+  string wall_id = 1;
+  uint64 index = 2;
+  WallOpening opening = 3;
+}
+message InsertWall {
+  uint64 index = 1;
+  MasonryWall wall = 2;
+}
+message RemoveConcentrated {
+  string wall_id = 1;
+  string load_case_id = 2;
+  string id = 3;
+}
+message RemoveLoadCase {
+  string wall_id = 1;
+  string id = 2;
+}
+message RemoveOpening {
+  string wall_id = 1;
+  string id = 2;
+}
+message RemoveWall {
+  string id = 1;
+}
+message ChangeAnnex {
+  AnnexChoice new_annex = 1;
+}
+message ChangeReliabilityClass {
+  string new_reliability_class = 1;
+}
+message ChangeQPWind {
+  string wall_id = 1;
+  string id = 2;
+  double new_q_p_wind_pa = 3;
 }
 message ChangeDesignSituation {
-  string new_design_situation = 1;
+  DesignSituation new_design_situation = 1;
+}
+message ChangeLoadCaseSituation {
+  string wall_id = 1;
+  string id = 2;
+  LoadCaseSituation new_design_situation = 3;
+}
+message ChangeConcentratedForce {
+  string wall_id = 1;
+  string load_case_id = 2;
+  string id = 3;
+  double new_force_n = 4;
+}
+message ChangeGKSlab {
+  string wall_id = 1;
+  string id = 2;
+  double new_g_k_slab_n = 3;
+}
+message ChangeQKImposed {
+  string wall_id = 1;
+  string id = 2;
+  double new_q_k_imposed_pa = 3;
+}
+message ChangeIsBasement {
+  string id = 1;
+  bool new_is_basement = 2;
 }
 message ChangeStoreys {
   uint32 new_storeys = 1;
 }
-message InsertWall {
-  uint32 index = 1;
-  string wall = 2;
+message ChangeMasonryClass {
+  MasonryClass new_masonry_class = 1;
 }
-message RemoveWall {
-  uint32 index = 1;
-}
-message ChangeWallThickness {
-  uint32 index = 1;
-  double new_thickness_m = 2;
-}
-message ChangeWallHeight {
-  uint32 index = 1;
-  double new_height_m = 2;
-}
-message ChangeWallLength {
-  uint32 index = 1;
-  double new_length_m = 2;
-}
-message ChangeWallType {
-  uint32 index = 1;
-  string new_wall_type = 2;
-}
-message ChangeSupportSides {
-  uint32 index = 1;
-  uint32 new_support_sides = 2;
-}
-message ChangeSlabBearingDepth {
-  uint32 index = 1;
-  double new_slab_bearing_depth_m = 2;
-}
-message ChangeEccentricityTop {
-  uint32 index = 1;
-  double new_eccentricity_top_m = 2;
-}
-message ChangeEccentricityBottom {
-  uint32 index = 1;
-  double new_eccentricity_bottom_m = 2;
-}
-message ChangeUnitGroup {
-  uint32 index = 1;
-  string new_unit_group = 2;
-}
-message ChangeUnitMaterial {
-  uint32 index = 1;
-  string new_unit_material = 2;
-}
-message ChangeUnitFb {
-  uint32 index = 1;
-  double new_f_b_pa = 2;
-}
-message ChangeUnitLength {
-  uint32 index = 1;
-  double new_unit_length_m = 2;
-}
-message ChangeUnitWidth {
-  uint32 index = 1;
-  double new_unit_width_m = 2;
-}
-message ChangeUnitHeight {
-  uint32 index = 1;
-  double new_unit_height_m = 2;
-}
-message ChangeMortarType {
-  uint32 index = 1;
-  string new_mortar_type = 2;
-}
-message ChangeMortarClass {
-  uint32 index = 1;
-  string new_mortar_class = 2;
-}
-message ChangeFm {
-  uint32 index = 1;
-  double new_f_m_pa = 2;
-}
-message ChangeBedJointThickness {
-  uint32 index = 1;
-  double new_bed_joint_thickness_m = 2;
-}
-message ChangeReinforced {
-  uint32 index = 1;
-  bool new_reinforced = 2;
-}
-message ChangeAsVertical {
-  uint32 index = 1;
-  double new_as_vertical_m2 = 2;
-}
-message ChangeAsHorizontal {
-  uint32 index = 1;
-  double new_as_horizontal_m2 = 2;
-}
-message ChangeFYd {
-  uint32 index = 1;
-  double new_f_yd_pa = 2;
-}
-message ChangeFireRei {
-  uint32 index = 1;
-  uint32 new_fire_rei_min = 2;
-}
-message ChangeExposure {
-  uint32 index = 1;
-  string new_exposure = 2;
-}
-message ChangeMu {
-  uint32 index = 1;
-  double new_mu = 2;
-}
-message ChangeLoadCaseSituation {
-  uint32 wall_index = 1;
-  uint32 load_case_index = 2;
-  string new_design_situation = 3;
+message ChangeImposedCategory {
+  string wall_id = 1;
+  string id = 2;
+  ImposedCategory new_imposed_category = 3;
 }
 message ChangeWallLabelDe {
-  uint32 index = 1;
+  string id = 1;
   string new_label_de = 2;
 }
 message ChangeWallLabelEn {
-  uint32 index = 1;
+  string id = 1;
   string new_label_en = 2;
 }
-message InsertOpening {
-  uint32 wall_index = 1;
-  uint32 index = 2;
-  string opening = 3;
+message ChangeExposure {
+  string id = 1;
+  ExposureClass new_exposure = 2;
 }
-message RemoveOpening {
-  uint32 wall_index = 1;
-  uint32 index = 2;
+message ChangeConcentratedBearingArea {
+  string wall_id = 1;
+  string load_case_id = 2;
+  string id = 3;
+  double new_bearing_area_m2 = 4;
 }
-message ChangeOpeningWidth {
-  uint32 wall_index = 1;
-  uint32 index = 2;
-  double new_width_m = 3;
+message ChangeSlabBearingDepth {
+  string id = 1;
+  double new_slab_bearing_depth_m = 2;
+}
+message ChangeTributaryArea {
+  string wall_id = 1;
+  string id = 2;
+  double new_tributary_area_m2 = 3;
+}
+message ChangeFireRei {
+  string id = 1;
+  uint32 new_fire_rei_min = 2;
+}
+message ChangeAsHorizontal {
+  string id = 1;
+  double new_as_horizontal_m2 = 2;
+}
+message ChangeAsVertical {
+  string id = 1;
+  double new_as_vertical_m2 = 2;
+}
+message ChangeFYd {
+  string id = 1;
+  double new_f_yd_pa = 2;
+}
+message ChangeReinforced {
+  string id = 1;
+  bool new_reinforced = 2;
+}
+message ChangeBedJointThickness {
+  string id = 1;
+  double new_bed_joint_thickness_m = 2;
+}
+message ChangeFm {
+  string id = 1;
+  double new_mortar_strength_pa = 2;
+}
+message ChangeMortarClass {
+  string id = 1;
+  MortarClass new_mortar_class = 2;
+}
+message ChangeMortarType {
+  string id = 1;
+  MortarType new_mortar_type = 2;
+}
+message ChangeCPe {
+  string wall_id = 1;
+  string id = 2;
+  double new_c_pe = 3;
+}
+message ChangeDensity {
+  string id = 1;
+  double new_density_kg_m3 = 2;
+}
+message ChangeSupportSides {
+  string id = 1;
+  uint32 new_support_sides = 2;
+}
+message ChangeUnitFb {
+  string id = 1;
+  double new_f_b_pa = 2;
+}
+message ChangeUnitGroup {
+  string id = 1;
+  UnitGroup new_unit_group = 2;
+}
+message ChangeUnitHeight {
+  string id = 1;
+  double new_unit_height_m = 2;
+}
+message ChangeUnitLength {
+  string id = 1;
+  double new_unit_length_m = 2;
+}
+message ChangeUnitMaterial {
+  string id = 1;
+  UnitMaterial new_unit_material = 2;
+}
+message ChangeUnitWidth {
+  string id = 1;
+  double new_unit_width_m = 2;
+}
+message ChangeWallType {
+  string id = 1;
+  WallType new_wall_type = 2;
+}
+message ChangeMu {
+  string id = 1;
+  double new_mu = 2;
 }
 message ChangeOpeningHeight {
-  uint32 wall_index = 1;
-  uint32 index = 2;
+  string wall_id = 1;
+  string id = 2;
   double new_height_m = 3;
 }
 message ChangeOpeningSill {
-  uint32 wall_index = 1;
-  uint32 index = 2;
+  string wall_id = 1;
+  string id = 2;
   double new_sill_height_m = 3;
 }
-message InsertLoadCase {
-  uint32 wall_index = 1;
-  uint32 index = 2;
-  string load_case = 3;
+message ChangeOpeningWidth {
+  string wall_id = 1;
+  string id = 2;
+  double new_width_m = 3;
 }
-message RemoveLoadCase {
-  uint32 wall_index = 1;
-  uint32 index = 2;
+message ChangeHKEarth {
+  string wall_id = 1;
+  string id = 2;
+  double new_h_k_earth_n = 3;
 }
-message ChangeNEdTop {
-  uint32 wall_index = 1;
-  uint32 index = 2;
-  double new_n_ed_top_n = 3;
+message ChangePierPosition {
+  string wall_id = 1;
+  string id = 2;
+  double new_position_m = 3;
 }
-message ChangeNEdMid {
-  uint32 wall_index = 1;
-  uint32 index = 2;
-  double new_n_ed_mid_n = 3;
+message ChangePierWidth {
+  string wall_id = 1;
+  string id = 2;
+  double new_width_m = 3;
 }
-message ChangeNEdBottom {
-  uint32 wall_index = 1;
-  uint32 index = 2;
-  double new_n_ed_bottom_n = 3;
+message InsertPier {
+  string wall_id = 1;
+  uint64 index = 2;
+  WallPier pier = 3;
 }
-message ChangeVEd {
-  uint32 wall_index = 1;
-  uint32 index = 2;
-  double new_v_ed_n = 3;
+message RemovePier {
+  string wall_id = 1;
+  string id = 2;
 }
-message ChangeWEd {
-  uint32 wall_index = 1;
-  uint32 index = 2;
-  double new_w_ed_pa = 3;
+message ChangeLintelPosition {
+  string wall_id = 1;
+  string id = 2;
+  double new_position_m = 3;
 }
-message InsertConcentrated {
-  uint32 wall_index = 1;
-  uint32 load_case_index = 2;
-  uint32 index = 3;
-  string load = 4;
+message ChangeLintelSpan {
+  string wall_id = 1;
+  string id = 2;
+  double new_span_m = 3;
 }
-message RemoveConcentrated {
-  uint32 wall_index = 1;
-  uint32 load_case_index = 2;
-  uint32 index = 3;
+message ChangeLintelDepth {
+  string wall_id = 1;
+  string id = 2;
+  double new_depth_m = 3;
 }
-message ChangeConcentratedForce {
-  uint32 wall_index = 1;
-  uint32 load_case_index = 2;
-  uint32 index = 3;
-  double new_force_n = 4;
+message ChangeLintelBearingLength {
+  string wall_id = 1;
+  string id = 2;
+  double new_bearing_length_m = 3;
 }
-message ChangeConcentratedBearingArea {
-  uint32 wall_index = 1;
-  uint32 load_case_index = 2;
-  uint32 index = 3;
-  double new_bearing_area_m2 = 4;
+message InsertLintel {
+  string wall_id = 1;
+  uint64 index = 2;
+  WallLintel lintel = 3;
 }
-message ChangeConcentratedBearingLength {
-  uint32 wall_index = 1;
-  uint32 load_case_index = 2;
-  uint32 index = 3;
-  double new_bearing_length_m = 4;
+message RemoveLintel {
+  string wall_id = 1;
+  string id = 2;
+}
+message ChangeTieKind {
+  string wall_id = 1;
+  string id = 2;
+  TieKind new_kind = 3;
+}
+message ChangeTiePosition {
+  string wall_id = 1;
+  string id = 2;
+  double new_position_m = 3;
+}
+message ChangeTieLevel {
+  string wall_id = 1;
+  string id = 2;
+  double new_level_m = 3;
+}
+message ChangeTieCapacity {
+  string wall_id = 1;
+  string id = 2;
+  double new_capacity_n = 3;
+}
+message InsertTie {
+  string wall_id = 1;
+  uint64 index = 2;
+  WallTie tie = 3;
+}
+message RemoveTie {
+  string wall_id = 1;
+  string id = 2;
+}
+message ChangePrestressForce {
+  string wall_id = 1;
+  string id = 2;
+  double new_force_n = 3;
+}
+message ChangePrestressArea {
+  string wall_id = 1;
+  string id = 2;
+  double new_area_m2 = 3;
+}
+message ChangePrestressStrength {
+  string wall_id = 1;
+  string id = 2;
+  double new_f_pk_pa = 3;
+}
+message ChangePrestressPosition {
+  string wall_id = 1;
+  string id = 2;
+  double new_position_m = 3;
+}
+message ChangePrestressEccentricity {
+  string wall_id = 1;
+  string id = 2;
+  double new_eccentricity_m = 3;
+}
+message ChangePrestressLoss {
+  string wall_id = 1;
+  string id = 2;
+  double new_loss_ratio = 3;
+}
+message InsertPrestress {
+  string wall_id = 1;
+  uint64 index = 2;
+  WallPrestress prestress = 3;
+}
+message RemovePrestress {
+  string wall_id = 1;
+  string id = 2;
+}
+message ChangeConfinedPosition {
+  string wall_id = 1;
+  string id = 2;
+  double new_position_m = 3;
+}
+message ChangeConfinedWidth {
+  string wall_id = 1;
+  string id = 2;
+  double new_width_m = 3;
+}
+message ChangeConfinedDepth {
+  string wall_id = 1;
+  string id = 2;
+  double new_depth_m = 3;
+}
+message ChangeConfinedSteel {
+  string wall_id = 1;
+  string id = 2;
+  double new_as_m2 = 3;
+}
+message InsertConfined {
+  string wall_id = 1;
+  uint64 index = 2;
+  ConfinedElement confined = 3;
+}
+message RemoveConfined {
+  string wall_id = 1;
+  string id = 2;
+}
+message ChangeFlangeLength {
+  string wall_id = 1;
+  string id = 2;
+  double new_length_m = 3;
+}
+message ChangeFlangeThickness {
+  string wall_id = 1;
+  string id = 2;
+  double new_thickness_m = 3;
+}
+message ChangeFlangePosition {
+  string wall_id = 1;
+  string id = 2;
+  double new_position_m = 3;
+}
+message InsertFlange {
+  string wall_id = 1;
+  uint64 index = 2;
+  ShearFlange flange = 3;
+}
+message RemoveFlange {
+  string wall_id = 1;
+  string id = 2;
+}
+message ChangeBarKind {
+  string wall_id = 1;
+  string id = 2;
+  BarKind new_kind = 3;
+}
+message ChangeBarDiameter {
+  string wall_id = 1;
+  string id = 2;
+  double new_diameter_m = 3;
+}
+message ChangeBarLength {
+  string wall_id = 1;
+  string id = 2;
+  double new_length_m = 3;
+}
+message ChangeBarSpacing {
+  string wall_id = 1;
+  string id = 2;
+  double new_spacing_m = 3;
+}
+message InsertBar {
+  string wall_id = 1;
+  uint64 index = 2;
+  WallBar bar = 3;
+}
+message RemoveBar {
+  string wall_id = 1;
+  string id = 2;
+}
+message ChangeFrostClass {
+  string id = 1;
+  FrostClass new_frost_class = 2;
+}
+message ChangeCover {
+  string id = 1;
+  double new_cover_m = 2;
+}
+message ChangeDeflectionLimit {
+  string id = 1;
+  double new_deflection_limit = 2;
+}
+message ChangeSoilHeight {
+  string id = 1;
+  double new_soil_height_m = 2;
+}
+message ChangeSoilDensity {
+  string id = 1;
+  double new_soil_density_kg_m3 = 2;
+}
+message ChangeIsothermDepth {
+  string id = 1;
+  double new_isotherm_depth_m = 2;
+}
+message ChangePlanX {
+  string id = 1;
+  double new_plan_x_m = 2;
+}
+message ChangePlanY {
+  string id = 1;
+  double new_plan_y_m = 2;
+}
+message ChangePlanAngle {
+  string id = 1;
+  double new_plan_angle_deg = 2;
+}
+message ChangeInPlaneShear {
+  string id = 1;
+  double new_in_plane_shear_n = 2;
+}
+message ChangeInPlaneMoment {
+  string id = 1;
+  double new_in_plane_moment_nm = 2;
+}
+message ChangeOpeningPosition {
+  string wall_id = 1;
+  string id = 2;
+  double new_position_m = 3;
+}
+message ChangeConcentratedPosition {
+  string wall_id = 1;
+  string load_case_id = 2;
+  string id = 3;
+  double new_position_m = 4;
+}
+message ChangeConcentratedDistanceA1 {
+  string wall_id = 1;
+  string load_case_id = 2;
+  string id = 3;
+  double new_distance_a1_m = 4;
+}
+message ChangePlacementX {
+  string id = 1;
+  double new_x = 2;
+}
+message ChangePlacementY {
+  string id = 1;
+  double new_y = 2;
+}
+message ChangePlacementZ {
+  string id = 1;
+  double new_z = 2;
+}
+message ChangePlacementYaw {
+  string id = 1;
+  double new_yaw = 2;
+}
+message InsertPlacement {
+  uint64 index = 1;
+  Placement item = 2;
+}
+message RemovePlacement {
+  string id = 1;
+}
+message InsertCase {
+  uint64 index = 1;
+  CaseRow case = 2;
+}
+message RemoveCase {
+  string id = 1;
+}
+message ChangeCaseNumber {
+  string case_id = 1;
+  string key = 2;
+  optional double value = 3;
+}
+message ChangeCaseText {
+  string case_id = 1;
+  string key = 2;
+  optional string value = 3;
+}
+message ChangeCaseLabelEn {
+  string case_id = 1;
+  string new_value = 2;
+}
+message ChangeCaseLabelDe {
+  string case_id = 1;
+  string new_value = 2;
+}
+message ChangeCaseEntryId {
+  string case_id = 1;
+  string new_value = 2;
+}
+message ChangeBracingSystem {
+  string id = 1;
+  string new_bracing_system = 2;
+}
+message ChangeDiaphragmStiffness {
+  string id = 1;
+  double new_diaphragm_stiffness_n_per_m = 2;
+}
+message ChangeChaseWall {
+  string id = 1;
+  string new_wall_id = 2;
+}
+message ChangeChaseKind {
+  string id = 1;
+  string new_kind = 2;
+}
+message ChangeChaseX {
+  string id = 1;
+  double new_x_m = 2;
+}
+message ChangeChaseY {
+  string id = 1;
+  double new_y_m = 2;
+}
+message ChangeChaseWidth {
+  string id = 1;
+  double new_width_m = 2;
+}
+message ChangeChaseLength {
+  string id = 1;
+  double new_length_m = 2;
+}
+message ChangeChaseDepth {
+  string id = 1;
+  double new_depth_m = 2;
+}
+message InsertChase {
+  uint64 index = 1;
+  WallChase item = 2;
+}
+message RemoveChase {
+  string id = 1;
+}
+message ChangeMovementJointWall {
+  string id = 1;
+  string new_wall_id = 2;
+}
+message ChangeMovementJointPosition {
+  string id = 1;
+  double new_position_m = 2;
+}
+message InsertMovementJoint {
+  uint64 index = 1;
+  MovementJoint item = 2;
+}
+message RemoveMovementJoint {
+  string id = 1;
 }

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeAssessmentFcMpa",
+  "id": "as-1",
+  "newConcreteStrengthMpa": 1.5
+}

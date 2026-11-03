@@ -1,0 +1,6 @@
+{
+  "ChangeFrameNodeSupport": {
+    "id": "node-a",
+    "newSupport": "Fixed"
+  }
+}

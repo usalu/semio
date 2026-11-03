@@ -1,0 +1,5 @@
+{
+  "mutation": "changeJointColumnId",
+  "id": "joint-1",
+  "newColumnId": "col-c2"
+}

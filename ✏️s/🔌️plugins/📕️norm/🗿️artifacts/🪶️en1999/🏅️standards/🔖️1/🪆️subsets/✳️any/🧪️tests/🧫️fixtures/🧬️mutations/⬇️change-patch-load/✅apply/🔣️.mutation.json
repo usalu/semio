@@ -1,0 +1,5 @@
+{
+  "mutation": "changePatchLoad",
+  "patchLoadId": "patch-1",
+  "newLoad": 24000.0
+}

@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-frame-bar-member-id/schema.json",
+  "title": "ChangeFrameBarMemberId",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newMemberId"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Frame bar",
+          "de": "Rahmenstab"
+        },
+        "description": {
+          "en": "The frame bar this mutation addresses, by id.",
+          "de": "Das adressierte Element (Rahmenstab), per Kennung."
+        },
+        "ref": {
+          "kind": "frame-bar"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newMemberId": {
+      "type": "string",
+      "x-semio-ui": {
+        "label": {
+          "en": "Steel member id (section, material)",
+          "de": "Stahlbauteil-Id (Querschnitt, Werkstoff)"
+        },
+        "widget": "text",
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

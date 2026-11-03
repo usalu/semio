@@ -1,0 +1,12 @@
+{
+  "InsertRailDerailment": {
+    "index": 1,
+    "item": {
+      "id": "rail-derailment-2",
+      "situation": "i",
+      "assumedLineLoad": 50000.0,
+      "loadedLength": 20.0,
+      "offset": 1.0
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "ChangePlatedStiffenerShape": {
+    "id": "pp-1",
+    "newStiffenerShape": "Flat"
+  }
+}

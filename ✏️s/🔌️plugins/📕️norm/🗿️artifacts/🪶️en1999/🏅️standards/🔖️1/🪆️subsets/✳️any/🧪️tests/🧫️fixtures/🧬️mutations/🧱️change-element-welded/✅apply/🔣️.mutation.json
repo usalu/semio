@@ -1,0 +1,6 @@
+{
+  "mutation": "changeElementWelded",
+  "sectionId": "sec-i120",
+  "elementId": "flange-top",
+  "newWelded": false
+}

@@ -13,20 +13,22 @@
       "const": "changeAnnex"
     },
     "newAnnex": {
-      "type": "string",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/snapshot.json#/$defs/AnnexChoice",
       "x-semio-ui": {
-        "widget": "text",
         "role": "value",
         "label": {
           "en": "National annex",
           "de": "Nationaler Anhang"
         },
         "description": {
-          "en": "de applies DIN EN 1998-1/NA (seismic zones), en the recommended CEN values.",
-          "de": "de wendet DIN EN 1998-1/NA an (Erdbebenzonen), en die empfohlenen CEN-Werte."
+          "en": "de applies DIN EN 1998-1/NA:2023-11 (plateau acceleration S_aP,R), en the recommended CEN values.",
+          "de": "de wendet DIN EN 1998-1/NA:2023-11 an (Plateau-Beschleunigung S_aP,R), en die empfohlenen CEN-Werte."
         },
         "group": "annex",
         "order": 10
+      },
+      "x-semio-rust": {
+        "type": "semio_s_plugin_norm_compliance::AnnexChoice"
       }
     }
   }

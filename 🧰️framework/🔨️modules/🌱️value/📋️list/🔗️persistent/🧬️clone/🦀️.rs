@@ -1,6 +1,6 @@
 //! 🔗️ Clones genuine original immutable roots through separately funded binding and projection turns.
 use crate::retained_clone::{RetainedClone,RetainedCloneBinding,RetainedCloneClose,RetainedCloneCursor,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef,RetainedCloneStep};
-use crate::{RetirementDemand, ValueError, ValueRefusalKind, snapshot_projection::ImmutableRootProjection, retirement::{RetireOwned, RetirementCursor, RetirementStep}, shared_issuance::SealedShared};
+use crate::{RetirementDemand, ValueError, ValueRefusalKind, snapshot_projection::ImmutableRootProjection, retirement::{RetireOwned, RetirementCursor, RetirementStep}};
 use crate::list::persistent::PersistentList;
 use std::mem::{ManuallyDrop,size_of};
 #[cfg(test)]

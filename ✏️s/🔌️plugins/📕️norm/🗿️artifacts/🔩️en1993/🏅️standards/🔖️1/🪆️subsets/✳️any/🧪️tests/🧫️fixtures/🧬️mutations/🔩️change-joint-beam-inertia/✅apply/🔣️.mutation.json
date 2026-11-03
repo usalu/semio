@@ -1,0 +1,6 @@
+{
+  "ChangeJointBeamInertia": {
+    "id": "joint-j1",
+    "newBeamInertia": 1.5
+  }
+}

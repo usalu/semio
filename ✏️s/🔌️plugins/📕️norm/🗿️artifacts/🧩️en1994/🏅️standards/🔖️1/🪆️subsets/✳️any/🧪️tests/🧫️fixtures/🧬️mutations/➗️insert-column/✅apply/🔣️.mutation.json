@@ -1,0 +1,45 @@
+{
+  "InsertColumn": {
+    "index": 0,
+    "column": {
+      "id": "col-new",
+      "kind": "concreteFilled",
+      "lengthM": 3.5,
+      "outerSizeM": 0.3,
+      "wallThicknessM": 0.01,
+      "steelAM2": 0.0084,
+      "steelFYPa": 355000000.0,
+      "concreteAM2": 0.072,
+      "concreteFCkPa": 30000000.0,
+      "reinforcementAsM2": 0.0012,
+      "reinforcementFYkPa": 500000000.0,
+      "iM4": 0.00021,
+      "bucklingCurve": "a",
+      "introducedForceN": 0.0,
+      "sectionHeightM": 0.0,
+      "sectionWidthM": 0.0,
+      "sectionTwM": 0.0,
+      "sectionTfM": 0.0,
+      "rebarCoverM": 0.0,
+      "reinforcementProduct": "hotRolled",
+      "actions": [
+        {
+          "id": "G-col",
+          "kind": "permanent",
+          "category": "self",
+          "stage": "composite",
+          "nKN": 1200000.0,
+          "mKNm": 20000.0
+        },
+        {
+          "id": "Q-col",
+          "kind": "imposed",
+          "category": "B",
+          "stage": "composite",
+          "nKN": 400000.0,
+          "mKNm": 15000.0
+        }
+      ]
+    }
+  }
+}

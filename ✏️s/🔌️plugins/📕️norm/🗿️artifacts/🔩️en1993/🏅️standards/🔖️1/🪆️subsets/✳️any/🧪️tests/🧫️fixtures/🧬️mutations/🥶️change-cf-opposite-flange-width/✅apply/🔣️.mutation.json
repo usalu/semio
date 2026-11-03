@@ -1,0 +1,6 @@
+{
+  "ChangeCfOppositeFlangeWidth": {
+    "id": "cf-1",
+    "newOppositeFlangeWidth": 1.5
+  }
+}

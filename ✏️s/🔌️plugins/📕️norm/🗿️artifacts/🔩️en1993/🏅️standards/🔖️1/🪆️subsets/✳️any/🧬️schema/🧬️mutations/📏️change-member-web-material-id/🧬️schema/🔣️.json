@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-member-web-material-id/schema.json",
+  "title": "ChangeMemberWebMaterialId",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newWebMaterialId"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Member",
+          "de": "Bauteil"
+        },
+        "description": {
+          "en": "The member this mutation addresses, by id.",
+          "de": "Das adressierte Element (Bauteil), per Kennung."
+        },
+        "ref": {
+          "kind": "member"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newWebMaterialId": {
+      "type": "string",
+      "x-semio-ui": {
+        "label": {
+          "en": "Web material of a hybrid girder (empty = the member material; the flanges keep the member material)",
+          "de": "Stegwerkstoff eines Hybridträgers (leer = Bauteilwerkstoff; die Gurte behalten den Bauteilwerkstoff)"
+        },
+        "widget": "text",
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

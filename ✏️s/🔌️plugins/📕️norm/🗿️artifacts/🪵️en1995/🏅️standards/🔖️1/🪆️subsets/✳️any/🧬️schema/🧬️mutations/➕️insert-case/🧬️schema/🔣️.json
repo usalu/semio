@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/insert-case/schema.json",
+  "title": "InsertCase",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "index",
+    "case"
+  ],
+  "properties": {
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Zero-based list position at which the record is inserted.",
+          "de": "Nullbasierte Listenposition, an der der Datensatz eingefügt wird."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
+    },
+    "case": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/CaseRow",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Case",
+          "de": "Fall"
+        },
+        "description": {
+          "en": "The complete catalogue case to insert.",
+          "de": "Der vollständige einzufügende Katalogfall."
+        },
+        "group": "record",
+        "order": 20
+      }
+    }
+  }
+}

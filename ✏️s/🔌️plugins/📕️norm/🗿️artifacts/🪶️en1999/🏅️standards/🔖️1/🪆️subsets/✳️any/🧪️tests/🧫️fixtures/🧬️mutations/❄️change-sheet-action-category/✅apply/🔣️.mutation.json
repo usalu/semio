@@ -1,0 +1,6 @@
+{
+  "mutation": "changeSheetActionCategory",
+  "coldFormedId": "sheet-pass",
+  "actionId": "G-sheet",
+  "newCategory": "selfWeight"
+}

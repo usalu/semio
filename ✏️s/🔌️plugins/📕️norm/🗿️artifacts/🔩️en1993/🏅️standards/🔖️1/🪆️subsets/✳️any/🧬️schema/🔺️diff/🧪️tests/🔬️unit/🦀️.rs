@@ -5,7 +5,7 @@ use protocol::os_spr::protocol_laws::{assert_diff_algebra_inverse_law, assert_mu
 use protocol::DiffAlgebra;
 
 fn base() -> En1993Snapshot {
-    En1993Snapshot::default()
+    En1993Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De)
 }
 
 fn changed() -> En1993Snapshot {

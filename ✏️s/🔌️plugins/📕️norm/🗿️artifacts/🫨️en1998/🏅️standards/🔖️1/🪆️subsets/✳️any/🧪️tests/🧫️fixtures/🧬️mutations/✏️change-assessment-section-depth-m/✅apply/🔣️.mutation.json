@@ -1,0 +1,5 @@
+{
+  "mutation": "changeAssessmentSectionDepthM",
+  "id": "as-1",
+  "newSectionDepthM": 1.5
+}

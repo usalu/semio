@@ -1,0 +1,6 @@
+{
+  "ChangeFrameNodeLoadZ": {
+    "id": "node-a",
+    "newLoadZ": 1.5
+  }
+}

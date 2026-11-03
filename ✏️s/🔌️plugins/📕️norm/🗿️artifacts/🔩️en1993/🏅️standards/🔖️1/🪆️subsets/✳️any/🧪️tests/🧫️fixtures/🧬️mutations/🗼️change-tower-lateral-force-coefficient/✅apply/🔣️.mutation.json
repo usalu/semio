@@ -1,0 +1,6 @@
+{
+  "ChangeTowerLateralForceCoefficient": {
+    "id": "tw-1",
+    "newLateralForceCoefficient": 1.5
+  }
+}

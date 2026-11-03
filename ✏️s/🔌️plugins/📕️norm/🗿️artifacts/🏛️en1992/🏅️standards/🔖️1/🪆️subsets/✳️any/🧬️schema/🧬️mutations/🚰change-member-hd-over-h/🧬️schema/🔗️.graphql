@@ -1,0 +1,4 @@
+type ChangeMemberHdOverH {
+  memberId: String!
+  newValue: Float!
+}

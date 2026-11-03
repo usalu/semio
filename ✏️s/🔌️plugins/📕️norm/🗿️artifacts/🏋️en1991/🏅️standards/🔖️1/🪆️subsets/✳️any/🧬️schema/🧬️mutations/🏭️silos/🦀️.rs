@@ -17,8 +17,8 @@ pub mod change_assumed_silo_wall_friction;
 pub mod change_silo_claimed;
 #[path = "../⭕change-silo-hydraulic-radius/🦀️.rs"]
 pub mod change_silo_hydraulic_radius;
-#[path = "../⚖️change-silo-kind/🦀️.rs"]
-pub mod change_silo_kind;
 //#endregion 🪢️Mounts
 
-pub use semio_s_artifact_norm_en1991_mut_silos_2::{change_assumed_silo_pressure, change_silo_bulk_density, change_silo_height, change_silo_k, change_silo_mu};
+pub use semio_s_artifact_norm_en1991_mut_silo_properties::{change_assumed_silo_pressure, change_silo_bulk_density, change_silo_height, change_silo_k, change_silo_mu};
+
+pub use semio_s_artifact_norm_en1991_mut_silos_more::{change_silo_kind, change_silo_diameter, change_silo_eccentricity, change_silo_hopper_angle_deg};

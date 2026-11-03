@@ -1,0 +1,5 @@
+{
+  "mutation": "changeBridgeDeckTwistLimit",
+  "id": "bri-1",
+  "newDeckTwistLimit": 2.0
+}

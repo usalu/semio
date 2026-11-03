@@ -16,7 +16,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-s-artifact-norm-vdi3805-examples-failing-2 = { workspace = true }
+semio-s-artifact-norm-vdi3805-examples-failing-blatt-4-to-19 = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }

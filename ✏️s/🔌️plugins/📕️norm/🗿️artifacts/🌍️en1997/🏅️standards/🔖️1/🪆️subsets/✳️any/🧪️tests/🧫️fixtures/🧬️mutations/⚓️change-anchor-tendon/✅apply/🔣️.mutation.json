@@ -1,0 +1,5 @@
+{
+  "mutation": "changeAnchorTendon",
+  "id": "anchor-A1",
+  "newTendon": "strand"
+}

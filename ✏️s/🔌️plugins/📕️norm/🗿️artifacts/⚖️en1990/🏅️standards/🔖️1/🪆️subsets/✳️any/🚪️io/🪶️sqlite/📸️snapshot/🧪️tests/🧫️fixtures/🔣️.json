@@ -1,22 +1,21 @@
 {
   "annex": "En",
   "projectId": "bridge 世界\u0000",
-  "structureKind": "custom",
+  "structureKind": "building",
   "altitudeM": -12.5,
   "consequenceClass": 255,
-  "reliabilityClass": 0,
+  "reliabilityClass": "RC3",
   "designWorkingLifeCategory": 254,
   "designWorkingLifeYears": 50.5,
   "referencePeriodYears": -1.25,
-  "supervisionLevel": "",
-  "inspectionLevel": "IL 世界",
-  "kFiDeclared": 1.125,
+  "supervisionLevel": "dsl2",
+  "inspectionLevel": "il2",
   "betaComputed": -3.75,
   "permanents": [
-    {"id": "G", "kind": "g_sup", "gk": 80000.5},
-    {"id": "G", "kind": "custom", "gk": -20000.25}
+    {"id": "G", "kind": "gSup", "gk": 80000.5},
+    {"id": "G", "kind": "gSup", "gk": -20000.25}
   ],
-  "variables": [{"id": "Q", "category": "office", "qk": 40000.125}],
+  "variables": [{"id": "Q", "category": "office", "qk": 40000.125, "group": "gr1a 世界"}],
   "accidentals": [{"id": "A", "ad": -12.75}],
   "seismics": [
     {"id": "S1", "aEk": 1.5, "importanceClass": "I"},
@@ -25,17 +24,33 @@
     {"id": "S4", "aEk": -4.5, "importanceClass": "IV"}
   ],
   "members": [
-    {"id": "beam", "labelEn": "Beam 世界", "labelDe": "Träger", "rdStr": 1.25, "rdGeo": 2.5, "rdEquStab": 3.75, "rdEquDestab": 4.25, "rdFat": 5.5, "span": 6.75, "deflectionW": -0.125, "deflectionLimitRatio": 250.5, "vibrationFrequency": 5.75, "vibrationFrequencyMin": 3.25},
-    {"id": "duplicate", "labelEn": "", "labelDe": "A", "rdStr": 11.25, "rdGeo": 12.5, "rdEquStab": 13.75, "rdEquDestab": 14.25, "rdFat": 15.5, "span": 16.75, "deflectionW": -10.125, "deflectionLimitRatio": 350.5, "vibrationFrequency": 15.75, "vibrationFrequencyMin": 13.25},
-    {"id": "duplicate", "labelEn": "", "labelDe": "B", "rdStr": 21.25, "rdGeo": 22.5, "rdEquStab": 23.75, "rdEquDestab": 24.25, "rdFat": 25.5, "span": 26.75, "deflectionW": -20.125, "deflectionLimitRatio": 450.5, "vibrationFrequency": 25.75, "vibrationFrequencyMin": 23.25}
+    {"id": "beam", "labelEn": "Beam 世界", "labelDe": "Träger", "rdStr": 1.25, "rdGeo": 2.5, "rdEquStab": 3.75, "rdEquDestab": 4.25, "rdFat": 5.5, "span": 6.75, "precamber": 0.0625, "deflectionW1": -0.125, "deflectionW2": -0.25, "deflectionW3": -0.5, "deflectionLimitRatio": 250.5, "deflectionLimitRatioW3": 251.5, "slsLimitChar": 2.5, "slsLimitFreq": 5.0, "slsLimitQp": 10.0, "vibrationFrequency": 5.75, "vibrationFrequencyMin": 3.25, "frameHeight": 0.0, "frameDrift": 0.0, "storeyHeight": 0.0, "storeyDrift": 0.0, "materialStrengthK": 0.0, "materialConversionFactor": 0.0, "materialPartialFactor": 0.0, "materialDesignStrength": 0.0, "nominalDimension": 0.0, "dimensionTolerance": 0.0, "designDimension": 0.0, "memberAlphaCr": 0.0, "secondOrderAnalysis": 0.0},
+    {"id": "duplicate", "labelEn": "", "labelDe": "A", "rdStr": 11.25, "rdGeo": 12.5, "rdEquStab": 13.75, "rdEquDestab": 14.25, "rdFat": 15.5, "span": 16.75, "precamber": 0.0625, "deflectionW1": -10.125, "deflectionW2": -20.25, "deflectionW3": -40.5, "deflectionLimitRatio": 350.5, "deflectionLimitRatioW3": 351.5, "slsLimitChar": 2.5, "slsLimitFreq": 5.0, "slsLimitQp": 10.0, "vibrationFrequency": 15.75, "vibrationFrequencyMin": 13.25, "frameHeight": 0.0, "frameDrift": 0.0, "storeyHeight": 0.0, "storeyDrift": 0.0, "materialStrengthK": 0.0, "materialConversionFactor": 0.0, "materialPartialFactor": 0.0, "materialDesignStrength": 0.0, "nominalDimension": 0.0, "dimensionTolerance": 0.0, "designDimension": 0.0, "memberAlphaCr": 0.0, "secondOrderAnalysis": 0.0},
+    {"id": "duplicate", "labelEn": "", "labelDe": "B", "rdStr": 21.25, "rdGeo": 22.5, "rdEquStab": 23.75, "rdEquDestab": 24.25, "rdFat": 25.5, "span": 26.75, "precamber": 0.0625, "deflectionW1": -20.125, "deflectionW2": -40.25, "deflectionW3": -80.5, "deflectionLimitRatio": 450.5, "deflectionLimitRatioW3": 451.5, "slsLimitChar": 2.5, "slsLimitFreq": 5.0, "slsLimitQp": 10.0, "vibrationFrequency": 25.75, "vibrationFrequencyMin": 23.25, "frameHeight": 0.0, "frameDrift": 0.0, "storeyHeight": 0.0, "storeyDrift": 0.0, "materialStrengthK": 0.0, "materialConversionFactor": 0.0, "materialPartialFactor": 0.0, "materialDesignStrength": 0.0, "nominalDimension": 0.0, "dimensionTolerance": 0.0, "designDimension": 0.0, "memberAlphaCr": 0.0, "secondOrderAnalysis": 0.0}
   ],
   "bridgeSls": [
-    {"id": "B", "memberId": "beam", "deckAcceleration": 1.25, "deckAccelerationLimit": 2.5, "deckTwist": -3.75, "deckTwistLimit": 4.25, "bridgeDeflection": -5.5, "bridgeDeflectionLimit": 6.75},
-    {"id": "B", "memberId": "missing", "deckAcceleration": 11.25, "deckAccelerationLimit": 12.5, "deckTwist": -13.75, "deckTwistLimit": 14.25, "bridgeDeflection": -15.5, "bridgeDeflectionLimit": 16.75}
+    {"id": "B", "memberId": "beam", "deckAcceleration": 1.25, "deckAccelerationLimit": 2.5, "deckTwist": -3.75, "deckTwistLimit": 4.25, "bridgeDeflection": -5.5, "bridgeDeflectionLimit": 6.75, "trackGauge": 0.0, "lineSpeed": 0.0, "ballastDepth": 0.0, "deckMass": 0.0, "naturalFrequency": 0.0, "endRotation": 0.0, "basicWindSpeed": 0.0, "dampingRatio": 0.0},
+    {"id": "B", "memberId": "missing", "deckAcceleration": 11.25, "deckAccelerationLimit": 12.5, "deckTwist": -13.75, "deckTwistLimit": 14.25, "bridgeDeflection": -15.5, "bridgeDeflectionLimit": 16.75, "trackGauge": 0.0, "lineSpeed": 0.0, "ballastDepth": 0.0, "deckMass": 0.0, "naturalFrequency": 0.0, "endRotation": 0.0, "basicWindSpeed": 0.0, "dampingRatio": 0.0}
   ],
   "effects": [
     {"memberId": "beam", "actionId": "Q", "influence": 1.25},
     {"memberId": "duplicate", "actionId": "G", "influence": -2.5},
     {"memberId": "missing", "actionId": "missing", "influence": 3.75}
-  ]
+  ],
+  "fatigueSpectra": [
+    {"id": "F", "memberId": "beam", "detailCategory": 71000000.5, "stressRange": 62500000.25, "cycles": 2000000.0},
+    {"id": "F", "memberId": "duplicate", "detailCategory": 90000000.0, "stressRange": -1.5, "cycles": 0.0},
+    {"id": "F2", "memberId": "missing", "detailCategory": 112000000.0, "stressRange": 30000000.0, "cycles": 1.0e7}
+  ],
+  "reliabilityAnalyses": [
+    {"id": "R", "resistanceDistribution": "lognormal", "resistanceMean": 500000.5, "resistanceSd": 50000.25, "actionDistribution": "normal", "actionMean": 200000.0, "actionSd": 40000.0}
+  ],
+  "testSeries": [
+    {"id": "T", "quantity": "yield strength 世界", "distribution": "lognormal", "sampleSize": 6, "mean": 355.5, "stdDev": 17.75, "variationKnown": 0.0, "conversionFactor": 0.9, "required": 300.0, "pairs": "", "theoryVariation": 0.0},
+    {"id": "T", "quantity": "", "distribution": "normal", "sampleSize": 4294967295, "mean": -1.5, "stdDev": 2.5, "variationKnown": 0.125, "conversionFactor": 1.0, "required": -3.75, "pairs": "", "theoryVariation": 0.0}
+  ],
+  "placements": [],
+  "cases": [],
+  "factorOverrides": [],
+  "trafficGroups": []
 }

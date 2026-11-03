@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-cf-thickness/schema.json",
+  "title": "ChangeCfThickness",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newThickness"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Cold-formed member",
+          "de": "Kaltprofil"
+        },
+        "description": {
+          "en": "The cold-formed member this mutation addresses, by id.",
+          "de": "Das adressierte Element (Kaltprofil), per Kennung."
+        },
+        "ref": {
+          "kind": "cold-formed"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newThickness": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Nominal thickness t",
+          "de": "Nennblechdicke t"
+        },
+        "widget": "stepper",
+        "unit": "m",
+        "displayUnit": "mm",
+        "displayFactor": 1000,
+        "precision": 2,
+        "step": 0.00001,
+        "snaps": [
+          0.00075,
+          0.00088,
+          0.001,
+          0.00125,
+          0.0015
+        ],
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

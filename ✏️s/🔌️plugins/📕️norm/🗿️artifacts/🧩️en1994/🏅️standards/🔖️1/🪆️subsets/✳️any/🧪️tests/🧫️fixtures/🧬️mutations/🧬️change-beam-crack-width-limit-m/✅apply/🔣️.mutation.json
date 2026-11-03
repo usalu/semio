@@ -1,0 +1,6 @@
+{
+  "ChangeBeamCrackWidthLimitM": {
+    "id": "beam-B1",
+    "newWkLimitM": 0.000375
+  }
+}

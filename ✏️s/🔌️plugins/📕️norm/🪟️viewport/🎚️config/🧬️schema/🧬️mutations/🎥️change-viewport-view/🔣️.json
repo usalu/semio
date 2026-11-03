@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/📕️norm/🪟️viewport/🎚️config/🧬️schema/🧬️mutations/🎥️change-viewport-view",
+  "semanticKind": "change-viewport-view",
+  "displayName": "Change Viewport View",
+  "emoji": "🎥️",
+  "aggregateVariant": "ChangeViewportView",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "change-viewport-view",
+  "binaryTag": 0,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "text",
+    "binary"
+  ]
+}

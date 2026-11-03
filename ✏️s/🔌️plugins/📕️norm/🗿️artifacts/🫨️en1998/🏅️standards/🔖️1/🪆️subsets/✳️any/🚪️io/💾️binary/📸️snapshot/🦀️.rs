@@ -30,7 +30,7 @@ mod native_snapshot_codec {
 use crate::binary::snapshot::*;
 use crate::binary::snapshot::*;
 use semio_s_artifact_norm_en1998_model::*;
-use semio_s_artifact_norm_en1998_model::{DeGroundCombo, DeSeismicZone, En1998Assessment, En1998Bridge, En1998Building, En1998Foundation, En1998RetainingWall, En1998Site, En1998Silo, En1998Storey, En1998VariableAction, En1998System, En1998Tank, En1998Tower, En1998Member};
+use semio_s_artifact_norm_en1998_model::{DeGroundCombo, En1998Assessment, En1998Bridge, En1998Building, En1998Foundation, En1998RetainingWall, En1998Site, En1998Silo, En1998Storey, En1998VariableAction, En1998System, En1998Tank, En1998Tower, En1998SoilLayer, En1998Diaphragm, En1998Accelerogram, En1998Pier, En1998Bearing, En1998Joint, En1998Member};
 use framework_schema::ArtifactSchema;
 use crate::text::snapshot::*;
 pub fn encode_en1998_pack(snapshot: &En1998Snapshot) -> Vec<u8> {
@@ -41,5 +41,3 @@ pub fn decode_en1998_pack(bytes: &[u8]) -> Result<En1998Snapshot, String> {
 }
 }
 pub use crate::binary::snapshot::native_snapshot_codec::*;
-
-semio_s_plugin_norm_compliance::impl_norm_artifact_record!(@binary En1998Snapshot, extension="en1998", envelope_id="norm.en1998", sqlite=crate::sqlite::snapshot::sqlite_codec);

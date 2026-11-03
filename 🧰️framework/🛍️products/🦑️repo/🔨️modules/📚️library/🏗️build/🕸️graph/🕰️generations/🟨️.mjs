@@ -1,3 +1,5 @@
+import{pendingCratePathsV1}from"./🕓️pending-crates/🟨️.mjs";
+import{readEdgeReadsV1,readEnvironmentPartsV1}from"./🧵️edge-reads/🟨️.mjs";
 import{createHash,randomBytes}from"node:crypto";
 import{brotliCompressSync,brotliDecompressSync,constants as zlibConstants}from"node:zlib";
 import{lstat,mkdir,open,readdir,readFile,rename,rm}from"node:fs/promises";
@@ -7,11 +9,12 @@ import{graphStringInternerV1,internJsonStringsV1}from"../../🧠️memory/🟨�
 import{canonicalJsonV1,compareCodePointsV1,decodeFactIndexV1,encodeFactIndexV1,openFactIndexV1}from"./🧮️fact-codec/🟨️.mjs";
 import{coverageOfV1,mergeVerifiedStampV1,readVerifiedStampV1,uncoveredOfV1}from"./🔭️coverage/🟨️.mjs";
 import{INDEX_CHUNK_POLICY_V1,addOwnerRunsV1,bulkUpsertClassesV1,classesOfChunksV1,createChunkInternerV1}from"./🧱️chunk-classes/🟨️.mjs";
+import{createFrontierV1,diffFrontiersV1,frontierFactHoldsV1,frontierHoldsV1,stableDirectoriesV1}from"./🧭️frontier/🟨️.mjs";
 import{mergeIntoHeadV1}from"./🔀️merge/🟨️.mjs";
 import{derivedUpsertsV1,holdersOfDerivedV1,isDerivedOwnerV1,orphanedDerivedOwnersV1,scopeWithDerivedV1,settleSuspectsV1,splitStaleConsumersV1,suspectsWithinV1,unsupportedDerivedV1,verifiableRowIdsV1}from"./✂️cutoff/🟨️.mjs";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 
-export{canonicalJsonV1,compareCodePointsV1};
+export{canonicalJsonV1,compareCodePointsV1,createFrontierV1,diffFrontiersV1,frontierFactHoldsV1,frontierHoldsV1,stableDirectoriesV1};
 
 /** 📏️ The declared names and limits of the graph generation store; the schema file is their single source. */
 export const GENERATION_POLICY_V1=Object.freeze({...schema.definitions.Policy.const,policies:Object.freeze([...schema.definitions.Policy.const.policies])});
@@ -68,7 +71,8 @@ export function readGenerationPointerV1(bytes){
 /** 📜️ Admits one closed immutable generation manifest. */
 export function readGenerationManifestV1(bytes){
  const value=JSON.parse(Buffer.from(bytes).toString("utf8"));
- requireKeys(value,["version","generation","parent","identity","implementation","env","membership","frontier","factIndex","global","owners","built"],[],"generation manifest");
+ requireKeys(value,["version","generation","parent","identity","implementation","env","membership","frontier","factIndex","global","owners","built"],["envParts"],"generation manifest");
+ if(value.envParts!==undefined)readEnvironmentPartsV1(value.envParts);
  if(value.version!==1)throw fail("Generation manifest version 1 required");
  requireCount(value.generation,"generation");
  if(value.parent!==null)requireHex(value.parent,"parent");
@@ -76,7 +80,7 @@ export function readGenerationManifestV1(bytes){
  if(value.frontier!==null)requireHex(value.frontier,"frontier");
  if(!isObject(value.owners)||Object.keys(value.owners).length>P.maximumOwners)throw fail("Bounded owner table required");
  for(const[name,row]of Object.entries(value.owners)){
-  requireText(name,"owner name");requireKeys(row,["root","kind","fragment","bytes","edgesEnv","targets"],["config","nativeRoot","tag"],"generation owner");
+  requireText(name,"owner name");requireKeys(row,["root","kind","fragment","bytes","edgesEnv","targets"],["config","nativeRoot","tag","reads"],"generation owner");if(row.reads!==undefined)readEdgeReadsV1(row.reads);
   requireText(row.root,"owner root");if(!["project","unavailable"].includes(row.kind))throw fail("Closed owner kind required");
   requireHex(row.fragment,"fragment");requireHex(row.edgesEnv,"edgesEnv");requireCount(row.bytes,"fragment bytes",P.maximumFragmentBytes);
   if(!Array.isArray(row.targets)||row.targets.some(target=>typeof target!=="string"))throw fail("Target name list required");
@@ -235,48 +239,6 @@ export function staleConsumersV1(index,classes,stale){
  return names;
 }
 
-/** 🗺️ Captures the membership frontier: every directory with its entry stamp (`[path, mtimeMs, ino]`) and every member with its mode (`[path, mode]`), so unchanged membership is proven by stat calls instead of a walk. */
-export function createFrontierV1({directories,members,capturedAt}){
- return{version:1,capturedAt,directories:[...directories].sort((a,b)=>compareCodePointsV1(a[0],b[0])),members:[...members].sort((a,b)=>compareCodePointsV1(a[0],b[0]))};
-}
-
-/** 0️⃣ Whether a recorded frontier fact (an inode or a member mode) agrees with a present one: `0` is the native scan's word for a fact the platform does not give it without a handle (Windows has neither POSIX inodes nor modes in `std`), and an unknown fact never contradicts. https://learn.microsoft.com/windows/win32/api/fileapi/nf-fileapi-getfileinformationbyhandle */
-export function frontierFactHoldsV1(present,recorded){return recorded===0||present===0||present===recorded;}
-
-/** 🚪️ True when no directory entry stamp and no member mode moved since the capture; a directory touched within the racy window of the capture never counts as proven. */
-export async function frontierHoldsV1(frontier,stat,{signal,concurrency=P.readConcurrency*2,racyMilliseconds=P.racyMilliseconds}={}){
- const rows=[...frontier.directories.map(row=>({row,directory:true})),...frontier.members.map(row=>({row,directory:false}))];
- let next=0,ok=true;
- await Promise.all(Array.from({length:Math.min(concurrency,rows.length)},async()=>{
-  while(ok&&next<rows.length){
-   aborted(signal);const{row,directory}=rows[next++];let status;
-   try{status=await stat(row[0]);}catch{ok=false;return;}
-   if(!status){ok=false;return;}
-   if(directory){if(!status.directory||status.mtimeMs!==row[1]||!frontierFactHoldsV1(status.ino,row[2])||frontier.capturedAt-row[1]<racyMilliseconds)ok=false;}
-   else if(!status.file||!frontierFactHoldsV1(status.mode,row[1]))ok=false;
-  }
- }));
- return ok;
-}
-
-/** 📁️ The directories whose entry sets are proven unchanged since `before` was captured: same stamp and inode in `after`, and not touched within the racy window of the earlier capture (a change in the same clock tick would be invisible). A recorded listing, type or absence of an entry of such a directory cannot have moved, because an entry appears, vanishes or changes type only by changing its parent. */
-export function stableDirectoriesV1(before,after,{racyMilliseconds=P.racyMilliseconds}={}){
- const old=new Map(before.directories.map(row=>[row[0],row])),stable=new Set();
- for(const row of after.directories){const was=old.get(row[0]);if(was&&was[1]===row[1]&&frontierFactHoldsV1(was[2],row[2])&&before.capturedAt-was[1]>=racyMilliseconds)stable.add(row[0]);}
- return stable;
-}
-
-/** ➗️ Names the paths that appeared, vanished or changed between two frontiers (directories whose stamp moved are `changed`, members whose mode moved are `changed`). */
-export function diffFrontiersV1(before,after){
- const changes=[];
- for(const directory of[true,false]){
-  const old=new Map((directory?before.directories:before.members).map(row=>[row[0],row])),next=new Map((directory?after.directories:after.members).map(row=>[row[0],row]));
-  for(const[path,row]of next){const was=old.get(path);if(!was)changes.push({path,kind:"added",directory});else if(directory?was[1]!==row[1]||!frontierFactHoldsV1(was[2],row[2]):!frontierFactHoldsV1(was[1],row[1]))changes.push({path,kind:"changed",directory});}
-  for(const path of old.keys())if(!next.has(path))changes.push({path,kind:"removed",directory});
- }
- return changes.sort((a,b)=>compareCodePointsV1(a.path,b.path));
-}
-
 /** 🗂️ The filesystem port of the store on real files: a missing file reads as undefined, writes are atomic by rename and a content addressed write that finds its file does nothing. */
 export function createNodeFilePortV1(){
  return Object.freeze({
@@ -338,6 +300,7 @@ export function unfoundedWithheldOwnersV1(index,owners,separator=sep){
 export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,holds,derive,resources,now=()=>Date.now(),sleep=defaultSleep,stamp=P.stampVerification}){
  if(typeof root!=="string"||!root||typeof holds!=="function"||!resources?.facts)throw fail("Generation store root, fact check and facts resource required");
  const stats={holdCalls:0,rowsChecked:0,computed:0,published:0,casConflicts:0,merged:0,mergeConflicts:0,publishHeldMs:[],indexLoads:0,fragmentReads:0,indexViews:0};
+ const answered=new Map();
  const at=(directory,digest,extension)=>join(root,directory,digest+extension),pointerPath=join(root,P.pointer),indexCache=new Map();
  const manifestPath=digest=>at(P.manifests,digest,".json"),fragmentPath=digest=>at(P.fragments,digest,".json.br"),indexPath=digest=>at(P.indexes,digest,".facts.br"),frontierPath=digest=>at(P.frontiers,digest,".json.br");
  const hold=async(rows,signal)=>{stats.holdCalls++;stats.rowsChecked+=rows.length;return holds(rows,signal);};
@@ -403,7 +366,7 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
   * `changes` undefined means the caller cannot diff membership: the plan is cold.
   */
  async function plan({current,identity,changes,only,skipEnvironment=false,signal,progress}){
-  const cold=reason=>({kind:"cold",reason,dirty:new Set(),added:[],removed:[],envStale:true,checked:0});
+  const cold=reason=>({kind:"cold",reason,dirty:new Set(),added:[],removed:[],pending:[],envStale:true,checked:0});
   if(!current?.manifest)return cold(current?(current.missing?"manifest":"invalidated"):"empty");
   const manifest=current.manifest;
   if(manifest.identity!==identity)return cold("identity");
@@ -413,8 +376,10 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
   const dirty=new Set(),added=[],removed=new Set(),reasons=[],owners=Object.entries(manifest.owners),ownerOf=createProjectFileIndexV1(Object.fromEntries(owners.map(([name,row])=>[name,{root:row.root}])));
   const configs=new Map(owners.filter(([,row])=>row.config!==undefined).map(([name,row])=>[row.config,name]));
   let envStale=false;
+  const pending=pendingCratePathsV1(changes,ownerOf);
   for(const change of changes){
    const known=configs.get(change.path);
+   if(pending.has(change.path))continue;
    if(change.config&&change.kind==="added")added.push(change.path);
    else if(change.config&&change.kind==="removed"&&known)removed.add(known);
    else if(change.config&&known)dirty.add(known);
@@ -425,11 +390,11 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
   const unfounded=unfoundedWithheldOwnersV1(index,manifest.owners);for(const name of unfounded)dirty.add(name);
   const scope=only?new Set(skipEnvironment?only:[...only,P.envOwner]):undefined,selection=selectFactClassesV1(index,scope?scopeWithDerivedV1(index,scope):undefined);
   const{stale}=await staleFactRowsV1(index,verifiableRowIdsV1(index,selection.ids),hold,{signal,progress});
-  const{direct,suspects:reached}=splitStaleConsumersV1(index,selection.classes,stale),suspects=scope?suspectsWithinV1(index,reached,scope):reached,settled=await settleSuspectsV1({index,suspects,derive,signal,progress}),changedHolders=holdersOfDerivedV1(index,settled.changed.keys());
+  const{direct,suspects:reached}=splitStaleConsumersV1(index,selection.classes,stale),suspects=scope?suspectsWithinV1(index,reached,scope):reached,settled=await settleSuspectsV1({index,suspects,derive,signal,progress,memo:answered,hold}),changedHolders=holdersOfDerivedV1(index,settled.changed.keys());
   for(const name of direct){if(name===P.envOwner)envStale=true;else if(manifest.owners[name])dirty.add(name);}
   for(const holders of changedHolders.values())for(const name of holders)if(manifest.owners[name])dirty.add(name);
   for(const change of changes){
-   if(reasons.length>=P.reasonRows)break;if(change.directory&&change.kind!=="removed")continue;
+   if(reasons.length>=P.reasonRows)break;if(change.directory&&change.kind!=="removed"||pending.has(change.path))continue;
    const owner=configs.get(change.path)??ownerOf(change.path);reasons.push({change:{path:change.path,kind:change.kind},owners:[owner??P.envOwner]});
   }
   for(const id of[...stale].sort((a,b)=>a-b)){
@@ -443,7 +408,7 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
   for(const name of removed)dirty.delete(name);
   const scoped=only?new Set([...[...dirty].filter(name=>only.has(name)),...unfounded]):dirty,clean=!scoped.size&&!added.length&&!removed.size&&!envStale;
   const staleKinds={};for(const id of stale){const kind=index.rows[id].kind;staleKinds[kind]=(staleKinds[kind]??0)+1;}
-  return{kind:clean?"clean":"delta",dirty:scoped,added,removed:[...removed],envStale,checked:selection.ids.length,stale:stale.size,staleKinds,reasons,cutoff:{questions:suspects.size,held:settled.held.size,changed:settled.changed.size,failed:settled.failed},refresh:settled.held};
+  return{kind:clean?"clean":"delta",dirty:scoped,added,removed:[...removed],pending:[...pending].sort(compareCodePointsV1),envStale,checked:selection.ids.length,stale:stale.size,staleKinds,reasons,cutoff:{questions:suspects.size,held:settled.held.size,changed:settled.changed.size,failed:settled.failed,reused:settled.reused},refresh:settled.held};
  }
 
  /** 🤝️ Swaps the pointer for the next generation only if it still names the generation the builder started from; the exclusive hold covers one small read and one rename and nothing else. */
@@ -471,8 +436,8 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
   const want=claim&&await claim.extend({owners:[...names,...found.removed],structural:cold||found.envStale||found.added.length>0,signal});
   if(want&&!want.held)return{current,built:false,published:false,computed:0,plan:found,needsBuild:true,pending:{generation:current?.pointer.generation??-1,roots:{},...want.request}};
   aborted(signal);
-  const spec={cold,owners:names,discover:found.added,removed:found.removed,changed:cold?[]:(live.changes??[]).filter(change=>!change.directory).map(change=>change.path),previousEnv:cold?null:usable.env,envStale:found.envStale,generation:(current?.pointer.generation??-1)+1,coldReason:cold?found.reason:undefined,reasons:found.reasons??[],staleRows:found.stale??0,staleKinds:found.staleKinds,
-   stubs:Object.fromEntries(Object.entries(owners0).map(([name,row])=>[name,{root:row.root,kind:row.kind,targets:row.targets,...(row.nativeRoot?{nativeRoot:row.nativeRoot}:{}),...(row.config?{config:row.config}:{}),...(row.tag?{tag:row.tag}:{})}]))};
+  const spec={cold,owners:names,discover:found.added,removed:found.removed,changed:cold?[]:(live.changes??[]).filter(change=>!change.directory).map(change=>change.path),previousEnv:cold?null:usable.env,previousParts:cold?undefined:usable.envParts,envStale:found.envStale,generation:(current?.pointer.generation??-1)+1,coldReason:cold?found.reason:undefined,reasons:found.reasons??[],staleRows:found.stale??0,staleKinds:found.staleKinds,
+   stubs:Object.fromEntries(Object.entries(owners0).map(([name,row])=>[name,{root:row.root,kind:row.kind,targets:row.targets,...(row.nativeRoot?{nativeRoot:row.nativeRoot}:{}),...(row.config?{config:row.config}:{}),...(row.tag?{tag:row.tag}:{}),...(row.reads?{reads:row.reads}:{})}]))};
   if(usable)indexCache.delete("view:"+usable.factIndex);
   const result=await compute(spec,signal);
   stats.computed+=result.owners.length;aborted(signal);
@@ -482,7 +447,7 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
    aborted(signal);
    if(owner.partial==="edges"){
     const old=owners[owner.name];if(!old)throw fail("Edge refresh requires a published owner","GENERATION_INCOMPLETE");
-    stored.push(async()=>{const fragment=await readFragment(old);if(!fragment)throw fail("Edge refresh requires the published fragment","GENERATION_INCOMPLETE");const saved=await store(P.fragments,{...fragment,edges:owner.edges??await result.reEdge(owner.name,fragment),edgesEnv:envDigest},".json.br",P.maximumFragmentBytes);owners[owner.name]={...old,fragment:saved.digest,bytes:saved.bytes,edgesEnv:envDigest};});
+    stored.push(async()=>{const fragment=await readFragment(old);if(!fragment)throw fail("Edge refresh requires the published fragment","GENERATION_INCOMPLETE");const saved=await store(P.fragments,{...fragment,edges:owner.edges??await result.reEdge(owner.name,fragment),edgesEnv:envDigest},".json.br",P.maximumFragmentBytes),{reads:_,...base}=old,reads=owner.reads??result.readsOf?.(owner.name);owners[owner.name]={...base,fragment:saved.digest,bytes:saved.bytes,edgesEnv:envDigest,...(reads?{reads}:{})};});
     if(owner.rows?.length)append.set(owner.name,owner.rows);
     continue;
    }
@@ -490,7 +455,7 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
    stored.push(async()=>{
     const body={version:1,name:owner.name,root:owner.root,kind:owner.kind,node:owner.node,edges:owner.edges,edgesEnv:envDigest,targets:owner.targets,...(owner.config?{config:owner.config}:{}),...(owner.nativeRoot?{nativeRoot:owner.nativeRoot}:{})};
     const saved=await store(P.fragments,body,".json.br",P.maximumFragmentBytes);
-    owners[owner.name]={root:owner.root,kind:owner.kind,fragment:saved.digest,bytes:saved.bytes,edgesEnv:envDigest,targets:owner.targets,...(owner.config?{config:owner.config}:{}),...(owner.nativeRoot?{nativeRoot:owner.nativeRoot}:{}),...(owner.tag?{tag:owner.tag}:{})};
+    owners[owner.name]={root:owner.root,kind:owner.kind,fragment:saved.digest,bytes:saved.bytes,edgesEnv:envDigest,targets:owner.targets,...(owner.config?{config:owner.config}:{}),...(owner.nativeRoot?{nativeRoot:owner.nativeRoot}:{}),...(owner.tag?{tag:owner.tag}:{}),...(owner.reads?{reads:owner.reads}:{})};
    });
    upserts.set(owner.name,owner.rows??[]);
   }
@@ -498,6 +463,7 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
   for(const name of names)if(!returned.has(name)&&!dropped.has(name)){delete owners[name];dropped.add(name);}
   for(const[name,row]of Object.entries(owners))if(row.tag&&result.replaceTags?.includes(row.tag)&&!returned.has(name)){delete owners[name];dropped.add(name);}
   for(const name of returned)dropped.delete(name);
+  for(const name of result.carried??[])if(owners[name]&&!returned.has(name))owners[name]={...owners[name],edgesEnv:envDigest};
   for(const[name,row]of Object.entries(owners))if(row.edgesEnv!==envDigest)throw fail("Every owner needs edges of the published environment: "+name,"GENERATION_INCOMPLETE");
   upserts.set(P.envOwner,result.env.rows??[]);
   for(const[name,rows]of derivedUpsertsV1(result.derived??[],found.refresh))upserts.set(name,rows);
@@ -509,7 +475,7 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
   const globalStored=await store(P.fragments,{version:1,name:"@global",value:result.global??null},".json.br",P.maximumFragmentBytes);
   const frontierStored=await store(P.frontiers,live.frontier,".json.br",P.maximumIndexBytes);
   const expectedGeneration=current?.pointer.generation??-1;
-  const next={version:1,generation:expectedGeneration+1,parent:current?.pointer.manifest??null,identity,implementation,env:envDigest,membership:live.digest,frontier:frontierStored.digest,factIndex:indexStored.digest,global:globalStored.digest,owners,built:{kind:cold?"cold":"delta",base:cold?null:usable.generation,dirty:[...returned].sort(compareCodePointsV1)}};
+  const{owners:_table,...envParts}=result.env.parts??{},next={version:1,generation:expectedGeneration+1,parent:current?.pointer.manifest??null,identity,implementation,env:envDigest,membership:live.digest,frontier:frontierStored.digest,factIndex:indexStored.digest,global:globalStored.digest,...(result.env.parts?{envParts}:{}),owners,built:{kind:cold?"cold":"delta",base:cold?null:usable.generation,dirty:[...returned].sort(compareCodePointsV1)}};
   const manifestDigest=await writeManifest(next);aborted(signal);
   const verified=stamp?mergeVerifiedStampV1({owners:Object.keys(owners).sort(compareCodePointsV1),scope:cold?undefined:only,observedAtMs,carried:cold?undefined:coverage}):undefined;
   let outcome=await publish({manifestDigest,expectedGeneration,verified,signal}),done=outcome.published?{next,index,packed:packedIndex,kept:indexStored}:undefined;
@@ -517,7 +483,7 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
   if(!done)return{current:await read(signal),built:true,published:false,plan:found,computed:result.owners.length};
   indexCache.set(done.kept.digest,done.index);
   if(await(claim?claim.alone({signal}).catch(()=>false):true))await retire({signal}).catch(error=>{if(signal?.aborted)throw error;});
-  return{current:{pointer:outcome.pointer,manifest:done.next},built:true,published:true,plan:found,computed:result.owners.length,...(done.theirs?{merged:done.theirs.length}:{}),index:{rows:done.index.rows.length,owners:done.index.owners.filter(name=>!isDerivedOwnerV1(name)).length,expandedBytes:done.packed.expandedBytes,packedBytes:done.kept.bytes}};
+  return{current:{pointer:outcome.pointer,manifest:done.next},built:true,published:true,plan:found,computed:result.owners.length,carried:result.carried?.length??0,...(done.theirs?{merged:done.theirs.length}:{}),index:{rows:done.index.rows.length,owners:done.index.owners.filter(name=>!isDerivedOwnerV1(name)).length,expandedBytes:done.packed.expandedBytes,packedBytes:done.kept.bytes}};
  }
 
  /** 🧷️ Publishes the same owners under a refreshed membership frontier, so the next verification is a stat pass again; losing the swap is harmless. */

@@ -1,0 +1,6 @@
+{
+  "ChangeBeamSteelShearAreaM2": {
+    "id": "beam-B1",
+    "newAVM2": 0.005625
+  }
+}

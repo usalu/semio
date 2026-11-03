@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-beam-concrete-f-ck-pa/schema.json",
+  "title": "ChangeBeamConcreteFCkPa",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newConcreteFCkPa"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Composite beam",
+          "de": "Verbundträger"
+        },
+        "description": {
+          "en": "The composite beam this mutation addresses, by id.",
+          "de": "Das adressierte Element (Verbundträger), per Kennung."
+        },
+        "ref": {
+          "kind": "beam"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newConcreteFCkPa": {
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Concrete cylinder strength f_ck of the beam slab",
+          "de": "Zylinderdruckfestigkeit f_ck der Trägerplatte"
+        },
+        "unit": "Pa",
+        "displayUnit": "MPa",
+        "displayFactor": 0.000001,
+        "step": 1000000,
+        "precision": 1,
+        "group": "beam",
+        "order": 20
+      }
+    }
+  }
+}

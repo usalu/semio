@@ -1,0 +1,5 @@
+{
+  "mutation": "changeBridgeBasicWindSpeed",
+  "id": "bri-1",
+  "newBasicWindSpeed": 2.0
+}

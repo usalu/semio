@@ -1,0 +1,5 @@
+type ChangeActionSource {
+  memberId: String!
+  actionId: String!
+  newSource: ActionSource!
+}

@@ -41,8 +41,8 @@
         },
         "unit": "Pa",
         "displayUnit": "N/mm²",
-        "displayFactor": 1e-06,
-        "step": 10000000.0,
+        "displayFactor": 0.000001,
+        "step": 10000000,
         "precision": 0,
         "group": "connection",
         "order": 20

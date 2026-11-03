@@ -1,0 +1,5 @@
+{
+  "mutation": "changeWallBackfillGamma",
+  "id": "wall-W1",
+  "newBackfillGamma": 36000.0
+}

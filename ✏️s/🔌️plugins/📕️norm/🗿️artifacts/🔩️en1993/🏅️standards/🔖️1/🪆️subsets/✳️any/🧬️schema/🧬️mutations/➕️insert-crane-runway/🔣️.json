@@ -7,7 +7,7 @@
   "aggregateVariant": "InsertCraneRunway",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
-  "binaryTag": 48,
+  "binaryTag": 31,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

@@ -1,0 +1,97 @@
+{
+  "annex": null,
+  "reliabilityClass": null,
+  "members": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "connections": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "placements": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "tapers": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "cutouts": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "fasteners": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "panels": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "floors": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "diaphragms": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "trusses": {
+    "removed": [],
+    "inserted": [
+      {
+        "index": 0,
+        "row": {
+          "id": "truss-1",
+          "kind": "warren",
+          "product": "solid",
+          "spanM": 12.0,
+          "heightM": 1.5,
+          "bays": 6,
+          "chordWidthM": 0.1,
+          "chordDepthM": 0.2,
+          "webWidthM": 0.08,
+          "webDepthM": 0.12,
+          "chordForceN": 20000.0,
+          "restraintLengthM": 6.0,
+          "bracingCapacityNPerM": 1500.0
+        }
+      }
+    ],
+    "moved": [],
+    "modified": []
+  },
+  "bracings": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "decks": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "ulsEquation": null,
+  "cases": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  }
+}

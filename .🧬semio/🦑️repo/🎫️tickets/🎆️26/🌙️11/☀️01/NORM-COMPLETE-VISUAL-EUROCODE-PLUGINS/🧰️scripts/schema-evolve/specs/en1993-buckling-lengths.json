@@ -1,0 +1,237 @@
+{
+  "artifact": "en1993",
+  "reference": "frameMemberBases",
+  "collection": {
+    "name": "bucklingLengths",
+    "entity": "BucklingLength",
+    "emoji": "🪜",
+    "doc": "🪜 Buckling length of a column in a frame from the end restraint of the adjacent members (EN 1993-1-1 6.3.1.3 with the nomogram of the effective length factor): sway or non-sway mode, the stiffness sums of columns and beams at both ends, and the member whose buckling length it checks.",
+    "label": {
+      "en": "Buckling lengths",
+      "de": "Knicklängen"
+    },
+    "id": {
+      "en": "Buckling length ID",
+      "de": "Knicklängen-ID"
+    },
+    "singular": {
+      "en": "buckling length",
+      "de": "Knicklänge"
+    },
+    "kindSlug": "buckling-length",
+    "fields": [
+      {
+        "name": "member_id",
+        "type": "String",
+        "label": {
+          "en": "Column",
+          "de": "Stütze"
+        },
+        "doc": "🧱 Id of the column whose buckling length is derived.",
+        "sample": "member-1"
+      },
+      {
+        "name": "plane",
+        "type": "enum",
+        "label": {
+          "en": "Buckling plane",
+          "de": "Knickebene"
+        },
+        "doc": "🧭 Plane of the frame: buckling about the major axis (length L_cr,y) or the minor axis (L_cr,z).",
+        "sample": "MajorAxis",
+        "enum": {
+          "name": "BucklingPlane",
+          "doc": "🧭 Buckling plane of a column: about the major or about the minor axis.",
+          "values": [
+            {
+              "token": "MajorAxis",
+              "label": {
+                "en": "About the major axis",
+                "de": "Um die starke Achse"
+              }
+            },
+            {
+              "token": "MinorAxis",
+              "label": {
+                "en": "About the minor axis",
+                "de": "Um die schwache Achse"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "name": "sway",
+        "type": "enum",
+        "label": {
+          "en": "Frame mode",
+          "de": "Rahmenverformung"
+        },
+        "doc": "↔ Non-sway or sway buckling mode of the frame.",
+        "sample": "NonSway",
+        "enum": {
+          "name": "FrameSway",
+          "doc": "↔ Buckling mode of a frame: nodes held (non-sway) or free to translate (sway).",
+          "values": [
+            {
+              "token": "NonSway",
+              "label": {
+                "en": "Non-sway",
+                "de": "Unverschieblich"
+              }
+            },
+            {
+              "token": "Sway",
+              "label": {
+                "en": "Sway",
+                "de": "Verschieblich"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "name": "restraint_a",
+        "type": "enum",
+        "label": {
+          "en": "Node A",
+          "de": "Knoten A"
+        },
+        "doc": "⛓ End condition at node A (the lower end of a column): framed into columns and beams, fixed (rigid) or pinned.",
+        "sample": "Framed",
+        "enum": {
+          "name": "NodeARestraint",
+          "doc": "⛓ End condition of a column at one node of a frame: framed, fixed or pinned.",
+          "values": [
+            {
+              "token": "Framed",
+              "label": {
+                "en": "Framed",
+                "de": "Eingebunden"
+              }
+            },
+            {
+              "token": "Fixed",
+              "label": {
+                "en": "Fixed",
+                "de": "Eingespannt"
+              }
+            },
+            {
+              "token": "Pinned",
+              "label": {
+                "en": "Pinned",
+                "de": "Gelenkig"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "name": "column_stiffness_a",
+        "type": "f64",
+        "label": {
+          "en": "Node A: column stiffness sum",
+          "de": "Knoten A: Stützensteifigkeit"
+        },
+        "doc": "🧮 Sum of I_c/L_c of the columns at node A, including the column itself.",
+        "sample": 3.6e-05,
+        "unit": "m3",
+        "precision": 7,
+        "step": 1e-06,
+        "range": [
+          0,
+          0.01
+        ]
+      },
+      {
+        "name": "beam_stiffness_a",
+        "type": "f64",
+        "label": {
+          "en": "Node A: beam stiffness sum",
+          "de": "Knoten A: Riegelsteifigkeit"
+        },
+        "doc": "🧮 Sum of alpha I_b/L_b of the beams at node A with the far-end factor alpha of each beam.",
+        "sample": 7.2e-05,
+        "unit": "m3",
+        "precision": 7,
+        "step": 1e-06,
+        "range": [
+          0,
+          0.01
+        ]
+      },
+      {
+        "name": "restraint_b",
+        "type": "enum",
+        "label": {
+          "en": "Node B",
+          "de": "Knoten B"
+        },
+        "doc": "⛓ End condition at node B (the upper end of a column): framed into columns and beams, fixed (rigid) or pinned.",
+        "sample": "Framed",
+        "enum": {
+          "name": "NodeBRestraint",
+          "doc": "⛓ End condition of a column at one node of a frame: framed, fixed or pinned.",
+          "values": [
+            {
+              "token": "Framed",
+              "label": {
+                "en": "Framed",
+                "de": "Eingebunden"
+              }
+            },
+            {
+              "token": "Fixed",
+              "label": {
+                "en": "Fixed",
+                "de": "Eingespannt"
+              }
+            },
+            {
+              "token": "Pinned",
+              "label": {
+                "en": "Pinned",
+                "de": "Gelenkig"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "name": "column_stiffness_b",
+        "type": "f64",
+        "label": {
+          "en": "Node B: column stiffness sum",
+          "de": "Knoten B: Stützensteifigkeit"
+        },
+        "doc": "🧮 Sum of I_c/L_c of the columns at node B, including the column itself.",
+        "sample": 3.6e-05,
+        "unit": "m3",
+        "precision": 7,
+        "step": 1e-06,
+        "range": [
+          0,
+          0.01
+        ]
+      },
+      {
+        "name": "beam_stiffness_b",
+        "type": "f64",
+        "label": {
+          "en": "Node B: beam stiffness sum",
+          "de": "Knoten B: Riegelsteifigkeit"
+        },
+        "doc": "🧮 Sum of alpha I_b/L_b of the beams at node B with the far-end factor alpha of each beam.",
+        "sample": 7.2e-05,
+        "unit": "m3",
+        "precision": 7,
+        "step": 1e-06,
+        "range": [
+          0,
+          0.01
+        ]
+      }
+    ]
+  }
+}

@@ -47,7 +47,7 @@ pub fn unescape_op_text_field(value: &str) -> String {
 /// 🧬️ P6: `dsl::DslRecord`/`dsl::DslArtifact` emit the inherent `__dsl_spec`/`__dsl_to_record`/
 /// `__dsl_from_record` trio only — never `pack::snapshot::ArtifactDsl`/`pack::snapshot::ArtifactPack` themselves (a
 /// permanent framework decision, see `🗣️dsl/✨️derive/🦀️.rs`'s "P6" header comment and every
-/// other P6-migrated document kind, e.g. `🪐️space`, `🔁️workflow`, `📖️playbook`). Every one of norm's
+/// other P6 document kind, e.g. `🪐️space`, `🔁️workflow`, `📖️playbook`). Every one of norm's
 /// fifteen family snapshots therefore needs the identical envelope-wrap/unwrap glue around that
 /// trio; W5a (ticket 26/08/11/SEMIO-ARTIFACT-…) found it hand-duplicated verbatim in fifteen
 /// `📸️snapshot/🦀️.rs` files' `HandcraftedArtifactCodecs` regions and consolidated it here —

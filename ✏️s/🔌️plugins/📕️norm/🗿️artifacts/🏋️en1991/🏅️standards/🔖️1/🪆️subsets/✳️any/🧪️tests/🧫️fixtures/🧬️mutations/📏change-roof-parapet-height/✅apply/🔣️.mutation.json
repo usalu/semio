@@ -1,0 +1,6 @@
+{
+  "ChangeRoofParapetHeight": {
+    "id": "roof-main",
+    "newParapetHeight": 0.5
+  }
+}

@@ -27,14 +27,24 @@
     "en1992_fire",
     "en1992_member_action",
     "en1992_anchor",
-    "en1992_anchor_action"
+    "en1992_anchor_action",
+    "en1992_section_point",
+    "en1992_bar_point",
+    "en1992_tendon_point",
+    "en1992_stud_row",
+    "en1992_placement",
+    "en1992_case",
+    "en1992_case_number",
+    "en1992_case_text",
+    "en1992_opening"
   ],
   "snapshot": {
     "annex": "De",
+    "reliabilityClass": "RC3",
     "title": "Concrete \u0000日本",
     "designWorkingLifeYears": 0.5,
     "deltaCDev": 0.5,
-    "cementType": "arbitrary cement",
+    "cementType": "N",
     "concreteGrades": [
       {
         "id": "duplicate",
@@ -83,11 +93,12 @@
             "id": "bar",
             "diameter": 0.5,
             "count": 4294967295,
-            "position": "arbitrary",
+            "position": "Bottom",
             "anchorageLength": 0.5,
             "lapLength": 0.5,
-            "bondCondition": "arbitrary",
-            "aggregateSize": 0.5
+            "bondCondition": "Poor",
+            "aggregateSize": 0.5,
+            "lapShare": 0.5
           }
         ],
         "stirrups": {
@@ -98,8 +109,11 @@
         "punching": {
           "columnWidth": 0.5,
           "columnDepth": 0.5,
-          "columnPosition": "arbitrary",
-          "asw": 0.5
+          "columnPosition": "Interior",
+          "asw": 0.5,
+          "betaMethod": "UnbalancedMoments",
+          "momentC1": 0.5,
+          "momentC2": 0.5
         },
         "prestress": {
           "force": 0.5,
@@ -110,15 +124,14 @@
         "fire": {
           "rating": "R120",
           "axisDistance": 0.5,
-          "columnMethod": "arbitrary",
-          "slabSystem": "arbitrary"
+          "slabSystem": "OneWay"
         },
         "actions": [
           {
             "id": "action\u0000日本",
-            "kind": "arbitrary",
-            "category": "unlisted",
-            "source": "owned",
+            "kind": "Permanent",
+            "category": "Office",
+            "source": "Udl",
             "gKLine": 0.5,
             "qKLine": 0.5,
             "pointForce": 0.5,
@@ -139,7 +152,46 @@
         "liquidFCtEff": 0.5,
         "liquidSRMax": 0.5,
         "bridgeSigmaC": 0.5,
-        "bridgeDeltaSigmaS": 0.5
+        "bridgeDeltaSigmaS": 0.5,
+        "relativeHumidity": 0.5,
+        "bearingWidth": 0.0,
+        "sectionPoints": [
+          {
+            "id": "p1",
+            "y": 0.5,
+            "z": 0.5
+          }
+        ],
+        "bars": [
+          {
+            "id": "b1",
+            "layerId": "l1",
+            "y": 0.5,
+            "z": 0.5,
+            "diameter": 0.5,
+            "length": 0.5,
+            "bend": "Auto"
+          }
+        ],
+        "tendonPoints": [
+          {
+            "id": "t1",
+            "x": 0.5,
+            "y": 0.5,
+            "z": 0.5
+          }
+        ],
+        "studRows": [
+          {
+            "id": "r1",
+            "angle": 0.75,
+            "count": 4294967295,
+            "spacingFirst": 0.5,
+            "spacingRadial": 0.25,
+            "diameter": 0.5
+          }
+        ],
+        "openings": []
       }
     ],
     "anchors": [
@@ -156,9 +208,9 @@
         "actions": [
           {
             "id": "action\u0000日本",
-            "kind": "arbitrary",
-            "category": "unlisted",
-            "source": "owned",
+            "kind": "Permanent",
+            "category": "Office",
+            "source": "Udl",
             "gKLine": 0.5,
             "qKLine": 0.5,
             "pointForce": 0.5,
@@ -168,9 +220,20 @@
             "tK": 0.5,
             "vKPunch": 0.5
           }
-        ]
+        ],
+        "headDiameter": 0.5
       }
-    ]
+    ],
+    "placements": [
+      {
+        "id": "duplicate",
+        "x": 0.5,
+        "y": 0.5,
+        "z": 0.5,
+        "yaw": 0.5
+      }
+    ],
+    "cases": []
   },
   "controlledOutput": {
     "textBytes": 100000,
@@ -178,12 +241,12 @@
     "tinyBytes": 16
   },
   "semanticCells": {
-    "fullRows": 13,
-    "absentRows": 9,
+    "fullRows": 18,
+    "absentRows": 10,
     "tableWidths": [
       [
         "en1992_anchor",
-        26
+        29
       ],
       [
         "en1992_anchor_action",
@@ -191,7 +254,23 @@
       ],
       [
         "en1992_bar_layer",
-        19
+        22
+      ],
+      [
+        "en1992_bar_point",
+        14
+      ],
+      [
+        "en1992_case",
+        7
+      ],
+      [
+        "en1992_case_number",
+        7
+      ],
+      [
+        "en1992_case_text",
+        5
       ],
       [
         "en1992_concrete_grade",
@@ -199,7 +278,7 @@
       ],
       [
         "en1992_document",
-        10
+        11
       ],
       [
         "en1992_fire",
@@ -207,11 +286,19 @@
       ],
       [
         "en1992_member",
-        57
+        60
       ],
       [
         "en1992_member_action",
         31
+      ],
+      [
+        "en1992_opening",
+        16
+      ],
+      [
+        "en1992_placement",
+        16
       ],
       [
         "en1992_prestress",
@@ -223,15 +310,27 @@
       ],
       [
         "en1992_punching",
-        11
+        18
       ],
       [
         "en1992_reinforcement_grade",
         18
       ],
       [
+        "en1992_section_point",
+        10
+      ],
+      [
         "en1992_stirrups",
         8
+      ],
+      [
+        "en1992_stud_row",
+        17
+      ],
+      [
+        "en1992_tendon_point",
+        13
       ]
     ]
   }

@@ -1,0 +1,30 @@
+{
+  "action": "focusRowControl",
+  "argument": "rowId",
+  "key": "F2",
+  "editableKinds": ["text", "longText", "number", "date"],
+  "plans": [
+    { "id": "the first editable cell of the row wins", "controls": [{ "id": "label", "kind": "button" }, { "id": "cell", "kind": "text" }, { "id": "second", "kind": "number" }], "target": "cell" },
+    { "id": "a disabled cell is skipped", "controls": [{ "id": "locked", "kind": "text", "disabled": true }, { "id": "open", "kind": "number" }], "target": "open" },
+    { "id": "a date and a multi-line field are typed into", "controls": [{ "id": "when", "kind": "date" }], "target": "when" },
+    { "id": "a multi-line field is typed into", "controls": [{ "id": "notes", "kind": "longText" }], "target": "notes" },
+    { "id": "a picker, a toggle and a select are not edit cells", "controls": [{ "id": "colour", "kind": "color" }, { "id": "attachment", "kind": "file" }, { "id": "visible", "kind": "toggle" }, { "id": "unit", "kind": "select" }], "target": null },
+    { "id": "a row without controls has nothing to edit", "controls": [], "target": null },
+    { "id": "a row whose only cell is disabled has nothing to edit", "controls": [{ "id": "locked", "kind": "text", "disabled": true }], "target": null }
+  ],
+  "focusOrigins": [
+    { "id": "a focused row raises the verb", "focus": "row", "rowId": "table.marker.m0" },
+    { "id": "focus inside the cell leaves F2 to the cell", "focus": "cell", "rowId": null },
+    { "id": "focus outside any row leaves F2 alone", "focus": "outside", "rowId": null }
+  ],
+  "announcements": [
+    { "locale": "en", "outcome": "refused", "code": "shell.row-control-focus.refused", "severity": "warning", "message": "This row has nothing to edit" },
+    { "locale": "de", "outcome": "refused", "code": "shell.row-control-focus.refused", "severity": "warning", "message": "Diese Zeile lässt sich nicht bearbeiten" }
+  ],
+  "cells": [
+    { "id": "escape drops a typed text draft and shows the committed value", "kind": "text", "committed": "350 cm", "typed": "0", "key": "Escape", "shown": "350 cm", "dispatched": null },
+    { "id": "escape drops a typed number draft and shows the committed value", "kind": "number", "committed": "7", "typed": "5", "key": "Escape", "shown": "7", "dispatched": null },
+    { "id": "enter commits the typed text draft", "kind": "text", "committed": "350 cm", "typed": "0", "key": "Enter", "shown": "350 cm0", "dispatched": "350 cm0" },
+    { "id": "enter commits the typed number draft", "kind": "number", "committed": "7", "typed": "5", "key": "Enter", "shown": "75", "dispatched": 75 }
+  ]
+}

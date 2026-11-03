@@ -1,0 +1,5 @@
+{
+  "mutation": "changeAccelerogramLabel",
+  "id": "acc-1",
+  "newLabel": "x"
+}

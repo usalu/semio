@@ -1,0 +1,78 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-bar-layer-aggregate-size/schema.json",
+  "title": "ChangeBarLayerAggregateSize",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "memberId",
+    "layerId",
+    "newAggregateSize"
+  ],
+  "properties": {
+    "memberId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Member",
+          "de": "Bauteil"
+        },
+        "description": {
+          "en": "The member this mutation addresses, by id.",
+          "de": "Das adressierte Element (Bauteil), per Kennung."
+        },
+        "ref": {
+          "kind": "member"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "layerId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Bar layer",
+          "de": "Bewehrungslage"
+        },
+        "description": {
+          "en": "The bar layer this mutation addresses, by id.",
+          "de": "Das adressierte Element (Bewehrungslage), per Kennung."
+        },
+        "ref": {
+          "kind": "layer"
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "newAggregateSize": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Maximum aggregate size d_g",
+          "de": "Größtkorn d_g"
+        },
+        "widget": "stepper",
+        "unit": "m",
+        "displayUnit": "mm",
+        "displayFactor": 1000,
+        "precision": 1,
+        "step": 0.001,
+        "snaps": [
+          0.008,
+          0.016,
+          0.022,
+          0.032
+        ],
+        "role": "value",
+        "group": "value",
+        "order": 30
+      }
+    }
+  }
+}

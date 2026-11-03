@@ -1,0 +1,6 @@
+{
+  "ChangeBeamTransverseAs": {
+    "id": "beam-B1",
+    "newTransverseAsM2PerM": 0.0004
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-pile-group-spacing/schema.json",
+  "title": "ChangePileGroupSpacing",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newSpacing"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changePileGroupSpacing"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Pile group",
+          "de": "Pfahlgruppe"
+        },
+        "description": {
+          "en": "The pile group this mutation addresses, by id.",
+          "de": "Die adressierte Zeile (Pfahlgruppe), per Kennung."
+        },
+        "ref": {
+          "kind": "pile-group"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newSpacing": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Spacing s",
+          "de": "Achsabstand s"
+        },
+        "widget": "stepper",
+        "unit": "m",
+        "precision": 2,
+        "step": 0.05,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

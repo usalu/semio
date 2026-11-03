@@ -1,0 +1,6 @@
+{
+  "mutation": "changeShellActionCategory",
+  "shellId": "shell-pass",
+  "actionId": "G-shell",
+  "newCategory": "selfWeight"
+}

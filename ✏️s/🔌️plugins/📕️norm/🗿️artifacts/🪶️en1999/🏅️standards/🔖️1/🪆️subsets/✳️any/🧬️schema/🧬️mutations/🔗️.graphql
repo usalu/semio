@@ -1,127 +1,866 @@
-# 🧬️ EN 1999 mutation schema — semantic kinds matching Rust `KINDS`.
-
-union En1999Mutation =
-    ChangeAnnex
-  | ChangeMaterials
-  | ChangeSections
-  | ChangeMembers
-  | ChangeConnections
-  | ChangeFireScenarios
-  | ChangeFatigueDetails
-  | ChangeColdFormed
-  | ChangeShells
-  | AddMember
-  | RemoveMember
-  | ChangeMemberNEd
-  | ChangeMemberMYEd
-  | ChangeMemberBucklingLength
-  | ChangeMaterialDesignation
-  | ChangePlateThickness
-  | ChangeWeldThroat
-  | ChangeBoltCount
-
-# KINDS: change-annex, change-materials, change-sections, change-members, change-connections, change-fire-scenarios, change-fatigue-details, change-cold-formed, change-shells, add-member, remove-member, change-member-n-ed, change-member-my-ed, change-member-buckling-length, change-material-designation, change-plate-thickness, change-weld-throat, change-bolt-count
-
+union En1999Mutation = ChangeAnnex | InsertMember | RemoveMember | ChangeMemberNEd | ChangeMemberMYEd | ChangeMemberBucklingLength | ChangeMaterialDesignation | ChangePlateThickness | ChangeWeldThroat | ChangeBoltCount | ChangeMaterialProductForm | ChangeSectionKind | ChangeSectionHeight | ChangeSectionWidth | ChangeSectionFlangeThickness | ChangeSectionWebThickness | ChangeSectionOuterDiameter | ChangeElementWidth | ChangeElementOutstand | ChangeElementWelded | ChangeElementWeldPosition | ChangeElementWeldProcess | ChangeElementWeldTJunction | ChangeElementWeldDirection | ChangeElementStiffenerDepth | ChangeElementStiffenerThk | ChangeMemberSectionId | ChangeMemberMaterialId | ChangeMemberLength | ChangeMemberSupport | ChangeMemberLtbLength | ChangeMemberC1 | ChangeMemberRestrainedLtb | ChangeMemberBearingLength | ChangeMemberTransverseWeld | ChangeMemberTWeldOffset | ChangeActionKind | ChangeActionCategory | ChangeActionSource | ChangeActionGKLine | ChangeActionQKLine | ChangeActionVYK | ChangeActionVZK | ChangeActionMZK | ChangeActionTorsionK | ChangeActionLocalLoadK | ChangeConnMemberId | ChangeConnMaterialId | ChangeConnKind | ChangeConnForceMethod | ChangeConnBoltsMaterial | ChangeConnBoltsDiameter | ChangeConnBoltsEdgeDistance | ChangeConnBoltsPitch | ChangeConnBoltsGauge | ChangeConnBoltsPlateThickness | ChangeConnWeldsFillerAlloy | ChangeConnWeldsLength | ChangeConnWeldsBetaW | ChangeConnWeldsHazExtent | ChangeConnActionKind | ChangeConnActionCategory | ChangeConnActionSource | ChangeConnActionGKLine | ChangeConnActionQKLine | ChangeConnActionNK | ChangeConnActionVYK | ChangeConnActionVZK | ChangeConnActionMYK | ChangeConnActionMZK | ChangeConnActionTorsionK | ChangeConnActionLocalLoadK | ChangeFireMemberId | ChangeFireThetaA | ChangeFireDurationS | ChangeFatigueMemberId | ChangeFatigueDetailCategory | ChangeFatigueDeltaSigmaC | ChangeFatigueDeltaSigmaEd | ChangeFatigueNCycles | ChangeFatigueM1 | ChangeFatigueM2 | ChangeSheetMaterialId | ChangeSheetThickness | ChangeSheetWidth | ChangeSheetSpan | ChangeSheetWelded | ChangeSheetActionKind | ChangeSheetActionCategory | ChangeSheetActionSource | ChangeSheetActionGKLine | ChangeSheetActionQKLine | ChangeSheetActionNK | ChangeSheetActionVYK | ChangeSheetActionVZK | ChangeSheetActionMYK | ChangeSheetActionMZK | ChangeSheetActionTorsionK | ChangeSheetActionLocalLoadK | ChangeShellMaterialId | ChangeShellRadius | ChangeShellThickness | ChangeShellLength | ChangeShellWelded | ChangeShellFabricationClass | ChangeShellActionKind | ChangeShellActionCategory | ChangeShellActionSource | ChangeShellActionGKLine | ChangeShellActionQKLine | ChangeShellActionNK | ChangeShellActionVYK | ChangeShellActionVZK | ChangeShellActionMYK | ChangeShellActionMZK | ChangeShellActionTorsionK | ChangeShellActionLocalLoadK | ChangeWeldRunMemberId | ChangeWeldRunElementId | ChangeWeldRunStart | ChangeWeldRunLength | ChangeWeldRunOffset | ChangeWeldRunThroat | ChangeWeldRunProcess | ChangeWeldRunTJunction | ChangeWeldRunDirection | ChangeWeldRunHazExtent | ChangeVertexSectionId | ChangeVertexRing | ChangeVertexElementId | ChangeVertexY | ChangeVertexZ | ChangePlacementX | ChangePlacementY | ChangePlacementZ | ChangePlacementYaw | InsertWeldRun | RemoveWeldRun | InsertOutlineVertex | RemoveOutlineVertex | InsertPlacement | RemovePlacement | InsertMaterial | RemoveMaterial | InsertSection | RemoveSection | InsertConnection | RemoveConnection | InsertFireScenario | RemoveFireScenario | InsertFatigueDetail | RemoveFatigueDetail | InsertColdFormedSheet | RemoveColdFormedSheet | InsertShell | RemoveShell | ChangeMemberBucklingLengthY | ChangeMemberBucklingLengthT | ChangeConnBoltsBoltsPerRow | ChangeCategoryMemberId | ChangeCategoryElementId | ChangeCategoryDetailCategory | ChangeCategoryDetailType | ChangeCategoryLocationX | ChangeCategoryM1 | ChangeCategoryM2 | ChangePatchSubjectId | ChangePatchPosition | ChangePatchX | ChangePatchBearingLength | ChangePatchWebHeight | ChangePatchWebAngle | ChangePatchCornerRadius | ChangePatchLoad | ChangeRingShellId | ChangeRingX | ChangeRingDepth | ChangeRingThickness | ChangeRingInternal | InsertFatigueCategory | RemoveFatigueCategory | InsertPatchLoad | RemovePatchLoad | InsertRingStiffener | RemoveRingStiffener | InsertMemberAction | RemoveMemberAction | InsertConnectionAction | RemoveConnectionAction | InsertSectionElement | RemoveSectionElement | InsertSheetAction | RemoveSheetAction | InsertShellAction | RemoveShellAction | ChangeTransverseGirderId | ChangeTransversePosition | ChangeTransverseWidth | ChangeTransverseThickness | ChangeConnLoadEccentricity | ChangeConnHoleStagger | ChangeTransverseSides | InsertTransverseStiffener | RemoveTransverseStiffener
 type ChangeAnnex {
-  # kind: "change-annex"
-  newAnnex: String! @state(class: ARTIFACT)
+  newAnnex: AnnexChoice!
 }
-
-type ChangeMaterials {
-  # kind: "change-materials"
-  materials: JSON! @state(class: ARTIFACT)
+type InsertMember {
+  index: Int!
+  member: AluminiumMember!
 }
-
-type ChangeSections {
-  # kind: "change-sections"
-  sections: JSON! @state(class: ARTIFACT)
-}
-
-type ChangeMembers {
-  # kind: "change-members"
-  members: JSON! @state(class: ARTIFACT)
-}
-
-type ChangeConnections {
-  # kind: "change-connections"
-  connections: JSON! @state(class: ARTIFACT)
-}
-
-type ChangeFireScenarios {
-  # kind: "change-fire-scenarios"
-  fireScenarios: JSON! @state(class: ARTIFACT)
-}
-
-type ChangeFatigueDetails {
-  # kind: "change-fatigue-details"
-  fatigueDetails: JSON! @state(class: ARTIFACT)
-}
-
-type ChangeColdFormed {
-  # kind: "change-cold-formed"
-  coldFormed: JSON! @state(class: ARTIFACT)
-}
-
-type ChangeShells {
-  # kind: "change-shells"
-  shells: JSON! @state(class: ARTIFACT)
-}
-
-type AddMember {
-  # kind: "add-member"
-  index: Int! @state(class: ARTIFACT)
-  member: JSON! @state(class: ARTIFACT)
-}
-
 type RemoveMember {
-  # kind: "remove-member"
-  id: String! @state(class: ARTIFACT)
+  id: String!
 }
-
 type ChangeMemberNEd {
-  # kind: "change-member-n-ed"
-  memberId: String! @state(class: ARTIFACT)
-  actionId: String! @state(class: ARTIFACT)
-  newNK: Float! @state(class: ARTIFACT)
+  memberId: String!
+  actionId: String!
+  newNK: Float!
 }
-
 type ChangeMemberMYEd {
-  # kind: "change-member-my-ed"
-  memberId: String! @state(class: ARTIFACT)
-  actionId: String! @state(class: ARTIFACT)
-  newMYK: Float! @state(class: ARTIFACT)
+  memberId: String!
+  actionId: String!
+  newMYK: Float!
 }
-
 type ChangeMemberBucklingLength {
-  # kind: "change-member-buckling-length"
-  memberId: String! @state(class: ARTIFACT)
-  axis: String! @state(class: ARTIFACT)
-  newLength: Float! @state(class: ARTIFACT)
+  memberId: String!
+  axis: String!
+  newLength: Float!
 }
-
 type ChangeMaterialDesignation {
-  # kind: "change-material-designation"
-  materialId: String! @state(class: ARTIFACT)
-  newDesignation: String! @state(class: ARTIFACT)
+  materialId: String!
+  newDesignation: String!
 }
-
 type ChangePlateThickness {
-  # kind: "change-plate-thickness"
-  sectionId: String! @state(class: ARTIFACT)
-  elementId: String! @state(class: ARTIFACT)
-  newThickness: Float! @state(class: ARTIFACT)
+  sectionId: String!
+  elementId: String!
+  newThickness: Float!
 }
-
 type ChangeWeldThroat {
-  # kind: "change-weld-throat"
-  connectionId: String! @state(class: ARTIFACT)
-  newThroat: Float! @state(class: ARTIFACT)
+  connectionId: String!
+  newThroat: Float!
 }
-
 type ChangeBoltCount {
-  # kind: "change-bolt-count"
-  connectionId: String! @state(class: ARTIFACT)
-  newRows: Int! @state(class: ARTIFACT)
-  newBoltsPerRow: Int! @state(class: ARTIFACT)
+  connectionId: String!
+  newRows: Int!
+  newBoltsPerRow: Int!
 }
-
+type ChangeMaterialProductForm {
+  materialId: String!
+  newProductForm: ProductForm!
+}
+type ChangeSectionKind {
+  sectionId: String!
+  newKind: SectionKind!
+}
+type ChangeSectionHeight {
+  sectionId: String!
+  newHeight: Float!
+}
+type ChangeSectionWidth {
+  sectionId: String!
+  newWidth: Float!
+}
+type ChangeSectionFlangeThickness {
+  sectionId: String!
+  newFlangeThickness: Float!
+}
+type ChangeSectionWebThickness {
+  sectionId: String!
+  newWebThickness: Float!
+}
+type ChangeSectionOuterDiameter {
+  sectionId: String!
+  newOuterDiameter: Float!
+}
+type ChangeElementWidth {
+  sectionId: String!
+  elementId: String!
+  newWidth: Float!
+}
+type ChangeElementOutstand {
+  sectionId: String!
+  elementId: String!
+  newOutstand: Boolean!
+}
+type ChangeElementWelded {
+  sectionId: String!
+  elementId: String!
+  newWelded: Boolean!
+}
+type ChangeElementWeldPosition {
+  sectionId: String!
+  elementId: String!
+  newWeldPosition: Float!
+}
+type ChangeElementWeldProcess {
+  sectionId: String!
+  elementId: String!
+  newWeldProcess: WeldProcess!
+}
+type ChangeElementWeldTJunction {
+  sectionId: String!
+  elementId: String!
+  newWeldTJunction: Boolean!
+}
+type ChangeElementWeldDirection {
+  sectionId: String!
+  elementId: String!
+  newWeldDirection: WeldDirection!
+}
+type ChangeElementStiffenerDepth {
+  sectionId: String!
+  elementId: String!
+  newEdgeStiffenerDepth: Float!
+}
+type ChangeElementStiffenerThk {
+  sectionId: String!
+  elementId: String!
+  newEdgeStiffenerThickness: Float!
+}
+type ChangeMemberSectionId {
+  memberId: String!
+  newSectionId: String!
+}
+type ChangeMemberMaterialId {
+  memberId: String!
+  newMaterialId: String!
+}
+type ChangeMemberLength {
+  memberId: String!
+  newLength: Float!
+}
+type ChangeMemberSupport {
+  memberId: String!
+  newSupport: String!
+}
+type ChangeMemberLtbLength {
+  memberId: String!
+  newLtbLength: Float!
+}
+type ChangeMemberC1 {
+  memberId: String!
+  newC1: Float!
+}
+type ChangeMemberRestrainedLtb {
+  memberId: String!
+  newRestrainedLtb: Boolean!
+}
+type ChangeMemberBearingLength {
+  memberId: String!
+  newBearingLength: Float!
+}
+type ChangeMemberTransverseWeld {
+  memberId: String!
+  newTransverseWeld: Boolean!
+}
+type ChangeMemberTWeldOffset {
+  memberId: String!
+  newTransverseWeldOffset: Float!
+}
+type ChangeActionKind {
+  memberId: String!
+  actionId: String!
+  newKind: ActionKind!
+}
+type ChangeActionCategory {
+  memberId: String!
+  actionId: String!
+  newCategory: ActionCategory!
+}
+type ChangeActionSource {
+  memberId: String!
+  actionId: String!
+  newSource: ActionSource!
+}
+type ChangeActionGKLine {
+  memberId: String!
+  actionId: String!
+  newGKLine: Float!
+}
+type ChangeActionQKLine {
+  memberId: String!
+  actionId: String!
+  newQKLine: Float!
+}
+type ChangeActionVYK {
+  memberId: String!
+  actionId: String!
+  newVYK: Float!
+}
+type ChangeActionVZK {
+  memberId: String!
+  actionId: String!
+  newVZK: Float!
+}
+type ChangeActionMZK {
+  memberId: String!
+  actionId: String!
+  newMZK: Float!
+}
+type ChangeActionTorsionK {
+  memberId: String!
+  actionId: String!
+  newTorsionK: Float!
+}
+type ChangeActionLocalLoadK {
+  memberId: String!
+  actionId: String!
+  newLocalLoadK: Float!
+}
+type ChangeConnMemberId {
+  connectionId: String!
+  newMemberId: String!
+}
+type ChangeConnMaterialId {
+  connectionId: String!
+  newMaterialId: String!
+}
+type ChangeConnKind {
+  connectionId: String!
+  newKind: ConnectionKind!
+}
+type ChangeConnForceMethod {
+  connectionId: String!
+  newForceMethod: FastenerForceMethod!
+}
+type ChangeConnBoltsMaterial {
+  connectionId: String!
+  newBoltsMaterial: String!
+}
+type ChangeConnBoltsDiameter {
+  connectionId: String!
+  newBoltsDiameter: Float!
+}
+type ChangeConnBoltsEdgeDistance {
+  connectionId: String!
+  newBoltsEdgeDistance: Float!
+}
+type ChangeConnBoltsPitch {
+  connectionId: String!
+  newBoltsPitch: Float!
+}
+type ChangeConnBoltsGauge {
+  connectionId: String!
+  newBoltsGauge: Float!
+}
+type ChangeConnBoltsPlateThickness {
+  connectionId: String!
+  newBoltsPlateThickness: Float!
+}
+type ChangeConnWeldsFillerAlloy {
+  connectionId: String!
+  newWeldsFillerAlloy: String!
+}
+type ChangeConnWeldsLength {
+  connectionId: String!
+  newWeldsLength: Float!
+}
+type ChangeConnWeldsBetaW {
+  connectionId: String!
+  newWeldsBetaW: Float!
+}
+type ChangeConnWeldsHazExtent {
+  connectionId: String!
+  newWeldsHazExtent: Float!
+}
+type ChangeConnActionKind {
+  connectionId: String!
+  actionId: String!
+  newKind: ActionKind!
+}
+type ChangeConnActionCategory {
+  connectionId: String!
+  actionId: String!
+  newCategory: ActionCategory!
+}
+type ChangeConnActionSource {
+  connectionId: String!
+  actionId: String!
+  newSource: ActionSource!
+}
+type ChangeConnActionGKLine {
+  connectionId: String!
+  actionId: String!
+  newGKLine: Float!
+}
+type ChangeConnActionQKLine {
+  connectionId: String!
+  actionId: String!
+  newQKLine: Float!
+}
+type ChangeConnActionNK {
+  connectionId: String!
+  actionId: String!
+  newNK: Float!
+}
+type ChangeConnActionVYK {
+  connectionId: String!
+  actionId: String!
+  newVYK: Float!
+}
+type ChangeConnActionVZK {
+  connectionId: String!
+  actionId: String!
+  newVZK: Float!
+}
+type ChangeConnActionMYK {
+  connectionId: String!
+  actionId: String!
+  newMYK: Float!
+}
+type ChangeConnActionMZK {
+  connectionId: String!
+  actionId: String!
+  newMZK: Float!
+}
+type ChangeConnActionTorsionK {
+  connectionId: String!
+  actionId: String!
+  newTorsionK: Float!
+}
+type ChangeConnActionLocalLoadK {
+  connectionId: String!
+  actionId: String!
+  newLocalLoadK: Float!
+}
+type ChangeFireMemberId {
+  fireScenarioId: String!
+  newMemberId: String!
+}
+type ChangeFireThetaA {
+  fireScenarioId: String!
+  newThetaA: Float!
+}
+type ChangeFireDurationS {
+  fireScenarioId: String!
+  newDurationS: Float!
+}
+type ChangeFatigueMemberId {
+  fatigueDetailId: String!
+  newMemberId: String!
+}
+type ChangeFatigueDetailCategory {
+  fatigueDetailId: String!
+  newDetailCategory: String!
+}
+type ChangeFatigueDeltaSigmaC {
+  fatigueDetailId: String!
+  newDeltaSigmaC: Float!
+}
+type ChangeFatigueDeltaSigmaEd {
+  fatigueDetailId: String!
+  newDeltaSigmaEd: Float!
+}
+type ChangeFatigueNCycles {
+  fatigueDetailId: String!
+  newNCycles: Float!
+}
+type ChangeFatigueM1 {
+  fatigueDetailId: String!
+  newM1: Float!
+}
+type ChangeFatigueM2 {
+  fatigueDetailId: String!
+  newM2: Float!
+}
+type ChangeSheetMaterialId {
+  coldFormedId: String!
+  newMaterialId: String!
+}
+type ChangeSheetThickness {
+  coldFormedId: String!
+  newThickness: Float!
+}
+type ChangeSheetWidth {
+  coldFormedId: String!
+  newWidth: Float!
+}
+type ChangeSheetSpan {
+  coldFormedId: String!
+  newSpan: Float!
+}
+type ChangeSheetWelded {
+  coldFormedId: String!
+  newWelded: Boolean!
+}
+type ChangeSheetActionKind {
+  coldFormedId: String!
+  actionId: String!
+  newKind: ActionKind!
+}
+type ChangeSheetActionCategory {
+  coldFormedId: String!
+  actionId: String!
+  newCategory: ActionCategory!
+}
+type ChangeSheetActionSource {
+  coldFormedId: String!
+  actionId: String!
+  newSource: ActionSource!
+}
+type ChangeSheetActionGKLine {
+  coldFormedId: String!
+  actionId: String!
+  newGKLine: Float!
+}
+type ChangeSheetActionQKLine {
+  coldFormedId: String!
+  actionId: String!
+  newQKLine: Float!
+}
+type ChangeSheetActionNK {
+  coldFormedId: String!
+  actionId: String!
+  newNK: Float!
+}
+type ChangeSheetActionVYK {
+  coldFormedId: String!
+  actionId: String!
+  newVYK: Float!
+}
+type ChangeSheetActionVZK {
+  coldFormedId: String!
+  actionId: String!
+  newVZK: Float!
+}
+type ChangeSheetActionMYK {
+  coldFormedId: String!
+  actionId: String!
+  newMYK: Float!
+}
+type ChangeSheetActionMZK {
+  coldFormedId: String!
+  actionId: String!
+  newMZK: Float!
+}
+type ChangeSheetActionTorsionK {
+  coldFormedId: String!
+  actionId: String!
+  newTorsionK: Float!
+}
+type ChangeSheetActionLocalLoadK {
+  coldFormedId: String!
+  actionId: String!
+  newLocalLoadK: Float!
+}
+type ChangeShellMaterialId {
+  shellId: String!
+  newMaterialId: String!
+}
+type ChangeShellRadius {
+  shellId: String!
+  newRadius: Float!
+}
+type ChangeShellThickness {
+  shellId: String!
+  newThickness: Float!
+}
+type ChangeShellLength {
+  shellId: String!
+  newLength: Float!
+}
+type ChangeShellWelded {
+  shellId: String!
+  newWelded: Boolean!
+}
+type ChangeShellFabricationClass {
+  shellId: String!
+  newFabricationClass: FabricationClass!
+}
+type ChangeShellActionKind {
+  shellId: String!
+  actionId: String!
+  newKind: ActionKind!
+}
+type ChangeShellActionCategory {
+  shellId: String!
+  actionId: String!
+  newCategory: ActionCategory!
+}
+type ChangeShellActionSource {
+  shellId: String!
+  actionId: String!
+  newSource: ActionSource!
+}
+type ChangeShellActionGKLine {
+  shellId: String!
+  actionId: String!
+  newGKLine: Float!
+}
+type ChangeShellActionQKLine {
+  shellId: String!
+  actionId: String!
+  newQKLine: Float!
+}
+type ChangeShellActionNK {
+  shellId: String!
+  actionId: String!
+  newNK: Float!
+}
+type ChangeShellActionVYK {
+  shellId: String!
+  actionId: String!
+  newVYK: Float!
+}
+type ChangeShellActionVZK {
+  shellId: String!
+  actionId: String!
+  newVZK: Float!
+}
+type ChangeShellActionMYK {
+  shellId: String!
+  actionId: String!
+  newMYK: Float!
+}
+type ChangeShellActionMZK {
+  shellId: String!
+  actionId: String!
+  newMZK: Float!
+}
+type ChangeShellActionTorsionK {
+  shellId: String!
+  actionId: String!
+  newTorsionK: Float!
+}
+type ChangeShellActionLocalLoadK {
+  shellId: String!
+  actionId: String!
+  newLocalLoadK: Float!
+}
+type ChangeWeldRunMemberId {
+  weldRunId: String!
+  newMemberId: String!
+}
+type ChangeWeldRunElementId {
+  weldRunId: String!
+  newElementId: String!
+}
+type ChangeWeldRunStart {
+  weldRunId: String!
+  newStart: Float!
+}
+type ChangeWeldRunLength {
+  weldRunId: String!
+  newLength: Float!
+}
+type ChangeWeldRunOffset {
+  weldRunId: String!
+  newOffset: Float!
+}
+type ChangeWeldRunThroat {
+  weldRunId: String!
+  newThroat: Float!
+}
+type ChangeWeldRunProcess {
+  weldRunId: String!
+  newProcess: WeldProcess!
+}
+type ChangeWeldRunTJunction {
+  weldRunId: String!
+  newTJunction: Boolean!
+}
+type ChangeWeldRunDirection {
+  weldRunId: String!
+  newDirection: WeldDirection!
+}
+type ChangeWeldRunHazExtent {
+  weldRunId: String!
+  newHazExtent: Float!
+}
+type ChangeVertexSectionId {
+  outlineVertexId: String!
+  newSectionId: String!
+}
+type ChangeVertexRing {
+  outlineVertexId: String!
+  newRing: OutlineRing!
+}
+type ChangeVertexElementId {
+  outlineVertexId: String!
+  newElementId: String!
+}
+type ChangeVertexY {
+  outlineVertexId: String!
+  newY: Float!
+}
+type ChangeVertexZ {
+  outlineVertexId: String!
+  newZ: Float!
+}
+type ChangePlacementX {
+  id: String!
+  newX: Float!
+}
+type ChangePlacementY {
+  id: String!
+  newY: Float!
+}
+type ChangePlacementZ {
+  id: String!
+  newZ: Float!
+}
+type ChangePlacementYaw {
+  id: String!
+  newYaw: Float!
+}
+type InsertWeldRun {
+  index: Int!
+  weldRun: WeldRun!
+}
+type RemoveWeldRun {
+  id: String!
+}
+type InsertOutlineVertex {
+  index: Int!
+  outlineVertex: SectionVertex!
+}
+type RemoveOutlineVertex {
+  id: String!
+}
+type InsertPlacement {
+  index: Int!
+  placement: Placement!
+}
+type RemovePlacement {
+  id: String!
+}
+type InsertMaterial {
+  index: Int!
+  material: AluminiumMaterial!
+}
+type RemoveMaterial {
+  id: String!
+}
+type InsertSection {
+  index: Int!
+  section: AluminiumSection!
+}
+type RemoveSection {
+  id: String!
+}
+type InsertConnection {
+  index: Int!
+  connection: AluminiumConnection!
+}
+type RemoveConnection {
+  id: String!
+}
+type InsertFireScenario {
+  index: Int!
+  fireScenario: FireScenario!
+}
+type RemoveFireScenario {
+  id: String!
+}
+type InsertFatigueDetail {
+  index: Int!
+  fatigueDetail: FatigueDetail!
+}
+type RemoveFatigueDetail {
+  id: String!
+}
+type InsertColdFormedSheet {
+  index: Int!
+  coldFormedSheet: ColdFormedSheet!
+}
+type RemoveColdFormedSheet {
+  id: String!
+}
+type InsertShell {
+  index: Int!
+  shell: AluminiumShell!
+}
+type RemoveShell {
+  id: String!
+}
+type ChangeMemberBucklingLengthY {
+  memberId: String!
+  newBucklingLengthY: Float!
+}
+type ChangeMemberBucklingLengthT {
+  memberId: String!
+  newBucklingLengthT: Float!
+}
+type ChangeConnBoltsBoltsPerRow {
+  connectionId: String!
+  newBoltsBoltsPerRow: Int!
+}
+type ChangeCategoryMemberId {
+  fatigueCategoryId: String!
+  newMemberId: String!
+}
+type ChangeCategoryElementId {
+  fatigueCategoryId: String!
+  newElementId: String!
+}
+type ChangeCategoryDetailCategory {
+  fatigueCategoryId: String!
+  newDetailCategory: String!
+}
+type ChangeCategoryDetailType {
+  fatigueCategoryId: String!
+  newDetailType: DetailType!
+}
+type ChangeCategoryLocationX {
+  fatigueCategoryId: String!
+  newLocationX: Float!
+}
+type ChangeCategoryM1 {
+  fatigueCategoryId: String!
+  newM1: Float!
+}
+type ChangeCategoryM2 {
+  fatigueCategoryId: String!
+  newM2: Float!
+}
+type ChangePatchSubjectId {
+  patchLoadId: String!
+  newSubjectId: String!
+}
+type ChangePatchPosition {
+  patchLoadId: String!
+  newPosition: PatchLoadPosition!
+}
+type ChangePatchX {
+  patchLoadId: String!
+  newX: Float!
+}
+type ChangePatchBearingLength {
+  patchLoadId: String!
+  newBearingLength: Float!
+}
+type ChangePatchWebHeight {
+  patchLoadId: String!
+  newWebHeight: Float!
+}
+type ChangePatchWebAngle {
+  patchLoadId: String!
+  newWebAngle: Float!
+}
+type ChangePatchCornerRadius {
+  patchLoadId: String!
+  newCornerRadius: Float!
+}
+type ChangePatchLoad {
+  patchLoadId: String!
+  newLoad: Float!
+}
+type ChangeRingShellId {
+  ringStiffenerId: String!
+  newShellId: String!
+}
+type ChangeRingX {
+  ringStiffenerId: String!
+  newX: Float!
+}
+type ChangeRingDepth {
+  ringStiffenerId: String!
+  newDepth: Float!
+}
+type ChangeRingThickness {
+  ringStiffenerId: String!
+  newThickness: Float!
+}
+type ChangeRingInternal {
+  ringStiffenerId: String!
+  newInternal: Boolean!
+}
+type InsertFatigueCategory {
+  index: Int!
+  fatigueCategory: FatigueCategory!
+}
+type RemoveFatigueCategory {
+  id: String!
+}
+type InsertPatchLoad {
+  index: Int!
+  patchLoad: PatchLoad!
+}
+type RemovePatchLoad {
+  id: String!
+}
+type InsertRingStiffener {
+  index: Int!
+  ringStiffener: RingStiffener!
+}
+type RemoveRingStiffener {
+  id: String!
+}
+type InsertMemberAction {
+  memberId: String!
+  index: Int!
+  action: MemberAction!
+}
+type RemoveMemberAction {
+  memberId: String!
+  id: String!
+}
+type InsertConnectionAction {
+  connectionId: String!
+  index: Int!
+  action: MemberAction!
+}
+type RemoveConnectionAction {
+  connectionId: String!
+  id: String!
+}
+type InsertSectionElement {
+  sectionId: String!
+  index: Int!
+  element: PlateElement!
+}
+type RemoveSectionElement {
+  sectionId: String!
+  id: String!
+}
+type InsertSheetAction {
+  coldFormedId: String!
+  index: Int!
+  action: MemberAction!
+}
+type RemoveSheetAction {
+  coldFormedId: String!
+  id: String!
+}
+type InsertShellAction {
+  shellId: String!
+  index: Int!
+  action: MemberAction!
+}
+type RemoveShellAction {
+  shellId: String!
+  id: String!
+}
+type ChangeTransverseGirderId {
+  transverseStiffenerId: String!
+  newGirderId: String!
+}
+type ChangeTransversePosition {
+  transverseStiffenerId: String!
+  newPosition: Float!
+}
+type ChangeTransverseWidth {
+  transverseStiffenerId: String!
+  newWidth: Float!
+}
+type ChangeTransverseThickness {
+  transverseStiffenerId: String!
+  newThickness: Float!
+}
+type ChangeConnLoadEccentricity {
+  aluminiumConnectionId: String!
+  newLoadEccentricity: Float!
+}
+type ChangeConnHoleStagger {
+  aluminiumConnectionId: String!
+  newHoleStagger: Float!
+}
+type ChangeTransverseSides {
+  transverseStiffenerId: String!
+  newSides: StiffenerSides!
+}
+type InsertTransverseStiffener {
+  index: Int!
+  transverseStiffener: TransverseStiffener!
+}
+type RemoveTransverseStiffener {
+  id: String!
+}

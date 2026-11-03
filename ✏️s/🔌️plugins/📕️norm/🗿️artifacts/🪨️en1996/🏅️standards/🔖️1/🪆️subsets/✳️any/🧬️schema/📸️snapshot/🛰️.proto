@@ -1,39 +1,24 @@
 syntax = "proto3";
 package semio.s.norm.en1996;
-message En1996Wall {
-  string id = 1;
-  string label_en = 2;
-  string label_de = 3;
-  string wall_type = 4;
-  double thickness_m = 5;
-  double height_m = 6;
-  double length_m = 7;
-  uint32 support_sides = 8;
-  double slab_bearing_depth_m = 9;
-  double eccentricity_top_m = 10;
-  double eccentricity_bottom_m = 11;
-  string unit_group = 12;
-  string unit_material = 13;
-  double f_b_pa = 14;
-  double unit_length_m = 15;
-  double unit_width_m = 16;
-  double unit_height_m = 17;
-  string mortar_type = 18;
-  string mortar_class = 19;
-  double f_m_pa = 20;
-  double bed_joint_thickness_m = 21;
-  bool reinforced = 22;
-  double as_vertical_m2 = 23;
-  double as_horizontal_m2 = 24;
-  double f_yd_pa = 25;
-  uint32 fire_rei_min = 26;
-  string exposure = 27;
-  double mu = 28;
-}
 message En1996Snapshot {
+  // @state artifact
   string annex = 1;
+  // @state artifact
   string masonry_class = 2;
+  // @state artifact
   string design_situation = 3;
+  // @state artifact
   uint32 storeys = 4;
-  repeated En1996Wall walls = 5;
+  // @state artifact
+  repeated MasonryWall walls = 5;
+  // @state artifact
+  repeated Placement placements = 6;
+  // @state artifact
+  repeated CaseRow cases = 7;
+  // @state artifact
+  repeated WallChase chases = 8;
+  // @state artifact
+  repeated MovementJoint movement_joints = 9;
+  // @state artifact
+  string reliability_class = 10;
 }

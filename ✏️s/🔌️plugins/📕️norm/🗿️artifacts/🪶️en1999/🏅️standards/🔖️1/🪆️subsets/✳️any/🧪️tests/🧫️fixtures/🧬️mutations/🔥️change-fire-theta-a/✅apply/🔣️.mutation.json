@@ -1,0 +1,5 @@
+{
+  "mutation": "changeFireThetaA",
+  "fireScenarioId": "fire-1",
+  "newThetaA": 360.0
+}

@@ -25,6 +25,10 @@ export function wire(registry) {
   ({ revisionIdentity } = registry);
 }
 
+/** 🙈️ The handle of an owner whose lookups nobody records. */
+const NO_EDGE_READS_V1 = Object.freeze({ owner() {}, path() {}, package() {}, module() {}, workspace() {}, lock() {} });
+const readsOfV1 = (context, name) => context.edgeReads?.owner(name) ?? NO_EDGE_READS_V1;
+
 const moduleGraphPublications=new Map();
 const moduleGraphPublicationKeyV1=root=>JSON.stringify([resolve(root),repositoryBuildGraphDataDirectoryV1(root,"inference")]);
 
@@ -70,19 +74,22 @@ function coreModuleImport(specifier) {
 }
 
 /** 🔗️ Resolves immutable runtime import strings against current ownership, package names, and lock scope. */
-function importTargetsFromFacts(imports, file, workspaceRoot, resolveOwner, byPackage, locked) {
+function importTargetsFromFacts(imports, file, workspaceRoot, resolveOwner, byPackage, locked, reads = NO_EDGE_READS_V1, self = undefined) {
   const targets = new Set();
   for (const specifier of imports) {
     if (specifier.startsWith(".")) {
       const path = buildPath(relative(workspaceRoot, resolve(dirname(join(workspaceRoot, file)), specifier)));
       const target = resolveOwner(path);
-      if (target) targets.add(target);
+      if (target) { targets.add(target); if (target !== self) reads.owner(target); }
+      else reads.path(path.includes("/") ? path.slice(0, path.lastIndexOf("/")) : ".");
       continue;
     }
     const packageName = specifier.startsWith("@") ? specifier.split("/").slice(0, 2).join("/") : specifier.split("/")[0];
     if (coreModuleImport(packageName)) continue;
+    reads.package(packageName);
     const workspaceTarget = byPackage.get(packageName);
     if (workspaceTarget) { targets.add(workspaceTarget); continue; }
+    reads.lock();
     const key = locked?.resolveImport?.(file, packageName);
     if (key && locked?.externalNodes?.[`npm:${key}`]) targets.add(`npm:${key}`);
   }
@@ -101,6 +108,7 @@ export const EDGE_CHUNK_OWNERS = 128;
 export async function collectImportEdges(workspaceRoot, projectFiles, projects, byPackage, locked, add, publication, scheduledFiles, context={}) {
   const resolveOwner=createRelativeImportResolverV1(importProjectOwners(projects)),retain=context.moduleGraphProjects,names=Object.keys(projectFiles),size=Math.max(1,context.edgeChunkOwners??EDGE_CHUNK_OWNERS);
   let step=0;
+  for(const name of names)readsOfV1(context,name);
   for(let from=0;from<names.length;from+=size){
     const jobs=[];
     for(const name of names.slice(from,from+size))for(const file of projectFiles[name])if(/\.[cm]?[jt]sx?$/.test(file.file))jobs.push({name,file});
@@ -112,7 +120,7 @@ export async function collectImportEdges(workspaceRoot, projectFiles, projects, 
         let fact;try{fact=await observedSourceAnalysisAsyncV1(prepareSourceAnalysesV1().module,join(workspaceRoot,sourceFile));}catch(error){if(error.code==="ENOENT")continue;throw error;}
         const{imports,productionImports}=fact;
         if(publication&&(!retain||retain.has(name)))(publication[name]??={version:1,files:[]}).files.push({file:sourceFile,imports,productionImports});
-        if(name!=="workspace"&&(!scheduledFiles||scheduledFiles.has(sourceFile)))for(const target of importTargetsFromFacts(context.completeSourceImports?imports:productionImports,sourceFile,workspaceRoot,resolveOwner,byPackage,locked))add(name,target,sourceFile);
+        if(name!=="workspace"&&(!scheduledFiles||scheduledFiles.has(sourceFile)))for(const target of importTargetsFromFacts(context.completeSourceImports?imports:productionImports,sourceFile,workspaceRoot,resolveOwner,byPackage,locked,readsOfV1(context,name),name))add(name,target,sourceFile);
       }
     }));
   }
@@ -191,26 +199,28 @@ function edgeAdderV1(context, edges) {
 }
 
 /** 📜️ The edges one project declares in its manifests (Cargo.toml, package.json, go.mod) among its `files`. */
-function manifestEdgesV1(authority, add, name, files) {
+function manifestEdgesV1(authority, add, name, files, reads = NO_EDGE_READS_V1) {
   const { workspaceRoot, projects, locked, byRoot, byPackage, manifests, goModules, goManifests } = authority, project = projects[name];
   if (!project || name === "workspace") return;
-  const root = resolve(workspaceRoot, project.root);
+  const root = resolve(workspaceRoot, project.root), ownerAt = (path) => { const found = byRoot.get(path); if (found) { if (found !== name) reads.owner(found); } else reads.path(buildPath(relative(workspaceRoot, path)) || "."); return found; };
   for (const file of files) {
     if (file.file.endsWith("Cargo.toml")) {
       const cargo = join(workspaceRoot, file.file);
       if (!existsSync(cargo)) continue;
       const manifest=readToml(cargo),directory=dirname(cargo),workspace=nativeWorkspaceV1(directory,workspaceRoot,manifest);
+      reads.workspace(buildPath(relative(workspaceRoot, workspace.root)) || ".");
       for (const dependency of nativeDependencies(manifest, workspace.declaration)) {
         if(dependency.kind === "dev-dependencies")continue;
-        add(name, byRoot.get(resolve(dependency.workspace ? workspace.root : directory, dependency.path)), file.file);
+        add(name, ownerAt(resolve(dependency.workspace ? workspace.root : directory, dependency.path)), file.file);
       }
     }
     if (file.file.endsWith("package.json")) {
       const manifest = manifests.get(name) ?? (existsSync(join(workspaceRoot, file.file)) ? JSON.parse(readFileSync(join(workspaceRoot, file.file), "utf8")) : undefined);
       if (!manifest) continue;
       for (const dependency of Object.keys({ ...manifest.dependencies, ...manifest.peerDependencies, ...manifest.optionalDependencies })) {
+        reads.package(dependency); reads.lock();
         const key = locked?.resolve(locked.workspacePackages.has(manifest.name) ? manifest.name : "", dependency);
-        add(name, byPackage.get(dependency) ?? (locked?.workspacePackages.has(key) ? byRoot.get(resolve(workspaceRoot, locked.workspacePackages.get(key))) : key && locked.externalNodes[`npm:${key}`] ? `npm:${key}` : undefined), file.file);
+        add(name, byPackage.get(dependency) ?? (locked?.workspacePackages.has(key) ? ownerAt(resolve(workspaceRoot, locked.workspacePackages.get(key))) : key && locked.externalNodes[`npm:${key}`] ? `npm:${key}` : undefined), file.file);
       }
     }
   }
@@ -219,8 +229,8 @@ function manifestEdgesV1(authority, add, name, files) {
     const provenance = buildPath(relative(workspaceRoot, go.path));
     if (files.some((file) => file.file === provenance || file.file.endsWith("go.mod"))) {
       const sourceFile = owned(provenance, project.root) ? provenance : buildPath(relative(workspaceRoot, join(root, SCRIPT_BASENAME)));
-      for (const dependency of go.requires) add(name, goModules.get(dependency), sourceFile);
-      for (const replacement of go.replacements) add(name, goModules.get(replacement.module) ?? byRoot.get(resolve(dirname(go.path), replacement.path)), sourceFile);
+      for (const dependency of go.requires) { reads.module(dependency); add(name, goModules.get(dependency), sourceFile); }
+      for (const replacement of go.replacements) { reads.module(replacement.module); add(name, goModules.get(replacement.module) ?? ownerAt(resolve(dirname(go.path), replacement.path)), sourceFile); }
     }
   }
 }
@@ -229,7 +239,8 @@ function manifestEdgesV1(authority, add, name, files) {
 export async function createDependenciesImplementation(_options, context) {
   const { workspaceRoot, projects } = context, authority = await edgeAuthorityV1(_options, context), { locked, byPackage } = authority, edges = new Map(), add = edgeAdderV1(context, edges);
   const projectFiles = projectFilesToProcess(context);
-  for (const [name, files] of Object.entries(projectFiles)) manifestEdgesV1(authority, add, name, files);
+  for (const [name, files] of Object.entries(projectFiles)) manifestEdgesV1(authority, add, name, files, readsOfV1(context, name));
+  for (const edge of locked?.dependencies ?? []) if (projectFiles[edge.source]) readsOfV1(context, edge.source).lock();
   const publication={},fullFiles=context.fileMap?.projectFileMap??projectFiles;
   await collectImportEdges(workspaceRoot,fullFiles,projects,byPackage,locked,add,publication,new Set(Object.values(projectFiles).flat().map(file=>buildPath(file.file))),context);
   moduleGraphPublications.set(moduleGraphPublicationKeyV1(workspaceRoot),{parser:loaded.commandInputHash,owners:Object.entries(projects).map(([name,project])=>[name,buildPath(project.root)]).sort(([a],[b])=>a.localeCompare(b)),projects:publication,retained:context.moduleGraphProjects});
@@ -242,9 +253,10 @@ export async function createStreamingEdgesImplementation(options, context) {
   for (const edge of locked?.dependencies ?? []) { const list = lockedBySource.get(edge.source); if (list) list.push(edge); else lockedBySource.set(edge.source, [edge]); }
   return {
     edgesOf(name, node) {
-      const edges = new Map(), add = edgeAdderV1(context, edges);
-      manifestEdgesV1(authority, add, name, context.fileMap?.projectFileMap?.[name] ?? []);
-      if (name !== "workspace" && projects[name]) for (const fact of node?.metadata?.semio?.moduleGraph?.files ?? []) for (const target of importTargetsFromFacts(context.completeSourceImports ? fact.imports : fact.productionImports, fact.file, context.workspaceRoot, resolveOwner, authority.byPackage, locked)) add(name, target, fact.file);
+      const edges = new Map(), add = edgeAdderV1(context, edges), reads = readsOfV1(context, name);
+      manifestEdgesV1(authority, add, name, context.fileMap?.projectFileMap?.[name] ?? [], reads);
+      if (name !== "workspace" && projects[name]) for (const fact of node?.metadata?.semio?.moduleGraph?.files ?? []) for (const target of importTargetsFromFacts(context.completeSourceImports ? fact.imports : fact.productionImports, fact.file, context.workspaceRoot, resolveOwner, authority.byPackage, locked, reads, name)) add(name, target, fact.file);
+      if (lockedBySource.has(name)) reads.lock();
       return [...edges.values(), ...(lockedBySource.get(name) ?? [])];
     },
   };

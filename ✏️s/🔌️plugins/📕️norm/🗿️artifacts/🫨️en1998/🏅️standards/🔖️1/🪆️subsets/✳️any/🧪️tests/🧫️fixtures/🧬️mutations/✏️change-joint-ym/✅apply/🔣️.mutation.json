@@ -1,0 +1,5 @@
+{
+  "mutation": "changeJointYM",
+  "id": "joint-1",
+  "newYM": 2.5
+}

@@ -1,271 +1,624 @@
-union En1996Mutation = ChangeAnnex | ChangeMasonryClass | ChangeDesignSituation | ChangeStoreys | InsertWall | RemoveWall | ChangeWallThickness | ChangeWallHeight | ChangeWallLength | ChangeWallType | ChangeSupportSides | ChangeSlabBearingDepth | ChangeEccentricityTop | ChangeEccentricityBottom | ChangeUnitGroup | ChangeUnitMaterial | ChangeUnitFb | ChangeUnitLength | ChangeUnitWidth | ChangeUnitHeight | ChangeMortarType | ChangeMortarClass | ChangeFm | ChangeBedJointThickness | ChangeReinforced | ChangeAsVertical | ChangeAsHorizontal | ChangeFYd | ChangeFireRei | ChangeExposure | ChangeMu | ChangeLoadCaseSituation | ChangeWallLabelDe | ChangeWallLabelEn | InsertOpening | RemoveOpening | ChangeOpeningWidth | ChangeOpeningHeight | ChangeOpeningSill | InsertLoadCase | RemoveLoadCase | ChangeNEdTop | ChangeNEdMid | ChangeNEdBottom | ChangeVEd | ChangeWEd | InsertConcentrated | RemoveConcentrated | ChangeConcentratedForce | ChangeConcentratedBearingArea | ChangeConcentratedBearingLength
-
-type ChangeAnnex {
-  newAnnex: String
-}
-
-type ChangeMasonryClass {
-  newMasonryClass: String
-}
-
-type ChangeDesignSituation {
-  newDesignSituation: String
-}
-
-type ChangeStoreys {
-  newStoreys: Int
-}
-
-type InsertWall {
-  index: Int
-  wall: String
-}
-
-type RemoveWall {
-  index: Int
-}
-
-type ChangeWallThickness {
-  index: Int
-  newThicknessM: Float
-}
-
-type ChangeWallHeight {
-  index: Int
-  newHeightM: Float
-}
-
-type ChangeWallLength {
-  index: Int
-  newLengthM: Float
-}
-
-type ChangeWallType {
-  index: Int
-  newWallType: String
-}
-
-type ChangeSupportSides {
-  index: Int
-  newSupportSides: Int
-}
-
-type ChangeSlabBearingDepth {
-  index: Int
-  newSlabBearingDepthM: Float
-}
-
-type ChangeEccentricityTop {
-  index: Int
-  newEccentricityTopM: Float
-}
-
-type ChangeEccentricityBottom {
-  index: Int
-  newEccentricityBottomM: Float
-}
-
-type ChangeUnitGroup {
-  index: Int
-  newUnitGroup: String
-}
-
-type ChangeUnitMaterial {
-  index: Int
-  newUnitMaterial: String
-}
-
-type ChangeUnitFb {
-  index: Int
-  newFBPa: Float
-}
-
-type ChangeUnitLength {
-  index: Int
-  newUnitLengthM: Float
-}
-
-type ChangeUnitWidth {
-  index: Int
-  newUnitWidthM: Float
-}
-
-type ChangeUnitHeight {
-  index: Int
-  newUnitHeightM: Float
-}
-
-type ChangeMortarType {
-  index: Int
-  newMortarType: String
-}
-
-type ChangeMortarClass {
-  index: Int
-  newMortarClass: String
-}
-
-type ChangeFm {
-  index: Int
-  newFMPa: Float
-}
-
-type ChangeBedJointThickness {
-  index: Int
-  newBedJointThicknessM: Float
-}
-
-type ChangeReinforced {
-  index: Int
-  newReinforced: Boolean
-}
-
-type ChangeAsVertical {
-  index: Int
-  newAsVerticalM2: Float
-}
-
-type ChangeAsHorizontal {
-  index: Int
-  newAsHorizontalM2: Float
-}
-
-type ChangeFYd {
-  index: Int
-  newFYdPa: Float
-}
-
-type ChangeFireRei {
-  index: Int
-  newFireReiMin: Int
-}
-
-type ChangeExposure {
-  index: Int
-  newExposure: String
-}
-
-type ChangeMu {
-  index: Int
-  newMu: Float
-}
-
-type ChangeLoadCaseSituation {
-  wallIndex: Int
-  loadCaseIndex: Int
-  newDesignSituation: String
-}
-
-type ChangeWallLabelDe {
-  index: Int
-  newLabelDe: String
-}
-
-type ChangeWallLabelEn {
-  index: Int
-  newLabelEn: String
-}
-
-type InsertOpening {
-  wallIndex: Int
-  index: Int
-  opening: String
-}
-
-type RemoveOpening {
-  wallIndex: Int
-  index: Int
-}
-
-type ChangeOpeningWidth {
-  wallIndex: Int
-  index: Int
-  newWidthM: Float
-}
-
-type ChangeOpeningHeight {
-  wallIndex: Int
-  index: Int
-  newHeightM: Float
-}
-
-type ChangeOpeningSill {
-  wallIndex: Int
-  index: Int
-  newSillHeightM: Float
-}
-
-type InsertLoadCase {
-  wallIndex: Int
-  index: Int
-  loadCase: String
-}
-
-type RemoveLoadCase {
-  wallIndex: Int
-  index: Int
-}
-
-type ChangeNEdTop {
-  wallIndex: Int
-  index: Int
-  newNEdTopN: Float
-}
-
-type ChangeNEdMid {
-  wallIndex: Int
-  index: Int
-  newNEdMidN: Float
-}
-
-type ChangeNEdBottom {
-  wallIndex: Int
-  index: Int
-  newNEdBottomN: Float
-}
-
-type ChangeVEd {
-  wallIndex: Int
-  index: Int
-  newVEdN: Float
-}
-
-type ChangeWEd {
-  wallIndex: Int
-  index: Int
-  newWEdPa: Float
-}
-
-type InsertConcentrated {
-  wallIndex: Int
-  loadCaseIndex: Int
-  index: Int
-  load: String
-}
-
-type RemoveConcentrated {
-  wallIndex: Int
-  loadCaseIndex: Int
-  index: Int
-}
-
-type ChangeConcentratedForce {
-  wallIndex: Int
-  loadCaseIndex: Int
-  index: Int
-  newForceN: Float
-}
-
-type ChangeConcentratedBearingArea {
-  wallIndex: Int
-  loadCaseIndex: Int
-  index: Int
-  newBearingAreaM2: Float
-}
-
+union En1996Mutation = ChangeConcentratedBearingLength | ChangeSlabSpan | ChangeWallLength | ChangeWallHeight | ChangeWallThickness | ChangeEccentricityBottom | ChangeEccentricityTop | ChangePhiInfinity | ChangeQKSnow | InsertConcentrated | InsertLoadCase | InsertOpening | InsertWall | RemoveConcentrated | RemoveLoadCase | RemoveOpening | RemoveWall | ChangeAnnex | ChangeReliabilityClass | ChangeQPWind | ChangeDesignSituation | ChangeLoadCaseSituation | ChangeConcentratedForce | ChangeGKSlab | ChangeQKImposed | ChangeIsBasement | ChangeStoreys | ChangeMasonryClass | ChangeImposedCategory | ChangeWallLabelDe | ChangeWallLabelEn | ChangeExposure | ChangeConcentratedBearingArea | ChangeSlabBearingDepth | ChangeTributaryArea | ChangeFireRei | ChangeAsHorizontal | ChangeAsVertical | ChangeFYd | ChangeReinforced | ChangeBedJointThickness | ChangeFm | ChangeMortarClass | ChangeMortarType | ChangeCPe | ChangeDensity | ChangeSupportSides | ChangeUnitFb | ChangeUnitGroup | ChangeUnitHeight | ChangeUnitLength | ChangeUnitMaterial | ChangeUnitWidth | ChangeWallType | ChangeMu | ChangeOpeningHeight | ChangeOpeningSill | ChangeOpeningWidth | ChangeHKEarth | ChangePierPosition | ChangePierWidth | InsertPier | RemovePier | ChangeLintelPosition | ChangeLintelSpan | ChangeLintelDepth | ChangeLintelBearingLength | InsertLintel | RemoveLintel | ChangeTieKind | ChangeTiePosition | ChangeTieLevel | ChangeTieCapacity | InsertTie | RemoveTie | ChangePrestressForce | ChangePrestressArea | ChangePrestressStrength | ChangePrestressPosition | ChangePrestressEccentricity | ChangePrestressLoss | InsertPrestress | RemovePrestress | ChangeConfinedPosition | ChangeConfinedWidth | ChangeConfinedDepth | ChangeConfinedSteel | InsertConfined | RemoveConfined | ChangeFlangeLength | ChangeFlangeThickness | ChangeFlangePosition | InsertFlange | RemoveFlange | ChangeBarKind | ChangeBarDiameter | ChangeBarLength | ChangeBarSpacing | InsertBar | RemoveBar | ChangeFrostClass | ChangeCover | ChangeDeflectionLimit | ChangeSoilHeight | ChangeSoilDensity | ChangeIsothermDepth | ChangePlanX | ChangePlanY | ChangePlanAngle | ChangeInPlaneShear | ChangeInPlaneMoment | ChangeOpeningPosition | ChangeConcentratedPosition | ChangeConcentratedDistanceA1 | ChangePlacementX | ChangePlacementY | ChangePlacementZ | ChangePlacementYaw | InsertPlacement | RemovePlacement | InsertCase | RemoveCase | ChangeCaseNumber | ChangeCaseText | ChangeCaseLabelEn | ChangeCaseLabelDe | ChangeCaseEntryId | ChangeBracingSystem | ChangeDiaphragmStiffness | ChangeChaseWall | ChangeChaseKind | ChangeChaseX | ChangeChaseY | ChangeChaseWidth | ChangeChaseLength | ChangeChaseDepth | InsertChase | RemoveChase | ChangeMovementJointWall | ChangeMovementJointPosition | InsertMovementJoint | RemoveMovementJoint
 type ChangeConcentratedBearingLength {
-  wallIndex: Int
-  loadCaseIndex: Int
-  index: Int
-  newBearingLengthM: Float
+  wallId: String!
+  loadCaseId: String!
+  id: String!
+  newBearingLengthM: Float!
+}
+type ChangeSlabSpan {
+  wallId: String!
+  id: String!
+  newSlabSpanM: Float!
+}
+type ChangeWallLength {
+  id: String!
+  newLengthM: Float!
+}
+type ChangeWallHeight {
+  id: String!
+  newHeightM: Float!
+}
+type ChangeWallThickness {
+  id: String!
+  newThicknessM: Float!
+}
+type ChangeEccentricityBottom {
+  id: String!
+  newEccentricityBottomM: Float!
+}
+type ChangeEccentricityTop {
+  id: String!
+  newEccentricityTopM: Float!
+}
+type ChangePhiInfinity {
+  id: String!
+  newPhiInfinity: Float!
+}
+type ChangeQKSnow {
+  wallId: String!
+  id: String!
+  newQKSnowPa: Float!
+}
+type InsertConcentrated {
+  wallId: String!
+  loadCaseId: String!
+  index: Int!
+  load: ConcentratedLoad!
+}
+type InsertLoadCase {
+  wallId: String!
+  index: Int!
+  loadCase: WallLoadCase!
+}
+type InsertOpening {
+  wallId: String!
+  index: Int!
+  opening: WallOpening!
+}
+type InsertWall {
+  index: Int!
+  wall: MasonryWall!
+}
+type RemoveConcentrated {
+  wallId: String!
+  loadCaseId: String!
+  id: String!
+}
+type RemoveLoadCase {
+  wallId: String!
+  id: String!
+}
+type RemoveOpening {
+  wallId: String!
+  id: String!
+}
+type RemoveWall {
+  id: String!
+}
+type ChangeAnnex {
+  newAnnex: AnnexChoice!
+}
+type ChangeReliabilityClass {
+  newReliabilityClass: String!
+}
+type ChangeQPWind {
+  wallId: String!
+  id: String!
+  newQPWindPa: Float!
+}
+type ChangeDesignSituation {
+  newDesignSituation: DesignSituation!
+}
+type ChangeLoadCaseSituation {
+  wallId: String!
+  id: String!
+  newDesignSituation: LoadCaseSituation!
+}
+type ChangeConcentratedForce {
+  wallId: String!
+  loadCaseId: String!
+  id: String!
+  newForceN: Float!
+}
+type ChangeGKSlab {
+  wallId: String!
+  id: String!
+  newGKSlabN: Float!
+}
+type ChangeQKImposed {
+  wallId: String!
+  id: String!
+  newQKImposedPa: Float!
+}
+type ChangeIsBasement {
+  id: String!
+  newIsBasement: Boolean!
+}
+type ChangeStoreys {
+  newStoreys: Int!
+}
+type ChangeMasonryClass {
+  newMasonryClass: MasonryClass!
+}
+type ChangeImposedCategory {
+  wallId: String!
+  id: String!
+  newImposedCategory: ImposedCategory!
+}
+type ChangeWallLabelDe {
+  id: String!
+  newLabelDe: String!
+}
+type ChangeWallLabelEn {
+  id: String!
+  newLabelEn: String!
+}
+type ChangeExposure {
+  id: String!
+  newExposure: ExposureClass!
+}
+type ChangeConcentratedBearingArea {
+  wallId: String!
+  loadCaseId: String!
+  id: String!
+  newBearingAreaM2: Float!
+}
+type ChangeSlabBearingDepth {
+  id: String!
+  newSlabBearingDepthM: Float!
+}
+type ChangeTributaryArea {
+  wallId: String!
+  id: String!
+  newTributaryAreaM2: Float!
+}
+type ChangeFireRei {
+  id: String!
+  newFireReiMin: Int!
+}
+type ChangeAsHorizontal {
+  id: String!
+  newAsHorizontalM2: Float!
+}
+type ChangeAsVertical {
+  id: String!
+  newAsVerticalM2: Float!
+}
+type ChangeFYd {
+  id: String!
+  newFYdPa: Float!
+}
+type ChangeReinforced {
+  id: String!
+  newReinforced: Boolean!
+}
+type ChangeBedJointThickness {
+  id: String!
+  newBedJointThicknessM: Float!
+}
+type ChangeFm {
+  id: String!
+  newMortarStrengthPa: Float!
+}
+type ChangeMortarClass {
+  id: String!
+  newMortarClass: MortarClass!
+}
+type ChangeMortarType {
+  id: String!
+  newMortarType: MortarType!
+}
+type ChangeCPe {
+  wallId: String!
+  id: String!
+  newCPe: Float!
+}
+type ChangeDensity {
+  id: String!
+  newDensityKgM3: Float!
+}
+type ChangeSupportSides {
+  id: String!
+  newSupportSides: Int!
+}
+type ChangeUnitFb {
+  id: String!
+  newFBPa: Float!
+}
+type ChangeUnitGroup {
+  id: String!
+  newUnitGroup: UnitGroup!
+}
+type ChangeUnitHeight {
+  id: String!
+  newUnitHeightM: Float!
+}
+type ChangeUnitLength {
+  id: String!
+  newUnitLengthM: Float!
+}
+type ChangeUnitMaterial {
+  id: String!
+  newUnitMaterial: UnitMaterial!
+}
+type ChangeUnitWidth {
+  id: String!
+  newUnitWidthM: Float!
+}
+type ChangeWallType {
+  id: String!
+  newWallType: WallType!
+}
+type ChangeMu {
+  id: String!
+  newMu: Float!
+}
+type ChangeOpeningHeight {
+  wallId: String!
+  id: String!
+  newHeightM: Float!
+}
+type ChangeOpeningSill {
+  wallId: String!
+  id: String!
+  newSillHeightM: Float!
+}
+type ChangeOpeningWidth {
+  wallId: String!
+  id: String!
+  newWidthM: Float!
+}
+type ChangeHKEarth {
+  wallId: String!
+  id: String!
+  newHKEarthN: Float!
+}
+type ChangePierPosition {
+  wallId: String!
+  id: String!
+  newPositionM: Float!
+}
+type ChangePierWidth {
+  wallId: String!
+  id: String!
+  newWidthM: Float!
+}
+type InsertPier {
+  wallId: String!
+  index: Int!
+  pier: WallPier!
+}
+type RemovePier {
+  wallId: String!
+  id: String!
+}
+type ChangeLintelPosition {
+  wallId: String!
+  id: String!
+  newPositionM: Float!
+}
+type ChangeLintelSpan {
+  wallId: String!
+  id: String!
+  newSpanM: Float!
+}
+type ChangeLintelDepth {
+  wallId: String!
+  id: String!
+  newDepthM: Float!
+}
+type ChangeLintelBearingLength {
+  wallId: String!
+  id: String!
+  newBearingLengthM: Float!
+}
+type InsertLintel {
+  wallId: String!
+  index: Int!
+  lintel: WallLintel!
+}
+type RemoveLintel {
+  wallId: String!
+  id: String!
+}
+type ChangeTieKind {
+  wallId: String!
+  id: String!
+  newKind: TieKind!
+}
+type ChangeTiePosition {
+  wallId: String!
+  id: String!
+  newPositionM: Float!
+}
+type ChangeTieLevel {
+  wallId: String!
+  id: String!
+  newLevelM: Float!
+}
+type ChangeTieCapacity {
+  wallId: String!
+  id: String!
+  newCapacityN: Float!
+}
+type InsertTie {
+  wallId: String!
+  index: Int!
+  tie: WallTie!
+}
+type RemoveTie {
+  wallId: String!
+  id: String!
+}
+type ChangePrestressForce {
+  wallId: String!
+  id: String!
+  newForceN: Float!
+}
+type ChangePrestressArea {
+  wallId: String!
+  id: String!
+  newAreaM2: Float!
+}
+type ChangePrestressStrength {
+  wallId: String!
+  id: String!
+  newFPkPa: Float!
+}
+type ChangePrestressPosition {
+  wallId: String!
+  id: String!
+  newPositionM: Float!
+}
+type ChangePrestressEccentricity {
+  wallId: String!
+  id: String!
+  newEccentricityM: Float!
+}
+type ChangePrestressLoss {
+  wallId: String!
+  id: String!
+  newLossRatio: Float!
+}
+type InsertPrestress {
+  wallId: String!
+  index: Int!
+  prestress: WallPrestress!
+}
+type RemovePrestress {
+  wallId: String!
+  id: String!
+}
+type ChangeConfinedPosition {
+  wallId: String!
+  id: String!
+  newPositionM: Float!
+}
+type ChangeConfinedWidth {
+  wallId: String!
+  id: String!
+  newWidthM: Float!
+}
+type ChangeConfinedDepth {
+  wallId: String!
+  id: String!
+  newDepthM: Float!
+}
+type ChangeConfinedSteel {
+  wallId: String!
+  id: String!
+  newAsM2: Float!
+}
+type InsertConfined {
+  wallId: String!
+  index: Int!
+  confined: ConfinedElement!
+}
+type RemoveConfined {
+  wallId: String!
+  id: String!
+}
+type ChangeFlangeLength {
+  wallId: String!
+  id: String!
+  newLengthM: Float!
+}
+type ChangeFlangeThickness {
+  wallId: String!
+  id: String!
+  newThicknessM: Float!
+}
+type ChangeFlangePosition {
+  wallId: String!
+  id: String!
+  newPositionM: Float!
+}
+type InsertFlange {
+  wallId: String!
+  index: Int!
+  flange: ShearFlange!
+}
+type RemoveFlange {
+  wallId: String!
+  id: String!
+}
+type ChangeBarKind {
+  wallId: String!
+  id: String!
+  newKind: BarKind!
+}
+type ChangeBarDiameter {
+  wallId: String!
+  id: String!
+  newDiameterM: Float!
+}
+type ChangeBarLength {
+  wallId: String!
+  id: String!
+  newLengthM: Float!
+}
+type ChangeBarSpacing {
+  wallId: String!
+  id: String!
+  newSpacingM: Float!
+}
+type InsertBar {
+  wallId: String!
+  index: Int!
+  bar: WallBar!
+}
+type RemoveBar {
+  wallId: String!
+  id: String!
+}
+type ChangeFrostClass {
+  id: String!
+  newFrostClass: FrostClass!
+}
+type ChangeCover {
+  id: String!
+  newCoverM: Float!
+}
+type ChangeDeflectionLimit {
+  id: String!
+  newDeflectionLimit: Float!
+}
+type ChangeSoilHeight {
+  id: String!
+  newSoilHeightM: Float!
+}
+type ChangeSoilDensity {
+  id: String!
+  newSoilDensityKgM3: Float!
+}
+type ChangeIsothermDepth {
+  id: String!
+  newIsothermDepthM: Float!
+}
+type ChangePlanX {
+  id: String!
+  newPlanXM: Float!
+}
+type ChangePlanY {
+  id: String!
+  newPlanYM: Float!
+}
+type ChangePlanAngle {
+  id: String!
+  newPlanAngleDeg: Float!
+}
+type ChangeInPlaneShear {
+  id: String!
+  newInPlaneShearN: Float!
+}
+type ChangeInPlaneMoment {
+  id: String!
+  newInPlaneMomentNm: Float!
+}
+type ChangeOpeningPosition {
+  wallId: String!
+  id: String!
+  newPositionM: Float!
+}
+type ChangeConcentratedPosition {
+  wallId: String!
+  loadCaseId: String!
+  id: String!
+  newPositionM: Float!
+}
+type ChangeConcentratedDistanceA1 {
+  wallId: String!
+  loadCaseId: String!
+  id: String!
+  newDistanceA1M: Float!
+}
+type ChangePlacementX {
+  id: String!
+  newX: Float!
+}
+type ChangePlacementY {
+  id: String!
+  newY: Float!
+}
+type ChangePlacementZ {
+  id: String!
+  newZ: Float!
+}
+type ChangePlacementYaw {
+  id: String!
+  newYaw: Float!
+}
+type InsertPlacement {
+  index: Int!
+  item: Placement!
+}
+type RemovePlacement {
+  id: String!
+}
+type InsertCase {
+  index: Int!
+  case: CaseRow!
+}
+type RemoveCase {
+  id: String!
+}
+type ChangeCaseNumber {
+  caseId: String!
+  key: String!
+  value: Float
+}
+type ChangeCaseText {
+  caseId: String!
+  key: String!
+  value: String
+}
+type ChangeCaseLabelEn {
+  caseId: String!
+  newValue: String!
+}
+type ChangeCaseLabelDe {
+  caseId: String!
+  newValue: String!
+}
+type ChangeCaseEntryId {
+  caseId: String!
+  newValue: String!
+}
+type ChangeBracingSystem {
+  id: String!
+  newBracingSystem: String!
+}
+type ChangeDiaphragmStiffness {
+  id: String!
+  newDiaphragmStiffnessNPerM: Float!
+}
+type ChangeChaseWall {
+  id: String!
+  newWallId: String!
+}
+type ChangeChaseKind {
+  id: String!
+  newKind: String!
+}
+type ChangeChaseX {
+  id: String!
+  newXM: Float!
+}
+type ChangeChaseY {
+  id: String!
+  newYM: Float!
+}
+type ChangeChaseWidth {
+  id: String!
+  newWidthM: Float!
+}
+type ChangeChaseLength {
+  id: String!
+  newLengthM: Float!
+}
+type ChangeChaseDepth {
+  id: String!
+  newDepthM: Float!
+}
+type InsertChase {
+  index: Int!
+  item: WallChase!
+}
+type RemoveChase {
+  id: String!
+}
+type ChangeMovementJointWall {
+  id: String!
+  newWallId: String!
+}
+type ChangeMovementJointPosition {
+  id: String!
+  newPositionM: Float!
+}
+type InsertMovementJoint {
+  index: Int!
+  item: MovementJoint!
+}
+type RemoveMovementJoint {
+  id: String!
 }

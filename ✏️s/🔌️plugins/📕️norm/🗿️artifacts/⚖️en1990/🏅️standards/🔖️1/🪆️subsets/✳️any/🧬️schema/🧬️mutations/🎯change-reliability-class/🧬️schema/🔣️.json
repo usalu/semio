@@ -13,20 +13,28 @@
       "const": "changeReliabilityClass"
     },
     "newReliabilityClass": {
-      "type": "integer",
-      "minimum": 0,
+      "type": "string",
+      "enum": [
+        "RC1",
+        "RC2",
+        "RC3"
+      ],
       "x-semio-ui": {
         "label": {
           "en": "Reliability class RC",
           "de": "Zuverlässigkeitsklasse RC"
         },
         "description": {
-          "en": "1 = RC1, 2 = RC2, 3 = RC3 (EN 1990 Annex B).",
-          "de": "1 = RC1, 2 = RC2, 3 = RC3 (EN 1990 Anhang B)."
+          "en": "RC1, RC2 or RC3 (EN 1990 Annex B); K_FI follows from the class.",
+          "de": "RC1, RC2 oder RC3 (EN 1990 Anhang B); K_FI folgt aus der Klasse."
         },
-        "widget": "stepper",
-        "step": 1,
-        "precision": 0
+        "widget": "select",
+        "role": "value",
+        "group": "value",
+        "order": 20
+      },
+      "x-semio-rust": {
+        "type": "semio_s_artifact_norm_en1990_model::ReliabilityClass"
       }
     }
   }

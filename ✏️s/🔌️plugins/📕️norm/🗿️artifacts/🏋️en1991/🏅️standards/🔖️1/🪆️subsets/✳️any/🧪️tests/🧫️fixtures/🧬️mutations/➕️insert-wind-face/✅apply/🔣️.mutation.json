@@ -1,0 +1,17 @@
+{
+  "InsertWindFace": {
+    "index": 1,
+    "item": {
+      "id": "facade-e",
+      "zone": "E",
+      "z": 8.0,
+      "cPe10": -0.5,
+      "cPe1": -0.7,
+      "cPi": -0.3,
+      "cS": 1.0,
+      "cD": 1.0,
+      "loadedArea": 10.0,
+      "assumedWp": 400.0
+    }
+  }
+}

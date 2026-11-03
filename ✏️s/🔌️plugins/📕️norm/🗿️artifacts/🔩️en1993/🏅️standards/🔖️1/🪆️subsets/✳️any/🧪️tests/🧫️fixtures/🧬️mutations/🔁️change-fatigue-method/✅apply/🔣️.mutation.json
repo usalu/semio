@@ -1,0 +1,6 @@
+{
+  "ChangeFatigueMethod": {
+    "id": "fat-1",
+    "newMethod": "SafeLife"
+  }
+}

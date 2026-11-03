@@ -1,0 +1,5 @@
+{
+  "mutation": "changeFatigueM1",
+  "fatigueDetailId": "fat-1",
+  "newM1": 8.6
+}

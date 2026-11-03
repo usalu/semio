@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-param-web-thickness/schema.json",
+  "title": "ChangeParamWebThickness",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newWebThickness"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Parametric section",
+          "de": "Parametrischer Querschnitt"
+        },
+        "description": {
+          "en": "The parametric section this mutation addresses, by id.",
+          "de": "Das adressierte Element (Parametrischer Querschnitt), per Kennung."
+        },
+        "ref": {
+          "kind": "param-section"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newWebThickness": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Web or wall thickness t_w",
+          "de": "Steg- oder Wanddicke t_w"
+        },
+        "widget": "stepper",
+        "unit": "m",
+        "precision": 3,
+        "step": 0.005,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

@@ -1,0 +1,990 @@
+{
+ "code": "en1997",
+ "standard": "EN 1997",
+ "spec": "📐️specs/en1997-en1998-target.md",
+ "specIds": [
+  "G-01",
+  "G-02",
+  "GEO-F01",
+  "GEO-F02",
+  "GEO-F03",
+  "GEO-F04",
+  "EQU-01",
+  "UPL-01",
+  "HYD-01",
+  "HYD-02",
+  "HYD-03",
+  "SLS-01",
+  "SLS-02",
+  "SLS-03",
+  "SLS-04",
+  "PILE-01",
+  "PILE-09",
+  "PILE-02",
+  "PILE-03",
+  "PILE-04",
+  "PILE-05",
+  "PILE-06",
+  "PILE-07",
+  "PILE-08",
+  "RW-01",
+  "RW-10",
+  "RW-02",
+  "RW-03",
+  "RW-04",
+  "RW-05",
+  "RW-06",
+  "RW-07",
+  "RW-08",
+  "RW-09",
+  "SLOPE-01",
+  "SLOPE-02",
+  "SLOPE-03",
+  "SLOPE-04",
+  "ANC-01",
+  "ANC-04",
+  "ANC-02",
+  "ANC-03",
+  "DEW-01",
+  "DEW-02",
+  "DEW-03",
+  "GI-01",
+  "GI-02",
+  "GI-03",
+  "GI-04",
+  "GI-05",
+  "GI-06",
+  "GI-07",
+  "GI-08",
+  "GI-09",
+  "GI-10",
+  "GI-11",
+  "GI-12",
+  "GI-13",
+  "GI-14",
+  "GI-15",
+  "GI-16"
+ ],
+ "items": [
+  {
+   "id": "G-01",
+   "clause": "2.1",
+   "entity": "layers",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1997.layer.model"
+    ]
+   },
+   "description": {
+    "en": "Stratigraphy of every soil layer: depth intervals without gaps or overlaps, parameter ranges and the stress profile σ_v, u (2.4.3)",
+    "de": "Schichtenfolge jeder Bodenschicht: Tiefenintervalle ohne Lücken oder Überlappungen, Parameterbereiche und der Spannungsverlauf σ_v, u (2.4.3)"
+   }
+  },
+  {
+   "id": "G-02",
+   "clause": "2.4.5.2",
+   "entity": "cases",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "G-02"
+    ]
+   },
+   "description": {
+    "en": "Statistical characteristic value X_k = X_m (1 − k_n V_x) of a sample series with Student t, local or mean mode, known or unknown V_x (EN 1997-1 2.4.5.2, EN 1997-2 Annex C)",
+    "de": "Statistischer charakteristischer Wert X_k = X_m (1 − k_n V_x) einer Stichprobenreihe mit Student-t, lokal oder Mittel, V_x bekannt oder unbekannt (EN 1997-1 2.4.5.2, EN 1997-2 Anhang C)"
+   }
+  },
+  {
+   "id": "GEO-F01",
+   "clause": "2.3",
+   "entity": "footings",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1997.6.5.bearing."
+    ]
+   },
+   "description": {
+    "en": "Drained bearing resistance R/A' = c' Nc bc sc ic + q' Nq bq sq iq + 0.5 γ' B' Nγ bγ sγ iγ of every footing and load case (Annex D.4)",
+    "de": "Grundbruchwiderstand im dränierten Zustand R/A' = c' Nc bc sc ic + q' Nq bq sq iq + 0,5 γ' B' Nγ bγ sγ iγ jedes Fundaments und Lastfalls (Anhang D.4)"
+   }
+  },
+  {
+   "id": "GEO-F02",
+   "clause": "2.3",
+   "entity": "footings",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1997.6.5.bearing.undrained."
+    ]
+   },
+   "description": {
+    "en": "Undrained bearing resistance R/A' = (π + 2) cu bc sc ic + q of a footing on a cohesive layer (Annex D.3)",
+    "de": "Grundbruchwiderstand im undränierten Zustand R/A' = (π + 2) cu bc sc ic + q eines Fundaments auf bindiger Schicht (Anhang D.3)"
+   }
+  },
+  {
+   "id": "GEO-F03",
+   "clause": "2.3",
+   "entity": "footings",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "GEO-F03"
+    ]
+   },
+   "description": {
+    "en": "DIN 4017 bearing resistance R_n,k = A' (c Nc sc ic + γ2 d Nd sd id + γ1 B' Nb sb ib) of every footing and load case as a reference method beside Annex D",
+    "de": "Grundbruchwiderstand nach DIN 4017 R_n,k = A' (c Nc sc ic + γ2 d Nd sd id + γ1 B' Nb sb ib) jedes Fundaments und Lastfalls als Vergleichsverfahren neben Anhang D"
+   }
+  },
+  {
+   "id": "GEO-F04",
+   "clause": "2.4",
+   "entity": "footings",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1997.6.5.3.sliding."
+    ]
+   },
+   "description": {
+    "en": "Base sliding H_d ≤ R_d with R_t,k = V_k tan δ_k and the passive resistance E_p,d of every footing and load case (2.4)",
+    "de": "Gleiten in der Sohlfuge H_d ≤ R_d mit R_t,k = V_k tan δ_k und dem Erdwiderstand E_p,d jedes Fundaments und Lastfalls (2.4)"
+   }
+  },
+  {
+   "id": "EQU-01",
+   "clause": "2.5",
+   "entity": "retainingWalls",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1997.9.overturning."
+    ]
+   },
+   "description": {
+    "en": "Equilibrium against overturning E_dst,d ≤ E_stb,d + T_d about the toe of every retaining wall (2.4.7.2)",
+    "de": "Gleichgewicht gegen Kippen E_dst,d ≤ E_stb,d + T_d um die Fußkante jeder Stützwand (2.4.7.2)"
+   }
+  },
+  {
+   "id": "UPL-01",
+   "clause": "2.6",
+   "entity": "upliftCases",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1997.10.upl."
+    ]
+   },
+   "description": {
+    "en": "Uplift equilibrium V_dst,d ≤ G_stb,d + R_d of every uplift case (10.2)",
+    "de": "Auftriebssicherheit V_dst,d ≤ G_stb,d + R_d jedes Auftriebsfalls (10.2)"
+   }
+  },
+  {
+   "id": "HYD-01",
+   "clause": "2.7",
+   "entity": "upliftCases",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1997.10.hyd."
+    ]
+   },
+   "description": {
+    "en": "Hydraulic heave S_dst,d ≤ G'_stb,d with the seepage force on the soil prism of every uplift case (10.3)",
+    "de": "Hydraulischer Grundbruch S_dst,d ≤ G'_stb,d mit der Strömungskraft auf das Bodenprisma jedes Auftriebsfalls (10.3)"
+   }
+  },
+  {
+   "id": "HYD-02",
+   "clause": "10.4",
+   "entity": "embeddedWalls",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "HYD-02"
+    ]
+   },
+   "description": {
+    "en": "Piping at the foot of an embedded wall: exit gradient i_exit against i_crit = γ'/γw and the Lane/Bligh creep ratios (10.3, 10.4)",
+    "de": "Erosionsgrundbruch am Wandfuß: Austrittsgefälle i_exit gegen i_crit = γ'/γw sowie Lane/Bligh-Sickerwegverhältnisse (10.3, 10.4)"
+   }
+  },
+  {
+   "id": "HYD-03",
+   "clause": "10.4",
+   "entity": "embeddedWalls",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "HYD-03"
+    ]
+   },
+   "description": {
+    "en": "Internal erosion and heave (10.4): Terzaghi toe prism γH·γw·h_m·d/2 ≤ γH,stb·γ'·d²/2 and largest gradient of the finite-difference flow net against γ'/γw",
+    "de": "Innere Erosion und Aufbruch (10.4): Terzaghi-Prisma am Wandfuß γH·γw·h_m·d/2 ≤ γH,stb·γ'·d²/2 und größtes Gefälle des Strömungsnetzes gegen γ'/γw"
+   }
+  },
+  {
+   "id": "SLS-01",
+   "clause": "2.8",
+   "entity": "footings",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1997.6.6.settlement.",
+     "en1997.6.6.elastic."
+    ]
+   },
+   "description": {
+    "en": "Oedometric and elastic settlement s = Σ σ_z,i h_i/E_oed,i of every footing against the limit (6.6, Annex F)",
+    "de": "Ödometrische und elastische Setzung s = Σ σ_z,i h_i/E_oed,i jedes Fundaments gegen den Grenzwert (6.6, Anhang F)"
+   }
+  },
+  {
+   "id": "SLS-02",
+   "clause": "2.8",
+   "entity": "labTests",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "SLS-02"
+    ]
+   },
+   "description": {
+    "en": "Primary consolidation settlement s_c = Cc H/(1 + e0) log10((σ'0 + Δσ)/σ'0) and time-settlement of every oedometer series (reference)",
+    "de": "Primärsetzung aus Konsolidation s_c = Cc H/(1 + e0) log10((σ'0 + Δσ)/σ'0) und Zeit-Setzung jeder Ödometerversuchsreihe (Vergleichsverfahren)"
+   }
+  },
+  {
+   "id": "SLS-03",
+   "clause": "2.8",
+   "entity": "labTests",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "SLS-03"
+    ]
+   },
+   "description": {
+    "en": "Secondary compression s_sec = Cα H/(1 + e0) log10(t2/t1) of every oedometer series over the design life (reference)",
+    "de": "Sekundärsetzung s_sec = Cα H/(1 + e0) log10(t2/t1) jeder Ödometerversuchsreihe über die Nutzungsdauer (Vergleichsverfahren)"
+   }
+  },
+  {
+   "id": "SLS-04",
+   "clause": "2.8",
+   "entity": "footings",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1997.6.6.angular.",
+     "en1997.6.6.tilt."
+    ]
+   },
+   "description": {
+    "en": "Angular distortion tan ω = (s_A − s_B)/L and tilt of the placed footings against 1/500, emitted once a document holds two footing placements",
+    "de": "Winkelverdrehung tan ω = (s_A − s_B)/L und Schiefstellung der gesetzten Fundamente gegen 1/500, ausgegeben, sobald ein Dokument zwei Fundamentpositionen enthält"
+   }
+  },
+  {
+   "id": "PILE-01",
+   "clause": "2.9",
+   "entity": "piles",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1997.7.6.2.compression."
+    ]
+   },
+   "description": {
+    "en": "Pile compression resistance R_c,k = min{R_c,m,mean/ξ1; R_c,m,min/ξ2} and R_c,d = R_c,k/γt from the static load-test profiles (7.6.2.2)",
+    "de": "Pfahldruckwiderstand R_c,k = min{R_c,m,mean/ξ1; R_c,m,min/ξ2} und R_c,d = R_c,k/γt aus den Profilen statischer Probebelastungen (7.6.2.2)"
+   }
+  },
+  {
+   "id": "PILE-09",
+   "clause": "2.9",
+   "entity": "piles",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1997.pile-09."
+    ]
+   },
+   "description": {
+    "en": "Resistance-settlement of every pile at its serviceability load with bilinear mobilisation plus elastic shortening, E_c from the pile's concrete class (registry E_cm, EN 1992-1-1 Table 3.1) or the explicit modulus (unverified)",
+    "de": "Widerstands-Setzungs-Verhalten jedes Pfahls unter Gebrauchslast mit bilinearer Mobilisierung zuzüglich elastischer Stauchung, E_c aus der Betonklasse des Pfahls (Register E_cm, EN 1992-1-1 Tabelle 3.1) oder dem expliziten Modul (ungeprüft)"
+   }
+  },
+  {
+   "id": "PILE-02",
+   "clause": "-",
+   "entity": "piles",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1997.7.6.2.compression."
+    ]
+   },
+   "description": {
+    "en": "Pile compression resistance R_c,k = min{R_c;cal,mean/ξ3; R_c;cal,min/ξ4} from the ground-test profiles with R_b + R_s (7.6.2.3)",
+    "de": "Pfahldruckwiderstand R_c,k = min{R_c;cal,mean/ξ3; R_c;cal,min/ξ4} aus den Baugrundprofilen mit R_b + R_s (7.6.2.3)"
+   }
+  },
+  {
+   "id": "PILE-03",
+   "clause": "-",
+   "entity": "piles",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1997.7.6.3.tension."
+    ]
+   },
+   "description": {
+    "en": "Tension resistance R_t,d = R_t,k/γs,t of every pile with a tension action, with the favourable pile weight; emitted from the tension variant of the demo package",
+    "de": "Zugwiderstand R_t,d = R_t,k/γs,t jedes Pfahls mit Zugeinwirkung, mit dem günstig wirkenden Pfahleigengewicht; ausgegeben aus der Zugvariante des Demopakets"
+   }
+  },
+  {
+   "id": "PILE-04",
+   "clause": "-",
+   "entity": "piles",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1997.pile-04.deflection."
+    ]
+   },
+   "description": {
+    "en": "Lateral head deflection of every pile by the Winkler subgrade with characteristic length λ = (k D/(4 E_p I_p))^(1/4) (7.7)",
+    "de": "Seitliche Kopfverschiebung jedes Pfahls nach dem Winkler-Bettungsmodell mit der charakteristischen Länge λ = (k D/(4 E_p I_p))^(1/4) (7.7)"
+   }
+  },
+  {
+   "id": "PILE-05",
+   "clause": "-",
+   "entity": "piles",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "PILE-05"
+    ]
+   },
+   "description": {
+    "en": "Negative skin friction F_neg = Σ π D q_s,neg h of the settling ground along every pile shaft, F_c,d + F_neg,d ≤ R_c,d (reference)",
+    "de": "Negative Mantelreibung F_neg = Σ π D q_s,neg h des sich setzenden Bodens entlang jedes Pfahlschafts, F_c,d + F_neg,d ≤ R_c,d (Vergleichsverfahren)"
+   }
+  },
+  {
+   "id": "PILE-06",
+   "clause": "-",
+   "entity": "pileGroups",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "PILE-06"
+    ]
+   },
+   "description": {
+    "en": "Group efficiency η_g by Converse-Labarre, block failure R_block and corner pile load of every pile group",
+    "de": "Gruppenwirkungsgrad η_g nach Converse-Labarre, Blockbruch R_block und Eckpfahllast jeder Pfahlgruppe"
+   }
+  },
+  {
+   "id": "PILE-07",
+   "clause": "-",
+   "entity": "piles",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1997.pile-07.buckling."
+    ]
+   },
+   "description": {
+    "en": "Buckling interface of every pile: critical load N_cr = π² EI/L_eff² against the design axial force",
+    "de": "Knickschnittstelle jedes Pfahls: kritische Last N_cr = π² EI/L_eff² gegen die Bemessungsnormalkraft"
+   }
+  },
+  {
+   "id": "PILE-08",
+   "clause": "-",
+   "entity": "piles",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "PILE-08"
+    ]
+   },
+   "description": {
+    "en": "Dynamic test evaluation with ξ5, ξ6 and the driving formula R = η_h W h/(s + 0.5 s_e) of every pile with dynamic tests (reference, 7.6.2.4)",
+    "de": "Auswertung dynamischer Pfahlprüfungen mit ξ5, ξ6 und der Rammformel R = η_h W h/(s + 0,5 s_e) jedes Pfahls mit dynamischen Prüfungen (Vergleichsverfahren, 7.6.2.4)"
+   }
+  },
+  {
+   "id": "RW-01",
+   "clause": "2.10",
+   "entity": "retainingWalls",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1997.9.earthPressure."
+    ]
+   },
+   "description": {
+    "en": "Active earth pressure regime and Coulomb coefficient Ka of every retaining wall (9, Annex C)",
+    "de": "Erddruckzustand und Coulombscher Beiwert Ka jeder Stützwand (9, Anhang C)"
+   }
+  },
+  {
+   "id": "RW-10",
+   "clause": "2.10",
+   "entity": "retainingWalls",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "RW-10"
+    ]
+   },
+   "description": {
+    "en": "Traffic surcharge at the crest of every retaining wall with 45° load spread (2.10)",
+    "de": "Verkehrslast am Wandkopf jeder Stützwand mit Lastausbreitung unter 45° (2.10)"
+   }
+  },
+  {
+   "id": "RW-02",
+   "clause": "-",
+   "entity": "retainingWalls",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1997.rw-02."
+    ]
+   },
+   "description": {
+    "en": "Rankine active coefficient Ka = (1 − sin φ')/(1 + sin φ') of every retaining wall as a reference",
+    "de": "Aktiver Beiwert Ka = (1 − sin φ')/(1 + sin φ') nach Rankine jeder Stützwand als Vergleichswert"
+   }
+  },
+  {
+   "id": "RW-03",
+   "clause": "-",
+   "entity": "embeddedWalls",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1997.rw-03."
+    ]
+   },
+   "description": {
+    "en": "Passive earth pressure of the embedment of every embedded wall on the curved failure surface (Kp by log-spiral)",
+    "de": "Erdwiderstand im Einbindebereich jeder Spundwand auf der gekrümmten Gleitfläche (Kp nach logarithmischer Spirale)"
+   }
+  },
+  {
+   "id": "RW-04",
+   "clause": "-",
+   "entity": "retainingWalls",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "RW-04"
+    ]
+   },
+   "description": {
+    "en": "At-rest coefficient K0 = (1 − sin φ') √OCR of every retaining wall as a reference",
+    "de": "Ruhedruckbeiwert K0 = (1 − sin φ') √OCR jeder Stützwand als Vergleichswert"
+   }
+  },
+  {
+   "id": "RW-05",
+   "clause": "-",
+   "entity": "retainingWalls",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1997.rw-05."
+    ]
+   },
+   "description": {
+    "en": "Surcharge Δe = K q and water pressure u = γw (z − z_w) on every retaining wall",
+    "de": "Auflast Δe = K q und Wasserdruck u = γw (z − z_w) auf jede Stützwand"
+   }
+  },
+  {
+   "id": "RW-06",
+   "clause": "-",
+   "entity": "retainingWalls",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1997.9.sliding.",
+     "en1997.9.overturning."
+    ]
+   },
+   "description": {
+    "en": "Sliding and overturning of every gravity or cantilever retaining wall, with the base pressure σ = V/B (1 ± 6e/B)",
+    "de": "Gleiten und Kippen jeder Schwergewichts- oder Winkelstützwand, mit der Sohlpressung σ = V/B (1 ± 6e/B)"
+   }
+  },
+  {
+   "id": "RW-07",
+   "clause": "-",
+   "entity": "embeddedWalls",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1997.rw-07."
+    ]
+   },
+   "description": {
+    "en": "Required embedment of every embedded wall from free earth support equilibrium against the provided embedment",
+    "de": "Erforderliche Einbindetiefe jeder Spundwand aus dem Gleichgewicht bei freier Auflagerung gegen die vorhandene Einbindetiefe"
+   }
+  },
+  {
+   "id": "RW-08",
+   "clause": "-",
+   "entity": "retainingWalls",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "RW-08"
+    ]
+   },
+   "description": {
+    "en": "Mononobe-Okabe thrust of every retaining wall with a horizontal seismic coefficient (EN 1998-5 7.3.2)",
+    "de": "Mononobe-Okabe-Schub jeder Stützwand mit einem horizontalen Erdbebenbeiwert (EN 1998-5 7.3.2)"
+   }
+  },
+  {
+   "id": "RW-09",
+   "clause": "-",
+   "entity": "retainingWalls",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "RW-09"
+    ]
+   },
+   "description": {
+    "en": "Internal stability of reinforced soil with T_max = K σ_v S_v and the embedment length L_e of every wall with reinforcement (reference)",
+    "de": "Innere Standsicherheit bewehrten Bodens mit T_max = K σ_v S_v und Verankerungslänge L_e jeder Wand mit Bewehrung (Vergleichsverfahren)"
+   }
+  },
+  {
+   "id": "SLOPE-01",
+   "clause": "2.11",
+   "entity": "slopes",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1997.11.bishop."
+    ]
+   },
+   "description": {
+    "en": "Simplified Bishop factor of safety F_s of every slope on its critical or user circle (11)",
+    "de": "Vereinfachter Bishop-Sicherheitsfaktor F_s jeder Böschung auf ihrem kritischen oder benutzerdefinierten Kreis (11)"
+   }
+  },
+  {
+   "id": "SLOPE-02",
+   "clause": "2.11",
+   "entity": "slopes",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "SLOPE-02"
+    ]
+   },
+   "description": {
+    "en": "Janbu simplified factor of safety F_s = f0 Σ[…]/Σ W tan α of every slope on the Bishop circle (11)",
+    "de": "Vereinfachter Janbu-Sicherheitsfaktor F_s = f0 Σ[…]/Σ W tan α jeder Böschung auf dem Bishop-Kreis (11)"
+   }
+  },
+  {
+   "id": "SLOPE-03",
+   "clause": "2.11",
+   "entity": "slopes",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "SLOPE-03"
+    ]
+   },
+   "description": {
+    "en": "Infinite-slope utilisation with F = tan φ'/tan β for dry ground and the seepage-parallel variant of every slope (11)",
+    "de": "Ausnutzung der unendlich langen Böschung mit F = tan φ'/tan β für trockenen Boden und der Variante mit hangparalleler Strömung jeder Böschung (11)"
+   }
+  },
+  {
+   "id": "SLOPE-04",
+   "clause": "2.11",
+   "entity": "slopes",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "SLOPE-04"
+    ]
+   },
+   "description": {
+    "en": "Plane-wedge utilisation of every slope (11)",
+    "de": "Ausnutzung des ebenen Gleitkeils jeder Böschung (11)"
+   }
+  },
+  {
+   "id": "ANC-01",
+   "clause": "2.13",
+   "entity": "anchors",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "ANC-01"
+    ]
+   },
+   "description": {
+    "en": "Pull-out resistance of every anchor from its suitability tests (2.13)",
+    "de": "Herausziehwiderstand jedes Ankers aus seinen Eignungsprüfungen (2.13)"
+   }
+  },
+  {
+   "id": "ANC-04",
+   "clause": "2.13",
+   "entity": "anchors",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "ANC-04"
+    ]
+   },
+   "description": {
+    "en": "Tendon capacity and free length of every anchor (2.13)",
+    "de": "Zuggliedtragfähigkeit und freie Länge jedes Ankers (2.13)"
+   }
+  },
+  {
+   "id": "ANC-02",
+   "clause": "-",
+   "entity": "anchors",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "ANC-02"
+    ]
+   },
+   "description": {
+    "en": "Empirical fixed-length resistance of every anchor",
+    "de": "Empirischer Verpresskörperwiderstand jedes Ankers"
+   }
+  },
+  {
+   "id": "ANC-03",
+   "clause": "-",
+   "entity": "anchors",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "ANC-03"
+    ]
+   },
+   "description": {
+    "en": "Anchor force and proof load of every anchor",
+    "de": "Ankerkraft und Prüflast jedes Ankers"
+   }
+  },
+  {
+   "id": "DEW-01",
+   "clause": "2.14",
+   "entity": "layerWaters",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "DEW-01"
+    ]
+   },
+   "description": {
+    "en": "Single-well discharge and required number of wells of every layer water with a pumped well (reference, 2.14)",
+    "de": "Einzelbrunnenergiebigkeit und erforderliche Brunnenanzahl jedes Schichtwassers mit Pumpbrunnen (Vergleichsverfahren, 2.14)"
+   }
+  },
+  {
+   "id": "DEW-02",
+   "clause": "2.14",
+   "entity": "layerWaters",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "DEW-02"
+    ]
+   },
+   "description": {
+    "en": "Well group as an equivalent big well with superposed drawdown at an observation point (2.14)",
+    "de": "Brunnengruppe als Ersatzgroßbrunnen mit überlagerter Absenkung an einem Aufpunkt (2.14)"
+   }
+  },
+  {
+   "id": "DEW-03",
+   "clause": "2.14",
+   "entity": "embeddedWalls",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "DEW-03"
+    ]
+   },
+   "description": {
+    "en": "Settlement from the groundwater drawdown at every embedded wall with a head across the wall (2.14)",
+    "de": "Setzung infolge der Grundwasserabsenkung an jeder Spundwand mit Potenzialdifferenz über die Wand (2.14)"
+   }
+  },
+  {
+   "id": "GI-01",
+   "clause": "2.4",
+   "entity": "footings",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1997.2.4.2.investigation.",
+     "en1997.gi-01."
+    ]
+   },
+   "description": {
+    "en": "Investigation extent: required depth z_a ≥ max(6 m, 2 B) below a footing or max(5 m, 3 D_b) below a pile base, point spacing, coverage against the available depth (Annex B.3)",
+    "de": "Erkundungsumfang: erforderliche Tiefe z_a ≥ max(6 m, 2 B) unter Fundamenten bzw. max(5 m, 3 D_b) unter dem Pfahlfuß, Punktabstand, Abdeckung gegen die vorhandene Tiefe (Anhang B.3)"
+   }
+  },
+  {
+   "id": "GI-02",
+   "clause": "E",
+   "entity": "cases",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "GI-02"
+    ]
+   },
+   "description": {
+    "en": "CPT soil classification: q_t = q_c + u_2 (1 − a), friction ratio R_f and soil behaviour type index I_c (Annex E)",
+    "de": "CPT-Klassifikation: q_t = q_c + u_2 (1 − a), Reibungsverhältnis R_f und Bodenverhaltensindex I_c (Anhang E)"
+   }
+  },
+  {
+   "id": "GI-03",
+   "clause": "D",
+   "entity": "cases",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1997.gi-03.",
+     "en1997.2.characteristic."
+    ]
+   },
+   "description": {
+    "en": "Undrained shear strength from CPT c_u = (q_t − σ_v0)/N_kt with the cone factor N_kt of the layer or the registry row (Annex D); per layer the characteristic c_u (and φ′ from CPT and SPT) derived from the investigation points, with the typed basis (declared or derived) that feeds GEO and SLOPE",
+    "de": "Undränierte Scherfestigkeit aus CPT c_u = (q_t − σ_v0)/N_kt mit dem Spitzendruckfaktor N_kt der Schicht oder der Registerzeile (Anhang D); je Schicht der charakteristische Wert c_u (und φ′ aus CPT und SPT) aus den Erkundungspunkten mit der typisierten Grundlage (angegeben oder abgeleitet), die GEO und SLOPE speist"
+   }
+  },
+  {
+   "id": "GI-04",
+   "clause": "D",
+   "entity": "cases",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "GI-04"
+    ]
+   },
+   "description": {
+    "en": "Friction angle from CPT after Kulhawy and Mayne (Annex D)",
+    "de": "Reibungswinkel aus CPT nach Kulhawy und Mayne (Anhang D)"
+   }
+  },
+  {
+   "id": "GI-05",
+   "clause": "D",
+   "entity": "cases",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "GI-05"
+    ]
+   },
+   "description": {
+    "en": "Oedometric modulus from CPT E_oed = α_E q_c (Annex D)",
+    "de": "Steifemodul aus CPT E_oed = α_E q_c (Anhang D)"
+   }
+  },
+  {
+   "id": "GI-06",
+   "clause": "F",
+   "entity": "cases",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "GI-06"
+    ]
+   },
+   "description": {
+    "en": "SPT correction N_60 and (N_1)_60 for energy, borehole, sampler, rod length and overburden (Annex F)",
+    "de": "SPT-Korrektur N_60 und (N_1)_60 für Energie, Bohrloch, Probenehmer, Gestängelänge und Überlagerung (Anhang F)"
+   }
+  },
+  {
+   "id": "GI-07",
+   "clause": "F",
+   "entity": "cases",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "GI-07"
+    ]
+   },
+   "description": {
+    "en": "Friction angle from SPT after Hatanaka and Uchida (Annex F)",
+    "de": "Reibungswinkel aus SPT nach Hatanaka und Uchida (Anhang F)"
+   }
+  },
+  {
+   "id": "GI-08",
+   "clause": "F",
+   "entity": "cases",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "GI-08"
+    ]
+   },
+   "description": {
+    "en": "Relative density from SPT after Skempton (Annex F)",
+    "de": "Lagerungsdichte aus SPT nach Skempton (Anhang F)"
+   }
+  },
+  {
+   "id": "GI-09",
+   "clause": "G",
+   "entity": "cases",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "GI-09"
+    ]
+   },
+   "description": {
+    "en": "Dynamic probing DPH/DPL/DPSH: friction angle range from N_10 (Annex G, H)",
+    "de": "Rammsondierung DPH/DPL/DPSH: Reibungswinkelbereich aus N_10 (Anhang G, H)"
+   }
+  },
+  {
+   "id": "GI-10",
+   "clause": "R",
+   "entity": "labTests",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "GI-10"
+    ]
+   },
+   "description": {
+    "en": "Laboratory oedometer series: compression index, preconsolidation stress and consolidation coefficient c_v = 0.848 H²/t90",
+    "de": "Laborödometerversuch: Kompressionsbeiwert, Vorbelastungsspannung und Konsolidierungsbeiwert c_v = 0,848 H²/t90"
+   }
+  },
+  {
+   "id": "GI-11",
+   "clause": "S",
+   "entity": "labTests",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "GI-11"
+    ]
+   },
+   "description": {
+    "en": "Laboratory triaxial CU/CD series: Mohr-Coulomb envelope φ', c' from the q-p' data",
+    "de": "Labor-Triaxialversuch CU/CD: Mohr-Coulomb-Einhüllende φ', c' aus den q-p'-Daten"
+   }
+  },
+  {
+   "id": "GI-12",
+   "clause": "S",
+   "entity": "labTests",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "GI-12"
+    ]
+   },
+   "description": {
+    "en": "Laboratory direct shear series: φ', c' by linear regression τ = c' + σ tan φ'",
+    "de": "Laborrahmenscherversuch: φ', c' durch lineare Regression τ = c' + σ tan φ'"
+   }
+  },
+  {
+   "id": "GI-13",
+   "clause": "2.4",
+   "entity": "labTests",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "GI-13"
+    ]
+   },
+   "description": {
+    "en": "Characteristic value derivation from test series: statistical X_k of a sample series (GI-13) and the characteristic lower bound of a laboratory strength regression against the layer values (code entry GI-17)",
+    "de": "Ableitung charakteristischer Werte aus Versuchsreihen: statistisches X_k einer Stichprobenreihe (GI-13) und unterer charakteristischer Wert der Laborfestigkeitsregression gegen die Schichtwerte (Codeeintrag GI-17)"
+   }
+  },
+  {
+   "id": "GI-14",
+   "clause": "E",
+   "entity": "cases",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "GI-14"
+    ]
+   },
+   "description": {
+    "en": "Pressuremeter (Ménard): q_b,k = k_p p_le*, E_oed = E_M/α_M",
+    "de": "Pressiometer (Ménard): q_b,k = k_p p_le*, E_oed = E_M/α_M"
+   }
+  },
+  {
+   "id": "GI-15",
+   "clause": "5",
+   "entity": "cases",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "GI-15"
+    ]
+   },
+   "description": {
+    "en": "Grain-size classification: C_u, C_c and Hazen permeability k = 0.0116 d10²",
+    "de": "Kornverteilung: C_u, C_c und Durchlässigkeit nach Hazen k = 0,0116 d10²"
+   }
+  },
+  {
+   "id": "GI-16",
+   "clause": "6",
+   "entity": "cases",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "GI-16"
+    ]
+   },
+   "description": {
+    "en": "Permeability from a pumping test after Dupuit/Thiem (2.14)",
+    "de": "Durchlässigkeit aus dem Pumpversuch nach Dupuit/Thiem (2.14)"
+   }
+  }
+ ]
+}

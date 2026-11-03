@@ -1,0 +1,5 @@
+{
+  "mutation": "changeAssessmentAxialForceN",
+  "id": "as-1",
+  "newAxialForceN": 1.5
+}

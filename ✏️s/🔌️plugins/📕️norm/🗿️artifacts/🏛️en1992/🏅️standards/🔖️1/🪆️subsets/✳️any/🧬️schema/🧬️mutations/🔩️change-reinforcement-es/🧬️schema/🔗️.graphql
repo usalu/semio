@@ -1,0 +1,4 @@
+type ChangeReinforcementES {
+  gradeId: String!
+  newES: Float!
+}

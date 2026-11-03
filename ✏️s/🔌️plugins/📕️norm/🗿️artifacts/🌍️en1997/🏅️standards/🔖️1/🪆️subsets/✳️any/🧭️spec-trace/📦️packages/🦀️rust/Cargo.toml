@@ -1,0 +1,19 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-s-artifact-norm-en1997-spec-trace"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "EN 1997 specification traceability table: every spec id with its clause, entity and realisation"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-s-plugin-norm-compliance = { workspace = true }

@@ -1,0 +1,6 @@
+{
+  "ChangeJointCompressionLever": {
+    "id": "joint-j1",
+    "newCompressionLever": 1.5
+  }
+}

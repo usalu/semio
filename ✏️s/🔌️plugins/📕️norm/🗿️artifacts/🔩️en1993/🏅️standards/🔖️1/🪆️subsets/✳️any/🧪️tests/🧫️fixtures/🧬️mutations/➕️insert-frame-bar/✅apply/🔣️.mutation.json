@@ -1,0 +1,14 @@
+{
+  "InsertFrameBar": {
+    "index": 1,
+    "frameBar": {
+      "id": "bar-1-2",
+      "memberId": "member-b1",
+      "label": "Left column",
+      "startNodeId": "node-a",
+      "endNodeId": "node-b",
+      "releaseStart": "Rigid",
+      "releaseEnd": "Rigid"
+    }
+  }
+}

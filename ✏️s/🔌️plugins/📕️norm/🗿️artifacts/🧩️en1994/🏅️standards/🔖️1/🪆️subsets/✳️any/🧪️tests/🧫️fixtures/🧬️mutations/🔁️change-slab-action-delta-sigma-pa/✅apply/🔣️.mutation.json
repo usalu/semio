@@ -1,0 +1,7 @@
+{
+  "ChangeSlabActionDeltaSigmaPa": {
+    "slabId": "slab-S1",
+    "id": "G-slab",
+    "newDeltaSigmaKPa": 2500000.0
+  }
+}

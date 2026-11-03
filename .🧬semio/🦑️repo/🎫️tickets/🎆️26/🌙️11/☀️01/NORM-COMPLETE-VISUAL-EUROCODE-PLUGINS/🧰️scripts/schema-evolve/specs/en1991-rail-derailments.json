@@ -1,0 +1,87 @@
+{
+  "artifact": "en1991",
+  "reference": "rotatingMachines",
+  "collection": {
+    "name": "railDerailments",
+    "entity": "RailDerailment",
+    "emoji": "🚆",
+    "doc": "🚆 Derailment action on a railway bridge (EN 1991-2, 6.7.1): design situation I (vehicles stay in the track area on the deck) or II, the vertical line load, its loaded length and its offset from the track axis the design assumes.",
+    "label": {
+      "en": "Rail derailments",
+      "de": "Eisenbahn-Entgleisungen"
+    },
+    "id": {
+      "en": "Derailment ID",
+      "de": "Entgleisungs-ID"
+    },
+    "singular": {
+      "en": "rail derailment",
+      "de": "Eisenbahn-Entgleisung"
+    },
+    "kindSlug": "rail-derailment",
+    "fields": [
+      {
+        "name": "situation",
+        "type": "String",
+        "label": {
+          "en": "Design situation (I | II)",
+          "de": "Bemessungssituation (I | II)"
+        },
+        "doc": "🚆 i | ii: design situation I or II of the derailment (anything else is an invalid input).",
+        "sample": "i"
+      },
+      {
+        "name": "assumed_line_load",
+        "type": "f64",
+        "label": {
+          "en": "Assumed vertical line load",
+          "de": "Angesetzte vertikale Linienlast"
+        },
+        "doc": "🏋️ Vertical line load [N/m] along the track the design assumes for the derailed vehicles.",
+        "sample": 50000.0,
+        "unit": "N/m",
+        "range": [
+          0,
+          500000
+        ]
+      },
+      {
+        "name": "loaded_length",
+        "type": "f64",
+        "label": {
+          "en": "Loaded length",
+          "de": "Belastete Länge"
+        },
+        "doc": "↔️ Length [m] over which the line load acts along the track.",
+        "sample": 20.0,
+        "unit": "m",
+        "range": [
+          0,
+          200
+        ]
+      },
+      {
+        "name": "offset",
+        "type": "f64",
+        "label": {
+          "en": "Offset from the track axis",
+          "de": "Abstand von der Gleisachse"
+        },
+        "doc": "↕️ Distance [m] of the line load from the track axis, transverse to the track.",
+        "sample": 1.0,
+        "unit": "m",
+        "range": [
+          0,
+          10
+        ]
+      }
+    ]
+  },
+  "kit": {
+    "id": "railDerailment",
+    "en": "Rail derailment",
+    "de": "Eisenbahn-Entgleisung",
+    "icon": "train",
+    "scene_kind": "Load"
+  }
+}

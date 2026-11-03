@@ -58,7 +58,7 @@ pub fn parse_path(path: &str) -> Result<Vec<PathSegment>, String> {
     Ok(segments)
 }
 
-pub(super) fn object_id_field(value: &semio_framework_value::DslValue) -> Option<&str> {
+pub fn object_id_field(value: &semio_framework_value::DslValue) -> Option<&str> {
     let semio_framework_value::DslValue::Object(entries) = value else {
         return None;
     };
@@ -81,7 +81,7 @@ pub fn list_element_path(array_path: &str, item: &semio_framework_value::DslValu
     format!("{array_path}{}", list_element_selector(item, index))
 }
 
-pub(super) fn resolve_list_index(items: &[semio_framework_value::DslValue], segment: &PathSegment, path_hint: &str) -> Result<usize, String> {
+pub fn resolve_list_index(items: &[semio_framework_value::DslValue], segment: &PathSegment, path_hint: &str) -> Result<usize, String> {
     match segment {
         PathSegment::Index(index) => {
             if *index >= items.len() {

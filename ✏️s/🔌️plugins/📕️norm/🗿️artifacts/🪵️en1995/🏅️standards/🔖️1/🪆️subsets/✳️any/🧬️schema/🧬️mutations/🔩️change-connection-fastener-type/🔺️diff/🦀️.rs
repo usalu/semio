@@ -7,5 +7,5 @@ pub fn diff(payload: &ChangeConnectionFastenerType, base: &En1995Snapshot) -> pr
         return protocol::MutationOutcome::fatal("mutation.invariant", "Unknown connection id.", vec![payload.connection_id.clone()]);
     };
     let connection = &base.connections[idx];
-    protocol::MutationOutcome::new(En1995Diff { connections: En1995ConnectionDelta::modification(&connection.id, En1995ConnectionPatch { fastener_type: Some(payload.new_value.clone()), ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(En1995Diff { connections: En1995ConnectionDelta::modification(&connection.id, En1995ConnectionPatch { fastener_type: Some(payload.new_value), ..Default::default() }), ..Default::default() })
 }

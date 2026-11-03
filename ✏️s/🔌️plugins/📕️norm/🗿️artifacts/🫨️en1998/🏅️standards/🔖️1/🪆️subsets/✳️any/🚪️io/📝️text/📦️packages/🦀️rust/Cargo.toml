@@ -15,9 +15,6 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
-[features]
-testkit = []
-
 [dependencies]
 pack = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }
@@ -30,6 +27,9 @@ semio-framework-value = { workspace = true }
 semio-s-artifact-norm-en1998-diff = { workspace = true }
 semio-s-artifact-norm-en1998-model = { workspace = true }
 semio-s-artifact-norm-en1998-mut-bridges-towers = { workspace = true }
+semio-s-artifact-norm-en1998-mut-placements = { workspace = true }
+semio-s-artifact-norm-en1998-mut-tie-beams = { workspace = true }
+semio-s-artifact-norm-en1998-mut-seismic-slopes = { workspace = true }
 semio-s-artifact-norm-en1998-mut-buildings = { workspace = true }
 semio-s-artifact-norm-en1998-mut-foundations = { workspace = true }
 semio-s-artifact-norm-en1998-mut-members = { workspace = true }
@@ -39,8 +39,20 @@ semio-s-plugin-norm-compliance = { workspace = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]
+semio-s-artifact-norm-en1998-mut-tie-beams = { workspace = true, features = ["test-support"] }
+semio-s-artifact-norm-en1998-mut-seismic-slopes = { workspace = true, features = ["test-support"] }
+semio-s-plugin-norm-results-config = { workspace = true, features = ["test-support"] }
+semio-s-artifact-norm-en1998-mutations = { workspace = true, features = ["test-support"] }
+semio-s-artifact-norm-en1998-mut-silos-tanks = { workspace = true, features = ["test-support"] }
+semio-s-artifact-norm-en1998-mut-placements = { workspace = true, features = ["test-support"] }
+semio-s-artifact-norm-en1998-mut-members = { workspace = true, features = ["test-support"] }
+semio-s-artifact-norm-en1998-mut-foundations = { workspace = true, features = ["test-support"] }
+semio-s-artifact-norm-en1998-mut-buildings = { workspace = true, features = ["test-support"] }
+semio-s-artifact-norm-en1998-mut-bridges-towers = { workspace = true, features = ["test-support"] }
+semio-s-artifact-norm-en1998-diff = { workspace = true, features = ["test-support"] }
+semio-s-artifact-norm-en1998-model = { workspace = true, features = ["test-support"] }
 semio-framework-async-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
-semio-s-plugin-norm-compliance = { workspace = true, features = ["compliance-testing"] }
+semio-s-plugin-norm-compliance = { workspace = true, features = ["test-support", "compliance-testing"] }
 

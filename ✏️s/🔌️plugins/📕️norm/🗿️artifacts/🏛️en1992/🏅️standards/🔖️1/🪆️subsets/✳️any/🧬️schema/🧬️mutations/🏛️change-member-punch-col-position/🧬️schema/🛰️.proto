@@ -1,0 +1,6 @@
+syntax = "proto3";
+package semio.s.norm.en1992.mutation.change_member_punch_col_position;
+message ChangeMemberPunchColPosition {
+  string member_id = 1;
+  ColumnPosition new_punching_column_position = 2;
+}

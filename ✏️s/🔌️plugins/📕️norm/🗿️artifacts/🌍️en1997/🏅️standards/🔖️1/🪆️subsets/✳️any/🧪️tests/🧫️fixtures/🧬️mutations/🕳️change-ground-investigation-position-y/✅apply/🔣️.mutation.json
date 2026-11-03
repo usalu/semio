@@ -1,0 +1,5 @@
+{
+  "mutation": "changeGroundInvestigationPositionY",
+  "id": "investigation-1",
+  "newPositionY": 16.0
+}

@@ -1,0 +1,6 @@
+{
+  "ChangeTensionCableModulus": {
+    "id": "ten-1",
+    "newCableModulus": 1.5
+  }
+}

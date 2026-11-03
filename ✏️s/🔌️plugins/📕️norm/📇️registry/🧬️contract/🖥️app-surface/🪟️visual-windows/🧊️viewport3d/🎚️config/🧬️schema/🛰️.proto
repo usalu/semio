@@ -1,0 +1,43 @@
+syntax = "proto3";
+package semio.norm.viewport3d;
+
+import "../../../../../../../🎬️structural-scene/🧬️schema/🛰️.proto";
+
+enum CameraPreset { CAMERA_PRESET_ISO = 0; CAMERA_PRESET_PLAN = 1; CAMERA_PRESET_ELEVATION_FRONT = 2; CAMERA_PRESET_ELEVATION_BACK = 3; CAMERA_PRESET_ELEVATION_LEFT = 4; CAMERA_PRESET_ELEVATION_RIGHT = 5; }
+enum ColourRamp { COLOUR_RAMP_VIRIDIS = 0; COLOUR_RAMP_INFERNO = 1; COLOUR_RAMP_COOLWARM = 2; COLOUR_RAMP_GRAYSCALE = 3; }
+enum LabelDensity { LABEL_DENSITY_OFF = 0; LABEL_DENSITY_LOW = 1; LABEL_DENSITY_NORMAL = 2; LABEL_DENSITY_HIGH = 3; }
+enum LengthUnit { LENGTH_UNIT_MILLIMETRE = 0; LENGTH_UNIT_METRE = 1; }
+enum DeviceClass { DEVICE_CLASS_DESKTOP = 0; DEVICE_CLASS_MOBILE = 1; DEVICE_CLASS_TABLET = 2; }
+
+message SectionPlane {
+  semio.norm.structuralscene.Vec3 origin = 1;
+  semio.norm.structuralscene.Vec3 normal = 2;
+  bool cap = 3;
+}
+
+message SavedView {
+  semio.norm.structuralscene.LocalizedCopy name = 1;
+  semio.norm.structuralscene.Vec3 position = 2;
+  semio.norm.structuralscene.Vec3 target = 3;
+}
+
+message Viewport3dWindowConfig {
+  CameraPreset preset = 1;
+  ColourRamp ramp = 2;
+  double domain_max = 3;
+  bool sun = 4;
+  repeated string hidden_layers = 5;
+  optional string solo_layer = 6;
+  repeated semio.norm.structuralscene.LoadKind hidden_load_kinds = 7;
+  double load_glyph_scale = 8;
+  double deformation_scale = 9;
+  double deformation_phase = 10;
+  optional SectionPlane section = 11;
+  LabelDensity label_density = 12;
+  bool show_dimensions = 13;
+  LengthUnit unit = 14;
+  DeviceClass device = 15;
+  repeated SavedView saved_views = 16;
+  double playback_speed = 17;
+  optional string active_field = 18;
+}

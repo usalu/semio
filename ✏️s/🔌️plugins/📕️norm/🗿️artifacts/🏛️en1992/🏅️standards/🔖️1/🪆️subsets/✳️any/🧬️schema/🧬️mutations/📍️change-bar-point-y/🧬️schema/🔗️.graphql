@@ -1,0 +1,5 @@
+type ChangeBarPointY {
+  memberId: String!
+  barId: String!
+  newY: Float!
+}

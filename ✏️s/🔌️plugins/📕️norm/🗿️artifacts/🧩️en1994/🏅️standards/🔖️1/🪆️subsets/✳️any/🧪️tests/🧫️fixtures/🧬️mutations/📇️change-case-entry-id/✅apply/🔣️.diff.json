@@ -1,0 +1,29 @@
+{
+  "cases": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "case-c94-09",
+        "patch": {
+          "labelEn": null,
+          "labelDe": null,
+          "entryId": "C94-04",
+          "numbers": {
+            "removed": [],
+            "inserted": [],
+            "moved": [],
+            "modified": []
+          },
+          "texts": {
+            "removed": [],
+            "inserted": [],
+            "moved": [],
+            "modified": []
+          }
+        }
+      }
+    ]
+  }
+}

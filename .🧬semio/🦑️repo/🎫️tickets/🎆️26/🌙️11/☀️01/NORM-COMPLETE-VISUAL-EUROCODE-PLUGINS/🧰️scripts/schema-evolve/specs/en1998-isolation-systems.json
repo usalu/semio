@@ -1,0 +1,88 @@
+{
+  "artifact": "en1998",
+  "collection": {
+    "name": "isolationSystems",
+    "entity": "En1998IsolationSystem",
+    "emoji": "🛞",
+    "doc": "🛞 Seismic isolation system of a bridge deck (EN 1998-2 chapter 7) or of a building (EN 1998-1 chapter 10): the bilinear hysteresis of the isolator units added up (characteristic strength Q_d, post-yield stiffness K_d, yield displacement d_y) and their displacement capacity d_max; the checks find the effective stiffness K_eff, the effective period T_eff, the equivalent damping ξ_eff and the design displacement d_cd.",
+    "label": {
+      "en": "Isolation systems",
+      "de": "Isolationssysteme"
+    },
+    "id": {
+      "en": "Isolation system ID",
+      "de": "Isolationssystem-ID"
+    },
+    "singular": {
+      "en": "isolation system",
+      "de": "Isolationssystem"
+    },
+    "kindSlug": "isolation",
+    "fields": [
+      {
+        "name": "bridge_id",
+        "type": "String",
+        "label": {
+          "en": "Isolated bridge",
+          "de": "Isolierte Brücke"
+        },
+        "doc": "🌉 Id of the bridge whose deck rests on the isolation system (EN 1998-2 chapter 7); empty for an isolated building.",
+        "sample": "br-1"
+      },
+      {
+        "name": "building_id",
+        "type": "String",
+        "label": {
+          "en": "Isolated building",
+          "de": "Isolierter Hochbau"
+        },
+        "doc": "🏢 Id of the building whose base rests on the isolation system (EN 1998-1 chapter 10); empty for an isolated bridge.",
+        "sample": ""
+      },
+      {
+        "name": "strength_n",
+        "type": "f64",
+        "label": {
+          "en": "Characteristic strength Q_d",
+          "de": "Charakteristische Festigkeit Q_d"
+        },
+        "doc": "🔩 Sum over the isolator units of the characteristic strength Q_d [N]: the force at zero displacement of the bilinear hysteresis loop (yield force minus K_d d_y).",
+        "sample": 150000.0,
+        "unit": "N"
+      },
+      {
+        "name": "stiffness_n_per_m",
+        "type": "f64",
+        "label": {
+          "en": "Post-yield stiffness K_d",
+          "de": "Steifigkeit nach dem Fließen K_d"
+        },
+        "doc": "〰️ Sum over the isolator units of the post-yield stiffness K_d [N/m] of the bilinear hysteresis loop.",
+        "sample": 4000000.0,
+        "unit": "N/m"
+      },
+      {
+        "name": "yield_displacement_m",
+        "type": "f64",
+        "label": {
+          "en": "Yield displacement d_y",
+          "de": "Fließverschiebung d_y"
+        },
+        "doc": "↔️ Yield displacement d_y [m] of the bilinear hysteresis loop (elastic stiffness K_1 = K_d + Q_d/d_y).",
+        "sample": 0.01,
+        "unit": "m"
+      },
+      {
+        "name": "capacity_m",
+        "type": "f64",
+        "label": {
+          "en": "Displacement capacity d_max",
+          "de": "Verschiebungskapazität d_max"
+        },
+        "doc": "📏 Displacement capacity d_max [m] of the isolator units; the design displacement d_cd must not exceed it.",
+        "sample": 0.35,
+        "unit": "m"
+      }
+    ]
+  }
+}

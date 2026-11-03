@@ -1,0 +1,14 @@
+{
+  "mutation": "insertFatigueCategory",
+  "index": 1,
+  "fatigueCategory": {
+    "id": "site-1-2",
+    "memberId": "purlin-1",
+    "elementId": "",
+    "detailCategory": "40",
+    "detailType": "buttWeld",
+    "locationX": 1.5,
+    "m1": 3.4,
+    "m2": 5.4
+  }
+}

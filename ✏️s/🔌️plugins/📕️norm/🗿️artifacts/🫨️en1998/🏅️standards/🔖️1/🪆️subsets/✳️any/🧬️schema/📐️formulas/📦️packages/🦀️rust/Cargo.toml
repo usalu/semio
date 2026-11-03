@@ -1,0 +1,26 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-norm-en1998-schema-formulas"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "EN 1998 schema formulas: DE-NA ground combinations and the closed-form checks of parts 1 to 6"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-s-artifact-norm-en1998-model = { workspace = true }
+semio-s-plugin-norm-compliance = { workspace = true }
+semio-s-plugin-norm-mechanics = { workspace = true }
+
+[dev-dependencies]
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-s-plugin-norm-compliance = { workspace = true, features = ["compliance-testing"] }
+serde = { workspace = true }

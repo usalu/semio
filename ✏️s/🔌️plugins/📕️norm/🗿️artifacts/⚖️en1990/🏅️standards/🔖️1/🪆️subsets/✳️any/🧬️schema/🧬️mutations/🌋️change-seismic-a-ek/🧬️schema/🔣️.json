@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/mutation/change-seismic-a-ek/schema.json",
+  "title": "ChangeSeismicAEk",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newAEk"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeSeismicAEk"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Seismic action",
+          "de": "Erdbebeneinwirkung"
+        },
+        "description": {
+          "en": "The seismic action this mutation addresses, by id.",
+          "de": "Das adressierte Element (Erdbebeneinwirkung), per Kennung."
+        },
+        "ref": {
+          "kind": "seismic"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newAEk": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Characteristic seismic action A_Ek",
+          "de": "Charakteristischer Wert der Erdbebeneinwirkung A_Ek"
+        },
+        "widget": "stepper",
+        "unit": "N",
+        "displayUnit": "kN",
+        "displayFactor": 0.001,
+        "precision": 2,
+        "step": 1000,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

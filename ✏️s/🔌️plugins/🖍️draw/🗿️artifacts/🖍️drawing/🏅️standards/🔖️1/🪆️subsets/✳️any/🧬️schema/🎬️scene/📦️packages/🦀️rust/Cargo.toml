@@ -36,6 +36,7 @@ semio-framework-value-persistent = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-draw-drawing-geometry = { workspace = true }
 semio-s-artifact-draw-drawing-model = { workspace = true }
+semio-s-artifact-draw-drawing-scene-support = { workspace = true }
 serde = { workspace = true, optional = true }
 
 [dev-dependencies]

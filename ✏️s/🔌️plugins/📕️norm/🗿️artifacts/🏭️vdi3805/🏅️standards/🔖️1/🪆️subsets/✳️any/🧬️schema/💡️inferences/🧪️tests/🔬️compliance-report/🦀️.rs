@@ -215,7 +215,6 @@ async fn every_emitted_path_resolves() {
 
 #[semio_framework_async_macros::async_test]
 async fn every_editable_leaf_has_en_de_field_meta() {
-    use semio_s_plugin_norm_app_surface::NormFieldMeta;
     use semio_s_artifact_norm_vdi3805_editor::field_meta::vdi3805_field_meta;
     use semio_framework_value::DslValue;
 use semio_framework_value::ToValue;
@@ -252,8 +251,8 @@ use semio_framework_value::ToValue;
     let mut missing = Vec::new();
     for path in &leaves {
         match vdi3805_field_meta(path) {
-            Some(NormFieldMeta { label_en, label_de, .. }) if !label_en.is_empty() && !label_de.is_empty() => {}
-            other => missing.push((path.clone(), other.map(|m| (m.label_en.to_string(), m.label_de.to_string())))),
+            Some(spec) if !spec.label.en.is_empty() && !spec.label.de.is_empty() => {}
+            other => missing.push((path.clone(), other.map(|m| (m.label.en.to_string(), m.label.de.to_string())))),
         }
     }
     assert!(missing.is_empty(), "missing en+de field meta for leaves ({}) : {missing:?}", missing.len());
@@ -424,7 +423,7 @@ fn perturb_dsl_leaf(path: &str, value: &semio_framework_value::DslValue) -> Opti
             if is_reference_or_entity_id_leaf(path) {
                 return Some(semio_framework_value::DslValue::String("__dangling__".into()));
             }
-            if let Some(choices) = vdi3805_field_meta(path).and_then(|m| m.choices) {
+            if let Some(choices) = vdi3805_field_meta(path).and_then(|m| m.choices()) {
                 let alt = choices.iter().map(|c| c.value).find(|c| *c != s.as_str()).unwrap_or("x");
                 return Some(semio_framework_value::DslValue::String(alt.to_string()));
             }

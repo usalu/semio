@@ -1,0 +1,6 @@
+{
+  "ChangeJointBeamFlangeThickness": {
+    "id": "joint-j1",
+    "newBeamFlangeThickness": 1.5
+  }
+}

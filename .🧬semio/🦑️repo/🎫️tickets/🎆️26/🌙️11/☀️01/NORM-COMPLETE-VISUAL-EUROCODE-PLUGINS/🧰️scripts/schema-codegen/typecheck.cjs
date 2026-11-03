@@ -1,0 +1,11 @@
+const ts = require(require("path").join(process.env.SEMIO_ROOT || require("path").resolve(__dirname, "../../../../../../../../..", ""), "node_modules/typescript"));
+const fs = require("fs"), path = require("path");
+const root = process.argv[2], filter = process.argv[3] || "";
+const files = [];
+const walk = (d) => { for (const e of fs.readdirSync(d, { withFileTypes: true })) { if (["target","node_modules","🗑️generated"].includes(e.name)) continue; const p = path.join(d, e.name); if (e.isDirectory()) walk(p); else if (e.name === "🟦️.ts" && p.includes(filter)) { const t = fs.readFileSync(p, "utf8"); if (t.includes("Generated from `./🔣️.json`")) files.push(p); } } };
+walk(root);
+const contract = path.join(root, "📇️registry/🧬️contract/🟦️.ts");
+const program = ts.createProgram(files, { noEmit: true, strict: true, target: ts.ScriptTarget.ESNext, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler, allowImportingTsExtensions: true, skipLibCheck: true, types: [], baseUrl: root, paths: { "@semio-tech/norm-js/registry/contract": [contract] } });
+const diags = ts.getPreEmitDiagnostics(program).filter((d) => d.file && files.includes(d.file.fileName));
+console.log("twins", files.length, "errors in twins", diags.length);
+for (const d of diags.slice(0, 400)) console.log(d.file.fileName.slice(-70), ts.flattenDiagnosticMessageText(d.messageText, "\n").slice(0, 200));

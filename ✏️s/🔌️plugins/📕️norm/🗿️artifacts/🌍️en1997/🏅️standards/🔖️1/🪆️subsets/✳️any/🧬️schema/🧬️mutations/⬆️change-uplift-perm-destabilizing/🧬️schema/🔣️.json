@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-uplift-perm-destabilizing/schema.json",
+  "title": "ChangeUpliftPermDestabilizing",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newPermanentDestabilizing"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeUpliftPermDestabilizing"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Uplift case",
+          "de": "Auftriebsfall"
+        },
+        "description": {
+          "en": "The uplift case this mutation addresses, by id.",
+          "de": "Die adressierte Zeile (Auftriebsfall), per Kennung."
+        },
+        "ref": {
+          "kind": "uplift-case"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newPermanentDestabilizing": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "permanent destabilizing",
+          "de": "Ständig, destabilisierend"
+        },
+        "widget": "stepper",
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

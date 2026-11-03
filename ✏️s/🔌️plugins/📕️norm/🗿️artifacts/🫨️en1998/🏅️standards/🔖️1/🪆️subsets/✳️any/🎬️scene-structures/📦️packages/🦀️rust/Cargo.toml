@@ -1,0 +1,22 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-s-artifact-norm-en1998-scene-structures"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "EN 1998 structure views: bridge, tank and tower response and diagrams of the scene"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-s-artifact-norm-en1998-model = { workspace = true }
+semio-s-artifact-norm-en1998-schema = { workspace = true }
+semio-s-plugin-norm-compliance = { workspace = true }
+semio-s-plugin-norm-structural-scene = { workspace = true }

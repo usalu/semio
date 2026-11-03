@@ -1,0 +1,5 @@
+{
+  "mutation": "changeSiloFillingRatio",
+  "id": "si-1",
+  "newFillingRatio": 1.7
+}

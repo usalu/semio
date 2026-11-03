@@ -1,0 +1,6 @@
+{
+  "ChangeJointBoltStressArea": {
+    "id": "joint-j1",
+    "newBoltStressArea": 1.5
+  }
+}

@@ -1,0 +1,4 @@
+type ChangeReinforcementK {
+  gradeId: String!
+  newK: Float!
+}

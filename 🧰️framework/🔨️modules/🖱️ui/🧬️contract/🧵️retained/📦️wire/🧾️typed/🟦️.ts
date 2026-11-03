@@ -329,7 +329,7 @@ export class Builder {
         const v = yield* this.record(value, ["type", "role", "label", "description", "required", "error", "defaultOpen", "dropOverlay"]);
         let dropOverlay: DropOverlaySpec | null = null;
         if (v.dropOverlay != null) { const d = yield* this.record(v.dropOverlay, ["title", "hint", "accept"]); dropOverlay = this.fixed({ title: text(d.title), hint: text(d.hint), accept: optional(d.accept, text) }); yield 128; }
-        return this.fixed({ type: "container", role: defaulted(v.role, "plain", v => choice(v, ["plain", "section", "group", "field", "form", "toolbar"])), label: optional(v.label, text), description: optional(v.description, text), required: optional(v.required, boolean), error: optional(v.error, text), defaultOpen: optional(v.defaultOpen, boolean), dropOverlay });
+        return this.fixed({ type: "container", role: defaulted(v.role, "plain", v => choice(v, ["plain", "section", "group", "field", "form", "toolbar", "sheet"])), label: optional(v.label, text), description: optional(v.description, text), required: optional(v.required, boolean), error: optional(v.error, text), defaultOpen: optional(v.defaultOpen, boolean), dropOverlay });
       }
       case "text": { const v = yield* this.record(value, ["type", "value", "emphasize", "dataAttributes"]); const dataAttributes = v.dataAttributes == null ? null : yield* this.stringMap(v.dataAttributes); yield 128; return this.fixed({ type: "text", value: text(v.value), emphasize: optional(v.emphasize, boolean), dataAttributes }); }
       case "button": { const v = yield* this.record(value, ["type", "icon", "label"]); return this.fixed({ type: "button", icon: text(v.icon), label: text(v.label) }); }

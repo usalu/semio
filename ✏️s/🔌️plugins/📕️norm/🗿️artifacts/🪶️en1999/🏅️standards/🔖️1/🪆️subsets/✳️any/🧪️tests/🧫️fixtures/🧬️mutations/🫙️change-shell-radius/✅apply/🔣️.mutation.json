@@ -1,0 +1,5 @@
+{
+  "mutation": "changeShellRadius",
+  "shellId": "shell-pass",
+  "newRadius": 1.0
+}

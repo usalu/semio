@@ -23,6 +23,7 @@
   "maximumCachedClosureEntries": 4194304,
   "maximumParsedManifests": 256,
   "childHeapMegabytes": 2048,
+  "hostAvailableFloorMegabytes": 1536,
   "budgetEnvironment": "SEMIO_GRAPH_MEMORY_MB",
   "planEnvironment": "SEMIO_HOST_CAPACITY_PLAN"
  },

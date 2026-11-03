@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-construction-load-magnitude/schema.json",
+  "title": "ChangeConstructionLoadMagnitude",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newMagnitude"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Construction load",
+          "de": "Bauzustandslast"
+        },
+        "description": {
+          "en": "The construction load this mutation addresses, by id.",
+          "de": "Das adressierte Element (Bauzustandslast), per Kennung."
+        },
+        "ref": {
+          "kind": "construction-load"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newMagnitude": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Load Q_c,i as area load",
+          "de": "Last Q_c,i als Flächenlast"
+        },
+        "widget": "stepper",
+        "unit": "Pa",
+        "displayUnit": "kN/m²",
+        "displayFactor": 0.001,
+        "precision": 2,
+        "step": 50,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

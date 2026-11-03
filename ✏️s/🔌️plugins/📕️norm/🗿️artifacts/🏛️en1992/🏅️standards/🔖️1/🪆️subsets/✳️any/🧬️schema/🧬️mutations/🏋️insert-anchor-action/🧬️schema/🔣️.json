@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/insert-anchor-action/schema.json",
+  "title": "InsertAnchorAction",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "anchorId",
+    "index",
+    "anchorAction"
+  ],
+  "properties": {
+    "anchorId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Anchor",
+          "de": "Dübel"
+        },
+        "description": {
+          "en": "The anchor this mutation addresses, by id.",
+          "de": "Das adressierte Element (Dübel), per Kennung."
+        },
+        "ref": {
+          "kind": "anchor"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Zero-based list position at which the record is inserted.",
+          "de": "Nullbasierte Listenposition, an der der Datensatz eingefügt wird."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 100
+      }
+    },
+    "anchorAction": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/$defs/LoadCaseActions",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Anchor action",
+          "de": "Dübeleinwirkung"
+        },
+        "description": {
+          "en": "The complete anchor action record to insert.",
+          "de": "Der vollständige einzufügende Datensatz (Dübeleinwirkung)."
+        },
+        "group": "record",
+        "order": 110
+      },
+      "x-semio-rust": {
+        "type": "semio_s_artifact_norm_en1992_model::LoadCaseActions"
+      }
+    }
+  }
+}

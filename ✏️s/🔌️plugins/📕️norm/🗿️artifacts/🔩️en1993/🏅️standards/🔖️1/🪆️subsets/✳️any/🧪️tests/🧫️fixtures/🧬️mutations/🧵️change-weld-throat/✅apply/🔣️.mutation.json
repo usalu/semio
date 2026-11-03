@@ -1,0 +1,6 @@
+{
+  "ChangeWeldThroat": {
+    "id": "weld-group-1",
+    "newThroat": 0.01
+  }
+}

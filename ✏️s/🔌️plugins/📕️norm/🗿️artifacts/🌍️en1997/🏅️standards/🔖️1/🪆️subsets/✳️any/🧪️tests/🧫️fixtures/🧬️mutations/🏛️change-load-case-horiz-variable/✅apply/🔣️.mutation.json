@@ -1,0 +1,6 @@
+{
+  "mutation": "changeLoadCaseHorizVariable",
+  "footingId": "footing-F1",
+  "id": "lc-bsP",
+  "newHorizontalVariable": 80000.0
+}

@@ -1,0 +1,6 @@
+{
+  "mutation": "changeShellActionVYK",
+  "shellId": "shell-pass",
+  "actionId": "G-shell",
+  "newVYK": 1.5
+}

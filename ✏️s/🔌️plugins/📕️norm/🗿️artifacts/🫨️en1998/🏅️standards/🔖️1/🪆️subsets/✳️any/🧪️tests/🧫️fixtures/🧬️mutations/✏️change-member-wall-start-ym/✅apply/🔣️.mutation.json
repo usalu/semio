@@ -1,0 +1,6 @@
+{
+  "mutation": "changeMemberWallStartYM",
+  "buildingId": "bldg-office",
+  "id": "col-c1",
+  "newWallStartYM": 1.5
+}

@@ -61,10 +61,10 @@ async fn regenerate_mutation_fixtures_when_env_set() {
             if !case_dir.is_dir() {
                 continue;
             }
-            let before_path = case_dir.join("📸️snapshot/⬅️before/🔣️.json");
-            let after_path = case_dir.join("📸️snapshot/➡️after/🔣️.json");
-            let mutation_path = case_dir.join("🦠️mutation/🔣️.json");
-            let diff_path = case_dir.join("🔺️diff/🔣️.json");
+            let before_path = case_dir.join("🔣️.before.json");
+            let after_path = case_dir.join("🔣️.after.json");
+            let mutation_path = case_dir.join("🔣️.mutation.json");
+            let diff_path = case_dir.join("🔣️.diff.json");
             if !before_path.is_file() || !mutation_path.is_file() {
                 continue;
             }

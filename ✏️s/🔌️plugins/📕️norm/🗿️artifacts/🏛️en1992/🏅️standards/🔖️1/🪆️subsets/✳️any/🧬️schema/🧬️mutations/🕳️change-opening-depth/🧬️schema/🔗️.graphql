@@ -1,0 +1,5 @@
+type ChangeOpeningDepth {
+  memberId: String!
+  openingId: String!
+  newDepth: Float!
+}

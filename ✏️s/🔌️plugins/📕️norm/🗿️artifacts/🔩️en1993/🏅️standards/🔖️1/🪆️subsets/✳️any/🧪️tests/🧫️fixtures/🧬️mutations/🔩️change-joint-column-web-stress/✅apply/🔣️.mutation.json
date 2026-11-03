@@ -1,0 +1,6 @@
+{
+  "ChangeJointColumnWebStress": {
+    "id": "joint-j1",
+    "newColumnWebStress": 1.5
+  }
+}

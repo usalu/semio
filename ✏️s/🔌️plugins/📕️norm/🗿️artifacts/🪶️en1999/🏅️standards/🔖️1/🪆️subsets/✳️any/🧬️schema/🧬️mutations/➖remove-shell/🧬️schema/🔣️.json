@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/remove-shell/schema.json",
+  "title": "RemoveShell",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "removeShell"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Shell",
+          "de": "Schale"
+        },
+        "description": {
+          "en": "The shell this mutation removes.",
+          "de": "Entfernt wird: Schale."
+        },
+        "ref": {
+          "kind": "shell"
+        },
+        "group": "target",
+        "order": 10
+      }
+    }
+  }
+}

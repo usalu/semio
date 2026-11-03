@@ -1,0 +1,5 @@
+{
+  "mutation": "changeWeldRunHazExtent",
+  "weldRunId": "weld-1",
+  "newHazExtent": 1.5
+}

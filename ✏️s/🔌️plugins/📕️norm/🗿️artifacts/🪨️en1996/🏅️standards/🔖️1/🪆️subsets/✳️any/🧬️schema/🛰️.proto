@@ -1,6 +1,21 @@
 syntax = "proto3";
 package semio.s.norm.en1996;
-message En1996Wall {
+message En1996Snapshot {
+  string annex = 1;
+  string masonry_class = 2;
+  string design_situation = 3;
+  uint32 storeys = 4;
+  repeated MasonryWall walls = 5;
+  repeated Placement placements = 6;
+  // @state artifact
+  repeated CaseRow cases = 7;
+  // @state artifact
+  repeated WallChase chases = 8;
+  // @state artifact
+  repeated MovementJoint movement_joints = 9;
+  string reliability_class = 10;
+}
+message MasonryWall {
   string id = 1;
   string label_en = 2;
   string label_de = 3;
@@ -9,31 +24,181 @@ message En1996Wall {
   double height_m = 6;
   double length_m = 7;
   uint32 support_sides = 8;
-  double slab_bearing_depth_m = 9;
-  double eccentricity_top_m = 10;
-  double eccentricity_bottom_m = 11;
-  string unit_group = 12;
-  string unit_material = 13;
-  double f_b_pa = 14;
-  double unit_length_m = 15;
-  double unit_width_m = 16;
-  double unit_height_m = 17;
-  string mortar_type = 18;
-  string mortar_class = 19;
-  double f_m_pa = 20;
-  double bed_joint_thickness_m = 21;
-  bool reinforced = 22;
-  double as_vertical_m2 = 23;
-  double as_horizontal_m2 = 24;
-  double f_yd_pa = 25;
-  uint32 fire_rei_min = 26;
-  string exposure = 27;
-  double mu = 28;
+  repeated WallOpening openings = 9;
+  double slab_bearing_depth_m = 10;
+  double eccentricity_top_m = 11;
+  double eccentricity_bottom_m = 12;
+  string unit_group = 13;
+  string unit_material = 14;
+  double f_b_pa = 15;
+  double unit_length_m = 16;
+  double unit_width_m = 17;
+  double unit_height_m = 18;
+  string mortar_type = 19;
+  string mortar_class = 20;
+  double mortar_strength_pa = 21;
+  double bed_joint_thickness_m = 22;
+  bool reinforced = 23;
+  double as_vertical_m2 = 24;
+  double as_horizontal_m2 = 25;
+  double f_yd_pa = 26;
+  uint32 fire_rei_min = 27;
+  string exposure = 28;
+  double mu = 29;
+  double density_kg_m3 = 30;
+  double phi_infinity = 31;
+  bool is_basement = 32;
+  repeated WallLoadCase load_cases = 33;
+  repeated WallPier piers = 34;
+  repeated WallLintel lintels = 35;
+  repeated WallTie ties = 36;
+  repeated WallPrestress prestress = 37;
+  repeated ConfinedElement confined = 38;
+  repeated ShearFlange flanges = 39;
+  repeated WallBar bars = 40;
+  string frost_class = 41;
+  double cover_m = 42;
+  double deflection_limit = 43;
+  double soil_height_m = 44;
+  double soil_density_kg_m3 = 45;
+  double isotherm_depth_m = 46;
+  double plan_x_m = 47;
+  double plan_y_m = 48;
+  double plan_angle_deg = 49;
+  double in_plane_shear_n = 50;
+  double in_plane_moment_nm = 51;
+  string bracing_system = 52;
+  double diaphragm_stiffness_n_per_m = 53;
+  double web_spacing_m = 54;
 }
-message En1996Artifact {
-  string annex = 1;
-  string masonry_class = 2;
-  string design_situation = 3;
-  uint32 storeys = 4;
-  repeated En1996Wall walls = 5;
+message Placement {
+  string id = 1;
+  double x = 2;
+  double y = 3;
+  double z = 4;
+  double yaw = 5;
+}
+message CaseRow {
+  string id = 1;
+  string label_en = 2;
+  string label_de = 3;
+  string entry_id = 4;
+  repeated CaseNumber numbers = 5;
+  repeated CaseText texts = 6;
+}
+message WallChase {
+  string id = 1;
+  string wall_id = 2;
+  string kind = 3;
+  double x_m = 4;
+  double y_m = 5;
+  double width_m = 6;
+  double length_m = 7;
+  double depth_m = 8;
+}
+message MovementJoint {
+  string id = 1;
+  string wall_id = 2;
+  double position_m = 3;
+}
+message CaseNumber {
+  string id = 1;
+  double value = 2;
+}
+message CaseText {
+  string id = 1;
+  string value = 2;
+}
+message WallOpening {
+  string id = 1;
+  double width_m = 2;
+  double height_m = 3;
+  double sill_height_m = 4;
+  double position_m = 5;
+}
+enum LoadCaseSituation {
+  LOAD_CASE_SITUATION_PERSISTENT = 0;
+  LOAD_CASE_SITUATION_TRANSIENT = 1;
+  LOAD_CASE_SITUATION_ACCIDENTAL = 2;
+  LOAD_CASE_SITUATION_SEISMIC = 3;
+}
+enum ImposedCategory {
+  IMPOSED_CATEGORY_A = 0;
+  IMPOSED_CATEGORY_B = 1;
+  IMPOSED_CATEGORY_C = 2;
+  IMPOSED_CATEGORY_D = 3;
+  IMPOSED_CATEGORY_E = 4;
+  IMPOSED_CATEGORY_F = 5;
+  IMPOSED_CATEGORY_G = 6;
+  IMPOSED_CATEGORY_H = 7;
+}
+message WallLoadCase {
+  string id = 1;
+  LoadCaseSituation design_situation = 2;
+  ImposedCategory imposed_category = 3;
+  double g_k_slab_n = 4;
+  double q_k_imposed_pa = 5;
+  double tributary_area_m2 = 6;
+  double slab_span_m = 7;
+  double q_k_snow_pa = 8;
+  double q_p_wind_pa = 9;
+  double c_pe = 10;
+  double h_k_earth_n = 11;
+  repeated ConcentratedLoad concentrated = 12;
+}
+message WallPier {
+  string id = 1;
+  double position_m = 2;
+  double width_m = 3;
+}
+message WallLintel {
+  string id = 1;
+  double position_m = 2;
+  double span_m = 3;
+  double depth_m = 4;
+  double bearing_length_m = 5;
+}
+message WallTie {
+  string id = 1;
+  string kind = 2;
+  double position_m = 3;
+  double level_m = 4;
+  double capacity_n = 5;
+}
+message WallPrestress {
+  string id = 1;
+  double force_n = 2;
+  double area_m2 = 3;
+  double f_pk_pa = 4;
+  double position_m = 5;
+  double eccentricity_m = 6;
+  double loss_ratio = 7;
+}
+message ConfinedElement {
+  string id = 1;
+  double position_m = 2;
+  double width_m = 3;
+  double depth_m = 4;
+  double as_m2 = 5;
+}
+message ShearFlange {
+  string id = 1;
+  double length_m = 2;
+  double thickness_m = 3;
+  double position_m = 4;
+}
+message WallBar {
+  string id = 1;
+  string kind = 2;
+  double diameter_m = 3;
+  double length_m = 4;
+  double spacing_m = 5;
+}
+message ConcentratedLoad {
+  string id = 1;
+  double force_n = 2;
+  double bearing_area_m2 = 3;
+  double bearing_length_m = 4;
+  double distance_a1_m = 5;
+  double position_m = 6;
 }

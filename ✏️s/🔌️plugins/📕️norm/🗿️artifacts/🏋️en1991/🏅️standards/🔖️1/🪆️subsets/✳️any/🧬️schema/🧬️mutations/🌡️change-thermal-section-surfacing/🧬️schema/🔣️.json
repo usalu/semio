@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-thermal-section-surfacing/schema.json",
+  "title": "ChangeThermalSectionSurfacing",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newSurfacing"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Thermal section",
+          "de": "Temperaturquerschnitt"
+        },
+        "description": {
+          "en": "The thermal section this mutation addresses, by id.",
+          "de": "Das adressierte Element (Temperaturquerschnitt), per Kennung."
+        },
+        "ref": {
+          "kind": "thermal-section"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newSurfacing": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255,
+      "x-semio-ui": {
+        "label": {
+          "en": "Surfacing (0 none, 1 waterproofed, 2 50 mm, 3 100 mm, 4 150 mm)",
+          "de": "Belag (0 keiner, 1 Abdichtung, 2 50 mm, 3 100 mm, 4 150 mm)"
+        },
+        "widget": "stepper",
+        "precision": 0,
+        "step": 1,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

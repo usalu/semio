@@ -1,0 +1,36 @@
+{
+  "artifact": "en1993",
+  "leaf": {
+    "kindSlug": "joint-plate",
+    "default": "Elastic",
+    "field": {
+      "name": "group_method",
+      "type": "enum",
+      "label": {
+        "en": "Bolt group method",
+        "de": "Verfahren der Schraubengruppe"
+      },
+      "doc": "🔩 Distribution of the load over the bolt group of the plate (EN 1993-1-8 3.12): Elastic is the vector method with the polar moment of the bolts, InstantaneousCentre is the plastic method with the load-deformation law of the bolts about the instantaneous centre of rotation.",
+      "enum": {
+        "name": "BoltGroupMethod",
+        "doc": "🔩 Method for the force on each bolt of a bolt group: elastic vector method or instantaneous centre of rotation.",
+        "values": [
+          {
+            "token": "Elastic",
+            "label": {
+              "en": "Elastic (polar moment)",
+              "de": "Elastisch (polares Moment)"
+            }
+          },
+          {
+            "token": "InstantaneousCentre",
+            "label": {
+              "en": "Instantaneous centre",
+              "de": "Momentanpol"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

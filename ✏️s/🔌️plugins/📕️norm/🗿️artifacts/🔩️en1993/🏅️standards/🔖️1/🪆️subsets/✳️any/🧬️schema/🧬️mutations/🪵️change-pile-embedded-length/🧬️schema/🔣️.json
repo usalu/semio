@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-pile-embedded-length/schema.json",
+  "title": "ChangePileEmbeddedLength",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newEmbeddedLength"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Pile",
+          "de": "Pfahl"
+        },
+        "description": {
+          "en": "The pile this mutation addresses, by id.",
+          "de": "Das adressierte Element (Pfahl), per Kennung."
+        },
+        "ref": {
+          "kind": "pile"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newEmbeddedLength": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Embedded length",
+          "de": "Einbindelänge"
+        },
+        "widget": "stepper",
+        "unit": "m",
+        "precision": 2,
+        "step": 0.05,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

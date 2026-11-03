@@ -61,11 +61,11 @@ def collection_key(document, kind):
     collection is a composed child slot resolves to that slot, so the refusal below can say WHY rather
     than merely that no field was found."""
     noun = "-".join(kind.split("-")[1:])
-    for candidate in (noun, noun + "s", re.sub(r"s$", "", noun)):
+    for candidate in (noun, plural(noun), noun + "s", re.sub(r"s$", "", noun)):
         key = key_of(document, candidate)
         if key is not None and isinstance(document.get(key), list):
             return key
-    for candidate in (noun, noun + "s", re.sub(r"s$", "", noun)):
+    for candidate in (noun, plural(noun), noun + "s", re.sub(r"s$", "", noun)):
         key = key_of(document, candidate)
         if key is not None:
             return key
@@ -129,8 +129,8 @@ def kebab(name):
 
 def qualified_field(member, kind, name):
     """🔬 The `(owner, key)` of `name` inside one collection member, preferring the sub-record the kind's noun
-    names just before the field — `change-beam-stud-spacing-m {index, newSpacingM}` writes the beam's
-    `studs.spacingM`, not the beam's own `spacingM` — else the shallowest field so spelled."""
+    names just before the field — `change-beam-sheeting-height-m {index, newHeightM}` writes the beam's
+    `sheeting.heightM`, not the beam's own `heightM` — else the shallowest field so spelled."""
     segments, field = kind.split("-")[1:], kebab(name).split("-")
     if len(segments) > len(field) and segments[-len(field):] == field:
         rest = segments[: -len(field)]
@@ -139,7 +139,10 @@ def qualified_field(member, kind, name):
                 holder = key_of(member, candidate) if isinstance(member, dict) else None
                 if holder is not None and isinstance(member[holder], dict) and key_of(member[holder], name) is not None:
                     return member[holder], key_of(member[holder], name)
-    return member_field(member, name)
+    found = member_field(member, name)
+    if found[0] is None and segments and field[0] == segments[0] and len(field) > 1:
+        return member_field(member, "-".join(field[1:]))
+    return found
 
 
 def selected_field(document, kind, address):
@@ -208,6 +211,23 @@ def member_field(member, name):
     return None, None
 
 
+def identified_slot(document, kind, identity, name):
+    """🪪 The `(owner, key)` of `name` inside the member whose native `id` is `identity`: in the collection the kind's noun names, else in
+    the first list of the record that holds such a member with that field — `change-slab-span {wallId, id, newSlabSpanM}` writes the
+    `slabSpanM` of the load case `id` of the wall `wallId` the addressing descended into. `(None, None)` when no member spells it."""
+    if not isinstance(document, dict) or not isinstance(identity, str):
+        return None, None
+    preferred = document.get(collection_key(document, kind) or "")
+    lists = ([preferred] if isinstance(preferred, list) else []) + [value for value in document.values() if isinstance(value, list) and value is not preferred]
+    for items in lists:
+        for member in items:
+            if member_matches(member, identity):
+                owner, key = qualified_field(member, kind, name)
+                if owner is not None:
+                    return owner, key
+    return None, None
+
+
 def indexed_collection(document, kind, names):
     """📚 The ordered collection an index-addressed setter writes: the one the kind's noun names, else the one
     collection whose every member carries each named field — `change-self-weight-assumed-gk` finds the
@@ -258,14 +278,14 @@ def address_steps(kind, arguments, order=None):
     """🪜 The addressing arguments that descend to the record a nested kind acts inside: every
     `<entity>Index` position and `<entity>Id` native key, in wire order or in the given `order` of their wire
     positions (`()` asks for every one of them, untrimmed), never a new value. The last `<entity>Id` of a
-    `remove`/`delete` without a bare `index` names the removed member itself, so it stays with the verb
-    instead of descending into the record it removes."""
+    `remove`/`delete` without a bare `index` or a bare `id` names the removed member itself, so it stays with the verb
+    instead of descending into the record it removes; with a bare `id` every `<entity>Id` is a parent."""
     steps = [(key, value) for key, value in arguments.items() if not normalised(key).startswith("new") and normalised(key) not in POSITIONS and ((re.search(r"[a-z0-9](Index|_index)$", key) and isinstance(value, int)) or (re.search(r"[a-z0-9](Id|_id)$", key) and isinstance(value, str)))]
     if order == ():
         return steps
     if order is not None:
         steps = [steps[at] for at in order]
-    if steps and kind.split("-")[0] in ("remove", "delete") and "index" not in arguments and re.search(r"(Id|_id)$", steps[-1][0]):
+    if steps and kind.split("-")[0] in ("remove", "delete") and "index" not in arguments and "id" not in arguments and re.search(r"(Id|_id)$", steps[-1][0]):
         steps = steps[:-1]
     return steps
 
@@ -317,10 +337,17 @@ def singular(noun):
     return re.sub(r"ies$", "y", noun) if noun.endswith("ies") else re.sub(r"s$", "", noun)
 
 
+#: 🏛️ The Latin plurals of the vocabulary's nouns (`spectrum` → `spectra`, `analysis` → `analyses`).
+LATIN_PLURALS = (("spectrum", "spectra"), ("analysis", "analyses"), ("vertex", "vertices"))
+
+
 def plural(noun):
     """*️⃣ The plural of an entity noun — `-ies`, `-es` after a sibilant (`product-classes`,
     `product-indexes`), else `-s`."""
-    return noun[:-1] + "ies" if noun.endswith("y") else noun + "es" if re.search(r"(s|x|z|ch|sh)$", noun) else noun + "s"
+    for singular, plural_form in LATIN_PLURALS:
+        if noun.endswith(singular):
+            return noun[: -len(singular)] + plural_form
+    return noun[:-1] + "ies" if re.search(r"[^aeiou]y$", noun) else noun + "es" if re.search(r"(s|x|z|ch|sh)$", noun) else noun + "s"
 
 
 def find_container(document, name):
@@ -506,7 +533,8 @@ def projection_recipe(source, entry):
                                   for key in (node[0].keys() if node and isinstance(node[0], dict) else ())
                                   if [member.get(key) for member in node] == value), None)
         else:
-            recipe[field] = next((("read", path) for path, node in walk(source) if node == value and not isinstance(node, (dict, list))), None)
+            reads = [("read", path) for path, node in walk(source) if node == value and type(node) is type(value) and not isinstance(node, (dict, list))]
+            recipe[field] = reads[0] if len(reads) == 1 else None
         if recipe[field] is None:
             return None
     return recipe
@@ -551,12 +579,14 @@ def derived_view(base):
 MISSING = object()
 
 
-def rebuild_derived(found, document):
+def rebuild_derived(found, document, base=None):
     """🔁 Rebuilds a derived mirror after the collection it projects has moved. Refuses rather than
-    guesses when the recipe read off the base cannot project a record."""
+    guesses when the recipe read off the base cannot project a record; a list the mutation itself wrote is not a mirror of anything and stays as written."""
     if found is None:
         return document
     view_path, source_path, recipe = found
+    if base is not None and at(document, view_path) != at(base, view_path):
+        return document
     records = at(document, source_path)
     if not isinstance(records, list):
         return document

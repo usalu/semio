@@ -159,8 +159,8 @@ fn publish_retained_action(input: &mut semio_framework_ui_wgpu_input::InputState
 
 /** 🫳️ Resolves `target`'s own `drop_action` (the only node kind `ui_wgpu`'s own
  * `sync_interactive_state` currently flags `NodeFlags::DROP_TARGET` for is `UiNode::Stack` — a
- * `UiTreeNode` also carries a `drop_action` field but nothing syncs `DROP_TARGET` for `Tree` nodes
- * yet, a `ui_wgpu`-side gap this fn doesn't paper over), decodes `payload`'s first
+ * `UiTreeNode` also carries a `drop_action` field but nothing syncs `DROP_TARGET` for `Tree` nodes;
+ * tree rows take drops through the shell's tree drag instead, see `apply_tree_row_drop`), decodes `payload`'s first
  * `application/x-semio-*` mime entry as JSON (mirrors `framework/renderer/react/index.tsx`'s
  * `UiStackHost.onDrop`: `[...dataTransfer.types].filter(k => k.startsWith("application/x-semio-"))`),
  * and queues the merged `ActionDescriptor` — `dispatchUiAction`'s own React-side merge order
@@ -171,8 +171,25 @@ pub fn apply_drop_committed(window_id: &str, target: NodeId, payload: &DragPaylo
     let Some(action) = drop_target_action(window_id, target) else {
         return Ok(());
     };
+    queue_drop_action(window_id, &action, payload, input).map(|_| ())
+}
+
+/// 🫳️ The action the tree row `item_key` of `window_id` declares for a drop on it (its `Trigger::Drop` binding), `None` when the row is no drop target.
+pub fn tree_item_drop_action(window_id: &str, item_key: &str) -> Option<ActionDescriptor> {
+    UI_ENGINE.with(|cell| semio_framework_ui_retained_tree::reconcile::tree_item_drop_action(cell.borrow().tree(window_id)?.document()?, item_key))
+}
+
+/// 🫳️ Drops `payload` on the tree row `item_key` of `window_id`: queues the row's drop action with the payload merged into its arguments, exactly as a drop on a `Stack` does. `Ok(false)` when the row declares no drop action or the payload carries no `application/x-semio-*` entry.
+pub fn apply_tree_row_drop(window_id: &str, item_key: &str, payload: &DragPayload, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
+    let Some(action) = tree_item_drop_action(window_id, item_key) else {
+        return Ok(false);
+    };
+    queue_drop_action(window_id, &action, payload, input)
+}
+
+fn queue_drop_action(window_id: &str, action: &ActionDescriptor, payload: &DragPayload, input: &mut semio_framework_ui_wgpu_input::InputState<ActionDescriptor>) -> Result<bool, semio_framework_ui_action::BoundedActionFault> {
     let Some(patch) = decode_drop_payload(payload) else {
-        return Ok(());
+        return Ok(false);
     };
     let mut reservation = input.reserve_action(&action.controller_id, &action.action, semio_framework_ui_action::ACTION_ITEM_BYTE_CAPACITY)?;
     let builder = reservation.builder();
@@ -191,7 +208,8 @@ pub fn apply_drop_committed(window_id: &str, target: NodeId, payload: &DragPaylo
     }
     builder.string(Some("windowId"), window_id)?;
     builder.end_container()?;
-    reservation.publish()
+    reservation.publish()?;
+    Ok(true)
 }
 
 fn write_json_action_value(builder: &mut semio_framework_ui_action::BoundedActionBuilder, key: Option<&str>, value: &Value) -> Result<(), semio_framework_ui_action::BoundedActionFault> {

@@ -1,0 +1,6 @@
+{
+  "ChangeRowGroupWithPrevious": {
+    "id": "row-1",
+    "newGroupWithPrevious": 1
+  }
+}

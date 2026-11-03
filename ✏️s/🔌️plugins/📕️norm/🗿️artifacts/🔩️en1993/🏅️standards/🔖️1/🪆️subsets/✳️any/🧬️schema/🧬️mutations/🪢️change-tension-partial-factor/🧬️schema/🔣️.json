@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-tension-partial-factor/schema.json",
+  "title": "ChangeTensionPartialFactor",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newPartialFactor"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Tension component",
+          "de": "Zugglied"
+        },
+        "description": {
+          "en": "The tension component this mutation addresses, by id.",
+          "de": "Das adressierte Element (Zugglied), per Kennung."
+        },
+        "ref": {
+          "kind": "tension"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newPartialFactor": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Cable partial factor γ_R (0 = none)",
+          "de": "Teilsicherheitsbeiwert Seil γ_R (0 = keiner)"
+        },
+        "widget": "stepper",
+        "unit": "1",
+        "precision": 3,
+        "step": 0.01,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

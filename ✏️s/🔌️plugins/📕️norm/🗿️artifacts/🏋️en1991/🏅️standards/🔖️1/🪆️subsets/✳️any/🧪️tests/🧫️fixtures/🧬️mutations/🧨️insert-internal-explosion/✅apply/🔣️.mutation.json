@@ -1,0 +1,12 @@
+{
+  "InsertInternalExplosion": {
+    "index": 1,
+    "item": {
+      "id": "internal-explosion-1-new",
+      "volume": 1.5,
+      "ventArea": 1.5,
+      "ventPressure": 1.5,
+      "assumedPressure": 1.5
+    }
+  }
+}

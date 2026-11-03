@@ -1,0 +1,6 @@
+{
+  "ChangeDeckBarSpacing": {
+    "deckId": "deck-1",
+    "newValue": 2.2
+  }
+}

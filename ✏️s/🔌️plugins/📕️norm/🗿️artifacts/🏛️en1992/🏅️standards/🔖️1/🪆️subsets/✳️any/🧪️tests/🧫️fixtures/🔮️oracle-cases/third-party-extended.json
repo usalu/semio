@@ -1,0 +1,1298 @@
+{
+  "$schema": "../../../../../../../../../🔮️oracles/🏃️harness/🧬️schema/🔣️.json",
+  "schemaVersion": 1,
+  "artifact": "en1992",
+  "annex": "de",
+  "cases": [
+    {
+      "id": "en1992.3.1.creep-shrinkage-c30-rh50",
+      "check": "en1992.3.1.creep-shrinkage",
+      "citation": {
+        "standard": "EN 1992-1-1",
+        "edition": "2004",
+        "clause": "3.1.4 and Annex B Eq. B.1-B.13; 3.1.4(6) Eq. 3.8-3.12",
+        "table": "B"
+      },
+      "inputs": {
+        "fck": 30000000.0,
+        "RH": 50.0,
+        "Ac": 0.15,
+        "u": 1.6,
+        "cement_class": 1,
+        "t0": 28.0,
+        "t": 18250.0,
+        "t_s": 3.0
+      },
+      "expected": {
+        "h_0": {
+          "value": 0.1875,
+          "unit": "m",
+          "profile": "numerical-v1"
+        },
+        "phi_RH": {
+          "value": 1.7949447621310584,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "phi_0": {
+          "value": 2.38939681923289,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "phi": {
+          "value": 2.369266541894601,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "eps_cd_0": {
+          "value": 0.00048224121929291294,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "eps_cd": {
+          "value": 0.0004166023331205368,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "eps_ca": {
+          "value": 4.9999999999907744e-05,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "eps_cs": {
+          "value": 0.0004666023331204446,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-structuralcodes",
+          "adapter": "structuralcodes",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1992.3.1.creep-shrinkage-c50-rh80-rapid",
+      "check": "en1992.3.1.creep-shrinkage",
+      "citation": {
+        "standard": "EN 1992-1-1",
+        "edition": "2004",
+        "clause": "3.1.4 and Annex B Eq. B.1-B.13; 3.1.4(6) Eq. 3.8-3.12",
+        "table": "B"
+      },
+      "inputs": {
+        "fck": 50000000.0,
+        "RH": 80.0,
+        "Ac": 0.12,
+        "u": 1.2,
+        "cement_class": 2,
+        "t0": 7.0,
+        "t": 18250.0,
+        "t_s": 3.0
+      },
+      "expected": {
+        "h_0": {
+          "value": 0.2,
+          "unit": "m",
+          "profile": "numerical-v1"
+        },
+        "phi_RH": {
+          "value": 1.1209839864916966,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "phi_0": {
+          "value": 1.415687708062665,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "phi": {
+          "value": 1.401161671343601,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "eps_cd_0": {
+          "value": 0.00029893257185747784,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "eps_cd": {
+          "value": 0.0002525269403718862,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "eps_ca": {
+          "value": 9.999999999981549e-05,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "eps_cs": {
+          "value": 0.00035252694037170166,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-structuralcodes",
+          "adapter": "structuralcodes",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1992.3.1.creep-shrinkage-c25-rh70-slow",
+      "check": "en1992.3.1.creep-shrinkage",
+      "citation": {
+        "standard": "EN 1992-1-1",
+        "edition": "2004",
+        "clause": "3.1.4 and Annex B Eq. B.1-B.13; 3.1.4(6) Eq. 3.8-3.12",
+        "table": "B"
+      },
+      "inputs": {
+        "fck": 25000000.0,
+        "RH": 70.0,
+        "Ac": 0.2,
+        "u": 1.8,
+        "cement_class": 0,
+        "t0": 90.0,
+        "t": 18250.0,
+        "t_s": 3.0
+      },
+      "expected": {
+        "h_0": {
+          "value": 0.22222222222222224,
+          "unit": "m",
+          "profile": "numerical-v1"
+        },
+        "phi_RH": {
+          "value": 1.495289087334194,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "phi_0": {
+          "value": 1.721541192216939,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "phi": {
+          "value": 1.704895281020293,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "eps_cd_0": {
+          "value": 0.00031000332373960337,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "eps_cd": {
+          "value": 0.0002547637954191552,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "eps_ca": {
+          "value": 3.7499999999930804e-05,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "eps_cs": {
+          "value": 0.00029226379541908603,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-structuralcodes",
+          "adapter": "structuralcodes",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1992.3.6.creep-deformation",
+      "check": "en1992.3.6.creep-deformation",
+      "citation": {
+        "standard": "EN 1992-1-1",
+        "edition": "2004",
+        "clause": "3.1.4(2) Eq. 3.6"
+      },
+      "inputs": {
+        "phi_inf_t0": 2.4,
+        "sigma_c": 10000000.0,
+        "e_c": 33000000000.0
+      },
+      "expected": {
+        "epsilon_cc": {
+          "value": 0.0007272727272727272,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-blue-prints",
+          "adapter": "blueprints",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1992.3.21.eta-lambda-c60",
+      "check": "en1992.3.21.eta",
+      "citation": {
+        "standard": "EN 1992-1-1",
+        "edition": "2004",
+        "clause": "3.1.7(3) Eq. 3.21, 3.22"
+      },
+      "inputs": {
+        "f_ck": 60000000.0
+      },
+      "expected": {
+        "eta": {
+          "value": 0.95,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-blue-prints",
+          "adapter": "blueprints",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1992.3.19.lambda-c60",
+      "check": "en1992.3.19.lambda",
+      "citation": {
+        "standard": "EN 1992-1-1",
+        "edition": "2004",
+        "clause": "3.1.7(3) Eq. 3.19, 3.20"
+      },
+      "inputs": {
+        "f_ck": 60000000.0
+      },
+      "expected": {
+        "lambda": {
+          "value": 0.775,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-blue-prints",
+          "adapter": "blueprints",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1992.3.21.eta-lambda-c90",
+      "check": "en1992.3.21.eta",
+      "citation": {
+        "standard": "EN 1992-1-1",
+        "edition": "2004",
+        "clause": "3.1.7(3) Eq. 3.21, 3.22"
+      },
+      "inputs": {
+        "f_ck": 90000000.0
+      },
+      "expected": {
+        "eta": {
+          "value": 0.8,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-blue-prints",
+          "adapter": "blueprints",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1992.3.19.lambda-c90",
+      "check": "en1992.3.19.lambda",
+      "citation": {
+        "standard": "EN 1992-1-1",
+        "edition": "2004",
+        "clause": "3.1.7(3) Eq. 3.19, 3.20"
+      },
+      "inputs": {
+        "f_ck": 90000000.0
+      },
+      "expected": {
+        "lambda": {
+          "value": 0.7000000000000001,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-blue-prints",
+          "adapter": "blueprints",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1992.4.1.c-nom",
+      "check": "en1992.4.1.c-nom",
+      "citation": {
+        "standard": "EN 1992-1-1",
+        "edition": "2004",
+        "clause": "4.4.1.1(2) Eq. 4.1"
+      },
+      "inputs": {
+        "c_min": 0.025,
+        "delta_c_dev": 0.01
+      },
+      "expected": {
+        "c_nom": {
+          "value": 0.035,
+          "unit": "m",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-blue-prints",
+          "adapter": "blueprints",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1992.4.2.c-min",
+      "check": "en1992.4.2.c-min",
+      "citation": {
+        "standard": "EN 1992-1-1",
+        "edition": "2004",
+        "clause": "4.4.1.2(2) Eq. 4.2"
+      },
+      "inputs": {
+        "c_min_b": 0.02,
+        "c_min_dur": 0.025,
+        "delta_c_dur_gamma": 0.0,
+        "delta_c_dur_st": 0.0,
+        "delta_c_dur_add": 0.0
+      },
+      "expected": {
+        "c_min": {
+          "value": 0.025,
+          "unit": "m",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-blue-prints",
+          "adapter": "blueprints",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1992.7.3.min-reinforcement-beam-axial-free",
+      "check": "en1992.7.3.min-reinforcement",
+      "citation": {
+        "standard": "EN 1992-1-1",
+        "edition": "2004",
+        "clause": "7.3.2(2) Eq. 7.1; Table 7.2 k; k_c of rectangular sections"
+      },
+      "inputs": {
+        "f_ct_eff": 2900000.0,
+        "sigma_s": 300000000.0,
+        "h": 0.5,
+        "b": 0.3,
+        "N_Ed": 0.0
+      },
+      "expected": {
+        "k_c": {
+          "value": 0.4,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "k": {
+          "value": 0.86,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "A_s_min": {
+          "value": 0.0002494,
+          "unit": "m^2",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-structuralcodes",
+          "adapter": "structuralcodes",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1992.7.3.min-reinforcement-deep-beam-compression",
+      "check": "en1992.7.3.min-reinforcement",
+      "citation": {
+        "standard": "EN 1992-1-1",
+        "edition": "2004",
+        "clause": "7.3.2(2) Eq. 7.1; Table 7.2 k; k_c of rectangular sections"
+      },
+      "inputs": {
+        "f_ct_eff": 2900000.0,
+        "sigma_s": 300000000.0,
+        "h": 0.9,
+        "b": 0.4,
+        "N_Ed": -300000.0
+      },
+      "expected": {
+        "k_c": {
+          "value": 0.5724137931034483,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "k": {
+          "value": 0.65,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "A_s_min": {
+          "value": 0.0006474,
+          "unit": "m^2",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-structuralcodes",
+          "adapter": "structuralcodes",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1992.7.3.effective-tension-area-shallow-axis",
+      "check": "en1992.7.3.effective-tension-area",
+      "citation": {
+        "standard": "EN 1992-1-1",
+        "edition": "2004",
+        "clause": "7.3.2(3) h_c,ef; Eq. 7.10"
+      },
+      "inputs": {
+        "h": 0.5,
+        "d": 0.45,
+        "b": 0.3,
+        "As": 0.0012,
+        "x": 0.15
+      },
+      "expected": {
+        "h_c_ef": {
+          "value": 0.11666666666666667,
+          "unit": "m",
+          "profile": "eurocode-quantities-v1"
+        },
+        "rho_p_eff": {
+          "value": 0.03428571428571429,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-structuralcodes",
+          "adapter": "structuralcodes",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1992.7.3.effective-tension-area-deep-axis",
+      "check": "en1992.7.3.effective-tension-area",
+      "citation": {
+        "standard": "EN 1992-1-1",
+        "edition": "2004",
+        "clause": "7.3.2(3) h_c,ef; Eq. 7.10"
+      },
+      "inputs": {
+        "h": 0.5,
+        "d": 0.45,
+        "b": 0.3,
+        "As": 0.0012,
+        "x": 0.3
+      },
+      "expected": {
+        "h_c_ef": {
+          "value": 0.06666666666666667,
+          "unit": "m",
+          "profile": "eurocode-quantities-v1"
+        },
+        "rho_p_eff": {
+          "value": 0.06,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-structuralcodes",
+          "adapter": "structuralcodes",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1992.7.14.sr-max-far",
+      "check": "en1992.7.14.sr-max-far",
+      "citation": {
+        "standard": "EN 1992-1-1",
+        "edition": "2004",
+        "clause": "7.3.4(3) Eq. 7.14"
+      },
+      "inputs": {
+        "h": 0.5,
+        "x": 0.15
+      },
+      "expected": {
+        "sr_max": {
+          "value": 0.455,
+          "unit": "m",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-structuralcodes",
+          "adapter": "structuralcodes",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1992.6.2.shear-link-limit",
+      "check": "en1992.6.2.shear-link-limit",
+      "citation": {
+        "standard": "EN 1992-1-1",
+        "edition": "2004",
+        "clause": "6.2.3(3) Eq. 6.12"
+      },
+      "inputs": {
+        "f_ck": 30000000.0,
+        "alpha_cc": 1.0,
+        "gamma_c": 1.5,
+        "b_w": 0.3,
+        "s": 0.2,
+        "f_ywd": 434780000.0,
+        "Ac": 0.15
+      },
+      "expected": {
+        "A_sw_max": {
+          "value": 0.0007286443718662312,
+          "unit": "m^2",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-structuralcodes",
+          "adapter": "structuralcodes",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1992.6.1.flexure-t-flange-compressed",
+      "check": "en1992.6.1.flexure-t",
+      "citation": {
+        "standard": "EN 1992-1-1",
+        "edition": "2004",
+        "clause": "6.1; 3.1.7(1); T-section with effective flange width 5.3.2.1",
+        "annex": "de"
+      },
+      "inputs": {
+        "fck": 30000000.0,
+        "fyk": 500000000.0,
+        "gamma_c": 1.5,
+        "gamma_s": 1.15,
+        "alpha_cc": 0.85,
+        "b_f": 1.2,
+        "h_f": 0.15,
+        "b_w": 0.3,
+        "h": 0.6,
+        "d": 0.55,
+        "As": 0.002
+      },
+      "expected": {
+        "M_Rd": {
+          "value": 459214.91363134625,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-structuralcodes",
+          "adapter": "structuralcodes",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-concreteproperties",
+          "adapter": "concreteproperties",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1992.6.1.flexure-t-web-compressed",
+      "check": "en1992.6.1.flexure-t",
+      "citation": {
+        "standard": "EN 1992-1-1",
+        "edition": "2004",
+        "clause": "6.1; 3.1.7(1); T-section with effective flange width 5.3.2.1",
+        "annex": "de"
+      },
+      "inputs": {
+        "fck": 30000000.0,
+        "fyk": 500000000.0,
+        "gamma_c": 1.5,
+        "gamma_s": 1.15,
+        "alpha_cc": 0.85,
+        "b_f": 1.2,
+        "h_f": 0.15,
+        "b_w": 0.3,
+        "h": 0.6,
+        "d": 0.55,
+        "As": 0.006
+      },
+      "expected": {
+        "M_Rd": {
+          "value": 1263632.083044267,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-structuralcodes",
+          "adapter": "structuralcodes",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-concreteproperties",
+          "adapter": "concreteproperties",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1992.6.1.flexure-t-c50-web",
+      "check": "en1992.6.1.flexure-t",
+      "citation": {
+        "standard": "EN 1992-1-1",
+        "edition": "2004",
+        "clause": "6.1; 3.1.7(1); T-section with effective flange width 5.3.2.1",
+        "annex": "de"
+      },
+      "inputs": {
+        "fck": 50000000.0,
+        "fyk": 500000000.0,
+        "gamma_c": 1.5,
+        "gamma_s": 1.15,
+        "alpha_cc": 0.85,
+        "b_f": 1.2,
+        "h_f": 0.15,
+        "b_w": 0.3,
+        "h": 0.6,
+        "d": 0.55,
+        "As": 0.004
+      },
+      "expected": {
+        "M_Rd": {
+          "value": 910811.4462600219,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-structuralcodes",
+          "adapter": "structuralcodes",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-concreteproperties",
+          "adapter": "concreteproperties",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1992.6.8.vrds",
+      "check": "en1992.6.8.vrds",
+      "citation": {
+        "standard": "EN 1992-1-1",
+        "edition": "2004",
+        "clause": "6.2.3(3) Eq. 6.8"
+      },
+      "inputs": {
+        "a_sw": 0.000157,
+        "s": 0.2,
+        "z": 0.405,
+        "f_ywd": 434780000.0,
+        "theta": 45.0
+      },
+      "expected": {
+        "V_Rd_s": {
+          "value": 138227.43150000004,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-blue-prints",
+          "adapter": "blueprints",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1992.6.9.vrdmax",
+      "check": "en1992.6.9.vrdmax",
+      "citation": {
+        "standard": "EN 1992-1-1",
+        "edition": "2004",
+        "clause": "6.2.3(3) Eq. 6.9"
+      },
+      "inputs": {
+        "b_w": 0.3,
+        "z": 0.405,
+        "f_cd": 17000000.0,
+        "nu_1": 0.528,
+        "alpha_cw": 1.0,
+        "theta": 45.0
+      },
+      "expected": {
+        "V_Rd_max": {
+          "value": 545292.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-blue-prints",
+          "adapter": "blueprints",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1992.6.10.nu1-c30",
+      "check": "en1992.6.10.nu1",
+      "citation": {
+        "standard": "EN 1992-1-1",
+        "edition": "2004",
+        "clause": "6.2.3(3) Eq. 6.10a/b N"
+      },
+      "inputs": {
+        "f_ck": 30000000.0
+      },
+      "expected": {
+        "nu_1": {
+          "value": 0.6,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-blue-prints",
+          "adapter": "blueprints",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1992.6.10.nu1-c70",
+      "check": "en1992.6.10.nu1",
+      "citation": {
+        "standard": "EN 1992-1-1",
+        "edition": "2004",
+        "clause": "6.2.3(3) Eq. 6.10a/b N"
+      },
+      "inputs": {
+        "f_ck": 70000000.0
+      },
+      "expected": {
+        "nu_1": {
+          "value": 0.55,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-blue-prints",
+          "adapter": "blueprints",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1992.6.11.alpha-cw-sigma2",
+      "check": "en1992.6.11.alpha-cw",
+      "citation": {
+        "standard": "EN 1992-1-1",
+        "edition": "2004",
+        "clause": "6.2.3(3) Eq. 6.11a/b/c N"
+      },
+      "inputs": {
+        "sigma_cp": 2000000.0,
+        "f_cd": 17000000.0
+      },
+      "expected": {
+        "alpha_cw": {
+          "value": 1.1176470588235294,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-blue-prints",
+          "adapter": "blueprints",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1992.6.11.alpha-cw-sigma6",
+      "check": "en1992.6.11.alpha-cw",
+      "citation": {
+        "standard": "EN 1992-1-1",
+        "edition": "2004",
+        "clause": "6.2.3(3) Eq. 6.11a/b/c N"
+      },
+      "inputs": {
+        "sigma_cp": 6000000.0,
+        "f_cd": 17000000.0
+      },
+      "expected": {
+        "alpha_cw": {
+          "value": 1.25,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-blue-prints",
+          "adapter": "blueprints",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1992.6.11.alpha-cw-sigma15",
+      "check": "en1992.6.11.alpha-cw",
+      "citation": {
+        "standard": "EN 1992-1-1",
+        "edition": "2004",
+        "clause": "6.2.3(3) Eq. 6.11a/b/c N"
+      },
+      "inputs": {
+        "sigma_cp": 15000000.0,
+        "f_cd": 17000000.0
+      },
+      "expected": {
+        "alpha_cw": {
+          "value": 0.2941176470588236,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-blue-prints",
+          "adapter": "blueprints",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1992.6.26.tau-wall",
+      "check": "en1992.6.26.tau-wall",
+      "citation": {
+        "standard": "EN 1992-1-1",
+        "edition": "2004",
+        "clause": "6.3.2(1) Eq. 6.26"
+      },
+      "inputs": {
+        "t_ed": 50000.0,
+        "a_k": 0.083789
+      },
+      "expected": {
+        "tau_t_t_ef": {
+          "value": 298368.520927568,
+          "unit": "N/m",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-blue-prints",
+          "adapter": "blueprints",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1992.6.28.asl-torsion",
+      "check": "en1992.6.28.asl-torsion",
+      "citation": {
+        "standard": "EN 1992-1-1",
+        "edition": "2004",
+        "clause": "6.3.2(3) Eq. 6.28"
+      },
+      "inputs": {
+        "u_k": 1.2,
+        "f_yd": 434780000.0,
+        "t_ed": 50000.0,
+        "a_k": 0.083789,
+        "theta": 45.0
+      },
+      "expected": {
+        "sum_A_sl": {
+          "value": 0.0008235020587724408,
+          "unit": "m^2",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-blue-prints",
+          "adapter": "blueprints",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1992.6.47.punching-vrdc",
+      "check": "en1992.6.47.punching-vrdc",
+      "citation": {
+        "standard": "EN 1992-1-1",
+        "edition": "2004",
+        "clause": "6.4.4(1) Eq. 6.47"
+      },
+      "inputs": {
+        "c_rd_c": 0.12,
+        "k": 1.89,
+        "rho_l": 0.01,
+        "f_ck": 30000000.0,
+        "k_1": 0.1,
+        "sigma_cp": 0.0,
+        "v_min": 500000.0
+      },
+      "expected": {
+        "v_Rd_c": {
+          "value": 704720.3323503351,
+          "unit": "Pa",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-blue-prints",
+          "adapter": "blueprints",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1992.6.51.punching-eccentric",
+      "check": "en1992.6.51.punching-eccentric",
+      "citation": {
+        "standard": "EN 1992-1-1",
+        "edition": "2004",
+        "clause": "6.4.3(3) Eq. 6.51"
+      },
+      "inputs": {
+        "v_ed_red": 500000.0,
+        "u": 3.2,
+        "d": 0.25,
+        "k": 0.6,
+        "m_ed": 60000.0,
+        "w": 1.2
+      },
+      "expected": {
+        "v_Ed": {
+          "value": 745000.0,
+          "unit": "Pa",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-blue-prints",
+          "adapter": "blueprints",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1992.6.43.beta-rectangular",
+      "check": "en1992.6.43.beta-rectangular",
+      "citation": {
+        "standard": "EN 1992-1-1",
+        "edition": "2004",
+        "clause": "6.4.3(6) Eq. 6.43"
+      },
+      "inputs": {
+        "ey": 0.1,
+        "ez": 0.05,
+        "by": 0.4,
+        "bz": 0.4
+      },
+      "expected": {
+        "beta": {
+          "value": 1.5031152949374529,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-blue-prints",
+          "adapter": "blueprints",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1992.6.39.beta-moment",
+      "check": "en1992.6.39.beta-moment",
+      "citation": {
+        "standard": "EN 1992-1-1",
+        "edition": "2004",
+        "clause": "6.4.3(3) Eq. 6.39"
+      },
+      "inputs": {
+        "k": 0.6,
+        "m_ed": 60000.0,
+        "v_ed": 500000.0,
+        "u_1": 3.2,
+        "w_1": 1.2
+      },
+      "expected": {
+        "beta": {
+          "value": 1.192,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-blue-prints",
+          "adapter": "blueprints",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1992.8.2.fbd",
+      "check": "en1992.8.2.fbd",
+      "citation": {
+        "standard": "EN 1992-1-1",
+        "edition": "2004",
+        "clause": "8.4.2(2) Eq. 8.2"
+      },
+      "inputs": {
+        "eta_1": 1.0,
+        "eta_2": 1.0,
+        "f_ctd": 2000000.0
+      },
+      "expected": {
+        "f_bd": {
+          "value": 4500000.0,
+          "unit": "Pa",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-blue-prints",
+          "adapter": "blueprints",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1992.8.4.anchorage-design-alpha-product-above-limit",
+      "check": "en1992.8.4.anchorage-design",
+      "citation": {
+        "standard": "EN 1992-1-1",
+        "edition": "2004",
+        "clause": "8.4.4(1) Eq. 8.4, 8.5, 8.6"
+      },
+      "inputs": {
+        "alpha_1": 1.0,
+        "alpha_4": 1.0,
+        "l_b_rqd": 0.6,
+        "diameter": 0.016,
+        "alpha_2": 0.9,
+        "alpha_3": 0.95,
+        "alpha_5": 0.9
+      },
+      "expected": {
+        "product_alpha_235": {
+          "value": 0.7695,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "l_b_min": {
+          "value": 0.18,
+          "unit": "m",
+          "profile": "eurocode-quantities-v1"
+        },
+        "l_bd": {
+          "value": 0.4617,
+          "unit": "m",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-blue-prints",
+          "adapter": "blueprints",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1992.8.4.anchorage-design-alpha-product-capped",
+      "check": "en1992.8.4.anchorage-design",
+      "citation": {
+        "standard": "EN 1992-1-1",
+        "edition": "2004",
+        "clause": "8.4.4(1) Eq. 8.4, 8.5, 8.6"
+      },
+      "inputs": {
+        "alpha_1": 1.0,
+        "alpha_4": 1.0,
+        "l_b_rqd": 0.6,
+        "diameter": 0.016,
+        "alpha_2": 0.7,
+        "alpha_3": 0.8,
+        "alpha_5": 0.8
+      },
+      "expected": {
+        "product_alpha_235": {
+          "value": 0.7,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "l_b_min": {
+          "value": 0.18,
+          "unit": "m",
+          "profile": "eurocode-quantities-v1"
+        },
+        "l_bd": {
+          "value": 0.42,
+          "unit": "m",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-blue-prints",
+          "adapter": "blueprints",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1992.8.10.lap-length",
+      "check": "en1992.8.10.lap-length",
+      "citation": {
+        "standard": "EN 1992-1-1",
+        "edition": "2004",
+        "clause": "8.7.3(1) Eq. 8.10"
+      },
+      "inputs": {
+        "alpha_1": 1.0,
+        "alpha_2": 0.9,
+        "alpha_3": 1.0,
+        "alpha_5": 1.0,
+        "alpha_6": 1.5,
+        "l_b_rqd": 0.6,
+        "l_0_min": 0.3
+      },
+      "expected": {
+        "l_0": {
+          "value": 0.81,
+          "unit": "m",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-blue-prints",
+          "adapter": "blueprints",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1992.8.14.bundle-diameter",
+      "check": "en1992.8.14.bundle-diameter",
+      "citation": {
+        "standard": "EN 1992-1-1",
+        "edition": "2004",
+        "clause": "8.9.1(2) Eq. 8.14"
+      },
+      "inputs": {
+        "diameter": 0.016,
+        "n_b": 2
+      },
+      "expected": {
+        "diameter_n": {
+          "value": 0.022627416997969524,
+          "unit": "m",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-blue-prints",
+          "adapter": "blueprints",
+          "kind": "third-party-library"
+        }
+      ]
+    }
+  ]
+}

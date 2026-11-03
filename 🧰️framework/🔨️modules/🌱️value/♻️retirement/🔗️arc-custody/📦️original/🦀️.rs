@@ -41,7 +41,7 @@ impl<T:Send+Sync+'static> SharedOriginalStorage<T>{
  pub fn aliases(&self)->usize{self.source.as_ref().expect("live original alias").aliases.load(Ordering::Acquire)}
  pub fn duplicate(&self)->crate::RetainedWorkOutcome<Self>{
   let source=match self.source.as_ref(){Some(v)=>v,None=>return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("live original alias").into()),work:0}};
-  let result=source.aliases.fetch_update(Ordering::AcqRel,Ordering::Acquire,|count|(count>0).then(||count.checked_add(1)).flatten()).map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"original alias space exhausted")).map(|_|Self{source:ManuallyDrop::new(Some(Arc::clone(source)))});
+  let result=source.aliases.try_update(Ordering::AcqRel,Ordering::Acquire,|count|(count>0).then(||count.checked_add(1)).flatten()).map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"original alias space exhausted")).map(|_|Self{source:ManuallyDrop::new(Some(Arc::clone(source)))});
   crate::RetainedWorkOutcome{result,work:1}
  }
 

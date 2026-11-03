@@ -1,9 +1,37 @@
-# 📸️ En1997Artifact GraphQL mirror
-enum AnnexChoice { de en }
-
+type En1997Artifact {
+  structureId: String!
+  geotechnicalCategory: Int!
+  designSituation: String!
+  designApproach: String!
+  annex: String!
+  groundwaterLevel: Float!
+  investigationDepth: Float!
+  layers: [SoilLayer!]!
+  footings: [SpreadFoundation!]!
+  piles: [Pile!]!
+  retainingWalls: [RetainingWall!]!
+  slopes: [Slope!]!
+  upliftCases: [UpliftCase!]!
+  anchors: [Anchor!]!
+  embeddedWalls: [EmbeddedWall!]!
+  pileGroups: [PileGroup!]!
+  labTests: [LabTest!]!
+  layerWaters: [LayerWater!]!
+  placements: [Placement!]!
+  cases: [CaseRow!]!
+  investigations: [Investigation!]!
+  characteristicBases: [CharacteristicBasis!]!
+}
+enum SoilType {
+  sand
+  gravel
+  clay
+  silt
+  fill
+}
 type SoilLayer {
   id: String!
-  soilType: String!
+  soilType: SoilType!
   depthTop: Float!
   depthBottom: Float!
   gamma: Float!
@@ -15,16 +43,7 @@ type SoilLayer {
   poissonRatio: Float!
   cptQc: Float!
   sptN: Float!
-}
-type FoundationLoadCase {
-  id: String!
-  designSituation: String!
-  verticalPermanent: Float!
-  verticalVariable: Float!
-  horizontalPermanent: Float!
-  horizontalVariable: Float!
-  momentPermanent: Float!
-  momentVariable: Float!
+  cptNkt: Float!
 }
 type SpreadFoundation {
   id: String!
@@ -35,10 +54,14 @@ type SpreadFoundation {
   settlementLimit: Float!
   loadCases: [FoundationLoadCase!]!
 }
-type PileTestProfile { id: String! shaftResistance: Float! baseResistance: Float! }
+enum PileType {
+  bored
+  driven
+  cfa
+}
 type Pile {
   id: String!
-  pileType: String!
+  pileType: PileType!
   diameter: Float!
   length: Float!
   count: Int!
@@ -49,7 +72,44 @@ type Pile {
   compressionVariable: Float!
   tensionPermanent: Float!
   tensionVariable: Float!
+  bendingStiffnessEi: Float!
+  horizontalSubgradeModulus: Float!
+  lateralHeadLoad: Float!
+  elasticModulus: Float!
+  settlingThickness: Float!
+  negativeFrictionBeta: Float!
+  dynamicTestCount: Float!
+  dynamicResistanceMean: Float!
+  dynamicResistanceMin: Float!
+  hammerWeight: Float!
+  dropHeight: Float!
+  setPerBlow: Float!
+  elasticCompression: Float!
+  hammerEfficiency: Float!
+  concreteClass: PileConcreteClass!
   testProfiles: [PileTestProfile!]!
+}
+enum PileConcreteClass {
+  notGiven
+  c1215
+  c1620
+  c2025
+  c2530
+  c3037
+  c3545
+  c4050
+  c4555
+  c5060
+}
+enum EarthPressureMode {
+  active
+  atRest
+  increasedActive
+}
+enum WallMovement {
+  free
+  rigid
+  propped
 }
 type RetainingWall {
   id: String!
@@ -60,13 +120,18 @@ type RetainingWall {
   backfillPhiDeg: Float!
   backfillGamma: Float!
   wallFrictionDeg: Float!
-  earthPressureMode: String!
-  wallMovement: String!
+  earthPressureMode: EarthPressureMode!
+  wallMovement: WallMovement!
   ocr: Float!
   concreteGamma: Float!
   surcharge: Float!
   verticalPermanent: Float!
   horizontalPermanent: Float!
+  seismicKh: Float!
+  seismicKv: Float!
+  reinforcementSpacing: Float!
+  reinforcementWidth: Float!
+  reinforcementFriction: Float!
 }
 type Slope {
   id: String!
@@ -74,6 +139,10 @@ type Slope {
   height: Float!
   length: Float!
   governingLayerId: String!
+  circleCentreX: Float!
+  circleCentreZ: Float!
+  circleRadius: Float!
+  width: Float!
 }
 type UpliftCase {
   id: String!
@@ -83,19 +152,171 @@ type UpliftCase {
   porePressure: Float!
   totalStress: Float!
 }
-
-type En1997Artifact {
-  structureId: String!
-  geotechnicalCategory: Int!
-  designSituation: String!
-  designApproach: String!
-  annex: AnnexChoice!
-  groundwaterLevel: Float!
-  investigationDepth: Float!
-  layers: [SoilLayer!]!
-  footings: [SpreadFoundation!]!
-  piles: [Pile!]!
-  retainingWalls: [RetainingWall!]!
-  slopes: [Slope!]!
-  upliftCases: [UpliftCase!]!
+enum TendonType {
+  strand
+  bar
+}
+type Anchor {
+  id: String!
+  wallId: String!
+  tendon: TendonType!
+  headDepth: Float!
+  inclinationDeg: Float!
+  freeLength: Float!
+  fixedLength: Float!
+  fixedDiameter: Float!
+  bondStress: Float!
+  designForce: Float!
+  tendonYieldForce: Float!
+  minFreeLength: Float!
+  testFactor: Float!
+  tests: [AnchorTest!]!
+}
+enum EmbeddedWallKind {
+  freeEarth
+  cantilever
+}
+type EmbeddedWall {
+  id: String!
+  kind: EmbeddedWallKind!
+  retainedHeight: Float!
+  embedment: Float!
+  propDepth: Float!
+  thickness: Float!
+  backfillGamma: Float!
+  phiDeg: Float!
+  deltaActiveDeg: Float!
+  deltaPassiveDeg: Float!
+  surcharge: Float!
+  undrainedStrength: Float!
+}
+type PileGroup {
+  id: String!
+  pileId: String!
+  rows: Int!
+  columns: Int!
+  spacing: Float!
+  capVertical: Float!
+  capMomentX: Float!
+  capMomentY: Float!
+  singleResistance: Float!
+  shaftCohesionSum: Float!
+  baseCohesion: Float!
+}
+enum LabTestKind {
+  oedometer
+  triaxial
+  directShear
+}
+type LabTest {
+  id: String!
+  layerId: String!
+  kind: LabTestKind!
+  voidRatio: Float!
+  preloadStress: Float!
+  drainageHeight: Float!
+  consolidationTime: Float!
+  compressionIndex: Float!
+  swellingIndex: Float!
+  stressIncrement: Float!
+  secondaryCompressionIndex: Float!
+  designLife: Float!
+  points: [LabPoint!]!
+}
+type LayerWater {
+  id: String!
+  layerId: String!
+  piezometricDepth: Float!
+  permeability: Float!
+  headDifference: Float!
+  flowLength: Float!
+  wellRadius: Float!
+  wellWaterDepth: Float!
+  influenceRadius: Float!
+  wellCapacity: Float!
+}
+type Placement {
+  id: String!
+  x: Float!
+  y: Float!
+  z: Float!
+  yaw: Float!
+}
+type CaseRow {
+  id: String!
+  labelEn: String!
+  labelDe: String!
+  entryId: String!
+  numbers: [CaseNumber!]!
+  texts: [CaseText!]!
+}
+type CaseNumber {
+  id: String!
+  value: Float!
+}
+type CaseText {
+  id: String!
+  value: String!
+}
+type LabPoint {
+  id: String!
+  normalStress: Float!
+  shearStress: Float!
+}
+type AnchorTest {
+  id: String!
+  pullOutResistance: Float!
+}
+type PileTestProfile {
+  id: String!
+  shaftResistance: Float!
+  baseResistance: Float!
+}
+enum SituationChoice {
+  persistent
+  transient
+  accidental
+}
+type FoundationLoadCase {
+  id: String!
+  designSituation: SituationChoice!
+  verticalPermanent: Float!
+  verticalVariable: Float!
+  horizontalPermanent: Float!
+  horizontalVariable: Float!
+  momentPermanent: Float!
+  momentVariable: Float!
+}
+enum InvestigationKind {
+  borehole
+  cpt
+  spt
+}
+type InvestigationReading {
+  id: String!
+  depth: Float!
+  measurement: Float!
+}
+type Investigation {
+  id: String!
+  positionX: Float!
+  positionY: Float!
+  groundLevel: Float!
+  depth: Float!
+  kind: InvestigationKind!
+  readings: [InvestigationReading!]!
+}
+enum CharacteristicParameter {
+  undrainedStrength
+  frictionAngle
+}
+enum ParameterBasis {
+  declared
+  derived
+}
+type CharacteristicBasis {
+  id: String!
+  layerId: String!
+  parameter: CharacteristicParameter!
+  basis: ParameterBasis!
 }

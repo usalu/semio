@@ -1,0 +1,347 @@
+{
+  "cases": [
+    {
+      "id": "worked-clay-silt-sand",
+      "description": "c_u of a clay (three CPT soundings, three independent samples, statistical) and of a silt (two soundings, cautious), phi' of a sand from three SPT soundings, c_u of the sand (no CPT reading: nothing derivable)",
+      "document": {
+        "annex": "De",
+        "groundwaterLevel": 4.0,
+        "layers": [
+          {
+            "id": "clay-1",
+            "soilType": "clay",
+            "depthTop": 0.0,
+            "depthBottom": 6.0,
+            "gamma": 18000.0,
+            "gammaPrime": 8000.0,
+            "phiPrimeDeg": 22.0,
+            "cohesionEffective": 0.0,
+            "cohesionUndrained": 35000.0,
+            "oedometricModulus": 8000000.0,
+            "poissonRatio": 0.35,
+            "cptQc": 0.0,
+            "sptN": 0.0,
+            "cptNkt": 15.0
+          },
+          {
+            "id": "silt-1",
+            "soilType": "silt",
+            "depthTop": 6.0,
+            "depthBottom": 9.0,
+            "gamma": 19000.0,
+            "gammaPrime": 9000.0,
+            "phiPrimeDeg": 26.0,
+            "cohesionEffective": 0.0,
+            "cohesionUndrained": 25000.0,
+            "oedometricModulus": 15000000.0,
+            "poissonRatio": 0.33,
+            "cptQc": 0.0,
+            "sptN": 0.0,
+            "cptNkt": 0.0
+          },
+          {
+            "id": "sand-1",
+            "soilType": "sand",
+            "depthTop": 9.0,
+            "depthBottom": 12.0,
+            "gamma": 20000.0,
+            "gammaPrime": 10000.0,
+            "phiPrimeDeg": 30.0,
+            "cohesionEffective": 0.0,
+            "cohesionUndrained": 0.0,
+            "oedometricModulus": 40000000.0,
+            "poissonRatio": 0.3,
+            "cptQc": 0.0,
+            "sptN": 0.0,
+            "cptNkt": 0.0
+          }
+        ],
+        "investigations": [
+          {
+            "id": "cpt-A",
+            "positionX": 0.0,
+            "positionY": 0.0,
+            "groundLevel": 0.0,
+            "depth": 12.0,
+            "kind": "cpt",
+            "readings": [
+              {
+                "id": "cpt-A-r1",
+                "depth": 1.0,
+                "measurement": 618000.0
+              },
+              {
+                "id": "cpt-A-r2",
+                "depth": 2.0,
+                "measurement": 666000.0
+              },
+              {
+                "id": "cpt-A-r3",
+                "depth": 3.0,
+                "measurement": 729000.0
+              },
+              {
+                "id": "cpt-A-r4",
+                "depth": 4.0,
+                "measurement": 687000.0
+              },
+              {
+                "id": "cpt-A-r5",
+                "depth": 5.0,
+                "measurement": 750000.0
+              },
+              {
+                "id": "cpt-A-r6",
+                "depth": 7.0,
+                "measurement": 577000.0
+              },
+              {
+                "id": "cpt-A-r7",
+                "depth": 8.0,
+                "measurement": 566000.0
+              }
+            ]
+          },
+          {
+            "id": "spt-A",
+            "positionX": 4.0,
+            "positionY": 0.0,
+            "groundLevel": 0.0,
+            "depth": 12.0,
+            "kind": "spt",
+            "readings": [
+              {
+                "id": "spt-A-r1",
+                "depth": 9.5,
+                "measurement": 20.0
+              },
+              {
+                "id": "spt-A-r2",
+                "depth": 10.5,
+                "measurement": 24.0
+              },
+              {
+                "id": "spt-A-r3",
+                "depth": 11.5,
+                "measurement": 28.0
+              }
+            ]
+          },
+          {
+            "id": "cpt-B",
+            "positionX": 10.0,
+            "positionY": 0.0,
+            "groundLevel": 0.0,
+            "depth": 12.0,
+            "kind": "cpt",
+            "readings": [
+              {
+                "id": "cpt-B-r1",
+                "depth": 1.5,
+                "measurement": 597000.0
+              },
+              {
+                "id": "cpt-B-r2",
+                "depth": 3.5,
+                "measurement": 708000.0
+              },
+              {
+                "id": "cpt-B-r3",
+                "depth": 4.5,
+                "measurement": 681000.0
+              },
+              {
+                "id": "cpt-B-r4",
+                "depth": 7.5,
+                "measurement": 631500.0
+              }
+            ]
+          },
+          {
+            "id": "cpt-C",
+            "positionX": 20.0,
+            "positionY": 0.0,
+            "groundLevel": 0.0,
+            "depth": 12.0,
+            "kind": "cpt",
+            "readings": [
+              {
+                "id": "cpt-C-r1",
+                "depth": 2.5,
+                "measurement": 735000.0
+              },
+              {
+                "id": "cpt-C-r2",
+                "depth": 5.5,
+                "measurement": 714000.0
+              }
+            ]
+          },
+          {
+            "id": "spt-B",
+            "positionX": 14.0,
+            "positionY": 0.0,
+            "groundLevel": 0.0,
+            "depth": 12.0,
+            "kind": "spt",
+            "readings": [
+              {
+                "id": "spt-B-r1",
+                "depth": 10.0,
+                "measurement": 22.0
+              },
+              {
+                "id": "spt-B-r2",
+                "depth": 11.0,
+                "measurement": 26.0
+              }
+            ]
+          },
+          {
+            "id": "spt-C",
+            "positionX": 24.0,
+            "positionY": 0.0,
+            "groundLevel": 0.0,
+            "depth": 12.0,
+            "kind": "spt",
+            "readings": [
+              {
+                "id": "spt-C-r1",
+                "depth": 9.8,
+                "measurement": 21.0
+              },
+              {
+                "id": "spt-C-r2",
+                "depth": 11.8,
+                "measurement": 30.0
+              }
+            ]
+          }
+        ],
+        "characteristicBases": [
+          {
+            "id": "b1",
+            "layerId": "clay-1",
+            "parameter": "undrainedStrength",
+            "basis": "derived"
+          },
+          {
+            "id": "b2",
+            "layerId": "silt-1",
+            "parameter": "undrainedStrength",
+            "basis": "derived"
+          },
+          {
+            "id": "b3",
+            "layerId": "sand-1",
+            "parameter": "frictionAngle",
+            "basis": "derived"
+          },
+          {
+            "id": "b4",
+            "layerId": "sand-1",
+            "parameter": "undrainedStrength",
+            "basis": "derived"
+          }
+        ]
+      },
+      "expected": {
+        "clay-1.undrainedStrength": {
+          "n": 3,
+          "readings": 10,
+          "method": "statistical",
+          "mean": 42077.777777778,
+          "variation": 0.03820867,
+          "kn": 1.685854461,
+          "characteristic": 39367.368991363
+        },
+        "silt-1.undrainedStrength": {
+          "n": 2,
+          "readings": 3,
+          "method": "cautious",
+          "mean": 31000.000000001,
+          "variation": 0.0,
+          "kn": 0.0,
+          "characteristic": 28000.000000001
+        },
+        "sand-1.frictionAngle": {
+          "n": 3,
+          "readings": 7,
+          "method": "statistical",
+          "mean": 40.629090202,
+          "variation": 0.006428407,
+          "kn": 1.685854461,
+          "characteristic": 40.188778164
+        },
+        "sand-1.undrainedStrength": null
+      }
+    },
+    {
+      "id": "clay-two-cpt-readings",
+      "description": "c_u of a clay from one CPT sounding with 2 readings (one independent sample, n < 3): the lowest reading, cautious",
+      "document": {
+        "annex": "De",
+        "groundwaterLevel": 4.0,
+        "layers": [
+          {
+            "id": "clay-1",
+            "soilType": "clay",
+            "depthTop": 0.0,
+            "depthBottom": 6.0,
+            "gamma": 18000.0,
+            "gammaPrime": 8000.0,
+            "phiPrimeDeg": 22.0,
+            "cohesionEffective": 0.0,
+            "cohesionUndrained": 35000.0,
+            "oedometricModulus": 8000000.0,
+            "poissonRatio": 0.35,
+            "cptQc": 0.0,
+            "sptN": 0.0,
+            "cptNkt": 15.0
+          }
+        ],
+        "investigations": [
+          {
+            "id": "cpt-B",
+            "positionX": 0.0,
+            "positionY": 0.0,
+            "groundLevel": 0.0,
+            "depth": 6.0,
+            "kind": "cpt",
+            "readings": [
+              {
+                "id": "cpt-B-r1",
+                "depth": 1.0,
+                "measurement": 618000.0
+              },
+              {
+                "id": "cpt-B-r2",
+                "depth": 2.0,
+                "measurement": 666000.0
+              }
+            ]
+          }
+        ],
+        "characteristicBases": [
+          {
+            "id": "b1",
+            "layerId": "clay-1",
+            "parameter": "undrainedStrength",
+            "basis": "derived"
+          }
+        ]
+      },
+      "expected": {
+        "clay-1.undrainedStrength": {
+          "n": 1,
+          "readings": 2,
+          "method": "cautious",
+          "mean": 41000.0,
+          "variation": 0.0,
+          "kn": 0.0,
+          "characteristic": 40000.0
+        }
+      }
+    }
+  ]
+}

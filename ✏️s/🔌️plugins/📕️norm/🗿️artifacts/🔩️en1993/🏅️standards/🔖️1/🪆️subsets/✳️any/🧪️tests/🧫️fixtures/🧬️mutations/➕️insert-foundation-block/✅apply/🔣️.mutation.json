@@ -1,0 +1,22 @@
+{
+  "InsertFoundationBlock": {
+    "index": 1,
+    "foundationBlock": {
+      "id": "foundation-1-2",
+      "jointId": "member-b1",
+      "label": "",
+      "blockLength": 1.0,
+      "blockWidth": 1.0,
+      "blockDepth": 1.0,
+      "concreteFck": 1.0,
+      "groutFck": 1.0,
+      "groutThickness": 1.0,
+      "anchorCount": 1,
+      "anchorClass": "",
+      "anchorDiameter": 1.0,
+      "anchorStressArea": 1.0,
+      "anchorEmbedment": 1.0,
+      "anchorEdgeDistance": 1.0
+    }
+  }
+}

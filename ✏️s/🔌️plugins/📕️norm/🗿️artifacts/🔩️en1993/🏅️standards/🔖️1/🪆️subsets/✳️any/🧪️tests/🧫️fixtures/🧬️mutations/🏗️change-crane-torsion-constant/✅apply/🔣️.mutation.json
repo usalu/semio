@@ -1,0 +1,6 @@
+{
+  "ChangeCraneTorsionConstant": {
+    "id": "crane-1",
+    "newTorsionConstant": 1.5
+  }
+}

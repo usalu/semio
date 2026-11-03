@@ -1,0 +1,6 @@
+{
+  "ChangeAccidentalAssumedPressure": {
+    "id": "explosion-1",
+    "newAssumedPressure": 40000.0
+  }
+}

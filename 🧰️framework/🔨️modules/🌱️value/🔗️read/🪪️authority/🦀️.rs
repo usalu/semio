@@ -67,7 +67,7 @@ impl ErasedSnapshotRetirement for ReadAuthority {
     fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError> {self.demands(body)}
 }
 impl RetirementCursor for ReadAuthority {
- fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{self.demands(body)}
+ fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.demands(body)}
     fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep {let turn=ErasedSnapshotRetirement::close_step(self,grant);match turn.result{Ok(RetainedCloneStep::Complete(p))if p==RetainedCloneProgress::default()=>RetirementStep::Complete(turn.work),Ok(step)=>RetirementStep::Progress(step.progress(),turn.work),Err(error)=>RetirementStep::Failure(error,turn.work)}}
     fn terminal_is_empty(&self)->bool {ErasedSnapshotRetirement::terminal_is_empty(self)}
     fn next_work_byte_demand(&self)->Result<usize,ValueError> {self.next_copy_byte_demand()}

@@ -1,0 +1,6 @@
+{
+  "ChangeMemberPunchingBetaMethod": {
+    "memberId": "wall-W1",
+    "newPunchingBetaMethod": "UnbalancedMoments"
+  }
+}

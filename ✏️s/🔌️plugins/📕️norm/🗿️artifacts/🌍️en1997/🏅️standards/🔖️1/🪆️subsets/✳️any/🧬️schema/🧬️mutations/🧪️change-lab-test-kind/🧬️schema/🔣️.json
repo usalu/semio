@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-lab-test-kind/schema.json",
+  "title": "ChangeLabTestKind",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newKind"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeLabTestKind"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Laboratory test",
+          "de": "Laborversuch"
+        },
+        "description": {
+          "en": "The laboratory test this mutation addresses, by id.",
+          "de": "Die adressierte Zeile (Laborversuch), per Kennung."
+        },
+        "ref": {
+          "kind": "lab-test"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newKind": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/snapshot.json#/$defs/LabTestKind",
+      "x-semio-ui": {
+        "label": {
+          "en": "Kind (oedometer | triaxial | directShear)",
+          "de": "Art (oedometer | triaxial | directShear)"
+        },
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

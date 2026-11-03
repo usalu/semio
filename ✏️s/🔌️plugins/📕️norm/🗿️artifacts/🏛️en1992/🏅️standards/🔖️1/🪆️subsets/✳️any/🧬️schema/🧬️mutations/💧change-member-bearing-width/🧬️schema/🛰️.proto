@@ -1,0 +1,6 @@
+syntax = "proto3";
+package semio.s.norm.en1992.mutation.change_member_bearing_width;
+message ChangeMemberBearingWidth {
+  string member_id = 1;
+  double new_value = 2;
+}

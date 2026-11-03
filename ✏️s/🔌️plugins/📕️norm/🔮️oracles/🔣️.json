@@ -1,8 +1,296 @@
 {
   "$schema": "../../../../🧰️framework/🔨️modules/🧪️test/🧬️schema/🔣️.json",
   "schemaVersion": 2,
-  "_comment": "🧩️ This plugin's contribution to the repository test platform. The framework discovers this file by convention (`testContributionDirName` in 🔣️taxonomy.json) and never names this plugin or any standard it owns. Nothing format-specific lives here: the fifteen norm artifacts are all semio-native, so every (non-)oracle registration and every mutation catalog sits with its own subset, at `🗿️artifacts/<artifact>/🏅️standards/🔖️1/🪆️subsets/✳️any/🔣️oracle.json`. What this root manifest carries is the ONE thing a subset cannot declare for itself: an `oracleHostPackage` reaches a case through its owner's ANCESTORS, and a case owned by `🗿️artifacts/<artifact>` is not a descendant of the subset that declares the catalog.",
-  "oracles": [],
+  "_comment": "🧩️ This plugin's contribution to the repository test platform. The framework discovers this file by convention (`testContributionDirName` in 🔣️taxonomy.json) and never names this plugin or any standard it owns. It additionally claims the shared test-only Python references of the Eurocode artifacts EN 1990-1999 (one claim per library, pinned in the root `pyproject.toml` test group), registers the five Eurocode tolerance profiles and hosts the schema-first oracle harness at `🏃️harness`.",
+  "oracles": [
+    {
+      "id": "norm-eurocode-structuralcodes",
+      "kind": "third-party-library",
+      "ecosystem": "python",
+      "package": "structuralcodes",
+      "version": "0.7.3",
+      "capabilities": [
+        "norm-eurocode-concrete-sections",
+        "norm-eurocode-concrete-clauses"
+      ],
+      "comparisonProfiles": [
+        "eurocode-quantities-v1",
+        "numerical-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "homepage": "https://github.com/fib-international/structuralcodes",
+      "rationale": "Independent open-source implementation of EN 1992-1-1:2004 constitutive laws, design strengths, shear and fibre section analysis. Delegated: M_Rd, V_Rd, creep and strengths; NA-DE parameters are passed in from cited fixtures, never read from the library.",
+      "hostPath": "✏️s/🔌️plugins/📕️norm/🔮️oracles/🏃️execution",
+      "engine": {
+        "family": "structuralcodes",
+        "implementation": "fib structuralcodes EN 1992-1-1:2004 and fib Model Code implementation",
+        "version": "0.7.3"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "packages": [
+        {
+          "package": "meshpy",
+          "version": "2026.1.1",
+          "license": "MIT",
+          "role": "Mesh generator used by structuralcodes; compiled cp314 wheels for linux-x64, linux-arm64, darwin-x64, darwin-arm64, win32-x64."
+        }
+      ]
+    },
+    {
+      "id": "norm-eurocode-concreteproperties",
+      "kind": "third-party-library",
+      "ecosystem": "python",
+      "package": "concreteproperties",
+      "version": "0.8.0",
+      "capabilities": [
+        "norm-eurocode-concrete-sections"
+      ],
+      "comparisonProfiles": [
+        "eurocode-quantities-v1",
+        "numerical-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "homepage": "https://github.com/robbievanleeuwen/concrete-properties",
+      "rationale": "Second reinforced-concrete section implementation: ultimate bending, M-N interaction and cracked properties through fibre integration with the EN 1992 parabola-rectangle law. Shares the sectionproperties kernel, so it is one family with it.",
+      "hostPath": "✏️s/🔌️plugins/📕️norm/🔮️oracles/🏃️execution",
+      "engine": {
+        "family": "sectionproperties-fem",
+        "implementation": "concreteproperties fibre and finite element reinforced concrete section analysis",
+        "version": "0.8.0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "packages": [
+        {
+          "package": "cytriangle",
+          "version": "3.0.2",
+          "license": "LGPL-3.0-only",
+          "role": "Triangle mesh generator used by sectionproperties; compiled cp314 wheels for linux-x64, darwin-x64, darwin-arm64, win32-x64."
+        }
+      ]
+    },
+    {
+      "id": "norm-eurocode-sectionproperties",
+      "kind": "third-party-library",
+      "ecosystem": "python",
+      "package": "sectionproperties",
+      "version": "3.10.2",
+      "capabilities": [
+        "norm-eurocode-section-properties"
+      ],
+      "comparisonProfiles": [
+        "eurocode-quantities-v1",
+        "numerical-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "homepage": "https://github.com/robbievanleeuwen/section-properties",
+      "rationale": "Finite element section constants (A, I, J, Iw, shear areas, plastic moduli) for EN 1993, EN 1994, EN 1995 and EN 1999 sections, independent of the closed-form tables.",
+      "hostPath": "✏️s/🔌️plugins/📕️norm/🔮️oracles/🏃️execution",
+      "engine": {
+        "family": "sectionproperties-fem",
+        "implementation": "sectionproperties finite element cross-section analysis",
+        "version": "3.10.2"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "packages": [
+        {
+          "package": "cytriangle",
+          "version": "3.0.2",
+          "license": "LGPL-3.0-only",
+          "role": "Triangle mesh generator used by sectionproperties; compiled cp314 wheels for linux-x64, darwin-x64, darwin-arm64, win32-x64."
+        }
+      ]
+    },
+    {
+      "id": "norm-eurocode-blue-prints",
+      "kind": "third-party-library",
+      "ecosystem": "python",
+      "package": "blue-prints",
+      "version": "0.8.0",
+      "capabilities": [
+        "norm-eurocode-concrete-clauses",
+        "norm-eurocode-steel-clauses",
+        "norm-eurocode-geotechnical-clauses"
+      ],
+      "comparisonProfiles": [
+        "eurocode-quantities-v1",
+        "numerical-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "homepage": "https://github.com/Blueprints-org/blueprints",
+      "rationale": "Clause-numbered formula objects for EN 1992-1-1, EN 1993 and EN 1997; per-function coverage is listed in the library coverage audit.",
+      "hostPath": "✏️s/🔌️plugins/📕️norm/🔮️oracles/🏃️execution",
+      "engine": {
+        "family": "blue-prints",
+        "implementation": "Blueprints Eurocode formula library",
+        "version": "0.8.0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "packages": [
+        {
+          "package": "googletrans",
+          "version": "locked",
+          "license": "MIT",
+          "role": "Transitive hard dependency of blue-prints, never imported by oracles."
+        }
+      ]
+    },
+    {
+      "id": "norm-eurocode-sympy",
+      "kind": "third-party-library",
+      "ecosystem": "python",
+      "package": "sympy",
+      "version": "1.14.0",
+      "capabilities": [
+        "norm-eurocode-symbolic"
+      ],
+      "comparisonProfiles": [
+        "eurocode-quantities-v1",
+        "numerical-v1"
+      ],
+      "license": "BSD-3-Clause",
+      "testOnly": true,
+      "homepage": "https://www.sympy.org",
+      "rationale": "Symbolic re-derivation and lambdified evaluation of closed forms (bearing factors, Euler, spectra) so the oracle never reuses the Rust expression.",
+      "hostPath": "✏️s/🔌️plugins/📕️norm/🔮️oracles/🏃️execution",
+      "engine": {
+        "family": "sympy",
+        "implementation": "SymPy symbolic algebra",
+        "version": "1.14.0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "packages": [
+        {
+          "package": "mpmath",
+          "version": "locked",
+          "license": "BSD-3-Clause",
+          "role": "SymPy arbitrary precision backend."
+        }
+      ]
+    },
+    {
+      "id": "norm-eurocode-groundhog",
+      "kind": "third-party-library",
+      "ecosystem": "python",
+      "package": "groundhog",
+      "version": "0.15.0",
+      "capabilities": [
+        "norm-eurocode-geotechnical-bearing"
+      ],
+      "comparisonProfiles": [
+        "eurocode-quantities-v1",
+        "numerical-v1"
+      ],
+      "license": "GPL-3.0-only",
+      "testOnly": true,
+      "homepage": "https://github.com/snakesonabrain/groundhog",
+      "rationale": "Raw bearing capacity, pile and settlement formulas; no EN 1997 partial factor sets. GPL-3.0 is acceptable because it is test-only and never linked into shipped code, the same basis as anastruct.",
+      "hostPath": "✏️s/🔌️plugins/📕️norm/🔮️oracles/🏃️execution",
+      "engine": {
+        "family": "groundhog",
+        "implementation": "groundhog geotechnical formulas",
+        "version": "0.15.0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "norm-eurocode-pynite",
+      "kind": "third-party-library",
+      "ecosystem": "python",
+      "package": "PyNiteFEA",
+      "version": "3.0.0",
+      "capabilities": [
+        "norm-eurocode-frame-analysis"
+      ],
+      "comparisonProfiles": [
+        "eurocode-quantities-v1",
+        "numerical-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "homepage": "https://github.com/JWock82/Pynite",
+      "rationale": "Independent 3D finite element frame solver: internal forces, reactions and deflections of beams and portals that validate the mechanics kernel and the load arrangement coefficients of EN 1990-1999.",
+      "hostPath": "✏️s/🔌️plugins/📕️norm/🔮️oracles/🏃️harness",
+      "engine": {
+        "family": "pynite",
+        "implementation": "PyNiteFEA 3D finite element frame solver",
+        "version": "3.0.0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "packages": [
+        {
+          "package": "numpy",
+          "version": "locked",
+          "license": "BSD-3-Clause",
+          "role": "Linear algebra backend of PyNiteFEA."
+        }
+      ]
+    },
+    {
+      "id": "norm-eurocode-anastruct",
+      "kind": "third-party-library",
+      "ecosystem": "python",
+      "package": "anastruct",
+      "version": "1.7.0",
+      "capabilities": [
+        "norm-eurocode-frame-analysis"
+      ],
+      "comparisonProfiles": [
+        "eurocode-quantities-v1",
+        "numerical-v1"
+      ],
+      "license": "GPL-3.0-only",
+      "testOnly": true,
+      "homepage": "https://anastruct.readthedocs.io",
+      "rationale": "Independent 2D direct-stiffness frame solver (GPL-3.0, test-only, never linked into shipped code) for the same beam and portal cases as PyNiteFEA.",
+      "hostPath": "✏️s/🔌️plugins/📕️norm/🔮️oracles/🏃️harness",
+      "engine": {
+        "family": "anastruct",
+        "implementation": "anastruct 2D direct-stiffness frame solver",
+        "version": "1.7.0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "norm-eurocode-scipy-numerics",
+      "kind": "third-party-library",
+      "ecosystem": "python",
+      "package": "scipy",
+      "version": "1.18.0",
+      "capabilities": [
+        "norm-eurocode-numerical-formulations"
+      ],
+      "comparisonProfiles": [
+        "eurocode-quantities-v1",
+        "numerical-v1",
+        "method-spread-v1",
+        "table-exact-v1"
+      ],
+      "license": "BSD-3-Clause",
+      "testOnly": true,
+      "homepage": "https://scipy.org",
+      "rationale": "Independent formulations of Eurocode clauses no Eurocode library covers: strain-compatibility flexure by quadrature, Ayrton-Perry roots, Euler eigenproblems, FORM design points, EN 1990 combination enumeration, composite plastic neutral axes, shear-building eigenproblems, Janssen slice equilibrium, Boussinesq integration and influence functions. Reference quantities are computed with SciPy, never with the Rust expressions.",
+      "hostPath": "✏️s/🔌️plugins/📕️norm/🔮️oracles/🏃️harness",
+      "engine": {
+        "family": "scipy",
+        "implementation": "SciPy quadrature, root finding, constrained minimisation and generalized eigenproblems on NumPy",
+        "version": "1.18.0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    }
+  ],
   "noOracleDecisions": [],
   "oracleHostPackages": [
     {
@@ -13,6 +301,32 @@
       "rationale": "📕️ The ONE independent Python implementation of the norm mutation vocabulary, put on the generated Python host's import path so all fifteen subset adapters IMPORT it instead of each holding a byte-identical copy. It is in-repo source (`path`), never a distribution, so nothing is provisioned and the dependency ratchet classifies it as neither production nor third-party. The fifteen subsets differ in exactly four things — kind list, specification vectors, example document, envelope token — and those four stay with the subset; the derivation rules the engine implements are one committed document for all fifteen, so implementing them fifteen times would have been fifteen copies of a single reading, not fifteen readings. Declared here rather than per subset for the same reason the Rust entry above is: an `oracleHostPackage` reaches a case through its owner's ANCESTORS, and a case owned by `🗿️artifacts/<artifact>` is not a descendant of the subset that declares the catalog."
     }
   ],
-  "comparisonProfiles": [],
+  "comparisonProfiles": [
+    {
+      "id": "closed-form-v1",
+      "description": "Same formula and constants: relative 1e-9.",
+      "tolerance": 1e-09
+    },
+    {
+      "id": "eurocode-quantities-v1",
+      "description": "Resistances and utilisations against a library: relative 1e-4, 2e-3 where the library rounds a constant.",
+      "tolerance": 0.0001
+    },
+    {
+      "id": "numerical-v1",
+      "description": "Integration or finite element reference: relative 5e-3, convergence checked by refinement.",
+      "tolerance": 0.005
+    },
+    {
+      "id": "method-spread-v1",
+      "description": "Two engineering methods: relative spread stated per case, default 3e-2.",
+      "tolerance": 0.03
+    },
+    {
+      "id": "table-exact-v1",
+      "description": "Cited normative table values: exact equality after unit conversion.",
+      "tolerance": 0.0
+    }
+  ],
   "mutationCatalogs": []
 }

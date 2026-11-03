@@ -1,0 +1,13 @@
+{
+  "InsertBar": {
+    "wallId": "wall-north",
+    "index": 1,
+    "bar": {
+      "id": "bar-2",
+      "kind": "Shear",
+      "diameterM": 0.012,
+      "lengthM": 0.6,
+      "spacingM": 0.4
+    }
+  }
+}

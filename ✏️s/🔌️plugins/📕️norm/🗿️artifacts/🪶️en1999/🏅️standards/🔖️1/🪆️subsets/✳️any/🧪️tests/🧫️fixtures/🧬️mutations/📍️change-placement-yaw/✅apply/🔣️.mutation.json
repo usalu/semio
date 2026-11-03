@@ -1,0 +1,5 @@
+{
+  "mutation": "changePlacementYaw",
+  "id": "purlin-1",
+  "newYaw": 0.5
+}

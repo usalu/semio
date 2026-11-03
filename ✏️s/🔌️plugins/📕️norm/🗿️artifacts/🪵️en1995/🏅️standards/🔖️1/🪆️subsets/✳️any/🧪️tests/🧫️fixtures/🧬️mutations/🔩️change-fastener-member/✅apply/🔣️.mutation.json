@@ -1,0 +1,6 @@
+{
+  "ChangeFastenerMember": {
+    "fastenerId": "fastener-1",
+    "newValue": "changed-beam-B1"
+  }
+}

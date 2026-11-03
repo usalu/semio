@@ -1,0 +1,6 @@
+{
+  "ChangeRailDynamicDeterminantLength": {
+    "id": "rail-dynamic-1",
+    "newDeterminantLength": 3.0
+  }
+}

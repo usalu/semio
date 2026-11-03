@@ -1,0 +1,204 @@
+{
+  "annex": null,
+  "snowZone": null,
+  "altitude": null,
+  "enSk": null,
+  "northGermanLowlandSnow": null,
+  "windZone": null,
+  "enVb": null,
+  "terrainCategory": null,
+  "mixedTerrainUpwind": null,
+  "mixedTerrainDistance": null,
+  "orographyFactor": null,
+  "coastOrIsland": null,
+  "airDensity": null,
+  "height": null,
+  "width": null,
+  "depth": null,
+  "assumedDeltaT": null,
+  "tMax": null,
+  "tMin": null,
+  "t0": null,
+  "thermalElementType": null,
+  "thermalBridgeType": null,
+  "deltaTM": null,
+  "storeyCount": null,
+  "fireMode": null,
+  "fireCurve": null,
+  "fireDuration": null,
+  "assumedGasTemperature": null,
+  "assumedHNet": null,
+  "fireCompartmentArea": null,
+  "fireCompartmentHeight": null,
+  "fireOpeningFactor": null,
+  "fireThermalInertia": null,
+  "fireOccupancy": null,
+  "fireLoadDensityQf": null,
+  "assumedQfD": null,
+  "constructionActivity": null,
+  "assumedConstructionQk": null,
+  "structureKind": null,
+  "bridgeLane": null,
+  "bridgeSpan": null,
+  "bridgeLaneWidth": null,
+  "assumedBridgeTandem": null,
+  "assumedBridgeUdl": null,
+  "assumedBridgeLm2": null,
+  "assumedBridgeFootway": null,
+  "assumedBridgeLm3": null,
+  "assumedBridgeLm4": null,
+  "bridgeLoadGroup": null,
+  "craneClaimed": null,
+  "craneClass": null,
+  "hoistClass": null,
+  "hoistingSpeed": null,
+  "assumedCraneWheel": null,
+  "assumedCraneHorizontal": null,
+  "siloClaimed": null,
+  "siloKind": null,
+  "siloBulkDensity": null,
+  "siloHeight": null,
+  "siloHydraulicRadius": null,
+  "siloMu": null,
+  "siloK": null,
+  "assumedSiloPressure": null,
+  "assumedSiloPatch": null,
+  "assumedSiloWallFriction": null,
+  "bridgeTandemX": null,
+  "railAlpha": null,
+  "assumedRailLm71": null,
+  "assumedRailLm71Udl": null,
+  "assumedRailSw0": null,
+  "assumedRailSw2": null,
+  "craneX": null,
+  "craneRunwayLength": null,
+  "craneWheelBase": null,
+  "siloDiameter": null,
+  "siloEccentricity": null,
+  "siloHopperAngleDeg": null,
+  "bridgeCurveRadius": null,
+  "fireLoadBasis": null,
+  "floors": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "selfWeightElements": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "roofs": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "roof-main",
+        "patch": {
+          "roofType": null,
+          "pitchDeg": null,
+          "cE": null,
+          "cT": 2.0,
+          "hasParapet": null,
+          "parapetHeight": null,
+          "driftObstructionHeight": null,
+          "multiSpan": null,
+          "assumedSk": null
+        }
+      }
+    ]
+  },
+  "windFaces": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "accidentalCases": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "bridgeLanes": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "constructionStages": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "roofSurfaces": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "placements": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "specialVehicles": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "windBridges": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "dynamicElements": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "impactActions": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "internalExplosions": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "thermalSections": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "cases": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "helicopterLandings": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "tieRuns": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "constructionLoads": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "fallingLoads": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "executionImperfections": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "derailmentCases": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "craneHoists": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "footbridges": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "railDynamics": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "loadDispersals": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "bulkSolids": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "rotatingMachines": {"removed": [], "inserted": [], "moved": [], "modified": []}
+}

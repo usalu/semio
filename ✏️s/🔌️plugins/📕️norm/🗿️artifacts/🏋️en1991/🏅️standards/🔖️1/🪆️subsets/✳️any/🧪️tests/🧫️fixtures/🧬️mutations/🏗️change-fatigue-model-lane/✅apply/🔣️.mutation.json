@@ -1,0 +1,6 @@
+{
+  "ChangeFatigueModelLane": {
+    "id": "fatigue-model-1",
+    "newLane": 2
+  }
+}

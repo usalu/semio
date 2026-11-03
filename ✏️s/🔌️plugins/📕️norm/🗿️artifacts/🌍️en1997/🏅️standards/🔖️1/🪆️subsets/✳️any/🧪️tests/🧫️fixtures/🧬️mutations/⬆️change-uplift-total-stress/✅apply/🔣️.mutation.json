@@ -1,0 +1,5 @@
+{
+  "mutation": "changeUpliftTotalStress",
+  "id": "upl-U1",
+  "newTotalStress": 240000.0
+}

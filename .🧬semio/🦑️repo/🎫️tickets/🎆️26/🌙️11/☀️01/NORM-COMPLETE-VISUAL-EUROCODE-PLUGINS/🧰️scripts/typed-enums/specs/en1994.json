@@ -1,0 +1,443 @@
+{
+ "artifact": "en1994",
+ "conversions": [
+  {
+   "hosts": [
+    "En1994Snapshot.structure_kind",
+    "En1994Artifact.structure_kind"
+   ],
+   "enum": "StructureKind",
+   "doc": "🏗️ Kind of structure: a building or a bridge (selects the EN 1994-1-1 or EN 1994-2 rules).",
+   "default": "Building",
+   "variants": [
+    [
+     "Building",
+     [
+      "building",
+      ""
+     ],
+     "Building",
+     "Hochbau"
+    ],
+    [
+     "Bridge",
+     [
+      "bridge"
+     ],
+     "Bridge",
+     "Brückenbau"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "CompositeBeam.construction"
+   ],
+   "enum": "ConstructionMethod",
+   "doc": "🪜 Construction method of a composite beam: with or without temporary props during casting (EN 1994-1-1 9.4).",
+   "default": "Propped",
+   "variants": [
+    [
+     "Propped",
+     [
+      "propped",
+      ""
+     ],
+     "Propped",
+     "mit Hilfsstützen"
+    ],
+    [
+     "Unpropped",
+     [
+      "unpropped"
+     ],
+     "Unpropped",
+     "ohne Hilfsstützen"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "CompositeColumn.buckling_curve"
+   ],
+   "enum": "BucklingCurve",
+   "doc": "📉 European buckling curve a, b, c or d of a composite column (EN 1994-1-1 6.7.3.5, EN 1993-1-1 Table 6.2).",
+   "default": "A",
+   "variants": [
+    [
+     "A",
+     [
+      "a",
+      ""
+     ],
+     "Curve a",
+     "Knicklinie a"
+    ],
+    [
+     "B",
+     [
+      "b"
+     ],
+     "Curve b",
+     "Knicklinie b"
+    ],
+    [
+     "C",
+     [
+      "c"
+     ],
+     "Curve c",
+     "Knicklinie c"
+    ],
+    [
+     "D",
+     [
+      "d"
+     ],
+     "Curve d",
+     "Knicklinie d"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "CharacteristicAction.stage",
+    "SlabAction.stage",
+    "ColumnAction.stage"
+   ],
+   "enum": "ActionStage",
+   "doc": "🏷️ Construction stage in which an action acts: before composite action, with composite action, or at every stage.",
+   "default": "Composite",
+   "variants": [
+    [
+     "Construction",
+     [
+      "construction"
+     ],
+     "Construction stage",
+     "Herstellungszustand"
+    ],
+    [
+     "Composite",
+     [
+      "composite",
+      ""
+     ],
+     "Composite stage",
+     "Verbundzustand"
+    ],
+    [
+     "Any",
+     [
+      "any"
+     ],
+     "Every stage",
+     "Jeder Zustand"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "En1994Snapshot.fire_rating",
+    "En1994Artifact.fire_rating"
+   ],
+   "enum": "FireRating",
+   "doc": "🔥 Standard fire resistance rating R (EN 1994-1-2); `Unrated` disables the fire checks.",
+   "default": "R60",
+   "variants": [
+    [
+     "Unrated",
+     [
+      "none",
+      ""
+     ],
+     "Unrated",
+     "Ohne Brandschutz"
+    ],
+    [
+     "R30",
+     [
+      "r30"
+     ],
+     "R30 (30 min)",
+     "R30 (30 min)"
+    ],
+    [
+     "R60",
+     [
+      "r60"
+     ],
+     "R60 (60 min)",
+     "R60 (60 min)"
+    ],
+    [
+     "R90",
+     [
+      "r90"
+     ],
+     "R90 (90 min)",
+     "R90 (90 min)"
+    ],
+    [
+     "R120",
+     [
+      "r120"
+     ],
+     "R120 (120 min)",
+     "R120 (120 min)"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "En1994Snapshot.fatigue_detail",
+    "En1994Artifact.fatigue_detail"
+   ],
+   "enum": "FatigueDetail",
+   "doc": "♻ Steel fatigue detail category (EN 1993-1-9 / EN 1994-2 6.8).",
+   "default": "StudWelded",
+   "variants": [
+    [
+     "StudWelded",
+     [
+      "stud_welded"
+     ],
+     "Welded headed stud",
+     "Geschweißter Kopfbolzen"
+    ],
+    [
+     "ShearConnector",
+     [
+      "shear_connector"
+     ],
+     "Shear connector",
+     "Schubdübel"
+    ],
+    [
+     "Reinforcement",
+     [
+      "reinforcement"
+     ],
+     "Reinforcement detail",
+     "Bewehrungsdetail"
+    ],
+    [
+     "FlangeButtWeld",
+     [
+      "flange_butt_weld"
+     ],
+     "Flange butt weld",
+     "Flansch-Stumpfnaht"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "CompositeBeam.support",
+    "CompositeSlab.support"
+   ],
+   "enum": "SupportCondition",
+   "doc": "🪝 Support condition of the designed span of a composite beam or slab (EN 1994-1-1 5.4.1.2 Fig. 5.1).",
+   "default": "SimplySupported",
+   "variants": [
+    [
+     "SimplySupported",
+     [
+      "simply_supported",
+      "",
+      "任意"
+     ],
+     "Simply supported",
+     "Einfeldträger"
+    ],
+    [
+     "Continuous2Span",
+     [
+      "continuous_2_span"
+     ],
+     "Continuous (2 equal spans)",
+     "Durchlaufträger (2 gleiche Felder)"
+    ],
+    [
+     "EndSpan",
+     [
+      "end_span"
+     ],
+     "End span of a continuous beam",
+     "Endfeld eines Durchlaufträgers"
+    ],
+    [
+     "InteriorSpan",
+     [
+      "interior_span"
+     ],
+     "Interior span of a continuous beam",
+     "Innenfeld eines Durchlaufträgers"
+    ],
+    [
+     "Cantilever",
+     [
+      "cantilever"
+     ],
+     "Cantilever",
+     "Kragarm"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "ProfiledSheeting.profile"
+   ],
+   "enum": "SheetingProfile",
+   "doc": "〰 Profile of the steel sheeting of a composite slab (EN 1994-1-1 9.7).",
+   "default": "Trapezoidal",
+   "variants": [
+    [
+     "Trapezoidal",
+     [
+      "trapezoidal",
+      "任意",
+      "任意\\u0000"
+     ],
+     "Trapezoidal",
+     "Trapezprofil"
+    ],
+    [
+     "ReEntrant",
+     [
+      "re_entrant",
+      "re-entrant"
+     ],
+     "Re-entrant",
+     "Schwalbenschwanzprofil"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "CompositeBeam.reinforcement_product",
+    "CompositeColumn.reinforcement_product"
+   ],
+   "enum": "ReinforcementProduct",
+   "doc": "🧵 Production route of the reinforcing steel, selecting the fire strength reduction (EN 1992-1-2 Table 3.2a).",
+   "default": "HotRolled",
+   "variants": [
+    [
+     "HotRolled",
+     [
+      "hot_rolled"
+     ],
+     "Hot rolled",
+     "Warmgewalzt"
+    ],
+    [
+     "ColdWorked",
+     [
+      "cold_worked"
+     ],
+     "Cold worked",
+     "Kaltverformt"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "CompositeColumn.kind"
+   ],
+   "enum": "ColumnKind",
+   "doc": "🏛 Cross-section type of a composite column (EN 1994-1-1 6.7).",
+   "default": "ConcreteFilled",
+   "variants": [
+    [
+     "Encased",
+     [
+      "encased"
+     ],
+     "Fully encased",
+     "Vollständig einbetoniert"
+    ],
+    [
+     "ConcreteFilled",
+     [
+      "concrete_filled",
+      "任意"
+     ],
+     "Concrete-filled",
+     "Betongefüllt"
+    ],
+    [
+     "PartiallyEncased",
+     [
+      "partially_encased"
+     ],
+     "Partially encased",
+     "Teilweise einbetoniert"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "CharacteristicAction.kind",
+    "ColumnAction.kind",
+    "SlabAction.kind"
+   ],
+   "enum": "ActionKind",
+   "doc": "🏋 Kind of an action (EN 1990 Table A1.1): selects the ψ factors and the load case colour.",
+   "default": "Permanent",
+   "variants": [
+    [
+     "Permanent",
+     [
+      "permanent",
+      "",
+      "unrecognized",
+      "任意"
+     ],
+     "Permanent (G)",
+     "Ständig (G)"
+    ],
+    [
+     "Imposed",
+     [
+      "imposed"
+     ],
+     "Imposed (Q)",
+     "Nutzlast (Q)"
+    ],
+    [
+     "Snow",
+     [
+      "snow"
+     ],
+     "Snow (S)",
+     "Schnee (S)"
+    ],
+    [
+     "Wind",
+     [
+      "wind"
+     ],
+     "Wind (W)",
+     "Wind (W)"
+    ],
+    [
+     "Construction",
+     [
+      "construction"
+     ],
+     "Construction load",
+     "Belastung im Bauzustand"
+    ],
+    [
+     "Fatigue",
+     [
+      "fatigue"
+     ],
+     "Fatigue",
+     "Ermüdung"
+    ]
+   ]
+  }
+ ],
+ "wire": "camel"
+}

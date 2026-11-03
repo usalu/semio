@@ -1,0 +1,5 @@
+{
+  "mutation": "removeConnectionAction",
+  "connectionId": "support-weld",
+  "id": "G-conn"
+}

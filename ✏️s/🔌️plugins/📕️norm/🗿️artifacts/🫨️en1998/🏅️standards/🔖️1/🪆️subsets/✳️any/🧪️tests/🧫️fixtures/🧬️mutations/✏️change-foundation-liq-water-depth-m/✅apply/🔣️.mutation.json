@@ -1,0 +1,5 @@
+{
+  "mutation": "changeFoundationLiqWaterDepthM",
+  "id": "fd-1",
+  "newLiqWaterDepthM": 1.5
+}

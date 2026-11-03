@@ -4,7 +4,7 @@
 # Builds and installs the `repo` launcher on macOS, Linux and the devcontainer: the one small native program that provisions the pinned JavaScript runtime
 # itself and starts the repository implementation, so that neither `bun` nor a Go toolchain has to be installed by hand.
 # Stage 0 of a bare machine: the pinned Go toolchain is found (PATH, the repository tools partition, the user cache) or fetched from the pins in
-# `🔩️native/🥾️bootstrap/🧬️schema/🔣️.json` (https only, SHA-256 checked before it is unpacked, one atomic rename, progress, Ctrl+C leaves nothing); it needs only curl, tar and a SHA-256 tool.
+# `🔩️native/🥾️bootstrap/🧬️schema/🔣️.json` (https only, SHA-256 checked before it is unpacked, one atomic rename, progress, Ctrl+C leaves nothing); curl, tar and a SHA-256 tool are used when they exist; Python 3 covers a missing downloader, a missing checksum tool and a tar that cannot read gzip.
 # Usage: bash "🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📥️install/🐚️.sh" [destination-directory]
 # The default destination is ${XDG_DATA_HOME:-$HOME/.local/share}/semio/launcher/bin; put it on PATH. Run it again after pulling to rebuild.
 # Environment: SEMIO_GO_ROOT (user cache of the toolchain, default ${XDG_DATA_HOME:-$HOME/.local/share}/semio/go), SEMIO_GO_MIRROR (https or loopback http directory that holds the pinned archive).
@@ -41,8 +41,19 @@ sha256_of() {
     sha256sum "$1" | awk '{print $1}'
   elif command -v shasum >/dev/null 2>&1; then
     shasum -a 256 "$1" | awk '{print $1}'
+  elif command -v python3 >/dev/null 2>&1; then
+    python3 - "$1" <<'PY'
+import hashlib
+import sys
+
+digest = hashlib.sha256()
+with open(sys.argv[1], "rb") as source:
+    for chunk in iter(lambda: source.read(1024 * 1024), b""):
+        digest.update(chunk)
+print(digest.hexdigest())
+PY
   else
-    fail "A SHA-256 tool (sha256sum or shasum) is required to verify the Go toolchain." "Ein SHA-256-Werkzeug (sha256sum oder shasum) ist zum Prüfen der Go-Toolchain nötig."
+    fail "A SHA-256 tool (sha256sum, shasum, or Python 3) is required to verify the Go toolchain." "Ein SHA-256-Werkzeug (sha256sum, shasum oder Python 3) ist zum Prüfen der Go-Toolchain nötig."
   fi
 }
 
@@ -112,8 +123,8 @@ download_go() {
     esac
     url="$base/$archive"
   fi
-  command -v curl >/dev/null 2>&1 || fail "curl is required to download the Go toolchain." "curl ist zum Herunterladen der Go-Toolchain nötig."
-  command -v tar >/dev/null 2>&1 || fail "tar is required to unpack the Go toolchain." "tar ist zum Entpacken der Go-Toolchain nötig."
+  command -v curl >/dev/null 2>&1 || command -v python3 >/dev/null 2>&1 || fail "curl or Python 3 is required to download the Go toolchain." "curl oder Python 3 ist zum Herunterladen der Go-Toolchain nötig."
+  command -v tar >/dev/null 2>&1 || command -v python3 >/dev/null 2>&1 || fail "tar or Python 3 is required to unpack the Go toolchain." "tar oder Python 3 ist zum Entpacken der Go-Toolchain nötig."
   mkdir -p "$(dirname "$target")"
   wait_for_lock "$target.lock"
   if is_pinned_go "$target/bin/go" "$version"; then
@@ -122,16 +133,110 @@ download_go() {
   partial="$(mktemp -d "$(dirname "$target")/.partial.XXXXXX")"
   say "Downloading Go $version (pinned, SHA-256 checked): $url" "Lade Go $version herunter (gepinnt, SHA-256 geprüft): $url"
   [ -t 2 ] && tty=1
-  if [ "$tty" -eq 1 ]; then
-    curl --proto "$protocols" --proto-redir "=https" --tlsv1.2 -fL --progress-bar --retry 3 --connect-timeout 30 --max-time 1800 --max-filesize 400000000 -o "$partial/$archive" "$url" || fail "The Go download failed: $url" "Der Go-Download ist fehlgeschlagen: $url"
+  schemes="${protocols//=}"
+  if command -v curl >/dev/null 2>&1; then
+    if [ "$tty" -eq 1 ]; then
+      curl --proto "$protocols" --proto-redir "=https" --tlsv1.2 -fL --progress-bar --retry 3 --connect-timeout 30 --max-time 1800 --max-filesize 400000000 -o "$partial/$archive" "$url" || fail "The Go download failed: $url" "Der Go-Download ist fehlgeschlagen: $url"
+    else
+      curl --proto "$protocols" --proto-redir "=https" --tlsv1.2 -fsSL --retry 3 --connect-timeout 30 --max-time 1800 --max-filesize 400000000 -o "$partial/$archive" "$url" || fail "The Go download failed: $url" "Der Go-Download ist fehlgeschlagen: $url"
+    fi
   else
-    curl --proto "$protocols" --proto-redir "=https" --tlsv1.2 -fsSL --retry 3 --connect-timeout 30 --max-time 1800 --max-filesize 400000000 -o "$partial/$archive" "$url" || fail "The Go download failed: $url" "Der Go-Download ist fehlgeschlagen: $url"
+    python3 - "$url" "$partial/$archive" "$schemes" <<'PY' || fail "The Go download failed: $url" "Der Go-Download ist fehlgeschlagen: $url"
+import ssl
+import sys
+import time
+import urllib.error
+import urllib.request
+
+url, dest, schemes = sys.argv[1], sys.argv[2], set(sys.argv[3].split(","))
+limit = 400000000
+deadline = time.monotonic() + 1800
+
+def scheme_of(value):
+    return str(value).split(":", 1)[0]
+
+if scheme_of(url) not in schemes:
+    raise SystemExit(1)
+
+class HttpsRedirects(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, request, response, code, message, headers, newurl):
+        if scheme_of(newurl) != "https":
+            raise urllib.error.URLError("redirect left https")
+        return super().redirect_request(request, response, code, message, headers, newurl)
+
+context = ssl.create_default_context()
+context.minimum_version = ssl.TLSVersion.TLSv1_2
+opener = urllib.request.build_opener(HttpsRedirects, urllib.request.HTTPSHandler(context=context))
+temporary = dest + ".partial"
+for _attempt in range(3):
+    try:
+        with opener.open(url, timeout=30) as response, open(temporary, "wb") as output:
+            total = 0
+            while True:
+                if time.monotonic() > deadline:
+                    raise TimeoutError("download exceeded 1800s")
+                chunk = response.read(1024 * 1024)
+                if not chunk:
+                    break
+                total += len(chunk)
+                if total > limit:
+                    raise OSError("download exceeded 400000000 bytes")
+                output.write(chunk)
+        import os
+        os.replace(temporary, dest)
+        raise SystemExit(0)
+    except Exception:
+        try:
+            import os
+            os.unlink(temporary)
+        except FileNotFoundError:
+            pass
+raise SystemExit(1)
+PY
   fi
   actual="$(sha256_of "$partial/$archive")"
   [ "$actual" = "$sha" ] || fail "Checksum mismatch for $archive (pinned $sha, received $actual); nothing was unpacked." "Prüfsumme von $archive stimmt nicht (gepinnt $sha, erhalten $actual); nichts wurde entpackt."
   say "Unpacking Go $version…" "Entpacke Go $version…"
   mkdir "$partial/unpacked"
-  tar -xzf "$partial/$archive" -C "$partial/unpacked" || fail "The Go archive could not be unpacked." "Das Go-Archiv konnte nicht entpackt werden."
+  if command -v tar >/dev/null 2>&1 && tar -xzf "$partial/$archive" -C "$partial/unpacked"; then
+    :
+  elif command -v python3 >/dev/null 2>&1; then
+    python3 - "$partial/$archive" "$partial/unpacked" <<'PY' || fail "The Go archive could not be unpacked." "Das Go-Archiv konnte nicht entpackt werden."
+import gzip
+import os
+import sys
+import tarfile
+
+archive, dest = sys.argv[1], os.path.realpath(sys.argv[2])
+
+def inside(path):
+    path = os.path.normpath(path)
+    if path != dest and not path.startswith(dest + os.sep):
+        raise SystemExit(1)
+    return path
+
+with gzip.open(archive, "rb") as raw, tarfile.open(fileobj=raw, mode="r|") as tar:
+    for member in tar:
+        parts = [part for part in member.name.split("/") if part != ""]
+        if not parts or any(part in (".", "..") for part in parts):
+            raise SystemExit(1)
+        target = inside(os.path.join(dest, *parts))
+        if member.isdir():
+            os.makedirs(target, exist_ok=True)
+            continue
+        os.makedirs(os.path.dirname(target), exist_ok=True)
+        if not member.isreg():
+            continue
+        source = tar.extractfile(member)
+        if source is None:
+            continue
+        with open(target, "wb") as output:
+            output.write(source.read())
+        os.chmod(target, member.mode & 0o777)
+PY
+  else
+    fail "The Go archive could not be unpacked." "Das Go-Archiv konnte nicht entpackt werden."
+  fi
   is_pinned_go "$partial/unpacked/go/bin/go" "$version" || fail "The unpacked toolchain does not report Go $version." "Die entpackte Toolchain meldet nicht Go $version."
   rm -rf "$target"
   mv "$partial/unpacked/go" "$target"
@@ -199,8 +304,19 @@ physical() {
 
 installed="$(physical "$destination/repo")"
 IFS=: read -r -a path_entries <<<"$PATH"
+seen=""
 for entry in "${path_entries[@]}"; do
   [ -n "$entry" ] && [ -x "$entry/repo" ] || continue
-  [ "$(physical "$entry/repo")" = "$installed" ] && continue
+  found="$(physical "$entry/repo")"
+  [ "$found" = "$installed" ] && continue
+  case "
+$seen
+" in
+  *"
+$found
+"*) continue ;;
+  esac
+  seen="${seen}
+${found}"
   printf '[semio] Another repository frontend is on PATH: %s/repo. Installed launcher: %s\n[semio] Ein weiteres Repository-Frontend liegt im PATH: %s/repo. Installierter Launcher: %s\n' "$entry" "$installed" "$entry" "$installed" >&2
 done

@@ -1,0 +1,23 @@
+{
+  "artifact": "en1990",
+  "leaf": {
+    "kindSlug": "reliability",
+    "field": {
+      "name": "second_action_sd",
+      "type": "f64",
+      "unit": "N",
+      "label": {
+        "en": "Second action standard deviation σ_E2 (0 = no second action)",
+        "de": "Standardabweichung der zweiten Einwirkung σ_E2 (0 = keine zweite Einwirkung)"
+      },
+      "doc": "➕ Standard deviation of the second action E2; 0 = no second action, the limit state stays g = R - E.",
+      "precision": 1,
+      "step": 1000,
+      "range": [
+        0,
+        1000000000000.0
+      ]
+    },
+    "default": 0.0
+  }
+}

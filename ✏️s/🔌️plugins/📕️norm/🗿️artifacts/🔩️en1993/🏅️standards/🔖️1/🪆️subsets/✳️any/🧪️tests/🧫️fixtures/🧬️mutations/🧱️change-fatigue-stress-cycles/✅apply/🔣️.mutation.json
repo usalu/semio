@@ -1,0 +1,6 @@
+{
+  "ChangeFatigueStressCycles": {
+    "id": "fatigue-stress-1",
+    "newCycles": 2000001.0
+  }
+}

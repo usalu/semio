@@ -1,0 +1,5 @@
+{
+  "mutation": "changeTieBeamDisplacementLimit",
+  "id": "en1998-tie-beam-1",
+  "newDisplacementLimit": 0.03
+}

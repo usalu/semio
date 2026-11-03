@@ -1,0 +1,15 @@
+{
+  "mutation": "insertSlope",
+  "index": 1,
+  "slope": {
+    "id": "slope-S1-2",
+    "angleDeg": 25.0,
+    "height": 6.0,
+    "length": 14.0,
+    "governingLayerId": "layer-sand",
+    "circleCentreX": 0.0,
+    "circleCentreZ": 0.0,
+    "circleRadius": 0.0,
+    "width": 0.0
+  }
+}

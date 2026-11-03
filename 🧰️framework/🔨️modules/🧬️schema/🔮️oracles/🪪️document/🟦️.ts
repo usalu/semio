@@ -10,6 +10,16 @@ interface Facet {
   nativeJson?: (value: unknown) => unknown;
 }
 
+export type FixtureRole = "snapshot" | "diff";
+
+/** 🗂️ The nested vector tree `<case>/📸️snapshot/⬅️before/🔣️.json`, `<case>/🔺️diff/🔣️.json`. */
+export const nestedFixtureRole = (path: string): FixtureRole | undefined =>
+  path.endsWith("/📸️snapshot/⬅️before/🔣️.json") || path.endsWith("/📸️snapshot/➡️after/🔣️.json") ? "snapshot" : path.endsWith("/🔺️diff/🔣️.json") ? "diff" : undefined;
+
+/** 🪶 The flat bundle `<case>/🔣️.before.json`, `<case>/🔣️.after.json`, `<case>/🔣️.diff.json` of the shared mutation vector harness, 22 bytes shorter per path. */
+export const flatFixtureRole = (path: string): FixtureRole | undefined =>
+  path.endsWith("/🔣️.before.json") || path.endsWith("/🔣️.after.json") ? "snapshot" : path.endsWith("/🔣️.diff.json") ? "diff" : undefined;
+
 export interface DocumentContractOracle {
   name: string;
   dependencies: readonly object[];
@@ -22,6 +32,7 @@ export interface DocumentContractOracle {
   validDiffs?: readonly { input: unknown; output: unknown }[];
   childIdentityFields?: readonly string[];
   mutationRoots: readonly string[];
+  fixtureRole?: (path: string) => FixtureRole | undefined;
   committed: { snapshots: number; diffs: number };
 }
 
@@ -74,8 +85,7 @@ export function assertDocumentContractOracle(spec: DocumentContractOracle): void
   const paths = spec.mutationRoots.flatMap((root) => readdirSync(root, { recursive: true }).map((path) => ({ path: String(path).replaceAll("\\", "/"), file: join(root, String(path)) })));
   let snapshots = 0, diffs = 0;
   for (const { path, file } of paths) {
-    const isSnapshot = path.endsWith("/📸️snapshot/⬅️before/🔣️.json") || path.endsWith("/📸️snapshot/➡️after/🔣️.json");
-    const isDiff = path.endsWith("/🔺️diff/🔣️.json");
+    const role = (spec.fixtureRole ?? nestedFixtureRole)(path), isSnapshot = role === "snapshot", isDiff = role === "diff";
     if (!isSnapshot && !isDiff) continue;
     const input = JSON.parse(readFileSync(file, "utf8"));
     assert.equal((isSnapshot ? validateSnapshot : validateDiff)(input) && exactIdentities(input), true, path);

@@ -1,0 +1,3864 @@
+{
+  "$schema": "https://json.schemas.assets.semio-tech.com/s/norm/compliance/design-case/schema.json",
+  "artifact": "s.norm.en1995",
+  "inputs": [
+    {
+      "key": "a1",
+      "scope": "T-62,T-90",
+      "kind": "number",
+      "en": "Area A₁ of part 1",
+      "de": "Fläche A₁ von Teil 1",
+      "unit": "mm²",
+      "unitId": "SquareMillimetre"
+    },
+    {
+      "key": "a1",
+      "scope": "T-74,T-75",
+      "kind": "number",
+      "en": "Spacing a₁ parallel to grain",
+      "de": "Abstand a₁ in Faserrichtung",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "a2",
+      "scope": "T-62,T-90",
+      "kind": "number",
+      "en": "Area A₂ of part 2",
+      "de": "Fläche A₂ von Teil 2",
+      "unit": "mm²",
+      "unitId": "SquareMillimetre"
+    },
+    {
+      "key": "a2",
+      "scope": "T-74",
+      "kind": "number",
+      "en": "Spacing a₂ perpendicular to grain",
+      "de": "Abstand a₂ quer zur Faser",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "a3",
+      "scope": "T-62,T-90",
+      "kind": "number",
+      "en": "Area A₃ of part 3",
+      "de": "Fläche A₃ von Teil 3",
+      "unit": "mm²",
+      "unitId": "SquareMillimetre"
+    },
+    {
+      "key": "a3c",
+      "scope": "",
+      "kind": "number",
+      "en": "End distance a₃,c unloaded end",
+      "de": "Endabstand a₃,c unbeanspruchtes Hirnholz",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "a3t",
+      "scope": "",
+      "kind": "number",
+      "en": "End distance a₃,t loaded end",
+      "de": "Endabstand a₃,t beanspruchtes Hirnholz",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "a4c",
+      "scope": "",
+      "kind": "number",
+      "en": "Edge distance a₄,c unloaded edge",
+      "de": "Randabstand a₄,c unbeanspruchter Rand",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "a4t",
+      "scope": "",
+      "kind": "number",
+      "en": "Edge distance a₄,t loaded edge",
+      "de": "Randabstand a₄,t beanspruchter Rand",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "a_ef",
+      "scope": "",
+      "kind": "number",
+      "en": "Effective plate area",
+      "de": "Wirksame Plattenfläche",
+      "unit": "mm²",
+      "unitId": "SquareMillimetre"
+    },
+    {
+      "key": "a_left",
+      "scope": "",
+      "kind": "number",
+      "en": "Left support length",
+      "de": "Linke Auflagerlänge",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "a_limit",
+      "scope": "",
+      "kind": "number",
+      "en": "Acceleration limit in m/s²",
+      "de": "Beschleunigungsgrenze in m/s²",
+      "unit": "1",
+      "unitId": "One",
+      "example": 0.7
+    },
+    {
+      "key": "a_mm_per_kn",
+      "scope": "",
+      "kind": "number",
+      "en": "Deflection limit a in mm/kN",
+      "de": "Durchbiegungsgrenze a in mm/kN",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "a_net",
+      "scope": "",
+      "kind": "number",
+      "en": "Net steel area",
+      "de": "Nettostahlfläche",
+      "unit": "mm²",
+      "unitId": "SquareMillimetre"
+    },
+    {
+      "key": "a_net_t",
+      "scope": "",
+      "kind": "number",
+      "en": "Net tension area",
+      "de": "Nettozugfläche",
+      "unit": "mm²",
+      "unitId": "SquareMillimetre"
+    },
+    {
+      "key": "a_net_v",
+      "scope": "",
+      "kind": "number",
+      "en": "Net shear area",
+      "de": "Nettoschubfläche",
+      "unit": "mm²",
+      "unitId": "SquareMillimetre"
+    },
+    {
+      "key": "a_provided",
+      "scope": "",
+      "kind": "number",
+      "en": "Provided distance",
+      "de": "Vorhandener Abstand",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "a_required",
+      "scope": "",
+      "kind": "number",
+      "en": "Required distance",
+      "de": "Erforderlicher Abstand",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "a_right",
+      "scope": "",
+      "kind": "number",
+      "en": "Right support length",
+      "de": "Rechte Auflagerlänge",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "a_support",
+      "scope": "",
+      "kind": "number",
+      "en": "Distance of the load to the support a",
+      "de": "Abstand der Last zum Auflager a",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "alpha1_deg",
+      "scope": "",
+      "kind": "number",
+      "en": "Angle α₁ to the grain",
+      "de": "Winkel α₁ zur Faser",
+      "unit": "°",
+      "unitId": "Degree"
+    },
+    {
+      "key": "alpha2_deg",
+      "scope": "",
+      "kind": "number",
+      "en": "Angle α₂ to the grain",
+      "de": "Winkel α₂ zur Faser",
+      "unit": "°",
+      "unitId": "Degree"
+    },
+    {
+      "key": "alpha_ap_deg",
+      "scope": "",
+      "kind": "number",
+      "en": "Apex angle α_ap",
+      "de": "Firstwinkel α_ap",
+      "unit": "°",
+      "unitId": "Degree"
+    },
+    {
+      "key": "alpha_deg",
+      "scope": "",
+      "kind": "number",
+      "en": "Angle α to the grain",
+      "de": "Winkel α zur Faser",
+      "unit": "°",
+      "unitId": "Degree"
+    },
+    {
+      "key": "area",
+      "scope": "",
+      "kind": "number",
+      "en": "Cross-section area A",
+      "de": "Querschnittsfläche A",
+      "unit": "mm²",
+      "unitId": "SquareMillimetre"
+    },
+    {
+      "key": "area",
+      "scope": "T-93",
+      "kind": "number",
+      "en": "Cross-section area A",
+      "de": "Querschnittsfläche A",
+      "unit": "mm²",
+      "unitId": "SquareMillimetre",
+      "lever": true
+    },
+    {
+      "key": "area_net",
+      "scope": "",
+      "kind": "number",
+      "en": "Net cross-section area",
+      "de": "Nettoquerschnittsfläche",
+      "unit": "mm²",
+      "unitId": "SquareMillimetre"
+    },
+    {
+      "key": "b",
+      "scope": "",
+      "kind": "number",
+      "en": "Width b",
+      "de": "Breite b",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "lever": true,
+      "example": 200.0
+    },
+    {
+      "key": "b_dia",
+      "scope": "",
+      "kind": "number",
+      "en": "Diaphragm chord width",
+      "de": "Gurtbreite der Scheibe",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "b_f",
+      "scope": "",
+      "kind": "number",
+      "en": "Flange width b_f",
+      "de": "Gurtbreite b_f",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "b_glue",
+      "scope": "",
+      "kind": "number",
+      "en": "Glue line width",
+      "de": "Klebfugenbreite",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "b_i",
+      "scope": "",
+      "kind": "number",
+      "en": "Panel width b_i",
+      "de": "Tafelbreite b_i",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "b_vel",
+      "scope": "",
+      "kind": "number",
+      "en": "Velocity response limit parameter b",
+      "de": "Grenzwertparameter b der Geschwindigkeit",
+      "unit": "1",
+      "unitId": "One",
+      "example": 100.0
+    },
+    {
+      "key": "b_w",
+      "scope": "",
+      "kind": "number",
+      "en": "Web width b_w",
+      "de": "Stegbreite b_w",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "bar_area",
+      "scope": "T-122",
+      "kind": "number",
+      "en": "Bar cross-section area",
+      "de": "Stabquerschnittsfläche",
+      "unit": "mm²",
+      "unitId": "SquareMillimetre"
+    },
+    {
+      "key": "bar_spacing",
+      "scope": "T-122",
+      "kind": "number",
+      "en": "Prestress bar spacing s",
+      "de": "Abstand s der Spannstäbe",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "bays",
+      "scope": "T-95",
+      "kind": "number",
+      "en": "Number of bays",
+      "de": "Anzahl der Felder",
+      "unit": "1",
+      "unitId": "One",
+      "min": 2.0,
+      "max": 24.0
+    },
+    {
+      "key": "beta_0",
+      "scope": "",
+      "kind": "number",
+      "en": "Charring rate β₀ in mm/min",
+      "de": "Abbrandrate β₀ in mm/min",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "beta_c",
+      "scope": "",
+      "kind": "number",
+      "en": "Factor β_c",
+      "de": "Beiwert β_c",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "beta_n",
+      "scope": "",
+      "kind": "number",
+      "en": "Notional charring rate β_n",
+      "de": "Ideelle Abbrandrate β_n",
+      "unit": "1",
+      "unitId": "One",
+      "example": 0.7
+    },
+    {
+      "key": "board",
+      "scope": "",
+      "kind": "choice",
+      "en": "Fire protection board type",
+      "de": "Brandschutzplattentyp",
+      "choices": [
+        {
+          "value": "F",
+          "en": "Type F board",
+          "de": "Platte Typ F"
+        },
+        {
+          "value": "A",
+          "en": "Type A board",
+          "de": "Platte Typ A"
+        }
+      ],
+      "example": "F"
+    },
+    {
+      "key": "brace_b",
+      "scope": "T-96",
+      "kind": "number",
+      "en": "Bracing member width",
+      "de": "Aussteifungsstabbreite",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "brace_h",
+      "scope": "T-96",
+      "kind": "number",
+      "en": "Bracing member depth",
+      "de": "Aussteifungsstabhöhe",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "char_material",
+      "scope": "",
+      "kind": "text",
+      "en": "Charring material",
+      "de": "Abbrandwerkstoff"
+    },
+    {
+      "key": "chord_b",
+      "scope": "T-95",
+      "kind": "number",
+      "en": "Chord width",
+      "de": "Gurtbreite",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "chord_h",
+      "scope": "T-95",
+      "kind": "number",
+      "en": "Chord depth",
+      "de": "Gurthöhe",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "class",
+      "scope": "",
+      "kind": "choice",
+      "en": "Strength class",
+      "de": "Festigkeitsklasse",
+      "choices": [
+        {
+          "value": "C14",
+          "en": "C14",
+          "de": "C14"
+        },
+        {
+          "value": "C16",
+          "en": "C16",
+          "de": "C16"
+        },
+        {
+          "value": "C18",
+          "en": "C18",
+          "de": "C18"
+        },
+        {
+          "value": "C20",
+          "en": "C20",
+          "de": "C20"
+        },
+        {
+          "value": "C22",
+          "en": "C22",
+          "de": "C22"
+        },
+        {
+          "value": "C24",
+          "en": "C24",
+          "de": "C24"
+        },
+        {
+          "value": "C27",
+          "en": "C27",
+          "de": "C27"
+        },
+        {
+          "value": "C30",
+          "en": "C30",
+          "de": "C30"
+        },
+        {
+          "value": "C35",
+          "en": "C35",
+          "de": "C35"
+        },
+        {
+          "value": "C40",
+          "en": "C40",
+          "de": "C40"
+        },
+        {
+          "value": "C45",
+          "en": "C45",
+          "de": "C45"
+        },
+        {
+          "value": "C50",
+          "en": "C50",
+          "de": "C50"
+        },
+        {
+          "value": "D18",
+          "en": "D18",
+          "de": "D18"
+        },
+        {
+          "value": "D24",
+          "en": "D24",
+          "de": "D24"
+        },
+        {
+          "value": "D30",
+          "en": "D30",
+          "de": "D30"
+        },
+        {
+          "value": "D35",
+          "en": "D35",
+          "de": "D35"
+        },
+        {
+          "value": "D40",
+          "en": "D40",
+          "de": "D40"
+        },
+        {
+          "value": "D50",
+          "en": "D50",
+          "de": "D50"
+        },
+        {
+          "value": "D60",
+          "en": "D60",
+          "de": "D60"
+        },
+        {
+          "value": "D70",
+          "en": "D70",
+          "de": "D70"
+        },
+        {
+          "value": "GL20h",
+          "en": "GL20h",
+          "de": "GL20h"
+        },
+        {
+          "value": "GL22h",
+          "en": "GL22h",
+          "de": "GL22h"
+        },
+        {
+          "value": "GL24h",
+          "en": "GL24h",
+          "de": "GL24h"
+        },
+        {
+          "value": "GL26h",
+          "en": "GL26h",
+          "de": "GL26h"
+        },
+        {
+          "value": "GL28h",
+          "en": "GL28h",
+          "de": "GL28h"
+        },
+        {
+          "value": "GL30h",
+          "en": "GL30h",
+          "de": "GL30h"
+        },
+        {
+          "value": "GL32h",
+          "en": "GL32h",
+          "de": "GL32h"
+        },
+        {
+          "value": "GL20c",
+          "en": "GL20c",
+          "de": "GL20c"
+        },
+        {
+          "value": "GL22c",
+          "en": "GL22c",
+          "de": "GL22c"
+        },
+        {
+          "value": "GL24c",
+          "en": "GL24c",
+          "de": "GL24c"
+        },
+        {
+          "value": "GL26c",
+          "en": "GL26c",
+          "de": "GL26c"
+        },
+        {
+          "value": "GL28c",
+          "en": "GL28c",
+          "de": "GL28c"
+        },
+        {
+          "value": "GL30c",
+          "en": "GL30c",
+          "de": "GL30c"
+        },
+        {
+          "value": "GL32c",
+          "en": "GL32c",
+          "de": "GL32c"
+        },
+        {
+          "value": "LVL32",
+          "en": "LVL32",
+          "de": "LVL32"
+        },
+        {
+          "value": "CLT100",
+          "en": "CLT100",
+          "de": "CLT100"
+        }
+      ],
+      "example": "GL24h"
+    },
+    {
+      "key": "class_2",
+      "scope": "",
+      "kind": "choice",
+      "en": "Strength class of member 2",
+      "de": "Festigkeitsklasse Bauteil 2",
+      "choices": [
+        {
+          "value": "C14",
+          "en": "C14",
+          "de": "C14"
+        },
+        {
+          "value": "C16",
+          "en": "C16",
+          "de": "C16"
+        },
+        {
+          "value": "C18",
+          "en": "C18",
+          "de": "C18"
+        },
+        {
+          "value": "C20",
+          "en": "C20",
+          "de": "C20"
+        },
+        {
+          "value": "C22",
+          "en": "C22",
+          "de": "C22"
+        },
+        {
+          "value": "C24",
+          "en": "C24",
+          "de": "C24"
+        },
+        {
+          "value": "C27",
+          "en": "C27",
+          "de": "C27"
+        },
+        {
+          "value": "C30",
+          "en": "C30",
+          "de": "C30"
+        },
+        {
+          "value": "C35",
+          "en": "C35",
+          "de": "C35"
+        },
+        {
+          "value": "C40",
+          "en": "C40",
+          "de": "C40"
+        },
+        {
+          "value": "C45",
+          "en": "C45",
+          "de": "C45"
+        },
+        {
+          "value": "C50",
+          "en": "C50",
+          "de": "C50"
+        },
+        {
+          "value": "D18",
+          "en": "D18",
+          "de": "D18"
+        },
+        {
+          "value": "D24",
+          "en": "D24",
+          "de": "D24"
+        },
+        {
+          "value": "D30",
+          "en": "D30",
+          "de": "D30"
+        },
+        {
+          "value": "D35",
+          "en": "D35",
+          "de": "D35"
+        },
+        {
+          "value": "D40",
+          "en": "D40",
+          "de": "D40"
+        },
+        {
+          "value": "D50",
+          "en": "D50",
+          "de": "D50"
+        },
+        {
+          "value": "D60",
+          "en": "D60",
+          "de": "D60"
+        },
+        {
+          "value": "D70",
+          "en": "D70",
+          "de": "D70"
+        },
+        {
+          "value": "GL20h",
+          "en": "GL20h",
+          "de": "GL20h"
+        },
+        {
+          "value": "GL22h",
+          "en": "GL22h",
+          "de": "GL22h"
+        },
+        {
+          "value": "GL24h",
+          "en": "GL24h",
+          "de": "GL24h"
+        },
+        {
+          "value": "GL26h",
+          "en": "GL26h",
+          "de": "GL26h"
+        },
+        {
+          "value": "GL28h",
+          "en": "GL28h",
+          "de": "GL28h"
+        },
+        {
+          "value": "GL30h",
+          "en": "GL30h",
+          "de": "GL30h"
+        },
+        {
+          "value": "GL32h",
+          "en": "GL32h",
+          "de": "GL32h"
+        },
+        {
+          "value": "GL20c",
+          "en": "GL20c",
+          "de": "GL20c"
+        },
+        {
+          "value": "GL22c",
+          "en": "GL22c",
+          "de": "GL22c"
+        },
+        {
+          "value": "GL24c",
+          "en": "GL24c",
+          "de": "GL24c"
+        },
+        {
+          "value": "GL26c",
+          "en": "GL26c",
+          "de": "GL26c"
+        },
+        {
+          "value": "GL28c",
+          "en": "GL28c",
+          "de": "GL28c"
+        },
+        {
+          "value": "GL30c",
+          "en": "GL30c",
+          "de": "GL30c"
+        },
+        {
+          "value": "GL32c",
+          "en": "GL32c",
+          "de": "GL32c"
+        },
+        {
+          "value": "LVL32",
+          "en": "LVL32",
+          "de": "LVL32"
+        },
+        {
+          "value": "CLT100",
+          "en": "CLT100",
+          "de": "CLT100"
+        }
+      ],
+      "example": "GL24h"
+    },
+    {
+      "key": "comfort",
+      "scope": "",
+      "kind": "choice",
+      "en": "Comfort class",
+      "de": "Komfortklasse",
+      "choices": [
+        {
+          "value": "normal",
+          "en": "Normal use",
+          "de": "Normale Nutzung"
+        },
+        {
+          "value": "crowd",
+          "en": "Crowd loading",
+          "de": "Menschenansammlung"
+        }
+      ],
+      "example": "normal"
+    },
+    {
+      "key": "config",
+      "scope": "",
+      "kind": "text",
+      "en": "Connection configuration",
+      "de": "Anschlusskonfiguration"
+    },
+    {
+      "key": "contact_mm",
+      "scope": "",
+      "kind": "number",
+      "en": "Contact length",
+      "de": "Kontaktlänge",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "crowd_density",
+      "scope": "",
+      "kind": "number",
+      "en": "Crowd density in persons per m²",
+      "de": "Personendichte in Personen je m²",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "crowd_model",
+      "scope": "",
+      "kind": "choice",
+      "en": "Crowd model",
+      "de": "Menschenmengenmodell",
+      "choices": [
+        {
+          "value": "en1995-2",
+          "en": "EN 1995-2 pedestrian groups",
+          "de": "EN-1995-2-Fußgängergruppen"
+        },
+        {
+          "value": "setra",
+          "en": "Harmonic crowd (Sétra/HIVOSS)",
+          "de": "Harmonische Menschenmenge (Sétra/HIVOSS)"
+        }
+      ],
+      "example": "en1995-2"
+    },
+    {
+      "key": "d",
+      "scope": "",
+      "kind": "number",
+      "en": "Fastener diameter d",
+      "de": "Durchmesser d des Verbindungsmittels",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "d0",
+      "scope": "",
+      "kind": "number",
+      "en": "Hole diameter d₀",
+      "de": "Lochdurchmesser d₀",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "d_c",
+      "scope": "",
+      "kind": "number",
+      "en": "Connector diameter d_c",
+      "de": "Dübeldurchmesser d_c",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "d_head",
+      "scope": "",
+      "kind": "number",
+      "en": "Head diameter",
+      "de": "Kopfdurchmesser",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "d_root",
+      "scope": "",
+      "kind": "number",
+      "en": "Root diameter",
+      "de": "Kerndurchmesser",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "d_washer",
+      "scope": "",
+      "kind": "number",
+      "en": "Washer diameter",
+      "de": "Scheibendurchmesser",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "deck_depth",
+      "scope": "T-122",
+      "kind": "number",
+      "en": "Deck depth h",
+      "de": "Deckhöhe h",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "deck_width_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Deck width",
+      "de": "Deckbreite",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "distributing",
+      "scope": "",
+      "kind": "number",
+      "en": "Load distributing (1) or not (0)",
+      "de": "Lastverteilend (1) oder nicht (0)",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "ds1",
+      "scope": "",
+      "kind": "number",
+      "en": "Stress range Δσ",
+      "de": "Spannungsschwingbreite Δσ",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre"
+    },
+    {
+      "key": "ds2",
+      "scope": "",
+      "kind": "number",
+      "en": "Stress range Δσ of block 2",
+      "de": "Spannungsschwingbreite Δσ des Blocks 2",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre"
+    },
+    {
+      "key": "ds3",
+      "scope": "",
+      "kind": "number",
+      "en": "Stress range Δσ of block 3",
+      "de": "Spannungsschwingbreite Δσ des Blocks 3",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre"
+    },
+    {
+      "key": "ds_cut",
+      "scope": "T-121",
+      "kind": "number",
+      "en": "Stress range below which no damage accrues",
+      "de": "Spannungsschwingbreite, unter der keine Schädigung entsteht",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre",
+      "example": 0.0
+    },
+    {
+      "key": "ductility",
+      "scope": "",
+      "kind": "choice",
+      "en": "Ductility class",
+      "de": "Duktilitätsklasse",
+      "choices": [
+        {
+          "value": "DCL",
+          "en": "Low (DCL)",
+          "de": "Niedrig (DCL)"
+        },
+        {
+          "value": "DCM",
+          "en": "Medium (DCM)",
+          "de": "Mittel (DCM)"
+        },
+        {
+          "value": "DCH",
+          "en": "High (DCH)",
+          "de": "Hoch (DCH)"
+        }
+      ],
+      "example": "DCM"
+    },
+    {
+      "key": "duration",
+      "scope": "",
+      "kind": "choice",
+      "en": "Load duration class",
+      "de": "Klasse der Lasteinwirkungsdauer",
+      "choices": [
+        {
+          "value": "permanent",
+          "en": "Permanent",
+          "de": "Ständig"
+        },
+        {
+          "value": "long",
+          "en": "Long-term",
+          "de": "Lang"
+        },
+        {
+          "value": "medium",
+          "en": "Medium-term",
+          "de": "Mittel"
+        },
+        {
+          "value": "short",
+          "en": "Short-term",
+          "de": "Kurz"
+        },
+        {
+          "value": "instantaneous",
+          "en": "Instantaneous",
+          "de": "Sehr kurz"
+        }
+      ],
+      "example": "medium"
+    },
+    {
+      "key": "durations",
+      "scope": "",
+      "kind": "text",
+      "en": "Load duration classes, comma separated",
+      "de": "Lasteinwirkungsdauern, kommagetrennt"
+    },
+    {
+      "key": "e1",
+      "scope": "T-62,T-90",
+      "kind": "number",
+      "en": "Modulus of elasticity E₁",
+      "de": "Elastizitätsmodul E₁",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre"
+    },
+    {
+      "key": "e1",
+      "scope": "T-79",
+      "kind": "number",
+      "en": "End distance e₁",
+      "de": "Endabstand e₁",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "e2",
+      "scope": "T-62,T-90",
+      "kind": "number",
+      "en": "Modulus of elasticity E₂",
+      "de": "Elastizitätsmodul E₂",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre"
+    },
+    {
+      "key": "e2",
+      "scope": "T-79",
+      "kind": "number",
+      "en": "Edge distance e₂",
+      "de": "Randabstand e₂",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "e3",
+      "scope": "T-62,T-90",
+      "kind": "number",
+      "en": "Modulus of elasticity E₃",
+      "de": "Elastizitätsmodul E₃",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre"
+    },
+    {
+      "key": "e_f",
+      "scope": "",
+      "kind": "number",
+      "en": "Modulus of the flange E_f",
+      "de": "Elastizitätsmodul des Gurts E_f",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre"
+    },
+    {
+      "key": "e_mean",
+      "scope": "",
+      "kind": "number",
+      "en": "Mean modulus of elasticity",
+      "de": "Mittlerer Elastizitätsmodul",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre"
+    },
+    {
+      "key": "e_w",
+      "scope": "",
+      "kind": "number",
+      "en": "Modulus of the web E_w",
+      "de": "Elastizitätsmodul des Stegs E_w",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre"
+    },
+    {
+      "key": "ei_b",
+      "scope": "",
+      "kind": "number",
+      "en": "Floor transverse stiffness (EI)b in N·m²/m",
+      "de": "Deckenquersteifigkeit (EI)b in N·m²/m",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "ei_l",
+      "scope": "",
+      "kind": "number",
+      "en": "Floor bending stiffness (EI)ℓ in N·m²/m",
+      "de": "Deckenbiegesteifigkeit (EI)ℓ in N·m²/m",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "ei_nm2",
+      "scope": "",
+      "kind": "number",
+      "en": "Bending stiffness EI in N·m²",
+      "de": "Biegesteifigkeit EI in N·m²",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "eta",
+      "scope": "",
+      "kind": "number",
+      "en": "Factor η",
+      "de": "Beiwert η",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "f1_limit",
+      "scope": "",
+      "kind": "number",
+      "en": "Frequency limit f₁",
+      "de": "Frequenzgrenze f₁",
+      "unit": "Hz",
+      "unitId": "Hertz"
+    },
+    {
+      "key": "f_90_ed",
+      "scope": "",
+      "kind": "number",
+      "en": "Design force perpendicular to grain F_90,Ed",
+      "de": "Bemessungskraft quer zur Faser F_90,Ed",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "f_a_k",
+      "scope": "",
+      "kind": "number",
+      "en": "Characteristic anchorage strength f_a,k",
+      "de": "Charakteristische Verankerungsfestigkeit f_a,k",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre"
+    },
+    {
+      "key": "f_ax_ed",
+      "scope": "",
+      "kind": "number",
+      "en": "Design axial force F_ax,Ed",
+      "de": "Bemessungsachskraft F_ax,Ed",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "f_ax_rd",
+      "scope": "",
+      "kind": "number",
+      "en": "Design axial resistance F_ax,Rd",
+      "de": "Bemessungsausziehwiderstand F_ax,Rd",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "f_ax_rk",
+      "scope": "",
+      "kind": "number",
+      "en": "Characteristic axial capacity F_ax,Rk",
+      "de": "Charakteristische Ausziehtragfähigkeit F_ax,Rk",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "f_bar_d",
+      "scope": "T-122",
+      "kind": "number",
+      "en": "Design bar resistance",
+      "de": "Bemessungswiderstand des Stabes",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre"
+    },
+    {
+      "key": "f_c90",
+      "scope": "",
+      "kind": "number",
+      "en": "Compressive force F_c,90,d perpendicular to the grain",
+      "de": "Querdruckkraft F_c,90,d",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "f_c_90",
+      "scope": "",
+      "kind": "number",
+      "en": "Bearing strength f_c,90",
+      "de": "Querdruckfestigkeit f_c,90",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre"
+    },
+    {
+      "key": "f_c_90_d",
+      "scope": "",
+      "kind": "number",
+      "en": "Design bearing strength f_c,90,d",
+      "de": "Bemessungsquerdruckfestigkeit f_c,90,d",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre"
+    },
+    {
+      "key": "f_c_90_k",
+      "scope": "",
+      "kind": "number",
+      "en": "Characteristic bearing strength f_c,90,k",
+      "de": "Charakteristische Querdruckfestigkeit f_c,90,k",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre"
+    },
+    {
+      "key": "f_d",
+      "scope": "",
+      "kind": "number",
+      "en": "Diaphragm force",
+      "de": "Scheibenkraft",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "f_ed",
+      "scope": "",
+      "kind": "number",
+      "en": "Design force F_Ed",
+      "de": "Bemessungskraft F_Ed",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "f_f_rd",
+      "scope": "",
+      "kind": "number",
+      "en": "Fastener capacity F_f,Rd",
+      "de": "Tragfähigkeit F_f,Rd des Verbindungsmittels",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "f_fi_d",
+      "scope": "",
+      "kind": "number",
+      "en": "Design capacity in fire F_fi,d",
+      "de": "Bemessungstragfähigkeit im Brandfall F_fi,d",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "f_flange_d",
+      "scope": "",
+      "kind": "number",
+      "en": "Design flange strength",
+      "de": "Bemessungsfestigkeit des Gurts",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre"
+    },
+    {
+      "key": "f_glue_d",
+      "scope": "",
+      "kind": "number",
+      "en": "Design glue line shear strength",
+      "de": "Bemessungswert Klebfugenschubfestigkeit",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre"
+    },
+    {
+      "key": "f_head_k",
+      "scope": "",
+      "kind": "number",
+      "en": "Head pull-through parameter f_head,k",
+      "de": "Kopfdurchziehparameter f_head,k",
+      "unit": "1",
+      "unitId": "One",
+      "example": 8.0
+    },
+    {
+      "key": "f_lat_hz",
+      "scope": "",
+      "kind": "number",
+      "en": "Lateral frequency",
+      "de": "Horizontale Eigenfrequenz",
+      "unit": "Hz",
+      "unitId": "Hertz"
+    },
+    {
+      "key": "f_lateral",
+      "scope": "",
+      "kind": "number",
+      "en": "Lateral load factor",
+      "de": "Querlastfaktor",
+      "unit": "1",
+      "unitId": "One",
+      "example": 3.0
+    },
+    {
+      "key": "f_r_k",
+      "scope": "",
+      "kind": "number",
+      "en": "Characteristic rolling shear strength",
+      "de": "Charakteristische Rollschubfestigkeit",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre"
+    },
+    {
+      "key": "f_rd",
+      "scope": "",
+      "kind": "number",
+      "en": "Bracing resistance F_Rd",
+      "de": "Widerstand F_Rd des Aussteifungssystems",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "f_rd_20",
+      "scope": "",
+      "kind": "number",
+      "en": "Connection resistance R_d at 20 degrees",
+      "de": "Verbindungstragfähigkeit R_d bei 20 Grad",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "f_t_k_plate",
+      "scope": "",
+      "kind": "number",
+      "en": "Plate tensile capacity per length f_t,k",
+      "de": "Zugtragfähigkeit des Blechs je Länge f_t,k",
+      "unit": "N/mm",
+      "unitId": "NewtonPerMillimetre"
+    },
+    {
+      "key": "f_tens_k",
+      "scope": "",
+      "kind": "number",
+      "en": "Characteristic tensile capacity",
+      "de": "Charakteristische Zugtragfähigkeit",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "f_u",
+      "scope": "",
+      "kind": "number",
+      "en": "Tensile strength f_u of the fastener",
+      "de": "Zugfestigkeit f_u des Verbindungsmittels",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre"
+    },
+    {
+      "key": "f_u_bolt",
+      "scope": "",
+      "kind": "number",
+      "en": "Bolt tensile strength",
+      "de": "Zugfestigkeit der Schraube",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre"
+    },
+    {
+      "key": "f_u_plate",
+      "scope": "",
+      "kind": "number",
+      "en": "Plate tensile strength f_u",
+      "de": "Zugfestigkeit f_u des Blechs",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre"
+    },
+    {
+      "key": "f_v_clt_k",
+      "scope": "",
+      "kind": "number",
+      "en": "Characteristic CLT shear strength",
+      "de": "Charakteristische BSP-Schubfestigkeit",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre",
+      "example": 5.0
+    },
+    {
+      "key": "f_v_ed",
+      "scope": "",
+      "kind": "number",
+      "en": "Design lateral force F_v,Ed",
+      "de": "Bemessungsquerkraft F_v,Ed",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "f_v_rd",
+      "scope": "",
+      "kind": "number",
+      "en": "Design lateral resistance F_v,Rd",
+      "de": "Bemessungsabscherwiderstand F_v,Rd",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "f_v_rk",
+      "scope": "",
+      "kind": "number",
+      "en": "Characteristic load-carrying capacity F_v,Rk",
+      "de": "Charakteristische Tragfähigkeit F_v,Rk",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "f_v_rk",
+      "scope": "T-104",
+      "kind": "number",
+      "en": "Characteristic load-carrying capacity F_v,Rk",
+      "de": "Charakteristische Tragfähigkeit F_v,Rk",
+      "unit": "N",
+      "unitId": "Newton",
+      "lever": true
+    },
+    {
+      "key": "f_v_web_d",
+      "scope": "",
+      "kind": "number",
+      "en": "Design web shear strength",
+      "de": "Bemessungsschubfestigkeit des Stegs",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre"
+    },
+    {
+      "key": "face_bottom",
+      "scope": "",
+      "kind": "number",
+      "en": "Bottom face exposed (1) or not (0)",
+      "de": "Unterseite beflammt (1) oder nicht (0)",
+      "unit": "1",
+      "unitId": "One",
+      "example": 1.0
+    },
+    {
+      "key": "face_left",
+      "scope": "",
+      "kind": "number",
+      "en": "Left face exposed (1) or not (0)",
+      "de": "Linke Seite beflammt (1) oder nicht (0)",
+      "unit": "1",
+      "unitId": "One",
+      "example": 1.0
+    },
+    {
+      "key": "face_right",
+      "scope": "",
+      "kind": "number",
+      "en": "Right face exposed (1) or not (0)",
+      "de": "Rechte Seite beflammt (1) oder nicht (0)",
+      "unit": "1",
+      "unitId": "One",
+      "example": 1.0
+    },
+    {
+      "key": "face_top",
+      "scope": "",
+      "kind": "number",
+      "en": "Top face exposed (1) or not (0)",
+      "de": "Oberseite beflammt (1) oder nicht (0)",
+      "unit": "1",
+      "unitId": "One",
+      "example": 0.0
+    },
+    {
+      "key": "fall_off",
+      "scope": "T-107",
+      "kind": "number",
+      "en": "Char layer falls off at the glue line (1) or not (0)",
+      "de": "Kohleschicht fällt an der Klebfuge ab (1) oder nicht (0)",
+      "unit": "1",
+      "unitId": "One",
+      "min": 0.0,
+      "max": 1.0,
+      "example": 1.0
+    },
+    {
+      "key": "fall_off_factor",
+      "scope": "T-107",
+      "kind": "number",
+      "en": "Charring rate factor after fall-off",
+      "de": "Faktor der Abbrandrate nach dem Abfallen",
+      "unit": "1",
+      "unitId": "One",
+      "example": 2.0
+    },
+    {
+      "key": "fd_a1",
+      "scope": "",
+      "kind": "number",
+      "en": "Design strength f_d of part 1 axial",
+      "de": "Bemessungsfestigkeit f_d Teil 1 axial",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre"
+    },
+    {
+      "key": "fd_m1",
+      "scope": "",
+      "kind": "number",
+      "en": "Design strength f_d of part 1 bending",
+      "de": "Bemessungsfestigkeit f_d Teil 1 Biegung",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre"
+    },
+    {
+      "key": "flange_side",
+      "scope": "",
+      "kind": "choice",
+      "en": "Flange side",
+      "de": "Gurtseite",
+      "choices": [
+        {
+          "value": "compression",
+          "en": "Compression flange",
+          "de": "Druckgurt"
+        },
+        {
+          "value": "tension",
+          "en": "Tension flange",
+          "de": "Zuggurt"
+        }
+      ],
+      "example": "compression"
+    },
+    {
+      "key": "force_n",
+      "scope": "",
+      "kind": "number",
+      "en": "Unit point load",
+      "de": "Einzellast",
+      "unit": "N",
+      "unitId": "Newton",
+      "example": 1000.0
+    },
+    {
+      "key": "fv_d_2",
+      "scope": "",
+      "kind": "number",
+      "en": "Design shear strength of member 2",
+      "de": "Bemessungsschubfestigkeit Bauteil 2",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre"
+    },
+    {
+      "key": "g_r",
+      "scope": "",
+      "kind": "number",
+      "en": "Rolling shear modulus G_R",
+      "de": "Rollschubmodul G_R",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre",
+      "example": 50.0
+    },
+    {
+      "key": "gamma_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Partial factor γ_M",
+      "de": "Teilsicherheitsbeiwert γ_M",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "gamma_m_conn",
+      "scope": "",
+      "kind": "number",
+      "en": "Partial factor γ_M of the connection",
+      "de": "Teilsicherheitsbeiwert γ_M der Verbindung",
+      "unit": "1",
+      "unitId": "One",
+      "example": 1.3
+    },
+    {
+      "key": "h",
+      "scope": "",
+      "kind": "number",
+      "en": "Depth h",
+      "de": "Höhe h",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "lever": true,
+      "example": 400.0
+    },
+    {
+      "key": "h1",
+      "scope": "",
+      "kind": "number",
+      "en": "Height or thickness h₁ of part or layer 1",
+      "de": "Höhe oder Dicke h₁ von Teil oder Lage 1",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "h2",
+      "scope": "",
+      "kind": "number",
+      "en": "Height h₂",
+      "de": "Höhe h₂",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "h3",
+      "scope": "",
+      "kind": "number",
+      "en": "Height h₃",
+      "de": "Höhe h₃",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "h_a",
+      "scope": "",
+      "kind": "number",
+      "en": "Web depth for shear deformation a",
+      "de": "Stegbreite für Schubverformung a",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "h_ap",
+      "scope": "",
+      "kind": "number",
+      "en": "Apex depth h_ap",
+      "de": "Firsthöhe h_ap",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "h_b",
+      "scope": "",
+      "kind": "number",
+      "en": "Web depth for shear deformation b",
+      "de": "Stegbreite für Schubverformung b",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "h_e",
+      "scope": "",
+      "kind": "number",
+      "en": "Connector embedment depth h_e",
+      "de": "Einlasstiefe h_e",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "h_ef",
+      "scope": "",
+      "kind": "number",
+      "en": "Effective depth h_ef",
+      "de": "Wirksame Höhe h_ef",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "h_f",
+      "scope": "",
+      "kind": "number",
+      "en": "Flange thickness h_f",
+      "de": "Gurtdicke h_f",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "h_p",
+      "scope": "",
+      "kind": "number",
+      "en": "Protection thickness h_p",
+      "de": "Bekleidungsdicke h_p",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "example": 20.0
+    },
+    {
+      "key": "h_w",
+      "scope": "",
+      "kind": "number",
+      "en": "Web height h_w",
+      "de": "Steghöhe h_w",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "he",
+      "scope": "",
+      "kind": "number",
+      "en": "Loaded edge distance h_e",
+      "de": "Abstand h_e zum beanspruchten Rand",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "height",
+      "scope": "T-95",
+      "kind": "number",
+      "en": "Truss height",
+      "de": "Fachwerkhöhe",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "hole_count",
+      "scope": "",
+      "kind": "number",
+      "en": "Number of holes in the section",
+      "de": "Anzahl Löcher im Querschnitt",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "hole_d",
+      "scope": "",
+      "kind": "number",
+      "en": "Hole diameter",
+      "de": "Lochdurchmesser",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "i1",
+      "scope": "T-62,T-90",
+      "kind": "number",
+      "en": "Second moment I₁ of part 1",
+      "de": "Flächenträgheitsmoment I₁ von Teil 1",
+      "unit": "mm⁴",
+      "unitId": "MillimetreFourth"
+    },
+    {
+      "key": "i1",
+      "scope": "T-93",
+      "kind": "number",
+      "en": "Radius of gyration i₁ of one part",
+      "de": "Trägheitsradius i₁ eines Einzelquerschnitts",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "i2",
+      "scope": "T-62,T-90",
+      "kind": "number",
+      "en": "Second moment I₂ of part 2",
+      "de": "Flächenträgheitsmoment I₂ von Teil 2",
+      "unit": "mm⁴",
+      "unitId": "MillimetreFourth"
+    },
+    {
+      "key": "i3",
+      "scope": "T-62,T-90",
+      "kind": "number",
+      "en": "Second moment I₃ of part 3",
+      "de": "Flächenträgheitsmoment I₃ von Teil 3",
+      "unit": "mm⁴",
+      "unitId": "MillimetreFourth"
+    },
+    {
+      "key": "i_tot",
+      "scope": "",
+      "kind": "number",
+      "en": "Radius of gyration i of the whole column",
+      "de": "Trägheitsradius i des gesamten Stabes",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "i_y",
+      "scope": "",
+      "kind": "number",
+      "en": "Second moment of area I_y",
+      "de": "Flächenträgheitsmoment I_y",
+      "unit": "mm⁴",
+      "unitId": "MillimetreFourth"
+    },
+    {
+      "key": "i_z",
+      "scope": "",
+      "kind": "number",
+      "en": "Second moment of area I_z",
+      "de": "Flächenträgheitsmoment I_z",
+      "unit": "mm⁴",
+      "unitId": "MillimetreFourth"
+    },
+    {
+      "key": "incl",
+      "scope": "",
+      "kind": "number",
+      "en": "Notch inclination i",
+      "de": "Neigung i der Ausklinkung",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "joint",
+      "scope": "",
+      "kind": "choice",
+      "en": "Joint type",
+      "de": "Verbindungsart",
+      "choices": [
+        {
+          "value": "nailed",
+          "en": "Nailed",
+          "de": "Genagelt"
+        },
+        {
+          "value": "bolted",
+          "en": "Bolted",
+          "de": "Gebolzt"
+        },
+        {
+          "value": "glued",
+          "en": "Glued",
+          "de": "Geklebt"
+        },
+        {
+          "value": "connectors",
+          "en": "Connectors",
+          "de": "Verbinder"
+        }
+      ],
+      "example": "nailed"
+    },
+    {
+      "key": "k",
+      "scope": "T-90",
+      "kind": "number",
+      "en": "Slip modulus K",
+      "de": "Verschiebungsmodul K",
+      "unit": "N/mm",
+      "unitId": "NewtonPerMillimetre",
+      "lever": true
+    },
+    {
+      "key": "k1",
+      "scope": "",
+      "kind": "number",
+      "en": "Factor k₁",
+      "de": "Beiwert k₁",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "k2",
+      "scope": "",
+      "kind": "number",
+      "en": "Factor k₂",
+      "de": "Beiwert k₂",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "k3",
+      "scope": "",
+      "kind": "number",
+      "en": "Factor k₃",
+      "de": "Beiwert k₃",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "k4",
+      "scope": "",
+      "kind": "number",
+      "en": "Factor k₄",
+      "de": "Beiwert k₄",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "k_br",
+      "scope": "",
+      "kind": "number",
+      "en": "Bracing stiffness",
+      "de": "Steifigkeit des Aussteifungssystems",
+      "unit": "N/mm",
+      "unitId": "NewtonPerMillimetre"
+    },
+    {
+      "key": "k_c90",
+      "scope": "",
+      "kind": "number",
+      "en": "Factor k_c,90",
+      "de": "Beiwert k_c,90",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "k_cr",
+      "scope": "",
+      "kind": "number",
+      "en": "Crack factor k_cr",
+      "de": "Rissbeiwert k_cr",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "k_d",
+      "scope": "",
+      "kind": "number",
+      "en": "Diaphragm factor k_d",
+      "de": "Beiwert k_d",
+      "unit": "1",
+      "unitId": "One",
+      "example": 1.0
+    },
+    {
+      "key": "k_def",
+      "scope": "",
+      "kind": "number",
+      "en": "Deformation factor k_def",
+      "de": "Verformungsbeiwert k_def",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "k_fire",
+      "scope": "",
+      "kind": "number",
+      "en": "Reduced load method constant k in 1/min",
+      "de": "Konstante k des Verfahrens mit abgeminderter Last in 1/min",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "k_flux",
+      "scope": "",
+      "kind": "number",
+      "en": "Heat flux factor",
+      "de": "Wärmestromfaktor",
+      "unit": "1",
+      "unitId": "One",
+      "example": 1.5
+    },
+    {
+      "key": "k_n",
+      "scope": "",
+      "kind": "number",
+      "en": "Nail spacing factor k_n",
+      "de": "Nagelabstandsfaktor k_n",
+      "unit": "1",
+      "unitId": "One",
+      "example": 1.0
+    },
+    {
+      "key": "k_op",
+      "scope": "",
+      "kind": "number",
+      "en": "Opening factor k_op",
+      "de": "Öffnungsbeiwert k_op",
+      "unit": "1",
+      "unitId": "One",
+      "example": 1.0
+    },
+    {
+      "key": "k_q",
+      "scope": "",
+      "kind": "number",
+      "en": "Load factor k_q",
+      "de": "Lastbeiwert k_q",
+      "unit": "1",
+      "unitId": "One",
+      "example": 1.0
+    },
+    {
+      "key": "k_ser",
+      "scope": "",
+      "kind": "number",
+      "en": "Slip modulus K_ser",
+      "de": "Verschiebungsmodul K_ser",
+      "unit": "N/mm",
+      "unitId": "NewtonPerMillimetre"
+    },
+    {
+      "key": "kappa",
+      "scope": "",
+      "kind": "number",
+      "en": "Shear correction factor κ",
+      "de": "Schubkorrekturbeiwert κ",
+      "unit": "1",
+      "unitId": "One",
+      "example": 1.2
+    },
+    {
+      "key": "kdef_2",
+      "scope": "",
+      "kind": "number",
+      "en": "Deformation factor k_def of member 2",
+      "de": "Verformungsbeiwert k_def Bauteil 2",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "kh",
+      "scope": "",
+      "kind": "number",
+      "en": "Size factor k_h",
+      "de": "Größenbeiwert k_h",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "kh_dim",
+      "scope": "",
+      "kind": "number",
+      "en": "Size factor reference dimension",
+      "de": "Bezugsmaß des Größenbeiwerts",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "kh_dim_z",
+      "scope": "",
+      "kind": "number",
+      "en": "Size factor reference dimension about z",
+      "de": "Bezugsmaß des Größenbeiwerts um z",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "kind",
+      "scope": "",
+      "kind": "choice",
+      "en": "Fastener type",
+      "de": "Verbindungsmittelart",
+      "choices": [
+        {
+          "value": "nail",
+          "en": "Nail",
+          "de": "Nagel"
+        },
+        {
+          "value": "nail_predrilled",
+          "en": "Predrilled nail",
+          "de": "Vorgebohrter Nagel"
+        },
+        {
+          "value": "nail_square",
+          "en": "Square nail",
+          "de": "Quadratnagel"
+        },
+        {
+          "value": "nail_other",
+          "en": "Other nail",
+          "de": "Sonstiger Nagel"
+        },
+        {
+          "value": "staple",
+          "en": "Staple",
+          "de": "Klammer"
+        },
+        {
+          "value": "screw",
+          "en": "Screw",
+          "de": "Schraube"
+        },
+        {
+          "value": "screw_axial",
+          "en": "Axially loaded screw",
+          "de": "Axial beanspruchte Schraube"
+        },
+        {
+          "value": "bolt",
+          "en": "Bolt",
+          "de": "Bolzen"
+        },
+        {
+          "value": "dowel",
+          "en": "Dowel",
+          "de": "Stabdübel"
+        }
+      ],
+      "example": "nail"
+    },
+    {
+      "key": "kind",
+      "scope": "T-95",
+      "kind": "choice",
+      "en": "Truss type",
+      "de": "Fachwerkart",
+      "choices": [
+        {
+          "value": "warren",
+          "en": "Warren",
+          "de": "Warren"
+        },
+        {
+          "value": "pratt",
+          "en": "Pratt",
+          "de": "Pratt"
+        },
+        {
+          "value": "howe",
+          "en": "Howe",
+          "de": "Howe"
+        },
+        {
+          "value": "king-post",
+          "en": "King post",
+          "de": "Hängewerk"
+        }
+      ],
+      "example": "warren"
+    },
+    {
+      "key": "kind",
+      "scope": "T-96",
+      "kind": "choice",
+      "en": "Bracing type",
+      "de": "Aussteifungsart",
+      "choices": [
+        {
+          "value": "plan-bracing",
+          "en": "Plan bracing",
+          "de": "Dachverband"
+        },
+        {
+          "value": "bridging",
+          "en": "Bridging",
+          "de": "Queraussteifung"
+        },
+        {
+          "value": "elastic-restraint",
+          "en": "Elastic restraint",
+          "de": "Elastische Halterung"
+        }
+      ],
+      "example": "plan-bracing"
+    },
+    {
+      "key": "kind1",
+      "scope": "",
+      "kind": "text",
+      "en": "Layer kind of layer 1",
+      "de": "Lagenart der Lage 1"
+    },
+    {
+      "key": "km",
+      "scope": "",
+      "kind": "number",
+      "en": "Factor k_m",
+      "de": "Beiwert k_m",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "kmod",
+      "scope": "",
+      "kind": "number",
+      "en": "Modification factor k_mod",
+      "de": "Modifikationsbeiwert k_mod",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "kmod_2",
+      "scope": "",
+      "kind": "number",
+      "en": "Modification factor k_mod of member 2",
+      "de": "Modifikationsbeiwert k_mod Bauteil 2",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "l",
+      "scope": "",
+      "kind": "number",
+      "en": "Span or length l",
+      "de": "Spannweite oder Länge l",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "example": 5000.0
+    },
+    {
+      "key": "l1",
+      "scope": "",
+      "kind": "number",
+      "en": "Length l₁ or bearing distance",
+      "de": "Länge l₁ oder Auflagerabstand",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "l_dia",
+      "scope": "",
+      "kind": "number",
+      "en": "Diaphragm length",
+      "de": "Scheibenlänge",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "l_ef",
+      "scope": "",
+      "kind": "number",
+      "en": "Effective penetration length l_ef",
+      "de": "Wirksame Eindringtiefe l_ef",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "l_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Bracing length l",
+      "de": "Aussteifungslänge l",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "l_plate",
+      "scope": "",
+      "kind": "number",
+      "en": "Plate length",
+      "de": "Blechlänge",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "lambda_max",
+      "scope": "",
+      "kind": "number",
+      "en": "Maximum slenderness",
+      "de": "Maximale Schlankheit",
+      "unit": "1",
+      "unitId": "One",
+      "example": 150.0
+    },
+    {
+      "key": "lef",
+      "scope": "",
+      "kind": "number",
+      "en": "Effective length l_ef",
+      "de": "Ersatzstablänge l_ef",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "lef_y",
+      "scope": "",
+      "kind": "number",
+      "en": "Buckling length about y",
+      "de": "Knicklänge um y",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "lef_z",
+      "scope": "",
+      "kind": "number",
+      "en": "Buckling length about z",
+      "de": "Knicklänge um z",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "length",
+      "scope": "",
+      "kind": "number",
+      "en": "Member length",
+      "de": "Bauteillänge",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "example": 3000.0
+    },
+    {
+      "key": "limit_divisor",
+      "scope": "",
+      "kind": "number",
+      "en": "Deflection limit divisor l/x",
+      "de": "Durchbiegungsgrenze l/x",
+      "unit": "1",
+      "unitId": "One",
+      "example": 300.0
+    },
+    {
+      "key": "limit_fin_divisor",
+      "scope": "",
+      "kind": "number",
+      "en": "Final deflection limit divisor l/x",
+      "de": "Enddurchbiegungsgrenze l/x",
+      "unit": "1",
+      "unitId": "One",
+      "example": 150.0
+    },
+    {
+      "key": "limit_net_divisor",
+      "scope": "",
+      "kind": "number",
+      "en": "Net final deflection limit divisor l/x",
+      "de": "Nettoenddurchbiegungsgrenze l/x",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "load_case",
+      "scope": "",
+      "kind": "choice",
+      "en": "Load case",
+      "de": "Lastfall",
+      "choices": [
+        {
+          "value": "udl_ss",
+          "en": "UDL, simply supported",
+          "de": "Gleichlast, Einfeldträger"
+        },
+        {
+          "value": "udl",
+          "en": "Uniform load",
+          "de": "Gleichlast"
+        },
+        {
+          "value": "point_mid",
+          "en": "Point load at midspan",
+          "de": "Einzellast in Feldmitte"
+        },
+        {
+          "value": "cantilever_udl",
+          "en": "Cantilever, UDL",
+          "de": "Kragarm, Gleichlast"
+        },
+        {
+          "value": "cantilever_point",
+          "en": "Cantilever, point load",
+          "de": "Kragarm, Einzellast"
+        },
+        {
+          "value": "two_span_udl",
+          "en": "Two spans, UDL (moment line)",
+          "de": "Zweifeldträger, Gleichlast (Momentenlinie)"
+        },
+        {
+          "value": "two_span_point",
+          "en": "Two spans, point load at midspan (moment line)",
+          "de": "Zweifeldträger, Einzellast in Feldmitte (Momentenlinie)"
+        }
+      ],
+      "example": "udl_ss"
+    },
+    {
+      "key": "point_share",
+      "scope": "T-30",
+      "kind": "number",
+      "en": "Share of the point load in the peak moment",
+      "de": "Anteil der Einzellast am maximalen Moment",
+      "unit": "1",
+      "unitId": "One",
+      "min": 0.0,
+      "max": 1.0
+    },
+    {
+      "key": "load_g",
+      "scope": "",
+      "kind": "number",
+      "en": "Permanent line load G",
+      "de": "Ständige Streckenlast G",
+      "unit": "N/mm",
+      "unitId": "NewtonPerMillimetre"
+    },
+    {
+      "key": "load_pos",
+      "scope": "",
+      "kind": "choice",
+      "en": "Load position",
+      "de": "Lastangriffspunkt",
+      "choices": [
+        {
+          "value": "centroid",
+          "en": "At the centroid",
+          "de": "Im Schwerpunkt"
+        },
+        {
+          "value": "top",
+          "en": "At the top edge",
+          "de": "Am oberen Rand"
+        },
+        {
+          "value": "bottom",
+          "en": "At the bottom edge",
+          "de": "Am unteren Rand"
+        }
+      ],
+      "example": "centroid"
+    },
+    {
+      "key": "load_q",
+      "scope": "",
+      "kind": "number",
+      "en": "Variable line load Q",
+      "de": "Veränderliche Streckenlast Q",
+      "unit": "N/mm",
+      "unitId": "NewtonPerMillimetre"
+    },
+    {
+      "key": "loss",
+      "scope": "",
+      "kind": "number",
+      "en": "Prestress loss ratio",
+      "de": "Vorspannverlustanteil",
+      "unit": "1",
+      "unitId": "One",
+      "min": 0.0,
+      "max": 1.0,
+      "example": 0.55
+    },
+    {
+      "key": "loss_creep",
+      "scope": "T-122",
+      "kind": "number",
+      "en": "Prestress loss by timber creep",
+      "de": "Vorspannverlust durch Kriechen",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "loss_mc",
+      "scope": "T-122",
+      "kind": "number",
+      "en": "Prestress loss by moisture content change",
+      "de": "Vorspannverlust durch Holzfeuchteänderung",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "loss_relax",
+      "scope": "T-122",
+      "kind": "number",
+      "en": "Prestress loss by bar relaxation",
+      "de": "Vorspannverlust durch Relaxation",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "m_ap",
+      "scope": "",
+      "kind": "number",
+      "en": "Apex moment M_ap,d",
+      "de": "Firstmoment M_ap,d",
+      "unit": "N·mm",
+      "unitId": "NewtonMillimetre"
+    },
+    {
+      "key": "m_d",
+      "scope": "",
+      "kind": "number",
+      "en": "Design moment M_d",
+      "de": "Bemessungsmoment M_d",
+      "unit": "N·mm",
+      "unitId": "NewtonMillimetre"
+    },
+    {
+      "key": "m_dia",
+      "scope": "",
+      "kind": "number",
+      "en": "Diaphragm moment",
+      "de": "Scheibenmoment",
+      "unit": "N·mm",
+      "unitId": "NewtonMillimetre"
+    },
+    {
+      "key": "m_fi",
+      "scope": "",
+      "kind": "number",
+      "en": "Design moment in fire M_fi,Ed",
+      "de": "Bemessungsmoment im Brandfall M_fi,Ed",
+      "unit": "N·mm",
+      "unitId": "NewtonMillimetre"
+    },
+    {
+      "key": "m_t",
+      "scope": "",
+      "kind": "number",
+      "en": "Design torsion moment M_t,Ed",
+      "de": "Bemessungstorsionsmoment M_t,Ed",
+      "unit": "N·mm",
+      "unitId": "NewtonMillimetre"
+    },
+    {
+      "key": "m_y",
+      "scope": "",
+      "kind": "number",
+      "en": "Design moment M_y,Ed",
+      "de": "Bemessungsmoment M_y,Ed",
+      "unit": "N·mm",
+      "unitId": "NewtonMillimetre"
+    },
+    {
+      "key": "m_z",
+      "scope": "",
+      "kind": "number",
+      "en": "Design moment M_z,Ed",
+      "de": "Bemessungsmoment M_z,Ed",
+      "unit": "N·mm",
+      "unitId": "NewtonMillimetre"
+    },
+    {
+      "key": "mass_kg_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Mass per length",
+      "de": "Masse je Länge",
+      "unit": "kg/m",
+      "unitId": "KilogramPerMetre"
+    },
+    {
+      "key": "mass_kg_m2",
+      "scope": "",
+      "kind": "number",
+      "en": "Floor mass per area",
+      "de": "Deckenmasse je Fläche",
+      "unit": "kg/m²",
+      "unitId": "KilogramPerSquareMetre"
+    },
+    {
+      "key": "material",
+      "scope": "",
+      "kind": "text",
+      "en": "Material key of the k_mod or γ_M table",
+      "de": "Werkstoffschlüssel der k_mod- oder γ_M-Tabelle"
+    },
+    {
+      "key": "material_gamma",
+      "scope": "",
+      "kind": "text",
+      "en": "Material key of the γ_M table",
+      "de": "Werkstoffschlüssel der γ_M-Tabelle"
+    },
+    {
+      "key": "member_b",
+      "scope": "T-96",
+      "kind": "number",
+      "en": "Stabilised member width",
+      "de": "Breite des ausgesteiften Bauteils",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "member_h",
+      "scope": "T-96",
+      "kind": "number",
+      "en": "Stabilised member depth",
+      "de": "Höhe des ausgesteiften Bauteils",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "members",
+      "scope": "",
+      "kind": "choice",
+      "en": "Member material",
+      "de": "Bauteilwerkstoff",
+      "choices": [
+        {
+          "value": "timber",
+          "en": "Timber",
+          "de": "Holz"
+        },
+        {
+          "value": "steel",
+          "en": "Steel",
+          "de": "Stahl"
+        }
+      ],
+      "example": "timber"
+    },
+    {
+      "key": "method",
+      "scope": "",
+      "kind": "choice",
+      "en": "Racking method",
+      "de": "Verfahren Wandscheibe",
+      "choices": [
+        {
+          "value": "A",
+          "en": "Method A",
+          "de": "Verfahren A"
+        },
+        {
+          "value": "B",
+          "en": "Method B",
+          "de": "Verfahren B"
+        }
+      ],
+      "example": "A"
+    },
+    {
+      "key": "mu",
+      "scope": "",
+      "kind": "number",
+      "en": "Friction coefficient μ",
+      "de": "Reibungsbeiwert μ",
+      "unit": "1",
+      "unitId": "One",
+      "example": 0.3
+    },
+    {
+      "key": "n",
+      "scope": "",
+      "kind": "number",
+      "en": "Number of fasteners",
+      "de": "Anzahl Verbindungsmittel",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "n1",
+      "scope": "",
+      "kind": "number",
+      "en": "Number of cycles",
+      "de": "Lastspielzahl",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "n2",
+      "scope": "",
+      "kind": "number",
+      "en": "Number of cycles of block 2",
+      "de": "Lastspielzahl des Blocks 2",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "n3",
+      "scope": "",
+      "kind": "number",
+      "en": "Number of cycles of block 3",
+      "de": "Lastspielzahl des Blocks 3",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "n_bolts",
+      "scope": "",
+      "kind": "number",
+      "en": "Number of bolts",
+      "de": "Anzahl Bolzen",
+      "unit": "1",
+      "unitId": "One",
+      "example": 1.0
+    },
+    {
+      "key": "n_braced",
+      "scope": "",
+      "kind": "number",
+      "en": "Number of members to be braced n",
+      "de": "Anzahl der auszusteifenden Bauteile n",
+      "unit": "1",
+      "unitId": "One",
+      "example": 1.0
+    },
+    {
+      "key": "n_c",
+      "scope": "",
+      "kind": "number",
+      "en": "Design compression force N_c,Ed",
+      "de": "Bemessungsdruckkraft N_c,Ed",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "n_c_fi",
+      "scope": "",
+      "kind": "number",
+      "en": "Design compression force in fire",
+      "de": "Bemessungsdruckkraft im Brandfall",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "n_chord_rd",
+      "scope": "",
+      "kind": "number",
+      "en": "Chord resistance",
+      "de": "Gurtwiderstand",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "n_d",
+      "scope": "",
+      "kind": "number",
+      "en": "Design compression force N_d of each member",
+      "de": "Bemessungsdruckkraft N_d je Bauteil",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "n_ef",
+      "scope": "",
+      "kind": "number",
+      "en": "Effective number of fasteners",
+      "de": "Wirksame Anzahl Verbindungsmittel",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "n_layers",
+      "scope": "",
+      "kind": "number",
+      "en": "Number of layers",
+      "de": "Anzahl Lagen",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "n_members",
+      "scope": "T-50",
+      "kind": "number",
+      "en": "Number of load-sharing members",
+      "de": "Anzahl lastverteilender Bauteile",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "n_panels",
+      "scope": "",
+      "kind": "number",
+      "en": "Number of panels",
+      "de": "Anzahl Tafeln",
+      "unit": "1",
+      "unitId": "One",
+      "example": 1.0
+    },
+    {
+      "key": "n_parts",
+      "scope": "",
+      "kind": "number",
+      "en": "Number of column parts",
+      "de": "Anzahl Stabteile",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "n_peds",
+      "scope": "",
+      "kind": "number",
+      "en": "Number of pedestrians",
+      "de": "Anzahl Fußgänger",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "n_rods",
+      "scope": "",
+      "kind": "number",
+      "en": "Number of reinforcing rods",
+      "de": "Anzahl Verstärkungsstäbe",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "n_t",
+      "scope": "",
+      "kind": "number",
+      "en": "Design tension force N_t,Ed",
+      "de": "Bemessungszugkraft N_t,Ed",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "n_t_fi",
+      "scope": "",
+      "kind": "number",
+      "en": "Design tension force in fire",
+      "de": "Bemessungszugkraft im Brandfall",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "o1",
+      "scope": "",
+      "kind": "number",
+      "en": "Orientation of layer 1",
+      "de": "Ausrichtung der Lage 1",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "o2",
+      "scope": "T-97,T-107",
+      "kind": "number",
+      "en": "Orientation of layer 2 (1 along the grain, 0 across)",
+      "de": "Ausrichtung der Lage 2 (1 längs, 0 quer)",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "o3",
+      "scope": "T-97,T-107",
+      "kind": "number",
+      "en": "Orientation of layer 3 (1 along the grain, 0 across)",
+      "de": "Ausrichtung der Lage 3 (1 längs, 0 quer)",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "o4",
+      "scope": "T-97,T-107",
+      "kind": "number",
+      "en": "Orientation of layer 4 (1 along the grain, 0 across)",
+      "de": "Ausrichtung der Lage 4 (1 längs, 0 quer)",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "o5",
+      "scope": "T-97,T-107",
+      "kind": "number",
+      "en": "Orientation of layer 5 (1 along the grain, 0 across)",
+      "de": "Ausrichtung der Lage 5 (1 längs, 0 quer)",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "outstand",
+      "scope": "",
+      "kind": "number",
+      "en": "Flange outstand",
+      "de": "Gurtüberstand",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "p_d",
+      "scope": "",
+      "kind": "number",
+      "en": "Design line load p_d at the apex",
+      "de": "Bemessungsstreckenlast p_d am First",
+      "unit": "N/mm",
+      "unitId": "NewtonPerMillimetre"
+    },
+    {
+      "key": "panel",
+      "scope": "",
+      "kind": "choice",
+      "en": "Panel material",
+      "de": "Plattenwerkstoff",
+      "choices": [
+        {
+          "value": "timber",
+          "en": "Timber",
+          "de": "Holz"
+        },
+        {
+          "value": "plywood",
+          "en": "Plywood",
+          "de": "Sperrholz"
+        },
+        {
+          "value": "osb",
+          "en": "OSB",
+          "de": "OSB"
+        },
+        {
+          "value": "particleboard",
+          "en": "Particleboard",
+          "de": "Spanplatte"
+        },
+        {
+          "value": "fibreboard",
+          "en": "Fibreboard",
+          "de": "Faserplatte"
+        }
+      ],
+      "example": "timber"
+    },
+    {
+      "key": "panel_2",
+      "scope": "",
+      "kind": "choice",
+      "en": "Panel material of member 2",
+      "de": "Plattenwerkstoff Bauteil 2",
+      "choices": [
+        {
+          "value": "timber",
+          "en": "Timber",
+          "de": "Holz"
+        },
+        {
+          "value": "plywood",
+          "en": "Plywood",
+          "de": "Sperrholz"
+        },
+        {
+          "value": "osb",
+          "en": "OSB",
+          "de": "OSB"
+        },
+        {
+          "value": "particleboard",
+          "en": "Particleboard",
+          "de": "Spanplatte"
+        },
+        {
+          "value": "fibreboard",
+          "en": "Fibreboard",
+          "de": "Faserplatte"
+        }
+      ],
+      "example": "timber"
+    },
+    {
+      "key": "plate_a",
+      "scope": "T-122",
+      "kind": "number",
+      "en": "Anchor plate area",
+      "de": "Ankerplattenfläche",
+      "unit": "mm²",
+      "unitId": "SquareMillimetre"
+    },
+    {
+      "key": "predrilled",
+      "scope": "",
+      "kind": "number",
+      "en": "Predrilled (1) or not (0)",
+      "de": "Vorgebohrt (1) oder nicht (0)",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "product",
+      "scope": "",
+      "kind": "choice",
+      "en": "Timber product",
+      "de": "Holzprodukt",
+      "choices": [
+        {
+          "value": "solid",
+          "en": "Solid timber",
+          "de": "Vollholz"
+        },
+        {
+          "value": "glulam",
+          "en": "Glulam",
+          "de": "Brettschichtholz"
+        },
+        {
+          "value": "lvl",
+          "en": "LVL",
+          "de": "Furnierschichtholz"
+        },
+        {
+          "value": "clt",
+          "en": "CLT",
+          "de": "Brettsperrholz"
+        }
+      ],
+      "example": "solid"
+    },
+    {
+      "key": "protect_mm",
+      "scope": "T-107",
+      "kind": "number",
+      "en": "Protecting char layer thickness",
+      "de": "Dicke der schützenden Kohleschicht",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "example": 25.0
+    },
+    {
+      "key": "psi_0_2",
+      "scope": "",
+      "kind": "number",
+      "en": "Combination factor ψ₀ of action 2",
+      "de": "Kombinationsbeiwert ψ₀ der Einwirkung 2",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "psi_2",
+      "scope": "",
+      "kind": "number",
+      "en": "Combination factor ψ₂",
+      "de": "Kombinationsbeiwert ψ₂",
+      "unit": "1",
+      "unitId": "One",
+      "min": 0.0,
+      "max": 1.0,
+      "example": 0.3
+    },
+    {
+      "key": "psi_2_2",
+      "scope": "",
+      "kind": "number",
+      "en": "Combination factor ψ₂ of action 2",
+      "de": "Kombinationsbeiwert ψ₂ der Einwirkung 2",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "q_d",
+      "scope": "T-90",
+      "kind": "number",
+      "en": "Design line load q_d",
+      "de": "Bemessungsstreckenlast q_d",
+      "unit": "N/mm",
+      "unitId": "NewtonPerMillimetre"
+    },
+    {
+      "key": "q_k",
+      "scope": "",
+      "kind": "number",
+      "en": "Characteristic line load q_k",
+      "de": "Charakteristische Streckenlast q_k",
+      "unit": "N/m",
+      "unitId": "NewtonPerMetre"
+    },
+    {
+      "key": "q_rd",
+      "scope": "",
+      "kind": "number",
+      "en": "Bracing capacity q_Rd",
+      "de": "Tragfähigkeit q_Rd des Aussteifungssystems",
+      "unit": "N/m",
+      "unitId": "NewtonPerMetre"
+    },
+    {
+      "key": "q_v",
+      "scope": "",
+      "kind": "number",
+      "en": "Vertical line load on the wall",
+      "de": "Vertikale Streckenlast auf die Wand",
+      "unit": "N/mm",
+      "unitId": "NewtonPerMillimetre"
+    },
+    {
+      "key": "q_v_rd",
+      "scope": "",
+      "kind": "number",
+      "en": "Diaphragm shear capacity",
+      "de": "Scheibenschubtragfähigkeit",
+      "unit": "N/mm",
+      "unitId": "NewtonPerMillimetre"
+    },
+    {
+      "key": "r_ax_k",
+      "scope": "",
+      "kind": "number",
+      "en": "Characteristic axial capacity per rod",
+      "de": "Charakteristische Ausziehtragfähigkeit je Stab",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "r_d1",
+      "scope": "",
+      "kind": "number",
+      "en": "Design fastener capacity R_d",
+      "de": "Bemessungstragfähigkeit R_d des Verbindungsmittels",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "r_hold_down",
+      "scope": "",
+      "kind": "number",
+      "en": "Hold-down capacity",
+      "de": "Tragfähigkeit der Zuganker",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "r_in",
+      "scope": "",
+      "kind": "number",
+      "en": "Inner radius r_in",
+      "de": "Innenradius r_in",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "restrained",
+      "scope": "",
+      "kind": "number",
+      "en": "Laterally restrained (1) or not (0)",
+      "de": "Seitlich gehalten (1) oder nicht (0)",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "rho_k",
+      "scope": "",
+      "kind": "number",
+      "en": "Characteristic density ρ_k",
+      "de": "Charakteristische Rohdichte ρ_k",
+      "unit": "kg/m³",
+      "unitId": "KilogramPerCubicMetre"
+    },
+    {
+      "key": "rho_k1",
+      "scope": "",
+      "kind": "number",
+      "en": "Characteristic density ρ_k of member 1",
+      "de": "Charakteristische Rohdichte ρ_k Bauteil 1",
+      "unit": "kg/m³",
+      "unitId": "KilogramPerCubicMetre"
+    },
+    {
+      "key": "rho_k2",
+      "scope": "",
+      "kind": "number",
+      "en": "Characteristic density ρ_k of member 2",
+      "de": "Charakteristische Rohdichte ρ_k Bauteil 2",
+      "unit": "kg/m³",
+      "unitId": "KilogramPerCubicMetre"
+    },
+    {
+      "key": "rho_m1",
+      "scope": "",
+      "kind": "number",
+      "en": "Mean density ρ_m of member 1",
+      "de": "Mittlere Rohdichte ρ_m Bauteil 1",
+      "unit": "kg/m³",
+      "unitId": "KilogramPerCubicMetre"
+    },
+    {
+      "key": "rho_m2",
+      "scope": "",
+      "kind": "number",
+      "en": "Mean density ρ_m of member 2",
+      "de": "Mittlere Rohdichte ρ_m Bauteil 2",
+      "unit": "kg/m³",
+      "unitId": "KilogramPerCubicMetre"
+    },
+    {
+      "key": "s",
+      "scope": "",
+      "kind": "number",
+      "en": "Fastener spacing s",
+      "de": "Verbindungsmittelabstand s",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "s1",
+      "scope": "T-62,T-90",
+      "kind": "number",
+      "en": "Fastener spacing s₁",
+      "de": "Abstand s₁ der Verbindungsmittel",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "s3",
+      "scope": "T-62,T-90",
+      "kind": "number",
+      "en": "Fastener spacing s₃",
+      "de": "Abstand s₃ der Verbindungsmittel",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "s_first",
+      "scope": "",
+      "kind": "number",
+      "en": "First moment of area S_f",
+      "de": "Statisches Moment S_f",
+      "unit": "mm³",
+      "unitId": "CubicMillimetre"
+    },
+    {
+      "key": "s_lvl",
+      "scope": "",
+      "kind": "number",
+      "en": "LVL size exponent",
+      "de": "LVL-Größenexponent",
+      "unit": "1",
+      "unitId": "One",
+      "example": 0.12
+    },
+    {
+      "key": "sc",
+      "scope": "",
+      "kind": "number",
+      "en": "Service class",
+      "de": "Nutzungsklasse",
+      "unit": "1",
+      "unitId": "One",
+      "min": 1.0,
+      "max": 3.0,
+      "example": 1.0
+    },
+    {
+      "key": "series",
+      "scope": "",
+      "kind": "number",
+      "en": "Series (1) or single (0) charring",
+      "de": "Serie (1) oder einzeln (0)",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "shape",
+      "scope": "",
+      "kind": "choice",
+      "en": "Cross-section shape",
+      "de": "Querschnittsform",
+      "choices": [
+        {
+          "value": "rect",
+          "en": "Rectangular",
+          "de": "Rechteckig"
+        },
+        {
+          "value": "circle",
+          "en": "Circular",
+          "de": "Kreisförmig"
+        },
+        {
+          "value": "double_tapered",
+          "en": "Double tapered",
+          "de": "Satteldach"
+        },
+        {
+          "value": "pitched_cambered",
+          "en": "Pitched cambered",
+          "de": "Gekrümmter Satteldachträger"
+        }
+      ],
+      "example": "rect"
+    },
+    {
+      "key": "shear_planes",
+      "scope": "",
+      "kind": "number",
+      "en": "Number of shear planes",
+      "de": "Anzahl Scherfugen",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "side",
+      "scope": "",
+      "kind": "choice",
+      "en": "Notch side",
+      "de": "Ausklinkungsseite",
+      "choices": [
+        {
+          "value": "support",
+          "en": "Support side",
+          "de": "Auflagerseite"
+        },
+        {
+          "value": "tension",
+          "en": "Tension side",
+          "de": "Zugseite"
+        },
+        {
+          "value": "compression",
+          "en": "Compression side",
+          "de": "Druckseite"
+        }
+      ],
+      "example": "support"
+    },
+    {
+      "key": "side_members",
+      "scope": "",
+      "kind": "choice",
+      "en": "Side member material",
+      "de": "Seitenholzwerkstoff",
+      "choices": [
+        {
+          "value": "timber",
+          "en": "Timber",
+          "de": "Holz"
+        },
+        {
+          "value": "steel",
+          "en": "Steel",
+          "de": "Stahl"
+        }
+      ],
+      "example": "timber"
+    },
+    {
+      "key": "sigma_p_0",
+      "scope": "",
+      "kind": "number",
+      "en": "Initial prestress σ_p,0",
+      "de": "Anfangsvorspannung σ_p,0",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre"
+    },
+    {
+      "key": "sigma_p_0",
+      "scope": "T-122",
+      "kind": "number",
+      "en": "Initial prestress σ_p,0",
+      "de": "Anfangsvorspannung σ_p,0",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre",
+      "lever": true
+    },
+    {
+      "key": "sigma_t_90",
+      "scope": "",
+      "kind": "number",
+      "en": "Tension stress perpendicular to grain σ_t,90,d",
+      "de": "Querzugspannung σ_t,90,d",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre"
+    },
+    {
+      "key": "situation",
+      "scope": "",
+      "kind": "choice",
+      "en": "Design situation",
+      "de": "Bemessungssituation",
+      "choices": [
+        {
+          "value": "persistent",
+          "en": "Persistent and transient",
+          "de": "Ständig und vorübergehend"
+        },
+        {
+          "value": "accidental",
+          "en": "Accidental",
+          "de": "Außergewöhnlich"
+        },
+        {
+          "value": "fire",
+          "en": "Fire",
+          "de": "Brand"
+        }
+      ],
+      "example": "persistent"
+    },
+    {
+      "key": "sn_a",
+      "scope": "",
+      "kind": "number",
+      "en": "S-N parameter a",
+      "de": "S-N-Parameter a",
+      "unit": "1",
+      "unitId": "One",
+      "example": 15.0
+    },
+    {
+      "key": "sn_b",
+      "scope": "",
+      "kind": "number",
+      "en": "S-N parameter b",
+      "de": "S-N-Parameter b",
+      "unit": "1",
+      "unitId": "One",
+      "example": 4.0
+    },
+    {
+      "key": "spacing",
+      "scope": "T-96",
+      "kind": "number",
+      "en": "Spacing of the stabilised members",
+      "de": "Abstand der ausgesteiften Bauteile",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "spacing_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Member spacing",
+      "de": "Bauteilabstand",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "span",
+      "scope": "T-95",
+      "kind": "number",
+      "en": "Truss span",
+      "de": "Fachwerkspannweite",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "span_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Span",
+      "de": "Spannweite",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "steel_to_timber",
+      "scope": "",
+      "kind": "number",
+      "en": "Steel-to-timber (1) or timber-to-timber (0)",
+      "de": "Stahl-Holz (1) oder Holz-Holz (0)",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "support",
+      "scope": "",
+      "kind": "choice",
+      "en": "Support type",
+      "de": "Auflagerart",
+      "choices": [
+        {
+          "value": "discrete",
+          "en": "Discrete support",
+          "de": "Punktuelle Lagerung"
+        },
+        {
+          "value": "continuous",
+          "en": "Continuous support",
+          "de": "Durchlaufende Lagerung"
+        }
+      ],
+      "example": "discrete"
+    },
+    {
+      "key": "system",
+      "scope": "",
+      "kind": "text",
+      "en": "Structural system",
+      "de": "Tragsystem"
+    },
+    {
+      "key": "t1",
+      "scope": "",
+      "kind": "number",
+      "en": "Thickness t₁",
+      "de": "Dicke t₁",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "t1",
+      "scope": "T-107",
+      "kind": "number",
+      "en": "Thickness t₁ of the exposed layer",
+      "de": "Dicke t₁ der beflammten Lage",
+      "unit": "mm",
+      "unitId": "Millimetre",
+      "lever": true
+    },
+    {
+      "key": "t2",
+      "scope": "",
+      "kind": "number",
+      "en": "Thickness t₂",
+      "de": "Dicke t₂",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "t3",
+      "scope": "T-97,T-107",
+      "kind": "number",
+      "en": "Thickness t3",
+      "de": "Dicke t3",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "t4",
+      "scope": "T-97,T-107",
+      "kind": "number",
+      "en": "Thickness t4",
+      "de": "Dicke t4",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "t5",
+      "scope": "T-97,T-107",
+      "kind": "number",
+      "en": "Thickness t5",
+      "de": "Dicke t5",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "t_a1",
+      "scope": "",
+      "kind": "number",
+      "en": "Distance t_a1",
+      "de": "Abstand t_a1",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "t_a2",
+      "scope": "",
+      "kind": "number",
+      "en": "Distance t_a2",
+      "de": "Abstand t_a2",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "t_head_side",
+      "scope": "",
+      "kind": "number",
+      "en": "Head side member thickness",
+      "de": "Dicke des kopfseitigen Holzes",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "t_lam",
+      "scope": "",
+      "kind": "number",
+      "en": "Lamella thickness t",
+      "de": "Lamellendicke t",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "t_min",
+      "scope": "",
+      "kind": "number",
+      "en": "Fire exposure or protection time",
+      "de": "Branddauer oder Schutzzeit",
+      "unit": "min",
+      "unitId": "Minute"
+    },
+    {
+      "key": "t_panel",
+      "scope": "",
+      "kind": "number",
+      "en": "Panel thickness",
+      "de": "Plattendicke",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "t_pen",
+      "scope": "",
+      "kind": "number",
+      "en": "Penetration length t_pen",
+      "de": "Einschlagtiefe t_pen",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "t_plate",
+      "scope": "",
+      "kind": "number",
+      "en": "Steel plate thickness",
+      "de": "Stahlblechdicke",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "t_req",
+      "scope": "",
+      "kind": "number",
+      "en": "Required fire resistance time t_req",
+      "de": "Geforderte Feuerwiderstandsdauer t_req",
+      "unit": "min",
+      "unitId": "Minute"
+    },
+    {
+      "key": "t_steel",
+      "scope": "",
+      "kind": "number",
+      "en": "Steel plate thickness",
+      "de": "Stahlblechdicke",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "tau_d",
+      "scope": "",
+      "kind": "number",
+      "en": "Shear stress τ_d",
+      "de": "Schubspannung τ_d",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre"
+    },
+    {
+      "key": "tau_h",
+      "scope": "",
+      "kind": "number",
+      "en": "Horizontal shear stress τ_h",
+      "de": "Horizontalschubspannung τ_h",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre"
+    },
+    {
+      "key": "tau_v",
+      "scope": "",
+      "kind": "number",
+      "en": "Torsional shear stress τ_v",
+      "de": "Torsionsschubspannung τ_v",
+      "unit": "N/mm²",
+      "unitId": "NewtonPerSquareMillimetre"
+    },
+    {
+      "key": "u_inst_g",
+      "scope": "",
+      "kind": "number",
+      "en": "Instantaneous deflection from G",
+      "de": "Anfangsverformung aus G",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "u_inst_q",
+      "scope": "",
+      "kind": "number",
+      "en": "Instantaneous deflection from Q",
+      "de": "Anfangsverformung aus Q",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "v",
+      "scope": "",
+      "kind": "number",
+      "en": "Design shear force V_Ed",
+      "de": "Bemessungsquerkraft V_Ed",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "v_apex",
+      "scope": "",
+      "kind": "number",
+      "en": "Apex zone volume",
+      "de": "Firstzonenvolumen",
+      "unit": "mm³",
+      "unitId": "CubicMillimetre"
+    },
+    {
+      "key": "v_beam",
+      "scope": "",
+      "kind": "number",
+      "en": "Stressed apex volume",
+      "de": "Beanspruchtes Firstvolumen",
+      "unit": "mm³",
+      "unitId": "CubicMillimetre"
+    },
+    {
+      "key": "v_d",
+      "scope": "",
+      "kind": "number",
+      "en": "Design shear force V_d",
+      "de": "Bemessungsquerkraft V_d",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "v_point",
+      "scope": "",
+      "kind": "number",
+      "en": "Support shear force V_Ed at the support",
+      "de": "Auflagerquerkraft V_Ed am Auflager",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "volume",
+      "scope": "",
+      "kind": "number",
+      "en": "Stressed volume",
+      "de": "Beanspruchtes Volumen",
+      "unit": "mm³",
+      "unitId": "CubicMillimetre"
+    },
+    {
+      "key": "w",
+      "scope": "",
+      "kind": "number",
+      "en": "Splitting factor w",
+      "de": "Spaltfaktor w",
+      "unit": "1",
+      "unitId": "One",
+      "example": 1.0
+    },
+    {
+      "key": "w_c",
+      "scope": "",
+      "kind": "number",
+      "en": "Pre-camber w_c",
+      "de": "Überhöhung w_c",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "w_q2",
+      "scope": "",
+      "kind": "number",
+      "en": "Deflection of action 2",
+      "de": "Durchbiegung der Einwirkung 2",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "w_y",
+      "scope": "",
+      "kind": "number",
+      "en": "Section modulus W_y",
+      "de": "Widerstandsmoment W_y",
+      "unit": "mm³",
+      "unitId": "CubicMillimetre"
+    },
+    {
+      "key": "w_z",
+      "scope": "",
+      "kind": "number",
+      "en": "Section modulus W_z",
+      "de": "Widerstandsmoment W_z",
+      "unit": "mm³",
+      "unitId": "CubicMillimetre"
+    },
+    {
+      "key": "web_b",
+      "scope": "T-95",
+      "kind": "number",
+      "en": "Web member width",
+      "de": "Füllstabbreite",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "web_h",
+      "scope": "T-95",
+      "kind": "number",
+      "en": "Web member depth",
+      "de": "Füllstabhöhe",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "wheel_n",
+      "scope": "",
+      "kind": "number",
+      "en": "Wheel load",
+      "de": "Radlast",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "width_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Floor width",
+      "de": "Deckenbreite",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "wood",
+      "scope": "",
+      "kind": "choice",
+      "en": "Wood type",
+      "de": "Holzart",
+      "choices": [
+        {
+          "value": "softwood",
+          "en": "Softwood",
+          "de": "Nadelholz"
+        },
+        {
+          "value": "hardwood",
+          "en": "Hardwood",
+          "de": "Laubholz"
+        }
+      ],
+      "example": "softwood"
+    },
+    {
+      "key": "x",
+      "scope": "",
+      "kind": "number",
+      "en": "Notch offset x",
+      "de": "Ausklinkungsabstand x",
+      "unit": "mm",
+      "unitId": "Millimetre"
+    },
+    {
+      "key": "years",
+      "scope": "T-121",
+      "kind": "number",
+      "en": "Design life in years (the block cycles are per year)",
+      "de": "Nutzungsdauer in Jahren (Lastspiele je Jahr)",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "zeta",
+      "scope": "",
+      "kind": "number",
+      "en": "Damping ratio ζ",
+      "de": "Dämpfungsgrad ζ",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "zeta",
+      "scope": "T-120",
+      "kind": "number",
+      "en": "Damping ratio ζ",
+      "de": "Dämpfungsgrad ζ",
+      "unit": "1",
+      "unitId": "One",
+      "lever": true,
+      "example": 0.015
+    }
+  ]
+}

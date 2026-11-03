@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-beam-sheeting-rib-width-m/schema.json",
+  "title": "ChangeBeamSheetingRibWidthM",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newRibWidthM"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Composite beam",
+          "de": "Verbundträger"
+        },
+        "description": {
+          "en": "The composite beam this mutation addresses, by id.",
+          "de": "Das adressierte Element (Verbundträger), per Kennung."
+        },
+        "ref": {
+          "kind": "beam"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newRibWidthM": {
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Profiled sheeting rib width b_0",
+          "de": "Rippenbreite b_0 des Profilblechs"
+        },
+        "unit": "m",
+        "step": 0.01,
+        "precision": 3,
+        "group": "sheeting",
+        "order": 20
+      }
+    }
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeBuildingNsWeightN",
+  "id": "bldg-office",
+  "newNonstructuralWeightN": 1.5
+}

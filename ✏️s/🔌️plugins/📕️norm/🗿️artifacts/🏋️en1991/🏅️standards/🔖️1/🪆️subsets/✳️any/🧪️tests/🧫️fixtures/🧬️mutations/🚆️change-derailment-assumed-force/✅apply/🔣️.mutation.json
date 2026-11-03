@@ -1,0 +1,6 @@
+{
+  "ChangeDerailmentAssumedForce": {
+    "id": "derailment-1",
+    "newAssumedForce": 3.0
+  }
+}

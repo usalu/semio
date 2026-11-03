@@ -1,0 +1,6 @@
+{
+  "ChangePlacementZ": {
+    "id": "wall-north",
+    "newZ": 1.0
+  }
+}

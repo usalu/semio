@@ -1,0 +1,13 @@
+{
+  "InsertLocalFire": {
+    "index": 1,
+    "item": {
+      "id": "local-fire-2",
+      "fireDiameter": 2.0,
+      "heatReleaseRate": 5000000.0,
+      "ceilingHeight": 3.0,
+      "horizontalDistance": 1.0,
+      "assumedFlux": 100000.0
+    }
+  }
+}

@@ -1,4 +1,5 @@
 import {noticeLanguagesV1} from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
+import {spawnSync} from "node:child_process";
 import {join,isAbsolute} from "node:path";
 import setupSchema from "../🧬️schema/🔣️.json" with {type:"json"};
 import {BundleScript,scriptInvocationBudget,advanceScriptInvocation,requireIssuedScriptInvocationV1,createIssuedResourceControlV1,requireIssuedResourceControlInvocationV1,type ScriptInvocation} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -16,6 +17,11 @@ export interface NativeDebuggerSetupStepV1 extends DeveloperPlan {readonly id:"p
 /** 🎛️ Host effects use one process port and the exact original cancellation signal. */
 export interface NativeDebuggerSetupHostV1 extends NativeDebuggerSetupSelectionV1 {find(program:string):string|null;run(plan:DeveloperPlan,signal:AbortSignal):Promise<void>;capture(plan:DeveloperPlan,signal:AbortSignal):Promise<string>;}
 
+/** 🔐 Linux debugger installation is root, or sudo only when `sudo -n true` succeeds. */
+export function linuxDebuggerPrivilegeV1(isRoot: boolean, sudoAvailable: boolean, noninteractive: boolean): "root" | "sudo" | "none" {
+ return isRoot ? "root" : sudoAvailable && noninteractive ? "sudo" : "none";
+}
+
 /** 🧬️ Expands only schema-owned host plans and known absolute Windows installation roots. */
 export function planNativeDebuggerProvisionV1(host:NativeDebuggerSetupSelectionV1,cwd:string):NativeDebuggerSetupStepV1[]{
  const policy=setupSchema.$defs.NativeDebuggerSetupPolicy.const,installer=policy.installers.find(row=>row.platform===host.platform&&row.manager===host.manager);if(!installer)throw Error("developer.setup.manager-unavailable");
@@ -26,7 +32,7 @@ export function planNativeDebuggerProvisionV1(host:NativeDebuggerSetupSelectionV
 
 /** 🔌️ Adapts existing owned child execution to bounded LLDB probes and cancellable provisioning. */
 export function createNativeDebuggerSetupHostV1(cwd:string,invocation:ScriptInvocation):NativeDebuggerSetupHostV1{
- requireIssuedScriptInvocationV1(invocation);const environment={...process.env},platform=process.platform,find=(program:string)=>runtimeWhichV1(program,{PATH:environment.PATH??environment.Path??""}),manager=(platform==="linux"?["apt-get","dnf","pacman","zypper"]:platform==="darwin"?["brew"]:platform==="win32"?["winget"]:[]).find(program=>find(program)),privilege=platform==="linux"?(process.getuid?.()===0?"root":find("sudo")?"sudo":"none"):"none";
+ requireIssuedScriptInvocationV1(invocation);const environment={...process.env},platform=process.platform,find=(program:string)=>runtimeWhichV1(program,{PATH:environment.PATH??environment.Path??""}),manager=(platform==="linux"?["apt-get","dnf","pacman","zypper"]:platform==="darwin"?["brew"]:platform==="win32"?["winget"]:[]).find(program=>find(program)),sudo=find("sudo"),noninteractive=Boolean(sudo)&&spawnSync(sudo!,["-n","true"],{stdio:"ignore"}).status===0,privilege=platform==="linux"?linuxDebuggerPrivilegeV1(process.getuid?.()===0,Boolean(sudo),noninteractive):"none";
  const execute=async(plan:DeveloperPlan,signal:AbortSignal,capture:boolean):Promise<string>=>{requireIssuedScriptInvocationV1(invocation);signal.throwIfAborted();if(signal!==invocation.control.signal)throw Error("developer.setup.original-signal-required");const chunks:string[]=[];await runOwnedCommand(plan.command,plan.args,plan.cwd,"developer-tools:setup-debugger",scriptInvocationBudget(invocation,capture?setupSchema.$defs.NativeDebuggerSetupPolicy.const.probeMilliseconds:0),{signal,env:plan.environment??environment,stdout:capture?"ignore":"inherit",output:{maximumBytes:capture?262144:16*1024*1024,maximumLines:capture?4096:200000},...(capture?{outputConsumer:(bytes:Uint8Array)=>{chunks.push(Buffer.from(bytes).toString());}}:{}),onProgress:()=>advanceScriptInvocation(invocation,"setup-debugger","running")});requireIssuedScriptInvocationV1(invocation);return chunks.join("");};
  return{platform,environment,manager,privilege,find,run:async(plan,signal)=>{await execute(plan,signal,false);},capture:(plan,signal)=>execute(plan,signal,true)};
 }

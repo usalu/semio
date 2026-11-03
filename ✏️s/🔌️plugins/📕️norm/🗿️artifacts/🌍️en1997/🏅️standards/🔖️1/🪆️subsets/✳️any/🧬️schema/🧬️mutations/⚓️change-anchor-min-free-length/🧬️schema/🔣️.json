@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-anchor-min-free-length/schema.json",
+  "title": "ChangeAnchorMinFreeLength",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newMinFreeLength"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeAnchorMinFreeLength"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Anchor",
+          "de": "Anker"
+        },
+        "description": {
+          "en": "The anchor this mutation addresses, by id.",
+          "de": "Die adressierte Zeile (Anker), per Kennung."
+        },
+        "ref": {
+          "kind": "anchor"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newMinFreeLength": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Minimum free length",
+          "de": "Mindestfreispiel"
+        },
+        "widget": "stepper",
+        "unit": "m",
+        "precision": 2,
+        "step": 0.05,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

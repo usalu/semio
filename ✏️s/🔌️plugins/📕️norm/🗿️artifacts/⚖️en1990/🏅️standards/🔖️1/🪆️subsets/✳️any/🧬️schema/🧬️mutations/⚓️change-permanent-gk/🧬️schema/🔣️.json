@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/mutation/change-permanent-gk/schema.json",
+  "title": "ChangePermanentGk",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newGk"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changePermanentGk"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Permanent action",
+          "de": "Ständige Einwirkung"
+        },
+        "description": {
+          "en": "The permanent action this mutation addresses, by id.",
+          "de": "Das adressierte Element (Ständige Einwirkung), per Kennung."
+        },
+        "ref": {
+          "kind": "permanent"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newGk": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Characteristic permanent action G_k",
+          "de": "Charakteristischer Wert der ständigen Einwirkung G_k"
+        },
+        "widget": "stepper",
+        "unit": "N",
+        "displayUnit": "kN",
+        "displayFactor": 0.001,
+        "precision": 2,
+        "step": 1000,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

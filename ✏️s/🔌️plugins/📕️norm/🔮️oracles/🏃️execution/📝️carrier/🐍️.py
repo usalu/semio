@@ -83,7 +83,7 @@ def parse_dsl(envelope, text):
                     "`key=value` field: the notation nests records and tables and flattens nested records into "
                     "`key=key=value` runs with no delimiter, and this repository publishes no grammar for it — the "
                     "subset's own `🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio` is the repository-wide "
-                    "`payload = OCTET+` placeholder and the framework's DSL notation module carries no grammar document "
+                    "`payload = OCTET+` rule and the framework's DSL notation module carries no grammar document "
                     "either. Reconstructing these bytes would mean inferring a grammar from one example rather than "
                     "reading a specification, so this implementation refuses instead of pretending. The mutation "
                     "vocabulary above is unaffected: it is specified, and both implementations agree on all of it. This "

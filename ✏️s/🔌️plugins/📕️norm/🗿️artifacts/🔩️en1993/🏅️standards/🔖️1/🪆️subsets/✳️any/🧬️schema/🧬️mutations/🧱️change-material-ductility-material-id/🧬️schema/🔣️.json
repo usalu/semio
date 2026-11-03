@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-material-ductility-material-id/schema.json",
+  "title": "ChangeMaterialDuctilityMaterialId",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newMaterialId"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Material ductility",
+          "de": "Werkstoffduktilität"
+        },
+        "description": {
+          "en": "The material ductility this mutation addresses, by id.",
+          "de": "Das adressierte Element (Werkstoffduktilität), per Kennung."
+        },
+        "ref": {
+          "kind": "material-ductility"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newMaterialId": {
+      "type": "string",
+      "x-semio-ui": {
+        "label": {
+          "en": "Material",
+          "de": "Werkstoff"
+        },
+        "widget": "text",
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

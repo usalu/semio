@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-anchor-f-uk/schema.json",
+  "title": "ChangeAnchorFUk",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "anchorId",
+    "newFUk"
+  ],
+  "properties": {
+    "anchorId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Anchor",
+          "de": "Dübel"
+        },
+        "description": {
+          "en": "The anchor this mutation addresses, by id.",
+          "de": "Das adressierte Element (Dübel), per Kennung."
+        },
+        "ref": {
+          "kind": "anchor"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newFUk": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Characteristic steel tensile strength f_uk",
+          "de": "Charakteristische Zugfestigkeit des Stahls f_uk"
+        },
+        "widget": "stepper",
+        "unit": "Pa",
+        "displayUnit": "N/mm²",
+        "displayFactor": 0.000001,
+        "precision": 1,
+        "step": 10000000,
+        "snaps": [
+          400000000,
+          500000000,
+          700000000,
+          800000000,
+          1000000000
+        ],
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

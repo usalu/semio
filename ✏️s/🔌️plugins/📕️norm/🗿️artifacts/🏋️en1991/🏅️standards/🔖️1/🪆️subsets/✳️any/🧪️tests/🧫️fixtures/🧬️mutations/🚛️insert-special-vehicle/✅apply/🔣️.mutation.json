@@ -1,0 +1,11 @@
+{
+  "InsertSpecialVehicle": {
+    "index": 1,
+    "item": {
+      "id": "special-vehicle-1-new",
+      "designation": "4 x 150",
+      "x": 1.5,
+      "y": 1.5
+    }
+  }
+}

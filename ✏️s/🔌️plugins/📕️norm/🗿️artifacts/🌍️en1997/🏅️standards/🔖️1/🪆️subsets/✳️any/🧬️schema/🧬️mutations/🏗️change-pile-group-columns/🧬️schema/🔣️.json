@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-pile-group-columns/schema.json",
+  "title": "ChangePileGroupColumns",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newColumns"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changePileGroupColumns"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Pile group",
+          "de": "Pfahlgruppe"
+        },
+        "description": {
+          "en": "The pile group this mutation addresses, by id.",
+          "de": "Die adressierte Zeile (Pfahlgruppe), per Kennung."
+        },
+        "ref": {
+          "kind": "pile-group"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newColumns": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295,
+      "x-semio-ui": {
+        "label": {
+          "en": "Columns n",
+          "de": "Spalten n"
+        },
+        "widget": "stepper",
+        "precision": 0,
+        "step": 1,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "ChangeSnowGuardRoofId": {
+    "id": "snow-guard-1",
+    "newRoofId": "R1-changed"
+  }
+}

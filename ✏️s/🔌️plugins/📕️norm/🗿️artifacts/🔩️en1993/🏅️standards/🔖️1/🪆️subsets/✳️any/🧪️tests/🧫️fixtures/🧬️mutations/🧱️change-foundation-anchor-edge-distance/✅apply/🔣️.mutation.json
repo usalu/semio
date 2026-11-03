@@ -1,0 +1,6 @@
+{
+  "ChangeFoundationAnchorEdgeDistance": {
+    "id": "foundation-1",
+    "newAnchorEdgeDistance": 2.0
+  }
+}

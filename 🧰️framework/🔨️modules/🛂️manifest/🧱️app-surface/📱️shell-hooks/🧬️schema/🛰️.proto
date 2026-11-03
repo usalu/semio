@@ -1,0 +1,56 @@
+syntax = "proto3";
+package semio.framework.shellhooks;
+
+enum ShellHookCause { SHELL_HOOK_CAUSE_START = 0; SHELL_HOOK_CAUSE_RESIZE = 1; SHELL_HOOK_CAUSE_INPUT_MODALITY = 2; SHELL_HOOK_CAUSE_SELECTION = 3; }
+
+enum ShellSheetState { SHELL_SHEET_STATE_COLLAPSED = 0; SHELL_SHEET_STATE_HALF = 1; SHELL_SHEET_STATE_FULL = 2; }
+
+message ShellDeviceSignal { uint32 width_px = 1; bool touch = 2; }
+
+message ShellPlatformPrefs { bool forced_colors = 1; bool prefers_contrast_more = 2; bool prefers_dark = 3; bool prefers_reduced_motion = 4; }
+
+message ShellLayoutRequest {
+  string app_id = 6;
+  ShellDeviceSignal signal = 1;
+  ShellHookCause cause = 2;
+  string prefs = 3;
+  bool has_selection = 4;
+  string lang = 5;
+}
+
+message ShellBottomSheet {
+  string label = 1;
+  ShellSheetState state = 2;
+  double height = 3;
+  uint32 min_handle_px = 4;
+}
+
+message ShellKeyEvent { string scope = 1; string key = 2; bool ctrl = 3; bool alt = 4; bool shift = 5; bool meta = 6; }
+
+message ShellKeyOutcome { oneof outcome { bool ignored = 1; bool consumed = 2; string action = 3; ShellSelect select = 4; ShellVerb verb = 5; } }
+
+enum ShellTouchGesture { SHELL_TOUCH_GESTURE_LONG_PRESS = 0; SHELL_TOUCH_GESTURE_DOUBLE_TAP = 1; SHELL_TOUCH_GESTURE_TAP = 2; }
+
+message ShellTouchProfile { bool one_finger_orbit = 1; bool long_press = 2; uint32 hit_px = 3; }
+
+message ShellTouchEvent { string scope = 1; ShellTouchGesture gesture = 2; double x = 3; double y = 4; uint32 width_px = 5; }
+
+message ShellVerb { string action = 1; map<string, string> args = 2; }
+
+message ShellSelectTarget { string granularity = 1; string id = 2; }
+
+message ShellSelect { string domain_id = 1; repeated ShellSelectTarget targets = 2; string merge = 3; }
+
+message ShellAccessibleNode {
+  string key = 1;
+  string role = 2;
+  string name = 3;
+  string description = 4;
+  string role_description = 5;
+  string value_text = 6;
+  uint32 position = 7;
+  uint32 set_size = 8;
+  bool selected = 9;
+  bool has_selected = 10;
+  uint32 depth = 11;
+}

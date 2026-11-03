@@ -1,0 +1,5 @@
+{
+  "mutation": "changePileTensionVariable",
+  "id": "pile-P1",
+  "newTensionVariable": 1.5
+}

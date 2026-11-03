@@ -1,5 +1,6 @@
 syntax = "proto3";
+package semio.s.norm.en1992.mutation.insert_member;
 message InsertMember {
-  uint32 index = 1;
-  string member = 2;
+  uint64 index = 1;
+  RcMember member = 2;
 }

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeSeismicImportanceClass",
+  "id": "E-1",
+  "newImportanceClass": "III"
+}

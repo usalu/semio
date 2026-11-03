@@ -1,0 +1,22 @@
+{
+  "InsertRestraint": {
+    "index": 1,
+    "restraint": {
+      "id": "restraint-1-2",
+      "memberId": "member-b1",
+      "label": "Restraint 1",
+      "startSupport": "Fork",
+      "endSupport": "Fork",
+      "intermediatePosition": 0.0,
+      "torsionalSpring": 0.0,
+      "lateralSpringPosition": 0.0,
+      "lateralSpringStiffness": 0.0,
+      "loadHeight": 0.0,
+      "loadDistribution": "Udl",
+      "designMoment": 100000.0,
+      "designAxial": 0.0,
+      "generalMethod": 0,
+      "hingeToRestraint": 0.0
+    }
+  }
+}

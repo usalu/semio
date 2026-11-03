@@ -1,0 +1,30 @@
+{
+  "annex": null,
+  "reliabilityClass": "RC2",
+  "cases": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "structureKind": null,
+  "steelFYPa": null,
+  "beams": null,
+  "columns": null,
+  "slabs": {
+    "removed": [
+      {
+        "id": "slab-S1-m1",
+        "index": 1
+      }
+    ],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "placements": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "studs": null,
+  "fireRating": null,
+  "insulationThicknessM": null,
+  "fatigueDetail": null
+}

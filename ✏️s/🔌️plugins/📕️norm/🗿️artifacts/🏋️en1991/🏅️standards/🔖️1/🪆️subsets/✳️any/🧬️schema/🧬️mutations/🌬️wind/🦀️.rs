@@ -17,12 +17,6 @@ pub mod change_coast_or_island;
 pub mod change_en_vb;
 #[path = "../📏change-mixed-terrain-distance/🦀️.rs"]
 pub mod change_mixed_terrain_distance;
-#[path = "../🧭change-mixed-terrain-upwind/🦀️.rs"]
-pub mod change_mixed_terrain_upwind;
-#[path = "../📐change-orography-factor/🦀️.rs"]
-pub mod change_orography_factor;
-#[path = "../🏞️change-terrain-category/🦀️.rs"]
-pub mod change_terrain_category;
-#[path = "../🪁change-wind-zone/🦀️.rs"]
-pub mod change_wind_zone;
 //#endregion 🪢️Mounts
+
+pub use semio_s_artifact_norm_en1991_mut_wind_more::{change_mixed_terrain_upwind, change_orography_factor, change_terrain_category, change_wind_zone};

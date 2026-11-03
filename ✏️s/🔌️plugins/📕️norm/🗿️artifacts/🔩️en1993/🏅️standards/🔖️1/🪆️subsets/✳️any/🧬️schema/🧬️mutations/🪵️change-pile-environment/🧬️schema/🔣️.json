@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-pile-environment/schema.json",
+  "title": "ChangePileEnvironment",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newEnvironment"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Pile",
+          "de": "Pfahl"
+        },
+        "description": {
+          "en": "The pile this mutation addresses, by id.",
+          "de": "Das adressierte Element (Pfahl), per Kennung."
+        },
+        "ref": {
+          "kind": "pile"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newEnvironment": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/SheetPileEnvironment",
+      "x-semio-ui": {
+        "label": {
+          "en": "Corrosion environment (sheet pile)",
+          "de": "Korrosionsumgebung (Spundwand)"
+        },
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

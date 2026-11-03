@@ -1,0 +1,7 @@
+syntax = "proto3";
+package semio.s.norm.en1992.mutation.insert_tendon_point;
+message InsertTendonPoint {
+  string member_id = 1;
+  uint64 index = 2;
+  TendonPoint tendon_point = 3;
+}

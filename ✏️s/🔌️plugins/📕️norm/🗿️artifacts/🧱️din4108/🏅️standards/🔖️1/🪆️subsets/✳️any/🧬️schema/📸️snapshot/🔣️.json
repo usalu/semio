@@ -133,8 +133,8 @@
               "en": "Water vapour diffusion resistance factor μ",
               "de": "Wasserdampf-Diffusionswiderstandszahl μ"
             },
-            "step": 1,
-            "precision": 0
+            "step": 0.5,
+            "precision": 1
           }
         },
         "density": {
@@ -565,12 +565,8 @@
           },
           "x-semio-ui": {
             "label": {
-              "en": "From position",
-              "de": "Von Position"
-            },
-            "description": {
-              "en": "Zero-based position of the layer to move in its list.",
-              "de": "Nullbasierte Position der zu verschiebenden Schicht in der Liste."
+              "en": "Layers",
+              "de": "Schichten"
             }
           }
         }
@@ -744,8 +740,8 @@
               "en": "Water vapour diffusion resistance factor μ",
               "de": "Wasserdampf-Diffusionswiderstandszahl μ"
             },
-            "step": 1,
-            "precision": 0
+            "step": 0.5,
+            "precision": 1
           }
         },
         "density": {

@@ -13,11 +13,20 @@ const SECTION_FIELDS: &[&str] = &[
     "foundations",
     "retainingWalls",
     "towers",
+    "soilLayers",
+    "diaphragms",
+    "accelerograms",
+    "piers",
+    "bearings",
+    "joints",
+    "tieBeams",
+    "slopes",
+    "placements",
 ];
 
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct En1998Outline {
     pub section_outline: Vec<String>,
@@ -34,7 +43,16 @@ impl En1998Outline {
             + snapshot.tanks.len()
             + snapshot.foundations.len()
             + snapshot.retaining_walls.len()
-            + snapshot.towers.len()) as u32;
+            + snapshot.towers.len()
+            + snapshot.soil_layers.len()
+            + snapshot.diaphragms.len()
+            + snapshot.accelerograms.len()
+            + snapshot.piers.len()
+            + snapshot.bearings.len()
+            + snapshot.joints.len()
+            + snapshot.tie_beams.len()
+            + snapshot.slopes.len()
+            + snapshot.placements.len()) as u32;
         Self {
             section_outline: SECTION_FIELDS.iter().map(|s| (*s).to_string()).collect(),
             field_count: SECTION_FIELDS.len() as u32,

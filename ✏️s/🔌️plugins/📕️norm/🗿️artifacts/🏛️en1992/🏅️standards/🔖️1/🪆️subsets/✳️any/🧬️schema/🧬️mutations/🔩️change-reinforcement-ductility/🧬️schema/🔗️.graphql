@@ -1,0 +1,4 @@
+type ChangeReinforcementDuctility {
+  gradeId: String!
+  newDuctility: DuctilityClass!
+}

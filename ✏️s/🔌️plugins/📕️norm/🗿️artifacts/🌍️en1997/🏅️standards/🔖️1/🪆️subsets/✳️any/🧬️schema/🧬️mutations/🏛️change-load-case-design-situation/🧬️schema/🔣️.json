@@ -1,0 +1,70 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-load-case-design-situation/schema.json",
+  "title": "ChangeLoadCaseDesignSituation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "footingId",
+    "id",
+    "newDesignSituation"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeLoadCaseDesignSituation"
+    },
+    "footingId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Footing",
+          "de": "Fundament"
+        },
+        "description": {
+          "en": "The footing this mutation addresses, by id.",
+          "de": "Die adressierte Zeile (Fundament), per Kennung."
+        },
+        "ref": {
+          "kind": "spread-foundation"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Footing load case",
+          "de": "Fundament-Lastfall"
+        },
+        "description": {
+          "en": "The footing load case this mutation addresses, by id.",
+          "de": "Die adressierte Zeile (Fundament-Lastfall), per Kennung."
+        },
+        "ref": {
+          "kind": "foundation-load-case"
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "newDesignSituation": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/snapshot.json#/$defs/SituationChoice",
+      "x-semio-ui": {
+        "label": {
+          "en": "Design situation",
+          "de": "Bemessungssituation"
+        },
+        "role": "value",
+        "group": "value",
+        "order": 30
+      }
+    }
+  }
+}

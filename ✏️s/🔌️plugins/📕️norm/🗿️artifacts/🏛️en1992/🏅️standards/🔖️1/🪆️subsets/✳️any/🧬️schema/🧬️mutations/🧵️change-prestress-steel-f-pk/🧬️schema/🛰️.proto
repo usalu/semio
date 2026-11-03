@@ -1,0 +1,6 @@
+syntax = "proto3";
+package semio.s.norm.en1992.mutation.change_prestress_steel_f_pk;
+message ChangePrestressSteelFPk {
+  string grade_id = 1;
+  double new_f_pk = 2;
+}

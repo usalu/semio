@@ -1,0 +1,37 @@
+# W3-EN1993-CORR-2: real directional weld method, punching d_m from nut widths, gamma_Mf wiring status
+
+Nothing compiled (rule); no git writes; no schema, scene routing or Cargo edits. Build line appended: `- ready for rebuild: en1993 corr-2`.
+
+## 1. Fillet weld directional method (EN 1993-1-8 4.5.3.2)
+- Defect: `fillet_weld_directional_n` enveloped the throat stresses of one scalar force over an unknown angle (0..90 degrees). The von Mises-type term peaks for a force along the axis, so the check was identical to the simplified method (4.5.3.3) and never used the transverse force.
+- Now (clauses `🧮️clauses/🔩️joints/🦀️.rs`): `weld_throat_stresses(f_parallel, f_transverse, psi, a, l)` returns sigma_perp = F_t cos psi / (a l), tau_perp = F_t sin psi / (a l), tau_par = F_par / (a l); `weld_directional_criteria` returns the two utilisations `[sigma_perp^2 + 3 (tau_perp^2 + tau_par^2)]^0.5 / (f_u / (beta_w gamma_M2))` and `|sigma_perp| / (0.9 f_u / gamma_M2)`; `weld_directional` is their maximum. `part_1_8::fillet_weld_directional_n(a, l, f_u, beta_w, gamma_M2, f_par, f_trans)` uses psi = 45 degrees (equal-leg fillet, force along either leg), so no angle is guessed.
+- Reading of the existing joint action leaves (no schema change): `shear` = force along the weld axis (tau_par; same convention as the fin plate weld check), `tension` = force perpendicular to the axis along a leg (sigma_perp = tau_perp = F / (sqrt 2 a l)). Tension was previously ignored for welded joints. Owner decision: if a separate transverse leaf or a throat angle is wanted, that is a schema leaf for W3-EN1993c; the reading is stated in the check explanation (EN and DE), which now lists sigma_perp, tau_perp, tau_par and both criteria.
+- The simplified check now uses the resultant `hypot(shear, tension)` (4.5.3.3 takes the vector sum of the forces per unit length); otherwise it would ignore a load the directional method sees. Results of every existing fixture are unchanged (all welded joints there have tension 0, where both methods coincide by theory: sqrt3 tau = f_u/(beta gamma) is the simplified limit).
+- Hand values (a = 5 mm, l = 200 mm, f_u = 490, beta_w = 0.9, gamma_M2 = 1.25; limits 435.56 and 352.8 N/mm2):
+  - F_t = 250 kN: sigma = tau_perp = 176.777, directional 0.81173 (criterion 2: 0.50107), simplified 0.99416. The methods differ.
+  - F_par = 100 kN, F_t = 200 kN: directional 0.76147, simplified (resultant) 0.88921.
+  - F_t = 300 kN at psi = 0: criterion 2 governs, 0.85034 against 0.68878; the sign of sigma is irrelevant.
+  - F_par only: directional = simplified = 0.39766.
+  Rust tests: `directional_weld_method_*` (3) in `🧮️clauses/🧪️tests/🔬️unit/🦀️.rs`.
+- Oracle (`🔮️oracles/🚦️check-outcome/🧭️families/🐍️.py`): `throat_stresses` rotates the traction vector `F / (a l)` onto the throat frame (axis, normal (y+z)/sqrt2, in-plane transverse (y-z)/sqrt2) with a numpy matrix product, independent of the cos/sin of the Rust; the family row `en1993.1-8.4.5.directional` takes both criteria; `--self-check` pins the hand value 0.8117297233008836 and the simplified 0.994161815568871. The simplified oracle row (`🚦️check-outcome/🐍️.py`) uses the resultant.
+- Fixture `families-fail`: joints `joint-w3` (transverse 315 kN: simplified 1.2035 fails, directional 0.9827 passes) and `joint-w4` (shear 126 kN + transverse 315 kN: simplified 1.2962, directional 1.0943 fails); script `🧰️scripts/oracle-gaps/fixtures_en1993.py` extended and regenerated (diff against the old fixture: only the two joints). Feature rows `fail-corr2-01..04`.
+
+## 2. Bolt punching d_m (Table 3.4)
+- Defect: `punching_mean_diameter(d)` took a regular hexagon of 1.5 d across flats (d_m = 32.32 mm for M20), about 4 % above the nut dimensions, unconservative for B_p,Rd.
+- Product tables are not in the repo (searched: no ISO 4014/4032 rows; only the earlier note in `ndp.en1993.v-402.1`). Added 16 registry rows `ndp.en1993.1-8.3.6.head-nut.m{12,16,20,22,24,27,30,36}.across-{flats,points}` (mm, EN = DE, status `unverified`, specRef V-402 and checklist W3E-C01, evidence: recalled from EN ISO 4032, NOT double-keyed, minimum widths s_min and e_min of the nut, the smaller of head and nut; EN 14399 preload assemblies are larger, so the rows stay conservative for them). Script `🧰️scripts/en1993-corr/registry_dm.py`; codegen `🗃️table/en1993` regenerated; M20 d_m = (29.16 + 32.95)/2 = 31.055 mm (0.9608 of the old value), M24 d_m = 37.275 mm.
+- Rust: `punching_mean_diameter(across_flats, across_points)` is the mean; `bolt_size_designation(d)` maps a diameter to `m<size>`; `check_punching` reads the two rows with `ndp_number` (no default: a diameter without a row yields NaN and the check ends as a localized refusal) and records the reads with `ndp_reads()`; the explanation shows both widths and the UNVERIFIED mark. Tests: mean, B_p,Rd = 286598.6 N for d_m = 31.055, ratio 0.96085 to the hexagon, size designation; the catalogue-trace test now uses the nut d_m.
+- Oracle: d_m from the registry rows plus the geometric sanity bound e <= s / cos 30 (a regular hexagon); feature rows `pass-v30-109/115/117`, `fail-v30-121` rescaled (x 1.0407: 0.0596653297, 0.1036292568, 0.621775541, 1.16582914).
+- Open for a human: confirm the 16 values against the printed EN ISO 4032 / 4014 tables and the Table 3.4 wording (head or nut, the smaller one); the check stays `unverifiedBasis` until then. Sizes outside M12..M36 have no row on purpose.
+
+## 3. gamma_Mf consequence leaves
+Not applied: the snapshot schema still has no `consequence` leaf (the W3-EN1993c `evolve.py add-leaf` chain has not started; W3-EN1993-NORM holds the schema lock with its own chain). Left to W3-EN1993c per the request `[w3-en1993-corr 16:55]`; `wire.py --check` is unchanged. After the leaves land: `python3 -I 🧰️scripts/en1993-corr/wire.py`, then twins generate, `evolve.py contract en1993 --apply`.
+
+## Verification state
+- Python oracle replay (`validate_rows.py en1993` through `heavy.sh`) never started: it waited about 15 minutes behind the build-en1995 graph-plan/low-memory gate and was cancelled (no background job left). Only `ast.parse` of both oracles and the hand/numpy arithmetic above were run. The runner should execute `heavy.sh python -I 🧰️scripts/oracle-gaps/validate_rows.py en1993` (expect 0 problems) and the families oracle `--self-check`.
+- Rust compile and tests are for the runner (`ready for rebuild: en1993 corr-2`). Compile risks reviewed by hand: `weld_throat_stresses` has a new arity (only caller `fillet_weld_directional_n`), `punching_mean_diameter` has a new arity (only caller `check_punching`), `ndp_reads()` consumes the builder before `build()`.
+
+## Files
+- Rust: `🧮️clauses/🔩️joints/🦀️.rs`, `📏️parts/🦀️.rs`, `🔗️special-checks/🔩️joint-checks/🦀️.rs`, `🧱️member-checks/🧾️vid-checks/🔩️joint-vids/🦀️.rs`, tests `🧮️clauses/🧪️tests/🔬️unit/🦀️.rs`, `🧪️tests/🗂️catalogue-trace/🦀️.rs` (all under `en1993/.../🧬️schema/💡️inferences/⚖️checks`).
+- Oracles: `🔮️oracles/🚦️check-outcome/🐍️.py`, `🔮️oracles/🚦️check-outcome/🧭️families/🐍️.py`; feature `🧪️tests/🚦️check-outcome-en1993-1/🥒️.feature`; fixture `📄️oracle-documents/families-fail/🔣️.json`.
+- Registry: `⚖️compliance/📜️annex-and-tables/🔖️ndp/🔣️.json` + `🗃️table/en1993`.
+- Ticket: `🧰️scripts/en1993-corr/registry_dm.py`, `🧰️scripts/oracle-gaps/fixtures_en1993.py`, `🔍️audits/wave2/printed-standards-checklist.md` (W3E-C01), `📌️important/requests.md`, `🗑️generated/build-en1993/latest.md`.

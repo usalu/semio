@@ -1,7 +1,7 @@
 use crate::panels::catalogue::*;
 use semio_s_plugin_norm_app_surface::CatalogueCell;
 use crate::unit_tests::context;
-use semio_s_artifact_norm_en1993_checks::{check_full_steel_structure, AnnexParams, GAMMA_M0_DE, GAMMA_M1_DE};
+use semio_s_artifact_norm_en1993_checks::{check_full_steel_structure, AnnexParams};
 use semio_s_artifact_norm_en1993_model::En1993Snapshot;
 
 #[semio_framework_async_macros::async_test]
@@ -42,7 +42,7 @@ fn reference_table_gamma_and_area_match_evaluated_axial_limit() {
     let CatalogueCell::Number { value: gamma_m1_de, .. } = &row.cells[2] else {
         panic!("γ_M1 DE cell must be Number");
     };
-    assert_eq!(*gamma_m1_de, GAMMA_M1_DE);
+    assert_eq!(*gamma_m1_de, semio_s_plugin_norm_compliance::ndp_number("ndp.en1993.gamma-m1", semio_s_plugin_norm_compliance::AnnexChoice::De));
     assert_eq!(*gamma_m1_de, AnnexParams::de().gamma_m1);
 
     let sections = tables.iter().find(|t| t.id == "table-en1993-heb-sections").expect("section table");
@@ -55,7 +55,7 @@ fn reference_table_gamma_and_area_match_evaluated_axial_limit() {
     let section = doc.sections.iter().find(|s| s.id == "sec-heb240").expect("section");
     let material = doc.materials.iter().find(|m| m.id == "mat-s355").expect("material");
     assert!((*area_cm2 * 1.0e-4 - section.area).abs() < 1e-9);
-    let expected = section.area * material.fy / GAMMA_M0_DE;
+    let expected = section.area * material.fy / AnnexParams::de().gamma_m0;
     let report = check_full_steel_structure(&doc);
     let matched = report.checks.iter().any(|c| (c.limit.value - expected).abs() / expected.max(1.0) < 1e-6);
     assert!(matched, "no evaluated limit equals A·fy/γ_M0 from shared consts; checks={:?}", report.checks.iter().map(|c| (c.id.clone(), c.limit.value)).collect::<Vec<_>>());

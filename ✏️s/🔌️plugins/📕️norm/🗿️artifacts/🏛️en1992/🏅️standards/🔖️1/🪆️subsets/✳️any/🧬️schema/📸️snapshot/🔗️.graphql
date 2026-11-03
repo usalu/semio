@@ -1,19 +1,28 @@
-scalar UInt32
-# 🧬️ EN 1992 snapshot GraphQL facet — mirrors Rust subject (characteristic actions; Table 3.1 derived off-schema).
-enum AnnexChoice { En De }
-enum MemberKind { Beam Slab Column Wall FlatSlab RibbedSlab TensionMember Bridge LiquidRetaining }
-enum SupportCondition { SimplySupported Continuous Cantilever Fixed }
-enum ExposureClass { X0 Xc1 Xc2 Xc3 Xc4 Xd1 Xd2 Xd3 Xs1 Xs2 Xs3 Xf1 Xf2 Xf3 Xf4 Xa1 Xa2 Xa3 }
-enum FireRating { R30 R60 R90 R120 }
-enum TightnessClass { Tc0 Tc1 Tc2 }
-enum DuctilityClass { a b c }
-
+type En1992Snapshot {
+  annex: AnnexChoice!
+  title: String!
+  designWorkingLifeYears: Float!
+  deltaCDev: Float!
+  cementType: CementClass!
+  concreteGrades: [ConcreteGrade!]!
+  reinforcementGrades: [ReinforcementGrade!]!
+  prestressSteels: [PrestressSteel!]!
+  members: [RcMember!]!
+  anchors: [Anchor!]!
+  placements: [Placement!]!
+  cases: [CaseRow!]!
+  reliabilityClass: String!
+}
+enum CementClass {
+  S
+  N
+  R
+}
 type ConcreteGrade {
   id: String!
   name: String!
   fCk: Float!
 }
-
 type ReinforcementGrade {
   id: String!
   name: String!
@@ -23,30 +32,140 @@ type ReinforcementGrade {
   k: Float!
   epsUk: Float!
 }
-
-type PrestressSteel { id: String! name: String! fPk: Float! fP01k: Float! }
-
+type PrestressSteel {
+  id: String!
+  name: String!
+  fPk: Float!
+  fP01k: Float!
+}
+enum BarPosition {
+  Bottom
+  Top
+  Tension
+  Compression
+}
 type BarLayer {
   id: String!
   diameter: Float!
-  count: UInt32!
-  position: String!
+  count: Int!
+  position: BarPosition!
   anchorageLength: Float!
   lapLength: Float!
-  bondCondition: String!
+  bondCondition: BondCondition!
   aggregateSize: Float!
+  lapShare: Float!
 }
-
-type Stirrups { diameter: Float! spacing: Float! legs: UInt32! }
-type PunchingSpec { columnWidth: Float! columnDepth: Float! columnPosition: String! asw: Float! }
-type PrestressSpec { force: Float! area: Float! eccentricity: Float! lossRatio: Float! }
-type FireSpec { rating: FireRating! axisDistance: Float! columnMethod: String! slabSystem: String! }
-
+type SectionPoint {
+  id: String!
+  y: Float!
+  z: Float!
+}
+enum BarBend {
+  Auto
+  Straight
+  Hook
+  UHook
+}
+type BarPoint {
+  id: String!
+  layerId: String!
+  y: Float!
+  z: Float!
+  diameter: Float!
+  length: Float!
+  bend: BarBend!
+}
+type TendonPoint {
+  id: String!
+  x: Float!
+  y: Float!
+  z: Float!
+}
+type StudRow {
+  id: String!
+  angle: Float!
+  count: Int!
+  spacingFirst: Float!
+  spacingRadial: Float!
+  diameter: Float!
+}
+type Opening {
+  id: String!
+  x: Float!
+  y: Float!
+  width: Float!
+  depth: Float!
+}
+type Stirrups {
+  diameter: Float!
+  spacing: Float!
+  legs: Int!
+}
+enum ColumnPosition {
+  Interior
+  Edge
+  Corner
+  WallEnd
+}
+enum PunchingBetaMethod {
+  Simplified
+  UnbalancedMoments
+}
+type PunchingSpec {
+  columnWidth: Float!
+  columnDepth: Float!
+  columnPosition: ColumnPosition!
+  asw: Float!
+  betaMethod: PunchingBetaMethod!
+  momentC1: Float!
+  momentC2: Float!
+}
+type PrestressSpec {
+  force: Float!
+  area: Float!
+  eccentricity: Float!
+  lossRatio: Float!
+}
+enum SlabFireSystem {
+  OneWay
+  TwoWay
+}
+type FireSpec {
+  rating: FireRating!
+  axisDistance: Float!
+  slabSystem: SlabFireSystem!
+}
+enum ActionKind {
+  Permanent
+  Imposed
+  Snow
+  Wind
+  Accidental
+  Prestress
+}
+enum ActionSource {
+  Udl
+  Point
+  External
+}
+enum PsiCategory {
+  SelfWeight
+  Office
+  Residential
+  Congregation
+  Shopping
+  Storage
+  Snow
+  SnowHigh
+  Wind
+  Temperature
+  Accidental
+}
 type LoadCaseActions {
   id: String!
-  kind: String!
-  category: String!
-  source: String!
+  kind: ActionKind!
+  category: PsiCategory!
+  source: ActionSource!
   gKLine: Float!
   qKLine: Float!
   pointForce: Float!
@@ -56,7 +175,6 @@ type LoadCaseActions {
   tK: Float!
   vKPunch: Float!
 }
-
 type RcMember {
   id: String!
   labelEn: String!
@@ -90,8 +208,14 @@ type RcMember {
   liquidSRMax: Float!
   bridgeSigmaC: Float!
   bridgeDeltaSigmaS: Float!
+  relativeHumidity: Float!
+  bearingWidth: Float!
+  sectionPoints: [SectionPoint!]!
+  bars: [BarPoint!]!
+  tendonPoints: [TendonPoint!]!
+  studRows: [StudRow!]!
+  openings: [Opening!]!
 }
-
 type Anchor {
   id: String!
   hEf: Float!
@@ -103,17 +227,73 @@ type Anchor {
   c1: Float!
   fCk: Float!
   actions: [LoadCaseActions!]!
+  headDiameter: Float!
 }
-
-type En1992Snapshot {
-  annex: AnnexChoice! @state(class: ARTIFACT)
-  title: String! @state(class: ARTIFACT)
-  designWorkingLifeYears: Float! @state(class: ARTIFACT)
-  deltaCDev: Float! @state(class: ARTIFACT)
-  cementType: String! @state(class: ARTIFACT)
-  concreteGrades: [ConcreteGrade!]! @state(class: ARTIFACT)
-  reinforcementGrades: [ReinforcementGrade!]! @state(class: ARTIFACT)
-  prestressSteels: [PrestressSteel!]! @state(class: ARTIFACT)
-  members: [RcMember!]! @state(class: ARTIFACT)
-  anchors: [Anchor!]! @state(class: ARTIFACT)
+type Placement {
+  id: String!
+  x: Float!
+  y: Float!
+  z: Float!
+  yaw: Float!
+}
+enum AnnexChoice {
+  En
+  De
+}
+enum DuctilityClass {
+  a
+  b
+  c
+}
+enum BondCondition {
+  Good
+  Poor
+}
+enum ExposureClass {
+  X0
+  Xc1
+  Xc2
+  Xc3
+  Xc4
+  Xd1
+  Xd2
+  Xd3
+  Xs1
+  Xs2
+  Xs3
+  Xf1
+  Xf2
+  Xf3
+  Xf4
+  Xa1
+  Xa2
+  Xa3
+}
+enum FireRating {
+  R30
+  R60
+  R90
+  R120
+}
+enum MemberKind {
+  Beam
+  Slab
+  Column
+  Wall
+  FlatSlab
+  RibbedSlab
+  TensionMember
+  Bridge
+  LiquidRetaining
+}
+enum SupportCondition {
+  SimplySupported
+  Continuous
+  Cantilever
+  Fixed
+}
+enum TightnessClass {
+  Tc0
+  Tc1
+  Tc2
 }

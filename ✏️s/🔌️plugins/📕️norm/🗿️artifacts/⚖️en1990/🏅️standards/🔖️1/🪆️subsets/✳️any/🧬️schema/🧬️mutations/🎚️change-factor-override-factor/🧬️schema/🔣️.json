@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/mutation/change-factor-override-factor/schema.json",
+  "title": "ChangeFactorOverrideFactor",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newFactor"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeFactorOverrideFactor"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Factor override",
+          "de": "Faktorüberschreibung"
+        },
+        "description": {
+          "en": "The factor override this mutation addresses, by id.",
+          "de": "Das adressierte Element (Faktorüberschreibung), per Kennung."
+        },
+        "ref": {
+          "kind": "factor-override"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newFactor": {
+      "type": "string",
+      "x-semio-ui": {
+        "label": {
+          "en": "Factor kind",
+          "de": "Faktorart"
+        },
+        "widget": "text",
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

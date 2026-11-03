@@ -1,0 +1,5 @@
+{
+  "mutation": "changeSiloHeightM",
+  "id": "si-1",
+  "newHeightM": 24.0
+}

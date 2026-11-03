@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-footing-settlement-limit/schema.json",
+  "title": "ChangeFootingSettlementLimit",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newSettlementLimit"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeFootingSettlementLimit"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Footing",
+          "de": "Fundament"
+        },
+        "description": {
+          "en": "The footing this mutation addresses, by id.",
+          "de": "Die adressierte Zeile (Fundament), per Kennung."
+        },
+        "ref": {
+          "kind": "spread-foundation"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newSettlementLimit": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Admissible settlement s",
+          "de": "Zulässige Setzung s"
+        },
+        "widget": "stepper",
+        "unit": "m",
+        "displayUnit": "mm",
+        "displayFactor": 1000,
+        "precision": 1,
+        "step": 0.001,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

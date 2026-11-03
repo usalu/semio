@@ -1,0 +1,6 @@
+{
+  "ChangeCraneDetailCatStress": {
+    "id": "crane-1",
+    "newDetailCategoryStress": 1.5
+  }
+}

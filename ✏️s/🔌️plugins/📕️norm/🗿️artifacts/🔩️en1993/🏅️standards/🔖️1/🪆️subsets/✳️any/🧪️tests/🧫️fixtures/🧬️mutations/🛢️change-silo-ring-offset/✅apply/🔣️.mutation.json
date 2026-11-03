@@ -1,0 +1,6 @@
+{
+  "ChangeSiloRingOffset": {
+    "id": "silo-1",
+    "newRingOffset": 1.5
+  }
+}

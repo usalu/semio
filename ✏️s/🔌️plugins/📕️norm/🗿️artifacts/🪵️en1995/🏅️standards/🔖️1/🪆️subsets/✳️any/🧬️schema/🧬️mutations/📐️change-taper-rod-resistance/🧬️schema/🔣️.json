@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-taper-rod-resistance/schema.json",
+  "title": "ChangeTaperRodResistance",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "taperId",
+    "newValue"
+  ],
+  "properties": {
+    "taperId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Taper",
+          "de": "Verjüngung"
+        },
+        "description": {
+          "en": "The taper this mutation addresses.",
+          "de": "Das Element, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "taper"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newValue": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Axial rod resistance R_ax,k",
+          "de": "Axialer Stabwiderstand R_ax,k"
+        },
+        "unit": "N",
+        "displayUnit": "kN",
+        "displayFactor": 0.001,
+        "precision": 2,
+        "step": 100,
+        "group": "fields",
+        "order": 20
+      }
+    }
+  }
+}

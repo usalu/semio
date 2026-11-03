@@ -1,0 +1,5 @@
+{
+  "mutation": "changeLabTestStressIncrement",
+  "id": "lab-T1",
+  "newStressIncrement": 1.5
+}

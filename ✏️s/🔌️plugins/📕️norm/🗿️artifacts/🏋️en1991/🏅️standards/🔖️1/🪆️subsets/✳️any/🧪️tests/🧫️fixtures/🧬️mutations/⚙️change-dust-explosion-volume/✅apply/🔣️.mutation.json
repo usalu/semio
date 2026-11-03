@@ -1,0 +1,6 @@
+{
+  "ChangeDustExplosionVolume": {
+    "id": "dust-explosion-1",
+    "newVolume": 101.0
+  }
+}

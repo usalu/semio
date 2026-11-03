@@ -1,0 +1,11 @@
+{
+  "InsertSnowGuard": {
+    "index": 1,
+    "item": {
+      "id": "snow-guard-2",
+      "roofId": "R1",
+      "slopeLength": 6.0,
+      "assumedForce": 8000.0
+    }
+  }
+}

@@ -40,6 +40,9 @@ import { useTreeHoverPathRootHandlers, useTreeSelectionPathSync } from "./🧷�
 import { TreeHoverPathRefreshContext } from "./🌲️branch/🟦️.tsx";
 import { type TreeComponent, TreeDataSectionView } from "./🪢️views/🟦️.tsx";
 
+/** 👆️ The row height of a `touch` tree: 44 px (WCAG 2.5.5), the twin of the Rust `TREE_ROW_TOUCH_MIN_PX`; a theme whose workbench row is taller keeps it. */
+const TREE_TOUCH_ROW_LENGTH = "max(44px, var(--size-workbench))";
+
 export const Tree = (({
   className = "",
   presentation = "standard",
@@ -507,12 +510,12 @@ export const Tree = (({
             dir="auto"
             className={`w-full min-w-0 overflow-hidden ${className}`}
             style={{
-              "--tree-row-height": presentation === "compact" ? "auto" : "var(--size-workbench)",
-              "--tree-row-min-height": presentation === "compact" ? "calc(var(--size-tiny) * 1.5)" : "var(--size-workbench)",
-              "--tree-row-max-height": presentation === "compact" ? "none" : "var(--size-workbench)",
+              "--tree-row-height": presentation === "compact" ? "auto" : presentation === "touch" ? TREE_TOUCH_ROW_LENGTH : "var(--size-workbench)",
+              "--tree-row-min-height": presentation === "compact" ? "calc(var(--size-tiny) * 1.5)" : presentation === "touch" ? TREE_TOUCH_ROW_LENGTH : "var(--size-workbench)",
+              "--tree-row-max-height": presentation === "compact" ? "none" : presentation === "touch" ? TREE_TOUCH_ROW_LENGTH : "var(--size-workbench)",
               "--tree-label-size": presentation === "compact" ? "var(--size-tiny)" : "var(--text-xs)",
               "--tree-label-line-height": presentation === "compact" ? "1.5" : "1",
-              "--tree-gutter-center": presentation === "compact" ? "50%" : "calc(var(--size-workbench) / 2)",
+              "--tree-gutter-center": presentation === "compact" ? "50%" : presentation === "touch" ? `calc(${TREE_TOUCH_ROW_LENGTH} / 2)` : "calc(var(--size-workbench) / 2)",
               "--tree-inline-control-height": presentation === "compact" ? "var(--size-small)" : "var(--size-medium)",
               "--tree-value-justify": presentation === "compact" ? "flex-start" : "flex-end",
               "--tree-value-column": uiSpacingLen(presentation === "compact" ? STYLING_DOM.windowMeasureValueColumnUiSpacing : STYLING_DOM.controlValueColumnUiSpacing),

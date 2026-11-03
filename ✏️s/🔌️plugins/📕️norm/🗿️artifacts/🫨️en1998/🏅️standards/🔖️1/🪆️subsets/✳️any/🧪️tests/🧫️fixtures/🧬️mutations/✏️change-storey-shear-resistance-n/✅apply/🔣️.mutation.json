@@ -1,0 +1,6 @@
+{
+  "mutation": "changeStoreyShearResistanceN",
+  "buildingId": "bldg-office",
+  "id": "s2",
+  "newShearResistanceN": 800000.0
+}

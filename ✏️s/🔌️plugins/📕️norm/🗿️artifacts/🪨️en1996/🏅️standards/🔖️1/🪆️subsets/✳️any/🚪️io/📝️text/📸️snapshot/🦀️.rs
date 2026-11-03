@@ -10,7 +10,7 @@ use semio_s_artifact_norm_en1996_model::En1996Snapshot;
 
 /// 🗄️ The load-bearing-wall example fixture, handcrafted in `en1996`'s DSL (`pack::snapshot::ArtifactDsl`):
 /// an EN-annex masonry class 2 wall check under a transient design situation, distinct from
-/// `En1996Snapshot::default()`'s DE-annex/persistent values so the grammar's non-default branches
+/// `En1996Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De)`'s DE-annex/persistent values so the grammar's non-default branches
 /// (annex, masonry class, design situation, exposure, mortar) are exercised too.
 pub const EN1996_LOADBEARING_WALL_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🧱️loadbearing-wall/🧱️loadbearing-wall/🗣️.dsl.semio");
 
@@ -87,5 +87,3 @@ use framework_schema::ArtifactSchema;
 
 }
 #[cfg(test)] pub use crate::snapshot::snapshot_wire_codec::*;
-
-semio_s_plugin_norm_compliance::impl_norm_artifact_record!(@text En1996Snapshot, extension="en1996", envelope_id="norm.en1996");

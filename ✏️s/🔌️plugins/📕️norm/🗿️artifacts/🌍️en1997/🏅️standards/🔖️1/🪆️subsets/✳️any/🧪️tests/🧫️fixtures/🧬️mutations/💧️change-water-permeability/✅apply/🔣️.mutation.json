@@ -1,0 +1,5 @@
+{
+  "mutation": "changeWaterPermeability",
+  "id": "water-gravel",
+  "newPermeability": 0.002
+}

@@ -1,0 +1,18 @@
+{
+  "mutation": "insertSectionElement",
+  "sectionId": "sec-i120",
+  "index": 3,
+  "element": {
+    "id": "flange-top-2",
+    "width": 0.031000000000000003,
+    "thickness": 0.01,
+    "outstand": true,
+    "welded": true,
+    "weldPosition": 0.005,
+    "weldProcess": "mig",
+    "weldTJunction": false,
+    "weldDirection": "longitudinal",
+    "edgeStiffenerDepth": 0.0,
+    "edgeStiffenerThickness": 0.0
+  }
+}

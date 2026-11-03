@@ -1,0 +1,6 @@
+{
+  "ChangeFloorAssumedQkConc": {
+    "id": "office-l1",
+    "newAssumedQkConcentrated": 10000.0
+  }
+}

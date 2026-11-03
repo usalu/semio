@@ -6,7 +6,7 @@ import { bootPhaseCeilingMs, type BrowserBootPhase, describeBrowserBootSilence, 
 import { OriginalBootstrapRootPort } from "@semio-tech/framework-actor/retained-turn/bootstrap/port";
 import type { MediaTransportPort } from "@semio-tech/framework-os/modules/renderer/engine/media/lifecycle";
 import { nextFrameSequence } from "../🧵️frame-turn-scheduler/🟦️.ts";
-import type { WgpuHostAppearance, WgpuHostStorageSnapshot } from "../🧭️boot-descriptor/🟦️.ts";
+import type { WgpuHostAppearance, WgpuHostPlatformPrefs, WgpuHostStorageSnapshot } from "../🧭️boot-descriptor/🟦️.ts";
 import { stampShardWorkerDiagnostics } from "@semio-tech/framework-actor/diagnostics";
 import { decodeReferenceImageOnPage } from "../🖼️reference-image-decode/🟦️.ts";
 
@@ -284,6 +284,15 @@ export class BrowserFrameTransport {
     if (this.status === "faulted" || this.status === "closed") return;
     this.worker.postMessage({ kind: "host-introduction-policy", lifecycle: this.lifecycle, suppressed });
     this.requestFrame();
+  }
+
+  /** 🎛️ Republishes the page realm's accessibility preferences. Fire-and-forget like {@link setHostAppearance}: the renderer re-reads them on its next frame, which this requests. */
+  setHostPlatformPrefs(platformPrefs: WgpuHostPlatformPrefs): void {
+    if (this.status === "faulted" || this.status === "closed") return;
+    try {
+      this.worker.postMessage({ kind: "host-platform-prefs", lifecycle: this.lifecycle, platformPrefs });
+      this.requestFrame();
+    } catch {}
   }
 
   /** 🌓️ Republishes the page realm's appearance reads. Fire-and-forget by construction: a

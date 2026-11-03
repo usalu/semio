@@ -1,0 +1,5 @@
+{
+  "mutation": "changePileGroupCapVertical",
+  "id": "group-G1",
+  "newCapVertical": 3600000.0
+}

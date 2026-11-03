@@ -1,0 +1,6 @@
+{
+  "ChangeMortarClass": {
+    "id": "wall-north",
+    "newMortarClass": "M20"
+  }
+}

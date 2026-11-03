@@ -1,0 +1,6 @@
+{
+  "ChangeStoreyBuildingHeight": {
+    "id": "storey-1",
+    "newBuildingHeight": 8.0
+  }
+}

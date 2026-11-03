@@ -1,0 +1,4 @@
+type ChangeAnchorFYk {
+  anchorId: String!
+  newFYk: Float!
+}

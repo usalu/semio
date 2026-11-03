@@ -1,29 +1,92 @@
-"""EN 1998 snapshot"""
-enum DeSeismicZone { zone0 zone1 zone2 zone3 }
-enum DeGroundCombo { AR BR CR BT CT CS }
+scalar JSON
+
+type En1998Snapshot {
+  annex: String!
+  site: En1998Site!
+  buildings: [En1998Building!]!
+  bridges: [En1998Bridge!]!
+  assessments: [En1998Assessment!]!
+  silos: [En1998Silo!]!
+  tanks: [En1998Tank!]!
+  foundations: [En1998Foundation!]!
+  retainingWalls: [En1998RetainingWall!]!
+  towers: [En1998Tower!]!
+  soilLayers: [En1998SoilLayer!]!
+  diaphragms: [En1998Diaphragm!]!
+  accelerograms: [En1998Accelerogram!]!
+  piers: [En1998Pier!]!
+  bearings: [En1998Bearing!]!
+  joints: [En1998Joint!]!
+  placements: [En1998Placement!]!
+  tieBeams: [En1998TieBeam!]!
+  slopes: [En1998Slope!]!
+}
+enum EnGroundType {
+  a
+  b
+  c
+  d
+  e
+}
+enum EnSpectrumType {
+  type1
+  type2
+}
+enum ImportanceClass {
+  i
+  ii
+  iii
+  iv
+}
 type En1998Site {
-  seismicZone: DeSeismicZone!
+  sApR: Float!
   aGr: Float!
   deGroundCombo: DeGroundCombo!
-  enGroundType: String!
-  enSpectrumType: String!
-  importanceClass: String!
+  enGroundType: EnGroundType!
+  enSpectrumType: EnSpectrumType!
+  importanceClass: ImportanceClass!
+  vS30MS: Float!
+  nSpt: Float!
+  cUKpa: Float!
+  softClayThicknessM: Float!
+  softClayPi: Float!
+  liquefiableLayer: Boolean!
+  alluviumThicknessM: Float!
+  alluviumVSMS: Float!
+  belowAlluviumVSMS: Float!
+}
+enum AnalysisDirection {
+  x
+  y
+}
+enum SystemType {
+  frame
+  wall
+  dual
+  masonry
+}
+enum StructuralMaterial {
+  rc
+  steel
+  composite
+  timber
+  masonry
+}
+enum DuctilityClass {
+  dcl
+  dcm
+  dch
 }
 type En1998System {
   id: String!
-  direction: String!
-  systemType: String!
-  material: String!
-  ductilityClass: String!
+  direction: AnalysisDirection!
+  systemType: SystemType!
+  material: StructuralMaterial!
+  ductilityClass: DuctilityClass!
   q0: Float!
   alphaUOverAlpha1: Float!
   kW: Float!
   baseShearResistanceN: Float!
-}
-type En1998VariableAction {
-  id: String!
-  category: String!
-  qkN: Float!
 }
 type En1998Storey {
   id: String!
@@ -43,14 +106,36 @@ type En1998Storey {
 }
 type En1998Member {
   id: String!
-  material: String!
-  role: String!
+  material: StructuralMaterial!
+  role: MemberKind!
   detailingCompatibleWithQ: Boolean!
   minDimensionM: Float!
   rho: Float!
   rhoPrime: Float!
   omegaWd: Float!
   steelSectionClass: Int!
+  fastenerDiameterMm: Float!
+  timberThicknessMm: Float!
+  wallThicknessM: Float!
+  wallEffectiveHeightM: Float!
+  wallLengthM: Float!
+  wallDirectionRad: Float!
+  wallStoreyId: String!
+  wallStartXM: Float!
+  wallStartYM: Float!
+  wallPoissonRatio: Float!
+  effectiveStiffnessBasis: StiffnessBasis!
+  effectiveStiffnessRatio: Float!
+}
+enum T1Method {
+  ct
+  rayleigh
+  given
+}
+enum DriftLimitClass {
+  brittle
+  ductile
+  isolated
 }
 type En1998Building {
   id: String!
@@ -62,15 +147,30 @@ type En1998Building {
   members: [En1998Member!]!
   planRegular: Boolean!
   elevationRegular: Boolean!
-  t1Method: String!
+  t1Method: T1Method!
   t1GivenS: Float!
   ct: Float!
-  driftLimitClass: String!
+  driftLimitClass: DriftLimitClass!
   nu: Float!
   multipleResistingSystems: Boolean!
   claimsSimpleMasonry: Boolean!
   masonryWallAreaRatio: Float!
   accidentalEccentricityRatio: Float!
+  setbackRatio: Float!
+  planEnvelopeGapRatio: Float!
+  jointGapM: Float!
+  nonstructuralWeightN: Float!
+  nonstructuralHeightM: Float!
+  nonstructuralPeriodS: Float!
+  nonstructuralQ: Float!
+  nonstructuralResistanceN: Float!
+  columnMomentSumNm: Float!
+  beamMomentSumNm: Float!
+  overturningBaseXM: Float!
+  overturningBaseYM: Float!
+  tieDownMomentNm: Float!
+  storeyStiffnessBasis: StiffnessBasis!
+  storeyStiffnessRatio: Float!
 }
 type En1998Bridge {
   id: String!
@@ -81,14 +181,56 @@ type En1998Bridge {
   permanentGkN: Float!
   correlatedOccupancy: Boolean!
   variables: [En1998VariableAction!]!
+  pierHeightM: Float!
+  pierMomentRdNm: Float!
+  pierShearRdN: Float!
+  deckLengthM: Float!
+  deckEiNm2: Float!
+  importanceClass: Float!
+  verticalPeriodS: Float!
+  pierCrackedInertiaRatio: Float!
+}
+enum LimitState {
+  nc
+  sd
+  dl
+}
+enum KnowledgeLevel {
+  kl1
+  kl2
+  kl3
 }
 type En1998Assessment {
   id: String!
-  knowledgeLevel: String!
-  limitState: String!
+  knowledgeLevel: KnowledgeLevel!
+  limitState: LimitState!
   supportedBuildingId: String!
   rKN: Float!
   gammaEl: Float!
+  chordRotationDemandRad: Float!
+  chordRotationYieldRad: Float!
+  chordRotationUltimateRad: Float!
+  sectionDepthM: Float!
+  sectionWidthM: Float!
+  effectiveDepthM: Float!
+  shearSpanM: Float!
+  axialForceN: Float!
+  tensionSteelAreaM2: Float!
+  compressionSteelAreaM2: Float!
+  barDiameterMm: Float!
+  steelYieldMpa: Float!
+  concreteStrengthMpa: Float!
+  stirrupLegAreaM2: Float!
+  stirrupSpacingM: Float!
+  stirrupYieldMpa: Float!
+  coreWidthM: Float!
+  coreDepthM: Float!
+  restrainedBarCount: Float!
+  restrainedBarSpacingM: Float!
+  diagonalReinforcementRatio: Float!
+  shearCrackingBeforeYield: Float!
+  shearForceDemandN: Float!
+  intermediateSteelAreaM2: Float!
 }
 type En1998Silo {
   id: String!
@@ -96,7 +238,7 @@ type En1998Silo {
   radiusM: Float!
   permanentGkN: Float!
   contentQkN: Float!
-  contentCategory: String!
+  contentCategory: ImposedCategory!
   fillingRatio: Float!
   nRdN: Float!
   vRdN: Float!
@@ -108,18 +250,45 @@ type En1998Tank {
   radiusM: Float!
   permanentGkN: Float!
   contentQkN: Float!
-  contentCategory: String!
+  contentCategory: ImposedCategory!
   fillingRatio: Float!
   vRdN: Float!
+  shellStrengthMpa: Float!
+  shellThicknessM: Float!
 }
 type En1998Foundation {
   id: String!
   supportedBuildingId: String!
   areaM2: Float!
   pRdPa: Float!
-  hRdN: Float!
+  passiveResistanceN: Float!
   kFoundation: Float!
   kSoil: Float!
+  liqN160: Float!
+  liqFinesPercent: Float!
+  liqDepthM: Float!
+  liqWaterDepthM: Float!
+  liqUnitWeightNM3: Float!
+  liqMagnitude: Float!
+  liqLayerThicknessM: Float!
+  footingWidthM: Float!
+  bearingAxialN: Float!
+  bearingShearN: Float!
+  bearingMomentNm: Float!
+  bearingNMaxN: Float!
+  soilFrictionAngleDeg: Float!
+  pileDiameterM: Float!
+  pileLengthM: Float!
+  pileModulusPa: Float!
+  pileSubgradeModulusNM3: Float!
+  pileHeadShearN: Float!
+  pileHeadFixed: Float!
+  pileInterfaceDepthM: Float!
+  pileUpperVsMS: Float!
+  pileLowerVsMS: Float!
+  pileMomentRdNm: Float!
+  baseFrictionAngleDeg: Float!
+  basePorePressurePa: Float!
 }
 type En1998RetainingWall {
   id: String!
@@ -128,6 +297,94 @@ type En1998RetainingWall {
   soilGamma: Float!
   r: Float!
   hRdNPerM: Float!
+  waterHeightM: Float!
+  saturatedGamma: Float!
+  permeabilityMS: Float!
+}
+type En1998SoilLayer {
+  id: String!
+  foundationId: String!
+  thicknessM: Float!
+  unitWeightNM3: Float!
+  shearWaveVelocityMS: Float!
+  n160: Float!
+  finesPercent: Float!
+}
+enum DiaphragmMaterial {
+  concrete
+  timber
+  steelDeck
+}
+type En1998Diaphragm {
+  id: String!
+  buildingId: String!
+  storeyId: String!
+  material: DiaphragmMaterial!
+  thicknessM: Float!
+  spanM: Float!
+  depthM: Float!
+  openingWidthM: Float!
+  shearStrengthMpa: Float!
+  chordAreaM2: Float!
+  chordStrengthMpa: Float!
+  gammaD: Float!
+}
+type En1998Accelerogram {
+  id: String!
+  buildingId: String!
+  label: String!
+  samples: String!
+  dtS: Float!
+  scaleFactor: Float!
+}
+enum PierStiffnessBasis {
+  declared
+  computed
+}
+type En1998Pier {
+  id: String!
+  bridgeId: String!
+  xM: Float!
+  heightM: Float!
+  sectionBM: Float!
+  sectionHM: Float!
+  modulusMpa: Float!
+  momentRdNm: Float!
+  shearRdN: Float!
+  reinforcementRatio: Float!
+  coverM: Float!
+  concreteFckMpa: Float!
+  steelFykMpa: Float!
+  axialLoadN: Float!
+  stiffnessBasis: PierStiffnessBasis!
+}
+enum BearingDevice {
+  fixed
+  elastomeric
+  sliding
+  isolator
+}
+type En1998Bearing {
+  id: String!
+  bridgeId: String!
+  pierId: String!
+  device: BearingDevice!
+  xM: Float!
+  stiffnessNPerM: Float!
+  dRdM: Float!
+  seatLengthM: Float!
+  minSupportLengthM: Float!
+}
+type En1998Joint {
+  id: String!
+  buildingId: String!
+  storeyId: String!
+  columnId: String!
+  beamId: String!
+  xM: Float!
+  yM: Float!
+  columnMomentRdNm: Float!
+  beamMomentRdNm: Float!
 }
 type En1998Tower {
   id: String!
@@ -138,16 +395,66 @@ type En1998Tower {
   permanentGkN: Float!
   correlatedOccupancy: Boolean!
   variables: [En1998VariableAction!]!
+  eiNm2: Float!
+  baseRotationalStiffnessNm: Float!
 }
-type En1998Snapshot {
-  annex: String!
-  site: En1998Site!
-  buildings: [En1998Building!]!
-  bridges: [En1998Bridge!]!
-  assessments: [En1998Assessment!]!
-  silos: [En1998Silo!]!
-  tanks: [En1998Tank!]!
-  foundations: [En1998Foundation!]!
-  retainingWalls: [En1998RetainingWall!]!
-  towers: [En1998Tower!]!
+type En1998Placement {
+  id: String!
+  x: Float!
+  y: Float!
+  z: Float!
+  yaw: Float!
+}
+enum ImposedCategory {
+  a
+  b
+  c
+  d
+  e
+  f
+  g
+  h
+  snow
+  wind
+}
+type En1998VariableAction {
+  id: String!
+  category: ImposedCategory!
+  qkN: Float!
+}
+enum StiffnessBasis {
+  simplified
+  declared
+}
+enum MemberKind {
+  beam
+  column
+  wall
+  brace
+}
+# 🔤️ DeGroundCombo is a string domain whose members are not GraphQL names; the JSON Schema enumerates them.
+scalar DeGroundCombo
+type En1998TieBeam {
+  id: String!
+  foundationAId: String!
+  foundationBId: String!
+  span: Float!
+  width: Float!
+  depth: Float!
+  steelArea: Float!
+  steelDesignStrength: Float!
+  relativeDisplacement: Float!
+  displacementLimit: Float!
+}
+type En1998Slope {
+  id: String!
+  governingLayerId: String!
+  height: Float!
+  angle: Float!
+  frictionAngle: Float!
+  cohesion: Float!
+  topographicAmplification: Float!
+  circleCentreX: Float!
+  circleCentreZ: Float!
+  circleRadius: Float!
 }

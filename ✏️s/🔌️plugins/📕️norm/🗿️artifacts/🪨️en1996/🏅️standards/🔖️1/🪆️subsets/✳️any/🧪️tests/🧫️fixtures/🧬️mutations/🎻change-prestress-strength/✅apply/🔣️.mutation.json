@@ -1,0 +1,7 @@
+{
+  "ChangePrestressStrength": {
+    "wallId": "wall-north",
+    "id": "tendon-1",
+    "newFPkPa": 1770000000.0
+  }
+}

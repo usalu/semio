@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-member-torsion-load/schema.json",
+  "title": "ChangeMemberTorsionLoad",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newTorsionLoad"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Member",
+          "de": "Bauteil"
+        },
+        "description": {
+          "en": "The member this mutation addresses, by id.",
+          "de": "Das adressierte Element (Bauteil), per Kennung."
+        },
+        "ref": {
+          "kind": "member"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newTorsionLoad": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/TorsionLoad",
+      "x-semio-ui": {
+        "label": {
+          "en": "Application of the torsion action on a fork-supported member (point torque at the position below or uniform torque)",
+          "de": "Anordnung des Torsionsmoments am gabelgelagerten Bauteil (Einzeltorsionsmoment an der Stelle unten oder gleichmäßig verteilt)"
+        },
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

@@ -6,5 +6,5 @@ pub fn diff(payload: &ChangeFireOccupancy, base: &En1991Snapshot) -> protocol::M
     if base.fire_occupancy == payload.new_fire_occupancy {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Value unchanged.");
     }
-    protocol::MutationOutcome::new(En1991Diff { fire_occupancy: Some(payload.new_fire_occupancy.clone()), ..Default::default() })
+    protocol::MutationOutcome::new(En1991Diff { fire_occupancy: Some(payload.new_fire_occupancy), ..Default::default() })
 }

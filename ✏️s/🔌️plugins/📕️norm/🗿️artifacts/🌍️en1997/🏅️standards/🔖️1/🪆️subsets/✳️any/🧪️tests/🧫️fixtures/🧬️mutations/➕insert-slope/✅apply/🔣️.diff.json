@@ -1,0 +1,48 @@
+{
+  "structureId": null,
+  "geotechnicalCategory": null,
+  "designSituation": null,
+  "designApproach": null,
+  "annex": null,
+  "groundwaterLevel": null,
+  "investigationDepth": null,
+  "layers": null,
+  "footings": null,
+  "piles": null,
+  "retainingWalls": null,
+  "slopes": {
+    "removed": [],
+    "inserted": [
+      {
+        "index": 1,
+        "row": {
+          "id": "slope-S1-2",
+          "angleDeg": 25.0,
+          "height": 6.0,
+          "length": 14.0,
+          "governingLayerId": "layer-sand",
+          "circleCentreX": 0.0,
+          "circleCentreZ": 0.0,
+          "circleRadius": 0.0,
+          "width": 0.0
+        }
+      }
+    ],
+    "moved": [],
+    "modified": []
+  },
+  "upliftCases": null,
+  "anchors": null,
+  "embeddedWalls": null,
+  "pileGroups": null,
+  "labTests": null,
+  "layerWaters": null,
+  "cases": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "investigations": null,
+  "characteristicBases": null
+}

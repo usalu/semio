@@ -1,0 +1,6 @@
+{
+  "ChangeFatigueStressHistory": {
+    "id": "fat-1",
+    "newStressHistory": "alt"
+  }
+}

@@ -1,0 +1,5 @@
+type ChangeBarPointLength {
+  memberId: String!
+  barId: String!
+  newLength: Float!
+}

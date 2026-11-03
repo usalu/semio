@@ -1,0 +1,92 @@
+Get the existing layout plugin working end to end in the current repository. Solve every problem that prevents its intended workflows from working in its actual host application.
+
+Own discovery, setup, implementation, integration, packaging, execution, and verification. Begin with a focused inspection and concise plan, then carry the work through to a usable, reproducible result.
+
+## 1. Identify the plugin, host, and intended behavior
+
+Locate the layout plugin, its documentation, manifests, entry points, host adapters, examples, tests, build scripts, and current work in progress. Read applicable repository instructions and preserve unrelated changes.
+
+Establish the actual host application, supported versions, plugin architecture, public interfaces, and intended layout operations from repository evidence. Use the established stack and implementation.
+
+Trace the complete path from the host's inputs or selection through plugin configuration and layout computation to the actual host objects, document, component state, or output artifact.
+
+Define a concise acceptance checklist for the principal supported workflows, including representative inputs and expected results. Reproduce the existing failures before changing their underlying causes.
+
+## 2. Make installation, loading, and invocation work
+
+Install the required dependencies using the project's package managers, lockfiles, and supported runtime versions. Repair the existing development, build, packaging, and installation commands as needed.
+
+Resolve blocking configuration, dependency, compilation, import, generated-code, resource, and host API compatibility issues.
+
+Validate the actual plugin manifest, entry-point paths, bundled code and assets, required permissions, registration hooks, and command or interface registration wherever these mechanisms exist.
+
+Build the plugin, load it through the host's established development or test installation process, and invoke it through the intended user-facing command, menu, panel, or equivalent entry point.
+
+Inspect host and plugin logs and resolve startup and loading failures. Verify that the installed package uses the code and assets just built.
+
+## 3. Complete the real layout workflows
+
+Exercise the complete supported flow: select or load input, configure the available options, invoke the layout operation, compute the result, apply it through the host API, and inspect the resulting host state.
+
+Connect all required controls, messages, processing steps, and host operations. Implement missing pieces needed by the existing intended workflows and resolve failures across component boundaries.
+
+Where the plugin provides a preview, verify that the committed result corresponds to that preview and its selected settings. Confirm that changes reach the intended host objects and remain visible after the operation completes.
+
+Respect the host's coordinate spaces, units, transforms, nesting, object identity, bounds, anchors, and layout constraints where applicable. Check representative positions, sizes, spacing, and alignment numerically as well as visually.
+
+Handle empty selections, unsupported inputs, invalid or non-finite values, and locked or hidden objects according to the existing contract. Clearly explain when inputs are skipped or no operation can be applied.
+
+Verify repeated use and relevant boundary cases. Preserve unrelated objects, document contents, and user settings.
+
+## 4. Integrate with host state and lifecycle
+
+Honor the host's existing transaction and history mechanisms. Where undo and redo apply, verify that a completed layout operation can be reversed and restored correctly.
+
+Make cancellation and failure leave a defined, recoverable state. Handle partial failures consistently with the host's transaction capabilities.
+
+Resolve problems in asynchronous UI, worker, service, or host messaging where present. Loading and error states must terminate correctly. Prevent stale results from being applied to a changed selection, a different document, or a closed plugin instance.
+
+Verify opening, closing, reopening, document changes, selection changes, and host reloads wherever supported. Clean up the plugin's handlers and resources so repeated use does not duplicate actions or retain invalid references.
+
+Use the host's and plugin's established persistence mechanisms. Confirm that supported settings and document changes survive the relevant save, reopen, reload, or restart operations.
+
+## 5. Verify the built plugin in its actual host
+
+Use representative development documents or fixtures and exercise every principal workflow in the real host. Use its available automation, interaction, inspection, and logging tools. For a browser-based host, inspect the actual rendered interface, console, and network behavior.
+
+Acceptance requires the installed plugin to execute successfully against actual host state, with the resulting objects or outputs inspected.
+
+Run relevant existing build, lint, type, test, integration, and packaging checks. Add focused regression coverage where it verifies repaired behavior and prevents recurrence. Resolve failures that affect the plugin's working state.
+
+Inspect the produced distributable and confirm it contains the required manifest, executable code, and resources. Verify installation and the main workflow again using that built package.
+
+Check a fresh start or controlled restart of the relevant host/plugin processes owned by this task. Confirm the documented steps reproduce the working state without hidden manual fixes.
+
+Record concrete before-and-after evidence, workflow results, and the commands used to verify them.
+
+## 6. Use the parallel agent workflow
+
+Use Opus 5.5 Medium for coordination and final integration. Spawn multiple sonnet-worker instances using Sonnet 5.5 Medium for substantial setup, host integration, layout logic, interface, state, and verification tasks.
+
+Use multiple haiku-reader instances using Haiku 5.5 Medium for read-only exploration, manifest and contract inspection, test review, and focused audits. Use haiku-helper for bounded low-complexity fixes and documentation.
+
+Agree on shared contracts and assign clear ownership before overlapping edits. Preserve other contributors' changes and running processes, coordinate shared files, and integrate concurrent work carefully.
+
+Require each worker to report findings, changed or inspected files, verification evidence, and unresolved dependencies. The coordinator must verify the complete installed plugin after integrating their work.
+
+## 7. Continue through completion and provide an operational handoff
+
+Make routine implementation decisions autonomously from repository evidence. Continue resolving problems through actual host execution and verification.
+
+If an unavailable host, credential, license, external service, or other genuine external dependency blocks verification, complete all independent work and identify the exact missing input, affected workflow, and minimal next action. Report any required but unverified workflow explicitly.
+
+Finish with:
+- The problems found, changes made, and why the fixes address them.
+- Exact dependency, build, package, installation, launch, and development-reload commands.
+- The built plugin artifact path and required configuration names.
+- The host and plugin versions actually verified.
+- A short walkthrough of the principal workflow with representative inputs and expected results.
+- Results for every acceptance criterion and relevant verification evidence.
+- Current runtime status and any remaining concrete blocker.
+
+The task is complete when the built layout plugin loads in its intended host, can be invoked normally, performs its principal layout operations against actual host objects, maintains the required state through its supported lifecycle, and can be built and installed reproducibly.

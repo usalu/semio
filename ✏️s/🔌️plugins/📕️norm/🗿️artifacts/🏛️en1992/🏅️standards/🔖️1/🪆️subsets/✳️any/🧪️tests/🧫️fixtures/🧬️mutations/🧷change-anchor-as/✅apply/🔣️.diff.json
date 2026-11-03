@@ -1,0 +1,41 @@
+{
+  "annex": null,
+  "reliabilityClass": null,
+  "title": null,
+  "designWorkingLifeYears": null,
+  "deltaCDev": null,
+  "cementType": null,
+  "concreteGrades": null,
+  "reinforcementGrades": null,
+  "prestressSteels": null,
+  "members": null,
+  "anchors": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "anc-1",
+        "patch": {
+          "hEf": null,
+          "cracked": null,
+          "fUk": null,
+          "fYk": null,
+          "aS": 0.00015,
+          "d": null,
+          "c1": null,
+          "fCk": null,
+          "headDiameter": null,
+          "actions": null
+        }
+      }
+    ]
+  },
+  "placements": null,
+  "cases": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  }
+}

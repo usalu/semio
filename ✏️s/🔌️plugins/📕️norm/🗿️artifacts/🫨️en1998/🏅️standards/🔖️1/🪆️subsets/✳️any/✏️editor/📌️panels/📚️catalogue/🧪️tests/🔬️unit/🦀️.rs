@@ -1,7 +1,7 @@
 use crate::panels::catalogue::*;
 use semio_s_plugin_norm_app_surface::CatalogueCell;
 use crate::unit_tests::context;
-use semio_s_artifact_norm_en1998_schema::na_de::{GroundCombo, SeismicZone};
+use semio_s_artifact_norm_en1998_schema::na_de::{self, GroundCombo};
 
 #[semio_framework_async_macros::async_test]
 async fn definition_binds_the_framework_catalogue_tab_to_this_body_key() {
@@ -35,7 +35,7 @@ fn renders_reference_tables_with_examples() {
 fn reference_tables_cells_match_na4_spectrum_params() {
     let tables = reference_tables();
     assert!(tables.iter().any(|t| t.id == "table-na-4-ground-combos"));
-    assert!(tables.iter().any(|t| t.id == "table-na-1-seismic-zones"));
+    assert!(tables.iter().any(|t| t.id == "table-na-1-plateau-acceleration"));
     let na4 = tables.iter().find(|t| t.id == "table-na-4-ground-combos").expect("NA.4");
     assert_ne!(na4.title_en, na4.title_de);
     let cs = na4.rows.iter().find(|r| r.id == "C-S").expect("C-S row");
@@ -50,10 +50,10 @@ fn reference_tables_cells_match_na4_spectrum_params() {
     assert!((*tb - expected_tb).abs() <= 1e-9);
     assert!((*tc - expected_tc).abs() <= 1e-9);
     assert!((*td - expected_td).abs() <= 1e-9);
-    let zones = tables.iter().find(|t| t.id == "table-na-1-seismic-zones").expect("NA.1");
+    let zones = tables.iter().find(|t| t.id == "table-na-1-plateau-acceleration").expect("NA.1");
     assert_ne!(zones.title_en, zones.title_de);
-    let z2 = zones.rows.iter().find(|r| r.id == "zone-2").expect("zone-2");
-    let CatalogueCell::Number { value: agr, .. } = &z2.cells[1] else { panic!("a_gR") };
-    assert_eq!(*agr, SeismicZone::Zone2.a_gr());
+    let row = zones.rows.iter().find(|r| r.id == "s-ap-r-1.5").expect("S_aP,R 1.5 row");
+    let CatalogueCell::Number { value: agr, .. } = &row.cells[1] else { panic!("a_gR") };
+    assert!((*agr - na_de::a_gr_from_s_ap_r(1.5)).abs() <= 0.005);
 }
 

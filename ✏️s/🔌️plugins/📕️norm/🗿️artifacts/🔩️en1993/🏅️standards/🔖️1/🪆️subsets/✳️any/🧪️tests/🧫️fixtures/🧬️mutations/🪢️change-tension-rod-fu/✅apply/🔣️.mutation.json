@@ -1,0 +1,6 @@
+{
+  "ChangeTensionRodFu": {
+    "id": "ten-1",
+    "newRodFu": 1.5
+  }
+}

@@ -1,0 +1,2559 @@
+{
+  "annex": "De",
+  "snowZone": "2",
+  "altitude": 150.0,
+  "enSk": 850.0,
+  "northGermanLowlandSnow": false,
+  "windZone": 2,
+  "enVb": 25.0,
+  "terrainCategory": 2,
+  "mixedTerrainUpwind": 2,
+  "mixedTerrainDistance": 0.0,
+  "orographyFactor": 1.0,
+  "coastOrIsland": false,
+  "airDensity": 1.25,
+  "height": 20.0,
+  "width": 15.0,
+  "depth": 25.0,
+  "assumedDeltaT": 10.0,
+  "constructionActivity": "scaffolding",
+  "assumedConstructionQk": 1500.0,
+  "structureKind": "building",
+  "bridgeLane": 1,
+  "bridgeSpan": 20.0,
+  "bridgeLaneWidth": 3.0,
+  "assumedBridgeTandem": 0.0,
+  "assumedBridgeUdl": 0.0,
+  "assumedBridgeLm2": 0.0,
+  "assumedBridgeFootway": 0.0,
+  "craneClaimed": true,
+  "craneClass": "HC2",
+  "hoistClass": "HC2",
+  "hoistingSpeed": 0.5,
+  "assumedCraneWheel": 50000.0,
+  "assumedCraneHorizontal": 5000.0,
+  "siloClaimed": true,
+  "siloKind": "silo",
+  "siloBulkDensity": 8000.0,
+  "siloHeight": 12.0,
+  "siloHydraulicRadius": 1.5,
+  "siloMu": 0.4,
+  "siloK": 0.4,
+  "assumedSiloPressure": 5000.0,
+  "assumedSiloPatch": 1000.0,
+  "assumedSiloWallFriction": 1000.0,
+  "bridgeTandemX": 10.0,
+  "railAlpha": 1.0,
+  "assumedRailLm71": 250000.0,
+  "assumedRailLm71Udl": 80000.0,
+  "assumedRailSw0": 133000.0,
+  "assumedRailSw2": 150000.0,
+  "craneX": 15.0,
+  "craneRunwayLength": 30.0,
+  "craneWheelBase": 3.5,
+  "siloDiameter": 6.0,
+  "siloEccentricity": 0.0,
+  "siloHopperAngleDeg": 60.0,
+  "bridgeCurveRadius": 0.0,
+  "fireLoadBasis": "occupancyTable",
+  "floors": [
+    {
+      "id": "office-l1",
+      "category": "B1",
+      "area": 240.0,
+      "assumedQk": 1000.0,
+      "assumedQkConcentrated": 5000.0,
+      "assumedPartitions": 200.0
+    }
+  ],
+  "selfWeightElements": [
+    {
+      "id": "slab-rc",
+      "material": "reinforced_concrete",
+      "thickness": 0.2,
+      "assumedGk": 2000.0
+    }
+  ],
+  "roofs": [
+    {
+      "id": "roof-main",
+      "roofType": "duopitch",
+      "pitchDeg": 15.0,
+      "cE": 1.0,
+      "cT": 1.0,
+      "hasParapet": false,
+      "parapetHeight": 0.0,
+      "driftObstructionHeight": 0.0,
+      "multiSpan": false,
+      "assumedSk": 200.0
+    }
+  ],
+  "windFaces": [
+    {
+      "id": "facade-d",
+      "zone": "D",
+      "z": 8.0,
+      "cPe10": 0.8,
+      "cPe1": 1.0,
+      "cPi": 0.2,
+      "cS": 1.0,
+      "cD": 1.0,
+      "loadedArea": 10.0,
+      "assumedWp": 100.0
+    }
+  ],
+  "accidentalCases": [
+    {
+      "id": "impact-1",
+      "impact": [
+        {
+          "vehicleMass": 15000.0,
+          "vehicleSpeed": 13.9,
+          "assumedForce": 50000.0
+        }
+      ],
+      "explosion": []
+    }
+  ],
+  "bridgeLanes": [],
+  "constructionStages": [],
+  "roofSurfaces": [],
+  "placements": [],
+  "specialVehicles": [],
+  "windBridges": [],
+  "dynamicElements": [],
+  "impactActions": [],
+  "internalExplosions": [],
+  "thermalSections": [],
+  "tMax": 37.0,
+  "tMin": -24.0,
+  "t0": 10.0,
+  "thermalElementType": "building",
+  "thermalBridgeType": 1,
+  "deltaTM": 0.0,
+  "storeyCount": 3,
+  "fireMode": "none",
+  "fireCurve": "standard",
+  "fireDuration": 3600.0,
+  "assumedGasTemperature": 1200.0,
+  "assumedHNet": 25000.0,
+  "fireCompartmentArea": 100.0,
+  "fireCompartmentHeight": 3.0,
+  "fireOpeningFactor": 0.04,
+  "fireThermalInertia": 1160.0,
+  "fireOccupancy": "office",
+  "fireLoadDensityQf": 420000000.0,
+  "assumedQfD": 420000000.0,
+  "assumedBridgeLm3": 0.0,
+  "assumedBridgeLm4": 0.0,
+  "bridgeLoadGroup": "gr1a",
+  "cases": [
+    {
+      "id": "case-e11-01",
+      "labelEn": "Self-weight of construction layers",
+      "labelDe": "Eigenlast von Bauteilschichten",
+      "entryId": "E11.01",
+      "numbers": [
+        {
+          "id": "gamma",
+          "value": 25000.0
+        },
+        {
+          "id": "thickness",
+          "value": 0.25
+        },
+        {
+          "id": "thickness2",
+          "value": 0.06
+        },
+        {
+          "id": "thickness3",
+          "value": 0.02
+        }
+      ],
+      "texts": [
+        {
+          "id": "material",
+          "value": "concrete"
+        },
+        {
+          "id": "material2",
+          "value": "concrete"
+        },
+        {
+          "id": "material3",
+          "value": "concrete"
+        }
+      ]
+    },
+    {
+      "id": "case-e11-02",
+      "labelEn": "Movable partitions and façades",
+      "labelDe": "Bewegliche Trennwände und Fassaden",
+      "entryId": "E11.02",
+      "numbers": [
+        {
+          "id": "finish",
+          "value": 0.0
+        },
+        {
+          "id": "wall_gamma",
+          "value": 18000.0
+        },
+        {
+          "id": "wall_height",
+          "value": 2.8
+        },
+        {
+          "id": "wall_load",
+          "value": 3000.0
+        },
+        {
+          "id": "wall_thickness",
+          "value": 0.175
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e11-03",
+      "labelEn": "Imposed loads on buildings by category",
+      "labelDe": "Nutzlasten Gebäude nach Kategorie",
+      "entryId": "E11.03",
+      "numbers": [
+        {
+          "id": "depth",
+          "value": 5.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "category",
+          "value": "B2"
+        }
+      ]
+    },
+    {
+      "id": "case-e11-04",
+      "labelEn": "Reduction factors α_A and α_n",
+      "labelDe": "Abminderungsbeiwerte α_A und α_n",
+      "entryId": "E11.04",
+      "numbers": [
+        {
+          "id": "area",
+          "value": 20.0
+        },
+        {
+          "id": "storeys",
+          "value": 3.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "category",
+          "value": "B2"
+        }
+      ]
+    },
+    {
+      "id": "case-e11-05",
+      "labelEn": "Horizontal loads on barriers",
+      "labelDe": "Horizontallasten auf Absturzsicherungen",
+      "entryId": "E11.05",
+      "numbers": [
+        {
+          "id": "delta_b",
+          "value": 0.1
+        },
+        {
+          "id": "delta_c",
+          "value": 0.1
+        },
+        {
+          "id": "mass",
+          "value": 1500.0
+        },
+        {
+          "id": "speed",
+          "value": 15.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "category",
+          "value": "B2"
+        }
+      ]
+    },
+    {
+      "id": "case-e11-06",
+      "labelEn": "Roofs category H",
+      "labelDe": "Dächer Kategorie H",
+      "entryId": "E11.06",
+      "numbers": [],
+      "texts": []
+    },
+    {
+      "id": "case-e11-07",
+      "labelEn": "Forklift trucks",
+      "labelDe": "Gabelstapler",
+      "entryId": "E11.07",
+      "numbers": [
+        {
+          "id": "class",
+          "value": 2.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "tyres",
+          "value": "pneumatic"
+        }
+      ]
+    },
+    {
+      "id": "case-e11-08",
+      "labelEn": "Load spreading through layers",
+      "labelDe": "Lastausbreitung durch Schichten",
+      "entryId": "E11.08",
+      "numbers": [
+        {
+          "id": "a",
+          "value": 0.2
+        },
+        {
+          "id": "b",
+          "value": 0.2
+        },
+        {
+          "id": "cover",
+          "value": 0.1
+        },
+        {
+          "id": "load",
+          "value": 40000.0
+        },
+        {
+          "id": "slab_thickness",
+          "value": 0.25
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e11-09",
+      "labelEn": "Wheel contact pressure",
+      "labelDe": "Radaufstandspressung",
+      "entryId": "E11.09",
+      "numbers": [
+        {
+          "id": "a",
+          "value": 0.2
+        },
+        {
+          "id": "b",
+          "value": 0.2
+        },
+        {
+          "id": "load",
+          "value": 40000.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e15-01",
+      "labelEn": "Uniform bridge temperature component",
+      "labelDe": "Gleichmäßiger Temperaturanteil Brücken",
+      "entryId": "E15.01",
+      "numbers": [
+        {
+          "id": "deck_type",
+          "value": 3.0
+        },
+        {
+          "id": "length",
+          "value": 40.0
+        },
+        {
+          "id": "t_0_c",
+          "value": 10.0
+        },
+        {
+          "id": "t_max_c",
+          "value": 35.0
+        },
+        {
+          "id": "t_min_c",
+          "value": -15.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e15-02",
+      "labelEn": "Linear temperature difference of bridges",
+      "labelDe": "Linearer Temperaturunterschied Brücken",
+      "entryId": "E15.02",
+      "numbers": [
+        {
+          "id": "k_sur_cool",
+          "value": 1.0
+        },
+        {
+          "id": "k_sur_heat",
+          "value": 1.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "deck",
+          "value": "composite"
+        },
+        {
+          "id": "surfacing",
+          "value": "50mm"
+        }
+      ]
+    },
+    {
+      "id": "case-e15-03",
+      "labelEn": "Full restraint stress",
+      "labelDe": "Spannung bei voller Behinderung",
+      "entryId": "E15.03",
+      "numbers": [
+        {
+          "id": "alpha",
+          "value": 1.2e-05
+        },
+        {
+          "id": "dt",
+          "value": 15.0
+        },
+        {
+          "id": "e",
+          "value": 30000000000.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e15-04",
+      "labelEn": "Combination of uniform and gradient components",
+      "labelDe": "Kombination von Temperaturanteilen",
+      "entryId": "E15.04",
+      "numbers": [
+        {
+          "id": "dt_m",
+          "value": 10.0
+        },
+        {
+          "id": "dt_n",
+          "value": 20.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e15-05",
+      "labelEn": "Restrained bowing moment",
+      "labelDe": "Zwangsmoment aus Verkrümmung",
+      "entryId": "E15.05",
+      "numbers": [
+        {
+          "id": "alpha",
+          "value": 1.2e-05
+        },
+        {
+          "id": "dt_m",
+          "value": 10.0
+        },
+        {
+          "id": "e",
+          "value": 30000000000.0
+        },
+        {
+          "id": "h",
+          "value": 1.5
+        },
+        {
+          "id": "i",
+          "value": 0.001
+        },
+        {
+          "id": "length",
+          "value": 6.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e15-06",
+      "labelEn": "Joint movement",
+      "labelDe": "Fugenbewegung",
+      "entryId": "E15.06",
+      "numbers": [
+        {
+          "id": "alpha",
+          "value": 1.2e-05
+        },
+        {
+          "id": "dt",
+          "value": 15.0
+        },
+        {
+          "id": "length",
+          "value": 6.0
+        },
+        {
+          "id": "margin_k",
+          "value": 0.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e15-07",
+      "labelEn": "Altitude correction of shade temperatures",
+      "labelDe": "Höhenkorrektur der Schattentemperaturen",
+      "entryId": "E15.07",
+      "numbers": [
+        {
+          "id": "altitude",
+          "value": 300.0
+        },
+        {
+          "id": "t_max_c",
+          "value": 35.0
+        },
+        {
+          "id": "t_min_c",
+          "value": -15.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e15-08",
+      "labelEn": "Building temperature ranges",
+      "labelDe": "Temperaturbereiche Gebäude",
+      "entryId": "E15.08",
+      "numbers": [
+        {
+          "id": "t_0_c",
+          "value": 10.0
+        },
+        {
+          "id": "t_max_c",
+          "value": 35.0
+        },
+        {
+          "id": "t_min_c",
+          "value": -15.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e16-01",
+      "labelEn": "Return period of transient situations",
+      "labelDe": "Wiederkehrperiode vorübergehender Situationen",
+      "entryId": "E16.01",
+      "numbers": [
+        {
+          "id": "duration_days",
+          "value": 60.0
+        },
+        {
+          "id": "rho",
+          "value": 1.25
+        },
+        {
+          "id": "v_b",
+          "value": 25.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e16-02",
+      "labelEn": "Construction loads Q_ca and fresh concrete",
+      "labelDe": "Bauzustandslasten Q_ca und Frischbeton",
+      "entryId": "E16.02",
+      "numbers": [
+        {
+          "id": "area",
+          "value": 20.0
+        },
+        {
+          "id": "gamma",
+          "value": 25000.0
+        },
+        {
+          "id": "h",
+          "value": 10.0
+        },
+        {
+          "id": "q_ca",
+          "value": 1000.0
+        },
+        {
+          "id": "q_ca_concreting",
+          "value": 750.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e16-03",
+      "labelEn": "Wind during execution",
+      "labelDe": "Wind im Bauzustand",
+      "entryId": "E16.03",
+      "numbers": [
+        {
+          "id": "p",
+          "value": 0.02
+        },
+        {
+          "id": "rho",
+          "value": 1.25
+        },
+        {
+          "id": "v_b",
+          "value": 25.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e16-06",
+      "labelEn": "Combination of construction loads",
+      "labelDe": "Kombination von Bauzustandslasten",
+      "entryId": "E16.06",
+      "numbers": [
+        {
+          "id": "q_ci.0",
+          "value": 20000.0
+        },
+        {
+          "id": "q_ci.1",
+          "value": 15000.0
+        },
+        {
+          "id": "q_ci.2",
+          "value": 30000.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e17-01",
+      "labelEn": "Impact of road vehicles",
+      "labelDe": "Anprall von Straßenfahrzeugen",
+      "entryId": "E17.01",
+      "numbers": [],
+      "texts": [
+        {
+          "id": "road",
+          "value": "motorway"
+        }
+      ]
+    },
+    {
+      "id": "case-e17-02",
+      "labelEn": "Impact of forklift trucks",
+      "labelDe": "Anprall von Gabelstaplern",
+      "entryId": "E17.02",
+      "numbers": [
+        {
+          "id": "weight",
+          "value": 30000.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e17-05",
+      "labelEn": "Helicopter hard landing",
+      "labelDe": "Hubschrauber-Hartlandung",
+      "entryId": "E17.05",
+      "numbers": [
+        {
+          "id": "mass",
+          "value": 1500.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e17-06",
+      "labelEn": "Robustness: ties, removal and key elements",
+      "labelDe": "Robustheit: Zugglieder, Wegfall, Schlüsselelemente",
+      "entryId": "E17.06",
+      "numbers": [
+        {
+          "id": "floor_area",
+          "value": 400.0
+        },
+        {
+          "id": "g_k",
+          "value": 5000.0
+        },
+        {
+          "id": "key_area",
+          "value": 20.0
+        },
+        {
+          "id": "l",
+          "value": 6.0
+        },
+        {
+          "id": "provided_tie",
+          "value": 80000.0
+        },
+        {
+          "id": "psi",
+          "value": 0.5
+        },
+        {
+          "id": "q_k",
+          "value": 3000.0
+        },
+        {
+          "id": "s",
+          "value": 5.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e17-07",
+      "labelEn": "Risk analysis",
+      "labelDe": "Risikoanalyse",
+      "entryId": "E17.07",
+      "numbers": [
+        {
+          "id": "consequence.0",
+          "value": 2000000.0
+        },
+        {
+          "id": "consequence.1",
+          "value": 5000000.0
+        },
+        {
+          "id": "p_d_h.0",
+          "value": 0.1
+        },
+        {
+          "id": "p_d_h.1",
+          "value": 0.05
+        },
+        {
+          "id": "p_h.0",
+          "value": 0.01
+        },
+        {
+          "id": "p_h.1",
+          "value": 0.001
+        },
+        {
+          "id": "r_acc",
+          "value": 1e-05
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e17-08",
+      "labelEn": "Dynamic design for impact",
+      "labelDe": "Dynamische Bemessung für Anprall",
+      "entryId": "E17.08",
+      "numbers": [
+        {
+          "id": "f_pl",
+          "value": 1000000.0
+        },
+        {
+          "id": "k",
+          "value": 300000.0
+        },
+        {
+          "id": "mass",
+          "value": 1500.0
+        },
+        {
+          "id": "speed",
+          "value": 15.0
+        },
+        {
+          "id": "y_allowed",
+          "value": 0.5
+        },
+        {
+          "id": "y_el",
+          "value": 0.1
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e17-09",
+      "labelEn": "Internal gas explosions",
+      "labelDe": "Innere Gasexplosionen",
+      "entryId": "E17.09",
+      "numbers": [
+        {
+          "id": "av_over_v",
+          "value": 0.1
+        },
+        {
+          "id": "p_v",
+          "value": 5.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e17-10",
+      "labelEn": "External explosion overpressure",
+      "labelDe": "Äußerer Explosionsüberdruck",
+      "entryId": "E17.10",
+      "numbers": [
+        {
+          "id": "charge_kg",
+          "value": 100.0
+        },
+        {
+          "id": "standoff",
+          "value": 30.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e13-01",
+      "labelEn": "Snow load on roofs",
+      "labelDe": "Schneelast auf Dächern",
+      "entryId": "E13.01",
+      "numbers": [
+        {
+          "id": "altitude",
+          "value": 300.0
+        },
+        {
+          "id": "c_e",
+          "value": 1.0
+        },
+        {
+          "id": "c_t",
+          "value": 1.0
+        },
+        {
+          "id": "mu",
+          "value": 0.8
+        },
+        {
+          "id": "s_k",
+          "value": 650.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "zone",
+          "value": "2"
+        }
+      ]
+    },
+    {
+      "id": "case-e13-02",
+      "labelEn": "Ground snow load",
+      "labelDe": "Schneelast auf dem Boden",
+      "entryId": "E13.02",
+      "numbers": [
+        {
+          "id": "altitude",
+          "value": 300.0
+        },
+        {
+          "id": "north_german_lowland",
+          "value": 1.0
+        },
+        {
+          "id": "s_k",
+          "value": 650.0
+        },
+        {
+          "id": "z",
+          "value": 3.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "cen_zone",
+          "value": "central_east"
+        },
+        {
+          "id": "zone",
+          "value": "2"
+        }
+      ]
+    },
+    {
+      "id": "case-e13-03",
+      "labelEn": "Mono-pitch and duo-pitch roofs",
+      "labelDe": "Pult- und Satteldächer",
+      "entryId": "E13.03",
+      "numbers": [
+        {
+          "id": "alpha",
+          "value": 20.0
+        },
+        {
+          "id": "alpha_2",
+          "value": 15.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e13-04",
+      "labelEn": "Multi-span roofs",
+      "labelDe": "Mehrfeldrige Dächer",
+      "entryId": "E13.04",
+      "numbers": [
+        {
+          "id": "alpha_1",
+          "value": 15.0
+        },
+        {
+          "id": "alpha_2",
+          "value": 15.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e13-05",
+      "labelEn": "Cylindrical roofs",
+      "labelDe": "Zylindrische Dächer",
+      "entryId": "E13.05",
+      "numbers": [
+        {
+          "id": "b",
+          "value": 12.0
+        },
+        {
+          "id": "h",
+          "value": 1.5
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e13-06",
+      "labelEn": "Drifts at obstructions and parapets",
+      "labelDe": "Schneeverwehung an Aufbauten und Attiken",
+      "entryId": "E13.06",
+      "numbers": [
+        {
+          "id": "b1",
+          "value": 5.0
+        },
+        {
+          "id": "b2",
+          "value": 5.0
+        },
+        {
+          "id": "h",
+          "value": 2.0
+        },
+        {
+          "id": "s_k",
+          "value": 650.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e13-07",
+      "labelEn": "Snow overhanging the eaves",
+      "labelDe": "Schneeüberhang an der Traufe",
+      "entryId": "E13.07",
+      "numbers": [
+        {
+          "id": "s",
+          "value": 2000.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e13-08",
+      "labelEn": "Snow guards",
+      "labelDe": "Schneefanggitter",
+      "entryId": "E13.08",
+      "numbers": [
+        {
+          "id": "alpha",
+          "value": 20.0
+        },
+        {
+          "id": "b",
+          "value": 12.0
+        },
+        {
+          "id": "s",
+          "value": 2000.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e13-09",
+      "labelEn": "Exceptional snow loads",
+      "labelDe": "Außergewöhnliche Schneelasten",
+      "entryId": "E13.09",
+      "numbers": [
+        {
+          "id": "altitude",
+          "value": 300.0
+        },
+        {
+          "id": "c_esl",
+          "value": 2.0
+        },
+        {
+          "id": "north_german_lowland",
+          "value": 1.0
+        },
+        {
+          "id": "s_k",
+          "value": 650.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "zone",
+          "value": "2"
+        }
+      ]
+    },
+    {
+      "id": "case-e13-10",
+      "labelEn": "Adjustment to the return period",
+      "labelDe": "Anpassung an die Wiederkehrperiode",
+      "entryId": "E13.10",
+      "numbers": [
+        {
+          "id": "n_years",
+          "value": 50.0
+        },
+        {
+          "id": "v",
+          "value": 0.4
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e13-11",
+      "labelEn": "Snow density",
+      "labelDe": "Wichte des Schnees",
+      "entryId": "E13.11",
+      "numbers": [],
+      "texts": [
+        {
+          "id": "state",
+          "value": "fresh"
+        }
+      ]
+    },
+    {
+      "id": "case-e13-12",
+      "labelEn": "Exposure and thermal coefficients",
+      "labelDe": "Umgebungs- und Temperaturbeiwert",
+      "entryId": "E13.12",
+      "numbers": [
+        {
+          "id": "c_e",
+          "value": 1.0
+        },
+        {
+          "id": "c_t",
+          "value": 1.0
+        },
+        {
+          "id": "mu",
+          "value": 0.8
+        },
+        {
+          "id": "s_k",
+          "value": 650.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e13-13",
+      "labelEn": "Local effects: overhangs and sliding snow",
+      "labelDe": "Örtliche Einwirkungen: Überstand und abrutschender Schnee",
+      "entryId": "E13.13",
+      "numbers": [
+        {
+          "id": "alpha",
+          "value": 20.0
+        },
+        {
+          "id": "b",
+          "value": 12.0
+        },
+        {
+          "id": "s",
+          "value": 2000.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e12-01",
+      "labelEn": "Nominal temperature-time curves",
+      "labelDe": "Einheits-Temperaturzeitkurven",
+      "entryId": "E12.01",
+      "numbers": [
+        {
+          "id": "t_min",
+          "value": 30.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "curve",
+          "value": "standard"
+        }
+      ]
+    },
+    {
+      "id": "case-e12-02",
+      "labelEn": "Parametric temperature-time curve",
+      "labelDe": "Parametrische Temperaturzeitkurve",
+      "entryId": "E12.02",
+      "numbers": [
+        {
+          "id": "a_f",
+          "value": 50.0
+        },
+        {
+          "id": "a_t",
+          "value": 130.0
+        },
+        {
+          "id": "a_v",
+          "value": 5.0
+        },
+        {
+          "id": "b",
+          "value": 1000.0
+        },
+        {
+          "id": "h_eq",
+          "value": 2.0
+        },
+        {
+          "id": "q_fd_mj",
+          "value": 600.0
+        },
+        {
+          "id": "t_lim_min",
+          "value": 20.0
+        },
+        {
+          "id": "t_min",
+          "value": 30.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e12-03",
+      "labelEn": "Design fire load density",
+      "labelDe": "Brandlastdichte",
+      "entryId": "E12.03",
+      "numbers": [
+        {
+          "id": "alarm",
+          "value": 0.0
+        },
+        {
+          "id": "area",
+          "value": 20.0
+        },
+        {
+          "id": "delta_q2",
+          "value": 1.0
+        },
+        {
+          "id": "heat_detection",
+          "value": 0.0
+        },
+        {
+          "id": "offsite_brigade",
+          "value": 0.0
+        },
+        {
+          "id": "onsite_brigade",
+          "value": 0.0
+        },
+        {
+          "id": "q_fk_mj",
+          "value": 511.0
+        },
+        {
+          "id": "safe_access",
+          "value": 0.0
+        },
+        {
+          "id": "smoke_detection",
+          "value": 0.0
+        },
+        {
+          "id": "sprinkler",
+          "value": 0.0
+        },
+        {
+          "id": "water_supplies",
+          "value": 0.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "occupancy",
+          "value": "office"
+        }
+      ]
+    },
+    {
+      "id": "case-e12-04",
+      "labelEn": "Equivalent fire duration",
+      "labelDe": "Äquivalente Branddauer",
+      "entryId": "E12.04",
+      "numbers": [
+        {
+          "id": "alpha_h",
+          "value": 0.0
+        },
+        {
+          "id": "alpha_v",
+          "value": 0.1
+        },
+        {
+          "id": "b",
+          "value": 1000.0
+        },
+        {
+          "id": "height",
+          "value": 3.0
+        },
+        {
+          "id": "k_b",
+          "value": 0.09
+        },
+        {
+          "id": "q_fd_mj",
+          "value": 600.0
+        },
+        {
+          "id": "resistance_min",
+          "value": 90.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e12-05",
+      "labelEn": "Localised fires",
+      "labelDe": "Lokale Brände",
+      "entryId": "E12.05",
+      "numbers": [
+        {
+          "id": "ceiling_height",
+          "value": 3.0
+        },
+        {
+          "id": "d",
+          "value": 1.0
+        },
+        {
+          "id": "fire_area",
+          "value": 20.0
+        },
+        {
+          "id": "l_h",
+          "value": 5.0
+        },
+        {
+          "id": "q_w",
+          "value": 1000000.0
+        },
+        {
+          "id": "r",
+          "value": 2.0
+        },
+        {
+          "id": "z",
+          "value": 3.0
+        },
+        {
+          "id": "z_prime",
+          "value": 0.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e12-06",
+      "labelEn": "Net heat flux",
+      "labelDe": "Netto-Wärmestrom",
+      "entryId": "E12.06",
+      "numbers": [
+        {
+          "id": "alpha_c",
+          "value": 25.0
+        },
+        {
+          "id": "eps_m",
+          "value": 0.8
+        },
+        {
+          "id": "theta_g_c",
+          "value": 600.0
+        },
+        {
+          "id": "theta_m_c",
+          "value": 300.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e12-07",
+      "labelEn": "Actions in the fire design situation",
+      "labelDe": "Einwirkungen im Brandfall",
+      "entryId": "E12.07",
+      "numbers": [
+        {
+          "id": "g_k",
+          "value": 5000.0
+        },
+        {
+          "id": "gamma_g",
+          "value": 1.35
+        },
+        {
+          "id": "gamma_q",
+          "value": 1.5
+        },
+        {
+          "id": "psi",
+          "value": 0.5
+        },
+        {
+          "id": "q_k",
+          "value": 3000.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e12-08",
+      "labelEn": "Thermal actions on external members",
+      "labelDe": "Thermische Einwirkungen auf außenliegende Bauteile",
+      "entryId": "E12.08",
+      "numbers": [
+        {
+          "id": "t_f_c",
+          "value": 800.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e12-09",
+      "labelEn": "Configuration factor",
+      "labelDe": "Konfigurationsfaktor",
+      "entryId": "E12.09",
+      "numbers": [
+        {
+          "id": "distance",
+          "value": 10.0
+        },
+        {
+          "id": "height",
+          "value": 4.0
+        },
+        {
+          "id": "width",
+          "value": 4.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e12-10",
+      "labelEn": "Imported temperature-time series",
+      "labelDe": "Importierte Temperaturzeitreihe",
+      "entryId": "E12.10",
+      "numbers": [
+        {
+          "id": "t_min",
+          "value": 30.0
+        },
+        {
+          "id": "temps_c.0",
+          "value": 20.0
+        },
+        {
+          "id": "temps_c.1",
+          "value": 400.0
+        },
+        {
+          "id": "temps_c.2",
+          "value": 700.0
+        },
+        {
+          "id": "temps_c.3",
+          "value": 900.0
+        },
+        {
+          "id": "temps_c.4",
+          "value": 800.0
+        },
+        {
+          "id": "times_min.0",
+          "value": 0.0
+        },
+        {
+          "id": "times_min.1",
+          "value": 5.0
+        },
+        {
+          "id": "times_min.2",
+          "value": 15.0
+        },
+        {
+          "id": "times_min.3",
+          "value": 45.0
+        },
+        {
+          "id": "times_min.4",
+          "value": 90.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e14-01",
+      "labelEn": "Basic wind velocity and pressure",
+      "labelDe": "Basiswindgeschwindigkeit und -druck",
+      "entryId": "E14.01",
+      "numbers": [
+        {
+          "id": "c_dir",
+          "value": 1.0
+        },
+        {
+          "id": "c_season",
+          "value": 1.0
+        },
+        {
+          "id": "rho",
+          "value": 1.25
+        },
+        {
+          "id": "v_b0",
+          "value": 25.0
+        },
+        {
+          "id": "zone",
+          "value": 2.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e14-02",
+      "labelEn": "NA-DE wind profiles",
+      "labelDe": "NA-DE Windprofile",
+      "entryId": "E14.02",
+      "numbers": [
+        {
+          "id": "coast",
+          "value": 0.0
+        },
+        {
+          "id": "z",
+          "value": 10.0
+        },
+        {
+          "id": "zone",
+          "value": 2.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e14-03",
+      "labelEn": "Orography",
+      "labelDe": "Orographie",
+      "entryId": "E14.03",
+      "numbers": [
+        {
+          "id": "phi",
+          "value": 0.1
+        },
+        {
+          "id": "s",
+          "value": 1.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e14-04",
+      "labelEn": "Turbulence intensity",
+      "labelDe": "Turbulenzintensität",
+      "entryId": "E14.04",
+      "numbers": [
+        {
+          "id": "c_o",
+          "value": 1.0
+        },
+        {
+          "id": "terrain",
+          "value": 2.0
+        },
+        {
+          "id": "z",
+          "value": 10.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e14-05",
+      "labelEn": "Peak velocity pressure",
+      "labelDe": "Böengeschwindigkeitsdruck",
+      "entryId": "E14.05",
+      "numbers": [
+        {
+          "id": "c_o",
+          "value": 1.0
+        },
+        {
+          "id": "rho",
+          "value": 1.25
+        },
+        {
+          "id": "terrain",
+          "value": 2.0
+        },
+        {
+          "id": "v_b",
+          "value": 25.0
+        },
+        {
+          "id": "z",
+          "value": 10.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e14-06",
+      "labelEn": "Probability factor",
+      "labelDe": "Wahrscheinlichkeitsbeiwert",
+      "entryId": "E14.06",
+      "numbers": [
+        {
+          "id": "n_years",
+          "value": 50.0
+        },
+        {
+          "id": "p",
+          "value": 0.02
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e14-07",
+      "labelEn": "Vertical wall zones",
+      "labelDe": "Zonen der Außenwände",
+      "entryId": "E14.07",
+      "numbers": [
+        {
+          "id": "b",
+          "value": 12.0
+        },
+        {
+          "id": "d",
+          "value": 20.0
+        },
+        {
+          "id": "h",
+          "value": 10.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e14-08",
+      "labelEn": "External pressure coefficients",
+      "labelDe": "Außendruckbeiwerte",
+      "entryId": "E14.08",
+      "numbers": [
+        {
+          "id": "area",
+          "value": 20.0
+        },
+        {
+          "id": "b",
+          "value": 12.0
+        },
+        {
+          "id": "d",
+          "value": 20.0
+        },
+        {
+          "id": "e",
+          "value": 10.0
+        },
+        {
+          "id": "h_over_d",
+          "value": 0.5
+        },
+        {
+          "id": "hp_over_h",
+          "value": 0.05
+        },
+        {
+          "id": "pitch",
+          "value": 20.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "roof_type",
+          "value": "duopitch"
+        },
+        {
+          "id": "zone",
+          "value": "A"
+        }
+      ]
+    },
+    {
+      "id": "case-e14-09",
+      "labelEn": "Internal pressure and net pressure",
+      "labelDe": "Innendruck und Nettodruck",
+      "entryId": "E14.09",
+      "numbers": [
+        {
+          "id": "c_d",
+          "value": 0.95
+        },
+        {
+          "id": "c_pe",
+          "value": 0.8
+        },
+        {
+          "id": "c_pi",
+          "value": -0.3
+        },
+        {
+          "id": "c_s",
+          "value": 0.9
+        },
+        {
+          "id": "dominant_ratio",
+          "value": 1.0
+        },
+        {
+          "id": "q_p",
+          "value": 800.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e14-10",
+      "labelEn": "Free-standing signboards",
+      "labelDe": "Freistehende Anzeigetafeln",
+      "entryId": "E14.10",
+      "numbers": [
+        {
+          "id": "a_ref",
+          "value": 30.0
+        },
+        {
+          "id": "c_d",
+          "value": 0.95
+        },
+        {
+          "id": "c_f",
+          "value": 1.3
+        },
+        {
+          "id": "c_s",
+          "value": 0.9
+        },
+        {
+          "id": "h",
+          "value": 10.0
+        },
+        {
+          "id": "q_p",
+          "value": 800.0
+        },
+        {
+          "id": "z_g",
+          "value": 3.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e14-11",
+      "labelEn": "Force coefficients and wind force",
+      "labelDe": "Kraftbeiwerte und Windkraft",
+      "entryId": "E14.11",
+      "numbers": [
+        {
+          "id": "a_ref",
+          "value": 30.0
+        },
+        {
+          "id": "b",
+          "value": 12.0
+        },
+        {
+          "id": "c_d",
+          "value": 0.95
+        },
+        {
+          "id": "c_f",
+          "value": 1.3
+        },
+        {
+          "id": "c_f0",
+          "value": 1.3
+        },
+        {
+          "id": "c_s",
+          "value": 0.9
+        },
+        {
+          "id": "length",
+          "value": 20.0
+        },
+        {
+          "id": "psi_lambda",
+          "value": 0.9
+        },
+        {
+          "id": "q_p",
+          "value": 800.0
+        },
+        {
+          "id": "r",
+          "value": 0.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e14-12",
+      "labelEn": "Structural factor c_s c_d",
+      "labelDe": "Strukturbeiwert c_s c_d",
+      "entryId": "E14.12",
+      "numbers": [
+        {
+          "id": "b",
+          "value": 12.0
+        },
+        {
+          "id": "delta",
+          "value": 0.1
+        },
+        {
+          "id": "h",
+          "value": 10.0
+        },
+        {
+          "id": "n_1",
+          "value": 1.5
+        },
+        {
+          "id": "terrain",
+          "value": 2.0
+        },
+        {
+          "id": "v_b",
+          "value": 25.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e14-13",
+      "labelEn": "Wind on bridges",
+      "labelDe": "Windwirkungen auf Brücken",
+      "entryId": "E14.13",
+      "numbers": [
+        {
+          "id": "a_ref",
+          "value": 30.0
+        },
+        {
+          "id": "c_e",
+          "value": 1.0
+        },
+        {
+          "id": "c_fx",
+          "value": 1.3
+        },
+        {
+          "id": "rho",
+          "value": 1.25
+        },
+        {
+          "id": "v_b",
+          "value": 25.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e14-14",
+      "labelEn": "Vortex shedding",
+      "labelDe": "Wirbelerregung",
+      "entryId": "E14.14",
+      "numbers": [
+        {
+          "id": "b",
+          "value": 12.0
+        },
+        {
+          "id": "delta_s",
+          "value": 0.05
+        },
+        {
+          "id": "m_e",
+          "value": 100.0
+        },
+        {
+          "id": "n",
+          "value": 1.0
+        },
+        {
+          "id": "rho",
+          "value": 1.25
+        },
+        {
+          "id": "st",
+          "value": 0.2
+        },
+        {
+          "id": "v_m",
+          "value": 20.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e14-15",
+      "labelEn": "Dynamic characteristics",
+      "labelDe": "Dynamische Kenngrößen",
+      "entryId": "E14.15",
+      "numbers": [
+        {
+          "id": "h",
+          "value": 10.0
+        },
+        {
+          "id": "z",
+          "value": 10.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "mode",
+          "value": "framed"
+        },
+        {
+          "id": "structure",
+          "value": "concrete"
+        }
+      ]
+    },
+    {
+      "id": "case-e14-16",
+      "labelEn": "Friction and Reynolds number",
+      "labelDe": "Reibung und Reynolds-Zahl",
+      "entryId": "E14.16",
+      "numbers": [
+        {
+          "id": "a_fr",
+          "value": 10.0
+        },
+        {
+          "id": "b",
+          "value": 12.0
+        },
+        {
+          "id": "c_fr",
+          "value": 0.04
+        },
+        {
+          "id": "q_p",
+          "value": 800.0
+        },
+        {
+          "id": "rho",
+          "value": 1.25
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e2-01",
+      "labelEn": "Notional lanes",
+      "labelDe": "Ideelle Fahrstreifen",
+      "entryId": "E2.01",
+      "numbers": [
+        {
+          "id": "width",
+          "value": 7.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e2-02",
+      "labelEn": "Load model 1 (LM1)",
+      "labelDe": "Lastmodell 1 (LM1)",
+      "entryId": "E2.02",
+      "numbers": [
+        {
+          "id": "width",
+          "value": 7.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e2-03",
+      "labelEn": "Load model 2 (LM2)",
+      "labelDe": "Lastmodell 2 (LM2)",
+      "entryId": "E2.03",
+      "numbers": [
+        {
+          "id": "a",
+          "value": 0.2
+        },
+        {
+          "id": "axle",
+          "value": 400000.0
+        },
+        {
+          "id": "b",
+          "value": 12.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e2-04",
+      "labelEn": "Load model 3 (LM3) special vehicles",
+      "labelDe": "Lastmodell 3 (LM3) Sonderfahrzeuge",
+      "entryId": "E2.04",
+      "numbers": [
+        {
+          "id": "axle_load",
+          "value": 300000.0
+        },
+        {
+          "id": "axles",
+          "value": 6.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e2-05",
+      "labelEn": "Load model 4 (LM4) crowd",
+      "labelDe": "Lastmodell 4 (LM4) Menschenmenge",
+      "entryId": "E2.05",
+      "numbers": [],
+      "texts": []
+    },
+    {
+      "id": "case-e2-06",
+      "labelEn": "Dispersal of concentrated loads",
+      "labelDe": "Lastausbreitung von Einzellasten",
+      "entryId": "E2.06",
+      "numbers": [
+        {
+          "id": "a",
+          "value": 0.2
+        },
+        {
+          "id": "b",
+          "value": 12.0
+        },
+        {
+          "id": "load",
+          "value": 40000.0
+        },
+        {
+          "id": "pavement",
+          "value": 0.1
+        },
+        {
+          "id": "slab_thickness",
+          "value": 0.25
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e2-07",
+      "labelEn": "Braking and acceleration forces",
+      "labelDe": "Brems- und Anfahrkräfte",
+      "entryId": "E2.07",
+      "numbers": [
+        {
+          "id": "loaded_length",
+          "value": 40.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e2-08",
+      "labelEn": "Centrifugal forces",
+      "labelDe": "Fliehkräfte",
+      "entryId": "E2.08",
+      "numbers": [
+        {
+          "id": "q_v",
+          "value": 600000.0
+        },
+        {
+          "id": "radius",
+          "value": 300.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e2-09",
+      "labelEn": "Groups of traffic loads",
+      "labelDe": "Lastgruppen",
+      "entryId": "E2.09",
+      "numbers": [],
+      "texts": [
+        {
+          "id": "group",
+          "value": "gr1a"
+        }
+      ]
+    },
+    {
+      "id": "case-e2-10",
+      "labelEn": "Fatigue load models",
+      "labelDe": "Ermüdungslastmodelle",
+      "entryId": "E2.10",
+      "numbers": [
+        {
+          "id": "lane",
+          "value": 1.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e2-11",
+      "labelEn": "Collision on bridge members",
+      "labelDe": "Anprall an Brückenbauteilen",
+      "entryId": "E2.11",
+      "numbers": [],
+      "texts": [
+        {
+          "id": "member",
+          "value": "deck"
+        }
+      ]
+    },
+    {
+      "id": "case-e2-12",
+      "labelEn": "Footbridge loads",
+      "labelDe": "Lasten auf Fußgängerbrücken",
+      "entryId": "E2.12",
+      "numbers": [
+        {
+          "id": "span",
+          "value": 40.0
+        },
+        {
+          "id": "width",
+          "value": 3.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e2-13",
+      "labelEn": "Pedestrian dynamic excitation",
+      "labelDe": "Dynamische Fußgängeranregung",
+      "entryId": "E2.13",
+      "numbers": [
+        {
+          "id": "frequency",
+          "value": 2.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "direction",
+          "value": "vertical"
+        }
+      ]
+    },
+    {
+      "id": "case-e2-14",
+      "labelEn": "Rail load model 71",
+      "labelDe": "Eisenbahn-Lastmodell 71",
+      "entryId": "E2.14",
+      "numbers": [
+        {
+          "id": "alpha",
+          "value": 1.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e2-15",
+      "labelEn": "Rail load models SW/0 and SW/2",
+      "labelDe": "Eisenbahn-Lastmodelle SW/0 und SW/2",
+      "entryId": "E2.15",
+      "numbers": [
+        {
+          "id": "alpha",
+          "value": 1.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "model",
+          "value": "sw0"
+        }
+      ]
+    },
+    {
+      "id": "case-e2-16",
+      "labelEn": "Rail dynamic factors",
+      "labelDe": "Dynamische Beiwerte Eisenbahn",
+      "entryId": "E2.16",
+      "numbers": [
+        {
+          "id": "l_phi",
+          "value": 40.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e2-17",
+      "labelEn": "Rail horizontal forces: centrifugal, traction and braking",
+      "labelDe": "Horizontale Eisenbahnlasten: Fliehkraft, Anfahren und Bremsen",
+      "entryId": "E2.17",
+      "numbers": [
+        {
+          "id": "l_f",
+          "value": 50.0
+        },
+        {
+          "id": "loaded_length",
+          "value": 40.0
+        },
+        {
+          "id": "q_vk",
+          "value": 1000000.0
+        },
+        {
+          "id": "radius",
+          "value": 300.0
+        },
+        {
+          "id": "v_kmh",
+          "value": 100.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e3-01",
+      "labelEn": "Dynamic factors of cranes",
+      "labelDe": "Dynamische Beiwerte von Kranen",
+      "entryId": "E3.01",
+      "numbers": [
+        {
+          "id": "beta_3",
+          "value": 0.5
+        },
+        {
+          "id": "dm_over_m",
+          "value": 0.5
+        },
+        {
+          "id": "v_h",
+          "value": 0.5
+        }
+      ],
+      "texts": [
+        {
+          "id": "hoist_class",
+          "value": "HC2"
+        }
+      ]
+    },
+    {
+      "id": "case-e3-02",
+      "labelEn": "Vertical wheel load of load group 1",
+      "labelDe": "Vertikale Radlast Lastgruppe 1",
+      "entryId": "E3.02",
+      "numbers": [
+        {
+          "id": "phi_1",
+          "value": 1.1
+        },
+        {
+          "id": "q_c",
+          "value": 100000.0
+        },
+        {
+          "id": "q_h",
+          "value": 50000.0
+        },
+        {
+          "id": "v_h",
+          "value": 0.5
+        },
+        {
+          "id": "wheels",
+          "value": 4.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "hoist_class",
+          "value": "HC2"
+        }
+      ]
+    },
+    {
+      "id": "case-e3-03",
+      "labelEn": "Horizontal crane forces",
+      "labelDe": "Horizontale Kranlasten",
+      "entryId": "E3.03",
+      "numbers": [
+        {
+          "id": "a",
+          "value": 20.0
+        },
+        {
+          "id": "m_c",
+          "value": 20000.0
+        },
+        {
+          "id": "m_drive",
+          "value": 100000.0
+        },
+        {
+          "id": "phi_7",
+          "value": 1.5
+        },
+        {
+          "id": "runway_beams",
+          "value": 2.0
+        },
+        {
+          "id": "s_b",
+          "value": 10000000.0
+        },
+        {
+          "id": "skew_rad",
+          "value": 0.0
+        },
+        {
+          "id": "sum_q_r",
+          "value": 400000.0
+        },
+        {
+          "id": "v_1",
+          "value": 0.7
+        },
+        {
+          "id": "xi",
+          "value": 0.2
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e3-04",
+      "labelEn": "Test loads",
+      "labelDe": "Prüflasten",
+      "entryId": "E3.04",
+      "numbers": [
+        {
+          "id": "q_h",
+          "value": 50000.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e3-05",
+      "labelEn": "Fatigue damage-equivalent load",
+      "labelDe": "Schädigungsäquivalente Last",
+      "entryId": "E3.05",
+      "numbers": [
+        {
+          "id": "lambda",
+          "value": 0.5
+        },
+        {
+          "id": "q_max",
+          "value": 100000.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e3-07",
+      "labelEn": "Dynamic loads of machinery",
+      "labelDe": "Dynamische Lasten von Maschinen",
+      "entryId": "E3.07",
+      "numbers": [
+        {
+          "id": "eccentricity",
+          "value": 0.01
+        },
+        {
+          "id": "mass",
+          "value": 1500.0
+        },
+        {
+          "id": "rpm",
+          "value": 1500.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e4-01",
+      "labelEn": "Action assessment class and slenderness",
+      "labelDe": "Auswirkungsklasse und Schlankheit",
+      "entryId": "E4.01",
+      "numbers": [
+        {
+          "id": "capacity_t",
+          "value": 500.0
+        },
+        {
+          "id": "dc",
+          "value": 6.0
+        },
+        {
+          "id": "gamma",
+          "value": 25000.0
+        },
+        {
+          "id": "hc",
+          "value": 12.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e4-02",
+      "labelEn": "Bulk solid parameters",
+      "labelDe": "Schüttgutkennwerte",
+      "entryId": "E4.02",
+      "numbers": [
+        {
+          "id": "phi",
+          "value": 30.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e4-03",
+      "labelEn": "Janssen filling loads",
+      "labelDe": "Befüllungslasten nach Janssen",
+      "entryId": "E4.03",
+      "numbers": [
+        {
+          "id": "a_over_u",
+          "value": 1.0
+        },
+        {
+          "id": "dc",
+          "value": 6.0
+        },
+        {
+          "id": "gamma",
+          "value": 25000.0
+        },
+        {
+          "id": "k",
+          "value": 0.5
+        },
+        {
+          "id": "mu",
+          "value": 0.4
+        },
+        {
+          "id": "phi",
+          "value": 30.0
+        },
+        {
+          "id": "z",
+          "value": 6.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e4-04",
+      "labelEn": "Discharge and patch loads",
+      "labelDe": "Entleerungs- und Patchlasten",
+      "entryId": "E4.04",
+      "numbers": [
+        {
+          "id": "a_over_u",
+          "value": 1.0
+        },
+        {
+          "id": "c_h",
+          "value": 1.15
+        },
+        {
+          "id": "c_w",
+          "value": 1.1
+        },
+        {
+          "id": "dc",
+          "value": 6.0
+        },
+        {
+          "id": "gamma",
+          "value": 25000.0
+        },
+        {
+          "id": "k",
+          "value": 0.5
+        },
+        {
+          "id": "mu",
+          "value": 0.4
+        },
+        {
+          "id": "phi",
+          "value": 30.0
+        },
+        {
+          "id": "z",
+          "value": 10.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e4-05",
+      "labelEn": "Patch load",
+      "labelDe": "Patchlast",
+      "entryId": "E4.05",
+      "numbers": [
+        {
+          "id": "a_over_u",
+          "value": 1.0
+        },
+        {
+          "id": "dc",
+          "value": 6.0
+        },
+        {
+          "id": "gamma",
+          "value": 25000.0
+        },
+        {
+          "id": "k",
+          "value": 0.5
+        },
+        {
+          "id": "mu",
+          "value": 0.4
+        },
+        {
+          "id": "phi",
+          "value": 30.0
+        },
+        {
+          "id": "z",
+          "value": 10.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-e4-08",
+      "labelEn": "Hydrostatic tank pressure",
+      "labelDe": "Hydrostatischer Tankdruck",
+      "entryId": "E4.08",
+      "numbers": [
+        {
+          "id": "gamma",
+          "value": 25000.0
+        },
+        {
+          "id": "z",
+          "value": 10.0
+        }
+      ],
+      "texts": []
+    }
+  ],
+  "helicopterLandings": [],
+  "tieRuns": [],
+  "constructionLoads": [],
+  "fallingLoads": [],
+  "executionImperfections": [],
+  "derailmentCases": [],
+  "craneHoists": [],
+  "footbridges": [],
+  "railDynamics": [],
+  "loadDispersals": [],
+  "bulkSolids": [],
+  "rotatingMachines": [],
+  "fatigueModels": [],
+  "supportCollisions": [],
+  "localFires": [],
+  "snowGuards": [],
+  "railDerailments": [],
+  "railLoadGroups": [],
+  "dustExplosions": []
+}

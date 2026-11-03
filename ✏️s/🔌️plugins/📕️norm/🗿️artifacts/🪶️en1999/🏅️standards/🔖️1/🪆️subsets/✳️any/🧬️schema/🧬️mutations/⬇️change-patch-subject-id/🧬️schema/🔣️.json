@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-patch-subject-id/schema.json",
+  "title": "ChangePatchSubjectId",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "patchLoadId",
+    "newSubjectId"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changePatchSubjectId"
+    },
+    "patchLoadId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Patch load",
+          "de": "Stegeinzellast"
+        },
+        "description": {
+          "en": "The patch load this mutation addresses, by id.",
+          "de": "Das adressierte Element (Stegeinzellast), per Kennung."
+        },
+        "ref": {
+          "kind": "patch-load"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newSubjectId": {
+      "type": "string",
+      "x-semio-ui": {
+        "label": {
+          "en": "Member or sheet",
+          "de": "Bauteil oder Blech"
+        },
+        "widget": "text",
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

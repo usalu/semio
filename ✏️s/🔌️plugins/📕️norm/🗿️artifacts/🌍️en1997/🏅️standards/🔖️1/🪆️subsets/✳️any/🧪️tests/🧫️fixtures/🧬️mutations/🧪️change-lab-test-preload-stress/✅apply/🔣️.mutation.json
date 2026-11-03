@@ -1,0 +1,5 @@
+{
+  "mutation": "changeLabTestPreloadStress",
+  "id": "lab-T1",
+  "newPreloadStress": 200000.0
+}

@@ -1,0 +1,6 @@
+{
+  "ChangeCraneHoistReleaseFraction": {
+    "id": "crane-hoist-1",
+    "newReleaseFraction": 3.0
+  }
+}

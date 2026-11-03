@@ -1,0 +1,6 @@
+{
+  "ChangeJointSlipFactorKs": {
+    "id": "joint-j1",
+    "newSlipFactorKs": 2.0
+  }
+}

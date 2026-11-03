@@ -1,0 +1,19 @@
+{
+  "artifact": "en1990",
+  "leaf": {
+    "kindSlug": "reliability",
+    "field": {
+      "name": "second_action_distribution",
+      "type": "enum",
+      "label": {
+        "en": "Second action distribution",
+        "de": "Verteilung der zweiten Einwirkung"
+      },
+      "doc": "🎲 Distribution of the second action E2 of g = R - E1 - E2 (Annex C.7); only used when its standard deviation is above 0.",
+      "enum": {
+        "name": "DistributionKind"
+      }
+    },
+    "default": "normal"
+  }
+}

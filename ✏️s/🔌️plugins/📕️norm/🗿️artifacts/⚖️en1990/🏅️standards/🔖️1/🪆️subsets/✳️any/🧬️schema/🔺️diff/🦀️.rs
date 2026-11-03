@@ -16,96 +16,311 @@ use semio_s_plugin_norm_compliance::AnnexChoice;
 use semio_s_artifact_norm_en1990_model::MemberEffect;
 
 //#region 🔖️Rows
+/// 🔑️ Key extractor of the foreign `PermanentAction` rows (`id`).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct PermanentKey;
+
+impl protocol::list_delta::KeyOf<semio_s_artifact_norm_en1990_model::PermanentAction> for PermanentKey {
+    type Key = String;
+    fn key_of(row: &semio_s_artifact_norm_en1990_model::PermanentAction) -> String {
+        row.id.clone()
+    }
+}
+
+/// 🔑️ Key extractor of the foreign `VariableAction` rows (`id`).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct VariableKey;
+
+impl protocol::list_delta::KeyOf<semio_s_artifact_norm_en1990_model::VariableAction> for VariableKey {
+    type Key = String;
+    fn key_of(row: &semio_s_artifact_norm_en1990_model::VariableAction) -> String {
+        row.id.clone()
+    }
+}
+
+/// 🔑️ Key extractor of the foreign `AccidentalAction` rows (`id`).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct AccidentalKey;
+
+impl protocol::list_delta::KeyOf<semio_s_artifact_norm_en1990_model::AccidentalAction> for AccidentalKey {
+    type Key = String;
+    fn key_of(row: &semio_s_artifact_norm_en1990_model::AccidentalAction) -> String {
+        row.id.clone()
+    }
+}
+
+/// 🔑️ Key extractor of the foreign `SeismicAction` rows (`id`).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct SeismicKey;
+
+impl protocol::list_delta::KeyOf<semio_s_artifact_norm_en1990_model::SeismicAction> for SeismicKey {
+    type Key = String;
+    fn key_of(row: &semio_s_artifact_norm_en1990_model::SeismicAction) -> String {
+        row.id.clone()
+    }
+}
+
+/// 🔑️ Key extractor of the foreign `Member` rows (`id`).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct MemberKey;
+
+impl protocol::list_delta::KeyOf<semio_s_artifact_norm_en1990_model::Member> for MemberKey {
+    type Key = String;
+    fn key_of(row: &semio_s_artifact_norm_en1990_model::Member) -> String {
+        row.id.clone()
+    }
+}
+
+/// 🔑️ Key extractor of the foreign `BridgeSls` rows (`id`).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct BridgeSlsKey;
+
+impl protocol::list_delta::KeyOf<semio_s_artifact_norm_en1990_model::BridgeSls> for BridgeSlsKey {
+    type Key = String;
+    fn key_of(row: &semio_s_artifact_norm_en1990_model::BridgeSls) -> String {
+        row.id.clone()
+    }
+}
+
+/// 🔑️ Key extractor of the foreign `FatigueSpectrum` rows (`id`).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct FatigueSpectrumKey;
+
+impl protocol::list_delta::KeyOf<semio_s_artifact_norm_en1990_model::FatigueSpectrum> for FatigueSpectrumKey {
+    type Key = String;
+    fn key_of(row: &semio_s_artifact_norm_en1990_model::FatigueSpectrum) -> String {
+        row.id.clone()
+    }
+}
+
+/// 🔑️ Key extractor of the foreign `ReliabilityAnalysis` rows (`id`).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct ReliabilityAnalysisKey;
+
+impl protocol::list_delta::KeyOf<semio_s_artifact_norm_en1990_model::ReliabilityAnalysis> for ReliabilityAnalysisKey {
+    type Key = String;
+    fn key_of(row: &semio_s_artifact_norm_en1990_model::ReliabilityAnalysis) -> String {
+        row.id.clone()
+    }
+}
+
+/// 🔑️ Key extractor of the foreign `TestSeries` rows (`id`).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct TestSeriesKey;
+
+/// 🔑️ Key extractor of the foreign `Placement` rows (`id`).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct PlacementKey;
+
+/// 🔑️ Key extractor of the foreign `FactorOverride` rows (`id`).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct FactorOverrideKey;
+
+/// 🔑️ Key extractor of the foreign `TrafficGroup` rows (`id`).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct TrafficGroupKey;
+
+impl protocol::list_delta::KeyOf<semio_s_artifact_norm_en1990_model::TestSeries> for TestSeriesKey {
+    type Key = String;
+    fn key_of(row: &semio_s_artifact_norm_en1990_model::TestSeries) -> String {
+        row.id.clone()
+    }
+}
+
+impl protocol::list_delta::KeyOf<semio_s_artifact_norm_en1990_model::Placement> for PlacementKey {
+    type Key = String;
+    fn key_of(row: &semio_s_artifact_norm_en1990_model::Placement) -> String {
+        row.id.clone()
+    }
+}
+
+impl protocol::list_delta::KeyOf<semio_s_artifact_norm_en1990_model::FactorOverride> for FactorOverrideKey {
+    type Key = String;
+    fn key_of(row: &semio_s_artifact_norm_en1990_model::FactorOverride) -> String {
+        row.id.clone()
+    }
+}
+
+impl protocol::list_delta::KeyOf<semio_s_artifact_norm_en1990_model::TrafficGroup> for TrafficGroupKey {
+    type Key = String;
+    fn key_of(row: &semio_s_artifact_norm_en1990_model::TrafficGroup) -> String {
+        row.id.clone()
+    }
+}
+
 protocol::row_patch! {
-    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `PermanentAction`.
-    pub En1990PermanentPatch of semio_s_artifact_norm_en1990_model::PermanentAction { set { kind: String, gk: f64 } }
+    pub En1990PermanentPatch of semio_s_artifact_norm_en1990_model::PermanentAction { set { kind: semio_s_artifact_norm_en1990_model::PermanentKind, gk: f64 } }
 }
 
 protocol::list_delta! {
-    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
     /// 📋️ Keyed row delta of one `PermanentAction` list.
-    pub En1990PermanentDelta { removal: En1990PermanentRemoval, insertion: En1990PermanentInsertion, relocation: En1990PermanentRelocation, modification: En1990PermanentModification, row: semio_s_artifact_norm_en1990_model::PermanentAction, patch: En1990PermanentPatch, key: id }
+    pub En1990PermanentDelta { removal: En1990PermanentRemoval, insertion: En1990PermanentInsertion, relocation: En1990PermanentRelocation, modification: En1990PermanentModification, row: semio_s_artifact_norm_en1990_model::PermanentAction, patch: En1990PermanentPatch, list: Vec<semio_s_artifact_norm_en1990_model::PermanentAction>, key: String = by PermanentKey }
 }
 
 protocol::row_patch! {
-    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `VariableAction`.
-    pub En1990VariablePatch of semio_s_artifact_norm_en1990_model::VariableAction { set { category: String, qk: f64 } }
+    pub En1990VariablePatch of semio_s_artifact_norm_en1990_model::VariableAction { set { category: String, qk: f64, group: String } }
 }
 
 protocol::list_delta! {
-    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
     /// 📋️ Keyed row delta of one `VariableAction` list.
-    pub En1990VariableDelta { removal: En1990VariableRemoval, insertion: En1990VariableInsertion, relocation: En1990VariableRelocation, modification: En1990VariableModification, row: semio_s_artifact_norm_en1990_model::VariableAction, patch: En1990VariablePatch, key: id }
+    pub En1990VariableDelta { removal: En1990VariableRemoval, insertion: En1990VariableInsertion, relocation: En1990VariableRelocation, modification: En1990VariableModification, row: semio_s_artifact_norm_en1990_model::VariableAction, patch: En1990VariablePatch, list: Vec<semio_s_artifact_norm_en1990_model::VariableAction>, key: String = by VariableKey }
 }
 
 protocol::row_patch! {
-    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `AccidentalAction`.
     pub En1990AccidentalPatch of semio_s_artifact_norm_en1990_model::AccidentalAction { set { ad: f64 } }
 }
 
 protocol::list_delta! {
-    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
     /// 📋️ Keyed row delta of one `AccidentalAction` list.
-    pub En1990AccidentalDelta { removal: En1990AccidentalRemoval, insertion: En1990AccidentalInsertion, relocation: En1990AccidentalRelocation, modification: En1990AccidentalModification, row: semio_s_artifact_norm_en1990_model::AccidentalAction, patch: En1990AccidentalPatch, key: id }
+    pub En1990AccidentalDelta { removal: En1990AccidentalRemoval, insertion: En1990AccidentalInsertion, relocation: En1990AccidentalRelocation, modification: En1990AccidentalModification, row: semio_s_artifact_norm_en1990_model::AccidentalAction, patch: En1990AccidentalPatch, list: Vec<semio_s_artifact_norm_en1990_model::AccidentalAction>, key: String = by AccidentalKey }
 }
 
 protocol::row_patch! {
-    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `SeismicAction`.
     pub En1990SeismicPatch of semio_s_artifact_norm_en1990_model::SeismicAction { set { a_ek: f64, importance_class: semio_s_artifact_norm_en1990_model::ImportanceClass } }
 }
 
 protocol::list_delta! {
-    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
     /// 📋️ Keyed row delta of one `SeismicAction` list.
-    pub En1990SeismicDelta { removal: En1990SeismicRemoval, insertion: En1990SeismicInsertion, relocation: En1990SeismicRelocation, modification: En1990SeismicModification, row: semio_s_artifact_norm_en1990_model::SeismicAction, patch: En1990SeismicPatch, key: id }
+    pub En1990SeismicDelta { removal: En1990SeismicRemoval, insertion: En1990SeismicInsertion, relocation: En1990SeismicRelocation, modification: En1990SeismicModification, row: semio_s_artifact_norm_en1990_model::SeismicAction, patch: En1990SeismicPatch, list: Vec<semio_s_artifact_norm_en1990_model::SeismicAction>, key: String = by SeismicKey }
 }
 
 protocol::row_patch! {
-    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `Member`.
-    pub En1990MemberPatch of semio_s_artifact_norm_en1990_model::Member { set { label_en: String, label_de: String, rd_str: f64, rd_geo: f64, rd_equ_stab: f64, rd_equ_destab: f64, rd_fat: f64, span: f64, deflection_w: f64, deflection_limit_ratio: f64, vibration_frequency: f64, vibration_frequency_min: f64 } }
+    pub En1990MemberPatch of semio_s_artifact_norm_en1990_model::Member { set { label_en: String, label_de: String, rd_str: f64, rd_geo: f64, rd_equ_stab: f64, rd_equ_destab: f64, rd_fat: f64, span: f64, precamber: f64, deflection_w1: f64, deflection_w2: f64, deflection_w3: f64, deflection_limit_ratio: f64, deflection_limit_ratio_w3: f64, sls_limit_char: f64, sls_limit_freq: f64, sls_limit_qp: f64, vibration_frequency: f64, vibration_frequency_min: f64, frame_height: f64, frame_drift: f64, storey_height: f64, storey_drift: f64, material_strength_k: f64, material_conversion_factor: f64, material_partial_factor: f64, material_design_strength: f64, nominal_dimension: f64, dimension_tolerance: f64, design_dimension: f64, member_alpha_cr: f64, second_order_analysis: f64 } }
 }
 
 protocol::list_delta! {
-    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
     /// 📋️ Keyed row delta of one `Member` list.
-    pub En1990MemberDelta { removal: En1990MemberRemoval, insertion: En1990MemberInsertion, relocation: En1990MemberRelocation, modification: En1990MemberModification, row: semio_s_artifact_norm_en1990_model::Member, patch: En1990MemberPatch, key: id }
+    pub En1990MemberDelta { removal: En1990MemberRemoval, insertion: En1990MemberInsertion, relocation: En1990MemberRelocation, modification: En1990MemberModification, row: semio_s_artifact_norm_en1990_model::Member, patch: En1990MemberPatch, list: Vec<semio_s_artifact_norm_en1990_model::Member>, key: String = by MemberKey }
 }
 
 protocol::row_patch! {
-    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
     /// 🩹 Sparse field patch of one `BridgeSls`.
-    pub En1990BridgeSlsPatch of semio_s_artifact_norm_en1990_model::BridgeSls { set { member_id: String, deck_acceleration: f64, deck_acceleration_limit: f64, deck_twist: f64, deck_twist_limit: f64, bridge_deflection: f64, bridge_deflection_limit: f64 } }
+    pub En1990BridgeSlsPatch of semio_s_artifact_norm_en1990_model::BridgeSls { set { member_id: String, deck_acceleration: f64, deck_acceleration_limit: f64, deck_twist: f64, deck_twist_limit: f64, bridge_deflection: f64, bridge_deflection_limit: f64, track_gauge: f64, line_speed: f64, ballast_depth: f64, deck_mass: f64, natural_frequency: f64, end_rotation: f64, basic_wind_speed: f64, damping_ratio: f64 } }
 }
 
 protocol::list_delta! {
-    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
     /// 📋️ Keyed row delta of one `BridgeSls` list.
-    pub En1990BridgeSlsDelta { removal: En1990BridgeSlsRemoval, insertion: En1990BridgeSlsInsertion, relocation: En1990BridgeSlsRelocation, modification: En1990BridgeSlsModification, row: semio_s_artifact_norm_en1990_model::BridgeSls, patch: En1990BridgeSlsPatch, key: id }
+    pub En1990BridgeSlsDelta { removal: En1990BridgeSlsRemoval, insertion: En1990BridgeSlsInsertion, relocation: En1990BridgeSlsRelocation, modification: En1990BridgeSlsModification, row: semio_s_artifact_norm_en1990_model::BridgeSls, patch: En1990BridgeSlsPatch, list: Vec<semio_s_artifact_norm_en1990_model::BridgeSls>, key: String = by BridgeSlsKey }
+}
+protocol::row_patch! {
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
+    /// 🩹 Sparse field patch of one `FatigueSpectrum`.
+    pub En1990FatigueSpectrumPatch of semio_s_artifact_norm_en1990_model::FatigueSpectrum { set { member_id: String, detail_category: f64, stress_range: f64, cycles: f64 } }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
+    /// 📋️ Keyed row delta of one `FatigueSpectrum` list.
+    pub En1990FatigueSpectrumDelta { removal: En1990FatigueSpectrumRemoval, insertion: En1990FatigueSpectrumInsertion, relocation: En1990FatigueSpectrumRelocation, modification: En1990FatigueSpectrumModification, row: semio_s_artifact_norm_en1990_model::FatigueSpectrum, patch: En1990FatigueSpectrumPatch, list: Vec<semio_s_artifact_norm_en1990_model::FatigueSpectrum>, key: String = by FatigueSpectrumKey }
+}
+
+protocol::row_patch! {
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
+    /// 🩹 Sparse field patch of one `ReliabilityAnalysis`.
+    pub En1990ReliabilityAnalysisPatch of semio_s_artifact_norm_en1990_model::ReliabilityAnalysis { set { resistance_distribution: semio_s_artifact_norm_en1990_model::DistributionKind, resistance_mean: f64, resistance_sd: f64, action_distribution: semio_s_artifact_norm_en1990_model::DistributionKind, action_mean: f64, action_sd: f64 } }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
+    /// 📋️ Keyed row delta of one `ReliabilityAnalysis` list.
+    pub En1990ReliabilityAnalysisDelta { removal: En1990ReliabilityAnalysisRemoval, insertion: En1990ReliabilityAnalysisInsertion, relocation: En1990ReliabilityAnalysisRelocation, modification: En1990ReliabilityAnalysisModification, row: semio_s_artifact_norm_en1990_model::ReliabilityAnalysis, patch: En1990ReliabilityAnalysisPatch, list: Vec<semio_s_artifact_norm_en1990_model::ReliabilityAnalysis>, key: String = by ReliabilityAnalysisKey }
+}
+
+protocol::row_patch! {
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
+    /// 🩹 Sparse field patch of one `TestSeries`.
+    pub En1990TestSeriesPatch of semio_s_artifact_norm_en1990_model::TestSeries { set { quantity: String, distribution: semio_s_artifact_norm_en1990_model::TestDistribution, sample_size: u32, mean: f64, std_dev: f64, variation_known: f64, conversion_factor: f64, required: f64 , pairs: String, theory_variation: f64} }
+}
+
+protocol::row_patch! {
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
+    /// 🩹 Sparse field patch of one `Placement`.
+    pub En1990PlacementPatch of semio_s_artifact_norm_en1990_model::Placement { set { x: f64, y: f64, z: f64, yaw: f64 } }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
+    /// 📋️ Keyed row delta of one `TestSeries` list.
+    pub En1990TestSeriesDelta { removal: En1990TestSeriesRemoval, insertion: En1990TestSeriesInsertion, relocation: En1990TestSeriesRelocation, modification: En1990TestSeriesModification, row: semio_s_artifact_norm_en1990_model::TestSeries, patch: En1990TestSeriesPatch, list: Vec<semio_s_artifact_norm_en1990_model::TestSeries>, key: String = by TestSeriesKey }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
+    /// 📋️ Keyed row delta of one `Placement` list.
+    pub En1990PlacementDelta { removal: En1990PlacementRemoval, insertion: En1990PlacementInsertion, relocation: En1990PlacementRelocation, modification: En1990PlacementModification, row: semio_s_artifact_norm_en1990_model::Placement, patch: En1990PlacementPatch, list: Vec<semio_s_artifact_norm_en1990_model::Placement>, key: String = by PlacementKey }
+}
+
+protocol::row_patch! {
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
+    /// 🩹 Sparse field patch of one `FactorOverride`.
+    pub En1990FactorOverridePatch of semio_s_artifact_norm_en1990_model::FactorOverride { set { factor: String, target: String, value: f64, justification: String } }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
+    /// 📋️ Keyed row delta of one `FactorOverride` list.
+    pub En1990FactorOverrideDelta { removal: En1990FactorOverrideRemoval, insertion: En1990FactorOverrideInsertion, relocation: En1990FactorOverrideRelocation, modification: En1990FactorOverrideModification, row: semio_s_artifact_norm_en1990_model::FactorOverride, patch: En1990FactorOverridePatch, list: Vec<semio_s_artifact_norm_en1990_model::FactorOverride>, key: String = by FactorOverrideKey }
+}
+
+protocol::row_patch! {
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
+    /// 🩹 Sparse field patch of one `TrafficGroup`.
+    pub En1990TrafficGroupPatch of semio_s_artifact_norm_en1990_model::TrafficGroup { set { group: semio_s_artifact_norm_en1990_model::LoadGroup, variable_id: String } }
+}
+
+protocol::list_delta! {
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
+    /// 📋️ Keyed row delta of one `TrafficGroup` list.
+    pub En1990TrafficGroupDelta { removal: En1990TrafficGroupRemoval, insertion: En1990TrafficGroupInsertion, relocation: En1990TrafficGroupRelocation, modification: En1990TrafficGroupModification, row: semio_s_artifact_norm_en1990_model::TrafficGroup, patch: En1990TrafficGroupPatch, list: Vec<semio_s_artifact_norm_en1990_model::TrafficGroup>, key: String = by TrafficGroupKey }
 }
 //#endregion 🔖️Rows
 
 //#region 🔖️Diff
 /// 🔺️ Sparse delta for the En1990 artifact: the scalar fields a mutation sets and the keyed row deltas of its lists.
 #[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.norm.en1990")]
 pub struct En1990Diff {
@@ -114,13 +329,13 @@ pub struct En1990Diff {
     #[state(artifact)]
     pub project_id: Option<String>,
     #[state(artifact)]
-    pub structure_kind: Option<String>,
+    pub structure_kind: Option<semio_s_artifact_norm_en1990_model::StructureKind>,
     #[state(artifact)]
     pub altitude_m: Option<f64>,
     #[state(artifact)]
     pub consequence_class: Option<u8>,
     #[state(artifact)]
-    pub reliability_class: Option<u8>,
+    pub reliability_class: Option<semio_s_artifact_norm_en1990_model::ReliabilityClass>,
     #[state(artifact)]
     pub design_working_life_category: Option<u8>,
     #[state(artifact)]
@@ -128,11 +343,9 @@ pub struct En1990Diff {
     #[state(artifact)]
     pub reference_period_years: Option<f64>,
     #[state(artifact)]
-    pub supervision_level: Option<String>,
+    pub supervision_level: Option<semio_s_artifact_norm_en1990_model::SupervisionLevel>,
     #[state(artifact)]
-    pub inspection_level: Option<String>,
-    #[state(artifact)]
-    pub k_fi_declared: Option<f64>,
+    pub inspection_level: Option<semio_s_artifact_norm_en1990_model::InspectionLevel>,
     #[state(artifact)]
     pub beta_computed: Option<f64>,
     #[state(artifact)]
@@ -149,13 +362,27 @@ pub struct En1990Diff {
     pub bridge_sls: En1990BridgeSlsDelta,
     #[state(artifact)]
     pub effects: Vec<En1990EffectEdit>,
+    #[state(artifact)]
+    pub fatigue_spectra: En1990FatigueSpectrumDelta,
+    #[state(artifact)]
+    pub reliability_analyses: En1990ReliabilityAnalysisDelta,
+    #[state(artifact)]
+    pub test_series: En1990TestSeriesDelta,
+    #[state(artifact)]
+    pub placements: En1990PlacementDelta,
+    #[state(artifact)]
+    pub cases: semio_s_plugin_norm_compliance::design_case::CaseRowDelta,
+    #[state(artifact)]
+    pub factor_overrides: En1990FactorOverrideDelta,
+    #[state(artifact)]
+    pub traffic_groups: En1990TrafficGroupDelta,
 }
 //#endregion 🔖️Diff
 
 //#region 🔖️RowEdits
 /// 🧾️ The operation one ordered-row edit performs on its collection.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
 pub enum En1990RowOp {
     #[dsl(key = "insert")]
     Insert,
@@ -294,8 +521,8 @@ fn positional_rows<E: En1990RowEdit>(base: &[E::Row], other: &[E::Row]) -> Vec<E
 
 /// 🧾️ One ordered-row edit of `effects`.
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct En1990EffectEdit {
     pub op: En1990RowOp,
@@ -370,9 +597,6 @@ impl protocol::ColdMutationDiff<En1990Snapshot> for En1990Diff {
         if other.inspection_level.is_some() {
             self.inspection_level = other.inspection_level;
         }
-        if other.k_fi_declared.is_some() {
-            self.k_fi_declared = other.k_fi_declared;
-        }
         if other.beta_computed.is_some() {
             self.beta_computed = other.beta_computed;
         }
@@ -385,6 +609,13 @@ impl protocol::ColdMutationDiff<En1990Snapshot> for En1990Diff {
         for edit in other.effects {
             push_row(&mut self.effects, edit);
         }
+        self.fatigue_spectra.absorb(other.fatigue_spectra);
+        self.reliability_analyses.absorb(other.reliability_analyses);
+        self.test_series.absorb(other.test_series);
+        self.placements.absorb(other.placements);
+        self.cases.absorb(other.cases);
+        self.factor_overrides.absorb(other.factor_overrides);
+        self.traffic_groups.absorb(other.traffic_groups);
     }
 
     fn apply(&self, unpublished: &mut En1990Snapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
@@ -423,9 +654,6 @@ impl protocol::ColdMutationDiff<En1990Snapshot> for En1990Diff {
         if let Some(value) = &self.inspection_level {
             next.inspection_level = value.clone();
         }
-        if let Some(value) = self.k_fi_declared {
-            next.k_fi_declared = value;
-        }
         if let Some(value) = self.beta_computed {
             next.beta_computed = value;
         }
@@ -436,6 +664,13 @@ impl protocol::ColdMutationDiff<En1990Snapshot> for En1990Diff {
         next.members = self.members.commit_onto(&base.members, capability).map_err(|error| error.under(["members"]))?;
         next.bridge_sls = self.bridge_sls.commit_onto(&base.bridge_sls, capability).map_err(|error| error.under(["bridgeSls"]))?;
         apply_rows::<En1990EffectEdit>(&mut next.effects, &self.effects).map_err(|error| error.under(["effects"]))?;
+        next.fatigue_spectra = self.fatigue_spectra.commit_onto(&base.fatigue_spectra, capability).map_err(|error| error.under(["fatigueSpectra"]))?;
+        next.reliability_analyses = self.reliability_analyses.commit_onto(&base.reliability_analyses, capability).map_err(|error| error.under(["reliabilityAnalyses"]))?;
+        next.test_series = self.test_series.commit_onto(&base.test_series, capability).map_err(|error| error.under(["testSeries"]))?;
+        next.placements = self.placements.commit_onto(&base.placements, capability).map_err(|error| error.under(["placements"]))?;
+        next.cases = self.cases.commit_onto(&base.cases, capability).map_err(|error| error.under(["cases"]))?;
+        next.factor_overrides = self.factor_overrides.commit_onto(&base.factor_overrides, capability).map_err(|error| error.under(["factorOverrides"]))?;
+        next.traffic_groups = self.traffic_groups.commit_onto(&base.traffic_groups, capability).map_err(|error| error.under(["trafficGroups"]))?;
         *unpublished = next;
         Ok(())
     }
@@ -454,7 +689,6 @@ impl DiffAlgebra<En1990Snapshot> for En1990Diff {
             && self.reference_period_years.is_none()
             && self.supervision_level.is_none()
             && self.inspection_level.is_none()
-            && self.k_fi_declared.is_none()
             && self.beta_computed.is_none()
             && self.permanents.is_empty()
             && self.variables.is_empty()
@@ -463,6 +697,13 @@ impl DiffAlgebra<En1990Snapshot> for En1990Diff {
             && self.members.is_empty()
             && self.bridge_sls.is_empty()
             && self.effects.is_empty()
+            && self.fatigue_spectra.is_empty()
+            && self.reliability_analyses.is_empty()
+            && self.test_series.is_empty()
+            && self.placements.is_empty()
+            && self.cases.is_empty()
+            && self.factor_overrides.is_empty()
+            && self.traffic_groups.is_empty()
     }
 }
 
@@ -480,7 +721,6 @@ impl protocol::ColdDiffAlgebra<En1990Snapshot> for En1990Diff {
             reference_period_years: self.reference_period_years.map(|_| base.reference_period_years),
             supervision_level: self.supervision_level.as_ref().map(|_| base.supervision_level.clone()),
             inspection_level: self.inspection_level.as_ref().map(|_| base.inspection_level.clone()),
-            k_fi_declared: self.k_fi_declared.map(|_| base.k_fi_declared),
             beta_computed: self.beta_computed.map(|_| base.beta_computed),
             permanents: self.permanents.inverse(&base.permanents),
             variables: self.variables.inverse(&base.variables),
@@ -489,6 +729,13 @@ impl protocol::ColdDiffAlgebra<En1990Snapshot> for En1990Diff {
             members: self.members.inverse(&base.members),
             bridge_sls: self.bridge_sls.inverse(&base.bridge_sls),
             effects: invert_rows::<En1990EffectEdit>(&base.effects, &self.effects),
+            fatigue_spectra: self.fatigue_spectra.inverse(&base.fatigue_spectra),
+            reliability_analyses: self.reliability_analyses.inverse(&base.reliability_analyses),
+            test_series: self.test_series.inverse(&base.test_series),
+            placements: self.placements.inverse(&base.placements),
+            cases: self.cases.inverse(&base.cases),
+            factor_overrides: self.factor_overrides.inverse(&base.factor_overrides),
+            traffic_groups: self.traffic_groups.inverse(&base.traffic_groups),
         }
     }
 }
@@ -501,3 +748,9 @@ mod tests;
 /// 🍃️ The five handcrafted leaves of the `diff` schema facet.
 pub const DIFF_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };
 //#endregion 🍃️FacetLeaves
+
+#[path = "../../🚪️io/📝️text/🔺️diff/🦀️.rs"]
+pub mod text;
+
+#[path = "../../🚪️io/💾️binary/🔺️diff/🦀️.rs"]
+pub mod binary;

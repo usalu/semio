@@ -1,12 +1,51 @@
-enum ImportanceClass { I II III IV }
-# 📸️ En1990Artifact GraphQL mirror
-enum AnnexChoice { En De }
-
-type PermanentAction { id: String! kind: String! gk: Float! }
-type VariableAction { id: String! category: String! qk: Float! }
-type AccidentalAction { id: String! ad: Float! }
-type SeismicAction { id: String! aEk: Float!
-  importanceClass: ImportanceClass! }
+type En1990Artifact {
+  annex: String!
+  projectId: String!
+  structureKind: StructureKind!
+  altitudeM: Float!
+  consequenceClass: Int!
+  reliabilityClass: String!
+  designWorkingLifeCategory: Int!
+  designWorkingLifeYears: Float!
+  referencePeriodYears: Float!
+  supervisionLevel: SupervisionLevel!
+  inspectionLevel: InspectionLevel!
+  betaComputed: Float!
+  permanents: [PermanentAction!]!
+  variables: [VariableAction!]!
+  accidentals: [AccidentalAction!]!
+  seismics: [SeismicAction!]!
+  members: [Member!]!
+  bridgeSls: [BridgeSls!]!
+  effects: [MemberEffect!]!
+  fatigueSpectra: [FatigueSpectrum!]!
+  reliabilityAnalyses: [ReliabilityAnalysis!]!
+  testSeries: [TestSeries!]!
+  placements: [Placement!]!
+  cases: [CaseRow!]!
+  factorOverrides: [FactorOverride!]!
+  trafficGroups: [TrafficGroup!]!
+}
+type PermanentAction {
+  id: String!
+  kind: String!
+  gk: Float!
+}
+type VariableAction {
+  id: String!
+  category: String!
+  qk: Float!
+  group: String!
+}
+type AccidentalAction {
+  id: String!
+  ad: Float!
+}
+type SeismicAction {
+  id: String!
+  aEk: Float!
+  importanceClass: String!
+}
 type Member {
   id: String!
   labelEn: String!
@@ -17,10 +56,35 @@ type Member {
   rdEquDestab: Float!
   rdFat: Float!
   span: Float!
-  deflectionW: Float!
+  precamber: Float!
+  deflectionW1: Float!
+  deflectionW2: Float!
+  deflectionW3: Float!
   deflectionLimitRatio: Float!
+  deflectionLimitRatioW3: Float!
+  slsLimitChar: Float!
+  slsLimitFreq: Float!
+  slsLimitQp: Float!
   vibrationFrequency: Float!
   vibrationFrequencyMin: Float!
+  frameHeight: Float!
+  frameDrift: Float!
+  storeyHeight: Float!
+  storeyDrift: Float!
+  materialStrengthK: Float!
+  materialConversionFactor: Float!
+  materialPartialFactor: Float!
+  materialDesignStrength: Float!
+  nominalDimension: Float!
+  dimensionTolerance: Float!
+  designDimension: Float!
+  memberAlphaCr: Float!
+  secondOrderAnalysis: Float!
+}
+type MemberEffect {
+  memberId: String!
+  actionId: String!
+  influence: Float!
 }
 type BridgeSls {
   id: String!
@@ -31,28 +95,74 @@ type BridgeSls {
   deckTwistLimit: Float!
   bridgeDeflection: Float!
   bridgeDeflectionLimit: Float!
+  trackGauge: Float!
+  lineSpeed: Float!
+  ballastDepth: Float!
+  deckMass: Float!
+  naturalFrequency: Float!
+  endRotation: Float!
+  basicWindSpeed: Float!
+  dampingRatio: Float!
 }
-type MemberEffect { memberId: String! actionId: String! influence: Float! }
-
-type En1990Artifact {
-  annex: AnnexChoice!
-  projectId: String!
-  structureKind: String!
-  altitudeM: Float!
-  consequenceClass: Int!
-  reliabilityClass: Int!
-  designWorkingLifeCategory: Int!
-  designWorkingLifeYears: Float!
-  referencePeriodYears: Float!
-  supervisionLevel: String!
-  inspectionLevel: String!
-  kFiDeclared: Float!
-  betaComputed: Float!
-  permanents: [PermanentAction!]!
-  variables: [VariableAction!]!
-  accidentals: [AccidentalAction!]!
-  seismics: [SeismicAction!]!
-  members: [Member!]!
-  bridgeSls: [BridgeSls!]!
-  effects: [MemberEffect!]!
+type FatigueSpectrum {
+  id: String!
+  memberId: String!
+  detailCategory: Float!
+  stressRange: Float!
+  cycles: Float!
+}
+type ReliabilityAnalysis {
+  id: String!
+  resistanceDistribution: String!
+  resistanceMean: Float!
+  resistanceSd: Float!
+  actionDistribution: String!
+  actionMean: Float!
+  actionSd: Float!
+}
+type TestSeries {
+  id: String!
+  quantity: String!
+  distribution: String!
+  sampleSize: Int!
+  mean: Float!
+  stdDev: Float!
+  variationKnown: Float!
+  conversionFactor: Float!
+  required: Float!
+}
+type Placement {
+  id: String!
+  x: Float!
+  y: Float!
+  z: Float!
+  yaw: Float!
+}
+type FactorOverride {
+  id: String!
+  factor: String!
+  target: String!
+  value: Float!
+  justification: String!
+}
+type TrafficGroup {
+  id: String!
+  group: String!
+  variableId: String!
+}
+type CaseNumber {
+  id: String!
+  value: Float!
+}
+type CaseText {
+  id: String!
+  value: String!
+}
+type CaseRow {
+  id: String!
+  labelEn: String!
+  labelDe: String!
+  entryId: String!
+  numbers: [CaseNumber!]!
+  texts: [CaseText!]!
 }

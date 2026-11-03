@@ -1,0 +1,6 @@
+{
+  "ChangeFoundationAnchorDiameter": {
+    "id": "foundation-1",
+    "newAnchorDiameter": 2.0
+  }
+}

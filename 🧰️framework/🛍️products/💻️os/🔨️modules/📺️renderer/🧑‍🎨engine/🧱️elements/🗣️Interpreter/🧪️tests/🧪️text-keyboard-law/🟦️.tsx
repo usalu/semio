@@ -9,6 +9,7 @@
 import userEvent from "@testing-library/user-event";
 import { uiTextControlsFixture as textControls } from "@semio-tech/ui/testing/fixtures";
 import { uiTextInputKey, type TextInputKey, type TextInputKeyAction } from "@semio-tech/ui-contract/component";
+import rowControlFixture from "../../../🐚️Shell/🧪️tests/🧫️fixtures/🎯️focus-row-control/🔣️.json" with { type: "json" };
 
 type TestSource = { readonly url: string };
 
@@ -27,8 +28,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   const BASE = { layout: { kind: "leaf", width: "hug", height: "hug" }, style: { variant: "plain", size: "md", density: "standard", tone: "neutral", emphasis: "regular" }, activity: "idle", disabled: false, transition: null, menu: null, children: [] };
 
   /** 🧱️ One bound draft field of `kind` publishing {@link PUBLISHED}, committed on blur — the shape of a history editor's text row. */
-  function field(kind: InputKind): UiNodeRecord {
-    const component = { type: "input", kind, value: PUBLISHED, placeholder: null, commit: "blur", accept: null, min: null, max: null, step: null, precision: null, displayFactor: null, snaps: [], limits: null };
+  function field(kind: InputKind, published: string = PUBLISHED): UiNodeRecord {
+    const component = { type: "input", kind, value: published, placeholder: null, commit: "blur", accept: null, min: null, max: null, step: null, precision: null, displayFactor: null, snaps: [], limits: null };
     return { ...BASE, id: 0, key: "field", component: component as unknown as Component, accessibility: { label: "Text", description: null, live: "off", shortcut: null, hidden: false }, bindings: [{ trigger: "commit", action: "setValue", args: null, capability: null }] } as unknown as UiNodeRecord;
   }
 
@@ -72,6 +73,26 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         const expected = { newline: [[], `${typed}\n`], commit: [[row.kind === "number" ? Number(typed) : typed], null], revert: [[], PUBLISHED], none: [[], typed] }[row.action ?? "none"];
         expect([received(), row.action === "commit" ? null : input.value], `${row.case}: ${chord}`).toEqual(expected);
         if (row.action === "commit") expect(document.activeElement === input, `${row.case}: a committed field gives its focus back`).toBe(false);
+        unmount();
+      }
+    }, 60_000);
+
+    it("answers the cell rows of the shared focus-row-control fixture: Escape shows the committed value again, Enter commits the draft", async () => {
+      const { act } = await import("@semio-tech/ui-react/test");
+      const user = userEvent.setup();
+      for (const row of rowControlFixture.cells) {
+        const { element, received, unmount } = await mount(field(row.kind as InputKind, row.committed), "input");
+        const input = element as HTMLInputElement;
+        await act(async () => {
+          await user.click(input);
+          await user.keyboard(`{End}${row.typed}`);
+        });
+        expect(input.value, `${row.id}: the typed draft`).toBe(`${row.committed}${row.typed}`);
+        await act(async () => {
+          await user.keyboard(`{${row.key}}`);
+        });
+        expect(received(), `${row.id}: what the guest received`).toEqual(row.dispatched === null ? [] : [row.dispatched]);
+        if (row.dispatched === null) expect(input.value, `${row.id}: the committed value is shown again`).toBe(row.shown);
         unmount();
       }
     }, 60_000);

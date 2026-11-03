@@ -1,187 +1,164 @@
-# 🧬️ En1990 diff schema — sparse scalar fields plus keyed row deltas.
+scalar JSON
 
 type En1990Diff {
-  annex: String @state(class: ARTIFACT)
-  projectId: String @state(class: ARTIFACT)
-  structureKind: String @state(class: ARTIFACT)
-  altitudeM: Float @state(class: ARTIFACT)
-  consequenceClass: Int @state(class: ARTIFACT)
-  reliabilityClass: Int @state(class: ARTIFACT)
-  designWorkingLifeCategory: Int @state(class: ARTIFACT)
-  designWorkingLifeYears: Float @state(class: ARTIFACT)
-  referencePeriodYears: Float @state(class: ARTIFACT)
-  supervisionLevel: String @state(class: ARTIFACT)
-  inspectionLevel: String @state(class: ARTIFACT)
-  kFiDeclared: Float @state(class: ARTIFACT)
-  betaComputed: Float @state(class: ARTIFACT)
-  permanents: En1990PermanentDelta! @state(class: ARTIFACT)
-  variables: En1990VariableDelta! @state(class: ARTIFACT)
-  accidentals: En1990AccidentalDelta! @state(class: ARTIFACT)
-  seismics: En1990SeismicDelta! @state(class: ARTIFACT)
-  members: En1990MemberDelta! @state(class: ARTIFACT)
-  bridgeSls: En1990BridgeSlsDelta! @state(class: ARTIFACT)
-  effects: [En1990EffectEdit!]! @state(class: ARTIFACT)
+  annex: JSON
+  projectId: JSON
+  structureKind: JSON
+  altitudeM: JSON
+  consequenceClass: JSON
+  reliabilityClass: JSON
+  designWorkingLifeCategory: JSON
+  designWorkingLifeYears: JSON
+  referencePeriodYears: JSON
+  supervisionLevel: JSON
+  inspectionLevel: JSON
+  betaComputed: JSON
+  permanents: JSON!
+  variables: JSON!
+  accidentals: JSON!
+  seismics: JSON!
+  members: JSON!
+  bridgeSls: JSON!
+  effects: [En1990EffectEdit!]!
+  fatigueSpectra: JSON!
+  reliabilityAnalyses: JSON!
+  testSeries: JSON!
+  placements: JSON!
+  cases: CaseRowDelta!
+  factorOverrides: JSON!
+  trafficGroups: JSON!
 }
-
 type En1990PermanentDelta {
   removed: [En1990PermanentRemoval!]!
   inserted: [En1990PermanentInsertion!]!
   moved: [En1990PermanentRelocation!]!
   modified: [En1990PermanentModification!]!
 }
-
 type En1990PermanentRemoval {
   id: String!
   index: Int!
 }
-
 type En1990PermanentInsertion {
   index: Int!
-  row: En1990PermanentAction!
+  row: PermanentAction!
 }
-
 type En1990PermanentRelocation {
   id: String!
   from: Int!
   to: Int!
 }
-
 type En1990PermanentModification {
   id: String!
   patch: En1990PermanentPatch!
 }
-
 type En1990PermanentPatch {
-  kind: String
+  kind: JSON
   gk: Float
 }
-
 type En1990VariableDelta {
   removed: [En1990VariableRemoval!]!
   inserted: [En1990VariableInsertion!]!
   moved: [En1990VariableRelocation!]!
   modified: [En1990VariableModification!]!
 }
-
 type En1990VariableRemoval {
   id: String!
   index: Int!
 }
-
 type En1990VariableInsertion {
   index: Int!
-  row: En1990VariableAction!
+  row: VariableAction!
 }
-
 type En1990VariableRelocation {
   id: String!
   from: Int!
   to: Int!
 }
-
 type En1990VariableModification {
   id: String!
   patch: En1990VariablePatch!
 }
-
 type En1990VariablePatch {
   category: String
   qk: Float
+  group: String
 }
-
 type En1990AccidentalDelta {
   removed: [En1990AccidentalRemoval!]!
   inserted: [En1990AccidentalInsertion!]!
   moved: [En1990AccidentalRelocation!]!
   modified: [En1990AccidentalModification!]!
 }
-
 type En1990AccidentalRemoval {
   id: String!
   index: Int!
 }
-
 type En1990AccidentalInsertion {
   index: Int!
-  row: En1990AccidentalAction!
+  row: AccidentalAction!
 }
-
 type En1990AccidentalRelocation {
   id: String!
   from: Int!
   to: Int!
 }
-
 type En1990AccidentalModification {
   id: String!
   patch: En1990AccidentalPatch!
 }
-
 type En1990AccidentalPatch {
   ad: Float
 }
-
 type En1990SeismicDelta {
   removed: [En1990SeismicRemoval!]!
   inserted: [En1990SeismicInsertion!]!
   moved: [En1990SeismicRelocation!]!
   modified: [En1990SeismicModification!]!
 }
-
 type En1990SeismicRemoval {
   id: String!
   index: Int!
 }
-
 type En1990SeismicInsertion {
   index: Int!
-  row: En1990SeismicAction!
+  row: SeismicAction!
 }
-
 type En1990SeismicRelocation {
   id: String!
   from: Int!
   to: Int!
 }
-
 type En1990SeismicModification {
   id: String!
   patch: En1990SeismicPatch!
 }
-
 type En1990SeismicPatch {
   aEk: Float
-  importanceClass: String
+  importanceClass: ImportanceClass
 }
-
 type En1990MemberDelta {
   removed: [En1990MemberRemoval!]!
   inserted: [En1990MemberInsertion!]!
   moved: [En1990MemberRelocation!]!
   modified: [En1990MemberModification!]!
 }
-
 type En1990MemberRemoval {
   id: String!
   index: Int!
 }
-
 type En1990MemberInsertion {
   index: Int!
-  row: En1990Member!
+  row: Member!
 }
-
 type En1990MemberRelocation {
   id: String!
   from: Int!
   to: Int!
 }
-
 type En1990MemberModification {
   id: String!
   patch: En1990MemberPatch!
 }
-
 type En1990MemberPatch {
   labelEn: String
   labelDe: String
@@ -191,40 +168,54 @@ type En1990MemberPatch {
   rdEquDestab: Float
   rdFat: Float
   span: Float
-  deflectionW: Float
+  precamber: Float
+  deflectionW1: Float
+  deflectionW2: Float
+  deflectionW3: Float
   deflectionLimitRatio: Float
+  deflectionLimitRatioW3: Float
+  slsLimitChar: Float
+  slsLimitFreq: Float
+  slsLimitQp: Float
   vibrationFrequency: Float
   vibrationFrequencyMin: Float
+  frameHeight: Float
+  frameDrift: Float
+  storeyHeight: Float
+  storeyDrift: Float
+  materialStrengthK: Float
+  materialConversionFactor: Float
+  materialPartialFactor: Float
+  materialDesignStrength: Float
+  nominalDimension: Float
+  dimensionTolerance: Float
+  designDimension: Float
+  memberAlphaCr: Float
+  secondOrderAnalysis: Float
 }
-
 type En1990BridgeSlsDelta {
   removed: [En1990BridgeSlsRemoval!]!
   inserted: [En1990BridgeSlsInsertion!]!
   moved: [En1990BridgeSlsRelocation!]!
   modified: [En1990BridgeSlsModification!]!
 }
-
 type En1990BridgeSlsRemoval {
   id: String!
   index: Int!
 }
-
 type En1990BridgeSlsInsertion {
   index: Int!
-  row: En1990BridgeSls!
+  row: BridgeSls!
 }
-
 type En1990BridgeSlsRelocation {
   id: String!
   from: Int!
   to: Int!
 }
-
 type En1990BridgeSlsModification {
   id: String!
   patch: En1990BridgeSlsPatch!
 }
-
 type En1990BridgeSlsPatch {
   memberId: String
   deckAcceleration: Float
@@ -233,17 +224,201 @@ type En1990BridgeSlsPatch {
   deckTwistLimit: Float
   bridgeDeflection: Float
   bridgeDeflectionLimit: Float
+  trackGauge: Float
+  lineSpeed: Float
+  ballastDepth: Float
+  deckMass: Float
+  naturalFrequency: Float
+  endRotation: Float
+  basicWindSpeed: Float
+  dampingRatio: Float
 }
-
+type En1990FatigueSpectrumDelta {
+  removed: [En1990FatigueSpectrumRemoval!]!
+  inserted: [En1990FatigueSpectrumInsertion!]!
+  moved: [En1990FatigueSpectrumRelocation!]!
+  modified: [En1990FatigueSpectrumModification!]!
+}
+type En1990FatigueSpectrumRemoval {
+  id: String!
+  index: Int!
+}
+type En1990FatigueSpectrumInsertion {
+  index: Int!
+  row: FatigueSpectrum!
+}
+type En1990FatigueSpectrumRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1990FatigueSpectrumModification {
+  id: String!
+  patch: En1990FatigueSpectrumPatch!
+}
+type En1990FatigueSpectrumPatch {
+  memberId: String
+  detailCategory: Float
+  stressRange: Float
+  cycles: Float
+}
+type En1990ReliabilityAnalysisDelta {
+  removed: [En1990ReliabilityAnalysisRemoval!]!
+  inserted: [En1990ReliabilityAnalysisInsertion!]!
+  moved: [En1990ReliabilityAnalysisRelocation!]!
+  modified: [En1990ReliabilityAnalysisModification!]!
+}
+type En1990ReliabilityAnalysisRemoval {
+  id: String!
+  index: Int!
+}
+type En1990ReliabilityAnalysisInsertion {
+  index: Int!
+  row: ReliabilityAnalysis!
+}
+type En1990ReliabilityAnalysisRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1990ReliabilityAnalysisModification {
+  id: String!
+  patch: En1990ReliabilityAnalysisPatch!
+}
+type En1990ReliabilityAnalysisPatch {
+  resistanceDistribution: JSON
+  resistanceMean: Float
+  resistanceSd: Float
+  actionDistribution: JSON
+  actionMean: Float
+  actionSd: Float
+}
+type En1990TestSeriesDelta {
+  removed: [En1990TestSeriesRemoval!]!
+  inserted: [En1990TestSeriesInsertion!]!
+  moved: [En1990TestSeriesRelocation!]!
+  modified: [En1990TestSeriesModification!]!
+}
+type En1990TestSeriesRemoval {
+  id: String!
+  index: Int!
+}
+type En1990TestSeriesInsertion {
+  index: Int!
+  row: TestSeries!
+}
+type En1990TestSeriesRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1990TestSeriesModification {
+  id: String!
+  patch: En1990TestSeriesPatch!
+}
+type En1990TestSeriesPatch {
+  quantity: String
+  distribution: JSON
+  sampleSize: Int
+  mean: Float
+  stdDev: Float
+  variationKnown: Float
+  conversionFactor: Float
+  required: Float
+}
+type En1990PlacementDelta {
+  removed: [En1990PlacementRemoval!]!
+  inserted: [En1990PlacementInsertion!]!
+  moved: [En1990PlacementRelocation!]!
+  modified: [En1990PlacementModification!]!
+}
+type En1990PlacementRemoval {
+  id: String!
+  index: Int!
+}
+type En1990PlacementInsertion {
+  index: Int!
+  row: Placement!
+}
+type En1990PlacementRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1990PlacementModification {
+  id: String!
+  patch: En1990PlacementPatch!
+}
+type En1990PlacementPatch {
+  x: Float
+  y: Float
+  z: Float
+  yaw: Float
+}
+type En1990FactorOverrideDelta {
+  removed: [En1990FactorOverrideRemoval!]!
+  inserted: [En1990FactorOverrideInsertion!]!
+  moved: [En1990FactorOverrideRelocation!]!
+  modified: [En1990FactorOverrideModification!]!
+}
+type En1990FactorOverrideRemoval {
+  id: String!
+  index: Int!
+}
+type En1990FactorOverrideInsertion {
+  index: Int!
+  row: FactorOverride!
+}
+type En1990FactorOverrideRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1990FactorOverrideModification {
+  id: String!
+  patch: En1990FactorOverridePatch!
+}
+type En1990FactorOverridePatch {
+  factor: String
+  target: String
+  value: Float
+  justification: String
+}
+type En1990TrafficGroupDelta {
+  removed: [En1990TrafficGroupRemoval!]
+  inserted: [En1990TrafficGroupInsertion!]
+  moved: [En1990TrafficGroupRelocation!]
+  modified: [En1990TrafficGroupModification!]
+}
+type En1990TrafficGroupRemoval {
+  id: String!
+  index: Int!
+}
+type En1990TrafficGroupInsertion {
+  index: Int!
+  row: TrafficGroup!
+}
+type En1990TrafficGroupRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1990TrafficGroupModification {
+  id: String!
+  patch: En1990TrafficGroupPatch!
+}
+type En1990TrafficGroupPatch {
+  group: String
+  variableId: String
+}
 enum En1990RowOp {
-  INSERT
-  REMOVE
-  REPLACE
+  Insert
+  Remove
+  Replace
 }
-
 type En1990EffectEdit {
   op: En1990RowOp!
   index: Int!
   id: String!
-  value: En1990MemberEffect
+  value: MemberEffect
 }

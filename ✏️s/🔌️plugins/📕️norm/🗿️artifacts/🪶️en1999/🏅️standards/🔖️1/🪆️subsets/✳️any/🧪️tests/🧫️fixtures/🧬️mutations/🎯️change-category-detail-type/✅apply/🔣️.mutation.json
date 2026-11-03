@@ -1,0 +1,5 @@
+{
+  "mutation": "changeCategoryDetailType",
+  "fatigueCategoryId": "site-1",
+  "newDetailType": "filletWeld"
+}

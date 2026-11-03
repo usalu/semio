@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-slab-action-delta-tau-pa/schema.json",
+  "title": "ChangeSlabActionDeltaTauPa",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "slabId",
+    "id",
+    "newDeltaTauKPa"
+  ],
+  "properties": {
+    "slabId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Composite slab",
+          "de": "Verbunddecke"
+        },
+        "description": {
+          "en": "The composite slab this mutation addresses, by id.",
+          "de": "Das adressierte Element (Verbunddecke), per Kennung."
+        },
+        "ref": {
+          "kind": "slab"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Action",
+          "de": "Einwirkung"
+        },
+        "description": {
+          "en": "The action this mutation addresses, by id.",
+          "de": "Das adressierte Element (Einwirkung), per Kennung."
+        },
+        "ref": {
+          "kind": "action"
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "newDeltaTauKPa": {
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Fatigue shear stress range of the slab action",
+          "de": "Schubspannungsschwingbreite der Deckeneinwirkung"
+        },
+        "unit": "Pa",
+        "displayUnit": "MPa",
+        "displayFactor": 0.000001,
+        "step": 1000000,
+        "precision": 1,
+        "group": "actions",
+        "order": 30
+      }
+    }
+  }
+}

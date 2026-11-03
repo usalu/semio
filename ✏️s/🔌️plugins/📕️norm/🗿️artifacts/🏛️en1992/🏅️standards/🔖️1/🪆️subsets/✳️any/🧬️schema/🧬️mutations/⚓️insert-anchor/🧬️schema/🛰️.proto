@@ -1,5 +1,6 @@
 syntax = "proto3";
+package semio.s.norm.en1992.mutation.insert_anchor;
 message InsertAnchor {
-  uint32 index = 1;
-  string anchor = 2;
+  uint64 index = 1;
+  Anchor anchor = 2;
 }

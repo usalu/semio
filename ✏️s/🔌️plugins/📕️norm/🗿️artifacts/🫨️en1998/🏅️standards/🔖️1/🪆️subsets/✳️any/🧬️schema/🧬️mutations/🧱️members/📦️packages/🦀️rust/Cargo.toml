@@ -16,6 +16,9 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+serde = { workspace = true, optional = true }
+semio-s-artifact-norm-en1998-mut-members-assessment = { workspace = true }
+semio-s-artifact-norm-en1998-mut-members-masonry-member = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-schema = { workspace = true }
@@ -24,6 +27,15 @@ semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-norm-en1998-diff = { workspace = true }
 semio-s-artifact-norm-en1998-model = { workspace = true }
+semio-s-artifact-norm-en1998-mut-members-wall = { workspace = true }
+semio-s-artifact-norm-en1998-mut-members-wall-rows = { workspace = true }
+semio-s-artifact-norm-en1998-mut-members-joints = { workspace = true }
+semio-s-artifact-norm-en1998-mut-assess-section = { workspace = true }
+semio-s-artifact-norm-en1998-mut-assess-steel = { workspace = true }
+semio-s-artifact-norm-en1998-mut-assess-confine = { workspace = true }
+
+[features]
+test-support = ["dep:serde", "semio-s-artifact-norm-en1998-diff/test-support", "semio-s-artifact-norm-en1998-model/test-support", "semio-s-artifact-norm-en1998-mut-assess-confine/test-support", "semio-s-artifact-norm-en1998-mut-assess-section/test-support", "semio-s-artifact-norm-en1998-mut-assess-steel/test-support", "semio-s-artifact-norm-en1998-mut-members-assessment/test-support", "semio-s-artifact-norm-en1998-mut-members-joints/test-support", "semio-s-artifact-norm-en1998-mut-members-masonry-member/test-support", "semio-s-artifact-norm-en1998-mut-members-wall/test-support", "semio-s-artifact-norm-en1998-mut-members-wall-rows/test-support"]
 
 [dev-dependencies]
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

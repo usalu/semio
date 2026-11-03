@@ -1,0 +1,5 @@
+{
+  "mutation": "changeTankHeightM",
+  "id": "tk-1",
+  "newHeightM": 20.0
+}

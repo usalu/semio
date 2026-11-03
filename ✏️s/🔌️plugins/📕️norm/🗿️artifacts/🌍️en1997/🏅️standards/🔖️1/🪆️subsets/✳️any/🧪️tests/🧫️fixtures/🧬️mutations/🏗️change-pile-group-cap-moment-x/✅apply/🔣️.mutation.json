@@ -1,0 +1,5 @@
+{
+  "mutation": "changePileGroupCapMomentX",
+  "id": "group-G1",
+  "newCapMomentX": 200000.0
+}

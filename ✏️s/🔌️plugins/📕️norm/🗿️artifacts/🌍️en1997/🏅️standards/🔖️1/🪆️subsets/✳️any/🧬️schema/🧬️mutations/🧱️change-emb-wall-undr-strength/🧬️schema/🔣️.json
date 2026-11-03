@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-emb-wall-undr-strength/schema.json",
+  "title": "ChangeEmbWallUndrStrength",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newUndrainedStrength"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeEmbWallUndrStrength"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Embedded wall",
+          "de": "Eingespannte Wand"
+        },
+        "description": {
+          "en": "The embedded wall this mutation addresses, by id.",
+          "de": "Die adressierte Zeile (Eingespannte Wand), per Kennung."
+        },
+        "ref": {
+          "kind": "embedded-wall"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newUndrainedStrength": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Undrained strength c_u (0 = drained)",
+          "de": "Undränierte Scherfestigkeit c_u (0 = dräniert)"
+        },
+        "widget": "stepper",
+        "unit": "Pa",
+        "displayUnit": "kN/m²",
+        "displayFactor": 0.001,
+        "precision": 2,
+        "step": 1000,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

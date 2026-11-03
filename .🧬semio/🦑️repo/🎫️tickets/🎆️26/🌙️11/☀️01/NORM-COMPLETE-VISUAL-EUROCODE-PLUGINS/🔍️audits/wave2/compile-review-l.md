@@ -1,0 +1,26 @@
+# Compile review L (wave 2, 2026-11-03 03:40)
+
+Scope: Rust files changed after 03:00 in en1990-en1995 plus the shared mechanics they use. No cargo/rustc run, no build started, no git write. The H gate (`compile-gate-h/gate.sh`) found nothing certain in my scope: its hits are false positives (macro or trait methods, `Status::Fail` in a different enum, `CaseRowPatch` nest types). Extra checks run on en1990-en1995 (niced Python): struct literal completeness for all snapshot structs with unique names (none missing), `Enum::Variant` exhaustiveness of every match on the snapshot enums (none missing; UlsEquation 2/2, ImposedCategory 9+SnowHigh, StrengthClass 36/36, FireOccupancy, MemberKind, StiffenerShape, WarpingSupport), typed fields compared or formatted as strings, enum fields borrowed as `&String`, `#[path]`/`include_str!` existence, imports against Cargo `[dependencies]`.
+
+## Fixed (certain, type-directed)
+1. en1994 `💡️inferences/⚖️checks/🦀️.rs` (hand-restored file, read in full, 1019 lines): everything resolves (continuous API `action_internals`/`permanent_internals`/`Load`/`Stiffness`, `SpanFactors`, `ActionFactors` methods, `PsiRow::as_tuple`, `ColumnAction`/`CharacteristicAction` fields, `uls_column`, `fire_column`, `accumulate`, `accumulate_column`, `RebarProduct`). One error: `beam_fire` read `beam.reinforcement_product`, a field only `CompositeColumn` has (E0609). Now `RebarProduct::default()`; judgement routed to `requests.md`.
+2. en1995 diff lane `🧬️schema/🔺️diff/🦀️.rs`: the patch structs still typed the converted fields `String` while leaves write `Some(payload.new_value)` with the enums (E0308): `kind`, `category`, `load_duration` of `En1995MemberActionPatch`, `kind`, `load_duration` of `En1995ConnectionActionPatch`, `strength_class` of member/connection/panel, `fastener_type` of the connection patch now carry `ActionKind`, `ImposedCategory`, `LoadDurationClass`, `StrengthClass`, `FastenerType`. patchck of en1995 is clean afterwards.
+3. en1995 `Display` missing on the new enums: `format!("{}", strength_class)` in `⚖️timber/🏗️structure-and-members`, `⚖️timber/🌉️bridge-and-connections` (4 sites) and `🎬️scene/🔩️connections` (2 sites) now use `.id()`.
+4. en1995 editor catalogue panel `✏️editor/📌️panels/📚️catalogue/🦀️.rs`: the `TimberConnection` probe used `f.value.to_string()` and `String::new()` for the typed `fastener_type`/`strength_class`; now a `FastenerType` match on the choice value and `StrengthClass::C24` (rho_k 350 as before).
+5. en1991 `🧬️schema/💡️inferences/🦀️.rs`: `fire_load_source(..., &document.fire_occupancy)` and `fire_load_ndp_ids(..., &document.fire_occupancy)` passed a reference where the functions take `FireOccupancy` by value (E0308); references removed.
+6. en1993 `🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs`: the admission byte bound `admit_strings(.., &[&String..])` listed `&v.warping_support` and `&v.stiffener_shape`, now enums (E0308); removed from both lists (fixed bound, no string length).
+7. Cargo: en1990 and en1991 viewer crates name `semio_s_plugin_norm_compliance` in `reference_birth` without the dependency (E0433); added. en1991/en1993/en1994 io crates read `..._mutations_protocol::LEAF` in `💾️binary/🧬️mutations` without the dependency; added (workspace entries exist). Cargo.lock sync requested in `requests.md`.
+8. Shared mechanics `🧪️tests/🔬️unit/🦀️.rs`: `include_str!("../🥒️.feature")` -> `../🧮️mechanics/🥒️.feature` (the feature file moved).
+
+## Checked and fine
+- EN 1990 span arrangements / SPAN-ENVELOPE: `SpanFactors`, `SpanBeam`, `SpanEnvelope` fields, `continuous_beam_envelope`, `permanent_arrangements`, `span_subsets` used consistently by en1990 (re-export, test), en1994 (`continuous::permanent_internals`), en1995 test; mechanics is a (dev-)dependency of every crate that names it.
+- EN 1991 v9: `check_braking`/`check_centrifugal`/`check_thermal_combination` (signatures of `braking_bounds_kn`, `braking_force_of_deck_kn`, `lane_layout`, `tandem_weight_kn`, `centrifugal_force_kn`, `required_delta_t`, `ActionFactors::{domain,gamma_q,psi}`, `Domain::Bridge`), traffic glyphs (`LoadGlyph::Point` fields, `Pose::at/dir`), module mounted at `💡️inferences/🦀️.rs:733`.
+- EN 1993 v9: `stiffener_outline`/`stiffener_constants` against `mechanics::analyse_section`, `Material`, `SectionConstants` fields; `StiffenerShape`/`WarpingSupport` matches exhaustive; `{:?}` formatting only.
+- EN 1995: `psi_factors(&ActionFactors, ActionKind, ImposedCategory)` with the restored `SnowHigh` (sqlite codec, matches exhaustive); `CharacteristicAction` test literals.
+- RC-THREADING v2 (still in progress by its owner): snapshot/artifact/diff of en1990, en1992, en1993, en1995 carry `reliability_class` consistently (`to_snapshot`/`from_snapshot`/`absorb`/`apply`/`inverse`/`is_empty`); no struct literal lacks it; sqlite codecs not re-read.
+- `#[path]` and `include_str!` targets exist everywhere in en1990-en1995, compliance and mechanics (after fix 8).
+
+## Open
+- Beam reinforcement product (judgement, `requests.md`).
+- Mutation leaf generators and en1995/en1997 leaves still emit `cfg_attr(test, derive(serde))` (J's open item, not repeated).
+- Not read line by line: the large scene/check bodies of en1991/en1992/en1993 (only scripts and the calls named above), the en1992 flat slab modules, en1995 deck/T-96 scene bodies.

@@ -17,14 +17,6 @@ pub mod change_zone_floor_area;
 pub mod change_zone_occupants;
 #[path = "../🏭️change-zone-pollution-class/🦀️.rs"]
 pub mod change_zone_pollution_class;
-#[path = "../🏢️change-zone-usage-type/🦀️.rs"]
-pub mod change_zone_usage_type;
-#[path = "../📐️change-zone-vent-method/🦀️.rs"]
-pub mod change_zone_vent_method;
-#[path = "../🔗change-zone-vent-system-id/🦀️.rs"]
-pub mod change_zone_vent_system_id;
-#[path = "../➕️insert-zone/🦀️.rs"]
-pub mod insert_zone;
-#[path = "../➖️remove-zone/🦀️.rs"]
-pub mod remove_zone;
 //#endregion 🪢️Mounts
+
+pub use semio_s_artifact_norm_din16798_mut_zones_more::{change_zone_usage_type, change_zone_vent_method, change_zone_vent_system_id, insert_zone, remove_zone};

@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-panel-fire-duration/schema.json",
+  "title": "ChangePanelFireDuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "panelId",
+    "newValue"
+  ],
+  "properties": {
+    "panelId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Panel",
+          "de": "Tafel"
+        },
+        "description": {
+          "en": "The panel this mutation addresses.",
+          "de": "Das Element, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "panel"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newValue": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Fire resistance time",
+          "de": "Feuerwiderstandsdauer"
+        },
+        "unit": "s",
+        "displayUnit": "min",
+        "displayFactor": 0.016666666666666666,
+        "precision": 0,
+        "step": 60,
+        "group": "fields",
+        "order": 20
+      }
+    }
+  }
+}

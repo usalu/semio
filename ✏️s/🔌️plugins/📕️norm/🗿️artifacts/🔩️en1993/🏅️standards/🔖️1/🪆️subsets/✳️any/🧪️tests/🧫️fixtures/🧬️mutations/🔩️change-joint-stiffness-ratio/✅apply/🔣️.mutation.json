@@ -1,0 +1,6 @@
+{
+  "ChangeJointStiffnessRatio": {
+    "id": "joint-j1",
+    "newStiffnessRatio": 1.5
+  }
+}

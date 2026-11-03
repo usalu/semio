@@ -1,0 +1,6 @@
+{
+  "mutation": "changeActionLocalLoadK",
+  "memberId": "purlin-1",
+  "actionId": "G",
+  "newLocalLoadK": 1.5
+}

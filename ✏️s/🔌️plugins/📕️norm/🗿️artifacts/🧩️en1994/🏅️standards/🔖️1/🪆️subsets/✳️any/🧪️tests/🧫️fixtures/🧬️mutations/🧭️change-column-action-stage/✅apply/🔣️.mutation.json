@@ -1,0 +1,7 @@
+{
+  "ChangeColumnActionStage": {
+    "columnId": "col-C1",
+    "id": "G-col",
+    "newStage": "construction"
+  }
+}

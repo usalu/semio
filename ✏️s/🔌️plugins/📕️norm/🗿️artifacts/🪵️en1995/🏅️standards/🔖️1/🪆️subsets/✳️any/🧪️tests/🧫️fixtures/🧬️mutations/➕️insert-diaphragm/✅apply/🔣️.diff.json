@@ -1,0 +1,97 @@
+{
+  "annex": null,
+  "reliabilityClass": null,
+  "members": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "connections": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "placements": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "tapers": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "cutouts": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "fasteners": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "panels": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "floors": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "diaphragms": {
+    "removed": [],
+    "inserted": [
+      {
+        "index": 0,
+        "row": {
+          "id": "diaphragm-1",
+          "kind": "wall",
+          "method": "method-a",
+          "panelWidthM": 1.2,
+          "wallHeightM": 2.4,
+          "fastenerSpacingM": 0.075,
+          "panels": 2,
+          "fastenerCapacityN": 3000.0,
+          "shearEdN": 3000.0,
+          "holdDownN": 20000.0,
+          "diaphragmForceN": 15000.0,
+          "diaphragmLengthM": 12.0,
+          "shearResistanceNPerM": 3000.0
+        }
+      }
+    ],
+    "moved": [],
+    "modified": []
+  },
+  "trusses": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "bracings": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "decks": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "ulsEquation": null,
+  "cases": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  }
+}

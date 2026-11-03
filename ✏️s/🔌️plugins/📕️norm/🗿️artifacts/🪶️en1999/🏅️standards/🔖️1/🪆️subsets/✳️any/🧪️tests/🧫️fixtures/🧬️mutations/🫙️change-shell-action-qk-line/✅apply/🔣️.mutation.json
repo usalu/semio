@@ -1,0 +1,6 @@
+{
+  "mutation": "changeShellActionQKLine",
+  "shellId": "shell-pass",
+  "actionId": "G-shell",
+  "newQKLine": 1.5
+}

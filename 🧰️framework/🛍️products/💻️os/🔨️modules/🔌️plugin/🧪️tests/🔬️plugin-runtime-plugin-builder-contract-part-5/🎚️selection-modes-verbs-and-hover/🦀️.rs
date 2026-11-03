@@ -57,6 +57,34 @@
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
     }
 
+    #[semio_framework_async_macros::async_test]
+    async fn select_all_takes_an_optional_granularity_scope_and_ignores_undeclared_ids() {
+        let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original builder fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_policy = semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
+        let identity_started = std::time::Instant::now();
+        let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+            progress.owned_bytes <= 1_048_576 && identity_started.elapsed() < std::time::Duration::from_secs(60)
+        };
+        let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
+
+        let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
+        app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta(), &mut identity,cx).await.expect("seed label");
+
+        reserved_action(&mut app, SELECT_ALL_ACTION_ID, Some(&dv(json!({ "granularities": "bogus" }))), &mut identity, cx).await;
+        assert_eq!(app.interaction_state().await.selection.get("items").map(|selection| selection.ids.clone()), Some(vec!["item-1".to_string()]), "an undeclared scope falls back to the active granularity");
+
+        reserved_action(&mut app, CLEAR_SELECTION_ACTION_ID, None, &mut identity, cx).await;
+        reserved_action(&mut app, SELECT_ALL_ACTION_ID, Some(&dv(json!({ "granularities": "bogus, item" }))), &mut identity, cx).await;
+        let selection = app.interaction_state().await.selection.get("items").cloned().expect("scoped selection");
+        assert_eq!((selection.granularity.as_str(), selection.ids), ("item", vec!["item-1".to_string()]), "a declared scope selects the nodes of that granularity");
+
+        artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
+    
+        }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
+    }
+
     /// 🧹️ `TestApp::interaction_topology` reports NO ids once `label` is empty again — simulates
     /// "item-1 was deleted from the document" — task 4: revalidated after EVERY artifact dispatch.
     #[semio_framework_async_macros::async_test]

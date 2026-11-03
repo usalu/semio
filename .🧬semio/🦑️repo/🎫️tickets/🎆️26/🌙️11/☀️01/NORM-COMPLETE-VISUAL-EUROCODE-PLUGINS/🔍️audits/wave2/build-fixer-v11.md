@@ -1,0 +1,5 @@
+# build-fixer v11
+- en1997/15: CHARACTERISTICBASIS was never a malformed name: the entity has no float columns, so no const exists. Generator `schema-evolve/l_sqlite.py` now emits `&[]` (Rust) / `[]` (TS) via `const_of`/`const_ts` for float-free entities; test added in `test_evolve.py`. Generated codecs (sqlite rs/ts, admission rs) hand-fixed.
+- ApproachChoice `as_str` arms renamed to Da1Str/Da1Geo/Da2Star (tokens unchanged). Preflight `b.repeated(...)` in sqlite snapshot rs now uses `.as_str()` for all enum fields (5 E0308 + 3 E0599). No other enum `.len()`/`.trim()`-style uses left in en1997 (grep).
+- en1993: `check_special_parts` removal is safe; every driver of `special-parts-checks` (check_member, cold_formed, stainless_fire, plated, shell, joint, tension, bridge, tower, pile, crane) has a caller and `check_special_elements` is called from member-checks:164.
+- en1996: removed push_unknown_* checks only validated impossible values of typed enums; no references remain. Nothing to restore.

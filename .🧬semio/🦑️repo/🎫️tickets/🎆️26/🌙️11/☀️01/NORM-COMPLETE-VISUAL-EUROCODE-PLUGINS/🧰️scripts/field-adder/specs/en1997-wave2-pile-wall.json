@@ -1,0 +1,20 @@
+{
+ "artifact": "en1997",
+ "fields": [
+  {"entity": "piles", "field": "bending_stiffness_ei", "after": "tension_variable", "type": "f64", "default": 0.0, "demo": 197200000.0, "unit": null, "step": 1000000, "precision": 0,
+   "doc": "🪵 Pile bending stiffness EI [N·m²] for the lateral Winkler beam and the buckling interface (PILE-04, PILE-07); 0 = not given (cracking is not applied).",
+   "en": "Pile bending stiffness EI [N·m²] (0 = not given)", "de": "Pfahl-Biegesteifigkeit EI [N·m²] (0 = nicht angegeben)"},
+  {"entity": "piles", "field": "horizontal_subgrade_modulus", "after": "bending_stiffness_ei", "type": "f64", "default": 0.0, "demo": 20000000.0, "unit": null, "unit_id": "NewtonPerCubicMetre", "step": 100000, "precision": 0,
+   "doc": "🪵 Horizontal modulus of subgrade reaction k_h [N/m³] (constant with depth) of the Winkler foundation of the lateral pile; 0 = not given.",
+   "en": "Horizontal subgrade modulus k_h (0 = not given)", "de": "Horizontaler Bettungsmodul k_h (0 = nicht angegeben)"},
+  {"entity": "piles", "field": "lateral_head_load", "after": "horizontal_subgrade_modulus", "type": "f64", "default": 0.0, "demo": 50000.0, "unit": "N", "dsl_unit": "N",
+   "doc": "🪵 Characteristic horizontal load at the pile head [N] for the lateral deflection line; 0 = none.",
+   "en": "Lateral head load H", "de": "Horizontale Kopflast H"},
+  {"entity": "retainingWalls", "field": "seismic_kh", "after": "horizontal_permanent", "type": "f64", "default": 0.0, "demo": 0.0, "unit": null, "step": 0.01, "precision": 3, "range": [0.0, 1.0],
+   "doc": "🌋 Horizontal seismic coefficient k_h of the pseudo-static Mononobe-Okabe thrust (RW-08, EN 1998-5 §7.3); 0 = no seismic situation.",
+   "en": "Seismic coefficient k_h (0 = none)", "de": "Seismischer Beiwert k_h (0 = keiner)"},
+  {"entity": "retainingWalls", "field": "seismic_kv", "after": "seismic_kh", "type": "f64", "default": 0.0, "demo": 0.0, "unit": null, "step": 0.01, "precision": 3, "range": [-1.0, 1.0],
+   "doc": "🌋 Vertical seismic coefficient k_v of the pseudo-static Mononobe-Okabe thrust (RW-08); positive downward, both signs are checked.",
+   "en": "Seismic coefficient k_v", "de": "Seismischer Beiwert k_v"}
+ ]
+}

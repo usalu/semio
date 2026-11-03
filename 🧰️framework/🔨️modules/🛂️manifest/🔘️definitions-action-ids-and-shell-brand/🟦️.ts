@@ -68,6 +68,18 @@ export const SELECT_ALL_ACTION_ID = "selectAll";
 export const SET_SELECTION_MODE_ACTION_ID = "setSelectionMode";
 export const SET_INTERACTION_GRANULARITY_ACTION_ID = "setInteractionGranularity";
 
+/** 🎯️ The framework-owned "focus the window of kind X" action id, shell-intercepted in every app — mirrors Rust `FOCUS_WINDOW_ACTION_ID`; the window kind is the text argument `windowKindId` (`FOCUS_WINDOW_ARG_KIND`). */
+export const FOCUS_WINDOW_ACTION_ID = "focusWindow";
+export const FOCUS_WINDOW_ARG_KIND = "windowKindId";
+/** 📱️ Mirrors Rust `FOCUS_WINDOW_ARG_FALLBACK`: the stand-in window kind for a device whose layout lacks the requested one. */
+export const FOCUS_WINDOW_ARG_FALLBACK = "fallbackWindowKindId";
+/** ✏️ The framework-owned "focus the editable control inside row R of a tree or grid" action id, shell-intercepted in every app — mirrors Rust `FOCUS_ROW_CONTROL_ACTION_ID`; the row is the text argument `rowId` (`FOCUS_ROW_CONTROL_ARG_ROW`), raised by `F2` (`FOCUS_ROW_CONTROL_KEY`) on a focused row. */
+export const FOCUS_ROW_CONTROL_ACTION_ID = "focusRowControl";
+export const FOCUS_ROW_CONTROL_ARG_ROW = "rowId";
+export const FOCUS_ROW_CONTROL_KEY = "F2";
+/** ✏️ Mirrors Rust `FOCUS_ROW_CONTROL_EDITABLE_KINDS`: the input kinds a row cell edits by typing. */
+export const FOCUS_ROW_CONTROL_EDITABLE_KINDS = ["text", "longText", "number", "date"] as const;
+
 /** 📤️ The framework-owned Export Document action id, shell-intercepted in every app — mirrors Rust
  * `EXPORT_ARTIFACT_DOCUMENT_ACTION_ID`. */
 export const EXPORT_ARTIFACT_DOCUMENT_ACTION_ID = "exportArtifactDocument";

@@ -4,6 +4,7 @@ use semio_s_artifact_norm_en1999_model::En1999Snapshot;
 
 const SECTION_FIELDS: &[&str] = &[
     "annex",
+    "reliabilityClass",
     "materials",
     "sections",
     "members",
@@ -14,8 +15,8 @@ const SECTION_FIELDS: &[&str] = &[
 
 /// 🧾️ `En1999` document outline.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct En1999Outline {
     pub section_outline: Vec<String>,
@@ -41,6 +42,6 @@ impl En1999Outline {
 
 impl Default for En1999Outline {
     fn default() -> Self {
-        Self::compute(&En1999Snapshot::default())
+        Self::compute(&En1999Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De))
     }
 }

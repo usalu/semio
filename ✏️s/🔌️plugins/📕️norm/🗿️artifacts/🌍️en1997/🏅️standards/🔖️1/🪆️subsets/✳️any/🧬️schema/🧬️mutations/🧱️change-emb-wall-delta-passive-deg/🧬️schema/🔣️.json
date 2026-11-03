@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-emb-wall-delta-passive-deg/schema.json",
+  "title": "ChangeEmbWallDeltaPassiveDeg",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newDeltaPassiveDeg"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeEmbWallDeltaPassiveDeg"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Embedded wall",
+          "de": "Eingespannte Wand"
+        },
+        "description": {
+          "en": "The embedded wall this mutation addresses, by id.",
+          "de": "Die adressierte Zeile (Eingespannte Wand), per Kennung."
+        },
+        "ref": {
+          "kind": "embedded-wall"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newDeltaPassiveDeg": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Passive wall friction δ_p",
+          "de": "Wandreibung passiv δ_p"
+        },
+        "widget": "dial",
+        "unit": "°",
+        "precision": 1,
+        "step": 0.5,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

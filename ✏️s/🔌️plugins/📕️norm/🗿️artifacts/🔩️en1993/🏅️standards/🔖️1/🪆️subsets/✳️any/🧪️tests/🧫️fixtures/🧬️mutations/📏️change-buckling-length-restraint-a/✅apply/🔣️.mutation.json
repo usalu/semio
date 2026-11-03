@@ -1,0 +1,6 @@
+{
+  "ChangeBucklingLengthRestraintA": {
+    "id": "frame-action-1",
+    "newRestraintA": "NodalMoment"
+  }
+}

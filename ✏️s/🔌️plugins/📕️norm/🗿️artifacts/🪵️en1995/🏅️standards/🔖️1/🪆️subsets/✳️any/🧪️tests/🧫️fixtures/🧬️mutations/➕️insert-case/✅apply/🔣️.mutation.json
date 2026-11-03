@@ -1,0 +1,47 @@
+{
+  "InsertCase": {
+    "index": 99,
+    "case": {
+      "id": "case-t45",
+      "labelEn": "Notched support",
+      "labelDe": "Ausgeklinktes Auflager",
+      "entryId": "T-45",
+      "numbers": [
+        {
+          "id": "v_d",
+          "value": 20000.0
+        },
+        {
+          "id": "b",
+          "value": 120.0
+        },
+        {
+          "id": "h",
+          "value": 240.0
+        },
+        {
+          "id": "h_ef",
+          "value": 180.0
+        },
+        {
+          "id": "x",
+          "value": 30.0
+        },
+        {
+          "id": "sc",
+          "value": 1.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "class",
+          "value": "C24"
+        },
+        {
+          "id": "duration",
+          "value": "medium"
+        }
+      ]
+    }
+  }
+}

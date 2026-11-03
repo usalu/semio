@@ -1,0 +1,63 @@
+{
+  "artifact": "en1991",
+  "collection": {
+    "name": "snowGuards",
+    "entity": "SnowGuard",
+    "emoji": "🛡️",
+    "doc": "🛡️ Snow guard on a roof (EN 1991-1-3, 6.3 and 5.3.8): the roof it protects, the slope length behind it and the line force the design assumes against F_s = s b sin α.",
+    "label": {
+      "en": "Snow guards",
+      "de": "Schneefanggitter"
+    },
+    "id": {
+      "en": "Snow guard ID",
+      "de": "Schneefang-ID"
+    },
+    "singular": {
+      "en": "snow guard",
+      "de": "Schneefanggitter"
+    },
+    "kindSlug": "snow-guard",
+    "fields": [
+      {
+        "name": "roof_id",
+        "type": "String",
+        "label": {
+          "en": "Roof",
+          "de": "Dach"
+        },
+        "doc": "🏠 Id of the roof (roofs[]) whose snow the guard retains.",
+        "sample": "R1"
+      },
+      {
+        "name": "slope_length",
+        "type": "f64",
+        "label": {
+          "en": "Slope length b",
+          "de": "Dachflächenlänge b"
+        },
+        "doc": "↔️ Length b [m] of the roof slope behind the guard measured in plan.",
+        "sample": 6.0,
+        "unit": "m"
+      },
+      {
+        "name": "assumed_force",
+        "type": "f64",
+        "label": {
+          "en": "Assumed line force",
+          "de": "Angesetzte Linienkraft"
+        },
+        "doc": "🏋️ Line force [N/m] along the guard the design assumes.",
+        "sample": 8000.0,
+        "unit": "N/m"
+      }
+    ]
+  },
+  "kit": {
+    "id": "snowGuard",
+    "en": "Snow guard",
+    "de": "Schneefanggitter",
+    "icon": "shield",
+    "scene_kind": "Load"
+  }
+}

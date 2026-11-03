@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-foundation-anchor-class/schema.json",
+  "title": "ChangeFoundationAnchorClass",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newAnchorClass"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Foundation block",
+          "de": "Fundamentblock"
+        },
+        "description": {
+          "en": "The foundation block this mutation addresses, by id.",
+          "de": "Das adressierte Element (Fundamentblock), per Kennung."
+        },
+        "ref": {
+          "kind": "foundation-block"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newAnchorClass": {
+      "type": "string",
+      "x-semio-ui": {
+        "label": {
+          "en": "Anchor class",
+          "de": "Festigkeitsklasse der Anker"
+        },
+        "widget": "text",
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

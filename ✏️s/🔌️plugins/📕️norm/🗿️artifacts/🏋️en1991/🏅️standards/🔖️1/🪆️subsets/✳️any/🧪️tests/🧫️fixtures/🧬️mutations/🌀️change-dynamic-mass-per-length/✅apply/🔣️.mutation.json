@@ -1,0 +1,6 @@
+{
+  "ChangeDynamicMassPerLength": {
+    "id": "dynamic-element-1",
+    "newMassPerLength": 3.0
+  }
+}

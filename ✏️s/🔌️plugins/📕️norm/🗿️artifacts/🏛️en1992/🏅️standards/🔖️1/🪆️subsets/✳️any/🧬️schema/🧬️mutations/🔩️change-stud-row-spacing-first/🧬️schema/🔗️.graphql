@@ -1,0 +1,5 @@
+type ChangeStudRowSpacingFirst {
+  memberId: String!
+  studRowId: String!
+  newSpacingFirst: Float!
+}

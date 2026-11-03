@@ -1,0 +1,6 @@
+{
+  "ChangeDeckLaminationProduct": {
+    "deckId": "deck-1",
+    "newValue": "glulam"
+  }
+}

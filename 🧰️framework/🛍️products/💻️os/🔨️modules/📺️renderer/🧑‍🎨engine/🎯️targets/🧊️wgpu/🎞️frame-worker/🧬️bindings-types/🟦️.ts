@@ -66,6 +66,8 @@ export type RendererBindings = RuntimeAssetBindings & {
    * is not the page's promise, so the UI isolate's read (the boot message's `locale`) crosses here once,
    * before the shell resolves its tongue: a lock, then the stored preference, then this. */
   semioWgpuSetHostLocale?: (locale: string) => void;
+  /** 🎛️ The platform-preferences door (`🧊️renderer/🦀️.rs`, region 🎛️HostPlatformPrefs): forced colours, more contrast, dark scheme, reduced motion. */
+  semioWgpuSetHostPlatformPrefs?: (forcedColors: boolean, prefersContrastMore: boolean, prefersDark: boolean, prefersReducedMotion: boolean) => void;
   semioWgpuSetHostIntroductionSuppressed?: (suppressed: boolean) => void;
   /** 🫥️ The hidden-page door (`⚙️EngineCanvas/🎯️targets/🧊️wgpu/✍️text-editor/🦀️.rs` `semioWgpuHostPageHidden`): the page was hidden or left, so
    * every open text-editor typing run ends (`hidden`) on the next frame turn. */

@@ -4,13 +4,18 @@ import {readFileSync,mkdirSync,mkdtempSync,writeFileSync,symlinkSync} from "node
 import {join,resolve,dirname} from "node:path";
 import {withBuildTestInvocationV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
 import {withScriptInvocationSignalV1,acknowledgeScriptInvocationSignalStopV1,type ScriptInvocation} from "@semio-tech/process/routing";
-import {createDeveloperProcessV1,createNativeDebuggerSetupHostV1,probeNativeDebuggerV1,type DeveloperProcessIOV1} from "../🏃️process/🟦️.ts";
+import {createDeveloperProcessV1,createNativeDebuggerSetupHostV1,linuxDebuggerPrivilegeV1,probeNativeDebuggerV1,type DeveloperProcessIOV1} from "../🏃️process/🟦️.ts";
 import {planDeveloperRequest,parseDeveloperArguments,executeDeveloperRequest,readDeveloperRequest,developerDebuggers} from "../🟦️.ts";
 const owner=resolve(import.meta.dir,".."),fixture=JSON.parse(readFileSync(join(owner,"🧫️fixtures/🔣️.json"),"utf8")),schema=JSON.parse(readFileSync(join(owner,"🧬️schema/🔣️.json"),"utf8"));
 const oracle=new Ajv({strict:true}).compile(schema),generated=process.env.SEMIO_TEST_ARTIFACT_DIR!;
 if(!generated)throw Error("Ticket-owned test artifact directory required");
 livePath(join(generated,"dt-XXXXXX/app/debug-native-lldb.c"));livePath(join(generated,"dg-XXXXXX/foreign.ts"));
 const root=mkdtempSync(join(generated,"dt-")),file=livePath(join(root,"app/space 🧪 file.ts"));mkdirSync(livePath(join(root,"app")));writeFileSync(file,"export const value=1;\n");
+
+test("linux debugger privilege is sudo only when noninteractive sudo works",async()=>{
+ const {Database}=await import("bun:sqlite"),db=new Database(":memory:");
+ try{const oracle=db.query("select case when ?1 then 'root' when ?2 and ?3 then 'sudo' else 'none' end privilege");for(const [isRoot,sudoAvailable,noninteractive,expected] of [[true,false,false,"root"],[false,true,true,"sudo"],[false,true,false,"none"],[false,false,true,"none"]] as const){expect(linuxDebuggerPrivilegeV1(isRoot,sudoAvailable,noninteractive)).toBe(expected);expect((oracle.get(Number(isRoot),Number(sudoAvailable),Number(noninteractive)) as {privilege:string}).privilege).toBe(expected);}}finally{db.close();}
+});
 
 test("live protocol obligations agree with closed schema and independent SQLite",async()=>{
  const {Database}=await import("bun:sqlite"),policy=schema.$defs.LiveProcessPolicy.const,validate=new Ajv({strict:true}).compile({$schema:schema.$schema,$defs:schema.$defs,$ref:"#/$defs/LiveProtocolFixture"}),db=new Database(":memory:");

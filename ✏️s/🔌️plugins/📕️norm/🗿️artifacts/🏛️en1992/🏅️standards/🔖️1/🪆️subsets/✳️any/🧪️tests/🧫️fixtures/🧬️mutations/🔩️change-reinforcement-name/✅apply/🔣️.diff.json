@@ -1,0 +1,37 @@
+{
+  "annex": null,
+  "reliabilityClass": null,
+  "title": null,
+  "designWorkingLifeYears": null,
+  "deltaCDev": null,
+  "cementType": null,
+  "concreteGrades": null,
+  "reinforcementGrades": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "b500",
+        "patch": {
+          "name": "B500B-alt",
+          "fYk": null,
+          "eS": null,
+          "ductility": null,
+          "k": null,
+          "epsUk": null
+        }
+      }
+    ]
+  },
+  "prestressSteels": null,
+  "members": null,
+  "anchors": null,
+  "placements": null,
+  "cases": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  }
+}

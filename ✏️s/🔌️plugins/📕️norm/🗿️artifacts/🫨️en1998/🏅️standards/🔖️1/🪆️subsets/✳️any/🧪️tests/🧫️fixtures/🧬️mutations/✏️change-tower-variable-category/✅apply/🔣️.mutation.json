@@ -1,0 +1,6 @@
+{
+  "mutation": "changeTowerVariableCategory",
+  "towerId": "tw-1",
+  "id": "tw-q1",
+  "newCategory": "c"
+}

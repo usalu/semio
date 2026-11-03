@@ -1,0 +1,5 @@
+{
+  "mutation": "changeBuildingBeamMomentSumNm",
+  "id": "bldg-office",
+  "newBeamMomentSumNm": 1.5
+}

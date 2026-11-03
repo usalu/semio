@@ -257,6 +257,21 @@ fn retained_key_mapper_separates_select_typeahead_and_space_from_input_text() {
 }
 
 #[test]
+fn the_context_menu_key_and_shift_f10_are_the_keyboard_secondary_click_and_nothing_else_is() {
+    use semio_framework_ui_wgpu_input::KeyAction;
+    let shift = PointerModifiers { shift: true, ..PointerModifiers::default() };
+    let ctrl_shift = PointerModifiers { shift: true, ctrl: true, ..PointerModifiers::default() };
+    assert!(is_context_menu_chord(&KeyAction::ContextMenu, &PointerModifiers::default()), "the dedicated key needs no modifier");
+    assert!(is_context_menu_chord(&KeyAction::ContextMenu, &shift), "and tolerates one");
+    assert!(is_context_menu_chord(&KeyAction::Function(10), &shift), "Shift+F10");
+    assert!(!is_context_menu_chord(&KeyAction::Function(10), &PointerModifiers::default()), "plain F10 is the menu bar key");
+    assert!(!is_context_menu_chord(&KeyAction::Function(10), &ctrl_shift), "Ctrl+Shift+F10 is another chord");
+    assert!(!is_context_menu_chord(&KeyAction::Function(11), &shift));
+    assert!(!is_context_menu_chord(&KeyAction::Enter, &shift));
+    assert!(matches!(ui_event_from_key_action(&KeyAction::ContextMenu, &PointerModifiers::default(), false), Some(semio_framework_ui_wgpu_events::UiEvent::KeyDown { key, .. }) if key == "ContextMenu"), "a retained scene sees the key too");
+}
+
+#[test]
 fn accessibility_focus_arms_shell_select_space_and_typeahead_routing() {
     let _camera_owner = semio_framework_os_renderer_wgpu_scene_state::camera_fixture_lease(semio_framework_os_renderer_wgpu_scene_state::camera_fixture_grant());
     let surface = "control-focus-select";

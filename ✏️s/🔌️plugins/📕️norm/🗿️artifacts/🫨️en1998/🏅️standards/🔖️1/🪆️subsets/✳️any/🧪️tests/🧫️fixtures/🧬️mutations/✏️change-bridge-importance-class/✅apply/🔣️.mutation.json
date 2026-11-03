@@ -1,0 +1,5 @@
+{
+  "mutation": "changeBridgeImportanceClass",
+  "id": "br-1",
+  "newImportanceClass": 3.0
+}

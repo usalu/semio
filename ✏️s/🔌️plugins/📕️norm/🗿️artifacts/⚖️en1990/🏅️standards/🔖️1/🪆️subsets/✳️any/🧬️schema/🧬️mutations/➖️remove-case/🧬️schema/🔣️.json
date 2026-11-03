@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/mutation/remove-case/schema.json",
+  "title": "RemoveCase",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "removeCase"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Case",
+          "de": "Fall"
+        },
+        "description": {
+          "en": "The catalogue case this mutation addresses, by id.",
+          "de": "Der adressierte Katalogfall, per Kennung."
+        },
+        "ref": {
+          "kind": "case"
+        },
+        "group": "target",
+        "order": 10
+      }
+    }
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "ChangePileActionLoadCaseId": {
+    "id": "pile-1",
+    "elementId": "pile-g",
+    "newLoadCaseId": "g-permanent-alt"
+  }
+}

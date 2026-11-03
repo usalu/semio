@@ -1,6 +1,7 @@
 module Norm_en1991_mutations;
 public type Op = unit {
     format: uint8 &requires=($$ == 1);
-    tag: uint8;
+    tag: uint8[] &until=($$ < 0x80);
+    len: uint8[] &until=($$ < 0x80);
     payload: bytes &eod;
 };

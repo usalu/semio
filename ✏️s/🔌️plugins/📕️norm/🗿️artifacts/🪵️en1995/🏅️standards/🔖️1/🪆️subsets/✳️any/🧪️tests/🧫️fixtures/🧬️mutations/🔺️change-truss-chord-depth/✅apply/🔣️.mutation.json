@@ -1,0 +1,6 @@
+{
+  "ChangeTrussChordDepth": {
+    "trussId": "truss-1",
+    "newValue": 1.3
+  }
+}

@@ -29,6 +29,9 @@
         },
         "group": "annex",
         "order": 10
+      },
+      "x-semio-rust": {
+        "type": "AnnexChoice"
       }
     }
   }

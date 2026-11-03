@@ -1,0 +1,6 @@
+{
+  "ChangeFireProtectionSpecificHeat": {
+    "id": "fire-1",
+    "newProtectionSpecificHeat": 3400.0
+  }
+}

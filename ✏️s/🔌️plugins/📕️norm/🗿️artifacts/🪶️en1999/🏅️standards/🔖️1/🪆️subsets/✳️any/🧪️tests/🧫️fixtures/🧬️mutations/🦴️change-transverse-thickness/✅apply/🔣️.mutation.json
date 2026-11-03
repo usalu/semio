@@ -1,0 +1,5 @@
+{
+  "mutation": "changeTransverseThickness",
+  "transverseStiffenerId": "stiffener-1",
+  "newThickness": 0.016
+}

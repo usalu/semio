@@ -1,0 +1,6 @@
+{
+  "ChangeSiloShellShearStress": {
+    "id": "silo-1",
+    "newShellShearStress": 1.5
+  }
+}

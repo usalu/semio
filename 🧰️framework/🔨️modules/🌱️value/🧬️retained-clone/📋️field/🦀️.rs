@@ -28,7 +28,7 @@ impl<T: RetainedClone> RetainedCloneCursor<T> for RetainedFieldCursor<T> {
         if !progress.fits(grant) { return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default())); }
         work+=1;self.child = Some(Box::new(T::retained_clone_cursor()));
         Ok(RetainedCloneStep::Progress(progress))
-    })();crate::RetainedWorkOutcome{result,work}}
+    })();RetainedWorkOutcome{result,work}}
     fn take_demand(&self)->Result<RetirementDemand,ValueError>{let Some(child)=self.child.as_ref()else{return Ok(Default::default())};let mut d=child.take_demand()?;d.depth=d.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"field output handoff depth overflow"))?;Ok(d)}
     fn take(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<Option<(T,RetainedCloneProgress)>>{
      if !self.output_ready(){return RetainedWorkOutcome{result:Ok(None),work:0}}
@@ -49,7 +49,7 @@ impl<T: RetainedClone> RetainedCloneCursor<T> for RetainedFieldCursor<T> {
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,released_bytes:size_of::<T::Cursor>(),..Default::default()}));
         }
         {let turn=close_retained_binding(&mut self.source,grant);work+=turn.work;turn.result}
-    })();crate::RetainedWorkOutcome{result,work}}
+    })();RetainedWorkOutcome{result,work}}
     fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError> {
         if !self.closing{return Ok(Default::default());}
         if let Some(child)=self.child.as_ref(){if !self.child_closing{return Ok(RetirementDemand{depth:1,..Default::default()});}return if child.terminal_is_empty(){Ok(RetirementDemand{release_bytes:size_of::<T::Cursor>(),depth:1,..Default::default()})}else{nested_retained_clone_close_demands::<T>(child.as_ref(),body)};}

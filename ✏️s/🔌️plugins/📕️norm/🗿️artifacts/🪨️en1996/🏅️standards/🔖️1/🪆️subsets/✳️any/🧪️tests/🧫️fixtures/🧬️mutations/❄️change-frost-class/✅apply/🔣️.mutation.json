@@ -1,0 +1,6 @@
+{
+  "ChangeFrostClass": {
+    "id": "wall-north",
+    "newFrostClass": "Severe"
+  }
+}

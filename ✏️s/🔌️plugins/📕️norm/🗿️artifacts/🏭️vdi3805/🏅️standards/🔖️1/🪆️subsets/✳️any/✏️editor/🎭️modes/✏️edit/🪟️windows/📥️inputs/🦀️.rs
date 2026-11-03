@@ -1,4 +1,4 @@
-//! 📥️ VDI 3805 play app — the inputs window: the raw compliance document, rendered as JSON.
+//! 📥️ VDI 3805 play app — the inputs window: the typed unit-aware inspector and entity outliner.
 
 use semio_s_artifact_norm_vdi3805_model::Vdi3805Snapshot;
 use semio_framework_ui_locale::LocalizedLabel;
@@ -19,7 +19,7 @@ pub fn definition() -> WindowKindDefinition {
 
 //#region 🔖️Render
 pub fn render(document: &Vdi3805Snapshot, locale: semio_framework_ui_locale::Locale, controller_id: &'static str, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    semio_s_plugin_norm_app_surface::render_document_editor(document, locale, controller_id, Some(crate::field_meta::vdi3805_field_meta), windows)
+    semio_s_plugin_norm_app_surface::render_inspector_for::<crate::Vdi3805Family>(document, locale, controller_id, Some(crate::field_meta::vdi3805_field_meta), windows)
 }
 //#endregion 🔖️Render
 

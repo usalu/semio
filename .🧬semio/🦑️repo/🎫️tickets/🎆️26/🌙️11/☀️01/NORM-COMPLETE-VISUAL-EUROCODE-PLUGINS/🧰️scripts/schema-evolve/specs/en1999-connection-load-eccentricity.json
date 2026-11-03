@@ -1,0 +1,29 @@
+{
+  "artifact": "en1999",
+  "leaf": {
+    "kindSlug": "conn",
+    "default": 0.0,
+    "field": {
+      "name": "load_eccentricity",
+      "type": "f64",
+      "unit": "m",
+      "label": {
+        "en": "Load eccentricity to the fastener group centroid (0 = concentric)",
+        "de": "Lastexzentrizität zum Schwerpunkt der Verbindungsmittelgruppe (0 = zentrisch)"
+      },
+      "doc": "🔩 Lever arm e of the in-plane shear force from the centroid of the fastener group (EN 1999-1-1 8.5); 0 = concentric, the shear is shared equally.",
+      "precision": 3,
+      "step": 0.005,
+      "range": [
+        0,
+        2
+      ]
+    },
+    "entity": {
+      "singular": {
+        "en": "connection",
+        "de": "Anschluss"
+      }
+    }
+  }
+}

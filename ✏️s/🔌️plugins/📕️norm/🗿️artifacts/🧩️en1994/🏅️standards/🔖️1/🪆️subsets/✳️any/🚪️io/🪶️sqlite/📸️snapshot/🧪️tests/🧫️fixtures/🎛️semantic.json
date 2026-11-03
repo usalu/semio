@@ -1,28 +1,32 @@
 {
-  "schemaBytes": 8227,
+  "schemaBytes": 12632,
   "tableWidths": {
-    "en1994_beam": 39,
-    "en1994_beam_action": 19,
+    "en1994_beam": 68,
+    "en1994_beam_action": 22,
     "en1994_beam_sheeting": 13,
-    "en1994_beam_steel": 27,
-    "en1994_beam_studs": 16,
-    "en1994_column": 36,
+    "en1994_beam_steel": 30,
+    "en1994_case": 7,
+    "en1994_case_number": 7,
+    "en1994_case_text": 5,
+    "en1994_column": 55,
     "en1994_column_action": 13,
-    "en1994_document": 11,
+    "en1994_document": 12,
+    "en1994_placement": 16,
     "en1994_slab": 23,
-    "en1994_slab_action": 19,
-    "en1994_slab_sheeting": 13
+    "en1994_slab_action": 25,
+    "en1994_slab_sheeting": 13,
+    "en1994_stud": 17
   },
   "cases": [
     {
       "id": "full",
-      "rows": 12,
-      "valueBytes": 1763
+      "rows": 13,
+      "valueBytes": 2478
     },
     {
       "id": "emptyCollections",
       "rows": 1,
-      "valueBytes": 71
+      "valueBytes": 82
     }
   ]
 }

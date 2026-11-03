@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-soil-layer-vs-ms/schema.json",
+  "title": "ChangeSoilLayerVsMS",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newShearWaveVelocityMS"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeSoilLayerVsMS"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Soil layer",
+          "de": "Bodenschicht"
+        },
+        "description": {
+          "en": "The soil layer this mutation addresses, by id.",
+          "de": "Das adressierte Element (Bodenschicht), per Kennung."
+        },
+        "ref": {
+          "kind": "soil-layer"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newShearWaveVelocityMS": {
+      "type": "number",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Shear wave velocity v_s",
+          "de": "Scherwellengeschwindigkeit v_s"
+        },
+        "group": "value",
+        "order": 20,
+        "widget": "stepper",
+        "step": 0.001,
+        "precision": 3
+      }
+    }
+  }
+}

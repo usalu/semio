@@ -1,0 +1,138 @@
+{
+  "annex": "De",
+  "projectId": "accidental-seismic-compliant",
+  "structureKind": "building",
+  "altitudeM": 120.0,
+  "consequenceClass": 2,
+  "reliabilityClass": "RC2",
+  "designWorkingLifeCategory": 4,
+  "designWorkingLifeYears": 50.0,
+  "referencePeriodYears": 50.0,
+  "supervisionLevel": "dsl2",
+  "inspectionLevel": "il2",
+  "betaComputed": 3.8,
+  "permanents": [
+    {
+      "id": "G-sup",
+      "kind": "gSup",
+      "gk": 80000.0
+    },
+    {
+      "id": "G-inf",
+      "kind": "gInf",
+      "gk": 20000.0
+    }
+  ],
+  "variables": [
+    {
+      "id": "Q-office",
+      "category": "office",
+      "qk": 40000.0,
+      "group": ""
+    },
+    {
+      "id": "Q-wind",
+      "category": "wind",
+      "qk": 20000.0,
+      "group": ""
+    }
+  ],
+  "accidentals": [
+    {
+      "id": "A-impact",
+      "ad": 50000.0
+    },
+    {
+      "id": "pad-1",
+      "ad": 50000.0
+    },
+    {
+      "id": "pad-2",
+      "ad": 50000.0
+    }
+  ],
+  "seismics": [
+    {
+      "id": "E-1",
+      "aEk": 60000.0,
+      "importanceClass": "II"
+    }
+  ],
+  "members": [
+    {
+      "id": "beam-B1",
+      "labelEn": "Office beam B1",
+      "labelDe": "Büroträger B1",
+      "rdStr": 250000.0,
+      "rdGeo": 250000.0,
+      "rdEquStab": 200000.0,
+      "rdEquDestab": 180000.0,
+      "rdFat": 0.0,
+      "span": 6.0,
+      "precamber": 0.0,
+      "deflectionW1": 0.006,
+      "deflectionW2": 0.003,
+      "deflectionW3": 0.009,
+      "deflectionLimitRatio": 250.0,
+      "deflectionLimitRatioW3": 300.0,
+      "slsLimitChar": 250000.0,
+      "slsLimitFreq": 250000.0,
+      "slsLimitQp": 250000.0,
+      "vibrationFrequency": 5.5,
+      "vibrationFrequencyMin": 3.0,
+      "frameHeight": 0.0,
+      "frameDrift": 0.0,
+      "storeyHeight": 0.0,
+      "storeyDrift": 0.0,
+      "materialStrengthK": 0.0,
+      "materialConversionFactor": 0.0,
+      "materialPartialFactor": 0.0,
+      "materialDesignStrength": 0.0,
+      "nominalDimension": 0.0,
+      "dimensionTolerance": 0.0,
+      "designDimension": 0.0,
+      "memberAlphaCr": 0.0,
+      "secondOrderAnalysis": 0.0
+    }
+  ],
+  "bridgeSls": [],
+  "effects": [
+    {
+      "memberId": "beam-B1",
+      "actionId": "G-sup",
+      "influence": 1.0
+    },
+    {
+      "memberId": "beam-B1",
+      "actionId": "G-inf",
+      "influence": -1.0
+    },
+    {
+      "memberId": "beam-B1",
+      "actionId": "Q-office",
+      "influence": 1.0
+    },
+    {
+      "memberId": "beam-B1",
+      "actionId": "Q-wind",
+      "influence": 1.0
+    },
+    {
+      "memberId": "beam-B1",
+      "actionId": "A-impact",
+      "influence": 1.0
+    },
+    {
+      "memberId": "beam-B1",
+      "actionId": "E-1",
+      "influence": 1.0
+    }
+  ],
+  "fatigueSpectra": [],
+  "reliabilityAnalyses": [],
+  "testSeries": [],
+  "placements": [],
+  "cases": [],
+  "factorOverrides": [],
+  "trafficGroups": []
+}

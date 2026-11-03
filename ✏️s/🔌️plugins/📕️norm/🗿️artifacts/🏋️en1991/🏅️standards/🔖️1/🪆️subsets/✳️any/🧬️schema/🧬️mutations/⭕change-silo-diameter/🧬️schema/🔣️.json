@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-silo-diameter/schema.json",
+  "title": "ChangeSiloDiameter",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newSiloDiameter"
+  ],
+  "properties": {
+    "newSiloDiameter": {
+      "type": "number",
+      "minimum": 0.5,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Silo diameter",
+          "de": "Silodurchmesser"
+        },
+        "unit": "m",
+        "step": 0.1,
+        "precision": 2,
+        "group": "silo",
+        "order": 10,
+        "displayUnit": "m",
+        "displayFactor": 1
+      }
+    }
+  }
+}

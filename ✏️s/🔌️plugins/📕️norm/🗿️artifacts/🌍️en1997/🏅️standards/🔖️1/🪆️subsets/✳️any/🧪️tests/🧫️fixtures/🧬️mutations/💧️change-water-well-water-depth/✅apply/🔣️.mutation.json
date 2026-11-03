@@ -1,0 +1,5 @@
+{
+  "mutation": "changeWaterWellWaterDepth",
+  "id": "water-gravel",
+  "newWellWaterDepth": 1.5
+}

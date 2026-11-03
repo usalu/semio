@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-bridge-tandem-x/schema.json",
+  "title": "ChangeBridgeTandemX",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newBridgeTandemX"
+  ],
+  "properties": {
+    "newBridgeTandemX": {
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Tandem position x from the left support",
+          "de": "Tandemlage x ab linkem Auflager"
+        },
+        "unit": "m",
+        "step": 0.25,
+        "precision": 2,
+        "group": "bridge",
+        "order": 10
+      }
+    }
+  }
+}

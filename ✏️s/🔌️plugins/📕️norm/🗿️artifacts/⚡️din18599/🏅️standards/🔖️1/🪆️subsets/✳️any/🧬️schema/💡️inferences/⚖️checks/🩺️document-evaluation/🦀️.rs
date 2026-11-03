@@ -10,7 +10,7 @@ use geometry_and_climate_checks::{check_heated_volume, check_climate_table, chec
 mod envelope_and_heating_checks;
 use envelope_and_heating_checks::{check_transmission_loss, check_monthly_heating_demand, check_ventilation_heat_recovery};
 
-#[path = "💡️lighting-hot-water-and-cooling-checks/🦀️.rs"]
+#[path = "💡️lighting-water-cooling-checks/🦀️.rs"]
 mod lighting_hot_water_and_cooling_checks;
 use lighting_hot_water_and_cooling_checks::{check_lighting, check_heating_system_efficiency, check_hot_water, check_cooling_temperature, check_cooling_demand};
 

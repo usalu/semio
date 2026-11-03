@@ -1,0 +1,6 @@
+{
+  "ChangeSlabSheetingRibWidthM": {
+    "id": "slab-S1",
+    "newRibWidthM": 0.125
+  }
+}

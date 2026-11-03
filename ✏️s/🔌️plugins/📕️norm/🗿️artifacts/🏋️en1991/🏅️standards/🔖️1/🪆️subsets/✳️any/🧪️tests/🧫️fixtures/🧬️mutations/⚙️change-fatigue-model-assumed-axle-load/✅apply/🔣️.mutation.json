@@ -1,0 +1,6 @@
+{
+  "ChangeFatigueModelAssumedAxleLoad": {
+    "id": "fatigue-model-1",
+    "newAssumedAxleLoad": 210001.0
+  }
+}

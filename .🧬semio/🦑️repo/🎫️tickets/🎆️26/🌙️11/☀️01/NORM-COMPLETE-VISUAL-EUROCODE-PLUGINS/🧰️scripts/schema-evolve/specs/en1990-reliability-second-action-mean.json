@@ -1,0 +1,23 @@
+{
+  "artifact": "en1990",
+  "leaf": {
+    "kindSlug": "reliability",
+    "field": {
+      "name": "second_action_mean",
+      "type": "f64",
+      "unit": "N",
+      "label": {
+        "en": "Second action mean μ_E2",
+        "de": "Mittelwert der zweiten Einwirkung μ_E2"
+      },
+      "doc": "➕ Mean of the second action E2; the second action is part of the limit state only when its standard deviation is above 0.",
+      "precision": 1,
+      "step": 1000,
+      "range": [
+        0,
+        1000000000000.0
+      ]
+    },
+    "default": 0.0
+  }
+}

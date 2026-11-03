@@ -1,13 +1,13 @@
 /** 🏋️ `change-concentrated-force` wire twin: the leaf payload `ChangeConcentratedForce`, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
- * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
+ * by `repo ./📜️script.ts schema twins generate`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
-import { normWireInteger, normWireNumber, normWireObject, normWireRange, type NormWireReader, normWireRequired } from "@semio-tech/norm-js/registry/contract";
+import { normWireNumber, normWireObject, normWireRange, normWireRequired, normWireString, type NormWireReader } from "@semio-tech/norm-js/registry/contract";
 
 export interface ChangeConcentratedForce {
-  wallIndex: number;
-  loadCaseIndex: number;
-  index: number;
+  wallId: string;
+  loadCaseId: string;
+  id: string;
   newForceN: number;
 }
 
-export const parseChangeConcentratedForce: NormWireReader<ChangeConcentratedForce> = normWireObject<ChangeConcentratedForce>({ wallIndex: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), loadCaseIndex: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), newForceN: normWireRequired(normWireNumber) });
+export const parseChangeConcentratedForce: NormWireReader<ChangeConcentratedForce> = normWireObject<ChangeConcentratedForce>({ wallId: normWireRequired(normWireString), loadCaseId: normWireRequired(normWireString), id: normWireRequired(normWireString), newForceN: normWireRequired(normWireRange(normWireNumber, {"minimum":-1000000000000,"maximum":1000000000000})) });

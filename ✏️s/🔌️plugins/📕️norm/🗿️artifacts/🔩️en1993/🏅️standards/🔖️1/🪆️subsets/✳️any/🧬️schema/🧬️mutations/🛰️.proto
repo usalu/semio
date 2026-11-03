@@ -1,107 +1,3086 @@
-// 🧬️ EN 1993 mutation schema
 syntax = "proto3";
-package semio.s.norm.en1993.mutation;
-
-message ChangeAnnex { string new_annex = 1; }
-message UpdateMemberProperties { bytes payload = 1; }
-message UpdateFireInputs { bytes payload = 1; }
-message UpdateColdFormedInputs { bytes payload = 1; }
-message UpdateStainlessInputs { bytes payload = 1; }
-message UpdatePlatedInputs { bytes payload = 1; }
-message UpdateSiloShellInputs { bytes payload = 1; }
-message UpdateBoltInputs { bytes payload = 1; }
-message UpdateWeldInputs { bytes payload = 1; }
-message UpdateFatigueInputs { bytes payload = 1; }
-message UpdateThroughThicknessInputs { bytes payload = 1; }
-message UpdateTensionComponentInputs { bytes payload = 1; }
-message UpdateHssInputs { bytes payload = 1; }
-message UpdateBridgeInputs { bytes payload = 1; }
-message UpdateTowerInputs { bytes payload = 1; }
-message UpdatePileInputs { bytes payload = 1; }
-message UpdateCraneInputs { bytes payload = 1; }
-message InsertMaterial { uint32 index = 1; bytes payload = 2; }
-message RemoveMaterial { uint32 index = 1; }
-message InsertSection { uint32 index = 1; bytes payload = 2; }
-message RemoveSection { uint32 index = 1; }
-message InsertMember { uint32 index = 1; bytes payload = 2; }
-message RemoveMember { uint32 index = 1; }
-message InsertLoadCase { uint32 index = 1; bytes payload = 2; }
-message RemoveLoadCase { uint32 index = 1; }
-message InsertMemberAction { uint32 index = 1; bytes payload = 2; }
-message RemoveMemberAction { uint32 index = 1; }
-message InsertJoint { uint32 index = 1; bytes payload = 2; }
-message RemoveJoint { uint32 index = 1; }
-message InsertFatigueDetail { uint32 index = 1; bytes payload = 2; }
-message RemoveFatigueDetail { uint32 index = 1; }
-message InsertFireExposure { uint32 index = 1; bytes payload = 2; }
-message RemoveFireExposure { uint32 index = 1; }
-message InsertColdFormedMember { uint32 index = 1; bytes payload = 2; }
-message RemoveColdFormedMember { uint32 index = 1; }
-message InsertPlatedPanel { uint32 index = 1; bytes payload = 2; }
-message RemovePlatedPanel { uint32 index = 1; }
-message InsertSiloShell { uint32 index = 1; bytes payload = 2; }
-message RemoveSiloShell { uint32 index = 1; }
-message InsertTensionComponent { uint32 index = 1; bytes payload = 2; }
-message RemoveTensionComponent { uint32 index = 1; }
-message InsertBridgeFatigue { uint32 index = 1; bytes payload = 2; }
-message RemoveBridgeFatigue { uint32 index = 1; }
-message InsertTowerLeg { uint32 index = 1; bytes payload = 2; }
-message RemoveTowerLeg { uint32 index = 1; }
-message InsertPile { uint32 index = 1; bytes payload = 2; }
-message RemovePile { uint32 index = 1; }
-message InsertCraneRunway { uint32 index = 1; bytes payload = 2; }
-message RemoveCraneRunway { uint32 index = 1; }
-
+package semio.s.norm.en1993;
 message En1993Mutation {
-  oneof payload {
+  oneof kind {
     ChangeAnnex change_annex = 1;
-    UpdateMemberProperties update_member_properties = 2;
-    UpdateFireInputs update_fire_inputs = 3;
-    UpdateColdFormedInputs update_cold_formed_inputs = 4;
-    UpdateStainlessInputs update_stainless_inputs = 5;
-    UpdatePlatedInputs update_plated_inputs = 6;
-    UpdateSiloShellInputs update_silo_shell_inputs = 7;
-    UpdateBoltInputs update_bolt_inputs = 8;
-    UpdateWeldInputs update_weld_inputs = 9;
-    UpdateFatigueInputs update_fatigue_inputs = 10;
-    UpdateThroughThicknessInputs update_through_thickness_inputs = 11;
-    UpdateTensionComponentInputs update_tension_component_inputs = 12;
-    UpdateHssInputs update_hss_inputs = 13;
-    UpdateBridgeInputs update_bridge_inputs = 14;
-    UpdateTowerInputs update_tower_inputs = 15;
-    UpdatePileInputs update_pile_inputs = 16;
-    UpdateCraneInputs update_crane_inputs = 17;
-    InsertMaterial insert_material = 18;
-    RemoveMaterial remove_material = 19;
-    InsertSection insert_section = 20;
-    RemoveSection remove_section = 21;
-    InsertMember insert_member = 22;
-    RemoveMember remove_member = 23;
-    InsertLoadCase insert_load_case = 24;
-    RemoveLoadCase remove_load_case = 25;
-    InsertMemberAction insert_member_action = 26;
-    RemoveMemberAction remove_member_action = 27;
-    InsertJoint insert_joint = 28;
-    RemoveJoint remove_joint = 29;
-    InsertFatigueDetail insert_fatigue_detail = 30;
-    RemoveFatigueDetail remove_fatigue_detail = 31;
-    InsertFireExposure insert_fire_exposure = 32;
-    RemoveFireExposure remove_fire_exposure = 33;
-    InsertColdFormedMember insert_cold_formed_member = 34;
-    RemoveColdFormedMember remove_cold_formed_member = 35;
-    InsertPlatedPanel insert_plated_panel = 36;
-    RemovePlatedPanel remove_plated_panel = 37;
-    InsertSiloShell insert_silo_shell = 38;
-    RemoveSiloShell remove_silo_shell = 39;
-    InsertTensionComponent insert_tension_component = 40;
-    RemoveTensionComponent remove_tension_component = 41;
-    InsertBridgeFatigue insert_bridge_fatigue = 42;
-    RemoveBridgeFatigue remove_bridge_fatigue = 43;
-    InsertTowerLeg insert_tower_leg = 44;
-    RemoveTowerLeg remove_tower_leg = 45;
-    InsertPile insert_pile = 46;
-    RemovePile remove_pile = 47;
-    InsertCraneRunway insert_crane_runway = 48;
-    RemoveCraneRunway remove_crane_runway = 49;
+    ChangeReliabilityClass change_reliability_class = 2;
+    InsertMaterial insert_material = 3;
+    RemoveMaterial remove_material = 4;
+    InsertSection insert_section = 5;
+    RemoveSection remove_section = 6;
+    InsertMember insert_member = 7;
+    RemoveMember remove_member = 8;
+    InsertLoadCase insert_load_case = 9;
+    RemoveLoadCase remove_load_case = 10;
+    InsertMemberAction insert_member_action = 11;
+    RemoveMemberAction remove_member_action = 12;
+    InsertJoint insert_joint = 13;
+    RemoveJoint remove_joint = 14;
+    InsertFatigueDetail insert_fatigue_detail = 15;
+    RemoveFatigueDetail remove_fatigue_detail = 16;
+    InsertFireExposure insert_fire_exposure = 17;
+    RemoveFireExposure remove_fire_exposure = 18;
+    InsertColdFormedMember insert_cold_formed_member = 19;
+    RemoveColdFormedMember remove_cold_formed_member = 20;
+    InsertPlatedPanel insert_plated_panel = 21;
+    RemovePlatedPanel remove_plated_panel = 22;
+    InsertSiloShell insert_silo_shell = 23;
+    RemoveSiloShell remove_silo_shell = 24;
+    InsertTensionComponent insert_tension_component = 25;
+    RemoveTensionComponent remove_tension_component = 26;
+    InsertBridgeFatigue insert_bridge_fatigue = 27;
+    RemoveBridgeFatigue remove_bridge_fatigue = 28;
+    InsertTowerLeg insert_tower_leg = 29;
+    RemoveTowerLeg remove_tower_leg = 30;
+    InsertPile insert_pile = 31;
+    RemovePile remove_pile = 32;
+    InsertCraneRunway insert_crane_runway = 33;
+    RemoveCraneRunway remove_crane_runway = 34;
+    InsertStorey insert_storey = 35;
+    RemoveStorey remove_storey = 36;
+    InsertRestraint insert_restraint = 37;
+    RemoveRestraint remove_restraint = 38;
+    InsertBuiltUpMember insert_built_up_member = 39;
+    RemoveBuiltUpMember remove_built_up_member = 40;
+    InsertWeldGroup insert_weld_group = 41;
+    RemoveWeldGroup remove_weld_group = 42;
+    InsertParametricSection insert_parametric_section = 43;
+    RemoveParametricSection remove_parametric_section = 44;
+    InsertHollowJoint insert_hollow_joint = 45;
+    RemoveHollowJoint remove_hollow_joint = 46;
+    InsertJointRow insert_joint_row = 47;
+    RemoveJointRow remove_joint_row = 48;
+    ChangeMaterialGrade change_material_grade = 49;
+    ChangeMaterialFy change_material_fy = 50;
+    ChangeMaterialFu change_material_fu = 51;
+    ChangeMaterialEModulus change_material_e_modulus = 52;
+    ChangeMaterialGModulus change_material_g_modulus = 53;
+    ChangeMaterialSubgrade change_material_subgrade = 54;
+    ChangeMaterialKind change_material_kind = 55;
+    ChangeSectionDesignation change_section_designation = 56;
+    ChangeSectionKind change_section_kind = 57;
+    ChangeSectionH change_section_h = 58;
+    ChangeSectionB change_section_b = 59;
+    ChangeSectionTw change_section_tw = 60;
+    ChangeSectionTf change_section_tf = 61;
+    ChangeSectionR change_section_r = 62;
+    ChangeSectionArea change_section_area = 63;
+    ChangeSectionShearAreaY change_section_shear_area_y = 64;
+    ChangeSectionShearAreaZ change_section_shear_area_z = 65;
+    ChangeSectionIy change_section_iy = 66;
+    ChangeSectionIz change_section_iz = 67;
+    ChangeSectionIt change_section_it = 68;
+    ChangeSectionIw change_section_iw = 69;
+    ChangeSectionWElY change_section_w_el_y = 70;
+    ChangeSectionWElZ change_section_w_el_z = 71;
+    ChangeSectionWPlY change_section_w_pl_y = 72;
+    ChangeSectionWPlZ change_section_w_pl_z = 73;
+    ChangeSectionAreaNet change_section_area_net = 74;
+    ChangeMemberLabel change_member_label = 75;
+    ChangeMemberMemberType change_member_member_type = 76;
+    ChangeMemberSectionId change_member_section_id = 77;
+    ChangeMemberMaterialId change_member_material_id = 78;
+    ChangeMemberLength change_member_length = 79;
+    ChangeMemberBucklingLengthY change_member_buckling_length_y = 80;
+    ChangeMemberBucklingLengthZ change_member_buckling_length_z = 81;
+    ChangeMemberLtbLength change_member_ltb_length = 82;
+    ChangeMemberLtbRestSpacing change_member_ltb_rest_spacing = 83;
+    ChangeMemberLoadApplication change_member_load_application = 84;
+    ChangeMemberEndMomentRatioPsi change_member_end_moment_ratio_psi = 85;
+    ChangeMemberMomentDiagram change_member_moment_diagram = 86;
+    ChangeMemberDeflLimitRatio change_member_defl_limit_ratio = 87;
+    ChangeMemberAnalysis change_member_analysis = 88;
+    ChangeMemberStainlessForming change_member_stainless_forming = 89;
+    ChangeMemberDesignTemperature change_member_design_temperature = 90;
+    ChangeMemberToughStressRatio change_member_tough_stress_ratio = 91;
+    ChangeMemberRadiationShift change_member_radiation_shift = 92;
+    ChangeMemberStressShift change_member_stress_shift = 93;
+    ChangeMemberMarginShift change_member_margin_shift = 94;
+    ChangeMemberStrainRateShift change_member_strain_rate_shift = 95;
+    ChangeMemberColdFormingRadius change_member_cold_forming_radius = 96;
+    ChangeLoadCaseName change_load_case_name = 97;
+    ChangeLoadCaseKind change_load_case_kind = 98;
+    ChangeLoadCaseCategory change_load_case_category = 99;
+    ChangeActionMemberId change_action_member_id = 100;
+    ChangeActionLoadCaseId change_action_load_case_id = 101;
+    ChangeActionN change_action_n = 102;
+    ChangeActionVy change_action_vy = 103;
+    ChangeActionVz change_action_vz = 104;
+    ChangeActionMy change_action_my = 105;
+    ChangeActionMz change_action_mz = 106;
+    ChangeActionT change_action_t = 107;
+    ChangeJointKind change_joint_kind = 108;
+    ChangeJointMemberId change_joint_member_id = 109;
+    ChangeJointBoltClass change_joint_bolt_class = 110;
+    ChangeJointBoltDiameter change_joint_bolt_diameter = 111;
+    ChangeJointBoltRows change_joint_bolt_rows = 112;
+    ChangeJointBoltsPerRow change_joint_bolts_per_row = 113;
+    ChangeJointPitch change_joint_pitch = 114;
+    ChangeJointGauge change_joint_gauge = 115;
+    ChangeJointEndDistance change_joint_end_distance = 116;
+    ChangeJointEdgeDistance change_joint_edge_distance = 117;
+    ChangeJointShearPlanes change_joint_shear_planes = 118;
+    ChangeJointPlateThickness change_joint_plate_thickness = 119;
+    ChangeJointPlateFu change_joint_plate_fu = 120;
+    ChangeJointWeldThroat change_joint_weld_throat = 121;
+    ChangeJointWeldLength change_joint_weld_length = 122;
+    ChangeJointWeldFu change_joint_weld_fu = 123;
+    ChangeJointWeldGrade change_joint_weld_grade = 124;
+    ChangeJointCategory change_joint_category = 125;
+    ChangeJointFrictionMu change_joint_friction_mu = 126;
+    ChangeJointPreloadForce change_joint_preload_force = 127;
+    ChangeJointSlipFactorKs change_joint_slip_factor_ks = 128;
+    ChangeJointFrictionSurfaces change_joint_friction_surfaces = 129;
+    ChangeJointPlateFy change_joint_plate_fy = 130;
+    ChangeJointPlateWidth change_joint_plate_width = 131;
+    ChangeJointBoltToWeb change_joint_bolt_to_web = 132;
+    ChangeJointExtensionToFlange change_joint_extension_to_flange = 133;
+    ChangeJointExtensionEdge change_joint_extension_edge = 134;
+    ChangeJointAlphaFactor change_joint_alpha_factor = 135;
+    ChangeJointBoltStressArea change_joint_bolt_stress_area = 136;
+    ChangeJointBoltGripLength change_joint_bolt_grip_length = 137;
+    ChangeJointColumnFlangeThk change_joint_column_flange_thk = 138;
+    ChangeJointColumnWebThickness change_joint_column_web_thickness = 139;
+    ChangeJointColumnWebDepth change_joint_column_web_depth = 140;
+    ChangeJointColumnWebShearArea change_joint_column_web_shear_area = 141;
+    ChangeJointColumnRootRadius change_joint_column_root_radius = 142;
+    ChangeJointColumnFy change_joint_column_fy = 143;
+    ChangeJointColumnWebStress change_joint_column_web_stress = 144;
+    ChangeJointBeamFlangeThickness change_joint_beam_flange_thickness = 145;
+    ChangeJointCompressionLever change_joint_compression_lever = 146;
+    ChangeJointMomentDemand change_joint_moment_demand = 147;
+    ChangeJointBeamMomentRes change_joint_beam_moment_res = 148;
+    ChangeJointColumnMomentRes change_joint_column_moment_res = 149;
+    ChangeJointBeamInertia change_joint_beam_inertia = 150;
+    ChangeJointBeamSpan change_joint_beam_span = 151;
+    ChangeJointBracedFrame change_joint_braced_frame = 152;
+    ChangeJointStiffnessRatio change_joint_stiffness_ratio = 153;
+    ChangeJointXformParameter change_joint_xform_parameter = 154;
+    ChangeJointAssumedClass change_joint_assumed_class = 155;
+    ChangeJointBasePlateLength change_joint_base_plate_length = 156;
+    ChangeJointConcreteFcd change_joint_concrete_fcd = 157;
+    ChangeJointConcreteModulus change_joint_concrete_modulus = 158;
+    ChangeJointConcreteAreaA0 change_joint_concrete_area_a0 = 159;
+    ChangeJointConcreteAreaA1 change_joint_concrete_area_a1 = 160;
+    ChangeJointJointCoefficient change_joint_joint_coefficient = 161;
+    ChangeJointAnchorArea change_joint_anchor_area = 162;
+    ChangeJointAnchorLength change_joint_anchor_length = 163;
+    ChangeJointBaseNormalForce change_joint_base_normal_force = 164;
+    ChangeJointBaseMoment change_joint_base_moment = 165;
+    ChangeJointBaseLeverLeft change_joint_base_lever_left = 166;
+    ChangeJointBaseLeverRight change_joint_base_lever_right = 167;
+    ChangeFatigueMemberId change_fatigue_member_id = 168;
+    ChangeFatigueCategory change_fatigue_category = 169;
+    ChangeFatigueMethod change_fatigue_method = 170;
+    ChangeFireMemberId change_fire_member_id = 171;
+    ChangeFireRating change_fire_rating = 172;
+    ChangeFireProtectionThickness change_fire_protection_thickness = 173;
+    ChangeFireSectionFactor change_fire_section_factor = 174;
+    ChangeFireMu0 change_fire_mu0 = 175;
+    ChangeFireDesignTemperature change_fire_design_temperature = 176;
+    ChangeFireProtConductivity change_fire_prot_conductivity = 177;
+    ChangeFireProtectionDensity change_fire_protection_density = 178;
+    ChangeFireProtSpecificHeat change_fire_prot_specific_heat = 179;
+    ChangeCfBBar change_cf_b_bar = 180;
+    ChangeCfThickness change_cf_thickness = 181;
+    ChangeCfKSigma change_cf_k_sigma = 182;
+    ChangeCfPsi change_cf_psi = 183;
+    ChangeCfFy change_cf_fy = 184;
+    ChangeCfGrossResistance change_cf_gross_resistance = 185;
+    ChangeCfFlangeWidth change_cf_flange_width = 186;
+    ChangeCfLipLength change_cf_lip_length = 187;
+    ChangeCfWebHeight change_cf_web_height = 188;
+    ChangeCfWebSlope change_cf_web_slope = 189;
+    ChangeCfOppositeFlangeWidth change_cf_opposite_flange_width = 190;
+    ChangeCfSpringFactor change_cf_spring_factor = 191;
+    ChangeCfCornerRadius change_cf_corner_radius = 192;
+    ChangeCfFlangeStress change_cf_flange_stress = 193;
+    ChangeCfShearForce change_cf_shear_force = 194;
+    ChangeCfSupportReaction change_cf_support_reaction = 195;
+    ChangeCfSupportLength change_cf_support_length = 196;
+    ChangeCfCripplingCategory change_cf_crippling_category = 197;
+    ChangeCfStiffenedSupport change_cf_stiffened_support = 198;
+    ChangeCfBendingMoment change_cf_bending_moment = 199;
+    ChangeCfMomentResistance change_cf_moment_resistance = 200;
+    ChangeCfSheetingStiffness change_cf_sheeting_stiffness = 201;
+    ChangeCfRequiredRestraintStiff change_cf_required_restraint_stiff = 202;
+    ChangePlatedA change_plated_a = 203;
+    ChangePlatedB change_plated_b = 204;
+    ChangePlatedThickness change_plated_thickness = 205;
+    ChangePlatedFy change_plated_fy = 206;
+    ChangePlatedKSigma change_plated_k_sigma = 207;
+    ChangePlatedStiffenerInertia change_plated_stiffener_inertia = 208;
+    ChangePlatedStiffenerArea change_plated_stiffener_area = 209;
+    ChangePlatedStiffenerEcc change_plated_stiffener_ecc = 210;
+    ChangePlatedStiffenerAlpha change_plated_stiffener_alpha = 211;
+    ChangePlatedCompressionStress change_plated_compression_stress = 212;
+    ChangePlatedHalfWidth change_plated_half_width = 213;
+    ChangePlatedEquivalentSpan change_plated_equivalent_span = 214;
+    ChangePlatedHogging change_plated_hogging = 215;
+    ChangePlatedPatchType change_plated_patch_type = 216;
+    ChangePlatedPatchForce change_plated_patch_force = 217;
+    ChangePlatedPatchLength change_plated_patch_length = 218;
+    ChangePlatedPatchOffset change_plated_patch_offset = 219;
+    ChangePlatedFlangeThickness change_plated_flange_thickness = 220;
+    ChangePlatedFlangeWidth change_plated_flange_width = 221;
+    ChangePlatedFlangeFy change_plated_flange_fy = 222;
+    ChangePlatedLongitudinalOffset change_plated_longitudinal_offset = 223;
+    ChangePlatedLongitudinalInertia change_plated_longitudinal_inertia = 224;
+    ChangePlatedPatchMoment change_plated_patch_moment = 225;
+    ChangePlatedPatchMomentRes change_plated_patch_moment_res = 226;
+    ChangePlatedBendingMoment change_plated_bending_moment = 227;
+    ChangePlatedPlasticMoment change_plated_plastic_moment = 228;
+    ChangePlatedFlangeMoment change_plated_flange_moment = 229;
+    ChangePlatedShearForce change_plated_shear_force = 230;
+    ChangePlatedTransStiffInert change_plated_trans_stiff_inert = 231;
+    ChangePlatedFlangeInducedK change_plated_flange_induced_k = 232;
+    ChangePlatedFlangeArea change_plated_flange_area = 233;
+    ChangePlatedStressX change_plated_stress_x = 234;
+    ChangePlatedStressZ change_plated_stress_z = 235;
+    ChangePlatedShearStress change_plated_shear_stress = 236;
+    ChangePlatedAlphaCr change_plated_alpha_cr = 237;
+    ChangeSiloThickness change_silo_thickness = 238;
+    ChangeSiloRadius change_silo_radius = 239;
+    ChangeSiloDepth change_silo_depth = 240;
+    ChangeSiloK change_silo_k = 241;
+    ChangeSiloGamma change_silo_gamma = 242;
+    ChangeSiloFy change_silo_fy = 243;
+    ChangeSiloLength change_silo_length = 244;
+    ChangeSiloFabricationClass change_silo_fabrication_class = 245;
+    ChangeSiloMeridionalStress change_silo_meridional_stress = 246;
+    ChangeSiloHoopStress change_silo_hoop_stress = 247;
+    ChangeSiloShellShearStress change_silo_shell_shear_stress = 248;
+    ChangeSiloBoundaryFactorAxial change_silo_boundary_factor_axial = 249;
+    ChangeSiloBoundaryFactorHoop change_silo_boundary_factor_hoop = 250;
+    ChangeSiloBoundaryFactorShear change_silo_boundary_factor_shear = 251;
+    ChangeSiloWallFriction change_silo_wall_friction = 252;
+    ChangeSiloPlanArea change_silo_plan_area = 253;
+    ChangeSiloPlanPerimeter change_silo_plan_perimeter = 254;
+    ChangeSiloLiquidDensity change_silo_liquid_density = 255;
+    ChangeSiloLiquidHeight change_silo_liquid_height = 256;
+    ChangeSiloCourseElevation change_silo_course_elevation = 257;
+    ChangeSiloInternalPressure change_silo_internal_pressure = 258;
+    ChangeSiloExternalPressure change_silo_external_pressure = 259;
+    ChangeSiloTemperatureChange change_silo_temperature_change = 260;
+    ChangeTensionFUk change_tension_f_uk = 261;
+    ChangeTensionFK change_tension_f_k = 262;
+    ChangeTensionPartialFactor change_tension_partial_factor = 263;
+    ChangeTensionCableLength change_tension_cable_length = 264;
+    ChangeTensionCableWeight change_tension_cable_weight = 265;
+    ChangeTensionCableHorizForce change_tension_cable_horiz_force = 266;
+    ChangeTensionCableModulus change_tension_cable_modulus = 267;
+    ChangeTensionCableStress change_tension_cable_stress = 268;
+    ChangeTensionCableUnitWeight change_tension_cable_unit_weight = 269;
+    ChangeTensionThreadFactor change_tension_thread_factor = 270;
+    ChangeTensionRodStressArea change_tension_rod_stress_area = 271;
+    ChangeTensionRodFu change_tension_rod_fu = 272;
+    ChangeTensionPinDiameter change_tension_pin_diameter = 273;
+    ChangeTensionPinPlateThickness change_tension_pin_plate_thickness = 274;
+    ChangeTensionPinGap change_tension_pin_gap = 275;
+    ChangeTensionPinOuterThickness change_tension_pin_outer_thickness = 276;
+    ChangeTensionPinInnerThickness change_tension_pin_inner_thickness = 277;
+    ChangeTensionPinFup change_tension_pin_fup = 278;
+    ChangeTensionPinFyp change_tension_pin_fyp = 279;
+    ChangeTensionPinPlateFy change_tension_pin_plate_fy = 280;
+    ChangeBridgeMemberId change_bridge_member_id = 281;
+    ChangeBridgeLambda change_bridge_lambda = 282;
+    ChangeBridgePhi2 change_bridge_phi2 = 283;
+    ChangeBridgeDeltaSigmaP change_bridge_delta_sigma_p = 284;
+    ChangeBridgeCategory change_bridge_category = 285;
+    ChangeBridgeMethod change_bridge_method = 286;
+    ChangeBridgeHeavyVehicleWeight change_bridge_heavy_vehicle_weight = 287;
+    ChangeBridgeReferenceWeight change_bridge_reference_weight = 288;
+    ChangeBridgeObservedTraffic change_bridge_observed_traffic = 289;
+    ChangeBridgeDesignLife change_bridge_design_life = 290;
+    ChangeBridgeSecondLaneTraffic change_bridge_second_lane_traffic = 291;
+    ChangeBridgeSecondLaneWeight change_bridge_second_lane_weight = 292;
+    ChangeBridgeLambda1 change_bridge_lambda1 = 293;
+    ChangeBridgeLambdaMax change_bridge_lambda_max = 294;
+    ChangeBridgeDetailId change_bridge_detail_id = 295;
+    ChangeBridgePlateThickness change_bridge_plate_thickness = 296;
+    ChangeTowerMemberId change_tower_member_id = 297;
+    ChangeTowerForceCoefficient change_tower_force_coefficient = 298;
+    ChangeTowerDynamicFactor change_tower_dynamic_factor = 299;
+    ChangeTowerLatticeKind change_tower_lattice_kind = 300;
+    ChangeTowerSlenderness change_tower_slenderness = 301;
+    ChangeTowerDiameter change_tower_diameter = 302;
+    ChangeTowerHeight change_tower_height = 303;
+    ChangeTowerBendingStiffness change_tower_bending_stiffness = 304;
+    ChangeTowerMassPerLength change_tower_mass_per_length = 305;
+    ChangeTowerStrouhal change_tower_strouhal = 306;
+    ChangeTowerLogDecrement change_tower_log_decrement = 307;
+    ChangeTowerAirDensity change_tower_air_density = 308;
+    ChangeTowerMeanWindSpeed change_tower_mean_wind_speed = 309;
+    ChangeTowerCrossingRate change_tower_crossing_rate = 310;
+    ChangeTowerDesignLife change_tower_design_life = 311;
+    ChangeTowerKFactor change_tower_k_factor = 312;
+    ChangeTowerKwFactor change_tower_kw_factor = 313;
+    ChangeTowerLateralForceCoef change_tower_lateral_force_coef = 314;
+    ChangeTowerPermAmplitudeRatio change_tower_perm_amplitude_ratio = 315;
+    ChangeTowerRingMode change_tower_ring_mode = 316;
+    ChangeTowerShellThickness change_tower_shell_thickness = 317;
+    ChangeTowerGuyArea change_tower_guy_area = 318;
+    ChangeTowerGuyAngle change_tower_guy_angle = 319;
+    ChangeTowerGuyLength change_tower_guy_length = 320;
+    ChangePileSectionId change_pile_section_id = 321;
+    ChangePileMaterialId change_pile_material_id = 322;
+    ChangePileDrivingStress change_pile_driving_stress = 323;
+    ChangePileEmbeddedLength change_pile_embedded_length = 324;
+    ChangePileShaftPerimeter change_pile_shaft_perimeter = 325;
+    ChangePileEnvironment change_pile_environment = 326;
+    ChangePileDesignLife change_pile_design_life = 327;
+    ChangePileWallThickness change_pile_wall_thickness = 328;
+    ChangePileIlockBendingFactor change_pile_ilock_bending_factor = 329;
+    ChangePileInterlockStiffFactor change_pile_interlock_stiff_factor = 330;
+    ChangePileSectionModulus change_pile_section_modulus = 331;
+    ChangePileShearArea change_pile_shear_area = 332;
+    ChangePileDesignMoment change_pile_design_moment = 333;
+    ChangePileDesignShear change_pile_design_shear = 334;
+    ChangePileInterlockShear change_pile_interlock_shear = 335;
+    ChangeCraneMemberId change_crane_member_id = 336;
+    ChangeCraneWheelContactLength change_crane_wheel_contact_length = 337;
+    ChangeCraneDispersion change_crane_dispersion = 338;
+    ChangeCraneWebThickness change_crane_web_thickness = 339;
+    ChangeCraneFy change_crane_fy = 340;
+    ChangeCranePhi change_crane_phi = 341;
+    ChangeCraneMaxWheelLoad change_crane_max_wheel_load = 342;
+    ChangeCraneLoadFactor change_crane_load_factor = 343;
+    ChangeCraneRailInertia change_crane_rail_inertia = 344;
+    ChangeCraneRailFixed change_crane_rail_fixed = 345;
+    ChangeCraneFlangeEffWidth change_crane_flange_eff_width = 346;
+    ChangeCraneFlangeThickness change_crane_flange_thickness = 347;
+    ChangeCraneWheelEccentricity change_crane_wheel_eccentricity = 348;
+    ChangeCraneTorsionConstant change_crane_torsion_constant = 349;
+    ChangeCraneLongitudinalStress change_crane_longitudinal_stress = 350;
+    ChangeCraneRailRadius change_crane_rail_radius = 351;
+    ChangeCraneRailContactWidth change_crane_rail_contact_width = 352;
+    ChangeCraneCraneNu change_crane_crane_nu = 353;
+    ChangeCraneCraneKq change_crane_crane_kq = 354;
+    ChangeCraneDamageExponent change_crane_damage_exponent = 355;
+    ChangeCraneStressRange change_crane_stress_range = 356;
+    ChangeCraneDetailCatStress change_crane_detail_cat_stress = 357;
+    ChangeCraneFatiguePhi change_crane_fatigue_phi = 358;
+    ChangeStoreyMemberId change_storey_member_id = 359;
+    ChangeStoreyLabel change_storey_label = 360;
+    ChangeStoreyHeight change_storey_height = 361;
+    ChangeStoreyVerticalLoad change_storey_vertical_load = 362;
+    ChangeStoreyHorizontalLoad change_storey_horizontal_load = 363;
+    ChangeStoreyDrift change_storey_drift = 364;
+    ChangeStoreyColumns change_storey_columns = 365;
+    ChangeStoreyPlasticAnalysis change_storey_plastic_analysis = 366;
+    ChangeStoreyBuildingHeight change_storey_building_height = 367;
+    ChangeStoreyBracingLoad change_storey_bracing_load = 368;
+    ChangeStoreyBracingLength change_storey_bracing_length = 369;
+    ChangeStoreyBracingDeflection change_storey_bracing_deflection = 370;
+    ChangeRestraintMemberId change_restraint_member_id = 371;
+    ChangeRestraintLabel change_restraint_label = 372;
+    ChangeRestraintStartSupport change_restraint_start_support = 373;
+    ChangeRestraintEndSupport change_restraint_end_support = 374;
+    ChangeRestIntermediatePosition change_rest_intermediate_position = 375;
+    ChangeRestraintTorsionalSpring change_restraint_torsional_spring = 376;
+    ChangeRestLatSpringPosition change_rest_lat_spring_position = 377;
+    ChangeRestLateralSpringStiff change_rest_lateral_spring_stiff = 378;
+    ChangeRestraintLoadHeight change_restraint_load_height = 379;
+    ChangeRestraintLoadDistribution change_restraint_load_distribution = 380;
+    ChangeRestraintDesignMoment change_restraint_design_moment = 381;
+    ChangeRestraintDesignAxial change_restraint_design_axial = 382;
+    ChangeRestraintGeneralMethod change_restraint_general_method = 383;
+    ChangeRestHingeToRest change_rest_hinge_to_rest = 384;
+    ChangeBuiltUpMemberId change_built_up_member_id = 385;
+    ChangeBuiltUpLabel change_built_up_label = 386;
+    ChangeBuiltUpKind change_built_up_kind = 387;
+    ChangeBuiltUpChordArea change_built_up_chord_area = 388;
+    ChangeBuiltUpChordInertia change_built_up_chord_inertia = 389;
+    ChangeBuiltUpChordDistance change_built_up_chord_distance = 390;
+    ChangeBuiltUpPanelSpacing change_built_up_panel_spacing = 391;
+    ChangeBuiltUpPlanes change_built_up_planes = 392;
+    ChangeBuiltUpBattenInertia change_built_up_batten_inertia = 393;
+    ChangeBuiltUpDiagonalArea change_built_up_diagonal_area = 394;
+    ChangeBuiltUpDiagonalLength change_built_up_diagonal_length = 395;
+    ChangeBuiltUpDesignAxial change_built_up_design_axial = 396;
+    ChangeBuiltUpDesignMoment change_built_up_design_moment = 397;
+    ChangeBuiltUpBackToBack change_built_up_back_to_back = 398;
+    ChangeBuiltUpMinRadius change_built_up_min_radius = 399;
+    ChangeBuiltUpChainSpacing change_built_up_chain_spacing = 400;
+    ChangeWeldMemberId change_weld_member_id = 401;
+    ChangeWeldLabel change_weld_label = 402;
+    ChangeWeldPattern change_weld_pattern = 403;
+    ChangeWeldThroat change_weld_throat = 404;
+    ChangeWeldWidth change_weld_width = 405;
+    ChangeWeldDepth change_weld_depth = 406;
+    ChangeWeldShearForce change_weld_shear_force = 407;
+    ChangeWeldEccentricity change_weld_eccentricity = 408;
+    ChangeWeldSteelFu change_weld_steel_fu = 409;
+    ChangeWeldBetaW change_weld_beta_w = 410;
+    ChangeParamSectionId change_param_section_id = 411;
+    ChangeParamLabel change_param_label = 412;
+    ChangeParamShape change_param_shape = 413;
+    ChangeParamHeight change_param_height = 414;
+    ChangeParamWidth change_param_width = 415;
+    ChangeParamWebThickness change_param_web_thickness = 416;
+    ChangeParamFlangeThickness change_param_flange_thickness = 417;
+    ChangeParamTolerance change_param_tolerance = 418;
+    ChangeHollowMemberId change_hollow_member_id = 419;
+    ChangeHollowLabel change_hollow_label = 420;
+    ChangeHollowChordWidth change_hollow_chord_width = 421;
+    ChangeHollowChordHeight change_hollow_chord_height = 422;
+    ChangeHollowChordThickness change_hollow_chord_thickness = 423;
+    ChangeHollowChordFy change_hollow_chord_fy = 424;
+    ChangeHollowChordStress change_hollow_chord_stress = 425;
+    ChangeHollowBrace1Width change_hollow_brace1_width = 426;
+    ChangeHollowBrace1Height change_hollow_brace1_height = 427;
+    ChangeHollowBrace1Thickness change_hollow_brace1_thickness = 428;
+    ChangeHollowBrace1Angle change_hollow_brace1_angle = 429;
+    ChangeHollowBrace1Force change_hollow_brace1_force = 430;
+    ChangeHollowBrace2Width change_hollow_brace2_width = 431;
+    ChangeHollowBrace2Height change_hollow_brace2_height = 432;
+    ChangeHollowBrace2Thickness change_hollow_brace2_thickness = 433;
+    ChangeHollowBrace2Angle change_hollow_brace2_angle = 434;
+    ChangeHollowBrace2Force change_hollow_brace2_force = 435;
+    ChangeHollowGap change_hollow_gap = 436;
+    ChangeHollowBraceFy change_hollow_brace_fy = 437;
+    ChangeRowJointId change_row_joint_id = 438;
+    ChangeRowLabel change_row_label = 439;
+    ChangeRowRowType change_row_row_type = 440;
+    ChangeRowLever change_row_lever = 441;
+    ChangeRowBoltToWeb change_row_bolt_to_web = 442;
+    ChangeRowEdgeDistance change_row_edge_distance = 443;
+    ChangeRowExtensionToFlange change_row_extension_to_flange = 444;
+    ChangeRowExtensionEdge change_row_extension_edge = 445;
+    ChangeRowAlphaFactor change_row_alpha_factor = 446;
+    ChangeRowPitchToPrevious change_row_pitch_to_previous = 447;
+    ChangeRowBolts change_row_bolts = 448;
+    ChangeRowBoltDiameter change_row_bolt_diameter = 449;
+    ChangeRowBoltStressArea change_row_bolt_stress_area = 450;
+    ChangeRowGripLength change_row_grip_length = 451;
+    ChangeRowBoltClass change_row_bolt_class = 452;
+    ChangeRowGroupWithPrevious change_row_group_with_previous = 453;
+    InsertJointAction insert_joint_action = 454;
+    RemoveJointAction remove_joint_action = 455;
+    ChangeJointActionLoadCaseId change_joint_action_load_case_id = 456;
+    ChangeJointActionShear change_joint_action_shear = 457;
+    ChangeJointActionTension change_joint_action_tension = 458;
+    InsertFatigueBand insert_fatigue_band = 459;
+    RemoveFatigueBand remove_fatigue_band = 460;
+    ChangeFatigueBandDeltaSigma change_fatigue_band_delta_sigma = 461;
+    ChangeFatigueBandCycles change_fatigue_band_cycles = 462;
+    InsertCfAction insert_cf_action = 463;
+    RemoveCfAction remove_cf_action = 464;
+    ChangeCfActionLoadCaseId change_cf_action_load_case_id = 465;
+    ChangeCfActionForce change_cf_action_force = 466;
+    InsertPlatedAction insert_plated_action = 467;
+    RemovePlatedAction remove_plated_action = 468;
+    ChangePlatedActionLoadCaseId change_plated_action_load_case_id = 469;
+    ChangePlatedActionForce change_plated_action_force = 470;
+    InsertTensionAction insert_tension_action = 471;
+    RemoveTensionAction remove_tension_action = 472;
+    ChangeTensionActionLoadCaseId change_tension_action_load_case_id = 473;
+    ChangeTensionActionForce change_tension_action_force = 474;
+    InsertTowerAction insert_tower_action = 475;
+    RemoveTowerAction remove_tower_action = 476;
+    ChangeTowerActionLoadCaseId change_tower_action_load_case_id = 477;
+    ChangeTowerActionForce change_tower_action_force = 478;
+    InsertPileAction insert_pile_action = 479;
+    RemovePileAction remove_pile_action = 480;
+    ChangePileActionLoadCaseId change_pile_action_load_case_id = 481;
+    ChangePileActionForce change_pile_action_force = 482;
+    InsertCraneAction insert_crane_action = 483;
+    RemoveCraneAction remove_crane_action = 484;
+    ChangeCraneActionLoadCaseId change_crane_action_load_case_id = 485;
+    ChangeCraneActionForce change_crane_action_force = 486;
+    InsertFrameNode insert_frame_node = 487;
+    RemoveFrameNode remove_frame_node = 488;
+    InsertFrameBar insert_frame_bar = 489;
+    RemoveFrameBar remove_frame_bar = 490;
+    InsertPlacement insert_placement = 491;
+    RemovePlacement remove_placement = 492;
+    ChangeMaterialRambergOsgoodN change_material_ramberg_osgood_n = 493;
+    ChangeFrameNodeLabel change_frame_node_label = 494;
+    ChangeFrameNodeX change_frame_node_x = 495;
+    ChangeFrameNodeZ change_frame_node_z = 496;
+    ChangeFrameNodeSupport change_frame_node_support = 497;
+    ChangeFrameNodeLoadX change_frame_node_load_x = 498;
+    ChangeFrameNodeLoadZ change_frame_node_load_z = 499;
+    ChangeFrameBarMemberId change_frame_bar_member_id = 500;
+    ChangeFrameBarLabel change_frame_bar_label = 501;
+    ChangeFrameBarStartNodeId change_frame_bar_start_node_id = 502;
+    ChangeFrameBarEndNodeId change_frame_bar_end_node_id = 503;
+    ChangeFrameBarReleaseStart change_frame_bar_release_start = 504;
+    ChangeFrameBarReleaseEnd change_frame_bar_release_end = 505;
+    ChangePlacementX change_placement_x = 506;
+    ChangePlacementY change_placement_y = 507;
+    ChangePlacementZ change_placement_z = 508;
+    ChangePlacementYaw change_placement_yaw = 509;
+    ChangeCfPurlinSpan change_cf_purlin_span = 510;
+    ChangeCfPurlinLoad change_cf_purlin_load = 511;
+    ChangeCfPurlinLateralRatio change_cf_purlin_lateral_ratio = 512;
+    ChangePlatedCorrugationFlat change_plated_corrugation_flat = 513;
+    ChangePlatedCorrProjection change_plated_corr_projection = 514;
+    ChangePlatedCorrugationDepth change_plated_corrugation_depth = 515;
+    ChangePlatedWebHeight change_plated_web_height = 516;
+    ChangeSiloRingSpacing change_silo_ring_spacing = 517;
+    ChangeSiloRingArea change_silo_ring_area = 518;
+    ChangeSiloRingInertia change_silo_ring_inertia = 519;
+    ChangeSiloRingOffset change_silo_ring_offset = 520;
+    ChangeBridgeDeckThickness change_bridge_deck_thickness = 521;
+    ChangeBridgeTroughSpacing change_bridge_trough_spacing = 522;
+    ChangeBridgeTroughWidth change_bridge_trough_width = 523;
+    ChangeBridgeTroughThickness change_bridge_trough_thickness = 524;
+    ChangeBridgeCrossbeamSpacing change_bridge_crossbeam_spacing = 525;
+    ChangeBridgeSurfacingThickness change_bridge_surfacing_thickness = 526;
+    ChangeBridgeWheelLoad change_bridge_wheel_load = 527;
+    ChangeBridgeWheelPatch change_bridge_wheel_patch = 528;
+    ChangePlatedStiffenerSpacing change_plated_stiffener_spacing = 529;
+    ChangeBuiltUpChordShape change_built_up_chord_shape = 530;
+    ChangeBuiltUpChordDepth change_built_up_chord_depth = 531;
+    ChangeBuiltUpChordWidth change_built_up_chord_width = 532;
+    ChangeBuiltUpChordFlangeThk change_built_up_chord_flange_thk = 533;
+    ChangeBuiltUpChordWebThk change_built_up_chord_web_thk = 534;
+    ChangeMemberWebMaterialId change_member_web_material_id = 535;
+    ChangeMemberTorsionLoad change_member_torsion_load = 536;
+    ChangeMemberTorquePosition change_member_torque_position = 537;
+    ChangeFatigueStressHistory change_fatigue_stress_history = 538;
+    ChangePlatedStiffenerShape change_plated_stiffener_shape = 539;
+    ChangePlatedStiffenerDepth change_plated_stiffener_depth = 540;
+    ChangePlatedStiffenerThickness change_plated_stiffener_thickness = 541;
+    ChangePlatedStiffFlangeWidth change_plated_stiff_flange_width = 542;
+    ChangePlatedStiffenerFlangeThk change_plated_stiffener_flange_thk = 543;
+    ChangePlatedLateralPressure change_plated_lateral_pressure = 544;
+    ChangePlatedLatPressureCoef change_plated_lat_pressure_coef = 545;
+    ChangeMemberWarpingSupport change_member_warping_support = 546;
+    InsertJointPlate insert_joint_plate = 547;
+    RemoveJointPlate remove_joint_plate = 548;
+    InsertFoundationBlock insert_foundation_block = 549;
+    RemoveFoundationBlock remove_foundation_block = 550;
+    ChangeMemberLtbRestraintSpacing change_member_ltb_restraint_spacing = 551;
+    ChangeMemberDeflectionLimitRatio change_member_deflection_limit_ratio = 552;
+    ChangeMemberToughnessStressRatio change_member_toughness_stress_ratio = 553;
+    ChangeJointColumnFlangeThickness change_joint_column_flange_thickness = 554;
+    ChangeJointBeamMomentResistance change_joint_beam_moment_resistance = 555;
+    ChangeJointColumnMomentResistance change_joint_column_moment_resistance = 556;
+    ChangeJointTransformationParameter change_joint_transformation_parameter = 557;
+    ChangeFireProtectionConductivity change_fire_protection_conductivity = 558;
+    ChangeFireProtectionSpecificHeat change_fire_protection_specific_heat = 559;
+    ChangeCfRequiredRestraintStiffness change_cf_required_restraint_stiffness = 560;
+    ChangePlatedStiffenerEccentricity change_plated_stiffener_eccentricity = 561;
+    ChangePlatedPatchMomentResistance change_plated_patch_moment_resistance = 562;
+    ChangePlatedTransverseStiffenerInertia change_plated_transverse_stiffener_inertia = 563;
+    ChangePlatedCorrugationProjection change_plated_corrugation_projection = 564;
+    ChangePlatedStiffenerFlangeWidth change_plated_stiffener_flange_width = 565;
+    ChangePlatedStiffenerFlangeThickness change_plated_stiffener_flange_thickness = 566;
+    ChangePlatedLateralPressureCoefficient change_plated_lateral_pressure_coefficient = 567;
+    ChangeTensionCableHorizontalForce change_tension_cable_horizontal_force = 568;
+    ChangeTowerLateralForceCoefficient change_tower_lateral_force_coefficient = 569;
+    ChangeTowerPermittedAmplitudeRatio change_tower_permitted_amplitude_ratio = 570;
+    ChangePileInterlockBendingFactor change_pile_interlock_bending_factor = 571;
+    ChangePileInterlockStiffnessFactor change_pile_interlock_stiffness_factor = 572;
+    ChangeCraneFlangeEffectiveWidth change_crane_flange_effective_width = 573;
+    ChangeCraneDetailCategoryStress change_crane_detail_category_stress = 574;
+    ChangeRestraintIntermediatePosition change_restraint_intermediate_position = 575;
+    ChangeRestraintLatSpringPosition change_restraint_lat_spring_position = 576;
+    ChangeRestraintLatSpringStiffness change_restraint_lat_spring_stiffness = 577;
+    ChangeRestraintHingeToRestraint change_restraint_hinge_to_restraint = 578;
+    ChangeBuiltUpChordFlangeThickness change_built_up_chord_flange_thickness = 579;
+    ChangeBuiltUpChordWebThickness change_built_up_chord_web_thickness = 580;
+    ChangeJointPlateJointId change_joint_plate_joint_id = 581;
+    ChangeJointPlateLabel change_joint_plate_label = 582;
+    ChangeJointPlateRole change_joint_plate_role = 583;
+    ChangeJointPlatePlateHeight change_joint_plate_plate_height = 584;
+    ChangeJointPlatePlateWidth change_joint_plate_plate_width = 585;
+    ChangeJointPlatePlateThickness change_joint_plate_plate_thickness = 586;
+    ChangeJointPlatePlateCount change_joint_plate_plate_count = 587;
+    ChangeJointPlatePlateFy change_joint_plate_plate_fy = 588;
+    ChangeJointPlatePlateFu change_joint_plate_plate_fu = 589;
+    ChangeJointPlateBoltClass change_joint_plate_bolt_class = 590;
+    ChangeJointPlateBoltDiameter change_joint_plate_bolt_diameter = 591;
+    ChangeJointPlateHoleDiameter change_joint_plate_hole_diameter = 592;
+    ChangeJointPlateBoltRows change_joint_plate_bolt_rows = 593;
+    ChangeJointPlateBoltsPerRow change_joint_plate_bolts_per_row = 594;
+    ChangeJointPlatePitch change_joint_plate_pitch = 595;
+    ChangeJointPlateGauge change_joint_plate_gauge = 596;
+    ChangeJointPlateEndDistance change_joint_plate_end_distance = 597;
+    ChangeJointPlateEdgeDistance change_joint_plate_edge_distance = 598;
+    ChangeJointPlateShearPlanes change_joint_plate_shear_planes = 599;
+    ChangeJointPlateEccentricity change_joint_plate_eccentricity = 600;
+    ChangeJointPlateWeldThroat change_joint_plate_weld_throat = 601;
+    ChangeJointPlateWeldFu change_joint_plate_weld_fu = 602;
+    ChangeJointPlateWeldBetaW change_joint_plate_weld_beta_w = 603;
+    ChangeFoundationJointId change_foundation_joint_id = 604;
+    ChangeFoundationLabel change_foundation_label = 605;
+    ChangeFoundationBlockLength change_foundation_block_length = 606;
+    ChangeFoundationBlockWidth change_foundation_block_width = 607;
+    ChangeFoundationBlockDepth change_foundation_block_depth = 608;
+    ChangeFoundationConcreteFck change_foundation_concrete_fck = 609;
+    ChangeFoundationGroutFck change_foundation_grout_fck = 610;
+    ChangeFoundationGroutThickness change_foundation_grout_thickness = 611;
+    ChangeFoundationAnchorCount change_foundation_anchor_count = 612;
+    ChangeFoundationAnchorClass change_foundation_anchor_class = 613;
+    ChangeFoundationAnchorDiameter change_foundation_anchor_diameter = 614;
+    ChangeFoundationAnchorStressArea change_foundation_anchor_stress_area = 615;
+    ChangeFoundationAnchorEmbedment change_foundation_anchor_embedment = 616;
+    ChangeFoundationAnchorEdgeDistance change_foundation_anchor_edge_distance = 617;
   }
+}
+message ChangeAnnex {
+  AnnexChoice new_annex = 1;
+}
+message ChangeReliabilityClass {
+  string new_reliability_class = 1;
+}
+message InsertMaterial {
+  optional uint64 index = 1;
+  SteelMaterial material = 2;
+}
+message RemoveMaterial {
+  uint64 index = 1;
+}
+message InsertSection {
+  optional uint64 index = 1;
+  SteelSection section = 2;
+}
+message RemoveSection {
+  uint64 index = 1;
+}
+message InsertMember {
+  optional uint64 index = 1;
+  SteelMember member = 2;
+}
+message RemoveMember {
+  uint64 index = 1;
+}
+message InsertLoadCase {
+  optional uint64 index = 1;
+  LoadCase load_case = 2;
+}
+message RemoveLoadCase {
+  uint64 index = 1;
+}
+message InsertMemberAction {
+  optional uint64 index = 1;
+  MemberAction member_action = 2;
+}
+message RemoveMemberAction {
+  uint64 index = 1;
+}
+message InsertJoint {
+  optional uint64 index = 1;
+  SteelJoint joint = 2;
+}
+message RemoveJoint {
+  uint64 index = 1;
+}
+message InsertFatigueDetail {
+  optional uint64 index = 1;
+  FatigueDetail fatigue_detail = 2;
+}
+message RemoveFatigueDetail {
+  uint64 index = 1;
+}
+message InsertFireExposure {
+  optional uint64 index = 1;
+  FireExposure fire_exposure = 2;
+}
+message RemoveFireExposure {
+  uint64 index = 1;
+}
+message InsertColdFormedMember {
+  optional uint64 index = 1;
+  ColdFormedMember cold_formed_member = 2;
+}
+message RemoveColdFormedMember {
+  uint64 index = 1;
+}
+message InsertPlatedPanel {
+  optional uint64 index = 1;
+  PlatedPanel plated_panel = 2;
+}
+message RemovePlatedPanel {
+  uint64 index = 1;
+}
+message InsertSiloShell {
+  optional uint64 index = 1;
+  SiloShell silo_shell = 2;
+}
+message RemoveSiloShell {
+  uint64 index = 1;
+}
+message InsertTensionComponent {
+  optional uint64 index = 1;
+  TensionComponent tension_component = 2;
+}
+message RemoveTensionComponent {
+  uint64 index = 1;
+}
+message InsertBridgeFatigue {
+  optional uint64 index = 1;
+  BridgeFatigue bridge_fatigue_item = 2;
+}
+message RemoveBridgeFatigue {
+  uint64 index = 1;
+}
+message InsertTowerLeg {
+  optional uint64 index = 1;
+  TowerLeg tower_leg = 2;
+}
+message RemoveTowerLeg {
+  uint64 index = 1;
+}
+message InsertPile {
+  optional uint64 index = 1;
+  SteelPile pile = 2;
+}
+message RemovePile {
+  uint64 index = 1;
+}
+message InsertCraneRunway {
+  optional uint64 index = 1;
+  CraneRunway crane_runway = 2;
+}
+message RemoveCraneRunway {
+  uint64 index = 1;
+}
+message InsertStorey {
+  optional uint64 index = 1;
+  Storey storey = 2;
+}
+message RemoveStorey {
+  uint64 index = 1;
+}
+message InsertRestraint {
+  optional uint64 index = 1;
+  Restraint restraint = 2;
+}
+message RemoveRestraint {
+  uint64 index = 1;
+}
+message InsertBuiltUpMember {
+  optional uint64 index = 1;
+  BuiltUpMember built_up_member = 2;
+}
+message RemoveBuiltUpMember {
+  uint64 index = 1;
+}
+message InsertWeldGroup {
+  optional uint64 index = 1;
+  WeldGroup weld_group = 2;
+}
+message RemoveWeldGroup {
+  uint64 index = 1;
+}
+message InsertParametricSection {
+  optional uint64 index = 1;
+  ParametricSection parametric_section = 2;
+}
+message RemoveParametricSection {
+  uint64 index = 1;
+}
+message InsertHollowJoint {
+  optional uint64 index = 1;
+  HollowJoint hollow_joint = 2;
+}
+message RemoveHollowJoint {
+  uint64 index = 1;
+}
+message InsertJointRow {
+  optional uint64 index = 1;
+  JointRow joint_row = 2;
+}
+message RemoveJointRow {
+  uint64 index = 1;
+}
+message ChangeMaterialGrade {
+  string id = 1;
+  string new_grade = 2;
+}
+message ChangeMaterialFy {
+  string id = 1;
+  double new_fy = 2;
+}
+message ChangeMaterialFu {
+  string id = 1;
+  double new_fu = 2;
+}
+message ChangeMaterialEModulus {
+  string id = 1;
+  double new_e_modulus = 2;
+}
+message ChangeMaterialGModulus {
+  string id = 1;
+  double new_g_modulus = 2;
+}
+message ChangeMaterialSubgrade {
+  string id = 1;
+  string new_subgrade = 2;
+}
+message ChangeMaterialKind {
+  string id = 1;
+  MaterialKind new_kind = 2;
+}
+message ChangeSectionDesignation {
+  string id = 1;
+  string new_designation = 2;
+}
+message ChangeSectionKind {
+  string id = 1;
+  SectionKind new_kind = 2;
+}
+message ChangeSectionH {
+  string id = 1;
+  double new_h = 2;
+}
+message ChangeSectionB {
+  string id = 1;
+  double new_b = 2;
+}
+message ChangeSectionTw {
+  string id = 1;
+  double new_tw = 2;
+}
+message ChangeSectionTf {
+  string id = 1;
+  double new_tf = 2;
+}
+message ChangeSectionR {
+  string id = 1;
+  double new_r = 2;
+}
+message ChangeSectionArea {
+  string id = 1;
+  double new_area = 2;
+}
+message ChangeSectionShearAreaY {
+  string id = 1;
+  double new_shear_area_y = 2;
+}
+message ChangeSectionShearAreaZ {
+  string id = 1;
+  double new_shear_area_z = 2;
+}
+message ChangeSectionIy {
+  string id = 1;
+  double new_iy = 2;
+}
+message ChangeSectionIz {
+  string id = 1;
+  double new_iz = 2;
+}
+message ChangeSectionIt {
+  string id = 1;
+  double new_it = 2;
+}
+message ChangeSectionIw {
+  string id = 1;
+  double new_iw = 2;
+}
+message ChangeSectionWElY {
+  string id = 1;
+  double new_w_el_y = 2;
+}
+message ChangeSectionWElZ {
+  string id = 1;
+  double new_w_el_z = 2;
+}
+message ChangeSectionWPlY {
+  string id = 1;
+  double new_w_pl_y = 2;
+}
+message ChangeSectionWPlZ {
+  string id = 1;
+  double new_w_pl_z = 2;
+}
+message ChangeSectionAreaNet {
+  string id = 1;
+  double new_area_net = 2;
+}
+message ChangeMemberLabel {
+  string id = 1;
+  string new_label = 2;
+}
+message ChangeMemberMemberType {
+  string id = 1;
+  SteelMemberType new_member_type = 2;
+}
+message ChangeMemberSectionId {
+  string id = 1;
+  string new_section_id = 2;
+}
+message ChangeMemberMaterialId {
+  string id = 1;
+  string new_material_id = 2;
+}
+message ChangeMemberLength {
+  string id = 1;
+  double new_length = 2;
+}
+message ChangeMemberBucklingLengthY {
+  string id = 1;
+  double new_buckling_length_y = 2;
+}
+message ChangeMemberBucklingLengthZ {
+  string id = 1;
+  double new_buckling_length_z = 2;
+}
+message ChangeMemberLtbLength {
+  string id = 1;
+  double new_ltb_length = 2;
+}
+message ChangeMemberLtbRestSpacing {
+  string id = 1;
+  double new_ltb_restraint_spacing = 2;
+}
+message ChangeMemberLoadApplication {
+  string id = 1;
+  LoadApplication new_load_application = 2;
+}
+message ChangeMemberEndMomentRatioPsi {
+  string id = 1;
+  double new_end_moment_ratio_psi = 2;
+}
+message ChangeMemberMomentDiagram {
+  string id = 1;
+  MomentDiagram new_moment_diagram = 2;
+}
+message ChangeMemberDeflLimitRatio {
+  string id = 1;
+  double new_deflection_limit_ratio = 2;
+}
+message ChangeMemberAnalysis {
+  string id = 1;
+  AnalysisKind new_analysis = 2;
+}
+message ChangeMemberStainlessForming {
+  string id = 1;
+  StainlessForming new_stainless_forming = 2;
+}
+message ChangeMemberDesignTemperature {
+  string id = 1;
+  double new_design_temperature = 2;
+}
+message ChangeMemberToughStressRatio {
+  string id = 1;
+  double new_toughness_stress_ratio = 2;
+}
+message ChangeMemberRadiationShift {
+  string id = 1;
+  double new_radiation_shift = 2;
+}
+message ChangeMemberStressShift {
+  string id = 1;
+  double new_stress_shift = 2;
+}
+message ChangeMemberMarginShift {
+  string id = 1;
+  double new_margin_shift = 2;
+}
+message ChangeMemberStrainRateShift {
+  string id = 1;
+  double new_strain_rate_shift = 2;
+}
+message ChangeMemberColdFormingRadius {
+  string id = 1;
+  double new_cold_forming_radius = 2;
+}
+message ChangeLoadCaseName {
+  string id = 1;
+  string new_name = 2;
+}
+message ChangeLoadCaseKind {
+  string id = 1;
+  ActionKind new_kind = 2;
+}
+message ChangeLoadCaseCategory {
+  string id = 1;
+  string new_category = 2;
+}
+message ChangeActionMemberId {
+  string id = 1;
+  string new_member_id = 2;
+}
+message ChangeActionLoadCaseId {
+  string id = 1;
+  string new_load_case_id = 2;
+}
+message ChangeActionN {
+  string id = 1;
+  double new_action_n = 2;
+}
+message ChangeActionVy {
+  string id = 1;
+  double new_action_vy = 2;
+}
+message ChangeActionVz {
+  string id = 1;
+  double new_action_vz = 2;
+}
+message ChangeActionMy {
+  string id = 1;
+  double new_action_my = 2;
+}
+message ChangeActionMz {
+  string id = 1;
+  double new_action_mz = 2;
+}
+message ChangeActionT {
+  string id = 1;
+  double new_action_t = 2;
+}
+message ChangeJointKind {
+  string id = 1;
+  JointKind new_kind = 2;
+}
+message ChangeJointMemberId {
+  string id = 1;
+  string new_member_id = 2;
+}
+message ChangeJointBoltClass {
+  string id = 1;
+  string new_bolt_class = 2;
+}
+message ChangeJointBoltDiameter {
+  string id = 1;
+  double new_bolt_diameter = 2;
+}
+message ChangeJointBoltRows {
+  string id = 1;
+  uint32 new_bolt_rows = 2;
+}
+message ChangeJointBoltsPerRow {
+  string id = 1;
+  uint32 new_bolts_per_row = 2;
+}
+message ChangeJointPitch {
+  string id = 1;
+  double new_pitch = 2;
+}
+message ChangeJointGauge {
+  string id = 1;
+  double new_gauge = 2;
+}
+message ChangeJointEndDistance {
+  string id = 1;
+  double new_end_distance = 2;
+}
+message ChangeJointEdgeDistance {
+  string id = 1;
+  double new_edge_distance = 2;
+}
+message ChangeJointShearPlanes {
+  string id = 1;
+  uint32 new_shear_planes = 2;
+}
+message ChangeJointPlateThickness {
+  string id = 1;
+  double new_plate_thickness = 2;
+}
+message ChangeJointPlateFu {
+  string id = 1;
+  double new_plate_fu = 2;
+}
+message ChangeJointWeldThroat {
+  string id = 1;
+  double new_weld_throat = 2;
+}
+message ChangeJointWeldLength {
+  string id = 1;
+  double new_weld_length = 2;
+}
+message ChangeJointWeldFu {
+  string id = 1;
+  double new_weld_fu = 2;
+}
+message ChangeJointWeldGrade {
+  string id = 1;
+  string new_weld_grade = 2;
+}
+message ChangeJointCategory {
+  string id = 1;
+  JointCategory new_category = 2;
+}
+message ChangeJointFrictionMu {
+  string id = 1;
+  double new_friction_mu = 2;
+}
+message ChangeJointPreloadForce {
+  string id = 1;
+  double new_preload_force = 2;
+}
+message ChangeJointSlipFactorKs {
+  string id = 1;
+  double new_slip_factor_ks = 2;
+}
+message ChangeJointFrictionSurfaces {
+  string id = 1;
+  uint32 new_friction_surfaces = 2;
+}
+message ChangeJointPlateFy {
+  string id = 1;
+  double new_plate_fy = 2;
+}
+message ChangeJointPlateWidth {
+  string id = 1;
+  double new_plate_width = 2;
+}
+message ChangeJointBoltToWeb {
+  string id = 1;
+  double new_bolt_to_web = 2;
+}
+message ChangeJointExtensionToFlange {
+  string id = 1;
+  double new_extension_to_flange = 2;
+}
+message ChangeJointExtensionEdge {
+  string id = 1;
+  double new_extension_edge = 2;
+}
+message ChangeJointAlphaFactor {
+  string id = 1;
+  double new_alpha_factor = 2;
+}
+message ChangeJointBoltStressArea {
+  string id = 1;
+  double new_bolt_stress_area = 2;
+}
+message ChangeJointBoltGripLength {
+  string id = 1;
+  double new_bolt_grip_length = 2;
+}
+message ChangeJointColumnFlangeThk {
+  string id = 1;
+  double new_column_flange_thickness = 2;
+}
+message ChangeJointColumnWebThickness {
+  string id = 1;
+  double new_column_web_thickness = 2;
+}
+message ChangeJointColumnWebDepth {
+  string id = 1;
+  double new_column_web_depth = 2;
+}
+message ChangeJointColumnWebShearArea {
+  string id = 1;
+  double new_column_web_shear_area = 2;
+}
+message ChangeJointColumnRootRadius {
+  string id = 1;
+  double new_column_root_radius = 2;
+}
+message ChangeJointColumnFy {
+  string id = 1;
+  double new_column_fy = 2;
+}
+message ChangeJointColumnWebStress {
+  string id = 1;
+  double new_column_web_stress = 2;
+}
+message ChangeJointBeamFlangeThickness {
+  string id = 1;
+  double new_beam_flange_thickness = 2;
+}
+message ChangeJointCompressionLever {
+  string id = 1;
+  double new_compression_lever = 2;
+}
+message ChangeJointMomentDemand {
+  string id = 1;
+  double new_moment_demand = 2;
+}
+message ChangeJointBeamMomentRes {
+  string id = 1;
+  double new_beam_moment_resistance = 2;
+}
+message ChangeJointColumnMomentRes {
+  string id = 1;
+  double new_column_moment_resistance = 2;
+}
+message ChangeJointBeamInertia {
+  string id = 1;
+  double new_beam_inertia = 2;
+}
+message ChangeJointBeamSpan {
+  string id = 1;
+  double new_beam_span = 2;
+}
+message ChangeJointBracedFrame {
+  string id = 1;
+  uint32 new_braced_frame = 2;
+}
+message ChangeJointStiffnessRatio {
+  string id = 1;
+  double new_stiffness_ratio = 2;
+}
+message ChangeJointXformParameter {
+  string id = 1;
+  double new_transformation_parameter = 2;
+}
+message ChangeJointAssumedClass {
+  string id = 1;
+  StiffnessClass new_assumed_class = 2;
+}
+message ChangeJointBasePlateLength {
+  string id = 1;
+  double new_base_plate_length = 2;
+}
+message ChangeJointConcreteFcd {
+  string id = 1;
+  double new_concrete_fcd = 2;
+}
+message ChangeJointConcreteModulus {
+  string id = 1;
+  double new_concrete_modulus = 2;
+}
+message ChangeJointConcreteAreaA0 {
+  string id = 1;
+  double new_concrete_area_a0 = 2;
+}
+message ChangeJointConcreteAreaA1 {
+  string id = 1;
+  double new_concrete_area_a1 = 2;
+}
+message ChangeJointJointCoefficient {
+  string id = 1;
+  double new_joint_coefficient = 2;
+}
+message ChangeJointAnchorArea {
+  string id = 1;
+  double new_anchor_area = 2;
+}
+message ChangeJointAnchorLength {
+  string id = 1;
+  double new_anchor_length = 2;
+}
+message ChangeJointBaseNormalForce {
+  string id = 1;
+  double new_base_normal_force = 2;
+}
+message ChangeJointBaseMoment {
+  string id = 1;
+  double new_base_moment = 2;
+}
+message ChangeJointBaseLeverLeft {
+  string id = 1;
+  double new_base_lever_left = 2;
+}
+message ChangeJointBaseLeverRight {
+  string id = 1;
+  double new_base_lever_right = 2;
+}
+message ChangeFatigueMemberId {
+  string id = 1;
+  string new_member_id = 2;
+}
+message ChangeFatigueCategory {
+  string id = 1;
+  uint32 new_category = 2;
+}
+message ChangeFatigueMethod {
+  string id = 1;
+  FatigueMethod new_method = 2;
+}
+message ChangeFireMemberId {
+  string id = 1;
+  string new_member_id = 2;
+}
+message ChangeFireRating {
+  string id = 1;
+  FireRating new_rating = 2;
+}
+message ChangeFireProtectionThickness {
+  string id = 1;
+  double new_protection_thickness = 2;
+}
+message ChangeFireSectionFactor {
+  string id = 1;
+  double new_section_factor = 2;
+}
+message ChangeFireMu0 {
+  string id = 1;
+  double new_mu0 = 2;
+}
+message ChangeFireDesignTemperature {
+  string id = 1;
+  double new_design_temperature = 2;
+}
+message ChangeFireProtConductivity {
+  string id = 1;
+  double new_protection_conductivity = 2;
+}
+message ChangeFireProtectionDensity {
+  string id = 1;
+  double new_protection_density = 2;
+}
+message ChangeFireProtSpecificHeat {
+  string id = 1;
+  double new_protection_specific_heat = 2;
+}
+message ChangeCfBBar {
+  string id = 1;
+  double new_b_bar = 2;
+}
+message ChangeCfThickness {
+  string id = 1;
+  double new_thickness = 2;
+}
+message ChangeCfKSigma {
+  string id = 1;
+  double new_k_sigma = 2;
+}
+message ChangeCfPsi {
+  string id = 1;
+  double new_psi = 2;
+}
+message ChangeCfFy {
+  string id = 1;
+  double new_fy = 2;
+}
+message ChangeCfGrossResistance {
+  string id = 1;
+  double new_gross_resistance = 2;
+}
+message ChangeCfFlangeWidth {
+  string id = 1;
+  double new_flange_width = 2;
+}
+message ChangeCfLipLength {
+  string id = 1;
+  double new_lip_length = 2;
+}
+message ChangeCfWebHeight {
+  string id = 1;
+  double new_web_height = 2;
+}
+message ChangeCfWebSlope {
+  string id = 1;
+  double new_web_slope = 2;
+}
+message ChangeCfOppositeFlangeWidth {
+  string id = 1;
+  double new_opposite_flange_width = 2;
+}
+message ChangeCfSpringFactor {
+  string id = 1;
+  double new_spring_factor = 2;
+}
+message ChangeCfCornerRadius {
+  string id = 1;
+  double new_corner_radius = 2;
+}
+message ChangeCfFlangeStress {
+  string id = 1;
+  double new_flange_stress = 2;
+}
+message ChangeCfShearForce {
+  string id = 1;
+  double new_shear_force = 2;
+}
+message ChangeCfSupportReaction {
+  string id = 1;
+  double new_support_reaction = 2;
+}
+message ChangeCfSupportLength {
+  string id = 1;
+  double new_support_length = 2;
+}
+message ChangeCfCripplingCategory {
+  string id = 1;
+  uint32 new_crippling_category = 2;
+}
+message ChangeCfStiffenedSupport {
+  string id = 1;
+  uint32 new_stiffened_support = 2;
+}
+message ChangeCfBendingMoment {
+  string id = 1;
+  double new_bending_moment = 2;
+}
+message ChangeCfMomentResistance {
+  string id = 1;
+  double new_moment_resistance = 2;
+}
+message ChangeCfSheetingStiffness {
+  string id = 1;
+  double new_sheeting_stiffness = 2;
+}
+message ChangeCfRequiredRestraintStiff {
+  string id = 1;
+  double new_required_restraint_stiffness = 2;
+}
+message ChangePlatedA {
+  string id = 1;
+  double new_a = 2;
+}
+message ChangePlatedB {
+  string id = 1;
+  double new_b = 2;
+}
+message ChangePlatedThickness {
+  string id = 1;
+  double new_thickness = 2;
+}
+message ChangePlatedFy {
+  string id = 1;
+  double new_fy = 2;
+}
+message ChangePlatedKSigma {
+  string id = 1;
+  double new_k_sigma = 2;
+}
+message ChangePlatedStiffenerInertia {
+  string id = 1;
+  double new_stiffener_inertia = 2;
+}
+message ChangePlatedStiffenerArea {
+  string id = 1;
+  double new_stiffener_area = 2;
+}
+message ChangePlatedStiffenerEcc {
+  string id = 1;
+  double new_stiffener_eccentricity = 2;
+}
+message ChangePlatedStiffenerAlpha {
+  string id = 1;
+  double new_stiffener_alpha = 2;
+}
+message ChangePlatedCompressionStress {
+  string id = 1;
+  double new_compression_stress = 2;
+}
+message ChangePlatedHalfWidth {
+  string id = 1;
+  double new_half_width = 2;
+}
+message ChangePlatedEquivalentSpan {
+  string id = 1;
+  double new_equivalent_span = 2;
+}
+message ChangePlatedHogging {
+  string id = 1;
+  uint32 new_hogging = 2;
+}
+message ChangePlatedPatchType {
+  string id = 1;
+  PatchLoadType new_patch_type = 2;
+}
+message ChangePlatedPatchForce {
+  string id = 1;
+  double new_patch_force = 2;
+}
+message ChangePlatedPatchLength {
+  string id = 1;
+  double new_patch_length = 2;
+}
+message ChangePlatedPatchOffset {
+  string id = 1;
+  double new_patch_offset = 2;
+}
+message ChangePlatedFlangeThickness {
+  string id = 1;
+  double new_flange_thickness = 2;
+}
+message ChangePlatedFlangeWidth {
+  string id = 1;
+  double new_flange_width = 2;
+}
+message ChangePlatedFlangeFy {
+  string id = 1;
+  double new_flange_fy = 2;
+}
+message ChangePlatedLongitudinalOffset {
+  string id = 1;
+  double new_longitudinal_offset = 2;
+}
+message ChangePlatedLongitudinalInertia {
+  string id = 1;
+  double new_longitudinal_inertia = 2;
+}
+message ChangePlatedPatchMoment {
+  string id = 1;
+  double new_patch_moment = 2;
+}
+message ChangePlatedPatchMomentRes {
+  string id = 1;
+  double new_patch_moment_resistance = 2;
+}
+message ChangePlatedBendingMoment {
+  string id = 1;
+  double new_bending_moment = 2;
+}
+message ChangePlatedPlasticMoment {
+  string id = 1;
+  double new_plastic_moment = 2;
+}
+message ChangePlatedFlangeMoment {
+  string id = 1;
+  double new_flange_moment = 2;
+}
+message ChangePlatedShearForce {
+  string id = 1;
+  double new_shear_force = 2;
+}
+message ChangePlatedTransStiffInert {
+  string id = 1;
+  double new_transverse_stiffener_inertia = 2;
+}
+message ChangePlatedFlangeInducedK {
+  string id = 1;
+  double new_flange_induced_k = 2;
+}
+message ChangePlatedFlangeArea {
+  string id = 1;
+  double new_flange_area = 2;
+}
+message ChangePlatedStressX {
+  string id = 1;
+  double new_stress_x = 2;
+}
+message ChangePlatedStressZ {
+  string id = 1;
+  double new_stress_z = 2;
+}
+message ChangePlatedShearStress {
+  string id = 1;
+  double new_shear_stress = 2;
+}
+message ChangePlatedAlphaCr {
+  string id = 1;
+  double new_alpha_cr = 2;
+}
+message ChangeSiloThickness {
+  string id = 1;
+  double new_thickness = 2;
+}
+message ChangeSiloRadius {
+  string id = 1;
+  double new_radius = 2;
+}
+message ChangeSiloDepth {
+  string id = 1;
+  double new_depth = 2;
+}
+message ChangeSiloK {
+  string id = 1;
+  double new_k = 2;
+}
+message ChangeSiloGamma {
+  string id = 1;
+  double new_gamma = 2;
+}
+message ChangeSiloFy {
+  string id = 1;
+  double new_fy = 2;
+}
+message ChangeSiloLength {
+  string id = 1;
+  double new_length = 2;
+}
+message ChangeSiloFabricationClass {
+  string id = 1;
+  FabricationToleranceClass new_fabrication_class = 2;
+}
+message ChangeSiloMeridionalStress {
+  string id = 1;
+  double new_meridional_stress = 2;
+}
+message ChangeSiloHoopStress {
+  string id = 1;
+  double new_hoop_stress = 2;
+}
+message ChangeSiloShellShearStress {
+  string id = 1;
+  double new_shell_shear_stress = 2;
+}
+message ChangeSiloBoundaryFactorAxial {
+  string id = 1;
+  double new_boundary_factor_axial = 2;
+}
+message ChangeSiloBoundaryFactorHoop {
+  string id = 1;
+  double new_boundary_factor_hoop = 2;
+}
+message ChangeSiloBoundaryFactorShear {
+  string id = 1;
+  double new_boundary_factor_shear = 2;
+}
+message ChangeSiloWallFriction {
+  string id = 1;
+  double new_wall_friction = 2;
+}
+message ChangeSiloPlanArea {
+  string id = 1;
+  double new_plan_area = 2;
+}
+message ChangeSiloPlanPerimeter {
+  string id = 1;
+  double new_plan_perimeter = 2;
+}
+message ChangeSiloLiquidDensity {
+  string id = 1;
+  double new_liquid_density = 2;
+}
+message ChangeSiloLiquidHeight {
+  string id = 1;
+  double new_liquid_height = 2;
+}
+message ChangeSiloCourseElevation {
+  string id = 1;
+  double new_course_elevation = 2;
+}
+message ChangeSiloInternalPressure {
+  string id = 1;
+  double new_internal_pressure = 2;
+}
+message ChangeSiloExternalPressure {
+  string id = 1;
+  double new_external_pressure = 2;
+}
+message ChangeSiloTemperatureChange {
+  string id = 1;
+  double new_temperature_change = 2;
+}
+message ChangeTensionFUk {
+  string id = 1;
+  double new_f_uk = 2;
+}
+message ChangeTensionFK {
+  string id = 1;
+  double new_f_k = 2;
+}
+message ChangeTensionPartialFactor {
+  string id = 1;
+  double new_partial_factor = 2;
+}
+message ChangeTensionCableLength {
+  string id = 1;
+  double new_cable_length = 2;
+}
+message ChangeTensionCableWeight {
+  string id = 1;
+  double new_cable_weight = 2;
+}
+message ChangeTensionCableHorizForce {
+  string id = 1;
+  double new_cable_horizontal_force = 2;
+}
+message ChangeTensionCableModulus {
+  string id = 1;
+  double new_cable_modulus = 2;
+}
+message ChangeTensionCableStress {
+  string id = 1;
+  double new_cable_stress = 2;
+}
+message ChangeTensionCableUnitWeight {
+  string id = 1;
+  double new_cable_unit_weight = 2;
+}
+message ChangeTensionThreadFactor {
+  string id = 1;
+  double new_thread_factor = 2;
+}
+message ChangeTensionRodStressArea {
+  string id = 1;
+  double new_rod_stress_area = 2;
+}
+message ChangeTensionRodFu {
+  string id = 1;
+  double new_rod_fu = 2;
+}
+message ChangeTensionPinDiameter {
+  string id = 1;
+  double new_pin_diameter = 2;
+}
+message ChangeTensionPinPlateThickness {
+  string id = 1;
+  double new_pin_plate_thickness = 2;
+}
+message ChangeTensionPinGap {
+  string id = 1;
+  double new_pin_gap = 2;
+}
+message ChangeTensionPinOuterThickness {
+  string id = 1;
+  double new_pin_outer_thickness = 2;
+}
+message ChangeTensionPinInnerThickness {
+  string id = 1;
+  double new_pin_inner_thickness = 2;
+}
+message ChangeTensionPinFup {
+  string id = 1;
+  double new_pin_fup = 2;
+}
+message ChangeTensionPinFyp {
+  string id = 1;
+  double new_pin_fyp = 2;
+}
+message ChangeTensionPinPlateFy {
+  string id = 1;
+  double new_pin_plate_fy = 2;
+}
+message ChangeBridgeMemberId {
+  string id = 1;
+  string new_member_id = 2;
+}
+message ChangeBridgeLambda {
+  string id = 1;
+  double new_lambda = 2;
+}
+message ChangeBridgePhi2 {
+  string id = 1;
+  double new_phi2 = 2;
+}
+message ChangeBridgeDeltaSigmaP {
+  string id = 1;
+  double new_delta_sigma_p = 2;
+}
+message ChangeBridgeCategory {
+  string id = 1;
+  uint32 new_category = 2;
+}
+message ChangeBridgeMethod {
+  string id = 1;
+  FatigueMethod new_method = 2;
+}
+message ChangeBridgeHeavyVehicleWeight {
+  string id = 1;
+  double new_heavy_vehicle_weight = 2;
+}
+message ChangeBridgeReferenceWeight {
+  string id = 1;
+  double new_reference_weight = 2;
+}
+message ChangeBridgeObservedTraffic {
+  string id = 1;
+  double new_observed_traffic = 2;
+}
+message ChangeBridgeDesignLife {
+  string id = 1;
+  double new_design_life = 2;
+}
+message ChangeBridgeSecondLaneTraffic {
+  string id = 1;
+  double new_second_lane_traffic = 2;
+}
+message ChangeBridgeSecondLaneWeight {
+  string id = 1;
+  double new_second_lane_weight = 2;
+}
+message ChangeBridgeLambda1 {
+  string id = 1;
+  double new_lambda1 = 2;
+}
+message ChangeBridgeLambdaMax {
+  string id = 1;
+  double new_lambda_max = 2;
+}
+message ChangeBridgeDetailId {
+  string id = 1;
+  string new_detail_id = 2;
+}
+message ChangeBridgePlateThickness {
+  string id = 1;
+  double new_plate_thickness = 2;
+}
+message ChangeTowerMemberId {
+  string id = 1;
+  string new_member_id = 2;
+}
+message ChangeTowerForceCoefficient {
+  string id = 1;
+  double new_force_coefficient = 2;
+}
+message ChangeTowerDynamicFactor {
+  string id = 1;
+  double new_dynamic_factor = 2;
+}
+message ChangeTowerLatticeKind {
+  string id = 1;
+  LatticeKind new_lattice_kind = 2;
+}
+message ChangeTowerSlenderness {
+  string id = 1;
+  double new_slenderness = 2;
+}
+message ChangeTowerDiameter {
+  string id = 1;
+  double new_diameter = 2;
+}
+message ChangeTowerHeight {
+  string id = 1;
+  double new_height = 2;
+}
+message ChangeTowerBendingStiffness {
+  string id = 1;
+  double new_bending_stiffness = 2;
+}
+message ChangeTowerMassPerLength {
+  string id = 1;
+  double new_mass_per_length = 2;
+}
+message ChangeTowerStrouhal {
+  string id = 1;
+  double new_strouhal = 2;
+}
+message ChangeTowerLogDecrement {
+  string id = 1;
+  double new_log_decrement = 2;
+}
+message ChangeTowerAirDensity {
+  string id = 1;
+  double new_air_density = 2;
+}
+message ChangeTowerMeanWindSpeed {
+  string id = 1;
+  double new_mean_wind_speed = 2;
+}
+message ChangeTowerCrossingRate {
+  string id = 1;
+  double new_crossing_rate = 2;
+}
+message ChangeTowerDesignLife {
+  string id = 1;
+  double new_design_life = 2;
+}
+message ChangeTowerKFactor {
+  string id = 1;
+  double new_k_factor = 2;
+}
+message ChangeTowerKwFactor {
+  string id = 1;
+  double new_kw_factor = 2;
+}
+message ChangeTowerLateralForceCoef {
+  string id = 1;
+  double new_lateral_force_coefficient = 2;
+}
+message ChangeTowerPermAmplitudeRatio {
+  string id = 1;
+  double new_permitted_amplitude_ratio = 2;
+}
+message ChangeTowerRingMode {
+  string id = 1;
+  double new_ring_mode = 2;
+}
+message ChangeTowerShellThickness {
+  string id = 1;
+  double new_shell_thickness = 2;
+}
+message ChangeTowerGuyArea {
+  string id = 1;
+  double new_guy_area = 2;
+}
+message ChangeTowerGuyAngle {
+  string id = 1;
+  double new_guy_angle = 2;
+}
+message ChangeTowerGuyLength {
+  string id = 1;
+  double new_guy_length = 2;
+}
+message ChangePileSectionId {
+  string id = 1;
+  string new_section_id = 2;
+}
+message ChangePileMaterialId {
+  string id = 1;
+  string new_material_id = 2;
+}
+message ChangePileDrivingStress {
+  string id = 1;
+  double new_driving_stress = 2;
+}
+message ChangePileEmbeddedLength {
+  string id = 1;
+  double new_embedded_length = 2;
+}
+message ChangePileShaftPerimeter {
+  string id = 1;
+  double new_shaft_perimeter = 2;
+}
+message ChangePileEnvironment {
+  string id = 1;
+  SheetPileEnvironment new_environment = 2;
+}
+message ChangePileDesignLife {
+  string id = 1;
+  double new_design_life = 2;
+}
+message ChangePileWallThickness {
+  string id = 1;
+  double new_wall_thickness = 2;
+}
+message ChangePileIlockBendingFactor {
+  string id = 1;
+  double new_interlock_bending_factor = 2;
+}
+message ChangePileInterlockStiffFactor {
+  string id = 1;
+  double new_interlock_stiffness_factor = 2;
+}
+message ChangePileSectionModulus {
+  string id = 1;
+  double new_section_modulus = 2;
+}
+message ChangePileShearArea {
+  string id = 1;
+  double new_shear_area = 2;
+}
+message ChangePileDesignMoment {
+  string id = 1;
+  double new_design_moment = 2;
+}
+message ChangePileDesignShear {
+  string id = 1;
+  double new_design_shear = 2;
+}
+message ChangePileInterlockShear {
+  string id = 1;
+  double new_interlock_shear = 2;
+}
+message ChangeCraneMemberId {
+  string id = 1;
+  string new_member_id = 2;
+}
+message ChangeCraneWheelContactLength {
+  string id = 1;
+  double new_wheel_contact_length = 2;
+}
+message ChangeCraneDispersion {
+  string id = 1;
+  double new_dispersion = 2;
+}
+message ChangeCraneWebThickness {
+  string id = 1;
+  double new_web_thickness = 2;
+}
+message ChangeCraneFy {
+  string id = 1;
+  double new_fy = 2;
+}
+message ChangeCranePhi {
+  string id = 1;
+  double new_phi = 2;
+}
+message ChangeCraneMaxWheelLoad {
+  string id = 1;
+  double new_max_wheel_load = 2;
+}
+message ChangeCraneLoadFactor {
+  string id = 1;
+  double new_load_factor = 2;
+}
+message ChangeCraneRailInertia {
+  string id = 1;
+  double new_rail_inertia = 2;
+}
+message ChangeCraneRailFixed {
+  string id = 1;
+  uint32 new_rail_fixed = 2;
+}
+message ChangeCraneFlangeEffWidth {
+  string id = 1;
+  double new_flange_effective_width = 2;
+}
+message ChangeCraneFlangeThickness {
+  string id = 1;
+  double new_flange_thickness = 2;
+}
+message ChangeCraneWheelEccentricity {
+  string id = 1;
+  double new_wheel_eccentricity = 2;
+}
+message ChangeCraneTorsionConstant {
+  string id = 1;
+  double new_torsion_constant = 2;
+}
+message ChangeCraneLongitudinalStress {
+  string id = 1;
+  double new_longitudinal_stress = 2;
+}
+message ChangeCraneRailRadius {
+  string id = 1;
+  double new_rail_radius = 2;
+}
+message ChangeCraneRailContactWidth {
+  string id = 1;
+  double new_rail_contact_width = 2;
+}
+message ChangeCraneCraneNu {
+  string id = 1;
+  double new_crane_nu = 2;
+}
+message ChangeCraneCraneKq {
+  string id = 1;
+  double new_crane_kq = 2;
+}
+message ChangeCraneDamageExponent {
+  string id = 1;
+  double new_damage_exponent = 2;
+}
+message ChangeCraneStressRange {
+  string id = 1;
+  double new_stress_range = 2;
+}
+message ChangeCraneDetailCatStress {
+  string id = 1;
+  double new_detail_category_stress = 2;
+}
+message ChangeCraneFatiguePhi {
+  string id = 1;
+  double new_fatigue_phi = 2;
+}
+message ChangeStoreyMemberId {
+  string id = 1;
+  string new_member_id = 2;
+}
+message ChangeStoreyLabel {
+  string id = 1;
+  string new_label = 2;
+}
+message ChangeStoreyHeight {
+  string id = 1;
+  double new_height = 2;
+}
+message ChangeStoreyVerticalLoad {
+  string id = 1;
+  double new_vertical_load = 2;
+}
+message ChangeStoreyHorizontalLoad {
+  string id = 1;
+  double new_horizontal_load = 2;
+}
+message ChangeStoreyDrift {
+  string id = 1;
+  double new_drift = 2;
+}
+message ChangeStoreyColumns {
+  string id = 1;
+  uint32 new_columns = 2;
+}
+message ChangeStoreyPlasticAnalysis {
+  string id = 1;
+  uint32 new_plastic_analysis = 2;
+}
+message ChangeStoreyBuildingHeight {
+  string id = 1;
+  double new_building_height = 2;
+}
+message ChangeStoreyBracingLoad {
+  string id = 1;
+  double new_bracing_load = 2;
+}
+message ChangeStoreyBracingLength {
+  string id = 1;
+  double new_bracing_length = 2;
+}
+message ChangeStoreyBracingDeflection {
+  string id = 1;
+  double new_bracing_deflection = 2;
+}
+message ChangeRestraintMemberId {
+  string id = 1;
+  string new_member_id = 2;
+}
+message ChangeRestraintLabel {
+  string id = 1;
+  string new_label = 2;
+}
+message ChangeRestraintStartSupport {
+  string id = 1;
+  RestraintSupport new_start_support = 2;
+}
+message ChangeRestraintEndSupport {
+  string id = 1;
+  RestraintSupport new_end_support = 2;
+}
+message ChangeRestIntermediatePosition {
+  string id = 1;
+  double new_intermediate_position = 2;
+}
+message ChangeRestraintTorsionalSpring {
+  string id = 1;
+  double new_torsional_spring = 2;
+}
+message ChangeRestLatSpringPosition {
+  string id = 1;
+  double new_lateral_spring_position = 2;
+}
+message ChangeRestLateralSpringStiff {
+  string id = 1;
+  double new_lateral_spring_stiffness = 2;
+}
+message ChangeRestraintLoadHeight {
+  string id = 1;
+  double new_load_height = 2;
+}
+message ChangeRestraintLoadDistribution {
+  string id = 1;
+  RestraintDistribution new_load_distribution = 2;
+}
+message ChangeRestraintDesignMoment {
+  string id = 1;
+  double new_design_moment = 2;
+}
+message ChangeRestraintDesignAxial {
+  string id = 1;
+  double new_design_axial = 2;
+}
+message ChangeRestraintGeneralMethod {
+  string id = 1;
+  uint32 new_general_method = 2;
+}
+message ChangeRestHingeToRest {
+  string id = 1;
+  double new_hinge_to_restraint = 2;
+}
+message ChangeBuiltUpMemberId {
+  string id = 1;
+  string new_member_id = 2;
+}
+message ChangeBuiltUpLabel {
+  string id = 1;
+  string new_label = 2;
+}
+message ChangeBuiltUpKind {
+  string id = 1;
+  BuiltUpKind new_kind = 2;
+}
+message ChangeBuiltUpChordArea {
+  string id = 1;
+  double new_chord_area = 2;
+}
+message ChangeBuiltUpChordInertia {
+  string id = 1;
+  double new_chord_inertia = 2;
+}
+message ChangeBuiltUpChordDistance {
+  string id = 1;
+  double new_chord_distance = 2;
+}
+message ChangeBuiltUpPanelSpacing {
+  string id = 1;
+  double new_panel_spacing = 2;
+}
+message ChangeBuiltUpPlanes {
+  string id = 1;
+  uint32 new_planes = 2;
+}
+message ChangeBuiltUpBattenInertia {
+  string id = 1;
+  double new_batten_inertia = 2;
+}
+message ChangeBuiltUpDiagonalArea {
+  string id = 1;
+  double new_diagonal_area = 2;
+}
+message ChangeBuiltUpDiagonalLength {
+  string id = 1;
+  double new_diagonal_length = 2;
+}
+message ChangeBuiltUpDesignAxial {
+  string id = 1;
+  double new_design_axial = 2;
+}
+message ChangeBuiltUpDesignMoment {
+  string id = 1;
+  double new_design_moment = 2;
+}
+message ChangeBuiltUpBackToBack {
+  string id = 1;
+  uint32 new_back_to_back = 2;
+}
+message ChangeBuiltUpMinRadius {
+  string id = 1;
+  double new_min_radius = 2;
+}
+message ChangeBuiltUpChainSpacing {
+  string id = 1;
+  double new_chain_spacing = 2;
+}
+message ChangeWeldMemberId {
+  string id = 1;
+  string new_member_id = 2;
+}
+message ChangeWeldLabel {
+  string id = 1;
+  string new_label = 2;
+}
+message ChangeWeldPattern {
+  string id = 1;
+  WeldPattern new_pattern = 2;
+}
+message ChangeWeldThroat {
+  string id = 1;
+  double new_throat = 2;
+}
+message ChangeWeldWidth {
+  string id = 1;
+  double new_width = 2;
+}
+message ChangeWeldDepth {
+  string id = 1;
+  double new_depth = 2;
+}
+message ChangeWeldShearForce {
+  string id = 1;
+  double new_shear_force = 2;
+}
+message ChangeWeldEccentricity {
+  string id = 1;
+  double new_eccentricity = 2;
+}
+message ChangeWeldSteelFu {
+  string id = 1;
+  double new_steel_fu = 2;
+}
+message ChangeWeldBetaW {
+  string id = 1;
+  double new_beta_w = 2;
+}
+message ChangeParamSectionId {
+  string id = 1;
+  string new_section_id = 2;
+}
+message ChangeParamLabel {
+  string id = 1;
+  string new_label = 2;
+}
+message ChangeParamShape {
+  string id = 1;
+  ParametricShape new_shape = 2;
+}
+message ChangeParamHeight {
+  string id = 1;
+  double new_height = 2;
+}
+message ChangeParamWidth {
+  string id = 1;
+  double new_width = 2;
+}
+message ChangeParamWebThickness {
+  string id = 1;
+  double new_web_thickness = 2;
+}
+message ChangeParamFlangeThickness {
+  string id = 1;
+  double new_flange_thickness = 2;
+}
+message ChangeParamTolerance {
+  string id = 1;
+  double new_tolerance = 2;
+}
+message ChangeHollowMemberId {
+  string id = 1;
+  string new_member_id = 2;
+}
+message ChangeHollowLabel {
+  string id = 1;
+  string new_label = 2;
+}
+message ChangeHollowChordWidth {
+  string id = 1;
+  double new_chord_width = 2;
+}
+message ChangeHollowChordHeight {
+  string id = 1;
+  double new_chord_height = 2;
+}
+message ChangeHollowChordThickness {
+  string id = 1;
+  double new_chord_thickness = 2;
+}
+message ChangeHollowChordFy {
+  string id = 1;
+  double new_chord_fy = 2;
+}
+message ChangeHollowChordStress {
+  string id = 1;
+  double new_chord_stress = 2;
+}
+message ChangeHollowBrace1Width {
+  string id = 1;
+  double new_brace1_width = 2;
+}
+message ChangeHollowBrace1Height {
+  string id = 1;
+  double new_brace1_height = 2;
+}
+message ChangeHollowBrace1Thickness {
+  string id = 1;
+  double new_brace1_thickness = 2;
+}
+message ChangeHollowBrace1Angle {
+  string id = 1;
+  double new_brace1_angle = 2;
+}
+message ChangeHollowBrace1Force {
+  string id = 1;
+  double new_brace1_force = 2;
+}
+message ChangeHollowBrace2Width {
+  string id = 1;
+  double new_brace2_width = 2;
+}
+message ChangeHollowBrace2Height {
+  string id = 1;
+  double new_brace2_height = 2;
+}
+message ChangeHollowBrace2Thickness {
+  string id = 1;
+  double new_brace2_thickness = 2;
+}
+message ChangeHollowBrace2Angle {
+  string id = 1;
+  double new_brace2_angle = 2;
+}
+message ChangeHollowBrace2Force {
+  string id = 1;
+  double new_brace2_force = 2;
+}
+message ChangeHollowGap {
+  string id = 1;
+  double new_gap = 2;
+}
+message ChangeHollowBraceFy {
+  string id = 1;
+  double new_brace_fy = 2;
+}
+message ChangeRowJointId {
+  string id = 1;
+  string new_joint_id = 2;
+}
+message ChangeRowLabel {
+  string id = 1;
+  string new_label = 2;
+}
+message ChangeRowRowType {
+  string id = 1;
+  JointRowType new_row_type = 2;
+}
+message ChangeRowLever {
+  string id = 1;
+  double new_lever = 2;
+}
+message ChangeRowBoltToWeb {
+  string id = 1;
+  double new_bolt_to_web = 2;
+}
+message ChangeRowEdgeDistance {
+  string id = 1;
+  double new_edge_distance = 2;
+}
+message ChangeRowExtensionToFlange {
+  string id = 1;
+  double new_extension_to_flange = 2;
+}
+message ChangeRowExtensionEdge {
+  string id = 1;
+  double new_extension_edge = 2;
+}
+message ChangeRowAlphaFactor {
+  string id = 1;
+  double new_alpha_factor = 2;
+}
+message ChangeRowPitchToPrevious {
+  string id = 1;
+  double new_pitch_to_previous = 2;
+}
+message ChangeRowBolts {
+  string id = 1;
+  uint32 new_bolts = 2;
+}
+message ChangeRowBoltDiameter {
+  string id = 1;
+  double new_bolt_diameter = 2;
+}
+message ChangeRowBoltStressArea {
+  string id = 1;
+  double new_bolt_stress_area = 2;
+}
+message ChangeRowGripLength {
+  string id = 1;
+  double new_grip_length = 2;
+}
+message ChangeRowBoltClass {
+  string id = 1;
+  string new_bolt_class = 2;
+}
+message ChangeRowGroupWithPrevious {
+  string id = 1;
+  uint32 new_group_with_previous = 2;
+}
+message InsertJointAction {
+  string id = 1;
+  optional uint64 index = 2;
+  JointForceAction element = 3;
+}
+message RemoveJointAction {
+  string id = 1;
+  uint64 index = 2;
+}
+message ChangeJointActionLoadCaseId {
+  string id = 1;
+  string element_id = 2;
+  string new_load_case_id = 3;
+}
+message ChangeJointActionShear {
+  string id = 1;
+  string element_id = 2;
+  double new_shear = 3;
+}
+message ChangeJointActionTension {
+  string id = 1;
+  string element_id = 2;
+  double new_tension = 3;
+}
+message InsertFatigueBand {
+  string id = 1;
+  optional uint64 index = 2;
+  FatigueBand element = 3;
+}
+message RemoveFatigueBand {
+  string id = 1;
+  uint64 index = 2;
+}
+message ChangeFatigueBandDeltaSigma {
+  string id = 1;
+  string element_id = 2;
+  double new_delta_sigma = 3;
+}
+message ChangeFatigueBandCycles {
+  string id = 1;
+  string element_id = 2;
+  double new_cycles = 3;
+}
+message InsertCfAction {
+  string id = 1;
+  optional uint64 index = 2;
+  ForceAction element = 3;
+}
+message RemoveCfAction {
+  string id = 1;
+  uint64 index = 2;
+}
+message ChangeCfActionLoadCaseId {
+  string id = 1;
+  string element_id = 2;
+  string new_load_case_id = 3;
+}
+message ChangeCfActionForce {
+  string id = 1;
+  string element_id = 2;
+  double new_force = 3;
+}
+message InsertPlatedAction {
+  string id = 1;
+  optional uint64 index = 2;
+  ForceAction element = 3;
+}
+message RemovePlatedAction {
+  string id = 1;
+  uint64 index = 2;
+}
+message ChangePlatedActionLoadCaseId {
+  string id = 1;
+  string element_id = 2;
+  string new_load_case_id = 3;
+}
+message ChangePlatedActionForce {
+  string id = 1;
+  string element_id = 2;
+  double new_force = 3;
+}
+message InsertTensionAction {
+  string id = 1;
+  optional uint64 index = 2;
+  ForceAction element = 3;
+}
+message RemoveTensionAction {
+  string id = 1;
+  uint64 index = 2;
+}
+message ChangeTensionActionLoadCaseId {
+  string id = 1;
+  string element_id = 2;
+  string new_load_case_id = 3;
+}
+message ChangeTensionActionForce {
+  string id = 1;
+  string element_id = 2;
+  double new_force = 3;
+}
+message InsertTowerAction {
+  string id = 1;
+  optional uint64 index = 2;
+  ForceAction element = 3;
+}
+message RemoveTowerAction {
+  string id = 1;
+  uint64 index = 2;
+}
+message ChangeTowerActionLoadCaseId {
+  string id = 1;
+  string element_id = 2;
+  string new_load_case_id = 3;
+}
+message ChangeTowerActionForce {
+  string id = 1;
+  string element_id = 2;
+  double new_force = 3;
+}
+message InsertPileAction {
+  string id = 1;
+  optional uint64 index = 2;
+  ForceAction element = 3;
+}
+message RemovePileAction {
+  string id = 1;
+  uint64 index = 2;
+}
+message ChangePileActionLoadCaseId {
+  string id = 1;
+  string element_id = 2;
+  string new_load_case_id = 3;
+}
+message ChangePileActionForce {
+  string id = 1;
+  string element_id = 2;
+  double new_force = 3;
+}
+message InsertCraneAction {
+  string id = 1;
+  optional uint64 index = 2;
+  ForceAction element = 3;
+}
+message RemoveCraneAction {
+  string id = 1;
+  uint64 index = 2;
+}
+message ChangeCraneActionLoadCaseId {
+  string id = 1;
+  string element_id = 2;
+  string new_load_case_id = 3;
+}
+message ChangeCraneActionForce {
+  string id = 1;
+  string element_id = 2;
+  double new_force = 3;
+}
+message InsertFrameNode {
+  optional uint64 index = 1;
+  FrameNode frame_node = 2;
+}
+message RemoveFrameNode {
+  uint64 index = 1;
+}
+message InsertFrameBar {
+  optional uint64 index = 1;
+  FrameBar frame_bar = 2;
+}
+message RemoveFrameBar {
+  uint64 index = 1;
+}
+message InsertPlacement {
+  optional uint64 index = 1;
+  Placement placement = 2;
+}
+message RemovePlacement {
+  uint64 index = 1;
+}
+message ChangeMaterialRambergOsgoodN {
+  string id = 1;
+  double new_ramberg_osgood_n = 2;
+}
+message ChangeFrameNodeLabel {
+  string id = 1;
+  string new_label = 2;
+}
+message ChangeFrameNodeX {
+  string id = 1;
+  double new_x = 2;
+}
+message ChangeFrameNodeZ {
+  string id = 1;
+  double new_z = 2;
+}
+message ChangeFrameNodeSupport {
+  string id = 1;
+  FrameNodeSupport new_support = 2;
+}
+message ChangeFrameNodeLoadX {
+  string id = 1;
+  double new_load_x = 2;
+}
+message ChangeFrameNodeLoadZ {
+  string id = 1;
+  double new_load_z = 2;
+}
+message ChangeFrameBarMemberId {
+  string id = 1;
+  string new_member_id = 2;
+}
+message ChangeFrameBarLabel {
+  string id = 1;
+  string new_label = 2;
+}
+message ChangeFrameBarStartNodeId {
+  string id = 1;
+  string new_start_node_id = 2;
+}
+message ChangeFrameBarEndNodeId {
+  string id = 1;
+  string new_end_node_id = 2;
+}
+message ChangeFrameBarReleaseStart {
+  string id = 1;
+  FrameBarRelease new_release_start = 2;
+}
+message ChangeFrameBarReleaseEnd {
+  string id = 1;
+  FrameBarRelease new_release_end = 2;
+}
+message ChangePlacementX {
+  string id = 1;
+  double new_x = 2;
+}
+message ChangePlacementY {
+  string id = 1;
+  double new_y = 2;
+}
+message ChangePlacementZ {
+  string id = 1;
+  double new_z = 2;
+}
+message ChangePlacementYaw {
+  string id = 1;
+  double new_yaw = 2;
+}
+message ChangeCfPurlinSpan {
+  string id = 1;
+  double new_purlin_span = 2;
+}
+message ChangeCfPurlinLoad {
+  string id = 1;
+  double new_purlin_load = 2;
+}
+message ChangeCfPurlinLateralRatio {
+  string id = 1;
+  double new_purlin_lateral_ratio = 2;
+}
+message ChangePlatedCorrugationFlat {
+  string id = 1;
+  double new_corrugation_flat = 2;
+}
+message ChangePlatedCorrProjection {
+  string id = 1;
+  double new_corrugation_projection = 2;
+}
+message ChangePlatedCorrugationDepth {
+  string id = 1;
+  double new_corrugation_depth = 2;
+}
+message ChangePlatedWebHeight {
+  string id = 1;
+  double new_web_height = 2;
+}
+message ChangeSiloRingSpacing {
+  string id = 1;
+  double new_ring_spacing = 2;
+}
+message ChangeSiloRingArea {
+  string id = 1;
+  double new_ring_area = 2;
+}
+message ChangeSiloRingInertia {
+  string id = 1;
+  double new_ring_inertia = 2;
+}
+message ChangeSiloRingOffset {
+  string id = 1;
+  double new_ring_offset = 2;
+}
+message ChangeBridgeDeckThickness {
+  string id = 1;
+  double new_deck_thickness = 2;
+}
+message ChangeBridgeTroughSpacing {
+  string id = 1;
+  double new_trough_spacing = 2;
+}
+message ChangeBridgeTroughWidth {
+  string id = 1;
+  double new_trough_width = 2;
+}
+message ChangeBridgeTroughThickness {
+  string id = 1;
+  double new_trough_thickness = 2;
+}
+message ChangeBridgeCrossbeamSpacing {
+  string id = 1;
+  double new_crossbeam_spacing = 2;
+}
+message ChangeBridgeSurfacingThickness {
+  string id = 1;
+  double new_surfacing_thickness = 2;
+}
+message ChangeBridgeWheelLoad {
+  string id = 1;
+  double new_wheel_load = 2;
+}
+message ChangeBridgeWheelPatch {
+  string id = 1;
+  double new_wheel_patch = 2;
+}
+message ChangePlatedStiffenerSpacing {
+  string id = 1;
+  double new_stiffener_spacing = 2;
+}
+message ChangeBuiltUpChordShape {
+  string id = 1;
+  ChordShape new_chord_shape = 2;
+}
+message ChangeBuiltUpChordDepth {
+  string id = 1;
+  double new_chord_depth = 2;
+}
+message ChangeBuiltUpChordWidth {
+  string id = 1;
+  double new_chord_width = 2;
+}
+message ChangeBuiltUpChordFlangeThk {
+  string id = 1;
+  double new_chord_flange_thickness = 2;
+}
+message ChangeBuiltUpChordWebThk {
+  string id = 1;
+  double new_chord_web_thickness = 2;
+}
+message ChangeMemberWebMaterialId {
+  string id = 1;
+  string new_web_material_id = 2;
+}
+message ChangeMemberTorsionLoad {
+  string id = 1;
+  TorsionLoad new_torsion_load = 2;
+}
+message ChangeMemberTorquePosition {
+  string id = 1;
+  double new_torque_position = 2;
+}
+message ChangeFatigueStressHistory {
+  string id = 1;
+  string new_stress_history = 2;
+}
+message ChangePlatedStiffenerShape {
+  string id = 1;
+  StiffenerShape new_stiffener_shape = 2;
+}
+message ChangePlatedStiffenerDepth {
+  string id = 1;
+  double new_stiffener_depth = 2;
+}
+message ChangePlatedStiffenerThickness {
+  string id = 1;
+  double new_stiffener_thickness = 2;
+}
+message ChangePlatedStiffFlangeWidth {
+  string id = 1;
+  double new_stiffener_flange_width = 2;
+}
+message ChangePlatedStiffenerFlangeThk {
+  string id = 1;
+  double new_stiffener_flange_thickness = 2;
+}
+message ChangePlatedLateralPressure {
+  string id = 1;
+  double new_lateral_pressure = 2;
+}
+message ChangePlatedLatPressureCoef {
+  string id = 1;
+  double new_lateral_pressure_coefficient = 2;
+}
+message ChangeMemberWarpingSupport {
+  string id = 1;
+  WarpingSupport new_warping_support = 2;
+}
+message InsertJointPlate {
+  optional uint64 index = 1;
+  JointPlate joint_plate = 2;
+}
+message RemoveJointPlate {
+  uint64 index = 1;
+}
+message InsertFoundationBlock {
+  optional uint64 index = 1;
+  FoundationBlock foundation_block = 2;
+}
+message RemoveFoundationBlock {
+  uint64 index = 1;
+}
+message ChangeMemberLtbRestraintSpacing {
+  string id = 1;
+  double new_ltb_restraint_spacing = 2;
+}
+message ChangeMemberDeflectionLimitRatio {
+  string id = 1;
+  double new_deflection_limit_ratio = 2;
+}
+message ChangeMemberToughnessStressRatio {
+  string id = 1;
+  double new_toughness_stress_ratio = 2;
+}
+message ChangeJointColumnFlangeThickness {
+  string id = 1;
+  double new_column_flange_thickness = 2;
+}
+message ChangeJointBeamMomentResistance {
+  string id = 1;
+  double new_beam_moment_resistance = 2;
+}
+message ChangeJointColumnMomentResistance {
+  string id = 1;
+  double new_column_moment_resistance = 2;
+}
+message ChangeJointTransformationParameter {
+  string id = 1;
+  double new_transformation_parameter = 2;
+}
+message ChangeFireProtectionConductivity {
+  string id = 1;
+  double new_protection_conductivity = 2;
+}
+message ChangeFireProtectionSpecificHeat {
+  string id = 1;
+  double new_protection_specific_heat = 2;
+}
+message ChangeCfRequiredRestraintStiffness {
+  string id = 1;
+  double new_required_restraint_stiffness = 2;
+}
+message ChangePlatedStiffenerEccentricity {
+  string id = 1;
+  double new_stiffener_eccentricity = 2;
+}
+message ChangePlatedPatchMomentResistance {
+  string id = 1;
+  double new_patch_moment_resistance = 2;
+}
+message ChangePlatedTransverseStiffenerInertia {
+  string id = 1;
+  double new_transverse_stiffener_inertia = 2;
+}
+message ChangePlatedCorrugationProjection {
+  string id = 1;
+  double new_corrugation_projection = 2;
+}
+message ChangePlatedStiffenerFlangeWidth {
+  string id = 1;
+  double new_stiffener_flange_width = 2;
+}
+message ChangePlatedStiffenerFlangeThickness {
+  string id = 1;
+  double new_stiffener_flange_thickness = 2;
+}
+message ChangePlatedLateralPressureCoefficient {
+  string id = 1;
+  double new_lateral_pressure_coefficient = 2;
+}
+message ChangeTensionCableHorizontalForce {
+  string id = 1;
+  double new_cable_horizontal_force = 2;
+}
+message ChangeTowerLateralForceCoefficient {
+  string id = 1;
+  double new_lateral_force_coefficient = 2;
+}
+message ChangeTowerPermittedAmplitudeRatio {
+  string id = 1;
+  double new_permitted_amplitude_ratio = 2;
+}
+message ChangePileInterlockBendingFactor {
+  string id = 1;
+  double new_interlock_bending_factor = 2;
+}
+message ChangePileInterlockStiffnessFactor {
+  string id = 1;
+  double new_interlock_stiffness_factor = 2;
+}
+message ChangeCraneFlangeEffectiveWidth {
+  string id = 1;
+  double new_flange_effective_width = 2;
+}
+message ChangeCraneDetailCategoryStress {
+  string id = 1;
+  double new_detail_category_stress = 2;
+}
+message ChangeRestraintIntermediatePosition {
+  string id = 1;
+  double new_intermediate_position = 2;
+}
+message ChangeRestraintLatSpringPosition {
+  string id = 1;
+  double new_lateral_spring_position = 2;
+}
+message ChangeRestraintLatSpringStiffness {
+  string id = 1;
+  double new_lateral_spring_stiffness = 2;
+}
+message ChangeRestraintHingeToRestraint {
+  string id = 1;
+  double new_hinge_to_restraint = 2;
+}
+message ChangeBuiltUpChordFlangeThickness {
+  string id = 1;
+  double new_chord_flange_thickness = 2;
+}
+message ChangeBuiltUpChordWebThickness {
+  string id = 1;
+  double new_chord_web_thickness = 2;
+}
+message ChangeJointPlateJointId {
+  string id = 1;
+  string new_joint_id = 2;
+}
+message ChangeJointPlateLabel {
+  string id = 1;
+  string new_label = 2;
+}
+message ChangeJointPlateRole {
+  string id = 1;
+  string new_role = 2;
+}
+message ChangeJointPlatePlateHeight {
+  string id = 1;
+  double new_plate_height = 2;
+}
+message ChangeJointPlatePlateWidth {
+  string id = 1;
+  double new_plate_width = 2;
+}
+message ChangeJointPlatePlateThickness {
+  string id = 1;
+  double new_plate_thickness = 2;
+}
+message ChangeJointPlatePlateCount {
+  string id = 1;
+  uint64 new_plate_count = 2;
+}
+message ChangeJointPlatePlateFy {
+  string id = 1;
+  double new_plate_fy = 2;
+}
+message ChangeJointPlatePlateFu {
+  string id = 1;
+  double new_plate_fu = 2;
+}
+message ChangeJointPlateBoltClass {
+  string id = 1;
+  string new_bolt_class = 2;
+}
+message ChangeJointPlateBoltDiameter {
+  string id = 1;
+  double new_bolt_diameter = 2;
+}
+message ChangeJointPlateHoleDiameter {
+  string id = 1;
+  double new_hole_diameter = 2;
+}
+message ChangeJointPlateBoltRows {
+  string id = 1;
+  uint64 new_bolt_rows = 2;
+}
+message ChangeJointPlateBoltsPerRow {
+  string id = 1;
+  uint64 new_bolts_per_row = 2;
+}
+message ChangeJointPlatePitch {
+  string id = 1;
+  double new_pitch = 2;
+}
+message ChangeJointPlateGauge {
+  string id = 1;
+  double new_gauge = 2;
+}
+message ChangeJointPlateEndDistance {
+  string id = 1;
+  double new_end_distance = 2;
+}
+message ChangeJointPlateEdgeDistance {
+  string id = 1;
+  double new_edge_distance = 2;
+}
+message ChangeJointPlateShearPlanes {
+  string id = 1;
+  uint64 new_shear_planes = 2;
+}
+message ChangeJointPlateEccentricity {
+  string id = 1;
+  double new_eccentricity = 2;
+}
+message ChangeJointPlateWeldThroat {
+  string id = 1;
+  double new_weld_throat = 2;
+}
+message ChangeJointPlateWeldFu {
+  string id = 1;
+  double new_weld_fu = 2;
+}
+message ChangeJointPlateWeldBetaW {
+  string id = 1;
+  double new_weld_beta_w = 2;
+}
+message ChangeFoundationJointId {
+  string id = 1;
+  string new_joint_id = 2;
+}
+message ChangeFoundationLabel {
+  string id = 1;
+  string new_label = 2;
+}
+message ChangeFoundationBlockLength {
+  string id = 1;
+  double new_block_length = 2;
+}
+message ChangeFoundationBlockWidth {
+  string id = 1;
+  double new_block_width = 2;
+}
+message ChangeFoundationBlockDepth {
+  string id = 1;
+  double new_block_depth = 2;
+}
+message ChangeFoundationConcreteFck {
+  string id = 1;
+  double new_concrete_fck = 2;
+}
+message ChangeFoundationGroutFck {
+  string id = 1;
+  double new_grout_fck = 2;
+}
+message ChangeFoundationGroutThickness {
+  string id = 1;
+  double new_grout_thickness = 2;
+}
+message ChangeFoundationAnchorCount {
+  string id = 1;
+  uint64 new_anchor_count = 2;
+}
+message ChangeFoundationAnchorClass {
+  string id = 1;
+  string new_anchor_class = 2;
+}
+message ChangeFoundationAnchorDiameter {
+  string id = 1;
+  double new_anchor_diameter = 2;
+}
+message ChangeFoundationAnchorStressArea {
+  string id = 1;
+  double new_anchor_stress_area = 2;
+}
+message ChangeFoundationAnchorEmbedment {
+  string id = 1;
+  double new_anchor_embedment = 2;
+}
+message ChangeFoundationAnchorEdgeDistance {
+  string id = 1;
+  double new_anchor_edge_distance = 2;
 }

@@ -1,0 +1,5 @@
+{
+  "mutation": "changePileUnitBaseResistance",
+  "id": "pile-P1",
+  "newUnitBaseResistance": 6000000.0
+}

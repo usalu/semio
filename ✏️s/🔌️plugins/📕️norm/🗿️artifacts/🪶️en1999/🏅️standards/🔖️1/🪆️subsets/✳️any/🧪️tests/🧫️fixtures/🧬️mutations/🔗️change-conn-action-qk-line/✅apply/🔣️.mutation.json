@@ -1,0 +1,6 @@
+{
+  "mutation": "changeConnActionQKLine",
+  "connectionId": "support-weld",
+  "actionId": "G-conn",
+  "newQKLine": 1.5
+}

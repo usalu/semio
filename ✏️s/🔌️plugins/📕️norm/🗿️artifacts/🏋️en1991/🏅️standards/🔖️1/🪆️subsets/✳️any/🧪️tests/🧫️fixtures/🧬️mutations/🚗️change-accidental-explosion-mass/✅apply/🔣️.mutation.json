@@ -1,0 +1,6 @@
+{
+  "ChangeAccidentalExplosionMass": {
+    "id": "explosion-1",
+    "newExplosionMass": 200.0
+  }
+}

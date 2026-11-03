@@ -7,7 +7,7 @@ use semio_s_artifact_norm_en1995_model::En1995Snapshot;
 /// 🔺️ A member-scoped change patches only that member's field; annex and connections stay untouched.
 #[semio_framework_async_macros::async_test]
 async fn change_mutation_diff_updates_only_its_field() {
-    let base = En1995Snapshot::default();
+    let base = En1995Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De);
     let mutation = En1995Mutation::ChangeMemberH(semio_s_artifact_norm_en1995_mut_geometry::change_member_h::ChangeMemberH { member_id: base.members[0].id.clone(), new_value: 0.5 });
     let outcome = mutation.diff(&base);
     let diff = outcome.diff();
@@ -22,7 +22,7 @@ async fn change_mutation_diff_updates_only_its_field() {
 /// 🧲 `absorb` coalesces patches per key: the latest value of a field wins and unrelated fields accumulate.
 #[semio_framework_async_macros::async_test]
 async fn absorb_coalesces_per_key_and_keeps_the_sequential_result() {
-    let base = En1995Snapshot::default();
+    let base = En1995Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De);
     let member_id = base.members[0].id.clone();
     let mut first = En1995Mutation::ChangeMemberH(semio_s_artifact_norm_en1995_mut_geometry::change_member_h::ChangeMemberH { member_id: member_id.clone(), new_value: 0.5 }).diff(&base).diff().clone();
     let mid = apply_diff_cold(&first, &base).expect("first applies");

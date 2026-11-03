@@ -1,0 +1,5 @@
+type ChangeBarLayerBondCondition {
+  memberId: String!
+  layerId: String!
+  newBondCondition: BondCondition!
+}

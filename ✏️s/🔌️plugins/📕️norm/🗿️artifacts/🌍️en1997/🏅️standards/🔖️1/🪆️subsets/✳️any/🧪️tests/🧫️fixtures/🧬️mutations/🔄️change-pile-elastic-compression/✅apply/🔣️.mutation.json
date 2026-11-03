@@ -1,0 +1,5 @@
+{
+  "mutation": "changePileElasticCompression",
+  "id": "pile-P1",
+  "newElasticCompression": 1.5
+}

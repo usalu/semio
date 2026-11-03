@@ -1,0 +1,12 @@
+{"schema":"fastening-cases/1","units":"N mm MPa","cases":[
+{"id":"cone-single","kind":"cone","f_ck":30,"h_ef":100,"k1":8.9,"c1":0,"anchors":[[0,0]],"e_nx":0,"e_ny":0,"expect_n_rk_c":48747.307617959785,"expect_ratio":1.0,"expect_psi_s":1.0},
+{"id":"cone-edge","kind":"cone","f_ck":30,"h_ef":100,"k1":8.9,"c1":100,"anchors":[[0,0]],"e_nx":0,"e_ny":0,"expect_n_rk_c":36560.480713469835,"expect_ratio":0.8333333333333334,"expect_psi_s":0.8999999999999999},
+{"id":"cone-pair","kind":"cone","f_ck":30,"h_ef":100,"k1":8.9,"c1":0,"anchors":[[0,0],[200,0]],"e_nx":0,"e_ny":0,"expect_n_rk_c":81245.51269659965,"expect_ratio":1.6666666666666667,"expect_psi_s":1.0},
+{"id":"cone-thin-eccentric","kind":"cone","f_ck":30,"h_ef":80,"k1":7.7,"c1":0,"anchors":[[0,0]],"e_nx":40,"e_ny":0,"expect_n_rk_c":20369.956700984912,"expect_ratio":1.0,"expect_psi_s":1.0},
+{"id":"pullout","kind":"pullout","f_ck":30,"k2":7.5,"d":20,"d_h":40,"expect_n_rk_p":212057.504117311},
+{"id":"steel-tension","kind":"steel","a_s":245,"f_uk":900,"f_yk":700,"expect_n_rk_s":220500.0,"expect_gamma_n":1.5,"expect_gamma_v":1.5},
+{"id":"steel-mild","kind":"steel","a_s":245,"f_uk":500,"f_yk":400,"expect_n_rk_s":122500.0,"expect_gamma_n":1.5,"expect_gamma_v":1.25},
+{"id":"edge-single","kind":"edge","f_ck":30,"k9":1.7,"d_nom":20,"h_ef":100,"c1":100,"h":200,"expect_v_rk_c":17541.57081526433},
+{"id":"pryout","kind":"pryout","n_rk_c":48750,"h_ef":100,"expect_v_rk_cp":97500.0},
+{"id":"interaction","kind":"interaction","n_ed":30,"n_rd":60,"v_ed":20,"v_rd":50,"exponent":1.5,"expect_value":0.6065356034067442}
+]}

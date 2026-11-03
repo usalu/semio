@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-shell-action-kind/schema.json",
+  "title": "ChangeShellActionKind",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "shellId",
+    "actionId",
+    "newKind"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeShellActionKind"
+    },
+    "shellId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Shell",
+          "de": "Schale"
+        },
+        "description": {
+          "en": "The shell this mutation addresses, by id.",
+          "de": "Das adressierte Element (Schale), per Kennung."
+        },
+        "ref": {
+          "kind": "shell"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "actionId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Action",
+          "de": "Einwirkung"
+        },
+        "description": {
+          "en": "The action this mutation addresses, by id.",
+          "de": "Das adressierte Element (Einwirkung), per Kennung."
+        },
+        "ref": {
+          "kind": "action"
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "newKind": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/$defs/ActionKind",
+      "x-semio-ui": {
+        "label": {
+          "en": "kind",
+          "de": "Art"
+        },
+        "role": "value",
+        "group": "value",
+        "order": 30
+      },
+      "x-semio-rust": {
+        "type": "ActionKind"
+      }
+    }
+  }
+}

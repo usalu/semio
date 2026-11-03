@@ -1,0 +1,21 @@
+{
+  "artifact": "en1993",
+  "leaf": {
+    "kindSlug": "fatigue",
+    "default": "Low",
+    "field": {
+      "name": "consequence",
+      "type": "enum",
+      "label": {"en": "Consequence class of failure", "de": "Schadensfolgeklasse"},
+      "doc": "🔄 Consequence class of a fatigue failure for the partial factor γ_Mf of EN 1993-1-9 Table 3.1: with the assessment method (damage tolerant or safe life) it selects one of the four registry rows ndp.en1993.1-9.gamma-mf.<method>.<consequence>.",
+      "enum": {
+        "name": "FatigueConsequence",
+        "doc": "⚠ Consequence class of a fatigue failure (EN 1993-1-9 Table 3.1): low consequence or high consequence.",
+        "values": [
+          {"token": "Low", "label": {"en": "Low consequence", "de": "Geringe Folgen"}},
+          {"token": "High", "label": {"en": "High consequence", "de": "Hohe Folgen"}}
+        ]
+      }
+    }
+  }
+}

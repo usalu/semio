@@ -1,0 +1,5 @@
+{
+  "mutation": "changeBuildingNsHeightM",
+  "id": "bldg-office",
+  "newNonstructuralHeightM": 1.5
+}

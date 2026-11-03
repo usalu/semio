@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-column-buckling-curve/schema.json",
+  "title": "ChangeColumnBucklingCurve",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newBucklingCurve"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Composite column",
+          "de": "Verbundstütze"
+        },
+        "description": {
+          "en": "The composite column this mutation addresses, by id.",
+          "de": "Das adressierte Element (Verbundstütze), per Kennung."
+        },
+        "ref": {
+          "kind": "column"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newBucklingCurve": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/BucklingCurve",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Column buckling curve",
+          "de": "Knickspannungslinie der Stütze"
+        },
+        "group": "column",
+        "order": 20
+      }
+    }
+  }
+}

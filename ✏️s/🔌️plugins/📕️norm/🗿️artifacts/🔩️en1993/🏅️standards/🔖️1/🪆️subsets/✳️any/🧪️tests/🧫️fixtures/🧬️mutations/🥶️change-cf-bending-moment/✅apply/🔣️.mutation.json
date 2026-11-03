@@ -1,0 +1,6 @@
+{
+  "ChangeCfBendingMoment": {
+    "id": "cf-1",
+    "newBendingMoment": 1.5
+  }
+}

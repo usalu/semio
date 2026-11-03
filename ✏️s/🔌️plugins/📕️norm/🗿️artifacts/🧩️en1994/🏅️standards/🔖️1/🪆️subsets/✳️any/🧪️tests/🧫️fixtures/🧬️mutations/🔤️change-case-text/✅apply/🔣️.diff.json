@@ -1,0 +1,36 @@
+{
+  "cases": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "case-c94-10",
+        "patch": {
+          "labelEn": null,
+          "labelDe": null,
+          "entryId": null,
+          "numbers": {
+            "removed": [],
+            "inserted": [],
+            "moved": [],
+            "modified": []
+          },
+          "texts": {
+            "removed": [],
+            "inserted": [],
+            "moved": [],
+            "modified": [
+              {
+                "id": "steel_kind",
+                "patch": {
+                  "value": "welded"
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

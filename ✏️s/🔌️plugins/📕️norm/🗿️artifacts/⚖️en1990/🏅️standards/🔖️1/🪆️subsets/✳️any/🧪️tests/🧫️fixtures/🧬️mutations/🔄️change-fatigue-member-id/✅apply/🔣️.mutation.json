@@ -1,0 +1,5 @@
+{
+  "mutation": "changeFatigueMemberId",
+  "id": "fat-1",
+  "newMemberId": "beam-B1-alt"
+}

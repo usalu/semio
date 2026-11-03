@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-crane-action-load-case-id/schema.json",
+  "title": "ChangeCraneActionLoadCaseId",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "elementId",
+    "newLoadCaseId"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Crane runway action",
+          "de": "Kranbahn-Einwirkung"
+        },
+        "description": {
+          "en": "The crane runway action this mutation addresses, by id.",
+          "de": "Das adressierte Element (Kranbahn-Einwirkung), per Kennung."
+        },
+        "ref": {
+          "kind": "crane-action"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "elementId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Crane runway action",
+          "de": "Kranbahn-Einwirkung"
+        },
+        "description": {
+          "en": "The crane runway action element this mutation addresses, by id.",
+          "de": "Das adressierte Element (Kranbahn-Einwirkung), per Kennung."
+        },
+        "ref": {
+          "kind": "crane-action"
+        },
+        "group": "target",
+        "order": 15
+      }
+    },
+    "newLoadCaseId": {
+      "type": "string",
+      "x-semio-ui": {
+        "label": {
+          "en": "Load case",
+          "de": "Lastfall"
+        },
+        "widget": "text",
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

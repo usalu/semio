@@ -1,0 +1,27 @@
+{
+  "artifact": "en1999",
+  "leaf": {
+    "kindSlug": "conn",
+    "default": "elastic",
+    "field": {
+      "name": "force_method",
+      "type": "enum",
+      "label": {
+        "en": "Fastener force distribution method",
+        "de": "Verfahren der Kraftverteilung auf die Verbindungsmittel"
+      },
+      "doc": "🔩 Method that distributes an eccentric in-plane shear over the fasteners of a bolt group (EN 1999-1-1 8.5): the elastic method (rigid plate, forces proportional to the distance from the centroid) or the instantaneous-centre method (ductile fasteners rotating about the instantaneous centre of rotation).",
+      "enum": {
+        "name": "FastenerForceMethod",
+        "doc": "🔩 Distribution of an eccentric shear over a bolt group: elastic method or instantaneous-centre method.",
+        "values": [
+          { "token": "elastic", "label": { "en": "Elastic method", "de": "Elastisches Verfahren" } },
+          { "token": "instantaneousCentre", "label": { "en": "Instantaneous-centre method", "de": "Momentanpolverfahren" } }
+        ]
+      }
+    },
+    "entity": {
+      "singular": { "en": "connection", "de": "Anschluss" }
+    }
+  }
+}

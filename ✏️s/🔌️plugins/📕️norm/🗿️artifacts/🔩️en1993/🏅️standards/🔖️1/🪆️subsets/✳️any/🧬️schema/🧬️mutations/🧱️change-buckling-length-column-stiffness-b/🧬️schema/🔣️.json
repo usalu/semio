@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-buckling-length-column-stiffness-b/schema.json",
+  "title": "ChangeBucklingLengthColumnStiffnessB",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newColumnStiffnessB"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Buckling length",
+          "de": "Knicklänge"
+        },
+        "description": {
+          "en": "The buckling length this mutation addresses, by id.",
+          "de": "Das adressierte Element (Knicklänge), per Kennung."
+        },
+        "ref": {
+          "kind": "buckling-length"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newColumnStiffnessB": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Node B: column stiffness sum",
+          "de": "Knoten B: Stützensteifigkeit"
+        },
+        "widget": "stepper",
+        "role": "value",
+        "group": "value",
+        "order": 20,
+        "unit": "m³",
+        "precision": 7,
+        "step": 1e-06
+      }
+    }
+  }
+}

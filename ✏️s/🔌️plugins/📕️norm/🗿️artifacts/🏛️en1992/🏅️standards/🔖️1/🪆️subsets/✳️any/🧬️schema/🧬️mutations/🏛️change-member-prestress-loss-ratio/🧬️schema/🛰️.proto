@@ -1,0 +1,6 @@
+syntax = "proto3";
+package semio.s.norm.en1992.mutation.change_member_prestress_loss_ratio;
+message ChangeMemberPrestressLossRatio {
+  string member_id = 1;
+  double new_prestress_loss_ratio = 2;
+}

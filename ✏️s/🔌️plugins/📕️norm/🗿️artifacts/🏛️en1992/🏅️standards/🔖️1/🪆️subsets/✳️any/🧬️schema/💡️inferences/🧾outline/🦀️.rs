@@ -5,6 +5,7 @@ use semio_s_artifact_norm_en1992_model::En1992Snapshot;
 /// 📋 Editable / evaluated field paths (camelCase).
 pub const OUTLINE_FIELDS: &[&str] = &[
     "annex",
+    "reliabilityClass",
     "title",
     "designWorkingLifeYears",
     "deltaCDev",
@@ -14,14 +15,16 @@ pub const OUTLINE_FIELDS: &[&str] = &[
     "prestressSteels",
     "members",
     "anchors",
+    "placements",
+    "cases",
 ];
 
 const SECTION_FIELDS: &[&str] = OUTLINE_FIELDS;
 
 /// 🧾️ `En1992` document outline.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct En1992Outline {
     pub section_outline: Vec<String>,
@@ -31,7 +34,7 @@ pub struct En1992Outline {
 
 impl Default for En1992Outline {
     fn default() -> Self {
-        Self::compute(&En1992Snapshot::default())
+        Self::compute(&En1992Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De))
     }
 }
 
@@ -41,7 +44,7 @@ impl En1992Outline {
         Self {
             section_outline: SECTION_FIELDS.iter().map(|s| (*s).to_string()).collect(),
             field_count: SECTION_FIELDS.len() as u32,
-            entry_count: (snapshot.members.len() + snapshot.anchors.len()) as u32,
+            entry_count: (snapshot.members.len() + snapshot.anchors.len() + snapshot.placements.len() + snapshot.cases.len()) as u32,
         }
     }
 }

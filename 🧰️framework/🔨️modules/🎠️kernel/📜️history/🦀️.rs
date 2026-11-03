@@ -245,7 +245,7 @@ pub struct HistoryTimeTravel {
 /// rows without an edit are session commands such as undo or a noted shell command). Hosts key rows by `edit_id`,
 /// falling back to `seq` for a row without an edit. The payload is deliberately presentation-neutral: the host owns
 /// windowing and retains entries beyond any visible range.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 #[derive(semio_framework_value::RetireOwned)]
@@ -306,6 +306,11 @@ fn history_entry_count() -> u32 {
 }
 
 impl HistoryEntry {
+    /// 🆕️ A row with the identifying fields and an explicit, complete label; every other field starts empty.
+    pub fn new(seq: u64, action_id: impl Into<String>, label: semio_framework_ui_locale::LocalizedLabel, kind: impl Into<String>) -> Self {
+        Self { seq, edit_id: None, transaction: None, transition_id: None, author: None, action_id: action_id.into(), label, kind: kind.into(), timestamp: String::new(), op_lines: Vec::new(), op_count: 0, applied: false, revertible: false, count: 0, worst: None, mutations: Vec::new() }
+    }
+
     /// 🔑️ The key a host folds this row under: `edit:<editId>`, else `transition:<transitionId>`, else `seq:<seq>`.
     /// TypeScript twin `historyEntryKey`.
     pub fn key(&self) -> String {

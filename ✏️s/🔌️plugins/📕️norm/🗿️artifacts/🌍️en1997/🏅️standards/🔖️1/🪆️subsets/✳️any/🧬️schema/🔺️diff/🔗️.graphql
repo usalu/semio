@@ -1,216 +1,661 @@
-# 🧬️ En1997 diff schema — keyed sparse diff: scalar setters, id/index/key keyed row diffs and per-field section patches.
+scalar JSON
 
-type En1997LayersPatch {
-  oedometricModulus: Float
-  phiPrimeDeg: Float
+type En1997Diff {
+  structureId: JSON
+  geotechnicalCategory: JSON
+  designSituation: JSON
+  designApproach: JSON
+  annex: JSON
+  groundwaterLevel: JSON
+  investigationDepth: JSON
+  layers: En1997LayersRows
+  footings: En1997FootingsRows
+  piles: En1997PilesRows
+  retainingWalls: En1997RetainingWallsRows
+  slopes: En1997SlopesRows
+  upliftCases: En1997UpliftCasesRows
+  anchors: En1997AnchorsRows
+  embeddedWalls: En1997EmbeddedWallsRows
+  pileGroups: En1997PileGroupsRows
+  labTests: En1997LabTestsRows
+  layerWaters: En1997LayerWatersRows
+  placements: En1997PlacementsRows
+  cases: CaseRowDelta!
+  investigations: En1997InvestigationsRows
+  characteristicBases: En1997CharacteristicBasesRows
 }
-
-type En1997LayersRemoved {
+type En1997AnchorsInserted {
+  index: Int!
+  row: Anchor!
+}
+type En1997AnchorsModified {
   id: String!
-  index: Int!
+  patch: En1997AnchorsPatch!
 }
-
-type En1997LayersInserted {
-  index: Int!
-  row: SoilLayer!
-}
-
-type En1997LayersMoved {
+type En1997AnchorsMoved {
   id: String!
   from: Int!
   to: Int!
 }
-
-type En1997LayersModified {
-  id: String!
-  patch: En1997LayersPatch!
+type En1997AnchorsPatch {
+  wallId: JSON
+  tendon: JSON
+  headDepth: JSON
+  inclinationDeg: JSON
+  freeLength: JSON
+  fixedLength: JSON
+  fixedDiameter: JSON
+  bondStress: JSON
+  designForce: JSON
+  tendonYieldForce: JSON
+  minFreeLength: JSON
+  testFactor: JSON
+  tests: En1997AnchorsTestsRows!
 }
-
-type En1997LayersRows {
-  removed: [En1997LayersRemoved!]!
-  inserted: [En1997LayersInserted!]!
-  moved: [En1997LayersMoved!]!
-  modified: [En1997LayersModified!]!
-}
-
-type En1997FootingsPatch {
-  width: Float
-  embedment: Float
-}
-
-type En1997FootingsRemoved {
+type En1997AnchorsRemoved {
   id: String!
   index: Int!
 }
-
+type En1997AnchorsRows {
+  removed: [En1997AnchorsRemoved!]!
+  inserted: [En1997AnchorsInserted!]!
+  moved: [En1997AnchorsMoved!]!
+  modified: [En1997AnchorsModified!]!
+}
+type En1997AnchorsTestsInserted {
+  index: Int!
+  row: AnchorTest!
+}
+type En1997AnchorsTestsModified {
+  id: String!
+  patch: En1997AnchorsTestsPatch!
+}
+type En1997AnchorsTestsMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1997AnchorsTestsPatch {
+  pullOutResistance: JSON
+}
+type En1997AnchorsTestsRemoved {
+  id: String!
+  index: Int!
+}
+type En1997AnchorsTestsRows {
+  removed: [En1997AnchorsTestsRemoved!]!
+  inserted: [En1997AnchorsTestsInserted!]!
+  moved: [En1997AnchorsTestsMoved!]!
+  modified: [En1997AnchorsTestsModified!]!
+}
+type En1997EmbeddedWallsInserted {
+  index: Int!
+  row: EmbeddedWall!
+}
+type En1997EmbeddedWallsModified {
+  id: String!
+  patch: En1997EmbeddedWallsPatch!
+}
+type En1997EmbeddedWallsMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1997EmbeddedWallsPatch {
+  kind: JSON
+  retainedHeight: JSON
+  embedment: JSON
+  propDepth: JSON
+  thickness: JSON
+  backfillGamma: JSON
+  phiDeg: JSON
+  deltaActiveDeg: JSON
+  deltaPassiveDeg: JSON
+  surcharge: JSON
+  undrainedStrength: JSON
+}
+type En1997EmbeddedWallsRemoved {
+  id: String!
+  index: Int!
+}
+type En1997EmbeddedWallsRows {
+  removed: [En1997EmbeddedWallsRemoved!]!
+  inserted: [En1997EmbeddedWallsInserted!]!
+  moved: [En1997EmbeddedWallsMoved!]!
+  modified: [En1997EmbeddedWallsModified!]!
+}
 type En1997FootingsInserted {
   index: Int!
   row: SpreadFoundation!
 }
-
+type En1997FootingsLoadCasesInserted {
+  index: Int!
+  row: FoundationLoadCase!
+}
+type En1997FootingsLoadCasesModified {
+  id: String!
+  patch: En1997FootingsLoadCasesPatch!
+}
+type En1997FootingsLoadCasesMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1997FootingsLoadCasesPatch {
+  designSituation: JSON
+  verticalPermanent: JSON
+  verticalVariable: JSON
+  horizontalPermanent: JSON
+  horizontalVariable: JSON
+  momentPermanent: JSON
+  momentVariable: JSON
+}
+type En1997FootingsLoadCasesRemoved {
+  id: String!
+  index: Int!
+}
+type En1997FootingsLoadCasesRows {
+  removed: [En1997FootingsLoadCasesRemoved!]!
+  inserted: [En1997FootingsLoadCasesInserted!]!
+  moved: [En1997FootingsLoadCasesMoved!]!
+  modified: [En1997FootingsLoadCasesModified!]!
+}
+type En1997FootingsModified {
+  id: String!
+  patch: En1997FootingsPatch!
+}
 type En1997FootingsMoved {
   id: String!
   from: Int!
   to: Int!
 }
-
-type En1997FootingsModified {
-  id: String!
-  patch: En1997FootingsPatch!
+type En1997FootingsPatch {
+  width: JSON
+  length: JSON
+  embedment: JSON
+  baseInclinationDeg: JSON
+  settlementLimit: JSON
+  loadCases: En1997FootingsLoadCasesRows!
 }
-
+type En1997FootingsRemoved {
+  id: String!
+  index: Int!
+}
 type En1997FootingsRows {
   removed: [En1997FootingsRemoved!]!
   inserted: [En1997FootingsInserted!]!
   moved: [En1997FootingsMoved!]!
   modified: [En1997FootingsModified!]!
 }
-
-type En1997PilesPatch {
-  length: Float
-  count: Int
+type En1997LabTestsInserted {
+  index: Int!
+  row: LabTest!
 }
-
-type En1997PilesRemoved {
+type En1997LabTestsModified {
+  id: String!
+  patch: En1997LabTestsPatch!
+}
+type En1997LabTestsMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1997LabTestsPatch {
+  layerId: JSON
+  kind: JSON
+  voidRatio: JSON
+  preloadStress: JSON
+  drainageHeight: JSON
+  consolidationTime: JSON
+  compressionIndex: JSON
+  swellingIndex: JSON
+  stressIncrement: JSON
+  secondaryCompressionIndex: JSON
+  designLife: JSON
+  points: En1997LabTestsPointsRows!
+}
+type En1997LabTestsPointsInserted {
+  index: Int!
+  row: LabPoint!
+}
+type En1997LabTestsPointsModified {
+  id: String!
+  patch: En1997LabTestsPointsPatch!
+}
+type En1997LabTestsPointsMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1997LabTestsPointsPatch {
+  normalStress: JSON
+  shearStress: JSON
+}
+type En1997LabTestsPointsRemoved {
   id: String!
   index: Int!
 }
-
+type En1997LabTestsPointsRows {
+  removed: [En1997LabTestsPointsRemoved!]!
+  inserted: [En1997LabTestsPointsInserted!]!
+  moved: [En1997LabTestsPointsMoved!]!
+  modified: [En1997LabTestsPointsModified!]!
+}
+type En1997LabTestsRemoved {
+  id: String!
+  index: Int!
+}
+type En1997LabTestsRows {
+  removed: [En1997LabTestsRemoved!]!
+  inserted: [En1997LabTestsInserted!]!
+  moved: [En1997LabTestsMoved!]!
+  modified: [En1997LabTestsModified!]!
+}
+type En1997LayerWatersInserted {
+  index: Int!
+  row: LayerWater!
+}
+type En1997LayerWatersModified {
+  id: String!
+  patch: En1997LayerWatersPatch!
+}
+type En1997LayerWatersMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1997LayerWatersPatch {
+  layerId: JSON
+  piezometricDepth: JSON
+  permeability: JSON
+  headDifference: JSON
+  flowLength: JSON
+  wellRadius: JSON
+  wellWaterDepth: JSON
+  influenceRadius: JSON
+  wellCapacity: JSON
+}
+type En1997LayerWatersRemoved {
+  id: String!
+  index: Int!
+}
+type En1997LayerWatersRows {
+  removed: [En1997LayerWatersRemoved!]!
+  inserted: [En1997LayerWatersInserted!]!
+  moved: [En1997LayerWatersMoved!]!
+  modified: [En1997LayerWatersModified!]!
+}
+type En1997PlacementsInserted {
+  index: Int!
+  row: Placement!
+}
+type En1997PlacementsModified {
+  id: String!
+  patch: En1997PlacementsPatch!
+}
+type En1997PlacementsMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1997PlacementsPatch {
+  x: Float
+  y: Float
+  z: Float
+  yaw: Float
+}
+type En1997PlacementsRemoved {
+  id: String!
+  index: Int!
+}
+type En1997PlacementsRows {
+  removed: [En1997PlacementsRemoved!]!
+  inserted: [En1997PlacementsInserted!]!
+  moved: [En1997PlacementsMoved!]!
+  modified: [En1997PlacementsModified!]!
+}
+type En1997LayersInserted {
+  index: Int!
+  row: SoilLayer!
+}
+type En1997LayersModified {
+  id: String!
+  patch: En1997LayersPatch!
+}
+type En1997LayersMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1997LayersPatch {
+  soilType: JSON
+  depthTop: JSON
+  depthBottom: JSON
+  gamma: JSON
+  gammaPrime: JSON
+  phiPrimeDeg: JSON
+  cohesionEffective: JSON
+  cohesionUndrained: JSON
+  oedometricModulus: JSON
+  poissonRatio: JSON
+  cptQc: JSON
+  sptN: JSON
+  cptNkt: JSON
+}
+type En1997LayersRemoved {
+  id: String!
+  index: Int!
+}
+type En1997LayersRows {
+  removed: [En1997LayersRemoved!]!
+  inserted: [En1997LayersInserted!]!
+  moved: [En1997LayersMoved!]!
+  modified: [En1997LayersModified!]!
+}
+type En1997PileGroupsInserted {
+  index: Int!
+  row: PileGroup!
+}
+type En1997PileGroupsModified {
+  id: String!
+  patch: En1997PileGroupsPatch!
+}
+type En1997PileGroupsMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1997PileGroupsPatch {
+  pileId: JSON
+  rows: JSON
+  columns: JSON
+  spacing: JSON
+  capVertical: JSON
+  capMomentX: JSON
+  capMomentY: JSON
+  singleResistance: JSON
+  shaftCohesionSum: JSON
+  baseCohesion: JSON
+}
+type En1997PileGroupsRemoved {
+  id: String!
+  index: Int!
+}
+type En1997PileGroupsRows {
+  removed: [En1997PileGroupsRemoved!]!
+  inserted: [En1997PileGroupsInserted!]!
+  moved: [En1997PileGroupsMoved!]!
+  modified: [En1997PileGroupsModified!]!
+}
 type En1997PilesInserted {
   index: Int!
   row: Pile!
 }
-
+type En1997PilesModified {
+  id: String!
+  patch: En1997PilesPatch!
+}
 type En1997PilesMoved {
   id: String!
   from: Int!
   to: Int!
 }
-
-type En1997PilesModified {
-  id: String!
-  patch: En1997PilesPatch!
+type En1997PilesPatch {
+  pileType: JSON
+  diameter: JSON
+  length: JSON
+  count: JSON
+  alphaS: JSON
+  unitShaftResistance: JSON
+  unitBaseResistance: JSON
+  compressionPermanent: JSON
+  compressionVariable: JSON
+  tensionPermanent: JSON
+  tensionVariable: JSON
+  bendingStiffnessEi: JSON
+  horizontalSubgradeModulus: JSON
+  lateralHeadLoad: JSON
+  elasticModulus: JSON
+  settlingThickness: JSON
+  negativeFrictionBeta: JSON
+  dynamicTestCount: JSON
+  dynamicResistanceMean: JSON
+  dynamicResistanceMin: JSON
+  hammerWeight: JSON
+  dropHeight: JSON
+  setPerBlow: JSON
+  elasticCompression: JSON
+  hammerEfficiency: JSON
+  concreteClass: JSON
+  testProfiles: En1997PilesTestProfilesRows!
 }
-
+type En1997PilesRemoved {
+  id: String!
+  index: Int!
+}
 type En1997PilesRows {
   removed: [En1997PilesRemoved!]!
   inserted: [En1997PilesInserted!]!
   moved: [En1997PilesMoved!]!
   modified: [En1997PilesModified!]!
 }
-
-type En1997RetainingWallsPatch {
-  baseWidth: Float
+type En1997PilesTestProfilesInserted {
+  index: Int!
+  row: PileTestProfile!
 }
-
-type En1997RetainingWallsRemoved {
+type En1997PilesTestProfilesModified {
+  id: String!
+  patch: En1997PilesTestProfilesPatch!
+}
+type En1997PilesTestProfilesMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1997PilesTestProfilesPatch {
+  shaftResistance: JSON
+  baseResistance: JSON
+}
+type En1997PilesTestProfilesRemoved {
   id: String!
   index: Int!
 }
-
+type En1997PilesTestProfilesRows {
+  removed: [En1997PilesTestProfilesRemoved!]!
+  inserted: [En1997PilesTestProfilesInserted!]!
+  moved: [En1997PilesTestProfilesMoved!]!
+  modified: [En1997PilesTestProfilesModified!]!
+}
 type En1997RetainingWallsInserted {
   index: Int!
   row: RetainingWall!
 }
-
+type En1997RetainingWallsModified {
+  id: String!
+  patch: En1997RetainingWallsPatch!
+}
 type En1997RetainingWallsMoved {
   id: String!
   from: Int!
   to: Int!
 }
-
-type En1997RetainingWallsModified {
-  id: String!
-  patch: En1997RetainingWallsPatch!
+type En1997RetainingWallsPatch {
+  height: JSON
+  embedment: JSON
+  baseWidth: JSON
+  stemThickness: JSON
+  backfillPhiDeg: JSON
+  backfillGamma: JSON
+  wallFrictionDeg: JSON
+  earthPressureMode: JSON
+  wallMovement: JSON
+  ocr: JSON
+  concreteGamma: JSON
+  surcharge: JSON
+  verticalPermanent: JSON
+  horizontalPermanent: JSON
+  seismicKh: JSON
+  seismicKv: JSON
+  reinforcementSpacing: JSON
+  reinforcementWidth: JSON
+  reinforcementFriction: JSON
 }
-
+type En1997RetainingWallsRemoved {
+  id: String!
+  index: Int!
+}
 type En1997RetainingWallsRows {
   removed: [En1997RetainingWallsRemoved!]!
   inserted: [En1997RetainingWallsInserted!]!
   moved: [En1997RetainingWallsMoved!]!
   modified: [En1997RetainingWallsModified!]!
 }
-
-type En1997SlopesPatch {
-  angleDeg: Float
-}
-
-type En1997SlopesRemoved {
-  id: String!
-  index: Int!
-}
-
 type En1997SlopesInserted {
   index: Int!
   row: Slope!
 }
-
+type En1997SlopesModified {
+  id: String!
+  patch: En1997SlopesPatch!
+}
 type En1997SlopesMoved {
   id: String!
   from: Int!
   to: Int!
 }
-
-type En1997SlopesModified {
-  id: String!
-  patch: En1997SlopesPatch!
+type En1997SlopesPatch {
+  angleDeg: JSON
+  height: JSON
+  length: JSON
+  governingLayerId: JSON
+  circleCentreX: JSON
+  circleCentreZ: JSON
+  circleRadius: JSON
+  width: JSON
 }
-
+type En1997SlopesRemoved {
+  id: String!
+  index: Int!
+}
 type En1997SlopesRows {
   removed: [En1997SlopesRemoved!]!
   inserted: [En1997SlopesInserted!]!
   moved: [En1997SlopesMoved!]!
   modified: [En1997SlopesModified!]!
 }
-
-type En1997UpliftCasesPatch {
-  permanentStabilizing: Float
-  permanentDestabilizing: Float
-  variableDestabilizing: Float
-  porePressure: Float
-  totalStress: Float
-}
-
-type En1997UpliftCasesRemoved {
-  id: String!
-  index: Int!
-}
-
 type En1997UpliftCasesInserted {
   index: Int!
   row: UpliftCase!
 }
-
+type En1997UpliftCasesModified {
+  id: String!
+  patch: En1997UpliftCasesPatch!
+}
 type En1997UpliftCasesMoved {
   id: String!
   from: Int!
   to: Int!
 }
-
-type En1997UpliftCasesModified {
-  id: String!
-  patch: En1997UpliftCasesPatch!
+type En1997UpliftCasesPatch {
+  permanentStabilizing: JSON
+  permanentDestabilizing: JSON
+  variableDestabilizing: JSON
+  porePressure: JSON
+  totalStress: JSON
 }
-
+type En1997UpliftCasesRemoved {
+  id: String!
+  index: Int!
+}
 type En1997UpliftCasesRows {
   removed: [En1997UpliftCasesRemoved!]!
   inserted: [En1997UpliftCasesInserted!]!
   moved: [En1997UpliftCasesMoved!]!
   modified: [En1997UpliftCasesModified!]!
 }
-
-type En1997Diff {
-  structureId: String @state(class: ARTIFACT)
-  geotechnicalCategory: Int @state(class: ARTIFACT)
-  designSituation: String @state(class: ARTIFACT)
-  designApproach: String @state(class: ARTIFACT)
-  annex: AnnexChoice @state(class: ARTIFACT)
-  groundwaterLevel: Float @state(class: ARTIFACT)
-  investigationDepth: Float @state(class: ARTIFACT)
-  layers: En1997LayersRows @state(class: ARTIFACT)
-  footings: En1997FootingsRows @state(class: ARTIFACT)
-  piles: En1997PilesRows @state(class: ARTIFACT)
-  retainingWalls: En1997RetainingWallsRows @state(class: ARTIFACT)
-  slopes: En1997SlopesRows @state(class: ARTIFACT)
-  upliftCases: En1997UpliftCasesRows @state(class: ARTIFACT)
+type En1997InvestigationsInserted {
+  index: Int!
+  row: Investigation!
+}
+type En1997InvestigationsModified {
+  id: String!
+  patch: En1997InvestigationsPatch!
+}
+type En1997InvestigationsMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1997InvestigationsRemoved {
+  id: String!
+  index: Int!
+}
+type En1997InvestigationsRows {
+  removed: [En1997InvestigationsRemoved!]!
+  inserted: [En1997InvestigationsInserted!]!
+  moved: [En1997InvestigationsMoved!]!
+  modified: [En1997InvestigationsModified!]!
+}
+type En1997InvestigationsReadingsInserted {
+  index: Int!
+  row: InvestigationReading!
+}
+type En1997InvestigationsReadingsModified {
+  id: String!
+  patch: En1997InvestigationsReadingsPatch!
+}
+type En1997InvestigationsReadingsMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1997InvestigationsReadingsRemoved {
+  id: String!
+  index: Int!
+}
+type En1997InvestigationsReadingsRows {
+  removed: [En1997InvestigationsReadingsRemoved!]!
+  inserted: [En1997InvestigationsReadingsInserted!]!
+  moved: [En1997InvestigationsReadingsMoved!]!
+  modified: [En1997InvestigationsReadingsModified!]!
+}
+type En1997InvestigationsReadingsPatch {
+  depth: JSON
+  measurement: JSON
+}
+type En1997InvestigationsPatch {
+  positionX: JSON
+  positionY: JSON
+  groundLevel: JSON
+  depth: JSON
+  kind: JSON
+  readings: En1997InvestigationsReadingsRows!
+}
+type En1997CharacteristicBasesInserted {
+  index: Int!
+  row: CharacteristicBasis!
+}
+type En1997CharacteristicBasesModified {
+  id: String!
+  patch: En1997CharacteristicBasesPatch!
+}
+type En1997CharacteristicBasesMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1997CharacteristicBasesRemoved {
+  id: String!
+  index: Int!
+}
+type En1997CharacteristicBasesRows {
+  removed: [En1997CharacteristicBasesRemoved!]!
+  inserted: [En1997CharacteristicBasesInserted!]!
+  moved: [En1997CharacteristicBasesMoved!]!
+  modified: [En1997CharacteristicBasesModified!]!
+}
+type En1997CharacteristicBasesPatch {
+  layerId: JSON
+  parameter: JSON
+  basis: JSON
 }

@@ -1,0 +1,6 @@
+{
+  "ChangeSiloLiquidHeight": {
+    "id": "silo-1",
+    "newLiquidHeight": 1.5
+  }
+}

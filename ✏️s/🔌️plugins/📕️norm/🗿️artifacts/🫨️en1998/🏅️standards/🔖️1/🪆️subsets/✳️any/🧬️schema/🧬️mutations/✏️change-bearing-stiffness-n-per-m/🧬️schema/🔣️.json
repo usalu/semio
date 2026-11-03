@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-bearing-stiffness-n-per-m/schema.json",
+  "title": "ChangeBearingStiffnessNPerM",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newStiffnessNPerM"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeBearingStiffnessNPerM"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Bearing",
+          "de": "Lager"
+        },
+        "description": {
+          "en": "The bearing this mutation addresses, by id.",
+          "de": "Das adressierte Element (Lager), per Kennung."
+        },
+        "ref": {
+          "kind": "bearing"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newStiffnessNPerM": {
+      "type": "number",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Horizontal stiffness of the bearing in the analysed direction (0 = rigid)",
+          "de": "Horizontalsteifigkeit des Lagers in der untersuchten Richtung (0 = starr)"
+        },
+        "group": "value",
+        "order": 20,
+        "widget": "stepper",
+        "step": 0.001,
+        "precision": 3
+      }
+    }
+  }
+}

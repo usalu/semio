@@ -31,6 +31,40 @@ pub fn set_active_tool_action_definition() -> ActionDefinition {
     .required()])
 }
 
+/// 🎯️ The framework-owned action id of "focus the window of kind X", shell-intercepted in every app (never forwarded to the program): the shell opens the window if it is closed, raises it, moves the keyboard focus into it and announces it politely to assistive technology in the interface language. A chord (`ShellKeyOutcome::Verb`), a menu row and the palette all raise this one verb; the window kind arrives as the text argument [`FOCUS_WINDOW_ARG_KIND`].
+pub const FOCUS_WINDOW_ACTION_ID: &str = "focusWindow";
+
+/// 🎯️ The text argument of [`FOCUS_WINDOW_ACTION_ID`]: the id of a window kind the app declares.
+pub const FOCUS_WINDOW_ARG_KIND: &str = "windowKindId";
+
+/// 📱️ The optional text argument of [`FOCUS_WINDOW_ACTION_ID`]: the window kind that stands in for the requested one on a device whose layout does not contain it (a mobile tab, a tablet side pane); without it, or when the stand-in is missing there too, the focus is refused with a localized notice.
+pub const FOCUS_WINDOW_ARG_FALLBACK: &str = "fallbackWindowKindId";
+
+/// ✏️ The framework-owned action id of "focus the editable control inside the row R of a tree or grid", shell-intercepted in every app (never forwarded to the program): the shell moves the keyboard focus into the first editable control the row holds (a text, number, date or multi-line field) so typing replaces the cell, and announces a refusal politely when the row holds none. `F2` on a focused row raises it ([`FOCUS_ROW_CONTROL_KEY`]); the row arrives as the text argument [`FOCUS_ROW_CONTROL_ARG_ROW`]. Escape in the cell drops the typed draft and shows the committed value again (the shared text keyboard law); Enter or leaving the cell commits.
+pub const FOCUS_ROW_CONTROL_ACTION_ID: &str = "focusRowControl";
+
+/// ✏️ The text argument of [`FOCUS_ROW_CONTROL_ACTION_ID`]: the authored key of the row (the id its author gave the tree item).
+pub const FOCUS_ROW_CONTROL_ARG_ROW: &str = "rowId";
+
+/// ⌨️ The key that raises [`FOCUS_ROW_CONTROL_ACTION_ID`] on a focused row (the spreadsheet and grid convention for "edit this cell").
+pub const FOCUS_ROW_CONTROL_KEY: &str = "F2";
+
+/// ✏️ The input kinds a row cell edits by typing; a colour or file input opens a picker instead and a toggle, button or select is not typed into, so none of them takes the focus of [`FOCUS_ROW_CONTROL_ACTION_ID`].
+pub const FOCUS_ROW_CONTROL_EDITABLE_KINDS: [&str; 4] = ["text", "longText", "number", "date"];
+
+/// ✏️ One control inside a row, reduced to what [`plan_row_control_focus`] reads.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct RowControl<'a> {
+    pub id: &'a str,
+    pub kind: &'a str,
+    pub disabled: bool,
+}
+
+/// ✏️ The control a [`FOCUS_ROW_CONTROL_ACTION_ID`] lands on: the first enabled control of the row, in row order, whose kind is one of [`FOCUS_ROW_CONTROL_EDITABLE_KINDS`]; `None` when the row holds no such control (the focus is refused). Shared rule of every host, pinned by `🐚️Shell/🧪️tests/🧫️fixtures/🎯️focus-row-control/🔣️.json`.
+pub fn plan_row_control_focus<'a>(controls: &[RowControl<'a>]) -> Option<&'a str> {
+    controls.iter().find(|control| !control.disabled && FOCUS_ROW_CONTROL_EDITABLE_KINDS.contains(&control.kind)).map(|control| control.id)
+}
+
 /// 📤️ The framework-owned action id of Export Document: injected into every app window and fully
 /// shell-intercepted (never forwarded to the program) — the shell writes the document's canonical archive (root
 /// envelope, its op log, every owned member) as one `.semio-archive` file, for every artifact kind alike.

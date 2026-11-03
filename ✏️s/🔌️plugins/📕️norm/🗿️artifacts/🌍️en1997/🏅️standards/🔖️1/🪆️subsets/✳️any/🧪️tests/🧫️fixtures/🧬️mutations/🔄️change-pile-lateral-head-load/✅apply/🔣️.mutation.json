@@ -1,0 +1,5 @@
+{
+  "mutation": "changePileLateralHeadLoad",
+  "id": "pile-P1",
+  "newLateralHeadLoad": 1.5
+}

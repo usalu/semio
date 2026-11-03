@@ -20,8 +20,8 @@ fn missing_target(what: impl std::fmt::Display) -> protocol::MutationApplyError 
 
 /// 🩹️ Sparse per-field patch of the `catalog.file` section.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct Vdi3805ManufacturerFilePatch {
     pub header_version: Option<String>,
@@ -98,8 +98,8 @@ impl Vdi3805ManufacturerFilePatch {
 
 /// 🩹️ Sparse patch of the `catalog.products` row addressed by its key.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct Vdi3805ProductsPatch {
     pub title: Option<Vec<semio_s_plugin_norm_compliance::LocalizedText>>,
@@ -140,15 +140,15 @@ impl protocol::list_delta::RowPatch<semio_s_artifact_norm_vdi3805_model::Catalog
 
 protocol::list_delta! {
     /// 🔑️ Positional keyed row delta of `catalog.products`; the key of a `crate::CatalogueProduct` row is `identity.article_number`.
-    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
     pub Vdi3805ProductsRows { removal: Vdi3805ProductsRemoved, insertion: Vdi3805ProductsInserted, relocation: Vdi3805ProductsMoved, modification: Vdi3805ProductsModified, row: semio_s_artifact_norm_vdi3805_model::CatalogueProduct, patch: Vdi3805ProductsPatch, list: Vec<semio_s_artifact_norm_vdi3805_model::CatalogueProduct>, key: String = |row| row.identity.article_number.clone() }
 }
 
 /// 🔑️ A `edition_profile` entry: its map key and value.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Vdi3805EditionProfileEntry {
     pub key: String,
@@ -157,8 +157,8 @@ pub struct Vdi3805EditionProfileEntry {
 
 /// 🔺️ Keyed diff of the `edition_profile` map: added entries, removed keys and modified values.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct Vdi3805EditionProfileRows {
     pub added: Vec<Vdi3805EditionProfileEntry>,
@@ -223,8 +223,8 @@ impl Vdi3805EditionProfileRows {
 
 /// 🩹️ Sparse patch of the `connections` row addressed by its key.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct Vdi3805GeometryConnectionsPatch {
     pub medium: Option<String>,
@@ -279,17 +279,28 @@ impl protocol::list_delta::RowPatch<semio_s_artifact_norm_vdi3805_model::Connect
     }
 }
 
+/// 🔑️ Key extractor of the foreign `ConnectionPoint` rows (`id`).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Vdi3805GeometryConnectionsRowsKey;
+
+impl protocol::list_delta::KeyOf<semio_s_artifact_norm_vdi3805_model::ConnectionPoint> for Vdi3805GeometryConnectionsRowsKey {
+    type Key = String;
+    fn key_of(row: &semio_s_artifact_norm_vdi3805_model::ConnectionPoint) -> String {
+        row.id.clone()
+    }
+}
+
 protocol::list_delta! {
-    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
     /// 📋️ Positional row delta of the `connections` list (rows keyed by `id`).
-    pub Vdi3805GeometryConnectionsRows { removal: Vdi3805GeometryConnectionsRemoved, insertion: Vdi3805GeometryConnectionsInserted, relocation: Vdi3805GeometryConnectionsMoved, modification: Vdi3805GeometryConnectionsModified, row: semio_s_artifact_norm_vdi3805_model::ConnectionPoint, patch: Vdi3805GeometryConnectionsPatch, key: id }
+    pub Vdi3805GeometryConnectionsRows { removal: Vdi3805GeometryConnectionsRemoved, insertion: Vdi3805GeometryConnectionsInserted, relocation: Vdi3805GeometryConnectionsMoved, modification: Vdi3805GeometryConnectionsModified, row: semio_s_artifact_norm_vdi3805_model::ConnectionPoint, patch: Vdi3805GeometryConnectionsPatch, list: Vec<semio_s_artifact_norm_vdi3805_model::ConnectionPoint>, key: String = by Vdi3805GeometryConnectionsRowsKey }
 }
 
 /// 🔑️ A `geometry` entry: its map key and value.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Vdi3805GeometryEntry {
     pub key: String,
@@ -298,8 +309,8 @@ pub struct Vdi3805GeometryEntry {
 
 /// 🩹️ Sparse patch of the `geometry` entry addressed by `key`.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct Vdi3805GeometryPatch {
     pub key: String,
@@ -350,8 +361,8 @@ impl Vdi3805GeometryPatch {
 
 /// 🔺️ Keyed diff of the `geometry` map: added entries, removed keys and modified entry patches.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct Vdi3805GeometryRows {
     pub added: Vec<Vdi3805GeometryEntry>,
@@ -415,8 +426,8 @@ impl Vdi3805GeometryRows {
 
 /// 🔑️ A `curves` entry: its map key and value.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Vdi3805CurvesEntry {
     pub key: String,
@@ -425,8 +436,8 @@ pub struct Vdi3805CurvesEntry {
 
 /// 🩹️ Sparse patch of the `curves` entry addressed by `key`.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct Vdi3805CurvesPatch {
     pub key: String,
@@ -457,8 +468,8 @@ impl Vdi3805CurvesPatch {
 
 /// 🔺️ Keyed diff of the `curves` map: added entries, removed keys and modified entry patches.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct Vdi3805CurvesRows {
     pub added: Vec<Vdi3805CurvesEntry>,
@@ -525,8 +536,8 @@ impl Vdi3805CurvesRows {
 
 /// 🩹️ Sparse per-field patch of the `limits` section.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct Vdi3805LimitsPatch {
     pub max_file_bytes: Option<usize>,
@@ -579,8 +590,8 @@ impl Vdi3805LimitsPatch {
 
 /// 🎁️ Carries the optional `ConnectionPoint.diameter_mm` value so an explicit `None` stays distinct from an untouched field.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct Vdi3805GeometryConnectionsPatchDiameterMmValue {
     pub value: Option<f64>,
@@ -588,8 +599,8 @@ pub struct Vdi3805GeometryConnectionsPatchDiameterMmValue {
 
 /// 🔺️ Keyed sparse diff of the Vdi3805 artifact: scalar setters, keyed row diffs and per-field section patches.
 #[derive(Clone, Debug, Default, PartialEq, framework_schema::ArtifactSchema, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.norm.vdi3805")]
 pub struct Vdi3805Diff {

@@ -1,0 +1,6 @@
+{
+  "ChangeJointBeamSpan": {
+    "id": "joint-j1",
+    "newBeamSpan": 1.5
+  }
+}

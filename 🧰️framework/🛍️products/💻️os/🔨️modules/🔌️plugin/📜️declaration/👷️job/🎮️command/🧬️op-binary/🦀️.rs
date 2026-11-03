@@ -31,7 +31,7 @@ impl<C:RetireOwned+OpBinary+Send+Sync+'static> OpBinaryProducer<C>{
   WIRE=>RetainedToolWireInput::original_birth_demands(self.length()?,RUNTIME_COMMAND_WIRE_MAXIMUM)?,
   PAGES=>RetirementDemand{copy_bytes:3*size_of::<ToolWirePage>()+(self.length()?-self.offset).min(TOOL_WIRE_PAGE_BYTES),depth:1,..Default::default()},
   SEAL=>header::<u8>(),RELEASE=>self.release_quote()?,_=>Default::default()})}
- fn release_bytes(&mut self,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{let d=self.release_quote()?;retired(cx,d,|g|{if !self.retirement.is_empty(){return self.retirement.select(self.body)?.step(g).result}if self.bytes.is_some(){return Ok(self.retirement.begin_granted(&mut self.bytes,g).result?.unwrap())}Ok(RetainedCloneStep::Complete(Default::default()))})?;Ok(())}
+ fn release_bytes(&mut self,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{let d=self.release_quote()?;retired(cx,d,|g|{if !self.retirement.is_empty(){return self.retirement.select(self.body)?.step(g).result}if self.bytes.is_some(){return Ok(self.retirement.begin_granted(&mut self.bytes,g).result?.unwrap_or(RetainedCloneStep::Progress(Default::default())))}Ok(RetainedCloneStep::Complete(Default::default()))})?;Ok(())}
 }
 impl<C:RetireOwned+OpBinary+Send+Sync+'static> ArtifactOriginalCommandProducer<C> for OpBinaryProducer<C>{
  fn demands(&self,_action:&str,_args:&Option<DslValue>,_fault:&Option<Fault>,_body:usize)->Result<RetirementDemand,ValueError>{self.step_demands()}
@@ -57,7 +57,7 @@ impl<C:RetireOwned+OpBinary+Send+Sync+'static> ArtifactOriginalCommandProducer<C
   self.validate(cx)?;if self.terminal_is_empty(){return Ok(true)}
   if !self.closing{let d=header::<bool>();let mut done=None;retired(cx,d,|_|{self.closing=true;done=Some(());Ok(RetainedCloneStep::Progress(progress(d)))})?;return Ok(false)}
   let d=self.close_quote()?;
-  retired(cx,d,|g|{if !self.retirement.is_empty(){return self.retirement.select(self.body)?.step(g).result}if self.bytes.is_some(){return Ok(self.retirement.begin_granted(&mut self.bytes,g).result?.unwrap())}if self.command.is_some(){return Ok(self.retirement.begin_granted(&mut self.command,g).result?.unwrap())}if self.input.is_some(){return Ok(self.retirement.begin_granted(&mut self.input,g).result?.unwrap())}Ok(RetainedCloneStep::Complete(Default::default()))})?;
+  retired(cx,d,|g|{if !self.retirement.is_empty(){return self.retirement.select(self.body)?.step(g).result}if self.bytes.is_some(){return Ok(self.retirement.begin_granted(&mut self.bytes,g).result?.unwrap_or(RetainedCloneStep::Progress(Default::default())))}if self.command.is_some(){return Ok(self.retirement.begin_granted(&mut self.command,g).result?.unwrap_or(RetainedCloneStep::Progress(Default::default())))}if self.input.is_some(){return Ok(self.retirement.begin_granted(&mut self.input,g).result?.unwrap_or(RetainedCloneStep::Progress(Default::default())))}Ok(RetainedCloneStep::Complete(Default::default()))})?;
   Ok(self.terminal_is_empty())
  }
  fn terminal_is_empty(&self)->bool{self.command.is_none()&&self.bytes.is_none()&&self.input.is_none()&&self.retirement.is_empty()}

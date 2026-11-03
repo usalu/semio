@@ -15,6 +15,10 @@ pub use host_temporal_formatter::*;
 #[path = "../🕰️native-temporal/🦀️.rs"]
 pub mod native_temporal;
 
+#[cfg(not(target_arch = "wasm32"))]
+#[path = "🎛️platform-prefs/🦀️.rs"]
+pub mod platform_prefs;
+
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]
 mod tests;

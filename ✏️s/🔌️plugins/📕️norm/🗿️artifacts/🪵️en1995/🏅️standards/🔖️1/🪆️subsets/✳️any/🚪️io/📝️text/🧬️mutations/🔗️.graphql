@@ -1,54 +1,34 @@
-# 🧬️ EN 1995 mutation schema — hierarchical timber subject.
-
-union En1995Mutation =
-    ChangeAnnex
-  | InsertMember
-  | RemoveMember
-  | ChangeMemberH
-  | ChangeMemberB
-  | ChangeMemberStrengthClass
-  | ChangeConnectionNumber
-  | InsertConnection
-  | RemoveConnection
-
+union En1995Mutation = ChangeAnnex | InsertMember | RemoveMember | ChangeMemberH | ChangeMemberB | ChangeMemberStrengthClass | ChangeConnectionNumber | InsertConnection | RemoveConnection
 type ChangeAnnex {
-  newAnnex: String! @state(class: ARTIFACT)
+  newAnnex: AnnexChoice!
 }
-
 type InsertMember {
-  index: Int! @state(class: ARTIFACT)
-  member: JSON! @state(class: ARTIFACT)
+  index: Int!
+  member: TimberMember!
 }
-
 type RemoveMember {
-  index: Int! @state(class: ARTIFACT)
+  index: Int!
 }
-
 type ChangeMemberH {
-  index: Int! @state(class: ARTIFACT)
-  newHM: Float! @state(class: ARTIFACT)
+  memberId: String!
+  newValue: Float!
 }
-
 type ChangeMemberB {
-  index: Int! @state(class: ARTIFACT)
-  newBM: Float! @state(class: ARTIFACT)
+  memberId: String!
+  newValue: Float!
 }
-
 type ChangeMemberStrengthClass {
-  index: Int! @state(class: ARTIFACT)
-  newStrengthClass: String! @state(class: ARTIFACT)
+  memberId: String!
+  newValue: StrengthClass!
 }
-
 type ChangeConnectionNumber {
-  index: Int! @state(class: ARTIFACT)
-  newNumber: Int! @state(class: ARTIFACT)
+  connectionId: String!
+  newValue: Int!
 }
-
 type InsertConnection {
-  index: Int! @state(class: ARTIFACT)
-  connection: JSON! @state(class: ARTIFACT)
+  index: Int!
+  connection: TimberConnection!
 }
-
 type RemoveConnection {
-  index: Int! @state(class: ARTIFACT)
+  index: Int!
 }

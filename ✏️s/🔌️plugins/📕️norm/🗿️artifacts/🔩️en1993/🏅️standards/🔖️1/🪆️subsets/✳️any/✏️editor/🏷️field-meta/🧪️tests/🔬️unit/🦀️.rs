@@ -36,8 +36,8 @@ fn walk(path: &str, value: &serde_json::Value, missing: &mut Vec<String>) {
                     if meta.is_none() {
                         missing.push(child);
                     } else if let Some(meta) = meta {
-                        assert!(!meta.label_en.is_empty() && !meta.label_de.is_empty(), "{child}");
-                        for choice in meta.choices.unwrap_or_default() {
+                        assert!(!meta.label.en.is_empty() && !meta.label.de.is_empty(), "{child}");
+                        for choice in meta.choices().unwrap_or_default() {
                             assert!(!choice.label_en.is_empty() && !choice.label_de.is_empty(), "{child}");
                             assert!(choice.label_en != choice.value || choice.label_de != choice.value, "{child} choice labels must not be raw codes only ({})", choice.value);
                         }
@@ -56,7 +56,7 @@ fn walk(path: &str, value: &serde_json::Value, missing: &mut Vec<String>) {
 
 #[test]
 fn every_default_snapshot_editable_leaf_has_en_de_meta() {
-    let doc = En1993Snapshot::default();
+    let doc = En1993Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De);
     let json = serde_json::Value::from(semio_framework_value::ToValue::to_value(&doc));
     let mut missing = Vec::new();
     walk("", &json, &mut missing);
@@ -74,7 +74,7 @@ fn every_compliant_example_leaf_has_en_de_meta() {
 #[test]
 fn annex_choices_are_human_labels() {
     let meta = en1993_field_meta("annex").expect("annex");
-    let choices = meta.choices.expect("choices");
+    let choices = meta.choices().expect("choices");
     assert_eq!(choices[0].label_en, "EN (CEN)");
     assert_eq!(choices[1].label_de, "Deutschland (DIN)");
 }

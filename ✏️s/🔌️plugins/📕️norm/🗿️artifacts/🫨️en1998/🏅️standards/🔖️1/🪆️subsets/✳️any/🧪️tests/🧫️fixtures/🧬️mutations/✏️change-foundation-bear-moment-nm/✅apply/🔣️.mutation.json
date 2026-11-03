@@ -1,0 +1,5 @@
+{
+  "mutation": "changeFoundationBearMomentNm",
+  "id": "fd-1",
+  "newBearingMomentNm": 1.5
+}

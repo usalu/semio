@@ -5,47 +5,47 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "index",
-    "actionIndex",
+    "columnId",
+    "id",
     "newNKN"
   ],
   "properties": {
-    "index": {
-      "type": "integer",
-      "minimum": 0,
+    "columnId": {
+      "type": "string",
       "x-semio-ui": {
-        "widget": "stepper",
-        "role": "value",
+        "widget": "reference",
+        "role": "target",
         "label": {
           "en": "Composite column",
           "de": "Verbundstütze"
         },
         "description": {
-          "en": "Zero-based position of the composite column in its list.",
-          "de": "Nullbasierte Position der Verbundstütze in der Liste."
+          "en": "The composite column this mutation addresses, by id.",
+          "de": "Das adressierte Element (Verbundstütze), per Kennung."
         },
-        "step": 1,
-        "precision": 0,
+        "ref": {
+          "kind": "column"
+        },
         "group": "target",
         "order": 10
       }
     },
-    "actionIndex": {
-      "type": "integer",
-      "minimum": 0,
+    "id": {
+      "type": "string",
       "x-semio-ui": {
-        "widget": "stepper",
-        "role": "value",
+        "widget": "reference",
+        "role": "target",
         "label": {
           "en": "Action",
           "de": "Einwirkung"
         },
         "description": {
-          "en": "Zero-based position of the characteristic action in the member's list.",
-          "de": "Nullbasierte Position der charakteristischen Einwirkung in der Liste des Bauteils."
+          "en": "The action this mutation addresses, by id.",
+          "de": "Das adressierte Element (Einwirkung), per Kennung."
         },
-        "step": 1,
-        "precision": 0,
+        "ref": {
+          "kind": "action"
+        },
         "group": "target",
         "order": 20
       }

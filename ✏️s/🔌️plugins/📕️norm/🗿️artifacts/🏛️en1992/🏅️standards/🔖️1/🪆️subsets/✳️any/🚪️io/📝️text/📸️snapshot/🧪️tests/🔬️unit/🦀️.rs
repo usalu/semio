@@ -2,12 +2,12 @@ use crate::text::snapshot::*;
 
 #[semio_framework_async_macros::async_test]
 async fn document_dsl_round_trips() {
-    store::os_store::test_support::assert_dsl_round_trip(&En1992Snapshot::default());
+    store::os_store::test_support::assert_dsl_round_trip(&En1992Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn dsl_round_trip_agrees_with_print_parse_wrappers() {
-    let document = En1992Snapshot::default();
+    let document = En1992Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De);
     let printed = print_dsl(&document);
     assert_eq!(parse_dsl(&printed).expect("parse printed document"), document);
 }

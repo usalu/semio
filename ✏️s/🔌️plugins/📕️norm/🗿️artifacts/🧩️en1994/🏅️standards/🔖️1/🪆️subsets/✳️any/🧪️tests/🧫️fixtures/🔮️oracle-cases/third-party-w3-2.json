@@ -1,0 +1,398 @@
+{
+  "$schema": "../../../../../../../../../🔮️oracles/🏃️harness/🧬️schema/🔣️.json",
+  "schemaVersion": 1,
+  "artifact": "en1994",
+  "annex": "de",
+  "cases": [
+    {
+      "id": "en1994.5.4.w3-2-composite-elastic-ipe400-short",
+      "check": "en1994.5.4.composite-elastic",
+      "citation": {
+        "standard": "EN 1994-1-1",
+        "edition": "2004",
+        "clause": "5.4.1.2 effective width and 5.4.2.2 modular ratio n = E_a / E_cm; transformed section"
+      },
+      "inputs": {
+        "E_a": 210000000000.0,
+        "h": 0.4,
+        "b": 0.18,
+        "tf": 0.0135,
+        "tw": 0.0086,
+        "r": 0.0,
+        "b_eff": 2.5,
+        "h_c": 0.15,
+        "E_c": 33000000000.0
+      },
+      "expected": {
+        "n": {
+          "value": 6.363636363636363,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "A_eff": {
+          "value": 0.06699637142857147,
+          "unit": "m^2",
+          "profile": "numerical-v1"
+        },
+        "z_na": {
+          "value": 0.44188410203878914,
+          "unit": "m",
+          "profile": "numerical-v1"
+        },
+        "I_eff": {
+          "value": 0.0008659107705130334,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sectionproperties",
+          "adapter": "sectionproperties",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1994.5.4.w3-2-composite-elastic-ipe500-long",
+      "check": "en1994.5.4.composite-elastic",
+      "citation": {
+        "standard": "EN 1994-1-1",
+        "edition": "2004",
+        "clause": "5.4.1.2 effective width and 5.4.2.2 modular ratio n = E_a / E_cm; transformed section"
+      },
+      "inputs": {
+        "E_a": 210000000000.0,
+        "h": 0.5,
+        "b": 0.2,
+        "tf": 0.016,
+        "tw": 0.0102,
+        "r": 0.0,
+        "b_eff": 3.0,
+        "h_c": 0.14,
+        "E_c": 11000000000.0
+      },
+      "expected": {
+        "n": {
+          "value": 19.09090909090909,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "A_eff": {
+          "value": 0.03317360000000041,
+          "unit": "m^2",
+          "profile": "numerical-v1"
+        },
+        "z_na": {
+          "value": 0.4622169435936963,
+          "unit": "m",
+          "profile": "numerical-v1"
+        },
+        "I_eff": {
+          "value": 0.0012567999309671082,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sectionproperties",
+          "adapter": "sectionproperties",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1994.5.4.w3-2-composite-elastic-hea300-rounded-c25",
+      "check": "en1994.5.4.composite-elastic",
+      "citation": {
+        "standard": "EN 1994-1-1",
+        "edition": "2004",
+        "clause": "5.4.2.2 transformed section with the rolled root radius"
+      },
+      "inputs": {
+        "E_a": 210000000000.0,
+        "h": 0.29,
+        "b": 0.3,
+        "tf": 0.014,
+        "tw": 0.0085,
+        "r": 0.027,
+        "b_eff": 1.8,
+        "h_c": 0.12,
+        "E_c": 31000000000.0
+      },
+      "expected": {
+        "n": {
+          "value": 6.774193548387097,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "A_eff": {
+          "value": 0.04314267679405062,
+          "unit": "m^2",
+          "profile": "numerical-v1"
+        },
+        "z_na": {
+          "value": 0.29651056712996265,
+          "unit": "m",
+          "profile": "numerical-v1"
+        },
+        "I_eff": {
+          "value": 0.0005705970588511476,
+          "unit": "m^4",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sectionproperties",
+          "adapter": "sectionproperties",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1994.mechanics.w3-2-two-span-unequal-spans-udl",
+      "check": "mechanics.beam-continuous",
+      "citation": {
+        "standard": "EN 1994-1-1",
+        "edition": "2004",
+        "clause": "5.1.3 load arrangements; 5.4 linear elastic analysis"
+      },
+      "inputs": {
+        "E": 210000000000.0,
+        "A": 0.00538,
+        "I": 8.356e-05,
+        "spans": [
+          5.0,
+          8.0
+        ],
+        "w": [
+          12000.0,
+          12000.0
+        ]
+      },
+      "expected": {
+        "R_0": {
+          "value": 15300.000000000002,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "R_1": {
+          "value": 101887.5,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "R_2": {
+          "value": 38812.499999999985,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "M_sag_0": {
+          "value": 9753.750000000005,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        },
+        "M_hog_0": {
+          "value": 73500.0,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-pynite",
+          "adapter": "pynite",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-anastruct",
+          "adapter": "anastruct",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1994.mechanics.w3-2-two-span-pattern-second-span",
+      "check": "mechanics.beam-continuous",
+      "citation": {
+        "standard": "EN 1994-1-1",
+        "edition": "2004",
+        "clause": "5.1.3 load arrangements (alternate spans)"
+      },
+      "inputs": {
+        "E": 210000000000.0,
+        "A": 0.00538,
+        "I": 8.356e-05,
+        "spans": [
+          6.0,
+          6.0
+        ],
+        "w": [
+          0.0,
+          18000.0
+        ]
+      },
+      "expected": {
+        "R_0": {
+          "value": -6749.999999999996,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "R_1": {
+          "value": 67499.99999999999,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "R_2": {
+          "value": 47249.99999999997,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "M_sag_0": {
+          "value": 0.0,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        },
+        "M_hog_0": {
+          "value": 40499.99999999999,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-pynite",
+          "adapter": "pynite",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-anastruct",
+          "adapter": "anastruct",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1994.mechanics.w3-2-ss-beam-long",
+      "check": "mechanics.beam-continuous",
+      "citation": {
+        "standard": "EN 1994-1-1",
+        "edition": "2004",
+        "clause": "7.2 deflections"
+      },
+      "inputs": {
+        "E": 210000000000.0,
+        "A": 0.00538,
+        "I": 8.356e-05,
+        "spans": [
+          9.0
+        ],
+        "w": [
+          22000.0
+        ]
+      },
+      "expected": {
+        "R_0": {
+          "value": 98999.99999999994,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "M_sag_0": {
+          "value": 222750.00000000035,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        },
+        "delta_0": {
+          "value": 0.10710599312726549,
+          "unit": "m",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-pynite",
+          "adapter": "pynite",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-anastruct",
+          "adapter": "anastruct",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1994.mechanics.w3-2-span-envelope-long",
+      "check": "mechanics.beam-span-envelope",
+      "citation": {
+        "standard": "EN 1990",
+        "edition": "2004",
+        "clause": "6.4.3.2 load arrangements; A1.3.1 permanent actions as individual actions with gamma_G,sup and gamma_G,inf (normative reading unverified against print)"
+      },
+      "inputs": {
+        "E": 210000000000.0,
+        "A": 0.00538,
+        "I": 8.356e-05,
+        "spans": [
+          9.0,
+          9.0
+        ],
+        "g": 25000.0,
+        "q": 18000.0,
+        "gamma_G": 1.35,
+        "gamma_Q": 1.5,
+        "gamma_G_inf": 1.0
+      },
+      "expected": {
+        "M_sag_0": {
+          "value": 417187.66276041674,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        },
+        "M_sag_1": {
+          "value": 417187.66276041686,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        },
+        "M_hog_support": {
+          "value": 615093.7500000005,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        },
+        "R_max_support": {
+          "value": 683437.5,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "R_min_0": {
+          "value": 64265.624999999985,
+          "unit": "N",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-pynite",
+          "adapter": "pynite",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-anastruct",
+          "adapter": "anastruct",
+          "kind": "third-party-library"
+        }
+      ]
+    }
+  ]
+}

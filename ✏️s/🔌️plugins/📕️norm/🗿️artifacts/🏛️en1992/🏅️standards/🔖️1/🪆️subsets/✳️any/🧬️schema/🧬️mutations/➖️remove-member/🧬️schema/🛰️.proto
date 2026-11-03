@@ -1,4 +1,5 @@
 syntax = "proto3";
+package semio.s.norm.en1992.mutation.remove_member;
 message RemoveMember {
-  string memberId = 1;
+  string member_id = 1;
 }

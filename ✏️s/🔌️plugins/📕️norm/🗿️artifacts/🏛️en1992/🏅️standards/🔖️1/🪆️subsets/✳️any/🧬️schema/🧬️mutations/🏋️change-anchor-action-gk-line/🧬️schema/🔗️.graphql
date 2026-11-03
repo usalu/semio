@@ -1,0 +1,5 @@
+type ChangeAnchorActionGKLine {
+  anchorId: String!
+  actionId: String!
+  newGKLine: Float!
+}

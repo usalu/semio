@@ -67,13 +67,13 @@ fn original_bounded_config_factory_retains_source_until_exact_physical_retiremen
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: law["maximumCopyBytes"].as_u64().unwrap() as usize, maximum_capacity_bytes: frame, maximum_release_bytes: 0, maximum_depth: 1 };
     for denied in [RetainedCloneGrant { maximum_items: 0, ..grant }, RetainedCloneGrant { maximum_capacity_bytes: frame - 1, ..grant }, RetainedCloneGrant { maximum_depth: 0, ..grant }] {
         let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| store::ArtifactOwnedValueRetirementFactory::retire_owned(&factory, source, denied));
-        source = match result { Err((_, original)) => original, Ok(_) => panic!("original config factory admitted an unfunded constructor") };
+        source = match result.result { Err((_, original)) => original, Ok(_) => panic!("original config factory admitted an unfunded constructor") };
         assert_eq!(source.as_ptr(), pointer);
         assert_eq!(source.capacity(), source_bytes);
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
     }
     let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| store::ArtifactOwnedValueRetirementFactory::retire_owned(&factory, source, grant));
-    let (owner, progress) = result.unwrap_or_else(|_| panic!("original config typed constructor refused its exact grant"));
+    let (owner, progress) = result.result.unwrap_or_else(|_| panic!("original config typed constructor refused its exact grant"));
     assert!(progress.fits(grant));
     assert_eq!((heap.requested_bytes, heap.released_bytes), (progress.retained_capacity_bytes, progress.released_bytes));
     assert_eq!(heap.requested_bytes, frame);

@@ -1,0 +1,5 @@
+type ChangeBarPointZ {
+  memberId: String!
+  barId: String!
+  newZ: Float!
+}

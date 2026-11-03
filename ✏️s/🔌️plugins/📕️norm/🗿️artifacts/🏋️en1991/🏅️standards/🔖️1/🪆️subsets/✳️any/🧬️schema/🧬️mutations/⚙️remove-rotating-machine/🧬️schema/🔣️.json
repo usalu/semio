@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/remove-rotating-machine/schema.json",
+  "title": "RemoveRotatingMachine",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Rotating machine",
+          "de": "Rotierende Maschine"
+        },
+        "description": {
+          "en": "The rotating machine this mutation addresses, by id.",
+          "de": "Das adressierte Element (Rotierende Maschine), per Kennung."
+        },
+        "ref": {
+          "kind": "rotating-machine"
+        },
+        "group": "target",
+        "order": 10
+      }
+    }
+  }
+}

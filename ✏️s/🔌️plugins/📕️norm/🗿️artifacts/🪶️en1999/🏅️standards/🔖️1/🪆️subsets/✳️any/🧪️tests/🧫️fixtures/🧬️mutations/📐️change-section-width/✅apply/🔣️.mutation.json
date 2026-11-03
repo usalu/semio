@@ -1,0 +1,5 @@
+{
+  "mutation": "changeSectionWidth",
+  "sectionId": "sec-i120",
+  "newWidth": 0.14
+}

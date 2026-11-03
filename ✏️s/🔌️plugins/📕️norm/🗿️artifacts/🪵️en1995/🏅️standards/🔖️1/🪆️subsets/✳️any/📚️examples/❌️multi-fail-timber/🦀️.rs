@@ -5,7 +5,7 @@ use semio_framework_ui_locale::LocalizedLabel;
 
 pub const ID: &str = "multi-fail-timber";
 pub fn label() -> LocalizedLabel {
-    LocalizedLabel::native("Non-Compliant Multi-Fail Timber", "Nicht nachweisbarer Mehrfachversagen-Holzbau")
+    LocalizedLabel::native("Non-Compliant Multi-Fail Timber", "Nicht nachweisbarer Holzbau mit Mehrfachversagen")
 }
 pub const ICON: &str = "file";
 pub const PRIMARY_TEXT: &str = include_str!("../../🖼️assets/❌️multi-fail-timber/❌️multi-fail-timber/🗣️.dsl.semio");

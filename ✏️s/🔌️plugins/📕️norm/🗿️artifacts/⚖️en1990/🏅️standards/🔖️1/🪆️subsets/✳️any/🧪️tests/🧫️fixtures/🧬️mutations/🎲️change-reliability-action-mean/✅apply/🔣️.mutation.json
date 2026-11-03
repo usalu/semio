@@ -1,0 +1,5 @@
+{
+  "mutation": "changeReliabilityActionMean",
+  "id": "rel-1",
+  "newActionMean": 2.0
+}

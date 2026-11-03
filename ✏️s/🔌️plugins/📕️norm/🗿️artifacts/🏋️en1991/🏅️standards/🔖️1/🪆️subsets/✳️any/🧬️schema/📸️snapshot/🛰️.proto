@@ -1,8 +1,5 @@
 syntax = "proto3";
-package semio.s.norm.en1991.snapshot;
-
-// 🧬️ En1991Snapshot schema — every field with its state class.
-
+package semio.s.norm.en1991;
 message En1991Snapshot {
   // @state artifact
   string annex = 1;
@@ -39,67 +36,191 @@ message En1991Snapshot {
   // @state artifact
   double assumed_delta_t = 17;
   // @state artifact
-  double required_delta_t = 18;
+  double t_max = 18;
   // @state artifact
-  string construction_activity = 19;
+  double t_min = 19;
   // @state artifact
-  double assumed_construction_qk = 20;
+  double t0 = 20;
   // @state artifact
-  bool bridge_claimed = 21;
+  string thermal_element_type = 21;
   // @state artifact
-  uint32 bridge_lane = 22;
+  uint32 thermal_bridge_type = 22;
   // @state artifact
-  double bridge_span = 23;
+  double delta_t_m = 23;
   // @state artifact
-  double bridge_lane_width = 24;
+  uint32 storey_count = 24;
   // @state artifact
-  double assumed_bridge_tandem = 25;
+  string fire_mode = 25;
   // @state artifact
-  double assumed_bridge_udl = 26;
+  string fire_curve = 26;
   // @state artifact
-  double assumed_bridge_lm2 = 27;
+  double fire_duration = 27;
   // @state artifact
-  double assumed_bridge_footway = 28;
+  double assumed_gas_temperature = 28;
   // @state artifact
-  bool crane_claimed = 29;
+  double assumed_h_net = 29;
   // @state artifact
-  string crane_class = 30;
+  double fire_compartment_area = 30;
   // @state artifact
-  string hoist_class = 31;
+  double fire_compartment_height = 31;
   // @state artifact
-  double hoisting_speed = 32;
+  double fire_opening_factor = 32;
   // @state artifact
-  double assumed_crane_wheel = 33;
+  double fire_thermal_inertia = 33;
   // @state artifact
-  double assumed_crane_horizontal = 34;
+  FireOccupancy fire_occupancy = 34;
   // @state artifact
-  bool silo_claimed = 35;
+  double fire_load_density_qf = 35;
   // @state artifact
-  string silo_kind = 36;
+  double assumed_qf_d = 36;
   // @state artifact
-  double silo_bulk_density = 37;
+  string construction_activity = 37;
   // @state artifact
-  double silo_height = 38;
+  double assumed_construction_qk = 38;
   // @state artifact
-  double silo_hydraulic_radius = 39;
+  string structure_kind = 39;
   // @state artifact
-  double silo_mu = 40;
+  uint32 bridge_lane = 40;
   // @state artifact
-  double silo_k = 41;
+  double bridge_span = 41;
   // @state artifact
-  double assumed_silo_pressure = 42;
+  double bridge_lane_width = 42;
   // @state artifact
-  double assumed_silo_patch = 43;
+  double assumed_bridge_tandem = 43;
   // @state artifact
-  double assumed_silo_wall_friction = 44;
+  double assumed_bridge_udl = 44;
   // @state artifact
-  string floors = 45;
+  double assumed_bridge_lm2 = 45;
   // @state artifact
-  string self_weight_elements = 46;
+  double assumed_bridge_footway = 46;
   // @state artifact
-  string roofs = 47;
+  double assumed_bridge_lm3 = 47;
   // @state artifact
-  string wind_faces = 48;
+  double assumed_bridge_lm4 = 48;
   // @state artifact
-  string accidental_cases = 49;
+  string bridge_load_group = 49;
+  // @state artifact
+  bool crane_claimed = 50;
+  // @state artifact
+  string crane_class = 51;
+  // @state artifact
+  string hoist_class = 52;
+  // @state artifact
+  double hoisting_speed = 53;
+  // @state artifact
+  double assumed_crane_wheel = 54;
+  // @state artifact
+  double assumed_crane_horizontal = 55;
+  // @state artifact
+  bool silo_claimed = 56;
+  // @state artifact
+  string silo_kind = 57;
+  // @state artifact
+  double silo_bulk_density = 58;
+  // @state artifact
+  double silo_height = 59;
+  // @state artifact
+  double silo_hydraulic_radius = 60;
+  // @state artifact
+  double silo_mu = 61;
+  // @state artifact
+  double silo_k = 62;
+  // @state artifact
+  double assumed_silo_pressure = 63;
+  // @state artifact
+  double assumed_silo_patch = 64;
+  // @state artifact
+  double assumed_silo_wall_friction = 65;
+  // @state artifact
+  double bridge_tandem_x = 66;
+  // @state artifact
+  double rail_alpha = 67;
+  // @state artifact
+  double assumed_rail_lm71 = 68;
+  // @state artifact
+  double assumed_rail_lm71_udl = 69;
+  // @state artifact
+  double assumed_rail_sw0 = 70;
+  // @state artifact
+  double assumed_rail_sw2 = 71;
+  // @state artifact
+  double crane_x = 72;
+  // @state artifact
+  double crane_runway_length = 73;
+  // @state artifact
+  double crane_wheel_base = 74;
+  // @state artifact
+  double silo_diameter = 75;
+  // @state artifact
+  double silo_eccentricity = 76;
+  // @state artifact
+  double silo_hopper_angle_deg = 77;
+  // @state artifact
+  double bridge_curve_radius = 78;
+  // @state artifact
+  string fire_load_basis = 79;
+  // @state artifact
+  repeated FloorArea floors = 80;
+  // @state artifact
+  repeated SelfWeightElement self_weight_elements = 81;
+  // @state artifact
+  repeated RoofArea roofs = 82;
+  // @state artifact
+  repeated WindFace wind_faces = 83;
+  // @state artifact
+  repeated AccidentalCase accidental_cases = 84;
+  // @state artifact
+  repeated BridgeLane bridge_lanes = 85;
+  // @state artifact
+  repeated ConstructionStage construction_stages = 86;
+  // @state artifact
+  repeated RoofSurface roof_surfaces = 87;
+  // @state artifact
+  repeated Placement placements = 88;
+  // @state artifact
+  repeated SpecialVehicle special_vehicles = 89;
+  // @state artifact
+  repeated WindBridge wind_bridges = 90;
+  // @state artifact
+  repeated DynamicElement dynamic_elements = 91;
+  // @state artifact
+  repeated ImpactAction impact_actions = 92;
+  // @state artifact
+  repeated InternalExplosion internal_explosions = 93;
+  // @state artifact
+  repeated ThermalSection thermal_sections = 94;
+  // @state artifact
+  repeated CaseRow cases = 95;
+  // @state artifact
+  repeated HelicopterLanding helicopter_landings = 96;
+  // @state artifact
+  repeated TieRun tie_runs = 97;
+  // @state artifact
+  repeated ConstructionLoad construction_loads = 98;
+  // @state artifact
+  repeated FallingLoad falling_loads = 99;
+  // @state artifact
+  repeated ExecutionImperfection execution_imperfections = 100;
+  // @state artifact
+  repeated DerailmentCase derailment_cases = 101;
+  // @state artifact
+  repeated CraneHoist crane_hoists = 102;
+  // @state artifact
+  repeated Footbridge footbridges = 103;
+  // @state artifact
+  repeated RailDynamic rail_dynamics = 104;
+  // @state artifact
+  repeated LoadDispersal load_dispersals = 105;
+  // @state artifact
+  repeated BulkSolid bulk_solids = 106;
+  // @state artifact
+  repeated RotatingMachine rotating_machines = 107;
+  // @state artifact
+  repeated FatigueModel fatigue_models = 108;
+  // @state artifact
+  repeated SupportCollision support_collisions = 109;
+  // @state artifact
+  repeated LocalFire local_fires = 110;
+  // @state artifact
+  repeated SnowGuard snow_guards = 111;
 }

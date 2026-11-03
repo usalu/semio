@@ -1,0 +1,6 @@
+{
+  "ChangePlatedLatPressureCoef": {
+    "id": "pp-1",
+    "newLateralPressureCoefficient": 1.5
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "ChangeFlangeThickness": {
+    "wallId": "wall-north",
+    "id": "flange-1",
+    "newThicknessM": 0.24
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-forming-gain-member-id/schema.json",
+  "title": "ChangeFormingGainMemberId",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newMemberId"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Forming gain",
+          "de": "Kaltverfestigung"
+        },
+        "description": {
+          "en": "The forming gain this mutation addresses, by id.",
+          "de": "Das adressierte Element (Kaltverfestigung), per Kennung."
+        },
+        "ref": {
+          "kind": "forming-gain"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newMemberId": {
+      "type": "string",
+      "x-semio-ui": {
+        "label": {
+          "en": "Cold-formed section",
+          "de": "Kaltprofil"
+        },
+        "widget": "text",
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

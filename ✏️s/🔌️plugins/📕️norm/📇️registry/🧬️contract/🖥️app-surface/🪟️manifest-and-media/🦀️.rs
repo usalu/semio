@@ -1,6 +1,7 @@
 //! 🪟️ Manifest and media of the norm app surface: the mode, window and panel definitions, the artifact kind spec and the media export and import. See [`super`].
 
 use super::*;
+use semio_framework_plugin::{ActionArgDef, WindowLayoutAxisNode, WindowLayoutChild};
 
 //#region 🔖️Manifest
 /// ✏️ The `edit` mode definition — identical for all fifteen apps.
@@ -28,6 +29,168 @@ pub fn window_definition(id: &str, label: LocalizedLabel, body_key: &str, icon_i
         capabilities: Vec::new(),
         interactions: Vec::new(),
     }
+}
+
+/// 🆔️ Window kind id of one visual window of an artifact variant: `norm-<variant>-<role>`.
+pub fn visual_window_id(variant: &str, role: &str) -> String {
+    format!("norm-{variant}-{role}")
+}
+
+fn view_action(id: &str, en: &str, de: &str, icon: &str, args: Vec<ActionArgDef>) -> semio_framework_plugin::ActionDefinition {
+    semio_framework_plugin::ActionDefinition { args, ..semio_framework_plugin::ActionDefinition::new(id, LocalizedLabel::native(en, de), semio_framework_plugin::ActionKind::View, icon) }
+}
+
+/// ⌨️ The window actions of the documented keyboard shortcuts, one per distinct shortcut action with the shortcut's English and German label; the shell dispatches a key the norm hook answered with an action to exactly these ids. The focus shortcuts are no app actions: the hook answers them with the framework `focusWindow` verb, which every window kind has through the palette.
+pub fn shortcut_action_definitions() -> Vec<semio_framework_plugin::ActionDefinition> {
+    let mut seen = std::collections::HashSet::new();
+    crate::accessibility::focus_order::shortcuts()
+        .into_iter()
+        .filter(|shortcut| !matches!(shortcut.action, crate::accessibility::focus_order::ShortcutAction::Focus(_)))
+        .filter_map(|shortcut| {
+            let id = crate::accessibility::focus_order::shortcut_action_id(&shortcut.action);
+            seen.insert(id.clone()).then(|| view_action(&id, &shortcut.label.en, &shortcut.label.de, "keyboard", Vec::new()))
+        })
+        .collect()
+}
+
+/// 🧊️ The 3D viewport window kind: `World3d` surface bound to the `norm.<variant>` interaction domain, with the transform utility and the camera, layer, colour map, section, deformation (amplitude), load-case, active-field and playback actions.
+pub fn viewport_window_definition(variant: &str, label: LocalizedLabel, body_key: &str, icon_id: &str) -> WindowKindDefinition {
+    use crate::viewport3d::playback::{ACTION_SEEK, ACTION_SELECT_TRACK, ACTION_SET_ACTIVE_FIELD, ACTION_SET_SPEED, ACTION_STEP, ACTION_TOGGLE_PLAY};
+    let text = |name: &str, en: &str, de: &str| ActionArgDef::text(name, LocalizedLabel::native(en, de)).required();
+    let number = |name: &str, en: &str, de: &str| ActionArgDef::number(name, LocalizedLabel::native(en, de)).required();
+    WindowKindDefinition {
+        surface_kind: SurfaceKind::World3d,
+        utilities: vec![semio_framework_plugin::UtilityRef::new("transform")],
+        interactions: vec![semio_framework_plugin::InteractionRef::new(format!("norm.{variant}"))],
+        actions: vec![
+            view_action("viewportSetCamera", "Set camera", "Kamera setzen", "camera", vec![text("preset", "Preset", "Voreinstellung")]),
+            view_action("viewportFrame", "Frame", "Einpassen", "maximize", vec![text("target", "Target (all, selection, worst)", "Ziel (alle, Auswahl, kritischster)")]),
+            view_action("viewportToggleLayer", "Toggle layer", "Ebene umschalten", "layers", vec![text("layer", "Layer", "Ebene")]),
+            view_action("viewportSetColourMap", "Set colour map", "Farbskala setzen", "palette", vec![text("ramp", "Ramp", "Verlauf")]),
+            view_action("viewportSetSection", "Set section", "Schnitt setzen", "scissors", vec![number("offset", "Offset", "Versatz")]),
+            view_action("viewportSetDeformationScale", "Set deformation scale", "Verformungsmaßstab setzen", "activity", vec![number("scale", "Scale", "Maßstab")]),
+            view_action("viewportSetLoadCase", "Set load case", "Lastfall setzen", "list", vec![text("loadCase", "Load case", "Lastfall")]),
+            view_action(ACTION_SET_ACTIVE_FIELD, "Set active field", "Aktives Feld setzen", "gauge", vec![text("field", "Field", "Feld")]),
+            view_action(ACTION_SELECT_TRACK, "Select parameter track", "Parameterverlauf wählen", "clock", vec![ActionArgDef::text("track", LocalizedLabel::native("Track", "Verlauf"))]),
+            view_action(ACTION_SEEK, "Seek parameter", "Parameter setzen", "sliders-horizontal", vec![number("value", "Value", "Wert")]),
+            view_action(ACTION_TOGGLE_PLAY, "Play or pause", "Abspielen oder anhalten", "play", Vec::new()),
+            view_action(ACTION_STEP, "Step parameter", "Parameter schrittweise ändern", "skip-forward", vec![number("direction", "Direction", "Richtung")]),
+            view_action(ACTION_SET_SPEED, "Set playback speed", "Wiedergabegeschwindigkeit setzen", "gauge", vec![number("speed", "Speed", "Geschwindigkeit")]),
+            view_action(crate::TOUCH_MENU_OPEN, "Open edit menu", "Bearbeiten-Menü öffnen", "menu", Vec::new()),
+            view_action(crate::TOUCH_MENU_CLOSE, "Close edit menu", "Bearbeiten-Menü schließen", "x", Vec::new()),
+            view_action(crate::TOUCH_FRAME_SELECTION, "Frame selection", "Auswahl einpassen", "maximize", Vec::new()),
+        ]
+        .into_iter()
+        .chain(shortcut_action_definitions())
+        .collect(),
+        ..window_definition(&visual_window_id(variant, "viewport"), label, body_key, icon_id)
+    }
+}
+
+/// 📈️ The 2D diagram window kind: a `Canvas2d` surface bound to the same interaction domain so a pick in 3D switches the diagrams.
+pub fn diagram_window_definition(variant: &str, label: LocalizedLabel, body_key: &str, icon_id: &str) -> WindowKindDefinition {
+    WindowKindDefinition {
+        interactions: vec![semio_framework_plugin::InteractionRef::new(format!("norm.{variant}"))],
+        actions: vec![view_action("diagramSelect", "Select diagram", "Diagramm wählen", "chart-line", vec![ActionArgDef::text("diagram", LocalizedLabel::native("Diagram", "Diagramm")).required()]), view_action("diagramToggleTable", "Toggle table", "Tabelle umschalten", "table", Vec::new())],
+        ..window_definition(&visual_window_id(variant, "diagrams"), label, body_key, icon_id)
+    }
+}
+
+fn layout_window(variant: &str, role: &str, title: &str) -> WindowLayoutWindowNode {
+    WindowLayoutWindowNode { kind: "window".into(), window_kind_id: visual_window_id(variant, role), title: Some(title.into()), instance_id: None, template_id: None, corner: None }
+}
+
+fn layout_stack(variant: &str, roles: &[(&str, &str)], size: Option<f64>) -> WindowLayoutStackNode {
+    WindowLayoutStackNode { kind: "stack".into(), size, active_window_kind_id: None, children: roles.iter().map(|(role, title)| layout_window(variant, role, title)).collect() }
+}
+
+fn role_title(role: &str) -> &'static str {
+    match role {
+        "outliner" => "Outliner",
+        "viewport" => "Model",
+        "properties" => "Properties",
+        "checks" => "Checks",
+        _ => "Diagrams",
+    }
+}
+
+fn titled<'a>(roles: &[&'a str]) -> Vec<(&'a str, &'static str)> {
+    roles.iter().map(|role| (*role, role_title(role))).collect()
+}
+
+/// 🧩️ The visual window layout of one device class at the default preferences, see [`visual_layout_with`].
+pub fn visual_layout(variant: &str, device: crate::viewport3d::config::DeviceClass) -> WindowLayout {
+    visual_layout_with(variant, device, &crate::device_profiles::LayoutPrefs::default())
+}
+
+/// 🧩️ The viewer's layout: the model, checks and diagrams of one device class under the user's preferences, see [`visual_layout_with`].
+pub fn view_layout_with(variant: &str, device: crate::viewport3d::config::DeviceClass, prefs: &crate::device_profiles::LayoutPrefs) -> WindowLayout {
+    visual_layout_roles(variant, device, prefs, &["viewport", "checks", "diagrams"])
+}
+
+/// 🧩️ The editor's layout: all five windows of one device class under the user's preferences, see [`visual_layout_roles`].
+pub fn visual_layout_with(variant: &str, device: crate::viewport3d::config::DeviceClass, prefs: &crate::device_profiles::LayoutPrefs) -> WindowLayout {
+    visual_layout_roles(variant, device, prefs, &["outliner", "viewport", "properties", "checks", "diagrams"])
+}
+
+/// 🆔️ Id of the named layout of a device class; a shell that learns the device class from the window size switches to this layout.
+pub fn visual_layout_id(device: crate::viewport3d::config::DeviceClass) -> String {
+    use crate::viewport3d::config::DeviceClass;
+    format!("norm-visual-{}", match device { DeviceClass::Desktop => "desktop", DeviceClass::Mobile => "mobile", DeviceClass::Tablet => "tablet" })
+}
+
+fn named_device_layout(device: &str, layout: impl Fn(crate::viewport3d::config::DeviceClass) -> WindowLayout) -> semio_framework_plugin::NamedLayout {
+    use crate::viewport3d::config::DeviceClass;
+    let (class, en) = match device { "mobile" => (DeviceClass::Mobile, "Mobile"), "tablet" => (DeviceClass::Tablet, "Tablet"), _ => (DeviceClass::Desktop, "Desktop") };
+    semio_framework_plugin::create_named_layout(visual_layout_id(class), en, layout(class), "builtin", None, None)
+}
+
+/// 📱️ The editor layout of `device` (`desktop`, `mobile` or `tablet`) at the default preferences, declared as a named layout so a shell can switch by device class.
+pub fn edit_named_layout(variant: &str, device: &str) -> semio_framework_plugin::NamedLayout {
+    named_device_layout(device, |class| visual_layout(variant, class))
+}
+
+/// 📱️ The viewer layout of `device` at the default preferences, see [`edit_named_layout`].
+pub fn view_named_layout(variant: &str, device: &str) -> semio_framework_plugin::NamedLayout {
+    named_device_layout(device, |class| view_layout_with(variant, class, &crate::device_profiles::LayoutPrefs::default()))
+}
+
+/// 🧩️ The visual window layout of the `available` windows of one device class under the user's layout preferences, desktop first: a dock of outliner and properties left, viewport centre, checks and diagrams right, hidden windows dropped and shares renormalised; mobile is one tab bar in the user's order with the model active; tablet pairs the viewport with a tabbed side pane. Preferences are sanitised first, so any stored value yields a valid tree.
+pub fn visual_layout_roles(variant: &str, device: crate::viewport3d::config::DeviceClass, prefs: &crate::device_profiles::LayoutPrefs, available: &[&str]) -> WindowLayout {
+    use crate::viewport3d::config::DeviceClass;
+    let prefs = crate::device_profiles::sanitised(prefs);
+    let axis = |kind: &str, size: Option<f64>, children: Vec<WindowLayoutChild>| WindowLayoutChild::Axis(WindowLayoutAxisNode { kind: kind.into(), size, children });
+    let stack = |roles: &[(&str, &str)], size: Option<f64>| WindowLayoutChild::Stack(layout_stack(variant, roles, size));
+    let root = match device {
+        DeviceClass::Desktop => {
+            let dock = &prefs.dock;
+            let shown = |role: &str| role == "viewport" || (available.contains(&role) && !dock.hidden.iter().any(|h| h == role));
+            let column = |pair: [&str; 2], split: f64, size: f64| {
+                let parts: Vec<(&str, f64)> = [(pair[0], split), (pair[1], 1.0 - split)].into_iter().filter(|(role, _)| shown(*role)).collect();
+                let total: f64 = parts.iter().map(|(_, weight)| weight).sum();
+                (!parts.is_empty()).then(|| (size, axis("column", Some(size), parts.iter().map(|(role, weight)| stack(&titled(&[*role]), Some(weight / total))).collect())))
+            };
+            let columns: Vec<(f64, WindowLayoutChild)> = [column(["outliner", "properties"], dock.left_split, dock.left), Some((dock.centre, stack(&titled(&["viewport"]), Some(dock.centre)))), column(["checks", "diagrams"], dock.right_split, dock.right)].into_iter().flatten().collect();
+            let total: f64 = columns.iter().map(|(size, _)| size).sum();
+            let resize = |share: f64, child: WindowLayoutChild| match child {
+                WindowLayoutChild::Axis(node) => WindowLayoutChild::Axis(WindowLayoutAxisNode { size: Some(share), ..node }),
+                WindowLayoutChild::Stack(node) => WindowLayoutChild::Stack(WindowLayoutStackNode { size: Some(share), ..node }),
+            };
+            WindowLayoutRoot::Axis(WindowLayoutAxisNode { kind: "row".into(), size: None, children: columns.into_iter().map(|(size, child)| resize(size / total, child)).collect() })
+        }
+        DeviceClass::Mobile => {
+            let tabs: Vec<&str> = prefs.mobile.tabs.iter().map(String::as_str).filter(|tab| available.contains(tab)).collect();
+            let active = if tabs.contains(&prefs.mobile.active.as_str()) { prefs.mobile.active.as_str() } else { "viewport" };
+            WindowLayoutRoot::Stack(WindowLayoutStackNode { active_window_kind_id: Some(visual_window_id(variant, active)), ..layout_stack(variant, &titled(&tabs), None) })
+        }
+        DeviceClass::Tablet => {
+            let tabs: Vec<&str> = prefs.tablet.side_tabs.iter().map(String::as_str).filter(|tab| available.contains(tab)).collect();
+            let active = if tabs.contains(&prefs.tablet.side_active.as_str()) { prefs.tablet.side_active.as_str() } else { tabs.first().copied().unwrap_or("checks") };
+            let side = WindowLayoutStackNode { active_window_kind_id: Some(visual_window_id(variant, active)), ..layout_stack(variant, &titled(&tabs), Some(1.0 - prefs.tablet.viewport)) };
+            WindowLayoutRoot::Axis(WindowLayoutAxisNode { kind: "row".into(), size: None, children: vec![stack(&titled(&["viewport"]), Some(prefs.tablet.viewport)), WindowLayoutChild::Stack(side)] })
+        }
+    };
+    WindowLayout { root }
 }
 
 /// 📌️ A norm panel tab — every one is a framework-predefined leaf id bound to this app's body key.
@@ -111,12 +274,8 @@ where
     F::Document: pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot,
 {
     if port == "report:out" {
-        let report = cached_report_for::<F>(document).unwrap_or_else(|| {
-            let report = F::evaluate(document);
-            store_cached_report_for::<F>(document, report.clone());
-            report
-        });
-        let json = semio_framework_pack_json::to_json_string(&report);
+        let report = F::live_report(document);
+        let json = semio_framework_pack_json::to_json_string(&*report);
         return Ok(Media { media_type: MediaType { class: MediaClass::Computation, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: artifact_kind_id(variant), json } });
     }
     if port != "artifact:out" {

@@ -1,0 +1,6 @@
+{
+  "ChangeFootbridgeDeckWidth": {
+    "id": "footbridge-1",
+    "newDeckWidth": 3.0
+  }
+}

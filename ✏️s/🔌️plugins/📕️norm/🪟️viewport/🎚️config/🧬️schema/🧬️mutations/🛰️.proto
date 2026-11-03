@@ -1,0 +1,15 @@
+syntax = "proto3";
+package semio.window.norm.viewport;
+
+message ChangeViewportView {
+  optional string camera_preset = 1;
+  repeated string hidden_layers = 2;
+  optional string colour_map = 3;
+  optional string unit_system = 4;
+}
+
+message NormViewportWindowConfigMutation {
+  oneof mutation {
+    ChangeViewportView change_viewport_view = 1;
+  }
+}

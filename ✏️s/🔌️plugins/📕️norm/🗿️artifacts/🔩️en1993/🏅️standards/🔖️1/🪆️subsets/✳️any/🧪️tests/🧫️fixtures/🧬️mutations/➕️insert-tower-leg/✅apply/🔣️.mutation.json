@@ -1,0 +1,44 @@
+{
+  "InsertTowerLeg": {
+    "index": 1,
+    "towerLeg": {
+      "id": "tw-1-2",
+      "memberId": "member-b1",
+      "forceCoefficient": 1.0,
+      "dynamicFactor": 1.0,
+      "actions": [
+        {
+          "id": "tw-g",
+          "loadCaseId": "g-permanent",
+          "force": 500000.0
+        },
+        {
+          "id": "tw-w",
+          "loadCaseId": "w-wind",
+          "force": 200000.0
+        }
+      ],
+      "latticeKind": "Unset",
+      "slenderness": 0.0,
+      "diameter": 0.0,
+      "height": 0.0,
+      "bendingStiffness": 0.0,
+      "massPerLength": 0.0,
+      "strouhal": 0.0,
+      "logDecrement": 0.0,
+      "airDensity": 0.0,
+      "meanWindSpeed": 0.0,
+      "crossingRate": 0.0,
+      "designLife": 0.0,
+      "kFactor": 0.0,
+      "kwFactor": 0.0,
+      "lateralForceCoefficient": 0.0,
+      "permittedAmplitudeRatio": 0.0,
+      "ringMode": 0.0,
+      "shellThickness": 0.0,
+      "guyArea": 0.0,
+      "guyAngle": 0.0,
+      "guyLength": 0.0
+    }
+  }
+}

@@ -28,7 +28,7 @@ impl<T:RetireOwned,E:RetireOwned> RetireOwned for Result<T,E>{
  fn controlled_retirement_supported()->bool{crate::retirement::support::controlled_retirement_supported::<Self>()}fn controlled_retirement_supported_in(path:&crate::retirement::RetirementSupport<'_>)->bool{path.supports::<T>()&&path.supports::<E>()}
 }
 impl<T:RetireOwned,E:RetireOwned> RetirementCursor for OriginalResult<T,E>{
- fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{self.demand(body)}
+ fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.demand(body)}
  fn close_step(&mut self,g:RetainedCloneGrant)->RetirementStep{
   if self.terminal_is_empty(){return RetirementStep::Complete(0);}
   let d=match self.demand(g.maximum_copy_bytes){Ok(d)=>d,Err(e)=>return RetirementStep::Failure(e,0)};

@@ -1,0 +1,6 @@
+{
+  "ChangeFatigueStressThickness": {
+    "id": "fatigue-stress-1",
+    "newThickness": 1.5
+  }
+}

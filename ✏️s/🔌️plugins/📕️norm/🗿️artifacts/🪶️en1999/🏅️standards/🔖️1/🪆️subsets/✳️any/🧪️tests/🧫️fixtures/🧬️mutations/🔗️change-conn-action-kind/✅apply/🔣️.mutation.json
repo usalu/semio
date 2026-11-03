@@ -1,0 +1,6 @@
+{
+  "mutation": "changeConnActionKind",
+  "connectionId": "support-weld",
+  "actionId": "G-conn",
+  "newKind": "permanent"
+}

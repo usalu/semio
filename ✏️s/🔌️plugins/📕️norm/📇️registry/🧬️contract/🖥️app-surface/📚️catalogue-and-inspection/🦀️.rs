@@ -1,6 +1,7 @@
 //! 📚️ Catalogue and inspection of the norm app surface: the catalogue table and the inspection render. See [`super`].
 
 use super::*;
+use semio_s_plugin_norm_compliance::spec_trace::{Realisation, SpecTraceTable};
 
 //#region 🔖️Render
 /// 📚️ One column in a normative reference [`CatalogueTable`].
@@ -16,6 +17,7 @@ pub struct CatalogueColumn {
 #[derive(Clone, Debug, PartialEq)]
 pub enum CatalogueCell {
     Text(String),
+    Localized { en: String, de: String },
     Number { value: f64, decimals: u8 },
     Empty,
 }
@@ -25,6 +27,7 @@ impl CatalogueCell {
     pub fn display(&self, locale: Locale) -> String {
         match self {
             Self::Text(text) => text.clone(),
+            Self::Localized { en, de } => chrome(en, de, locale),
             Self::Number { value, decimals } => format!("{value:.prec$}", prec = *decimals as usize),
             Self::Empty => chrome("—", "—", locale),
         }
@@ -33,6 +36,11 @@ impl CatalogueCell {
     /// 🔤 Text cell from a static label.
     pub fn text(value: impl Into<String>) -> Self {
         Self::Text(value.into())
+    }
+
+    /// 🗣️ Text cell with one string per shell locale.
+    pub fn localized(en: impl Into<String>, de: impl Into<String>) -> Self {
+        Self::Localized { en: en.into(), de: de.into() }
     }
 
     /// 🔢 Number cell with fixed decimal places.
@@ -57,6 +65,45 @@ pub struct CatalogueTable {
     pub clause: ClauseId,
     pub columns: Vec<CatalogueColumn>,
     pub rows: Vec<CatalogueRow>,
+}
+
+/// 🧭️ The spec trace of an artifact as the uniform reference table of its catalogue panel: spec id, clause, entity, realisation kind, realisation and description.
+pub fn spec_trace_table(trace: &SpecTraceTable) -> CatalogueTable {
+    let kind = |realisation: &Realisation| match realisation {
+        Realisation::Check(_) => CatalogueCell::localized("Check", "Prüfung"),
+        Realisation::Data(_) => CatalogueCell::localized("Data", "Daten"),
+        Realisation::DesignCase(_) => CatalogueCell::localized("Design case", "Bemessungsfall"),
+        Realisation::NotModelled(_) => CatalogueCell::localized("Not modelled", "Nicht modelliert"),
+    };
+    CatalogueTable {
+        id: "spec-trace",
+        title_en: "Spec traceability (spec id, clause, realisation)",
+        title_de: "Spezifikations-Rückverfolgung (Spezifikations-Id, Abschnitt, Realisierung)",
+        clause: ClauseId::new(trace.standard, "catalogue", "traceability"),
+        columns: vec![
+            CatalogueColumn { id: "id", label_en: "Spec id", label_de: "Spezifikations-Id", unit: None },
+            CatalogueColumn { id: "clause", label_en: "Clause", label_de: "Abschnitt", unit: None },
+            CatalogueColumn { id: "entity", label_en: "Entity", label_de: "Entität", unit: None },
+            CatalogueColumn { id: "kind", label_en: "Realisation", label_de: "Realisierung", unit: None },
+            CatalogueColumn { id: "detail", label_en: "Check ids, data, case entry or reason", label_de: "Prüf-Ids, Daten, Fall-Eintrag oder Grund", unit: None },
+            CatalogueColumn { id: "description", label_en: "Description", label_de: "Beschreibung", unit: None },
+        ],
+        rows: trace
+            .items
+            .iter()
+            .map(|item| CatalogueRow {
+                id: item.id.into(),
+                cells: vec![
+                    CatalogueCell::text(item.id),
+                    CatalogueCell::localized(item.clause, semio_s_plugin_norm_compliance::designator(item.clause, &Locale::De)),
+                    if item.entity.is_empty() { CatalogueCell::Empty } else { CatalogueCell::text(item.entity) },
+                    kind(&item.realisation),
+                    CatalogueCell::localized(item.realisation.describe(&Locale::En), item.realisation.describe(&Locale::De)),
+                    CatalogueCell::localized(item.description.en, item.description.de),
+                ],
+            })
+            .collect(),
+    }
 }
 
 fn catalogue_column_header(column: &CatalogueColumn, locale: Locale) -> String {
@@ -124,7 +171,7 @@ pub fn render_catalogue(
     for table in tables {
         let section_id = format!("norm-catalogue.table-{}", table.id);
         let title = chrome(table.title_en, table.title_de, locale);
-        let header = format!("{title} · {} · ({})", table.clause, table.rows.len());
+        let header = format!("{title} · {} · ({})", table.clause.text(&locale), table.rows.len());
         let column_band = table.columns.iter().map(|column| catalogue_column_header(column, locale)).collect::<Vec<_>>().join(" | ");
         let rows: Vec<&CatalogueRow> = table.rows.iter().collect();
         builder = builder.window_section_or_placeholder(
@@ -155,62 +202,23 @@ pub fn render_inspection(report: &CheckReport, selected_check_index: Option<u32>
         return PanelTreeBuilder::new("norm-inspection")?.section("norm-inspection.summary", Some(norm_ui_label(chrome("Inspection", "Inspektion", locale))?), true, items)?.build();
     };
     let protocol_locale = protocol_locale(locale);
-    let mut rows = Vec::new();
-    rows.push(tree_item_desc("norm-inspection.check.id", norm_ui_label(chrome("Id", "Kennung", locale))?, Some(check.id.clone()))?);
-    rows.push(tree_item_desc("norm-inspection.check.part", norm_ui_label(chrome("Part", "Teil", locale))?, Some(check.part.clone()))?);
-    rows.push(tree_item_desc("norm-inspection.check.clause", norm_ui_label(chrome("Clause", "Klausel", locale))?, Some(check.clause.to_string()))?);
-    rows.push(tree_item_desc(
-        "norm-inspection.check.subject",
-        norm_ui_label(chrome("Subject", "Gegenstand", locale))?,
-        Some(check.subject.label.resolve(&protocol_locale).to_string()),
-    )?);
+    let spec = ChecksWindowSpec { controller_id, ..ChecksWindowSpec::default() };
+    let mut rows = vec![
+        tree_item_desc("norm-inspection.check.id", norm_ui_label(chrome("Id", "Kennung", locale))?, Some(check.id.clone()))?,
+        tree_item_desc("norm-inspection.check.part", norm_ui_label(chrome("Part", "Teil", locale))?, Some(check.part.clone()))?,
+        tree_item_desc("norm-inspection.check.subject", norm_ui_label(chrome("Subject", "Gegenstand", locale))?, Some(check.subject.label.resolve(&protocol_locale).to_string()))?,
+    ];
     if !check.subject.path.is_empty() {
-        rows.push(tree_item_desc(
-            "norm-inspection.check.subject-path",
-            norm_ui_label(chrome("Subject path", "Gegenstandspfad", locale))?,
-            Some(check.subject.path.clone()),
-        )?);
+        rows.push(tree_item_desc("norm-inspection.check.subject-path", norm_ui_label(chrome("Subject path", "Gegenstandspfad", locale))?, Some(check.subject.path.clone()))?);
     }
-    rows.push(tree_item_desc("norm-inspection.check.status", norm_ui_label(chrome("Status", "Status", locale))?, Some(status_label(check.status, locale)))?);
     rows.push(tree_item_desc("norm-inspection.check.title", norm_ui_label(chrome("Title", "Titel", locale))?, Some(check.title.resolve(&protocol_locale).to_string()))?);
-    rows.push(tree_item_desc(
-        "norm-inspection.check.explanation",
-        norm_ui_label(chrome("Explanation", "Erläuterung", locale))?,
-        Some(check.explanation.resolve(&protocol_locale).to_string()),
-    )?);
-    rows.push(tree_item_desc("norm-inspection.check.computed", norm_ui_label(chrome("Computed", "Berechnet", locale))?, Some(format_quantity(&check.computed)))?);
-    rows.push(tree_item_desc("norm-inspection.check.limit", norm_ui_label(chrome("Limit", "Grenzwert", locale))?, Some(format_quantity(&check.limit)))?);
-    rows.push(tree_item_desc("norm-inspection.check.utilization", norm_ui_label(chrome("Utilization", "Ausnutzung", locale))?, Some(format!("{:.2}", check.utilization)))?);
+    rows.extend(check_detail_rows("norm-inspection.check", check, locale, &spec)?);
     rows.push(tree_item_desc("norm-inspection.check.annex", norm_ui_label(chrome("Annex", "Anhang", locale))?, Some(check.annex.label().into()))?);
-    for (remedy_index, remedy) in check.remedies.iter().enumerate() {
-        let detail = format!(
-            "{} · {} → {} · {}",
-            remedy.action.resolve(&protocol_locale),
-            format_quantity(&remedy.current),
-            format_quantity(&remedy.required),
-            remedy.target.path
-        );
-        let row = if remedy.applicable {
-            if let Some(controller_id) = controller_id {
-                let args = action_args_map(vec![("checkId", ui_value_text(&check.id)?), ("remedyIndex", UiValue::Number(remedy_index as f64))])?;
-                tree_item_with_action(
-                    format!("norm-inspection.check.remedy-{remedy_index}"),
-                    norm_ui_label(format!("{} {}", chrome("Apply", "Anwenden", locale), remedy_index + 1))?,
-                    Some(detail),
-                    norm_action(controller_id, "applyRemedy", Some(args))?,
-                )?
-            } else {
-                tree_item_desc(format!("norm-inspection.check.remedy-{remedy_index}"), norm_ui_label(chrome("Remedy", "Abhilfe", locale))?, Some(detail))?
-            }
-        } else {
-            tree_item_desc(format!("norm-inspection.check.remedy-{remedy_index}"), norm_ui_label(chrome("Remedy", "Abhilfe", locale))?, Some(detail))?
-        };
-        rows.push(row);
-    }
     let items = ui_node_list(rows.into_iter().map(Ok))?;
-    PanelTreeBuilder::new("norm-inspection")?
+    let tree = PanelTreeBuilder::new("norm-inspection")?
         .section("norm-inspection.check", Some(norm_ui_label(format!("{} {}", chrome("Check", "Nachweis", locale), index + 1))?), true, items)?
-        .build()
+        .build()?;
+    ui::column().try_children([utilisation_progress_node(check.status, check.utilization, locale)?, tree]).map_err(|_| ui_error("ui.node.children"))?.try_build().map_err(|_| ui_error("ui.node.build"))
 }
 
 /// ❓️ The unknown-body-key fallback every norm app's `render` ends with.

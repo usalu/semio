@@ -38,9 +38,8 @@ mod subject {
     /// 🗣️ The real committed EN 1991 document the identity scenario declares.
     const DSL_ASSET: &str = "asset://🏢de-office-compliant/🏢de-office-compliant/🗣️.dsl.semio";
     /// 🎒️ The same document in its binary envelope, written by a separate codec from the DSL text.
-    const PACK_ASSET: &str = "asset://🏢de-office-compliant/🏢de-office-compliant/📦️.pack.semio";
+    const PACK_ASSET: &str = "asset://🏢de-office-compliant/🏢de-office-compliant/🎒️.pack.semio";
 
-    //#region 🔖️FixtureDecode
     /// 🧫️ One committed vector file the scenario's steps declare, found by its bundle-relative suffix.
     fn committed(ctx: &Context, kind: &str, suffix: &str) -> Result<String, String> {
         let uri = ctx.step_input_uris().into_iter().find(|uri| uri.ends_with(suffix)).ok_or_else(|| format!("mutate-en1991-1: the {kind:?} scenario declares no committed …/{suffix}"))?;
@@ -59,18 +58,16 @@ mod subject {
     fn disagreement(what: &str, got: &En1991Snapshot, expected: &En1991Snapshot) -> String {
         format!("{what}\n     got: {}\nexpected: {}", encode_en1991_snapshot_json(got), encode_en1991_snapshot_json(expected))
     }
-    //#endregion 🔖️FixtureDecode
 
-    //#region 🔖️Handlers
     /// 🎯️ Applies the kind to the committed before-snapshot and asserts the result IS the committed after-snapshot
     /// under the committed outcome: an `applied` vector must be accepted without a diagnostic and must move the
     /// projection, a `rejected` one must raise a diagnostic and leave the document bit-identical.
     pub fn mutate(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
         move |ctx: &Context| {
-            let base = snapshot(ctx, kind, "📸️snapshot/⬅️before/🔣️.json")?;
-            let expected = snapshot(ctx, kind, "📸️snapshot/➡️after/🔣️.json")?;
-            let mutation = decode_en1991_mutation_json(&committed(ctx, kind, "🦠️mutation/🔣️.json")?)?;
-            let status = parse_json(&committed(ctx, kind, "🎯️outcome/🔣️.json")?)?.str("status");
+            let base = snapshot(ctx, kind, "🔣️.before.json")?;
+            let expected = snapshot(ctx, kind, "🔣️.after.json")?;
+            let mutation = decode_en1991_mutation_json(&committed(ctx, kind, "🔣️.mutation.json")?)?;
+            let status = parse_json(&committed(ctx, kind, "🔣️.outcome.json")?)?.str("status");
             let current = match (status.as_str(), apply_en1991_mutation(&base, &mutation)) {
                 ("applied", Ok((snapshot, messages))) if messages.is_empty() => snapshot,
                 ("applied", Ok((_snapshot, messages))) => return Err(format!("mutate-{kind}: the committed vector declares this mutation applied, yet it raised {messages:?}")),
@@ -98,9 +95,9 @@ mod subject {
     /// projection carries BOTH the mutated and the restored document, so every row projects its own value.
     pub fn inverse(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
         move |ctx: &Context| {
-            let base = snapshot(ctx, kind, "📸️snapshot/⬅️before/🔣️.json")?;
-            let mutation = decode_en1991_mutation_json(&committed(ctx, kind, "🦠️mutation/🔣️.json")?)?;
-            let applied = parse_json(&committed(ctx, kind, "🎯️outcome/🔣️.json")?)?.str("status") == "applied";
+            let base = snapshot(ctx, kind, "🔣️.before.json")?;
+            let mutation = decode_en1991_mutation_json(&committed(ctx, kind, "🔣️.mutation.json")?)?;
+            let applied = parse_json(&committed(ctx, kind, "🔣️.outcome.json")?)?.str("status") == "applied";
             let original = projection(&base)?;
             let mut current = apply_en1991_mutation(&base, &mutation).map_err(|error| format!("inverse-{kind}: the forward mutation could not be applied to its own committed before-snapshot: {error}"))?.0;
             let mutated = projection(&current)?;
@@ -162,7 +159,6 @@ mod subject {
         law::round_trip_preserves(&projection(&repacked)?, &projection(&parsed)?)?;
         Ok(Outcome::with_raw(reprinted.as_bytes().to_vec(), carrier_projection(&reprinted)))
     }
-    //#endregion 🔖️Handlers
 }
 //#endregion 🔖️Subject
 

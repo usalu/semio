@@ -1,0 +1,36 @@
+{
+  "$schema": "../../../../../../../../../🔮️oracles/🏃️harness/🧬️schema/🔣️.json",
+  "schemaVersion": 1,
+  "artifact": "en1995",
+  "annex": "de",
+  "cases": [
+    {
+      "id": "en1995.7.5.natural-frequency",
+      "check": "en1995.7.5.natural-frequency",
+      "citation": {
+        "standard": "EN 1995-1-1",
+        "edition": "2004",
+        "clause": "7.3.3 Eq. 7.5"
+      },
+      "inputs": {
+        "length": 4.5,
+        "ei_l": 120000.0,
+        "m": 150.0
+      },
+      "expected": {
+        "f_1": {
+          "value": 2.194016265757218,
+          "unit": "Hz",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-blue-prints",
+          "adapter": "blueprints",
+          "kind": "third-party-library"
+        }
+      ]
+    }
+  ]
+}

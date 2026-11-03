@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/remove-connection-action/schema.json",
+  "title": "RemoveConnectionAction",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "connectionId",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "removeConnectionAction"
+    },
+    "connectionId": {
+      "type": "string",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Connection",
+          "de": "Anschluss"
+        },
+        "description": {
+          "en": "The connection that owns the row, by id.",
+          "de": "Das Elternelement (Anschluss), per Kennung."
+        },
+        "group": "target",
+        "order": 10,
+        "widget": "reference",
+        "ref": {
+          "kind": "connections"
+        }
+      }
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Connection action",
+          "de": "Anschlusseinwirkung"
+        },
+        "description": {
+          "en": "The connection action this mutation removes.",
+          "de": "Entfernt wird: Anschlusseinwirkung."
+        },
+        "group": "target",
+        "order": 20,
+        "widget": "reference",
+        "ref": {
+          "kind": "connection-action"
+        }
+      }
+    }
+  }
+}

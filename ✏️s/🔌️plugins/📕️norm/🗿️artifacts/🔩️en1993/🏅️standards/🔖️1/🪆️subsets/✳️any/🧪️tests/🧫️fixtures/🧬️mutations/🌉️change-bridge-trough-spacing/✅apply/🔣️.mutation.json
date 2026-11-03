@@ -1,0 +1,6 @@
+{
+  "ChangeBridgeTroughSpacing": {
+    "id": "br-1",
+    "newTroughSpacing": 1.5
+  }
+}

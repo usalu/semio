@@ -1,0 +1,306 @@
+{
+  "$schema": "../../../../../../../../../🔮️oracles/🏃️harness/🧬️schema/🔣️.json",
+  "schemaVersion": 1,
+  "artifact": "en1992",
+  "annex": "de",
+  "cases": [
+    {
+      "id": "en1992.F.membrane-reinforcement-tension-both",
+      "check": "en1992.F.membrane-reinforcement",
+      "citation": {
+        "standard": "EN 1992-1-1",
+        "edition": "2004",
+        "clause": "Annex F (informative) in-plane stress reinforcement, tension positive"
+      },
+      "inputs": {
+        "n_x": 200000.0,
+        "n_y": 100000.0,
+        "n_xy": 80000.0
+      },
+      "expected": {
+        "f_x": {
+          "value": 279999.9981361007,
+          "unit": "N/m",
+          "profile": "numerical-v1"
+        },
+        "f_y": {
+          "value": 180000.0018638993,
+          "unit": "N/m",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1992.F.membrane-reinforcement-compression-y",
+      "check": "en1992.F.membrane-reinforcement",
+      "citation": {
+        "standard": "EN 1992-1-1",
+        "edition": "2004",
+        "clause": "Annex F (informative) in-plane stress reinforcement, tension positive"
+      },
+      "inputs": {
+        "n_x": 300000.0,
+        "n_y": -150000.0,
+        "n_xy": 120000.0
+      },
+      "expected": {
+        "f_x": {
+          "value": 395999.99546399416,
+          "unit": "N/m",
+          "profile": "numerical-v1"
+        },
+        "f_y": {
+          "value": 0.0,
+          "unit": "N/m",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1992.F.membrane-reinforcement-compression-x",
+      "check": "en1992.F.membrane-reinforcement",
+      "citation": {
+        "standard": "EN 1992-1-1",
+        "edition": "2004",
+        "clause": "Annex F (informative) in-plane stress reinforcement, tension positive"
+      },
+      "inputs": {
+        "n_x": -100000.0,
+        "n_y": 200000.0,
+        "n_xy": 100000.0
+      },
+      "expected": {
+        "f_x": {
+          "value": 0.0,
+          "unit": "N/m",
+          "profile": "numerical-v1"
+        },
+        "f_y": {
+          "value": 299999.99629008526,
+          "unit": "N/m",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1992.J.3.corbel-truss",
+      "check": "en1992.J.3.corbel-truss",
+      "citation": {
+        "standard": "EN 1992-1-1",
+        "edition": "2004",
+        "clause": "Annex J.3 and 6.5 corbel strut-and-tie (three-bar truss)",
+        "annex": "en"
+      },
+      "inputs": {
+        "F": 500000.0,
+        "a": 0.25,
+        "z": 0.4,
+        "H": 50000.0
+      },
+      "expected": {
+        "F_t": {
+          "value": 362499.9953433872,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        },
+        "C": {
+          "value": 589623.8182855379,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        },
+        "theta": {
+          "value": 1.0121970114513341,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-anastruct",
+          "adapter": "anastruct",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1992.J.3.corbel-truss-no-horizontal",
+      "check": "en1992.J.3.corbel-truss",
+      "citation": {
+        "standard": "EN 1992-1-1",
+        "edition": "2004",
+        "clause": "Annex J.3 and 6.5 corbel strut-and-tie (three-bar truss)",
+        "annex": "en"
+      },
+      "inputs": {
+        "F": 300000.0,
+        "a": 0.15,
+        "z": 0.35,
+        "H": 0.0
+      },
+      "expected": {
+        "F_t": {
+          "value": 128571.43586995667,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        },
+        "C": {
+          "value": 326390.27884062723,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        },
+        "theta": {
+          "value": 1.1659045405098132,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-anastruct",
+          "adapter": "anastruct",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1992.KK.age-adjusted-modulus-c30-rh50",
+      "check": "en1992.KK.age-adjusted-modulus",
+      "citation": {
+        "standard": "EN 1992-2",
+        "edition": "2005",
+        "clause": "EN 1992-2 Annex KK age-adjusted effective modulus E_c,adj = E / (1 + chi phi), creep function of EN 1992-1-1 Annex B.1",
+        "annex": "en"
+      },
+      "inputs": {
+        "E": 33000000000.0,
+        "t0": 28.0,
+        "t": 18250.0,
+        "f_cm": 38000000.0,
+        "phi_RH": 1.4,
+        "beta_H": 500.0
+      },
+      "expected": {
+        "phi": {
+          "value": 1.848580507347109,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "chi": {
+          "value": 0.8636720694715739,
+          "unit": "1",
+          "profile": "method-spread-v1"
+        },
+        "E_adj": {
+          "value": 12709086852.663122,
+          "unit": "Pa",
+          "profile": "method-spread-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1992.KK.age-adjusted-modulus-c50-rh80",
+      "check": "en1992.KK.age-adjusted-modulus",
+      "citation": {
+        "standard": "EN 1992-2",
+        "edition": "2005",
+        "clause": "EN 1992-2 Annex KK age-adjusted effective modulus E_c,adj = E / (1 + chi phi), creep function of EN 1992-1-1 Annex B.1",
+        "annex": "en"
+      },
+      "inputs": {
+        "E": 33000000000.0,
+        "t0": 28.0,
+        "t": 18250.0,
+        "f_cm": 58000000.0,
+        "phi_RH": 1.1,
+        "beta_H": 700.0
+      },
+      "expected": {
+        "phi": {
+          "value": 1.1719157231772503,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "chi": {
+          "value": 0.8207000218510874,
+          "unit": "1",
+          "profile": "method-spread-v1"
+        },
+        "E_adj": {
+          "value": 16821361517.537567,
+          "unit": "Pa",
+          "profile": "method-spread-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    }
+  ]
+}

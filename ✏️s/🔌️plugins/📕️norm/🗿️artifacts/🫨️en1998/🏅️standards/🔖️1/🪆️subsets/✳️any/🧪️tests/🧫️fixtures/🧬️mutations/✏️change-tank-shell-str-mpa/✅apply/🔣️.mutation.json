@@ -1,0 +1,5 @@
+{
+  "mutation": "changeTankShellStrMpa",
+  "id": "tk-1",
+  "newShellStrengthMpa": 1.5
+}

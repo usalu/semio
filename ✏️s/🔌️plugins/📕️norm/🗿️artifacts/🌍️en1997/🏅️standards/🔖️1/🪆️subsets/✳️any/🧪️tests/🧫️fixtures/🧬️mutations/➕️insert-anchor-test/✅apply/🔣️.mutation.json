@@ -1,0 +1,9 @@
+{
+  "mutation": "insertAnchorTest",
+  "anchorId": "anchor-A1",
+  "index": 0,
+  "anchorTest": {
+    "id": "atest-1-new",
+    "pullOutResistance": 650000.0
+  }
+}

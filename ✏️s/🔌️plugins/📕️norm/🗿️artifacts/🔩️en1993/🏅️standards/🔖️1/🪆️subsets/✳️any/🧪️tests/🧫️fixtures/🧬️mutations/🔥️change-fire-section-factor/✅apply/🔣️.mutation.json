@@ -1,0 +1,6 @@
+{
+  "ChangeFireSectionFactor": {
+    "id": "fire-1",
+    "newSectionFactor": 360.0
+  }
+}

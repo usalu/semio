@@ -1,11 +1,82 @@
 semio norm.en1994.dsl v1
-annex=de structure-kind=building steel-f-y-pa=355000000Pa fire-rating=r60 insulation-thickness-m=0.025m fatigue-detail=stud_welded
-beams [id:TEXT span-m:QTY spacing-m:QTY support:TEXT construction:TEXT steel:REC slab-thickness-m:QTY concrete-f-ck-pa:QTY concrete-e-cm-pa:QTY sheeting:REC studs:REC transverse-as-m2-per-m:NUM ltb-length-m:QTY as-hogging-m2-per-m:NUM bar-spacing-m:QTY wk-limit-m:QTY n-cycles:NUM actions:TABLE] {
-  beam-B1 8m 3m simply_supported propped {designation=HEB300 height-m=0.3m width-m=0.3m tw-m=0.011m tf-m=0.019m a-m2=0.0149m2 w-pl-y-m3=0.001867m3 i-y-m4=0.0002517m4 a-v-m2=0.0045m2} 0.14m 30000000Pa 33000000000Pa {profile=trapezoidal height-m=0.055m rib-width-m=0.1m thickness-m=0.0009m ribs-parallel-to-beam=false} {diameter-m=0.019m height-m=0.095m f-u-pa=450000000Pa count-per-rib=1 spacing-m=0.15m total-count=64} 0.0025 4m 0.0005 0.15m 0.0003m 2000000 [ {id=G-steel kind=permanent category=self_steel stage=construction q-area-pa=382.47555Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa} {id=G-wet kind=permanent category=wet_concrete stage=construction q-area-pa=2125.0Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa} {id=Q-constr kind=construction category=construction stage=construction q-area-pa=1000Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa} {id=G-steel-comp kind=permanent category=self_steel stage=composite q-area-pa=382.47555Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa} {id=G-slab kind=permanent category=slab stage=composite q-area-pa=1912.5Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa} {id=G-finishes kind=permanent category=finishes stage=composite q-area-pa=1000.0Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa} {id=Q-office kind=imposed category=B stage=composite q-area-pa=2000Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa} ]
+annex=de structure-kind=building steel-f-y-pa=355000000Pa
+beams [id:TEXT span-m:QTY spacing-m:QTY support:TEXT construction:TEXT steel:REC slab-thickness-m:QTY concrete-f-ck-pa:QTY concrete-e-cm-pa:QTY sheeting:REC transverse-as-m2-per-m:NUM ltb-length-m:QTY as-hogging-m2-per-m:NUM bar-spacing-m:QTY wk-limit-m:QTY n-cycles:NUM adjacent-span-m:QTY patch-bearing-length-m:QTY bridge-lanes:UINT cracked-length-fraction:NUM stud-transverse-spacing-m:QTY stud-edge-distance-m:QTY transverse-as-top-m2-per-m:QTY end-plate-width-m:QTY end-plate-height-m:QTY end-zone-length-m:QTY reinforcement-product:TEXT actions:TABLE] {
+  beam-B1 8m 3m simply_supported propped {designation=HEB300 height-m=0.3m width-m=0.3m tw-m=0.011m tf-m=0.019m a-m2=0.0149m2 w-pl-y-m3=0.001867m3 i-y-m4=0.0002517m4 a-v-m2=0.0045m2 r-m=0.027m} 0.14m 30000000Pa 33000000000Pa {profile=trapezoidal height-m=0.055m rib-width-m=0.1m thickness-m=0.0009m ribs-parallel-to-beam=false} 0.0025 4m 0.0005 0.15m 0.0003m 2000000 0m 0.1m 0 0.15 0m 0m 0m2/m 0m 0m 0m hot_rolled [ {id=G-steel kind=permanent category=self_steel stage=construction q-area-pa=382.47555Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} {id=G-wet kind=permanent category=wet_concrete stage=construction q-area-pa=2125.0Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} {id=Q-constr kind=construction category=construction stage=construction q-area-pa=1000Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} {id=G-steel-comp kind=permanent category=self_steel stage=composite q-area-pa=382.47555Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} {id=G-slab kind=permanent category=slab stage=composite q-area-pa=1912.5Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} {id=G-finishes kind=permanent category=finishes stage=composite q-area-pa=1000.0Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} {id=Q-office kind=imposed category=B stage=composite q-area-pa=2000Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m} ]
 }
-columns [id:TEXT kind:TEXT length-m:QTY outer-size-m:QTY wall-thickness-m:QTY steel-a-m2:QTY steel-f-y-pa:QTY concrete-a-m2:QTY concrete-f-ck-pa:QTY reinforcement-as-m2:QTY reinforcement-f-yk-pa:QTY i-m4:QTY buckling-curve:TEXT actions:TABLE] {
-  col-C1 concrete_filled 3.5m 0.3m 0.01m 0.0084m2 355000000Pa 0.072m2 30000000Pa 0.0012m2 500000000Pa 0.00021m4 a [ {id=G-col kind=permanent category=self stage=composite n-k-n=1200000N m-k-nm=20000} {id=Q-col kind=imposed category=B stage=composite n-k-n=400000N m-k-nm=15000} ]
+columns [id:TEXT kind:TEXT length-m:QTY outer-size-m:QTY wall-thickness-m:QTY steel-a-m2:QTY steel-f-y-pa:QTY concrete-a-m2:QTY concrete-f-ck-pa:QTY reinforcement-as-m2:QTY reinforcement-f-yk-pa:QTY i-m4:QTY buckling-curve:TEXT introduced-force-n:QTY section-height-m:QTY section-width-m:QTY section-tw-m:QTY section-tf-m:QTY rebar-cover-m:QTY reinforcement-product:TEXT actions:TABLE] {
+  col-C1 concrete_filled 3.5m 0.3m 0.01m 0.0084m2 355000000Pa 0.072m2 30000000Pa 0.0012m2 500000000Pa 0.00021m4 a 0N 0m 0m 0m 0m 0m hot_rolled [ {id=G-col kind=permanent category=self stage=composite n-k-n=1200000N m-k-nm=20000} {id=Q-col kind=imposed category=B stage=composite n-k-n=400000N m-k-nm=15000} ]
 }
 slabs [id:TEXT span-m:QTY support:TEXT sheeting:REC concrete-thickness-m:QTY f-ck-pa:QTY m-factor:NUM k-factor:NUM as-m2-per-m:NUM actions:TABLE] {
-  slab-S1 3m simply_supported {profile=trapezoidal height-m=0.055m rib-width-m=0.1m thickness-m=0.0009m ribs-parallel-to-beam=false} 0.14m 30000000Pa 180 0.05 0.00025 [ {id=G-slab kind=permanent category=self stage=composite q-area-pa=3500Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa} {id=Q-slab kind=imposed category=B stage=composite q-area-pa=2000Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa} ]
+  slab-S1 3m simply_supported {profile=trapezoidal height-m=0.055m rib-width-m=0.1m thickness-m=0.0009m ribs-parallel-to-beam=false} 0.14m 30000000Pa 180 0.05 0.00025 [ {id=G-slab kind=permanent category=self stage=composite q-area-pa=3500Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m y-m=0m} {id=Q-slab kind=imposed category=B stage=composite q-area-pa=2000Pa f-k-n=0N delta-sigma-k-pa=0Pa delta-tau-k-pa=0Pa x-m=0m y-m=0m} ]
+}
+placements [id:TEXT x:NUM y:NUM z:NUM yaw:NUM] {
+}
+fire-rating=r60 insulation-thickness-m=0.025m fatigue-detail=stud-welded reliability-class=rc2
+studs [id:TEXT beam-id:TEXT x-m:QTY diameter-m:QTY height-m:QTY f-u-pa:QTY] {
+  beam-B1-stud-0 beam-B1 -0.725m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-1 beam-B1 -0.575m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-2 beam-B1 -0.425m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-3 beam-B1 -0.275m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-4 beam-B1 -0.125m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-5 beam-B1 0.025m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-6 beam-B1 0.175m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-7 beam-B1 0.325m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-8 beam-B1 0.475m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-9 beam-B1 0.625m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-10 beam-B1 0.775m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-11 beam-B1 0.925m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-12 beam-B1 1.075m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-13 beam-B1 1.225m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-14 beam-B1 1.375m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-15 beam-B1 1.525m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-16 beam-B1 1.675m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-17 beam-B1 1.825m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-18 beam-B1 1.975m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-19 beam-B1 2.125m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-20 beam-B1 2.275m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-21 beam-B1 2.425m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-22 beam-B1 2.575m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-23 beam-B1 2.725m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-24 beam-B1 2.875m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-25 beam-B1 3.025m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-26 beam-B1 3.175m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-27 beam-B1 3.325m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-28 beam-B1 3.475m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-29 beam-B1 3.625m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-30 beam-B1 3.775m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-31 beam-B1 3.925m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-32 beam-B1 4.075m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-33 beam-B1 4.225m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-34 beam-B1 4.375m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-35 beam-B1 4.525m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-36 beam-B1 4.675m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-37 beam-B1 4.825m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-38 beam-B1 4.975m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-39 beam-B1 5.125m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-40 beam-B1 5.275m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-41 beam-B1 5.425m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-42 beam-B1 5.575m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-43 beam-B1 5.725m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-44 beam-B1 5.875m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-45 beam-B1 6.025m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-46 beam-B1 6.175m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-47 beam-B1 6.325m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-48 beam-B1 6.475m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-49 beam-B1 6.625m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-50 beam-B1 6.775m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-51 beam-B1 6.925m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-52 beam-B1 7.075m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-53 beam-B1 7.225m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-54 beam-B1 7.375m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-55 beam-B1 7.525m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-56 beam-B1 7.675m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-57 beam-B1 7.825m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-58 beam-B1 7.975m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-59 beam-B1 8.125m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-60 beam-B1 8.275m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-61 beam-B1 8.425m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-62 beam-B1 8.575m 0.019m 0.095m 450000000Pa
+  beam-B1-stud-63 beam-B1 8.725m 0.019m 0.095m 450000000Pa
+}
+cases [id:TEXT label-en:TEXT label-de:TEXT entry-id:TEXT numbers:TABLE texts:TABLE] {
 }

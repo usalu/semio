@@ -1,0 +1,1339 @@
+{
+  "$schema": "../../../../../../../../../🔮️oracles/🏃️harness/🧬️schema/🔣️.json",
+  "schemaVersion": 1,
+  "artifact": "en1991",
+  "annex": "en",
+  "cases": [
+    {
+      "id": "en1991.8.bridge-wind-force-open-parapet-wide",
+      "check": "en1991.8.bridge-wind-force",
+      "citation": {
+        "standard": "EN 1991-1-4",
+        "edition": "2005",
+        "clause": "EN 1991-1-4 8.3.1 Table 8.1 and Fig. 8.3, 8.3.2 Eq. 8.1, 8.3.3, 8.3.4; registry values recalled from the standard and unverified (ndp.en1991.*)",
+        "annex": "en"
+      },
+      "inputs": {
+        "q_p": 1250.0,
+        "open_add": 0.3,
+        "road_add": 2.0,
+        "rail_add": 4.0,
+        "r_narrow": 0.5,
+        "r_wide": 4.0,
+        "cfx_narrow": 2.4,
+        "cfx_wide": 1.3,
+        "cfz": 0.9,
+        "longitudinal": 0.25,
+        "b": 12.0,
+        "d": 2.0,
+        "parapet_kind": 1,
+        "d1": 1.1,
+        "traffic_kind": 0
+      },
+      "expected": {
+        "d_tot": {
+          "value": 2.6,
+          "unit": "m",
+          "profile": "eurocode-quantities-v1"
+        },
+        "c_fx0": {
+          "value": 1.3,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "F_x": {
+          "value": 4225.0,
+          "unit": "N/m",
+          "profile": "eurocode-quantities-v1"
+        },
+        "F_z": {
+          "value": 13500.0,
+          "unit": "N/m",
+          "profile": "eurocode-quantities-v1"
+        },
+        "F_y": {
+          "value": 1056.25,
+          "unit": "N/m",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.8.bridge-wind-force-solid-parapet-road-traffic",
+      "check": "en1991.8.bridge-wind-force",
+      "citation": {
+        "standard": "EN 1991-1-4",
+        "edition": "2005",
+        "clause": "EN 1991-1-4 8.3.1 Table 8.1 and Fig. 8.3, 8.3.2 Eq. 8.1, 8.3.3, 8.3.4; registry values recalled from the standard and unverified (ndp.en1991.*)",
+        "annex": "en"
+      },
+      "inputs": {
+        "q_p": 1250.0,
+        "open_add": 0.3,
+        "road_add": 2.0,
+        "rail_add": 4.0,
+        "r_narrow": 0.5,
+        "r_wide": 4.0,
+        "cfx_narrow": 2.4,
+        "cfx_wide": 1.3,
+        "cfz": 0.9,
+        "longitudinal": 0.25,
+        "b": 9.0,
+        "d": 1.6,
+        "parapet_kind": 2,
+        "d1": 1.1,
+        "traffic_kind": 1
+      },
+      "expected": {
+        "d_tot": {
+          "value": 3.8000000000000003,
+          "unit": "m",
+          "profile": "eurocode-quantities-v1"
+        },
+        "c_fx0": {
+          "value": 1.8127819548872182,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "F_x": {
+          "value": 8610.714285714288,
+          "unit": "N/m",
+          "profile": "eurocode-quantities-v1"
+        },
+        "F_z": {
+          "value": 10125.0,
+          "unit": "N/m",
+          "profile": "eurocode-quantities-v1"
+        },
+        "F_y": {
+          "value": 2152.678571428572,
+          "unit": "N/m",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.8.bridge-wind-force-narrow-deck-rail",
+      "check": "en1991.8.bridge-wind-force",
+      "citation": {
+        "standard": "EN 1991-1-4",
+        "edition": "2005",
+        "clause": "EN 1991-1-4 8.3.1 Table 8.1 and Fig. 8.3, 8.3.2 Eq. 8.1, 8.3.3, 8.3.4; registry values recalled from the standard and unverified (ndp.en1991.*)",
+        "annex": "en"
+      },
+      "inputs": {
+        "q_p": 1250.0,
+        "open_add": 0.3,
+        "road_add": 2.0,
+        "rail_add": 4.0,
+        "r_narrow": 0.5,
+        "r_wide": 4.0,
+        "cfx_narrow": 2.4,
+        "cfx_wide": 1.3,
+        "cfz": 0.9,
+        "longitudinal": 0.25,
+        "b": 4.0,
+        "d": 3.0,
+        "parapet_kind": 0,
+        "d1": 0.0,
+        "traffic_kind": 2
+      },
+      "expected": {
+        "d_tot": {
+          "value": 7.0,
+          "unit": "m",
+          "profile": "eurocode-quantities-v1"
+        },
+        "c_fx0": {
+          "value": 2.377551020408163,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "F_x": {
+          "value": 20803.571428571428,
+          "unit": "N/m",
+          "profile": "eurocode-quantities-v1"
+        },
+        "F_z": {
+          "value": 4500.0,
+          "unit": "N/m",
+          "profile": "eurocode-quantities-v1"
+        },
+        "F_y": {
+          "value": 5200.892857142857,
+          "unit": "N/m",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.6.structural-factor-tower-60m",
+      "check": "en1991.6.structural-factor",
+      "citation": {
+        "standard": "EN 1991-1-4",
+        "edition": "2005",
+        "clause": "EN 1991-1-4 6.3.1 Eq. 6.1, Annex B.1 to B.4 Eq. B.1, B.3, B.4, B.7, B.8 with n_1 = 46/h",
+        "annex": "en"
+      },
+      "inputs": {
+        "n1": 0.7666666666666667,
+        "L_t": 300.0,
+        "z_t": 200.0,
+        "z0_II": 0.05,
+        "nu_min": 0.08,
+        "T": 600.0,
+        "h": 60.0,
+        "b": 8.0,
+        "z0": 0.3,
+        "z_min": 5.0,
+        "v_b": 25.0,
+        "delta": 0.05
+      },
+      "expected": {
+        "z_s": {
+          "value": 36.0,
+          "unit": "m",
+          "profile": "eurocode-quantities-v1"
+        },
+        "L": {
+          "value": 105.43514889064741,
+          "unit": "m",
+          "profile": "eurocode-quantities-v1"
+        },
+        "B2": {
+          "value": 0.5942761079394864,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "S_L": {
+          "value": 0.06285558815108656,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "R2": {
+          "value": 0.3854316053114854,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "nu": {
+          "value": 0.4808747566998748,
+          "unit": "Hz",
+          "profile": "eurocode-quantities-v1"
+        },
+        "k_p": {
+          "value": 3.5441977570365584,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "c_s_c_d": {
+          "value": 1.001366451239672,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.6.structural-factor-chimney-120m",
+      "check": "en1991.6.structural-factor",
+      "citation": {
+        "standard": "EN 1991-1-4",
+        "edition": "2005",
+        "clause": "EN 1991-1-4 6.3.1 Eq. 6.1, Annex B.1 to B.4 Eq. B.1, B.3, B.4, B.7, B.8 with n_1 = 46/h",
+        "annex": "en"
+      },
+      "inputs": {
+        "n1": 0.38333333333333336,
+        "L_t": 300.0,
+        "z_t": 200.0,
+        "z0_II": 0.05,
+        "nu_min": 0.08,
+        "T": 600.0,
+        "h": 120.0,
+        "b": 6.0,
+        "z0": 0.05,
+        "z_min": 2.0,
+        "v_b": 27.5,
+        "delta": 0.03
+      },
+      "expected": {
+        "z_s": {
+          "value": 72.0,
+          "unit": "m",
+          "profile": "eurocode-quantities-v1"
+        },
+        "L": {
+          "value": 176.32093336519767,
+          "unit": "m",
+          "profile": "eurocode-quantities-v1"
+        },
+        "B2": {
+          "value": 0.5786065074539299,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "S_L": {
+          "value": 0.08829378164951182,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "R2": {
+          "value": 1.988386465920502,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "nu": {
+          "value": 0.33737635739819566,
+          "unit": "Hz",
+          "profile": "eurocode-quantities-v1"
+        },
+        "k_p": {
+          "value": 3.443057197174488,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "c_s_c_d": {
+          "value": 1.28256085011399,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.6.structural-factor-concrete-building-90m",
+      "check": "en1991.6.structural-factor",
+      "citation": {
+        "standard": "EN 1991-1-4",
+        "edition": "2005",
+        "clause": "EN 1991-1-4 6.3.1 Eq. 6.1, Annex B.1 to B.4 Eq. B.1, B.3, B.4, B.7, B.8 with n_1 = 46/h",
+        "annex": "en"
+      },
+      "inputs": {
+        "n1": 0.5111111111111111,
+        "L_t": 300.0,
+        "z_t": 200.0,
+        "z0_II": 0.05,
+        "nu_min": 0.08,
+        "T": 600.0,
+        "h": 90.0,
+        "b": 30.0,
+        "z0": 1.0,
+        "z_min": 10.0,
+        "v_b": 24.0,
+        "delta": 0.1
+      },
+      "expected": {
+        "z_s": {
+          "value": 54.0,
+          "unit": "m",
+          "profile": "eurocode-quantities-v1"
+        },
+        "L": {
+          "value": 124.77712554917508,
+          "unit": "m",
+          "profile": "eurocode-quantities-v1"
+        },
+        "B2": {
+          "value": 0.5324428753278451,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "S_L": {
+          "value": 0.06675235035897914,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "R2": {
+          "value": 0.08849204419623093,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "nu": {
+          "value": 0.192949827236158,
+          "unit": "Hz",
+          "profile": "eurocode-quantities-v1"
+        },
+        "k_p": {
+          "value": 3.2773603826622666,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "c_s_c_d": {
+          "value": 0.8330220704867252,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.6.vortex-shedding-steel-chimney",
+      "check": "en1991.6.vortex-shedding",
+      "citation": {
+        "standard": "EN 1991-1-4",
+        "edition": "2005",
+        "clause": "EN 1991-1-4 Annex E.1.3.1 Eq. E.1 and E.2, E.1.3.3 Eq. E.4; registry values recalled from the standard and unverified (ndp.en1991.*)",
+        "annex": "en"
+      },
+      "inputs": {
+        "rho": 1.25,
+        "onset": 1.25,
+        "nu": 1.5e-05,
+        "b": 3.0,
+        "n1": 0.8,
+        "St": 0.18,
+        "delta_s": 0.012,
+        "m_e": 800.0,
+        "v_m": 30.0
+      },
+      "expected": {
+        "v_crit": {
+          "value": 13.333333333333332,
+          "unit": "m/s",
+          "profile": "eurocode-quantities-v1"
+        },
+        "Sc": {
+          "value": 1.7066666666666666,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "v_onset": {
+          "value": 37.5,
+          "unit": "m/s",
+          "profile": "eurocode-quantities-v1"
+        },
+        "Re": {
+          "value": 2666666.6666666665,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.6.vortex-shedding-slender-mast",
+      "check": "en1991.6.vortex-shedding",
+      "citation": {
+        "standard": "EN 1991-1-4",
+        "edition": "2005",
+        "clause": "EN 1991-1-4 Annex E.1.3.1 Eq. E.1 and E.2, E.1.3.3 Eq. E.4; registry values recalled from the standard and unverified (ndp.en1991.*)",
+        "annex": "en"
+      },
+      "inputs": {
+        "rho": 1.25,
+        "onset": 1.25,
+        "nu": 1.5e-05,
+        "b": 0.6,
+        "n1": 2.5,
+        "St": 0.18,
+        "delta_s": 0.02,
+        "m_e": 60.0,
+        "v_m": 22.0
+      },
+      "expected": {
+        "v_crit": {
+          "value": 8.333333333333332,
+          "unit": "m/s",
+          "profile": "eurocode-quantities-v1"
+        },
+        "Sc": {
+          "value": 5.333333333333334,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "v_onset": {
+          "value": 27.5,
+          "unit": "m/s",
+          "profile": "eurocode-quantities-v1"
+        },
+        "Re": {
+          "value": 333333.33333333326,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.7.impact-force-car",
+      "check": "en1991.7.impact-force",
+      "citation": {
+        "standard": "EN 1991-1-7",
+        "edition": "2005",
+        "clause": "EN 1991-1-7 Annex C.1 and C.2: F = v sqrt(k m) from the energy balance of a linear spring",
+        "annex": "en"
+      },
+      "inputs": {
+        "m": 1500.0,
+        "v": 15.0,
+        "k": 300000.0
+      },
+      "expected": {
+        "F": {
+          "value": 318198.0515333571,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "E": {
+          "value": 168750.0,
+          "unit": "J",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.7.impact-force-lorry",
+      "check": "en1991.7.impact-force",
+      "citation": {
+        "standard": "EN 1991-1-7",
+        "edition": "2005",
+        "clause": "EN 1991-1-7 Annex C.1 and C.2: F = v sqrt(k m) from the energy balance of a linear spring",
+        "annex": "en"
+      },
+      "inputs": {
+        "m": 30000.0,
+        "v": 12.5,
+        "k": 300000.0
+      },
+      "expected": {
+        "F": {
+          "value": 1185854.1225609642,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "E": {
+          "value": 2343750.0,
+          "unit": "J",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.7.impact-force-ship",
+      "check": "en1991.7.impact-force",
+      "citation": {
+        "standard": "EN 1991-1-7",
+        "edition": "2005",
+        "clause": "EN 1991-1-7 Annex C.1 and C.2: F = v sqrt(k m) from the energy balance of a linear spring",
+        "annex": "en"
+      },
+      "inputs": {
+        "m": 2000000.0,
+        "v": 3.0,
+        "k": 5000000.0
+      },
+      "expected": {
+        "F": {
+          "value": 9486832.980487602,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "E": {
+          "value": 9000000.0,
+          "unit": "J",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.7.gas-explosion-small-vent",
+      "check": "en1991.7.gas-explosion",
+      "citation": {
+        "standard": "EN 1991-1-7",
+        "edition": "2005",
+        "clause": "EN 1991-1-7 Annex D.1 and D.2; registry values recalled from the standard and unverified (ndp.en1991.*)",
+        "annex": "en"
+      },
+      "inputs": {
+        "base": 3.0,
+        "coefficient": 0.04,
+        "p_v": 5.0,
+        "V": 100.0,
+        "a_v": 2.0
+      },
+      "expected": {
+        "p_d1": {
+          "value": 8.0,
+          "unit": "kPa",
+          "profile": "eurocode-quantities-v1"
+        },
+        "p_d2": {
+          "value": 105.5,
+          "unit": "kPa",
+          "profile": "eurocode-quantities-v1"
+        },
+        "p_d": {
+          "value": 105.5,
+          "unit": "kPa",
+          "profile": "eurocode-quantities-v1"
+        },
+        "ratio": {
+          "value": 0.02,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.7.gas-explosion-large-vent",
+      "check": "en1991.7.gas-explosion",
+      "citation": {
+        "standard": "EN 1991-1-7",
+        "edition": "2005",
+        "clause": "EN 1991-1-7 Annex D.1 and D.2; registry values recalled from the standard and unverified (ndp.en1991.*)",
+        "annex": "en"
+      },
+      "inputs": {
+        "base": 3.0,
+        "coefficient": 0.04,
+        "p_v": 5.0,
+        "V": 100.0,
+        "a_v": 40.0
+      },
+      "expected": {
+        "p_d1": {
+          "value": 8.0,
+          "unit": "kPa",
+          "profile": "eurocode-quantities-v1"
+        },
+        "p_d2": {
+          "value": 5.75,
+          "unit": "kPa",
+          "profile": "eurocode-quantities-v1"
+        },
+        "p_d": {
+          "value": 8.0,
+          "unit": "kPa",
+          "profile": "eurocode-quantities-v1"
+        },
+        "ratio": {
+          "value": 0.4,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.7.gas-explosion-strong-vent-panel",
+      "check": "en1991.7.gas-explosion",
+      "citation": {
+        "standard": "EN 1991-1-7",
+        "edition": "2005",
+        "clause": "EN 1991-1-7 Annex D.1 and D.2; registry values recalled from the standard and unverified (ndp.en1991.*)",
+        "annex": "en"
+      },
+      "inputs": {
+        "base": 3.0,
+        "coefficient": 0.04,
+        "p_v": 10.0,
+        "V": 60.0,
+        "a_v": 3.0
+      },
+      "expected": {
+        "p_d1": {
+          "value": 13.0,
+          "unit": "kPa",
+          "profile": "eurocode-quantities-v1"
+        },
+        "p_d2": {
+          "value": 23.999999999999996,
+          "unit": "kPa",
+          "profile": "eurocode-quantities-v1"
+        },
+        "p_d": {
+          "value": 23.999999999999996,
+          "unit": "kPa",
+          "profile": "eurocode-quantities-v1"
+        },
+        "ratio": {
+          "value": 0.05,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.5.bridge-temperature-steel-deck",
+      "check": "en1991.5.bridge-temperature",
+      "citation": {
+        "standard": "EN 1991-1-5",
+        "edition": "2005",
+        "clause": "EN 1991-1-5 6.1.3 Fig. 6.1, 6.1.4 Table 6.1, 6.1.5; registry values recalled from the standard and unverified (ndp.en1991.*)",
+        "annex": "en"
+      },
+      "inputs": {
+        "t_min": -24.0,
+        "t_max": 37.0,
+        "t_0": 10.0,
+        "omega_n": 0.35,
+        "omega_m": 0.75,
+        "shift_min": -3.0,
+        "shift_max": 16.0,
+        "dtm_heat": 18.0,
+        "dtm_cool": 13.0,
+        "ksur_heat": 1.0,
+        "ksur_cool": 1.0,
+        "alpha": 1.2e-05,
+        "h": 1.5,
+        "L": 60.0
+      },
+      "expected": {
+        "dt_con": {
+          "value": 37.0,
+          "unit": "K",
+          "profile": "eurocode-quantities-v1"
+        },
+        "dt_exp": {
+          "value": 43.0,
+          "unit": "K",
+          "profile": "eurocode-quantities-v1"
+        },
+        "kappa": {
+          "value": 0.00014399999999999995,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "theta": {
+          "value": 0.004319999999999995,
+          "unit": "rad",
+          "profile": "numerical-v1"
+        },
+        "movement": {
+          "value": 0.0576,
+          "unit": "m",
+          "profile": "eurocode-quantities-v1"
+        },
+        "combined": {
+          "value": 56.5,
+          "unit": "K",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.5.bridge-temperature-composite-deck",
+      "check": "en1991.5.bridge-temperature",
+      "citation": {
+        "standard": "EN 1991-1-5",
+        "edition": "2005",
+        "clause": "EN 1991-1-5 6.1.3 Fig. 6.1, 6.1.4 Table 6.1, 6.1.5; registry values recalled from the standard and unverified (ndp.en1991.*)",
+        "annex": "en"
+      },
+      "inputs": {
+        "t_min": -24.0,
+        "t_max": 37.0,
+        "t_0": 10.0,
+        "omega_n": 0.35,
+        "omega_m": 0.75,
+        "shift_min": 4.0,
+        "shift_max": 4.0,
+        "dtm_heat": 15.0,
+        "dtm_cool": 18.0,
+        "ksur_heat": 1.0,
+        "ksur_cool": 1.0,
+        "alpha": 1e-05,
+        "h": 2.2,
+        "L": 90.0
+      },
+      "expected": {
+        "dt_con": {
+          "value": 30.0,
+          "unit": "K",
+          "profile": "eurocode-quantities-v1"
+        },
+        "dt_exp": {
+          "value": 31.0,
+          "unit": "K",
+          "profile": "eurocode-quantities-v1"
+        },
+        "kappa": {
+          "value": 8.181818181818179e-05,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "theta": {
+          "value": 0.0036818181818181793,
+          "unit": "rad",
+          "profile": "numerical-v1"
+        },
+        "movement": {
+          "value": 0.054900000000000004,
+          "unit": "m",
+          "profile": "eurocode-quantities-v1"
+        },
+        "combined": {
+          "value": 44.5,
+          "unit": "K",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.5.bridge-temperature-concrete-box",
+      "check": "en1991.5.bridge-temperature",
+      "citation": {
+        "standard": "EN 1991-1-5",
+        "edition": "2005",
+        "clause": "EN 1991-1-5 6.1.3 Fig. 6.1, 6.1.4 Table 6.1, 6.1.5; registry values recalled from the standard and unverified (ndp.en1991.*)",
+        "annex": "en"
+      },
+      "inputs": {
+        "t_min": -24.0,
+        "t_max": 37.0,
+        "t_0": 10.0,
+        "omega_n": 0.35,
+        "omega_m": 0.75,
+        "shift_min": 8.0,
+        "shift_max": 2.0,
+        "dtm_heat": 10.0,
+        "dtm_cool": 5.0,
+        "ksur_heat": 1.0,
+        "ksur_cool": 1.0,
+        "alpha": 1e-05,
+        "h": 3.0,
+        "L": 120.0
+      },
+      "expected": {
+        "dt_con": {
+          "value": 26.0,
+          "unit": "K",
+          "profile": "eurocode-quantities-v1"
+        },
+        "dt_exp": {
+          "value": 29.0,
+          "unit": "K",
+          "profile": "eurocode-quantities-v1"
+        },
+        "kappa": {
+          "value": 3.333333333333333e-05,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "theta": {
+          "value": 0.001999999999999999,
+          "unit": "rad",
+          "profile": "numerical-v1"
+        },
+        "movement": {
+          "value": 0.066,
+          "unit": "m",
+          "profile": "eurocode-quantities-v1"
+        },
+        "combined": {
+          "value": 36.5,
+          "unit": "K",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.2.special-vehicle-600-150",
+      "check": "en1991.2.special-vehicle",
+      "citation": {
+        "standard": "EN 1991-2",
+        "edition": "2005",
+        "clause": "EN 1991-2 Annex A standard special vehicles total/axle line in kN; registry values recalled from the standard and unverified (ndp.en1991.*)",
+        "annex": "en"
+      },
+      "inputs": {
+        "designation": "600/150",
+        "spacing": 1.5
+      },
+      "expected": {
+        "total": {
+          "value": 600000.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        },
+        "axle": {
+          "value": 150000.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        },
+        "lines": {
+          "value": 4.0,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "length": {
+          "value": 4.5,
+          "unit": "m",
+          "profile": "eurocode-quantities-v1"
+        },
+        "sum": {
+          "value": 600000.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.2.special-vehicle-1800-200",
+      "check": "en1991.2.special-vehicle",
+      "citation": {
+        "standard": "EN 1991-2",
+        "edition": "2005",
+        "clause": "EN 1991-2 Annex A standard special vehicles total/axle line in kN; registry values recalled from the standard and unverified (ndp.en1991.*)",
+        "annex": "en"
+      },
+      "inputs": {
+        "designation": "1800/200",
+        "spacing": 1.5
+      },
+      "expected": {
+        "total": {
+          "value": 1800000.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        },
+        "axle": {
+          "value": 200000.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        },
+        "lines": {
+          "value": 9.0,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "length": {
+          "value": 12.0,
+          "unit": "m",
+          "profile": "eurocode-quantities-v1"
+        },
+        "sum": {
+          "value": 1800000.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.2.special-vehicle-3000-200",
+      "check": "en1991.2.special-vehicle",
+      "citation": {
+        "standard": "EN 1991-2",
+        "edition": "2005",
+        "clause": "EN 1991-2 Annex A standard special vehicles total/axle line in kN; registry values recalled from the standard and unverified (ndp.en1991.*)",
+        "annex": "en"
+      },
+      "inputs": {
+        "designation": "3000/200",
+        "spacing": 1.5
+      },
+      "expected": {
+        "total": {
+          "value": 3000000.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        },
+        "axle": {
+          "value": 200000.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        },
+        "lines": {
+          "value": 15.0,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "length": {
+          "value": 21.0,
+          "unit": "m",
+          "profile": "eurocode-quantities-v1"
+        },
+        "sum": {
+          "value": 3000000.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.2.special-vehicle-3600-200",
+      "check": "en1991.2.special-vehicle",
+      "citation": {
+        "standard": "EN 1991-2",
+        "edition": "2005",
+        "clause": "EN 1991-2 Annex A standard special vehicles total/axle line in kN; registry values recalled from the standard and unverified (ndp.en1991.*)",
+        "annex": "en"
+      },
+      "inputs": {
+        "designation": "3600/200",
+        "spacing": 1.5
+      },
+      "expected": {
+        "total": {
+          "value": 3600000.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        },
+        "axle": {
+          "value": 200000.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        },
+        "lines": {
+          "value": 18.0,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "length": {
+          "value": 25.5,
+          "unit": "m",
+          "profile": "eurocode-quantities-v1"
+        },
+        "sum": {
+          "value": 3600000.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.snow.roof-step-drift-high-step",
+      "check": "en1991.snow.roof-step-drift",
+      "citation": {
+        "standard": "EN 1991-1-3",
+        "edition": "2005",
+        "clause": "EN 1991-1-3 5.3.6 Eq. 5.5 to 5.7; registry values recalled from the standard and unverified (ndp.en1991.*)",
+        "annex": "en"
+      },
+      "inputs": {
+        "gamma": 2000.0,
+        "cap": 4.0,
+        "share": 0.5,
+        "h": 1.5,
+        "b1": 8.0,
+        "b2": 12.0,
+        "s_k": 1100.0,
+        "pitch_upper": 25.0
+      },
+      "expected": {
+        "mu_w": {
+          "value": 2.727272727272727,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "mu_s": {
+          "value": 0.4,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "l_s": {
+          "value": 5.0,
+          "unit": "m",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.snow.roof-step-drift-low-step",
+      "check": "en1991.snow.roof-step-drift",
+      "citation": {
+        "standard": "EN 1991-1-3",
+        "edition": "2005",
+        "clause": "EN 1991-1-3 5.3.6 Eq. 5.5 to 5.7; registry values recalled from the standard and unverified (ndp.en1991.*)",
+        "annex": "en"
+      },
+      "inputs": {
+        "gamma": 2000.0,
+        "cap": 4.0,
+        "share": 0.5,
+        "h": 0.5,
+        "b1": 2.0,
+        "b2": 3.0,
+        "s_k": 1000.0,
+        "pitch_upper": 10.0
+      },
+      "expected": {
+        "mu_w": {
+          "value": 1.0,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "mu_s": {
+          "value": 0.0,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "l_s": {
+          "value": 5.0,
+          "unit": "m",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.snow.roof-step-drift-flat-upper",
+      "check": "en1991.snow.roof-step-drift",
+      "citation": {
+        "standard": "EN 1991-1-3",
+        "edition": "2005",
+        "clause": "EN 1991-1-3 5.3.6 Eq. 5.5 to 5.7; registry values recalled from the standard and unverified (ndp.en1991.*)",
+        "annex": "en"
+      },
+      "inputs": {
+        "gamma": 2000.0,
+        "cap": 4.0,
+        "share": 0.5,
+        "h": 2.0,
+        "b1": 10.0,
+        "b2": 14.0,
+        "s_k": 800.0,
+        "pitch_upper": 0.0
+      },
+      "expected": {
+        "mu_w": {
+          "value": 4.0,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "mu_s": {
+          "value": 0.0,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "l_s": {
+          "value": 5.0,
+          "unit": "m",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    }
+  ]
+}

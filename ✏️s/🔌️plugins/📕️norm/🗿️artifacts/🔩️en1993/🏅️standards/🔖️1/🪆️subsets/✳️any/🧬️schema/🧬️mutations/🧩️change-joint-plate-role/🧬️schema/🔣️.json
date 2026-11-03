@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-joint-plate-role/schema.json",
+  "title": "ChangeJointPlateRole",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newRole"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Joint plate",
+          "de": "Anschlussblech"
+        },
+        "description": {
+          "en": "The joint plate this mutation addresses, by id.",
+          "de": "Das adressierte Element (Anschlussblech), per Kennung."
+        },
+        "ref": {
+          "kind": "joint-plate"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newRole": {
+      "type": "string",
+      "x-semio-ui": {
+        "label": {
+          "en": "Plate role",
+          "de": "Blechrolle"
+        },
+        "widget": "text",
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

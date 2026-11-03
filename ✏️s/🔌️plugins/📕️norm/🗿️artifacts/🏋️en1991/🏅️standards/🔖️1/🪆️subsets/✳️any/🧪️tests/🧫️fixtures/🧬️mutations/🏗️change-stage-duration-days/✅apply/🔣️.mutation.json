@@ -1,0 +1,6 @@
+{
+  "ChangeStageDurationDays": {
+    "id": "stage-1",
+    "newDurationDays": 3.0
+  }
+}

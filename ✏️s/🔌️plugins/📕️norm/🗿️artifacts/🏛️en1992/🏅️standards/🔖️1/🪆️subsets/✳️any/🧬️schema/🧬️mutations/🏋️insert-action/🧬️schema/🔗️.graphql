@@ -1,0 +1,5 @@
+type InsertAction {
+  memberId: String!
+  index: Int!
+  action: LoadCaseActions!
+}

@@ -1,0 +1,7 @@
+{
+  "ChangeTensionActionLoadCaseId": {
+    "id": "ten-1",
+    "elementId": "ten-g",
+    "newLoadCaseId": "g-permanent-alt"
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-transverse-girder-id/schema.json",
+  "title": "ChangeTransverseGirderId",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "transverseStiffenerId",
+    "newGirderId"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeTransverseGirderId"
+    },
+    "transverseStiffenerId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Transverse stiffener",
+          "de": "Quersteife"
+        },
+        "description": {
+          "en": "The transverse stiffener this mutation addresses, by id.",
+          "de": "Das adressierte Element (Quersteife), per Kennung."
+        },
+        "ref": {
+          "kind": "transverse-stiffener"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newGirderId": {
+      "type": "string",
+      "x-semio-ui": {
+        "label": {
+          "en": "Plate girder",
+          "de": "Blechträger"
+        },
+        "widget": "text",
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

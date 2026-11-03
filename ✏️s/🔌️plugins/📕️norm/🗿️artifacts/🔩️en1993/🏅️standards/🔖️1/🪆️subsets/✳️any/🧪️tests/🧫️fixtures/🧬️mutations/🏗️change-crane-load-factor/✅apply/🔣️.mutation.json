@@ -1,0 +1,6 @@
+{
+  "ChangeCraneLoadFactor": {
+    "id": "crane-1",
+    "newLoadFactor": 1.5
+  }
+}

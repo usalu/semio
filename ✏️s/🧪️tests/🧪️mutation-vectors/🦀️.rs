@@ -1,7 +1,9 @@
 //! 🧫️ The committed mutation vectors of an artifact subset as one data-driven law table, shared by every artifact family.
 //!
-//! Source of truth is every bundle under a subset's `🧫️fixtures/🧬️mutations/<leaf>/<case>/`: `📸️snapshot/⬅️before`,
-//! `📸️snapshot/➡️after`, `🦠️mutation`, `🎯️outcome` and `🔺️diff` (or its empty `🚫️.absent` marker); a `🧾️wire-witness`
+//! Source of truth is every bundle under a subset's `🧫️fixtures/🧬️mutations/<leaf>/<case>/`: the flat role files
+//! `🔣️.before.json`, `🔣️.after.json`, `🔣️.mutation.json`, `🔣️.outcome.json` and `🔣️.diff.json` (no diff file means no diff; a
+//! rejected vector commits none). The flat tree keeps every path short: the longest one is `<leaf>` plus 29 bytes, where the
+//! nested `📸️snapshot/⬅️before/🔣️.json` tree cost 51. A bundle holds nothing else; a `🧾️wire-witness`
 //! case carries the mutation only. The bundles are read at test runtime, so no fixture byte enters a compilation unit, and
 //! the subset's independent Python engine replays the same bytes. Every vector lands on its committed after-snapshot under
 //! exactly its committed messages: an `applied` one moves the document by exactly the committed diff, its own inverse
@@ -17,6 +19,20 @@ use std::fmt::Debug;
 use std::path::{Path, PathBuf};
 
 //#region 📂️Bundles
+const BEFORE: &str = "🔣️.before.json";
+const AFTER: &str = "🔣️.after.json";
+const MUTATION: &str = "🔣️.mutation.json";
+const OUTCOME: &str = "🔣️.outcome.json";
+const DIFF: &str = "🔣️.diff.json";
+const ROLES: [&str; 5] = [BEFORE, AFTER, MUTATION, OUTCOME, DIFF];
+
+/// 🧹️ A bundle holds only the five flat role files; a nested folder or a foreign file is a breach.
+fn layout_breaches(bundle: &Path) -> Vec<String> {
+    let mut foreign: Vec<String> = std::fs::read_dir(bundle).unwrap_or_else(|error| panic!("bundle {} is readable: {error}", bundle.display())).map(|entry| entry.expect("bundle entry").file_name().to_string_lossy().into_owned()).filter(|name| !ROLES.contains(&name.as_str())).collect();
+    foreign.sort();
+    foreign.into_iter().map(|name| format!("{}: {name:?} is not a role file of the flat bundle layout", bundle.display())).collect()
+}
+
 fn read(path: &Path) -> String {
     std::fs::read_to_string(path).unwrap_or_else(|error| panic!("committed vector file {} is readable: {error}", path.display()))
 }
@@ -79,7 +95,7 @@ fn stray<S, M: Mutation<S>>(mutation: &M) -> Option<M> {
 
 /// 🧾️ The committed mutation JSON is the canonical wire of the decoded operation.
 fn wire_breaches<M: FromValue + ToValue>(bundle: &Path) -> Vec<String> {
-    let text = read(&bundle.join("🦠️mutation/🔣️.json"));
+    let text = read(&bundle.join(MUTATION));
     let committed = json(&text);
     match M::from_value(committed.clone().into()) {
         Ok(operation) if serde_json::Value::from(operation.to_value()) == committed => Vec::new(),
@@ -110,9 +126,9 @@ where
 {
     let name = bundle.display();
     let step = |document: &S, operation: &M| apply(document, operation).unwrap_or_else(|error| panic!("{name}: {error}"));
-    let before: S = decode(&bundle.join("📸️snapshot/⬅️before/🔣️.json"));
-    let after: S = decode(&bundle.join("📸️snapshot/➡️after/🔣️.json"));
-    let outcome = json(&read(&bundle.join("🎯️outcome/🔣️.json")));
+    let before: S = decode(&bundle.join(BEFORE));
+    let after: S = decode(&bundle.join(AFTER));
+    let outcome = json(&read(&bundle.join(OUTCOME)));
     let status = outcome["status"].as_str().unwrap_or_default().to_string();
     let (applied, messages) = step(&before, mutation);
     let mut breaches = Vec::new();
@@ -125,10 +141,10 @@ where
     if (status == "applied") == (applied == before) || refused(&messages) != (status == "rejected") {
         breaches.push(format!("{name}: a {status:?} vector must move the document exactly when applied and be refused exactly when rejected"));
     }
-    let diff = bundle.join("🔺️diff");
-    if diff.join("🔣️.json").is_file() {
+    let diff = bundle.join(DIFF);
+    if diff.is_file() {
         let raised = mutation.diff(&before);
-        if json(&semio_framework_pack_json::to_json_string(raised.diff())) != json(&read(&diff.join("🔣️.json"))) {
+        if json(&semio_framework_pack_json::to_json_string(raised.diff())) != json(&read(&diff)) {
             breaches.push(format!("{name}: the produced diff is not the committed diff"));
         }
     } else if status != "rejected" {
@@ -167,8 +183,9 @@ where
     let (mut covered, mut breaches, mut classes) = (BTreeSet::new(), Vec::new(), BTreeMap::new());
     let mut applied_vectors = Vec::new();
     for bundle in directories(root).iter().flat_map(|leaf| directories(leaf)) {
+        breaches.extend(layout_breaches(&bundle));
         breaches.extend(wire_breaches::<M>(&bundle));
-        let mutation: M = decode(&bundle.join("🦠️mutation/🔣️.json"));
+        let mutation: M = decode(&bundle.join(MUTATION));
         let descriptor = mutation.descriptor();
         breaches.extend(binary_breaches(&bundle, &mutation));
         if bundle.ends_with("🧾️wire-witness") {
@@ -178,7 +195,7 @@ where
         let declared: BTreeSet<String> = descriptor.outcome_classes.iter().map(|class| class.as_str().to_string()).collect();
         let (canonical, reached, _) = classes.entry(descriptor.semantic_kind).or_insert_with(|| (false, BTreeSet::new(), declared));
         let found = vector_breaches::<S, M>(&bundle, &mutation, reached);
-        let applied = json(&read(&bundle.join("🎯️outcome/🔣️.json")))["status"] == "applied";
+        let applied = json(&read(&bundle.join(OUTCOME)))["status"] == "applied";
         if found.is_empty() && applied {
             covered.insert(descriptor.semantic_kind);
             applied_vectors.push(bundle.clone());
@@ -195,9 +212,32 @@ where
     let missing: Vec<&str> = <M as SemanticMutation<S>>::kinds().iter().map(|descriptor| descriptor.kind).filter(|kind| !covered.contains(kind)).collect();
     assert!(missing.is_empty(), "kinds without a committed applied vector or wire witness: {missing:?}");
     for bundle in applied_vectors {
-        let mutation: M = decode(&bundle.join("🦠️mutation/🔣️.json"));
-        let before: S = decode(&bundle.join("📸️snapshot/⬅️before/🔣️.json"));
+        let mutation: M = decode(&bundle.join(MUTATION));
+        let before: S = decode(&bundle.join(BEFORE));
         semio_framework_os_kernel::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &before).await;
     }
 }
 //#endregion 🧫️Table
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_bundle_holds_only_the_flat_role_files() {
+        let bundle = std::env::temp_dir().join(format!("semio-mutation-vectors-{}", std::process::id()));
+        std::fs::create_dir_all(bundle.join("📸️snapshot")).expect("nested folder");
+        std::fs::write(bundle.join(BEFORE), "{}").expect("role file");
+        let breaches = layout_breaches(&bundle);
+        std::fs::remove_dir_all(&bundle).expect("clean up");
+        assert_eq!(breaches.len(), 1);
+        assert!(breaches[0].contains("📸️snapshot"));
+    }
+
+    #[test]
+    fn the_role_files_are_distinct_json_files_of_the_five_roles() {
+        let distinct: BTreeSet<&str> = ROLES.iter().copied().collect();
+        assert_eq!(distinct.len(), 5);
+        assert!(ROLES.iter().all(|name| name.starts_with("🔣️.") && name.ends_with(".json")));
+    }
+}

@@ -1,0 +1,6 @@
+{
+  "ChangeBeamStudEdgeDistanceM": {
+    "id": "beam-B1",
+    "newStudEdgeDistanceM": 0.5
+  }
+}

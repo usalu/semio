@@ -70,18 +70,18 @@ export async function testContainerRuntimeBootstrap(workspace: string,invocation
   assert.equal(dockerfile.includes('exec bun run --cwd /workspaces/semio dashboard'), false, "The container has no second dashboard launcher");
   const bootstrap = readFileSync(join(workspace, fixture.postCreateCommand[1]), "utf8"), ownedBootstrap = bootstrap.match(/^repo_bootstrap\(\) \{[\s\S]*?^\}/m)?.[0];
   assert.ok(ownedBootstrap, "The cold lifecycle uses the owned native installer boundary");
-  const bootstrapStages = ["installer", "help", "setup", "debugger", "browser"];
+  const bootstrapStages = ["installer", "help", "setup", "debugger"];
   for (const row of fixture.bootstrapCases) {
     const cutoff = row.failAt === null ? bootstrapStages.length : bootstrapStages.indexOf(row.failAt) + 1;
     assert.deepEqual(row.expectedCalls, require("lodash").take(bootstrapStages, cutoff), row.id);
-    assert.equal(row.expectedStatus, row.failAt === null ? 0 : 1, row.id);
+    assert.equal(row.expectedStatus, row.failAt === null || row.failAt === "debugger" ? 0 : 1, row.id);
     if (process.platform === "win32") continue;
     const recording: string = [
       "set -eu", "exec 3>&1", "native_available=$NATIVE_INITIAL",
       "log() { :; }",
       "bun() { return 92; }",
       "repo() { if [ \"$*\" = \"run repo-mcp:install\" ]; then printf 'installer\\n' >&3; [ \"$FAIL_AT\" != installer ] || return 9; native_available=1; return 0; fi; [ \"$native_available\" = 1 ] || return 91; case \"$*\" in --help) phase=help;; 'run workspace:setup') phase=setup;; 'run @semio-tech/repo-developer-tools:setup-debugger') phase=debugger;; *) return 93;; esac; printf '%s\\n' \"$phase\" >&3; [ \"$FAIL_AT\" != \"$phase\" ]; }",
-      "ensure_browser_libraries() { printf 'browser\\n' >&3; }", ownedBootstrap, "repo_bootstrap",
+      ownedBootstrap, "repo_bootstrap",
     ].join("\n");
     const answer = spawnSync("bash", ["-c", recording], { cwd: workspace, env: { ...process.env, REPO_ROOT: workspace, LOCAL_BIN: "/owned-native-test-bin", SKIP_REPO_BOOTSTRAP: "0", NATIVE_INITIAL: row.nativePresent ? "1" : "0", FAIL_AT: row.failAt ?? "" }, encoding: "utf8", timeout: 5000 });
     assert.equal(answer.status, row.expectedStatus, row.id + ": " + answer.stderr);
@@ -111,7 +111,7 @@ export async function testContainerRuntimeBootstrap(workspace: string,invocation
   assert.equal(config.containerEnv.LANG, fixture.locale);
   assert.equal(config.containerEnv.LC_ALL, fixture.locale);
   assert.ok(dockerfile.includes(`locale-gen ${fixture.locale}`) && dockerfile.includes(`ENV LANG=${fixture.locale}`), "The image generates the locale its environment declares");
-  assert.deepEqual(config.onCreateCommand, ["sudo", "chown", `${config.remoteUser}:${config.remoteUser}`, ...volumes], "Docker creates a named volume nested in the checkout owned by root; the remote user must own it before postCreateCommand installs into it");
+  assert.deepEqual(config.onCreateCommand, ["sudo", "-n", "chown", `${config.remoteUser}:${config.remoteUser}`, ...volumes], "Docker creates a named volume nested in the checkout owned by root; the remote user must own it before postCreateCommand installs into it");
   for (const path of fixture.retiredScripts) assert.equal(existsSync(join(workspace, path)), false, `Retired lifecycle bypass: ${path}`);
   const rootTargets = JSON.parse(readFileSync(join(workspace, "📋️project.json"), "utf8")).targets;
   const target = rootTargets[fixture.setupTarget];

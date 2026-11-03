@@ -1,0 +1,6 @@
+{
+  "ChangeBeamCrackedLengthFraction": {
+    "id": "beam-B1",
+    "newCrackedLengthFraction": 0.1875
+  }
+}

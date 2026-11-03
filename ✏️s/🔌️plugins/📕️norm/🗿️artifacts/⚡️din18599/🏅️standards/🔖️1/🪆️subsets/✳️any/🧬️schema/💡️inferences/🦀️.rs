@@ -20,8 +20,8 @@ use framework_schema::ArtifactSchema;
 /// `💡️inferences/` (currently: `outline`, backed by the `🧾outline/` slug dir — this document's
 /// own field/section structure, since a norm compliance record IS the document it describes).
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.norm.din18599.inference")]
 pub struct Din18599Inference {

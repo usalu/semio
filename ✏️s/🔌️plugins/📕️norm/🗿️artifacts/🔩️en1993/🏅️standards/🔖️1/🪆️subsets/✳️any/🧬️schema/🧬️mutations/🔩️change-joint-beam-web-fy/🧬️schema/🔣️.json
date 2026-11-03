@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-joint-beam-web-fy/schema.json",
+  "title": "ChangeJointBeamWebFy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newBeamWebFy"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Joint",
+          "de": "Anschluss"
+        },
+        "description": {
+          "en": "The joint this mutation addresses, by id.",
+          "de": "Das adressierte Element (Anschluss), per Kennung."
+        },
+        "ref": {
+          "kind": "joint"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newBeamWebFy": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Beam web yield strength f_y,wb (0 = not given)",
+          "de": "Trägerstegstreckgrenze f_y,wb (0 = nicht angegeben)"
+        },
+        "widget": "stepper",
+        "role": "value",
+        "group": "value",
+        "order": 20,
+        "unit": "Pa",
+        "displayUnit": "kN/m²",
+        "displayFactor": 0.001,
+        "precision": 0,
+        "step": 5000000
+      }
+    }
+  }
+}

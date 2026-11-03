@@ -1,0 +1,5 @@
+{
+  "mutation": "changeAssessmentSupportedBuildingId",
+  "id": "as-1",
+  "newSupportedBuildingId": "bldg-office2"
+}

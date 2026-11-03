@@ -16,6 +16,9 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-s-artifact-norm-en1998-inferences-structural-system = { workspace = true }
+semio-s-artifact-norm-en1998-inferences-details = { workspace = true }
+serde = { workspace = true, optional = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-schema-composition = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
@@ -26,6 +29,11 @@ semio-framework-value-derive = { workspace = true }
 semio-s-artifact-norm-en1998-model = { workspace = true }
 semio-s-artifact-norm-en1998-schema = { workspace = true }
 semio-s-plugin-norm-compliance = { workspace = true }
+semio-s-plugin-norm-mechanics = { workspace = true }
+semio-s-artifact-norm-en1998-structure-checks = { workspace = true }
+
+[features]
+test-support = ["dep:serde", "semio-s-artifact-norm-en1998-model/test-support", "semio-s-artifact-norm-en1998-schema/test-support", "semio-s-plugin-norm-compliance/test-support"]
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }

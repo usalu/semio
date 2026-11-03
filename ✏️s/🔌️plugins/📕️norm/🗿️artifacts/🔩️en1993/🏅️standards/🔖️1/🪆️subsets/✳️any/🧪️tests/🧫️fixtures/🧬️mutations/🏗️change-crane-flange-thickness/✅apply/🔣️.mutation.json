@@ -1,0 +1,6 @@
+{
+  "ChangeCraneFlangeThickness": {
+    "id": "crane-1",
+    "newFlangeThickness": 1.5
+  }
+}

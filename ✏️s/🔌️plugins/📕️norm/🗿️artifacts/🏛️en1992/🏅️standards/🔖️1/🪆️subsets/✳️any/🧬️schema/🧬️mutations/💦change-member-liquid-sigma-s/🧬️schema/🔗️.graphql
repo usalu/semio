@@ -1,0 +1,4 @@
+type ChangeMemberLiquidSigmaS {
+  memberId: String!
+  newValue: Float!
+}

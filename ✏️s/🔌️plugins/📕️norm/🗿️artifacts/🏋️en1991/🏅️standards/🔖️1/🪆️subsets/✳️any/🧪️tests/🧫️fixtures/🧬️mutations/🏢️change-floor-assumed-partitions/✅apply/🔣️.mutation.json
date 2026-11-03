@@ -1,0 +1,6 @@
+{
+  "ChangeFloorAssumedPartitions": {
+    "id": "office-l1",
+    "newAssumedPartitions": 400.0
+  }
+}

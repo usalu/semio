@@ -1,0 +1,216 @@
+{
+  "$schema": "../../../../../../../../../🔮️oracles/🏃️harness/🧬️schema/🔣️.json",
+  "schemaVersion": 1,
+  "artifact": "en1991",
+  "annex": "de",
+  "cases": [
+    {
+      "id": "en1991.2.braking-L-10_0",
+      "check": "en1991.2.braking",
+      "citation": {
+        "standard": "EN 1991-2",
+        "edition": "2003",
+        "clause": "EN 1991-2 4.4.1 (2) Eq. 4.4 braking and acceleration force of lane 1; alpha factors 1.0 and Q_1k, q_1k, w_1 are the LM1 lane 1 values (unverified registry)",
+        "annex": "de"
+      },
+      "inputs": {
+        "Q1": 300000.0,
+        "q1": 9000.0,
+        "w1": 3.0,
+        "alpha_Q1": 1.0,
+        "alpha_q1": 1.0,
+        "L": 10.0
+      },
+      "expected": {
+        "Q_lk": {
+          "value": 387000.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.2.braking-L-40_0",
+      "check": "en1991.2.braking",
+      "citation": {
+        "standard": "EN 1991-2",
+        "edition": "2003",
+        "clause": "EN 1991-2 4.4.1 (2) Eq. 4.4 braking and acceleration force of lane 1; alpha factors 1.0 and Q_1k, q_1k, w_1 are the LM1 lane 1 values (unverified registry)",
+        "annex": "de"
+      },
+      "inputs": {
+        "Q1": 300000.0,
+        "q1": 9000.0,
+        "w1": 3.0,
+        "alpha_Q1": 1.0,
+        "alpha_q1": 1.0,
+        "L": 40.0
+      },
+      "expected": {
+        "Q_lk": {
+          "value": 468000.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.2.braking-L-400_0",
+      "check": "en1991.2.braking",
+      "citation": {
+        "standard": "EN 1991-2",
+        "edition": "2003",
+        "clause": "EN 1991-2 4.4.1 (2) Eq. 4.4 braking and acceleration force of lane 1; alpha factors 1.0 and Q_1k, q_1k, w_1 are the LM1 lane 1 values (unverified registry)",
+        "annex": "de"
+      },
+      "inputs": {
+        "Q1": 300000.0,
+        "q1": 9000.0,
+        "w1": 3.0,
+        "alpha_Q1": 1.0,
+        "alpha_q1": 1.0,
+        "L": 400.0
+      },
+      "expected": {
+        "Q_lk": {
+          "value": 900000.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.2.centrifugal-r-150",
+      "check": "en1991.2.centrifugal",
+      "citation": {
+        "standard": "EN 1991-2",
+        "edition": "2003",
+        "clause": "EN 1991-2 4.4.2 Table 4.3 centrifugal force Q_tk (unverified registry values)",
+        "annex": "de"
+      },
+      "inputs": {
+        "Q_v": 1200000.0,
+        "r": 150.0
+      },
+      "expected": {
+        "Q_tk": {
+          "value": 240000.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.2.centrifugal-r-300",
+      "check": "en1991.2.centrifugal",
+      "citation": {
+        "standard": "EN 1991-2",
+        "edition": "2003",
+        "clause": "EN 1991-2 4.4.2 Table 4.3 centrifugal force Q_tk (unverified registry values)",
+        "annex": "de"
+      },
+      "inputs": {
+        "Q_v": 1200000.0,
+        "r": 300.0
+      },
+      "expected": {
+        "Q_tk": {
+          "value": 160000.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.2.centrifugal-r-1500",
+      "check": "en1991.2.centrifugal",
+      "citation": {
+        "standard": "EN 1991-2",
+        "edition": "2003",
+        "clause": "EN 1991-2 4.4.2 Table 4.3 centrifugal force Q_tk (unverified registry values)",
+        "annex": "de"
+      },
+      "inputs": {
+        "Q_v": 1200000.0,
+        "r": 1500.0
+      },
+      "expected": {
+        "Q_tk": {
+          "value": 32000.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.2.centrifugal-r-2000",
+      "check": "en1991.2.centrifugal",
+      "citation": {
+        "standard": "EN 1991-2",
+        "edition": "2003",
+        "clause": "EN 1991-2 4.4.2 Table 4.3 centrifugal force Q_tk (unverified registry values)",
+        "annex": "de"
+      },
+      "inputs": {
+        "Q_v": 1200000.0,
+        "r": 2000.0
+      },
+      "expected": {
+        "Q_tk": {
+          "value": 0.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    }
+  ]
+}

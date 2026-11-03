@@ -1,0 +1,6 @@
+{
+  "ChangeLoadDispersalSlabThickness": {
+    "id": "load-dispersal-1",
+    "newSlabThickness": 3.0
+  }
+}

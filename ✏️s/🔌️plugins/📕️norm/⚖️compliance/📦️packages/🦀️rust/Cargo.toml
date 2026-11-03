@@ -4,7 +4,7 @@ name = "semio-s-plugin-norm-compliance"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "Norm compliance: check reports, clauses, quantities, remedies and the norm artifact record"
+description = "Norm compliance facade: re-exports the core and adds the norm family, incremental evaluation, design cases, reasons and the norm artifact record"
 
 [package.metadata.semio]
 role = "library"
@@ -16,7 +16,8 @@ workspace = true
 path = "../../🦀️.rs"
 
 [features]
-compliance-testing = ["dep:serde", "dep:serde_json", "dep:semio-framework-artifact-reference"]
+test-support = ["dep:serde"]
+compliance-testing = ["semio-s-plugin-norm-compliance-core/compliance-testing", "dep:serde", "dep:serde_json", "dep:semio-framework-artifact-reference"]
 
 [dependencies]
 pack = { workspace = true }
@@ -31,10 +32,13 @@ semio-framework-schema = { workspace = true }
 semio-framework-ui-locale = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
+semio-s-plugin-norm-compliance-core = { path = "../../🧱️core/📦️packages/🦀️rust" }
+semio-s-plugin-norm-ndp = { path = "../../📜️annex-and-tables/🔖️ndp/📦️packages/🦀️rust" }
 serde = { workspace = true, optional = true }
 serde_json = { workspace = true, optional = true }
 
 [dev-dependencies]
+semio-s-plugin-norm-compliance-core = { path = "../../🧱️core/📦️packages/🦀️rust", features = ["compliance-testing"] }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-async-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

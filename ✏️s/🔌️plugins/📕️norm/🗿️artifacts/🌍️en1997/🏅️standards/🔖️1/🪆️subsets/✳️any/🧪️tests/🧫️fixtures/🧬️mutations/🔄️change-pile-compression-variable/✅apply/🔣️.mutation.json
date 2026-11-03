@@ -1,0 +1,5 @@
+{
+  "mutation": "changePileCompressionVariable",
+  "id": "pile-P1",
+  "newCompressionVariable": 200000.0
+}

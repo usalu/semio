@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/insert-slab-action/schema.json",
+  "title": "InsertSlabAction",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "slabId",
+    "index",
+    "action"
+  ],
+  "properties": {
+    "slabId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Slab",
+          "de": "Decke"
+        },
+        "description": {
+          "en": "The slab this mutation addresses, by id.",
+          "de": "Das adressierte Element (Decke), per Kennung."
+        },
+        "ref": {
+          "kind": "slab"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "Zero-based list position at which the record is inserted.",
+          "de": "Nullbasierte Listenposition, an der der Datensatz eingefügt wird."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 100
+      }
+    },
+    "action": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/SlabAction",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Slab action",
+          "de": "Deckeneinwirkung"
+        },
+        "description": {
+          "en": "The complete slab action record to insert.",
+          "de": "Der vollständige einzufügende Datensatz (Deckeneinwirkung)."
+        },
+        "group": "record",
+        "order": 110
+      },
+      "x-semio-rust": {
+        "type": "semio_s_artifact_norm_en1994_model::SlabAction"
+      }
+    }
+  }
+}

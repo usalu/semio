@@ -54,6 +54,8 @@ pub struct TutorialState {
 /// Fields keep the names they had on the former `ShellState`; the composer owns one value of this struct as `settle`.
 pub struct SettleState {
     pub deferred_actions: Vec<ActionDescriptor>,
+    /// 🖐️ Touch gestures the frame recognised on its own clock (a held finger reached its long-press deadline): offered to the plugin and answered on the settle lane, because the frame build cannot await.
+    pub touch_gestures: Vec<(semio_framework::ShellTouchGesture, f32, f32)>,
     /// 🔁️ Guards `flush_deferred_actions`'s convergence loop against re-entry: a nested flush (one a
     /// dispatched action itself asks for) stays a plain drain so the outer loop keeps the single
     /// authority over how many times the window bodies are re-entered.

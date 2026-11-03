@@ -11,7 +11,7 @@ use protocol::{DiffAlgebra as _, Mutation as _, MutationDiff as _};
 use protocol::ColdMutationDiff;
 
 fn base() -> En1997Snapshot {
-    let mut base = En1997Snapshot::default();
+    let mut base = En1997Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De);
     let mut extra = base.footings[0].clone();
     extra.id = "footing-extra".into();
     base.footings.push(extra);

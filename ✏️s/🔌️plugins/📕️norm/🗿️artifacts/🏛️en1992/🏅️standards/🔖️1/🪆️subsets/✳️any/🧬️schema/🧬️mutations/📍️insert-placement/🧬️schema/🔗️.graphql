@@ -1,0 +1,4 @@
+type InsertPlacement {
+  index: Int!
+  placement: Placement!
+}

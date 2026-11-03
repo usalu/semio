@@ -1,0 +1,486 @@
+{
+  "$schema": "../../../../../../../../../🔮️oracles/🏃️harness/🧬️schema/🔣️.json",
+  "schemaVersion": 1,
+  "artifact": "en1990",
+  "annex": "de",
+  "cases": [
+    {
+      "id": "en1990.C.beta-pf-1e-3",
+      "check": "en1990.C.beta",
+      "citation": {
+        "standard": "EN 1990",
+        "edition": "2004",
+        "clause": "Annex C Table C2 reliability index"
+      },
+      "inputs": {
+        "pf": 0.001
+      },
+      "expected": {
+        "beta": {
+          "value": 3.0902323061678136,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1990.C.beta-pf-1e-4",
+      "check": "en1990.C.beta",
+      "citation": {
+        "standard": "EN 1990",
+        "edition": "2004",
+        "clause": "Annex C Table C2 reliability index"
+      },
+      "inputs": {
+        "pf": 0.0001
+      },
+      "expected": {
+        "beta": {
+          "value": 3.7190164854556804,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1990.C.beta-pf-7.23e-5",
+      "check": "en1990.C.beta",
+      "citation": {
+        "standard": "EN 1990",
+        "edition": "2004",
+        "clause": "Annex C Table C2 reliability index"
+      },
+      "inputs": {
+        "pf": 7.23e-05
+      },
+      "expected": {
+        "beta": {
+          "value": 3.8001646153780664,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1990.C.beta-pf-1e-6",
+      "check": "en1990.C.beta",
+      "citation": {
+        "standard": "EN 1990",
+        "edition": "2004",
+        "clause": "Annex C Table C2 reliability index"
+      },
+      "inputs": {
+        "pf": 1e-06
+      },
+      "expected": {
+        "beta": {
+          "value": 4.753424308822899,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1990.C.form-equal-scatter",
+      "check": "en1990.C.form-linear",
+      "citation": {
+        "standard": "EN 1990",
+        "edition": "2004",
+        "clause": "Annex C.6 and C.7 FORM sensitivity factors"
+      },
+      "inputs": {
+        "mu_R": 300.0,
+        "sigma_R": 30.0,
+        "mu_E": 150.0,
+        "sigma_E": 30.0
+      },
+      "expected": {
+        "beta": {
+          "value": 3.5355339059327378,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "alpha_R": {
+          "value": 0.7071067811865476,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "alpha_E": {
+          "value": -0.7071067811865476,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "R_d": {
+          "value": 225.0,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "E_d": {
+          "value": 225.0,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "P_f": {
+          "value": 0.00020347600872247946,
+          "unit": "1",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1990.C.form-resistance-scatter",
+      "check": "en1990.C.form-linear",
+      "citation": {
+        "standard": "EN 1990",
+        "edition": "2004",
+        "clause": "Annex C.6 and C.7 FORM sensitivity factors"
+      },
+      "inputs": {
+        "mu_R": 420.0,
+        "sigma_R": 42.0,
+        "mu_E": 200.0,
+        "sigma_E": 36.0
+      },
+      "expected": {
+        "beta": {
+          "value": 3.97705839334203,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "alpha_R": {
+          "value": 0.7592566023652966,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "alpha_E": {
+          "value": -0.6507913734559685,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "R_d": {
+          "value": 293.1764705882353,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "E_d": {
+          "value": 293.1764705882353,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "P_f": {
+          "value": 3.488651790706796e-05,
+          "unit": "1",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1990.6.4.combinations-three-variable",
+      "check": "en1990.6.4.combinations",
+      "citation": {
+        "standard": "EN 1990",
+        "edition": "2004",
+        "clause": "6.4.3.2 Eq. 6.10, 6.10a, 6.10b, 6.14b, 6.15b, 6.16b",
+        "annex": "en"
+      },
+      "inputs": {
+        "G_k": [
+          50000.0,
+          20000.0
+        ],
+        "Q_k": [
+          30000.0,
+          20000.0,
+          10000.0
+        ],
+        "psi_0": [
+          0.7,
+          0.7,
+          0.6
+        ],
+        "psi_1": [
+          0.5,
+          0.5,
+          0.2
+        ],
+        "psi_2": [
+          0.3,
+          0.3,
+          0.0
+        ],
+        "gamma_G": 1.35,
+        "gamma_Q": 1.5,
+        "xi": 0.85
+      },
+      "expected": {
+        "E_6_10": {
+          "value": 169500.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        },
+        "E_6_10a": {
+          "value": 156000.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        },
+        "E_6_10b": {
+          "value": 155325.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        },
+        "E_d": {
+          "value": 156000.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        },
+        "E_char": {
+          "value": 120000.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        },
+        "E_freq": {
+          "value": 91000.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        },
+        "E_qp": {
+          "value": 85000.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1990.6.4.combinations-single-variable",
+      "check": "en1990.6.4.combinations",
+      "citation": {
+        "standard": "EN 1990",
+        "edition": "2004",
+        "clause": "6.4.3.2 Eq. 6.10, 6.10a, 6.10b, 6.14b, 6.15b, 6.16b",
+        "annex": "en"
+      },
+      "inputs": {
+        "G_k": [
+          50000.0,
+          20000.0
+        ],
+        "Q_k": [
+          40000.0
+        ],
+        "psi_0": [
+          0.7
+        ],
+        "psi_1": [
+          0.5
+        ],
+        "psi_2": [
+          0.3
+        ],
+        "gamma_G": 1.35,
+        "gamma_Q": 1.5,
+        "xi": 0.85
+      },
+      "expected": {
+        "E_6_10": {
+          "value": 154500.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        },
+        "E_6_10a": {
+          "value": 136500.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        },
+        "E_6_10b": {
+          "value": 140325.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        },
+        "E_d": {
+          "value": 140325.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        },
+        "E_char": {
+          "value": 110000.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        },
+        "E_freq": {
+          "value": 90000.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        },
+        "E_qp": {
+          "value": 82000.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1990.6.4.combinations-ten-percent-permanent",
+      "check": "en1990.6.4.combinations",
+      "citation": {
+        "standard": "EN 1990",
+        "edition": "2004",
+        "clause": "6.4.3.2 Eq. 6.10b governing when the permanent share is large",
+        "annex": "en"
+      },
+      "inputs": {
+        "G_k": [
+          200000.0
+        ],
+        "Q_k": [
+          60000.0,
+          15000.0
+        ],
+        "psi_0": [
+          0.7,
+          0.5
+        ],
+        "psi_1": [
+          0.5,
+          0.2
+        ],
+        "psi_2": [
+          0.3,
+          0.0
+        ],
+        "gamma_G": 1.35,
+        "gamma_Q": 1.5,
+        "xi": 0.85
+      },
+      "expected": {
+        "E_6_10": {
+          "value": 371250.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        },
+        "E_6_10a": {
+          "value": 344250.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        },
+        "E_6_10b": {
+          "value": 330750.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        },
+        "E_d": {
+          "value": 344250.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        },
+        "E_char": {
+          "value": 267500.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        },
+        "E_freq": {
+          "value": 230000.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        },
+        "E_qp": {
+          "value": 218000.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    }
+  ]
+}

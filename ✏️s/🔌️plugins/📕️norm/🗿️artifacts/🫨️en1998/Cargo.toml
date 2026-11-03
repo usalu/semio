@@ -3,22 +3,109 @@ cargo-features = [ "trim-paths" ]
 [workspace]
 resolver = "2"
 members = [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗼️bridges-pier-more/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔩️members-joints-rest/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🎬️scene/📐️geometry/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/🔗️tie-beams/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/🏭️silos-tanks/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/⛰️seismic-slopes/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/📍️placements/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/🧱️members/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/🏗️foundations/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/🏢️buildings/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/🗼️bridges-towers/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/🧰️kit/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗼️bridges-piers-rest/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️foundations-more/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🎬️scene/🧱️core/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️site-ground-more/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️foundations-soil-more/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️buildings-envelope-more/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗼️bridges-piers-more/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔩️members-joints-more/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️buildings-system-more/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️buildings-more/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗼️bridges-bearings-more/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️members-wall-rows-more/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️buildings-storey-more/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📐️formulas/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🌍️full-seismic-check/🧱️system-checks/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧱️details/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🎬️scene/🔬️analysis/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🛰️proto-twin/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️json-schema-twin/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔗️graphql-twin/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️typescript-twin/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎲️demo-cases/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/📡️protocol-twin/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛰️proto-twin/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔣️json-schema-twin/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️graphql-twin/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦️typescript-twin/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️placements/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🎬️scene/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📦️packages/🦀️rust",
-    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️foundations-bearing/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️foundations-foundation/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️foundations-liq/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️foundations-pile-head/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️foundations-pile/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️foundations-retaining-wall/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️foundations-soil/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️foundations/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️buildings-annex-building/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️buildings-envelope/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️members-wall-rows/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️site-ground/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️buildings-nonstructural/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️buildings-site/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️foundations-sliding/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️tie-beams/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛰️seismic-slopes/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️foundations-water/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔩️members-joints/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗼️towers-foundation/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️silos-tanks-shell/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗼️bridges-bearings/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗼️bridges-piers/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️buildings-overturning/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📈️accelerograms/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️diaphragms-resistance/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️diaphragms-core/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️buildings-storey-stiffness/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️buildings-storey/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️buildings-system/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️buildings-variables/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️buildings/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️silos-tanks-silo-tank/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️silos-tanks-tank/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️silos-tanks/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗼️bridges-pier/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗼️bridges-towers-bridge-tower/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗼️bridges-towers-tower/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗼️bridges-towers/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗼️bridges-variables/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗼️towers-variables/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️assess-confine/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️assess-section/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️assess-steel/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️members-assessment/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️members-masonry-member/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️members-wall/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️members/📦️packages/🦀️rust",
-    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪜️buildings-2/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪜️buildings-lifecycle/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🎬️scene-structures/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌉️structure-checks/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📦️packages/🦀️rust",
     "📦️packages/🦀️rust",
 ]
 exclude = [
@@ -89,6 +176,12 @@ features = [ "raw_value" ]
 [workspace.dependencies.semio-s-plugin-norm-app-surface]
 path = "../../📇️registry/🧬️contract/🖥️app-surface/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-s-plugin-norm-structural-scene]
+path = "../../🎬️structural-scene/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-norm-mechanics]
+path = "../../🧮️mechanics/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-s-plugin-norm-compliance]
 path = "../../⚖️compliance/📦️packages/🦀️rust"
 
@@ -149,8 +242,8 @@ path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️
 [workspace.dependencies.semio-s-artifact-norm-en1998-mut-buildings]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️buildings/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-s-artifact-norm-en1998-mut-buildings-2]
-path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪜️buildings-2/📦️packages/🦀️rust"
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-buildings-lifecycle]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪜️buildings-lifecycle/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-norm-en1998-mut-foundations]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️foundations/📦️packages/🦀️rust"
@@ -164,6 +257,9 @@ path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️
 [workspace.dependencies.semio-s-artifact-norm-en1998-mutations]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-s-artifact-norm-en1998-scene]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🎬️scene/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-s-artifact-norm-en1998-schema]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust"
 
@@ -172,6 +268,264 @@ path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️
 
 [workspace.dependencies.semio-s-mutation-vectors]
 path = "../../../../🧪️tests/🧪️mutation-vectors/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-buildings-annex-building]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️buildings-annex-building/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-buildings-storey]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️buildings-storey/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-buildings-storey-stiffness]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️buildings-storey-stiffness/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-buildings-site]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️buildings-site/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-buildings-system]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️buildings-system/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-silos-tanks-silo-tank]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️silos-tanks-silo-tank/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-silos-tanks-tank]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️silos-tanks-tank/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-members-masonry-member]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️members-masonry-member/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-members-assessment]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️members-assessment/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-bridges-towers-bridge-tower]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗼️bridges-towers-bridge-tower/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-bridges-towers-tower]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗼️bridges-towers-tower/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-foundations-foundation]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️foundations-foundation/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-foundations-retaining-wall]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️foundations-retaining-wall/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-buildings-envelope]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️buildings-envelope/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-members-wall-rows]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️members-wall-rows/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-site-ground]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️site-ground/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-buildings-nonstructural]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️buildings-nonstructural/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-members-wall]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️members-wall/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-foundations-liq]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️foundations-liq/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-bridges-pier]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗼️bridges-pier/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-assess-section]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️assess-section/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-assess-steel]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️assess-steel/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-assess-confine]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️assess-confine/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-foundations-bearing]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️foundations-bearing/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-foundations-pile]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️foundations-pile/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-foundations-pile-head]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️foundations-pile-head/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-buildings-variables]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️buildings-variables/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-bridges-variables]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗼️bridges-variables/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-towers-variables]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗼️towers-variables/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-foundations-soil]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️foundations-soil/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-placements]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️placements/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mutations-typescript]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦️typescript-twin/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mutations-graphql]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️graphql-twin/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mutations-json-schema]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔣️json-schema-twin/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mutations-proto]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛰️proto-twin/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mutations-protocol]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🧬️mutations/📡️protocol-twin/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-diaphragms-core]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️diaphragms-core/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-diaphragms-resistance]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️diaphragms-resistance/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-accelerograms]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📈️accelerograms/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-buildings-overturning]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️buildings-overturning/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-bridges-piers]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗼️bridges-piers/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-bridges-bearings]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗼️bridges-bearings/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-silos-tanks-shell]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️silos-tanks-shell/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-towers-foundation]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗼️towers-foundation/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-scene-structures]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🎬️scene-structures/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-structure-checks]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🌉️structure-checks/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-edit-rules]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️edit-rules/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mutations-demo]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎲️demo-cases/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-members-joints]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔩️members-joints/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-model-typescript]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️typescript-twin/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-model-graphql]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔗️graphql-twin/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-model-json-schema]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️json-schema-twin/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-model-proto]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🛰️proto-twin/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-scene-analysis]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🎬️scene/🔬️analysis/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-inferences-details]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧱️details/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-inferences-structural-system]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🌍️full-seismic-check/🧱️system-checks/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-schema-formulas]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📐️formulas/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-buildings-storey-more]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️buildings-storey-more/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-members-wall-rows-more]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱️members-wall-rows-more/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-bridges-bearings-more]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗼️bridges-bearings-more/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-buildings-more]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️buildings-more/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-buildings-system-more]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️buildings-system-more/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-members-joints-more]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔩️members-joints-more/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-bridges-piers-more]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗼️bridges-piers-more/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-buildings-envelope-more]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️buildings-envelope-more/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-foundations-soil-more]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️foundations-soil-more/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-site-ground-more]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍️site-ground-more/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-scene-core]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🎬️scene/🧱️core/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-foundations-water]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️foundations-water/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-foundations-sliding]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️foundations-sliding/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-tie-beams]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️tie-beams/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-seismic-slopes]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛰️seismic-slopes/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-foundations-more]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️foundations-more/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-bridges-piers-rest]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗼️bridges-piers-rest/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mutations-text-kit]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/🧰️kit/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mutations-text-bridges-towers]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/🗼️bridges-towers/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mutations-text-buildings]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/🏢️buildings/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mutations-text-foundations]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/🏗️foundations/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mutations-text-members]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/🧱️members/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mutations-text-placements]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/📍️placements/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mutations-text-seismic-slopes]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/⛰️seismic-slopes/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mutations-text-silos-tanks]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/🏭️silos-tanks/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mutations-text-tie-beams]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/🔗️tie-beams/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-scene-geometry]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🎬️scene/📐️geometry/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-members-joints-rest]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔩️members-joints-rest/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1998-mut-bridges-pier-more]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗼️bridges-pier-more/📦️packages/🦀️rust"
 
 [workspace.lints.rust]
 unsafe_op_in_unsafe_fn = "warn"

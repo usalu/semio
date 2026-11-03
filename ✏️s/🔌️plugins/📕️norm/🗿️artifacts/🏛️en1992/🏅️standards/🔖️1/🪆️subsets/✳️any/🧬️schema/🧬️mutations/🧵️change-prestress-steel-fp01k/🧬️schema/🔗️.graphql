@@ -1,0 +1,4 @@
+type ChangePrestressSteelFP01k {
+  gradeId: String!
+  newFP01k: Float!
+}

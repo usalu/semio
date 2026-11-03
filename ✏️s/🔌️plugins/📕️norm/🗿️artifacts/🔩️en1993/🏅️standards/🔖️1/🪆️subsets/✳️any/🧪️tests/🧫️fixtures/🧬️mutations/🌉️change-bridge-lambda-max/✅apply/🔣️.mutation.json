@@ -1,0 +1,6 @@
+{
+  "ChangeBridgeLambdaMax": {
+    "id": "br-1",
+    "newLambdaMax": 1.5
+  }
+}

@@ -1,0 +1,17 @@
+import os, sys; sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from lib import *
+import twins as W
+A = Art("en1997")
+W.snapshot_json(A, formats=["🔣️jsonschema", "🔗️graphql", "🛰️protobuf"])
+W.snapshot_ts(A, "En1997Snapshot")
+W.graphql_typed(A.snap + "/🔗️.graphql", "En1997Artifact")
+W.proto_typed(A.snap + "/🛰️.proto", "En1997Artifact")
+W.root_json(A)
+W.root_ts(A, "En1997Artifact")
+W.graphql_typed(A.schema + "/🔗️.graphql", "En1997Artifact")
+W.proto_typed(A.schema + "/🛰️.proto", "En1997Artifact")
+W.diff_json(A)
+W.diff_ts(A, "En1997Diff")
+W.diff_graphql(A, "En1997Diff")
+W.diff_proto(A, "En1997Diff")
+print(len(LOG))

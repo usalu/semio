@@ -15,8 +15,8 @@ use framework_schema::ArtifactSchema;
 //#region 🔖️Snapshot
 
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ArtifactSchema, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[dsl(id = "norm.din4108", layout = "lines")]
 #[artifact_schema(id = "s.norm.din4108")]
@@ -222,8 +222,8 @@ use semio_s_plugin_norm_app_surface as app_surface;
 /// 🧩 Parallel fraction of an inhomogeneous ISO 6946 §6.7 layer (area share of one material).
 #[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct LayerSegment {
     pub id: String,
@@ -238,8 +238,8 @@ pub struct LayerSegment {
 /// Empty `segments` = homogeneous; non-empty = ISO 6946 §6.7 upper/lower-bound method.
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct LayerDocument {
     pub id: String,
@@ -250,30 +250,30 @@ pub struct LayerDocument {
     pub mu: f64,
     pub density: f64,
     /// 📱️ DIN 4108-10 Table 1 application-type code (DAD, WAB, …).
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(default))]
     pub application_type: String,
     /// 🏷️ DIN 4108-10 compressive / mechanical property class (dh/ds/dm/dk/dx).
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(default))]
     pub compressive_class: String,
     /// 💧️ DIN 4108-10 water-absorption class (wk/wf/wd).
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(default))]
     pub water_class: String,
     /// 🗂️ DIN 4108-10 tensile class (tk/tf).
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(default))]
     pub tensile_class: String,
     /// 🔊️ DIN 4108-10 acoustic class (sh/sm/sg).
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(default))]
     pub acoustic_class: String,
     #[dsl(table)]
-    #[cfg_attr(test, serde(default))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(default))]
     pub segments: Vec<LayerSegment>,
 }
 
 /// 🪟 Transparent opening contribution for DIN 4108-2 §8 summer heat protection.
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct ZoneWindow {
     pub id: String,
@@ -289,8 +289,8 @@ pub struct ZoneWindow {
 /// 🚪 Thermal zone / room used for summer heat protection aggregation.
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct ThermalZone {
     pub id: String,
@@ -305,8 +305,8 @@ pub struct ThermalZone {
 /// 🏛️ Opaque or transparent envelope element with ISO 6946 layer stack (incl. ΔU_g/ΔU_f/ΔU_r corrections).
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct EnvelopeElement {
     pub id: String,
@@ -327,8 +327,8 @@ pub struct EnvelopeElement {
 /// 🌉️ Linear thermal bridge (DIN 4108 Beiblatt 2).
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct ThermalBridge {
     pub id: String,

@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-layer-cohesion-undrained/schema.json",
+  "title": "ChangeLayerCohesionUndrained",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newCohesionUndrained"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeLayerCohesionUndrained"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Soil layer",
+          "de": "Bodenschicht"
+        },
+        "description": {
+          "en": "The soil layer this mutation addresses, by id.",
+          "de": "Die adressierte Zeile (Bodenschicht), per Kennung."
+        },
+        "ref": {
+          "kind": "soil-layer"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newCohesionUndrained": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Undrained shear strength c_u",
+          "de": "Undränierte Scherfestigkeit c_u"
+        },
+        "widget": "stepper",
+        "unit": "Pa",
+        "displayUnit": "kN/m²",
+        "displayFactor": 0.001,
+        "precision": 2,
+        "step": 1000,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "ChangeThermalSectionAlphaMicro": {
+    "id": "thermal-section-1",
+    "newAlphaMicro": 3.0
+  }
+}

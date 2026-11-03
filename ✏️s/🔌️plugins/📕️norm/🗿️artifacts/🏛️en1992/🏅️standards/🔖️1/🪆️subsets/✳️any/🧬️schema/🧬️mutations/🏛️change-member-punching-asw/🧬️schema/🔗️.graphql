@@ -1,0 +1,4 @@
+type ChangeMemberPunchingAsw {
+  memberId: String!
+  newPunchingAsw: Float!
+}

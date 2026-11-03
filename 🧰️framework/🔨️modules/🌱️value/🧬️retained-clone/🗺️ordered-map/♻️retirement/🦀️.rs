@@ -5,18 +5,18 @@ use crate::retirement::{RetirementCursor,RetirementStep};
 use std::mem::ManuallyDrop;
 
 trait EditOwner:Send+'static {
- fn demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>;
+ fn demand(&self,body:usize)->Result<crate::RetirementDemand,ValueError>;
  fn begin(&mut self);
  fn close(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome;
  fn empty(&self)->bool;
 }
 struct EditRetirement<C:EditOwner>{cursor:ManuallyDrop<C>}
 impl<C:EditOwner> RetirementCursor for EditRetirement<C> {
- fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{self.cursor.demand(body)}
+ fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{self.cursor.demand(body)}
  fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{let turn=self.cursor.close(grant);match turn.result{Ok(RetainedCloneStep::Complete(progress))if progress==RetainedCloneProgress::default()=>RetirementStep::Complete(turn.work),Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress,turn.work),Err(error)=>RetirementStep::Failure(error,turn.work)}}
  fn terminal_is_empty(&self)->bool{self.cursor.empty()}
- fn next_depth_demand(&self)->Result<usize,crate::ValueError>{Ok(self.cursor.demand(0)?.depth)}
- fn next_work_byte_demand(&self)->Result<usize,crate::ValueError>{Ok(self.cursor.demand(0)?.copy_bytes)}
+ fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.cursor.demand(0)?.depth)}
+ fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.cursor.demand(0)?.copy_bytes)}
  fn next_close_byte_demand(&self)->Option<usize>{self.cursor.demand(0).ok().map(|d|d.release_bytes)}
  fn next_birth_bytes(&self,body:usize)->Option<usize>{self.cursor.demand(body).ok().map(|d|d.capacity_bytes)}
  fn allows_admitted_narrow_work(&self)->bool{true}
@@ -42,7 +42,7 @@ edit_owner!(RetainedOrderedMapInsertCursor);
 edit_owner!(RetainedOrderedMapRemoveCursor);
 
 impl<K:RetainedClone,V:RetainedClone> EditOwner for RetainedOrderedMapCloneCursor<K,V>{
- fn demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{self.close_demands(body)}
+ fn demand(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{self.close_demands(body)}
  fn begin(&mut self){self.begin_close();}
  fn close(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome{self.close_step(grant)}
  fn empty(&self)->bool{self.terminal_is_empty()}

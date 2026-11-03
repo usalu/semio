@@ -69,7 +69,7 @@ fn peer_rows(corpus: &Value) -> BTreeMap<String, HistoryEntry> {
                     store: None,
                 })
                 .collect();
-            let entry = HistoryEntry { seq: row["seq"].as_u64().expect("seq"), edit_id: row["editId"].as_str().map(str::to_string), action_id: "apply".into(), label: LocalizedLabel::native("Apply", "Anwenden"), kind: "mutation".into(), applied: true, mutations, ..Default::default() };
+            let entry = HistoryEntry { edit_id: row["editId"].as_str().map(str::to_string), applied: true, mutations, ..HistoryEntry::new(row["seq"].as_u64().expect("seq"), "apply", LocalizedLabel::native("Apply", "Anwenden"), "mutation") };
             (entry.key(), entry)
         })
         .collect()

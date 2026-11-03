@@ -1,0 +1,6 @@
+{
+  "ChangeDeckWheelLoad": {
+    "deckId": "deck-1",
+    "newValue": 150001.0
+  }
+}

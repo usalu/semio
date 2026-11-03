@@ -1,0 +1,5 @@
+type InsertSectionPoint {
+  memberId: String!
+  index: Int!
+  sectionPoint: SectionPoint!
+}

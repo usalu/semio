@@ -10,10 +10,12 @@ pub const MODE_EDIT: &str = "edit";
 /// 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET).
 pub const MODE_VIEW: &str = "view";
 
-/// 🆔️ The report tree every norm results window renders, and its one windowed check section.
-pub const NORM_REPORT_TREE_ID: &str = "norm-report";
+/// 🆔️ The checks tree every norm results window renders, its summary section and its one windowed check section.
+pub const NORM_CHECKS_TREE_ID: &str = "norm-checks";
 
-pub const NORM_REPORT_SECTION_ID: &str = "norm-report.checks";
+pub const NORM_CHECKS_SUMMARY_ID: &str = "norm-checks.summary";
+
+pub const NORM_CHECKS_SECTION_ID: &str = "norm-checks.list";
 //#endregion 🔖️Ids
 
 /// 📎️ Norm applications own no config or presence facets; Results-window config is registered separately.
@@ -45,7 +47,7 @@ pub fn single_window_layout(window_kind_id: &str, title: &str) -> WindowLayout {
     }
 }
 
-/// 📊️ `TableWindowKit` column headers for a norm `CheckReport` — shared by all fifteen viewers.
+/// 📊️ `TableWindowKit` column headers for a norm `CheckReport` — the accessible table twin of the checks window.
 pub fn report_table_columns(locale: Locale) -> Vec<String> {
     let terminology = Terminology::Native;
     vec![
@@ -73,7 +75,7 @@ pub fn report_table_rows(report: &CheckReport, locale: Locale) -> Vec<Vec<String
                 .unwrap_or_default();
             vec![
                 check.part.clone(),
-                check.clause.to_string(),
+                check.clause.text(&locale),
                 check.subject.label.resolve(&protocol_locale).to_string(),
                 status_label(check.status, locale),
                 format!("{:.2}", check.utilization),
@@ -95,12 +97,12 @@ pub fn protocol_locale(locale: Locale) -> Locale {
 }
 
 /// 🏷️ Localized chrome string from a fixed en/de pair.
-pub(super) fn chrome(en: &str, de: &str, locale: Locale) -> String {
+pub fn chrome(en: &str, de: &str, locale: Locale) -> String {
     LocalizedLabel::native(en, de).resolve(Terminology::Native, locale).to_string()
 }
 
 /// 🏷️ `MediaPortSpec.label` is a plain `String` — pack both native terms from a [`LocalizedLabel`].
-pub(super) fn media_port_label(label: LocalizedLabel) -> String {
+pub fn media_port_label(label: LocalizedLabel) -> String {
     format!(
         "{} / {}",
         label.resolve(Terminology::Native, Locale::En),
@@ -115,6 +117,8 @@ pub fn status_label(status: CheckStatus, locale: Locale) -> String {
         CheckStatus::Warning => chrome("Warning", "Warnung", locale),
         CheckStatus::Fail => chrome("Fail", "Nicht bestanden", locale),
         CheckStatus::NotApplicable => chrome("Not applicable", "Nicht anwendbar", locale),
+        CheckStatus::UnverifiedBasis => chrome("Unverified basis", "Ungeprüfte Grundlage", locale),
+        CheckStatus::Info => chrome("Info", "Hinweis", locale),
     }
 }
 
@@ -142,6 +146,7 @@ pub fn format_quantity(quantity: &Quantity) -> String {
         QuantityKind::Time => format!("{:.3} s", quantity.value),
         QuantityKind::Temperature => format!("{:.2} K", quantity.value),
         QuantityKind::Acceleration => format!("{:.3} m/s²", quantity.value),
+        QuantityKind::Velocity => format!("{:.3} m/s", quantity.value),
         QuantityKind::AirPermeability => format!("{:.3} m³/(m²h)", quantity.value),
         QuantityKind::VentilationRate => format!("{:.3} 1/h", quantity.value),
         QuantityKind::Dimensionless => format!("{:.3}", quantity.value),
@@ -153,3 +158,41 @@ pub fn editor_controller_id(variant: &str) -> String {
     format!("s.norm.{variant}@1/*#editor")
 }
 //#endregion 🔖️LocaleChrome
+
+//#region 🔖️FaultNotices
+/// 📢️ The localized notice of every refusal and warning code the norm editors raise (`mutation.*`, `norm.*`), the table each norm editor and viewer declares as `fault_notices`; one fixed sentence per code, never the English developer detail.
+pub fn norm_fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
+    static NOTICES: std::sync::LazyLock<Vec<(&'static str, LocalizedLabel)>> = std::sync::LazyLock::new(|| {
+        [
+            ("mutation.no-op", "Nothing changed: the value is already set.", "Keine Änderung: Der Wert ist bereits gesetzt."),
+            ("mutation.clamped", "The position was past the end of the list; the item was added at the end.", "Die Position lag hinter dem Listenende; das Element wurde am Ende eingefügt."),
+            ("mutation.invariant", "The value breaks a rule of this standard and was not applied.", "Der Wert verletzt eine Regel dieser Norm und wurde nicht übernommen."),
+            ("mutation.duplicate-id", "Another row already uses this id.", "Eine andere Zeile verwendet diese Id bereits."),
+            ("norm.unhandled-action", "The norm editor does not handle this action.", "Der Norm-Editor verarbeitet diese Aktion nicht."),
+            ("norm.value-path", "The field path is not valid.", "Der Feldpfad ist ungültig."),
+            ("norm.set-field-value", "The value does not fit this field.", "Der Wert passt nicht zu diesem Feld."),
+            ("norm.set-active-example-invalid", "This example is not available.", "Dieses Beispiel ist nicht verfügbar."),
+            ("norm.insert-item-value", "The row could not be inserted.", "Die Zeile konnte nicht eingefügt werden."),
+            ("norm.set-fields-args", "The live edit arguments are incomplete or malformed.", "Die Argumente der Live-Änderung sind unvollständig oder fehlerhaft."),
+            ("norm.insert-placement", "The item could not be placed at this position.", "Das Element konnte an dieser Position nicht platziert werden."),
+            ("norm.edit-unresolved", "The edit could not be resolved against the document.", "Die Änderung konnte im Dokument nicht aufgelöst werden."),
+            ("norm.apply-remedy-option-type", "The chosen remedy option has the wrong type.", "Die gewählte Abhilfe-Variante hat den falschen Typ."),
+            ("norm.apply-remedy-uint", "The remedy value must be a non-negative whole number.", "Der Abhilfewert muss eine nicht negative ganze Zahl sein."),
+            ("norm.apply-remedy-int", "The remedy value must be a whole number.", "Der Abhilfewert muss eine ganze Zahl sein."),
+            ("norm.apply-remedy-not-applicable", "This remedy cannot be applied to the check.", "Diese Abhilfe kann auf den Nachweis nicht angewendet werden."),
+            ("norm.apply-remedy-missing-remedy", "The check offers no such remedy.", "Der Nachweis bietet diese Abhilfe nicht an."),
+            ("norm.apply-remedy-missing-option", "The remedy offers no such option.", "Die Abhilfe bietet diese Variante nicht an."),
+            ("norm.apply-remedy-missing-check", "The check no longer exists.", "Der Nachweis existiert nicht mehr."),
+            ("norm.apply-remedy-empty-path", "The remedy names no field to change.", "Die Abhilfe nennt kein zu änderndes Feld."),
+            ("norm.apply-remedy-remove-path", "A removing remedy must target a list row.", "Eine entfernende Abhilfe muss auf eine Listenzeile zielen."),
+            ("norm.entity-delete-empty", "Select at least one row to delete.", "Mindestens eine Zeile zum Löschen auswählen."),
+            ("norm.entity-delete-unknown", "A selected row no longer exists, so nothing was deleted.", "Eine ausgewählte Zeile existiert nicht mehr, daher wurde nichts gelöscht."),
+            ("norm.remedy-removes-row", "This remedy removes a row and writes no value.", "Diese Abhilfe entfernt eine Zeile und schreibt keinen Wert."),
+        ]
+        .into_iter()
+        .map(|(code, en, de)| (code, LocalizedLabel::native(en, de)))
+        .collect()
+    });
+    NOTICES.as_slice()
+}
+//#endregion 🔖️FaultNotices

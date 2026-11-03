@@ -1,0 +1,16 @@
+@capability-en1993-1-evaluate
+@oracle-en1993-1-compliance-independent
+@comparison-numerical-v1
+Feature: EN 1993 structural scene
+  The steel snapshot and its check report project to a deterministic, locale-free 3D scene, a set of 2D diagrams and drag handles.
+
+  Further specification assertions, asserted by the Rust unit tests of the crate and not by the platform adapters:
+  - members extrude their catalogue section: Given the compliant HEB 240 frame When the scene is projected Then entity "member-b1" is a member of 4.00 m whose section outline area is within 5 % of the catalogue area
+  - utilisation colours the governing entity: Given the compliant HEB 240 frame and its check report When the scene is projected Then entity "member-b1" carries the largest utilisation of its own and its attached checks And a failing member in the overloaded frame has error style, a diagonal hatch and a failure glyph
+  - joints show plate, bolt grid and group: Given the compliant HEB 240 frame When the scene is projected Then entity "joint-j1:bolts" is a 2 by 2 grid with the pitch and gauge of joint "joint-j1"
+  - handles write document leaves: Given the compliant HEB 240 frame When the length handle of "member-b1" is dragged to 5.012 m Then one write sets "members[id=member-b1].length" to 5.0 m And the section handle snaps to a catalogue height
+  - diagrams agree with the closed forms: Given the compliant HEB 240 frame and its check report When the diagrams are built Then the buckling marker of "member-b1" lies on its buckling curve And an independent Python oracle reproduces the section areas, buckling reduction factors, the S–N slopes and the interaction polygon area
+  - members are coloured along their length from the check stations: Given the overloaded frame and its check report When the scene is projected Then the utilisation of "member-b1" carries one value per check station, ascending along the member And the largest station value equals the governing station utilisation of the member checks
+  - buckling, lateral-torsional and deflection shapes come from the mechanics kernel: Given a 6 m pinned HEB 240 beam When the flexural mode, the lateral-torsional mode and the deflection line are computed Then the critical load, the critical moment and the midspan deflection agree with an independent Python oracle And a fixed-base column buckles at a quarter of the pinned load
+  - the mode track scrubs flexural and lateral-torsional eigenforms one layer at a time: Given a document whose members have a flexural and a lateral-torsional buckling check When the scene is projected Then a "mode" track of kind Mode snaps over indices 1 to 2 only when two mode layers exist And every keyframe reveals one mode layer whose entities carry a harmonic mode overlay of that index
+  - joint plates and foundation blocks own their plates, bolts, block, grout and anchors: Given the special parts showcase When the scene is projected Then entity "plate-fin" owns "plate-fin:plate-1" and three bolts, "plate-web" owns two plates, and "block-bp" owns the concrete block, the grout layer and two anchors And the grips of "block-bp" write "foundationBlocks[id=block-bp].blockDepth", "groutThickness", "anchorEmbedment" and "anchorCount" And the incremental projection after a plate or block edit equals the full projection

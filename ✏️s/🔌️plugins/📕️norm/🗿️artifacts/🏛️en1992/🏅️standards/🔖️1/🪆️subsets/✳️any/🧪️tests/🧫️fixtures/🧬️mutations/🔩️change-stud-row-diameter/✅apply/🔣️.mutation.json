@@ -1,0 +1,7 @@
+{
+  "ChangeStudRowDiameter": {
+    "memberId": "wall-W1",
+    "studRowId": "sr-1",
+    "newDiameter": 0.02
+  }
+}

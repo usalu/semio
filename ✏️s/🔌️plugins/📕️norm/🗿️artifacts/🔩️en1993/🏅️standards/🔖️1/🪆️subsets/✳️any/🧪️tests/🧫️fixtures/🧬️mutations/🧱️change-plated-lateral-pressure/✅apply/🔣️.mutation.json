@@ -1,0 +1,6 @@
+{
+  "ChangePlatedLateralPressure": {
+    "id": "pp-1",
+    "newLateralPressure": 1.5
+  }
+}

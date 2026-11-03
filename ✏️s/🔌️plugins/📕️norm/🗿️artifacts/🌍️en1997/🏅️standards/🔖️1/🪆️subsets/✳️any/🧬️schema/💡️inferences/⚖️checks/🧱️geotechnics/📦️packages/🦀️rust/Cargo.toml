@@ -1,0 +1,34 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-s-artifact-norm-en1997-checks-geotechnics"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "EN 1997 geotechnical checks"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-norm-en1997-checks-catalogue = { workspace = true }
+semio-s-artifact-norm-en1997-model = { workspace = true }
+semio-s-artifact-norm-en1997-spec-trace = { workspace = true }
+semio-s-plugin-norm-app-surface = { workspace = true }
+semio-s-plugin-norm-compliance = { workspace = true }
+semio-s-plugin-norm-mechanics = { workspace = true }
+
+[dev-dependencies]
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-s-plugin-norm-app-surface = { workspace = true, features = ["compliance-testing"] }
+semio-s-plugin-norm-compliance = { workspace = true, features = ["compliance-testing"] }

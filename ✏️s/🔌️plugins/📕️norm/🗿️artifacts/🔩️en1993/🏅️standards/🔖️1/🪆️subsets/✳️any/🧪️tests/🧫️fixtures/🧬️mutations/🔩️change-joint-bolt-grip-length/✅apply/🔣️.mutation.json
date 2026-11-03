@@ -1,0 +1,6 @@
+{
+  "ChangeJointBoltGripLength": {
+    "id": "joint-j1",
+    "newBoltGripLength": 1.5
+  }
+}

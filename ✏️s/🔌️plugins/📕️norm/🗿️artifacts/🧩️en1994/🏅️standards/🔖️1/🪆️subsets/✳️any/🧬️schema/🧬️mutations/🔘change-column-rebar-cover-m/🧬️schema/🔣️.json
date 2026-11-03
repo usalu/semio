@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-column-rebar-cover-m/schema.json",
+  "title": "ChangeColumnRebarCoverM",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newRebarCoverM"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Composite column",
+          "de": "Verbundstütze"
+        },
+        "description": {
+          "en": "The composite column this mutation addresses, by id.",
+          "de": "Das adressierte Element (Verbundstütze), per Kennung."
+        },
+        "ref": {
+          "kind": "column"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newRebarCoverM": {
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Axis distance of the longitudinal bars from the concrete surface (0 = 0.05 m)",
+          "de": "Achsabstand der Längsbewehrung von der Betonoberfläche (0 = 0,05 m)"
+        },
+        "unit": "m",
+        "step": 0.01,
+        "precision": 3,
+        "group": "column",
+        "order": 20
+      }
+    }
+  }
+}

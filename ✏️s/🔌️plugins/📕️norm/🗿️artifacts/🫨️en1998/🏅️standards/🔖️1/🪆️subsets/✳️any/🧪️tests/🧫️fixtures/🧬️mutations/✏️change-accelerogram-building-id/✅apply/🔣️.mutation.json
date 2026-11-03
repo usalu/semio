@@ -1,0 +1,5 @@
+{
+  "mutation": "changeAccelerogramBuildingId",
+  "id": "acc-1",
+  "newBuildingId": "bldg-office2"
+}

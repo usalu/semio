@@ -1,0 +1,25 @@
+{
+  "entries": [
+    { "id": "T-01", "part": "EN TOY-1", "clause": "6.1.2", "en": "Tension parallel to grain", "de": "Zug parallel zur Faser" },
+    { "id": "T-02", "part": "EN TOY-1", "clause": "6.2.1", "en": "Compression", "de": "Druck" },
+    { "id": "T-10", "part": "EN TOY-2", "clause": "6.1.2", "en": "Bending", "de": "Biegung" }
+  ],
+  "searches": [
+    { "query": "", "ids": ["T-01", "T-02", "T-10"] },
+    { "query": "t01", "ids": ["T-01"] },
+    { "query": "T-10", "ids": ["T-10"] },
+    { "query": "6.1.2", "ids": ["T-01", "T-10"] },
+    { "query": "toy-2", "ids": ["T-10"] },
+    { "query": "toy", "ids": ["T-01", "T-02", "T-10"] },
+    { "query": "faser zug", "ids": ["T-01"] },
+    { "query": "biegung", "ids": ["T-10"] },
+    { "query": "compression", "ids": ["T-02"] },
+    { "query": "6.2 toy", "ids": ["T-02"] },
+    { "query": "t-02 toy", "ids": ["T-02"] },
+    { "query": "does not exist", "ids": [] }
+  ],
+  "levers": [
+    { "current": 200.0, "utilization": 1.3, "required": 260.0 },
+    { "current": 150.0, "utilization": 1.0833333333333333, "required": 162.5 }
+  ]
+}

@@ -40,7 +40,6 @@ mod subject {
     /// 🎒️ The same document in its binary envelope, written by a separate codec from the DSL text.
     const PACK_ASSET: &str = "asset://🏢️high-consequence-office/🎒️.pack.semio";
 
-    //#region 🔖️FixtureDecode
     /// 🧫️ One committed vector file the scenario's steps declare, found by its bundle-relative suffix.
     fn committed(ctx: &Context, kind: &str, suffix: &str) -> Result<String, String> {
         let uri = ctx.step_input_uris().into_iter().find(|uri| uri.ends_with(suffix)).ok_or_else(|| format!("mutate-en1990-1: the {kind:?} scenario declares no committed …/{suffix}"))?;
@@ -59,18 +58,16 @@ mod subject {
     fn disagreement(what: &str, got: &En1990Snapshot, expected: &En1990Snapshot) -> String {
         format!("{what}\n     got: {}\nexpected: {}", encode_en1990_snapshot_json(got), encode_en1990_snapshot_json(expected))
     }
-    //#endregion 🔖️FixtureDecode
 
-    //#region 🔖️Handlers
     /// 🎯️ Applies the row's committed mutation to its committed before-snapshot and asserts the result IS the committed
     /// after-snapshot under exactly the committed outcome: production raises exactly the committed messages, an `applied`
     /// vector moves the projection, and a `no-op` or `rejected` one leaves the document bit-identical.
     pub fn mutate(row: String) -> impl Fn(&Context) -> Result<Outcome, String> {
         move |ctx: &Context| {
-            let base = snapshot(ctx, &row, "📸️snapshot/⬅️before/🔣️.json")?;
-            let expected = snapshot(ctx, &row, "📸️snapshot/➡️after/🔣️.json")?;
-            let mutation = decode_en1990_mutation_json(&committed(ctx, &row, "🦠️mutation/🔣️.json")?)?;
-            let outcome = parse_json(&committed(ctx, &row, "🎯️outcome/🔣️.json")?)?;
+            let base = snapshot(ctx, &row, "🔣️.before.json")?;
+            let expected = snapshot(ctx, &row, "🔣️.after.json")?;
+            let mutation = decode_en1990_mutation_json(&committed(ctx, &row, "🔣️.mutation.json")?)?;
+            let outcome = parse_json(&committed(ctx, &row, "🔣️.outcome.json")?)?;
             let status = outcome.str("status");
             if !["applied", "no-op", "rejected"].contains(&status.as_str()) {
                 return Err(format!("mutate-{row}: unknown committed outcome status {status:?}"));
@@ -108,9 +105,9 @@ mod subject {
     /// projection carries BOTH the mutated and the restored document, so every row projects its own value.
     pub fn inverse(kind: &'static str) -> impl Fn(&Context) -> Result<Outcome, String> {
         move |ctx: &Context| {
-            let base = snapshot(ctx, kind, "📸️snapshot/⬅️before/🔣️.json")?;
-            let mutation = decode_en1990_mutation_json(&committed(ctx, kind, "🦠️mutation/🔣️.json")?)?;
-            let applied = parse_json(&committed(ctx, kind, "🎯️outcome/🔣️.json")?)?.str("status") == "applied";
+            let base = snapshot(ctx, kind, "🔣️.before.json")?;
+            let mutation = decode_en1990_mutation_json(&committed(ctx, kind, "🔣️.mutation.json")?)?;
+            let applied = parse_json(&committed(ctx, kind, "🔣️.outcome.json")?)?.str("status") == "applied";
             let original = projection(&base)?;
             let mut current = apply_en1990_mutation(&base, &mutation).map_err(|error| format!("inverse-{kind}: the forward mutation could not be applied to its own committed before-snapshot: {error}"))?.0;
             let mutated = projection(&current)?;
@@ -172,7 +169,6 @@ mod subject {
         law::round_trip_preserves(&projection(&repacked)?, &projection(&parsed)?)?;
         Ok(Outcome::with_raw(reprinted.as_bytes().to_vec(), carrier_projection(&reprinted)))
     }
-    //#endregion 🔖️Handlers
 }
 //#endregion 🔖️Subject
 

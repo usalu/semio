@@ -1,0 +1,7 @@
+{
+  "ChangeLintelBearingLength": {
+    "wallId": "wall-north",
+    "id": "lintel-1",
+    "newBearingLengthM": 0.25
+  }
+}

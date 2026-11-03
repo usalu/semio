@@ -1,0 +1,5 @@
+{
+  "mutation": "changeEmbWallSurcharge",
+  "id": "ewall-E1",
+  "newSurcharge": 20000.0
+}

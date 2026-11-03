@@ -77,13 +77,14 @@ pub struct SurfaceContexts {
     closing_slot: usize,
     closing_body: Option<usize>,
     cached_source:std::mem::ManuallyDrop<Option<semio_framework_value::RetainedCloneSource<ViewModel>>>,
+    cached_admission:std::mem::ManuallyDrop<Option<semio_framework_value::retained_clone::RetainedCloneSourceAdmission<ViewModel,ViewModel,()>>>,
     cached_capture:Option<usize>,
     captured_slot:Option<usize>,
 }
 
 impl Default for SurfaceContexts {
     fn default() -> Self {
-        Self {slots: std::array::from_fn(|_| None),view_state: None,version:0,leases_exhausted:false,retirement:Default::default(),closing_slot:0,closing_body:None,cached_source:std::mem::ManuallyDrop::new(None),cached_capture:None,captured_slot:None}
+        Self {slots: std::array::from_fn(|_| None),view_state: None,version:0,leases_exhausted:false,retirement:Default::default(),closing_slot:0,closing_body:None,cached_source:std::mem::ManuallyDrop::new(None),cached_admission:std::mem::ManuallyDrop::new(None),cached_capture:None,captured_slot:None}
     }
 }
 

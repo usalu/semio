@@ -504,3 +504,37 @@ test("verification opens the fact index as a view that reads only the rows it ch
   expect([...dirty.names].sort()).toEqual(["a","b"]);
  }finally{clean(dir);}
 },30000);
+
+test("a crate manifest without an owner is pending: it is named in the plan, never stales the workspace and never builds, and a manifest below an owner stays that owner's file",async()=>{
+ const dir=scratch();
+ try{
+  await seed(dir,{"pkg/a/project.json":"{\"name\": \"a\", \"package\": \"@syn/a\", \"uses\": []}","pkg/a/src/index.ts":"export const v=0;\n"});
+  const world=createWorld(dir);await world.refresh();
+  await applyOps(dir,[{op:"write",path:"pkg/x/Cargo.toml",content:"[package]\nname = \"x\"\n"},{op:"write",path:"pkg/a/Cargo.toml",content:"[package]\nname = \"a\"\n"}]);
+  const before=world.log.length,result=await world.refresh();
+  expect(result.plan?.pending).toEqual(["pkg/x/Cargo.toml"]);
+  expect(result.plan?.envStale).toBe(false);expect(result.plan?.added).toEqual([]);
+  expect(result.plan?.dirty.has("a")).toBe(true);
+  expect(world.log.length-before).toBe(1);expect(world.log.at(-1)!.full).toEqual(["a"]);expect(world.log.at(-1)!.edges).toEqual([]);
+ }finally{clean(dir);}
+});
+
+test("an environment edit no recorded lookup touches keeps the fragment of every other owner: a new unrelated owner refreshes one owner, a renamed package only its importers, and the manifest carries the reads and the environment parts",async()=>{
+ const dir=scratch();
+ try{
+  await seed(dir,ringFiles(24));const world=createWorld(dir),first=await world.refresh();
+  const manifest=first.current.manifest!;
+  expect(Object.values(manifest.owners).every(row=>row.reads!==undefined)).toBe(true);
+  expect(manifest.envParts!.packages.length).toBe(24);expect(manifest.owners.p3!.reads).toEqual({owners:["p5"],packages:["@syn/p4"]});
+  await seed(dir,{"pkg/zz/project.json":JSON.stringify({name:"zz",package:"@syn/zz",uses:[]}),"pkg/zz/src/index.ts":"export const v=1;\n"});
+  const second=await world.refresh(),next=second.current.manifest!;
+  expect(world.log.at(-1)!.full).toEqual(["zz"]);expect(world.log.at(-1)!.edges).toEqual([]);
+  expect(next.env).not.toBe(manifest.env);
+  for(const[name,row]of Object.entries(manifest.owners)){expect(next.owners[name]!.fragment,name).toBe(row.fragment);expect(next.owners[name]!.edgesEnv,name).toBe(next.env);expect(next.owners[name]!.reads,name).toEqual(row.reads);}
+  await seed(dir,{"pkg/p7/project.json":JSON.stringify({name:"p7",package:"@syn/p7renamed",uses:[]})});
+  const third=await world.refresh();
+  expect(world.log.at(-1)!.full).toEqual(["p7"]);expect(world.log.at(-1)!.edges).toEqual(["p6"]);
+  expect(Object.values(third.current.manifest!.owners).every(row=>row.edgesEnv===third.current.manifest!.env)).toBe(true);
+  expect(await world.graph(third.current)).toEqual(pythonGraph(dir));
+ }finally{clean(dir);}
+},60000);

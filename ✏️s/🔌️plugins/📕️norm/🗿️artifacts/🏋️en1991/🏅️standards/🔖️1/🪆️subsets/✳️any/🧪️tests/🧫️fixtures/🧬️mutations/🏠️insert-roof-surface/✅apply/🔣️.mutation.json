@@ -1,0 +1,12 @@
+{
+  "InsertRoofSurface": {
+    "index": 1,
+    "item": {
+      "id": "roof-surface-1-new",
+      "face": "x",
+      "shape": "x",
+      "pitchDeg": 1.5,
+      "extent": 1.5
+    }
+  }
+}

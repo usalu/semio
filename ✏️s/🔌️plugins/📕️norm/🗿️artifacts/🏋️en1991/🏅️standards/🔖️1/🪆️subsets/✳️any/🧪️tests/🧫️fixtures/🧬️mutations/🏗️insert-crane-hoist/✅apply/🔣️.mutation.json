@@ -1,0 +1,11 @@
+{
+  "InsertCraneHoist": {
+    "index": 1,
+    "item": {
+      "id": "crane-hoist-1-new",
+      "ratedLoad": 1.5,
+      "releaseFraction": 1.5,
+      "releaseDevice": "x"
+    }
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "ChangeCraneActionForce": {
+    "id": "crane-1",
+    "elementId": "cr-g",
+    "newForce": 40000.0
+  }
+}

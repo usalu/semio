@@ -1,0 +1,11 @@
+{
+  "InsertMaterialDuctility": {
+    "index": 1,
+    "materialDuctility": {
+      "id": "material-ductility-2",
+      "materialId": "steel-s355",
+      "elongation": 0.2,
+      "ultimateStrain": 0.15
+    }
+  }
+}

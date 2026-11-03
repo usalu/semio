@@ -1,0 +1,5 @@
+{
+  "mutation": "changePileGroupBaseCohesion",
+  "id": "group-G1",
+  "newBaseCohesion": 240000.0
+}

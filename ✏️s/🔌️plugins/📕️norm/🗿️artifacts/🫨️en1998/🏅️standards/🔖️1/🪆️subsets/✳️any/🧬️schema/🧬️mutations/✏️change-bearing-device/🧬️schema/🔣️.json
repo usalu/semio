@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-bearing-device/schema.json",
+  "title": "ChangeBearingDevice",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newDevice"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeBearingDevice"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Bearing",
+          "de": "Lager"
+        },
+        "description": {
+          "en": "The bearing this mutation addresses, by id.",
+          "de": "Das adressierte Element (Lager), per Kennung."
+        },
+        "ref": {
+          "kind": "bearing"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newDevice": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/snapshot.json#/$defs/BearingDevice",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Device type (fixed, elastomeric, sliding, isolator)",
+          "de": "Lagerart (fest, Elastomer, gleitend, Isolator)"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

@@ -1,80 +1,824 @@
-# 🧬️ En1997 mutations
-enum AnnexChoice { de en }
-input SoilLayerInput {
-  id: String!
-  soilType: String!
-  depthTop: Float!
-  depthBottom: Float!
-  gamma: Float!
-  gammaPrime: Float!
-  phiPrimeDeg: Float!
-  cohesionEffective: Float!
-  cohesionUndrained: Float!
-  oedometricModulus: Float!
-  poissonRatio: Float!
-  cptQc: Float!
-  sptN: Float!
+union En1997Mutation = ChangeAnnex | ChangeGeotechnicalCategory | ChangeDesignSituation | ChangeDesignApproach | ChangeGroundwaterLevel | ChangeInvestigationDepth | ChangeFootingWidth | ChangeFootingEmbedment | ChangePileLength | ChangePileCount | ChangeWallBaseWidth | ChangeSlopeAngle | ChangeLayerPhiPrime | ChangeLayerOedometricModulus | InsertLayer | RemoveLayer | InsertFooting | RemoveFooting | InsertPile | RemovePile | InsertRetainingWall | RemoveRetainingWall | InsertSlope | RemoveSlope | InsertUpliftCase | RemoveUpliftCase | InsertAnchor | RemoveAnchor | InsertEmbeddedWall | RemoveEmbeddedWall | InsertPileGroup | RemovePileGroup | InsertLabTest | RemoveLabTest | InsertLayerWater | InsertCharacteristicBasis | InsertGroundInvestigation | RemoveLayerWater | RemoveCharacteristicBasis | RemoveGroundInvestigation | ChangeLayerSoilType | ChangeLayerDepthTop | ChangeLayerDepthBottom | ChangeLayerGamma | ChangeLayerGammaPrime | ChangeLayerCohesionEffective | ChangeLayerCohesionUndrained | ChangeLayerPoissonRatio | ChangeLayerCptQc | ChangeLayerSptN | ChangeFootingLength | ChangeFootingBaseInclDeg | ChangeFootingSettlementLimit | ChangeLoadCaseDesignSituation | ChangeLoadCaseVerticalPerm | ChangeLoadCaseVerticalVar | ChangeLoadCaseHorizPermanent | ChangeLoadCaseHorizVariable | ChangeLoadCaseMomentPermanent | ChangeLoadCaseMomentVariable | ChangePilePileType | ChangePileDiameter | ChangePileAlphaS | ChangePileUnitShaftResistance | ChangePileUnitBaseResistance | ChangePileCompressionPermanent | ChangePileCompressionVariable | ChangePileTensionPermanent | ChangePileTensionVariable | ChangeProfileShaftResistance | ChangeProfileBaseResistance | ChangeWallHeight | ChangeWallEmbedment | ChangeWallStemThickness | ChangeWallBackfillPhiDeg | ChangeWallBackfillGamma | ChangeWallWallFrictionDeg | ChangeWallEarthPressureMode | ChangeWallWallMovement | ChangeWallOcr | ChangeWallConcreteGamma | ChangeWallSurcharge | ChangeWallVerticalPermanent | ChangeWallHorizontalPermanent | ChangeSlopeHeight | ChangeSlopeLength | ChangeSlopeGoverningLayerId | ChangeSlopeCircleCentreX | ChangeSlopeCircleCentreZ | ChangeSlopeCircleRadius | ChangeUpliftPermStabilizing | ChangeUpliftPermDestabilizing | ChangeUpliftVarDestabilizing | ChangeUpliftPorePressure | ChangeUpliftTotalStress | ChangeAnchorWallId | ChangeAnchorTendon | ChangeAnchorHeadDepth | ChangeAnchorInclinationDeg | ChangeAnchorFreeLength | ChangeAnchorFixedLength | ChangeAnchorFixedDiameter | ChangeAnchorBondStress | ChangeAnchorDesignForce | ChangeAnchorTendonYieldForce | ChangeAnchorMinFreeLength | ChangeAnchorTestFactor | ChangeAnchorTestPullOutRes | ChangeEmbWallKind | ChangeEmbWallRetainedHeight | ChangeEmbWallEmbedment | ChangeEmbWallPropDepth | ChangeEmbWallThickness | ChangeEmbWallBackfillGamma | ChangeEmbWallPhiDeg | ChangeEmbWallDeltaActiveDeg | ChangeEmbWallDeltaPassiveDeg | ChangeEmbWallSurcharge | ChangeEmbWallUndrStrength | ChangePileGroupPileId | ChangePileGroupRows | ChangePileGroupColumns | ChangePileGroupSpacing | ChangePileGroupCapVertical | ChangePileGroupCapMomentX | ChangePileGroupCapMomentY | ChangePileGroupSingleRes | ChangePileGroupShaftCohSum | ChangePileGroupBaseCohesion | ChangeLabTestLayerId | ChangeLabTestKind | ChangeLabTestVoidRatio | ChangeLabTestPreloadStress | ChangeLabTestDrainageHeight | ChangeLabTestConsolTime | ChangeLabPointNormalStress | ChangeLabPointShearStress | ChangeWaterLayerId | ChangeWaterPiezometricDepth | ChangeWaterPermeability | ChangeWaterHeadDifference | ChangeWaterFlowLength | ChangeStructureId | InsertLoadCase | RemoveLoadCase | InsertTestProfile | RemoveTestProfile | InsertAnchorTest | RemoveAnchorTest | InsertLabPoint | InsertGroundInvestigationReading | RemoveLabPoint | RemoveGroundInvestigationReading | ChangePlacementX | ChangePlacementY | ChangePlacementZ | ChangePlacementYaw | InsertPlacement | RemovePlacement | InsertCase | RemoveCase | ChangeCaseNumber | ChangeCaseText | ChangeCaseLabelEn | ChangeCaseLabelDe | ChangeCaseEntryId | ChangeSlopeWidth | ChangePileBendingStiffnessEi | ChangePileHorizBedModulus | ChangePileLateralHeadLoad | ChangeWallSeismicKh | ChangeWallSeismicKv | ChangePileElasticModulus | ChangePileSettlingThickness | ChangePileNegFrictionBeta | ChangePileDynamicTestCount | ChangePileDynamicResMean | ChangePileDynamicResMin | ChangePileHammerWeight | ChangePileDropHeight | ChangePileSetPerBlow | ChangePileElasticCompression | ChangePileHammerEfficiency | ChangeWallReinforcementSpacing | ChangeWallReinforcementWidth | ChangeWallRebarFriction | ChangeLabTestCompressionIndex | ChangeLabTestSwellingIndex | ChangeLabTestStressIncrement | ChangeLabTestSecComprIndex | ChangeLabTestDesignLife | ChangeWaterWellRadius | ChangeWaterWellWaterDepth | ChangeWaterInfluenceRadius | ChangeWaterWellCapacity | ChangePileConcreteClass | ChangeGroundInvestigationPositionX | ChangeGroundInvestigationPositionY | ChangeGroundInvestigationLevel | ChangeGroundInvestigationDepth | ChangeGroundInvestigationKind | ChangeGroundReadingDepth | ChangeGroundReadingMeasurement | ChangeCharacteristicBasisLayerId | ChangeCharacteristicBasisParameter | ChangeCharacteristicBasisBasis
+type ChangeAnnex {
+  newAnnex: AnnexChoice!
 }
-input SpreadFoundationInput {
-  id: String!
-  width: Float!
-  length: Float!
-  embedment: Float!
-  baseInclinationDeg: Float!
-  settlementLimit: Float!
+type ChangeGeotechnicalCategory {
+  newGeotechnicalCategory: Int!
 }
-input PileInput {
-  id: String!
-  pileType: String!
-  diameter: Float!
-  length: Float!
-  count: Int!
-  alphaS: Float!
-  unitShaftResistance: Float!
-  unitBaseResistance: Float!
-  compressionPermanent: Float!
-  compressionVariable: Float!
-  tensionPermanent: Float!
-  tensionVariable: Float!
+type ChangeDesignSituation {
+  newDesignSituation: SituationChoice!
 }
-union En1997Mutation =
-  ChangeAnnex
-  | ChangeGeotechnicalCategory
-  | ChangeDesignSituation
-  | ChangeDesignApproach
-  | ChangeGroundwaterLevel
-  | ChangeInvestigationDepth
-  | ChangeFootingWidth
-  | ChangeFootingEmbedment
-  | ChangePileLength
-  | ChangePileCount
-  | ChangeWallBaseWidth
-  | ChangeSlopeAngle
-  | ChangeLayerPhiPrime
-  | ChangeLayerOedometricModulus
-  | InsertLayer
-  | RemoveLayer
-  | InsertFooting
-  | RemoveFooting
-  | InsertPile
-  | RemovePile
-type ChangeAnnex { mutation: String! newAnnex: AnnexChoice! }
-type ChangeGeotechnicalCategory { mutation: String! newGeotechnicalCategory: Int! }
-type ChangeDesignSituation { mutation: String! newDesignSituation: String! }
-type ChangeDesignApproach { mutation: String! newDesignApproach: String! }
-type ChangeGroundwaterLevel { mutation: String! newGroundwaterLevel: Float! }
-type ChangeInvestigationDepth { mutation: String! newInvestigationDepth: Float! }
-type ChangeFootingWidth { mutation: String! id: String! newWidth: Float! }
-type ChangeFootingEmbedment { mutation: String! id: String! newEmbedment: Float! }
-type ChangePileLength { mutation: String! id: String! newLength: Float! }
-type ChangePileCount { mutation: String! id: String! newCount: Int! }
-type ChangeWallBaseWidth { mutation: String! id: String! newBaseWidth: Float! }
-type ChangeSlopeAngle { mutation: String! id: String! newAngleDeg: Float! }
-type ChangeLayerPhiPrime { mutation: String! id: String! newPhiPrimeDeg: Float! }
-type ChangeLayerOedometricModulus { mutation: String! id: String! newOedometricModulus: Float! }
-type InsertLayer { mutation: String! index: Int! layer: SoilLayerInput! }
-type RemoveLayer { mutation: String! index: Int! }
-type InsertFooting { mutation: String! index: Int! footing: SpreadFoundationInput! }
-type RemoveFooting { mutation: String! index: Int! }
-type InsertPile { mutation: String! index: Int! pile: PileInput! }
-type RemovePile { mutation: String! index: Int! }
+type ChangeDesignApproach {
+  newDesignApproach: ApproachChoice!
+}
+type ChangeGroundwaterLevel {
+  newGroundwaterLevel: Float!
+}
+type ChangeInvestigationDepth {
+  newInvestigationDepth: Float!
+}
+type ChangeFootingWidth {
+  id: String!
+  newWidth: Float!
+}
+type ChangeFootingEmbedment {
+  id: String!
+  newEmbedment: Float!
+}
+type ChangePileLength {
+  id: String!
+  newLength: Float!
+}
+type ChangePileCount {
+  id: String!
+  newCount: Int!
+}
+type ChangeWallBaseWidth {
+  id: String!
+  newBaseWidth: Float!
+}
+type ChangeSlopeAngle {
+  id: String!
+  newAngleDeg: Float!
+}
+type ChangeLayerPhiPrime {
+  id: String!
+  newPhiPrimeDeg: Float!
+}
+type ChangeLayerOedometricModulus {
+  id: String!
+  newOedometricModulus: Float!
+}
+type InsertLayer {
+  index: Int!
+  layer: SoilLayer!
+}
+type RemoveLayer {
+  index: Int!
+}
+type InsertFooting {
+  index: Int!
+  footing: SpreadFoundation!
+}
+type RemoveFooting {
+  index: Int!
+}
+type InsertPile {
+  index: Int!
+  pile: Pile!
+}
+type RemovePile {
+  index: Int!
+}
+type InsertRetainingWall {
+  index: Int!
+  retainingWall: RetainingWall!
+}
+type RemoveRetainingWall {
+  index: Int!
+}
+type InsertSlope {
+  index: Int!
+  slope: Slope!
+}
+type RemoveSlope {
+  index: Int!
+}
+type InsertUpliftCase {
+  index: Int!
+  upliftCase: UpliftCase!
+}
+type RemoveUpliftCase {
+  index: Int!
+}
+type InsertAnchor {
+  index: Int!
+  anchor: Anchor!
+}
+type RemoveAnchor {
+  index: Int!
+}
+type InsertEmbeddedWall {
+  index: Int!
+  embeddedWall: EmbeddedWall!
+}
+type RemoveEmbeddedWall {
+  index: Int!
+}
+type InsertPileGroup {
+  index: Int!
+  pileGroup: PileGroup!
+}
+type RemovePileGroup {
+  index: Int!
+}
+type InsertLabTest {
+  index: Int!
+  labTest: LabTest!
+}
+type RemoveLabTest {
+  index: Int!
+}
+type InsertLayerWater {
+  index: Int!
+  layerWater: LayerWater!
+}
+type InsertCharacteristicBasis {
+  index: Int!
+  characteristicBasis: CharacteristicBasis!
+}
+type InsertGroundInvestigation {
+  index: Int!
+  investigation: Investigation!
+}
+type RemoveLayerWater {
+  index: Int!
+}
+type RemoveCharacteristicBasis {
+  index: Int!
+}
+type RemoveGroundInvestigation {
+  index: Int!
+}
+type ChangeLayerSoilType {
+  id: String!
+  newSoilType: SoilType!
+}
+type ChangeLayerDepthTop {
+  id: String!
+  newDepthTop: Float!
+}
+type ChangeLayerDepthBottom {
+  id: String!
+  newDepthBottom: Float!
+}
+type ChangeLayerGamma {
+  id: String!
+  newGamma: Float!
+}
+type ChangeLayerGammaPrime {
+  id: String!
+  newGammaPrime: Float!
+}
+type ChangeLayerCohesionEffective {
+  id: String!
+  newCohesionEffective: Float!
+}
+type ChangeLayerCohesionUndrained {
+  id: String!
+  newCohesionUndrained: Float!
+}
+type ChangeLayerPoissonRatio {
+  id: String!
+  newPoissonRatio: Float!
+}
+type ChangeLayerCptQc {
+  id: String!
+  newCptQc: Float!
+}
+type ChangeLayerSptN {
+  id: String!
+  newSptN: Float!
+}
+type ChangeFootingLength {
+  id: String!
+  newLength: Float!
+}
+type ChangeFootingBaseInclDeg {
+  id: String!
+  newBaseInclinationDeg: Float!
+}
+type ChangeFootingSettlementLimit {
+  id: String!
+  newSettlementLimit: Float!
+}
+type ChangeLoadCaseDesignSituation {
+  footingId: String!
+  id: String!
+  newDesignSituation: SituationChoice!
+}
+type ChangeLoadCaseVerticalPerm {
+  footingId: String!
+  id: String!
+  newVerticalPermanent: Float!
+}
+type ChangeLoadCaseVerticalVar {
+  footingId: String!
+  id: String!
+  newVerticalVariable: Float!
+}
+type ChangeLoadCaseHorizPermanent {
+  footingId: String!
+  id: String!
+  newHorizontalPermanent: Float!
+}
+type ChangeLoadCaseHorizVariable {
+  footingId: String!
+  id: String!
+  newHorizontalVariable: Float!
+}
+type ChangeLoadCaseMomentPermanent {
+  footingId: String!
+  id: String!
+  newMomentPermanent: Float!
+}
+type ChangeLoadCaseMomentVariable {
+  footingId: String!
+  id: String!
+  newMomentVariable: Float!
+}
+type ChangePilePileType {
+  id: String!
+  newPileType: PileType!
+}
+type ChangePileDiameter {
+  id: String!
+  newDiameter: Float!
+}
+type ChangePileAlphaS {
+  id: String!
+  newAlphaS: Float!
+}
+type ChangePileUnitShaftResistance {
+  id: String!
+  newUnitShaftResistance: Float!
+}
+type ChangePileUnitBaseResistance {
+  id: String!
+  newUnitBaseResistance: Float!
+}
+type ChangePileCompressionPermanent {
+  id: String!
+  newCompressionPermanent: Float!
+}
+type ChangePileCompressionVariable {
+  id: String!
+  newCompressionVariable: Float!
+}
+type ChangePileTensionPermanent {
+  id: String!
+  newTensionPermanent: Float!
+}
+type ChangePileTensionVariable {
+  id: String!
+  newTensionVariable: Float!
+}
+type ChangeProfileShaftResistance {
+  pileId: String!
+  id: String!
+  newShaftResistance: Float!
+}
+type ChangeProfileBaseResistance {
+  pileId: String!
+  id: String!
+  newBaseResistance: Float!
+}
+type ChangeWallHeight {
+  id: String!
+  newHeight: Float!
+}
+type ChangeWallEmbedment {
+  id: String!
+  newEmbedment: Float!
+}
+type ChangeWallStemThickness {
+  id: String!
+  newStemThickness: Float!
+}
+type ChangeWallBackfillPhiDeg {
+  id: String!
+  newBackfillPhiDeg: Float!
+}
+type ChangeWallBackfillGamma {
+  id: String!
+  newBackfillGamma: Float!
+}
+type ChangeWallWallFrictionDeg {
+  id: String!
+  newWallFrictionDeg: Float!
+}
+type ChangeWallEarthPressureMode {
+  id: String!
+  newEarthPressureMode: EarthPressureMode!
+}
+type ChangeWallWallMovement {
+  id: String!
+  newWallMovement: WallMovement!
+}
+type ChangeWallOcr {
+  id: String!
+  newOcr: Float!
+}
+type ChangeWallConcreteGamma {
+  id: String!
+  newConcreteGamma: Float!
+}
+type ChangeWallSurcharge {
+  id: String!
+  newSurcharge: Float!
+}
+type ChangeWallVerticalPermanent {
+  id: String!
+  newVerticalPermanent: Float!
+}
+type ChangeWallHorizontalPermanent {
+  id: String!
+  newHorizontalPermanent: Float!
+}
+type ChangeSlopeHeight {
+  id: String!
+  newHeight: Float!
+}
+type ChangeSlopeLength {
+  id: String!
+  newLength: Float!
+}
+type ChangeSlopeGoverningLayerId {
+  id: String!
+  newGoverningLayerId: String!
+}
+type ChangeSlopeCircleCentreX {
+  id: String!
+  newCircleCentreX: Float!
+}
+type ChangeSlopeCircleCentreZ {
+  id: String!
+  newCircleCentreZ: Float!
+}
+type ChangeSlopeCircleRadius {
+  id: String!
+  newCircleRadius: Float!
+}
+type ChangeUpliftPermStabilizing {
+  id: String!
+  newPermanentStabilizing: Float!
+}
+type ChangeUpliftPermDestabilizing {
+  id: String!
+  newPermanentDestabilizing: Float!
+}
+type ChangeUpliftVarDestabilizing {
+  id: String!
+  newVariableDestabilizing: Float!
+}
+type ChangeUpliftPorePressure {
+  id: String!
+  newPorePressure: Float!
+}
+type ChangeUpliftTotalStress {
+  id: String!
+  newTotalStress: Float!
+}
+type ChangeAnchorWallId {
+  id: String!
+  newWallId: String!
+}
+type ChangeAnchorTendon {
+  id: String!
+  newTendon: TendonType!
+}
+type ChangeAnchorHeadDepth {
+  id: String!
+  newHeadDepth: Float!
+}
+type ChangeAnchorInclinationDeg {
+  id: String!
+  newInclinationDeg: Float!
+}
+type ChangeAnchorFreeLength {
+  id: String!
+  newFreeLength: Float!
+}
+type ChangeAnchorFixedLength {
+  id: String!
+  newFixedLength: Float!
+}
+type ChangeAnchorFixedDiameter {
+  id: String!
+  newFixedDiameter: Float!
+}
+type ChangeAnchorBondStress {
+  id: String!
+  newBondStress: Float!
+}
+type ChangeAnchorDesignForce {
+  id: String!
+  newDesignForce: Float!
+}
+type ChangeAnchorTendonYieldForce {
+  id: String!
+  newTendonYieldForce: Float!
+}
+type ChangeAnchorMinFreeLength {
+  id: String!
+  newMinFreeLength: Float!
+}
+type ChangeAnchorTestFactor {
+  id: String!
+  newTestFactor: Float!
+}
+type ChangeAnchorTestPullOutRes {
+  anchorId: String!
+  id: String!
+  newPullOutResistance: Float!
+}
+type ChangeEmbWallKind {
+  id: String!
+  newKind: EmbeddedWallKind!
+}
+type ChangeEmbWallRetainedHeight {
+  id: String!
+  newRetainedHeight: Float!
+}
+type ChangeEmbWallEmbedment {
+  id: String!
+  newEmbedment: Float!
+}
+type ChangeEmbWallPropDepth {
+  id: String!
+  newPropDepth: Float!
+}
+type ChangeEmbWallThickness {
+  id: String!
+  newThickness: Float!
+}
+type ChangeEmbWallBackfillGamma {
+  id: String!
+  newBackfillGamma: Float!
+}
+type ChangeEmbWallPhiDeg {
+  id: String!
+  newPhiDeg: Float!
+}
+type ChangeEmbWallDeltaActiveDeg {
+  id: String!
+  newDeltaActiveDeg: Float!
+}
+type ChangeEmbWallDeltaPassiveDeg {
+  id: String!
+  newDeltaPassiveDeg: Float!
+}
+type ChangeEmbWallSurcharge {
+  id: String!
+  newSurcharge: Float!
+}
+type ChangeEmbWallUndrStrength {
+  id: String!
+  newUndrainedStrength: Float!
+}
+type ChangePileGroupPileId {
+  id: String!
+  newPileId: String!
+}
+type ChangePileGroupRows {
+  id: String!
+  newRows: Int!
+}
+type ChangePileGroupColumns {
+  id: String!
+  newColumns: Int!
+}
+type ChangePileGroupSpacing {
+  id: String!
+  newSpacing: Float!
+}
+type ChangePileGroupCapVertical {
+  id: String!
+  newCapVertical: Float!
+}
+type ChangePileGroupCapMomentX {
+  id: String!
+  newCapMomentX: Float!
+}
+type ChangePileGroupCapMomentY {
+  id: String!
+  newCapMomentY: Float!
+}
+type ChangePileGroupSingleRes {
+  id: String!
+  newSingleResistance: Float!
+}
+type ChangePileGroupShaftCohSum {
+  id: String!
+  newShaftCohesionSum: Float!
+}
+type ChangePileGroupBaseCohesion {
+  id: String!
+  newBaseCohesion: Float!
+}
+type ChangeLabTestLayerId {
+  id: String!
+  newLayerId: String!
+}
+type ChangeLabTestKind {
+  id: String!
+  newKind: LabTestKind!
+}
+type ChangeLabTestVoidRatio {
+  id: String!
+  newVoidRatio: Float!
+}
+type ChangeLabTestPreloadStress {
+  id: String!
+  newPreloadStress: Float!
+}
+type ChangeLabTestDrainageHeight {
+  id: String!
+  newDrainageHeight: Float!
+}
+type ChangeLabTestConsolTime {
+  id: String!
+  newConsolidationTime: Float!
+}
+type ChangeLabPointNormalStress {
+  labTestId: String!
+  id: String!
+  newNormalStress: Float!
+}
+type ChangeLabPointShearStress {
+  labTestId: String!
+  id: String!
+  newShearStress: Float!
+}
+type ChangeWaterLayerId {
+  id: String!
+  newLayerId: String!
+}
+type ChangeWaterPiezometricDepth {
+  id: String!
+  newPiezometricDepth: Float!
+}
+type ChangeWaterPermeability {
+  id: String!
+  newPermeability: Float!
+}
+type ChangeWaterHeadDifference {
+  id: String!
+  newHeadDifference: Float!
+}
+type ChangeWaterFlowLength {
+  id: String!
+  newFlowLength: Float!
+}
+type ChangeStructureId {
+  newStructureId: String!
+}
+type InsertLoadCase {
+  footingId: String!
+  index: Int!
+  loadCase: FoundationLoadCase!
+}
+type RemoveLoadCase {
+  footingId: String!
+  index: Int!
+}
+type InsertTestProfile {
+  pileId: String!
+  index: Int!
+  testProfile: PileTestProfile!
+}
+type RemoveTestProfile {
+  pileId: String!
+  index: Int!
+}
+type InsertAnchorTest {
+  anchorId: String!
+  index: Int!
+  anchorTest: AnchorTest!
+}
+type RemoveAnchorTest {
+  anchorId: String!
+  index: Int!
+}
+type InsertLabPoint {
+  labTestId: String!
+  index: Int!
+  labPoint: LabPoint!
+}
+type InsertGroundInvestigationReading {
+  investigationId: String!
+  index: Int!
+  investigationReading: InvestigationReading!
+}
+type RemoveLabPoint {
+  labTestId: String!
+  index: Int!
+}
+type RemoveGroundInvestigationReading {
+  investigationId: String!
+  index: Int!
+}
+type ChangePlacementX {
+  id: String!
+  newX: Float!
+}
+type ChangePlacementY {
+  id: String!
+  newY: Float!
+}
+type ChangePlacementZ {
+  id: String!
+  newZ: Float!
+}
+type ChangePlacementYaw {
+  id: String!
+  newYaw: Float!
+}
+type InsertPlacement {
+  index: Int!
+  item: Placement!
+}
+type RemovePlacement {
+  index: Int!
+}
+type InsertCase {
+  index: Int!
+  case: CaseRow!
+}
+type RemoveCase {
+  id: String!
+}
+type ChangeCaseNumber {
+  caseId: String!
+  key: String!
+  value: Float
+}
+type ChangeCaseText {
+  caseId: String!
+  key: String!
+  value: String
+}
+type ChangeCaseLabelEn {
+  caseId: String!
+  newValue: String!
+}
+type ChangeCaseLabelDe {
+  caseId: String!
+  newValue: String!
+}
+type ChangeCaseEntryId {
+  caseId: String!
+  newValue: String!
+}
+type ChangeSlopeWidth {
+  id: String!
+  newWidth: Float!
+}
+type ChangePileBendingStiffnessEi {
+  id: String!
+  newBendingStiffnessEi: Float!
+}
+type ChangePileHorizBedModulus {
+  id: String!
+  newHorizontalSubgradeModulus: Float!
+}
+type ChangePileLateralHeadLoad {
+  id: String!
+  newLateralHeadLoad: Float!
+}
+type ChangeWallSeismicKh {
+  id: String!
+  newSeismicKh: Float!
+}
+type ChangeWallSeismicKv {
+  id: String!
+  newSeismicKv: Float!
+}
+type ChangePileElasticModulus {
+  id: String!
+  newElasticModulus: Float!
+}
+type ChangePileSettlingThickness {
+  id: String!
+  newSettlingThickness: Float!
+}
+type ChangePileNegFrictionBeta {
+  id: String!
+  newNegativeFrictionBeta: Float!
+}
+type ChangePileDynamicTestCount {
+  id: String!
+  newDynamicTestCount: Float!
+}
+type ChangePileDynamicResMean {
+  id: String!
+  newDynamicResistanceMean: Float!
+}
+type ChangePileDynamicResMin {
+  id: String!
+  newDynamicResistanceMin: Float!
+}
+type ChangePileHammerWeight {
+  id: String!
+  newHammerWeight: Float!
+}
+type ChangePileDropHeight {
+  id: String!
+  newDropHeight: Float!
+}
+type ChangePileSetPerBlow {
+  id: String!
+  newSetPerBlow: Float!
+}
+type ChangePileElasticCompression {
+  id: String!
+  newElasticCompression: Float!
+}
+type ChangePileHammerEfficiency {
+  id: String!
+  newHammerEfficiency: Float!
+}
+type ChangeWallReinforcementSpacing {
+  id: String!
+  newReinforcementSpacing: Float!
+}
+type ChangeWallReinforcementWidth {
+  id: String!
+  newReinforcementWidth: Float!
+}
+type ChangeWallRebarFriction {
+  id: String!
+  newReinforcementFriction: Float!
+}
+type ChangeLabTestCompressionIndex {
+  id: String!
+  newCompressionIndex: Float!
+}
+type ChangeLabTestSwellingIndex {
+  id: String!
+  newSwellingIndex: Float!
+}
+type ChangeLabTestStressIncrement {
+  id: String!
+  newStressIncrement: Float!
+}
+type ChangeLabTestSecComprIndex {
+  id: String!
+  newSecondaryCompressionIndex: Float!
+}
+type ChangeLabTestDesignLife {
+  id: String!
+  newDesignLife: Float!
+}
+type ChangeWaterWellRadius {
+  id: String!
+  newWellRadius: Float!
+}
+type ChangeWaterWellWaterDepth {
+  id: String!
+  newWellWaterDepth: Float!
+}
+type ChangeWaterInfluenceRadius {
+  id: String!
+  newInfluenceRadius: Float!
+}
+type ChangeWaterWellCapacity {
+  id: String!
+  newWellCapacity: Float!
+}
+type ChangePileConcreteClass {
+  id: String!
+  newConcreteClass: String!
+}
+type ChangeGroundInvestigationPositionX {
+  id: String!
+  newPositionX: Float!
+}
+type ChangeGroundInvestigationPositionY {
+  id: String!
+  newPositionY: Float!
+}
+type ChangeGroundInvestigationLevel {
+  id: String!
+  newGroundLevel: Float!
+}
+type ChangeGroundInvestigationDepth {
+  id: String!
+  newDepth: Float!
+}
+type ChangeGroundInvestigationKind {
+  id: String!
+  newKind: String!
+}
+type ChangeGroundReadingDepth {
+  investigationId: String!
+  id: String!
+  newDepth: Float!
+}
+type ChangeGroundReadingMeasurement {
+  investigationId: String!
+  id: String!
+  newMeasurement: Float!
+}
+type ChangeCharacteristicBasisLayerId {
+  id: String!
+  newLayerId: String!
+}
+type ChangeCharacteristicBasisParameter {
+  id: String!
+  newParameter: String!
+}
+type ChangeCharacteristicBasisBasis {
+  id: String!
+  newBasis: String!
+}

@@ -1,0 +1,4 @@
+type ChangeMemberBridgeSigmaC {
+  memberId: String!
+  newValue: Float!
+}

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeConnMemberId",
+  "connectionId": "support-weld",
+  "newMemberId": "post-chs"
+}

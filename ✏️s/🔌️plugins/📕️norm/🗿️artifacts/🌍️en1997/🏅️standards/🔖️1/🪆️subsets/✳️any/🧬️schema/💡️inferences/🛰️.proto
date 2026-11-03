@@ -1,15 +1,17 @@
 syntax = "proto3";
-package semio.s.norm.en1997.inference;
-
-// 💡️ En1997 inference schema — document outline (field/section list + entry count).
-
+package semio.s.norm.en1997;
 message En1997Inference {
-  // @derived
   En1997Outline outline = 1;
 }
-
 message En1997Outline {
   repeated string section_outline = 1;
   uint32 field_count = 2;
   uint32 entry_count = 3;
+  uint32 check_count = 4;
+  uint32 pass_count = 5;
+  bool all_pass = 6;
+  string governing_clause = 7;
+  double governing_utilization = 8;
+  string governing_situation = 9;
+  string governing_approach = 10;
 }

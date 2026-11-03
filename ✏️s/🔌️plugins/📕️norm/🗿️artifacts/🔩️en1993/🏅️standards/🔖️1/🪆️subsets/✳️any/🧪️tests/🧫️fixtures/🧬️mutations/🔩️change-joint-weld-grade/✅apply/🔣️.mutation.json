@@ -1,0 +1,6 @@
+{
+  "ChangeJointWeldGrade": {
+    "id": "joint-j1",
+    "newWeldGrade": "S460-alt"
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeCaseEntryId",
+  "caseId": "case-equ-01",
+  "newValue": "UPL-01"
+}

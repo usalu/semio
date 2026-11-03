@@ -1,0 +1,20 @@
+{
+  "mutation": "insertSheetAction",
+  "coldFormedId": "sheet-pass",
+  "index": 0,
+  "action": {
+    "id": "G-sheet",
+    "kind": "permanent",
+    "category": "selfWeight",
+    "source": "external",
+    "gKLine": 120.0,
+    "qKLine": 0.0,
+    "nK": 5926.0,
+    "vYK": 0.0,
+    "vZK": 0.0,
+    "mYK": 29.6,
+    "mZK": 0.0,
+    "torsionK": 0.0,
+    "localLoadK": 0.0
+  }
+}

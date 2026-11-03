@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-material-product-form/schema.json",
+  "title": "ChangeMaterialProductForm",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "materialId",
+    "newProductForm"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeMaterialProductForm"
+    },
+    "materialId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Material",
+          "de": "Werkstoff"
+        },
+        "description": {
+          "en": "The material this mutation addresses, by id.",
+          "de": "Das adressierte Element (Werkstoff), per Kennung."
+        },
+        "ref": {
+          "kind": "material"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newProductForm": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/$defs/ProductForm",
+      "x-semio-ui": {
+        "label": {
+          "en": "Product form",
+          "de": "Erzeugnisform"
+        },
+        "role": "value",
+        "group": "value",
+        "order": 20
+      },
+      "x-semio-rust": {
+        "type": "ProductForm"
+      }
+    }
+  }
+}

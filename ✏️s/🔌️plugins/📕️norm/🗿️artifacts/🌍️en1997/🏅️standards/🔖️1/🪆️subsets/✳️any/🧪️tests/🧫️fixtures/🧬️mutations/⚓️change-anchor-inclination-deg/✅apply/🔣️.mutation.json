@@ -1,0 +1,5 @@
+{
+  "mutation": "changeAnchorInclinationDeg",
+  "id": "anchor-A1",
+  "newInclinationDeg": 30.0
+}

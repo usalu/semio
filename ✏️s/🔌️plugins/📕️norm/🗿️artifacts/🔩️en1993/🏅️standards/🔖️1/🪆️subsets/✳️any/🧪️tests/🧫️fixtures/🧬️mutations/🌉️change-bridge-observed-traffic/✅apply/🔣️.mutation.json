@@ -1,0 +1,6 @@
+{
+  "ChangeBridgeObservedTraffic": {
+    "id": "br-1",
+    "newObservedTraffic": 1.5
+  }
+}

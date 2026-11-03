@@ -167,7 +167,7 @@ pub(super) const CONTAINER_ROLE: SchemaMetadata = SchemaMetadata {
  * counterpart, added per the packet brief for the layouts those two collapsed variants could not
  * previously express as a single node.
  */
-export type ContainerRole = "plain" | "section" | "group" | "field" | "form" | "toolbar";"####,
+export type ContainerRole = "plain" | "section" | "group" | "field" | "form" | "toolbar" | "sheet";"####,
 };
 
 pub(super) const DENSITY: SchemaMetadata = SchemaMetadata {

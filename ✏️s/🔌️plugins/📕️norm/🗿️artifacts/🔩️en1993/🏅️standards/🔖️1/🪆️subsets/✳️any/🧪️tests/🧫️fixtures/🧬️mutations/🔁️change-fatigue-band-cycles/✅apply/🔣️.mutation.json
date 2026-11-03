@@ -1,0 +1,7 @@
+{
+  "ChangeFatigueBandCycles": {
+    "id": "fat-1",
+    "elementId": "fb-1",
+    "newCycles": 4000000.0
+  }
+}

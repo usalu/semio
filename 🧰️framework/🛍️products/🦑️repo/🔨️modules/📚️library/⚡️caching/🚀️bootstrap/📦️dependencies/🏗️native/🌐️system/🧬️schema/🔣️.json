@@ -211,6 +211,9 @@
               }
             }
           }
+        },
+        "escalate": {
+          "type": "boolean"
         }
       }
     }

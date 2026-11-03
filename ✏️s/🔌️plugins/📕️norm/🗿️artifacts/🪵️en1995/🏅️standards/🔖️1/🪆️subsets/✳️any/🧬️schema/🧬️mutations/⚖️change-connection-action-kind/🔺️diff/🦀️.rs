@@ -11,5 +11,5 @@ pub fn diff(payload: &ChangeConnectionActionKind, base: &En1995Snapshot) -> prot
     };
     let connection = &base.connections[idx];
     let action = &connection.actions[action_idx];
-    protocol::MutationOutcome::new(En1995Diff { connections: En1995ConnectionDelta::modification(&connection.id, En1995ConnectionPatch { actions: En1995ConnectionActionDelta::modification(&action.id, En1995ConnectionActionPatch { kind: Some(payload.new_value.clone()), ..Default::default() }), ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(En1995Diff { connections: En1995ConnectionDelta::modification(&connection.id, En1995ConnectionPatch { actions: En1995ConnectionActionDelta::modification(&action.id, En1995ConnectionActionPatch { kind: Some(payload.new_value), ..Default::default() }), ..Default::default() }), ..Default::default() })
 }

@@ -1,86 +1,687 @@
-# 🧬️ En1992 mutations — hierarchical artifact fields only (no flat design-effect stubs).
-
-type En1992Mutation {
-  annex: String @state(class: ARTIFACT)
-  title: String @state(class: ARTIFACT)
-  designWorkingLifeYears: Float @state(class: ARTIFACT)
-  deltaCDev: Float @state(class: ARTIFACT)
-  cementType: String @state(class: ARTIFACT)
-  members: [En1992MemberMutation!] @state(class: ARTIFACT)
-  anchors: [En1992AnchorMutation!] @state(class: ARTIFACT)
-  concreteGrades: [En1992ConcreteMutation!] @state(class: ARTIFACT)
-  reinforcementGrades: [En1992ReinfMutation!] @state(class: ARTIFACT)
+union En1992Mutation = ChangeAnnex | ChangeReliabilityClass | ChangeTitle | ChangeDesignWorkingLife | ChangeDeltaCDev | ChangeCementType | ChangeConcreteFCk | ChangeReinforcementFYk | InsertMember | RemoveMember | ChangeMemberOrder | ChangeMemberWidth | ChangeMemberHeight | ChangeMemberEffectiveDepth | ChangeMemberCover | ChangeMemberExposure | ChangeMemberSpan | ChangeMemberStirrupSpacing | ChangeMemberAxisDistance | ChangeMemberFireRating | ChangeBarLayerCount | ChangeBarLayerDiameter | ChangeActionMk | ChangeActionNk | ChangeActionVk | InsertAnchor | RemoveAnchor | ChangeAnchorHEf | ChangeAnchorAs | ChangeMemberRelativeHumidity | ChangeMemberBucklingLength | ChangeMemberUdl | ChangeMemberHdOverH | ChangeMemberLiquidSigmaS | ChangeMemberLiquidRhoPEff | ChangeMemberLiquidFCtEff | ChangeMemberLiquidSRMax | ChangeMemberBridgeSigmaC | ChangeMemberBridgeDeltaSigmaS | ChangeConcreteName | ChangeReinforcementName | ChangeReinforcementES | ChangeReinforcementDuctility | ChangeReinforcementK | ChangeReinforcementEpsUk | ChangePrestressSteelName | ChangePrestressSteelFPk | ChangePrestressSteelFP01k | ChangeMemberLabelEn | ChangeMemberLabelDe | ChangeMemberKind | ChangeMemberConcreteGradeId | ChangeMemberRebarGradeId | ChangeMemberPrestressSteelId | ChangeMemberSupport | ChangeMemberStirrupsDiameter | ChangeMemberStirrupsLegs | ChangeMemberPunchColumnWidth | ChangeMemberPunchColumnDepth | ChangeMemberPunchColPosition | ChangeMemberPunchingAsw | ChangeMemberPrestressForce | ChangeMemberPrestressArea | ChangeMemberPrestressEcc | ChangeMemberPrestressLossRatio | ChangeMemberFireSlabSystem | ChangeMemberUseFem | ChangeMemberDeflectionSensitive | ChangeBarLayerPosition | ChangeBarLayerAnchorageLength | ChangeBarLayerLapLength | ChangeBarLayerBondCondition | ChangeBarLayerAggregateSize | ChangeBarLayerLapShare | ChangeActionKind | ChangeActionCategory | ChangeActionSource | ChangeActionGKLine | ChangeActionQKLine | ChangeActionPointForce | ChangeActionTK | ChangeActionVKPunch | ChangeSectionPointY | ChangeSectionPointZ | ChangeBarPointLayerId | ChangeBarPointY | ChangeBarPointZ | ChangeBarPointDiameter | ChangeTendonPointX | ChangeTendonPointY | ChangeTendonPointZ | ChangeAnchorCracked | ChangeAnchorFUk | ChangeAnchorFYk | ChangeAnchorD | ChangeAnchorC1 | ChangeAnchorFCk | ChangeAnchorHeadDiameter | ChangeAnchorActionKind | ChangeAnchorActionCategory | ChangeAnchorActionSource | ChangeAnchorActionGKLine | ChangeAnchorActionQKLine | ChangeAnchorActionPointForce | ChangeAnchorActionMK | ChangeAnchorActionNK | ChangeAnchorActionVK | ChangeAnchorActionTK | ChangeAnchorActionVKPunch | InsertConcreteGrade | RemoveConcreteGrade | InsertReinforcementGrade | RemoveReinforcementGrade | InsertPrestressSteel | RemovePrestressSteel | InsertBarLayer | RemoveBarLayer | InsertAction | RemoveAction | InsertSectionPoint | RemoveSectionPoint | InsertBarPoint | RemoveBarPoint | InsertTendonPoint | RemoveTendonPoint | InsertAnchorAction | RemoveAnchorAction | ChangePlacementX | ChangePlacementY | ChangePlacementZ | ChangePlacementYaw | InsertPlacement | RemovePlacement | InsertCase | RemoveCase | ChangeCaseNumber | ChangeCaseText | ChangeCaseLabelEn | ChangeCaseLabelDe | ChangeCaseEntryId | ChangeMemberTightness | ClearMemberTightness | ChangeBarPointLength | ChangeBarPointBend | ChangeMemberPunchingBetaMethod | ChangeMemberPunchingMomentC1 | ChangeMemberPunchingMomentC2 | ChangeOpeningX | ChangeOpeningY | ChangeOpeningWidth | ChangeOpeningDepth | InsertOpening | RemoveOpening | ChangeStudRowAngle | ChangeStudRowCount | ChangeStudRowSpacingFirst | ChangeStudRowSpacingRadial | ChangeStudRowDiameter | InsertStudRow | RemoveStudRow
+type ChangeAnnex {
+  newAnnex: AnnexChoice!
 }
-
-type En1992MemberMutation {
+type ChangeReliabilityClass {
+  newReliabilityClass: String!
+}
+type ChangeTitle {
+  newTitle: String!
+}
+type ChangeDesignWorkingLife {
+  newYears: Float!
+}
+type ChangeDeltaCDev {
+  newDeltaCDev: Float!
+}
+type ChangeCementType {
+  newCementType: CementClass!
+}
+type ChangeConcreteFCk {
+  gradeId: String!
+  newFCk: Float!
+}
+type ChangeReinforcementFYk {
+  gradeId: String!
+  newFYk: Float!
+}
+type InsertMember {
+  index: Int!
+  member: RcMember!
+}
+type RemoveMember {
+  memberId: String!
+}
+type ChangeMemberOrder {
+  fromIndex: Int!
+  toIndex: Int!
+}
+type ChangeMemberWidth {
+  memberId: String!
+  newValue: Float!
+}
+type ChangeMemberHeight {
+  memberId: String!
+  newValue: Float!
+}
+type ChangeMemberEffectiveDepth {
+  memberId: String!
+  newValue: Float!
+}
+type ChangeMemberCover {
+  memberId: String!
+  newValue: Float!
+}
+type ChangeMemberExposure {
+  memberId: String!
+  newExposure: ExposureClass!
+}
+type ChangeMemberSpan {
+  memberId: String!
+  newValue: Float!
+}
+type ChangeMemberStirrupSpacing {
+  memberId: String!
+  newSpacing: Float!
+}
+type ChangeMemberAxisDistance {
+  memberId: String!
+  newAxisDistance: Float!
+}
+type ChangeMemberFireRating {
+  memberId: String!
+  newRating: FireRating!
+}
+type ChangeBarLayerCount {
+  memberId: String!
+  layerId: String!
+  newCount: Int!
+}
+type ChangeBarLayerDiameter {
+  memberId: String!
+  layerId: String!
+  newDiameter: Float!
+}
+type ChangeActionMk {
+  memberId: String!
+  actionId: String!
+  newValue: Float!
+}
+type ChangeActionNk {
+  memberId: String!
+  actionId: String!
+  newValue: Float!
+}
+type ChangeActionVk {
+  memberId: String!
+  actionId: String!
+  newValue: Float!
+}
+type InsertAnchor {
+  index: Int!
+  anchor: Anchor!
+}
+type RemoveAnchor {
+  anchorId: String!
+}
+type ChangeAnchorHEf {
+  anchorId: String!
+  newValue: Float!
+}
+type ChangeAnchorAs {
+  anchorId: String!
+  newValue: Float!
+}
+type ChangeMemberRelativeHumidity {
+  memberId: String!
+  newValue: Float!
+}
+type ChangeMemberBucklingLength {
+  memberId: String!
+  newValue: Float!
+}
+type ChangeMemberUdl {
+  memberId: String!
+  newValue: Float!
+}
+type ChangeMemberHdOverH {
+  memberId: String!
+  newValue: Float!
+}
+type ChangeMemberLiquidSigmaS {
+  memberId: String!
+  newValue: Float!
+}
+type ChangeMemberLiquidRhoPEff {
+  memberId: String!
+  newValue: Float!
+}
+type ChangeMemberLiquidFCtEff {
+  memberId: String!
+  newValue: Float!
+}
+type ChangeMemberLiquidSRMax {
+  memberId: String!
+  newValue: Float!
+}
+type ChangeMemberBridgeSigmaC {
+  memberId: String!
+  newValue: Float!
+}
+type ChangeMemberBridgeDeltaSigmaS {
+  memberId: String!
+  newValue: Float!
+}
+type ChangeConcreteName {
+  gradeId: String!
+  newName: String!
+}
+type ChangeReinforcementName {
+  gradeId: String!
+  newName: String!
+}
+type ChangeReinforcementES {
+  gradeId: String!
+  newES: Float!
+}
+type ChangeReinforcementDuctility {
+  gradeId: String!
+  newDuctility: DuctilityClass!
+}
+type ChangeReinforcementK {
+  gradeId: String!
+  newK: Float!
+}
+type ChangeReinforcementEpsUk {
+  gradeId: String!
+  newEpsUk: Float!
+}
+type ChangePrestressSteelName {
+  gradeId: String!
+  newName: String!
+}
+type ChangePrestressSteelFPk {
+  gradeId: String!
+  newFPk: Float!
+}
+type ChangePrestressSteelFP01k {
+  gradeId: String!
+  newFP01k: Float!
+}
+type ChangeMemberLabelEn {
+  memberId: String!
+  newLabelEn: String!
+}
+type ChangeMemberLabelDe {
+  memberId: String!
+  newLabelDe: String!
+}
+type ChangeMemberKind {
+  memberId: String!
+  newKind: String!
+}
+type ChangeMemberConcreteGradeId {
+  memberId: String!
+  newConcreteGradeId: String!
+}
+type ChangeMemberRebarGradeId {
+  memberId: String!
+  newReinforcementGradeId: String!
+}
+type ChangeMemberPrestressSteelId {
+  memberId: String!
+  newPrestressSteelId: String!
+}
+type ChangeMemberSupport {
+  memberId: String!
+  newSupport: String!
+}
+type ChangeMemberStirrupsDiameter {
+  memberId: String!
+  newStirrupsDiameter: Float!
+}
+type ChangeMemberStirrupsLegs {
+  memberId: String!
+  newStirrupsLegs: Int!
+}
+type ChangeMemberPunchColumnWidth {
+  memberId: String!
+  newPunchingColumnWidth: Float!
+}
+type ChangeMemberPunchColumnDepth {
+  memberId: String!
+  newPunchingColumnDepth: Float!
+}
+type ChangeMemberPunchColPosition {
+  memberId: String!
+  newPunchingColumnPosition: ColumnPosition!
+}
+type ChangeMemberPunchingAsw {
+  memberId: String!
+  newPunchingAsw: Float!
+}
+type ChangeMemberPrestressForce {
+  memberId: String!
+  newPrestressForce: Float!
+}
+type ChangeMemberPrestressArea {
+  memberId: String!
+  newPrestressArea: Float!
+}
+type ChangeMemberPrestressEcc {
+  memberId: String!
+  newPrestressEccentricity: Float!
+}
+type ChangeMemberPrestressLossRatio {
+  memberId: String!
+  newPrestressLossRatio: Float!
+}
+type ChangeMemberFireSlabSystem {
+  memberId: String!
+  newFireSlabSystem: SlabFireSystem!
+}
+type ChangeMemberUseFem {
+  memberId: String!
+  newUseFem: Boolean!
+}
+type ChangeMemberDeflectionSensitive {
+  memberId: String!
+  newDeflectionSensitive: Boolean!
+}
+type ChangeBarLayerPosition {
+  memberId: String!
+  layerId: String!
+  newPosition: BarPosition!
+}
+type ChangeBarLayerAnchorageLength {
+  memberId: String!
+  layerId: String!
+  newAnchorageLength: Float!
+}
+type ChangeBarLayerLapLength {
+  memberId: String!
+  layerId: String!
+  newLapLength: Float!
+}
+type ChangeBarLayerBondCondition {
+  memberId: String!
+  layerId: String!
+  newBondCondition: BondCondition!
+}
+type ChangeBarLayerAggregateSize {
+  memberId: String!
+  layerId: String!
+  newAggregateSize: Float!
+}
+type ChangeBarLayerLapShare {
+  memberId: String!
+  layerId: String!
+  newLapShare: Float!
+}
+type ChangeActionKind {
+  memberId: String!
+  actionId: String!
+  newKind: ActionKind!
+}
+type ChangeActionCategory {
+  memberId: String!
+  actionId: String!
+  newCategory: PsiCategory!
+}
+type ChangeActionSource {
+  memberId: String!
+  actionId: String!
+  newSource: ActionSource!
+}
+type ChangeActionGKLine {
+  memberId: String!
+  actionId: String!
+  newGKLine: Float!
+}
+type ChangeActionQKLine {
+  memberId: String!
+  actionId: String!
+  newQKLine: Float!
+}
+type ChangeActionPointForce {
+  memberId: String!
+  actionId: String!
+  newPointForce: Float!
+}
+type ChangeActionTK {
+  memberId: String!
+  actionId: String!
+  newTK: Float!
+}
+type ChangeActionVKPunch {
+  memberId: String!
+  actionId: String!
+  newVKPunch: Float!
+}
+type ChangeSectionPointY {
+  memberId: String!
+  sectionPointId: String!
+  newY: Float!
+}
+type ChangeSectionPointZ {
+  memberId: String!
+  sectionPointId: String!
+  newZ: Float!
+}
+type ChangeBarPointLayerId {
+  memberId: String!
+  barId: String!
+  newLayerId: String!
+}
+type ChangeBarPointY {
+  memberId: String!
+  barId: String!
+  newY: Float!
+}
+type ChangeBarPointZ {
+  memberId: String!
+  barId: String!
+  newZ: Float!
+}
+type ChangeBarPointDiameter {
+  memberId: String!
+  barId: String!
+  newDiameter: Float!
+}
+type ChangeTendonPointX {
+  memberId: String!
+  tendonPointId: String!
+  newX: Float!
+}
+type ChangeTendonPointY {
+  memberId: String!
+  tendonPointId: String!
+  newY: Float!
+}
+type ChangeTendonPointZ {
+  memberId: String!
+  tendonPointId: String!
+  newZ: Float!
+}
+type ChangeAnchorCracked {
+  anchorId: String!
+  newCracked: Boolean!
+}
+type ChangeAnchorFUk {
+  anchorId: String!
+  newFUk: Float!
+}
+type ChangeAnchorFYk {
+  anchorId: String!
+  newFYk: Float!
+}
+type ChangeAnchorD {
+  anchorId: String!
+  newD: Float!
+}
+type ChangeAnchorC1 {
+  anchorId: String!
+  newC1: Float!
+}
+type ChangeAnchorFCk {
+  anchorId: String!
+  newFCk: Float!
+}
+type ChangeAnchorHeadDiameter {
+  anchorId: String!
+  newHeadDiameter: Float!
+}
+type ChangeAnchorActionKind {
+  anchorId: String!
+  actionId: String!
+  newKind: ActionKind!
+}
+type ChangeAnchorActionCategory {
+  anchorId: String!
+  actionId: String!
+  newCategory: PsiCategory!
+}
+type ChangeAnchorActionSource {
+  anchorId: String!
+  actionId: String!
+  newSource: ActionSource!
+}
+type ChangeAnchorActionGKLine {
+  anchorId: String!
+  actionId: String!
+  newGKLine: Float!
+}
+type ChangeAnchorActionQKLine {
+  anchorId: String!
+  actionId: String!
+  newQKLine: Float!
+}
+type ChangeAnchorActionPointForce {
+  anchorId: String!
+  actionId: String!
+  newPointForce: Float!
+}
+type ChangeAnchorActionMK {
+  anchorId: String!
+  actionId: String!
+  newMK: Float!
+}
+type ChangeAnchorActionNK {
+  anchorId: String!
+  actionId: String!
+  newNK: Float!
+}
+type ChangeAnchorActionVK {
+  anchorId: String!
+  actionId: String!
+  newVK: Float!
+}
+type ChangeAnchorActionTK {
+  anchorId: String!
+  actionId: String!
+  newTK: Float!
+}
+type ChangeAnchorActionVKPunch {
+  anchorId: String!
+  actionId: String!
+  newVKPunch: Float!
+}
+type InsertConcreteGrade {
+  index: Int!
+  concreteGrade: ConcreteGrade!
+}
+type RemoveConcreteGrade {
+  index: Int!
+}
+type InsertReinforcementGrade {
+  index: Int!
+  reinforcementGrade: ReinforcementGrade!
+}
+type RemoveReinforcementGrade {
+  index: Int!
+}
+type InsertPrestressSteel {
+  index: Int!
+  prestressSteel: PrestressSteel!
+}
+type RemovePrestressSteel {
+  index: Int!
+}
+type InsertBarLayer {
+  memberId: String!
+  index: Int!
+  barLayer: BarLayer!
+}
+type RemoveBarLayer {
+  memberId: String!
+  index: Int!
+}
+type InsertAction {
+  memberId: String!
+  index: Int!
+  action: LoadCaseActions!
+}
+type RemoveAction {
+  memberId: String!
+  index: Int!
+}
+type InsertSectionPoint {
+  memberId: String!
+  index: Int!
+  sectionPoint: SectionPoint!
+}
+type RemoveSectionPoint {
+  memberId: String!
+  index: Int!
+}
+type InsertBarPoint {
+  memberId: String!
+  index: Int!
+  barPoint: BarPoint!
+}
+type RemoveBarPoint {
+  memberId: String!
+  index: Int!
+}
+type InsertTendonPoint {
+  memberId: String!
+  index: Int!
+  tendonPoint: TendonPoint!
+}
+type RemoveTendonPoint {
+  memberId: String!
+  index: Int!
+}
+type InsertAnchorAction {
+  anchorId: String!
+  index: Int!
+  anchorAction: LoadCaseActions!
+}
+type RemoveAnchorAction {
+  anchorId: String!
+  index: Int!
+}
+type ChangePlacementX {
   id: String!
-  cover: Float
-  width: Float
-  height: Float
-  effectiveDepth: Float
-  span: Float
-  exposure: String
-  fireAxisDistance: Float
-  fireRating: String
-  stirrupSpacing: Float
-  useFem: Boolean
-  udl: Float
-  deflectionSensitive: Boolean
-  actions: [En1992ActionMutation!]
-  longitudinal: [En1992BarMutation!]
-  punching: En1992PunchingMutation
-  prestress: En1992PrestressMutation
+  newX: Float!
 }
-
-type En1992ActionMutation {
+type ChangePlacementY {
   id: String!
-  kind: String
-  category: String
-  source: String
-  gKLine: Float
-  qKLine: Float
-  pointForce: Float
-  mK: Float
-  nK: Float
-  vK: Float
-  tK: Float
-  vKPunch: Float
+  newY: Float!
 }
-
-type En1992BarMutation {
+type ChangePlacementZ {
   id: String!
-  diameter: Float
-  count: Int
-  anchorageLength: Float
-  lapLength: Float
+  newZ: Float!
 }
-
-type En1992PunchingMutation {
-  columnWidth: Float
-  columnDepth: Float
-  columnPosition: String
-  asw: Float
-}
-
-type En1992PrestressMutation {
-  force: Float
-  area: Float
-  eccentricity: Float
-  lossRatio: Float
-}
-
-type En1992AnchorMutation {
+type ChangePlacementYaw {
   id: String!
-  hEf: Float
-  aS: Float
+  newYaw: Float!
 }
-
-type En1992ConcreteMutation {
-  id: String!
-  fCk: Float
+type InsertPlacement {
+  index: Int!
+  placement: Placement!
 }
-
-type En1992ReinfMutation {
+type RemovePlacement {
+  index: Int!
+}
+type InsertCase {
+  index: Int!
+  case: CaseRow!
+}
+type RemoveCase {
   id: String!
-  fYk: Float
+}
+type ChangeCaseNumber {
+  caseId: String!
+  key: String!
+  value: Float
+}
+type ChangeCaseText {
+  caseId: String!
+  key: String!
+  value: String
+}
+type ChangeCaseLabelEn {
+  caseId: String!
+  newValue: String!
+}
+type ChangeCaseLabelDe {
+  caseId: String!
+  newValue: String!
+}
+type ChangeCaseEntryId {
+  caseId: String!
+  newValue: String!
+}
+type ChangeMemberTightness {
+  memberId: String!
+  newTightness: TightnessClass!
+}
+type ClearMemberTightness {
+  memberId: String!
+}
+type ChangeBarPointLength {
+  memberId: String!
+  barId: String!
+  newLength: Float!
+}
+type ChangeBarPointBend {
+  memberId: String!
+  barId: String!
+  newBend: BarBend!
+}
+type ChangeMemberPunchingBetaMethod {
+  memberId: String!
+  newPunchingBetaMethod: String!
+}
+type ChangeMemberPunchingMomentC1 {
+  memberId: String!
+  newPunchingMomentC1: Float!
+}
+type ChangeMemberPunchingMomentC2 {
+  memberId: String!
+  newPunchingMomentC2: Float!
+}
+type ChangeOpeningX {
+  memberId: String!
+  openingId: String!
+  newX: Float!
+}
+type ChangeOpeningY {
+  memberId: String!
+  openingId: String!
+  newY: Float!
+}
+type ChangeOpeningWidth {
+  memberId: String!
+  openingId: String!
+  newWidth: Float!
+}
+type ChangeOpeningDepth {
+  memberId: String!
+  openingId: String!
+  newDepth: Float!
+}
+type InsertOpening {
+  memberId: String!
+  index: Int!
+  opening: Opening!
+}
+type RemoveOpening {
+  memberId: String!
+  index: Int!
+}
+type ChangeStudRowAngle {
+  memberId: String!
+  studRowId: String!
+  newAngle: Float!
+}
+type ChangeStudRowCount {
+  memberId: String!
+  studRowId: String!
+  newCount: Int!
+}
+type ChangeStudRowSpacingFirst {
+  memberId: String!
+  studRowId: String!
+  newSpacingFirst: Float!
+}
+type ChangeStudRowSpacingRadial {
+  memberId: String!
+  studRowId: String!
+  newSpacingRadial: Float!
+}
+type ChangeStudRowDiameter {
+  memberId: String!
+  studRowId: String!
+  newDiameter: Float!
+}
+type InsertStudRow {
+  memberId: String!
+  index: Int!
+  studRow: StudRow!
+}
+type RemoveStudRow {
+  memberId: String!
+  index: Int!
 }

@@ -1,0 +1,98 @@
+syntax = "proto3";
+package semio.norm.livelanes;
+
+import "google/protobuf/struct.proto";
+import "🎬️structural-scene/🧬️schema/🛰️.proto";
+
+message FieldWrite {
+  string path = 1;
+  google.protobuf.Value value = 2;
+}
+
+message DragPreview {
+  string handle = 1;
+ repeated FieldWrite writes = 2;
+  uint64 started_seq = 3;
+  double origin = 4;
+  double s = 5;
+  string entry = 6;
+}
+
+message GhostPreview {
+ repeated FieldWrite writes = 1;
+  GhostSource source = 2;
+}
+
+message EvalProgress {
+ repeated string running = 1;
+  uint32 done = 2;
+  uint32 total = 3;
+  bool cancelled = 4;
+}
+
+message NormTransient {
+ optional DragPreview drag = 1;
+ optional GhostPreview ghost = 2;
+  EvalProgress eval = 3;
+ repeated PeerDrag peers = 4;
+  ViewLane view = 5;
+}
+
+message ViewLane {
+ optional string active_field = 1;
+ optional string track = 2;
+ optional double value = 3;
+  bool playing = 4;
+  double clock = 5;
+  double speed = 6;
+ optional string units = 7;
+ optional uint32 item = 8;
+ optional uint32 check = 9;
+ optional uint32 group = 10;
+  bool menu = 11;
+  bool frame = 12;
+}
+
+message PeerDrag {
+  string user = 1;
+  DragPreview drag = 2;
+}
+
+message CameraPose {
+  Vec3 eye = 1;
+  Vec3 target = 2;
+  Vec3 up = 3;
+  double fov_y = 4;
+}
+
+message NormPresence {
+  string user = 1;
+ repeated EntityRef selection = 2;
+ optional EntityRef hover = 3;
+ optional CameraPose camera = 4;
+ optional DragPreview drag = 5;
+}
+
+enum Lane {
+  LANE_PERSISTED_SHARED = 0;
+  LANE_PERSISTED_LOCAL = 1;
+  LANE_EPHEMERAL_SHARED = 2;
+  LANE_EPHEMERAL_LOCAL = 3;
+}
+
+message GhostSource {
+  message RemedyData {
+    string check_id = 1;
+    uint32 index = 2;
+  }
+  message InsertData {
+    string spec = 1;
+    EntityKind kind = 2;
+    Vec3 at = 3;
+  }
+  oneof kind {
+    RemedyData remedy = 1;
+    Empty hover = 2;
+    InsertData insert = 3;
+  }
+}

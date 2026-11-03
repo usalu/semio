@@ -1,0 +1,6 @@
+{
+  "ChangeFoundationAnchorStressArea": {
+    "id": "foundation-1",
+    "newAnchorStressArea": 2.0
+  }
+}

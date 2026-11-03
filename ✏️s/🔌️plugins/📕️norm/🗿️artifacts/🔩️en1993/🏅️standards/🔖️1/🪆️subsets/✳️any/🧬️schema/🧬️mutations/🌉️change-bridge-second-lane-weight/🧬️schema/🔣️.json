@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-bridge-second-lane-weight/schema.json",
+  "title": "ChangeBridgeSecondLaneWeight",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newSecondLaneWeight"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Bridge fatigue",
+          "de": "Brückenermüdung"
+        },
+        "description": {
+          "en": "The bridge fatigue this mutation addresses, by id.",
+          "de": "Das adressierte Element (Brückenermüdung), per Kennung."
+        },
+        "ref": {
+          "kind": "bridge"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newSecondLaneWeight": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Second lane mean weight Q_m2",
+          "de": "Mittleres Gewicht zweiter Fahrstreifen Q_m2"
+        },
+        "widget": "stepper",
+        "unit": "N",
+        "displayUnit": "kN",
+        "displayFactor": 0.001,
+        "precision": 1,
+        "step": 1000,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

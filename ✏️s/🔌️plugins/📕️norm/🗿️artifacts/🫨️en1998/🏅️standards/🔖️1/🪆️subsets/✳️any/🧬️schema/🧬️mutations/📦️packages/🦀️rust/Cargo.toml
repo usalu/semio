@@ -20,6 +20,21 @@ name = "mutation_vectors"
 path = "../../🧪️tests/🔬️vectors/🦀️.rs"
 
 [dependencies]
+semio-s-artifact-norm-en1998-mutations-text-tie-beams = { workspace = true }
+semio-s-artifact-norm-en1998-mutations-text-silos-tanks = { workspace = true }
+semio-s-artifact-norm-en1998-mutations-text-seismic-slopes = { workspace = true }
+semio-s-artifact-norm-en1998-mutations-text-placements = { workspace = true }
+semio-s-artifact-norm-en1998-mutations-text-members = { workspace = true }
+semio-s-artifact-norm-en1998-mutations-text-foundations = { workspace = true }
+semio-s-artifact-norm-en1998-mutations-text-buildings = { workspace = true }
+semio-s-artifact-norm-en1998-mutations-text-bridges-towers = { workspace = true }
+semio-s-artifact-norm-en1998-mutations-text-kit = { workspace = true }
+serde = { workspace = true, optional = true }
+semio-s-artifact-norm-en1998-mutations-protocol = { workspace = true }
+semio-s-artifact-norm-en1998-mutations-proto = { workspace = true }
+semio-s-artifact-norm-en1998-mutations-json-schema = { workspace = true }
+semio-s-artifact-norm-en1998-mutations-graphql = { workspace = true }
+semio-s-artifact-norm-en1998-mutations-typescript = { workspace = true }
 semio-framework-os-command = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-os-store-one-item = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/📦️packages/🦀️rust" }
@@ -33,11 +48,18 @@ semio-framework-value-derive = { workspace = true }
 semio-s-artifact-norm-en1998-diff = { workspace = true }
 semio-s-artifact-norm-en1998-model = { workspace = true }
 semio-s-artifact-norm-en1998-mut-bridges-towers = { workspace = true }
+semio-s-artifact-norm-en1998-mut-placements = { workspace = true }
+semio-s-artifact-norm-en1998-mut-tie-beams = { workspace = true }
+semio-s-artifact-norm-en1998-mut-seismic-slopes = { workspace = true }
 semio-s-artifact-norm-en1998-mut-buildings = { workspace = true }
 semio-s-artifact-norm-en1998-mut-foundations = { workspace = true }
 semio-s-artifact-norm-en1998-mut-members = { workspace = true }
 semio-s-artifact-norm-en1998-mut-silos-tanks = { workspace = true }
 semio-s-plugin-norm-app-surface = { workspace = true }
+semio-framework-diagnostic = { workspace = true }
+
+[features]
+test-support = ["dep:serde", "semio-s-artifact-norm-en1998-diff/test-support", "semio-s-artifact-norm-en1998-model/test-support", "semio-s-artifact-norm-en1998-mut-bridges-towers/test-support", "semio-s-artifact-norm-en1998-mut-buildings/test-support", "semio-s-artifact-norm-en1998-mut-foundations/test-support", "semio-s-artifact-norm-en1998-mut-members/test-support", "semio-s-artifact-norm-en1998-mut-placements/test-support", "semio-s-artifact-norm-en1998-mut-seismic-slopes/test-support", "semio-s-artifact-norm-en1998-mut-silos-tanks/test-support", "semio-s-artifact-norm-en1998-mut-tie-beams/test-support"]
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }
@@ -46,3 +68,4 @@ semio-framework-test-fixtures = { path = "../../../../../../../../../../../../..
 semio-s-plugin-norm-app-surface = { workspace = true, features = ["compliance-testing"] }
 semio-s-mutation-vectors = { workspace = true }
 serde = { workspace = true }
+semio-framework-plugin = { workspace = true }

@@ -1,0 +1,4 @@
+type ChangeConcreteName {
+  gradeId: String!
+  newName: String!
+}

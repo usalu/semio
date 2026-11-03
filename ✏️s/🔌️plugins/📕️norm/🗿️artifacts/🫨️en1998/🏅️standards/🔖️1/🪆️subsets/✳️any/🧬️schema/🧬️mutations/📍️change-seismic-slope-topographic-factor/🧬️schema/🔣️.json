@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-seismic-slope-topographic-factor/schema.json",
+  "title": "ChangeSeismicSlopeTopographicFactor",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newTopographicAmplification"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeSeismicSlopeTopographicFactor"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "SeismicSlope",
+          "de": "Platzierung"
+        },
+        "description": {
+          "en": "The seismicSlope this mutation addresses, by id.",
+          "de": "Das adressierte Element (Platzierung), per Kennung."
+        },
+        "ref": {
+          "kind": "seismicSlope"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newTopographicAmplification": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "TopographicAmplification about Z",
+          "de": "Gierwinkel um Z"
+        },
+        "widget": "stepper",
+        "unit": "rad",
+        "displayUnit": "°",
+        "displayFactor": 57.29577951308232,
+        "precision": 1,
+        "step": 0.0174532925,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

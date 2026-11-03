@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/mutation/change-effect-influence/schema.json",
+  "title": "ChangeEffectInfluence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "index",
+    "newInfluence"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeEffectInfluence"
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "target",
+        "label": {
+          "en": "Member effect",
+          "de": "Bauteilwirkung"
+        },
+        "description": {
+          "en": "Zero-based position of the member effect this mutation addresses.",
+          "de": "Nullbasierte Position des adressierten Elements (Bauteilwirkung)."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newInfluence": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Influence coefficient",
+          "de": "Einflussbeiwert"
+        },
+        "widget": "stepper",
+        "description": {
+          "en": "Factor mapping the action magnitude onto the member effect.",
+          "de": "Faktor, der die Größe der Einwirkung auf die Beanspruchung des Bauteils abbildet."
+        },
+        "precision": 3,
+        "step": 0.001,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "ChangeJointPlatePlateThickness": {
+    "id": "joint-plate-1",
+    "newPlateThickness": 2.0
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeMemberBearingLength",
+  "memberId": "purlin-1",
+  "newBearingLength": 1.5
+}

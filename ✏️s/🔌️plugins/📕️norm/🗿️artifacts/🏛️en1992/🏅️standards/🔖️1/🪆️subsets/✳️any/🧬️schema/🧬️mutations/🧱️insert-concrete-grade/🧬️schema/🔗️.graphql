@@ -1,0 +1,4 @@
+type InsertConcreteGrade {
+  index: Int!
+  concreteGrade: ConcreteGrade!
+}

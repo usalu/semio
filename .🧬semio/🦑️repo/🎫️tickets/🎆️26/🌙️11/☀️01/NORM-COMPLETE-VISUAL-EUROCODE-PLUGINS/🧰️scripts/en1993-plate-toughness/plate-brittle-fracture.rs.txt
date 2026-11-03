@@ -1,0 +1,35 @@
+/// 🌡 EN 1993-1-10 Table 2.1 for a plated panel: the plate thickness against the permissible thickness of its grade and sub-grade at the reference temperature T_Ed of the panel, the stress level taken as the highest transcribed column 0.75 f_y(t); not applicable (with the reason) where the table cell is not transcribed.
+fn plate_brittle_fracture(annex: AnnexChoice, report: &mut CheckReport, p: &PlatedPanel) {
+    let (t, t_ed, ratio) = (p.thickness * 1e3, p.design_temperature, 0.75);
+    let subject = || subj(&p.id, "platedPanels", "steelSubgrade", "Sub-grade", "Gütegruppe");
+    let id = format!("en1993.1-10.t.{}", p.id);
+    let title = loc("Brittle fracture avoidance of the plate", "Vermeidung von Sprödbruch der Platte");
+    let (grade, sub) = (p.steel_grade.as_str(), p.steel_subgrade.as_str());
+    let limit = match toughness::limit(grade, sub, ratio, t_ed) {
+        Ok(limit) => limit,
+        Err(gap) => {
+            let (en, de) = gap_words(gap, grade, sub, ratio, t_ed);
+            report.push(CheckResult::assess(id, "DIN EN 1993-1-10", ClauseId::new("EN 1993-1-10", "2", "2.1"), subject(), title).annex(annex).not_applicable(loc(&en, &de)).build());
+            return;
+        }
+    };
+    let case = Case {
+        id,
+        part: "DIN EN 1993-1-10",
+        family: "EN 1993-1-10",
+        chapter: "2",
+        section: "2.1",
+        subject: subject(),
+        title,
+        demand: length_m(t / 1e3),
+        capacity: length_m(limit.t_max / 1e3),
+        explanation: bilingual(format!("t={t:.1} mm, t_max={:.1} mm at T_Ed={t_ed:.1} °C and σ_Ed/f_y={ratio:.2} ({grade} {sub}, Table 2.1; stress level taken as the highest transcribed column).", limit.t_max), format!("t={t:.1} mm, t_max={:.1} mm bei T_Ed={t_ed:.1} °C und σ_Ed/f_y={ratio:.2} ({grade} {sub}, Tabelle 2.1; Spannungsniveau als höchste übertragene Spalte angesetzt).", limit.t_max)),
+        ndps: &[],
+        gammas: &[],
+    };
+    emit(report, annex, case, || {
+        let options: Vec<String> = toughness::sub_grades(grade).iter().filter(|s| **s != sub && toughness::max_thickness(grade, s, ratio, t_ed).is_some_and(|m| m >= t)).map(|s| (*s).to_string()).collect();
+        vec![Remedy::one_of(subject(), options.clone(), loc(&format!("Choose a tougher sub-grade: {}.", options.join(", ")), &format!("Zähere Gütegruppe wählen: {}.", options.join(", "))))]
+    });
+}
+

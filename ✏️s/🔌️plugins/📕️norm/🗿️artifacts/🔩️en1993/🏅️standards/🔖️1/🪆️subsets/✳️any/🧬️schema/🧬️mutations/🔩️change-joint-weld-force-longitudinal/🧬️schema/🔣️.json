@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-joint-weld-force-longitudinal/schema.json",
+  "title": "ChangeJointWeldForceLongitudinal",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newWeldForceLongitudinal"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Joint",
+          "de": "Anschluss"
+        },
+        "description": {
+          "en": "The joint this mutation addresses, by id.",
+          "de": "Das adressierte Element (Anschluss), per Kennung."
+        },
+        "ref": {
+          "kind": "joint"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newWeldForceLongitudinal": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Weld force along the weld axis F_w,par,Ed (0 = not given)",
+          "de": "Nahtkraft in Nahtrichtung F_w,par,Ed (0 = nicht angegeben)"
+        },
+        "widget": "stepper",
+        "role": "value",
+        "group": "value",
+        "order": 20,
+        "unit": "N",
+        "displayUnit": "kN",
+        "displayFactor": 0.001,
+        "precision": 2,
+        "step": 1000
+      }
+    }
+  }
+}

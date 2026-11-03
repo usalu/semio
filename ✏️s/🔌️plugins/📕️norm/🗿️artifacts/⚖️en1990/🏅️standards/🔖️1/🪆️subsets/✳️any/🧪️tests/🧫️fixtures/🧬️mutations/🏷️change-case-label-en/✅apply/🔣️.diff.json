@@ -1,0 +1,99 @@
+{
+  "annex": null,
+  "projectId": null,
+  "structureKind": null,
+  "altitudeM": null,
+  "consequenceClass": null,
+  "reliabilityClass": null,
+  "designWorkingLifeCategory": null,
+  "designWorkingLifeYears": null,
+  "referencePeriodYears": null,
+  "supervisionLevel": null,
+  "inspectionLevel": null,
+  "betaComputed": null,
+  "permanents": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "variables": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "accidentals": null,
+  "seismics": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "members": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "bridgeSls": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "effects": null,
+  "fatigueSpectra": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "reliabilityAnalyses": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "testSeries": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "placements": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "cases": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "case-psi",
+        "patch": {
+          "labelEn": "Other representative values of the office (revised)",
+          "labelDe": null,
+          "entryId": null,
+          "numbers": {
+            "removed": [],
+            "inserted": [],
+            "moved": [],
+            "modified": []
+          },
+          "texts": {
+            "removed": [],
+            "inserted": [],
+            "moved": [],
+            "modified": []
+          }
+        }
+      }
+    ]
+  },
+  "factorOverrides": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "trafficGroups": {"removed": [], "inserted": [], "moved": [], "modified": []}
+}

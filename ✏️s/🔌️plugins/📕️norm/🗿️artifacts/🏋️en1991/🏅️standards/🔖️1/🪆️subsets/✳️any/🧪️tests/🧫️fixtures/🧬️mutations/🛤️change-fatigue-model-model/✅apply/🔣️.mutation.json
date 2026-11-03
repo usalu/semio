@@ -1,0 +1,6 @@
+{
+  "ChangeFatigueModelModel": {
+    "id": "fatigue-model-1",
+    "newModel": "flm1-changed"
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeTowerBaseRotStiffNm",
+  "id": "tw-1",
+  "newBaseRotationalStiffnessNm": 1.5
+}

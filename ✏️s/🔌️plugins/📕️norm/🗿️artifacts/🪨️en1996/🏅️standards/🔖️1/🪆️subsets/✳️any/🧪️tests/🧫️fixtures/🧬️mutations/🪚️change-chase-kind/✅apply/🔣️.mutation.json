@@ -1,0 +1,6 @@
+{
+  "ChangeChaseKind": {
+    "id": "chase-1",
+    "newKind": "Horizontal"
+  }
+}

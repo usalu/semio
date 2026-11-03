@@ -1,0 +1,9 @@
+{
+  "InsertBulkSolid": {
+    "index": 1,
+    "item": {
+      "id": "bulk-solid-1-new",
+      "internalFriction": 1.5
+    }
+  }
+}

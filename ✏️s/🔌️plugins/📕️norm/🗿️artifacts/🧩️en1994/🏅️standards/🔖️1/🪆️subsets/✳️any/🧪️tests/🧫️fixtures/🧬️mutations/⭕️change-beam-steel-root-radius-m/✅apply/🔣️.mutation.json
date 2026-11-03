@@ -1,0 +1,6 @@
+{
+  "ChangeBeamSteelRootRadiusM": {
+    "id": "beam-B1",
+    "newRM": 0.02
+  }
+}

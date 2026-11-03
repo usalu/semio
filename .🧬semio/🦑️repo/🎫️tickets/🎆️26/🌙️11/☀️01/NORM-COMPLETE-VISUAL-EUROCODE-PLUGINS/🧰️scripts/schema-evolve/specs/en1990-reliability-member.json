@@ -1,0 +1,17 @@
+{
+  "artifact": "en1990",
+  "leaf": {
+    "kindSlug": "reliability",
+    "default": "",
+    "field": {
+      "name": "member_id",
+      "type": "String",
+      "label": {
+        "en": "Member (empty = whole project)",
+        "de": "Bauteil (leer = ganzes Projekt)"
+      },
+      "doc": "🏗️ Id of the member whose reliability this analysis represents: the member shows a 3D reliability badge with the FORM index; empty = the analysis belongs to the project.",
+      "sample": ""
+    }
+  }
+}

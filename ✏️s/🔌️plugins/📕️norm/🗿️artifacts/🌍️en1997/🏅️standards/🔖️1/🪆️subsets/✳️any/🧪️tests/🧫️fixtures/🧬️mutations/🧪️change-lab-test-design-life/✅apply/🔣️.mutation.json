@@ -1,0 +1,5 @@
+{
+  "mutation": "changeLabTestDesignLife",
+  "id": "lab-T1",
+  "newDesignLife": 1.5
+}

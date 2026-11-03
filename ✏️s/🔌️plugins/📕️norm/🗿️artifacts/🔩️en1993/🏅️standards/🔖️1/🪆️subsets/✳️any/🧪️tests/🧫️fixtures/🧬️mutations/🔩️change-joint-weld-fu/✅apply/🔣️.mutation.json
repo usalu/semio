@@ -1,0 +1,6 @@
+{
+  "ChangeJointWeldFu": {
+    "id": "joint-j1",
+    "newWeldFu": 1100000000.0
+  }
+}

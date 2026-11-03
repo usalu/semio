@@ -1,0 +1,6 @@
+{
+  "mutation": "changeSystemVRdN",
+  "buildingId": "bldg-office",
+  "id": "sys-y",
+  "newBaseShearResistanceN": 1500000.0
+}

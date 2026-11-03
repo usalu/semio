@@ -1,0 +1,6 @@
+{
+  "ChangeJointAlphaFactor": {
+    "id": "joint-j1",
+    "newAlphaFactor": 1.5
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "ChangePhiInfinity": {
+    "id": "wall-north",
+    "newPhiInfinity": 2.0
+  }
+}

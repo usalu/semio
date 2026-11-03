@@ -1,0 +1,11 @@
+{
+  "InsertCfAction": {
+    "id": "cf-1",
+    "index": 2,
+    "element": {
+      "id": "cf-g-2",
+      "loadCaseId": "g-permanent",
+      "force": 15000.0
+    }
+  }
+}

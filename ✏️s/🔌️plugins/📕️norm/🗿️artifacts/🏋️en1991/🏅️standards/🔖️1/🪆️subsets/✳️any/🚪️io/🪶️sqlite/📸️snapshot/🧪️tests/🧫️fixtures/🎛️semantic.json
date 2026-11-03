@@ -1,25 +1,57 @@
 {
-  "schemaBytes": 10368,
+  "schemaBytes": 31259,
   "tableWidths": {
     "en1991_accidental_case": 4,
-    "en1991_document": 152,
+    "en1991_bridge_lane": 11,
+    "en1991_bulk_solid": 7,
+    "en1991_case": 7,
+    "en1991_case_number": 7,
+    "en1991_case_text": 5,
+    "en1991_construction_load": 9,
+    "en1991_construction_stage": 14,
+    "en1991_crane_hoist": 11,
+    "en1991_derailment_case": 22,
+    "en1991_document": 192,
+    "en1991_dust_explosion": 22,
+    "en1991_dynamic_element": 25,
+    "en1991_execution_imperfection": 22,
     "en1991_explosion": 12,
+    "en1991_falling_load": 22,
+    "en1991_fatigue_model": 12,
     "en1991_floor": 17,
+    "en1991_footbridge": 16,
+    "en1991_helicopter_landing": 19,
     "en1991_impact": 12,
+    "en1991_impact_action": 26,
+    "en1991_internal_explosion": 16,
+    "en1991_load_dispersal": 16,
+    "en1991_local_fire": 19,
+    "en1991_placement": 16,
+    "en1991_rail_derailment": 14,
+    "en1991_rail_dynamic": 8,
+    "en1991_rail_load_group": 26,
     "en1991_roof": 25,
+    "en1991_roof_surface": 12,
+    "en1991_rotating_machine": 13,
     "en1991_self_weight": 11,
+    "en1991_snow_guard": 11,
+    "en1991_special_vehicle": 11,
+    "en1991_support_collision": 17,
+    "en1991_thermal_section": 18,
+    "en1991_tie_run": 29,
+    "en1991_wind_bridge": 24,
     "en1991_wind_face": 29
   },
   "cases": [
     {
       "id": "full",
       "rows": 17,
-      "valueBytes": 2930
+      "valueBytes": 3208
     },
     {
       "id": "emptyCollections",
       "rows": 1,
-      "valueBytes": 1140
+      "valueBytes": 1418
     }
   ]
 }

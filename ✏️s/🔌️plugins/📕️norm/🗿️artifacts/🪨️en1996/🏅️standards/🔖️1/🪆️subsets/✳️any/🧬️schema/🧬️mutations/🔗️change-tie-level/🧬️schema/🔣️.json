@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-tie-level/schema.json",
+  "title": "ChangeTieLevel",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "wallId",
+    "id",
+    "newLevelM"
+  ],
+  "properties": {
+    "wallId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Wall",
+          "de": "Wand"
+        },
+        "description": {
+          "en": "The wall this mutation addresses, by id.",
+          "de": "Das adressierte Element (Wand), per Kennung."
+        },
+        "ref": {
+          "kind": "wall"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Tie or anchor",
+          "de": "Anker"
+        },
+        "description": {
+          "en": "The tie or anchor this mutation addresses, by id.",
+          "de": "Das adressierte Element (Anker), per Kennung."
+        },
+        "ref": {
+          "kind": "tie"
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "newLevelM": {
+      "type": "number",
+      "maximum": 10000,
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Tie level y",
+          "de": "Ankerhöhe y"
+        },
+        "unit": "m",
+        "step": 0.05,
+        "precision": 2,
+        "group": "ties",
+        "order": 30
+      }
+    }
+  }
+}

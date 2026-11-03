@@ -1,53 +1,140 @@
-# 🧬️ En1991Diff schema — every field with its state class.
+scalar JSON
 
 type En1991Diff {
-  annex: String @state(class: ARTIFACT)
-  snowZone: String @state(class: ARTIFACT)
-  altitude: Float @state(class: ARTIFACT)
-  enSk: Float @state(class: ARTIFACT)
-  northGermanLowlandSnow: Boolean @state(class: ARTIFACT)
-  windZone: Int @state(class: ARTIFACT)
-  enVb: Float @state(class: ARTIFACT)
-  terrainCategory: Int @state(class: ARTIFACT)
-  mixedTerrainUpwind: Int @state(class: ARTIFACT)
-  mixedTerrainDistance: Float @state(class: ARTIFACT)
-  orographyFactor: Float @state(class: ARTIFACT)
-  coastOrIsland: Boolean @state(class: ARTIFACT)
-  airDensity: Float @state(class: ARTIFACT)
-  height: Float @state(class: ARTIFACT)
-  width: Float @state(class: ARTIFACT)
-  depth: Float @state(class: ARTIFACT)
-  assumedDeltaT: Float @state(class: ARTIFACT)
-  requiredDeltaT: Float @state(class: ARTIFACT)
-  constructionActivity: String @state(class: ARTIFACT)
-  assumedConstructionQk: Float @state(class: ARTIFACT)
-  bridgeClaimed: Boolean @state(class: ARTIFACT)
-  bridgeLane: Int @state(class: ARTIFACT)
-  bridgeSpan: Float @state(class: ARTIFACT)
-  bridgeLaneWidth: Float @state(class: ARTIFACT)
-  assumedBridgeTandem: Float @state(class: ARTIFACT)
-  assumedBridgeUdl: Float @state(class: ARTIFACT)
-  assumedBridgeLm2: Float @state(class: ARTIFACT)
-  assumedBridgeFootway: Float @state(class: ARTIFACT)
-  craneClaimed: Boolean @state(class: ARTIFACT)
-  craneClass: String @state(class: ARTIFACT)
-  hoistClass: String @state(class: ARTIFACT)
-  hoistingSpeed: Float @state(class: ARTIFACT)
-  assumedCraneWheel: Float @state(class: ARTIFACT)
-  assumedCraneHorizontal: Float @state(class: ARTIFACT)
-  siloClaimed: Boolean @state(class: ARTIFACT)
-  siloKind: String @state(class: ARTIFACT)
-  siloBulkDensity: Float @state(class: ARTIFACT)
-  siloHeight: Float @state(class: ARTIFACT)
-  siloHydraulicRadius: Float @state(class: ARTIFACT)
-  siloMu: Float @state(class: ARTIFACT)
-  siloK: Float @state(class: ARTIFACT)
-  assumedSiloPressure: Float @state(class: ARTIFACT)
-  assumedSiloPatch: Float @state(class: ARTIFACT)
-  assumedSiloWallFriction: Float @state(class: ARTIFACT)
-  floors: [JSON!] @state(class: ARTIFACT)
-  selfWeightElements: [JSON!] @state(class: ARTIFACT)
-  roofs: [JSON!] @state(class: ARTIFACT)
-  windFaces: [JSON!] @state(class: ARTIFACT)
-  accidentalCases: [JSON!] @state(class: ARTIFACT)
+  annex: JSON
+  snowZone: JSON
+  altitude: JSON
+  enSk: JSON
+  northGermanLowlandSnow: JSON
+  windZone: JSON
+  enVb: JSON
+  terrainCategory: JSON
+  mixedTerrainUpwind: JSON
+  mixedTerrainDistance: JSON
+  orographyFactor: JSON
+  coastOrIsland: JSON
+  airDensity: JSON
+  height: JSON
+  width: JSON
+  depth: JSON
+  assumedDeltaT: JSON
+  tMax: JSON
+  tMin: JSON
+  t0: JSON
+  thermalElementType: JSON
+  thermalBridgeType: JSON
+  deltaTM: JSON
+  storeyCount: JSON
+  fireMode: JSON
+  fireCurve: JSON
+  fireDuration: JSON
+  assumedGasTemperature: JSON
+  assumedHNet: JSON
+  fireCompartmentArea: JSON
+  fireCompartmentHeight: JSON
+  fireOpeningFactor: JSON
+  fireThermalInertia: JSON
+  fireOccupancy: JSON
+  fireLoadDensityQf: JSON
+  assumedQfD: JSON
+  constructionActivity: JSON
+  assumedConstructionQk: JSON
+  structureKind: JSON
+  bridgeLane: JSON
+  bridgeSpan: JSON
+  bridgeLaneWidth: JSON
+  assumedBridgeTandem: JSON
+  assumedBridgeUdl: JSON
+  assumedBridgeLm2: JSON
+  assumedBridgeFootway: JSON
+  assumedBridgeLm3: JSON
+  assumedBridgeLm4: JSON
+  bridgeLoadGroup: JSON
+  craneClaimed: JSON
+  craneClass: JSON
+  hoistClass: JSON
+  hoistingSpeed: JSON
+  assumedCraneWheel: JSON
+  assumedCraneHorizontal: JSON
+  siloClaimed: JSON
+  siloKind: JSON
+  siloBulkDensity: JSON
+  siloHeight: JSON
+  siloHydraulicRadius: JSON
+  siloMu: JSON
+  siloK: JSON
+  assumedSiloPressure: JSON
+  assumedSiloPatch: JSON
+  assumedSiloWallFriction: JSON
+  bridgeTandemX: JSON
+  railAlpha: JSON
+  assumedRailLm71: JSON
+  assumedRailLm71Udl: JSON
+  assumedRailSw0: JSON
+  assumedRailSw2: JSON
+  craneX: JSON
+  craneRunwayLength: JSON
+  craneWheelBase: JSON
+  siloDiameter: JSON
+  siloEccentricity: JSON
+  siloHopperAngleDeg: JSON
+  bridgeCurveRadius: JSON
+  fireLoadBasis: JSON
+  floors: En1991FloorDelta!
+  selfWeightElements: En1991SelfWeightElementDelta!
+  roofs: En1991RoofDelta!
+  windFaces: En1991WindFaceDelta!
+  accidentalCases: En1991AccidentalCaseDelta!
+  bridgeLanes: En1991BridgeLaneDelta!
+  constructionStages: En1991ConstructionStageDelta!
+  roofSurfaces: En1991RoofSurfaceDelta!
+  placements: En1991PlacementDelta!
+  specialVehicles: En1991SpecialVehicleDelta!
+  windBridges: En1991WindBridgeDelta!
+  dynamicElements: En1991DynamicElementDelta!
+  impactActions: En1991ImpactActionDelta!
+  internalExplosions: En1991InternalExplosionDelta!
+  thermalSections: En1991ThermalSectionDelta!
+  cases: CaseRowDelta!
+  helicopterLandings: En1991HelicopterLandingDelta!
+  tieRuns: En1991TieRunDelta!
+  constructionLoads: En1991ConstructionLoadDelta!
+  fallingLoads: En1991FallingLoadDelta!
+  executionImperfections: En1991ExecutionImperfectionDelta!
+  derailmentCases: En1991DerailmentCaseDelta!
+  craneHoists: En1991CraneHoistDelta!
+  footbridges: En1991FootbridgeDelta!
+  railDynamics: En1991RailDynamicDelta!
+  loadDispersals: En1991LoadDispersalDelta!
+  bulkSolids: En1991BulkSolidDelta!
+  rotatingMachines: En1991RotatingMachineDelta!
+  fatigueModels: En1991FatigueModelDelta
+  supportCollisions: En1991SupportCollisionDelta
+  localFires: En1991LocalFireDelta
+  snowGuards: En1991SnowGuardDelta
+}
+type En1991FatigueModelPatch {
+  model: JSON
+  lane: JSON
+  assumedAxleLoad: JSON
+  assumedUdl: JSON
+}
+type En1991SupportCollisionPatch {
+  location: JSON
+  assumedForceX: JSON
+  assumedForceY: JSON
+  height: JSON
+  positionX: JSON
+}
+type En1991LocalFirePatch {
+  fireDiameter: JSON
+  heatReleaseRate: JSON
+  ceilingHeight: JSON
+  horizontalDistance: JSON
+  assumedFlux: JSON
+}
+type En1991SnowGuardPatch {
+  roofId: JSON
+  slopeLength: JSON
+  assumedForce: JSON
 }

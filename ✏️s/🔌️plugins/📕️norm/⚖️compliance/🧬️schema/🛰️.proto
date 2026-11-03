@@ -1,6 +1,9 @@
 syntax = "proto3";
-package semio.norm.compliance;
-
+package semio.s.norm.compliance.check_report;
+message CheckReport {
+  CheckReportSummary summary = 1;
+  repeated CheckResult checks = 2;
+}
 enum QuantityKind {
   QUANTITY_KIND_DIMENSIONLESS = 0;
   QUANTITY_KIND_LENGTH = 1;
@@ -21,49 +24,46 @@ enum QuantityKind {
   QUANTITY_KIND_AIR_PERMEABILITY = 16;
   QUANTITY_KIND_VENTILATION_RATE = 17;
   QUANTITY_KIND_ACCELERATION = 18;
+  QUANTITY_KIND_VELOCITY = 19;
 }
-
 message Quantity {
   QuantityKind kind = 1;
   double value = 2;
 }
-
 message ClauseId {
   string family = 1;
   string part = 2;
   string section = 3;
 }
-
 message LocalizedCopy {
   string en = 1;
   string de = 2;
 }
-
 message SubjectRef {
   string entity_id = 1;
   string path = 2;
   LocalizedCopy label = 3;
 }
-
 enum CheckStatus {
   CHECK_STATUS_PASS = 0;
   CHECK_STATUS_WARNING = 1;
   CHECK_STATUS_FAIL = 2;
   CHECK_STATUS_NOT_APPLICABLE = 3;
+  CHECK_STATUS_UNVERIFIED_BASIS = 4;
+  CHECK_STATUS_INFO = 5;
 }
-
 enum AnnexChoice {
   ANNEX_CHOICE_EN = 0;
   ANNEX_CHOICE_DE = 1;
 }
-
 enum RemedyBound {
   REMEDY_BOUND_AT_LEAST = 0;
   REMEDY_BOUND_AT_MOST = 1;
   REMEDY_BOUND_EXACTLY = 2;
   REMEDY_BOUND_ONE_OF = 3;
+  REMEDY_BOUND_REMOVE = 4;
+  REMEDY_BOUND_INSERT = 5;
 }
-
 message Remedy {
   SubjectRef target = 1;
   Quantity current = 2;
@@ -73,7 +73,6 @@ message Remedy {
   LocalizedCopy action = 6;
   bool applicable = 7;
 }
-
 message CheckResult {
   string id = 1;
   string part = 2;
@@ -87,30 +86,74 @@ message CheckResult {
   double utilization = 10;
   AnnexChoice annex = 11;
   repeated Remedy remedies = 12;
+  repeated string ndps = 13;
+  repeated Station stations = 14;
+  string station_field = 15;
 }
-
+message Station {
+  repeated double at = 1;
+  double utilization = 2;
+  repeated Quantity values = 3;
+}
 message PartVerdict {
   string part = 1;
-  uint32 pass = 2;
-  uint32 warning = 3;
-  uint32 fail = 4;
-  uint32 not_applicable = 5;
-  double worst_utilization = 6;
-  bool complies = 7;
+  uint64 pass = 2;
+  uint64 warning = 3;
+  uint64 fail = 4;
+  uint64 not_applicable = 5;
+  uint64 unverified = 6;
+  double worst_utilization = 7;
+  bool complies = 8;
+  uint64 info = 9;
 }
-
 message CheckReportSummary {
-  uint32 total = 1;
-  uint32 pass = 2;
-  uint32 warning = 3;
-  uint32 fail = 4;
-  uint32 not_applicable = 5;
-  double worst_utilization = 6;
-  bool complies = 7;
-  repeated PartVerdict parts = 8;
+  uint64 total = 1;
+  uint64 pass = 2;
+  uint64 warning = 3;
+  uint64 fail = 4;
+  uint64 not_applicable = 5;
+  uint64 unverified = 6;
+  double worst_utilization = 7;
+  bool complies = 8;
+  repeated PartVerdict parts = 9;
+  uint64 info = 10;
 }
-
-message CheckReport {
-  CheckReportSummary summary = 1;
-  repeated CheckResult checks = 2;
+enum NdpStatus {
+  NDP_STATUS_VERIFIED = 0;
+  NDP_STATUS_UNVERIFIED = 1;
+}
+message NdpValue {
+  bytes value = 1;
+}
+message NdpSource {
+  string document = 1;
+  string edition = 2;
+  string locator = 3;
+}
+message NdpAnnexVerification {
+  NdpStatus status = 1;
+  string evidence = 2;
+}
+message NdpAnnexStatus {
+  NdpAnnexVerification en = 1;
+  NdpAnnexVerification na_de = 2;
+}
+message NdpEntry {
+  string id = 1;
+  string code = 2;
+  string part = 3;
+  string clause = 4;
+  string symbol = 5;
+  string unit = 6;
+  string spec_ref = 7;
+  string as_written = 8;
+  NdpValue recommended = 9;
+  NdpValue na_de = 10;
+  NdpSource source = 11;
+  NdpStatus status = 12;
+  string evidence = 13;
+  optional NdpAnnexStatus annex_status = 14;
+}
+message NdpRegistry {
+  repeated NdpEntry entries = 1;
 }

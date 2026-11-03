@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-bearing-min-support-m/schema.json",
+  "title": "ChangeBearingMinSupportM",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newMinSupportLengthM"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeBearingMinSupportM"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Bearing",
+          "de": "Lager"
+        },
+        "description": {
+          "en": "The bearing this mutation addresses, by id.",
+          "de": "Das adressierte Element (Lager), per Kennung."
+        },
+        "ref": {
+          "kind": "bearing"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newMinSupportLengthM": {
+      "type": "number",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Minimum support length l_m of the design",
+          "de": "Mindestauflagerlänge l_m der Bemessung"
+        },
+        "group": "value",
+        "order": 20,
+        "widget": "stepper",
+        "step": 0.001,
+        "precision": 3
+      }
+    }
+  }
+}

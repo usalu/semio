@@ -81,10 +81,10 @@ impl<T: RetainedClone> RetainedCloneCursor<Box<T>> for BoxCursor<T> {
         let child_grant = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
         if child.output_ready(){let turn=child.take(child_grant);work+=turn.work;let Some((value,p))=turn.result?else{return Ok(RetainedCloneStep::Progress(Default::default()))};self.value=Some(value);child.begin_close();self.child_closing=true;return Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(child_grant,p,"boxed child output handoff")?))}
         let turn=child.advance(source.project(1,|boxed|boxed.as_ref()),body,child_grant);work+=turn.work;Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(child_grant,turn.result?.progress(),"retained box child")?))
-    })();crate::RetainedWorkOutcome{result,work}}
+    })();RetainedWorkOutcome{result,work}}
 
-    fn take_demand(&self)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::retained_clone::retained_clone_take_demand())}
-    fn take(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<Option<(Box<T>,RetainedCloneProgress)>>{if !self.output_ready(){return crate::RetainedWorkOutcome{result:Ok(None),work:0}}let turn=crate::retained_clone::take_retained_clone_output(&mut self.output,grant);if matches!(&turn.result,Ok(Some(_))){self.spent = true;}turn}
+    fn take_demand(&self)->Result<RetirementDemand,ValueError>{Ok(retained_clone_take_demand())}
+    fn take(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<Option<(Box<T>,RetainedCloneProgress)>>{if !self.output_ready(){return RetainedWorkOutcome{result:Ok(None),work:0}}let turn=take_retained_clone_output(&mut self.output,grant);if matches!(&turn.result,Ok(Some(_))){self.spent = true;}turn}
 
     fn begin_close(&mut self) -> bool {
         if self.closing {
@@ -121,7 +121,7 @@ impl<T: RetainedClone> RetainedCloneCursor<Box<T>> for BoxCursor<T> {
         {let turn=self.close.begin_granted(&mut self.value, grant);work+=turn.work;if let Some(step)=turn.result?{return Ok(step)}}
         {let turn=self.close.begin_granted(&mut self.output, grant);work+=turn.work;if let Some(step)=turn.result?{return Ok(step)}}
         {let turn=close_retained_binding(&mut self.source, grant);work+=turn.work;turn.result}
-    })();crate::RetainedWorkOutcome{result,work}}
+    })();RetainedWorkOutcome{result,work}}
 
     fn next_close_depth_demand(&self)->Result<usize,ValueError>{if !self.closing {return Ok(0);} if let Some(child)=self.child.as_ref(){return if child.terminal_is_empty(){Ok(1)}else{child.next_close_depth_demand()};} self.close.next_owner_depth_with_binding(self.value.is_some()||self.output.is_some(),&self.source)}
     fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> {

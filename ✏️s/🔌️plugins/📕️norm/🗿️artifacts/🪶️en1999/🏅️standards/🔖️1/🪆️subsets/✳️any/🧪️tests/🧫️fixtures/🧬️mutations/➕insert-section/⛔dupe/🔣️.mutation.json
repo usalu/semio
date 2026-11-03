@@ -1,0 +1,54 @@
+{
+  "mutation": "insertSection",
+  "index": 0,
+  "section": {
+    "id": "sec-i120",
+    "kind": "extrudedI",
+    "height": 0.14,
+    "width": 0.07,
+    "flangeThickness": 0.01,
+    "webThickness": 0.008,
+    "outerDiameter": 0.0,
+    "elements": [
+      {
+        "id": "flange-top",
+        "width": 0.031000000000000003,
+        "thickness": 0.01,
+        "outstand": true,
+        "welded": true,
+        "weldPosition": 0.005,
+        "weldProcess": "mig",
+        "weldTJunction": false,
+        "weldDirection": "longitudinal",
+        "edgeStiffenerDepth": 0.0,
+        "edgeStiffenerThickness": 0.0
+      },
+      {
+        "id": "flange-bot",
+        "width": 0.031000000000000003,
+        "thickness": 0.01,
+        "outstand": true,
+        "welded": true,
+        "weldPosition": 0.005,
+        "weldProcess": "mig",
+        "weldTJunction": false,
+        "weldDirection": "longitudinal",
+        "edgeStiffenerDepth": 0.0,
+        "edgeStiffenerThickness": 0.0
+      },
+      {
+        "id": "web",
+        "width": 0.12000000000000001,
+        "thickness": 0.008,
+        "outstand": false,
+        "welded": true,
+        "weldPosition": 0.005,
+        "weldProcess": "mig",
+        "weldTJunction": false,
+        "weldDirection": "longitudinal",
+        "edgeStiffenerDepth": 0.0,
+        "edgeStiffenerThickness": 0.0
+      }
+    ]
+  }
+}

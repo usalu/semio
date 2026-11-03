@@ -1,0 +1,5 @@
+{
+  "mutation": "changeTowerHeightM",
+  "id": "tw-1",
+  "newHeightM": 90.0
+}

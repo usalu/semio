@@ -1,0 +1,4 @@
+type ChangeMemberLiquidFCtEff {
+  memberId: String!
+  newValue: Float!
+}

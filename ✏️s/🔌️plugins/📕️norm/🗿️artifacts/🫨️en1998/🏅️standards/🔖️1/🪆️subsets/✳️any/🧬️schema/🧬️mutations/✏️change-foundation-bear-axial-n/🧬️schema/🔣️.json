@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-foundation-bear-axial-n/schema.json",
+  "title": "ChangeFoundationBearAxialN",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newBearingAxialN"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeFoundationBearAxialN"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Foundation",
+          "de": "Gründung"
+        },
+        "description": {
+          "en": "The foundation this mutation addresses, by id.",
+          "de": "Das adressierte Element (Gründung), per Kennung."
+        },
+        "ref": {
+          "kind": "foundation"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newBearingAxialN": {
+      "type": "number",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Design axial force N_Ed of the footing",
+          "de": "Bemessungswert der Normalkraft N_Ed des Fundaments"
+        },
+        "group": "value",
+        "order": 20,
+        "widget": "stepper",
+        "step": 0.001,
+        "precision": 3
+      }
+    }
+  }
+}

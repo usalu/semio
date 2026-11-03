@@ -1,0 +1,5 @@
+{
+  "mutation": "changeMaterialProductForm",
+  "materialId": "mat-6082",
+  "newProductForm": "extrudedProfile"
+}

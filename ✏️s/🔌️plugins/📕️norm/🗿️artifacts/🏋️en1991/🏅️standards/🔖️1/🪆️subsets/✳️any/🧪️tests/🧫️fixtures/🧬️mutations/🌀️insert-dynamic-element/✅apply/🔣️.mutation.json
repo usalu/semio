@@ -1,0 +1,15 @@
+{
+  "InsertDynamicElement": {
+    "index": 1,
+    "item": {
+      "id": "dynamic-element-1-new",
+      "height": 1.5,
+      "width": 1.5,
+      "firstFrequency": 1.5,
+      "logDecrement": 1.5,
+      "massPerLength": 1.5,
+      "strouhal": 1.5,
+      "assumedCscd": 1.5
+    }
+  }
+}

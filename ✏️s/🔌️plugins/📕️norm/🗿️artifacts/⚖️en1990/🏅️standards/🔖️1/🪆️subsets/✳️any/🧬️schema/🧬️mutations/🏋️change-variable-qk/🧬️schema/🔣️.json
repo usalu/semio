@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/mutation/change-variable-qk/schema.json",
+  "title": "ChangeVariableQk",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newQk"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeVariableQk"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Variable action",
+          "de": "Veränderliche Einwirkung"
+        },
+        "description": {
+          "en": "The variable action this mutation addresses, by id.",
+          "de": "Das adressierte Element (Veränderliche Einwirkung), per Kennung."
+        },
+        "ref": {
+          "kind": "variable"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newQk": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Characteristic variable action Q_k",
+          "de": "Charakteristischer Wert der veränderlichen Einwirkung Q_k"
+        },
+        "widget": "stepper",
+        "unit": "N",
+        "displayUnit": "kN",
+        "displayFactor": 0.001,
+        "precision": 2,
+        "step": 1000,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

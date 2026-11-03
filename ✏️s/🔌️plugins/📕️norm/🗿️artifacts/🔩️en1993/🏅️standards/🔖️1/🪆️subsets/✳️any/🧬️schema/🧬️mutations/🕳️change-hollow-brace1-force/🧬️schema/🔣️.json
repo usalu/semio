@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-hollow-brace1-force/schema.json",
+  "title": "ChangeHollowBrace1Force",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newBrace1Force"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Hollow joint",
+          "de": "Hohlprofilknoten"
+        },
+        "description": {
+          "en": "The hollow joint this mutation addresses, by id.",
+          "de": "Das adressierte Element (Hohlprofilknoten), per Kennung."
+        },
+        "ref": {
+          "kind": "hollow-joint"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newBrace1Force": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Brace 1 force N_1,Ed",
+          "de": "Streben-1-Kraft N_1,Ed"
+        },
+        "widget": "stepper",
+        "unit": "N",
+        "displayUnit": "kN",
+        "displayFactor": 0.001,
+        "precision": 1,
+        "step": 1000,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

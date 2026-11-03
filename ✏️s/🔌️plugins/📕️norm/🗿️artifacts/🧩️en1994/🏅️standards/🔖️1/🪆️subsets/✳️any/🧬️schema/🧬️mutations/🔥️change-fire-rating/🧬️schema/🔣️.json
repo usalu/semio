@@ -9,9 +9,8 @@
   ],
   "properties": {
     "newFireRating": {
-      "type": "string",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/FireRating",
       "x-semio-ui": {
-        "widget": "text",
         "role": "value",
         "label": {
           "en": "Fire resistance class",

@@ -1,0 +1,6 @@
+{
+  "ChangeFireDesignTemperature": {
+    "id": "fire-1",
+    "newDesignTemperature": 1100.0
+  }
+}

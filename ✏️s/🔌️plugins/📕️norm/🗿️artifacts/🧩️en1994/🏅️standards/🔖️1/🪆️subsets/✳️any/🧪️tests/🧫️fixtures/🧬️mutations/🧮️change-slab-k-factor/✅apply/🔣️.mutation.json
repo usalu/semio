@@ -1,0 +1,6 @@
+{
+  "ChangeSlabKFactor": {
+    "id": "slab-S1",
+    "newKFactor": 0.0625
+  }
+}

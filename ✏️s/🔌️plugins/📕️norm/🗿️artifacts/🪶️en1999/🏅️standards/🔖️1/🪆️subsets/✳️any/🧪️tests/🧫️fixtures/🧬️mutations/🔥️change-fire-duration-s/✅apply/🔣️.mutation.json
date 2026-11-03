@@ -1,0 +1,5 @@
+{
+  "mutation": "changeFireDurationS",
+  "fireScenarioId": "fire-1",
+  "newDurationS": 1200.0
+}

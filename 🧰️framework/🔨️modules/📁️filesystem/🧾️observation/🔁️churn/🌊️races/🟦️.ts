@@ -102,8 +102,8 @@ export function filesystemRaceOfTextV1(text:string,given?:RaceWorldV1):RaceDecis
  const error=filesystemErrorFromTextV1(text,given?.platform??process.platform);return error===undefined?none("","shape"):filesystemRaceOfErrorV1(error,given);
 }
 
-/** 🧱️ The error a reader raises when the path it expects to be a regular file is something else: a directory or a symlink carries the code the operating system gives for it (`EISDIR`, `ELOOP`), so the same classification decides whether a peer replaced the file; any other shape stays a plain error unless the caller names the code (an ancestor that became a file is `ENOTDIR`). */
+/** 🧱️ The error a reader raises when the path it expects to be a regular file is something else: a directory or a symlink carries the code the operating system gives for it (`EISDIR`, `ELOOP`), so the same classification decides whether a peer replaced the file; any other shape (a regular file that is too large or has more than one link) stays an error without code unless the caller names the code (an ancestor that became a file is `ENOTDIR`). The message always names the path, whatever the shape. */
 export function filesystemShapeErrorV1(shape:Readonly<{isDirectory():boolean;isSymbolicLink():boolean}>,path:string,message:string,fallbackCode?:string,syscall:string="lstat"):Error{
- const code=shape.isDirectory()?"EISDIR":shape.isSymbolicLink()?"ELOOP":fallbackCode;
- return code===undefined?Error(message):Object.assign(Error(message),{code,syscall,path});
+ const code=shape.isDirectory()?"EISDIR":shape.isSymbolicLink()?"ELOOP":fallbackCode,named=message.includes(path)?message:`${message}: ${path}`;
+ return code===undefined?Object.assign(Error(named),{path}):Object.assign(Error(named),{code,syscall,path});
 }

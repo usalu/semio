@@ -10,7 +10,12 @@
   "properties": {
     "outline": {
       "$ref": "#/$defs/En1995Outline",
-      "x-semio-derived": true
+      "x-semio-derived": true,
+      "x-semio-rust": {
+        "attributes": [
+          "#[derived]"
+        ]
+      }
     }
   },
   "$defs": {
@@ -30,12 +35,38 @@
           }
         },
         "fieldCount": {
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         },
         "entryCount": {
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
         }
       }
     }
+  },
+  "x-semio-rust": {
+    "doc": [
+      "💡️ Everything inferable from a en1995 snapshot. One field per named inference under",
+      "`💡️inferences/` (currently: `outline`, backed by the `🧾outline/` slug dir — this document's",
+      "own field/section structure, since a norm compliance record IS the document it describes)."
+    ],
+    "derive": [
+      "Clone",
+      "Debug",
+      "Default",
+      "PartialEq",
+      "ArtifactSchema",
+      "value_derive::ToValue",
+      "value_derive::FromValue"
+    ],
+    "artifactSchema": "s.norm.en1995.inference",
+    "attributes": [
+      "#[cfg_attr(any(test, feature = \"test-support\"), derive(serde::Serialize, serde::Deserialize))]",
+      "#[cfg_attr(any(test, feature = \"test-support\"), serde(rename_all = \"camelCase\"))]",
+      "#[value(rename_all = \"camelCase\")]"
+    ]
   }
 }

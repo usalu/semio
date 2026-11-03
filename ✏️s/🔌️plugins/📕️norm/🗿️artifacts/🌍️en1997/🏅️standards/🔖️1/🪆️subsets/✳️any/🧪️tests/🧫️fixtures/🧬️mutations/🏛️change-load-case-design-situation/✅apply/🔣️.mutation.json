@@ -1,0 +1,6 @@
+{
+  "mutation": "changeLoadCaseDesignSituation",
+  "footingId": "footing-F1",
+  "id": "lc-bsP",
+  "newDesignSituation": "persistent"
+}

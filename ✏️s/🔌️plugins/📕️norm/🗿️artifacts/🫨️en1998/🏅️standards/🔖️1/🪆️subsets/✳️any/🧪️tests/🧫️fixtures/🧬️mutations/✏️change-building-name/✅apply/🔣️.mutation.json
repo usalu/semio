@@ -1,0 +1,5 @@
+{
+  "mutation": "changeBuildingName",
+  "id": "bldg-office",
+  "newName": "Renamed"
+}

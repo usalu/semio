@@ -1,0 +1,20 @@
+{
+  "InsertFastener": {
+    "index": 0,
+    "fastener": {
+      "id": "fastener-1",
+      "connectionId": "conn-C1",
+      "memberId": "beam-B1",
+      "columns": 4,
+      "lines": 2,
+      "spacingParallelM": 0.08,
+      "spacingPerpendicularM": 0.04,
+      "endDistanceM": 0.1,
+      "edgeDistanceM": 0.04,
+      "offsetXM": 0.1,
+      "offsetYM": 0.05,
+      "loadAngleRad": 0.0,
+      "positions": []
+    }
+  }
+}

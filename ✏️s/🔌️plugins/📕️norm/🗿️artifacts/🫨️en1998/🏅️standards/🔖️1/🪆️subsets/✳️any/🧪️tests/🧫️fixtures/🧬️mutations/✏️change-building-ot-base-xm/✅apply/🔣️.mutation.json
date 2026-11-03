@@ -1,0 +1,5 @@
+{
+  "mutation": "changeBuildingOtBaseXM",
+  "id": "bldg-office",
+  "newOverturningBaseXM": 1.5
+}

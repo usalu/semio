@@ -1,0 +1,5 @@
+{
+  "mutation": "changeShellThickness",
+  "shellId": "shell-pass",
+  "newThickness": 0.02
+}

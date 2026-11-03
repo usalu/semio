@@ -1,0 +1,6 @@
+{
+  "ChangeWindBridgeDeckDepth": {
+    "id": "wind-bridge-1",
+    "newDeckDepth": 3.0
+  }
+}

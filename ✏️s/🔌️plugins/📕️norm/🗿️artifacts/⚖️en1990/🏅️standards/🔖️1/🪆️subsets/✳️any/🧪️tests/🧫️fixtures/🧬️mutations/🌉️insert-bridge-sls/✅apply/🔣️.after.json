@@ -1,0 +1,207 @@
+{
+  "annex": "De",
+  "projectId": "accidental-seismic-compliant",
+  "structureKind": "building",
+  "altitudeM": 120.0,
+  "consequenceClass": 2,
+  "reliabilityClass": "RC2",
+  "designWorkingLifeCategory": 4,
+  "designWorkingLifeYears": 50.0,
+  "referencePeriodYears": 50.0,
+  "supervisionLevel": "dsl2",
+  "inspectionLevel": "il2",
+  "betaComputed": 3.8,
+  "permanents": [
+    {
+      "id": "G-sup",
+      "kind": "gSup",
+      "gk": 80000.0
+    },
+    {
+      "id": "G-inf",
+      "kind": "gInf",
+      "gk": 20000.0
+    }
+  ],
+  "variables": [
+    {
+      "id": "Q-office",
+      "category": "office",
+      "qk": 40000.0,
+      "group": ""
+    },
+    {
+      "id": "Q-wind",
+      "category": "wind",
+      "qk": 20000.0,
+      "group": ""
+    }
+  ],
+  "accidentals": [
+    {
+      "id": "A-impact",
+      "ad": 50000.0
+    }
+  ],
+  "seismics": [
+    {
+      "id": "E-1",
+      "aEk": 60000.0,
+      "importanceClass": "II"
+    }
+  ],
+  "members": [
+    {
+      "id": "beam-B1",
+      "labelEn": "Office beam B1",
+      "labelDe": "Büroträger B1",
+      "rdStr": 250000.0,
+      "rdGeo": 250000.0,
+      "rdEquStab": 200000.0,
+      "rdEquDestab": 180000.0,
+      "rdFat": 0.0,
+      "span": 6.0,
+      "precamber": 0.0,
+      "deflectionW1": 0.006,
+      "deflectionW2": 0.003,
+      "deflectionW3": 0.009,
+      "deflectionLimitRatio": 250.0,
+      "deflectionLimitRatioW3": 300.0,
+      "slsLimitChar": 250000.0,
+      "slsLimitFreq": 250000.0,
+      "slsLimitQp": 250000.0,
+      "vibrationFrequency": 5.5,
+      "vibrationFrequencyMin": 3.0,
+      "frameHeight": 0.0,
+      "frameDrift": 0.0,
+      "storeyHeight": 0.0,
+      "storeyDrift": 0.0,
+      "materialStrengthK": 0.0,
+      "materialConversionFactor": 0.0,
+      "materialPartialFactor": 0.0,
+      "materialDesignStrength": 0.0,
+      "nominalDimension": 0.0,
+      "dimensionTolerance": 0.0,
+      "designDimension": 0.0,
+      "memberAlphaCr": 0.0,
+      "secondOrderAnalysis": 0.0
+    }
+  ],
+  "bridgeSls": [
+    {
+      "id": "bri-1",
+      "memberId": "beam-B1",
+      "deckAcceleration": 1.0,
+      "deckAccelerationLimit": 1.0,
+      "deckTwist": 1.0,
+      "deckTwistLimit": 1.0,
+      "bridgeDeflection": 1.0,
+      "bridgeDeflectionLimit": 1.0,
+      "trackGauge": 0.0,
+      "lineSpeed": 0.0,
+      "ballastDepth": 0.0,
+      "deckMass": 0.0,
+      "naturalFrequency": 0.0,
+      "endRotation": 0.0,
+      "basicWindSpeed": 0.0,
+      "dampingRatio": 0.0
+    },
+    {
+      "id": "bri-1-new",
+      "memberId": "beam-B1",
+      "deckAcceleration": 1.0,
+      "deckAccelerationLimit": 1.0,
+      "deckTwist": 1.0,
+      "deckTwistLimit": 1.0,
+      "bridgeDeflection": 1.0,
+      "bridgeDeflectionLimit": 1.0,
+      "trackGauge": 0.0,
+      "lineSpeed": 0.0,
+      "ballastDepth": 0.0,
+      "deckMass": 0.0,
+      "naturalFrequency": 0.0,
+      "endRotation": 0.0,
+      "basicWindSpeed": 0.0,
+      "dampingRatio": 0.0
+    }
+  ],
+  "effects": [
+    {
+      "memberId": "beam-B1",
+      "actionId": "G-sup",
+      "influence": 1.0
+    },
+    {
+      "memberId": "beam-B1",
+      "actionId": "G-inf",
+      "influence": -1.0
+    },
+    {
+      "memberId": "beam-B1",
+      "actionId": "Q-office",
+      "influence": 1.0
+    },
+    {
+      "memberId": "beam-B1",
+      "actionId": "Q-wind",
+      "influence": 1.0
+    },
+    {
+      "memberId": "beam-B1",
+      "actionId": "A-impact",
+      "influence": 1.0
+    },
+    {
+      "memberId": "beam-B1",
+      "actionId": "E-1",
+      "influence": 1.0
+    }
+  ],
+  "fatigueSpectra": [
+    {
+      "id": "fat-1",
+      "memberId": "beam-B1",
+      "detailCategory": 1.0,
+      "stressRange": 1.0,
+      "cycles": 1.0
+    }
+  ],
+  "reliabilityAnalyses": [
+    {
+      "id": "rel-1",
+      "resistanceDistribution": "normal",
+      "resistanceMean": 1.0,
+      "resistanceSd": 1.0,
+      "actionDistribution": "normal",
+      "actionMean": 1.0,
+      "actionSd": 1.0
+    }
+  ],
+  "testSeries": [
+    {
+      "id": "tes-1",
+      "quantity": "normal",
+      "distribution": "normal",
+      "sampleSize": 1,
+      "mean": 1.0,
+      "stdDev": 1.0,
+      "variationKnown": 1.0,
+      "conversionFactor": 1.0,
+      "required": 1.0,
+      "pairs": "",
+      "theoryVariation": 0.0
+    }
+  ],
+  "placements": [
+    {
+      "id": "pla-1",
+      "x": 1.0,
+      "y": 1.0,
+      "z": 1.0,
+      "yaw": 1.0
+    }
+  ],
+  "cases": [],
+  "factorOverrides": [],
+  "trafficGroups": []
+}

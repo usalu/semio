@@ -1,0 +1,95 @@
+{
+  "artifact": "en1997",
+  "collection": {
+    "name": "characteristicBases",
+    "entity": "CharacteristicBasis",
+    "emoji": "🧮",
+    "doc": "Typed basis of one characteristic soil parameter of a layer: the declared value of the layer or the value derived from the ground investigations (GI-03, GI-13). A parameter without a row keeps its declared value; nothing is overridden silently.",
+    "label": {
+      "en": "Characteristic value bases",
+      "de": "Grundlagen der charakteristischen Werte"
+    },
+    "id": {
+      "en": "Basis ID",
+      "de": "Grundlagen-ID"
+    },
+    "singular": {
+      "en": "characteristic value basis",
+      "de": "Grundlage des charakteristischen Werts"
+    },
+    "kindSlug": "characteristic-basis",
+    "fields": [
+      {
+        "name": "layer_id",
+        "label": {
+          "en": "Layer",
+          "de": "Schicht"
+        },
+        "type": "String",
+        "unit": "",
+        "doc": "🪨 Id of the soil layer whose parameter this row governs.",
+        "sample": "sand-1"
+      },
+      {
+        "name": "parameter",
+        "label": {
+          "en": "Parameter",
+          "de": "Parameter"
+        },
+        "type": "enum",
+        "doc": "🎯 undrainedStrength | frictionAngle.",
+        "sample": "undrainedStrength",
+        "enum": {
+          "name": "CharacteristicParameter",
+          "doc": "🎯 Soil parameter whose characteristic value has a typed basis.",
+          "values": [
+            {
+              "token": "undrainedStrength",
+              "label": {
+                "en": "Undrained shear strength c_u",
+                "de": "Undränierte Scherfestigkeit c_u"
+              }
+            },
+            {
+              "token": "frictionAngle",
+              "label": {
+                "en": "Friction angle φ′",
+                "de": "Reibungswinkel φ′"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "name": "basis",
+        "label": {
+          "en": "Basis",
+          "de": "Grundlage"
+        },
+        "type": "enum",
+        "doc": "🧮 declared | derived.",
+        "sample": "derived",
+        "enum": {
+          "name": "ParameterBasis",
+          "doc": "🧮 Source of a characteristic parameter: the declared layer value or the value derived from the ground investigations.",
+          "values": [
+            {
+              "token": "declared",
+              "label": {
+                "en": "Declared on the layer",
+                "de": "Auf der Schicht angegeben"
+              }
+            },
+            {
+              "token": "derived",
+              "label": {
+                "en": "Derived from investigations",
+                "de": "Aus Erkundungen abgeleitet"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

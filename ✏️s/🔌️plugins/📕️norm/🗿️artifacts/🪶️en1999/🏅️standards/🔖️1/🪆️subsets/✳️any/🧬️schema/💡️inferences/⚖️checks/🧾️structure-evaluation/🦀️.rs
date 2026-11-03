@@ -1,6 +1,7 @@
 //! 🧾️ EN 1999 structure evaluation: the duplicate-id check and `evaluate_structure`, which runs every clause check over a whole snapshot.
 
 use super::*;
+use super::{outline_checks, weld_run_checks};
 
 //#region 🔖️ComplianceHelpers
 /// 📋️ Exhaustive evaluate for the aluminium-structure subject.
@@ -54,26 +55,158 @@ fn push_duplicate_id_fails(report: &mut CheckReport, annex: AnnexChoice, list_pa
     }
 }
 
+fn detail_fail(report: &mut CheckReport, annex: AnnexChoice, id: String, owner: &str, path: String, title: (&str, &str), en: String, de: String, options: Vec<String>) {
+    let subject = SubjectRef::new(owner, path, loc(title.0, title.1));
+    report.push(
+        CheckResult::assess(id, "DIN EN 1999-1-1", ClauseId::new("EN 1999-1-1", "§6.1.6", "6.1.6"), subject.clone(), loc(title.0, title.1))
+            .status(semio_s_plugin_norm_compliance::CheckStatus::Fail)
+            .explanation(loc(&en, &de))
+            .annex(annex)
+            .remedy(Remedy::one_of(subject, options, loc("Pick a supported value.", "Unterstützten Wert wählen.")))
+            .build(),
+    );
+}
+
+/// 🧪 Refuses incomplete or misplaced edge stiffeners.
+fn push_detail_fails(report: &mut CheckReport, doc: &En1999Snapshot) {
+    let annex = doc.annex;
+    for sec in &doc.sections {
+        for el in &sec.elements {
+            let base = format!("sections[id={}].elements[id={}]", sec.id, el.id);
+            let key = format!("{}.{}", sec.id, el.id);
+            let any = el.edge_stiffener_depth > 0.0 || el.edge_stiffener_thickness > 0.0;
+            if any && (!el.outstand || el.edge_stiffener_depth <= 0.0 || el.edge_stiffener_thickness <= 0.0) {
+                let subject = SubjectRef::new(&sec.id, format!("{base}.edgeStiffenerDepth"), loc("Edge stiffener", "Randsteife"));
+                report.push(
+                    CheckResult::assess(format!("en1999.ref.element.stiffener.{key}"), "DIN EN 1999-1-1", ClauseId::new("EN 1999-1-1", "§6.1.4", "6.1.4.3"), subject.clone(), loc("Edge stiffener", "Randsteife"))
+                        .status(semio_s_plugin_norm_compliance::CheckStatus::Fail)
+                        .explanation(loc(
+                            &format!("Edge stiffener of element {} needs a positive depth and thickness on an outstand.", el.id),
+                            &format!("Die Randsteife des Elements {} braucht positive Tiefe und Dicke an einem auskragenden Element.", el.id),
+                        ))
+                        .annex(annex)
+                        .remedy(Remedy::exactly(subject, q_length(el.edge_stiffener_depth), q_length(0.0), loc("Remove the stiffener.", "Randsteife entfernen.")))
+                        .build(),
+                );
+            }
+        }
+    }
+    let placeable: Vec<String> = doc.members.iter().map(|m| m.id.clone()).chain(doc.connections.iter().map(|c| c.id.clone())).chain(doc.cold_formed.iter().map(|c| c.id.clone())).chain(doc.shells.iter().map(|c| c.id.clone())).collect();
+    for placement in &doc.placements {
+        let finite = [placement.x, placement.y, placement.z, placement.yaw].iter().all(|v| v.is_finite());
+        if !placeable.contains(&placement.id) || !finite {
+            let subject = SubjectRef::new(&placement.id, format!("placements[id={}].id", placement.id), loc("Placement", "Platzierung"));
+            let mut check = CheckResult::assess(format!("en1999.ref.placement.{}", placement.id), "DIN EN 1999-1-1", ClauseId::new("EN 1999-1-1", "§1", "1"), subject.clone(), loc("Placement reference", "Platzierungsverweis"))
+                .status(semio_s_plugin_norm_compliance::CheckStatus::Fail)
+                .explanation(loc(
+                    &format!("Placement '{}' must name an existing member, connection, sheet or shell and carry finite coordinates.", placement.id),
+                    &format!("Platzierung '{}' muss ein vorhandenes Bauteil, einen Anschluss, ein Blech oder eine Schale benennen und endliche Koordinaten tragen.", placement.id),
+                ))
+                .annex(annex);
+            if !placeable.is_empty() { check = check.remedy(Remedy::one_of(subject, placeable.clone(), loc("Point the placement at an existing entity.", "Platzierung auf ein vorhandenes Element richten."))); }
+            report.push(check.build());
+        }
+    }
+    for vertex in &doc.outline_vertices {
+        if !doc.sections.iter().any(|s| s.id == vertex.section_id) {
+            detail_fail(report, annex, format!("en1999.ref.vertex.{}", vertex.id), &vertex.id, format!("outlineVertices[id={}].sectionId", vertex.id), ("Outline vertex section", "Querschnitt des Umrissknotens"),
+                format!("Outline vertex '{}' names the unknown section '{}'.", vertex.id, vertex.section_id), format!("Umrissknoten '{}' nennt den unbekannten Querschnitt '{}'.", vertex.id, vertex.section_id), doc.sections.iter().map(|s| s.id.clone()).collect());
+        }
+    }
+    for mat in &doc.materials {
+        let tube_member = doc.members.iter().find(|m| m.material_id == mat.id && doc.sections.iter().any(|s| s.id == m.section_id && part_1_1::is_tube(s)));
+        if let (Some(member), false) = (tube_member, part_1_1::form_supplies_tube(mat.product_form)) {
+            let subject = SubjectRef::new(&mat.id, format!("materials[id={}].productForm", mat.id), loc("Product form", "Erzeugnisform"));
+            report.push(
+                CheckResult::assess(format!("en1999.3.2.form.{}", mat.id), "DIN EN 1999-1-1", ClauseId::new("EN 1999-1-1", "§3.2", "3.2"), subject.clone(), loc("Product form against section", "Erzeugnisform gegen Querschnitt"))
+                    .status(semio_s_plugin_norm_compliance::CheckStatus::Warning)
+                    .explanation(loc(
+                        &format!("Member {} is a circular hollow section but material {} is '{:?}'; Table 3.2 only lists hollow sections as extruded profile, extruded tube or drawn tube.", member.id, mat.id, mat.product_form),
+                        &format!("Bauteil {} ist ein Kreishohlprofil, Werkstoff {} aber '{:?}'; Tabelle 3.2 führt Hohlquerschnitte nur als Strangpressprofil, Strangpressrohr oder gezogenes Rohr.", member.id, mat.id, mat.product_form),
+                    ))
+                    .annex(annex)
+                    .remedy(Remedy::one_of(subject, vec!["extrudedProfile".into(), "extrudedTube".into(), "drawnTube".into()], loc("Pick a tube product form.", "Rohr-Erzeugnisform wählen.")))
+                    .build(),
+            );
+        }
+    }
+    for shell in &doc.shells {
+    }
+}
+
+/// 🎯 The checks of one document entity (member, connection, sheet, shell, fire scenario, fatigue detail) and its governing one.
+#[derive(Clone, Debug, PartialEq)]
+pub struct CheckUnit {
+    pub entity_kind: &'static str,
+    pub entity_id: String,
+    pub check_ids: Vec<String>,
+    pub governing_id: String,
+    pub utilization: f64,
+}
+
+/// 🎯 Groups a report by the entity each check is about, so a viewer can colour an entity by its governing check.
+pub fn check_units(doc: &En1999Snapshot, report: &CheckReport) -> Vec<CheckUnit> {
+    let kinds: Vec<(&'static str, Vec<&str>)> = vec![
+        ("member", doc.members.iter().map(|m| m.id.as_str()).collect()),
+        ("connection", doc.connections.iter().map(|c| c.id.as_str()).collect()),
+        ("coldFormedSheet", doc.cold_formed.iter().map(|c| c.id.as_str()).collect()),
+        ("shell", doc.shells.iter().map(|c| c.id.as_str()).collect()),
+        ("fireScenario", doc.fire_scenarios.iter().map(|c| c.id.as_str()).collect()),
+        ("fatigueDetail", doc.fatigue_details.iter().map(|c| c.id.as_str()).collect()),
+        ("fatigueCategory", doc.fatigue_categories.iter().map(|c| c.id.as_str()).collect()),
+        ("patchLoad", doc.patch_loads.iter().map(|c| c.id.as_str()).collect()),
+        ("ringStiffener", doc.ring_stiffeners.iter().map(|c| c.id.as_str()).collect()),
+        ("fireInsulation", doc.fire_insulations.iter().map(|c| c.id.as_str()).collect()),
+        ("sheetProfile", doc.sheet_profiles.iter().map(|c| c.id.as_str()).collect()),
+        ("transverseStiffener", doc.transverse_stiffeners.iter().map(|c| c.id.as_str()).collect()),
+    ];
+    let mut out = Vec::new();
+    for (entity_kind, ids) in kinds {
+        for id in ids {
+            let mine: Vec<&CheckResult> = report.checks.iter().filter(|c| c.subject.entity_id == id).collect();
+            let Some(worst) = mine.iter().max_by(|a, b| a.utilization.partial_cmp(&b.utilization).unwrap_or(std::cmp::Ordering::Equal)) else { continue };
+            out.push(CheckUnit { entity_kind, entity_id: id.to_owned(), check_ids: mine.iter().map(|c| c.id.clone()).collect(), governing_id: worst.id.clone(), utilization: worst.utilization });
+        }
+    }
+    out
+}
+
 pub fn evaluate_structure(doc: &En1999Snapshot) -> CheckReport {
+    evaluate_scoped(doc, Scope::All)
+}
+
+/// 🎯️ The evaluation restricted to `scope`: the named parts `integrity` and `<collection>-empty` (verdicts) or one row of `members`, `connections`, `fireScenarios`, `fatigueDetails`, `coldFormed`, `shells`, `weldRuns`, `sectionOutlines` or the action rows `memberActions`, `connectionActions`, `coldFormedActions`, `shellActions`; the ordered concatenation of the units in [`En1999Units`] is [`evaluate_structure`].
+pub fn evaluate_scoped(doc: &En1999Snapshot, scope: Scope<'_>) -> CheckReport {
     let mut report = CheckReport::default();
     let annex = doc.annex;
 
+    if scope.part("integrity") {
     push_duplicate_id_fails(&mut report, annex, "materials", "Material", "Material", doc.materials.iter().map(|m| m.id.clone()));
     push_duplicate_id_fails(&mut report, annex, "sections", "Section", "Querschnitt", doc.sections.iter().map(|s| s.id.clone()));
     push_duplicate_id_fails(&mut report, annex, "members", "Member", "Bauteil", doc.members.iter().map(|m| m.id.clone()));
     push_duplicate_id_fails(&mut report, annex, "connections", "Connection", "Anschluss", doc.connections.iter().map(|c| c.id.clone()));
     push_duplicate_id_fails(&mut report, annex, "fireScenarios", "Fire scenario", "Brandszenario", doc.fire_scenarios.iter().map(|f| f.id.clone()));
     push_duplicate_id_fails(&mut report, annex, "fatigueDetails", "Fatigue detail", "Ermüdungsdetail", doc.fatigue_details.iter().map(|f| f.id.clone()));
+    push_duplicate_id_fails(&mut report, annex, "fatigueCategories", "Fatigue category", "Ermüdungskategorie", doc.fatigue_categories.iter().map(|f| f.id.clone()));
+    push_duplicate_id_fails(&mut report, annex, "patchLoads", "Patch load", "Stegeinzellast", doc.patch_loads.iter().map(|f| f.id.clone()));
+    push_duplicate_id_fails(&mut report, annex, "ringStiffeners", "Ring stiffener", "Ringsteife", doc.ring_stiffeners.iter().map(|f| f.id.clone()));
+    push_duplicate_id_fails(&mut report, annex, "fireInsulations", "Fire insulation", "Brandschutzbekleidung", doc.fire_insulations.iter().map(|f| f.id.clone()));
+    push_duplicate_id_fails(&mut report, annex, "sheetProfiles", "Sheet profile", "Blechprofil", doc.sheet_profiles.iter().map(|f| f.id.clone()));
+    push_duplicate_id_fails(&mut report, annex, "transverseStiffeners", "Transverse stiffener", "Quersteife", doc.transverse_stiffeners.iter().map(|f| f.id.clone()));
     push_duplicate_id_fails(&mut report, annex, "coldFormed", "Cold-formed sheet", "Kaltprofil", doc.cold_formed.iter().map(|s| s.id.clone()));
     push_duplicate_id_fails(&mut report, annex, "shells", "Shell", "Schale", doc.shells.iter().map(|s| s.id.clone()));
+    push_duplicate_id_fails(&mut report, annex, "placements", "Placement", "Platzierung", doc.placements.iter().map(|p| p.id.clone()));
+    push_duplicate_id_fails(&mut report, annex, "weldRuns", "Weld run", "Schweißnaht", doc.weld_runs.iter().map(|p| p.id.clone()));
+    push_duplicate_id_fails(&mut report, annex, "outlineVertices", "Outline vertex", "Umrissknoten", doc.outline_vertices.iter().map(|p| p.id.clone()));
+    push_detail_fails(&mut report, doc);
+    }
 
+    for (i, m) in doc.members.iter().enumerate().filter(|(i, _)| scope.admits("memberActions", *i)) { push_action_field_fails(&mut report, annex, "members", &m.id, &m.actions); }
+    for (i, c) in doc.connections.iter().enumerate().filter(|(i, _)| scope.admits("connectionActions", *i)) { push_action_field_fails(&mut report, annex, "connections", &c.id, &c.actions); }
+    for (i, s) in doc.cold_formed.iter().enumerate().filter(|(i, _)| scope.admits("coldFormedActions", *i)) { push_action_field_fails(&mut report, annex, "coldFormed", &s.id, &s.actions); }
+    for (i, s) in doc.shells.iter().enumerate().filter(|(i, _)| scope.admits("shellActions", *i)) { push_action_field_fails(&mut report, annex, "shells", &s.id, &s.actions); }
 
-    for m in &doc.members { push_action_field_fails(&mut report, annex, "members", &m.id, &m.actions); }
-    for c in &doc.connections { push_action_field_fails(&mut report, annex, "connections", &c.id, &c.actions); }
-    for s in &doc.cold_formed { push_action_field_fails(&mut report, annex, "coldFormed", &s.id, &s.actions); }
-    for s in &doc.shells { push_action_field_fails(&mut report, annex, "shells", &s.id, &s.actions); }
-
-    if doc.members.is_empty() {
+    if doc.members.is_empty() && scope.part("members-empty") {
         report.push(
             CheckResult::assess(
                 "en1999.1-1.empty",
@@ -88,11 +221,17 @@ pub fn evaluate_structure(doc: &En1999Snapshot) -> CheckReport {
         );
     }
 
-    for member in &doc.members {
+    for (_, member) in doc.members.iter().enumerate().filter(|(i, _)| scope.admits("members", *i)) {
         let section = doc.sections.iter().find(|s| s.id == member.section_id);
         let material = doc.materials.iter().find(|m| m.id == member.material_id);
         match (section, material) {
-            (Some(sec), Some(mat)) => report.extend(check_member(member, sec, mat, annex)),
+            (Some(sec), Some(mat)) if outline_checks::is_free(sec) => report.extend(check_free_member(member, sec, &outline_checks::rings(&doc.outline_vertices, &sec.id), mat, annex, doc.reliability_class)),
+            (Some(sec), Some(mat)) => {
+                let runs = weld_run_checks::runs_of(&doc.weld_runs, &member.id);
+                let (resolved_member, resolved_section) = weld_run_checks::resolved(member, sec, &runs);
+                report.extend(check_member(&resolved_member, &resolved_section, mat, annex, doc.reliability_class, &weld_run_checks::haz_overrides(&runs), &web_stiffener::rows_of(&doc.transverse_stiffeners, &member.id)));
+                report.extend(check_edge_stiffeners(member, sec, mat, annex));
+            }
             _ => report.push(
                 CheckResult::assess(
                     format!("en1999.ref.{}", member.id),
@@ -114,7 +253,7 @@ pub fn evaluate_structure(doc: &En1999Snapshot) -> CheckReport {
         }
     }
 
-    if doc.connections.is_empty() {
+    if doc.connections.is_empty() && scope.part("connections-empty") {
         report.push(
             CheckResult::assess(
                 "en1999.8.empty",
@@ -128,12 +267,12 @@ pub fn evaluate_structure(doc: &En1999Snapshot) -> CheckReport {
             .build(),
         );
     }
-    for conn in &doc.connections {
+    for (_, conn) in doc.connections.iter().enumerate().filter(|(i, _)| scope.admits("connections", *i)) {
         match doc.materials.iter().find(|m| m.id == conn.material_id) {
             Some(mat) => {
                 let mem = doc.members.iter().find(|m| m.id == conn.member_id);
                 let member_ids: Vec<String> = doc.members.iter().map(|m| m.id.clone()).collect();
-                report.extend(check_connection(conn, mat, mem, &member_ids, annex));
+                report.extend(check_connection(conn, mat, mem, &member_ids, annex, doc.reliability_class));
             }
             None => report.push(
                 CheckResult::assess(
@@ -159,7 +298,7 @@ pub fn evaluate_structure(doc: &En1999Snapshot) -> CheckReport {
         }
     }
 
-    if doc.fire_scenarios.is_empty() {
+    if doc.fire_scenarios.is_empty() && scope.part("fire-empty") {
         report.push(
             CheckResult::assess(
                 "en1999.1-2.empty",
@@ -173,12 +312,18 @@ pub fn evaluate_structure(doc: &En1999Snapshot) -> CheckReport {
             .build(),
         );
     }
-    for fire in &doc.fire_scenarios {
+    for (_, fire) in doc.fire_scenarios.iter().enumerate().filter(|(i, _)| scope.admits("fireScenarios", *i)) {
         let member = doc.members.iter().find(|m| m.id == fire.member_id);
         let section = member.and_then(|m| doc.sections.iter().find(|s| s.id == m.section_id));
         let material = member.and_then(|m| doc.materials.iter().find(|mat| mat.id == m.material_id));
         match (member, section, material) {
-            (Some(mem), Some(sec), Some(mat)) => report.push(check_fire(fire, mem, sec, mat, annex)),
+            (Some(_), Some(sec), Some(_)) if outline_checks::is_free(sec) => report.push(
+                CheckResult::assess(format!("en1999.1-2.fire.{}", fire.id), "DIN EN 1999-1-2", ClauseId::new("EN 1999-1-2", "§4", "4.2"), SubjectRef::new(&fire.id, format!("fireScenarios[id={}].memberId", fire.id), loc("Fire", "Brand")), loc("Fire on a free outline", "Brand am freien Umriss"))
+                    .not_applicable(loc("The fire resistance of a free outline is not evaluated.", "Der Feuerwiderstand eines freien Umrisses wird nicht ausgewertet."))
+                    .annex(annex)
+                    .build(),
+            ),
+            (Some(mem), Some(sec), Some(mat)) => report.extend(check_fire(fire, mem, sec, mat, doc.fire_insulations.iter().find(|i| i.fire_id == fire.id), annex)),
             _ => report.push(
                 CheckResult::assess(
                     format!("en1999.1-2.fire.{}", fire.id),
@@ -203,7 +348,7 @@ pub fn evaluate_structure(doc: &En1999Snapshot) -> CheckReport {
         }
     }
 
-    if doc.fatigue_details.is_empty() {
+    if doc.fatigue_details.is_empty() && scope.part("fatigue-empty") {
         report.push(
             CheckResult::assess(
                 "en1999.1-3.empty",
@@ -217,12 +362,35 @@ pub fn evaluate_structure(doc: &En1999Snapshot) -> CheckReport {
             .build(),
         );
     }
-    for fat in &doc.fatigue_details {
+    let spectra = part_1_3::spectrum_groups(&doc.fatigue_details);
+    for (i, fat) in doc.fatigue_details.iter().enumerate().filter(|(i, _)| scope.admits("fatigueDetails", *i)) {
         let mem = doc.members.iter().find(|m| m.id == fat.member_id);
-        report.push(check_fatigue(fat, mem, annex));
+        report.extend(check_fatigue(fat, mem, annex));
+        if let Some(group) = spectra.iter().filter(|g| !part_1_3::group_has_category(g, &doc.fatigue_details, &doc.fatigue_categories)).find(|g| g[0] == i) {
+            report.extend(check_fatigue_spectrum(&group.iter().map(|j| &doc.fatigue_details[*j]).collect::<Vec<_>>(), annex));
+        }
     }
 
-    if doc.cold_formed.is_empty() {
+    for (_, category) in doc.fatigue_categories.iter().enumerate().filter(|(i, _)| scope.admits("fatigueCategories", *i)) {
+        report.extend(check_fatigue_category(category, doc, annex));
+    }
+    for (_, load) in doc.patch_loads.iter().enumerate().filter(|(i, _)| scope.admits("patchLoads", *i)) {
+        report.extend(check_patch_load(load, doc, annex));
+    }
+    for (_, insulation) in doc.fire_insulations.iter().enumerate().filter(|(i, _)| scope.admits("fireInsulations", *i)) {
+        report.extend(check_fire_insulation(insulation, doc, annex));
+    }
+    for (_, profile) in doc.sheet_profiles.iter().enumerate().filter(|(i, _)| scope.admits("sheetProfiles", *i)) {
+        report.extend(check_sheet_profile(profile, doc, annex));
+    }
+    for (_, ring) in doc.ring_stiffeners.iter().enumerate().filter(|(i, _)| scope.admits("ringStiffeners", *i)) {
+        report.extend(check_ring_stiffener(ring, doc, annex, doc.reliability_class));
+    }
+    for (_, stiffener) in doc.transverse_stiffeners.iter().enumerate().filter(|(i, _)| scope.admits("transverseStiffeners", *i)) {
+        report.extend(check_transverse_stiffener(stiffener, doc, annex, doc.reliability_class));
+    }
+
+    if doc.cold_formed.is_empty() && scope.part("coldFormed-empty") {
         report.push(
             CheckResult::assess(
                 "en1999.1-4.empty",
@@ -236,9 +404,9 @@ pub fn evaluate_structure(doc: &En1999Snapshot) -> CheckReport {
             .build(),
         );
     }
-    for sheet in &doc.cold_formed {
+    for (_, sheet) in doc.cold_formed.iter().enumerate().filter(|(i, _)| scope.admits("coldFormed", *i)) {
         if let Some(mat) = doc.materials.iter().find(|m| m.id == sheet.material_id) {
-            report.extend(check_cold_formed(sheet, mat, annex));
+            report.extend(check_cold_formed(sheet, mat, doc.sheet_profiles.iter().find(|p| p.sheet_id == sheet.id), annex, doc.reliability_class));
         } else {
             report.push(
                 CheckResult::assess(
@@ -261,7 +429,7 @@ pub fn evaluate_structure(doc: &En1999Snapshot) -> CheckReport {
         }
     }
 
-    if doc.shells.is_empty() {
+    if doc.shells.is_empty() && scope.part("shells-empty") {
         report.push(
             CheckResult::assess(
                 "en1999.1-5.empty",
@@ -275,9 +443,9 @@ pub fn evaluate_structure(doc: &En1999Snapshot) -> CheckReport {
             .build(),
         );
     }
-    for shell in &doc.shells {
+    for (_, shell) in doc.shells.iter().enumerate().filter(|(i, _)| scope.admits("shells", *i)) {
         if let Some(mat) = doc.materials.iter().find(|m| m.id == shell.material_id) {
-            report.extend(check_shell(shell, mat, annex));
+            report.extend(check_shell(shell, mat, &doc.ring_stiffeners.iter().filter(|r| r.shell_id == shell.id).map(|r| r.x).collect::<Vec<_>>(), annex, doc.reliability_class));
         } else {
             report.push(
                 CheckResult::assess(
@@ -300,57 +468,22 @@ pub fn evaluate_structure(doc: &En1999Snapshot) -> CheckReport {
         }
     }
 
+    for (_, run) in doc.weld_runs.iter().enumerate().filter(|(i, _)| scope.admits("weldRuns", *i)) {
+        report.extend(check_run(doc, run));
+    }
+    for (_, section) in doc.sections.iter().enumerate().filter(|(i, _)| scope.admits("sectionOutlines", *i)) {
+        report.extend(check_outline(section, &doc.outline_vertices, annex));
+    }
+
     report
 }
 
 fn push_action_field_fails(report: &mut CheckReport, annex: AnnexChoice, owner_path: &str, owner_id: &str, actions: &[semio_s_artifact_norm_en1999_model::MemberAction]) {
-    const KINDS: &[&str] = &["permanent", "imposed", "snow", "wind", "temperature", "fire"];
-    const CATS: &[&str] = &["self", "office", "snow", "wind", "residential", "A", "B", "congregation", "C", "retail", "D", "storage", "E", "snow_high", "temperature", "fire"];
-    const SOURCES: &[&str] = &["udl", "external"];
     for a in actions {
         let base = format!("{owner_path}[id={owner_id}].actions[id={}]", a.id);
-        if !KINDS.contains(&a.kind.as_str()) {
-            report.push(CheckResult::assess(
-                format!("en1999.ref.action.kind.{owner_id}.{}", a.id),
-                "DIN EN 1990",
-                ClauseId::new("EN 1990", "§6", "6.10"),
-                SubjectRef::new(owner_id, format!("{base}.kind"), loc("Action kind", "Einwirkungsart")),
-                loc("Action kind", "Einwirkungsart"),
-            ).status(semio_s_plugin_norm_compliance::CheckStatus::Fail)
-            .explanation(loc(&format!("Unknown action kind '{}'.", a.kind), &format!("Unbekannte Einwirkungsart '{}'.", a.kind)))
-            .annex(annex)
-            .remedy(Remedy::one_of(SubjectRef::new(owner_id, format!("{base}.kind"), loc("Action kind", "Einwirkungsart")), KINDS.iter().map(|s| (*s).to_string()).collect(), loc("Pick a recognised EN 1990 action kind.", "Anerkannte EN-1990-Einwirkungsart wählen.")))
-            .build());
-        }
-        if !CATS.contains(&a.category.as_str()) {
-            report.push(CheckResult::assess(
-                format!("en1999.ref.action.category.{owner_id}.{}", a.id),
-                "DIN EN 1990",
-                ClauseId::new("EN 1990", "§A1.2.2", "A.1.2.2"),
-                SubjectRef::new(owner_id, format!("{base}.category"), loc("Action category", "Einwirkungskategorie")),
-                loc("Action category", "Einwirkungskategorie"),
-            ).status(semio_s_plugin_norm_compliance::CheckStatus::Fail)
-            .explanation(loc(&format!("Unknown action category '{}'.", a.category), &format!("Unbekannte Einwirkungskategorie '{}'.", a.category)))
-            .annex(annex)
-            .remedy(Remedy::one_of(SubjectRef::new(owner_id, format!("{base}.category"), loc("Action category", "Einwirkungskategorie")), CATS.iter().map(|s| (*s).to_string()).collect(), loc("Pick a recognised ψ-category.", "Anerkannte ψ-Kategorie wählen.")))
-            .build());
-        }
-        if !SOURCES.contains(&a.source.as_str()) {
-            report.push(CheckResult::assess(
-                format!("en1999.ref.action.source.{owner_id}.{}", a.id),
-                "DIN EN 1990",
-                ClauseId::new("EN 1990", "§6", "6.10"),
-                SubjectRef::new(owner_id, format!("{base}.source"), loc("Action source", "Einwirkungsquelle")),
-                loc("Action source", "Einwirkungsquelle"),
-            ).status(semio_s_plugin_norm_compliance::CheckStatus::Fail)
-            .explanation(loc(&format!("Unknown action source '{}'.", a.source), &format!("Unbekannte Einwirkungsquelle '{}'.", a.source)))
-            .annex(annex)
-            .remedy(Remedy::one_of(SubjectRef::new(owner_id, format!("{base}.source"), loc("Action source", "Einwirkungsquelle")), SOURCES.iter().map(|s| (*s).to_string()).collect(), loc("Pick udl or external.", "udl oder external wählen.")))
-            .build());
-        }
-        let permanent = a.kind == "permanent";
-        let self_cat = a.category == "self";
-        if permanent && !self_cat && CATS.contains(&a.category.as_str()) {
+        let permanent = a.kind == semio_s_artifact_norm_en1999_model::ActionKind::Permanent;
+        let self_cat = a.category == semio_s_artifact_norm_en1999_model::ActionCategory::SelfWeight;
+        if permanent && !self_cat {
             report.push(CheckResult::assess(
                 format!("en1999.ref.action.category.kind.{owner_id}.{}", a.id),
                 "DIN EN 1990",
@@ -359,8 +492,8 @@ fn push_action_field_fails(report: &mut CheckReport, annex: AnnexChoice, owner_p
                 loc("Permanent action category", "Kategorie ständiger Einwirkung"),
             ).status(semio_s_plugin_norm_compliance::CheckStatus::Fail)
             .explanation(loc(
-                &format!("Permanent action '{}' must use category 'self', not '{}'.", a.id, a.category),
-                &format!("Ständige Einwirkung '{}' muss Kategorie 'self' nutzen, nicht '{}'.", a.id, a.category),
+                &format!("Permanent action '{}' must use category 'self', not '{:?}'.", a.id, a.category),
+                &format!("Ständige Einwirkung '{}' muss Kategorie 'self' nutzen, nicht '{:?}'.", a.id, a.category),
             ))
             .annex(annex)
             .remedy(Remedy::one_of(SubjectRef::new(owner_id, format!("{base}.category"), loc("Action category", "Einwirkungskategorie")), vec!["self".into()], loc("Set category to self for permanent actions.", "Kategorie self für ständige Einwirkungen setzen.")))

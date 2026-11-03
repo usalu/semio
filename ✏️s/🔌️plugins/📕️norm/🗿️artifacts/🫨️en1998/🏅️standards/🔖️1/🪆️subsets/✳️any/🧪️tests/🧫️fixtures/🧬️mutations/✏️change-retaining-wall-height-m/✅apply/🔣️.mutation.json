@@ -1,0 +1,5 @@
+{
+  "mutation": "changeRetainingWallHeightM",
+  "id": "rw-1",
+  "newHeightM": 9.0
+}

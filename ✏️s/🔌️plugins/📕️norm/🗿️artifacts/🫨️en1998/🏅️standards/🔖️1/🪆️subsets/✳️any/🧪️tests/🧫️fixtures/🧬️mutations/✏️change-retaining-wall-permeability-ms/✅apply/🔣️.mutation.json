@@ -1,0 +1,5 @@
+{
+  "mutation": "changeRetainingWallPermeabilityMS",
+  "index": 0,
+  "newPermeabilityMS": 1.5
+}

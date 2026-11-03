@@ -1,0 +1,11 @@
+{
+  "mutation": "insertStoreyVariable",
+  "buildingId": "bldg-office",
+  "storeyId": "s1",
+  "index": 1,
+  "variable": {
+    "id": "v-new",
+    "category": "c",
+    "qkN": 250000.0
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-fire-load-basis/schema.json",
+  "title": "ChangeFireLoadBasis",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newFireLoadBasis"
+  ],
+  "properties": {
+    "newFireLoadBasis": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/snapshot.json#/$defs/FireLoadBasis",
+      "x-semio-ui": {
+        "widget": "segmented",
+        "role": "value",
+        "label": {
+          "en": "Fire load basis",
+          "de": "Brandlastgrundlage"
+        },
+        "options": {
+          "occupancyTable": {
+            "en": "Occupancy table (Table E.4, 80 % fractile)",
+            "de": "Nutzungstabelle (Tabelle E.4, 80-%-Fraktile)"
+          },
+          "userSpecified": {
+            "en": "User-specified q_f,k",
+            "de": "Vorgegebenes q_f,k"
+          }
+        },
+        "group": "fire",
+        "order": 9
+      },
+      "x-semio-rust": {
+        "type": "semio_s_artifact_norm_en1991_model::FireLoadBasis"
+      }
+    }
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeAssessmentBarDiameterMm",
+  "id": "as-1",
+  "newBarDiameterMm": 1.5
+}

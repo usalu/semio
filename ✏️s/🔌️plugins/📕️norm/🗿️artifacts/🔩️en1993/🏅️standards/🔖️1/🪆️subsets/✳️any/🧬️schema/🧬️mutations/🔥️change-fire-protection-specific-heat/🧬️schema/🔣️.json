@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-fire-protection-specific-heat/schema.json",
+  "title": "ChangeFireProtectionSpecificHeat",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newProtectionSpecificHeat"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Fire exposure",
+          "de": "Brandbeanspruchung"
+        },
+        "description": {
+          "en": "The fire exposure this mutation addresses, by id.",
+          "de": "Das adressierte Element (Brandbeanspruchung), per Kennung."
+        },
+        "ref": {
+          "kind": "fire-exposure"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newProtectionSpecificHeat": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Specific heat of the protection c_p",
+          "de": "Spezifische Wärmekapazität der Bekleidung c_p"
+        },
+        "widget": "stepper",
+        "unit": "J/(kg·K)",
+        "precision": 0,
+        "step": 50,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

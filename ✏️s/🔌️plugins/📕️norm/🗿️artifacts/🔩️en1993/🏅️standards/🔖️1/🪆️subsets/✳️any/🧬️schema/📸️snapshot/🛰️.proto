@@ -1,44 +1,869 @@
-// 🧬️ En1993 snapshot
 syntax = "proto3";
-package semio.s.norm.en1993.snapshot;
-
-message SteelMaterial { string id = 1; string grade = 2; double fy = 3; double fu = 4; double e_modulus = 5; double g_modulus = 6; string subgrade = 7; string kind = 8; }
-message SteelSection { string id = 1; string designation = 2; string kind = 3; double h = 4; double b = 5; double tw = 6; double tf = 7; double r = 8; double area = 9; double shear_area_y = 10; double shear_area_z = 11; double iy = 12; double iz = 13; double it = 14; double iw = 15; double w_el_y = 16; double w_el_z = 17; double w_pl_y = 18; double w_pl_z = 19; double area_net = 20; }
-message SteelMember { string id = 1; string label = 2; string member_type = 3; string section_id = 4; string material_id = 5; double length = 6; double buckling_length_y = 7; double buckling_length_z = 8; double ltb_length = 9; double ltb_restraint_spacing = 10; string load_application = 11; double end_moment_ratio_psi = 12; string moment_diagram = 13; double deflection_limit_ratio = 14; string analysis = 15; }
-message DesignAction { double n = 1; double vy = 2; double vz = 3; double my = 4; double mz = 5; double t = 6; }
-message LoadCase { string id = 1; string name = 2; string kind = 3; string category = 4; }
-message MemberAction { string id = 1; string member_id = 2; string load_case_id = 3; DesignAction action = 4; }
-message ForceAction { string id = 1; string load_case_id = 2; double force = 3; }
-message JointForceAction { string id = 1; string load_case_id = 2; double shear = 3; double tension = 4; }
-message FatigueBand { string id = 1; double delta_sigma = 2; double cycles = 3; }
-message SteelJoint { string id = 1; string kind = 2; string member_id = 3; string bolt_class = 4; double bolt_diameter = 5; uint32 bolt_rows = 6; uint32 bolts_per_row = 7; double pitch = 8; double gauge = 9; double end_distance = 10; double edge_distance = 11; uint32 shear_planes = 12; double plate_thickness = 13; double plate_fu = 14; double weld_throat = 15; double weld_length = 16; double weld_fu = 17; string weld_grade = 18; repeated JointForceAction actions = 19; string category = 20; double friction_mu = 21; double preload_force = 22; double slip_factor_ks = 23; uint32 friction_surfaces = 24; }
-message FatigueDetail { string id = 1; string member_id = 2; uint32 category = 3; string method = 4; repeated FatigueBand spectrum = 5; }
-message FireExposure { string id = 1; string member_id = 2; string rating = 3; double protection_thickness = 4; double section_factor = 5; double mu0 = 6; double design_temperature = 7; double protection_conductivity = 8; double protection_density = 9; double protection_specific_heat = 10; }
-message ColdFormedMember { string id = 1; double b_bar = 2; double thickness = 3; double k_sigma = 4; double psi = 5; double fy = 6; double gross_resistance = 7; repeated ForceAction actions = 8; }
-message PlatedPanel { string id = 1; double a = 2; double b = 3; double thickness = 4; double fy = 5; double k_sigma = 6; repeated ForceAction actions = 7; }
-message SiloShell { string id = 1; double thickness = 2; double radius = 3; double depth = 4; double k = 5; double gamma = 6; double fy = 7; }
-message TensionComponent { string id = 1; double f_uk = 2; double f_k = 3; repeated ForceAction actions = 4; }
-message BridgeFatigue { string id = 1; string member_id = 2; double lambda = 3; double phi2 = 4; double delta_sigma_p = 5; uint32 category = 6; string method = 7; }
-message TowerLeg { string id = 1; string member_id = 2; double force_coefficient = 3; double dynamic_factor = 4; repeated ForceAction actions = 5; }
-message SteelPile { string id = 1; string section_id = 2; string material_id = 3; double driving_stress = 4; double embedded_length = 5; double shaft_perimeter = 6; repeated ForceAction actions = 7; }
-message CraneRunway { string id = 1; string member_id = 2; double wheel_contact_length = 3; double dispersion = 4; double web_thickness = 5; double fy = 6; double phi = 7; repeated ForceAction actions = 8; }
-
+package semio.s.norm.en1993;
 message En1993Snapshot {
+  // @state artifact
   string annex = 1;
+  // @state artifact
   repeated SteelMaterial materials = 2;
+  // @state artifact
   repeated SteelSection sections = 3;
+  // @state artifact
   repeated SteelMember members = 4;
+  // @state artifact
   repeated LoadCase load_cases = 5;
+  // @state artifact
   repeated MemberAction member_actions = 6;
+  // @state artifact
   repeated SteelJoint joints = 7;
+  // @state artifact
   repeated FatigueDetail fatigue_details = 8;
+  // @state artifact
   repeated FireExposure fire_exposures = 9;
+  // @state artifact
   repeated ColdFormedMember cold_formed_members = 10;
+  // @state artifact
   repeated PlatedPanel plated_panels = 11;
+  // @state artifact
   repeated SiloShell silo_shells = 12;
+  // @state artifact
   repeated TensionComponent tension_components = 13;
+  // @state artifact
   repeated BridgeFatigue bridge_fatigue = 14;
+  // @state artifact
   repeated TowerLeg tower_legs = 15;
+  // @state artifact
   repeated SteelPile piles = 16;
+  // @state artifact
   repeated CraneRunway crane_runways = 17;
+  // @state artifact
+  repeated Storey storeys = 18;
+  // @state artifact
+  repeated Restraint restraints = 19;
+  // @state artifact
+  repeated BuiltUpMember built_up_members = 20;
+  // @state artifact
+  repeated WeldGroup weld_groups = 21;
+  // @state artifact
+  repeated ParametricSection parametric_sections = 22;
+  // @state artifact
+  repeated HollowJoint hollow_joints = 23;
+  // @state artifact
+  repeated JointRow joint_rows = 24;
+  // @state artifact
+  repeated FrameNode frame_nodes = 25;
+  // @state artifact
+  repeated FrameBar frame_bars = 26;
+  // @state artifact
+  repeated Placement placements = 27;
+  // @state artifact
+  repeated JointPlate joint_plates = 28;
+  // @state artifact
+  repeated FoundationBlock foundation_blocks = 29;
+  // @state artifact
+  string reliability_class = 30;
+  // @state artifact
+  repeated FrameAction frame_actions = 31;
+  // @state artifact
+  repeated FrameMemberBasis frame_member_bases = 32;
+}
+enum MaterialKind {
+  MATERIAL_KIND_CARBON = 0;
+  MATERIAL_KIND_STAINLESS = 1;
+}
+message SteelMaterial {
+  string id = 1;
+  string grade = 2;
+  double fy = 3;
+  double fu = 4;
+  double e_modulus = 5;
+  double g_modulus = 6;
+  string subgrade = 7;
+  MaterialKind kind = 8;
+  double ramberg_osgood_n = 9;
+}
+enum SectionKind {
+  SECTION_KIND_ROLLED_I = 0;
+  SECTION_KIND_WELDED_I = 1;
+  SECTION_KIND_HSS = 2;
+  SECTION_KIND_CHS = 3;
+  SECTION_KIND_ANGLE = 4;
+}
+message SteelSection {
+  string id = 1;
+  string designation = 2;
+  SectionKind kind = 3;
+  double h = 4;
+  double b = 5;
+  double tw = 6;
+  double tf = 7;
+  double r = 8;
+  double area = 9;
+  double shear_area_y = 10;
+  double shear_area_z = 11;
+  double iy = 12;
+  double iz = 13;
+  double it = 14;
+  double iw = 15;
+  double w_el_y = 16;
+  double w_el_z = 17;
+  double w_pl_y = 18;
+  double w_pl_z = 19;
+  double area_net = 20;
+  HollowFabrication fabrication = 21;
+}
+enum WarpingSupport {
+  WARPING_SUPPORT_FORK = 0;
+  WARPING_SUPPORT_FIXED = 1;
+  WARPING_SUPPORT_FIXED_FORK = 2;
+  WARPING_SUPPORT_CANTILEVER = 3;
+}
+enum SteelMemberType {
+  STEEL_MEMBER_TYPE_BEAM = 0;
+  STEEL_MEMBER_TYPE_COLUMN = 1;
+  STEEL_MEMBER_TYPE_BEAM_COLUMN = 2;
+  STEEL_MEMBER_TYPE_BRACE = 3;
+  STEEL_MEMBER_TYPE_TIE = 4;
+}
+enum LoadApplication {
+  LOAD_APPLICATION_SHEAR_CENTER = 0;
+  LOAD_APPLICATION_TOP_FLANGE = 1;
+  LOAD_APPLICATION_BOTTOM_FLANGE = 2;
+}
+enum MomentDiagram {
+  MOMENT_DIAGRAM_LINEAR = 0;
+  MOMENT_DIAGRAM_UNIFORM = 1;
+  MOMENT_DIAGRAM_PARABOLIC = 2;
+}
+enum AnalysisKind {
+  ANALYSIS_KIND_ELASTIC = 0;
+  ANALYSIS_KIND_PLASTIC = 1;
+}
+enum StainlessForming {
+  STAINLESS_FORMING_UNSET = 0;
+  STAINLESS_FORMING_COLD_FORMED_OPEN = 1;
+  STAINLESS_FORMING_WELDED_OPEN = 2;
+  STAINLESS_FORMING_HOLLOW = 3;
+}
+enum TorsionLoad {
+  TORSION_LOAD_POINT = 0;
+  TORSION_LOAD_UDL = 1;
+}
+message SteelMember {
+  string id = 1;
+  string label = 2;
+  SteelMemberType member_type = 3;
+  string section_id = 4;
+  string material_id = 5;
+  double length = 6;
+  double buckling_length_y = 7;
+  double buckling_length_z = 8;
+  double ltb_length = 9;
+  double ltb_restraint_spacing = 10;
+  LoadApplication load_application = 11;
+  double end_moment_ratio_psi = 12;
+  MomentDiagram moment_diagram = 13;
+  double deflection_limit_ratio = 14;
+  AnalysisKind analysis = 15;
+  StainlessForming stainless_forming = 16;
+  double design_temperature = 17;
+  double toughness_stress_ratio = 18;
+  double radiation_shift = 19;
+  double stress_shift = 20;
+  double margin_shift = 21;
+  double strain_rate_shift = 22;
+  double cold_forming_radius = 23;
+  string web_material_id = 24;
+  TorsionLoad torsion_load = 25;
+  double torque_position = 26;
+  WarpingSupport warping_support = 27;
+}
+enum ActionKind {
+  ACTION_KIND_PERMANENT = 0;
+  ACTION_KIND_IMPOSED = 1;
+  ACTION_KIND_WIND = 2;
+  ACTION_KIND_SNOW = 3;
+  ACTION_KIND_ACCIDENTAL = 4;
+}
+message LoadCase {
+  string id = 1;
+  string name = 2;
+  ActionKind kind = 3;
+  string category = 4;
+}
+message DesignAction {
+  double n = 1;
+  double vy = 2;
+  double vz = 3;
+  double my = 4;
+  double mz = 5;
+  double t = 6;
+}
+message MemberAction {
+  string id = 1;
+  string member_id = 2;
+  string load_case_id = 3;
+  DesignAction action = 4;
+}
+enum StiffnessClass {
+  STIFFNESS_CLASS_UNSET = 0;
+  STIFFNESS_CLASS_RIGID = 1;
+  STIFFNESS_CLASS_SEMI_RIGID = 2;
+  STIFFNESS_CLASS_PINNED = 3;
+}
+enum JointKind {
+  JOINT_KIND_BOLTED = 0;
+  JOINT_KIND_WELDED = 1;
+  JOINT_KIND_END_PLATE = 2;
+  JOINT_KIND_BASE_PLATE = 3;
+}
+enum JointCategory {
+  JOINT_CATEGORY_A = 0;
+  JOINT_CATEGORY_B = 1;
+  JOINT_CATEGORY_C = 2;
+}
+message SteelJoint {
+  string id = 1;
+  JointKind kind = 2;
+  string member_id = 3;
+  string bolt_class = 4;
+  double bolt_diameter = 5;
+  uint32 bolt_rows = 6;
+  uint32 bolts_per_row = 7;
+  double pitch = 8;
+  double gauge = 9;
+  double end_distance = 10;
+  double edge_distance = 11;
+  uint32 shear_planes = 12;
+  double plate_thickness = 13;
+  double plate_fu = 14;
+  double weld_throat = 15;
+  double weld_length = 16;
+  double weld_fu = 17;
+  string weld_grade = 18;
+  repeated JointForceAction actions = 19;
+  JointCategory category = 20;
+  double friction_mu = 21;
+  double preload_force = 22;
+  double slip_factor_ks = 23;
+  uint32 friction_surfaces = 24;
+  double plate_fy = 25;
+  double plate_width = 26;
+  double bolt_to_web = 27;
+  double extension_to_flange = 28;
+  double extension_edge = 29;
+  double alpha_factor = 30;
+  double bolt_stress_area = 31;
+  double bolt_grip_length = 32;
+  double column_flange_thickness = 33;
+  double column_web_thickness = 34;
+  double column_web_depth = 35;
+  double column_web_shear_area = 36;
+  double column_root_radius = 37;
+  double column_fy = 38;
+  double column_web_stress = 39;
+  double beam_flange_thickness = 40;
+  double compression_lever = 41;
+  double moment_demand = 42;
+  double beam_moment_resistance = 43;
+  double column_moment_resistance = 44;
+  double beam_inertia = 45;
+  double beam_span = 46;
+  uint32 braced_frame = 47;
+  double stiffness_ratio = 48;
+  double transformation_parameter = 49;
+  StiffnessClass assumed_class = 50;
+  double base_plate_length = 51;
+  double concrete_fcd = 52;
+  double concrete_modulus = 53;
+  double concrete_area_a0 = 54;
+  double concrete_area_a1 = 55;
+  double joint_coefficient = 56;
+  double anchor_area = 57;
+  double anchor_length = 58;
+  double base_normal_force = 59;
+  double base_moment = 60;
+  double base_lever_left = 61;
+  double base_lever_right = 62;
+  double beam_web_thickness = 63;
+  double beam_web_fy = 64;
+}
+enum FatigueMethod {
+  FATIGUE_METHOD_DAMAGE_TOLERANT = 0;
+  FATIGUE_METHOD_SAFE_LIFE = 1;
+}
+message FatigueDetail {
+  string id = 1;
+  string member_id = 2;
+  uint32 category = 3;
+  FatigueMethod method = 4;
+  repeated FatigueBand spectrum = 5;
+  string stress_history = 6;
+}
+enum FireRating {
+  FIRE_RATING_R30 = 0;
+  FIRE_RATING_R60 = 1;
+  FIRE_RATING_R90 = 2;
+  FIRE_RATING_R120 = 3;
+}
+message FireExposure {
+  string id = 1;
+  string member_id = 2;
+  FireRating rating = 3;
+  double protection_thickness = 4;
+  double section_factor = 5;
+  double mu0 = 6;
+  double design_temperature = 7;
+  double protection_conductivity = 8;
+  double protection_density = 9;
+  double protection_specific_heat = 10;
+}
+message ColdFormedMember {
+  string id = 1;
+  double b_bar = 2;
+  double thickness = 3;
+  double k_sigma = 4;
+  double psi = 5;
+  double fy = 6;
+  double gross_resistance = 7;
+  repeated ForceAction actions = 8;
+  double flange_width = 9;
+  double lip_length = 10;
+  double web_height = 11;
+  double web_slope = 12;
+  double opposite_flange_width = 13;
+  double spring_factor = 14;
+  double corner_radius = 15;
+  double flange_stress = 16;
+  double shear_force = 17;
+  double support_reaction = 18;
+  double support_length = 19;
+  uint32 crippling_category = 20;
+  uint32 stiffened_support = 21;
+  double bending_moment = 22;
+  double moment_resistance = 23;
+  double sheeting_stiffness = 24;
+  double required_restraint_stiffness = 25;
+  double purlin_span = 26;
+  double purlin_load = 27;
+  double purlin_lateral_ratio = 28;
+}
+enum StiffenerShape {
+  STIFFENER_SHAPE_NONE = 0;
+  STIFFENER_SHAPE_FLAT = 1;
+  STIFFENER_SHAPE_TEE = 2;
+  STIFFENER_SHAPE_ANGLE = 3;
+}
+enum PatchLoadType {
+  PATCH_LOAD_TYPE_UNSET = 0;
+  PATCH_LOAD_TYPE_THROUGH = 1;
+  PATCH_LOAD_TYPE_ONE_FLANGE_NEAR_END = 2;
+  PATCH_LOAD_TYPE_END_FLANGE = 3;
+}
+message PlatedPanel {
+  string id = 1;
+  double a = 2;
+  double b = 3;
+  double thickness = 4;
+  double fy = 5;
+  double k_sigma = 6;
+  repeated ForceAction actions = 7;
+  double stiffener_inertia = 8;
+  double stiffener_area = 9;
+  double stiffener_eccentricity = 10;
+  double stiffener_alpha = 11;
+  double compression_stress = 12;
+  double half_width = 13;
+  double equivalent_span = 14;
+  uint32 hogging = 15;
+  PatchLoadType patch_type = 16;
+  double patch_force = 17;
+  double patch_length = 18;
+  double patch_offset = 19;
+  double flange_thickness = 20;
+  double flange_width = 21;
+  double flange_fy = 22;
+  double longitudinal_offset = 23;
+  double longitudinal_inertia = 24;
+  double patch_moment = 25;
+  double patch_moment_resistance = 26;
+  double bending_moment = 27;
+  double plastic_moment = 28;
+  double flange_moment = 29;
+  double shear_force = 30;
+  double transverse_stiffener_inertia = 31;
+  double flange_induced_k = 32;
+  double flange_area = 33;
+  double stress_x = 34;
+  double stress_z = 35;
+  double shear_stress = 36;
+  double alpha_cr = 37;
+  double corrugation_flat = 38;
+  double corrugation_projection = 39;
+  double corrugation_depth = 40;
+  double web_height = 41;
+  double stiffener_spacing = 42;
+  StiffenerShape stiffener_shape = 43;
+  double stiffener_depth = 44;
+  double stiffener_thickness = 45;
+  double stiffener_flange_width = 46;
+  double stiffener_flange_thickness = 47;
+  double lateral_pressure = 48;
+  double lateral_pressure_coefficient = 49;
+}
+enum FabricationToleranceClass {
+  FABRICATION_TOLERANCE_CLASS_UNSET = 0;
+  FABRICATION_TOLERANCE_CLASS_A = 1;
+  FABRICATION_TOLERANCE_CLASS_B = 2;
+  FABRICATION_TOLERANCE_CLASS_C = 3;
+}
+message SiloShell {
+  string id = 1;
+  double thickness = 2;
+  double radius = 3;
+  double depth = 4;
+  double k = 5;
+  double gamma = 6;
+  double fy = 7;
+  double length = 8;
+  FabricationToleranceClass fabrication_class = 9;
+  double meridional_stress = 10;
+  double hoop_stress = 11;
+  double shell_shear_stress = 12;
+  double boundary_factor_axial = 13;
+  double boundary_factor_hoop = 14;
+  double boundary_factor_shear = 15;
+  double wall_friction = 16;
+  double plan_area = 17;
+  double plan_perimeter = 18;
+  double liquid_density = 19;
+  double liquid_height = 20;
+  double course_elevation = 21;
+  double internal_pressure = 22;
+  double external_pressure = 23;
+  double temperature_change = 24;
+  double ring_spacing = 25;
+  double ring_area = 26;
+  double ring_inertia = 27;
+  double ring_offset = 28;
+}
+message TensionComponent {
+  string id = 1;
+  double f_uk = 2;
+  double f_k = 3;
+  repeated ForceAction actions = 4;
+  double partial_factor = 5;
+  double cable_length = 6;
+  double cable_weight = 7;
+  double cable_horizontal_force = 8;
+  double cable_modulus = 9;
+  double cable_stress = 10;
+  double cable_unit_weight = 11;
+  double thread_factor = 12;
+  double rod_stress_area = 13;
+  double rod_fu = 14;
+  double pin_diameter = 15;
+  double pin_plate_thickness = 16;
+  double pin_gap = 17;
+  double pin_outer_thickness = 18;
+  double pin_inner_thickness = 19;
+  double pin_fup = 20;
+  double pin_fyp = 21;
+  double pin_plate_fy = 22;
+}
+message BridgeFatigue {
+  string id = 1;
+  string member_id = 2;
+  double lambda = 3;
+  double phi2 = 4;
+  double delta_sigma_p = 5;
+  uint32 category = 6;
+  FatigueMethod method = 7;
+  double heavy_vehicle_weight = 8;
+  double reference_weight = 9;
+  double observed_traffic = 10;
+  double design_life = 11;
+  double second_lane_traffic = 12;
+  double second_lane_weight = 13;
+  double lambda1 = 14;
+  double lambda_max = 15;
+  string detail_id = 16;
+  double plate_thickness = 17;
+  double deck_thickness = 18;
+  double trough_spacing = 19;
+  double trough_width = 20;
+  double trough_thickness = 21;
+  double crossbeam_spacing = 22;
+  double surfacing_thickness = 23;
+  double wheel_load = 24;
+  double wheel_patch = 25;
+}
+enum LatticeKind {
+  LATTICE_KIND_UNSET = 0;
+  LATTICE_KIND_LEG = 1;
+  LATTICE_KIND_DIAGONAL = 2;
+  LATTICE_KIND_REDUNDANT = 3;
+}
+message TowerLeg {
+  string id = 1;
+  string member_id = 2;
+  double force_coefficient = 3;
+  double dynamic_factor = 4;
+  repeated ForceAction actions = 5;
+  LatticeKind lattice_kind = 6;
+  double slenderness = 7;
+  double diameter = 8;
+  double height = 9;
+  double bending_stiffness = 10;
+  double mass_per_length = 11;
+  double strouhal = 12;
+  double log_decrement = 13;
+  double air_density = 14;
+  double mean_wind_speed = 15;
+  double crossing_rate = 16;
+  double design_life = 17;
+  double k_factor = 18;
+  double kw_factor = 19;
+  double lateral_force_coefficient = 20;
+  double permitted_amplitude_ratio = 21;
+  double ring_mode = 22;
+  double shell_thickness = 23;
+  double guy_area = 24;
+  double guy_angle = 25;
+  double guy_length = 26;
+}
+enum SheetPileEnvironment {
+  SHEET_PILE_ENVIRONMENT_UNSET = 0;
+  SHEET_PILE_ENVIRONMENT_UNDISTURBED_SOIL = 1;
+  SHEET_PILE_ENVIRONMENT_POLLUTED_SOIL = 2;
+  SHEET_PILE_ENVIRONMENT_COMPACTED_FILL = 3;
+  SHEET_PILE_ENVIRONMENT_NON_COMPACTED_FILL = 4;
+}
+message SteelPile {
+  string id = 1;
+  string section_id = 2;
+  string material_id = 3;
+  double driving_stress = 4;
+  double embedded_length = 5;
+  double shaft_perimeter = 6;
+  repeated ForceAction actions = 7;
+  SheetPileEnvironment environment = 8;
+  double design_life = 9;
+  double wall_thickness = 10;
+  double interlock_bending_factor = 11;
+  double interlock_stiffness_factor = 12;
+  double section_modulus = 13;
+  double shear_area = 14;
+  double design_moment = 15;
+  double design_shear = 16;
+  double interlock_shear = 17;
+}
+message CraneRunway {
+  string id = 1;
+  string member_id = 2;
+  double wheel_contact_length = 3;
+  double dispersion = 4;
+  double web_thickness = 5;
+  double fy = 6;
+  double phi = 7;
+  repeated ForceAction actions = 8;
+  double max_wheel_load = 9;
+  double load_factor = 10;
+  double rail_inertia = 11;
+  uint32 rail_fixed = 12;
+  double flange_effective_width = 13;
+  double flange_thickness = 14;
+  double wheel_eccentricity = 15;
+  double torsion_constant = 16;
+  double longitudinal_stress = 17;
+  double rail_radius = 18;
+  double rail_contact_width = 19;
+  double crane_nu = 20;
+  double crane_kq = 21;
+  double damage_exponent = 22;
+  double stress_range = 23;
+  double detail_category_stress = 24;
+  double fatigue_phi = 25;
+}
+message Storey {
+  string id = 1;
+  string member_id = 2;
+  string label = 3;
+  double height = 4;
+  double vertical_load = 5;
+  double horizontal_load = 6;
+  double drift = 7;
+  uint32 columns = 8;
+  uint32 plastic_analysis = 9;
+  double building_height = 10;
+  double bracing_load = 11;
+  double bracing_length = 12;
+  double bracing_deflection = 13;
+}
+enum RestraintSupport {
+  RESTRAINT_SUPPORT_FORK = 0;
+  RESTRAINT_SUPPORT_FIXED = 1;
+}
+enum RestraintDistribution {
+  RESTRAINT_DISTRIBUTION_UNIFORM = 0;
+  RESTRAINT_DISTRIBUTION_UDL = 1;
+  RESTRAINT_DISTRIBUTION_LINEAR = 2;
+}
+message Restraint {
+  string id = 1;
+  string member_id = 2;
+  string label = 3;
+  RestraintSupport start_support = 4;
+  RestraintSupport end_support = 5;
+  double intermediate_position = 6;
+  double torsional_spring = 7;
+  double lateral_spring_position = 8;
+  double lateral_spring_stiffness = 9;
+  double load_height = 10;
+  RestraintDistribution load_distribution = 11;
+  double design_moment = 12;
+  double design_axial = 13;
+  uint32 general_method = 14;
+  double hinge_to_restraint = 15;
+}
+enum ChordShape {
+  CHORD_SHAPE_UNSET = 0;
+  CHORD_SHAPE_CHANNEL = 1;
+  CHORD_SHAPE_I = 2;
+  CHORD_SHAPE_RHS = 3;
+  CHORD_SHAPE_CHS = 4;
+}
+enum BuiltUpKind {
+  BUILT_UP_KIND_LACED = 0;
+  BUILT_UP_KIND_BATTENED = 1;
+  BUILT_UP_KIND_CLOSELY = 2;
+}
+message BuiltUpMember {
+  string id = 1;
+  string member_id = 2;
+  string label = 3;
+  BuiltUpKind kind = 4;
+  double chord_area = 5;
+  double chord_inertia = 6;
+  double chord_distance = 7;
+  double panel_spacing = 8;
+  uint32 planes = 9;
+  double batten_inertia = 10;
+  double diagonal_area = 11;
+  double diagonal_length = 12;
+  double design_axial = 13;
+  double design_moment = 14;
+  uint32 back_to_back = 15;
+  double min_radius = 16;
+  double chain_spacing = 17;
+  ChordShape chord_shape = 18;
+  double chord_depth = 19;
+  double chord_width = 20;
+  double chord_flange_thickness = 21;
+  double chord_web_thickness = 22;
+}
+enum WeldPattern {
+  WELD_PATTERN_LINE = 0;
+  WELD_PATTERN_TWO_LINES = 1;
+  WELD_PATTERN_BOX = 2;
+}
+message WeldGroup {
+  string id = 1;
+  string member_id = 2;
+  string label = 3;
+  WeldPattern pattern = 4;
+  double throat = 5;
+  double width = 6;
+  double depth = 7;
+  double shear_force = 8;
+  double eccentricity = 9;
+  double steel_fu = 10;
+  double beta_w = 11;
+}
+enum ParametricShape {
+  PARAMETRIC_SHAPE_WELDED_I = 0;
+  PARAMETRIC_SHAPE_RHS = 1;
+  PARAMETRIC_SHAPE_CHS = 2;
+  PARAMETRIC_SHAPE_ANGLE = 3;
+}
+message ParametricSection {
+  string id = 1;
+  string section_id = 2;
+  string label = 3;
+  ParametricShape shape = 4;
+  double height = 5;
+  double width = 6;
+  double web_thickness = 7;
+  double flange_thickness = 8;
+  double tolerance = 9;
+}
+message HollowJoint {
+  string id = 1;
+  string member_id = 2;
+  string label = 3;
+  double chord_width = 4;
+  double chord_height = 5;
+  double chord_thickness = 6;
+  double chord_fy = 7;
+  double chord_stress = 8;
+  double brace1_width = 9;
+  double brace1_height = 10;
+  double brace1_thickness = 11;
+  double brace1_angle = 12;
+  double brace1_force = 13;
+  double brace2_width = 14;
+  double brace2_height = 15;
+  double brace2_thickness = 16;
+  double brace2_angle = 17;
+  double brace2_force = 18;
+  double gap = 19;
+  double brace_fy = 20;
+}
+enum JointRowType {
+  JOINT_ROW_TYPE_EXTENDED = 0;
+  JOINT_ROW_TYPE_FIRST_BELOW = 1;
+  JOINT_ROW_TYPE_INNER = 2;
+}
+message JointRow {
+  string id = 1;
+  string joint_id = 2;
+  string label = 3;
+  JointRowType row_type = 4;
+  double lever = 5;
+  double bolt_to_web = 6;
+  double edge_distance = 7;
+  double extension_to_flange = 8;
+  double extension_edge = 9;
+  double alpha_factor = 10;
+  double pitch_to_previous = 11;
+  uint32 bolts = 12;
+  double bolt_diameter = 13;
+  double bolt_stress_area = 14;
+  double grip_length = 15;
+  string bolt_class = 16;
+  uint32 group_with_previous = 17;
+}
+enum FrameNodeSupport {
+  FRAME_NODE_SUPPORT_FREE = 0;
+  FRAME_NODE_SUPPORT_PINNED = 1;
+  FRAME_NODE_SUPPORT_FIXED = 2;
+  FRAME_NODE_SUPPORT_ROLLER = 3;
+}
+message FrameNode {
+  string id = 1;
+  string label = 2;
+  double x = 3;
+  double z = 4;
+  FrameNodeSupport support = 5;
+  double load_x = 6;
+  double load_z = 7;
+}
+enum FrameBarRelease {
+  FRAME_BAR_RELEASE_RIGID = 0;
+  FRAME_BAR_RELEASE_PINNED = 1;
+  FRAME_BAR_RELEASE_SEMI_RIGID = 2;
+}
+message FrameBar {
+  string id = 1;
+  string member_id = 2;
+  string label = 3;
+  string start_node_id = 4;
+  string end_node_id = 5;
+  FrameBarRelease release_start = 6;
+  FrameBarRelease release_end = 7;
+}
+message Placement {
+  string id = 1;
+  double x = 2;
+  double y = 3;
+  double z = 4;
+  double yaw = 5;
+}
+message JointPlate {
+  string id = 1;
+  string joint_id = 2;
+  string label = 3;
+  string role = 4;
+  double plate_height = 5;
+  double plate_width = 6;
+  double plate_thickness = 7;
+  uint32 plate_count = 8;
+  double plate_fy = 9;
+  double plate_fu = 10;
+  string bolt_class = 11;
+  double bolt_diameter = 12;
+  double hole_diameter = 13;
+  uint32 bolt_rows = 14;
+  uint32 bolts_per_row = 15;
+  double pitch = 16;
+  double gauge = 17;
+  double end_distance = 18;
+  double edge_distance = 19;
+  uint32 shear_planes = 20;
+  double eccentricity = 21;
+  double weld_throat = 22;
+  double weld_fu = 23;
+  double weld_beta_w = 24;
+}
+message FoundationBlock {
+  string id = 1;
+  string joint_id = 2;
+  string label = 3;
+  double block_length = 4;
+  double block_width = 5;
+  double block_depth = 6;
+  double concrete_fck = 7;
+  double grout_fck = 8;
+  double grout_thickness = 9;
+  uint32 anchor_count = 10;
+  string anchor_class = 11;
+  double anchor_diameter = 12;
+  double anchor_stress_area = 13;
+  double anchor_embedment = 14;
+  double anchor_edge_distance = 15;
+}
+message ForceAction {
+  string id = 1;
+  string load_case_id = 2;
+  double force = 3;
+}
+message JointForceAction {
+  string id = 1;
+  string load_case_id = 2;
+  double shear = 3;
+  double tension = 4;
+}
+message FatigueBand {
+  string id = 1;
+  double delta_sigma = 2;
+  double cycles = 3;
+}
+enum FrameActionKind {
+  FRAME_ACTION_KIND_NODAL_FORCE = 0;
+  FRAME_ACTION_KIND_NODAL_MOMENT = 1;
+  FRAME_ACTION_KIND_BAR_UNIFORM = 2;
+}
+message FrameAction {
+  string id = 1;
+  string load_case_id = 2;
+  string target_id = 3;
+  FrameActionKind kind = 4;
+  double fx = 5;
+  double fz = 6;
+  double my = 7;
+  double start_ratio = 8;
+  double end_ratio = 9;
+}
+enum MemberForceBasis {
+  MEMBER_FORCE_BASIS_FRAME_DERIVED = 0;
+  MEMBER_FORCE_BASIS_EXPLICIT = 1;
+}
+message FrameMemberBasis {
+  string id = 1;
+  string member_id = 2;
+  MemberForceBasis basis = 3;
+}
+enum HollowFabrication {
+  HOLLOW_FABRICATION_UNSET = 0;
+  HOLLOW_FABRICATION_HOT_FINISHED = 1;
+  HOLLOW_FABRICATION_COLD_FORMED = 2;
 }

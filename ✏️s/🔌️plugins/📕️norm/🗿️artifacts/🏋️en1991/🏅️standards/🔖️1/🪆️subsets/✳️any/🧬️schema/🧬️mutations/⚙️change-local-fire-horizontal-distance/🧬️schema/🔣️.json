@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-local-fire-horizontal-distance/schema.json",
+  "title": "ChangeLocalFireHorizontalDistance",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newHorizontalDistance"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Localised fire",
+          "de": "Lokaler Brand"
+        },
+        "description": {
+          "en": "The localised fire this mutation addresses, by id.",
+          "de": "Das adressierte Element (Lokaler Brand), per Kennung."
+        },
+        "ref": {
+          "kind": "local-fire"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newHorizontalDistance": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Rotation horizontal_distance f",
+          "de": "Horizontaler Abstand r"
+        },
+        "widget": "stepper",
+        "role": "value",
+        "group": "value",
+        "order": 20,
+        "unit": "m",
+        "precision": 2,
+        "step": 0.1
+      }
+    }
+  }
+}

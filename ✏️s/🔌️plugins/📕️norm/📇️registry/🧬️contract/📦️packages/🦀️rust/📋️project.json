@@ -11,6 +11,8 @@
     "nativeSources": [
       "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/⚖️compliance/**/*.rs",
       "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/🪟️results/🎚️config/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/🪟️viewport/🎚️config/**/*",
+      "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/🎬️structural-scene/**/*",
       "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/🖥️app-surface/**/*.rs",
       "{workspaceRoot}/✏️s/🔌️plugins/📕️norm/📇️registry/🧬️contract/**/*"
     ]

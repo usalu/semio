@@ -207,6 +207,7 @@ impl AppRuntime {
                 cursor.phase = FrameBuildPhase::Hover;
             }
             FrameBuildPhase::Hover => {
+                self.poll_world_touch();
                 let (hover_x, hover_y) = (self.last_pointer_x, self.last_pointer_y);
                 self.input.update_hover(hover_x, hover_y);
                 cursor.phase = FrameBuildPhase::InputFrame;
@@ -310,7 +311,7 @@ impl AppRuntime {
                 let wall_now_ms = app_now_ms();
                 semio_framework_os_renderer_wgpu_shell_window_actions::WindowActionsCtx::of(&mut self.shell).tutorial_tick(wall_now_ms);
                 if let Some(runtime) = handle.upgrade().map(RuntimeMailbox) {
-                    let deadline = semio_framework_job::default_now_us().and_then(|now| self.shell.surfaces.next_chrome_deadline(now as f64 / 1_000_000.0, wall_now_ms, &self.shell.chrome, &self.shell.tutorial));
+                    let deadline = semio_framework_job::default_now_us().and_then(|now| AppInteractionState::wake_deadline(self.shell.surfaces.next_chrome_deadline(now as f64 / 1_000_000.0, wall_now_ms, &self.shell.chrome, &self.shell.tutorial), now as f64 / 1_000_000.0, wall_now_ms));
                     runtime.publish_shell_clock_deadline(deadline);
                 }
                 cursor.phase = FrameBuildPhase::EnginePacketBacking;

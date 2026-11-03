@@ -1,0 +1,6 @@
+{
+  "ChangeChaseWall": {
+    "id": "chase-1",
+    "newWallId": "wall-south"
+  }
+}

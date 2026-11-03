@@ -1,0 +1,5 @@
+{
+  "mutation": "changeConnWeldsBetaW",
+  "connectionId": "support-weld",
+  "newWeldsBetaW": 1.26
+}

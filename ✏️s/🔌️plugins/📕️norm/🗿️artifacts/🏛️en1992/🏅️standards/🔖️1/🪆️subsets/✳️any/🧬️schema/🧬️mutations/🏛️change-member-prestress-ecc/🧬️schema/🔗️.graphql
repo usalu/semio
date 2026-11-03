@@ -1,0 +1,4 @@
+type ChangeMemberPrestressEcc {
+  memberId: String!
+  newPrestressEccentricity: Float!
+}

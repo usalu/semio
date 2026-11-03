@@ -1,0 +1,6 @@
+{
+  "ChangeDynamicElementStrouhal": {
+    "id": "dynamic-element-1",
+    "newStrouhal": 3.0
+  }
+}

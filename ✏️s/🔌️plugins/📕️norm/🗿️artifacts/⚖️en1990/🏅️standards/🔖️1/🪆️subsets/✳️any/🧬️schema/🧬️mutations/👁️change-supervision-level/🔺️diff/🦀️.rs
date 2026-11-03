@@ -6,11 +6,11 @@ use semio_s_artifact_norm_en1990_model::En1990Snapshot;
 use protocol::MutationOutcome;
 
 pub fn diff(mutation: &ChangeSupervisionLevel, base: &En1990Snapshot) -> MutationOutcome<En1990Diff> {
-    if &base.supervision_level == &mutation.new_supervision_level {
+    if base.supervision_level == mutation.new_supervision_level {
         return MutationOutcome::empty().warning("mutation.no-op", "supervision_level already has this value.");
     }
     MutationOutcome::new(En1990Diff {
-        supervision_level: Some(mutation.new_supervision_level.clone()),
+        supervision_level: Some(mutation.new_supervision_level),
         ..En1990Diff::default()
     })
 }

@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-member-section-id/schema.json",
+  "title": "ChangeMemberSectionId",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "memberId",
+    "newSectionId"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeMemberSectionId"
+    },
+    "memberId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Member",
+          "de": "Bauteil"
+        },
+        "description": {
+          "en": "The member this mutation addresses, by id.",
+          "de": "Das adressierte Element (Bauteil), per Kennung."
+        },
+        "ref": {
+          "kind": "member"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newSectionId": {
+      "type": "string",
+      "x-semio-ui": {
+        "label": {
+          "en": "Cross-section",
+          "de": "Querschnitt"
+        },
+        "widget": "text",
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

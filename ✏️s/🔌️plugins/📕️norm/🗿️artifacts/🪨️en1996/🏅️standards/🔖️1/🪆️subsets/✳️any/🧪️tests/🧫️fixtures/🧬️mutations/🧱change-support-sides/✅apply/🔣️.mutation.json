@@ -1,0 +1,6 @@
+{
+  "ChangeSupportSides": {
+    "id": "wall-weak",
+    "newSupportSides": 4
+  }
+}

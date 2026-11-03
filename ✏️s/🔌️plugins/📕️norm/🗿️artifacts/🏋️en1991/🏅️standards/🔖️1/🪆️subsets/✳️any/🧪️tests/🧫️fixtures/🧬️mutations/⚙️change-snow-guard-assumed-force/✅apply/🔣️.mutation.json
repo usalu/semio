@@ -1,0 +1,6 @@
+{
+  "ChangeSnowGuardAssumedForce": {
+    "id": "snow-guard-1",
+    "newAssumedForce": 8001.0
+  }
+}

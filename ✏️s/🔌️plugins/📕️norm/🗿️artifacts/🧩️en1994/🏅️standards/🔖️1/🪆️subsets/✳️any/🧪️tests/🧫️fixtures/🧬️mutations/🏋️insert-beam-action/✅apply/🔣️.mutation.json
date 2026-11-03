@@ -1,0 +1,17 @@
+{
+  "InsertBeamAction": {
+    "beamId": "beam-B1",
+    "index": 1,
+    "action": {
+      "id": "G-steel-new",
+      "kind": "permanent",
+      "category": "self_steel",
+      "stage": "construction",
+      "qAreaPa": 382.47555000000006,
+      "fKN": 0.0,
+      "deltaSigmaKPa": 0.0,
+      "deltaTauKPa": 0.0,
+      "xM": 0.0
+    }
+  }
+}

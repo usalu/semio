@@ -1,0 +1,14 @@
+{
+  "InsertImperfection": {
+    "index": 1,
+    "item": {
+      "id": "imperfection-1-new",
+      "height": 1.5,
+      "tolerance": 1.5,
+      "verticalLoad": 1.5,
+      "x": 1.5,
+      "y": 1.5,
+      "assumedForce": 1.5
+    }
+  }
+}

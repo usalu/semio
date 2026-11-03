@@ -1,0 +1,25 @@
+{
+  "artifact": "en1994",
+  "run_generator": true,
+  "crates": [],
+  "fields": [
+    {"entity": "beams", "field": "cracked_length_fraction", "after": "bridge_lanes", "type": "f64", "default": 0.15, "unit": null,
+     "en": "Cracked length fraction at internal supports (0 = uncracked analysis)", "de": "Gerissener Längenanteil an Innenstützen (0 = ungerissene Berechnung)",
+     "kind": "change-beam-cracked-length-fraction", "ui_unit": "ratio", "leaf_en": "cracked length fraction of each span at internal supports, cl. 5.4.2.3 (0 = uncracked analysis)", "leaf_de": "gerissener Längenanteil je Feld an Innenstützen nach 5.4.2.3 (0 = ungerissene Berechnung)", "group": "beam", "emoji": "〰️", "crate": "beam-design"},
+    {"entity": "columns", "field": "section_height_m", "after": "introduced_force_n", "type": "f64", "default": 0.0, "unit": "m", "tests_after": "i_m4",
+     "en": "Encased I-section height (0 = equivalent section)", "de": "Höhe des einbetonierten I-Profils (0 = Ersatzquerschnitt)",
+     "kind": "change-column-section-height-m", "ui_unit": "m", "leaf_en": "height of the encased I-section (0 = equivalent section from the area)", "leaf_de": "Höhe des einbetonierten I-Profils (0 = Ersatzquerschnitt aus der Fläche)", "group": "column", "emoji": "↕️", "crate": "column-design"},
+    {"entity": "columns", "field": "section_width_m", "after": "section_height_m", "type": "f64", "default": 0.0, "unit": "m", "tests_after": "i_m4",
+     "en": "Encased I-section flange width", "de": "Flanschbreite des einbetonierten I-Profils",
+     "kind": "change-column-section-width-m", "ui_unit": "m", "leaf_en": "flange width of the encased I-section", "leaf_de": "Flanschbreite des einbetonierten I-Profils", "group": "column", "emoji": "↔️", "crate": "column-design"},
+    {"entity": "columns", "field": "section_tw_m", "after": "section_width_m", "type": "f64", "default": 0.0, "unit": "m", "tests_after": "i_m4",
+     "en": "Encased I-section web thickness", "de": "Stegdicke des einbetonierten I-Profils",
+     "kind": "change-column-section-tw-m", "ui_unit": "m", "leaf_en": "web thickness of the encased I-section", "leaf_de": "Stegdicke des einbetonierten I-Profils", "group": "column", "emoji": "▮", "crate": "column-design"},
+    {"entity": "columns", "field": "section_tf_m", "after": "section_tw_m", "type": "f64", "default": 0.0, "unit": "m", "tests_after": "i_m4",
+     "en": "Encased I-section flange thickness", "de": "Flanschdicke des einbetonierten I-Profils",
+     "kind": "change-column-section-tf-m", "ui_unit": "m", "leaf_en": "flange thickness of the encased I-section", "leaf_de": "Flanschdicke des einbetonierten I-Profils", "group": "column", "emoji": "▬", "crate": "column-design"},
+    {"entity": "columns", "field": "rebar_cover_m", "after": "section_tf_m", "type": "f64", "default": 0.0, "unit": "m", "tests_after": "i_m4",
+     "en": "Axis distance of the longitudinal bars from the surface", "de": "Achsabstand der Längsbewehrung von der Oberfläche",
+     "kind": "change-column-rebar-cover-m", "ui_unit": "m", "leaf_en": "axis distance of the longitudinal bars from the concrete surface (0 = 0.05 m)", "leaf_de": "Achsabstand der Längsbewehrung von der Betonoberfläche (0 = 0,05 m)", "group": "column", "emoji": "🔘", "crate": "column-design"}
+  ]
+}

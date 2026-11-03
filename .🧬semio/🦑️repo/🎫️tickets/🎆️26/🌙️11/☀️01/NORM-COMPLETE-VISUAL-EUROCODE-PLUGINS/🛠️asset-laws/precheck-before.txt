@@ -1,0 +1,625 @@
+STALE ⚖️en1990 🏢️road-bridge-failing/🏢️road-bridge-failing/🗣️.dsl.semio
+      - members: schema field `frameHeight` missing from header (new)
+      - members: schema field `frameDrift` missing from header (new)
+      - members: schema field `storeyHeight` missing from header (new)
+      - members: schema field `storeyDrift` missing from header (new)
+      - members: schema field `materialStrengthK` missing from header (new)
+      - members: schema field `materialConversionFactor` missing from header (new)
+      - members: schema field `materialPartialFactor` missing from header (new)
+      - members: schema field `materialDesignStrength` missing from header (new)
+      - members: schema field `nominalDimension` missing from header (new)
+      - members: schema field `dimensionTolerance` missing from header (new)
+      - members: schema field `designDimension` missing from header (new)
+      - members: schema field `memberAlphaCr` missing from header (new)
+      - members: schema field `secondOrderAnalysis` missing from header (new)
+      - bridge-sls: schema field `trackGauge` missing from header (new)
+      - bridge-sls: schema field `lineSpeed` missing from header (new)
+      - bridge-sls: schema field `ballastDepth` missing from header (new)
+      - bridge-sls: schema field `deckMass` missing from header (new)
+      - bridge-sls: schema field `naturalFrequency` missing from header (new)
+      - bridge-sls: schema field `endRotation` missing from header (new)
+      - bridge-sls: schema field `basicWindSpeed` missing from header (new)
+      - bridge-sls: schema field `dampingRatio` missing from header (new)
+      - collection `placements` has no table (new)
+      - collection `cases` has no table (new)
+      - collection `factorOverrides` has no table (new)
+STALE ⚖️en1990 🏢️accidental-seismic-failing/🏢️accidental-seismic-failing/🗣️.dsl.semio
+      - seismics[0].importance-class: value `iii` not in schema enum ['I', 'II', 'III', 'IV']
+      - members: schema field `frameHeight` missing from header (new)
+      - members: schema field `frameDrift` missing from header (new)
+      - members: schema field `storeyHeight` missing from header (new)
+      - members: schema field `storeyDrift` missing from header (new)
+      - members: schema field `materialStrengthK` missing from header (new)
+      - members: schema field `materialConversionFactor` missing from header (new)
+      - members: schema field `materialPartialFactor` missing from header (new)
+      - members: schema field `materialDesignStrength` missing from header (new)
+      - members: schema field `nominalDimension` missing from header (new)
+      - members: schema field `dimensionTolerance` missing from header (new)
+      - members: schema field `designDimension` missing from header (new)
+      - members: schema field `memberAlphaCr` missing from header (new)
+      - members: schema field `secondOrderAnalysis` missing from header (new)
+      - bridge-sls: schema field `trackGauge` missing from header (new)
+      - bridge-sls: schema field `lineSpeed` missing from header (new)
+      - bridge-sls: schema field `ballastDepth` missing from header (new)
+      - bridge-sls: schema field `deckMass` missing from header (new)
+      - bridge-sls: schema field `naturalFrequency` missing from header (new)
+      - bridge-sls: schema field `endRotation` missing from header (new)
+      - bridge-sls: schema field `basicWindSpeed` missing from header (new)
+      - bridge-sls: schema field `dampingRatio` missing from header (new)
+      - collection `placements` has no table (new)
+      - collection `cases` has no table (new)
+      - collection `factorOverrides` has no table (new)
+STALE ⚖️en1990 🏢️accidental-seismic-compliant/🏢️accidental-seismic-compliant/🗣️.dsl.semio
+      - seismics[0].importance-class: value `ii` not in schema enum ['I', 'II', 'III', 'IV']
+      - members: schema field `frameHeight` missing from header (new)
+      - members: schema field `frameDrift` missing from header (new)
+      - members: schema field `storeyHeight` missing from header (new)
+      - members: schema field `storeyDrift` missing from header (new)
+      - members: schema field `materialStrengthK` missing from header (new)
+      - members: schema field `materialConversionFactor` missing from header (new)
+      - members: schema field `materialPartialFactor` missing from header (new)
+      - members: schema field `materialDesignStrength` missing from header (new)
+      - members: schema field `nominalDimension` missing from header (new)
+      - members: schema field `dimensionTolerance` missing from header (new)
+      - members: schema field `designDimension` missing from header (new)
+      - members: schema field `memberAlphaCr` missing from header (new)
+      - members: schema field `secondOrderAnalysis` missing from header (new)
+      - bridge-sls: schema field `trackGauge` missing from header (new)
+      - bridge-sls: schema field `lineSpeed` missing from header (new)
+      - bridge-sls: schema field `ballastDepth` missing from header (new)
+      - bridge-sls: schema field `deckMass` missing from header (new)
+      - bridge-sls: schema field `naturalFrequency` missing from header (new)
+      - bridge-sls: schema field `endRotation` missing from header (new)
+      - bridge-sls: schema field `basicWindSpeed` missing from header (new)
+      - bridge-sls: schema field `dampingRatio` missing from header (new)
+      - collection `placements` has no table (new)
+      - collection `cases` has no table (new)
+      - collection `factorOverrides` has no table (new)
+STALE ⚖️en1990 🏢️fatigue-compliant/🏢️fatigue-compliant/🗣️.dsl.semio
+      - members: schema field `frameHeight` missing from header (new)
+      - members: schema field `frameDrift` missing from header (new)
+      - members: schema field `storeyHeight` missing from header (new)
+      - members: schema field `storeyDrift` missing from header (new)
+      - members: schema field `materialStrengthK` missing from header (new)
+      - members: schema field `materialConversionFactor` missing from header (new)
+      - members: schema field `materialPartialFactor` missing from header (new)
+      - members: schema field `materialDesignStrength` missing from header (new)
+      - members: schema field `nominalDimension` missing from header (new)
+      - members: schema field `dimensionTolerance` missing from header (new)
+      - members: schema field `designDimension` missing from header (new)
+      - members: schema field `memberAlphaCr` missing from header (new)
+      - members: schema field `secondOrderAnalysis` missing from header (new)
+      - bridge-sls: schema field `trackGauge` missing from header (new)
+      - bridge-sls: schema field `lineSpeed` missing from header (new)
+      - bridge-sls: schema field `ballastDepth` missing from header (new)
+      - bridge-sls: schema field `deckMass` missing from header (new)
+      - bridge-sls: schema field `naturalFrequency` missing from header (new)
+      - bridge-sls: schema field `endRotation` missing from header (new)
+      - bridge-sls: schema field `basicWindSpeed` missing from header (new)
+      - bridge-sls: schema field `dampingRatio` missing from header (new)
+      - collection `placements` has no table (new)
+      - collection `cases` has no table (new)
+      - collection `factorOverrides` has no table (new)
+STALE ⚖️en1990 🏢️high-consequence-office/🏢️high-consequence-office/🗣️.dsl.semio
+      - members: schema field `frameHeight` missing from header (new)
+      - members: schema field `frameDrift` missing from header (new)
+      - members: schema field `storeyHeight` missing from header (new)
+      - members: schema field `storeyDrift` missing from header (new)
+      - members: schema field `materialStrengthK` missing from header (new)
+      - members: schema field `materialConversionFactor` missing from header (new)
+      - members: schema field `materialPartialFactor` missing from header (new)
+      - members: schema field `materialDesignStrength` missing from header (new)
+      - members: schema field `nominalDimension` missing from header (new)
+      - members: schema field `dimensionTolerance` missing from header (new)
+      - members: schema field `designDimension` missing from header (new)
+      - members: schema field `memberAlphaCr` missing from header (new)
+      - members: schema field `secondOrderAnalysis` missing from header (new)
+      - bridge-sls: schema field `trackGauge` missing from header (new)
+      - bridge-sls: schema field `lineSpeed` missing from header (new)
+      - bridge-sls: schema field `ballastDepth` missing from header (new)
+      - bridge-sls: schema field `deckMass` missing from header (new)
+      - bridge-sls: schema field `naturalFrequency` missing from header (new)
+      - bridge-sls: schema field `endRotation` missing from header (new)
+      - bridge-sls: schema field `basicWindSpeed` missing from header (new)
+      - bridge-sls: schema field `dampingRatio` missing from header (new)
+      - collection `placements` has no table (new)
+      - collection `cases` has no table (new)
+      - collection `factorOverrides` has no table (new)
+STALE ⚖️en1990 🏢️road-bridge-compliant/🏢️road-bridge-compliant/🗣️.dsl.semio
+      - members: schema field `frameHeight` missing from header (new)
+      - members: schema field `frameDrift` missing from header (new)
+      - members: schema field `storeyHeight` missing from header (new)
+      - members: schema field `storeyDrift` missing from header (new)
+      - members: schema field `materialStrengthK` missing from header (new)
+      - members: schema field `materialConversionFactor` missing from header (new)
+      - members: schema field `materialPartialFactor` missing from header (new)
+      - members: schema field `materialDesignStrength` missing from header (new)
+      - members: schema field `nominalDimension` missing from header (new)
+      - members: schema field `dimensionTolerance` missing from header (new)
+      - members: schema field `designDimension` missing from header (new)
+      - members: schema field `memberAlphaCr` missing from header (new)
+      - members: schema field `secondOrderAnalysis` missing from header (new)
+      - bridge-sls: schema field `trackGauge` missing from header (new)
+      - bridge-sls: schema field `lineSpeed` missing from header (new)
+      - bridge-sls: schema field `ballastDepth` missing from header (new)
+      - bridge-sls: schema field `deckMass` missing from header (new)
+      - bridge-sls: schema field `naturalFrequency` missing from header (new)
+      - bridge-sls: schema field `endRotation` missing from header (new)
+      - bridge-sls: schema field `basicWindSpeed` missing from header (new)
+      - bridge-sls: schema field `dampingRatio` missing from header (new)
+      - collection `placements` has no table (new)
+      - collection `cases` has no table (new)
+      - collection `factorOverrides` has no table (new)
+STALE ⚖️en1990 🏢️fatigue-failing/🏢️fatigue-failing/🗣️.dsl.semio
+      - members: schema field `frameHeight` missing from header (new)
+      - members: schema field `frameDrift` missing from header (new)
+      - members: schema field `storeyHeight` missing from header (new)
+      - members: schema field `storeyDrift` missing from header (new)
+      - members: schema field `materialStrengthK` missing from header (new)
+      - members: schema field `materialConversionFactor` missing from header (new)
+      - members: schema field `materialPartialFactor` missing from header (new)
+      - members: schema field `materialDesignStrength` missing from header (new)
+      - members: schema field `nominalDimension` missing from header (new)
+      - members: schema field `dimensionTolerance` missing from header (new)
+      - members: schema field `designDimension` missing from header (new)
+      - members: schema field `memberAlphaCr` missing from header (new)
+      - members: schema field `secondOrderAnalysis` missing from header (new)
+      - bridge-sls: schema field `trackGauge` missing from header (new)
+      - bridge-sls: schema field `lineSpeed` missing from header (new)
+      - bridge-sls: schema field `ballastDepth` missing from header (new)
+      - bridge-sls: schema field `deckMass` missing from header (new)
+      - bridge-sls: schema field `naturalFrequency` missing from header (new)
+      - bridge-sls: schema field `endRotation` missing from header (new)
+      - bridge-sls: schema field `basicWindSpeed` missing from header (new)
+      - bridge-sls: schema field `dampingRatio` missing from header (new)
+      - collection `placements` has no table (new)
+      - collection `cases` has no table (new)
+      - collection `factorOverrides` has no table (new)
+STALE ⚖️en1990 🏢️default-office/🏢️default-office/🗣️.dsl.semio
+      - members: schema field `frameHeight` missing from header (new)
+      - members: schema field `frameDrift` missing from header (new)
+      - members: schema field `storeyHeight` missing from header (new)
+      - members: schema field `storeyDrift` missing from header (new)
+      - members: schema field `materialStrengthK` missing from header (new)
+      - members: schema field `materialConversionFactor` missing from header (new)
+      - members: schema field `materialPartialFactor` missing from header (new)
+      - members: schema field `materialDesignStrength` missing from header (new)
+      - members: schema field `nominalDimension` missing from header (new)
+      - members: schema field `dimensionTolerance` missing from header (new)
+      - members: schema field `designDimension` missing from header (new)
+      - members: schema field `memberAlphaCr` missing from header (new)
+      - members: schema field `secondOrderAnalysis` missing from header (new)
+      - bridge-sls: schema field `trackGauge` missing from header (new)
+      - bridge-sls: schema field `lineSpeed` missing from header (new)
+      - bridge-sls: schema field `ballastDepth` missing from header (new)
+      - bridge-sls: schema field `deckMass` missing from header (new)
+      - bridge-sls: schema field `naturalFrequency` missing from header (new)
+      - bridge-sls: schema field `endRotation` missing from header (new)
+      - bridge-sls: schema field `basicWindSpeed` missing from header (new)
+      - bridge-sls: schema field `dampingRatio` missing from header (new)
+      - collection `placements` has no table (new)
+      - collection `cases` has no table (new)
+      - collection `factorOverrides` has no table (new)
+STALE 🏋️en1991 ⚠️multi-fail-noncompliant/⚠️multi-fail-noncompliant/🗣️.dsl.semio
+      - collection `bridgeLanes` has no table (new)
+      - collection `constructionStages` has no table (new)
+      - collection `roofSurfaces` has no table (new)
+      - collection `placements` has no table (new)
+      - collection `specialVehicles` has no table (new)
+      - collection `windBridges` has no table (new)
+      - collection `dynamicElements` has no table (new)
+      - collection `impactActions` has no table (new)
+      - collection `internalExplosions` has no table (new)
+      - collection `thermalSections` has no table (new)
+      - collection `cases` has no table (new)
+STALE 🏋️en1991 🏢de-office-compliant/🏢de-office-compliant/🗣️.dsl.semio
+      - collection `bridgeLanes` has no table (new)
+      - collection `constructionStages` has no table (new)
+      - collection `roofSurfaces` has no table (new)
+      - collection `placements` has no table (new)
+      - collection `specialVehicles` has no table (new)
+      - collection `windBridges` has no table (new)
+      - collection `dynamicElements` has no table (new)
+      - collection `impactActions` has no table (new)
+      - collection `internalExplosions` has no table (new)
+      - collection `thermalSections` has no table (new)
+      - collection `cases` has no table (new)
+STALE 🏛️en1992 🛢️liquid-retaining-fem-anchor/🛢️liquid-retaining-fem-anchor/🗣️.dsl.semio
+      - members: schema field `relativeHumidity` missing from header (new)
+      - members: schema field `sectionPoints` missing from header (new)
+      - members: schema field `bars` missing from header (new)
+      - members: schema field `tendonPoints` missing from header (new)
+      - members: schema field `studRings` missing from header (new)
+      - members[0].kind: value `liquid-retaining` not in schema enum ['Beam', 'Slab', 'Column', 'Wall', 'FlatSlab', 'RibbedSlab', 'TensionMember', 'Bridge', 'LiquidRetaining']
+      - members[0].exposure: value `xc4` not in schema enum ['X0', 'Xc1', 'Xc2', 'Xc3', 'Xc4', 'Xd1', 'Xd2', 'Xd3', 'Xs1', 'Xs2', 'Xs3', 'Xf1', 'Xf2', 'Xf3', 'Xf4', 'Xa1', 'Xa2', 'Xa3']
+      - members[0].support: value `continuous` not in schema enum ['SimplySupported', 'Continuous', 'Cantilever', 'Fixed']
+      - members[0].stirrups: nested key `diameter` not in schema
+      - members[0].stirrups: nested key `spacing` not in schema
+      - members[0].stirrups: nested key `legs` not in schema
+      - members[0].fire: nested key `rating` not in schema
+      - members[0].fire: nested key `axis-distance` not in schema
+      - members[0].fire: nested key `column-method` not in schema
+      - members[0].fire: nested key `slab-system` not in schema
+      - anchors: schema field `headDiameter` missing from header (new)
+      - collection `placements` has no table (new)
+      - collection `cases` has no table (new)
+STALE 🏛️en1992 💥failing-prestressed-beam/💥failing-prestressed-beam/🗣️.dsl.semio
+      - members: schema field `relativeHumidity` missing from header (new)
+      - members: schema field `sectionPoints` missing from header (new)
+      - members: schema field `bars` missing from header (new)
+      - members: schema field `tendonPoints` missing from header (new)
+      - members: schema field `studRings` missing from header (new)
+      - members[0].kind: value `beam` not in schema enum ['Beam', 'Slab', 'Column', 'Wall', 'FlatSlab', 'RibbedSlab', 'TensionMember', 'Bridge', 'LiquidRetaining']
+      - members[0].exposure: value `xc1` not in schema enum ['X0', 'Xc1', 'Xc2', 'Xc3', 'Xc4', 'Xd1', 'Xd2', 'Xd3', 'Xs1', 'Xs2', 'Xs3', 'Xf1', 'Xf2', 'Xf3', 'Xf4', 'Xa1', 'Xa2', 'Xa3']
+      - members[0].support: value `simply-supported` not in schema enum ['SimplySupported', 'Continuous', 'Cantilever', 'Fixed']
+      - members[0].stirrups: nested key `diameter` not in schema
+      - members[0].stirrups: nested key `spacing` not in schema
+      - members[0].stirrups: nested key `legs` not in schema
+      - members[0].prestress: nested key `force` not in schema
+      - members[0].prestress: nested key `area` not in schema
+      - members[0].prestress: nested key `eccentricity` not in schema
+      - members[0].prestress: nested key `loss-ratio` not in schema
+      - members[0].fire: nested key `rating` not in schema
+      - members[0].fire: nested key `axis-distance` not in schema
+      - members[0].fire: nested key `column-method` not in schema
+      - members[0].fire: nested key `slab-system` not in schema
+      - anchors: schema field `headDiameter` missing from header (new)
+      - collection `placements` has no table (new)
+      - collection `cases` has no table (new)
+STALE 🏛️en1992 🧵compliant-prestressed-beam/🧵compliant-prestressed-beam/🗣️.dsl.semio
+      - members: schema field `relativeHumidity` missing from header (new)
+      - members: schema field `sectionPoints` missing from header (new)
+      - members: schema field `bars` missing from header (new)
+      - members: schema field `tendonPoints` missing from header (new)
+      - members: schema field `studRings` missing from header (new)
+      - members[0].kind: value `beam` not in schema enum ['Beam', 'Slab', 'Column', 'Wall', 'FlatSlab', 'RibbedSlab', 'TensionMember', 'Bridge', 'LiquidRetaining']
+      - members[0].exposure: value `xc1` not in schema enum ['X0', 'Xc1', 'Xc2', 'Xc3', 'Xc4', 'Xd1', 'Xd2', 'Xd3', 'Xs1', 'Xs2', 'Xs3', 'Xf1', 'Xf2', 'Xf3', 'Xf4', 'Xa1', 'Xa2', 'Xa3']
+      - members[0].support: value `simply-supported` not in schema enum ['SimplySupported', 'Continuous', 'Cantilever', 'Fixed']
+      - members[0].stirrups: nested key `diameter` not in schema
+      - members[0].stirrups: nested key `spacing` not in schema
+      - members[0].stirrups: nested key `legs` not in schema
+      - members[0].prestress: nested key `force` not in schema
+      - members[0].prestress: nested key `area` not in schema
+      - members[0].prestress: nested key `eccentricity` not in schema
+      - members[0].prestress: nested key `loss-ratio` not in schema
+      - members[0].fire: nested key `rating` not in schema
+      - members[0].fire: nested key `axis-distance` not in schema
+      - members[0].fire: nested key `column-method` not in schema
+      - members[0].fire: nested key `slab-system` not in schema
+      - anchors: schema field `headDiameter` missing from header (new)
+      - collection `placements` has no table (new)
+      - collection `cases` has no table (new)
+STALE 🏛️en1992 ❌️failing-under-reinforced/❌️failing-under-reinforced/🗣️.dsl.semio
+      - members: schema field `relativeHumidity` missing from header (new)
+      - members: schema field `sectionPoints` missing from header (new)
+      - members: schema field `bars` missing from header (new)
+      - members: schema field `tendonPoints` missing from header (new)
+      - members: schema field `studRings` missing from header (new)
+      - members[0].kind: value `beam` not in schema enum ['Beam', 'Slab', 'Column', 'Wall', 'FlatSlab', 'RibbedSlab', 'TensionMember', 'Bridge', 'LiquidRetaining']
+      - members[0].exposure: value `xc3` not in schema enum ['X0', 'Xc1', 'Xc2', 'Xc3', 'Xc4', 'Xd1', 'Xd2', 'Xd3', 'Xs1', 'Xs2', 'Xs3', 'Xf1', 'Xf2', 'Xf3', 'Xf4', 'Xa1', 'Xa2', 'Xa3']
+      - members[0].support: value `simply-supported` not in schema enum ['SimplySupported', 'Continuous', 'Cantilever', 'Fixed']
+      - members[0].stirrups: nested key `diameter` not in schema
+      - members[0].stirrups: nested key `spacing` not in schema
+      - members[0].stirrups: nested key `legs` not in schema
+      - members[0].fire: nested key `rating` not in schema
+      - members[0].fire: nested key `axis-distance` not in schema
+      - members[0].fire: nested key `column-method` not in schema
+      - members[0].fire: nested key `slab-system` not in schema
+      - members[1].kind: value `column` not in schema enum ['Beam', 'Slab', 'Column', 'Wall', 'FlatSlab', 'RibbedSlab', 'TensionMember', 'Bridge', 'LiquidRetaining']
+      - members[1].exposure: value `xc1` not in schema enum ['X0', 'Xc1', 'Xc2', 'Xc3', 'Xc4', 'Xd1', 'Xd2', 'Xd3', 'Xs1', 'Xs2', 'Xs3', 'Xf1', 'Xf2', 'Xf3', 'Xf4', 'Xa1', 'Xa2', 'Xa3']
+      - members[1].support: value `fixed` not in schema enum ['SimplySupported', 'Continuous', 'Cantilever', 'Fixed']
+      - members[1].stirrups: nested key `diameter` not in schema
+      - members[1].stirrups: nested key `spacing` not in schema
+      - members[1].stirrups: nested key `legs` not in schema
+      - members[1].fire: nested key `rating` not in schema
+      - members[1].fire: nested key `axis-distance` not in schema
+      - members[1].fire: nested key `column-method` not in schema
+      - members[1].fire: nested key `slab-system` not in schema
+      - members[2].kind: value `flat-slab` not in schema enum ['Beam', 'Slab', 'Column', 'Wall', 'FlatSlab', 'RibbedSlab', 'TensionMember', 'Bridge', 'LiquidRetaining']
+      - members[2].exposure: value `xc1` not in schema enum ['X0', 'Xc1', 'Xc2', 'Xc3', 'Xc4', 'Xd1', 'Xd2', 'Xd3', 'Xs1', 'Xs2', 'Xs3', 'Xf1', 'Xf2', 'Xf3', 'Xf4', 'Xa1', 'Xa2', 'Xa3']
+      - members[2].support: value `continuous` not in schema enum ['SimplySupported', 'Continuous', 'Cantilever', 'Fixed']
+      - members[2].punching: nested key `column-width` not in schema
+      - members[2].punching: nested key `column-depth` not in schema
+      - members[2].punching: nested key `column-position` not in schema
+      - members[2].punching: nested key `asw` not in schema
+      - members[2].fire: nested key `rating` not in schema
+      - members[2].fire: nested key `axis-distance` not in schema
+      - members[2].fire: nested key `column-method` not in schema
+      - members[2].fire: nested key `slab-system` not in schema
+      - anchors: schema field `headDiameter` missing from header (new)
+      - collection `placements` has no table (new)
+      - collection `cases` has no table (new)
+STALE 🏛️en1992 🏢compliant-office-frame/🏢compliant-office-frame/🗣️.dsl.semio
+      - members: schema field `relativeHumidity` missing from header (new)
+      - members: schema field `sectionPoints` missing from header (new)
+      - members: schema field `bars` missing from header (new)
+      - members: schema field `tendonPoints` missing from header (new)
+      - members: schema field `studRings` missing from header (new)
+      - members[0].kind: value `beam` not in schema enum ['Beam', 'Slab', 'Column', 'Wall', 'FlatSlab', 'RibbedSlab', 'TensionMember', 'Bridge', 'LiquidRetaining']
+      - members[0].exposure: value `xc3` not in schema enum ['X0', 'Xc1', 'Xc2', 'Xc3', 'Xc4', 'Xd1', 'Xd2', 'Xd3', 'Xs1', 'Xs2', 'Xs3', 'Xf1', 'Xf2', 'Xf3', 'Xf4', 'Xa1', 'Xa2', 'Xa3']
+      - members[0].support: value `simply-supported` not in schema enum ['SimplySupported', 'Continuous', 'Cantilever', 'Fixed']
+      - members[0].stirrups: nested key `diameter` not in schema
+      - members[0].stirrups: nested key `spacing` not in schema
+      - members[0].stirrups: nested key `legs` not in schema
+      - members[0].fire: nested key `rating` not in schema
+      - members[0].fire: nested key `axis-distance` not in schema
+      - members[0].fire: nested key `column-method` not in schema
+      - members[0].fire: nested key `slab-system` not in schema
+      - members[1].kind: value `column` not in schema enum ['Beam', 'Slab', 'Column', 'Wall', 'FlatSlab', 'RibbedSlab', 'TensionMember', 'Bridge', 'LiquidRetaining']
+      - members[1].exposure: value `xc1` not in schema enum ['X0', 'Xc1', 'Xc2', 'Xc3', 'Xc4', 'Xd1', 'Xd2', 'Xd3', 'Xs1', 'Xs2', 'Xs3', 'Xf1', 'Xf2', 'Xf3', 'Xf4', 'Xa1', 'Xa2', 'Xa3']
+      - members[1].support: value `fixed` not in schema enum ['SimplySupported', 'Continuous', 'Cantilever', 'Fixed']
+      - members[1].stirrups: nested key `diameter` not in schema
+      - members[1].stirrups: nested key `spacing` not in schema
+      - members[1].stirrups: nested key `legs` not in schema
+      - members[1].fire: nested key `rating` not in schema
+      - members[1].fire: nested key `axis-distance` not in schema
+      - members[1].fire: nested key `column-method` not in schema
+      - members[1].fire: nested key `slab-system` not in schema
+      - members[2].kind: value `flat-slab` not in schema enum ['Beam', 'Slab', 'Column', 'Wall', 'FlatSlab', 'RibbedSlab', 'TensionMember', 'Bridge', 'LiquidRetaining']
+      - members[2].exposure: value `xc1` not in schema enum ['X0', 'Xc1', 'Xc2', 'Xc3', 'Xc4', 'Xd1', 'Xd2', 'Xd3', 'Xs1', 'Xs2', 'Xs3', 'Xf1', 'Xf2', 'Xf3', 'Xf4', 'Xa1', 'Xa2', 'Xa3']
+      - members[2].support: value `continuous` not in schema enum ['SimplySupported', 'Continuous', 'Cantilever', 'Fixed']
+      - members[2].punching: nested key `column-width` not in schema
+      - members[2].punching: nested key `column-depth` not in schema
+      - members[2].punching: nested key `column-position` not in schema
+      - members[2].punching: nested key `asw` not in schema
+      - members[2].fire: nested key `rating` not in schema
+      - members[2].fire: nested key `axis-distance` not in schema
+      - members[2].fire: nested key `column-method` not in schema
+      - members[2].fire: nested key `slab-system` not in schema
+      - anchors: schema field `headDiameter` missing from header (new)
+      - collection `placements` has no table (new)
+      - collection `cases` has no table (new)
+STALE 🔩️en1993 ✅️heb240-compliant/✅️heb240-compliant/🗣️.dsl.semio
+      - scalar `""` not in schema
+      - scalar `0.0` not in schema
+      - weld-groups[0]: 5 cells for 11 columns
+      - collection `placements` has no table (new)
+STALE 🔩️en1993 🔩️high-strength-connection/🔩️high-strength-connection/🗣️.dsl.semio
+      - scalar `""` not in schema
+      - scalar `0.0` not in schema
+      - weld-groups[0]: 5 cells for 11 columns
+      - collection `placements` has no table (new)
+STALE 🧩️en1994 🏢composite-floor-beam/🏢composite-floor-beam/🗣️.dsl.semio
+      - beams: schema field `adjacentSpanM` missing from header (new)
+      - beams: schema field `patchBearingLengthM` missing from header (new)
+      - beams: schema field `bridgeLanes` missing from header (new)
+      - beams: schema field `crackedLengthFraction` missing from header (new)
+      - beams: schema field `studTransverseSpacingM` missing from header (new)
+      - beams: schema field `studEdgeDistanceM` missing from header (new)
+      - beams: schema field `transverseAsTopM2PerM` missing from header (new)
+      - beams: schema field `endPlateWidthM` missing from header (new)
+      - beams: schema field `endPlateHeightM` missing from header (new)
+      - beams: schema field `endZoneLengthM` missing from header (new)
+      - columns: schema field `introducedForceN` missing from header (new)
+      - columns: schema field `sectionHeightM` missing from header (new)
+      - columns: schema field `sectionWidthM` missing from header (new)
+      - columns: schema field `sectionTwM` missing from header (new)
+      - columns: schema field `sectionTfM` missing from header (new)
+      - columns: schema field `rebarCoverM` missing from header (new)
+      - collection `placements` has no table (new)
+STALE 🧩️en1994 🏢composite-floor-beam-failing/🏢composite-floor-beam-failing/🗣️.dsl.semio
+      - beams: schema field `adjacentSpanM` missing from header (new)
+      - beams: schema field `patchBearingLengthM` missing from header (new)
+      - beams: schema field `bridgeLanes` missing from header (new)
+      - beams: schema field `crackedLengthFraction` missing from header (new)
+      - beams: schema field `studTransverseSpacingM` missing from header (new)
+      - beams: schema field `studEdgeDistanceM` missing from header (new)
+      - beams: schema field `transverseAsTopM2PerM` missing from header (new)
+      - beams: schema field `endPlateWidthM` missing from header (new)
+      - beams: schema field `endPlateHeightM` missing from header (new)
+      - beams: schema field `endZoneLengthM` missing from header (new)
+      - columns: schema field `introducedForceN` missing from header (new)
+      - columns: schema field `sectionHeightM` missing from header (new)
+      - columns: schema field `sectionWidthM` missing from header (new)
+      - columns: schema field `sectionTwM` missing from header (new)
+      - columns: schema field `sectionTfM` missing from header (new)
+      - columns: schema field `rebarCoverM` missing from header (new)
+      - collection `placements` has no table (new)
+STALE 🧩️en1994 🌉️composite-bridge-girder/🌉️composite-bridge-girder/🗣️.dsl.semio
+      - beams: schema field `adjacentSpanM` missing from header (new)
+      - beams: schema field `patchBearingLengthM` missing from header (new)
+      - beams: schema field `bridgeLanes` missing from header (new)
+      - beams: schema field `crackedLengthFraction` missing from header (new)
+      - beams: schema field `studTransverseSpacingM` missing from header (new)
+      - beams: schema field `studEdgeDistanceM` missing from header (new)
+      - beams: schema field `transverseAsTopM2PerM` missing from header (new)
+      - beams: schema field `endPlateWidthM` missing from header (new)
+      - beams: schema field `endPlateHeightM` missing from header (new)
+      - beams: schema field `endZoneLengthM` missing from header (new)
+      - columns: schema field `introducedForceN` missing from header (new)
+      - columns: schema field `sectionHeightM` missing from header (new)
+      - columns: schema field `sectionWidthM` missing from header (new)
+      - columns: schema field `sectionTwM` missing from header (new)
+      - columns: schema field `sectionTfM` missing from header (new)
+      - columns: schema field `rebarCoverM` missing from header (new)
+      - collection `placements` has no table (new)
+STALE 🪵️en1995 🌉️glulam-footbridge/🌉️glulam-footbridge/🗣️.dsl.semio
+      - members[0].support: value `simply-supported` not in schema enum ['simplySupported', 'cantilever', 'continuousTwoSpan']
+      - collection `placements` has no table (new)
+      - collection `tapers` has no table (new)
+      - collection `cutouts` has no table (new)
+      - collection `fasteners` has no table (new)
+      - collection `panels` has no table (new)
+      - collection `floors` has no table (new)
+STALE 🪵️en1995 🏠️glulam-floor-beam/🏠️glulam-floor-beam/🗣️.dsl.semio
+      - members[0].support: value `simply-supported` not in schema enum ['simplySupported', 'cantilever', 'continuousTwoSpan']
+      - collection `placements` has no table (new)
+      - collection `tapers` has no table (new)
+      - collection `cutouts` has no table (new)
+      - collection `fasteners` has no table (new)
+      - collection `panels` has no table (new)
+      - collection `floors` has no table (new)
+STALE 🪵️en1995 ❌️multi-fail-timber/❌️multi-fail-timber/🗣️.dsl.semio
+      - members[0].support: value `simply-supported` not in schema enum ['simplySupported', 'cantilever', 'continuousTwoSpan']
+      - members[1].support: value `simply-supported` not in schema enum ['simplySupported', 'cantilever', 'continuousTwoSpan']
+      - collection `placements` has no table (new)
+      - collection `tapers` has no table (new)
+      - collection `cutouts` has no table (new)
+      - collection `fasteners` has no table (new)
+      - collection `panels` has no table (new)
+      - collection `floors` has no table (new)
+STALE 🪵️en1995 ⚠️overloaded-footbridge/⚠️overloaded-footbridge/🗣️.dsl.semio
+      - members[0].support: value `simply-supported` not in schema enum ['simplySupported', 'cantilever', 'continuousTwoSpan']
+      - collection `placements` has no table (new)
+      - collection `tapers` has no table (new)
+      - collection `cutouts` has no table (new)
+      - collection `fasteners` has no table (new)
+      - collection `panels` has no table (new)
+      - collection `floors` has no table (new)
+STALE 🪨️en1996 ❌️multi-fail-masonry/❌️multi-fail-masonry/🗣️.dsl.semio
+      - walls[0]: 33 cells for 53 columns
+      - walls[1]: 3 cells for 53 columns
+      - walls[2]: 6 cells for 53 columns
+      - walls[3]: 1 cells for 53 columns
+      - walls[4]: 1 cells for 53 columns
+      - collection `placements` has no table (new)
+      - collection `cases` has no table (new)
+      - collection `chases` has no table (new)
+      - collection `movementJoints` has no table (new)
+STALE 🪨️en1996 🧱️loadbearing-wall/🧱️loadbearing-wall/🗣️.dsl.semio
+      - walls[0]: 33 cells for 53 columns
+      - walls[1]: 3 cells for 53 columns
+      - walls[2]: 1 cells for 53 columns
+      - walls[3]: 1 cells for 53 columns
+      - collection `placements` has no table (new)
+      - collection `cases` has no table (new)
+      - collection `chases` has no table (new)
+      - collection `movementJoints` has no table (new)
+STALE 🌍️en1997 🎬️demo/🗣️.dsl.semio
+      - collection `placements` has no table (new)
+      - collection `cases` has no table (new)
+STALE 🌍️en1997 🚨noncompliant/🗣️.dsl.semio
+      - collection `placements` has no table (new)
+      - collection `cases` has no table (new)
+STALE 🌍️en1997 🏗️compliant/🗣️.dsl.semio
+      - collection `placements` has no table (new)
+      - collection `cases` has no table (new)
+STALE 🫨️en1998 ⚠️seismic-multipart-fail/⚠️seismic-multipart-fail/🗣️.dsl.semio
+      - scalar `a-gr` not in schema
+      - scalar `de-ground-combo` not in schema
+      - scalar `en-ground-type` not in schema
+      - scalar `en-spectrum-type` not in schema
+      - scalar `importance-class` not in schema
+      - scalar `v-s30-m-s` not in schema
+      - buildings[0]: 6 cells for 31 columns
+      - buildings[1]: 3 cells for 31 columns
+      - buildings[2]: 3 cells for 31 columns
+      - buildings[3]: 1 cells for 31 columns
+      - buildings[4]: 13 cells for 31 columns
+      - buildings[5]: 3 cells for 31 columns
+      - buildings[6]: 3 cells for 31 columns
+      - buildings[7]: 1 cells for 31 columns
+      - buildings[8]: 13 cells for 31 columns
+      - buildings[9]: 3 cells for 31 columns
+      - buildings[10]: 3 cells for 31 columns
+      - buildings[11]: 1 cells for 31 columns
+      - buildings[12]: 13 cells for 31 columns
+      - buildings[13]: 3 cells for 31 columns
+      - buildings[14]: 3 cells for 31 columns
+      - buildings[15]: 1 cells for 31 columns
+      - buildings[16]: 25 cells for 31 columns
+      - collection `placements` has no table (new)
+STALE 🫨️en1998 🏢️seismic-rc-frame/🏢️seismic-rc-frame/🗣️.dsl.semio
+      - scalar `a-gr` not in schema
+      - scalar `de-ground-combo` not in schema
+      - scalar `en-ground-type` not in schema
+      - scalar `en-spectrum-type` not in schema
+      - scalar `importance-class` not in schema
+      - scalar `v-s30-m-s` not in schema
+      - buildings[0]: 6 cells for 31 columns
+      - buildings[1]: 3 cells for 31 columns
+      - buildings[2]: 3 cells for 31 columns
+      - buildings[3]: 1 cells for 31 columns
+      - buildings[4]: 13 cells for 31 columns
+      - buildings[5]: 3 cells for 31 columns
+      - buildings[6]: 3 cells for 31 columns
+      - buildings[7]: 1 cells for 31 columns
+      - buildings[8]: 13 cells for 31 columns
+      - buildings[9]: 3 cells for 31 columns
+      - buildings[10]: 3 cells for 31 columns
+      - buildings[11]: 1 cells for 31 columns
+      - buildings[12]: 13 cells for 31 columns
+      - buildings[13]: 3 cells for 31 columns
+      - buildings[14]: 3 cells for 31 columns
+      - buildings[15]: 1 cells for 31 columns
+      - buildings[16]: 25 cells for 31 columns
+      - collection `placements` has no table (new)
+STALE 🫨️en1998 ⚠️seismic-rc-frame-fail/⚠️seismic-rc-frame-fail/🗣️.dsl.semio
+      - scalar `a-gr` not in schema
+      - scalar `de-ground-combo` not in schema
+      - scalar `en-ground-type` not in schema
+      - scalar `en-spectrum-type` not in schema
+      - scalar `importance-class` not in schema
+      - scalar `v-s30-m-s` not in schema
+      - buildings[0]: 6 cells for 31 columns
+      - buildings[1]: 3 cells for 31 columns
+      - buildings[2]: 3 cells for 31 columns
+      - buildings[3]: 1 cells for 31 columns
+      - buildings[4]: 13 cells for 31 columns
+      - buildings[5]: 3 cells for 31 columns
+      - buildings[6]: 3 cells for 31 columns
+      - buildings[7]: 1 cells for 31 columns
+      - buildings[8]: 13 cells for 31 columns
+      - buildings[9]: 3 cells for 31 columns
+      - buildings[10]: 3 cells for 31 columns
+      - buildings[11]: 1 cells for 31 columns
+      - buildings[12]: 13 cells for 31 columns
+      - buildings[13]: 3 cells for 31 columns
+      - buildings[14]: 3 cells for 31 columns
+      - buildings[15]: 1 cells for 31 columns
+      - buildings[16]: 25 cells for 31 columns
+      - collection `placements` has no table (new)
+STALE 🫨️en1998 🏢️seismic-multipart/🏢️seismic-multipart/🗣️.dsl.semio
+      - scalar `a-gr` not in schema
+      - scalar `de-ground-combo` not in schema
+      - scalar `en-ground-type` not in schema
+      - scalar `en-spectrum-type` not in schema
+      - scalar `importance-class` not in schema
+      - scalar `v-s30-m-s` not in schema
+      - buildings[0]: 6 cells for 31 columns
+      - buildings[1]: 3 cells for 31 columns
+      - buildings[2]: 3 cells for 31 columns
+      - buildings[3]: 1 cells for 31 columns
+      - buildings[4]: 13 cells for 31 columns
+      - buildings[5]: 3 cells for 31 columns
+      - buildings[6]: 3 cells for 31 columns
+      - buildings[7]: 1 cells for 31 columns
+      - buildings[8]: 13 cells for 31 columns
+      - buildings[9]: 3 cells for 31 columns
+      - buildings[10]: 3 cells for 31 columns
+      - buildings[11]: 1 cells for 31 columns
+      - buildings[12]: 13 cells for 31 columns
+      - buildings[13]: 3 cells for 31 columns
+      - buildings[14]: 3 cells for 31 columns
+      - buildings[15]: 1 cells for 31 columns
+      - buildings[16]: 25 cells for 31 columns
+      - collection `placements` has no table (new)
+STALE 🪶️en1999 🏚️noncompliant-multi-fail/🏚️noncompliant-multi-fail/🗣️.dsl.semio
+      - materials: schema field `productForm` missing from header (new)
+      - members: schema field `stiffenerSpacing` missing from header (new)
+      - members: schema field `bearingLength` missing from header (new)
+      - members: schema field `transverseWeld` missing from header (new)
+      - members: schema field `transverseWeldOffset` missing from header (new)
+      - shells: schema field `welded` missing from header (new)
+      - shells: schema field `fabricationClass` missing from header (new)
+      - collection `placements` has no table (new)
+      - collection `weldRuns` has no table (new)
+      - collection `outlineVertices` has no table (new)
+      - collection `fatigueCategories` has no table (new)
+      - collection `patchLoads` has no table (new)
+      - collection `ringStiffeners` has no table (new)
+STALE 🪶️en1999 🏠️aluminium-roof-purlin/🏠️aluminium-roof-purlin/🗣️.dsl.semio
+      - materials: schema field `productForm` missing from header (new)
+      - members: schema field `stiffenerSpacing` missing from header (new)
+      - members: schema field `bearingLength` missing from header (new)
+      - members: schema field `transverseWeld` missing from header (new)
+      - members: schema field `transverseWeldOffset` missing from header (new)
+      - shells: schema field `welded` missing from header (new)
+      - shells: schema field `fabricationClass` missing from header (new)
+      - collection `placements` has no table (new)
+      - collection `weldRuns` has no table (new)
+      - collection `outlineVertices` has no table (new)
+      - collection `fatigueCategories` has no table (new)
+      - collection `patchLoads` has no table (new)
+      - collection `ringStiffeners` has no table (new)
+TOTAL issues 589

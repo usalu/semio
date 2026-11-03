@@ -1,0 +1,314 @@
+# key|scope|kind|unit|example|flags|en|de   (flags: L lever, rA:B range; unit "-" for text/choice; kind n number, c choice, x text)
+class||c|-|GL24h||Strength class|Festigkeitsklasse
+class_2||c|-|GL24h||Strength class of member 2|Festigkeitsklasse Bauteil 2
+sc||n|1|1|r1:3|Service class|Nutzungsklasse
+duration||c|-|medium||Load duration class|Klasse der Lasteinwirkungsdauer
+durations||x|-|||Load duration classes, comma separated|Lasteinwirkungsdauern, kommagetrennt
+situation||c|-|persistent||Design situation|Bemessungssituation
+material||x|-|||Material key of the k_mod or γ_M table|Werkstoffschlüssel der k_mod- oder γ_M-Tabelle
+material_gamma||x|-|||Material key of the γ_M table|Werkstoffschlüssel der γ_M-Tabelle
+product||c|-|solid||Timber product|Holzprodukt
+kind||c|-|nail||Fastener type|Verbindungsmittelart
+kind1||x|-|||Layer kind of layer 1|Lagenart der Lage 1
+config||x|-|||Connection configuration|Anschlusskonfiguration
+b||n|mm|200|L|Width b|Breite b
+h||n|mm|400|L|Depth h|Höhe h
+l||n|mm|5000||Span or length l|Spannweite oder Länge l
+l1||n|mm|||Length l₁ or bearing distance|Länge l₁ oder Auflagerabstand
+length||n|mm|3000||Member length|Bauteillänge
+volume||n|mm3|||Stressed volume|Beanspruchtes Volumen
+area||n|mm2|||Cross-section area A|Querschnittsfläche A
+area_net||n|mm2|||Net cross-section area|Nettoquerschnittsfläche
+i_y||n|mm4|||Second moment of area I_y|Flächenträgheitsmoment I_y
+i_z||n|mm4|||Second moment of area I_z|Flächenträgheitsmoment I_z
+w_y||n|mm3|||Section modulus W_y|Widerstandsmoment W_y
+w_z||n|mm3|||Section modulus W_z|Widerstandsmoment W_z
+n_t||n|N|||Design tension force N_t,Ed|Bemessungszugkraft N_t,Ed
+n_c||n|N|||Design compression force N_c,Ed|Bemessungsdruckkraft N_c,Ed
+m_y||n|Nmm|||Design moment M_y,Ed|Bemessungsmoment M_y,Ed
+m_z||n|Nmm|||Design moment M_z,Ed|Bemessungsmoment M_z,Ed
+m_t||n|Nmm|||Design torsion moment M_t,Ed|Bemessungstorsionsmoment M_t,Ed
+v||n|N|||Design shear force V_Ed|Bemessungsquerkraft V_Ed
+v_point||n|N|||Support shear force V_Ed at the support|Auflagerquerkraft V_Ed am Auflager
+a_support||n|mm|||Distance of the load to the support a|Abstand der Last zum Auflager a
+tau_v||n|MPa|||Torsional shear stress τ_v|Torsionsschubspannung τ_v
+sigma_t_90||n|MPa|||Tension stress perpendicular to grain σ_t,90,d|Querzugspannung σ_t,90,d
+f_c90||n|MPa|||Bearing stress perpendicular to grain σ_c,90,d|Querdruckspannung σ_c,90,d
+support||c|-|discrete||Support type|Auflagerart
+hole_d||n|mm|||Hole diameter|Lochdurchmesser
+hole_count||n|1|||Number of holes in the section|Anzahl Löcher im Querschnitt
+members||c|-|timber||Member material|Bauteilwerkstoff
+spacing_m||n|m|||Member spacing|Bauteilabstand
+load_case||c|-|udl_ss||Load case|Lastfall
+load_g||n|N_m|||Permanent line load G|Ständige Streckenlast G
+load_q||n|N_m|||Variable line load Q|Veränderliche Streckenlast Q
+h_a||n|mm|||Web depth for shear deformation a|Stegbreite für Schubverformung a
+h_b||n|mm|||Web depth for shear deformation b|Stegbreite für Schubverformung b
+psi_2||n|1|0.3|r0:1|Combination factor ψ₂|Kombinationsbeiwert ψ₂
+w_c||n|mm|||Pre-camber w_c|Überhöhung w_c
+k_ser||n|N_mm|||Slip modulus K_ser|Verschiebungsmodul K_ser
+u_inst_g||n|mm|||Instantaneous deflection from G|Anfangsverformung aus G
+u_inst_q||n|mm|||Instantaneous deflection from Q|Anfangsverformung aus Q
+kmod||n|1|||Modification factor k_mod|Modifikationsbeiwert k_mod
+kmod_2||n|1|||Modification factor k_mod of member 2|Modifikationsbeiwert k_mod Bauteil 2
+span_m||n|m|||Span|Spannweite
+width_m||n|m|||Floor width|Deckenbreite
+ei_l||n|1|||Floor bending stiffness (EI)ℓ in N·m²/m|Deckenbiegesteifigkeit (EI)ℓ in N·m²/m
+ei_b||n|1|||Floor transverse stiffness (EI)b in N·m²/m|Deckenquersteifigkeit (EI)b in N·m²/m
+ei_nm2||n|1|||Bending stiffness EI in N·m²|Biegesteifigkeit EI in N·m²
+mass_kg_m2||n|kgm2|||Floor mass per area|Deckenmasse je Fläche
+mass_kg_m||n|kgm|||Mass per length|Masse je Länge
+f1_limit||n|Hz|||Frequency limit f₁|Frequenzgrenze f₁
+force_n||n|N|1000||Unit point load|Einzellast
+a_mm_per_kn||n|1|||Deflection limit a in mm/kN|Durchbiegungsgrenze a in mm/kN
+b_vel||n|1|100||Velocity response limit parameter b|Grenzwertparameter b der Geschwindigkeit
+zeta||n|1|||Damping ratio ζ|Dämpfungsgrad ζ
+n_peds||n|1|||Number of pedestrians|Anzahl Fußgänger
+comfort||c|-|normal||Comfort class|Komfortklasse
+sn_a||n|1|15||S-N parameter a|S-N-Parameter a
+sn_b||n|1|4||S-N parameter b|S-N-Parameter b
+ds1||n|MPa|||Stress range Δσ|Spannungsschwingbreite Δσ
+n1||n|1|||Number of cycles|Lastspielzahl
+sigma_p_0||n|MPa|||Initial prestress σ_p,0|Anfangsvorspannung σ_p,0
+loss||n|1|0.55|r0:1|Prestress loss ratio|Vorspannverlustanteil
+tau_h||n|MPa|||Horizontal shear stress τ_h|Horizontalschubspannung τ_h
+mu||n|1|0.3||Friction coefficient μ|Reibungsbeiwert μ
+f_v_rk||n|N|||Characteristic load-carrying capacity F_v,Rk|Charakteristische Tragfähigkeit F_v,Rk
+n||n|1|||Number of fasteners|Anzahl Verbindungsmittel
+f_ed||n|N|||Design force F_Ed|Bemessungskraft F_Ed
+d||n|mm|||Fastener diameter d|Durchmesser d des Verbindungsmittels
+rho_k1||n|kgm3|||Characteristic density ρ_k of member 1|Charakteristische Rohdichte ρ_k Bauteil 1
+rho_k||n|kgm3|||Characteristic density ρ_k|Charakteristische Rohdichte ρ_k
+rho_k2||n|kgm3|||Characteristic density ρ_k of member 2|Charakteristische Rohdichte ρ_k Bauteil 2
+rho_m1||n|kgm3|||Mean density ρ_m of member 1|Mittlere Rohdichte ρ_m Bauteil 1
+rho_m2||n|kgm3|||Mean density ρ_m of member 2|Mittlere Rohdichte ρ_m Bauteil 2
+f_u||n|MPa|||Tensile strength f_u of the fastener|Zugfestigkeit f_u des Verbindungsmittels
+alpha_deg||n|deg|||Angle α to the grain|Winkel α zur Faser|
+wood||c|-|softwood||Wood type|Holzart
+panel||c|-|timber||Panel material|Plattenwerkstoff
+panel_2||c|-|timber||Panel material of member 2|Plattenwerkstoff Bauteil 2
+t_panel||n|mm|||Panel thickness|Plattendicke
+t1||n|mm|||Thickness t₁|Dicke t₁
+t2||n|mm|||Thickness t₂|Dicke t₂
+t_steel||n|mm|||Steel plate thickness|Stahlblechdicke
+f_ax_rk||n|N|||Characteristic axial capacity F_ax,Rk|Charakteristische Ausziehtragfähigkeit F_ax,Rk
+a1|T-74,T-75|n|mm|||Spacing a₁ parallel to grain|Abstand a₁ in Faserrichtung
+a2|T-74|n|mm|||Spacing a₂ perpendicular to grain|Abstand a₂ quer zur Faser
+a3t||n|mm|||End distance a₃,t loaded end|Endabstand a₃,t beanspruchtes Hirnholz
+a3c||n|mm|||End distance a₃,c unloaded end|Endabstand a₃,c unbeanspruchtes Hirnholz
+a4t||n|mm|||Edge distance a₄,t loaded edge|Randabstand a₄,t beanspruchter Rand
+a4c||n|mm|||Edge distance a₄,c unloaded edge|Randabstand a₄,c unbeanspruchter Rand
+predrilled||n|1|||Predrilled (1) or not (0)|Vorgebohrt (1) oder nicht (0)
+t_pen||n|mm|||Penetration length t_pen|Einschlagtiefe t_pen
+l_ef||n|mm|||Effective penetration length l_ef|Wirksame Eindringtiefe l_ef
+n_ef||n|1|||Effective number of fasteners|Wirksame Anzahl Verbindungsmittel
+f_ax_ed||n|N|||Design axial force F_ax,Ed|Bemessungsachskraft F_ax,Ed
+f_ax_rd||n|N|||Design axial resistance F_ax,Rd|Bemessungsausziehwiderstand F_ax,Rd
+f_v_ed||n|N|||Design lateral force F_v,Ed|Bemessungsquerkraft F_v,Ed
+f_v_rd||n|N|||Design lateral resistance F_v,Rd|Bemessungsabscherwiderstand F_v,Rd
+f_90_ed||n|N|||Design force perpendicular to grain F_90,Ed|Bemessungskraft quer zur Faser F_90,Ed
+he||n|mm|||Loaded edge distance h_e|Abstand h_e zum beanspruchten Rand
+w||n|1|1||Splitting factor w|Spaltfaktor w
+a_net_t||n|mm2|||Net tension area|Nettozugfläche
+a_net_v||n|mm2|||Net shear area|Nettoschubfläche
+a_net||n|mm2|||Net steel area|Nettostahlfläche
+t_plate||n|mm|||Steel plate thickness|Stahlblechdicke
+d0||n|mm|||Hole diameter d₀|Lochdurchmesser d₀
+e1|T-79|n|mm|||End distance e₁|Endabstand e₁
+e2|T-79|n|mm|||Edge distance e₂|Randabstand e₂
+f_u_plate||n|MPa|||Plate tensile strength f_u|Zugfestigkeit f_u des Blechs
+d_c||n|mm|||Connector diameter d_c|Dübeldurchmesser d_c
+h_e||n|mm|||Connector embedment depth h_e|Einlasstiefe h_e
+k1||n|1|||Factor k₁|Beiwert k₁
+k2||n|1|||Factor k₂|Beiwert k₂
+k3||n|1|||Factor k₃|Beiwert k₃
+k4||n|1|||Factor k₄|Beiwert k₄
+f_a_k||n|MPa|||Characteristic anchorage strength f_a,k|Charakteristische Verankerungsfestigkeit f_a,k
+f_t_k_plate||n|N_mm|||Plate tensile capacity per length f_t,k|Zugtragfähigkeit des Blechs je Länge f_t,k
+l_plate||n|mm|||Plate length|Blechlänge
+steel_to_timber||n|1|||Steel-to-timber (1) or timber-to-timber (0)|Stahl-Holz (1) oder Holz-Holz (0)
+lef_y||n|mm|||Buckling length about y|Knicklänge um y
+lef_z||n|mm|||Buckling length about z|Knicklänge um z
+lef||n|mm|||Effective length l_ef|Ersatzstablänge l_ef
+load_pos||c|-|centroid||Load position|Lastangriffspunkt
+restrained||n|1|||Laterally restrained (1) or not (0)|Seitlich gehalten (1) oder nicht (0)
+char_material||x|-|||Charring material|Abbrandwerkstoff
+t_min||n|min|||Fire exposure or protection time|Branddauer oder Schutzzeit
+h_p||n|mm|20||Protection thickness h_p|Bekleidungsdicke h_p
+series||n|1|||Series (1) or single (0) charring|Serie (1) oder einzeln (0)
+t_req||n|min|||Required fire resistance time t_req|Geforderte Feuerwiderstandsdauer t_req
+face_left||n|1|1||Left face exposed (1) or not (0)|Linke Seite beflammt (1) oder nicht (0)
+face_right||n|1|1||Right face exposed (1) or not (0)|Rechte Seite beflammt (1) oder nicht (0)
+face_top||n|1|0||Top face exposed (1) or not (0)|Oberseite beflammt (1) oder nicht (0)
+face_bottom||n|1|1||Bottom face exposed (1) or not (0)|Unterseite beflammt (1) oder nicht (0)
+m_fi||n|Nmm|||Design moment in fire M_fi,Ed|Bemessungsmoment im Brandfall M_fi,Ed
+n_c_fi||n|N|||Design compression force in fire|Bemessungsdruckkraft im Brandfall
+n_t_fi||n|N|||Design tension force in fire|Bemessungszugkraft im Brandfall
+board||c|-|F||Fire protection board type|Brandschutzplattentyp
+side_members||c|-|timber||Side member material|Seitenholzwerkstoff
+beta_n||n|1|0.7||Notional charring rate β_n|Ideelle Abbrandrate β_n
+f_fi_d||n|N|||Design capacity in fire F_fi,d|Bemessungstragfähigkeit im Brandfall F_fi,d
+a_required||n|mm|||Required distance|Erforderlicher Abstand
+a_provided||n|mm|||Provided distance|Vorhandener Abstand
+n_layers||n|1|||Number of layers|Anzahl Lagen
+h1||n|mm|||Height or thickness h₁ of part or layer 1|Höhe oder Dicke h₁ von Teil oder Lage 1
+a1|T-62,T-90|n|mm2|||Area A₁ of part 1|Fläche A₁ von Teil 1
+a2|T-62,T-90|n|mm2|||Area A₂ of part 2|Fläche A₂ von Teil 2
+a3|T-62,T-90|n|mm2|||Area A₃ of part 3|Fläche A₃ von Teil 3
+i1|T-62,T-90,T-93|n|mm4|||Second moment I₁ of part 1|Flächenträgheitsmoment I₁ von Teil 1
+i2|T-62,T-90|n|mm4|||Second moment I₂ of part 2|Flächenträgheitsmoment I₂ von Teil 2
+i3|T-62,T-90|n|mm4|||Second moment I₃ of part 3|Flächenträgheitsmoment I₃ von Teil 3
+e1|T-62,T-90|n|MPa|||Modulus of elasticity E₁|Elastizitätsmodul E₁
+e2|T-62,T-90|n|MPa|||Modulus of elasticity E₂|Elastizitätsmodul E₂
+e3|T-62,T-90|n|MPa|||Modulus of elasticity E₃|Elastizitätsmodul E₃
+z1|T-62,T-90|n|mm|||Centroid offset z₁|Schwerpunktabstand z₁
+z3|T-62,T-90|n|mm|||Centroid offset z₃|Schwerpunktabstand z₃
+s1|T-62,T-90|n|mm|||Fastener spacing s₁|Abstand s₁ der Verbindungsmittel
+s3|T-62,T-90|n|mm|||Fastener spacing s₃|Abstand s₃ der Verbindungsmittel
+h2||n|mm|||Height h₂|Höhe h₂
+h3||n|mm|||Height h₃|Höhe h₃
+k|T-90|n|N_mm||L|Slip modulus K|Verschiebungsmodul K
+m_d||n|Nmm|||Design moment M_d|Bemessungsmoment M_d
+v_d||n|N|||Design shear force V_d|Bemessungsquerkraft V_d
+fd_a1||n|MPa|||Design strength f_d of part 1 axial|Bemessungsfestigkeit f_d Teil 1 axial
+fd_m1||n|MPa|||Design strength f_d of part 1 bending|Bemessungsfestigkeit f_d Teil 1 Biegung
+r_d1||n|N|||Design fastener capacity R_d|Bemessungstragfähigkeit R_d des Verbindungsmittels
+b_f||n|mm|||Flange width b_f|Gurtbreite b_f
+h_f||n|mm|||Flange thickness h_f|Gurtdicke h_f
+b_w||n|mm|||Web width b_w|Stegbreite b_w
+h_w||n|mm|||Web height h_w|Steghöhe h_w
+e_f||n|MPa|||Modulus of the flange E_f|Elastizitätsmodul des Gurts E_f
+e_w||n|MPa|||Modulus of the web E_w|Elastizitätsmodul des Stegs E_w
+f_glue_d||n|MPa|||Design glue line shear strength|Bemessungswert Klebfugenschubfestigkeit
+f_flange_d||n|MPa|||Design flange strength|Bemessungsfestigkeit des Gurts
+outstand||n|mm|||Flange outstand|Gurtüberstand
+i_tot||n|mm4|||Total second moment of area|Gesamtträgheitsmoment
+n_parts||n|1|||Number of column parts|Anzahl Stabteile
+joint||c|-|nailed||Joint type|Verbindungsart
+f_f_rd||n|N|||Fastener capacity F_f,Rd|Tragfähigkeit F_f,Rd des Verbindungsmittels
+b_i||n|mm|||Panel width b_i|Tafelbreite b_i
+s||n|mm|||Fastener spacing s|Verbindungsmittelabstand s
+n_panels||n|1|1||Number of panels|Anzahl Tafeln
+method||c|-|A||Racking method|Verfahren Wandscheibe
+r_hold_down||n|N|||Hold-down capacity|Tragfähigkeit der Zuganker
+f_d||n|N|||Diaphragm force|Scheibenkraft
+l_dia||n|mm|||Diaphragm length|Scheibenlänge
+q_v_rd||n|N_mm|||Diaphragm shear capacity|Scheibenschubtragfähigkeit
+n_d||n|N|||Design axial force N_d of stabilised members|Normalkraft N_d der ausgesteiften Bauteile
+l_m||n|m|||Bracing length l|Aussteifungslänge l
+q_rd||n|N_m|||Bracing capacity q_Rd|Tragfähigkeit q_Rd des Aussteifungssystems
+f_rd||n|N|||Bracing resistance F_Rd|Widerstand F_Rd des Aussteifungssystems
+k_br||n|N_mm|||Bracing stiffness|Steifigkeit des Aussteifungssystems
+o1||x|-|||Orientation of layer 1|Ausrichtung der Lage 1
+g_r||n|MPa|50||Rolling shear modulus G_R|Rollschubmodul G_R
+q_k||n|N_m|||Characteristic line load q_k|Charakteristische Streckenlast q_k
+system||x|-|||Structural system|Tragsystem
+ductility||c|-|DCM||Ductility class|Duktilitätsklasse
+alpha_ap_deg||n|deg|||Apex angle α_ap|Firstwinkel α_ap
+m_ap||n|Nmm|||Apex moment M_ap,d|Firstmoment M_ap,d
+h_ap||n|mm|||Apex depth h_ap|Firsthöhe h_ap
+r_in||n|mm|||Inner radius r_in|Innenradius r_in
+t_lam||n|mm|||Lamella thickness t|Lamellendicke t
+v_beam||n|mm3|||Stressed apex volume|Beanspruchtes Firstvolumen
+shape||c|-|rect||Cross-section shape|Querschnittsform
+p_d||n|N_m|||Design line load p_d at the apex|Bemessungsstreckenlast p_d am First
+tau_d||n|MPa|||Shear stress τ_d|Schubspannung τ_d
+n_rods||n|1|||Number of reinforcing rods|Anzahl Verstärkungsstäbe
+r_ax_k||n|N|||Characteristic axial capacity per rod|Charakteristische Ausziehtragfähigkeit je Stab
+x||n|mm|||Notch offset x|Ausklinkungsabstand x
+incl||n|1|||Notch inclination i|Neigung i der Ausklinkung
+side||c|-|support||Notch side|Ausklinkungsseite
+h_ef||n|mm|||Effective depth h_ef|Wirksame Höhe h_ef
+a_left||n|mm|||Left support length|Linke Auflagerlänge
+a_right||n|mm|||Right support length|Rechte Auflagerlänge
+alpha1_deg||n|deg|||Angle α₁ to the grain|Winkel α₁ zur Faser
+alpha2_deg||n|deg|||Angle α₂ to the grain|Winkel α₂ zur Faser
+b_dia||n|mm|||Diaphragm chord width|Gurtbreite der Scheibe
+m_dia||n|Nmm|||Diaphragm moment|Scheibenmoment
+n_chord_rd||n|N|||Chord resistance|Gurtwiderstand
+b_glue||n|mm|||Glue line width|Klebfugenbreite
+beta_0||n|1|||Charring rate β₀ in mm/min|Abbrandrate β₀ in mm/min
+beta_c||n|1|||Factor β_c|Beiwert β_c
+contact_mm||n|mm|||Contact length|Kontaktlänge
+d_head||n|mm|||Head diameter|Kopfdurchmesser
+d_root||n|mm|||Root diameter|Kerndurchmesser
+d_washer||n|mm|||Washer diameter|Scheibendurchmesser
+distributing||n|1|||Load distributing (1) or not (0)|Lastverteilend (1) oder nicht (0)
+e_mean||n|MPa|||Mean modulus of elasticity|Mittlerer Elastizitätsmodul
+eta||n|1|||Factor η|Beiwert η
+f_c_90||n|MPa|||Bearing strength f_c,90|Querdruckfestigkeit f_c,90
+f_c_90_d||n|MPa|||Design bearing strength f_c,90,d|Bemessungsquerdruckfestigkeit f_c,90,d
+f_c_90_k||n|MPa|||Characteristic bearing strength f_c,90,k|Charakteristische Querdruckfestigkeit f_c,90,k
+f_head_k||n|1|8||Head pull-through parameter f_head,k|Kopfdurchziehparameter f_head,k
+f_lateral||n|1|3||Lateral load factor|Querlastfaktor
+f_r_k||n|MPa|||Characteristic rolling shear strength|Charakteristische Rollschubfestigkeit
+f_tens_k||n|N|||Characteristic tensile capacity|Charakteristische Zugtragfähigkeit
+f_u_bolt||n|MPa|||Bolt tensile strength|Zugfestigkeit der Schraube
+f_v_clt_k||n|MPa|5||Characteristic CLT shear strength|Charakteristische BSP-Schubfestigkeit
+f_v_web_d||n|MPa|||Design web shear strength|Bemessungsschubfestigkeit des Stegs
+fv_d_2||n|MPa|||Design shear strength of member 2|Bemessungsschubfestigkeit Bauteil 2
+flange_side||c|-|compression||Flange side|Gurtseite
+gamma_m||n|1|||Partial factor γ_M|Teilsicherheitsbeiwert γ_M
+gamma_m_conn||n|1|1.3||Partial factor γ_M of the connection|Teilsicherheitsbeiwert γ_M der Verbindung
+k_c90||n|1|||Factor k_c,90|Beiwert k_c,90
+k_cr||n|1|||Crack factor k_cr|Rissbeiwert k_cr
+k_d||n|1|1||Diaphragm factor k_d|Beiwert k_d
+k_def||n|1|||Deformation factor k_def|Verformungsbeiwert k_def
+k_flux||n|1|1.5||Heat flux factor|Wärmestromfaktor
+k_n||n|1|1||Nail spacing factor k_n|Nagelabstandsfaktor k_n
+k_op||n|1|1||Opening factor k_op|Öffnungsbeiwert k_op
+k_q||n|1|1||Load factor k_q|Lastbeiwert k_q
+kappa||n|1|1.2||Shear correction factor κ|Schubkorrekturbeiwert κ
+kdef_2||n|1|||Deformation factor k_def of member 2|Verformungsbeiwert k_def Bauteil 2
+kh||n|1|||Size factor k_h|Größenbeiwert k_h
+kh_dim||n|mm|||Size factor reference dimension|Bezugsmaß des Größenbeiwerts
+kh_dim_z||n|mm|||Size factor reference dimension about z|Bezugsmaß des Größenbeiwerts um z
+km||n|1|||Factor k_m|Beiwert k_m
+lambda_max||n|1|150||Maximum slenderness|Maximale Schlankheit
+limit_divisor||n|1|300||Deflection limit divisor l/x|Durchbiegungsgrenze l/x
+limit_fin_divisor||n|1|150||Final deflection limit divisor l/x|Enddurchbiegungsgrenze l/x
+limit_net_divisor||n|1|||Net final deflection limit divisor l/x|Nettoenddurchbiegungsgrenze l/x
+n_bolts||n|1|1||Number of bolts|Anzahl Bolzen
+psi_0_2||n|1|||Combination factor ψ₀ of action 2|Kombinationsbeiwert ψ₀ der Einwirkung 2
+psi_2_2||n|1|||Combination factor ψ₂ of action 2|Kombinationsbeiwert ψ₂ der Einwirkung 2
+q_v||n|N_mm|||Vertical line load on the wall|Vertikale Streckenlast auf die Wand
+s_first||n|mm3|||First moment of area S_f|Statisches Moment S_f
+s_lvl||n|1|0.12||LVL size exponent|LVL-Größenexponent
+shear_planes||n|1|||Number of shear planes|Anzahl Scherfugen
+t_a1||n|mm|||Distance t_a1|Abstand t_a1
+t_a2||n|mm|||Distance t_a2|Abstand t_a2
+t_head_side||n|mm|||Head side member thickness|Dicke des kopfseitigen Holzes
+v_apex||n|mm3|||Apex zone volume|Firstzonenvolumen
+w_q2||n|mm|||Deflection of action 2|Durchbiegung der Einwirkung 2
+wheel_n||n|N|||Wheel load|Radlast
+a_ef||n|mm2|||Effective plate area|Wirksame Plattenfläche
+ds2||n|MPa|||Stress range Δσ of block 2|Spannungsschwingbreite Δσ des Blocks 2
+n2||n|1|||Number of cycles of block 2|Lastspielzahl des Blocks 2
+ds3||n|MPa|||Stress range Δσ of block 3|Spannungsschwingbreite Δσ des Blocks 3
+n3||n|1|||Number of cycles of block 3|Lastspielzahl des Blocks 3
+years|T-121|n|1|||Design life in years (the block cycles are per year)|Nutzungsdauer in Jahren (Lastspiele je Jahr)
+ds_cut|T-121|n|MPa|0||Stress range below which no damage accrues|Spannungsschwingbreite, unter der keine Schädigung entsteht
+deck_width_m||n|m|||Deck width|Deckbreite
+crowd_density||n|1|||Crowd density in persons per m²|Personendichte in Personen je m²
+crowd_model||c|-|en1995-2||Crowd model|Menschenmengenmodell
+a_limit||n|1|0.7||Acceleration limit in m/s²|Beschleunigungsgrenze in m/s²
+f_lat_hz||n|Hz|||Lateral frequency|Horizontale Eigenfrequenz
+loss_relax|T-122|n|1|||Prestress loss by bar relaxation|Vorspannverlust durch Relaxation
+loss_creep|T-122|n|1|||Prestress loss by timber creep|Vorspannverlust durch Kriechen
+loss_mc|T-122|n|1|||Prestress loss by moisture content change|Vorspannverlust durch Holzfeuchteänderung
+bar_spacing|T-122|n|mm|||Prestress bar spacing s|Abstand s der Spannstäbe
+deck_depth|T-122|n|mm|||Deck depth h|Deckhöhe h
+bar_area|T-122|n|mm2|||Bar cross-section area|Stabquerschnittsfläche
+f_bar_d|T-122|n|MPa|||Design bar resistance|Bemessungswiderstand des Stabes
+plate_a|T-122|n|mm2|||Anchor plate area|Ankerplattenfläche
+f_rd_20||n|N|||Connection resistance R_d at 20 degrees|Verbindungstragfähigkeit R_d bei 20 Grad
+k_fire||n|1|||Reduced load method constant k in 1/min|Konstante k des Verfahrens mit abgeminderter Last in 1/min
+fall_off|T-107|n|1|1|r0:1|Char layer falls off at the glue line (1) or not (0)|Kohleschicht fällt an der Klebfuge ab (1) oder nicht (0)
+fall_off_factor|T-107|n|1|2||Charring rate factor after fall-off|Faktor der Abbrandrate nach dem Abfallen
+protect_mm|T-107|n|mm|25||Protecting char layer thickness|Dicke der schützenden Kohleschicht
+q_d|T-90|n|N_mm|||Design line load q_d|Bemessungsstreckenlast q_d
+zeta|T-120|n|1|0.015|L|Damping ratio ζ|Dämpfungsgrad ζ
+sigma_p_0|T-122|n|MPa||L|Initial prestress σ_p,0|Anfangsvorspannung σ_p,0
+t1|T-107|n|mm||L|Thickness t₁ of the exposed layer|Dicke t₁ der beflammten Lage
+area|T-93|n|mm2||L|Cross-section area A|Querschnittsfläche A
+f_v_rk|T-104|n|N||L|Characteristic load-carrying capacity F_v,Rk|Charakteristische Tragfähigkeit F_v,Rk

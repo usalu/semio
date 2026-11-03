@@ -1,0 +1,6 @@
+{
+  "ChangePileIlockBendingFactor": {
+    "id": "pile-1",
+    "newInterlockBendingFactor": 1.5
+  }
+}

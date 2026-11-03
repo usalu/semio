@@ -1,9 +1,78 @@
 syntax = "proto3";
-package semio.norm.en1997;
-
+package semio.s.norm.en1997;
+message En1997Snapshot {
+  // @state artifact
+  string structure_id = 1;
+  // @state artifact
+  uint32 geotechnical_category = 2;
+  // @state artifact
+  SituationChoice design_situation = 3;
+  // @state artifact
+  ApproachChoice design_approach = 4;
+  // @state artifact
+  AnnexChoice annex = 5;
+  // @state artifact
+  double groundwater_level = 6;
+  // @state artifact
+  double investigation_depth = 7;
+  // @state artifact
+  repeated SoilLayer layers = 8;
+  // @state artifact
+  repeated SpreadFoundation footings = 9;
+  // @state artifact
+  repeated Pile piles = 10;
+  // @state artifact
+  repeated RetainingWall retaining_walls = 11;
+  // @state artifact
+  repeated Slope slopes = 12;
+  // @state artifact
+  repeated UpliftCase uplift_cases = 13;
+  // @state artifact
+  repeated Anchor anchors = 14;
+  // @state artifact
+  repeated EmbeddedWall embedded_walls = 15;
+  // @state artifact
+  repeated PileGroup pile_groups = 16;
+  // @state artifact
+  repeated LabTest lab_tests = 17;
+  // @state artifact
+  repeated LayerWater layer_waters = 18;
+  // @state artifact
+  repeated Placement placements = 19;
+  // @state artifact
+  repeated CaseRow cases = 20;
+  // @state artifact
+  repeated Investigation investigations = 21;
+  // @state artifact
+  repeated CharacteristicBasis characteristic_bases = 22;
+}
+enum ApproachChoice {
+  APPROACH_CHOICE_DA1_STR = 0;
+  APPROACH_CHOICE_DA1_GEO = 1;
+  APPROACH_CHOICE_DA2 = 2;
+  APPROACH_CHOICE_DA2_STAR = 3;
+  APPROACH_CHOICE_DA3 = 4;
+  APPROACH_CHOICE_GEO3 = 5;
+}
+message SpreadFoundation {
+  string id = 1;
+  double width = 2;
+  double length = 3;
+  double embedment = 4;
+  double base_inclination_deg = 5;
+  double settlement_limit = 6;
+  repeated FoundationLoadCase load_cases = 7;
+}
+enum SoilType {
+  SOIL_TYPE_SAND = 0;
+  SOIL_TYPE_GRAVEL = 1;
+  SOIL_TYPE_CLAY = 2;
+  SOIL_TYPE_SILT = 3;
+  SOIL_TYPE_FILL = 4;
+}
 message SoilLayer {
   string id = 1;
-  string soil_type = 2;
+  SoilType soil_type = 2;
   double depth_top = 3;
   double depth_bottom = 4;
   double gamma = 5;
@@ -15,34 +84,16 @@ message SoilLayer {
   double poisson_ratio = 11;
   double cpt_qc = 12;
   double spt_n = 13;
+  double cpt_nkt = 14;
 }
-message FoundationLoadCase {
-  string id = 1;
-  string design_situation = 2;
-  double vertical_permanent = 3;
-  double vertical_variable = 4;
-  double horizontal_permanent = 5;
-  double horizontal_variable = 6;
-  double moment_permanent = 7;
-  double moment_variable = 8;
-}
-message SpreadFoundation {
-  string id = 1;
-  double width = 2;
-  double length = 3;
-  double embedment = 4;
-  double base_inclination_deg = 5;
-  double settlement_limit = 6;
-  repeated FoundationLoadCase load_cases = 7;
-}
-message PileTestProfile {
-  string id = 1;
-  double shaft_resistance = 2;
-  double base_resistance = 3;
+enum PileType {
+  PILE_TYPE_BORED = 0;
+  PILE_TYPE_DRIVEN = 1;
+  PILE_TYPE_CFA = 2;
 }
 message Pile {
   string id = 1;
-  string pile_type = 2;
+  PileType pile_type = 2;
   double diameter = 3;
   double length = 4;
   uint32 count = 5;
@@ -53,7 +104,64 @@ message Pile {
   double compression_variable = 10;
   double tension_permanent = 11;
   double tension_variable = 12;
-  repeated PileTestProfile test_profiles = 13;
+  double bending_stiffness_ei = 13;
+  double horizontal_subgrade_modulus = 14;
+  double lateral_head_load = 15;
+  double elastic_modulus = 16;
+  double settling_thickness = 17;
+  double negative_friction_beta = 18;
+  double dynamic_test_count = 19;
+  double dynamic_resistance_mean = 20;
+  double dynamic_resistance_min = 21;
+  double hammer_weight = 22;
+  double drop_height = 23;
+  double set_per_blow = 24;
+  double elastic_compression = 25;
+  double hammer_efficiency = 26;
+  PileConcreteClass concrete_class = 27;
+  repeated PileTestProfile test_profiles = 28;
+}
+enum PileConcreteClass {
+  PILE_CONCRETE_CLASS_NOT_GIVEN = 0;
+  PILE_CONCRETE_CLASS_C1215 = 1;
+  PILE_CONCRETE_CLASS_C1620 = 2;
+  PILE_CONCRETE_CLASS_C2025 = 3;
+  PILE_CONCRETE_CLASS_C2530 = 4;
+  PILE_CONCRETE_CLASS_C3037 = 5;
+  PILE_CONCRETE_CLASS_C3545 = 6;
+  PILE_CONCRETE_CLASS_C4050 = 7;
+  PILE_CONCRETE_CLASS_C4555 = 8;
+  PILE_CONCRETE_CLASS_C5060 = 9;
+}
+enum SituationChoice {
+  SITUATION_CHOICE_PERSISTENT = 0;
+  SITUATION_CHOICE_TRANSIENT = 1;
+  SITUATION_CHOICE_ACCIDENTAL = 2;
+}
+message FoundationLoadCase {
+  string id = 1;
+  SituationChoice design_situation = 2;
+  double vertical_permanent = 3;
+  double vertical_variable = 4;
+  double horizontal_permanent = 5;
+  double horizontal_variable = 6;
+  double moment_permanent = 7;
+  double moment_variable = 8;
+}
+message PileTestProfile {
+  string id = 1;
+  double shaft_resistance = 2;
+  double base_resistance = 3;
+}
+enum EarthPressureMode {
+  EARTH_PRESSURE_MODE_ACTIVE = 0;
+  EARTH_PRESSURE_MODE_AT_REST = 1;
+  EARTH_PRESSURE_MODE_INCREASED_ACTIVE = 2;
+}
+enum WallMovement {
+  WALL_MOVEMENT_FREE = 0;
+  WALL_MOVEMENT_RIGID = 1;
+  WALL_MOVEMENT_PROPPED = 2;
 }
 message RetainingWall {
   string id = 1;
@@ -64,13 +172,18 @@ message RetainingWall {
   double backfill_phi_deg = 6;
   double backfill_gamma = 7;
   double wall_friction_deg = 8;
-  string earth_pressure_mode = 9;
-  string wall_movement = 10;
+  EarthPressureMode earth_pressure_mode = 9;
+  WallMovement wall_movement = 10;
   double ocr = 11;
   double concrete_gamma = 12;
   double surcharge = 13;
   double vertical_permanent = 14;
   double horizontal_permanent = 15;
+  double seismic_kh = 16;
+  double seismic_kv = 17;
+  double reinforcement_spacing = 18;
+  double reinforcement_width = 19;
+  double reinforcement_friction = 20;
 }
 message Slope {
   string id = 1;
@@ -78,6 +191,10 @@ message Slope {
   double height = 3;
   double length = 4;
   string governing_layer_id = 5;
+  double circle_centre_x = 6;
+  double circle_centre_z = 7;
+  double circle_radius = 8;
+  double width = 9;
 }
 message UpliftCase {
   string id = 1;
@@ -87,18 +204,151 @@ message UpliftCase {
   double pore_pressure = 5;
   double total_stress = 6;
 }
-message En1997Artifact {
-  string structure_id = 1;
-  uint32 geotechnical_category = 2;
-  string design_situation = 3;
-  string design_approach = 4;
-  string annex = 5;
-  double groundwater_level = 6;
-  double investigation_depth = 7;
-  repeated SoilLayer layers = 8;
-  repeated SpreadFoundation footings = 9;
-  repeated Pile piles = 10;
-  repeated RetainingWall retaining_walls = 11;
-  repeated Slope slopes = 12;
-  repeated UpliftCase uplift_cases = 13;
+message AnchorTest {
+  string id = 1;
+  double pull_out_resistance = 2;
+}
+enum TendonType {
+  TENDON_TYPE_STRAND = 0;
+  TENDON_TYPE_BAR = 1;
+}
+message Anchor {
+  string id = 1;
+  string wall_id = 2;
+  TendonType tendon = 3;
+  double head_depth = 4;
+  double inclination_deg = 5;
+  double free_length = 6;
+  double fixed_length = 7;
+  double fixed_diameter = 8;
+  double bond_stress = 9;
+  double design_force = 10;
+  double tendon_yield_force = 11;
+  double min_free_length = 12;
+  double test_factor = 13;
+  repeated AnchorTest tests = 14;
+}
+enum EmbeddedWallKind {
+  EMBEDDED_WALL_KIND_FREE_EARTH = 0;
+  EMBEDDED_WALL_KIND_CANTILEVER = 1;
+}
+message EmbeddedWall {
+  string id = 1;
+  EmbeddedWallKind kind = 2;
+  double retained_height = 3;
+  double embedment = 4;
+  double prop_depth = 5;
+  double thickness = 6;
+  double backfill_gamma = 7;
+  double phi_deg = 8;
+  double delta_active_deg = 9;
+  double delta_passive_deg = 10;
+  double surcharge = 11;
+  double undrained_strength = 12;
+}
+message PileGroup {
+  string id = 1;
+  string pile_id = 2;
+  uint32 rows = 3;
+  uint32 columns = 4;
+  double spacing = 5;
+  double cap_vertical = 6;
+  double cap_moment_x = 7;
+  double cap_moment_y = 8;
+  double single_resistance = 9;
+  double shaft_cohesion_sum = 10;
+  double base_cohesion = 11;
+}
+message LabPoint {
+  string id = 1;
+  double normal_stress = 2;
+  double shear_stress = 3;
+}
+enum LabTestKind {
+  LAB_TEST_KIND_OEDOMETER = 0;
+  LAB_TEST_KIND_TRIAXIAL = 1;
+  LAB_TEST_KIND_DIRECT_SHEAR = 2;
+}
+message LabTest {
+  string id = 1;
+  string layer_id = 2;
+  LabTestKind kind = 3;
+  double void_ratio = 4;
+  double preload_stress = 5;
+  double drainage_height = 6;
+  double consolidation_time = 7;
+  double compression_index = 8;
+  double swelling_index = 9;
+  double stress_increment = 10;
+  double secondary_compression_index = 11;
+  double design_life = 12;
+  repeated LabPoint points = 13;
+}
+message LayerWater {
+  string id = 1;
+  string layer_id = 2;
+  double piezometric_depth = 3;
+  double permeability = 4;
+  double head_difference = 5;
+  double flow_length = 6;
+  double well_radius = 7;
+  double well_water_depth = 8;
+  double influence_radius = 9;
+  double well_capacity = 10;
+}
+message Placement {
+  string id = 1;
+  double x = 2;
+  double y = 3;
+  double z = 4;
+  double yaw = 5;
+}
+message CaseNumber {
+  string id = 1;
+  double value = 2;
+}
+message CaseText {
+  string id = 1;
+  string value = 2;
+}
+message CaseRow {
+  string id = 1;
+  string label_en = 2;
+  string label_de = 3;
+  string entry_id = 4;
+  repeated CaseNumber numbers = 5;
+  repeated CaseText texts = 6;
+}
+enum InvestigationKind {
+  INVESTIGATION_KIND_BOREHOLE = 0;
+  INVESTIGATION_KIND_CPT = 1;
+  INVESTIGATION_KIND_SPT = 2;
+}
+message InvestigationReading {
+  string id = 1;
+  double depth = 2;
+  double measurement = 3;
+}
+message Investigation {
+  string id = 1;
+  double position_x = 2;
+  double position_y = 3;
+  double ground_level = 4;
+  double depth = 5;
+  InvestigationKind kind = 6;
+  repeated InvestigationReading readings = 7;
+}
+enum CharacteristicParameter {
+  CHARACTERISTIC_PARAMETER_UNDRAINED_STRENGTH = 0;
+  CHARACTERISTIC_PARAMETER_FRICTION_ANGLE = 1;
+}
+enum ParameterBasis {
+  PARAMETER_BASIS_DECLARED = 0;
+  PARAMETER_BASIS_DERIVED = 1;
+}
+message CharacteristicBasis {
+  string id = 1;
+  string layer_id = 2;
+  CharacteristicParameter parameter = 3;
+  ParameterBasis basis = 4;
 }

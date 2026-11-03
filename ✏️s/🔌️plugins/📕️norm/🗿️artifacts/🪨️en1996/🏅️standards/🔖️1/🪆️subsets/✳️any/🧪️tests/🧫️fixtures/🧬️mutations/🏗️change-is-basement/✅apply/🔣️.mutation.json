@@ -1,0 +1,6 @@
+{
+  "ChangeIsBasement": {
+    "id": "wall-north",
+    "newIsBasement": true
+  }
+}

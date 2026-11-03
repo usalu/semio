@@ -1,0 +1,6 @@
+{
+  "ChangeBeamSheetingThicknessM": {
+    "id": "beam-B1",
+    "newThicknessM": 0.001125
+  }
+}

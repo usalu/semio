@@ -1,0 +1,147 @@
+{
+  "artifact": "en1993",
+  "reference": "frameMemberBases",
+  "collection": {
+    "name": "fatigueStresses",
+    "entity": "FatigueStress",
+    "emoji": "⏳",
+    "doc": "⏳ Stress range of one fatigue detail from the fatigue load model (EN 1993-1-9 5.1 to 5.4): the stresses at the detail fibre from the member actions of the highest and the lowest load case, the reduction of the compressive part for non-welded or stress-relieved details, the geometric stress concentration, the plate thickness for the size effect and the number of cycles of the range.",
+    "label": {
+      "en": "Stress ranges",
+      "de": "Spannungsschwingbreiten"
+    },
+    "id": {
+      "en": "Stress range ID",
+      "de": "Schwingbreiten-ID"
+    },
+    "singular": {
+      "en": "stress range",
+      "de": "Spannungsschwingbreite"
+    },
+    "kindSlug": "fatigue-stress",
+    "fields": [
+      {
+        "name": "detail_id",
+        "type": "String",
+        "label": {
+          "en": "Fatigue detail",
+          "de": "Kerbfall-Detail"
+        },
+        "doc": "🔗 Id of the fatigue detail (category, method) the range belongs to.",
+        "sample": "fatigue-1"
+      },
+      {
+        "name": "max_case_id",
+        "type": "String",
+        "label": {
+          "en": "Load case of the maximum",
+          "de": "Lastfall des Maximums"
+        },
+        "doc": "⬆ Id of the load case whose member actions give the largest stress at the detail fibre (fatigue load model in its unfavourable position).",
+        "sample": "lm-max"
+      },
+      {
+        "name": "min_case_id",
+        "type": "String",
+        "label": {
+          "en": "Load case of the minimum",
+          "de": "Lastfall des Minimums"
+        },
+        "doc": "⬇ Id of the load case whose member actions give the smallest stress at the detail fibre.",
+        "sample": "lm-min"
+      },
+      {
+        "name": "fibre_z",
+        "type": "f64",
+        "label": {
+          "en": "Fibre distance z",
+          "de": "Faserabstand z"
+        },
+        "doc": "📍 Distance z of the detail fibre from the y axis, positive in the direction of positive bending moment M_y compression: sigma = N/A + M_y z/I_y - M_z y/I_z.",
+        "sample": 0.1,
+        "unit": "m"
+      },
+      {
+        "name": "fibre_y",
+        "type": "f64",
+        "label": {
+          "en": "Fibre distance y",
+          "de": "Faserabstand y"
+        },
+        "doc": "📍 Distance y of the detail fibre from the z axis.",
+        "sample": 0.0,
+        "unit": "m"
+      },
+      {
+        "name": "relief",
+        "type": "enum",
+        "label": {
+          "en": "Residual stress state",
+          "de": "Eigenspannungszustand"
+        },
+        "doc": "🧯 As-welded details take the full range; stress-relieved welded and non-welded details take the compressive part of the cycle reduced (EN 1993-1-9 5.4).",
+        "sample": "AsWelded",
+        "enum": {
+          "name": "StressRelief",
+          "doc": "🧯 Residual stress state of a fatigue detail: as welded, welded and stress relieved or non-welded.",
+          "values": [
+            {
+              "token": "AsWelded",
+              "label": {
+                "en": "As welded",
+                "de": "Geschweißt, nicht spannungsarm"
+              }
+            },
+            {
+              "token": "StressRelieved",
+              "label": {
+                "en": "Welded, stress relieved",
+                "de": "Geschweißt, spannungsarm geglüht"
+              }
+            },
+            {
+              "token": "NonWelded",
+              "label": {
+                "en": "Non-welded",
+                "de": "Nicht geschweißt"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "name": "concentration",
+        "type": "f64",
+        "label": {
+          "en": "Stress concentration k_f",
+          "de": "Spannungskonzentration k_f"
+        },
+        "doc": "📐 Geometric stress concentration factor k_f of the nominal stress at the detail (EN 1993-1-9 5.2); 0 = not given, the nominal stress is used unchanged.",
+        "sample": 0.0,
+        "unit": ""
+      },
+      {
+        "name": "thickness",
+        "type": "f64",
+        "label": {
+          "en": "Plate thickness t",
+          "de": "Blechdicke t"
+        },
+        "doc": "📏 Thickness t of the cracked plate for the size effect k_s = (25/t)^n of the detail strength (EN 1993-1-9 7.1); 0 = not given, no size effect is applied.",
+        "sample": 0.0,
+        "unit": "m"
+      },
+      {
+        "name": "cycles",
+        "type": "f64",
+        "label": {
+          "en": "Number of cycles",
+          "de": "Lastspielzahl"
+        },
+        "doc": "🔁 Number of cycles of this stress range in the design life.",
+        "sample": 2000000.0,
+        "unit": ""
+      }
+    ]
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeDiaphragmChordStrMpa",
+  "id": "dia-1",
+  "newChordStrengthMpa": 870.0
+}

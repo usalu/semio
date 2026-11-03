@@ -1,0 +1,29 @@
+{
+  "cases": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "case-c94-09",
+        "patch": {
+          "labelEn": "Floor beam natural frequency (revised)",
+          "labelDe": null,
+          "entryId": null,
+          "numbers": {
+            "removed": [],
+            "inserted": [],
+            "moved": [],
+            "modified": []
+          },
+          "texts": {
+            "removed": [],
+            "inserted": [],
+            "moved": [],
+            "modified": []
+          }
+        }
+      }
+    ]
+  }
+}

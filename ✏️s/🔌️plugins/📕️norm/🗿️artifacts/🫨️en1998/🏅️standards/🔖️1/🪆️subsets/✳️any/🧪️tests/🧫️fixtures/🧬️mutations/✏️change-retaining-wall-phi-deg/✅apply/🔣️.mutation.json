@@ -1,0 +1,5 @@
+{
+  "mutation": "changeRetainingWallPhiDeg",
+  "id": "rw-1",
+  "newPhiDeg": 64.0
+}

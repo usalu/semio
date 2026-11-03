@@ -138,6 +138,9 @@ pub enum TreeDragRole {
 /// 🌲️ React's property-row value column: `controlValueColumnUiSpacing × --ui-spacing`.
 pub const TREE_ROW_CONTROL_WIDTH: f32 = (ui_styling::metrics::dom::CONTROL_VALUE_COLUMN_UI_SPACING * ui_styling::metrics::chrome::UI_SPACING_COMPACT_PX) as f32;
 
+/// 👆️ The smallest row height of a touch tree in pixels (WCAG 2.5.5 target size): [`ui_contract::TreePresentation::Touch`] rows are never shorter, whatever the theme's row height.
+pub const TREE_ROW_TOUCH_MIN_PX: f32 = 44.0;
+
 /// 🌴️ React's compact property-tree value column, measured from the actual mounted DOM.
 pub const TREE_ROW_COMPACT_CONTROL_WIDTH: f32 = 104.0;
 
@@ -171,10 +174,11 @@ impl TreeRowMetrics {
         self.row_height = match presentation {
             ui_contract::TreePresentation::Standard => self.standard_row_height,
             ui_contract::TreePresentation::Compact => crate::chrome::SIZE_TINY * 1.5,
+            ui_contract::TreePresentation::Touch => self.standard_row_height.max(TREE_ROW_TOUCH_MIN_PX),
         };
         self.header_height = self.row_height;
         self.control_width = match presentation {
-            ui_contract::TreePresentation::Standard => self.standard_control_width,
+            ui_contract::TreePresentation::Standard | ui_contract::TreePresentation::Touch => self.standard_control_width,
             ui_contract::TreePresentation::Compact => TREE_ROW_COMPACT_CONTROL_WIDTH,
         };
         self.control_height = self.standard_control_height;

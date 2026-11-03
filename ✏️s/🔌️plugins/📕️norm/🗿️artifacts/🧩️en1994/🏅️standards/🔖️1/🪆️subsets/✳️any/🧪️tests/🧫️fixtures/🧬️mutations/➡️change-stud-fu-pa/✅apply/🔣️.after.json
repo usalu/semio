@@ -1,0 +1,160 @@
+{
+  "annex": "En",
+  "reliabilityClass": "RC3",
+  "cases": [],
+  "structureKind": "building",
+  "steelFYPa": 355000000,
+  "fireRating": "unrated",
+  "insulationThicknessM": 0.025,
+  "fatigueDetail": "studWelded",
+  "beams": [
+    {
+      "id": "duplicate",
+      "spanM": 6,
+      "spacingM": 3,
+      "support": "simplySupported",
+      "construction": "propped",
+      "steel": {
+        "designation": "自製\u0000",
+        "heightM": 0.3,
+        "widthM": 0.2,
+        "twM": 0.01,
+        "tfM": 0.02,
+        "aM2": 0.012,
+        "wPlYM3": 0.0009,
+        "iYM4": 0.0002,
+        "aVM2": 0.003,
+        "rM": 0.0
+      },
+      "slabThicknessM": 0.12,
+      "concreteFCkPa": 30000000,
+      "concreteECmPa": 33000000000,
+      "sheeting": {
+        "profile": "trapezoidal",
+        "heightM": 0.06,
+        "ribWidthM": 0.15,
+        "thicknessM": 0.001,
+        "ribsParallelToBeam": true
+      },
+      "transverseAsM2PerM": 0.0005,
+      "ltbLengthM": 3,
+      "asHoggingM2PerM": 0.0004,
+      "barSpacingM": 0.15,
+      "wkLimitM": 0.0003,
+      "nCycles": 2000000,
+      "adjacentSpanM": 0,
+      "patchBearingLengthM": 0.1,
+      "bridgeLanes": 0,
+      "crackedLengthFraction": 0.15,
+      "studTransverseSpacingM": 0.0,
+      "studEdgeDistanceM": 0.0,
+      "transverseAsTopM2PerM": 0.0,
+      "endPlateWidthM": 0.0,
+      "endPlateHeightM": 0.0,
+      "endZoneLengthM": 0.0,
+      "reinforcementProduct": "hotRolled",
+      "actions": [
+        {
+          "id": "duplicate",
+          "kind": "permanent",
+          "category": "任意\u0000",
+          "stage": "composite",
+          "qAreaPa": 2000,
+          "fKN": 5000,
+          "deltaSigmaKPa": 1000000,
+          "deltaTauKPa": 2000000,
+          "xM": 0
+        },
+        {
+          "id": "duplicate",
+          "kind": "permanent",
+          "category": "",
+          "stage": "composite",
+          "qAreaPa": 0,
+          "fKN": 0,
+          "deltaSigmaKPa": 0,
+          "deltaTauKPa": 0,
+          "xM": 0
+        }
+      ]
+    }
+  ],
+  "columns": [
+    {
+      "id": "duplicate",
+      "kind": "concreteFilled",
+      "lengthM": 3,
+      "outerSizeM": 0.4,
+      "wallThicknessM": 0.01,
+      "steelAM2": 0.012,
+      "steelFYPa": 355000000,
+      "concreteAM2": 0.1,
+      "concreteFCkPa": 30000000,
+      "reinforcementAsM2": 0.001,
+      "reinforcementFYkPa": 500000000,
+      "iM4": 0.002,
+      "bucklingCurve": "a",
+      "introducedForceN": 0,
+      "sectionHeightM": 0.0,
+      "sectionWidthM": 0.0,
+      "sectionTwM": 0.0,
+      "sectionTfM": 0.0,
+      "rebarCoverM": 0.0,
+      "reinforcementProduct": "hotRolled",
+      "actions": [
+        {
+          "id": "duplicate",
+          "kind": "permanent",
+          "category": "",
+          "stage": "composite",
+          "nKN": 100000,
+          "mKNm": 50000
+        }
+      ]
+    }
+  ],
+  "slabs": [
+    {
+      "id": "duplicate",
+      "spanM": 4,
+      "support": "simplySupported",
+      "sheeting": {
+        "profile": "trapezoidal",
+        "heightM": 0.05,
+        "ribWidthM": 0.2,
+        "thicknessM": 0.002,
+        "ribsParallelToBeam": false
+      },
+      "concreteThicknessM": 0.15,
+      "fCkPa": 35000000,
+      "mFactor": 1.2,
+      "kFactor": 0.8,
+      "asM2PerM": 0.0003,
+      "actions": [
+        {
+          "id": "",
+          "kind": "permanent",
+          "category": "",
+          "stage": "composite",
+          "qAreaPa": 3000,
+          "fKN": 1,
+          "deltaSigmaKPa": 2,
+          "deltaTauKPa": 3,
+          "xM": 0,
+          "yM": 0
+        }
+      ]
+    }
+  ],
+  "placements": [],
+  "studs": [
+    {
+      "id": "stud-1",
+      "beamId": "beam-B1",
+      "xM": 0.0,
+      "diameterM": 0.019,
+      "heightM": 0.095,
+      "fUPa": 450000001.0
+    }
+  ]
+}

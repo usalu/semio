@@ -1,8 +1,17 @@
 semio norm.en1996.dsl v1
 annex=de masonry-class=class1 design-situation=persistent storeys=2
-walls [id:TEXT label-en:TEXT label-de:TEXT wall-type:ENUM thickness-m:QTY height-m:QTY length-m:QTY support-sides:UINT openings:TABLE slab-bearing-depth-m:QTY eccentricity-top-m:QTY eccentricity-bottom-m:QTY unit-group:ENUM unit-material:ENUM f-b-pa:QTY unit-length-m:QTY unit-width-m:QTY unit-height-m:QTY mortar-type:ENUM mortar-class:ENUM mortar-strength-pa:QTY bed-joint-thickness-m:QTY reinforced:BOOL as-vertical-m2:QTY as-horizontal-m2:QTY f-yd-pa:QTY fire-rei-min:UINT exposure:ENUM mu:NUM density-kg-m3:NUM phi-infinity:NUM is-basement:BOOL load-cases:TABLE] {
-  wall-north "North load-bearing wall" "Tragende Nordwand" load-bearing 0.365m 2.75m 5m 4 [ ] 0.12m 0.02m 0.015m group1 clay 20000000Pa 0.24m 0.365m 0.113m general-purpose m10 10000000Pa 0.012m false 0m2 0m2 0Pa 90 mx1 0.4 1800 1.5 false [ {id=ulsinz design-situation=persistent imposed-category=A g-k-slab-n=120000N q-k-imposed-pa=2000Pa tributary-area-m2=12.5m2 slab-span-m=4.5m q-k-snow-pa=0Pa q-p-wind-pa=800Pa c-pe=0.8 h-k-earth-n=0N
-  concentrated [id:TEXT force-n:QTY bearing-area-m2:QTY bearing-length-m:QTY] {
-  }
-  } ]
+walls [id:TEXT label-en:TEXT label-de:TEXT wall-type:ENUM thickness-m:QTY height-m:QTY length-m:QTY support-sides:UINT openings:TABLE slab-bearing-depth-m:QTY eccentricity-top-m:QTY eccentricity-bottom-m:QTY unit-group:ENUM unit-material:ENUM f-b-pa:QTY unit-length-m:QTY unit-width-m:QTY unit-height-m:QTY mortar-type:ENUM mortar-class:ENUM mortar-strength-pa:QTY bed-joint-thickness-m:QTY reinforced:BOOL as-vertical-m2:QTY as-horizontal-m2:QTY f-yd-pa:QTY fire-rei-min:UINT exposure:ENUM mu:NUM density-kg-m3:NUM phi-infinity:NUM is-basement:BOOL load-cases:TABLE piers:TABLE lintels:TABLE ties:TABLE prestress:TABLE confined:TABLE flanges:TABLE bars:TABLE frost-class:ENUM cover-m:QTY deflection-limit:NUM soil-height-m:QTY soil-density-kg-m3:NUM isotherm-depth-m:QTY plan-x-m:QTY plan-y-m:QTY plan-angle-deg:NUM in-plane-shear-n:QTY in-plane-moment-nm:NUM bracing-system:ENUM diaphragm-stiffness-n-per-m:NUM web-spacing-m:QTY] {
+  wall-north "North load-bearing wall" "Tragende Nordwand" load-bearing 0.365m 2.75m 5m 4 0m [ ] 0.12m 0.02m 0.015m group1 clay 20000000Pa 0.24m 0.365m 0.113m general-purpose m10 10000000Pa 0.012m false 0m2 0m2 0Pa 90 mx1 0.4 1800 1.5 false [ {id=ulsinz design-situation=persistent imposed-category=a g-k-slab-n=120000N q-k-imposed-pa=2000Pa tributary-area-m2=12.5m2 slab-span-m=4.5m q-k-snow-pa=0Pa q-p-wind-pa=800Pa c-pe=0.8 h-k-earth-n=0N
+  concentrated 0m [id:TEXT force-n:QTY bearing-area-m2:QTY bearing-length-m:QTY distance-a1-m:QTY position-m:QTY] {
+  } 0m
+  } ] 0m [ ] [ ] [ ] [ ] [ ] [ ] [ ] exempt 0.03m 250 0m 1800 0m 0m 0m 0 0N 0 unreinforced 0
 }
+placements [id:TEXT x:NUM y:NUM z:NUM yaw:NUM] {
+}
+cases [id:TEXT label-en:TEXT label-de:TEXT entry-id:TEXT numbers:TABLE texts:TABLE] {
+}
+chases [id:TEXT wall-id:TEXT kind:ENUM x-m:QTY y-m:QTY width-m:QTY length-m:QTY depth-m:QTY] {
+}
+movement-joints [id:TEXT wall-id:TEXT position-m:QTY] {
+}
+reliability-class=rc2

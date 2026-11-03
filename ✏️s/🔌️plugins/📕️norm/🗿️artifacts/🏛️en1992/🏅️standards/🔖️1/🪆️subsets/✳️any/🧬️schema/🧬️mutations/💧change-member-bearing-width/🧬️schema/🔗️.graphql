@@ -1,0 +1,4 @@
+type ChangeMemberBearingWidth {
+  memberId: String!
+  newValue: Float!
+}

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeBearingMinSupportM",
+  "id": "bear-1",
+  "newMinSupportLengthM": 0.8
+}

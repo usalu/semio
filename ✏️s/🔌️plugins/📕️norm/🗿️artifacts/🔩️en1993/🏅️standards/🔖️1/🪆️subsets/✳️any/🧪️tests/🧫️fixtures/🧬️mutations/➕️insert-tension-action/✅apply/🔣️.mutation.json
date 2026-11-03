@@ -1,0 +1,11 @@
+{
+  "InsertTensionAction": {
+    "id": "ten-1",
+    "index": 2,
+    "element": {
+      "id": "ten-g-2",
+      "loadCaseId": "g-permanent",
+      "force": 120000.0
+    }
+  }
+}

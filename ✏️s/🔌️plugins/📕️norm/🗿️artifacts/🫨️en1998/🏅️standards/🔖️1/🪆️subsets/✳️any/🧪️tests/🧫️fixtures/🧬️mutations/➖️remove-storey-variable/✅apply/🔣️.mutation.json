@@ -1,0 +1,6 @@
+{
+  "mutation": "removeStoreyVariable",
+  "buildingId": "bldg-office",
+  "storeyId": "s1",
+  "id": "s1-q"
+}

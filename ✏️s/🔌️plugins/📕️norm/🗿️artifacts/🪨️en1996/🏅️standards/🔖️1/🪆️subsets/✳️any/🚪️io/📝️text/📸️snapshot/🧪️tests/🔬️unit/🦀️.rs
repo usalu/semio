@@ -3,7 +3,7 @@ use semio_s_plugin_norm_compliance::{AnnexChoice, DesignSituation};
 
 #[semio_framework_async_macros::async_test]
 async fn document_dsl_round_trips() {
-    store::os_store::test_support::assert_dsl_round_trip(&En1996Snapshot::default());
+    store::os_store::test_support::assert_dsl_round_trip(&En1996Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De));
 }
 
 #[semio_framework_async_macros::async_test]

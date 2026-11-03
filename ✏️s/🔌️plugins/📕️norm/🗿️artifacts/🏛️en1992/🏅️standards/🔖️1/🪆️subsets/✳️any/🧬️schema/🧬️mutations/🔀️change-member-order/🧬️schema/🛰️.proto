@@ -1,0 +1,6 @@
+syntax = "proto3";
+package semio.s.norm.en1992.mutation.change_member_order;
+message ChangeMemberOrder {
+  uint64 from_index = 1;
+  uint64 to_index = 2;
+}

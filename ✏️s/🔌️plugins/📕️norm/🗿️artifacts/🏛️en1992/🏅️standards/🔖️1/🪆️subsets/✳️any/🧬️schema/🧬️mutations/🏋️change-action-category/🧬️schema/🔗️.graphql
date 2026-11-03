@@ -1,0 +1,5 @@
+type ChangeActionCategory {
+  memberId: String!
+  actionId: String!
+  newCategory: PsiCategory!
+}

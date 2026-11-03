@@ -1,0 +1,145 @@
+syntax = "proto3";
+package semio.s.norm.compliance.design_case;
+message InputVocabulary {
+  string artifact = 1;
+  repeated InputSpec inputs = 2;
+}
+enum InputKind {
+  INPUT_KIND_NUMBER = 0;
+  INPUT_KIND_VECTOR = 1;
+  INPUT_KIND_SERIES = 2;
+  INPUT_KIND_CHOICE = 3;
+  INPUT_KIND_TEXT = 4;
+}
+message InputChoice {
+  string value = 1;
+  string en = 2;
+  string de = 3;
+}
+message InputSpec {
+  string key = 1;
+  string scope = 2;
+  InputKind kind = 3;
+  string en = 4;
+  string de = 5;
+  optional string unit = 6;
+  optional string unit_id = 7;
+  optional double min = 8;
+  optional double max = 9;
+  optional string confidence = 10;
+  optional string note = 11;
+  optional bool lever = 12;
+  optional double example = 13;
+  repeated InputChoice choices = 14;
+}
+message CaseEntryGeometry {
+  string width = 1;
+  string height = 2;
+}
+message CaseEntry {
+  string id = 1;
+  string part = 2;
+  string clause = 3;
+  string en = 4;
+  string de = 5;
+  repeated string inputs = 6;
+  optional CaseEntryGeometry geometry = 7;
+}
+message CaseNumber {
+  string id = 1;
+  double value = 2;
+}
+message CaseText {
+  string id = 1;
+  string value = 2;
+}
+message CaseRow {
+  string id = 1;
+  string label_en = 2;
+  string label_de = 3;
+  string entry_id = 4;
+  repeated CaseNumber numbers = 5;
+  repeated CaseText texts = 6;
+}
+message CaseNumberPatch {
+  optional double value = 1;
+}
+message CaseNumberRemoval {
+  string id = 1;
+  uint64 index = 2;
+}
+message CaseNumberInsertion {
+  uint64 index = 1;
+  CaseNumber row = 2;
+}
+message CaseNumberRelocation {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+message CaseNumberModification {
+  string id = 1;
+  CaseNumberPatch patch = 2;
+}
+message CaseNumberDelta {
+  repeated CaseNumberRemoval removed = 1;
+  repeated CaseNumberInsertion inserted = 2;
+  repeated CaseNumberRelocation moved = 3;
+  repeated CaseNumberModification modified = 4;
+}
+message CaseTextPatch {
+  optional string value = 1;
+}
+message CaseTextRemoval {
+  string id = 1;
+  uint64 index = 2;
+}
+message CaseTextInsertion {
+  uint64 index = 1;
+  CaseText row = 2;
+}
+message CaseTextRelocation {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+message CaseTextModification {
+  string id = 1;
+  CaseTextPatch patch = 2;
+}
+message CaseTextDelta {
+  repeated CaseTextRemoval removed = 1;
+  repeated CaseTextInsertion inserted = 2;
+  repeated CaseTextRelocation moved = 3;
+  repeated CaseTextModification modified = 4;
+}
+message CaseRowPatch {
+  optional string label_en = 1;
+  optional string label_de = 2;
+  optional string entry_id = 3;
+  optional CaseNumberDelta numbers = 4;
+  optional CaseTextDelta texts = 5;
+}
+message CaseRowRemoval {
+  string id = 1;
+  uint64 index = 2;
+}
+message CaseRowInsertion {
+  uint64 index = 1;
+  CaseRow row = 2;
+}
+message CaseRowRelocation {
+  string id = 1;
+  uint64 from = 2;
+  uint64 to = 3;
+}
+message CaseRowModification {
+  string id = 1;
+  CaseRowPatch patch = 2;
+}
+message CaseRowDelta {
+  repeated CaseRowRemoval removed = 1;
+  repeated CaseRowInsertion inserted = 2;
+  repeated CaseRowRelocation moved = 3;
+  repeated CaseRowModification modified = 4;
+}

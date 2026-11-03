@@ -1,0 +1,33 @@
+{
+  "annex": null,
+  "structureKind": null,
+  "steelFYPa": null,
+  "beams": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "columns": null,
+  "slabs": null,
+  "fireRating": null,
+  "insulationThicknessM": null,
+  "fatigueDetail": null,
+  "studs": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "stud-1",
+        "patch": {
+          "beamId": null,
+          "xM": null,
+          "diameterM": null,
+          "heightM": 1.095,
+          "fUPa": null
+        }
+      }
+    ]
+  }
+}

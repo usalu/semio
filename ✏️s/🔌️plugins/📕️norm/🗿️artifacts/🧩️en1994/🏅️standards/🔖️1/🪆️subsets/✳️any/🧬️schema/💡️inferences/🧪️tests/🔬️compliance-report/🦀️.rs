@@ -3,7 +3,7 @@ use semio_s_artifact_norm_en1994_inferences::*;
 use semio_s_plugin_norm_app_surface::{apply_remedy_edit, get_value_at_path, insert_value_at_path, remove_value_at_path, set_value_at_path};
 use semio_s_plugin_norm_compliance::{AnnexChoice, CheckStatus, RemedyBound};
 use semio_s_artifact_norm_en1994_editor::field_meta::en1994_field_meta;
-use semio_s_artifact_norm_en1994_model::{En1994Snapshot, SteelSection};
+use semio_s_artifact_norm_en1994_model::{En1994Snapshot, SteelSection, Stud};
 use semio_s_artifact_norm_en1994_io::text::snapshot::encode_en1994_snapshot_json;
 use std::path::PathBuf;
 use std::process::Command;
@@ -32,7 +32,7 @@ fn example_dsl(name: &str) -> String {
 
 #[test]
 fn full_composite_worked_example_passes_default() {
-    let report = evaluate(&En1994Snapshot::default());
+    let report = evaluate(&En1994Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De));
     assert!(report.checks.len() >= 10, "len={}", report.checks.len());
     assert!(
         report.complies(),
@@ -43,7 +43,7 @@ fn full_composite_worked_example_passes_default() {
 
 #[test]
 fn evaluate_runs_building_and_fire_parts() {
-    let report = evaluate(&En1994Snapshot::default());
+    let report = evaluate(&En1994Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De));
     assert!(report.checks.iter().any(|c| c.part.contains("1994-1-1")));
     assert!(report.checks.iter().any(|c| c.part.contains("1994-1-2")));
     assert!(report.checks.iter().any(|c| c.status == CheckStatus::NotApplicable && c.id.contains("fatigue")));
@@ -51,12 +51,12 @@ fn evaluate_runs_building_and_fire_parts() {
 
 #[test]
 fn failing_subject_has_remedies() {
-    let mut doc = En1994Snapshot::default();
+    let mut doc = En1994Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De);
     for a in &mut doc.beams[0].actions {
-        if a.kind == "imposed" { a.q_area_pa = 25.0e3; }
+        if a.kind == semio_s_artifact_norm_en1994_model::ActionKind::Imposed { a.q_area_pa = 25.0e3; }
     }
     doc.insulation_thickness_m = 0.010;
-    doc.beams[0].studs.total_count = 5;
+    doc.studs = Stud::typical_row("beam-B1", 4.0, 1.5, 5);
     let report = evaluate(&doc);
     let fails: Vec<_> = report.failing().collect();
     assert!(!fails.is_empty());
@@ -68,14 +68,14 @@ fn failing_subject_has_remedies() {
 
 #[test]
 fn de_vs_en_bridge_fatigue_gamma_mf() {
-    let mut en = En1994Snapshot::default();
+    let mut en = En1994Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De);
     en.annex = AnnexChoice::En;
-    en.structure_kind = "bridge".into();
+    en.structure_kind = semio_s_artifact_norm_en1994_model::StructureKind::Bridge;
     en.beams[0].n_cycles = 2.0e6;
     en.beams[0].actions.push(semio_s_artifact_norm_en1994_model::CharacteristicAction {
-        id: "FLM3".into(), kind: "fatigue".into(), category: "flm3".into(), stage: "composite".into(),
+        id: "FLM3".into(), kind: semio_s_artifact_norm_en1994_model::ActionKind::Fatigue, category: "flm3".into(), stage: semio_s_artifact_norm_en1994_model::ActionStage::Composite,
         q_area_pa: 0.0, f_k_n: 0.0,
-        delta_sigma_k_pa: 65e6, delta_tau_k_pa: 40e6,
+        delta_sigma_k_pa: 65e6, delta_tau_k_pa: 40e6, x_m: 0.0,
     });
     let mut de = en.clone();
     de.annex = AnnexChoice::De;
@@ -88,65 +88,65 @@ fn de_vs_en_bridge_fatigue_gamma_mf() {
 }
 
 #[test]
-fn remedy_law_stud_count() {
-    let mut doc = En1994Snapshot::default();
-    doc.beams[0].studs.total_count = 5;
-    doc.beams[0].studs.spacing_m = 1.5;
+fn remedy_law_stud_insert_repeats_until_the_stud_checks_clear() {
+    let mut doc = En1994Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De);
+    doc.studs = Stud::typical_row("beam-B1", 4.0, 1.5, 5);
     let report = evaluate(&doc);
     let fail = report.failing().find(|c| c.id.contains("prd") || c.id.contains("etamin")).expect("expected stud-related fail");
-    let remedy = fail.remedies.iter().find(|r| r.applicable && r.target.path.contains("totalCount")).expect("stud count remedy");
-    assert!(remedy.target.path.contains("beams[id=beam-B1]"), "path={}", remedy.target.path);
-    doc.beams[0].studs.total_count = remedy.required.value as u32;
-    let after = evaluate(&doc);
-    let again = after.checks.iter().find(|c| c.id == fail.id).unwrap();
-    assert!(again.utilization <= 1.0 || again.status != CheckStatus::Fail, "u={}", again.utilization);
+    assert!(fail.remedies.iter().any(|r| r.applicable && matches!(r.bound, RemedyBound::Insert) && r.target.path == "studs"), "stud insert remedy");
+    let (id, before) = (fail.id.clone(), doc.studs.len());
+    let mut tree = semio_framework_value::ToValue::to_value(&doc);
+    for _ in 0..200 {
+        let current: En1994Snapshot = semio_framework_value::FromValue::from_value(tree.clone()).expect("decode");
+        let report = evaluate(&current);
+        let check = report.checks.iter().find(|c| c.id == id).expect("check");
+        if check.status != CheckStatus::Fail {
+            break;
+        }
+        let index = check.remedies.iter().position(|r| r.applicable && matches!(r.bound, RemedyBound::Insert)).expect("insert remedy");
+        apply_remedy_edit(&report, &id, index, 0, &mut tree).expect("apply the insert remedy");
+    }
+    let fixed: En1994Snapshot = semio_framework_value::FromValue::from_value(tree).expect("decode");
+    let again = evaluate(&fixed);
+    assert_ne!(again.checks.iter().find(|c| c.id == id).expect("check").status, CheckStatus::Fail);
+    assert!(fixed.studs.len() > before);
 }
 
 #[test]
 fn subject_paths_use_stable_ids_and_survive_reorder() {
-    let mut doc = En1994Snapshot::default();
-    doc.beams[0].studs.total_count = 5;
-    doc.beams[0].studs.spacing_m = 1.5;
+    let mut doc = En1994Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De);
+    doc.studs = Stud::typical_row("beam-B1", 4.0, 1.5, 5);
     let report = evaluate(&doc);
     for check in &report.checks {
-        if check.subject.path.starts_with("beams") || check.subject.path.starts_with("columns") || check.subject.path.starts_with("slabs") {
-            assert!(
-                check.subject.path.contains("[id="),
-                "expected id selector in {}",
-                check.subject.path
-            );
+        if check.subject.path.starts_with("beams") || check.subject.path.starts_with("columns") || check.subject.path.starts_with("slabs") || check.subject.path.starts_with("studs[") {
+            assert!(check.subject.path.contains("[id="), "expected id selector in {}", check.subject.path);
         }
         for remedy in &check.remedies {
-            if remedy.target.path.starts_with("beams") || remedy.target.path.starts_with("columns") || remedy.target.path.starts_with("slabs") {
+            if remedy.target.path.starts_with("beams") || remedy.target.path.starts_with("columns") || remedy.target.path.starts_with("slabs") || remedy.target.path.starts_with("studs[") {
                 assert!(remedy.target.path.contains("[id="), "remedy path {}", remedy.target.path);
             }
         }
     }
-    let fail = report.failing().find(|c| c.id.contains("prd") || c.id.contains("etamin")).expect("stud fail");
-    let remedy = fail.remedies.iter().find(|r| r.target.path.contains("totalCount")).expect("stud remedy");
-    let path = remedy.target.path.clone();
-    let required = remedy.required.value;
+    let spacing = report.checks.iter().find(|c| c.id.starts_with("en1994.6.6.5.5.spacing.")).expect("spacing check");
+    assert!(spacing.subject.path.starts_with("studs[id=beam-B1-stud-"), "{}", spacing.subject.path);
 
     let mut tree = semio_framework_value::ToValue::to_value(&doc);
-    let extra = semio_s_artifact_norm_en1994_model::CompositeBeam {
-        id: "beam-FRONT".into(),
-        ..semio_s_artifact_norm_en1994_model::CompositeBeam::default_placeholder()
-    };
-    insert_value_at_path(&mut tree, "beams", 0, Some(semio_framework_value::ToValue::to_value(&extra))).expect("insert");
+    let extra = Stud::typical("extra", "beam-B1", 0.2);
+    insert_value_at_path(&mut tree, "studs", 0, Some(semio_framework_value::ToValue::to_value(&extra))).expect("insert");
     let mut reordered: En1994Snapshot = semio_framework_value::FromValue::from_value(tree.clone()).expect("from tree");
-    assert_eq!(reordered.beams[1].id, "beam-B1");
-    set_value_at_path(&mut tree, &path, semio_framework_value::DslValue::uint(required as u64)).expect("set via id path after reorder");
+    assert_eq!(reordered.studs[1].id, "beam-B1-stud-0");
+    set_value_at_path(&mut tree, "studs[id=beam-B1-stud-1].xM", semio_framework_value::DslValue::float(2.6)).expect("set via id path after reorder");
     reordered = semio_framework_value::FromValue::from_value(tree.clone()).expect("decode");
-    assert_eq!(reordered.beams.iter().find(|b| b.id == "beam-B1").unwrap().studs.total_count, required as u32);
-    remove_value_at_path(&mut tree, "beams[id=beam-FRONT]", 0).expect("remove");
-    let _ = get_value_at_path(&tree, "beams[id=beam-B1].studs.totalCount").expect("resolve id path");
+    assert_eq!(reordered.studs.iter().find(|s| s.id == "beam-B1-stud-1").unwrap().x_m, 2.6);
+    remove_value_at_path(&mut tree, "studs[id=extra]", 0).expect("remove");
+    let _ = get_value_at_path(&tree, "studs[id=beam-B1-stud-0].xM").expect("resolve id path");
 }
 
 #[test]
 fn heavier_section_oneof_remedy_writes_designation() {
-    let mut doc = En1994Snapshot::default();
+    let mut doc = En1994Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De);
     for a in &mut doc.beams[0].actions {
-        if a.kind == "imposed" { a.q_area_pa = 80.0e3; }
+        if a.kind == semio_s_artifact_norm_en1994_model::ActionKind::Imposed { a.q_area_pa = 80.0e3; }
     }
     doc.beams[0].span_m = 14.0;
     let report = evaluate(&doc);
@@ -165,7 +165,7 @@ fn heavier_section_oneof_remedy_writes_designation() {
 
 #[test]
 fn insulation_remedy_flips_fire_check() {
-    let mut doc = En1994Snapshot::default();
+    let mut doc = En1994Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De);
     doc.insulation_thickness_m = 0.008;
     let report = evaluate(&doc);
     let fail = report.failing().find(|c| c.id.contains("insulation")).expect("fire fail");
@@ -187,7 +187,7 @@ fn passing_example_dsl_complies() {
 fn failing_example_dsl_does_not_comply_with_named_ids() {
     let doc = semio_s_artifact_norm_en1994_io::text::snapshot::decode_en1994_dsl(&example_dsl("composite-floor-beam-failing")).expect("decode");
     assert!(doc.beams[0].steel.a_m2 > 0.01, "nested steel must be present");
-    assert!(doc.beams[0].studs.total_count > 0);
+    assert!(!doc.studs.is_empty());
     let report = evaluate(&doc);
     assert!(!report.complies());
     assert!(report.summary.fail >= 2, "fail_count={}", report.summary.fail);
@@ -256,15 +256,15 @@ fn every_default_leaf_has_en_de_field_meta() {
             }
         }
     }
-    let doc = En1994Snapshot::default();
+    let doc = En1994Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De);
     let mut leaves = Vec::new();
     walk(&semio_framework_value::ToValue::to_value(&doc), "", &mut leaves);
     assert!(!leaves.is_empty());
     for path in &leaves {
         let meta = en1994_field_meta(path).unwrap_or_else(|| panic!("missing meta for {path}"));
-        assert!(!meta.label_en.is_empty(), "{path}");
-        assert!(!meta.label_de.is_empty(), "{path}");
-        if let Some(choices) = meta.choices {
+        assert!(!meta.label.en.is_empty(), "{path}");
+        assert!(!meta.label.de.is_empty(), "{path}");
+        if let Some(choices) = meta.choices() {
             for c in choices {
                 assert_ne!(c.label_en, c.value, "raw wire label_en for {} on {path}", c.value);
                 assert!(!c.label_de.is_empty());
@@ -280,14 +280,14 @@ fn every_default_leaf_has_en_de_field_meta() {
 fn example_snapshot_validates_against_json_schema() {
     let schema_path = snapshot_schema_path();
     for (label, snap) in [
-        ("default", En1994Snapshot::default()),
+        ("default", En1994Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De)),
         ("passing", semio_s_artifact_norm_en1994_io::text::snapshot::decode_en1994_dsl(&example_dsl("composite-floor-beam")).unwrap()),
         ("failing", semio_s_artifact_norm_en1994_io::text::snapshot::decode_en1994_dsl(&example_dsl("composite-floor-beam-failing")).unwrap()),
     ] {
         let instance = encode_en1994_snapshot_json(&snap);
         let tmp = std::env::temp_dir().join(format!("en1994-instance-{label}.json"));
         std::fs::write(&tmp, &instance).unwrap();
-        let status = Command::new("python3")
+        let status = semio_s_plugin_norm_compliance::python_oracle::command()
             .arg("-c")
             .arg("import json,sys,jsonschema; s=json.load(open(sys.argv[1])); i=json.load(open(sys.argv[2])); jsonschema.validate(instance=i, schema=s); print('ok')")
             .arg(&schema_path)
@@ -306,13 +306,13 @@ fn example_snapshot_validates_against_json_schema() {
 #[test]
 fn python_oracle_matches_evaluate_json_within_half_percent() {
     for (label, snap) in [
-        ("compliant", En1994Snapshot::default()),
+        ("compliant", En1994Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De)),
         ("failing", semio_s_artifact_norm_en1994_io::text::snapshot::decode_en1994_dsl(&example_dsl("composite-floor-beam-failing")).unwrap()),
     ] {
         let rust = evaluate(&snap);
         let report_json = serde_json::to_string(&rust).expect("report json");
         let snap_json = encode_en1994_snapshot_json(&snap);
-        let mut child = Command::new("python3")
+        let mut child = semio_s_plugin_norm_compliance::python_oracle::command()
             .arg(oracle_script())
             .arg("--evaluate-json")
             .stdin(std::process::Stdio::piped())
@@ -429,7 +429,7 @@ fn every_editable_leaf_affects_at_least_one_check() {
                         .collect();
                 }
                 let meta = en1994_field_meta(path);
-                if let Some(choices) = meta.and_then(|m| m.choices) {
+                if let Some(choices) = meta.and_then(|m| m.choices()) {
                     choices
                         .iter()
                         .map(|c| c.value)
@@ -460,16 +460,45 @@ fn every_editable_leaf_affects_at_least_one_check() {
 
     type Pred = fn(&str) -> bool;
     let failing_beam = semio_s_artifact_norm_en1994_io::text::snapshot::decode_en1994_dsl(&example_dsl("composite-floor-beam-failing")).expect("failing beam");
-    let scopes: [(&str, En1994Snapshot, Pred); 6] = [
+    let mut continuous = En1994Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De);
+    continuous.beams[0].support = semio_s_artifact_norm_en1994_model::SupportCondition::EndSpan;
+    continuous.beams[0].actions.push(semio_s_artifact_norm_en1994_model::CharacteristicAction::point_force("P1", semio_s_artifact_norm_en1994_model::ActionStage::Composite, semio_s_artifact_norm_en1994_model::ActionKind::Imposed, "B", 50e3));
+    let mut encased = En1994Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De);
+    encased.fire_rating = semio_s_artifact_norm_en1994_model::FireRating::R60;
+    {
+        let column = &mut encased.columns[0];
+        column.kind = semio_s_artifact_norm_en1994_model::ColumnKind::Encased;
+        column.outer_size_m = 0.4;
+        column.reinforcement_as_m2 = 4.0 * 314.16e-6;
+        column.section_height_m = 0.2;
+        column.section_width_m = 0.2;
+        column.section_tw_m = 0.0085;
+        column.section_tf_m = 0.013;
+        column.rebar_cover_m = 0.05;
+    }
+    let mut detailed = En1994Snapshot::bridge_girder();
+    {
+        let beam = &mut detailed.beams[0];
+        beam.stud_transverse_spacing_m = 0.1;
+        beam.stud_edge_distance_m = 0.03;
+        beam.transverse_as_top_m2_per_m = 5e-4;
+        beam.end_plate_width_m = 0.3;
+        beam.end_plate_height_m = 0.2;
+        beam.end_zone_length_m = 0.6;
+    }
+    let scopes: [(&str, En1994Snapshot, Pred); 9] = [
         (
             "default-building",
-            En1994Snapshot::default(),
+            En1994Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De),
             |p| {
                 let leaf = leaf_name(p);
                 if catalogue_steel_geom(p) {
                     return false;
                 }
-                if matches!(leaf, "ltbLengthM" | "nCycles" | "fatigueDetail" | "annex") {
+                if p.contains("beams[") && leaf == "reinforcementProduct" {
+                    return false;
+                }
+                if matches!(leaf, "ltbLengthM" | "nCycles" | "fatigueDetail" | "annex" | "adjacentSpanM" | "patchBearingLengthM" | "bridgeLanes" | "crackedLengthFraction" | "sectionHeightM" | "sectionWidthM" | "sectionTwM" | "sectionTfM" | "rebarCoverM" | "studTransverseSpacingM" | "studEdgeDistanceM" | "transverseAsTopM2PerM" | "endPlateWidthM" | "endPlateHeightM" | "endZoneLengthM") {
                     return false;
                 }
                 if p.contains("deltaSigma") || p.contains("deltaTau") || p.contains("FLM3") {
@@ -507,7 +536,7 @@ fn every_editable_leaf_affects_at_least_one_check() {
             En1994Snapshot::bridge_girder(),
             |p| {
                 let leaf = leaf_name(p);
-                if matches!(leaf, "annex" | "structureKind" | "nCycles" | "fatigueDetail") {
+                if matches!(leaf, "annex" | "structureKind" | "nCycles" | "fatigueDetail" | "bridgeLanes") {
                     return true;
                 }
                 if p.contains("[id=FLM3") && matches!(leaf, "deltaSigmaKPa" | "deltaTauKPa" | "kind" | "fKN" | "qAreaPa") {
@@ -516,6 +545,9 @@ fn every_editable_leaf_affects_at_least_one_check() {
                 false
             },
         ),
+        ("bridge-girder-detail", detailed, |p| matches!(leaf_name(p), "studTransverseSpacingM" | "studEdgeDistanceM" | "transverseAsTopM2PerM" | "endPlateWidthM" | "endPlateHeightM" | "endZoneLengthM")),
+        ("continuous-cracked", continuous, |p| matches!(leaf_name(p), "crackedLengthFraction" | "adjacentSpanM" | "patchBearingLengthM")),
+        ("encased-section", encased, |p| matches!(leaf_name(p), "sectionHeightM" | "sectionWidthM" | "sectionTwM" | "sectionTfM" | "rebarCoverM")),
         (
             "fire-demanding",
             En1994Snapshot::fire_demanding(),
@@ -569,7 +601,7 @@ fn every_editable_leaf_affects_at_least_one_check() {
     }
 
     {
-        let base = En1994Snapshot::default();
+        let base = En1994Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De);
         let base_sig = norm_sig(&evaluate(&base));
         let mut leaves = Vec::new();
         walk(&semio_framework_value::ToValue::to_value(&base), "", &mut leaves);
@@ -612,14 +644,156 @@ fn ts_snapshot_facets_have_no_unknown_and_match_rust_leaves() {
         assert!(body.contains("qAreaPa"), "{label} missing qAreaPa");
         assert!(!body.contains("qLineNPerM"), "{label} must not keep qLineNPerM");
     }
-    let encoded = serde_json::to_value(En1994Snapshot::default()).expect("json");
+    let encoded = serde_json::to_value(En1994Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De)).expect("json");
     let beams = encoded.get("beams").and_then(|v| v.as_array()).expect("beams");
     assert!(!beams.is_empty());
     let beam = &beams[0];
-    for key in ["spanM", "spacingM", "steel", "studs", "actions", "sheeting"] {
+    for key in ["spanM", "spacingM", "steel", "actions", "sheeting"] {
         assert!(beam.get(key).is_some(), "rust beam missing {key}");
     }
+    assert!(beam.get("studs").is_none(), "the studs are rows of the top-level collection");
+    assert!(encoded.get("studs").and_then(|v| v.as_array()).is_some_and(|rows| !rows.is_empty() && rows[0].get("beamId").is_some()));
     assert!(beam.get("actions").unwrap().as_array().unwrap()[0].get("qAreaPa").is_some());
     assert!(beam.get("actions").unwrap().as_array().unwrap()[0].get("qLineNPerM").is_none());
 }
 
+
+#[test]
+fn beam_checks_emit_stations_along_the_whole_length_and_obey_the_station_law() {
+    let mut document = En1994Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De);
+    document.beams[0].support = semio_s_artifact_norm_en1994_model::SupportCondition::Continuous2Span;
+    let report = evaluate(&document);
+    for prefix in ["en1994.6.2.1.3.mrd.", "en1994.6.2.2.vpl.", "en1994.6.6.3.1.prd.", "en1994.6.2.1.2.hogging."] {
+        let check = report.checks.iter().find(|c| c.id.starts_with(prefix)).unwrap_or_else(|| panic!("{prefix}"));
+        assert_eq!(check.stations.len(), 17, "{prefix}");
+        assert!(check.stations_consistent(), "{prefix}");
+    }
+    let sagging = report.checks.iter().find(|c| c.id.starts_with("en1994.6.2.1.3.mrd.")).expect("sagging");
+    let peak = sagging.stations.iter().max_by(|a, b| a.utilization.total_cmp(&b.utilization)).expect("station");
+    assert!((peak.at[0] - 3.0 / 16.0).abs() < 1e-12 || (peak.at[0] - 13.0 / 16.0).abs() < 1e-12);
+    let hogging = report.checks.iter().find(|c| c.id.starts_with("en1994.6.2.1.2.hogging.")).expect("hogging");
+    assert!((hogging.stations[8].utilization - hogging.utilization).abs() < 1e-12);
+    assert_eq!(hogging.stations[0].utilization, 0.0);
+}
+
+/// 🔮️ EN 1994 third-party oracle cases: the shared harness recomputes every blessed case in `🧪️tests/🧫️fixtures/🔮️oracle-cases` with the registered libraries and fails on any mismatch beyond the tolerance profile or between libraries.
+#[test]
+fn third_party_libraries_reproduce_the_blessed_oracle_cases() {
+    let verified = semio_s_plugin_norm_compliance::python_oracle::verify_cases_above(env!("CARGO_MANIFEST_DIR"));
+    assert!(verified >= 11, "expected at least 11 verified oracle cases, got {verified}");
+}
+
+fn end_span_building() -> En1994Snapshot {
+    let mut doc = En1994Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De);
+    doc.beams[0].support = semio_s_artifact_norm_en1994_model::SupportCondition::EndSpan;
+    doc
+}
+
+#[test]
+fn continuous_spans_report_the_cracked_analysis_and_the_sagging_interaction() {
+    let mut doc = end_span_building();
+    let report = evaluate(&doc);
+    assert!(report.checks.iter().any(|c| c.id.starts_with("en1994.5.4.2.3.cracked.") && c.status != CheckStatus::NotApplicable));
+    assert!(report.checks.iter().any(|c| c.id.starts_with("en1994.6.2.2.4.vm-sagging.")));
+    doc.beams[0].cracked_length_fraction = 0.0;
+    let off = evaluate(&doc);
+    assert!(off.checks.iter().any(|c| c.id.starts_with("en1994.5.4.2.3.cracked.") && c.status == CheckStatus::NotApplicable));
+}
+
+#[test]
+fn cracked_stiffness_over_the_support_regions_raises_the_continuous_deflection() {
+    let deflection = |d: &En1994Snapshot| evaluate(d).checks.iter().find(|c| c.id.starts_with("en1994.7.3.1.deflection.beam")).map(|c| c.computed.value).expect("deflection check");
+    let mut doc = end_span_building();
+    let cracked = deflection(&doc);
+    doc.beams[0].cracked_length_fraction = 0.0;
+    assert!(cracked > deflection(&doc));
+}
+
+#[test]
+fn end_interior_and_cantilever_spans_have_distinct_statics_and_stations() {
+    let moment = |support: semio_s_artifact_norm_en1994_model::SupportCondition| {
+        let mut doc = En1994Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De);
+        doc.beams[0].support = support;
+        evaluate(&doc).checks.iter().find(|c| c.id.starts_with("en1994.6.2.1.3.mrd.")).map(|c| c.computed.value).expect("mrd")
+    };
+    let (end, interior, cantilever) = (moment(semio_s_artifact_norm_en1994_model::SupportCondition::EndSpan), moment(semio_s_artifact_norm_en1994_model::SupportCondition::InteriorSpan), moment(semio_s_artifact_norm_en1994_model::SupportCondition::Cantilever));
+    assert!(end != interior && interior != cantilever && end != cantilever, "{end} {interior} {cantilever}");
+}
+
+#[test]
+fn encased_columns_report_the_fire_model_and_the_untranscribed_tables() {
+    let mut doc = En1994Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De);
+    doc.fire_rating = semio_s_artifact_norm_en1994_model::FireRating::R60;
+    let column = &mut doc.columns[0];
+    column.kind = semio_s_artifact_norm_en1994_model::ColumnKind::Encased;
+    column.outer_size_m = 0.4;
+    column.reinforcement_as_m2 = 4.0 * 314.16e-6;
+    column.section_height_m = 0.2;
+    column.section_width_m = 0.2;
+    column.section_tw_m = 0.0085;
+    column.section_tf_m = 0.013;
+    column.rebar_cover_m = 0.05;
+    let report = evaluate(&doc);
+    assert!(report.checks.iter().any(|c| c.id.starts_with("en1994.1-2.4.3.5.column.") && c.status != CheckStatus::NotApplicable));
+    assert!(report.checks.iter().any(|c| c.id.starts_with("en1994.1-2.4.2.table-column.") && c.status == CheckStatus::NotApplicable));
+}
+
+#[test]
+fn bridge_girders_report_shear_lag_and_the_cracked_section_reinforcement_range() {
+    let mut doc = En1994Snapshot::bridge_girder();
+    doc.fatigue_detail = semio_s_artifact_norm_en1994_model::FatigueDetail::Reinforcement;
+    let report = evaluate(&doc);
+    assert!(report.checks.iter().any(|c| c.id.starts_with("en1994.2.5.4.1.shear-lag.")));
+    let rebar = report.checks.iter().find(|c| c.id.starts_with("en1994.2.6.8.2.rebar.")).expect("rebar fatigue check");
+    assert!(rebar.ndps.iter().any(|n| n == "ndp.en1994.2.fatigue-tension-stiffening"));
+    assert!(rebar.utilization.is_finite() && rebar.utilization > 0.0);
+}
+
+#[test]
+fn bridge_girder_details_are_checked_with_remedies_and_skipped_while_undeclared() {
+    let undeclared = evaluate(&En1994Snapshot::bridge_girder());
+    for prefix in ["en1994.2.6.6.5.edge.", "en1994.2.6.6.5.cross-spacing.", "en1994.2.6.6.5.end-plate."] {
+        assert!(undeclared.checks.iter().any(|c| c.id.starts_with(prefix) && c.status == CheckStatus::NotApplicable), "{prefix}");
+    }
+    let mut doc = En1994Snapshot::bridge_girder();
+    {
+        let beam = &mut doc.beams[0];
+        beam.stud_edge_distance_m = 0.01;
+        beam.stud_transverse_spacing_m = 0.03;
+        beam.transverse_as_top_m2_per_m = 0.0;
+        beam.transverse_as_m2_per_m = 1e-5;
+        beam.end_plate_width_m = 0.05;
+        beam.end_plate_height_m = 0.05;
+        beam.end_zone_length_m = 1.5;
+    }
+    let report = evaluate(&doc);
+    for prefix in ["en1994.2.6.6.5.edge.", "en1994.2.6.6.5.cross-spacing.", "en1994.2.6.6.6.transverse-min.", "en1994.2.6.6.5.end-plate."] {
+        let check = report.checks.iter().find(|c| c.id.starts_with(prefix)).expect(prefix);
+        assert_eq!(check.status, CheckStatus::Fail, "{prefix}");
+        assert!(!check.remedies.is_empty(), "{prefix}");
+        assert!(!check.ndps.is_empty(), "{prefix}");
+    }
+    let mut ok = doc.clone();
+    {
+        let beam = &mut ok.beams[0];
+        beam.stud_edge_distance_m = 0.04;
+        beam.stud_transverse_spacing_m = 0.2;
+        beam.transverse_as_top_m2_per_m = 1e-3;
+        beam.end_plate_width_m = 0.6;
+        beam.end_plate_height_m = 0.25;
+        beam.end_zone_length_m = 0.3;
+    }
+    let report = evaluate(&ok);
+    for prefix in ["en1994.2.6.6.5.edge.", "en1994.2.6.6.5.cross-spacing.", "en1994.2.6.6.6.transverse-min.", "en1994.2.6.6.5.end-plate."] {
+        let check = report.checks.iter().find(|c| c.id.starts_with(prefix)).expect(prefix);
+        assert_ne!(check.status, CheckStatus::Fail, "{prefix}");
+    }
+}
+
+#[test]
+fn reliability_class_of_the_document_reaches_the_evaluation() {
+    let rc2 = semio_s_artifact_norm_en1994_model::En1994Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De);
+    let rc3 = semio_s_artifact_norm_en1994_model::En1994Snapshot { reliability_class: semio_s_plugin_norm_compliance::ReliabilityClass::RC3, ..rc2.clone() };
+    let load_effect = |document: &semio_s_artifact_norm_en1994_model::En1994Snapshot| evaluate(document).checks.iter().map(|c| c.utilization).sum::<f64>();
+    assert!(load_effect(&rc3) > load_effect(&rc2));
+}

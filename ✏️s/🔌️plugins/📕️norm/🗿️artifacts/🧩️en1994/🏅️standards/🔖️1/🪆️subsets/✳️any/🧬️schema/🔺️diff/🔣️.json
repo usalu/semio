@@ -1,550 +1,77 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/diff.json",
-  "title": "En1994Diff",
-  "type": "object",
-  "additionalProperties": false,
-  "properties": {
-    "annex": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/properties/annex"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "structureKind": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/properties/structureKind"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "steelFYPa": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/properties/steelFYPa"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "beams": {
-      "anyOf": [
-        {
-          "$ref": "#/$defs/En1994BeamsRows"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "columns": {
-      "anyOf": [
-        {
-          "$ref": "#/$defs/En1994ColumnsRows"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "slabs": {
-      "anyOf": [
-        {
-          "$ref": "#/$defs/En1994SlabsRows"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "fireRating": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/properties/fireRating"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "insulationThicknessM": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/properties/insulationThicknessM"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    },
-    "fatigueDetail": {
-      "anyOf": [
-        {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/properties/fatigueDetail"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "x-semio-state": "artifact"
-    }
+  "$schema":"http://json-schema.org/draft-07/schema#",
+  "$id":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/diff.json",
+  "title":"En1994Diff",
+  "type":"object",
+  "additionalProperties":false,
+  "properties":{"annex":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/properties/annex"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"semio_s_plugin_norm_compliance::AnnexChoice"}},"structureKind":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/properties/structureKind"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"semio_s_artifact_norm_en1994_model::StructureKind"}},"steelFYPa":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/properties/steelFYPa"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"beams":{"anyOf":[{"$ref":"#/$defs/En1994BeamsRows"},{"type":"null"}],"x-semio-state":"artifact"},"columns":{"anyOf":[{"$ref":"#/$defs/En1994ColumnsRows"},{"type":"null"}],"x-semio-state":"artifact"},"slabs":{"anyOf":[{"$ref":"#/$defs/En1994SlabsRows"},{"type":"null"}],"x-semio-state":"artifact"},"placements":{"anyOf":[{"$ref":"#/$defs/En1994PlacementsRows"},{"type":"null"}],"x-semio-state":"artifact"},"studs":{"anyOf":[{"$ref":"#/$defs/En1994StudsRows"},{"type":"null"}],"x-semio-state":"artifact"},"fireRating":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/properties/fireRating"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"semio_s_artifact_norm_en1994_model::FireRating"}},"insulationThicknessM":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/properties/insulationThicknessM"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"f64"}},"fatigueDetail":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/properties/fatigueDetail"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"semio_s_artifact_norm_en1994_model::FatigueDetail"}},"reliabilityClass":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/properties/reliabilityClass"},{"type":"null"}],"x-semio-state":"artifact","x-semio-rust":{"type":"semio_s_plugin_norm_compliance::ReliabilityClass"}},"cases":{"$ref":"#/$defs/CaseRowDelta","x-semio-state":"artifact","x-semio-rust":{"type":"semio_s_plugin_norm_compliance::design_case::CaseRowDelta"}}},
+  "$defs":{
+    "En1994BeamsActionsInserted":{"type":"object","additionalProperties":false,"required":["index","row"],"properties":{"index":{"type":"integer","minimum":0},"row":{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CharacteristicAction"}}},
+    "En1994BeamsActionsModified":{"type":"object","additionalProperties":false,"required":["id","patch"],"properties":{"id":{"type":"string"},"patch":{"$ref":"#/$defs/En1994BeamsActionsPatch"}}},
+    "En1994BeamsActionsMoved":{"type":"object","additionalProperties":false,"required":["id","from","to"],"properties":{"id":{"type":"string"},"from":{"type":"integer","minimum":0},"to":{"type":"integer","minimum":0}}},
+    "En1994BeamsActionsPatch":{"type":"object","additionalProperties":false,"required":["kind","category","stage","qAreaPa","fKN","deltaSigmaKPa","deltaTauKPa","xM"],"properties":{"kind":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CharacteristicAction/properties/kind"},{"type":"null"}]},"category":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CharacteristicAction/properties/category"},{"type":"null"}]},"stage":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CharacteristicAction/properties/stage"},{"type":"null"}]},"qAreaPa":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CharacteristicAction/properties/qAreaPa"},{"type":"null"}]},"fKN":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CharacteristicAction/properties/fKN"},{"type":"null"}]},"deltaSigmaKPa":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CharacteristicAction/properties/deltaSigmaKPa"},{"type":"null"}]},"deltaTauKPa":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CharacteristicAction/properties/deltaTauKPa"},{"type":"null"}]},"xM":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CharacteristicAction/properties/xM"},{"type":"null"}]}}},
+    "En1994BeamsActionsRemoved":{"type":"object","additionalProperties":false,"required":["id","index"],"properties":{"id":{"type":"string"},"index":{"type":"integer","minimum":0}}},
+    "En1994BeamsActionsRows":{"type":"object","additionalProperties":false,"required":["removed","inserted","moved","modified"],"properties":{"removed":{"type":"array","items":{"$ref":"#/$defs/En1994BeamsActionsRemoved"}},"inserted":{"type":"array","items":{"$ref":"#/$defs/En1994BeamsActionsInserted"}},"moved":{"type":"array","items":{"$ref":"#/$defs/En1994BeamsActionsMoved"}},"modified":{"type":"array","items":{"$ref":"#/$defs/En1994BeamsActionsModified"}}}},
+    "En1994BeamsInserted":{"type":"object","additionalProperties":false,"required":["index","row"],"properties":{"index":{"type":"integer","minimum":0},"row":{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeBeam"}}},
+    "En1994BeamsModified":{"type":"object","additionalProperties":false,"required":["id","patch"],"properties":{"id":{"type":"string"},"patch":{"$ref":"#/$defs/En1994BeamsPatch"}}},
+    "En1994BeamsMoved":{"type":"object","additionalProperties":false,"required":["id","from","to"],"properties":{"id":{"type":"string"},"from":{"type":"integer","minimum":0},"to":{"type":"integer","minimum":0}}},
+    "En1994BeamsPatch":{"type":"object","additionalProperties":false,"required":["spanM","spacingM","support","construction","steel","steelHeightM","steelWidthM","steelTwM","steelTfM","steelAM2","steelWPlYM3","steelIYM4","steelAVM2","steelRM","slabThicknessM","concreteFCkPa","concreteECmPa","sheetingProfile","sheetingHeightM","sheetingRibWidthM","sheetingThicknessM","sheetingRibsParallelToBeam","transverseAsM2PerM","ltbLengthM","asHoggingM2PerM","barSpacingM","wkLimitM","nCycles","adjacentSpanM","patchBearingLengthM","bridgeLanes","crackedLengthFraction","studTransverseSpacingM","studEdgeDistanceM","transverseAsTopM2PerM","endPlateWidthM","endPlateHeightM","endZoneLengthM","reinforcementProduct","actions"],"properties":{"spanM":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeBeam/properties/spanM"},{"type":"null"}]},"spacingM":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeBeam/properties/spacingM"},{"type":"null"}]},"support":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeBeam/properties/support"},{"type":"null"}]},"construction":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeBeam/properties/construction"},{"type":"null"}]},"steel":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/SteelSection"},{"type":"null"}]},"steelHeightM":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/SteelSection/properties/heightM"},{"type":"null"}]},"steelWidthM":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/SteelSection/properties/widthM"},{"type":"null"}]},"steelTwM":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/SteelSection/properties/twM"},{"type":"null"}]},"steelTfM":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/SteelSection/properties/tfM"},{"type":"null"}]},"steelAM2":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/SteelSection/properties/aM2"},{"type":"null"}]},"steelWPlYM3":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/SteelSection/properties/wPlYM3"},{"type":"null"}]},"steelIYM4":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/SteelSection/properties/iYM4"},{"type":"null"}]},"steelAVM2":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/SteelSection/properties/aVM2"},{"type":"null"}]},"steelRM":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/SteelSection/properties/rM"},{"type":"null"}]},"slabThicknessM":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeBeam/properties/slabThicknessM"},{"type":"null"}]},"concreteFCkPa":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeBeam/properties/concreteFCkPa"},{"type":"null"}]},"concreteECmPa":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeBeam/properties/concreteECmPa"},{"type":"null"}]},"sheetingProfile":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/ProfiledSheeting/properties/profile"},{"type":"null"}]},"sheetingHeightM":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/ProfiledSheeting/properties/heightM"},{"type":"null"}]},"sheetingRibWidthM":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/ProfiledSheeting/properties/ribWidthM"},{"type":"null"}]},"sheetingThicknessM":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/ProfiledSheeting/properties/thicknessM"},{"type":"null"}]},"sheetingRibsParallelToBeam":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/ProfiledSheeting/properties/ribsParallelToBeam"},{"type":"null"}]},"transverseAsM2PerM":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeBeam/properties/transverseAsM2PerM"},{"type":"null"}]},"ltbLengthM":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeBeam/properties/ltbLengthM"},{"type":"null"}]},"asHoggingM2PerM":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeBeam/properties/asHoggingM2PerM"},{"type":"null"}]},"barSpacingM":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeBeam/properties/barSpacingM"},{"type":"null"}]},"wkLimitM":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeBeam/properties/wkLimitM"},{"type":"null"}]},"nCycles":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeBeam/properties/nCycles"},{"type":"null"}]},"adjacentSpanM":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeBeam/properties/adjacentSpanM"},{"type":"null"}]},"patchBearingLengthM":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeBeam/properties/patchBearingLengthM"},{"type":"null"}]},"bridgeLanes":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeBeam/properties/bridgeLanes"},{"type":"null"}]},"crackedLengthFraction":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeBeam/properties/crackedLengthFraction"},{"type":"null"}]},"studTransverseSpacingM":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeBeam/properties/studTransverseSpacingM"},{"type":"null"}]},"studEdgeDistanceM":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeBeam/properties/studEdgeDistanceM"},{"type":"null"}]},"transverseAsTopM2PerM":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeBeam/properties/transverseAsTopM2PerM"},{"type":"null"}]},"endPlateWidthM":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeBeam/properties/endPlateWidthM"},{"type":"null"}]},"endPlateHeightM":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeBeam/properties/endPlateHeightM"},{"type":"null"}]},"endZoneLengthM":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeBeam/properties/endZoneLengthM"},{"type":"null"}]},"reinforcementProduct":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeBeam/properties/reinforcementProduct"},{"type":"null"}]},"actions":{"anyOf":[{"$ref":"#/$defs/En1994BeamsActionsRows"},{"type":"null"}]}}},
+    "En1994BeamsRemoved":{"type":"object","additionalProperties":false,"required":["id","index"],"properties":{"id":{"type":"string"},"index":{"type":"integer","minimum":0}}},
+    "En1994BeamsRows":{"type":"object","additionalProperties":false,"required":["removed","inserted","moved","modified"],"properties":{"removed":{"type":"array","items":{"$ref":"#/$defs/En1994BeamsRemoved"}},"inserted":{"type":"array","items":{"$ref":"#/$defs/En1994BeamsInserted"}},"moved":{"type":"array","items":{"$ref":"#/$defs/En1994BeamsMoved"}},"modified":{"type":"array","items":{"$ref":"#/$defs/En1994BeamsModified"}}}},
+    "En1994ColumnsActionsInserted":{"type":"object","additionalProperties":false,"required":["index","row"],"properties":{"index":{"type":"integer","minimum":0},"row":{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/ColumnAction"}}},
+    "En1994ColumnsActionsModified":{"type":"object","additionalProperties":false,"required":["id","patch"],"properties":{"id":{"type":"string"},"patch":{"$ref":"#/$defs/En1994ColumnsActionsPatch"}}},
+    "En1994ColumnsActionsMoved":{"type":"object","additionalProperties":false,"required":["id","from","to"],"properties":{"id":{"type":"string"},"from":{"type":"integer","minimum":0},"to":{"type":"integer","minimum":0}}},
+    "En1994ColumnsActionsPatch":{"type":"object","additionalProperties":false,"required":["kind","category","stage","nKN","mKNm"],"properties":{"kind":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/ColumnAction/properties/kind"},{"type":"null"}]},"category":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/ColumnAction/properties/category"},{"type":"null"}]},"stage":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/ColumnAction/properties/stage"},{"type":"null"}]},"nKN":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/ColumnAction/properties/nKN"},{"type":"null"}]},"mKNm":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/ColumnAction/properties/mKNm"},{"type":"null"}]}}},
+    "En1994ColumnsActionsRemoved":{"type":"object","additionalProperties":false,"required":["id","index"],"properties":{"id":{"type":"string"},"index":{"type":"integer","minimum":0}}},
+    "En1994ColumnsActionsRows":{"type":"object","additionalProperties":false,"required":["removed","inserted","moved","modified"],"properties":{"removed":{"type":"array","items":{"$ref":"#/$defs/En1994ColumnsActionsRemoved"}},"inserted":{"type":"array","items":{"$ref":"#/$defs/En1994ColumnsActionsInserted"}},"moved":{"type":"array","items":{"$ref":"#/$defs/En1994ColumnsActionsMoved"}},"modified":{"type":"array","items":{"$ref":"#/$defs/En1994ColumnsActionsModified"}}}},
+    "En1994ColumnsInserted":{"type":"object","additionalProperties":false,"required":["index","row"],"properties":{"index":{"type":"integer","minimum":0},"row":{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeColumn"}}},
+    "En1994ColumnsModified":{"type":"object","additionalProperties":false,"required":["id","patch"],"properties":{"id":{"type":"string"},"patch":{"$ref":"#/$defs/En1994ColumnsPatch"}}},
+    "En1994ColumnsMoved":{"type":"object","additionalProperties":false,"required":["id","from","to"],"properties":{"id":{"type":"string"},"from":{"type":"integer","minimum":0},"to":{"type":"integer","minimum":0}}},
+    "En1994ColumnsPatch":{"type":"object","additionalProperties":false,"required":["kind","lengthM","outerSizeM","wallThicknessM","steelAM2","steelFYPa","concreteAM2","concreteFCkPa","reinforcementAsM2","reinforcementFYkPa","iM4","bucklingCurve","introducedForceN","sectionHeightM","sectionWidthM","sectionTwM","sectionTfM","rebarCoverM","reinforcementProduct","actions"],"properties":{"kind":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeColumn/properties/kind"},{"type":"null"}]},"lengthM":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeColumn/properties/lengthM"},{"type":"null"}]},"outerSizeM":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeColumn/properties/outerSizeM"},{"type":"null"}]},"wallThicknessM":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeColumn/properties/wallThicknessM"},{"type":"null"}]},"steelAM2":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeColumn/properties/steelAM2"},{"type":"null"}]},"steelFYPa":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeColumn/properties/steelFYPa"},{"type":"null"}]},"concreteAM2":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeColumn/properties/concreteAM2"},{"type":"null"}]},"concreteFCkPa":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeColumn/properties/concreteFCkPa"},{"type":"null"}]},"reinforcementAsM2":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeColumn/properties/reinforcementAsM2"},{"type":"null"}]},"reinforcementFYkPa":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeColumn/properties/reinforcementFYkPa"},{"type":"null"}]},"iM4":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeColumn/properties/iM4"},{"type":"null"}]},"bucklingCurve":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeColumn/properties/bucklingCurve"},{"type":"null"}]},"introducedForceN":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeColumn/properties/introducedForceN"},{"type":"null"}]},"sectionHeightM":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeColumn/properties/sectionHeightM"},{"type":"null"}]},"sectionWidthM":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeColumn/properties/sectionWidthM"},{"type":"null"}]},"sectionTwM":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeColumn/properties/sectionTwM"},{"type":"null"}]},"sectionTfM":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeColumn/properties/sectionTfM"},{"type":"null"}]},"rebarCoverM":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeColumn/properties/rebarCoverM"},{"type":"null"}]},"reinforcementProduct":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeColumn/properties/reinforcementProduct"},{"type":"null"}]},"actions":{"anyOf":[{"$ref":"#/$defs/En1994ColumnsActionsRows"},{"type":"null"}]}}},
+    "En1994ColumnsRemoved":{"type":"object","additionalProperties":false,"required":["id","index"],"properties":{"id":{"type":"string"},"index":{"type":"integer","minimum":0}}},
+    "En1994ColumnsRows":{"type":"object","additionalProperties":false,"required":["removed","inserted","moved","modified"],"properties":{"removed":{"type":"array","items":{"$ref":"#/$defs/En1994ColumnsRemoved"}},"inserted":{"type":"array","items":{"$ref":"#/$defs/En1994ColumnsInserted"}},"moved":{"type":"array","items":{"$ref":"#/$defs/En1994ColumnsMoved"}},"modified":{"type":"array","items":{"$ref":"#/$defs/En1994ColumnsModified"}}}},
+    "En1994PlacementsInserted":{"type":"object","additionalProperties":false,"required":["index","row"],"properties":{"index":{"type":"integer","minimum":0},"row":{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/Placement"}}},
+    "En1994PlacementsModified":{"type":"object","additionalProperties":false,"required":["id","patch"],"properties":{"id":{"type":"string"},"patch":{"$ref":"#/$defs/En1994PlacementsPatch"}}},
+    "En1994PlacementsMoved":{"type":"object","additionalProperties":false,"required":["id","from","to"],"properties":{"id":{"type":"string"},"from":{"type":"integer","minimum":0},"to":{"type":"integer","minimum":0}}},
+    "En1994PlacementsPatch":{"type":"object","additionalProperties":false,"required":["x","y","z","yaw"],"properties":{"x":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/Placement/properties/x"},{"type":"null"}]},"y":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/Placement/properties/y"},{"type":"null"}]},"z":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/Placement/properties/z"},{"type":"null"}]},"yaw":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/Placement/properties/yaw"},{"type":"null"}]}}},
+    "En1994PlacementsRemoved":{"type":"object","additionalProperties":false,"required":["id","index"],"properties":{"id":{"type":"string"},"index":{"type":"integer","minimum":0}}},
+    "En1994PlacementsRows":{"type":"object","additionalProperties":false,"required":["removed","inserted","moved","modified"],"properties":{"removed":{"type":"array","items":{"$ref":"#/$defs/En1994PlacementsRemoved"}},"inserted":{"type":"array","items":{"$ref":"#/$defs/En1994PlacementsInserted"}},"moved":{"type":"array","items":{"$ref":"#/$defs/En1994PlacementsMoved"}},"modified":{"type":"array","items":{"$ref":"#/$defs/En1994PlacementsModified"}}}},
+    "En1994SlabsActionsInserted":{"type":"object","additionalProperties":false,"required":["index","row"],"properties":{"index":{"type":"integer","minimum":0},"row":{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/SlabAction"}}},
+    "En1994SlabsActionsModified":{"type":"object","additionalProperties":false,"required":["id","patch"],"properties":{"id":{"type":"string"},"patch":{"$ref":"#/$defs/En1994SlabsActionsPatch"}}},
+    "En1994SlabsActionsMoved":{"type":"object","additionalProperties":false,"required":["id","from","to"],"properties":{"id":{"type":"string"},"from":{"type":"integer","minimum":0},"to":{"type":"integer","minimum":0}}},
+    "En1994SlabsActionsPatch":{"type":"object","additionalProperties":false,"required":["kind","category","stage","qAreaPa","fKN","deltaSigmaKPa","deltaTauKPa","xM","yM"],"properties":{"kind":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/SlabAction/properties/kind"},{"type":"null"}]},"category":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/SlabAction/properties/category"},{"type":"null"}]},"stage":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/SlabAction/properties/stage"},{"type":"null"}]},"qAreaPa":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/SlabAction/properties/qAreaPa"},{"type":"null"}]},"fKN":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/SlabAction/properties/fKN"},{"type":"null"}]},"deltaSigmaKPa":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/SlabAction/properties/deltaSigmaKPa"},{"type":"null"}]},"deltaTauKPa":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/SlabAction/properties/deltaTauKPa"},{"type":"null"}]},"xM":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/SlabAction/properties/xM"},{"type":"null"}]},"yM":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/SlabAction/properties/yM"},{"type":"null"}]}}},
+    "En1994SlabsActionsRemoved":{"type":"object","additionalProperties":false,"required":["id","index"],"properties":{"id":{"type":"string"},"index":{"type":"integer","minimum":0}}},
+    "En1994SlabsActionsRows":{"type":"object","additionalProperties":false,"required":["removed","inserted","moved","modified"],"properties":{"removed":{"type":"array","items":{"$ref":"#/$defs/En1994SlabsActionsRemoved"}},"inserted":{"type":"array","items":{"$ref":"#/$defs/En1994SlabsActionsInserted"}},"moved":{"type":"array","items":{"$ref":"#/$defs/En1994SlabsActionsMoved"}},"modified":{"type":"array","items":{"$ref":"#/$defs/En1994SlabsActionsModified"}}}},
+    "En1994SlabsInserted":{"type":"object","additionalProperties":false,"required":["index","row"],"properties":{"index":{"type":"integer","minimum":0},"row":{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeSlab"}}},
+    "En1994SlabsModified":{"type":"object","additionalProperties":false,"required":["id","patch"],"properties":{"id":{"type":"string"},"patch":{"$ref":"#/$defs/En1994SlabsPatch"}}},
+    "En1994SlabsMoved":{"type":"object","additionalProperties":false,"required":["id","from","to"],"properties":{"id":{"type":"string"},"from":{"type":"integer","minimum":0},"to":{"type":"integer","minimum":0}}},
+    "En1994SlabsPatch":{"type":"object","additionalProperties":false,"required":["spanM","support","sheetingProfile","sheetingHeightM","sheetingRibWidthM","sheetingThicknessM","sheetingRibsParallelToBeam","concreteThicknessM","fCkPa","mFactor","kFactor","asM2PerM","actions"],"properties":{"spanM":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeSlab/properties/spanM"},{"type":"null"}]},"support":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeSlab/properties/support"},{"type":"null"}]},"sheetingProfile":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/ProfiledSheeting/properties/profile"},{"type":"null"}]},"sheetingHeightM":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/ProfiledSheeting/properties/heightM"},{"type":"null"}]},"sheetingRibWidthM":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/ProfiledSheeting/properties/ribWidthM"},{"type":"null"}]},"sheetingThicknessM":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/ProfiledSheeting/properties/thicknessM"},{"type":"null"}]},"sheetingRibsParallelToBeam":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/ProfiledSheeting/properties/ribsParallelToBeam"},{"type":"null"}]},"concreteThicknessM":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeSlab/properties/concreteThicknessM"},{"type":"null"}]},"fCkPa":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeSlab/properties/fCkPa"},{"type":"null"}]},"mFactor":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeSlab/properties/mFactor"},{"type":"null"}]},"kFactor":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeSlab/properties/kFactor"},{"type":"null"}]},"asM2PerM":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeSlab/properties/asM2PerM"},{"type":"null"}]},"actions":{"anyOf":[{"$ref":"#/$defs/En1994SlabsActionsRows"},{"type":"null"}]}}},
+    "En1994SlabsRemoved":{"type":"object","additionalProperties":false,"required":["id","index"],"properties":{"id":{"type":"string"},"index":{"type":"integer","minimum":0}}},
+    "En1994SlabsRows":{"type":"object","additionalProperties":false,"required":["removed","inserted","moved","modified"],"properties":{"removed":{"type":"array","items":{"$ref":"#/$defs/En1994SlabsRemoved"}},"inserted":{"type":"array","items":{"$ref":"#/$defs/En1994SlabsInserted"}},"moved":{"type":"array","items":{"$ref":"#/$defs/En1994SlabsMoved"}},"modified":{"type":"array","items":{"$ref":"#/$defs/En1994SlabsModified"}}}},
+    "En1994StudsInserted":{"type":"object","additionalProperties":false,"required":["index","row"],"properties":{"index":{"type":"integer","minimum":0},"row":{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/Stud"}}},
+    "En1994StudsModified":{"type":"object","additionalProperties":false,"required":["id","patch"],"properties":{"id":{"type":"string"},"patch":{"$ref":"#/$defs/En1994StudsPatch"}}},
+    "En1994StudsMoved":{"type":"object","additionalProperties":false,"required":["id","from","to"],"properties":{"id":{"type":"string"},"from":{"type":"integer","minimum":0},"to":{"type":"integer","minimum":0}}},
+    "En1994StudsRemoved":{"type":"object","additionalProperties":false,"required":["id","index"],"properties":{"id":{"type":"string"},"index":{"type":"integer","minimum":0}}},
+    "En1994StudsRows":{"type":"object","additionalProperties":false,"required":["removed","inserted","moved","modified"],"properties":{"removed":{"type":"array","items":{"$ref":"#/$defs/En1994StudsRemoved"}},"inserted":{"type":"array","items":{"$ref":"#/$defs/En1994StudsInserted"}},"moved":{"type":"array","items":{"$ref":"#/$defs/En1994StudsMoved"}},"modified":{"type":"array","items":{"$ref":"#/$defs/En1994StudsModified"}}}},
+    "En1994StudsPatch":{"type":"object","additionalProperties":false,"required":["beamId","xM","diameterM","heightM","fUPa"],"properties":{"beamId":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/Stud/properties/beamId"},{"type":"null"}]},"xM":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/Stud/properties/xM"},{"type":"null"}]},"diameterM":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/Stud/properties/diameterM"},{"type":"null"}]},"heightM":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/Stud/properties/heightM"},{"type":"null"}]},"fUPa":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/Stud/properties/fUPa"},{"type":"null"}]}}},
+    "CaseNumberPatch":{"title":"CaseNumberPatch","type":"object","additionalProperties":false,"properties":{"value":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CaseNumber/properties/value"},{"type":"null"}]}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "CaseNumberRemoval":{"title":"CaseNumberRemoval","type":"object","additionalProperties":false,"required":["id","index"],"properties":{"id":{"type":"string"},"index":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "CaseNumberInsertion":{"title":"CaseNumberInsertion","type":"object","additionalProperties":false,"required":["index","row"],"properties":{"index":{"type":"integer","minimum":0},"row":{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CaseNumber"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "CaseNumberRelocation":{"title":"CaseNumberRelocation","type":"object","additionalProperties":false,"required":["id","from","to"],"properties":{"id":{"type":"string"},"from":{"type":"integer","minimum":0},"to":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "CaseNumberModification":{"title":"CaseNumberModification","type":"object","additionalProperties":false,"required":["id","patch"],"properties":{"id":{"type":"string"},"patch":{"$ref":"#/$defs/CaseNumberPatch"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "CaseNumberDelta":{"title":"CaseNumberDelta","type":"object","additionalProperties":false,"required":["removed","inserted","moved","modified"],"properties":{"removed":{"type":"array","items":{"$ref":"#/$defs/CaseNumberRemoval"}},"inserted":{"type":"array","items":{"$ref":"#/$defs/CaseNumberInsertion"}},"moved":{"type":"array","items":{"$ref":"#/$defs/CaseNumberRelocation"}},"modified":{"type":"array","items":{"$ref":"#/$defs/CaseNumberModification"}}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "CaseTextPatch":{"title":"CaseTextPatch","type":"object","additionalProperties":false,"properties":{"value":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CaseText/properties/value"},{"type":"null"}]}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "CaseTextRemoval":{"title":"CaseTextRemoval","type":"object","additionalProperties":false,"required":["id","index"],"properties":{"id":{"type":"string"},"index":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "CaseTextInsertion":{"title":"CaseTextInsertion","type":"object","additionalProperties":false,"required":["index","row"],"properties":{"index":{"type":"integer","minimum":0},"row":{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CaseText"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "CaseTextRelocation":{"title":"CaseTextRelocation","type":"object","additionalProperties":false,"required":["id","from","to"],"properties":{"id":{"type":"string"},"from":{"type":"integer","minimum":0},"to":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "CaseTextModification":{"title":"CaseTextModification","type":"object","additionalProperties":false,"required":["id","patch"],"properties":{"id":{"type":"string"},"patch":{"$ref":"#/$defs/CaseTextPatch"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "CaseTextDelta":{"title":"CaseTextDelta","type":"object","additionalProperties":false,"required":["removed","inserted","moved","modified"],"properties":{"removed":{"type":"array","items":{"$ref":"#/$defs/CaseTextRemoval"}},"inserted":{"type":"array","items":{"$ref":"#/$defs/CaseTextInsertion"}},"moved":{"type":"array","items":{"$ref":"#/$defs/CaseTextRelocation"}},"modified":{"type":"array","items":{"$ref":"#/$defs/CaseTextModification"}}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "CaseRowPatch":{"title":"CaseRowPatch","type":"object","additionalProperties":false,"properties":{"labelEn":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CaseRow/properties/labelEn"},{"type":"null"}]},"labelDe":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CaseRow/properties/labelDe"},{"type":"null"}]},"entryId":{"anyOf":[{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CaseRow/properties/entryId"},{"type":"null"}]},"numbers":{"$ref":"#/$defs/CaseNumberDelta"},"texts":{"$ref":"#/$defs/CaseTextDelta"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "CaseRowRemoval":{"title":"CaseRowRemoval","type":"object","additionalProperties":false,"required":["id","index"],"properties":{"id":{"type":"string"},"index":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "CaseRowInsertion":{"title":"CaseRowInsertion","type":"object","additionalProperties":false,"required":["index","row"],"properties":{"index":{"type":"integer","minimum":0},"row":{"$ref":"https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CaseRow"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "CaseRowRelocation":{"title":"CaseRowRelocation","type":"object","additionalProperties":false,"required":["id","from","to"],"properties":{"id":{"type":"string"},"from":{"type":"integer","minimum":0},"to":{"type":"integer","minimum":0}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "CaseRowModification":{"title":"CaseRowModification","type":"object","additionalProperties":false,"required":["id","patch"],"properties":{"id":{"type":"string"},"patch":{"$ref":"#/$defs/CaseRowPatch"}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]},
+    "CaseRowDelta":{"title":"CaseRowDelta","type":"object","additionalProperties":false,"required":["removed","inserted","moved","modified"],"properties":{"removed":{"type":"array","items":{"$ref":"#/$defs/CaseRowRemoval"}},"inserted":{"type":"array","items":{"$ref":"#/$defs/CaseRowInsertion"}},"moved":{"type":"array","items":{"$ref":"#/$defs/CaseRowRelocation"}},"modified":{"type":"array","items":{"$ref":"#/$defs/CaseRowModification"}}},"x-semio-formats":["🔣️jsonschema","🟦️typescript"]}
   },
-  "$defs": {
-    "En1994BeamsActionsPatch": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "index",
-        "qAreaPa"
-      ],
-      "properties": {
-        "index": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "qAreaPa": {
-          "anyOf": [
-            {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CharacteristicAction/properties/qAreaPa"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      }
-    },
-    "En1994BeamsActionsRows": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "modified"
-      ],
-      "properties": {
-        "modified": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/En1994BeamsActionsPatch"
-          }
-        }
-      }
-    },
-    "En1994BeamsInserted": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "index",
-        "row"
-      ],
-      "properties": {
-        "index": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "row": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeBeam"
-        }
-      }
-    },
-    "En1994BeamsPatch": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "index",
-        "spanM",
-        "slabThicknessM",
-        "construction",
-        "transverseAsM2PerM",
-        "studsDiameterM",
-        "studsFUPa",
-        "studsSpacingM",
-        "studsTotalCount",
-        "actions"
-      ],
-      "properties": {
-        "index": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "spanM": {
-          "anyOf": [
-            {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeBeam/properties/spanM"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "slabThicknessM": {
-          "anyOf": [
-            {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeBeam/properties/slabThicknessM"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "construction": {
-          "anyOf": [
-            {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeBeam/properties/construction"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "transverseAsM2PerM": {
-          "anyOf": [
-            {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeBeam/properties/transverseAsM2PerM"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "studsDiameterM": {
-          "anyOf": [
-            {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/HeadedStuds/properties/diameterM"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "studsFUPa": {
-          "anyOf": [
-            {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/HeadedStuds/properties/fUPa"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "studsSpacingM": {
-          "anyOf": [
-            {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/HeadedStuds/properties/spacingM"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "studsTotalCount": {
-          "anyOf": [
-            {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/HeadedStuds/properties/totalCount"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "actions": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/En1994BeamsActionsRows"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      }
-    },
-    "En1994BeamsRows": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "removed",
-        "inserted",
-        "modified"
-      ],
-      "properties": {
-        "removed": {
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "minimum": 0
-          }
-        },
-        "inserted": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/En1994BeamsInserted"
-          }
-        },
-        "modified": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/En1994BeamsPatch"
-          }
-        }
-      }
-    },
-    "En1994ColumnsActionsPatch": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "index",
-        "nKN"
-      ],
-      "properties": {
-        "index": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "nKN": {
-          "anyOf": [
-            {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/ColumnAction/properties/nKN"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      }
-    },
-    "En1994ColumnsActionsRows": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "modified"
-      ],
-      "properties": {
-        "modified": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/En1994ColumnsActionsPatch"
-          }
-        }
-      }
-    },
-    "En1994ColumnsInserted": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "index",
-        "row"
-      ],
-      "properties": {
-        "index": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "row": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeColumn"
-        }
-      }
-    },
-    "En1994ColumnsPatch": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "index",
-        "kind",
-        "actions"
-      ],
-      "properties": {
-        "index": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "kind": {
-          "anyOf": [
-            {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeColumn/properties/kind"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "actions": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/En1994ColumnsActionsRows"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      }
-    },
-    "En1994ColumnsRows": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "removed",
-        "inserted",
-        "modified"
-      ],
-      "properties": {
-        "removed": {
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "minimum": 0
-          }
-        },
-        "inserted": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/En1994ColumnsInserted"
-          }
-        },
-        "modified": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/En1994ColumnsPatch"
-          }
-        }
-      }
-    },
-    "En1994SlabsActionsPatch": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "index",
-        "qAreaPa"
-      ],
-      "properties": {
-        "index": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "qAreaPa": {
-          "anyOf": [
-            {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CharacteristicAction/properties/qAreaPa"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      }
-    },
-    "En1994SlabsActionsRows": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "modified"
-      ],
-      "properties": {
-        "modified": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/En1994SlabsActionsPatch"
-          }
-        }
-      }
-    },
-    "En1994SlabsInserted": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "index",
-        "row"
-      ],
-      "properties": {
-        "index": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "row": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeSlab"
-        }
-      }
-    },
-    "En1994SlabsPatch": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "index",
-        "concreteThicknessM",
-        "actions"
-      ],
-      "properties": {
-        "index": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "concreteThicknessM": {
-          "anyOf": [
-            {
-              "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/CompositeSlab/properties/concreteThicknessM"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        "actions": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/En1994SlabsActionsRows"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      }
-    },
-    "En1994SlabsRows": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "removed",
-        "inserted",
-        "modified"
-      ],
-      "properties": {
-        "removed": {
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "minimum": 0
-          }
-        },
-        "inserted": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/En1994SlabsInserted"
-          }
-        },
-        "modified": {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/En1994SlabsPatch"
-          }
-        }
-      }
-    }
-  }
+  "x-semio-rust":{"doc":["🔺️ Keyed sparse diff of the En1994 artifact: scalar setters, keyed row diffs and per-field section patches."],"derive":["Clone","Debug","Default","PartialEq","framework_schema::ArtifactSchema","value_derive::ToValue","value_derive::FromValue","semio_framework_dsl_record_derive::DslRecord"],"artifactSchema":"s.norm.en1994","attributes":["#[cfg_attr(any(test, feature = \"test-support\"), derive(serde::Serialize, serde::Deserialize))]","#[cfg_attr(any(test, feature = \"test-support\"), serde(rename_all = \"camelCase\", default))]","#[value(rename_all = \"camelCase\", default)]"]}
 }

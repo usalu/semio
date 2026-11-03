@@ -1,0 +1,37 @@
+{
+  "annex": null,
+  "reliabilityClass": null,
+  "title": null,
+  "designWorkingLifeYears": null,
+  "deltaCDev": null,
+  "cementType": null,
+  "concreteGrades": null,
+  "reinforcementGrades": null,
+  "prestressSteels": null,
+  "members": null,
+  "anchors": null,
+  "placements": null,
+  "cases": {
+    "removed": [],
+    "inserted": [
+      {
+        "index": 1,
+        "row": {
+          "id": "case-m02",
+          "labelEn": "Concrete property table",
+          "labelDe": "Betonkennwerte",
+          "entryId": "M-02",
+          "numbers": [
+            {
+              "id": "fck",
+              "value": 30.0
+            }
+          ],
+          "texts": []
+        }
+      }
+    ],
+    "moved": [],
+    "modified": []
+  }
+}

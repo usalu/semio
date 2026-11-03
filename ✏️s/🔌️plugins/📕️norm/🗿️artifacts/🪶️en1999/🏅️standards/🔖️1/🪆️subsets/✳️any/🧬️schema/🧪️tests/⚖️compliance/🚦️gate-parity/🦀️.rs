@@ -7,24 +7,29 @@ fn gate_parity_every_fail_remedy_clears_status() {
     let doc = En1999Snapshot::noncompliant_multi_fail();
     let report = evaluate_structure(&doc);
     let listed = [
+        "en1999.6.2.5.m.beam-fail",
         "en1999.6.2.5.mz.beam-fail",
-        "en1999.6.3.1.fb.z.beam-fail",
-        "en1999.6.3.1.lambda.y.beam-fail",
-        "en1999.6.3.1.lambda.t.beam-fail",
+        "en1999.6.2.6.v.beam-fail",
+        "en1999.6.7.4.vb.beam-fail",
+        "en1999.6.2.9.nm.beam-fail",
+        "en1999.6.3.2.ltb.beam-fail",
+        "en1999.6.3.3.int.beam-fail",
         "en1999.7.2.defl.beam-fail",
-        "en1999.7.2.stress.beam-fail",
-        "en1999.7.2.sls-freq.beam-fail",
         "en1999.8.6.weld.weld-thin",
         "en1999.8.sls-freq.weld-thin",
         "en1999.8.5.bolt.bolt-short",
         "en1999.8.sls-freq.bolt-short",
         "en1999.1-2.fire.fire-hot",
+        "en1999.1-3.fat.fat-hot",
+        "en1999.1-3.fat.range.fat-hot",
         "en1999.1-4.bend.sheet-fail",
         "en1999.1-4.axial.sheet-fail",
         "en1999.1-4.nm.sheet-fail",
         "en1999.1-5.ring.shell-fail",
         "en1999.1-5.shear.shell-fail",
+        "en1999.1-5.int.shell-fail",
     ];
+
     for id in listed {
         let check = report
             .checks

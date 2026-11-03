@@ -10,8 +10,7 @@ mod tests {
     use semio_s_artifact_norm_vdi3805_model::{all_conforming_blatt_examples, conforming_blatt_dataset, nonconforming_blatt_dataset, nonconforming_valve_dataset, ASSESSED_BLATT_SHEETS};
     use semio_s_artifact_norm_vdi3805_model::{conforming_valve_dataset, SheetAttributes, Vdi3805Snapshot};
     use std::path::PathBuf;
-    use std::process::Command;
-
+    
     fn oracle_dir() -> PathBuf {
         fixture_path!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🔮️oracles/⚖️compliance")
     }
@@ -29,7 +28,7 @@ mod tests {
 
     fn run_oracle(snapshot: &std::path::Path) -> serde_json::Value {
         let py = oracle_dir().join("🐍️.py");
-        let out = Command::new("python3").arg(&py).arg(snapshot).output().expect("spawn python oracle");
+        let out = semio_s_plugin_norm_compliance::python_oracle::command().arg(&py).arg(snapshot).output().expect("spawn python oracle");
         assert!(out.status.success(), "oracle failed: {}\n{}", String::from_utf8_lossy(&out.stdout), String::from_utf8_lossy(&out.stderr));
         serde_json::from_slice(&out.stdout).expect("oracle json")
     }
@@ -120,7 +119,7 @@ mod tests {
         let snap = dir.join("conforming.json");
         write_snapshot(&conforming_valve_dataset(), &snap);
         let py = oracle_dir().join("../🧬️snapshot-schema/🐍️.py");
-        let out = Command::new("python3").arg(&py).arg(snapshot_schema_path()).arg(&snap).output().expect("spawn validate_schema");
+        let out = semio_s_plugin_norm_compliance::python_oracle::command().arg(&py).arg(snapshot_schema_path()).arg(&snap).output().expect("spawn validate_schema");
         assert!(out.status.success(), "validate_schema failed: {}\n{}", String::from_utf8_lossy(&out.stdout), String::from_utf8_lossy(&out.stderr));
     }
 
@@ -206,12 +205,12 @@ mod tests {
         for sheet in ASSESSED_BLATT_SHEETS {
             let snap = dir.join(format!("blatt-{sheet}.json"));
             write_snapshot(&conforming_blatt_dataset(*sheet), &snap);
-            let out = Command::new("python3").arg(&py).arg(snapshot_schema_path()).arg(&snap).output().expect("spawn validate_schema");
+            let out = semio_s_plugin_norm_compliance::python_oracle::command().arg(&py).arg(snapshot_schema_path()).arg(&snap).output().expect("spawn validate_schema");
             assert!(out.status.success(), "jsonschema blatt {sheet} failed: {}
 {}", String::from_utf8_lossy(&out.stdout), String::from_utf8_lossy(&out.stderr));
             let bad = dir.join(format!("blatt-{sheet}-bad.json"));
             write_snapshot(&nonconforming_blatt_dataset(*sheet), &bad);
-            let _ = Command::new("python3").arg(&py).arg(snapshot_schema_path()).arg(&bad).output();
+            let _ = semio_s_plugin_norm_compliance::python_oracle::command().arg(&py).arg(snapshot_schema_path()).arg(&bad).output();
         }
     }
 

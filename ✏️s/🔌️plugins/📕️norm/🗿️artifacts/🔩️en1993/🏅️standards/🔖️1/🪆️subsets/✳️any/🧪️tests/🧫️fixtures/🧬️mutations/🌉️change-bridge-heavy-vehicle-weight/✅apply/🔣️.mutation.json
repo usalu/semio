@@ -1,0 +1,6 @@
+{
+  "ChangeBridgeHeavyVehicleWeight": {
+    "id": "br-1",
+    "newHeavyVehicleWeight": 1.5
+  }
+}

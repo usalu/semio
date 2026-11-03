@@ -1,0 +1,7 @@
+{
+  "ChangePierPosition": {
+    "wallId": "wall-north",
+    "id": "pier-1",
+    "newPositionM": 3.0
+  }
+}

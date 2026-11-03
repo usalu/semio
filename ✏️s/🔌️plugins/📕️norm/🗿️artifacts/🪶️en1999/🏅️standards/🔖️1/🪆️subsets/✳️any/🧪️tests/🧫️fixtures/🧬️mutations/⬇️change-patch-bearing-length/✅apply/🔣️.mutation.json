@@ -1,0 +1,5 @@
+{
+  "mutation": "changePatchBearingLength",
+  "patchLoadId": "patch-1",
+  "newBearingLength": 0.1
+}

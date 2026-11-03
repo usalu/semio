@@ -9,7 +9,7 @@ fn decoded() -> En1995Snapshot {
 
 fn report() -> CheckReport {
     let snap = decoded();
-    evaluate_structure(snap.annex, &snap.members, &snap.connections)
+    evaluate_structure(&snap)
 }
 
 #[test]

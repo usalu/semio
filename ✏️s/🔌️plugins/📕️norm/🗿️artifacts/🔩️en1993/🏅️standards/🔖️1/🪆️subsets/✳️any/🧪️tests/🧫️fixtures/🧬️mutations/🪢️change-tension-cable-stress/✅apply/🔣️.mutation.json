@@ -1,0 +1,6 @@
+{
+  "ChangeTensionCableStress": {
+    "id": "ten-1",
+    "newCableStress": 1.5
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "ChangeLoadDispersalWheelWidth": {
+    "id": "load-dispersal-1",
+    "newWheelWidth": 3.0
+  }
+}

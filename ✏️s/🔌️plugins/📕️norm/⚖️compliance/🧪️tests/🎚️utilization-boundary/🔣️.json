@@ -1,0 +1,12 @@
+{
+  "tolerance": 1e-9,
+  "cases": [
+    { "id": "exactly-one", "utilization": 1.0, "status": "pass" },
+    { "id": "one-plus-1e-12", "utilization": 1.000000000001, "status": "pass" },
+    { "id": "one-plus-tolerance-half", "utilization": 1.0000000005, "status": "pass" },
+    { "id": "one-plus-1e-6", "utilization": 1.000001, "status": "fail" },
+    { "id": "one-plus-2e-9", "utilization": 1.000000002, "status": "fail" },
+    { "id": "well-below", "utilization": 0.5, "status": "pass" },
+    { "id": "well-above", "utilization": 2.0, "status": "fail" }
+  ]
+}

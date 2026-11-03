@@ -48,6 +48,10 @@ export async function receive(message: BrowserFrameUiMessage): Promise<void> {
     ownedStep("host-appearance", () => bindings?.semioWgpuSetHostAppearance?.(message.appearance.preference, message.appearance.systemDark));
     return;
   }
+  if (message.kind === "host-platform-prefs") {
+    ownedStep("host-platform-prefs", () => bindings?.semioWgpuSetHostPlatformPrefs?.(message.platformPrefs.forcedColors, message.platformPrefs.prefersContrastMore, message.platformPrefs.prefersDark, message.platformPrefs.prefersReducedMotion));
+    return;
+  }
   if (message.kind === "host-introduction-policy") {
     ownedStep("host-introduction-policy", () => bindings?.semioWgpuSetHostIntroductionSuppressed?.(message.suppressed));
     return;

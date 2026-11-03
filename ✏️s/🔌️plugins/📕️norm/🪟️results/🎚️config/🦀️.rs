@@ -5,8 +5,6 @@
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_os_kernel as vcs;
-extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
 pub use crate::mutations::change_selected_check_index::ChangeSelectedCheckIndex;
@@ -61,7 +59,7 @@ where
     view.window::<O>().cloned().unwrap_or_default()
 }
 
-/// 🎯️ Addresses selection to a concrete Results instance, including a panel's focused window.
+/// 🎯️ Addresses selection to a concrete Results instance: the addressed or focused window when it is one, else the document's first Results window, so the outliner and properties windows select through the checks window.
 pub fn addressed<O>(
     view: &semio_framework_plugin::ViewModel,
     mutation: NormResultsWindowConfigMutation,
@@ -69,20 +67,14 @@ pub fn addressed<O>(
 where
     O: semio_framework_plugin::WindowConfigOwner<State = NormResultsWindowConfig, Mutation = NormResultsWindowConfigMutation>,
 {
-    let id = view
-        .window_id
-        .as_deref()
-        .or(view.focused_window_id.as_deref())
-        .ok_or_else(|| semio_framework_plugin::Fault::from("norm-results-window-required"))?;
-    let kind = view
-        .window_instances
-        .iter()
-        .find(|window| window.id == id)
-        .map(|window| window.window_kind_id.as_str())
-        .ok_or_else(|| semio_framework_plugin::Fault::from("norm-results-window-stale"))?;
-    if kind != O::WINDOW_KIND_ID {
-        return Err(semio_framework_plugin::Fault::from("norm-results-window-kind-required"));
-    }
+    let owner = |window: &&semio_framework_plugin::ViewWindowInstance| window.window_kind_id == O::WINDOW_KIND_ID;
+    let named = view.window_id.as_deref().into_iter().chain(view.focused_window_id.as_deref());
+    let id = named
+        .filter_map(|id| view.window_instances.iter().find(|window| window.id == id))
+        .find(owner)
+        .or_else(|| view.window_instances.iter().find(owner))
+        .map(|window| window.id.as_str())
+        .ok_or_else(|| semio_framework_plugin::Fault::from(if view.window_instances.is_empty() { "norm-results-window-required" } else { "norm-results-window-stale" }))?;
     Ok(semio_framework_plugin::WindowConfigMutation::of::<O>(id, mutation))
 }
 

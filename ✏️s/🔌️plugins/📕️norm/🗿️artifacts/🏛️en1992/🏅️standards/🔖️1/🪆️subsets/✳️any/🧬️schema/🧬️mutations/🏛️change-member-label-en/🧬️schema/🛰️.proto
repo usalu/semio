@@ -1,0 +1,6 @@
+syntax = "proto3";
+package semio.s.norm.en1992.mutation.change_member_label_en;
+message ChangeMemberLabelEn {
+  string member_id = 1;
+  string new_label_en = 2;
+}

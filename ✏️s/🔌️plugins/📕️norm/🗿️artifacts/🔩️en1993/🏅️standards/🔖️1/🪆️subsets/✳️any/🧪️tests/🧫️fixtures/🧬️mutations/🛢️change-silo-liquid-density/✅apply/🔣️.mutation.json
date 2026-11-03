@@ -1,0 +1,6 @@
+{
+  "ChangeSiloLiquidDensity": {
+    "id": "silo-1",
+    "newLiquidDensity": 1.5
+  }
+}

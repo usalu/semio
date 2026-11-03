@@ -1,0 +1,5 @@
+{
+  "mutation": "changeSlopeWidth",
+  "id": "slope-S1",
+  "newWidth": 1.5
+}

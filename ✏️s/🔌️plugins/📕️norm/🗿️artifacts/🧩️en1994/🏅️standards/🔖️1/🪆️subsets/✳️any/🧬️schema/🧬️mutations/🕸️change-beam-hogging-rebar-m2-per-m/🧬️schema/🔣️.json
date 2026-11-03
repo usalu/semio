@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-beam-hogging-rebar-m2-per-m/schema.json",
+  "title": "ChangeBeamHoggingRebarM2PerM",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newAsHoggingM2PerM"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Composite beam",
+          "de": "Verbundträger"
+        },
+        "description": {
+          "en": "The composite beam this mutation addresses, by id.",
+          "de": "Das adressierte Element (Verbundträger), per Kennung."
+        },
+        "ref": {
+          "kind": "beam"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newAsHoggingM2PerM": {
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Hogging reinforcement per metre",
+          "de": "Stützbewehrung je Meter"
+        },
+        "unit": "m2/m",
+        "step": 0.00001,
+        "precision": 6,
+        "group": "beam",
+        "order": 20
+      }
+    }
+  }
+}

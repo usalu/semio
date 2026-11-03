@@ -4,8 +4,8 @@ use super::*;
 
 /// 🩹️ Sparse patch of the `catalogue.product_groups` row addressed by its key.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct Iso16757ProductGroupsPatch {
     pub name: Option<String>,
@@ -36,17 +36,28 @@ impl protocol::list_delta::RowPatch<semio_s_artifact_norm_iso16757_model::part_1
     }
 }
 
+/// 🔑️ Key extractor of the foreign `ProductGroup` rows (`id`).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Iso16757ProductGroupsRowsKey;
+
+impl protocol::list_delta::KeyOf<semio_s_artifact_norm_iso16757_model::part_1::ProductGroup> for Iso16757ProductGroupsRowsKey {
+    type Key = String;
+    fn key_of(row: &semio_s_artifact_norm_iso16757_model::part_1::ProductGroup) -> String {
+        row.id.clone()
+    }
+}
+
 protocol::list_delta! {
-    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
     /// 📋️ Positional row delta of the `catalogue.product_groups` list (rows keyed by `id`).
-    pub Iso16757ProductGroupsRows { removal: Iso16757ProductGroupsRemoved, insertion: Iso16757ProductGroupsInserted, relocation: Iso16757ProductGroupsMoved, modification: Iso16757ProductGroupsModified, row: semio_s_artifact_norm_iso16757_model::part_1::ProductGroup, patch: Iso16757ProductGroupsPatch, key: id }
+    pub Iso16757ProductGroupsRows { removal: Iso16757ProductGroupsRemoved, insertion: Iso16757ProductGroupsInserted, relocation: Iso16757ProductGroupsMoved, modification: Iso16757ProductGroupsModified, row: semio_s_artifact_norm_iso16757_model::part_1::ProductGroup, patch: Iso16757ProductGroupsPatch, list: Vec<semio_s_artifact_norm_iso16757_model::part_1::ProductGroup>, key: String = by Iso16757ProductGroupsRowsKey }
 }
 
 /// 🩹️ Sparse patch of the `catalogue.product_classes` row addressed by its key.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct Iso16757ProductClassesPatch {
     pub group_id: Option<String>,
@@ -109,17 +120,28 @@ impl protocol::list_delta::RowPatch<semio_s_artifact_norm_iso16757_model::part_1
     }
 }
 
+/// 🔑️ Key extractor of the foreign `ProductClass` rows (`id`).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Iso16757ProductClassesRowsKey;
+
+impl protocol::list_delta::KeyOf<semio_s_artifact_norm_iso16757_model::part_1::ProductClass> for Iso16757ProductClassesRowsKey {
+    type Key = String;
+    fn key_of(row: &semio_s_artifact_norm_iso16757_model::part_1::ProductClass) -> String {
+        row.id.clone()
+    }
+}
+
 protocol::list_delta! {
-    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
     /// 📋️ Positional row delta of the `catalogue.product_classes` list (rows keyed by `id`).
-    pub Iso16757ProductClassesRows { removal: Iso16757ProductClassesRemoved, insertion: Iso16757ProductClassesInserted, relocation: Iso16757ProductClassesMoved, modification: Iso16757ProductClassesModified, row: semio_s_artifact_norm_iso16757_model::part_1::ProductClass, patch: Iso16757ProductClassesPatch, key: id }
+    pub Iso16757ProductClassesRows { removal: Iso16757ProductClassesRemoved, insertion: Iso16757ProductClassesInserted, relocation: Iso16757ProductClassesMoved, modification: Iso16757ProductClassesModified, row: semio_s_artifact_norm_iso16757_model::part_1::ProductClass, patch: Iso16757ProductClassesPatch, list: Vec<semio_s_artifact_norm_iso16757_model::part_1::ProductClass>, key: String = by Iso16757ProductClassesRowsKey }
 }
 
 /// 🩹️ Sparse patch of the `catalogue.product_series` row addressed by its key.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct Iso16757ProductSeriesPatch {
     pub class_id: Option<String>,
@@ -174,17 +196,28 @@ impl protocol::list_delta::RowPatch<semio_s_artifact_norm_iso16757_model::part_1
     }
 }
 
+/// 🔑️ Key extractor of the foreign `ProductSeries` rows (`id`).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Iso16757ProductSeriesRowsKey;
+
+impl protocol::list_delta::KeyOf<semio_s_artifact_norm_iso16757_model::part_1::ProductSeries> for Iso16757ProductSeriesRowsKey {
+    type Key = String;
+    fn key_of(row: &semio_s_artifact_norm_iso16757_model::part_1::ProductSeries) -> String {
+        row.id.clone()
+    }
+}
+
 protocol::list_delta! {
-    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
     /// 📋️ Positional row delta of the `catalogue.product_series` list (rows keyed by `id`).
-    pub Iso16757ProductSeriesRows { removal: Iso16757ProductSeriesRemoved, insertion: Iso16757ProductSeriesInserted, relocation: Iso16757ProductSeriesMoved, modification: Iso16757ProductSeriesModified, row: semio_s_artifact_norm_iso16757_model::part_1::ProductSeries, patch: Iso16757ProductSeriesPatch, key: id }
+    pub Iso16757ProductSeriesRows { removal: Iso16757ProductSeriesRemoved, insertion: Iso16757ProductSeriesInserted, relocation: Iso16757ProductSeriesMoved, modification: Iso16757ProductSeriesModified, row: semio_s_artifact_norm_iso16757_model::part_1::ProductSeries, patch: Iso16757ProductSeriesPatch, list: Vec<semio_s_artifact_norm_iso16757_model::part_1::ProductSeries>, key: String = by Iso16757ProductSeriesRowsKey }
 }
 
 /// 🩹️ Sparse patch of the `catalogue.products` row addressed by its key.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct Iso16757ProductsPatch {
     pub name: Option<String>,
@@ -215,17 +248,28 @@ impl protocol::list_delta::RowPatch<semio_s_artifact_norm_iso16757_model::part_1
     }
 }
 
+/// 🔑️ Key extractor of the foreign `Product` rows (`id`).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Iso16757ProductsRowsKey;
+
+impl protocol::list_delta::KeyOf<semio_s_artifact_norm_iso16757_model::part_1::Product> for Iso16757ProductsRowsKey {
+    type Key = String;
+    fn key_of(row: &semio_s_artifact_norm_iso16757_model::part_1::Product) -> String {
+        row.id.clone()
+    }
+}
+
 protocol::list_delta! {
-    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
     /// 📋️ Positional row delta of the `catalogue.products` list (rows keyed by `id`).
-    pub Iso16757ProductsRows { removal: Iso16757ProductsRemoved, insertion: Iso16757ProductsInserted, relocation: Iso16757ProductsMoved, modification: Iso16757ProductsModified, row: semio_s_artifact_norm_iso16757_model::part_1::Product, patch: Iso16757ProductsPatch, key: id }
+    pub Iso16757ProductsRows { removal: Iso16757ProductsRemoved, insertion: Iso16757ProductsInserted, relocation: Iso16757ProductsMoved, modification: Iso16757ProductsModified, row: semio_s_artifact_norm_iso16757_model::part_1::Product, patch: Iso16757ProductsPatch, list: Vec<semio_s_artifact_norm_iso16757_model::part_1::Product>, key: String = by Iso16757ProductsRowsKey }
 }
 
 /// 🩹️ Sparse patch of the `catalogue.product_indexes` row addressed by its key.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct Iso16757ProductIndexesPatch {
     pub product_id: Option<String>,
@@ -272,17 +316,28 @@ impl protocol::list_delta::RowPatch<semio_s_artifact_norm_iso16757_model::part_1
     }
 }
 
+/// 🔑️ Key extractor of the foreign `ProductIndex` rows (`id`).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Iso16757ProductIndexesRowsKey;
+
+impl protocol::list_delta::KeyOf<semio_s_artifact_norm_iso16757_model::part_1::ProductIndex> for Iso16757ProductIndexesRowsKey {
+    type Key = String;
+    fn key_of(row: &semio_s_artifact_norm_iso16757_model::part_1::ProductIndex) -> String {
+        row.id.clone()
+    }
+}
+
 protocol::list_delta! {
-    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
     /// 📋️ Positional row delta of the `catalogue.product_indexes` list (rows keyed by `id`).
-    pub Iso16757ProductIndexesRows { removal: Iso16757ProductIndexesRemoved, insertion: Iso16757ProductIndexesInserted, relocation: Iso16757ProductIndexesMoved, modification: Iso16757ProductIndexesModified, row: semio_s_artifact_norm_iso16757_model::part_1::ProductIndex, patch: Iso16757ProductIndexesPatch, key: id }
+    pub Iso16757ProductIndexesRows { removal: Iso16757ProductIndexesRemoved, insertion: Iso16757ProductIndexesInserted, relocation: Iso16757ProductIndexesMoved, modification: Iso16757ProductIndexesModified, row: semio_s_artifact_norm_iso16757_model::part_1::ProductIndex, patch: Iso16757ProductIndexesPatch, list: Vec<semio_s_artifact_norm_iso16757_model::part_1::ProductIndex>, key: String = by Iso16757ProductIndexesRowsKey }
 }
 
 /// 🩹️ Sparse patch of the `catalogue.property_definitions` row addressed by its key.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct Iso16757PropertyDefinitionsPatch {
     pub names: Option<semio_s_artifact_norm_iso16757_model::Names>,
@@ -353,17 +408,28 @@ impl protocol::list_delta::RowPatch<semio_s_artifact_norm_iso16757_model::part_1
     }
 }
 
+/// 🔑️ Key extractor of the foreign `PropertyDefinition` rows (`id`).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Iso16757PropertyDefinitionsRowsKey;
+
+impl protocol::list_delta::KeyOf<semio_s_artifact_norm_iso16757_model::part_1::PropertyDefinition> for Iso16757PropertyDefinitionsRowsKey {
+    type Key = String;
+    fn key_of(row: &semio_s_artifact_norm_iso16757_model::part_1::PropertyDefinition) -> String {
+        row.id.clone()
+    }
+}
+
 protocol::list_delta! {
-    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
     /// 📋️ Positional row delta of the `catalogue.property_definitions` list (rows keyed by `id`).
-    pub Iso16757PropertyDefinitionsRows { removal: Iso16757PropertyDefinitionsRemoved, insertion: Iso16757PropertyDefinitionsInserted, relocation: Iso16757PropertyDefinitionsMoved, modification: Iso16757PropertyDefinitionsModified, row: semio_s_artifact_norm_iso16757_model::part_1::PropertyDefinition, patch: Iso16757PropertyDefinitionsPatch, key: id }
+    pub Iso16757PropertyDefinitionsRows { removal: Iso16757PropertyDefinitionsRemoved, insertion: Iso16757PropertyDefinitionsInserted, relocation: Iso16757PropertyDefinitionsMoved, modification: Iso16757PropertyDefinitionsModified, row: semio_s_artifact_norm_iso16757_model::part_1::PropertyDefinition, patch: Iso16757PropertyDefinitionsPatch, list: Vec<semio_s_artifact_norm_iso16757_model::part_1::PropertyDefinition>, key: String = by Iso16757PropertyDefinitionsRowsKey }
 }
 
 /// 🩹️ Sparse patch of the `dictionary.subjects` row addressed by its key.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct Iso16757SubjectsPatch {
     pub kind: Option<semio_s_artifact_norm_iso16757_model::part_4::SubjectKind>,
@@ -418,9 +484,20 @@ impl protocol::list_delta::RowPatch<semio_s_artifact_norm_iso16757_model::part_4
     }
 }
 
+/// 🔑️ Key extractor of the foreign `Subject` rows (`id`).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Iso16757SubjectsRowsKey;
+
+impl protocol::list_delta::KeyOf<semio_s_artifact_norm_iso16757_model::part_4::Subject> for Iso16757SubjectsRowsKey {
+    type Key = String;
+    fn key_of(row: &semio_s_artifact_norm_iso16757_model::part_4::Subject) -> String {
+        row.id.clone()
+    }
+}
+
 protocol::list_delta! {
-    #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-    #[cfg_attr(test, serde(rename_all = "camelCase"))]
+    #[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
     /// 📋️ Positional row delta of the `dictionary.subjects` list (rows keyed by `id`).
-    pub Iso16757SubjectsRows { removal: Iso16757SubjectsRemoved, insertion: Iso16757SubjectsInserted, relocation: Iso16757SubjectsMoved, modification: Iso16757SubjectsModified, row: semio_s_artifact_norm_iso16757_model::part_4::Subject, patch: Iso16757SubjectsPatch, key: id }
+    pub Iso16757SubjectsRows { removal: Iso16757SubjectsRemoved, insertion: Iso16757SubjectsInserted, relocation: Iso16757SubjectsMoved, modification: Iso16757SubjectsModified, row: semio_s_artifact_norm_iso16757_model::part_4::Subject, patch: Iso16757SubjectsPatch, list: Vec<semio_s_artifact_norm_iso16757_model::part_4::Subject>, key: String = by Iso16757SubjectsRowsKey }
 }

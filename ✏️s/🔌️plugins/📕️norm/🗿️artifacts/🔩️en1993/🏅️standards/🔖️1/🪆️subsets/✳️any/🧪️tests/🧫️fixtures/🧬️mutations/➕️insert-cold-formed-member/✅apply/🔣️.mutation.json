@@ -1,0 +1,41 @@
+{
+  "InsertColdFormedMember": {
+    "index": 1,
+    "coldFormedMember": {
+      "id": "cf-1-2",
+      "bBar": 0.08,
+      "thickness": 0.003,
+      "kSigma": 4.0,
+      "psi": 1.0,
+      "fy": 350000000.0,
+      "grossResistance": 80000.0,
+      "actions": [
+        {
+          "id": "cf-g",
+          "loadCaseId": "g-permanent",
+          "force": 20000.0
+        }
+      ],
+      "flangeWidth": 0.0,
+      "lipLength": 0.0,
+      "webHeight": 0.0,
+      "webSlope": 90.0,
+      "oppositeFlangeWidth": 0.0,
+      "springFactor": 1.0,
+      "cornerRadius": 0.0,
+      "flangeStress": 0.0,
+      "shearForce": 0.0,
+      "supportReaction": 0.0,
+      "supportLength": 0.0,
+      "cripplingCategory": 2,
+      "stiffenedSupport": 0,
+      "bendingMoment": 0.0,
+      "momentResistance": 0.0,
+      "sheetingStiffness": 0.0,
+      "requiredRestraintStiffness": 0.0,
+      "purlinSpan": 0.0,
+      "purlinLoad": 0.0,
+      "purlinLateralRatio": 0.0
+    }
+  }
+}

@@ -6,29 +6,29 @@
   "additionalProperties": false,
   "required": [
     "mutation",
-    "index",
+    "id",
     "newRKN"
   ],
   "properties": {
     "mutation": {
       "const": "changeAssessmentRKN"
     },
-    "index": {
-      "type": "integer",
-      "minimum": 0,
+    "id": {
+      "type": "string",
       "x-semio-ui": {
-        "widget": "stepper",
-        "role": "value",
+        "widget": "reference",
+        "role": "target",
         "label": {
           "en": "Assessed element",
           "de": "Bewertetes Bauteil"
         },
         "description": {
-          "en": "Zero-based position of the assessed element in its list.",
-          "de": "Nullbasierte Position des bewerteten Bauteils in der Liste."
+          "en": "The assessed element this mutation addresses, by id.",
+          "de": "Das adressierte Element (Bewertetes Bauteil), per Kennung."
         },
-        "step": 1,
-        "precision": 0,
+        "ref": {
+          "kind": "assessment"
+        },
         "group": "target",
         "order": 10
       }

@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-fastened-joint-shear-resistance/schema.json",
+  "title": "ChangeFastenedJointShearResistance",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newShearResistance"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Fastened joint",
+          "de": "Befestigungsverbindung"
+        },
+        "description": {
+          "en": "The fastened joint this mutation addresses, by id.",
+          "de": "Das adressierte Element (Befestigungsverbindung), per Kennung."
+        },
+        "ref": {
+          "kind": "fastened-joints"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newShearResistance": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "ShearResistance at failure",
+          "de": "Abscherwiderstand F_v,Rd"
+        },
+        "widget": "stepper",
+        "role": "value",
+        "group": "value",
+        "order": 20,
+        "unit": "N",
+        "displayUnit": "kN",
+        "displayFactor": 0.001,
+        "precision": 1,
+        "step": 1000
+      }
+    }
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "annex": null,
+  "reliabilityClass": null,
+  "materials": null,
+  "sections": null,
+  "members": null,
+  "connections": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "connection",
+        "patch": {
+          "memberId": null,
+          "materialId": null,
+          "kind": null,
+          "boltsMaterial": null,
+          "boltsDiameter": null,
+          "boltsRows": null,
+          "boltsBoltsPerRow": null,
+          "boltsEdgeDistance": null,
+          "boltsPitch": null,
+          "boltsGauge": null,
+          "boltsPlateThickness": null,
+          "weldsFillerAlloy": null,
+          "weldsThroat": null,
+          "weldsLength": null,
+          "weldsBetaW": null,
+          "weldsHazExtent": null,
+          "actions": null,
+          "loadEccentricity": null,
+          "holeStagger": 1.5
+        }
+      }
+    ]
+  },
+  "fireScenarios": null,
+  "fatigueDetails": null,
+  "coldFormed": null,
+  "shells": null,
+  "placements": null,
+  "weldRuns": null,
+  "outlineVertices": null,
+  "fatigueCategories": null,
+  "patchLoads": null,
+  "ringStiffeners": null,
+  "transverseStiffeners": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  }
+}

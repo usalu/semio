@@ -1,0 +1,166 @@
+{
+  "$schema": "../../../../../../../../../🔮️oracles/🏃️harness/🧬️schema/🔣️.json",
+  "schemaVersion": 1,
+  "artifact": "en1998",
+  "annex": "De",
+  "cases": [
+    {
+      "id": "en1998.mechanics.lateral-force-frame-three-storey",
+      "check": "mechanics.lateral-frame",
+      "citation": {
+        "standard": "EN 1998-1",
+        "edition": "2004",
+        "clause": "4.3.3.2.3 Eq. 4.11 lateral forces on a planar frame; 4.4.3.2 interstorey drift"
+      },
+      "inputs": {
+        "E": 210000000000.0,
+        "A": 0.00538,
+        "I_col": 8.356e-05,
+        "I_beam": 0.008356,
+        "h": [
+          3.5,
+          3.2,
+          3.2
+        ],
+        "span": 6.0,
+        "F": [
+          40000.0,
+          80000.0,
+          120000.0
+        ]
+      },
+      "expected": {
+        "u_1": {
+          "value": 0.025287295909524117,
+          "unit": "m",
+          "profile": "numerical-v1"
+        },
+        "u_2": {
+          "value": 0.04243998595371638,
+          "unit": "m",
+          "profile": "numerical-v1"
+        },
+        "u_3": {
+          "value": 0.05334534578071746,
+          "unit": "m",
+          "profile": "numerical-v1"
+        },
+        "drift_1": {
+          "value": 0.025287295909524117,
+          "unit": "m",
+          "profile": "numerical-v1"
+        },
+        "drift_2": {
+          "value": 0.017152690044192266,
+          "unit": "m",
+          "profile": "numerical-v1"
+        },
+        "drift_3": {
+          "value": 0.010905359827001075,
+          "unit": "m",
+          "profile": "numerical-v1"
+        },
+        "V_base": {
+          "value": 240000.00000000047,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "M_base_left": {
+          "value": 212735.38595985007,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        },
+        "M_base_right": {
+          "value": 211851.29713199887,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-pynite",
+          "adapter": "pynite",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-anastruct",
+          "adapter": "anastruct",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1998.mechanics.lateral-force-frame-two-storey",
+      "check": "mechanics.lateral-frame",
+      "citation": {
+        "standard": "EN 1998-1",
+        "edition": "2004",
+        "clause": "4.3.3.2.3 Eq. 4.11 lateral forces on a planar frame; 4.4.3.2 interstorey drift"
+      },
+      "inputs": {
+        "E": 210000000000.0,
+        "A": 0.00538,
+        "I_col": 8.356e-05,
+        "I_beam": 0.008356,
+        "h": [
+          4.0,
+          3.0
+        ],
+        "span": 7.5,
+        "F": [
+          60000.0,
+          90000.0
+        ]
+      },
+      "expected": {
+        "u_1": {
+          "value": 0.02334550159390982,
+          "unit": "m",
+          "profile": "numerical-v1"
+        },
+        "u_2": {
+          "value": 0.029701357477477767,
+          "unit": "m",
+          "profile": "numerical-v1"
+        },
+        "drift_1": {
+          "value": 0.02334550159390982,
+          "unit": "m",
+          "profile": "numerical-v1"
+        },
+        "drift_2": {
+          "value": 0.0063558558835679485,
+          "unit": "m",
+          "profile": "numerical-v1"
+        },
+        "V_base": {
+          "value": 149999.99999999965,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "M_base_left": {
+          "value": 151623.5106193684,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        },
+        "M_base_right": {
+          "value": 150353.66679639544,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-pynite",
+          "adapter": "pynite",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-anastruct",
+          "adapter": "anastruct",
+          "kind": "third-party-library"
+        }
+      ]
+    }
+  ]
+}

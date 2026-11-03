@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/remove-panel-layer/schema.json",
+  "title": "RemovePanelLayer",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "panelId",
+    "id"
+  ],
+  "properties": {
+    "panelId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Panel",
+          "de": "Tafel"
+        },
+        "description": {
+          "en": "The panel this mutation addresses.",
+          "de": "Das Element, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "panel"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "PanelLayer",
+          "de": "Tafelschicht"
+        },
+        "description": {
+          "en": "The panel-layer this mutation addresses.",
+          "de": "Das Element, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "panel-layer"
+        },
+        "group": "target",
+        "order": 20
+      }
+    }
+  }
+}

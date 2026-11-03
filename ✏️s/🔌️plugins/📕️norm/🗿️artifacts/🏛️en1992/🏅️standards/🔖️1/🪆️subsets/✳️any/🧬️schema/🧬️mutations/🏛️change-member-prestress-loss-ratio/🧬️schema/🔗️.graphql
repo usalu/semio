@@ -1,0 +1,4 @@
+type ChangeMemberPrestressLossRatio {
+  memberId: String!
+  newPrestressLossRatio: Float!
+}

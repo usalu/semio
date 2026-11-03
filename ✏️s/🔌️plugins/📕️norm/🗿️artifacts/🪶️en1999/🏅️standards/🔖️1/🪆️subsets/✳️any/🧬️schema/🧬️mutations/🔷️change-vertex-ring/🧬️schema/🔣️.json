@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-vertex-ring/schema.json",
+  "title": "ChangeVertexRing",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "outlineVertexId",
+    "newRing"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeVertexRing"
+    },
+    "outlineVertexId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Outline vertex",
+          "de": "Umrissknoten"
+        },
+        "description": {
+          "en": "The outline vertex this mutation addresses, by id.",
+          "de": "Das adressierte Element (Umrissknoten), per Kennung."
+        },
+        "ref": {
+          "kind": "outline-vertex"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newRing": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/$defs/OutlineRing",
+      "x-semio-ui": {
+        "label": {
+          "en": "Ring (outer or hole name)",
+          "de": "Ring (outer oder Lochname)"
+        },
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

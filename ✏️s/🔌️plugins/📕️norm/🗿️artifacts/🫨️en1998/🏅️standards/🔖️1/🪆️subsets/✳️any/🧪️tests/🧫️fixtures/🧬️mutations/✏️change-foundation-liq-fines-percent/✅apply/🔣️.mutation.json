@@ -1,0 +1,5 @@
+{
+  "mutation": "changeFoundationLiqFinesPercent",
+  "id": "fd-1",
+  "newLiqFinesPercent": 1.5
+}

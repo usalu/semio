@@ -1,0 +1,6 @@
+{
+  "ChangeDerailmentDesignForceY": {
+    "id": "derailment-1",
+    "newDesignForceY": 3.0
+  }
+}

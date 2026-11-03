@@ -138,6 +138,22 @@ export type UiTranslationSchema = {
       readonly goHome: UiLabelValue;
       readonly spawnPrefix: UiLabelValue;
     };
+    /** ✏️ The polite refusal of the framework `focusRowControl` verb, for a row that holds no cell to type into. */
+    readonly rowControlFocus: {
+      readonly refused: UiLabelValue;
+    };
+    /** 🎯️ The polite announcements of the framework `focusWindow` verb; `{{name}}` is the window kind label, `{{device}}` the presented device. */
+    readonly windowFocus: {
+      readonly raised: UiLabelValue;
+      readonly opened: UiLabelValue;
+      readonly refused: UiLabelValue;
+      readonly unavailable: UiLabelValue;
+      readonly device: {
+        readonly desktop: UiLabelValue;
+        readonly mobile: UiLabelValue;
+        readonly tablet: UiLabelValue;
+      };
+    };
     readonly panel: {
       readonly artifact: UiLabelValue;
       readonly catalogue: UiLabelValue;

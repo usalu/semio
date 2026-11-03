@@ -1,0 +1,13 @@
+{
+  "InsertSupportCollision": {
+    "index": 1,
+    "item": {
+      "id": "support-collision-2",
+      "location": "deck",
+      "assumedForceX": 1000000.0,
+      "assumedForceY": 500000.0,
+      "height": 1.25,
+      "positionX": 10.0
+    }
+  }
+}

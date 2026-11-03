@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-opening-y/schema.json",
+  "title": "ChangeOpeningY",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "memberId",
+    "openingId",
+    "newY"
+  ],
+  "properties": {
+    "memberId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Member",
+          "de": "Bauteil"
+        },
+        "description": {
+          "en": "The member this mutation addresses, by id.",
+          "de": "Das adressierte Element (Bauteil), per Kennung."
+        },
+        "ref": {
+          "kind": "member"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "openingId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Opening",
+          "de": "Öffnung"
+        },
+        "description": {
+          "en": "The opening this mutation addresses, by id.",
+          "de": "Das adressierte Element (Öffnung), per Kennung."
+        },
+        "ref": {
+          "kind": "opening"
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "newY": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Opening centre y (column frame)",
+          "de": "Öffnungsmitte y (Stützenachsen)"
+        },
+        "widget": "stepper",
+        "unit": "m",
+        "displayUnit": "mm",
+        "displayFactor": 1000,
+        "precision": 0,
+        "step": 0.01,
+        "role": "value",
+        "group": "value",
+        "order": 30
+      }
+    }
+  }
+}

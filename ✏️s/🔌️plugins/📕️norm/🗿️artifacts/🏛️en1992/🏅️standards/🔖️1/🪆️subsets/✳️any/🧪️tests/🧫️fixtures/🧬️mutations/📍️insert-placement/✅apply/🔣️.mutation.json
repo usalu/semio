@@ -1,0 +1,12 @@
+{
+  "InsertPlacement": {
+    "index": 1,
+    "placement": {
+      "id": "wall-W1-new",
+      "x": 1.0,
+      "y": 0.5,
+      "z": 0.0,
+      "yaw": 0.25
+    }
+  }
+}

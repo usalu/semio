@@ -1,0 +1,5 @@
+{
+  "mutation": "changePlacementZ",
+  "id": "bldg-office",
+  "newZ": 1.0
+}

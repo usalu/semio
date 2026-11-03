@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-pile-design-life/schema.json",
+  "title": "ChangePileDesignLife",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newDesignLife"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Pile",
+          "de": "Pfahl"
+        },
+        "description": {
+          "en": "The pile this mutation addresses, by id.",
+          "de": "Das adressierte Element (Pfahl), per Kennung."
+        },
+        "ref": {
+          "kind": "pile"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newDesignLife": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Design life",
+          "de": "Nutzungsdauer"
+        },
+        "widget": "stepper",
+        "unit": "a",
+        "precision": 0,
+        "step": 1,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

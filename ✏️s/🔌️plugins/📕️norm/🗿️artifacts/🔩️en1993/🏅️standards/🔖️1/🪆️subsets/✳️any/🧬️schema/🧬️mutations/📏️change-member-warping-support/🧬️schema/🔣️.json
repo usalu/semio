@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-member-warping-support/schema.json",
+  "title": "ChangeMemberWarpingSupport",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newWarpingSupport"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Member",
+          "de": "Bauteil"
+        },
+        "description": {
+          "en": "The member this mutation addresses, by id.",
+          "de": "Das adressierte Element (Bauteil), per Kennung."
+        },
+        "ref": {
+          "kind": "member"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newWarpingSupport": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/WarpingSupport",
+      "x-semio-ui": {
+        "label": {
+          "en": "Torsion and warping end conditions of the member for the bimoment row (EN 1993-1-1 6.2.7): fork, both ends restrained, restrained at the start with fork end, or cantilever",
+          "de": "Torsions- und Wölblagerung der Bauteilenden für die Bimomentzeile (EN 1993-1-1 6.2.7): Gabel, beidseitig eingespannt, Anfang eingespannt mit Gabelende oder Kragarm"
+        },
+        "role": "value",
+        "group": "value",
+        "order": 20
+      },
+      "x-semio-rust": {
+        "type": "semio_s_artifact_norm_en1993_model::WarpingSupport"
+      }
+    }
+  }
+}

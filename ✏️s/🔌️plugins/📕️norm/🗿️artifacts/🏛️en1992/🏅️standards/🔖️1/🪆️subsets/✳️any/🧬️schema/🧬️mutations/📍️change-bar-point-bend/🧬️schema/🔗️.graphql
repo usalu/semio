@@ -1,0 +1,5 @@
+type ChangeBarPointBend {
+  memberId: String!
+  barId: String!
+  newBend: BarBend!
+}

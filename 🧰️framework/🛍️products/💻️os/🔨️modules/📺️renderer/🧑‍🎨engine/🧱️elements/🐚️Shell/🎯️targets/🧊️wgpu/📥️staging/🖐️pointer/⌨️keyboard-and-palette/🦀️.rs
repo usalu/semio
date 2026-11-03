@@ -9,6 +9,7 @@ mod deferred_and_menus;
 
 #[path = "⌨️keyboard/🦀️.rs"]
 mod keyboard_handling;
+pub use keyboard_handling::is_context_menu_chord;
 
 #[path = "🔎️pump-activation/🦀️.rs"]
 mod pump_cross_and_activation;

@@ -77,6 +77,7 @@ pub fn plugin() -> Result<Plugin<NormApps>, PluginAssemblyError> {
         .label("Norm")
         .version("0.1.0")
         .package_id("semio:norm")
+        .shell_hooks(std::sync::Arc::new(semio_s_plugin_norm_app_surface::NormShellHooks))
         .artifact(din4108)
         .artifact(din16798)
         .artifact(din18599)

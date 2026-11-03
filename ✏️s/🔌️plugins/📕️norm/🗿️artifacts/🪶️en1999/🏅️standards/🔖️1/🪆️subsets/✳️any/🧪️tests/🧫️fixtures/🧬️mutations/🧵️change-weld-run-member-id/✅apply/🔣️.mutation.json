@@ -1,0 +1,5 @@
+{
+  "mutation": "changeWeldRunMemberId",
+  "weldRunId": "weld-1",
+  "newMemberId": "post-chs"
+}

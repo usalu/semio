@@ -1,0 +1,20 @@
+{
+  "InsertStorey": {
+    "index": 1,
+    "storey": {
+      "id": "storey-1-2",
+      "memberId": "member-b1",
+      "label": "Storey 1",
+      "height": 4.0,
+      "verticalLoad": 400000.0,
+      "horizontalLoad": 20000.0,
+      "drift": 0.002,
+      "columns": 2,
+      "plasticAnalysis": 0,
+      "buildingHeight": 4.0,
+      "bracingLoad": 0.0,
+      "bracingLength": 0.0,
+      "bracingDeflection": 0.0
+    }
+  }
+}

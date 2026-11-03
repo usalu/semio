@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-pier-height-m/schema.json",
+  "title": "ChangePierHeightM",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newHeightM"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changePierHeightM"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Pier",
+          "de": "Pfeiler"
+        },
+        "description": {
+          "en": "The pier this mutation addresses, by id.",
+          "de": "Das adressierte Element (Pfeiler), per Kennung."
+        },
+        "ref": {
+          "kind": "pier"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newHeightM": {
+      "type": "number",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Clear pier height from the foundation to the bearing level",
+          "de": "Lichte Pfeilerhöhe von der Gründung bis zur Lagerebene"
+        },
+        "group": "value",
+        "order": 20,
+        "widget": "stepper",
+        "step": 0.001,
+        "precision": 3
+      }
+    }
+  }
+}

@@ -313,6 +313,19 @@ pub(super) mod native {
         semio_framework_os_renderer_wgpu_host_base::set_host_appearance(semio_framework_os_renderer_wgpu_host_base::HostAppearance { system_dark: matches!(theme, winit::window::Theme::Dark), ..semio_framework_os_renderer_wgpu_host_base::host_appearance() });
     }
 
+    /// 🎛️ Reads the accessibility preferences of the operating system (high contrast, more contrast, dark scheme, reduced motion) into [`semio_framework_os_renderer_wgpu_host_base::publish_host_platform_prefs`]; `true` when one changed. The browser twin is the page thread forwarding its media queries, so a wasm realm reads nothing here.
+    // 🚫️async: U1 — called from winit's own sync `ApplicationHandler` callbacks.
+    #[cfg(not(target_arch = "wasm32"))]
+    fn publish_platform_prefs() -> bool {
+        let read = semio_framework_os_renderer_wgpu_native_platform::platform_prefs::detect();
+        semio_framework_os_renderer_wgpu_host_base::publish_host_platform_prefs(read.forced_colors, read.prefers_contrast_more, read.prefers_dark, read.prefers_reduced_motion)
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    fn publish_platform_prefs() -> bool {
+        false
+    }
+
     impl ApplicationHandler<HostUserEvent> for WinitApp {
         fn new_events(&mut self,event_loop:&ActiveEventLoop,cause:winit::event::StartCause){
             if matches!(cause,winit::event::StartCause::ResumeTimeReached{..})&&self.host.as_ref().is_some_and(|host|self.pending_reason.is_some()||!host.original_event_terminal_is_empty()||host.scheduler.next_deadline().is_some_and(|deadline|deadline.due<=host.now_seconds())){let _=self.frame_caller.observe_event();self.recompute_control_flow(event_loop);}
@@ -369,6 +382,7 @@ pub(super) mod native {
                 window.set_visible(true);
             }
             publish_system_appearance(window.theme());
+            publish_platform_prefs();
             self.window = Some(window.clone());
             let proxy = self.proxy.clone();
             let plugin_filter = self.plugin_filter.clone();
@@ -478,10 +492,22 @@ pub(super) mod native {
                 WindowEvent::ThemeChanged(theme) => {
                     let _=self.frame_caller.observe_event();
                     publish_system_appearance(Some(*theme));
+                    publish_platform_prefs();
                     if let Some(host) = self.host.as_mut() {
                         let now = host.now_seconds();
                         if invalidate_scheduler_redraw(&mut host.scheduler, &mut self.pending_reason, now, InvalidationReason::THEME).is_some() {
                             window.request_redraw();
+                        }
+                    }
+                }
+                WindowEvent::Focused(true) => {
+                    let _=self.frame_caller.observe_event();
+                    if publish_platform_prefs() {
+                        if let Some(host) = self.host.as_mut() {
+                            let now = host.now_seconds();
+                            if invalidate_scheduler_redraw(&mut host.scheduler, &mut self.pending_reason, now, InvalidationReason::THEME).is_some() {
+                                window.request_redraw();
+                            }
                         }
                     }
                 }

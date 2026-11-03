@@ -1,247 +1,122 @@
-//! 🌍️ Design working life and bridge annex checks of the EN 1990 compliance report: the working life, annex B and the A2 bridge serviceability. See [`super`].
+//! 🌍️ Design working life, Annex B quality levels and Annex A2 bridge serviceability of the EN 1990 compliance report. See [`super`].
 
 use super::*;
 
 //#region 🔖️ComplianceReport
 pub(super) fn push_design_working_life(report: &mut CheckReport, document: &En1990Snapshot) {
-    use semio_s_artifact_norm_en1990_checks::design_working_life_indicative;
-    let (lo, hi) = design_working_life_indicative(document.design_working_life_category);
     let years = document.design_working_life_years;
-    let bridge = is_bridge(&document.structure_kind);
+    let category = document.design_working_life_category;
     let years_subject = SubjectRef::new(document.project_id.clone(), "designWorkingLifeYears", copy("Design working life", "Nutzungsdauer"));
     let cat_subject = SubjectRef::new(document.project_id.clone(), "designWorkingLifeCategory", copy("Design working life category", "Nutzungskategorie"));
-
-    let years_ok = if bridge && document.design_working_life_category == 5 {
-        (years - 100.0).abs() < 1e-6
-    } else if bridge {
-        false
-    } else {
-        years + 1e-9 >= lo && years - 1e-9 <= hi
+    let clause = ClauseId::new("EN 1990", "§2.3", "Table 2.1");
+    let Some((lo, hi)) = design_working_life_indicative(category) else {
+        report.push(
+            CheckResult::assess("en1990.table-2.1.category", "EN 1990 §2.3", clause, cat_subject.clone(), copy("Design working life category", "Nutzungskategorie"))
+                .status(CheckStatus::Fail)
+                .annex(document.annex)
+                .explanation(copy(format!("Category {category} is not defined; Table 2.1 knows 1..5."), format!("Kategorie {category} ist nicht definiert; Tabelle 2.1 kennt 1..5.")))
+                .remedy(Remedy::one_of(cat_subject, (1..=5).map(|c| c.to_string()).collect(), copy("Set the design working life category to 1..5.", "Nutzungskategorie auf 1..5 setzen.")))
+                .build(),
+        );
+        return;
     };
-    let mut years_builder = CheckResult::assess(
-        "en1990.table-2.1.design-working-life",
-        "EN 1990 §2.3",
-        ClauseId::new("EN 1990", "§2.3", "Table 2.1"),
-        years_subject.clone(),
-        copy("Design working life Table 2.1", "Nutzungsdauer Tabelle 2.1"),
-    )
-    .annex(document.annex)
-    .explanation(copy(
-        format!("Project {}: category {} indicative [{lo:.0}; {hi:.0}] a; declared {years:.0} a.", document.project_id, document.design_working_life_category),
-        format!("Projekt {}: Kategorie {} indikativ [{lo:.0}; {hi:.0}] a; angegeben {years:.0} a.", document.project_id, document.design_working_life_category),
-    ));
-    if years_ok {
-        years_builder = years_builder.status(semio_s_plugin_norm_compliance::CheckStatus::Pass);
-    } else {
-        let required_years = if bridge { 100.0 } else { hi };
-        years_builder = years_builder.status(semio_s_plugin_norm_compliance::CheckStatus::Fail).remedy(Remedy::exactly(
-            years_subject,
-            q_dim(years),
-            q_dim(required_years),
-            copy(
-                format!("Set design working life years to {required_years:.0} a."),
-                format!("Nutzungsdauer auf {required_years:.0} a setzen."),
-            ),
+    let within = years + 1e-9 >= lo && years - 1e-9 <= hi;
+    let mut builder = CheckResult::assess("en1990.table-2.1.design-working-life", "EN 1990 §2.3", clause.clone(), years_subject.clone(), copy("Design working life Table 2.1", "Nutzungsdauer Tabelle 2.1"))
+        .utilization(q_dim(years), q_dim(hi))
+        .status(if within { CheckStatus::Pass } else { CheckStatus::Warning })
+        .annex(document.annex)
+        .explanation(copy(
+            format!("Project {}: category {category} indicative [{lo:.0}; {hi:.0}] a; declared {years:.0} a.", document.project_id),
+            format!("Projekt {}: Kategorie {category} indikativ [{lo:.0}; {hi:.0}] a; angegeben {years:.0} a.", document.project_id),
         ));
+    if !within {
+        let required = years.clamp(lo, hi);
+        builder = builder.remedy(Remedy::exactly(years_subject.clone(), q_dim(years), q_dim(required), copy(format!("Set design working life years to {required:.0} a."), format!("Nutzungsdauer auf {required:.0} a setzen."))));
     }
-    let mut years_built = years_builder.build();
-    years_built.computed = q_dim(years);
-    years_built.limit = q_dim(if bridge { 100.0 } else { hi });
-    let lim = if bridge { 100.0 } else { hi }; years_built.utilization = if lim.abs() < f64::EPSILON { 0.0 } else { years / lim };
-    report.push(years_built);
-
-    let cat_ok = (1..=5).contains(&document.design_working_life_category) && (!bridge || document.design_working_life_category == 5);
-    let mut cat_builder = CheckResult::assess(
-        "en1990.table-2.1.category",
-        "EN 1990 §2.3",
-        ClauseId::new("EN 1990", "§2.3", "Table 2.1"),
-        cat_subject.clone(),
-        copy("Design working life category", "Nutzungskategorie"),
-    )
-    .annex(document.annex)
-    .explanation(copy(
-        format!("Project {}: declared category {}; bridges require Table 2.1 / A2 category 5 (100 a).", document.project_id, document.design_working_life_category),
-        format!("Projekt {}: angegebene Kategorie {}; Brücken erfordern Tabelle 2.1 / A2 Kategorie 5 (100 a).", document.project_id, document.design_working_life_category),
-    ));
-    if cat_ok {
-        cat_builder = cat_builder.status(semio_s_plugin_norm_compliance::CheckStatus::Pass);
-    } else {
-        let target = if bridge { 5u8 } else { 4u8 };
-        cat_builder = cat_builder.status(semio_s_plugin_norm_compliance::CheckStatus::Fail).remedy(Remedy::one_of(
-            cat_subject,
-            vec![target.to_string()],
-            copy(
-                format!("Set design working life category to {target} (bridges: category 5)."),
-                format!("Nutzungskategorie auf {target} setzen (Brücken: Kategorie 5)."),
-            ),
-        ));
+    report.push(builder.build());
+    if document.structure_kind.is_bridge() {
+        let hundred = (years - 100.0).abs() < 1e-6;
+        let mut bridge = CheckResult::assess("en1990.a2.working-life", "EN 1990 Annex A2", ClauseId::new("EN 1990", "A2.1", "A2.1(1)"), years_subject.clone(), copy("Bridge design working life 100 a", "Brücken-Nutzungsdauer 100 a"))
+            .utilization(q_dim(years.min(100.0)), q_dim(100.0))
+            .status(if hundred { CheckStatus::Pass } else { CheckStatus::Warning })
+            .annex(document.annex)
+            .explanation(copy(format!("Bridges are designed for 100 a unless specified otherwise; declared {years:.0} a."), format!("Brücken werden für 100 a bemessen, sofern nichts anderes festgelegt ist; angegeben {years:.0} a.")));
+        if !hundred {
+            bridge = bridge.remedy(Remedy::exactly(years_subject, q_dim(years), q_dim(100.0), copy("Set the design working life of the bridge to 100 a (Annex A2.1(1)) or specify the deviation in the project.", "Nutzungsdauer der Brücke auf 100 a setzen (Anhang A2.1(1)) oder die Abweichung im Projekt festlegen.")));
+        }
+        report.push(bridge.build());
     }
-    let mut cat_built = cat_builder.build();
-    cat_built.computed = q_dim(document.design_working_life_category as f64);
-    cat_built.limit = q_dim(5.0);
-    cat_built.utilization = document.design_working_life_category as f64 / 5.0;
-    report.push(cat_built);
 }
 
 pub(super) fn push_annex_b_dsl_il(report: &mut CheckReport, document: &En1990Snapshot) {
-    use semio_s_artifact_norm_en1990_checks::annex_b_dsl_il_for_rc;
-    let (dsl_req, il_req) = annex_b_dsl_il_for_rc(document.reliability_class);
-    for (id, path, declared, required, title_en, title_de) in [
-        ("en1990.annex-b.dsl", "supervisionLevel", document.supervision_level.as_str(), dsl_req, "Design supervision level vs RC", "Überwachungsstufe gegenüber RC"),
-        ("en1990.annex-b.il", "inspectionLevel", document.inspection_level.as_str(), il_req, "Inspection level vs RC", "Inspektionsstufe gegenüber RC"),
+    let Some((dsl_req, il_req)) = annex_b_levels(document.reliability_class.number()) else { return };
+    for (id, path, prefix, declared, required, title_en, title_de, clause) in [
+        ("en1990.annex-b.dsl", "supervisionLevel", "DSL", document.supervision_level.as_str(), dsl_req, "Design supervision level vs RC", "Entwurfsüberwachung gegenüber RC", "Table B4"),
+        ("en1990.annex-b.il", "inspectionLevel", "IL", document.inspection_level.as_str(), il_req, "Inspection level vs RC", "Ausführungsüberwachung gegenüber RC", "Table B5"),
     ] {
-        let subject = SubjectRef::new("", path, copy(title_en, title_de));
-        let ok = declared == required;
-        let mut builder = CheckResult::assess(id, "EN 1990 Annex B", ClauseId::new("EN 1990", "Annex B", path), subject.clone(), copy(title_en, title_de))
-            .annex(document.annex)
-            .explanation(copy(
-                format!("Declared {declared} for RC{}; Annex B recommends {required}.", document.reliability_class),
-                format!("Angegeben {declared} für RC{}; Anhang B empfiehlt {required}.", document.reliability_class),
-            ));
-        if ok {
-            builder = builder.status(semio_s_plugin_norm_compliance::CheckStatus::Pass);
-        } else {
-            builder = builder.status(semio_s_plugin_norm_compliance::CheckStatus::Fail).remedy(Remedy::one_of(
-                subject,
-                vec![required.to_string()],
-                copy(
-                    format!("Set {path} to {required} for the reliability class."),
-                    format!("{path} für die Zuverlässigkeitsklasse auf {required} setzen."),
-                ),
-            ));
-        }
-        let mut built = builder.build();
-        built.computed = q_dim(if ok { 1.0 } else { 0.0 });
-        built.limit = q_dim(1.0);
-        built.utilization = if ok { 1.0 } else { 2.0 };
+        let subject = SubjectRef::new(document.project_id.clone(), path, copy(title_en, title_de));
+        let builder = CheckResult::assess(id, "EN 1990 Annex B", ClauseId::new("EN 1990", "Annex B", clause), subject.clone(), copy(title_en, title_de)).annex(document.annex);
+        let recommendation = format!("{prefix}{required}");
+        let remedy = |text_en: String, text_de: String| Remedy::one_of(subject.clone(), vec![recommendation.clone()], copy(text_en, text_de));
+        let built = match parse_level(declared, prefix) {
+            None => builder
+                .status(CheckStatus::Fail)
+                .explanation(copy(format!("'{declared}' is not {prefix}1..{prefix}3."), format!("'{declared}' ist nicht {prefix}1..{prefix}3.")))
+                .remedy(remedy(format!("Set {path} to {recommendation}."), format!("{path} auf {recommendation} setzen.")))
+                .build(),
+            Some(level) => {
+                let mut level_check = builder
+                    .minimum(q_dim(f64::from(level)), q_dim(f64::from(required)))
+                    .status(if level >= required { CheckStatus::Pass } else { CheckStatus::Warning })
+                    .explanation(copy(format!("Declared {declared} for RC{}; Annex B recommends at least {recommendation}.", document.reliability_class.number()), format!("Angegeben {declared} für RC{}; Anhang B empfiehlt mindestens {recommendation}.", document.reliability_class.number())));
+                if level < required {
+                    level_check = level_check.remedy(remedy(format!("Raise {path} to {recommendation}."), format!("{path} auf {recommendation} anheben.")));
+                }
+                level_check.build()
+            }
+        };
         report.push(built);
     }
 }
 
+fn a2_subject(sls_id: &str, member: &Member, field: &str) -> SubjectRef {
+    SubjectRef::new(sls_id, format!("bridgeSls[id={sls_id}].{field}"), member_label(member))
+}
+
+fn a2_limit(report: &mut CheckReport, document: &En1990Snapshot, member: &Member, sls: &BridgeSls, key: &str, field: &str, clause: &str, title: (&str, &str), value: f64, limit: f64, kind: QuantityKind, remedy: (String, String)) {
+    let subject = a2_subject(&sls.id, member, field);
+    let mut builder = CheckResult::assess(format!("en1990.a2.{key}.{}.{}", member.id, sls.id), "EN 1990 Annex A2.4", ClauseId::new("EN 1990", format!("A{clause}"), clause), subject.clone(), copy(title.0, title.1))
+        .utilization(Quantity::new(kind, value), Quantity::new(kind, limit))
+        .annex(document.annex)
+        .explanation(copy(format!("{value:.4} vs limit {limit:.4}"), format!("{value:.4} gegenüber Grenze {limit:.4}")));
+    if value > limit {
+        builder = builder.remedy(Remedy::at_most(subject, Quantity::new(kind, value), Quantity::new(kind, limit), copy(remedy.0, remedy.1)));
+    }
+    report.push(builder.build());
+}
+
 pub(super) fn push_a2_bridge_sls(report: &mut CheckReport, document: &En1990Snapshot, member: &Member) {
-    if !is_bridge(&document.structure_kind) {
-        report.push(
-            CheckResult::assess(
-                format!("en1990.a2.bridge.{}", member.id),
-                "EN 1990 Annex A2",
-                ClauseId::new("EN 1990", "Annex A2", "SLS"),
-                SubjectRef::new(&member.id, member_path(document, &member.id, "rdStr"), member_label(member)),
-                copy("Annex A2 bridge SLS", "Anhang A2 Brücken-GZG"),
-            )
-            .not_applicable(copy(
-                "Structure kind is not a bridge; Annex A2 SLS criteria live on bridgeSls[].",
-                "Tragwerksart ist keine Brücke; Anhang-A2-GZG-Kriterien liegen auf bridgeSls[].",
-            ))
-            .annex(document.annex)
-            .build(),
-        );
+    let id = format!("en1990.a2.bridge.{}", member.id);
+    let clause = ClauseId::new("EN 1990", "Annex A2", "SLS");
+    let title = copy("Annex A2 bridge SLS", "Anhang A2 Brücken-GZG");
+    let subject = member_subject(member, "rdStr");
+    if !document.structure_kind.is_bridge() {
+        report.push(not_applicable(id, "EN 1990 Annex A2", clause, subject, title, document.annex, copy("Structure kind is not a bridge; Annex A2 SLS criteria live on bridgeSls[].", "Tragwerksart ist keine Brücke; Anhang-A2-GZG-Kriterien liegen auf bridgeSls[].")));
         return;
     }
     let Some(sls) = document.bridge_sls.iter().find(|b| b.member_id == member.id) else {
-        report.push(
-            CheckResult::assess(
-                format!("en1990.a2.bridge.{}", member.id),
-                "EN 1990 Annex A2",
-                ClauseId::new("EN 1990", "Annex A2", "SLS"),
-                SubjectRef::new(&member.id, member_path(document, &member.id, "rdStr"), member_label(member)),
-                copy("Annex A2 bridge SLS", "Anhang A2 Brücken-GZG"),
-            )
-            .not_applicable(copy(
-                format!("No bridgeSls entry for member {}.", member.id),
-                format!("Kein bridgeSls-Eintrag für Bauteil {}.", member.id),
-            ))
-            .annex(document.annex)
-            .build(),
-        );
+        report.push(not_applicable(id, "EN 1990 Annex A2", clause, subject, title, document.annex, copy(format!("No bridgeSls entry for member {}.", member.id), format!("Kein bridgeSls-Eintrag für Bauteil {}.", member.id))));
         return;
     };
-    let sls_path = |field: &str| format!("bridgeSls[id={}].{field}", sls.id);
-    if matches!(document.structure_kind.as_str(), "footbridge" | "rail_bridge") {
-        let path = sls_path("deckAcceleration");
-        let subject = SubjectRef::new(&sls.id, &path, member_label(member));
-        let mut builder = CheckResult::assess(
-            format!("en1990.a2.acceleration.{}.{}", member.id, sls.id),
-            "EN 1990 Annex A2.4",
-            ClauseId::new("EN 1990", "Annex A2.4", "acceleration"),
-            subject.clone(),
-            copy("Deck acceleration", "Deckbeschleunigung"),
-        )
-        .utilization(q_dim(sls.deck_acceleration), q_dim(sls.deck_acceleration_limit))
-        .annex(document.annex)
-        .explanation(copy(
-            format!("a = {:.3} m/s² vs limit {:.3} m/s²", sls.deck_acceleration, sls.deck_acceleration_limit),
-            format!("a = {:.3} m/s² gegenüber Grenze {:.3} m/s²", sls.deck_acceleration, sls.deck_acceleration_limit),
-        ));
-        if sls.deck_acceleration > sls.deck_acceleration_limit {
-            builder = builder.remedy(Remedy::at_most(
-                subject,
-                q_dim(sls.deck_acceleration),
-                q_dim(sls.deck_acceleration_limit),
-                copy(
-                    format!("Reduce deck acceleration to at most {:.3} m/s².", sls.deck_acceleration_limit),
-                    format!("Deckbeschleunigung auf höchstens {:.3} m/s² reduzieren.", sls.deck_acceleration_limit),
-                ),
-            ));
-        }
-        report.push(builder.build());
+    let rail = document.structure_kind == semio_s_artifact_norm_en1990_model::StructureKind::RailBridge;
+    if document.structure_kind == semio_s_artifact_norm_en1990_model::StructureKind::Footbridge || rail {
+        a2_limit(report, document, member, sls, "acceleration", "deckAcceleration", if rail { "2.4.4.2.1" } else { "2.4.3.2" }, ("Deck acceleration", "Deckbeschleunigung"), sls.deck_acceleration, sls.deck_acceleration_limit, QuantityKind::Acceleration, (format!("Reduce deck acceleration to at most {:.3} m/s².", sls.deck_acceleration_limit), format!("Deckbeschleunigung auf höchstens {:.3} m/s² reduzieren.", sls.deck_acceleration_limit)));
     }
-    if document.structure_kind == "rail_bridge" {
-        let path = sls_path("deckTwist");
-        let subject = SubjectRef::new(&sls.id, &path, member_label(member));
-        let mut builder = CheckResult::assess(
-            format!("en1990.a2.twist.{}.{}", member.id, sls.id),
-            "EN 1990 Annex A2.4",
-            ClauseId::new("EN 1990", "Annex A2.4", "twist"),
-            subject.clone(),
-            copy("Deck twist", "Deckverwindung"),
-        )
-        .utilization(q_dim(sls.deck_twist), q_dim(sls.deck_twist_limit))
-        .annex(document.annex)
-        .explanation(copy(
-            format!("twist = {:.5} rad vs limit {:.5} rad", sls.deck_twist, sls.deck_twist_limit),
-            format!("Verwindung = {:.5} rad gegenüber Grenze {:.5} rad", sls.deck_twist, sls.deck_twist_limit),
-        ));
-        if sls.deck_twist > sls.deck_twist_limit {
-            builder = builder.remedy(Remedy::at_most(
-                subject,
-                q_dim(sls.deck_twist),
-                q_dim(sls.deck_twist_limit),
-                copy(
-                    format!("Reduce deck twist to at most {:.5} rad.", sls.deck_twist_limit),
-                    format!("Deckverwindung auf höchstens {:.5} rad reduzieren.", sls.deck_twist_limit),
-                ),
-            ));
-        }
-        report.push(builder.build());
+    if rail {
+        a2_limit(report, document, member, sls, "twist", "deckTwist", "2.4.4.2.2", ("Deck twist", "Deckverwindung"), sls.deck_twist, sls.deck_twist_limit, QuantityKind::Dimensionless, (format!("Reduce deck twist to at most {:.5} rad.", sls.deck_twist_limit), format!("Deckverwindung auf höchstens {:.5} rad reduzieren.", sls.deck_twist_limit)));
     }
     if sls.bridge_deflection_limit > 0.0 {
-        let path = sls_path("bridgeDeflection");
-        let subject = SubjectRef::new(&sls.id, &path, member_label(member));
-        let mut builder = CheckResult::assess(
-            format!("en1990.a2.deflection.{}.{}", member.id, sls.id),
-            "EN 1990 Annex A2.4",
-            ClauseId::new("EN 1990", "Annex A2.4", "deflection"),
-            subject.clone(),
-            copy("Bridge vertical deflection", "Vertikale Brückendurchbiegung"),
-        )
-        .utilization(q_len(sls.bridge_deflection), q_len(sls.bridge_deflection_limit))
-        .annex(document.annex)
-        .explanation(copy(
-            format!("δ = {:.1} mm vs limit {:.1} mm", sls.bridge_deflection * 1000.0, sls.bridge_deflection_limit * 1000.0),
-            format!("δ = {:.1} mm gegenüber Grenze {:.1} mm", sls.bridge_deflection * 1000.0, sls.bridge_deflection_limit * 1000.0),
-        ));
-        if sls.bridge_deflection > sls.bridge_deflection_limit {
-            builder = builder.remedy(Remedy::at_most(
-                subject,
-                q_len(sls.bridge_deflection),
-                q_len(sls.bridge_deflection_limit),
-                copy(
-                    format!("Reduce bridge deflection to at most {:.1} mm.", sls.bridge_deflection_limit * 1000.0),
-                    format!("Brückendurchbiegung auf höchstens {:.1} mm reduzieren.", sls.bridge_deflection_limit * 1000.0),
-                ),
-            ));
-        }
-        report.push(builder.build());
+        a2_limit(report, document, member, sls, "deflection", "bridgeDeflection", "2.4.4.3", ("Bridge vertical deflection", "Vertikale Brückendurchbiegung"), sls.bridge_deflection, sls.bridge_deflection_limit, QuantityKind::Length, (format!("Reduce bridge deflection to at most {:.1} mm.", sls.bridge_deflection_limit * 1000.0), format!("Brückendurchbiegung auf höchstens {:.1} mm reduzieren.", sls.bridge_deflection_limit * 1000.0)));
     }
 }
 //#endregion 🔖️ComplianceReport

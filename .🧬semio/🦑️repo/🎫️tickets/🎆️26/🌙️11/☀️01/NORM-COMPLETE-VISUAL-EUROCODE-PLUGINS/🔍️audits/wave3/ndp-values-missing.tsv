@@ -1,0 +1,255 @@
+code	id	clause	symbol	en	de	read_kind	first_use	class
+en1990	ndp.en1990.e90-02.1	Table B3	?	None	None	cite	📇️catalogue:177	citation of a rule or formula block
+en1990	ndp.en1990.e90-16.1	6.10	ExclusiveGroup	None	None	cite-or-table	📇️catalogue:178	citation of a rule or formula block
+en1990	ndp.en1990.e90-24.1	1.5	?	None	None	cite	📏️serviceability-and-fatigue:53	citation of a rule or formula block
+en1990	ndp.en1990.e90-24.2	1.5	?	None	None	cite-or-table	📏️serviceability-and-fatigue:93	citation of a rule or formula block
+en1990	ndp.en1990.e90-25.1	1.6	?	None	None	cite-or-table	📇️catalogue:180	citation of a rule or formula block
+en1990	ndp.en1990.e90-25.2	A2.2	?	None	None	cite-or-table	📇️catalogue:180	citation of a rule or formula block
+en1990	ndp.en1990.e90-26.1	1.05	?	None	None	cite-or-table	📇️catalogue:181	citation of a rule or formula block
+en1990	ndp.en1990.e90-27.2	E90.27	BridgeSls	None	None	cite	📇️catalogue:182	citation of a rule or formula block
+en1990	ndp.en1990.e90-27.3	E90.27	BridgeSls	None	None	cite-or-table	📇️catalogue:182	citation of a rule or formula block
+en1990	ndp.en1990.e90-28.1	1.7	?	None	None	cite	📊️annex-analyses:82	citation of a rule or formula block
+en1991	ndp.en1991.1-6.stage-return.days3	Table 3.1	T return period, duration up to 3 days	2.0	None	cite-or-table	🧱️parts:904	one-sided row, EN-only constant
+en1991	ndp.en1991.1-6.stage-return.longer	Table 3.1	T return period, duration over 1 year	50.0	None	cite-or-table	🧱️parts:904	one-sided row, EN-only constant
+en1991	ndp.en1991.1-6.stage-return.months3	Table 3.1	T return period, duration over 3 days up	5.0	None	cite-or-table	🧱️parts:904	one-sided row, EN-only constant
+en1991	ndp.en1991.1-6.stage-return.year1	Table 3.1	T return period, duration over 3 months 	10.0	None	cite-or-table	🧱️parts:904	one-sided row, EN-only constant
+en1991	ndp.en1991.alpha-a.de-c0	6.3.1.2 NA	α_A c0	None	0.5	value	🧱️parts:280	annex-gated value read
+en1991	ndp.en1991.alpha-a.de-c1	6.3.1.2 NA	α_A c1	None	10.0	value	🧱️parts:280	annex-gated value read
+en1991	ndp.en1991.alpha-a.de-max	6.3.1.2 NA	α_A max	None	1.0	value	🧱️parts:280	annex-gated value read
+en1991	ndp.en1991.alpha-a.de-min	6.3.1.2 NA	α_A min	None	0.7	value	🧱️parts:280	annex-gated value read
+en1991	ndp.en1991.alpha-a.en-a0	6.3.1.2(10)	A0	10.0	None	value	🧱️parts:282	annex-gated value read
+en1991	ndp.en1991.alpha-a.en-min-cd	6.3.1.2(10)	α_A min C D	0.6	None	value	🧱️parts:283	annex-gated value read
+en1991	ndp.en1991.e11.alpha	e11	e11.alpha	None	None	cite	🧱️gravity:69	citation of a rule or formula block
+en1991	ndp.en1991.e11.barrier	e11	e11.barrier	None	None	cite	🧱️gravity:83	citation of a rule or formula block
+en1991	ndp.en1991.e11.density	e11	e11.density	None	None	cite	🧱️gravity:24	citation of a rule or formula block
+en1991	ndp.en1991.e11.forklift	e11	e11.forklift	None	None	cite	🧱️gravity:106	citation of a rule or formula block
+en1991	ndp.en1991.e11.na-table	e11	e11.na-table	None	None	cite	🧱️gravity:51	citation of a rule or formula block
+en1991	ndp.en1991.e11.partition	e11	e11.partition	None	None	cite	🧱️gravity:37	citation of a rule or formula block
+en1991	ndp.en1991.e12.annex-a	e12	e12.annex-a	None	None	cite	🔥️fire:27	citation of a rule or formula block
+en1991	ndp.en1991.e12.annex-c	e12	e12.annex-c	None	None	cite	🔥️fire:87	citation of a rule or formula block
+en1991	ndp.en1991.e12.annex-e	e12	e12.annex-e	None	None	cite	🔥️fire:64	citation of a rule or formula block
+en1991	ndp.en1991.e12.annex-f	e12	e12.annex-f	None	None	cite	🔥️fire:76	citation of a rule or formula block
+en1991	ndp.en1991.e12.firecurves	e12	e12.firecurves	None	None	cite	🔥️fire:14	citation of a rule or formula block
+en1991	ndp.en1991.e13.drift	e13	e13.drift	None	None	cite	❄️snow:76	citation of a rule or formula block
+en1991	ndp.en1991.e13.en-annex-c	e13	e13.en-annex-c	None	None	cite	❄️snow:36	citation of a rule or formula block
+en1991	ndp.en1991.e13.na-zones	e13	e13.na-zones	None	None	cite	❄️snow:36	citation of a rule or formula block
+en1991	ndp.en1991.e13.overhang	e13	e13.overhang	None	None	cite	❄️snow:92	citation of a rule or formula block
+en1991	ndp.en1991.e13.weights	e13	e13.weights	None	None	cite	❄️snow:132	citation of a rule or formula block
+en1991	ndp.en1991.e14-12.1	6.1	?	None	None	cite	🌪️wave3-checks:167	citation of a rule or formula block
+en1991	ndp.en1991.e14-13.1	E14.13	?	None	None	cite	🌪️wave3-checks:135	citation of a rule or formula block
+en1991	ndp.en1991.e14-14.1	2.4	?	None	None	cite-or-table	🌪️wave3-checks:173	citation of a rule or formula block
+en1991	ndp.en1991.e14.annex-b	e14	e14.annex-b	None	None	cite	🌬️wind:158	citation of a rule or formula block
+en1991	ndp.en1991.e14.annex-e	e14	e14.annex-e	None	None	cite	🌬️wind:171	citation of a rule or formula block
+en1991	ndp.en1991.e14.bridge	e14	e14.bridge	None	None	cite	🌬️wind:164	citation of a rule or formula block
+en1991	ndp.en1991.e14.cpe-flat	e14	e14.cpe-flat	None	None	cite	🌬️wind:94	citation of a rule or formula block
+en1991	ndp.en1991.e14.cpe-pitched	e14	e14.cpe-pitched	None	None	cite	🌬️wind:94	citation of a rule or formula block
+en1991	ndp.en1991.e14.na-profile	e14	e14.na-profile	None	None	cite	🌬️wind:35	citation of a rule or formula block
+en1991	ndp.en1991.e15.altitude	e15	e15.altitude	None	None	cite	🌡️actions:72	citation of a rule or formula block
+en1991	ndp.en1991.e15.shifts	e15	e15.shifts	None	None	cite	🌪️wave3-checks:290	citation of a rule or formula block
+en1991	ndp.en1991.e16.returns	e16	e16.returns	None	None	cite	🌡️actions:94	citation of a rule or formula block
+en1991	ndp.en1991.e17.blast	e17	e17.blast	None	None	cite-or-table	🌪️wave3-checks:243	citation of a rule or formula block
+en1991	ndp.en1991.e17.impact	e17	e17.impact	None	None	cite	🌪️wave3-checks:216	citation of a rule or formula block
+en1991	ndp.en1991.e17.robust	e17	e17.robust	None	None	cite	🌡️actions:154	citation of a rule or formula block
+en1991	ndp.en1991.e2-14.1	Table 6.1	?	None	None	cite-or-table	💡️inferences:551	citation of a rule or formula block
+en1991	ndp.en1991.e2-14.2	Table 6.1	?	None	None	cite-or-table	💡️inferences:553	citation of a rule or formula block
+en1991	ndp.en1991.e2-14.3	Table 6.1	?	None	None	cite-or-table	💡️inferences:554	citation of a rule or formula block
+en1991	ndp.en1991.e2.na-factors	e2	e2.na-factors	None	None	cite	🌉️structures:19	citation of a rule or formula block
+en1991	ndp.en1991.e2.rail	e2	e2.rail	None	None	cite	🌉️structures:122	citation of a rule or formula block
+en1991	ndp.en1991.e3-01.4	Table 2.x	?	None	None	cite	💡️inferences:663	citation of a rule or formula block
+en1991	ndp.en1991.e3.cranes	e3	e3.cranes	None	None	cite	🌉️structures:166	citation of a rule or formula block
+en1991	ndp.en1991.e4-02.1	§5.2.4 / §6	?	None	None	cite	💡️inferences:698	citation of a rule or formula block
+en1991	ndp.en1991.e4.silo	e4	e4.silo	None	None	cite	🌉️structures:226	citation of a rule or formula block
+en1991	ndp.en1991.e6-01.1	Eq. 4.2	K, n	None	None	cite-or-table	🧱️collection-checks:10	citation of a rule or formula block
+en1991	ndp.en1991.vb0.zone1	NA.A.1 Table NA.A.1	v_b,0 zone 1	None	22.5	cite-or-table	🧱️parts:148	annex-gated value read
+en1991	ndp.en1991.vb0.zone2	NA.A.1 Table NA.A.1	v_b,0 zone 2	None	25.0	cite-or-table	🧱️parts:148	annex-gated value read
+en1991	ndp.en1991.vb0.zone3	NA.A.1 Table NA.A.1	v_b,0 zone 3	None	27.5	cite-or-table	🧱️parts:148	annex-gated value read
+en1991	ndp.en1991.vb0.zone4	NA.A.1 Table NA.A.1	v_b,0 zone 4	None	30.0	cite-or-table	🧱️parts:148	annex-gated value read
+en1992	ndp.en1992.a-09.1	5.8.3.1	lambda_lim = 25	None	None	cite	🧱️slenderness-prestress-and-ductility-checks:45	citation of a rule or formula block
+en1992	ndp.en1992.b-01.1	8.4.2	[V]	None	None	cite	🔥️fire-anchorage-bridge-and-liquid-checks:88	citation of a rule or formula block
+en1992	ndp.en1992.b-04.1	1.0	<= 50%	None	None	cite	🔥️fire-anchorage-bridge-and-liquid-checks:109	citation of a rule or formula block
+en1992	ndp.en1992.d-02.1	2.2	XC1 C16/20	None	None	cite	📐️cover-and-constitutive-checks:107	citation of a rule or formula block
+en1992	ndp.en1992.d-03.2	Table 4.4N	cmin,dur	None	None	cite-or-table	📐️cover-and-constitutive-checks:32	citation of a rule or formula block
+en1992	ndp.en1992.e-03.1	1.1	nu1 = 0.75*nu2 = 0.75	None	None	cite-or-table	🏗️resistance-and-serviceability-checks:130	citation of a rule or formula block
+en1992	ndp.en1992.fa-03.1	1.5	 [N, fck MPa, hef mm]; 	None	None	cite	⚓️anchor-evaluation:178	citation of a rule or formula block
+en1992	ndp.en1992.fa-04.1	7.2.1.4	NRk,p = psi_c*A_h*8*fck	None	None	cite	⚓️anchor-evaluation:158	citation of a rule or formula block
+en1992	ndp.en1992.lq-01.1	Table 7.105	hD/h <= 5: 0.20	None	None	cite	🔥️fire-anchorage-bridge-and-liquid-checks:177	citation of a rule or formula block
+en1992	ndp.en1992.nu2-fck-divisor	6.2.3	nu2_fck_divisor	None	500.0	value	🌉️bridges-and-liquid:152	annex-gated value read
+en1992	ndp.en1992.nu2-offset	6.2.3	nu2_offset	None	1.1	value	🌉️bridges-and-liquid:152	annex-gated value read
+en1992	ndp.en1992.p-03.1	2.0	 and 	None	None	cite	🏗️resistance-and-serviceability-checks:243	citation of a rule or formula block
+en1992	ndp.en1992.p-03.3	1.4	[V]	None	None	cite-or-table	🏗️resistance-and-serviceability-checks:243	citation of a rule or formula block
+en1992	ndp.en1992.p-04.1	1.5	[V]	None	None	cite-or-table	🏗️resistance-and-serviceability-checks:243	citation of a rule or formula block
+en1992	ndp.en1992.p-05.1	6.4.5(4)	vRd,max	None	None	cite-or-table	🏗️resistance-and-serviceability-checks:248	citation of a rule or formula block
+en1992	ndp.en1992.pr-01.1	5.10.2.1	Pmax = Ap*sigma_p,max	None	None	cite	🧱️slenderness-prestress-and-ductility-checks:135	citation of a rule or formula block
+en1992	ndp.en1992.pr-05.1	7.2(5)	Pm,t(x,t)	None	None	cite-or-table	🧱️slenderness-prestress-and-ductility-checks:135	citation of a rule or formula block
+en1992	ndp.en1992.r-01.1	5.1	fck > C80/95	None	None	cite	🔥️fire-anchorage-bridge-and-liquid-checks:27	citation of a rule or formula block
+en1992	ndp.en1992.sl-02.1	7.2(5)	0.65 fpk	None	None	cite-or-table	🧱️slenderness-prestress-and-ductility-checks:135	citation of a rule or formula block
+en1992	ndp.en1992.sl-06.1	Table 7.1DE	0.4	None	None	cite	🏗️resistance-and-serviceability-checks:315	citation of a rule or formula block
+en1992	ndp.en1992.sl-07.1	1.5	 (	None	None	cite	🏗️resistance-and-serviceability-checks:450	citation of a rule or formula block
+en1992	ndp.en1992.t-04.1	1.0	. Box sections: 	None	None	cite	🏗️resistance-and-serviceability-checks:143	citation of a rule or formula block
+en1992	ndp.en1992.v-01.1	6.2.1	av/d >= 0.5	None	None	cite	🏗️resistance-and-serviceability-checks:130	citation of a rule or formula block
+en1992	ndp.en1992.v-02.1	1.5	0.035*k^1.5*sqrt(fck)	None	None	cite-or-table	🏗️resistance-and-serviceability-checks:130	citation of a rule or formula block
+en1992	ndp.en1992.v-03.1	2.5	1.2	None	None	cite-or-table	🏗️resistance-and-serviceability-checks:130	citation of a rule or formula block
+en1992	ndp.en1992.v-03.2	9.2.2	 (DE: 	None	None	cite-or-table	🏗️resistance-and-serviceability-checks:130	citation of a rule or formula block
+en1992	ndp.en1992.vrdcc-k	6.2.3(2)	vrdcc_k	None	0.48	value	🌉️bridges-and-liquid:152	annex-gated value read
+en1993	ndp.en1993.l402.1	Table 2.1	?	None	None	cite	🔭️special-parts-checks:415	citation of a rule or formula block
+en1993	ndp.en1993.v-024.1	5.3.2(6)	Bow imperfection inclusion rule	None	None	cite-or-table	🧱️member-vids:150	citation of a rule or formula block
+en1993	ndp.en1993.v-050.1	6.2.6(3)	Shear area A_v of rolled and welded I se	None	None	cite	🧱️member-vids:102	citation of a rule or formula block
+en1993	ndp.en1993.v-091.1	7.2.3	Floor natural frequency limit	None	None	cite	🧱️member-vids:259	citation of a rule or formula block
+en1993	ndp.en1993.v-101.1	6.3.1.4	Torsional buckling length and curve	None	None	cite	🧱️member-vids:66	citation of a rule or formula block
+en1993	ndp.en1993.v-111.2	6.3.2.3	lambda_bar_LT,0 = 0.4	None	None	cite-or-table	🧱️member-vids:186	citation of a rule or formula block
+en1993	ndp.en1993.v-112.1	6.3.2.4(1)B	Simplified LTB method k_fl and lambda_c0	None	None	cite	🧱️member-vids:222	citation of a rule or formula block
+en1993	ndp.en1993.v-113b.1	6.3.2.2	W_y class dependent	None	None	cite	🧷️restraint-checks:94	citation of a rule or formula block
+en1993	ndp.en1993.v-113c.1	10.1.5	?	None	None	cite	🔭️special-parts-checks:263	citation of a rule or formula block
+en1993	ndp.en1993.v-123.1	6.3.4	alpha_cr,op estimate	None	None	cite	🧷️restraint-checks:135	citation of a rule or formula block
+en1993	ndp.en1993.v-250.1	3.2.2	, 	None	None	cite	🔭️special-parts-checks:148	citation of a rule or formula block
+en1993	ndp.en1993.v-255.1	EN 1993-1-3 6.1.5	?	None	None	cite	🔭️special-parts-checks:178	citation of a rule or formula block
+en1993	ndp.en1993.v-256.1	EN 1993-1-3 6.1.7	?	None	None	cite	🔭️special-parts-checks:202	citation of a rule or formula block
+en1993	ndp.en1993.v-257.1	EN 1993-1-3 6.1.8	?	None	None	cite	🔭️special-parts-checks:221	citation of a rule or formula block
+en1993	ndp.en1993.v-258.1	Annex E	Purlin free flange on the sheeting sprin	None	None	cite	🏛️annex-block-checks:335	citation of a rule or formula block
+en1993	ndp.en1993.v-300.1	Table 5.	kyy	None	None	cite	🔭️special-parts-checks:336	citation of a rule or formula block
+en1993	ndp.en1993.v-300.2	Annex C	Ramberg-Osgood exponent n of the built-i	None	None	cite-or-table	🔭️special-parts-checks:336	citation of a rule or formula block
+en1993	ndp.en1993.v-305.1	EN 1993-1-4 Annex	?	None	None	cite	🔭️special-parts-checks:367	citation of a rule or formula block
+en1993	ndp.en1993.v-360.1	3.2	β_ult = β^(κ?)	None	None	cite	🔭️special-parts-checks:486	citation of a rule or formula block
+en1993	ndp.en1993.v-362.1	4.4	σcr,p = kσ,p σE	None	None	cite	🔭️special-parts-checks:457	citation of a rule or formula block
+en1993	ndp.en1993.v-367.1	5.3	η = 1.2	None	None	cite	🔭️special-parts-checks:595	citation of a rule or formula block
+en1993	ndp.en1993.v-369.1	5.5	A_end >= ...	None	None	cite	🔭️special-parts-checks:613	citation of a rule or formula block
+en1993	ndp.en1993.v-371.1	7.2	η2 + 0.8 η1 <= 1.4	None	None	cite	🔭️special-parts-checks:523	citation of a rule or formula block
+en1993	ndp.en1993.v-372.1	10.5	ρ_x	None	None	cite	🔭️special-parts-checks:701	citation of a rule or formula block
+en1993	ndp.en1993.v-376.1	Annex D	Corrugated web shear: tau_cr,l (k_l = 5.	None	None	cite	🏛️annex-block-checks:206	citation of a rule or formula block
+en1993	ndp.en1993.v-376.a1	Annex A.1	Smeared equal stiffeners: k_sigma,p = 2(	None	None	cite-or-table	🏛️annex-block-checks:111	citation of a rule or formula block
+en1993	ndp.en1993.v-376.a2	Annex A.2.2.1	Single stiffener: a_c = 4.33 (I_sl b1^2 	None	None	cite-or-table	🏛️annex-block-checks:103	citation of a rule or formula block
+en1993	ndp.en1993.v-376.c1	Annex C	Finite element cross-check: ratio of the	None	None	cite	🏛️annex-block-checks:172	citation of a rule or formula block
+en1993	ndp.en1993.v-402.1	3.6	Punching shear of bolt heads and nuts	None	None	cite	🔩️joint-vids:66	citation of a rule or formula block
+en1993	ndp.en1993.v-405.1	3.10.2	Block tearing geometry	None	None	cite	🔩️joint-vids:34	citation of a rule or formula block
+en1993	ndp.en1993.v-413.1	4.10	Effective width of a plate welded to an 	None	None	cite	🔩️joint-vids:99	citation of a rule or formula block
+en1993	ndp.en1993.v-420.1	6.2.4	FT,1,Rd = 4 Mpl,1,Rd/m	None	None	cite	🔭️special-parts-checks:1016	citation of a rule or formula block
+en1993	ndp.en1993.v-431.1	6.3.1	 per Table 6.11 	None	None	cite	🔭️special-parts-checks:1080	citation of a rule or formula block
+en1993	ndp.en1993.v-431.2	6.3.1	 per Table 6.11 	None	None	cite	🔭️special-parts-checks:1048	citation of a rule or formula block
+en1993	ndp.en1993.v-440.1	7.4.2	Table 7.11 N_1,Rd chord face	None	None	cite	🕳️hollow-joint-checks:58	citation of a rule or formula block
+en1993	ndp.en1993.v-440.2	7.4.2	Table 7.11 N_i,Rd brace effective width	None	None	cite	🕳️hollow-joint-checks:59	citation of a rule or formula block
+en1993	ndp.en1993.v-440.3	7.4.1	Table 7.8 validity range of the K/N gap 	None	None	cite	🕳️hollow-joint-checks:60	citation of a rule or formula block
+en1993	ndp.en1993.v-800.1	EN 1993-1-6 section 8	?	None	None	cite	🔭️special-parts-checks:752	citation of a rule or formula block
+en1993	ndp.en1993.v-801.1	8.5	λ̄ = sqrt(Rpl/Rcr)	None	None	cite	🔭️special-parts-checks:771	citation of a rule or formula block
+en1993	ndp.en1993.v-801.2	8.5	λ̄ = sqrt(Rpl/Rcr)	None	None	cite	🔭️special-parts-checks:810	citation of a rule or formula block
+en1993	ndp.en1993.v-802.1	1.0	σx,Rcr = 0.605 E Cx t/r	None	None	cite	🔭️special-parts-checks:790	citation of a rule or formula block
+en1993	ndp.en1993.v-803.1	8.7	nx = μ·pn ... 	None	None	cite	🔭️special-parts-checks:856	citation of a rule or formula block
+en1993	ndp.en1993.v-803.2	8.7	nx = μ·pn ... 	None	None	cite	🔭️special-parts-checks:872	citation of a rule or formula block
+en1993	ndp.en1993.v-804.1	1.O Shells (EN 1993-1-6), silos/tanks (1-6, 4-1, 4-2)	σ = 0.9 ρ g H	None	None	cite	🔭️special-parts-checks:890	citation of a rule or formula block
+en1993	ndp.en1993.v-850.1	6.3.1.4	λ̄eff = 0.9 + ...	None	None	cite	🔭️special-parts-checks:1246	citation of a rule or formula block
+en1993	ndp.en1993.v-851.1	EN 1993-3-2	Vcrit = b fn/St	None	None	cite	🔭️special-parts-checks:1271	citation of a rule or formula block
+en1993	ndp.en1993.v-851.2	EN 1993-3-2	Vcrit = b fn/St	None	None	cite	🔭️special-parts-checks:1293	citation of a rule or formula block
+en1993	ndp.en1993.v-870.1	Table 5.2	βD	None	None	cite	🔭️special-parts-checks:1342	citation of a rule or formula block
+en1993	ndp.en1993.v-870.2	Table 5.2	βD	None	None	cite	🔭️special-parts-checks:1357	citation of a rule or formula block
+en1993	ndp.en1993.v-870.3	Table 5.2	βD	None	None	cite	🔭️special-parts-checks:1373	citation of a rule or formula block
+en1993	ndp.en1993.v-880.2	1.0	gM0	None	None	cite-or-table	🔭️special-parts-checks:1213	citation of a rule or formula block
+en1993	ndp.en1993.v-881.3	9.5	Deck plate wheel strip model	None	None	cite-or-table	🏛️annex-block-checks:290	citation of a rule or formula block
+en1993	ndp.en1993.v-890.1	3.25	σoz,Ed = Fz,Ed/(leff tw)	None	None	cite	🔭️special-parts-checks:1411	citation of a rule or formula block
+en1993	ndp.en1993.v-890.2	3.25	σoz,Ed = Fz,Ed/(leff tw)	None	None	cite	🔭️special-parts-checks:1431	citation of a rule or formula block
+en1993	ndp.en1993.v-905.1	EN 1993-4-3	t = p d/(2 fy/gM0)	None	None	cite	🔭️special-parts-checks:911	citation of a rule or formula block
+en1993	ndp.en1993.v-905.2	EN 1993-4-3	t = p d/(2 fy/gM0)	None	None	cite	🔭️special-parts-checks:931	citation of a rule or formula block
+en1993	ndp.en1993.v-905.3	EN 1993-4-3	t = p d/(2 fy/gM0)	None	None	cite	🔭️special-parts-checks:949	citation of a rule or formula block
+en1994	ndp.en1994.1-2.buckling-curve	EN 1994-1-2	1-2.buckling-curve	None	None	cite-or-table	🔥️fire-and-bridge:13	citation of a rule or formula block
+en1994	ndp.en1994.1-2.concrete-conduction	EN 1994-1-2	1-2.concrete-conduction	None	None	cite-or-table	🔥️fire-and-bridge:10	citation of a rule or formula block
+en1994	ndp.en1994.1-2.eps-c1-theta	EN 1994-1-2	1-2.eps-c1-theta	None	None	cite-or-table	🔥️fire-and-bridge:8	citation of a rule or formula block
+en1994	ndp.en1994.1-2.heff	EN 1994-1-2 4.3.2	h_eff	None	None	cite	🔥️fire-and-bridge:119	citation of a rule or formula block
+en1994	ndp.en1994.1-2.interaction	EN 1994-1-2	1-2.interaction	None	None	cite-or-table	🔥️fire-and-bridge:14	citation of a rule or formula block
+en1994	ndp.en1994.1-2.kc-theta	EN 1994-1-2	1-2.kc-theta	None	None	cite-or-table	🔥️fire-and-bridge:7	citation of a rule or formula block
+en1994	ndp.en1994.1-2.ke-theta	EN 1994-1-2	1-2.ke-theta	None	None	cite-or-table	🔥️fire-and-bridge:9	citation of a rule or formula block
+en1994	ndp.en1994.1-2.stiffness-phi	EN 1994-1-2	1-2.stiffness-phi	None	None	cite-or-table	🔥️fire-and-bridge:12	citation of a rule or formula block
+en1994	ndp.en1994.1-2.surface-exchange	EN 1994-1-2	1-2.surface-exchange	None	None	cite-or-table	🔥️fire-and-bridge:11	citation of a rule or formula block
+en1994	ndp.en1994.1-2.tables	EN 1994-1-2	1-2.tables	None	None	cite-or-table	🔥️fire-and-bridge:15	citation of a rule or formula block
+en1994	ndp.en1994.2.end-plate-bearing	6.6.5	F_Rdu	None	None	cite-or-table	🔥️fire-and-bridge:30	citation of a rule or formula block
+en1994	ndp.en1994.2.min-transverse-reinforcement	6.6.6.3	rho_t	0.002	None	cite-or-table	🔥️fire-and-bridge:29	one-sided row, EN-only constant
+en1994	ndp.en1994.2.rebar-fatigue-range	EN 1994-2	2.rebar-fatigue-range	None	None	cite-or-table	🔥️fire-and-bridge:22	citation of a rule or formula block
+en1994	ndp.en1994.2.shear-lag	EN 1994-2	2.shear-lag	None	None	cite-or-table	🔥️fire-and-bridge:21	citation of a rule or formula block
+en1994	ndp.en1994.2.stud-cross-spacing	6.6.5	e_t/d	2.5	None	cite-or-table	🔥️fire-and-bridge:28	one-sided row, EN-only constant
+en1994	ndp.en1994.2.stud-edge-distance	6.6.5	e_D	0.02	None	cite-or-table	🔥️fire-and-bridge:27	one-sided row, EN-only constant
+en1995	ndp.en1995.fire.connection-reduced-load-k	EN 1995-1-2 6.2	k of t_fi,d = -ln(eta)/k	None	None	value	🔥️fire:190	optional value read (None handled)
+en1995	ndp.en1995.k-cr.de-numerator	NA 6.1.7(2)	k_cr DE numerator	None	2.5	value	⚖️kernel:49	annex-gated value read
+en1995	ndp.en1995.k-cr.en-constant	6.1.7(2)	k_cr EN	0.67	None	value	⚖️kernel:46	annex-gated value read
+en1996	ndp.en1996.annex-e.ffff	Annex E	alpha1 cells FFFF	None	None	cite-or-table	📐️annex-e:87	citation of a rule or formula block
+en1996	ndp.en1996.annex-e.fffs	Annex E	alpha1 cells FFFS	None	None	cite-or-table	📐️annex-e:87	citation of a rule or formula block
+en1996	ndp.en1996.annex-e.fffx	Annex E	alpha1 cells FFFX	None	None	cite-or-table	📐️annex-e:87	citation of a rule or formula block
+en1996	ndp.en1996.annex-e.ffss	Annex E	alpha1 cells FFSS	None	None	cite-or-table	📐️annex-e:87	citation of a rule or formula block
+en1996	ndp.en1996.annex-e.ffsx	Annex E	alpha1 cells FFSX	None	None	cite-or-table	📐️annex-e:87	citation of a rule or formula block
+en1996	ndp.en1996.annex-e.ffxx	Annex E	alpha1 cells FFXX	None	None	cite-or-table	📐️annex-e:87	citation of a rule or formula block
+en1996	ndp.en1996.annex-e.fsff	Annex E	alpha1 cells FSFF	None	None	cite-or-table	📐️annex-e:87	citation of a rule or formula block
+en1996	ndp.en1996.annex-e.fsfs	Annex E	alpha1 cells FSFS	None	None	cite-or-table	📐️annex-e:87	citation of a rule or formula block
+en1996	ndp.en1996.annex-e.fsfx	Annex E	alpha1 cells FSFX	None	None	cite-or-table	📐️annex-e:87	citation of a rule or formula block
+en1996	ndp.en1996.annex-e.fsss	Annex E	alpha1 cells FSSS	None	None	cite-or-table	📐️annex-e:87	citation of a rule or formula block
+en1996	ndp.en1996.annex-e.fssx	Annex E	alpha1 cells FSSX	None	None	cite-or-table	📐️annex-e:87	citation of a rule or formula block
+en1996	ndp.en1996.annex-e.fsxx	Annex E	alpha1 cells FSXX	None	None	cite-or-table	📐️annex-e:87	citation of a rule or formula block
+en1996	ndp.en1996.annex-e.fxff	Annex E	alpha1 cells FXFF	None	None	cite-or-table	📐️annex-e:87	citation of a rule or formula block
+en1996	ndp.en1996.annex-e.fxfs	Annex E	alpha1 cells FXFS	None	None	cite-or-table	📐️annex-e:87	citation of a rule or formula block
+en1996	ndp.en1996.annex-e.fxfx	Annex E	alpha1 cells FXFX	None	None	cite-or-table	📐️annex-e:87	citation of a rule or formula block
+en1996	ndp.en1996.annex-e.fxss	Annex E	alpha1 cells FXSS	None	None	cite-or-table	📐️annex-e:87	citation of a rule or formula block
+en1996	ndp.en1996.annex-e.fxsx	Annex E	alpha1 cells FXSX	None	None	cite-or-table	📐️annex-e:87	citation of a rule or formula block
+en1996	ndp.en1996.annex-e.fxxx	Annex E	alpha1 cells FXXX	None	None	cite-or-table	📐️annex-e:87	citation of a rule or formula block
+en1996	ndp.en1996.annex-e.ssff	Annex E	alpha1 cells SSFF	None	None	cite-or-table	📐️annex-e:87	citation of a rule or formula block
+en1996	ndp.en1996.annex-e.ssfs	Annex E	alpha1 cells SSFS	None	None	cite-or-table	📐️annex-e:87	citation of a rule or formula block
+en1996	ndp.en1996.annex-e.ssfx	Annex E	alpha1 cells SSFX	None	None	cite-or-table	📐️annex-e:87	citation of a rule or formula block
+en1996	ndp.en1996.annex-e.ssss	Annex E	alpha1 cells SSSS	None	None	cite-or-table	📐️annex-e:87	citation of a rule or formula block
+en1996	ndp.en1996.annex-e.sssx	Annex E	alpha1 cells SSSX	None	None	cite-or-table	📐️annex-e:87	citation of a rule or formula block
+en1996	ndp.en1996.annex-e.ssxx	Annex E	alpha1 cells SSXX	None	None	cite-or-table	📐️annex-e:87	citation of a rule or formula block
+en1996	ndp.en1996.annex-e.sxff	Annex E	alpha1 cells SXFF	None	None	cite-or-table	📐️annex-e:87	citation of a rule or formula block
+en1996	ndp.en1996.annex-e.sxfs	Annex E	alpha1 cells SXFS	None	None	cite-or-table	📐️annex-e:87	citation of a rule or formula block
+en1996	ndp.en1996.annex-e.sxfx	Annex E	alpha1 cells SXFX	None	None	cite-or-table	📐️annex-e:87	citation of a rule or formula block
+en1996	ndp.en1996.annex-e.sxss	Annex E	alpha1 cells SXSS	None	None	cite-or-table	📐️annex-e:87	citation of a rule or formula block
+en1996	ndp.en1996.annex-e.sxsx	Annex E	alpha1 cells SXSX	None	None	cite-or-table	📐️annex-e:87	citation of a rule or formula block
+en1996	ndp.en1996.annex-e.sxxx	Annex E	alpha1 cells SXXX	None	None	cite-or-table	📐️annex-e:87	citation of a rule or formula block
+en1996	ndp.en1996.annex-e.xxff	Annex E	alpha1 cells XXFF	None	None	cite-or-table	📐️annex-e:87	citation of a rule or formula block
+en1996	ndp.en1996.annex-e.xxfs	Annex E	alpha1 cells XXFS	None	None	cite-or-table	📐️annex-e:87	citation of a rule or formula block
+en1996	ndp.en1996.annex-e.xxfx	Annex E	alpha1 cells XXFX	None	None	cite-or-table	📐️annex-e:87	citation of a rule or formula block
+en1996	ndp.en1996.annex-e.xxss	Annex E	alpha1 cells XXSS	None	None	cite-or-table	📐️annex-e:87	citation of a rule or formula block
+en1996	ndp.en1996.annex-e.xxsx	Annex E	alpha1 cells XXSX	None	None	cite-or-table	📐️annex-e:87	citation of a rule or formula block
+en1996	ndp.en1996.annex-e.xxxx	Annex E	alpha1 cells XXXX	None	None	cite-or-table	📐️annex-e:87	citation of a rule or formula block
+en1996	ndp.en1996.durability.mortar	Table 2.1	durability.mortar	None	None	cite	🌦️serviceability-simplified-and-fire:31	citation of a rule or formula block
+en1996	ndp.en1996.fvlt.de-k	6.2	f_vlt NA-DE factor	None	0.45	value	📚️normative-tables:136	annex-gated value read
+en1996	ndp.en1996.fvlt.de-share.g1	6.2	f_bt,cal share g1	None	0.032	cite-or-table	📚️normative-tables:130	annex-gated value read
+en1996	ndp.en1996.fvlt.f-b-factor	6.2	f_vlt EN factor of f_b	0.065	None	value	📚️normative-tables:128	annex-gated value read
+en1996	ndp.en1996.gamma-m.accidental	NA.2.4.3	γ_M accidental	None	1.3	cite-or-table	📸️snapshot:418	annex-gated value read
+en1996	ndp.en1996.m01.conformance	EN 1996-1-1 3.1 / DE NA	conformance rules	None	None	cite	📏️wall-geometry-and-material:7	citation of a rule or formula block
+en1996	ndp.en1996.m01.delta	EN 1996-1-1 3.1, EN 772-1	m01.delta	None	None	cite-or-table	🏋️load-case-checks:18	citation of a rule or formula block
+en1996	ndp.en1996.m02.caps	EN 1996-1-1 3.6.1.2	m02.caps	None	None	cite-or-table	📚️normative-tables:91	citation of a rule or formula block
+en1996	ndp.en1996.m02.k-de	EN 1996-1-1 3.6.1.2	m02.k-de	None	None	cite-or-table	📚️normative-tables:93	citation of a rule or formula block
+en1996	ndp.en1996.m02.k-en	EN 1996-1-1 3.6.1.2	m02.k-en	None	None	cite-or-table	📚️normative-tables:96	citation of a rule or formula block
+en1996	ndp.en1996.m03.fvk-cap-en	EN 1996-1-1 3.6.2	m03.fvk-cap-en	None	None	cite-or-table	🏋️load-case-checks:25	citation of a rule or formula block
+en1996	ndp.en1996.m03.fvk0	EN 1996-1-1 3.6.2	m03.fvk0	None	None	cite	🪵️shear-and-lateral:35	citation of a rule or formula block
+en1996	ndp.en1996.m03.fvlt-de	EN 1996-1-1 3.6.2	m03.fvlt-de	None	None	cite-or-table	🏋️load-case-checks:26	citation of a rule or formula block
+en1996	ndp.en1996.m04.fxk	EN 1996-1-1 3.6.3	m04.fxk	None	None	cite	🪵️shear-and-lateral:142	citation of a rule or formula block
+en1996	ndp.en1996.m06.creep	EN 1996-1-1 3.7	m06.creep	None	None	cite	🏋️load-case-checks:6	citation of a rule or formula block
+en1996	ndp.en1996.m06.e	EN 1996-1-1 3.7	m06.e	None	None	cite	🔥️fire-durability-and-reinforcement:7	citation of a rule or formula block
+en1996	ndp.en1996.m07.gamma	EN 1996-1-1 Table 2.3	m07.gamma	None	None	cite	🔥️fire-durability-and-reinforcement:7	citation of a rule or formula block
+en1996	ndp.en1996.m10.rho2	EN 1996-1-1 5.5.1.2	m10.rho2	None	None	cite-or-table	🧱️vertical-load:25	citation of a rule or formula block
+en1996	ndp.en1996.m10.stiffener	EN 1996-1-1 5.5.1.2	m10.stiffener	None	None	cite-or-table	🧱️vertical-load:29	citation of a rule or formula block
+en1996	ndp.en1996.m11.beta-floor	EN 1996-1-1 5.5.1.4	m11.beta-floor	None	None	cite-or-table	🧱️vertical-load:25	citation of a rule or formula block
+en1996	ndp.en1996.m11.limit	EN 1996-1-1 5.5.1.4	m11.limit	None	None	cite-or-table	🧱️vertical-load:46	citation of a rule or formula block
+en1996	ndp.en1996.m12.einit	EN 1996-1-1 6.1.2.2	m12.einit	None	None	cite	🧱️vertical-load:64	citation of a rule or formula block
+en1996	ndp.en1996.m13.phi1	EN 1996-1-1 6.1.2.2, Annex G	m13.phi1	None	None	cite	🌦️serviceability-simplified-and-fire:166	citation of a rule or formula block
+en1996	ndp.en1996.m14.beta	EN 1996-1-1 6.1.3	m14.beta	None	None	cite	🧱️vertical-load:115	citation of a rule or formula block
+en1996	ndp.en1996.m15.lintel	EN 1996-1-1 5.5, 6.1, Annex	m15.lintel	None	None	cite	🧱️vertical-load:131	citation of a rule or formula block
+en1996	ndp.en1996.m20.flange	EN 1996-1-1 6.2	m20.flange	None	None	cite	🪵️shear-and-lateral:47	citation of a rule or formula block
+en1996	ndp.en1996.m20.stability	EN 1996-1-1 6.2	m20.stability	None	None	cite	🪵️shear-and-lateral:34	citation of a rule or formula block
+en1996	ndp.en1996.m31.fixed-hogging	EN 1996-1-1 6.3.2, Annex E	m31.fixed-hogging	None	None	cite	🪵️shear-and-lateral:158	citation of a rule or formula block
+en1996	ndp.en1996.m31.yield-line	EN 1996-1-1 6.3.2, Annex E	m31.yield-line	None	None	cite-or-table	🪵️shear-and-lateral:162	citation of a rule or formula block
+en1996	ndp.en1996.m32.arching	M-32	m32.arching	None	None	cite	🪵️shear-and-lateral:194	citation of a rule or formula block
+en1996	ndp.en1996.m34.basement	M-34	m34.basement	None	None	cite	🌦️serviceability-simplified-and-fire:199	citation of a rule or formula block
+en1996	ndp.en1996.m40.flexure	EN 1996-1-1 6.6.1, 6.6.2	m40.flexure	None	None	cite	🪢️reinforced-special-and-ties:50	citation of a rule or formula block
+en1996	ndp.en1996.m41.shear	EN 1996-1-1 6.7.2	m41.shear	None	None	cite	🪢️reinforced-special-and-ties:69	citation of a rule or formula block
+en1996	ndp.en1996.m42.deep	EN 1996-1-1 6.7	m42.deep	None	None	cite	🪢️reinforced-special-and-ties:84	citation of a rule or formula block
+en1996	ndp.en1996.m45.bond	M-45	m45.bond	None	None	cite	🪢️reinforced-special-and-ties:199	citation of a rule or formula block
+en1996	ndp.en1996.m50.ties	M-50	m50.ties	None	None	cite	🪢️reinforced-special-and-ties:158	citation of a rule or formula block
+en1996	ndp.en1996.m51.anchor	EN 1996-1-1 8.5.1, Annex D	m51.anchor	None	None	cite	🪢️reinforced-special-and-ties:183	citation of a rule or formula block
+en1996	ndp.en1996.m52.joints	M-52	m52.joints	None	None	cite	🪢️reinforced-special-and-ties:216	citation of a rule or formula block
+en1996	ndp.en1996.m60.exposure	EN 1996-2, EN 1996-1-1 section 4	m60.exposure	None	None	cite	🌦️serviceability-simplified-and-fire:41	citation of a rule or formula block
+en1996	ndp.en1996.m61.slender	EN 1996-1-1 7, 8.5.1	m61.slender	None	None	cite	🌦️serviceability-simplified-and-fire:65	citation of a rule or formula block
+en1996	ndp.en1996.m70.execution	EN 1996-2 3, 8	m70.execution	None	None	cite	📏️wall-geometry-and-material:6	citation of a rule or formula block
+en1996	ndp.en1996.m80.limits	EN 1996-3 4.1, NA-DE 4.1	m80.limits	None	None	cite	🔥️fire-durability-and-reinforcement:10	citation of a rule or formula block
+en1996	ndp.en1996.m81.phis	EN 1996-3 4.2, NA-DE 4.2	m81.phis	None	None	cite	🌦️serviceability-simplified-and-fire:165	citation of a rule or formula block
+en1996	ndp.en1996.m82.shear	M-82	m82.shear	None	None	cite	🌦️serviceability-simplified-and-fire:183	citation of a rule or formula block
+en1996	ndp.en1996.m90.fire	M-90	m90.fire	None	None	cite	🌦️serviceability-simplified-and-fire:214	citation of a rule or formula block
+en1996	ndp.en1996.m91.fire	EN 1996-1-2 3.3 / Annex C	m91.fire	None	None	cite	🌦️serviceability-simplified-and-fire:227	citation of a rule or formula block
+en1996	ndp.en1996.psi	EN 1990 Table A1.1	psi	None	None	cite	🔥️fire-durability-and-reinforcement:7	citation of a rule or formula block
+en1998	ndp.en1998.en3.na.return-period	NA-DE EN 1998-3	T_R NA-DE	None	475.0	value	📐️formulas:1056	annex-gated value read
+en1999	ndp.en1999.ring-stiffener.required-inertia-factor	6.7.6 and 5 (ring stiffener stiffness)	γ_r	None	None	cite-or-table	🎯️entity-checks:242	citation of a rule or formula block
+en1999	ndp.en1999.web-crippling.end.alpha	6.1.7 (web crippling)	α	None	None	cite-or-table	🎯️entity-checks:158	citation of a rule or formula block

@@ -1,0 +1,6 @@
+{
+  "ChangeFastenerEndDistance": {
+    "fastenerId": "fastener-1",
+    "newValue": 1.15
+  }
+}

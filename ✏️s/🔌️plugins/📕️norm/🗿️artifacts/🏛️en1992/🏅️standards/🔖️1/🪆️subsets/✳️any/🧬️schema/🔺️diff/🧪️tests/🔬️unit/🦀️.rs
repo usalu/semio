@@ -6,7 +6,7 @@ use semio_s_artifact_norm_en1992_mut_members::change_member_height::ChangeMember
 use semio_s_artifact_norm_en1992_mut_members::change_member_width::ChangeMemberWidth;
 use semio_s_artifact_norm_en1992_mut_members::insert_member::InsertMember;
 use semio_s_artifact_norm_en1992_mut_members::remove_member::RemoveMember;
-use semio_s_artifact_norm_en1992_mut_members::reorder_members::ReorderMembers;
+use semio_s_artifact_norm_en1992_mut_members::change_member_order::ChangeMemberOrder;
 use semio_s_artifact_norm_en1992_mutations::En1992Mutation;
 use semio_s_artifact_norm_en1992_model::En1992Snapshot;
 use protocol::{DiffAlgebra as _, Mutation as _, MutationDiff as _};
@@ -24,7 +24,7 @@ fn width(base: &En1992Snapshot, value: f64) -> En1992Mutation {
 
 #[semio_framework_async_macros::async_test]
 async fn patches_on_one_row_coalesce_into_one_patch() {
-    let base = En1992Snapshot::default();
+    let base = En1992Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De);
     let first = diff_of(&width(&base, 0.41), &base);
     let mid = protocol::apply_diff_cold(&first, &base).expect("first");
     let second = diff_of(&En1992Mutation::ChangeMemberHeight(ChangeMemberHeight { member_id: base.members[0].id.clone(), new_value: 0.77 }), &mid);
@@ -36,7 +36,7 @@ async fn patches_on_one_row_coalesce_into_one_patch() {
 
 #[semio_framework_async_macros::async_test]
 async fn nested_action_patches_coalesce_by_action_id() {
-    let base = En1992Snapshot::default();
+    let base = En1992Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De);
     let member = base.members.iter().find(|member| !member.actions.is_empty()).expect("member with actions").clone();
     let action = member.actions[0].id.clone();
     let set = |value: f64| En1992Mutation::ChangeActionVk(ChangeActionVk { member_id: member.id.clone(), action_id: action.clone(), new_value: value });
@@ -53,7 +53,7 @@ async fn nested_action_patches_coalesce_by_action_id() {
 
 #[semio_framework_async_macros::async_test]
 async fn insert_then_remove_cancels_and_remove_then_insert_replaces() {
-    let base = En1992Snapshot::default();
+    let base = En1992Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De);
     let mut member = base.members[0].clone();
     member.id = "member-created".into();
     let insert = En1992Mutation::InsertMember(InsertMember { index: 1, member: member.clone() });
@@ -78,8 +78,8 @@ async fn insert_then_remove_cancels_and_remove_then_insert_replaces() {
 
 #[semio_framework_async_macros::async_test]
 async fn reorder_and_inverse_follow_the_negative_diff() {
-    let base = En1992Snapshot::default();
-    let moved = diff_of(&En1992Mutation::ReorderMembers(ReorderMembers { from_index: 0, to_index: base.members.len() - 1 }), &base);
+    let base = En1992Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De);
+    let moved = diff_of(&En1992Mutation::ChangeMemberOrder(ChangeMemberOrder { from_index: 0, to_index: base.members.len() - 1 }), &base);
     let after = protocol::apply_diff_cold(&moved, &base).expect("reorder");
     assert_ne!(after, base);
     assert_eq!(protocol::apply_diff_cold(&moved.inverse(&base), &after).expect("inverse"), base);

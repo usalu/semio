@@ -1,0 +1,5 @@
+{
+  "mutation": "changeWallWallFrictionDeg",
+  "id": "wall-W1",
+  "newWallFrictionDeg": 40.0
+}

@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-floor-area/schema.json",
+  "title": "ChangeFloorArea",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newArea"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Floor",
+          "de": "Decke"
+        },
+        "description": {
+          "en": "The floor this mutation addresses, by id.",
+          "de": "Das adressierte Element (Decke), per Kennung."
+        },
+        "ref": {
+          "kind": "floor"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newArea": {
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Floor area",
+          "de": "Deckenfläche"
+        },
+        "description": {
+          "en": "Value of the design; the checks and the 3D scene derive their actions from it.",
+          "de": "Wert des Entwurfs; Nachweise und 3D-Szene leiten ihre Einwirkungen daraus ab."
+        },
+        "unit": "m2",
+        "displayUnit": "m²",
+        "displayFactor": 1,
+        "step": 1,
+        "precision": 1,
+        "group": "floors",
+        "order": 20
+      }
+    }
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "mutation": "changePileHammerEfficiency",
+  "id": "pile-P1",
+  "newHammerEfficiency": 1.5
+}

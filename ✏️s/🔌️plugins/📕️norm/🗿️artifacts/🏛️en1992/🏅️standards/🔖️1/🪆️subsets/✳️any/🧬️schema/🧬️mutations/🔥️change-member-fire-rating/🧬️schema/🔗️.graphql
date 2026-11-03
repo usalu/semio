@@ -1,4 +1,4 @@
 type ChangeMemberFireRating {
   memberId: String!
-  newRating: String!
+  newRating: FireRating!
 }

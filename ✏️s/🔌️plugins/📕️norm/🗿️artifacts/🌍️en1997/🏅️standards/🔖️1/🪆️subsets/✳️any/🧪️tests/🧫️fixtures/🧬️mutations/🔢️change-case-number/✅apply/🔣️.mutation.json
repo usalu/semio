@@ -1,0 +1,6 @@
+{
+  "mutation": "changeCaseNumber",
+  "caseId": "case-equ-01",
+  "key": "m_dst_g",
+  "value": 500000.0
+}

@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeStoreyCount",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
-  "binaryTag": 60,
+  "binaryTag": 27,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-silo-liquid-density/schema.json",
+  "title": "ChangeSiloLiquidDensity",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newLiquidDensity"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Silo shell",
+          "de": "Silo-Schale"
+        },
+        "description": {
+          "en": "The silo shell this mutation addresses, by id.",
+          "de": "Das adressierte Element (Silo-Schale), per Kennung."
+        },
+        "ref": {
+          "kind": "silo"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newLiquidDensity": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Liquid density ρ (tank)",
+          "de": "Flüssigkeitsdichte ρ (Tank)"
+        },
+        "widget": "stepper",
+        "unit": "kg/m³",
+        "precision": 0,
+        "step": 10,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

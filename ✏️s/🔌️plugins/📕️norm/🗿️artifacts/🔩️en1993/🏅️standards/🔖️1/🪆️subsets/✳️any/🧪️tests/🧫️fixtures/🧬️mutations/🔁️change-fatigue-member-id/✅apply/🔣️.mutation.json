@@ -1,0 +1,6 @@
+{
+  "ChangeFatigueMemberId": {
+    "id": "fat-1",
+    "newMemberId": "member-b1-alt"
+  }
+}

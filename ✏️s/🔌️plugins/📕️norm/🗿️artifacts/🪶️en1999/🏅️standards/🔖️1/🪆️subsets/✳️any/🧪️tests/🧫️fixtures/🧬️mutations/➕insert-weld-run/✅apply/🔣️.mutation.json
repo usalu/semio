@@ -1,0 +1,17 @@
+{
+  "mutation": "insertWeldRun",
+  "index": 1,
+  "weldRun": {
+    "id": "weld-1-2",
+    "memberId": "purlin-1",
+    "elementId": "flange-top",
+    "start": 0.5,
+    "length": 2.0,
+    "offset": 0.0,
+    "throat": 0.004,
+    "process": "mig",
+    "tJunction": false,
+    "direction": "longitudinal",
+    "hazExtent": 0.0
+  }
+}

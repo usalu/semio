@@ -15,12 +15,19 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[features]
+oracle-wiring = ["semio-s-plugin-norm-compliance/compliance-testing"]
+
 [dependencies]
+semio-s-artifact-norm-en1999-checks-members = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-value-derive = { workspace = true }
+semio-s-artifact-norm-en1999-check-parts = { workspace = true }
 semio-s-artifact-norm-en1999-model = { workspace = true }
+semio-s-artifact-norm-en1999-section-solver = { workspace = true }
 semio-s-plugin-norm-compliance = { workspace = true }
+semio-s-plugin-norm-mechanics = { workspace = true }
 
 [dev-dependencies]
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

@@ -1,0 +1,6 @@
+{
+  "ChangeRowBoltDiameter": {
+    "id": "row-1",
+    "newBoltDiameter": 0.04
+  }
+}

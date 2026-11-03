@@ -1,0 +1,6 @@
+{
+  "ChangeFrameBarEndNodeId": {
+    "id": "bar-1",
+    "newEndNodeId": "node-b-alt"
+  }
+}

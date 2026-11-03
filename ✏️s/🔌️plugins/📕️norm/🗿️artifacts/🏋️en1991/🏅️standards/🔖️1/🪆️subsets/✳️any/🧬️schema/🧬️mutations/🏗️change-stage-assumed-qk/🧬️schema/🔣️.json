@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-stage-assumed-qk/schema.json",
+  "title": "ChangeStageAssumedQk",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newAssumedQk"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Construction stage",
+          "de": "Bauphase"
+        },
+        "description": {
+          "en": "The construction stage this mutation addresses, by id.",
+          "de": "Das adressierte Element (Bauphase), per Kennung."
+        },
+        "ref": {
+          "kind": "construction-stage"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newAssumedQk": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Assumed construction load q_ca",
+          "de": "Angenommene Bauzustandslast q_ca"
+        },
+        "widget": "stepper",
+        "unit": "Pa",
+        "displayUnit": "kN/m²",
+        "displayFactor": 0.001,
+        "precision": 2,
+        "step": 50,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-tension-cable-modulus/schema.json",
+  "title": "ChangeTensionCableModulus",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newCableModulus"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Tension component",
+          "de": "Zugglied"
+        },
+        "description": {
+          "en": "The tension component this mutation addresses, by id.",
+          "de": "Das adressierte Element (Zugglied), per Kennung."
+        },
+        "ref": {
+          "kind": "tension"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newCableModulus": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Cable modulus E",
+          "de": "Seil-E-Modul E"
+        },
+        "widget": "stepper",
+        "unit": "Pa",
+        "displayUnit": "N/mm²",
+        "displayFactor": 0.000001,
+        "precision": 1,
+        "step": 1000000,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

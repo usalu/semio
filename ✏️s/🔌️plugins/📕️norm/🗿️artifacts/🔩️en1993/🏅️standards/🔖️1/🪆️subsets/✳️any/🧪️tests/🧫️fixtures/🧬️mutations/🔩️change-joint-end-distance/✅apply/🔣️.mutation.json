@@ -1,0 +1,6 @@
+{
+  "ChangeJointEndDistance": {
+    "id": "joint-j1",
+    "newEndDistance": 0.06
+  }
+}

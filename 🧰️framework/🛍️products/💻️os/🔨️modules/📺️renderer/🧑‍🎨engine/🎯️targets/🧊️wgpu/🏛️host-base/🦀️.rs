@@ -189,6 +189,29 @@ pub fn prefers_dark_scheme() -> bool {
 }
 //#endregion 🌓️HostAppearance
 
+//#region 🎛️HostPlatformPrefs
+thread_local! {
+    static HOST_PLATFORM_PREFS: std::cell::Cell<semio_framework::ShellPlatformPrefs> = const { std::cell::Cell::new(semio_framework::ShellPlatformPrefs { forced_colors: false, prefers_contrast_more: false, prefers_dark: false, prefers_reduced_motion: false }) };
+}
+
+/// 🎛️ Publishes the accessibility preferences the platform reports (native: the OS settings read by the winit host; browser: the `forced-colors`, `prefers-contrast`, `prefers-color-scheme` and `prefers-reduced-motion` media queries forwarded by the page thread). Like [`set_host_appearance`] this store owns no scheduler: each live host requests a frame after a change and the shell hands the value to the open plugin on the next plan.
+pub fn set_host_platform_prefs(prefs: semio_framework::ShellPlatformPrefs) {
+    HOST_PLATFORM_PREFS.with(|cell| cell.set(prefs));
+}
+
+/// 🎛️ The published platform preferences; all `false` until a host publishes.
+pub fn host_platform_prefs() -> semio_framework::ShellPlatformPrefs {
+    HOST_PLATFORM_PREFS.with(|cell| cell.get())
+}
+/// 🎛️ Publishes the four answers of a host that holds no `semio_framework` type of its own (the winit host's OS read); `true` when they differ from the published ones, so the caller requests a frame.
+pub fn publish_host_platform_prefs(forced_colors: bool, prefers_contrast_more: bool, prefers_dark: bool, prefers_reduced_motion: bool) -> bool {
+    let next = semio_framework::ShellPlatformPrefs { forced_colors, prefers_contrast_more, prefers_dark, prefers_reduced_motion };
+    let changed = host_platform_prefs() != next;
+    set_host_platform_prefs(next);
+    changed
+}
+//#endregion 🎛️HostPlatformPrefs
+
 //#region 🎓️HostIntroduction
 thread_local! {
     static HOST_INTRODUCTION_SUPPRESSED: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };

@@ -101,6 +101,12 @@ pub fn section(label: crate::Label) -> ContainerBuilder {
     ContainerBuilder::new(crate::ContainerRole::Section, label)
 }
 
+/// 🪟️ A labeled bottom sheet, the secondary content of a small screen — `Component::Container(role: Sheet)`, announced as a complementary landmark.
+// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+pub fn sheet(label: crate::Label) -> ContainerBuilder {
+    ContainerBuilder::new(crate::ContainerRole::Sheet, label)
+}
+
 /// 🔖️ A labeled form field — `Component::Container(role: Field)`.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub fn field(label: crate::Label) -> ContainerBuilder {

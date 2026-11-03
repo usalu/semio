@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-local-fire-heat-release-rate/schema.json",
+  "title": "ChangeLocalFireHeatReleaseRate",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newHeatReleaseRate"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Localised fire",
+          "de": "Lokaler Brand"
+        },
+        "description": {
+          "en": "The localised fire this mutation addresses, by id.",
+          "de": "Das adressierte Element (Lokaler Brand), per Kennung."
+        },
+        "ref": {
+          "kind": "local-fire"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newHeatReleaseRate": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Rotation heat_release_rate f",
+          "de": "Wärmefreisetzungsrate Q"
+        },
+        "widget": "stepper",
+        "role": "value",
+        "group": "value",
+        "order": 20,
+        "unit": "W",
+        "displayUnit": "MW",
+        "displayFactor": 0.000001,
+        "precision": 2,
+        "step": 100000
+      }
+    }
+  }
+}

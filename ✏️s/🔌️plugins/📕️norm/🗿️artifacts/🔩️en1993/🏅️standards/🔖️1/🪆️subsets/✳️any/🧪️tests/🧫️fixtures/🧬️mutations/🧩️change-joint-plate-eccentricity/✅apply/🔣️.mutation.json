@@ -1,0 +1,6 @@
+{
+  "ChangeJointPlateEccentricity": {
+    "id": "joint-plate-1",
+    "newEccentricity": 2.0
+  }
+}

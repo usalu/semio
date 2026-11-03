@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-conn-action-gk-line/schema.json",
+  "title": "ChangeConnActionGKLine",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "connectionId",
+    "actionId",
+    "newGKLine"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeConnActionGKLine"
+    },
+    "connectionId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Connection",
+          "de": "Anschluss"
+        },
+        "description": {
+          "en": "The connection this mutation addresses, by id.",
+          "de": "Das adressierte Element (Anschluss), per Kennung."
+        },
+        "ref": {
+          "kind": "connection"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "actionId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Action",
+          "de": "Einwirkung"
+        },
+        "description": {
+          "en": "The action this mutation addresses, by id.",
+          "de": "Das adressierte Element (Einwirkung), per Kennung."
+        },
+        "ref": {
+          "kind": "action"
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "newGKLine": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Permanent line load g_k",
+          "de": "Ständige Streckenlast g_k"
+        },
+        "widget": "stepper",
+        "unit": "N/m",
+        "displayUnit": "kN/m",
+        "displayFactor": 0.001,
+        "precision": 2,
+        "step": 100,
+        "role": "value",
+        "group": "value",
+        "order": 30
+      }
+    }
+  }
+}

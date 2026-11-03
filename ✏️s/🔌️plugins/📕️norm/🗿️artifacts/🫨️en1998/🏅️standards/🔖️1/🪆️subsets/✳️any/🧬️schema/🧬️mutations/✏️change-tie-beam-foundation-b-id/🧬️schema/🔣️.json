@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-tie-beam-foundation-b-id/schema.json",
+  "title": "ChangeTieBeamFoundationBId",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newFoundationBId"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeTieBeamFoundationBId"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "TieBeam",
+          "de": "Gründung"
+        },
+        "description": {
+          "en": "The tieBeam this mutation addresses, by id.",
+          "de": "Das adressierte Element (Gründung), per Kennung."
+        },
+        "ref": {
+          "kind": "tieBeam"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newFoundationBId": {
+      "type": "string",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Supported building id",
+          "de": "Gestütztes Gebäude"
+        },
+        "group": "value",
+        "order": 20,
+        "widget": "text"
+      }
+    }
+  }
+}

@@ -1,0 +1,5 @@
+type ChangeBarLayerAggregateSize {
+  memberId: String!
+  layerId: String!
+  newAggregateSize: Float!
+}

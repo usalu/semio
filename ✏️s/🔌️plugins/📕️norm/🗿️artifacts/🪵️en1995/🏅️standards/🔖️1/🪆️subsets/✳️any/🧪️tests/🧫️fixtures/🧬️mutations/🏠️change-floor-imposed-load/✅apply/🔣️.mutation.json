@@ -1,0 +1,6 @@
+{
+  "ChangeFloorImposedLoad": {
+    "floorId": "floor-1",
+    "newValue": 3001.0
+  }
+}

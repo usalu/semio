@@ -4,8 +4,11 @@ use crate::insert_slab::InsertSlab;
 use semio_s_artifact_norm_en1994_model::En1994Snapshot;
 pub fn inverse<Op>(payload: &RemoveSlab, base: &En1994Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::insert_slab::InsertSlab> {
     Ok((|| {
-    let Some(slab) = base.slabs.get(payload.index).cloned() else { return Vec::new(); };
-    vec![Op::from(InsertSlab { index: payload.index, slab })]
+    let Some(index) = base.slabs.iter().position(|row| row.id == payload.id) else {
+        return Vec::new();
+    };
+    let Some(slab) = base.slabs.get(index).cloned() else { return Vec::new(); };
+    vec![Op::from(InsertSlab { index: index, slab })]
 
     })())
 }

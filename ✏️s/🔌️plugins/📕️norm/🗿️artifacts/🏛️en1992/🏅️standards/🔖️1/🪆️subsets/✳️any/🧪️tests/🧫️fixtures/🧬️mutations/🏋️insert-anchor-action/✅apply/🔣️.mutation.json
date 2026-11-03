@@ -1,0 +1,20 @@
+{
+  "InsertAnchorAction": {
+    "anchorId": "anc-1",
+    "index": 1,
+    "anchorAction": {
+      "id": "G-new",
+      "kind": "Permanent",
+      "category": "SelfWeight",
+      "source": "External",
+      "gKLine": 0.0,
+      "qKLine": 0.0,
+      "pointForce": 0.0,
+      "mK": 0.0,
+      "nK": 8000.0,
+      "vK": 4000.0,
+      "tK": 0.0,
+      "vKPunch": 0.0
+    }
+  }
+}

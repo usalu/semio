@@ -7,7 +7,7 @@
   "aggregateVariant": "InsertTowerLeg",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
-  "binaryTag": 44,
+  "binaryTag": 27,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

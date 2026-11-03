@@ -1,0 +1,4 @@
+type ChangeAnchorFCk {
+  anchorId: String!
+  newFCk: Float!
+}

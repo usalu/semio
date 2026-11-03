@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-member-udl/schema.json",
+  "title": "ChangeMemberUdl",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "memberId",
+    "newValue"
+  ],
+  "properties": {
+    "memberId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Member",
+          "de": "Bauteil"
+        },
+        "description": {
+          "en": "The reinforced concrete member this mutation addresses.",
+          "de": "Das Stahlbetonbauteil, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "member"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newValue": {
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Uniformly distributed load",
+          "de": "Gleichstreckenlast"
+        },
+        "unit": "N/m",
+        "displayUnit": "kN/m",
+        "displayFactor": 0.001,
+        "precision": 2,
+        "step": 100,
+        "group": "member",
+        "order": 20
+      }
+    }
+  }
+}

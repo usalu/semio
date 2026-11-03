@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-tank-shell-str-mpa/schema.json",
+  "title": "ChangeTankShellStrMpa",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newShellStrengthMpa"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeTankShellStrMpa"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Tank",
+          "de": "Tank"
+        },
+        "description": {
+          "en": "The tank this mutation addresses, by id.",
+          "de": "Das adressierte Element (Tank), per Kennung."
+        },
+        "ref": {
+          "kind": "tank"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newShellStrengthMpa": {
+      "type": "number",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Design strength of the shell wall in hoop tension (0 = not given)",
+          "de": "Bemessungsfestigkeit der Schalenwand in Ringzug (0 = nicht angegeben)"
+        },
+        "group": "value",
+        "order": 20,
+        "widget": "stepper",
+        "step": 0.001,
+        "precision": 3
+      }
+    }
+  }
+}

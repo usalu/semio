@@ -1,0 +1,7 @@
+{
+  "ChangeBeamActionPointForceN": {
+    "beamId": "beam-B1",
+    "id": "G-steel",
+    "newFKN": 1500.0
+  }
+}

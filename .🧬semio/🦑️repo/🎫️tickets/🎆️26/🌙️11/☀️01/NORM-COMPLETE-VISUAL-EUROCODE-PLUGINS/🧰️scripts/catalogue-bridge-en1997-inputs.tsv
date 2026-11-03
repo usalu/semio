@@ -1,0 +1,259 @@
+# key|scope|kind|unit|example|flags|en|de|confidence|note   (kinds: n number, v vector/series, c choice, x text; EN 1997 evaluators work in SI: N, Pa, m, N·m, degrees)
+@choice approach|da1str|DA1 combination 1 (structural)|DA1 Kombination 1 (Tragwerk)
+@choice approach|da1geo|DA1 combination 2 (geotechnical)|DA1 Kombination 2 (Geotechnik)
+@choice approach|da2|DA2|DA2
+@choice approach|da2star|DA2*|DA2*
+@choice approach|da3|DA3|DA3
+@choice approach|geo3|GEO3 (German NA)|GEO3 (Nationaler Anhang)
+@choice situation|bsP|Persistent (BS-P)|Ständig (BS-P)
+@choice situation|bsT|Transient (BS-T)|Vorübergehend (BS-T)
+@choice situation|bsA|Accidental (BS-A)|Außergewöhnlich (BS-A)
+@choice mode|mean|Mean value of the sample|Mittelwert der Stichprobe
+@choice mode|local|Local (lowest value) derivation|Lokale Ableitung (niedrigster Wert)
+@choice shape|rect|Rectangular footing|Rechteckfundament
+@choice shape|circle|Circular footing|Kreisfundament
+@choice shape|circle_flexible|Flexible circular footing|Biegeweiches Kreisfundament
+@choice shape|circle_rigid|Rigid circular footing|Starres Kreisfundament
+@choice shape|factor|Influence factor|Einflussbeiwert
+@choice kind|free_earth|Free earth support|Freie Auflagerung
+@choice kind|cantilever|Cantilever wall|Eingespannte Wand
+@choice kind|propped|Propped wall|Gestützte Wand
+@choice tendon|strand|Strand tendon|Litzenanker
+@choice tendon|bar|Bar tendon|Stabanker
+@choice aquifer|unconfined|Unconfined aquifer|Freier Grundwasserleiter
+@choice aquifer|confined|Confined aquifer|Gespannter Grundwasserleiter
+approach||c|-|da1str||Design approach|Nachweisverfahren|high|values of parse_design_approach
+situation||c|-|bsP||Design situation|Bemessungssituation|high|BS-P, BS-T, BS-A as used by resolve_params
+mode||c|-|mean||Characteristic value mode|Modus des charakteristischen Werts|high|c.so("mode") mean or local
+shape|SLS-01|c|-|rect||Footing shape|Fundamentform|medium|default rect
+shape|SLS-01B|c|-|circle_flexible||Footing shape|Fundamentform|high|match arm values in sls_01b
+kind||c|-|free_earth||Wall type|Wandart|medium|free_earth and cantilever read; propped assumed
+tendon||c|-|strand||Tendon type|Ankerart|high|strand default, bar branch
+aquifer||c|-|unconfined||Aquifer type|Grundwasserleiter|high|unconfined default, confined branch
+gamma||n|N_m3|19000||Unit weight γ|Wichte γ|high|SI tests use 19e3
+gamma1|G-01|s|N_m3|||Unit weight γ of layer 1 (series γ1…γn)|Wichte γ der Schicht 1 (Reihe γ1…γn)|medium|series by layers
+gamma1|GEO-F01,GEO-F03|n|N_m3|||Unit weight γ₁ below the foundation level|Wichte γ₁ unter der Gründungssohle|medium|assumed below; gamma2 above
+gamma2|GEO-F01,GEO-F02,GEO-F03|n|N_m3|||Unit weight γ₂ above the foundation level|Wichte γ₂ über der Gründungssohle|high|ex02 uses 19e3
+gamma_sat||n|N_m3|||Saturated unit weight γ_sat|Wichte unter Auftrieb γ_sat|high|
+gamma_sat1|G-01|s|N_m3|||Saturated unit weight of layer 1 (series)|Gesättigte Wichte der Schicht 1 (Reihe)|medium|series by layers
+gamma_w||n|N_m3|10000||Unit weight of water γ_w|Wichte des Wassers γ_w|high|
+gamma_prime||n|N_m3|||Buoyant unit weight γ'|Wichte unter Auftrieb γ'|high|
+gamma_s|ANC-04|n|1|||Partial factor γ_s of the tendon|Teilsicherheitsbeiwert γ_s des Zugglieds|medium|
+phi_deg||n|deg|||Friction angle φ|Reibungswinkel φ|high|r0:90
+phi_k_deg||n|deg|||Characteristic friction angle φ_k|Charakteristischer Reibungswinkel φ_k|high|
+phi1|G-01|s|deg|||Friction angle of layer 1 (series)|Reibungswinkel der Schicht 1 (Reihe)|medium|
+phi_base_deg||n|deg|||Friction angle at the base φ|Reibungswinkel in der Sohlfuge φ|medium|
+delta_deg||n|deg|||Wall friction angle δ|Wandreibungswinkel δ|high|
+delta_a_deg||n|deg|||Active wall friction angle δ_a|Aktiver Wandreibungswinkel δ_a|high|
+delta_p_deg||n|deg|||Passive wall friction angle δ_p|Passiver Wandreibungswinkel δ_p|high|
+alpha_deg||n|deg|||Wall or base inclination α|Neigung α der Wand oder Sohle|medium|
+beta_deg||n|deg|||Ground or slope inclination β|Geländeneigung β|high|
+theta_deg|ANC-03|n|deg|||Anchor inclination θ|Ankerneigung θ|medium|
+arc_deg||n|deg|||Slip arc angle|Bogenwinkel der Gleitfläche|medium|
+c||n|Pa|||Cohesion c|Kohäsion c|high|
+c_k||n|Pa|||Characteristic cohesion c_k|Charakteristische Kohäsion c_k|high|
+cu_k||n|Pa|||Characteristic undrained shear strength c_u,k|Charakteristische undränierte Scherfestigkeit c_u,k|high|ex02 uses 60e3
+cu_b||n|Pa|||Undrained shear strength at the base|Undränierte Scherfestigkeit an der Sohle|medium|
+cu_h_sum||n|Pa|||Sum of c_u over the pile length (c_u·h)|Summe c_u über die Pfahllänge|low|name only
+q|GI-16|n|m3_s|||Pumping rate Q|Pumpmenge Q|high|
+q||n|Pa|||Surcharge q|Auflast q|high|10e3 in tests
+q_total||n|Pa|||Total traffic surcharge|Gesamte Verkehrsauflast|medium|
+q_dst||n|N|||Destabilising variable action Q_dst|Destabilisierende veränderliche Einwirkung Q_dst|medium|
+q_well||n|m3_s|||Well discharge Q|Brunnenergiebigkeit Q|medium|
+strip_q||n|Pa|||Strip surcharge q|Streifenlast q|medium|
+strip_b||n|m|||Strip load width b|Breite b der Streifenlast|medium|
+strip_a||n|m|||Strip load distance a|Abstand a der Streifenlast|medium|
+strip_z||n|m|||Depth z of the strip load check|Tiefe z der Streifenlastbetrachtung|medium|
+h||n|m|||Height or thickness h|Höhe oder Dicke h|high|
+h1|G-01,SLS-01,PILE-05|s|m|||Thickness of layer 1 (series h1…hn)|Dicke der Schicht 1 (Reihe h1…hn)|high|series
+h1|GI-16|n|m|||Water level h₁ at observation well 1|Wasserstand h₁ im Beobachtungsbrunnen 1|medium|
+h2|GI-16|n|m|||Water level h₂ at observation well 2|Wasserstand h₂ im Beobachtungsbrunnen 2|medium|
+h_d||n|m|||Pile depth or head height h|Pfahllänge oder Kopfhöhe|low|PILE-04
+h_dr||n|m|||Drainage path length h_dr|Dränweglänge h_dr|high|
+h_g||n|N|||Horizontal permanent action H_G|Horizontale ständige Einwirkung H_G|high|
+h_q||n|N|||Horizontal variable action H_Q|Horizontale veränderliche Einwirkung H_Q|high|
+h_drop||n|m|||Drop height of the hammer|Fallhöhe des Rammbärs|high|
+h_aquifer||n|m|||Aquifer head h|Wasserstand im Grundwasserleiter|medium|
+h_well||n|m|||Water level in the well|Wasserstand im Brunnen|medium|
+hb_d||n|N|||Design horizontal force H_B,d (in b)|Bemessungshorizontalkraft H_B,d (in b-Richtung)|high|
+hl_d||n|N|||Design horizontal force H_L,d (in l)|Bemessungshorizontalkraft H_L,d (in l-Richtung)|high|
+head||n|m|||Hydraulic head|Wasserdruckhöhe|medium|
+delta_h||n|m|||Head difference Δh|Potentialdifferenz Δh|high|
+b||n|m|||Width b|Breite b|high|
+d||n|m|||Depth or diameter d|Tiefe oder Durchmesser d|high|
+d_b||n|m|||Investigation depth below the base|Erkundungstiefe unter der Sohle|medium|
+l||n|m|||Length l|Länge l|high|
+l_eff||n|m|||Buckling length|Knicklänge|high|
+l_f||n|m|||Fixed length|Verpresslänge|high|
+l_flow||n|m|||Flow path length|Sickerweglänge|high|
+l_free||n|m|||Free length|Freie Länge|high|
+l_min||n|m|||Minimum free length|Mindestfreilänge|high|
+z||n|m|||Depth z|Tiefe z|high|
+z_have||n|m|||Investigated depth present|Vorhandene Erkundungstiefe|high|
+z_start||n|m|||Start depth of the first layer|Starttiefe der ersten Schicht|high|
+z_w||n|m|||Depth of the water table|Tiefe des Wasserspiegels|high|
+z_m|ANC-03|n|m|||Depth z of the anchor force plane|Tiefe z der Ankerkraftebene|low|
+x_m|ANC-03|n|m|||Horizontal distance x|Horizontalabstand x|low|
+t_w|ANC-03|n|m|||Wall thickness or wedge width t|Wand- oder Keilbreite t|low|
+t|RW-03|n|m|||Embedment depth t|Einbindetiefe t|high|
+t|SLS-02|n|s|||Time t|Zeit t|high|
+t1|SLS-03|n|s|||Time t₁|Zeit t₁|high|
+t2|SLS-03|n|s|||Time t₂|Zeit t₂|high|
+t90||n|s|||Time t₉₀ of 90 % consolidation|Zeit t₉₀ bei 90 % Konsolidierung|medium|
+a|SLS-01,SLS-01B|n|m|||Footing dimension a (radius or width)|Fundamentmaß a (Radius oder Breite)|medium|ex09 uses 1.5 with circle
+a|GI-02|n|1|||Net area ratio a of the cone|Flächenverhältnis a der Spitze|high|
+a_d||n|N|||Design anchor action A_d|Bemessungsankerkraft A_d|medium|
+a_k|ANC-03|n|N|||Characteristic anchor force A_k|Charakteristische Ankerkraft A_k|medium|
+a_eff||n|m2|||Effective base area A'|Effektive Sohlfläche A'|high|
+area||n|m2|||Plan area A|Grundfläche A|high|
+alpha_e||n|1|||Oedometric modulus factor α|Beiwert α des Steifemoduls|high|
+alpha_m||n|1|||Rheological factor α (Ménard)|Rheologiebeiwert α (Ménard)|high|
+arm_g||n|m|||Lever arm of the permanent earth thrust|Hebelarm des ständigen Erddrucks|high|
+arm_q||n|m|||Lever arm of the variable earth thrust|Hebelarm des veränderlichen Erddrucks|high|
+beta|PILE-05|n|1|||Skin friction coefficient β|Mantelreibungsbeiwert β|high|
+block_b||n|m|||Block width of the pile group|Blockbreite der Pfahlgruppe|high|
+block_l||n|m|||Block length of the pile group|Blocklänge der Pfahlgruppe|high|
+c_alpha||n|1|||Secondary compression index C_α|Kriechbeiwert C_α|high|
+cb||n|1|||Borehole diameter correction C_B|Bohrlochkorrektur C_B|high|
+cc||n|1|||Compression index C_c|Kompressionsbeiwert C_c|high|
+cr||n|1|||Rod length correction C_R|Gestängekorrektur C_R|high|
+cs|SLS-02|n|1|||Swelling index C_s|Schwellbeiwert C_s|high|
+cs|GI-06|n|1|||Sampler correction C_S|Probenehmerkorrektur C_S|high|
+cv||n|1|||Coefficient of consolidation c_v in m²/s|Konsolidierungsbeiwert c_v in m²/s|medium|no m²/s unit in UnitId
+d10||n|m|||Grain size d₁₀|Korngröße d₁₀|medium|SI m assumed
+d30||n|m|||Grain size d₃₀|Korngröße d₃₀|medium|
+d60||n|m|||Grain size d₆₀|Korngröße d₆₀|medium|
+d15_b||n|m|||Grain size d₁₅ of the base filter|Korngröße d₁₅ des Filters|medium|
+d15_f||n|m|||Grain size d₁₅ of the filter|Korngröße d₁₅ der Filterschicht|medium|
+d85_b||n|m|||Grain size d₈₅ of the base soil|Korngröße d₈₅ des Bodens|medium|
+dsigma||n|Pa|||Stress increment Δσ|Spannungszuwachs Δσ|high|
+e|PILE-04|n|m|||Eccentricity or lever arm e|Exzentrizität oder Hebelarm e|low|name only
+e0||n|1|||Initial void ratio e₀|Anfangsporenzahl e₀|high|
+e1|SLS-01|s|Pa|||Constrained modulus of layer 1 (series e1…en)|Steifemodul der Schicht 1 (Reihe e1…en)|high|series
+e1|GI-10|s|1|||Void ratio at step 1 (series)|Porenzahl der Laststufe 1 (Reihe)|medium|
+e1|ANC-03|n|m|||Dimension e₁|Maß e₁|low|used with gamma and phi
+e2|ANC-03|n|m|||Dimension e₂|Maß e₂|low|
+e_h_d||n|N|||Design horizontal earth thrust E_h,d|Bemessungswert des horizontalen Erddrucks E_h,d|medium|
+e_m||n|Pa|||Modulus E (Ménard or elastic)|Modul E (Ménard oder elastisch)|high|
+e_oed||n|Pa|||Oedometric modulus E_oed|Steifemodul E_oed|high|
+e_p_k||n|N|||Characteristic passive thrust E_p,k|Charakteristischer Erdwiderstand E_p,k|high|
+ea||n|N|||Axial stiffness EA|Dehnsteifigkeit EA|high|
+eah_g||n|N|||Permanent horizontal earth thrust E_ah,G|Ständiger horizontaler Erddruck E_ah,G|high|
+eah_q||n|N|||Variable horizontal earth thrust E_ah,Q|Veränderlicher horizontaler Erddruck E_ah,Q|high|
+eav||n|N|||Vertical component of the earth thrust|Vertikalkomponente des Erddrucks|high|
+ei||n|1|||Flexural stiffness EI in N·m²|Biegesteifigkeit EI in N·m²|medium|no N·m² unit in UnitId
+empirical||n|1|||Empirical resistance (1) or not (0)|Erfahrungswerte (1) oder nicht (0)|high|flag read as > 0.5
+er||n|1|||Energy ratio E_r|Energieverhältnis E_r|high|
+eta_h||n|1|||Hammer efficiency η_h|Wirkungsgrad η_h des Rammbärs|medium|
+eta_kranz||n|1|||Kranz safety factor η|Sicherheit η nach Kranz|medium|
+f||n|1|||Influence factor f|Einflussbeiwert f|medium|
+f_cd||n|N|||Design pile compression action F_c,d|Bemessungsdruckkraft F_c,d|high|
+f_td||n|N|||Design pile tension action F_t,d|Bemessungszugkraft F_t,d|high|
+f_star||n|1|||Apparent friction coefficient f*|Scheinbarer Reibungsbeiwert f*|high|
+fs||n|Pa|||CPT sleeve friction f_s|Mantelreibung f_s des Drucksondierens|high|
+g_dst||n|N|||Destabilising permanent action G_dst|Destabilisierende ständige Einwirkung G_dst|high|
+g_stb||n|N|||Stabilising permanent action G_stb|Stabilisierende ständige Einwirkung G_stb|high|
+g_pile||n|N|||Pile self-weight G|Pfahleigengewicht G|high|
+gk||n|1|||Geotechnical category|Geotechnische Kategorie|high|1 to 3
+gwl_level||n|m|||Groundwater level|Grundwasserstand|medium|
+include_depth||n|1|||Include the depth factors d_q, d_c (1) or not (0); not in EN 1997-1 Annex D, Hansen/DIN 4017 convention|Tiefenfaktoren d_q, d_c berücksichtigen (1) oder nicht (0); nicht in EN 1997-1 Anhang D, Hansen/DIN-4017-Konvention|high|
+k|RW-09|n|1|||Earth pressure coefficient k|Erddruckbeiwert k|medium|
+k|DEW-01,DEW-02|n|m_s|||Permeability k|Durchlässigkeit k|high|
+k_p||n|1|||Pressuremeter factor k_p|Pressiometerbeiwert k_p|high|
+k_s||n|N_m3|||Modulus of subgrade reaction k_s|Bettungsmodul k_s|medium|N/m³ assumed
+ka||n|1|||Active earth pressure coefficient K_a|Aktiver Erddruckbeiwert K_a|high|
+kh||n|1|||Horizontal seismic coefficient k_h|Horizontaler Erdbebenbeiwert k_h|high|
+kv||n|1|||Vertical seismic coefficient k_v|Vertikaler Erdbebenbeiwert k_v|high|
+limit_den||n|1|||Limit denominator 1/x of the angular distortion|Grenznenner 1/x der Winkelverdrehung|medium|
+m|PILE-06|n|1|||Number of pile rows m|Anzahl Pfahlreihen m|high|
+m_dst_g||n|Nm|||Destabilising permanent moment|Destabilisierendes ständiges Moment|high|
+m_dst_q||n|Nm|||Destabilising variable moment|Destabilisierendes veränderliches Moment|high|
+m_stb_g||n|Nm|||Stabilising permanent moment|Stabilisierendes ständiges Moment|high|
+m_tension||n|Nm|||Moment of the anchor tension|Moment der Ankerkraft|medium|
+mb_d||n|Nm|||Design moment M_B,d about the b axis|Bemessungsmoment M_B,d um die b-Achse|high|
+ml_d||n|Nm|||Design moment M_L,d about the l axis|Bemessungsmoment M_L,d um die l-Achse|high|
+mobilisation||n|1|1|r0:1|Mobilisation ratio of the passive resistance|Mobilisierungsgrad des Erdwiderstands|high|clamped 0 to 1
+mx||n|Nm|||Moment M_x on the pile group|Moment M_x auf die Pfahlgruppe|high|
+my||n|Nm|||Moment M_y on the pile group|Moment M_y auf die Pfahlgruppe|high|
+n|PILE-09|n|N|||Axial pile force N|Pfahlnormalkraft N|medium|
+n|PILE-06|n|1|||Number of pile columns n|Anzahl Pfahlspalten n|high|
+n|GI-06|n|1|||SPT blow count N|SPT-Schlagzahl N|high|
+n10||n|1|||Dynamic probing blow count N₁₀|Schlagzahl N₁₀ der Rammsondierung|high|
+n1_60||n|1|||Corrected SPT blow count (N₁)₆₀|Korrigierte SPT-Schlagzahl (N₁)₆₀|high|
+n_ed||n|N|||Design axial force N_Ed|Bemessungsnormalkraft N_Ed|high|
+nc||n|1|||Bearing capacity factor N_c|Tragfähigkeitsbeiwert N_c|medium|
+nkt||n|1|||Cone factor N_kt|Kegelfaktor N_kt|high|
+nu||n|1|0.3|r0:0.5|Poisson ratio ν|Querdehnzahl ν|high|
+ocr||n|1|||Overconsolidation ratio OCR|Überkonsolidierungsgrad OCR|high|
+p||n|Pa|||Uniform pressure p|Gleichmäßiger Druck p|high|
+p1|GI-11|s|Pa|||Mean stress p of test 1 (series)|Mittlere Spannung p des Versuchs 1 (Reihe)|medium|
+q1|GI-11|s|Pa|||Deviator stress q of test 1 (series)|Deviatorspannung q des Versuchs 1 (Reihe)|medium|
+p_le||n|Pa|||Net limit pressure p_le*|Netto-Grenzdruck p_le*|high|
+p_t_k||n|N|||Characteristic tendon strength P_t,k|Charakteristische Zuggliedtragkraft P_t,k|high|
+passive_share||n|1|||Share of the passive thrust|Anteil des Erdwiderstands|high|
+prop_depth||n|m|||Prop depth below the crest|Stützentiefe unter der Oberkante|high|
+px||n|m|||Plan dimension p_x|Grundrissmaß p_x|low|
+py||n|m|||Plan dimension p_y|Grundrissmaß p_y|low|
+qc||n|Pa|||CPT cone resistance q_c|Spitzendruck q_c|high|
+qt||n|Pa|||Corrected cone resistance q_t|Korrigierter Spitzendruck q_t|high|
+qw1|DEW-02|s|m3_s|||Discharge of well 1 (series)|Förderleistung des Brunnens 1 (Reihe)|medium|
+r||n|m|||Radius r|Radius r|high|
+r1|GI-16|n|m|||Distance r₁ of observation well 1|Abstand r₁ des Beobachtungsbrunnens 1|high|
+r2|GI-16|n|m|||Distance r₂ of observation well 2|Abstand r₂ des Beobachtungsbrunnens 2|high|
+r_c_d||n|N|||Design pile compression resistance R_c,d|Bemessungswiderstand R_c,d|high|
+r_d||n|N|||Design resistance R_d|Bemessungswiderstand R_d|high|
+r_influence||n|m|||Radius of influence|Reichweite|high|
+r_well||n|m|||Well radius|Brunnenradius|high|
+radius||n|m|||Radius|Radius|medium|
+ra1|ANC-01|s|N|||Anchor resistance of test 1 (series)|Ankerwiderstand des Versuchs 1 (Reihe)|high|
+rb1|PILE-02|s|N|||Base resistance of profile 1 (series)|Spitzenwiderstand des Profils 1 (Reihe)|high|
+rs1|PILE-02|s|N|||Shaft resistance of profile 1 (series)|Mantelwiderstand des Profils 1 (Reihe)|high|
+rb_max||n|N|||Ultimate base resistance|Grenzspitzenwiderstand|high|
+rs_max||n|N|||Ultimate shaft resistance|Grenzmantelwiderstand|high|
+rigid_factor||n|1|||Rigidity factor|Steifigkeitsbeiwert|medium|
+rm1|PILE-01,PILE-08|s|N|||Measured resistance of test 1 (series)|Gemessener Widerstand des Versuchs 1 (Reihe)|high|
+row||n|1|||Pile row number|Pfahlreihennummer|medium|
+rt1|PILE-03|s|N|||Tension resistance of test 1 (series)|Zugwiderstand des Versuchs 1 (Reihe)|high|
+rt_k||n|N|||Characteristic tension resistance|Charakteristischer Zugwiderstand|high|
+ru||n|1|||Pore pressure ratio r_u|Porenwasserdruckverhältnis r_u|high|
+s|PILE-06|n|m|||Pile spacing s|Pfahlabstand s|high|
+s|RW-09|n|m|||Spacing s|Abstand s|low|
+s_a||n|m|||Settlement of point A|Setzung des Punktes A|high|
+s_b||n|m|||Settlement of point B|Setzung des Punktes B|high|
+s_e||n|m|||Elastic set per blow|Elastische Zusammendrückung je Schlag|medium|
+s_lim||n|m|||Limit settlement|Grenzsetzung|high|
+s_ref_b||n|m|||Reference base settlement|Referenzsetzung am Fuß|medium|
+s_ref_s||n|m|||Reference shaft settlement|Referenzsetzung am Mantel|medium|
+s_set||n|m|||Set per blow|Eindringung je Schlag|high|
+s_v||n|m|||Vertical reinforcement spacing|Vertikaler Bewehrungsabstand|medium|
+seepage||n|1|||Seepage parallel to slope (1) or not (0)|Hangparallele Sickerströmung (1) oder nicht (0)|high|flag read as > 0.5
+sigma0||n|Pa|||Stress σ₀ at the footing base|Spannung σ₀ in der Sohle|high|
+sigma1|GI-10|s|Pa|||Vertical stress of step 1 (series)|Vertikalspannung der Laststufe 1 (Reihe)|high|
+sigma1|GI-12|s|Pa|||Normal stress of test 1 (series)|Normalspannung des Versuchs 1 (Reihe)|high|
+sigma_p||n|Pa|||Preconsolidation pressure σ'_p|Vorbelastungsdruck σ'_p|high|
+sigma_v||n|Pa|||Vertical stress σ_v|Vertikalspannung σ_v|high|
+sigma_v0||n|Pa|||Total vertical stress σ_v0|Totale Vertikalspannung σ_v0|high|
+sigma_v0_eff||n|Pa|||Effective vertical stress σ'_v0|Effektive Vertikalspannung σ'_v0|high|
+slices||n|1|||Number of slices|Anzahl Lamellen|high|
+stiff||n|1|||Stiff structure (1) or not (0)|Steifes Tragwerk (1) oder nicht (0)|high|flag read as > 0.5
+sv1|PILE-05|s|Pa|||Vertical stress of layer 1 (series)|Vertikalspannung der Schicht 1 (Reihe)|medium|
+sx||n|m|||Pile spacing s_x|Pfahlabstand s_x|high|
+sy||n|m|||Pile spacing s_y|Pfahlabstand s_y|high|
+tau1|GI-12|s|Pa|||Shear stress of test 1 (series)|Schubspannung des Versuchs 1 (Reihe)|high|
+tau_f||n|Pa|||Fixed-length skin friction τ_f|Mantelreibung τ_f der Verpresslänge|high|
+thickness||n|m|||Aquifer or layer thickness|Mächtigkeit|high|
+u2||n|Pa|||CPT pore pressure u₂|Porenwasserdruck u₂ des Drucksondierens|high|
+v||n|N|||Vertical load V|Vertikallast V|high|
+v_d||n|N|||Design vertical force V_d|Bemessungsvertikalkraft V_d|high|
+v_k||n|N|||Characteristic vertical force V_k|Charakteristische Vertikalkraft V_k|high|
+v_known||n|1|||Known coefficient of variation|Bekannter Variationskoeffizient|high|
+w||n|N|||Weight W|Gewicht W|medium|N assumed, per metre run unclear
+x1|G-02,GI-13|s|1|||Sample value 1 (series x1…xn)|Stichprobenwert 1 (Reihe x1…xn)|high|series
+x1|DEW-02|s|m|||x coordinate of well 1 (series)|x-Koordinate des Brunnens 1 (Reihe)|high|
+y1|DEW-02|s|m|||y coordinate of well 1 (series)|y-Koordinate des Brunnens 1 (Reihe)|high|
+x_v||n|m|||Lever arm of the vertical thrust|Hebelarm der Vertikalkomponente|high|
+x_w||n|m|||Lever arm of the weight|Hebelarm des Gewichts|high|
+xc||n|m|||Slip circle centre x|Gleitkreismittelpunkt x|high|
+yc||n|m|||Slip circle centre y|Gleitkreismittelpunkt y|high|
+xi_a||n|1|||Correlation factor ξ_a|Streuungsfaktor ξ_a|medium|
+y_lim||n|m|||Limit pile head displacement|Grenzverschiebung des Pfahlkopfs|medium|

@@ -1,0 +1,6 @@
+{
+  "ChangeCraneHoistReleaseDevice": {
+    "id": "crane-hoist-1",
+    "newReleaseDevice": "x-alt"
+  }
+}

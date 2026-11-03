@@ -1,0 +1,5 @@
+{
+  "mutation": "changeWeldRunProcess",
+  "weldRunId": "weld-1",
+  "newProcess": "tig"
+}

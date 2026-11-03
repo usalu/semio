@@ -1,90 +1,114 @@
-# 🧬️ En1998 diff schema — sparse scalar fields plus keyed row deltas.
+scalar JSON
 
 type En1998Diff {
-  annex: String @state(class: ARTIFACT)
-  site: En1998Site @state(class: ARTIFACT)
-  buildings: En1998BuildingDelta! @state(class: ARTIFACT)
-  bridges: En1998BridgeDelta! @state(class: ARTIFACT)
-  assessments: En1998AssessmentDelta! @state(class: ARTIFACT)
-  silos: En1998SiloDelta! @state(class: ARTIFACT)
-  tanks: En1998TankDelta! @state(class: ARTIFACT)
-  foundations: En1998FoundationDelta! @state(class: ARTIFACT)
-  retainingWalls: En1998RetainingWallDelta! @state(class: ARTIFACT)
-  towers: En1998TowerDelta! @state(class: ARTIFACT)
+  annex: JSON
+  site: JSON
+  buildings: JSON!
+  bridges: JSON!
+  assessments: JSON!
+  silos: JSON!
+  tanks: JSON!
+  foundations: JSON!
+  retainingWalls: JSON!
+  towers: JSON!
+  soilLayers: JSON!
+  diaphragms: JSON!
+  accelerograms: JSON!
+  piers: JSON!
+  bearings: JSON!
+  joints: JSON!
+  tieBeams: JSON!
+  slopes: JSON!
+  placements: JSON!
 }
-
 type En1998SystemDelta {
   removed: [En1998SystemRemoval!]!
   inserted: [En1998SystemInsertion!]!
   moved: [En1998SystemRelocation!]!
   modified: [En1998SystemModification!]!
 }
-
 type En1998SystemRemoval {
   id: String!
   index: Int!
 }
-
 type En1998SystemInsertion {
   index: Int!
   row: En1998System!
 }
-
 type En1998SystemRelocation {
   id: String!
   from: Int!
   to: Int!
 }
-
 type En1998SystemModification {
   id: String!
   patch: En1998SystemPatch!
 }
-
 type En1998SystemPatch {
-  direction: String
-  systemType: String
-  material: String
-  ductilityClass: String
+  direction: JSON
+  systemType: JSON
+  material: JSON
+  ductilityClass: JSON
   q0: Float
   alphaUOverAlpha1: Float
   kW: Float
   baseShearResistanceN: Float
 }
-
 type En1998StoreyDelta {
   removed: [En1998StoreyRemoval!]!
   inserted: [En1998StoreyInsertion!]!
   moved: [En1998StoreyRelocation!]!
   modified: [En1998StoreyModification!]!
 }
-
 type En1998StoreyRemoval {
   id: String!
   index: Int!
 }
-
 type En1998StoreyInsertion {
   index: Int!
   row: En1998Storey!
 }
-
 type En1998StoreyRelocation {
   id: String!
   from: Int!
   to: Int!
 }
-
 type En1998StoreyModification {
   id: String!
   patch: En1998StoreyPatch!
 }
-
+type En1998VariableActionDelta {
+  removed: [En1998VariableActionRemoval!]!
+  inserted: [En1998VariableActionInsertion!]!
+  moved: [En1998VariableActionRelocation!]!
+  modified: [En1998VariableActionModification!]!
+}
+type En1998VariableActionRemoval {
+  id: String!
+  index: Int!
+}
+type En1998VariableActionInsertion {
+  index: Int!
+  row: En1998VariableAction!
+}
+type En1998VariableActionRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1998VariableActionModification {
+  id: String!
+  patch: En1998VariableActionPatch!
+}
+type En1998VariableActionPatch {
+  category: JSON
+  qkN: Float
+}
 type En1998StoreyPatch {
   heightM: Float
   permanentGkN: Float
   correlatedOccupancy: Boolean
-  variables: String
+  variables: En1998VariableActionDelta!
   stiffnessX: Float
   stiffnessY: Float
   centreOfMassXM: Float
@@ -95,37 +119,31 @@ type En1998StoreyPatch {
   driftYM: Float
   shearResistanceN: Float
 }
-
 type En1998MemberDelta {
   removed: [En1998MemberRemoval!]!
   inserted: [En1998MemberInsertion!]!
   moved: [En1998MemberRelocation!]!
   modified: [En1998MemberModification!]!
 }
-
 type En1998MemberRemoval {
   id: String!
   index: Int!
 }
-
 type En1998MemberInsertion {
   index: Int!
   row: En1998Member!
 }
-
 type En1998MemberRelocation {
   id: String!
   from: Int!
   to: Int!
 }
-
 type En1998MemberModification {
   id: String!
   patch: En1998MemberPatch!
 }
-
 type En1998MemberPatch {
-  material: String
+  material: JSON
   role: String
   detailingCompatibleWithQ: Boolean
   minDimensionM: Float
@@ -133,36 +151,42 @@ type En1998MemberPatch {
   rhoPrime: Float
   omegaWd: Float
   steelSectionClass: Int
+  fastenerDiameterMm: Float
+  timberThicknessMm: Float
+  wallThicknessM: Float
+  wallEffectiveHeightM: Float
+  wallLengthM: Float
+  wallDirectionRad: Float
+  wallStoreyId: String
+  wallStartXM: Float
+  wallStartYM: Float
+  wallPoissonRatio: Float
+  effectiveStiffnessBasis: String
+  effectiveStiffnessRatio: Float
 }
-
 type En1998BuildingDelta {
   removed: [En1998BuildingRemoval!]!
   inserted: [En1998BuildingInsertion!]!
   moved: [En1998BuildingRelocation!]!
   modified: [En1998BuildingModification!]!
 }
-
 type En1998BuildingRemoval {
   id: String!
   index: Int!
 }
-
 type En1998BuildingInsertion {
   index: Int!
   row: En1998Building!
 }
-
 type En1998BuildingRelocation {
   id: String!
   from: Int!
   to: Int!
 }
-
 type En1998BuildingModification {
   id: String!
   patch: En1998BuildingPatch!
 }
-
 type En1998BuildingPatch {
   name: String
   planWidthM: Float
@@ -172,45 +196,54 @@ type En1998BuildingPatch {
   members: En1998MemberDelta!
   planRegular: Boolean
   elevationRegular: Boolean
-  t1Method: String
+  t1Method: JSON
   t1GivenS: Float
   ct: Float
-  driftLimitClass: String
+  driftLimitClass: JSON
   nu: Float
   multipleResistingSystems: Boolean
   claimsSimpleMasonry: Boolean
   masonryWallAreaRatio: Float
   accidentalEccentricityRatio: Float
+  setbackRatio: Float
+  planEnvelopeGapRatio: Float
+  jointGapM: Float
+  nonstructuralWeightN: Float
+  nonstructuralHeightM: Float
+  nonstructuralPeriodS: Float
+  nonstructuralQ: Float
+  nonstructuralResistanceN: Float
+  columnMomentSumNm: Float
+  beamMomentSumNm: Float
+  overturningBaseXM: Float
+  overturningBaseYM: Float
+  tieDownMomentNm: Float
+  storeyStiffnessBasis: String
+  storeyStiffnessRatio: Float
 }
-
 type En1998BridgeDelta {
   removed: [En1998BridgeRemoval!]!
   inserted: [En1998BridgeInsertion!]!
   moved: [En1998BridgeRelocation!]!
   modified: [En1998BridgeModification!]!
 }
-
 type En1998BridgeRemoval {
   id: String!
   index: Int!
 }
-
 type En1998BridgeInsertion {
   index: Int!
   row: En1998Bridge!
 }
-
 type En1998BridgeRelocation {
   id: String!
   from: Int!
   to: Int!
 }
-
 type En1998BridgeModification {
   id: String!
   patch: En1998BridgePatch!
 }
-
 type En1998BridgePatch {
   periodRatio: Float
   fundamentalPeriodS: Float
@@ -218,224 +251,250 @@ type En1998BridgePatch {
   bearingDRdM: Float
   permanentGkN: Float
   correlatedOccupancy: Boolean
-  variables: String
+  variables: En1998VariableActionDelta!
+  pierHeightM: Float
+  pierMomentRdNm: Float
+  pierShearRdN: Float
+  deckLengthM: Float
+  deckEiNm2: Float
+  importanceClass: Float
+  verticalPeriodS: Float
+  pierCrackedInertiaRatio: Float
 }
-
 type En1998AssessmentDelta {
   removed: [En1998AssessmentRemoval!]!
   inserted: [En1998AssessmentInsertion!]!
   moved: [En1998AssessmentRelocation!]!
   modified: [En1998AssessmentModification!]!
 }
-
 type En1998AssessmentRemoval {
   id: String!
   index: Int!
 }
-
 type En1998AssessmentInsertion {
   index: Int!
   row: En1998Assessment!
 }
-
 type En1998AssessmentRelocation {
   id: String!
   from: Int!
   to: Int!
 }
-
 type En1998AssessmentModification {
   id: String!
   patch: En1998AssessmentPatch!
 }
-
 type En1998AssessmentPatch {
-  knowledgeLevel: String
-  limitState: String
+  knowledgeLevel: JSON
+  limitState: JSON
   supportedBuildingId: String
   rKN: Float
   gammaEl: Float
+  chordRotationDemandRad: Float
+  chordRotationYieldRad: Float
+  chordRotationUltimateRad: Float
+  sectionDepthM: Float
+  sectionWidthM: Float
+  effectiveDepthM: Float
+  shearSpanM: Float
+  axialForceN: Float
+  tensionSteelAreaM2: Float
+  compressionSteelAreaM2: Float
+  barDiameterMm: Float
+  steelYieldMpa: Float
+  concreteStrengthMpa: Float
+  stirrupLegAreaM2: Float
+  stirrupSpacingM: Float
+  stirrupYieldMpa: Float
+  coreWidthM: Float
+  coreDepthM: Float
+  restrainedBarCount: Float
+  restrainedBarSpacingM: Float
+  diagonalReinforcementRatio: Float
+  shearCrackingBeforeYield: Float
+  shearForceDemandN: Float
+  intermediateSteelAreaM2: JSON
 }
-
 type En1998SiloDelta {
   removed: [En1998SiloRemoval!]!
   inserted: [En1998SiloInsertion!]!
   moved: [En1998SiloRelocation!]!
   modified: [En1998SiloModification!]!
 }
-
 type En1998SiloRemoval {
   id: String!
   index: Int!
 }
-
 type En1998SiloInsertion {
   index: Int!
   row: En1998Silo!
 }
-
 type En1998SiloRelocation {
   id: String!
   from: Int!
   to: Int!
 }
-
 type En1998SiloModification {
   id: String!
   patch: En1998SiloPatch!
 }
-
 type En1998SiloPatch {
   heightM: Float
   radiusM: Float
   permanentGkN: Float
   contentQkN: Float
-  contentCategory: String
+  contentCategory: JSON
   fillingRatio: Float
   nRdN: Float
   vRdN: Float
   qNominal: Float
 }
-
 type En1998TankDelta {
   removed: [En1998TankRemoval!]!
   inserted: [En1998TankInsertion!]!
   moved: [En1998TankRelocation!]!
   modified: [En1998TankModification!]!
 }
-
 type En1998TankRemoval {
   id: String!
   index: Int!
 }
-
 type En1998TankInsertion {
   index: Int!
   row: En1998Tank!
 }
-
 type En1998TankRelocation {
   id: String!
   from: Int!
   to: Int!
 }
-
 type En1998TankModification {
   id: String!
   patch: En1998TankPatch!
 }
-
 type En1998TankPatch {
   heightM: Float
   radiusM: Float
   permanentGkN: Float
   contentQkN: Float
-  contentCategory: String
+  contentCategory: JSON
   fillingRatio: Float
   vRdN: Float
+  shellStrengthMpa: Float
+  shellThicknessM: Float
 }
-
 type En1998FoundationDelta {
   removed: [En1998FoundationRemoval!]!
   inserted: [En1998FoundationInsertion!]!
   moved: [En1998FoundationRelocation!]!
   modified: [En1998FoundationModification!]!
 }
-
 type En1998FoundationRemoval {
   id: String!
   index: Int!
 }
-
 type En1998FoundationInsertion {
   index: Int!
   row: En1998Foundation!
 }
-
 type En1998FoundationRelocation {
   id: String!
   from: Int!
   to: Int!
 }
-
 type En1998FoundationModification {
   id: String!
   patch: En1998FoundationPatch!
 }
-
 type En1998FoundationPatch {
   supportedBuildingId: String
   areaM2: Float
   pRdPa: Float
-  hRdN: Float
+  passiveResistanceN: Float
   kFoundation: Float
   kSoil: Float
+  liqN160: Float
+  liqFinesPercent: Float
+  liqDepthM: Float
+  liqWaterDepthM: Float
+  liqUnitWeightNM3: Float
+  liqMagnitude: Float
+  liqLayerThicknessM: Float
+  footingWidthM: Float
+  bearingAxialN: Float
+  bearingShearN: Float
+  bearingMomentNm: Float
+  bearingNMaxN: Float
+  soilFrictionAngleDeg: Float
+  pileDiameterM: Float
+  pileLengthM: Float
+  pileModulusPa: Float
+  pileSubgradeModulusNM3: Float
+  pileHeadShearN: Float
+  pileHeadFixed: Float
+  pileInterfaceDepthM: Float
+  pileUpperVsMS: Float
+  pileLowerVsMS: Float
+  pileMomentRdNm: Float
+  baseFrictionAngleDeg: Float
+  basePorePressurePa: Float
 }
-
 type En1998RetainingWallDelta {
   removed: [En1998RetainingWallRemoval!]!
   inserted: [En1998RetainingWallInsertion!]!
   moved: [En1998RetainingWallRelocation!]!
   modified: [En1998RetainingWallModification!]!
 }
-
 type En1998RetainingWallRemoval {
   id: String!
   index: Int!
 }
-
 type En1998RetainingWallInsertion {
   index: Int!
   row: En1998RetainingWall!
 }
-
 type En1998RetainingWallRelocation {
   id: String!
   from: Int!
   to: Int!
 }
-
 type En1998RetainingWallModification {
   id: String!
   patch: En1998RetainingWallPatch!
 }
-
 type En1998RetainingWallPatch {
   heightM: Float
   phiDeg: Float
   soilGamma: Float
   r: Float
   hRdNPerM: Float
+  waterHeightM: Float
+  saturatedGamma: Float
+  permeabilityMS: Float
 }
-
 type En1998TowerDelta {
   removed: [En1998TowerRemoval!]!
   inserted: [En1998TowerInsertion!]!
   moved: [En1998TowerRelocation!]!
   modified: [En1998TowerModification!]!
 }
-
 type En1998TowerRemoval {
   id: String!
   index: Int!
 }
-
 type En1998TowerInsertion {
   index: Int!
   row: En1998Tower!
 }
-
 type En1998TowerRelocation {
   id: String!
   from: Int!
   to: Int!
 }
-
 type En1998TowerModification {
   id: String!
   patch: En1998TowerPatch!
 }
-
 type En1998TowerPatch {
   heightM: Float
   mRdNm: Float
@@ -443,5 +502,306 @@ type En1998TowerPatch {
   qNominal: Float
   permanentGkN: Float
   correlatedOccupancy: Boolean
-  variables: String
+  variables: En1998VariableActionDelta!
+  eiNm2: Float
+  baseRotationalStiffnessNm: Float
+}
+type En1998PlacementDelta {
+  removed: [En1998PlacementRemoval!]!
+  inserted: [En1998PlacementInsertion!]!
+  moved: [En1998PlacementRelocation!]!
+  modified: [En1998PlacementModification!]!
+}
+type En1998PlacementRemoval {
+  id: String!
+  index: Int!
+}
+type En1998PlacementInsertion {
+  index: Int!
+  row: En1998Placement!
+}
+type En1998PlacementRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1998PlacementModification {
+  id: String!
+  patch: En1998PlacementPatch!
+}
+type En1998PlacementPatch {
+  x: Float
+  y: Float
+  z: Float
+  yaw: Float
+}
+type En1998SoilLayerDelta {
+  removed: [En1998SoilLayerRemoval!]!
+  inserted: [En1998SoilLayerInsertion!]!
+  moved: [En1998SoilLayerRelocation!]!
+  modified: [En1998SoilLayerModification!]!
+}
+type En1998SoilLayerRemoval {
+  id: String!
+  index: Int!
+}
+type En1998SoilLayerInsertion {
+  index: Int!
+  row: En1998SoilLayer!
+}
+type En1998SoilLayerRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1998SoilLayerModification {
+  id: String!
+  patch: En1998SoilLayerPatch!
+}
+type En1998SoilLayerPatch {
+  foundationId: String
+  thicknessM: Float
+  unitWeightNM3: Float
+  shearWaveVelocityMS: Float
+  n160: Float
+  finesPercent: Float
+}
+type En1998DiaphragmDelta {
+  removed: [En1998DiaphragmRemoval!]!
+  inserted: [En1998DiaphragmInsertion!]!
+  moved: [En1998DiaphragmRelocation!]!
+  modified: [En1998DiaphragmModification!]!
+}
+type En1998DiaphragmRemoval {
+  id: String!
+  index: Int!
+}
+type En1998DiaphragmInsertion {
+  index: Int!
+  row: En1998Diaphragm!
+}
+type En1998DiaphragmRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1998DiaphragmModification {
+  id: String!
+  patch: En1998DiaphragmPatch!
+}
+type En1998DiaphragmPatch {
+  buildingId: String
+  storeyId: String
+  material: JSON
+  thicknessM: Float
+  spanM: Float
+  depthM: Float
+  openingWidthM: Float
+  shearStrengthMpa: Float
+  chordAreaM2: Float
+  chordStrengthMpa: Float
+  gammaD: Float
+}
+type En1998AccelerogramDelta {
+  removed: [En1998AccelerogramRemoval!]!
+  inserted: [En1998AccelerogramInsertion!]!
+  moved: [En1998AccelerogramRelocation!]!
+  modified: [En1998AccelerogramModification!]!
+}
+type En1998AccelerogramRemoval {
+  id: String!
+  index: Int!
+}
+type En1998AccelerogramInsertion {
+  index: Int!
+  row: En1998Accelerogram!
+}
+type En1998AccelerogramRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1998AccelerogramModification {
+  id: String!
+  patch: En1998AccelerogramPatch!
+}
+type En1998AccelerogramPatch {
+  buildingId: String
+  label: String
+  samples: String
+  dtS: Float
+  scaleFactor: Float
+}
+type En1998PierDelta {
+  removed: [En1998PierRemoval!]!
+  inserted: [En1998PierInsertion!]!
+  moved: [En1998PierRelocation!]!
+  modified: [En1998PierModification!]!
+}
+type En1998PierRemoval {
+  id: String!
+  index: Int!
+}
+type En1998PierInsertion {
+  index: Int!
+  row: En1998Pier!
+}
+type En1998PierRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1998PierModification {
+  id: String!
+  patch: En1998PierPatch!
+}
+type En1998PierPatch {
+  bridgeId: String
+  xM: Float
+  heightM: Float
+  sectionBM: Float
+  sectionHM: Float
+  modulusMpa: Float
+  momentRdNm: Float
+  shearRdN: Float
+  reinforcementRatio: String
+  coverM: String
+  concreteFckMpa: String
+  steelFykMpa: String
+  axialLoadN: String
+  stiffnessBasis: JSON
+}
+type En1998BearingDelta {
+  removed: [En1998BearingRemoval!]!
+  inserted: [En1998BearingInsertion!]!
+  moved: [En1998BearingRelocation!]!
+  modified: [En1998BearingModification!]!
+}
+type En1998BearingRemoval {
+  id: String!
+  index: Int!
+}
+type En1998BearingInsertion {
+  index: Int!
+  row: En1998Bearing!
+}
+type En1998BearingRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1998BearingModification {
+  id: String!
+  patch: En1998BearingPatch!
+}
+type En1998BearingPatch {
+  bridgeId: String
+  pierId: String
+  device: JSON
+  xM: Float
+  stiffnessNPerM: Float
+  dRdM: Float
+  seatLengthM: Float
+  minSupportLengthM: Float
+}
+type En1998JointDelta {
+  removed: [En1998JointRemoval!]
+  inserted: [En1998JointInsertion!]
+  moved: [En1998JointRelocation!]
+  modified: [En1998JointModification!]
+}
+type En1998JointRemoval {
+  id: String!
+  index: Int!
+}
+type En1998JointInsertion {
+  index: Int!
+  row: En1998Joint!
+}
+type En1998JointRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1998JointModification {
+  id: String!
+  patch: En1998JointPatch!
+}
+type En1998JointPatch {
+  buildingId: String
+  storeyId: String
+  columnId: String
+  beamId: String
+  xM: Float
+  yM: Float
+  columnMomentRdNm: Float
+  beamMomentRdNm: Float
+}
+type En1998TieBeamDelta {
+  removed: [En1998TieBeamRemoval!]
+  inserted: [En1998TieBeamInsertion!]
+  moved: [En1998TieBeamRelocation!]
+  modified: [En1998TieBeamModification!]
+}
+type En1998TieBeamRemoval {
+  id: String!
+  index: Int!
+}
+type En1998TieBeamInsertion {
+  index: Int!
+  row: En1998TieBeam!
+}
+type En1998TieBeamRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1998TieBeamModification {
+  id: String!
+  patch: En1998TieBeamPatch!
+}
+type En1998TieBeamPatch {
+  foundationAId: String
+  foundationBId: String
+  span: String
+  width: String
+  depth: String
+  steelArea: String
+  steelDesignStrength: String
+  relativeDisplacement: String
+  displacementLimit: String
+}
+type En1998SlopeDelta {
+  removed: [En1998SlopeRemoval!]
+  inserted: [En1998SlopeInsertion!]
+  moved: [En1998SlopeRelocation!]
+  modified: [En1998SlopeModification!]
+}
+type En1998SlopeRemoval {
+  id: String!
+  index: Int!
+}
+type En1998SlopeInsertion {
+  index: Int!
+  row: En1998Slope!
+}
+type En1998SlopeRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1998SlopeModification {
+  id: String!
+  patch: En1998SlopePatch!
+}
+type En1998SlopePatch {
+  governingLayerId: String
+  height: String
+  angle: String
+  frictionAngle: String
+  cohesion: String
+  topographicAmplification: String
+  circleCentreX: String
+  circleCentreZ: String
+  circleRadius: String
 }

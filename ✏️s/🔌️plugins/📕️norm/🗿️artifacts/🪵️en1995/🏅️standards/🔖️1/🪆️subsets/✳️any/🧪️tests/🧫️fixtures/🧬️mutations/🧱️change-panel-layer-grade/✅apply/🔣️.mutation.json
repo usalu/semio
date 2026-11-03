@@ -1,0 +1,7 @@
+{
+  "ChangePanelLayerGrade": {
+    "panelId": "panel-1",
+    "layerId": "layer-1",
+    "newValue": "changed-C24"
+  }
+}

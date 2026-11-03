@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-layer-cpt-qc/schema.json",
+  "title": "ChangeLayerCptQc",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newCptQc"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeLayerCptQc"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Soil layer",
+          "de": "Bodenschicht"
+        },
+        "description": {
+          "en": "The soil layer this mutation addresses, by id.",
+          "de": "Die adressierte Zeile (Bodenschicht), per Kennung."
+        },
+        "ref": {
+          "kind": "soil-layer"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newCptQc": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Cone resistance q_c",
+          "de": "Spitzenwiderstand q_c"
+        },
+        "widget": "stepper",
+        "unit": "Pa",
+        "displayUnit": "N/mm²",
+        "displayFactor": 0.000001,
+        "precision": 1,
+        "step": 500000,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

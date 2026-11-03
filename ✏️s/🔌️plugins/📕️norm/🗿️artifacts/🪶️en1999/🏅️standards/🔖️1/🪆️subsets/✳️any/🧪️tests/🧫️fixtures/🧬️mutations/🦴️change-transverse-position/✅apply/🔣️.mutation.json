@@ -1,0 +1,5 @@
+{
+  "mutation": "changeTransversePosition",
+  "transverseStiffenerId": "stiffener-1",
+  "newPosition": 3.0
+}

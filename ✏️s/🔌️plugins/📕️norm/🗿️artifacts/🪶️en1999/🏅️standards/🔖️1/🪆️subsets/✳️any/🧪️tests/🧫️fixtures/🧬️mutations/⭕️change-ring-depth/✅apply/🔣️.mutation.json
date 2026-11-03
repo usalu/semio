@@ -1,0 +1,5 @@
+{
+  "mutation": "changeRingDepth",
+  "ringStiffenerId": "ring-1",
+  "newDepth": 0.12
+}

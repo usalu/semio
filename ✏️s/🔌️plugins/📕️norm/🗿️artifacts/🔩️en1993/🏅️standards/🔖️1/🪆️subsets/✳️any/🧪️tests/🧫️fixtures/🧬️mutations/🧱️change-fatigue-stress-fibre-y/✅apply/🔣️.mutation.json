@@ -1,0 +1,6 @@
+{
+  "ChangeFatigueStressFibreY": {
+    "id": "fatigue-stress-1",
+    "newFibreY": 1.5
+  }
+}

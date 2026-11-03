@@ -16,6 +16,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+serde = { workspace = true, optional = true }
 semio-framework-dsl-record = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-dsl-record-derive = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
@@ -25,8 +26,15 @@ semio-framework-schema-registry = { workspace = true }
 semio-framework-schema-state = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
 semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
+semio-s-artifact-norm-en1999-diff-typescript = { workspace = true }
+semio-s-artifact-norm-en1999-diff-graphql = { workspace = true }
+semio-s-artifact-norm-en1999-diff-json-schema = { workspace = true }
+semio-s-artifact-norm-en1999-diff-proto = { workspace = true }
 semio-s-artifact-norm-en1999-model = { workspace = true }
 semio-s-plugin-norm-compliance = { workspace = true }
+
+[features]
+test-support = ["dep:serde", "semio-s-artifact-norm-en1999-model/test-support", "semio-s-plugin-norm-compliance/test-support"]
 
 [dev-dependencies]
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

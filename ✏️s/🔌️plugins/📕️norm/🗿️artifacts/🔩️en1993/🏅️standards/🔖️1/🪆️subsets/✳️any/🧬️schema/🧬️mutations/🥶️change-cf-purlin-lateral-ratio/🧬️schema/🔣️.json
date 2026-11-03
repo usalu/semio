@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-cf-purlin-lateral-ratio/schema.json",
+  "title": "ChangeCfPurlinLateralRatio",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newPurlinLateralRatio"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Cold-formed member",
+          "de": "Kaltprofil"
+        },
+        "description": {
+          "en": "The cold-formed member this mutation addresses, by id.",
+          "de": "Das adressierte Element (Kaltprofil), per Kennung."
+        },
+        "ref": {
+          "kind": "cold-formed"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newPurlinLateralRatio": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Lateral to vertical load ratio k_h on the free flange",
+          "de": "Verhältnis k_h seitliche zu lotrechter Last am freien Gurt"
+        },
+        "widget": "stepper",
+        "unit": "1",
+        "precision": 3,
+        "step": 0.01,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

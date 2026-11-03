@@ -1,0 +1,16 @@
+{
+  "mutation": "insertLayerWater",
+  "index": 1,
+  "layerWater": {
+    "id": "water-gravel-2",
+    "layerId": "layer-gravel",
+    "piezometricDepth": 4.0,
+    "permeability": 0.001,
+    "headDifference": 1.0,
+    "flowLength": 6.0,
+    "wellRadius": 0.0,
+    "wellWaterDepth": 0.0,
+    "influenceRadius": 0.0,
+    "wellCapacity": 0.0
+  }
+}

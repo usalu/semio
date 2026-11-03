@@ -1,0 +1,7 @@
+{
+  "ChangePlatedActionForce": {
+    "id": "pp-1",
+    "elementId": "pp-g",
+    "newForce": 160000000.0
+  }
+}

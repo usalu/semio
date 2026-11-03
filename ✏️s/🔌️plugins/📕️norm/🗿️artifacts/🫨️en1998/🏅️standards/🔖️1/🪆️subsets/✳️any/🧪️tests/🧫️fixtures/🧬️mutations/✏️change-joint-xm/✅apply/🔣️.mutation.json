@@ -1,0 +1,5 @@
+{
+  "mutation": "changeJointXM",
+  "id": "joint-1",
+  "newXM": 6.5
+}

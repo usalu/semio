@@ -1,0 +1,5 @@
+type InsertBarPoint {
+  memberId: String!
+  index: Int!
+  barPoint: BarPoint!
+}

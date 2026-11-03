@@ -7,7 +7,7 @@
   "aggregateVariant": "InsertBridgeFatigue",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
-  "binaryTag": 42,
+  "binaryTag": 25,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

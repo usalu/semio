@@ -1,0 +1,70 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-system-direction/schema.json",
+  "title": "ChangeSystemDirection",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "buildingId",
+    "id",
+    "newDirection"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeSystemDirection"
+    },
+    "buildingId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Building",
+          "de": "Gebäude"
+        },
+        "description": {
+          "en": "The building this mutation addresses, by id.",
+          "de": "Das adressierte Element (Gebäude), per Kennung."
+        },
+        "ref": {
+          "kind": "building"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "System",
+          "de": "Aussteifungssystem"
+        },
+        "description": {
+          "en": "The system this mutation addresses, by id.",
+          "de": "Das adressierte Element (Aussteifungssystem), per Kennung."
+        },
+        "ref": {
+          "kind": "system"
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "newDirection": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/snapshot.json#/$defs/AnalysisDirection",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Direction",
+          "de": "Richtung"
+        },
+        "group": "value",
+        "order": 30
+      }
+    }
+  }
+}

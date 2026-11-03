@@ -1,0 +1,6 @@
+{
+  "ChangeSiloExternalPressure": {
+    "id": "silo-1",
+    "newExternalPressure": 1.5
+  }
+}

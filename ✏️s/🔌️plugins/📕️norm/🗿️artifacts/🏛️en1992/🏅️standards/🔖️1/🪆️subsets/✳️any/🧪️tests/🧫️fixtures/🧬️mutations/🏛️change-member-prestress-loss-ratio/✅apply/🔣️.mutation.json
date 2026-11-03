@@ -1,0 +1,6 @@
+{
+  "ChangeMemberPrestressLossRatio": {
+    "memberId": "wall-W1",
+    "newPrestressLossRatio": 0.3
+  }
+}

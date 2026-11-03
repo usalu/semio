@@ -1,0 +1,4 @@
+{
+  "mutation": "changeInspectionLevel",
+  "newInspectionLevel": "il3"
+}

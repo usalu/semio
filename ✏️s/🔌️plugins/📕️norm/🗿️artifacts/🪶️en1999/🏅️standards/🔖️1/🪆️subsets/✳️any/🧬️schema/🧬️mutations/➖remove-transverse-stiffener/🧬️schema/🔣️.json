@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/remove-transverse-stiffener/schema.json",
+  "title": "RemoveTransverseStiffener",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "removeTransverseStiffener"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Transverse stiffener",
+          "de": "Quersteife"
+        },
+        "description": {
+          "en": "The transverse stiffener this mutation removes.",
+          "de": "Entfernt wird: Quersteife."
+        },
+        "ref": {
+          "kind": "transverse-stiffener"
+        },
+        "group": "target",
+        "order": 10
+      }
+    }
+  }
+}

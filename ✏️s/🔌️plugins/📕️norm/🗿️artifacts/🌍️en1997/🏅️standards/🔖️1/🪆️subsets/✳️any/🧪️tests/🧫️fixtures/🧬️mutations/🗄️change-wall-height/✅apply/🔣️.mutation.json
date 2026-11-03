@@ -1,0 +1,5 @@
+{
+  "mutation": "changeWallHeight",
+  "id": "wall-W1",
+  "newHeight": 8.0
+}

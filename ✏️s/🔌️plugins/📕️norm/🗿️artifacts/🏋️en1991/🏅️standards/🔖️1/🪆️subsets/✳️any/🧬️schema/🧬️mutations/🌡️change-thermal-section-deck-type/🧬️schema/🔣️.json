@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-thermal-section-deck-type/schema.json",
+  "title": "ChangeThermalSectionDeckType",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newDeckType"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Thermal section",
+          "de": "Temperaturquerschnitt"
+        },
+        "description": {
+          "en": "The thermal section this mutation addresses, by id.",
+          "de": "Das adressierte Element (Temperaturquerschnitt), per Kennung."
+        },
+        "ref": {
+          "kind": "thermal-section"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newDeckType": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255,
+      "x-semio-ui": {
+        "label": {
+          "en": "Deck type (1 steel, 2 composite, 3 concrete box, 4 concrete slab, 5 concrete beam)",
+          "de": "Überbauart (1 Stahl, 2 Verbund, 3 Betonhohlkasten, 4 Betonplatte, 5 Betonbalken)"
+        },
+        "widget": "stepper",
+        "precision": 0,
+        "step": 1,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

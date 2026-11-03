@@ -1,0 +1,213 @@
+{
+  "annex": null,
+  "reliabilityClass": null,
+  "materials": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "sections": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "members": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "loadCases": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "memberActions": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "joints": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "fatigueDetails": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "fireExposures": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "coldFormedMembers": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "platedPanels": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "siloShells": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "tensionComponents": {
+    "removed": [],
+    "inserted": [
+      {
+        "index": 1,
+        "row": {
+          "id": "ten-1-2",
+          "fUk": 500000.0,
+          "fK": 400000.0,
+          "actions": [
+            {
+              "id": "ten-g",
+              "loadCaseId": "g-permanent",
+              "force": 100000.0
+            }
+          ],
+          "partialFactor": 0.0,
+          "cableLength": 0.0,
+          "cableWeight": 0.0,
+          "cableHorizontalForce": 0.0,
+          "cableModulus": 0.0,
+          "cableStress": 0.0,
+          "cableUnitWeight": 0.0,
+          "threadFactor": 0.0,
+          "rodStressArea": 0.0,
+          "rodFu": 0.0,
+          "pinDiameter": 0.0,
+          "pinPlateThickness": 0.0,
+          "pinGap": 0.0,
+          "pinOuterThickness": 0.0,
+          "pinInnerThickness": 0.0,
+          "pinFup": 0.0,
+          "pinFyp": 0.0,
+          "pinPlateFy": 0.0
+        }
+      }
+    ],
+    "moved": [],
+    "modified": []
+  },
+  "bridgeFatigue": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "towerLegs": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "piles": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "craneRunways": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "storeys": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "restraints": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "builtUpMembers": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "weldGroups": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "parametricSections": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "hollowJoints": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "jointRows": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "frameNodes": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "frameBars": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "placements": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "jointPlates": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "foundationBlocks": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "frameActions": null,
+  "frameMemberBases": null,
+  "fatigueStresses": null,
+  "bucklingLengths": null,
+  "formingGains": null,
+  "materialDuctility": null,
+  "fastenedJoints": null
+}

@@ -10,10 +10,6 @@ pub mod insert_tower_leg;
 pub mod remove_pile;
 #[path = "../➖️remove-tower-leg/🦀️.rs"]
 pub mod remove_tower_leg;
-#[path = "../🪵️update-pile-inputs/🦀️.rs"]
-pub mod update_pile_inputs;
-#[path = "../🗼️update-tower-inputs/🦀️.rs"]
-pub mod update_tower_inputs;
 //#endregion 🪢️Mounts
 
 

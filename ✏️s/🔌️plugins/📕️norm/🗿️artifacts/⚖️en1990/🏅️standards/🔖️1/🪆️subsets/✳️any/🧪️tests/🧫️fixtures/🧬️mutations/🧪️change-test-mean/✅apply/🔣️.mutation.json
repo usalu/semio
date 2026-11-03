@@ -1,0 +1,5 @@
+{
+  "mutation": "changeTestMean",
+  "id": "tes-1",
+  "newMean": 2.0
+}

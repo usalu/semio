@@ -1,0 +1,4 @@
+{
+  "mutation": "changeStructureKind",
+  "newStructureKind": "building"
+}

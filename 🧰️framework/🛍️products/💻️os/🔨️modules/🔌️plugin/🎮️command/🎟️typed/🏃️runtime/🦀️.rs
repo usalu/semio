@@ -6,7 +6,7 @@ impl<A:ArtifactApp> OriginalTypedCommandSource<A>{
  /// 🏃️ A command the runtime originates is born into the producer slot once, then encoded and handed to this source together with its sealed wire.
  pub fn produce_runtime(&mut self,make:impl FnOnce()->Option<Box<A::Command>>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   self.validate(cx)?;
-  if self.caller.is_none(){cx.original_source_parent()?.admit_loan(&mut self.caller,cx)?;return Ok(false)}
+  if self.caller.is_none(){if !cx.original_source_parent()?.admit_loan(&mut *self.caller,cx)?{return Ok(false)}}
   if self.command.is_some()||self.wire.is_some(){if self.command.is_none()||self.wire.is_none(){return Err(refused().into())}if self.producer.is_some(){self.close_producer(cx)?;return Ok(false)}return Ok(true)}
   if self.producer.is_none(){admit_op_binary_producer(make,None,cx,&mut self.producer)?;return Ok(false)}
   let producer=self.producer.as_mut().unwrap();

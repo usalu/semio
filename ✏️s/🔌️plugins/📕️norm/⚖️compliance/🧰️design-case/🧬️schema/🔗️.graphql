@@ -1,0 +1,145 @@
+scalar JSON
+
+type InputVocabulary {
+  artifact: String!
+  inputs: [InputSpec!]!
+}
+enum InputKind {
+  number
+  vector
+  series
+  choice
+  text
+}
+type InputChoice {
+  value: String!
+  en: String!
+  de: String!
+}
+type InputSpec {
+  key: String!
+  scope: String!
+  kind: InputKind!
+  en: String!
+  de: String!
+  unit: String
+  unitId: String
+  min: Float
+  max: Float
+  confidence: String
+  note: String
+  lever: Boolean
+  example: JSON
+  choices: [InputChoice!]
+}
+type CaseEntryGeometry {
+  width: String!
+  height: String!
+}
+type CaseEntry {
+  id: String!
+  part: String!
+  clause: String!
+  en: String!
+  de: String!
+  inputs: [String!]!
+  geometry: CaseEntryGeometry
+}
+type CaseNumber {
+  id: String!
+  value: Float!
+}
+type CaseText {
+  id: String!
+  value: String!
+}
+type CaseRow {
+  id: String!
+  labelEn: String!
+  labelDe: String!
+  entryId: String!
+  numbers: [CaseNumber!]!
+  texts: [CaseText!]!
+}
+type CaseNumberPatch {
+  value: JSON
+}
+type CaseNumberRemoval {
+  id: String!
+  index: Int!
+}
+type CaseNumberInsertion {
+  index: Int!
+  row: CaseNumber!
+}
+type CaseNumberRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type CaseNumberModification {
+  id: String!
+  patch: CaseNumberPatch!
+}
+type CaseNumberDelta {
+  removed: [CaseNumberRemoval!]!
+  inserted: [CaseNumberInsertion!]!
+  moved: [CaseNumberRelocation!]!
+  modified: [CaseNumberModification!]!
+}
+type CaseTextPatch {
+  value: JSON
+}
+type CaseTextRemoval {
+  id: String!
+  index: Int!
+}
+type CaseTextInsertion {
+  index: Int!
+  row: CaseText!
+}
+type CaseTextRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type CaseTextModification {
+  id: String!
+  patch: CaseTextPatch!
+}
+type CaseTextDelta {
+  removed: [CaseTextRemoval!]!
+  inserted: [CaseTextInsertion!]!
+  moved: [CaseTextRelocation!]!
+  modified: [CaseTextModification!]!
+}
+type CaseRowPatch {
+  labelEn: JSON
+  labelDe: JSON
+  entryId: JSON
+  numbers: CaseNumberDelta
+  texts: CaseTextDelta
+}
+type CaseRowRemoval {
+  id: String!
+  index: Int!
+}
+type CaseRowInsertion {
+  index: Int!
+  row: CaseRow!
+}
+type CaseRowRelocation {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type CaseRowModification {
+  id: String!
+  patch: CaseRowPatch!
+}
+type CaseRowDelta {
+  removed: [CaseRowRemoval!]!
+  inserted: [CaseRowInsertion!]!
+  moved: [CaseRowRelocation!]!
+  modified: [CaseRowModification!]!
+}

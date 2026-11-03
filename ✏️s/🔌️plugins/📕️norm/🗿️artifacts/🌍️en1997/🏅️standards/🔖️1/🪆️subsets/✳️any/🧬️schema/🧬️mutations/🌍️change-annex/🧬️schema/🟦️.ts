@@ -1,12 +1,12 @@
 /** 🌍️ `change-annex` wire twin: the leaf payload `ChangeAnnex`, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
- * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
+ * by `repo ./📜️script.ts schema twins generate`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
-import { normWireLiteral, normWireObject, type NormWireReader, normWireRequired } from "@semio-tech/norm-js/registry/contract";
-import { type AnnexChoice, parseAnnexChoice } from "../../../📸️snapshot/🟦️.ts";
+import { normWireLiteral, normWireObject, normWireRequired, type NormWireReader } from "@semio-tech/norm-js/registry/contract";
+import { type En1997AnnexChoice, parseEn1997AnnexChoice } from "../../../📸️snapshot/🟦️.ts";
 
 export interface ChangeAnnex {
   mutation: "changeAnnex";
-  newAnnex: AnnexChoice;
+  newAnnex: En1997AnnexChoice;
 }
 
-export const parseChangeAnnex: NormWireReader<ChangeAnnex> = normWireObject<ChangeAnnex>({ mutation: normWireRequired(normWireLiteral("changeAnnex")), newAnnex: normWireRequired(parseAnnexChoice) });
+export const parseChangeAnnex: NormWireReader<ChangeAnnex> = normWireObject<ChangeAnnex>({ mutation: normWireRequired(normWireLiteral("changeAnnex")), newAnnex: normWireRequired(parseEn1997AnnexChoice) });

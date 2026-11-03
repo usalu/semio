@@ -1,0 +1,6 @@
+{
+  "ChangeMovementJointPosition": {
+    "id": "joint-1",
+    "newPositionM": 3.0
+  }
+}

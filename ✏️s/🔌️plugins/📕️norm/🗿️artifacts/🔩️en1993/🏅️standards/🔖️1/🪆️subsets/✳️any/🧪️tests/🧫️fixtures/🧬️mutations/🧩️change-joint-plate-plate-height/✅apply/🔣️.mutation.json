@@ -1,0 +1,6 @@
+{
+  "ChangeJointPlatePlateHeight": {
+    "id": "joint-plate-1",
+    "newPlateHeight": 2.0
+  }
+}

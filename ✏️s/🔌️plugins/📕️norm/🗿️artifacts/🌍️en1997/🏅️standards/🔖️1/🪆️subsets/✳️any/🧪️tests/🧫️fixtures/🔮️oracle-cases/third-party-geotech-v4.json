@@ -1,0 +1,133 @@
+{
+  "$schema": "../../../../../../../../../🔮️oracles/🏃️harness/🧬️schema/🔣️.json",
+  "schemaVersion": 1,
+  "artifact": "en1997",
+  "annex": "de",
+  "cases": [
+    {
+      "id": "en1997.7.pile-lateral-winkler-long-bored-pile",
+      "check": "en1997.7.pile-lateral-winkler",
+      "citation": {
+        "standard": "EN 1997-1",
+        "edition": "2004",
+        "clause": "7.7 and 7.8: head deflection and maximum moment of a long free-head pile under a lateral head load on a Winkler foundation (Hetényi), elastic critical load of the pile with the same continuous support; boundary value solver and finite-difference eigenproblem",
+        "annex": "en"
+      },
+      "inputs": {
+        "EI": 197200000.0,
+        "k_h": 20000000.0,
+        "D": 0.6,
+        "L": 60.0,
+        "H": 50000.0
+      },
+      "expected": {
+        "y_0": {
+          "value": 0.0029266604587627463,
+          "unit": "m",
+          "profile": "numerical-v1"
+        },
+        "M_max": {
+          "value": 45899.358097880984,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        },
+        "N_cr": {
+          "value": 97829873.57307401,
+          "unit": "N",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1997.9.mononobe-okabe-vertical-wall",
+      "check": "en1997.9.mononobe-okabe",
+      "citation": {
+        "standard": "EN 1998-5",
+        "edition": "2004",
+        "clause": "Annex E: pseudo-static active thrust of Mononobe and Okabe on a vertical wall with horizontal backfill, more onerous sign of the vertical coefficient, critical wedge angle from the maximised force polygon",
+        "annex": "en"
+      },
+      "inputs": {
+        "gamma": 18000.0,
+        "H": 4.0,
+        "phi": 30.0,
+        "delta": 20.0,
+        "k_h": 0.15,
+        "k_v": 0.05
+      },
+      "expected": {
+        "E_ae": {
+          "value": 60604.029397552964,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "K_ae": {
+          "value": 0.4008203002483662,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "rho_deg": {
+          "value": 47.90764084482713,
+          "unit": "deg",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1997.9.mononobe-okabe-steep-friction",
+      "check": "en1997.9.mononobe-okabe",
+      "citation": {
+        "standard": "EN 1998-5",
+        "edition": "2004",
+        "clause": "Annex E: pseudo-static active thrust of Mononobe and Okabe, second parameter set",
+        "annex": "en"
+      },
+      "inputs": {
+        "gamma": 18000.0,
+        "H": 4.0,
+        "phi": 35.0,
+        "delta": 15.0,
+        "k_h": 0.2,
+        "k_v": 0.1
+      },
+      "expected": {
+        "E_ae": {
+          "value": 57783.188711815164,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "K_ae": {
+          "value": 0.36479285802913614,
+          "unit": "1",
+          "profile": "numerical-v1"
+        },
+        "rho_deg": {
+          "value": 50.95026707952071,
+          "unit": "deg",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        }
+      ]
+    }
+  ]
+}

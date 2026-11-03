@@ -1,0 +1,6 @@
+{
+  "ChangeLocalFireHeatReleaseRate": {
+    "id": "local-fire-1",
+    "newHeatReleaseRate": 5000001.0
+  }
+}

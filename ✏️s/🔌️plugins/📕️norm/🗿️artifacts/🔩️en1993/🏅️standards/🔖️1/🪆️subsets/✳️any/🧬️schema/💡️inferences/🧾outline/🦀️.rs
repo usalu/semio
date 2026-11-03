@@ -4,6 +4,7 @@ use semio_s_artifact_norm_en1993_model::En1993Snapshot;
 
 const SECTION_FIELDS: &[&str] = &[
     "annex",
+    "reliabilityClass",
     "materials",
     "sections",
     "members",
@@ -20,12 +21,22 @@ const SECTION_FIELDS: &[&str] = &[
     "towerLegs",
     "piles",
     "craneRunways",
+    "storeys",
+    "restraints",
+    "builtUpMembers",
+    "weldGroups",
+    "parametricSections",
+    "hollowJoints",
+    "jointRows",
+    "frameNodes",
+    "frameBars",
+    "placements",
 ];
 
 /// 🧾️ `En1993` document outline.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct En1993Outline {
     pub section_outline: Vec<String>,
@@ -54,6 +65,25 @@ impl En1993Outline {
                 + snapshot.tower_legs.len()
                 + snapshot.piles.len()
                 + snapshot.crane_runways.len()
+                + snapshot.storeys.len()
+                + snapshot.restraints.len()
+                + snapshot.built_up_members.len()
+                + snapshot.weld_groups.len()
+                + snapshot.parametric_sections.len()
+                + snapshot.hollow_joints.len()
+                + snapshot.joint_rows.len()
+                + snapshot.frame_nodes.len()
+                + snapshot.frame_bars.len()
+                + snapshot.joint_plates.len()
+                + snapshot.foundation_blocks.len()
+                + snapshot.material_ductility.len()
+                + snapshot.forming_gains.len()
+                + snapshot.buckling_lengths.len()
+                + snapshot.fatigue_stresses.len()
+                + snapshot.frame_member_bases.len()
+                + snapshot.fastened_joints.len()
+                + snapshot.frame_actions.len()
+                + snapshot.placements.len()
         ) as u32;
         Self { section_outline, field_count, entry_count }
     }
@@ -61,7 +91,7 @@ impl En1993Outline {
 
 impl Default for En1993Outline {
     fn default() -> Self {
-        Self::compute(&En1993Snapshot::default())
+        Self::compute(&En1993Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De))
     }
 }
 

@@ -1,26 +1,35 @@
 {
-  "schemaBytes": 5052,
+  "schemaBytes": 12672,
   "tableWidths": {
     "en1990_accidental_action": 4,
     "en1990_action": 5,
-    "en1990_bridge_sls": 24,
-    "en1990_document": 24,
+    "en1990_bridge_sls": 48,
+    "en1990_case": 7,
+    "en1990_case_number": 7,
+    "en1990_case_text": 5,
+    "en1990_document": 21,
     "en1990_effect": 10,
-    "en1990_member": 36,
+    "en1990_factor_override": 10,
+    "en1990_fatigue_spectrum": 15,
+    "en1990_member": 96,
     "en1990_permanent_action": 5,
+    "en1990_placement": 16,
+    "en1990_reliability_analysis": 18,
     "en1990_seismic_action": 5,
-    "en1990_variable_action": 5
+    "en1990_test_series": 26,
+    "en1990_traffic_group": 6,
+    "en1990_variable_action": 6
   },
   "cases": [
     {
       "id": "full",
-      "rows": 25,
-      "valueBytes": 1996
+      "rows": 31,
+      "valueBytes": 4401
     },
     {
       "id": "emptyCollections",
       "rows": 1,
-      "valueBytes": 173
+      "valueBytes": 146
     }
   ]
 }

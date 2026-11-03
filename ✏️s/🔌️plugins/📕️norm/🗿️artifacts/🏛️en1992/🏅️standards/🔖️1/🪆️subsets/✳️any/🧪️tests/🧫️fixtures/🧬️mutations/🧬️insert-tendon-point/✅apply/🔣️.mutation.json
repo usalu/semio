@@ -1,0 +1,12 @@
+{
+  "InsertTendonPoint": {
+    "memberId": "wall-W1",
+    "index": 1,
+    "tendonPoint": {
+      "id": "tp-1-new",
+      "x": 0.0,
+      "y": 0.1,
+      "z": 0.2
+    }
+  }
+}

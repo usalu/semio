@@ -1,0 +1,5 @@
+{
+  "mutation": "changeJointBeamId",
+  "id": "joint-1",
+  "newBeamId": "beam-b2"
+}

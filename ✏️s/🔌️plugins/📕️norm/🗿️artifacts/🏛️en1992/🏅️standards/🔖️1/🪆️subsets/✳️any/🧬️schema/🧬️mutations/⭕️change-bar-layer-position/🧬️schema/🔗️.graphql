@@ -1,0 +1,5 @@
+type ChangeBarLayerPosition {
+  memberId: String!
+  layerId: String!
+  newPosition: BarPosition!
+}

@@ -1,0 +1,6 @@
+{
+  "ChangeFormingGainForming": {
+    "id": "frame-action-1",
+    "newForming": "NodalMoment"
+  }
+}

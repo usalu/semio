@@ -1,0 +1,4 @@
+type ChangeMemberSupport {
+  memberId: String!
+  newSupport: String!
+}

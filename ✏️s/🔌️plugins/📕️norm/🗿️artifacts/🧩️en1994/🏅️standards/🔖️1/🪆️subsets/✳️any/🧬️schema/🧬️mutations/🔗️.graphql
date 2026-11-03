@@ -1,26 +1,512 @@
-# 🧬️ En1994 mutation schema — artifact-lane fields only.
-
-type En1994Mutation {
-  annex: String! @state(class: ARTIFACT)
-  mEdKnm: Float! @state(class: ARTIFACT)
-  vEdKn: Float! @state(class: ARTIFACT)
-  mPla: Float! @state(class: ARTIFACT)
-  mPlRd: Float! @state(class: ARTIFACT)
-  eta: Float! @state(class: ARTIFACT)
-  vLRd: Float! @state(class: ARTIFACT)
-  insulationThicknessMm: Float! @state(class: ARTIFACT)
-  fireRating: String! @state(class: ARTIFACT)
-  deckType: String! @state(class: ARTIFACT)
-  deltaSigmaMpa: Float! @state(class: ARTIFACT)
-  fatigueDetail: String! @state(class: ARTIFACT)
-  dMm: Float! @state(class: ARTIFACT)
-  hScMm: Float! @state(class: ARTIFACT)
-  fCkMpa: Float! @state(class: ARTIFACT)
-  fUMpa: Float! @state(class: ARTIFACT)
-  eCmMpa: Float! @state(class: ARTIFACT)
-  vEdPerStudKn: Float! @state(class: ARTIFACT)
-  spanM: Float! @state(class: ARTIFACT)
-  fYMpa: Float! @state(class: ARTIFACT)
-  nCyclesStud: Float! @state(class: ARTIFACT)
-  deltaTauStudMpa: Float! @state(class: ARTIFACT)
+union En1994Mutation = ChangeAnnex | ChangeReliabilityClass | ChangeStructureKind | ChangeSteelFYPa | ChangeFireRating | ChangeInsulationThicknessM | ChangeFatigueDetail | InsertBeam | RemoveBeam | ChangeBeamActionQAreaPa | ChangeBeamSpanM | ChangeBeamSlabThicknessM | ChangeBeamTransverseAs | ChangeBeamConstruction | InsertColumn | RemoveColumn | ChangeColumnActionForceN | ChangeColumnKind | InsertSlab | RemoveSlab | ChangeSlabActionQAreaPa | ChangeSlabThicknessM | ChangeBeamSpacingM | ChangeBeamSupport | ChangeBeamRebarProduct | ChangeBeamConcreteFCkPa | ChangeBeamConcreteECmPa | ChangeBeamLtbLengthM | ChangeBeamHoggingRebarM2PerM | ChangeBeamBarSpacingM | ChangeBeamCrackWidthLimitM | ChangeBeamFatigueCycles | ChangeBeamSteelDesignation | ChangeBeamSteelHeightM | ChangeBeamSteelWidthM | ChangeBeamSteelWebThicknessM | ChangeBeamSteelTfM | ChangeBeamSteelAreaM2 | ChangeBeamSteelWPlYM3 | ChangeBeamSteelSecondMomentM4 | ChangeBeamSteelShearAreaM2 | ChangeBeamSteelRootRadiusM | ChangeBeamSheetingProfile | ChangeBeamSheetingHeightM | ChangeBeamSheetingRibWidthM | ChangeBeamSheetingThicknessM | ChangeBeamSheetingRibsParallel | ChangeBeamActionKind | ChangeBeamActionCategory | ChangeBeamActionStage | ChangeBeamActionPointForceN | ChangeBeamActionDeltaSigmaPa | ChangeBeamActionDeltaTauPa | ChangeColumnLengthM | ChangeColumnOuterSizeM | ChangeColumnWallThicknessM | ChangeColumnSteelAreaM2 | ChangeColumnSteelFYPa | ChangeColumnConcreteAreaM2 | ChangeColumnConcreteFCkPa | ChangeColumnRebarAreaM2 | ChangeColumnRebarFYkPa | ChangeColumnSecondMomentM4 | ChangeColumnBucklingCurve | ChangeColumnRebarProduct | ChangeColumnActionKind | ChangeColumnActionCategory | ChangeColumnActionStage | ChangeColumnActionMomentNm | ChangeSlabSpanM | ChangeSlabSupport | ChangeSlabFCkPa | ChangeSlabMFactor | ChangeSlabKFactor | ChangeSlabReinforcementM2PerM | ChangeSlabSheetingProfile | ChangeSlabSheetingHeightM | ChangeSlabSheetingRibWidthM | ChangeSlabSheetingThicknessM | ChangeSlabSheetingRibsParallel | ChangeSlabActionKind | ChangeSlabActionCategory | ChangeSlabActionStage | ChangeSlabActionPointForceN | ChangeSlabActionDeltaSigmaPa | ChangeSlabActionDeltaTauPa | ChangeBeamAdjacentSpanM | ChangeBeamPatchBearingLengthM | ChangeBeamBridgeLanes | ChangeColumnIntroducedForceN | ChangeBeamCrackedLengthFraction | ChangeColumnSectionHeightM | ChangeColumnSectionWidthM | ChangeColumnSectionTwM | ChangeColumnSectionTfM | ChangeColumnRebarCoverM | ChangePlacementX | ChangePlacementY | ChangePlacementZ | ChangePlacementYaw | InsertPlacement | RemovePlacement | ChangeBeamStudCrossSpacingM | ChangeBeamStudEdgeDistanceM | ChangeBeamTransverseAsTop | ChangeBeamEndPlateWidthM | ChangeBeamEndPlateHeightM | ChangeBeamEndZoneLengthM | InsertBeamAction | RemoveBeamAction | InsertColumnAction | RemoveColumnAction | InsertSlabAction | RemoveSlabAction | ChangeBeamActionXM | ChangeSlabActionXM | ChangeSlabActionYM | InsertCase | RemoveCase | ChangeCaseNumber | ChangeCaseText | ChangeCaseLabelEn | ChangeCaseLabelDe | ChangeCaseEntryId
+type ChangeAnnex {
+  newAnnex: AnnexChoice!
+}
+type ChangeReliabilityClass {
+  newReliabilityClass: String!
+}
+type ChangeStructureKind {
+  newStructureKind: StructureKind!
+}
+type ChangeSteelFYPa {
+  newSteelFYPa: Float!
+}
+type ChangeFireRating {
+  newFireRating: FireRating!
+}
+type ChangeInsulationThicknessM {
+  newInsulationThicknessM: Float!
+}
+type ChangeFatigueDetail {
+  newFatigueDetail: FatigueDetail!
+}
+type InsertBeam {
+  index: Int!
+  beam: CompositeBeam!
+}
+type RemoveBeam {
+  id: String!
+}
+type ChangeBeamActionQAreaPa {
+  beamId: String!
+  id: String!
+  newQAreaPa: Float!
+}
+type ChangeBeamSpanM {
+  id: String!
+  newSpanM: Float!
+}
+type ChangeBeamSlabThicknessM {
+  id: String!
+  newSlabThicknessM: Float!
+}
+type ChangeBeamTransverseAs {
+  id: String!
+  newTransverseAsM2PerM: Float!
+}
+type ChangeBeamConstruction {
+  id: String!
+  newConstruction: ConstructionMethod!
+}
+type InsertColumn {
+  index: Int!
+  column: CompositeColumn!
+}
+type RemoveColumn {
+  id: String!
+}
+type ChangeColumnActionForceN {
+  columnId: String!
+  id: String!
+  newNKN: Float!
+}
+type ChangeColumnKind {
+  id: String!
+  newKind: ColumnKind!
+}
+type InsertSlab {
+  index: Int!
+  slab: CompositeSlab!
+}
+type RemoveSlab {
+  id: String!
+}
+type ChangeSlabActionQAreaPa {
+  slabId: String!
+  id: String!
+  newQAreaPa: Float!
+}
+type ChangeSlabThicknessM {
+  id: String!
+  newConcreteThicknessM: Float!
+}
+type ChangeBeamSpacingM {
+  id: String!
+  newSpacingM: Float!
+}
+type ChangeBeamSupport {
+  id: String!
+  newSupport: SupportCondition!
+}
+type ChangeBeamRebarProduct {
+  id: String!
+  newReinforcementProduct: ReinforcementProduct!
+}
+type ChangeBeamConcreteFCkPa {
+  id: String!
+  newConcreteFCkPa: Float!
+}
+type ChangeBeamConcreteECmPa {
+  id: String!
+  newConcreteECmPa: Float!
+}
+type ChangeBeamLtbLengthM {
+  id: String!
+  newLtbLengthM: Float!
+}
+type ChangeBeamHoggingRebarM2PerM {
+  id: String!
+  newAsHoggingM2PerM: Float!
+}
+type ChangeBeamBarSpacingM {
+  id: String!
+  newBarSpacingM: Float!
+}
+type ChangeBeamCrackWidthLimitM {
+  id: String!
+  newWkLimitM: Float!
+}
+type ChangeBeamFatigueCycles {
+  id: String!
+  newNCycles: Float!
+}
+type ChangeBeamSteelDesignation {
+  id: String!
+  newDesignation: String!
+}
+type ChangeBeamSteelHeightM {
+  id: String!
+  newHeightM: Float!
+}
+type ChangeBeamSteelWidthM {
+  id: String!
+  newWidthM: Float!
+}
+type ChangeBeamSteelWebThicknessM {
+  id: String!
+  newTwM: Float!
+}
+type ChangeBeamSteelTfM {
+  id: String!
+  newTfM: Float!
+}
+type ChangeBeamSteelAreaM2 {
+  id: String!
+  newAM2: Float!
+}
+type ChangeBeamSteelWPlYM3 {
+  id: String!
+  newWPlYM3: Float!
+}
+type ChangeBeamSteelSecondMomentM4 {
+  id: String!
+  newIYM4: Float!
+}
+type ChangeBeamSteelShearAreaM2 {
+  id: String!
+  newAVM2: Float!
+}
+type ChangeBeamSteelRootRadiusM {
+  id: String!
+  newRM: Float!
+}
+type ChangeBeamSheetingProfile {
+  id: String!
+  newProfile: SheetingProfile!
+}
+type ChangeBeamSheetingHeightM {
+  id: String!
+  newHeightM: Float!
+}
+type ChangeBeamSheetingRibWidthM {
+  id: String!
+  newRibWidthM: Float!
+}
+type ChangeBeamSheetingThicknessM {
+  id: String!
+  newThicknessM: Float!
+}
+type ChangeBeamSheetingRibsParallel {
+  id: String!
+  newRibsParallelToBeam: Boolean!
+}
+type ChangeBeamActionKind {
+  beamId: String!
+  id: String!
+  newKind: ActionKind!
+}
+type ChangeBeamActionCategory {
+  beamId: String!
+  id: String!
+  newCategory: String!
+}
+type ChangeBeamActionStage {
+  beamId: String!
+  id: String!
+  newStage: ActionStage!
+}
+type ChangeBeamActionPointForceN {
+  beamId: String!
+  id: String!
+  newFKN: Float!
+}
+type ChangeBeamActionDeltaSigmaPa {
+  beamId: String!
+  id: String!
+  newDeltaSigmaKPa: Float!
+}
+type ChangeBeamActionDeltaTauPa {
+  beamId: String!
+  id: String!
+  newDeltaTauKPa: Float!
+}
+type ChangeColumnLengthM {
+  id: String!
+  newLengthM: Float!
+}
+type ChangeColumnOuterSizeM {
+  id: String!
+  newOuterSizeM: Float!
+}
+type ChangeColumnWallThicknessM {
+  id: String!
+  newWallThicknessM: Float!
+}
+type ChangeColumnSteelAreaM2 {
+  id: String!
+  newSteelAM2: Float!
+}
+type ChangeColumnSteelFYPa {
+  id: String!
+  newSteelFYPa: Float!
+}
+type ChangeColumnConcreteAreaM2 {
+  id: String!
+  newConcreteAM2: Float!
+}
+type ChangeColumnConcreteFCkPa {
+  id: String!
+  newConcreteFCkPa: Float!
+}
+type ChangeColumnRebarAreaM2 {
+  id: String!
+  newReinforcementAsM2: Float!
+}
+type ChangeColumnRebarFYkPa {
+  id: String!
+  newReinforcementFYkPa: Float!
+}
+type ChangeColumnSecondMomentM4 {
+  id: String!
+  newIM4: Float!
+}
+type ChangeColumnBucklingCurve {
+  id: String!
+  newBucklingCurve: BucklingCurve!
+}
+type ChangeColumnRebarProduct {
+  id: String!
+  newReinforcementProduct: ReinforcementProduct!
+}
+type ChangeColumnActionKind {
+  columnId: String!
+  id: String!
+  newKind: ActionKind!
+}
+type ChangeColumnActionCategory {
+  columnId: String!
+  id: String!
+  newCategory: String!
+}
+type ChangeColumnActionStage {
+  columnId: String!
+  id: String!
+  newStage: ActionStage!
+}
+type ChangeColumnActionMomentNm {
+  columnId: String!
+  id: String!
+  newMKNm: Float!
+}
+type ChangeSlabSpanM {
+  id: String!
+  newSpanM: Float!
+}
+type ChangeSlabSupport {
+  id: String!
+  newSupport: SupportCondition!
+}
+type ChangeSlabFCkPa {
+  id: String!
+  newFCkPa: Float!
+}
+type ChangeSlabMFactor {
+  id: String!
+  newMFactor: Float!
+}
+type ChangeSlabKFactor {
+  id: String!
+  newKFactor: Float!
+}
+type ChangeSlabReinforcementM2PerM {
+  id: String!
+  newAsM2PerM: Float!
+}
+type ChangeSlabSheetingProfile {
+  id: String!
+  newProfile: SheetingProfile!
+}
+type ChangeSlabSheetingHeightM {
+  id: String!
+  newHeightM: Float!
+}
+type ChangeSlabSheetingRibWidthM {
+  id: String!
+  newRibWidthM: Float!
+}
+type ChangeSlabSheetingThicknessM {
+  id: String!
+  newThicknessM: Float!
+}
+type ChangeSlabSheetingRibsParallel {
+  id: String!
+  newRibsParallelToBeam: Boolean!
+}
+type ChangeSlabActionKind {
+  slabId: String!
+  id: String!
+  newKind: ActionKind!
+}
+type ChangeSlabActionCategory {
+  slabId: String!
+  id: String!
+  newCategory: String!
+}
+type ChangeSlabActionStage {
+  slabId: String!
+  id: String!
+  newStage: ActionStage!
+}
+type ChangeSlabActionPointForceN {
+  slabId: String!
+  id: String!
+  newFKN: Float!
+}
+type ChangeSlabActionDeltaSigmaPa {
+  slabId: String!
+  id: String!
+  newDeltaSigmaKPa: Float!
+}
+type ChangeSlabActionDeltaTauPa {
+  slabId: String!
+  id: String!
+  newDeltaTauKPa: Float!
+}
+type ChangeBeamAdjacentSpanM {
+  id: String!
+  newAdjacentSpanM: Float!
+}
+type ChangeBeamPatchBearingLengthM {
+  id: String!
+  newPatchBearingLengthM: Float!
+}
+type ChangeBeamBridgeLanes {
+  id: String!
+  newBridgeLanes: Int!
+}
+type ChangeColumnIntroducedForceN {
+  id: String!
+  newIntroducedForceN: Float!
+}
+type ChangeBeamCrackedLengthFraction {
+  id: String!
+  newCrackedLengthFraction: Float!
+}
+type ChangeColumnSectionHeightM {
+  id: String!
+  newSectionHeightM: Float!
+}
+type ChangeColumnSectionWidthM {
+  id: String!
+  newSectionWidthM: Float!
+}
+type ChangeColumnSectionTwM {
+  id: String!
+  newSectionTwM: Float!
+}
+type ChangeColumnSectionTfM {
+  id: String!
+  newSectionTfM: Float!
+}
+type ChangeColumnRebarCoverM {
+  id: String!
+  newRebarCoverM: Float!
+}
+type ChangePlacementX {
+  id: String!
+  newX: Float!
+}
+type ChangePlacementY {
+  id: String!
+  newY: Float!
+}
+type ChangePlacementZ {
+  id: String!
+  newZ: Float!
+}
+type ChangePlacementYaw {
+  id: String!
+  newYaw: Float!
+}
+type InsertPlacement {
+  index: Int!
+  item: Placement!
+}
+type RemovePlacement {
+  id: String!
+}
+type ChangeBeamStudCrossSpacingM {
+  id: String!
+  newStudTransverseSpacingM: Float!
+}
+type ChangeBeamStudEdgeDistanceM {
+  id: String!
+  newStudEdgeDistanceM: Float!
+}
+type ChangeBeamTransverseAsTop {
+  id: String!
+  newTransverseAsTopM2PerM: Float!
+}
+type ChangeBeamEndPlateWidthM {
+  id: String!
+  newEndPlateWidthM: Float!
+}
+type ChangeBeamEndPlateHeightM {
+  id: String!
+  newEndPlateHeightM: Float!
+}
+type ChangeBeamEndZoneLengthM {
+  id: String!
+  newEndZoneLengthM: Float!
+}
+type InsertBeamAction {
+  beamId: String!
+  index: Int!
+  action: CharacteristicAction!
+}
+type RemoveBeamAction {
+  beamId: String!
+  id: String!
+}
+type InsertColumnAction {
+  columnId: String!
+  index: Int!
+  action: ColumnAction!
+}
+type RemoveColumnAction {
+  columnId: String!
+  id: String!
+}
+type InsertSlabAction {
+  slabId: String!
+  index: Int!
+  action: SlabAction!
+}
+type RemoveSlabAction {
+  slabId: String!
+  id: String!
+}
+type ChangeBeamActionXM {
+  beamId: String!
+  id: String!
+  newXM: Float!
+}
+type ChangeSlabActionXM {
+  slabId: String!
+  id: String!
+  newXM: Float!
+}
+type ChangeSlabActionYM {
+  slabId: String!
+  id: String!
+  newYM: Float!
+}
+type InsertCase {
+  index: Int!
+  case: CaseRow!
+}
+type RemoveCase {
+  id: String!
+}
+type ChangeCaseNumber {
+  caseId: String!
+  key: String!
+  value: Float
+}
+type ChangeCaseText {
+  caseId: String!
+  key: String!
+  value: String
+}
+type ChangeCaseLabelEn {
+  caseId: String!
+  newValue: String!
+}
+type ChangeCaseLabelDe {
+  caseId: String!
+  newValue: String!
+}
+type ChangeCaseEntryId {
+  caseId: String!
+  newValue: String!
 }

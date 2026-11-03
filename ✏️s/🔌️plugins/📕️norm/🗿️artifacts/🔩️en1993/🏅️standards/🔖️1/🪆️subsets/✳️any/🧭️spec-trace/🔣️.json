@@ -1,0 +1,2719 @@
+{
+ "code": "en1993",
+ "standard": "EN 1993",
+ "spec": "📐️specs/en1993-target.md",
+ "specIds": [
+  "V-001",
+  "V-002",
+  "V-010",
+  "V-011",
+  "V-012",
+  "V-013",
+  "V-014",
+  "V-015",
+  "V-020",
+  "V-021",
+  "V-022",
+  "V-023",
+  "V-024",
+  "V-025",
+  "V-026",
+  "V-027",
+  "V-028",
+  "V-029",
+  "V-030",
+  "V-031",
+  "V-032",
+  "V-033",
+  "V-034",
+  "V-040",
+  "V-050",
+  "V-060",
+  "V-061",
+  "V-062",
+  "V-063",
+  "V-064",
+  "V-065",
+  "V-066",
+  "V-067",
+  "V-068",
+  "V-069",
+  "V-070",
+  "V-071",
+  "V-072",
+  "V-073",
+  "V-074",
+  "V-075",
+  "V-100",
+  "V-101",
+  "V-102",
+  "V-110",
+  "V-111",
+  "V-112",
+  "V-113",
+  "V-113a",
+  "V-113b",
+  "V-113c",
+  "V-120",
+  "V-121",
+  "V-122",
+  "V-123",
+  "V-124",
+  "V-125",
+  "V-126",
+  "V-127",
+  "V-130",
+  "V-131",
+  "V-132",
+  "V-133",
+  "V-090",
+  "V-091",
+  "V-400",
+  "V-401",
+  "V-402",
+  "V-403",
+  "V-404",
+  "V-405",
+  "V-406",
+  "V-407",
+  "V-410",
+  "V-411",
+  "V-412",
+  "V-413",
+  "V-420",
+  "V-421",
+  "V-422",
+  "V-423",
+  "V-424",
+  "V-425",
+  "V-426",
+  "V-427",
+  "V-430",
+  "V-431",
+  "V-432",
+  "V-433",
+  "V-440",
+  "V-450",
+  "V-451",
+  "V-452",
+  "V-500",
+  "V-501",
+  "V-502",
+  "V-503",
+  "V-504",
+  "V-505",
+  "V-506",
+  "V-600",
+  "V-601",
+  "V-602",
+  "V-603",
+  "V-604",
+  "V-605",
+  "V-606",
+  "V-607",
+  "V-608",
+  "V-609",
+  "V-610",
+  "V-611",
+  "V-250",
+  "V-251",
+  "V-252",
+  "V-253",
+  "V-254",
+  "V-255",
+  "V-256",
+  "V-257",
+  "V-258",
+  "V-259",
+  "V-260",
+  "V-300",
+  "V-301",
+  "V-302",
+  "V-303",
+  "V-304",
+  "V-305",
+  "V-360",
+  "V-361",
+  "V-362",
+  "V-363",
+  "V-364",
+  "V-366",
+  "V-367",
+  "V-368",
+  "V-369",
+  "V-370",
+  "V-371",
+  "V-372",
+  "V-373",
+  "V-374",
+  "V-375",
+  "V-376",
+  "V-800",
+  "V-801",
+  "V-802",
+  "V-803",
+  "V-804",
+  "V-805",
+  "V-806",
+  "V-850",
+  "V-851",
+  "V-860",
+  "V-861",
+  "V-870",
+  "V-880",
+  "V-890",
+  "V-900",
+  "V-901",
+  "V-902",
+  "V-903",
+  "V-904",
+  "V-905",
+  "V-906"
+ ],
+ "items": [
+  {
+   "id": "V-001",
+   "clause": "2.4.3 / 6.1",
+   "entity": "annex",
+   "realisation": {
+    "kind": "data",
+    "path": "AnnexParams::GAMMA_M0..GAMMA_MF via the shared registry ndp.en1993.gamma-m0..gamma-mf"
+   },
+   "description": {
+    "en": "gamma_M0/M1/M2/Mf come from the shared NDP registry through AnnexParams::for_choice",
+    "de": "gamma_M0/M1/M2/Mf stammen über AnnexParams::for_choice aus dem gemeinsamen NDP-Register"
+   }
+  },
+  {
+   "id": "V-002",
+   "clause": "2.2 / 2.3",
+   "entity": "members",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.7.sls"
+    ]
+   },
+   "description": {
+    "en": "Serviceability limit state per 2.2/2.3, realised as the member check family en1993.7.sls with combinations taken from the en1990 artifact",
+    "de": "Grenzzustand der Gebrauchstauglichkeit nach 2.2/2.3, umgesetzt als Stabnachweisfamilie en1993.7.sls mit Kombinationen aus dem Artefakt en1990"
+   }
+  },
+  {
+   "id": "V-010",
+   "clause": "3.2.1 Table 3.1",
+   "entity": "materials",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.3.2.1.grade"
+    ]
+   },
+   "description": {
+    "en": "Table 3.1 rows for t <= 40 mm (S235, S275, S355, S450), ndp.en1993.v-010.1 unverified",
+    "de": "Zeilen der Tabelle 3.1 für t <= 40 mm (S235, S275, S355, S450), ndp.en1993.v-010.1 ungeprüft"
+   }
+  },
+  {
+   "id": "V-011",
+   "clause": "3.2.2",
+   "entity": "materialDuctility",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.3.2.2.ductility",
+     "en1993.3.2.2.elongation",
+     "en1993.3.2.2.strain"
+    ]
+   },
+   "description": {
+    "en": "Ductility requirements f_u/f_y ≥ 1.10, elongation at failure ≥ 15 % and ε_u ≥ 15 ε_y (3.2.2) with the certificate values of the ductility row of a material (registry rows ndp.en1993.1-1.ductility.*, unverified)",
+    "de": "Duktilitätsanforderungen f_u/f_y ≥ 1,10, Bruchdehnung ≥ 15 % und ε_u ≥ 15 ε_y (3.2.2) mit den Zeugniswerten der Duktilitätszeile eines Werkstoffs (Registerzeilen ndp.en1993.1-1.ductility.*, ungeprüft)"
+   }
+  },
+  {
+   "id": "V-012",
+   "clause": "3.2.3 + 1-10",
+   "entity": "members",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-10.t"
+    ]
+   },
+   "description": {
+    "en": "Fracture toughness requirements of 3.2.3 and EN 1993-1-10, delegated to V-900; the cells of Table 2.1 are unverified registry rows",
+    "de": "Zähigkeitsanforderungen nach 3.2.3 und EN 1993-1-10, delegiert an V-900; die Zellen der Tabelle 2.1 sind ungeprüfte Registerzeilen"
+   }
+  },
+  {
+   "id": "V-013",
+   "clause": "3.2.6",
+   "entity": "materials",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.3.2.6.constants"
+    ]
+   },
+   "description": {
+    "en": "Design values of the material constants E, G, nu, alpha_T and rho per 3.2.6, realised as the check en1993.3.2.6.constants",
+    "de": "Bemessungswerte der Werkstoffkonstanten E, G, nu, alpha_T und rho nach 3.2.6, umgesetzt als Nachweis en1993.3.2.6.constants"
+   }
+  },
+  {
+   "id": "V-014",
+   "clause": "3.3",
+   "entity": "joints",
+   "realisation": {
+    "kind": "data",
+    "path": "part_1_8::bolt_fub and clauses::joints::bolt_fyb (bolt classes 4.6 to 10.9)"
+   },
+   "description": {
+    "en": "Bolt classes 4.6 to 10.9 with f_yb and f_ub (3.3); the bolt and consumable catalogue is not part of the snapshot, the bolt class is a joint field",
+    "de": "Schraubenklassen 4.6 bis 10.9 mit f_yb und f_ub (3.3); der Schrauben- und Zusatzwerkstoffkatalog ist nicht Teil des Schnappschusses, die Schraubenklasse ist ein Verbindungsfeld"
+   }
+  },
+  {
+   "id": "V-015",
+   "clause": "1-4 Table 2.1",
+   "entity": "materials",
+   "realisation": {
+    "kind": "data",
+    "path": "clauses::cold_stainless::stainless_grade (ndp.en1993.v-300.2 unverified)"
+   },
+   "description": {
+    "en": "Stainless steel grade table of EN 1993-1-4 Table 2.1 with f_y and f_u of austenitic, duplex and ferritic grades, built in behind ndp.en1993.v-300.2 (unverified)",
+    "de": "Güten-Tabelle nichtrostender Stähle nach EN 1993-1-4 Tabelle 2.1 mit f_y und f_u austenitischer, Duplex- und ferritischer Güten, eingebaut hinter ndp.en1993.v-300.2 (ungeprüft)"
+   }
+  },
+  {
+   "id": "V-020",
+   "clause": "5.2.1",
+   "entity": "storeys",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-1.5.2.alpha"
+    ]
+   },
+   "description": {
+    "en": "Elastic critical load factor alpha_cr per 5.2.1, realised as the storey check en1993.1-1.5.2.alpha",
+    "de": "Elastischer Verzweigungslastfaktor alpha_cr nach 5.2.1, umgesetzt als Geschossnachweis en1993.1-1.5.2.alpha"
+   }
+  },
+  {
+   "id": "V-021",
+   "clause": "5.2.2(3)",
+   "entity": "storeys",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-1.5.2.alpha"
+    ]
+   },
+   "description": {
+    "en": "Approximate second-order amplification of horizontal-load and sway moments per 5.2.2(3), realised as the storey check en1993.1-1.5.2.alpha",
+    "de": "Näherungsweise Verstärkung der Momente aus Horizontallast und Schiefstellung nach Theorie II. Ordnung gemäß 5.2.2(3), umgesetzt als Geschossnachweis en1993.1-1.5.2.alpha"
+   }
+  },
+  {
+   "id": "V-022",
+   "clause": "5.2.2(5) + (6)",
+   "entity": "frameBars",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-1.5.2.frame"
+    ]
+   },
+   "description": {
+    "en": "Selection of global and local second-order effects per 5.2.2(5)/(6), realised as the frame bar check en1993.1-1.5.2.frame",
+    "de": "Wahl globaler und lokaler Einflüsse nach Theorie II. Ordnung gemäß 5.2.2(5)/(6), umgesetzt als Rahmenstabnachweis en1993.1-1.5.2.frame"
+   }
+  },
+  {
+   "id": "V-023",
+   "clause": "5.3.2",
+   "entity": "storeys",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-1.5.3.2.sway"
+    ]
+   },
+   "description": {
+    "en": "Global sway imperfection phi of frames per 5.3.2, realised as the storey check en1993.1-1.5.3.2.sway",
+    "de": "Globale Anfangsschiefstellung phi von Rahmen nach 5.3.2, umgesetzt als Geschossnachweis en1993.1-1.5.3.2.sway"
+   }
+  },
+  {
+   "id": "V-024",
+   "clause": "5.3.2(3)(b)",
+   "entity": "members",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.5.3.2.bow"
+    ]
+   },
+   "description": {
+    "en": "Local bow imperfection e_0/L of Table 5.1 by buckling curve for elastic and plastic analysis (5.3.2(3)(b)) with the inclusion rule 5.3.2(6)",
+    "de": "Lokale Vorkrümmung e_0/L nach Tabelle 5.1 je Knickspannungslinie für elastische und plastische Berechnung (5.3.2(3)(b)) mit der Einbeziehungsregel 5.3.2(6)"
+   }
+  },
+  {
+   "id": "V-025",
+   "clause": "5.3.3",
+   "entity": "members",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.5.3.2.bow"
+    ]
+   },
+   "description": {
+    "en": "Equivalent imperfection for the stability analysis of members as a scaled buckling mode (5.3.3)",
+    "de": "Gleichwertige Ersatzimperfektion für den Stabilitätsnachweis von Bauteilen als skalierte Knickeigenform (5.3.3)"
+   }
+  },
+  {
+   "id": "V-026",
+   "clause": "5.3.4",
+   "entity": "members",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.5.3.2.bow"
+    ]
+   },
+   "description": {
+    "en": "Member imperfection k e_0 with k = 0.5 in the weak-axis imperfection for lateral-torsional buckling by second-order torsional analysis (5.3.4)",
+    "de": "Bauteilimperfektion k e_0 mit k = 0,5 in der Imperfektion um die schwache Achse für das Biegedrillknicken nach Theorie II. Ordnung mit Torsion (5.3.4)"
+   }
+  },
+  {
+   "id": "V-027",
+   "clause": "5.2.2 / 5.3.5",
+   "entity": "storeys",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-1.5.3.3.bracing"
+    ]
+   },
+   "description": {
+    "en": "Imperfections of bracing systems and equivalent stabilising force per 5.2.2/5.3.5, realised as the storey check en1993.1-1.5.3.3.bracing",
+    "de": "Imperfektionen von Aussteifungssystemen und äquivalente Stabilisierungskraft nach 5.2.2/5.3.5, umgesetzt als Geschossnachweis en1993.1-1.5.3.3.bracing"
+   }
+  },
+  {
+   "id": "V-028",
+   "clause": "5.5",
+   "entity": "members",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.5.2.class"
+    ]
+   },
+   "description": {
+    "en": "Cross-section classification (5.5), delegated to V-030 to V-034, with the effective class 4 section of rolled and welded I and hollow sections",
+    "de": "Querschnittsklassifizierung (5.5), delegiert an V-030 bis V-034, mit wirksamem Querschnitt der Klasse 4 für gewalzte und geschweißte I- und Hohlquerschnitte"
+   }
+  },
+  {
+   "id": "V-029",
+   "clause": "5.6",
+   "entity": "members",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.5.6.plastic",
+     "en1993.5.2.plastic",
+     "en1993.1-1.6.3.5.lm",
+     "en1993.5.6.ductility"
+    ]
+   },
+   "description": {
+    "en": "Plastic global analysis conditions (5.6) as a gate for members with plastic analysis: class 1 at the hinge, the restraint at the hinge location (restraint row with hingeToRestraint) and the stable length L_m of 6.3.5.3 (Eq. 6.67); the gate check en1993.5.6.plastic takes the larger of the class and the distance over L_m, without a hinge distance it is not applicable; the rotation capacity of 5.6(3) beyond class 1 and stiffeners at the hinge are not modelled; the ductility gate en1993.5.6.ductility requires f_u/f_y, the elongation and eps_u of the material (V-011) and offers the elastic analysis as remedy",
+    "de": "Voraussetzungen der plastischen Schnittgrößenermittlung (5.6) als Prüftor für Bauteile mit plastischer Berechnung: Klasse 1 am Gelenk, Halterung an der Gelenkstelle (Halterungszeile mit hingeToRestraint) und stabile Länge L_m nach 6.3.5.3 (Gl. 6.67); der Nachweis en1993.5.6.plastic nimmt das Größere aus Klasse und Abstand über L_m, ohne Gelenkabstand ist er nicht anwendbar; die Rotationskapazität nach 5.6(3) jenseits von Klasse 1 und Steifen am Gelenk sind nicht abgebildet; das Duktilitätstor en1993.5.6.ductility verlangt f_u/f_y, Bruchdehnung und eps_u des Werkstoffs (V-011) und bietet die elastische Berechnung als Abhilfe"
+   }
+  },
+  {
+   "id": "V-030",
+   "clause": "5.5 / Table 5.2 sheet 1",
+   "entity": "members",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.5.2.class"
+    ]
+   },
+   "description": {
+    "en": "Classification of internal compression parts (I webs, box flanges, RHS walls) by c/t against the ε limits (Table 5.2 sheet 1), with the effective class 4 section",
+    "de": "Klassifizierung innenliegender Druckteile (I-Stege, Kastenflansche, RHS-Wände) über c/t gegen die ε-Grenzen (Tabelle 5.2 Blatt 1), mit wirksamem Querschnitt der Klasse 4"
+   }
+  },
+  {
+   "id": "V-031",
+   "clause": "Table 5.2 sheet 2",
+   "entity": "members",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.5.2.class"
+    ]
+   },
+   "description": {
+    "en": "Classification of outstand flanges of I, H, T and channel sections by c/t ≤ 9ε, 10ε, 14ε for class 1, 2, 3 (Table 5.2 sheet 2)",
+    "de": "Klassifizierung überstehender Flansche von I-, H-, T- und U-Querschnitten über c/t ≤ 9ε, 10ε, 14ε für Klasse 1, 2, 3 (Tabelle 5.2 Blatt 2)"
+   }
+  },
+  {
+   "id": "V-032",
+   "clause": "Table 5.2 sheet 2",
+   "entity": "members",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.5.2.class"
+    ]
+   },
+   "description": {
+    "en": "Classification of angles (h/t ≤ 15ε, (b+h)/2t ≤ 11.5ε) and circular hollow sections (d/t ≤ 50ε², 70ε², 90ε²) (Table 5.2 sheet 2); wired for hollow sections only, the angle and CHS tables are not assigned to a section kind",
+    "de": "Klassifizierung von Winkeln (h/t ≤ 15ε, (b+h)/2t ≤ 11,5ε) und Kreishohlprofilen (d/t ≤ 50ε², 70ε², 90ε²) (Tabelle 5.2 Blatt 2); nur für Hohlprofile angebunden, die Winkel- und Kreishohlprofiltabellen sind keiner Querschnittsart zugeordnet"
+   }
+  },
+  {
+   "id": "V-033",
+   "clause": "5.5.2(7)",
+   "entity": "members",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.5.2.class"
+    ]
+   },
+   "description": {
+    "en": "Section class as the highest class of any compressed part, determined per load combination (5.5.2(7))",
+    "de": "Querschnittsklasse als höchste Klasse eines gedrückten Teils, je Lastkombination bestimmt (5.5.2(7))"
+   }
+  },
+  {
+   "id": "V-034",
+   "clause": "5.5.2(11)",
+   "entity": "members",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-1.5.5.hybrid"
+    ]
+   },
+   "description": {
+    "en": "hybrid girder: flange class with f_y,f, web class with f_y,w, plastic moment from the two strengths; the reduced epsilon of the stress ratio (5.5.2(11) text of the spec) is not applied",
+    "de": "Hybridträger: Flanschklasse mit f_y,f, Stegklasse mit f_y,w, plastisches Moment aus beiden Festigkeiten; das abgeminderte epsilon des Spannungsverhältnisses (Text 5.5.2(11) der Spezifikation) wird nicht angewendet"
+   }
+  },
+  {
+   "id": "V-040",
+   "clause": "EN 1993-1-5 4.3 + 1-1 6.2.2.5",
+   "entity": "members",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.5.2.class",
+     "en1993.6.2.4.n"
+    ]
+   },
+   "description": {
+    "en": "Effective class 4 section with the plate reduction factor ρ (ρ = 1.0 for λ_p ≤ 0.673) from part geometry and stresses (EN 1993-1-5 4.3, 1-1 6.2.2.5), via the effective-width kernel",
+    "de": "Wirksamer Querschnitt der Klasse 4 mit dem Plattenabminderungsbeiwert ρ (ρ = 1,0 für λ_p ≤ 0,673) aus Teilgeometrie und Spannungen (EN 1993-1-5 4.3, 1-1 6.2.2.5) über den Kern für wirksame Breiten"
+   }
+  },
+  {
+   "id": "V-050",
+   "clause": "6.2.2.2 / 6.2.2.5",
+   "entity": "members",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.6.2.6.av",
+     "en1993.sections.param",
+     "en1993.6.2.4.n"
+    ]
+   },
+   "description": {
+    "en": "Gross, net and effective section properties per 6.2.2, realised by the member checks en1993.6.2.6.av, en1993.sections.param and en1993.6.2.4.n",
+    "de": "Brutto-, Netto- und wirksame Querschnittswerte nach 6.2.2, umgesetzt durch die Stabnachweise en1993.6.2.6.av, en1993.sections.param und en1993.6.2.4.n"
+   }
+  },
+  {
+   "id": "V-060",
+   "clause": "6.2.3",
+   "entity": "members",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.6.2.3.nt"
+    ]
+   },
+   "description": {
+    "en": "Tension resistance of the section (plastic and net section) per 6.2.3, realised as the member check en1993.6.2.3.nt",
+    "de": "Zugtragfähigkeit des Querschnitts (plastisch und Nettoquerschnitt) nach 6.2.3, umgesetzt als Stabnachweis en1993.6.2.3.nt"
+   }
+  },
+  {
+   "id": "V-061",
+   "clause": "6.2.4",
+   "entity": "members",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.6.2.4.n"
+    ]
+   },
+   "description": {
+    "en": "Cross-section compression resistance per 6.2.4, realised as the member check en1993.6.2.4.n",
+    "de": "Querschnittstragfähigkeit auf Druck nach 6.2.4, umgesetzt als Stabnachweis en1993.6.2.4.n"
+   }
+  },
+  {
+   "id": "V-062",
+   "clause": "6.2.5",
+   "entity": "members",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.6.2.5.my"
+    ]
+   },
+   "description": {
+    "en": "Bending resistance Mc,Rd = Wpl fy/γM0 (class 1, 2), Wel,min fy/γM0 (class 3) and Weff,min fy/γM0 (class 4) with shear-reduced and class-dependent modulus (6.2.5)",
+    "de": "Biegetragfähigkeit Mc,Rd = Wpl fy/γM0 (Klasse 1, 2), Wel,min fy/γM0 (Klasse 3) und Weff,min fy/γM0 (Klasse 4) mit querkraftabgemindertem und klassenabhängigem Widerstandsmoment (6.2.5)"
+   }
+  },
+  {
+   "id": "V-063",
+   "clause": "6.2.6",
+   "entity": "members",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.6.2.6.v"
+    ]
+   },
+   "description": {
+    "en": "Shear resistance, plastic and elastic, per 6.2.6, realised as the member check en1993.6.2.6.v",
+    "de": "Querkrafttragfähigkeit, plastisch und elastisch, nach 6.2.6, umgesetzt als Stabnachweis en1993.6.2.6.v"
+   }
+  },
+  {
+   "id": "V-064",
+   "clause": "6.2.7",
+   "entity": "members",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.6.2.7.t"
+    ]
+   },
+   "description": {
+    "en": "Torsion stresses of open and closed sections per 6.2.7, realised as the member check en1993.6.2.7.t",
+    "de": "Torsionsspannungen offener und geschlossener Querschnitte nach 6.2.7, umgesetzt als Stabnachweis en1993.6.2.7.t"
+   }
+  },
+  {
+   "id": "V-065",
+   "clause": "6.2.7(9)",
+   "entity": "members",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.6.2.7.t"
+    ]
+   },
+   "description": {
+    "en": "Interaction of shear and torsion with the reduced plastic shear resistance per 6.2.7(9), realised as the member check en1993.6.2.7.t",
+    "de": "Interaktion von Querkraft und Torsion mit abgeminderter plastischer Querkrafttragfähigkeit nach 6.2.7(9), umgesetzt als Stabnachweis en1993.6.2.7.t"
+   }
+  },
+  {
+   "id": "V-066",
+   "clause": "6.2.7(1)",
+   "entity": "members",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.6.2.7.w"
+    ]
+   },
+   "description": {
+    "en": "Warping torsion of a member under a point or uniform torque with fork, fixed, restrained-fork or cantilever warping supports (field warpingSupport) by the exact solution of E I_w θ'''' − G I_t θ'' = m, with σ_w = B/W_w summed elastically with N, M_y and M_z (6.2.7(1)); clauses 6.2.7(5)-(9) are not verified against the print",
+    "de": "Wölbkrafttorsion eines Stabs unter Einzel- oder Streckentorsionsmoment mit Gabel-, beidseitig eingespannten, eingespannt-gabelgelagerten oder Kragarm-Wölblagerungen (Feld warpingSupport) nach der exakten Lösung von E I_w θ'''' − G I_t θ'' = m, mit σ_w = B/W_w, elastisch überlagert mit N, M_y und M_z (6.2.7(1)); die Abschnitte 6.2.7(5)-(9) sind nicht gegen den Druck geprüft"
+   }
+  },
+  {
+   "id": "V-067",
+   "clause": "6.2.8",
+   "entity": "members",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.6.2.5.my"
+    ]
+   },
+   "description": {
+    "en": "Bending and shear: no reduction for VEd ≤ 0.5 Vpl,Rd, otherwise reduced yield strength fy,red = (1 − ρ) fy on the shear area with ρ = (2 VEd/Vpl,Rd − 1)² (6.2.8)",
+    "de": "Biegung und Querkraft: keine Abminderung für VEd ≤ 0,5 Vpl,Rd, sonst abgeminderte Streckgrenze fy,red = (1 − ρ) fy in der Schubfläche mit ρ = (2 VEd/Vpl,Rd − 1)² (6.2.8)"
+   }
+  },
+  {
+   "id": "V-068",
+   "clause": "6.2.9.1",
+   "entity": "members",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.6.2.9.mn"
+    ]
+   },
+   "description": {
+    "en": "Bending and axial force interaction of class 1 and 2 sections per 6.2.9.1, realised as the member check en1993.6.2.9.mn",
+    "de": "Interaktion von Biegung und Normalkraft für Querschnitte der Klassen 1 und 2 nach 6.2.9.1, umgesetzt als Stabnachweis en1993.6.2.9.mn"
+   }
+  },
+  {
+   "id": "V-069",
+   "clause": "6.2.9.2",
+   "entity": "members",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.6.2.9.mn"
+    ]
+   },
+   "description": {
+    "en": "Bending, shear and axial force with yield strength reduced in the shear area per 6.2.9.2, realised as the member check en1993.6.2.9.mn",
+    "de": "Biegung, Querkraft und Normalkraft mit abgeminderter Streckgrenze im Schubbereich nach 6.2.9.2, umgesetzt als Stabnachweis en1993.6.2.9.mn"
+   }
+  },
+  {
+   "id": "V-070",
+   "clause": "6.2.9.3",
+   "entity": "members",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.6.2.9.mn"
+    ]
+   },
+   "description": {
+    "en": "Class 3 stress check σx,Ed ≤ fy/γM0 and class 4 bending with axial force on the effective section (6.2.9.3, eq. 6.44), realised as the member check en1993.6.2.9.mn",
+    "de": "Spannungsnachweis σx,Ed ≤ fy/γM0 für Klasse 3 und Biegung mit Normalkraft am wirksamen Querschnitt für Klasse 4 (6.2.9.3, Gl. 6.44), umgesetzt als Stabnachweis en1993.6.2.9.mn"
+   }
+  },
+  {
+   "id": "V-071",
+   "clause": "6.2.10",
+   "entity": "members",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.6.2.9.mn"
+    ]
+   },
+   "description": {
+    "en": "Bending, shear and axial force of class 4 sections with effective web per 6.2.10, realised as the member check en1993.6.2.9.mn",
+    "de": "Biegung, Querkraft und Normalkraft von Querschnitten der Klasse 4 mit wirksamem Steg nach 6.2.10, umgesetzt als Stabnachweis en1993.6.2.9.mn"
+   }
+  },
+  {
+   "id": "V-072",
+   "clause": "6.2.9.1 (summary)",
+   "entity": "members",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.6.2.9.mn"
+    ]
+   },
+   "description": {
+    "en": "Summary of the cross-section bending resistance with axial force per 6.2.9.1, realised as the member check en1993.6.2.9.mn",
+    "de": "Zusammenfassung der Querschnittstragfähigkeit auf Biegung mit Normalkraft nach 6.2.9.1, umgesetzt als Stabnachweis en1993.6.2.9.mn"
+   }
+  },
+  {
+   "id": "V-073",
+   "clause": "6.2.2",
+   "entity": "platedPanels",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-5.10"
+    ]
+   },
+   "description": {
+    "en": "Elastic von Mises criterion (σx/fyd)² + (σz/fyd)² − (σx/fyd)(σz/fyd) + 3(τ/fyd)² ≤ 1 for combined stresses (6.2.2, 6.1(5)), realised as the reduced stress criterion of plated panels",
+    "de": "Elastisches Vergleichsspannungskriterium nach von Mises (σx/fyd)² + (σz/fyd)² − (σx/fyd)(σz/fyd) + 3(τ/fyd)² ≤ 1 für kombinierte Spannungen (6.2.2, 6.1(5)), umgesetzt als Vergleichsspannungskriterium für Beulfelder"
+   }
+  },
+  {
+   "id": "V-074",
+   "clause": "6.2.11",
+   "entity": "platedPanels",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-5.6"
+    ]
+   },
+   "description": {
+    "en": "Local transverse force on webs per 6.2.11, delegated to the plate buckling check family en1993.1-5.6",
+    "de": "Örtliche Querkraft auf Stege nach 6.2.11, delegiert an die Beulnachweisfamilie en1993.1-5.6"
+   }
+  },
+  {
+   "id": "V-075",
+   "clause": "6.2.12",
+   "entity": "craneRunways",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.6.5.7.vm",
+     "en1993.1-5.6."
+    ]
+   },
+   "description": {
+    "en": "Transverse load on webs from crane runway wheels per 6.2.12, realised by the checks en1993.6.5.7.vm and en1993.1-5.6.",
+    "de": "Querlasten auf Stege aus Kranbahnrädern nach 6.2.12, umgesetzt durch die Nachweise en1993.6.5.7.vm und en1993.1-5.6."
+   }
+  },
+  {
+   "id": "V-100",
+   "clause": "6.3.1.2",
+   "entity": "members",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.6.3.1.nb"
+    ]
+   },
+   "description": {
+    "en": "Flexural buckling resistance of compression members per 6.3.1.2 with buckling curves, realised as the member check en1993.6.3.1.nb",
+    "de": "Biegeknicktragfähigkeit von Druckstäben nach 6.3.1.2 mit Knickspannungslinien, umgesetzt als Stabnachweis en1993.6.3.1.nb"
+   }
+  },
+  {
+   "id": "V-101",
+   "clause": "6.3.1.4",
+   "entity": "members",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.6.3.1.tf"
+    ]
+   },
+   "description": {
+    "en": "Torsional and torsional-flexural buckling per 6.3.1.4, realised as the member check en1993.6.3.1.tf",
+    "de": "Drillknicken und Biegedrillknicken nach 6.3.1.4, umgesetzt als Stabnachweis en1993.6.3.1.tf"
+   }
+  },
+  {
+   "id": "V-102",
+   "clause": "6.3.1.1",
+   "entity": "members",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.6.3.1.tf",
+     "en1993.6.3.1.nb"
+    ]
+   },
+   "description": {
+    "en": "Selection of the applicable buckling checks by section symmetry per 6.3.1.1, realised by the checks en1993.6.3.1.tf and en1993.6.3.1.nb",
+    "de": "Wahl der maßgebenden Knicknachweise nach Querschnittssymmetrie gemäß 6.3.1.1, umgesetzt durch die Nachweise en1993.6.3.1.tf und en1993.6.3.1.nb"
+   }
+  },
+  {
+   "id": "V-110",
+   "clause": "6.3.2.1",
+   "entity": "members",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.6.3.2.mb"
+    ]
+   },
+   "description": {
+    "en": "Lateral-torsional buckling by the general case λ_LT = √(Wy fy/Mcr) with Φ_LT and χ_LT (6.3.2.1), Mcr by the closed form with C1 and C2",
+    "de": "Biegedrillknicken nach dem allgemeinen Fall λ_LT = √(Wy fy/Mcr) mit Φ_LT und χ_LT (6.3.2.1), Mcr in geschlossener Form mit C1 und C2"
+   }
+  },
+  {
+   "id": "V-111",
+   "clause": "6.3.2.3",
+   "entity": "members",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.6.3.2.3.rolled"
+    ]
+   },
+   "description": {
+    "en": "Lateral-torsional buckling of rolled and equivalent welded sections per 6.3.2.3, realised as the member check en1993.6.3.2.3.rolled",
+    "de": "Biegedrillknicken gewalzter und gleichartiger geschweißter Querschnitte nach 6.3.2.3, umgesetzt als Stabnachweis en1993.6.3.2.3.rolled"
+   }
+  },
+  {
+   "id": "V-112",
+   "clause": "6.3.2.4",
+   "entity": "members",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.6.3.2.4.cf"
+    ]
+   },
+   "description": {
+    "en": "Simplified compression flange method for beams in buildings per 6.3.2.4, realised as the member check en1993.6.3.2.4.cf",
+    "de": "Vereinfachtes Verfahren mit dem Druckflansch als Druckstab für Träger im Hochbau nach 6.3.2.4, umgesetzt als Stabnachweis en1993.6.3.2.4.cf"
+   }
+  },
+  {
+   "id": "V-113",
+   "clause": "6.3.2.2",
+   "entity": "restraints",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-1.6.3.2.mcrfe"
+    ]
+   },
+   "description": {
+    "en": "Elastic critical moment Mcr by the Hermite finite element chain with springs and load height (6.3.2.2)",
+    "de": "Ideales Biegedrillknickmoment Mcr mit der Hermite-Finite-Elemente-Kette mit Federn und Lastangriffshöhe (6.3.2.2)"
+   }
+  },
+  {
+   "id": "V-113a",
+   "clause": "EN 1993",
+   "entity": "members",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.6.3.2.mb",
+     "en1993.1-1.6.3.2.mcrfe"
+    ]
+   },
+   "description": {
+    "en": "Elastic critical moment Mcr of a doubly symmetric I section by the closed form with C1, C2 and C3 (ECCS formula)",
+    "de": "Ideales Biegedrillknickmoment Mcr eines doppeltsymmetrischen I-Querschnitts in geschlossener Form mit C1, C2 und C3 (ECCS-Formel)"
+   }
+  },
+  {
+   "id": "V-113b",
+   "clause": "General",
+   "entity": "restraints",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-1.6.3.2.mcrfe"
+    ]
+   },
+   "description": {
+    "en": "Mcr for arbitrary loading and supports from the linear stability eigenproblem of a 7-DOF thin-walled beam chain with warping, solved by Hermite finite elements with springs and load height",
+    "de": "Mcr für beliebige Belastung und Lagerung aus dem linearen Stabilitäts-Eigenwertproblem einer dünnwandigen 7-Freiheitsgrade-Stabkette mit Verwölbung, gelöst mit Hermite-Finiten-Elementen mit Federn und Lastangriffshöhe"
+   }
+  },
+  {
+   "id": "V-113c",
+   "clause": "EN 1993",
+   "entity": "restraints",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-1.6.3.2.mcrfe"
+    ]
+   },
+   "description": {
+    "en": "Mcr with lateral restraint by trapezoidal sheeting through the rotational spring stiffness CD (NA-DE), solved by Hermite finite elements with springs and load height",
+    "de": "Mcr mit seitlicher Stützung durch Trapezprofile über die Drehfedersteifigkeit CD (NA-DE), gelöst mit Hermite-Finiten-Elementen mit Federn und Lastangriffshöhe"
+   }
+  },
+  {
+   "id": "V-120",
+   "clause": "6.3.3 + Annex A",
+   "entity": "members",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.6.3.3.int"
+    ]
+   },
+   "description": {
+    "en": "Interaction method 1 for bending and compression per 6.3.3 and Annex A, realised as the member check en1993.6.3.3.int",
+    "de": "Interaktionsverfahren 1 für Biegung und Druck nach 6.3.3 und Anhang A, umgesetzt als Stabnachweis en1993.6.3.3.int"
+   }
+  },
+  {
+   "id": "V-121",
+   "clause": "6.3.3 + Annex B",
+   "entity": "members",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.6.3.3.int"
+    ]
+   },
+   "description": {
+    "en": "Interaction method 2 for bending and compression per 6.3.3 and Annex B, realised as the member check en1993.6.3.3.int",
+    "de": "Interaktionsverfahren 2 für Biegung und Druck nach 6.3.3 und Anhang B, umgesetzt als Stabnachweis en1993.6.3.3.int"
+   }
+  },
+  {
+   "id": "V-122",
+   "clause": "6.3.3(6)",
+   "entity": "members",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.6.3.3.int"
+    ]
+   },
+   "description": {
+    "en": "Combined flexural and lateral-torsional buckling equations 6.61 and 6.62 evaluated together per 6.3.3(6), realised as the member check en1993.6.3.3.int",
+    "de": "Gemeinsam ausgewertete Gleichungen 6.61 und 6.62 für Biege- und Biegedrillknicken nach 6.3.3(6), umgesetzt als Stabnachweis en1993.6.3.3.int"
+   }
+  },
+  {
+   "id": "V-123",
+   "clause": "6.3.4",
+   "entity": "restraints",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-1.6.3.4.general"
+    ]
+   },
+   "description": {
+    "en": "General method for lateral and lateral-torsional buckling of components per 6.3.4, realised as the restraint check en1993.1-1.6.3.4.general",
+    "de": "Allgemeines Verfahren für Biege- und Biegedrillknicken von Bauteilen nach 6.3.4, umgesetzt als Nachweis en1993.1-1.6.3.4.general für Halterungen"
+   }
+  },
+  {
+   "id": "V-124",
+   "clause": "6.3.5",
+   "entity": "restraints",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-1.6.3.5.lm"
+    ]
+   },
+   "description": {
+    "en": "Stable length Lm between restraints at plastic hinges per 6.3.5, realised as the restraint check en1993.1-1.6.3.5.lm",
+    "de": "Stabile Länge Lm zwischen Halterungen bei plastischen Gelenken nach 6.3.5, umgesetzt als Nachweis en1993.1-1.6.3.5.lm für Halterungen"
+   }
+  },
+  {
+   "id": "V-125",
+   "clause": "6.3.6",
+   "entity": "storeys",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-1.5.3.3.bracing",
+     "en1993.1-1.6.3.4.general"
+    ]
+   },
+   "description": {
+    "en": "Bracing and restraint of members per 6.3.6, realised by the storey checks en1993.1-1.5.3.3.bracing and en1993.1-1.6.3.4.general",
+    "de": "Aussteifung und Halterung von Bauteilen nach 6.3.6, umgesetzt durch die Geschossnachweise en1993.1-1.5.3.3.bracing und en1993.1-1.6.3.4.general"
+   }
+  },
+  {
+   "id": "V-126",
+   "clause": "6.3.1.3 / 6.3.1.2(3)",
+   "entity": "bucklingLengths",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-1.6.3.1.3.lcr",
+     "en1993.6.3.1.nb"
+    ]
+   },
+   "description": {
+    "en": "Slenderness and buckling length Lcr = K L (6.3.1.3): K from the distribution factors G_A and G_B of the end stiffness sums by the nomogram equations for non-sway and sway frames, checked against the buckling length entered at the member as en1993.1-1.6.3.1.3.lcr",
+    "de": "Schlankheit und Knicklänge Lcr = K L (6.3.1.3): K aus den Verteilungsfaktoren G_A und G_B der Endsteifigkeitssummen nach den Nomogrammgleichungen für unverschiebliche und verschiebliche Rahmen, geprüft gegen die am Bauteil angesetzte Knicklänge als en1993.1-1.6.3.1.3.lcr"
+   }
+  },
+  {
+   "id": "V-127",
+   "clause": "6.3.2",
+   "entity": "members",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.6.2.5.my"
+    ]
+   },
+   "description": {
+    "en": "Section modulus selection for lateral-torsional buckling: Wpl,y, Wel,y or Weff,y by section class (6.3.2)",
+    "de": "Auswahl des Widerstandsmoments für das Biegedrillknicken: Wpl,y, Wel,y oder Weff,y je Querschnittsklasse (6.3.2)"
+   }
+  },
+  {
+   "id": "V-130",
+   "clause": "6.4.1",
+   "entity": "builtUpMembers",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-1.6.4.chord"
+    ]
+   },
+   "description": {
+    "en": "General requirements for built-up compression members per 6.4.1, realised as the check en1993.1-1.6.4.chord",
+    "de": "Allgemeine Anforderungen an mehrteilige Druckstäbe nach 6.4.1, umgesetzt als Nachweis en1993.1-1.6.4.chord"
+   }
+  },
+  {
+   "id": "V-131",
+   "clause": "6.4.2",
+   "entity": "builtUpMembers",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-1.6.4.chord"
+    ]
+   },
+   "description": {
+    "en": "Laced compression members with chord and diagonal forces per 6.4.2, realised as the check en1993.1-1.6.4.chord",
+    "de": "Vergitterte Druckstäbe mit Gurt- und Diagonalkräften nach 6.4.2, umgesetzt als Nachweis en1993.1-1.6.4.chord"
+   }
+  },
+  {
+   "id": "V-132",
+   "clause": "6.4.3",
+   "entity": "builtUpMembers",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-1.6.4.chord"
+    ]
+   },
+   "description": {
+    "en": "Battened compression members with effective second moment of area per 6.4.3, realised as the check en1993.1-1.6.4.chord",
+    "de": "Rahmenstäbe mit wirksamem Flächenträgheitsmoment nach 6.4.3, umgesetzt als Nachweis en1993.1-1.6.4.chord"
+   }
+  },
+  {
+   "id": "V-133",
+   "clause": "6.4.4",
+   "entity": "builtUpMembers",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-1.6.4.4.spacing"
+    ]
+   },
+   "description": {
+    "en": "Spacing conditions of closely spaced built-up members per 6.4.4, realised as the check en1993.1-1.6.4.4.spacing",
+    "de": "Abstandsbedingungen eng gestellter mehrteiliger Stäbe nach 6.4.4, umgesetzt als Nachweis en1993.1-1.6.4.4.spacing"
+   }
+  },
+  {
+   "id": "V-090",
+   "clause": "7.2",
+   "entity": "members",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.7.sls"
+    ]
+   },
+   "description": {
+    "en": "Serviceability deflection limits of members per 7.2, realised as the member check en1993.7.sls",
+    "de": "Verformungsgrenzen von Stäben im Grenzzustand der Gebrauchstauglichkeit nach 7.2, umgesetzt als Stabnachweis en1993.7.sls"
+   }
+  },
+  {
+   "id": "V-091",
+   "clause": "7.2.3",
+   "entity": "members",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.7.2.3.freq"
+    ]
+   },
+   "description": {
+    "en": "Floor natural frequency f1 = π/(2L²) √(EI/m) ≥ 3 Hz (7.2.3) for a simply supported beam under uniform load with mass from permanent actions",
+    "de": "Eigenfrequenz der Decke f1 = π/(2L²) √(EI/m) ≥ 3 Hz (7.2.3) für einen einfeldrigen Balken unter Gleichlast mit Masse aus ständigen Einwirkungen"
+   }
+  },
+  {
+   "id": "V-400",
+   "clause": "3.6 / Table 3.4",
+   "entity": "joints",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-8.3.6.shear"
+    ]
+   },
+   "description": {
+    "en": "Bolt shear resistance Fv,Rd per 3.6 and Table 3.4, realised as the joint check en1993.1-8.3.6.shear",
+    "de": "Abschertragfähigkeit Fv,Rd von Schrauben nach 3.6 und Tabelle 3.4, umgesetzt als Anschlussnachweis en1993.1-8.3.6.shear"
+   }
+  },
+  {
+   "id": "V-401",
+   "clause": "3.6",
+   "entity": "joints",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-8.3.6.bearing"
+    ]
+   },
+   "description": {
+    "en": "Bearing resistance Fb,Rd of bolted plates per 3.6, realised as the joint check en1993.1-8.3.6.bearing",
+    "de": "Lochleibungstragfähigkeit Fb,Rd geschraubter Bleche nach 3.6, umgesetzt als Anschlussnachweis en1993.1-8.3.6.bearing"
+   }
+  },
+  {
+   "id": "V-402",
+   "clause": "3.6",
+   "entity": "joints",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-8.3.6.tension",
+     "en1993.1-8.3.6.punching"
+    ]
+   },
+   "description": {
+    "en": "Bolt tension resistance Ft,Rd and punching shear Bp,Rd per 3.6, realised by the joint checks en1993.1-8.3.6.tension and en1993.1-8.3.6.punching",
+    "de": "Zugtragfähigkeit Ft,Rd von Schrauben und Durchstanztragfähigkeit Bp,Rd nach 3.6, umgesetzt durch die Anschlussnachweise en1993.1-8.3.6.tension und en1993.1-8.3.6.punching"
+   }
+  },
+  {
+   "id": "V-403",
+   "clause": "3.6.1 + Table 3.4",
+   "entity": "joints",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-8.3.6.interaction"
+    ]
+   },
+   "description": {
+    "en": "Combined shear and tension interaction of bolts per 3.6.1 and Table 3.4, realised as the joint check en1993.1-8.3.6.interaction",
+    "de": "Interaktion von Abscheren und Zug bei Schrauben nach 3.6.1 und Tabelle 3.4, umgesetzt als Anschlussnachweis en1993.1-8.3.6.interaction"
+   }
+  },
+  {
+   "id": "V-404",
+   "clause": "3.9",
+   "entity": "joints",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-8.3.9.slip"
+    ]
+   },
+   "description": {
+    "en": "Slip resistance of preloaded connections per 3.9, realised as the joint check en1993.1-8.3.9.slip",
+    "de": "Gleitfestigkeit vorgespannter Verbindungen nach 3.9, umgesetzt als Anschlussnachweis en1993.1-8.3.9.slip"
+   }
+  },
+  {
+   "id": "V-405",
+   "clause": "3.10",
+   "entity": "joints",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-8.3.10.block"
+    ]
+   },
+   "description": {
+    "en": "Block tearing resistance Veff,1,Rd = fu Ant/γM2 + fy Anv/(√3 γM0) (3.10); the angle net section with β2, β3 is not wired",
+    "de": "Blockversagen Veff,1,Rd = fu Ant/γM2 + fy Anv/(√3 γM0) (3.10); der Nettoquerschnitt von Winkeln mit β2, β3 ist nicht angebunden"
+   }
+  },
+  {
+   "id": "V-406",
+   "clause": "3.5",
+   "entity": "joints",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-8.3.5."
+    ]
+   },
+   "description": {
+    "en": "Minimum and maximum edge distances and spacings of fasteners per 3.5 and Table 3.3, realised by the joint checks en1993.1-8.3.5.",
+    "de": "Mindest- und Höchstwerte der Rand- und Lochabstände von Verbindungsmitteln nach 3.5 und Tabelle 3.3, umgesetzt durch die Anschlussnachweise en1993.1-8.3.5."
+   }
+  },
+  {
+   "id": "V-407",
+   "clause": "3.12",
+   "entity": "jointPlates",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-8.3.12.ic",
+     "en1993.1-8.3.6.plate",
+     "en1993.1-8.6.2.row"
+    ]
+   },
+   "description": {
+    "en": "Distribution of load over a group of fasteners (3.12): the bolt group of a joint plate under shear and eccentricity by the elastic vector method or the plastic instantaneous centre of rotation with the load-deformation law of one bolt (registry rows ndp.en1993.1-8.3.12.ic.*, unverified model constants), checked as en1993.1-8.3.12.ic with the eccentricity as remedy",
+    "de": "Lastverteilung auf eine Gruppe von Verbindungsmitteln (3.12): die Schraubengruppe eines Anschlussblechs unter Querkraft und Ausmitte nach dem elastischen Vektorverfahren oder plastisch um den Momentanpol mit dem Last-Verformungs-Gesetz einer Schraube (Registerzeilen ndp.en1993.1-8.3.12.ic.*, ungeprüfte Modellkonstanten), geprüft als en1993.1-8.3.12.ic mit der Ausmitte als Abhilfe"
+   }
+  },
+  {
+   "id": "V-410",
+   "clause": "4.5",
+   "entity": "joints",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-8.4.5.directional",
+     "en1993.1-8.4.5.simplified"
+    ]
+   },
+   "description": {
+    "en": "Fillet weld by the directional method with throat a, effective length ≥ max(6a, 30 mm) and stress components σ_⊥, τ_⊥, τ_∥ on the throat plane (4.5)",
+    "de": "Kehlnaht nach dem richtungsbezogenen Verfahren mit Nahtdicke a, wirksamer Länge ≥ max(6a, 30 mm) und Spannungskomponenten σ_⊥, τ_⊥, τ_∥ in der Nahtebene (4.5)"
+   }
+  },
+  {
+   "id": "V-411",
+   "clause": "4.7",
+   "entity": "joints",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-8.4.5.directional",
+     "en1993.1-8.4.5.simplified"
+    ]
+   },
+   "description": {
+    "en": "butt welds take the member resistance; partial penetration welds as deep fillets",
+    "de": "Stumpfnähte übernehmen die Bauteiltragfähigkeit; nicht durchgeschweißte Nähte werden wie tiefe Kehlnähte behandelt"
+   }
+  },
+  {
+   "id": "V-412",
+   "clause": "4.10",
+   "entity": "weldGroups",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-8.4.5.group"
+    ]
+   },
+   "description": {
+    "en": "Weld group under torsion and eccentric load per 4.10, realised as the weld group check en1993.1-8.4.5.group",
+    "de": "Schweißnahtgruppe unter Torsion und exzentrischer Last nach 4.10, umgesetzt als Nahtgruppennachweis en1993.1-8.4.5.group"
+   }
+  },
+  {
+   "id": "V-413",
+   "clause": "4.11",
+   "entity": "joints",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-8.4.11.beff"
+    ]
+   },
+   "description": {
+    "en": "Effective width beff for force distribution in beam-to-column connections per 4.11, realised as the joint check en1993.1-8.4.11.beff",
+    "de": "Mittragende Breite beff für die Kraftverteilung in Träger-Stützen-Anschlüssen nach 4.11, umgesetzt als Anschlussnachweis en1993.1-8.4.11.beff"
+   }
+  },
+  {
+   "id": "V-420",
+   "clause": "6.2.4 + Table 6.2",
+   "entity": "jointRows",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-8.6.2.row"
+    ]
+   },
+   "description": {
+    "en": "Equivalent T-stub in tension with failure modes 1 to 3 per 6.2.4 and Table 6.2, realised as the joint row check en1993.1-8.6.2.row",
+    "de": "Äquivalenter T-Stummel auf Zug mit den Versagensformen 1 bis 3 nach 6.2.4 und Tabelle 6.2, umgesetzt als Anschlusszeilennachweis en1993.1-8.6.2.row"
+   }
+  },
+  {
+   "id": "V-421",
+   "clause": "6.2.6.2",
+   "entity": "joints",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-8.6.3.mj"
+    ]
+   },
+   "description": {
+    "en": "Column web in transverse compression per 6.2.6.2, realised as the joint check en1993.1-8.6.3.mj",
+    "de": "Stützensteg unter Querdruck nach 6.2.6.2, umgesetzt als Anschlussnachweis en1993.1-8.6.3.mj"
+   }
+  },
+  {
+   "id": "V-422",
+   "clause": "6.2.6.1",
+   "entity": "joints",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-8.6.3.mj"
+    ]
+   },
+   "description": {
+    "en": "Column web panel in shear per 6.2.6.1, realised as the joint check en1993.1-8.6.3.mj",
+    "de": "Stützenstegfeld unter Schub nach 6.2.6.1, umgesetzt als Anschlussnachweis en1993.1-8.6.3.mj"
+   }
+  },
+  {
+   "id": "V-423",
+   "clause": "6.2.6.3",
+   "entity": "jointRows",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-8.6.2.row"
+    ]
+   },
+   "description": {
+    "en": "Column web in transverse tension per 6.2.6.3, realised as the joint row check en1993.1-8.6.2.row",
+    "de": "Stützensteg unter Querzug nach 6.2.6.3, umgesetzt als Anschlusszeilennachweis en1993.1-8.6.2.row"
+   }
+  },
+  {
+   "id": "V-424",
+   "clause": "6.2.6.4",
+   "entity": "jointRows",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-8.6.2.row"
+    ]
+   },
+   "description": {
+    "en": "Column flange in bending per 6.2.6.4 as the equivalent T-stub of Table 6.2 with modes 1 to 3 and the effective lengths of Tables 6.4 and 6.5 (single row and group), a component of the joint row check en1993.1-8.6.2.row and a bar of the component diagram components:<joint>; the same T-stub kernel serves the base plate check en1993.1-8.6.2.tbend",
+    "de": "Stützenflansch auf Biegung nach 6.2.6.4 als äquivalenter T-Stummel nach Tabelle 6.2 mit den Modi 1 bis 3 und den wirksamen Längen der Tabellen 6.4 und 6.5 (Einzelreihe und Gruppe), Komponente des Anschlusszeilennachweises en1993.1-8.6.2.row und Balken des Komponentendiagramms components:<joint>; derselbe T-Stummel-Kern bedient den Fußplattennachweis en1993.1-8.6.2.tbend"
+   }
+  },
+  {
+   "id": "V-425",
+   "clause": "6.2.6.5",
+   "entity": "jointRows",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-8.6.2.row"
+    ]
+   },
+   "description": {
+    "en": "End plate in bending per 6.2.6.5 as the equivalent T-stub with modes 1 to 3 (effective lengths of Table 6.6 for the extended row, first row below, inner rows), a component of the joint row check en1993.1-8.6.2.row and a bar of the component diagram components:<joint>",
+    "de": "Kopfplatte auf Biegung nach 6.2.6.5 als äquivalenter T-Stummel mit den Modi 1 bis 3 (wirksame Längen nach Tabelle 6.6 für die überstehende Reihe, die erste Reihe darunter und innere Reihen), Komponente des Anschlusszeilennachweises en1993.1-8.6.2.row und Balken des Komponentendiagramms components:<joint>"
+   }
+  },
+  {
+   "id": "V-426",
+   "clause": "6.2.6.6",
+   "entity": "joints",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-8.6.2.comp"
+    ]
+   },
+   "description": {
+    "en": "Beam flange and web in compression F_c,fb,Rd = M_c,Rd/(h - t_fb) (numbered 6.2.6.7 in EN 1993-1-8:2005) with the column web in compression (6.2.6.2) and the web panel in shear (6.2.6.1) as the compression zone of the joint: the check en1993.1-8.6.2.comp takes F_c,Ed = M_j,Ed/z against the least of the three, the reduction for h > 600 mm is not applied",
+    "de": "Trägerflansch und -steg auf Druck F_c,fb,Rd = M_c,Rd/(h - t_fb) (in EN 1993-1-8:2005 als 6.2.6.7 nummeriert) mit Stützensteg auf Druck (6.2.6.2) und Stegfeld auf Schub (6.2.6.1) als Druckzone des Anschlusses: der Nachweis en1993.1-8.6.2.comp setzt F_c,Ed = M_j,Ed/z dem Kleinsten der drei gegenüber, die Abminderung für h > 600 mm wird nicht angesetzt"
+   }
+  },
+  {
+   "id": "V-427",
+   "clause": "6.2.6.8",
+   "entity": "joints",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-8.6.2.row"
+    ]
+   },
+   "description": {
+    "en": "Beam web in tension per 6.2.6.8 with b_eff,t,wb = the effective length of the end plate T-stub, realised as a component of the row check en1993.1-8.6.2.row",
+    "de": "Trägersteg auf Zug nach 6.2.6.8 mit b_eff,t,wb = wirksame Länge des Kopfplatten-T-Stummels, umgesetzt als Komponente des Reihennachweises en1993.1-8.6.2.row"
+   }
+  },
+  {
+   "id": "V-430",
+   "clause": "6.3",
+   "entity": "joints",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-8.6.3.mj"
+    ]
+   },
+   "description": {
+    "en": "Design moment resistance of joints from bolt row resistances by the component method per 6.3, realised as the joint check en1993.1-8.6.3.mj",
+    "de": "Bemessungswert der Momententragfähigkeit von Anschlüssen aus den Schraubenreihentragfähigkeiten nach dem Komponentenverfahren gemäß 6.3, umgesetzt als Anschlussnachweis en1993.1-8.6.3.mj"
+   }
+  },
+  {
+   "id": "V-431",
+   "clause": "6.3.1",
+   "entity": "joints",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-8.5.2.sj"
+    ]
+   },
+   "description": {
+    "en": "Initial rotational stiffness Sj,ini and secant stiffness of joints per 6.3.1, realised as the joint check en1993.1-8.5.2.sj",
+    "de": "Anfangsdrehsteifigkeit Sj,ini und Sekantensteifigkeit von Anschlüssen nach 6.3.1, umgesetzt als Anschlussnachweis en1993.1-8.5.2.sj"
+   }
+  },
+  {
+   "id": "V-432",
+   "clause": "6.3.2",
+   "entity": "joints",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-8.6.3.mj"
+    ]
+   },
+   "description": {
+    "en": "Moment-rotation characteristic of joints per 6.3.2, realised as the joint check en1993.1-8.6.3.mj",
+    "de": "Momenten-Rotations-Charakteristik von Anschlüssen nach 6.3.2, umgesetzt als Anschlussnachweis en1993.1-8.6.3.mj"
+   }
+  },
+  {
+   "id": "V-433",
+   "clause": "5.2",
+   "entity": "joints",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-8.5.2.sj"
+    ]
+   },
+   "description": {
+    "en": "Joint classification by stiffness and strength per 5.2, realised as the joint check en1993.1-8.5.2.sj",
+    "de": "Klassifizierung von Anschlüssen nach Steifigkeit und Tragfähigkeit gemäß 5.2, umgesetzt als Anschlussnachweis en1993.1-8.5.2.sj"
+   }
+  },
+  {
+   "id": "V-440",
+   "clause": "6.2.8",
+   "entity": "foundationBlocks",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-8.6.2.base",
+     "en1993.1-8.6.2.grout",
+     "en1993.1-8.6.2.bearing",
+     "en1993.1-8.6.2.anchort",
+     "en1993.1-8.6.2.anchorv",
+     "en1993.1-8.6.2.cbend",
+     "en1993.1-8.6.2.tbend",
+     "en1993.1-8.6.2.mjrd",
+     "en1993.1-8.6.2.cone"
+    ]
+   },
+   "description": {
+    "en": "Base plates with T-stub in tension and concrete in compression per 6.2.8: the joint check en1993.1-8.6.2.base, and for a foundation block the grout condition beta_j = 2/3 (6.2.5(7)), the bearing on grout and concrete with k_j from the load spread of EN 1992-1-1 6.7 (gamma_C from the shared registry row ndp.en1992.m-01.gamma-c-persistent), the anchor tension 0.9 f_ub A_s/gamma_M2 and the anchor shear with alpha_b = 0.44 - 0.0003 f_yb without friction (6.2.2(7)); the plate bending in compression (c-strip, c = t_p sqrt(f_y/(3 f_jd gamma_M0)) with the required plate thickness, 6.2.5 and 6.2.6.11), the tension T-stub with modes 1 to 3 with and without prying (Table 6.2, effective lengths of Table 6.4 for the single row inside the flange; the Table 6.6 case outside the flange needs m_x and e_x, which the model does not carry), the column base moment resistance M_j,Rd on the block (6.2.8.3) and the concrete cone breakout N_Rk,c of EN 1992-4 7.2.1.4 (k_1 cracked, gamma_inst and gamma_C from unverified registry rows, isolated cones, one free edge); the pull-out N_Rk,p of EN 1992-4 needs the head bearing area, which the model does not carry, and is not modelled",
+    "de": "Fußplatten mit T-Stummel auf Zug und Beton auf Druck nach 6.2.8: der Anschlussnachweis en1993.1-8.6.2.base und für einen Fundamentblock die Vergussbedingung beta_j = 2/3 (6.2.5(7)), die Pressung auf Mörtel und Beton mit k_j aus der Lastausbreitung nach EN 1992-1-1 6.7 (gamma_C aus der gemeinsamen Registerzeile ndp.en1992.m-01.gamma-c-persistent), der Ankerzug 0,9 f_ub A_s/gamma_M2 und das Ankerabscheren mit alpha_b = 0,44 - 0,0003 f_yb ohne Reibung (6.2.2(7)); die Fußplattenbiegung auf Druck (c-Streifen, c = t_p Wurzel(f_y/(3 f_jd gamma_M0)) mit erforderlicher Plattendicke, 6.2.5 und 6.2.6.11), der T-Stummel auf Zug mit den Modi 1 bis 3 mit und ohne Hebelkräfte (Tabelle 6.2, wirksame Längen nach Tabelle 6.4 für die einzelne Reihe innerhalb des Flansches; der Fall außerhalb des Flansches nach Tabelle 6.6 braucht m_x und e_x, die das Modell nicht führt), die Momententragfähigkeit M_j,Rd des Stützenfußes auf dem Block (6.2.8.3) und der Betonausbruch N_Rk,c nach EN 1992-4 7.2.1.4 (k_1 gerissen, gamma_inst und gamma_C aus ungeprüften Registerzeilen, einzelne Kegel, ein freier Rand); das Herausziehen N_Rk,p nach EN 1992-4 braucht die Kopfauflagefläche, die das Modell nicht führt, und ist nicht abgebildet"
+   }
+  },
+  {
+   "id": "V-450",
+   "clause": "5.1 / 6.2",
+   "entity": "hollowJoints",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-8.7.4.gap"
+    ]
+   },
+   "description": {
+    "en": "Tubular joints: chord face failure of K and N gap joints of RHS (Tables 7.8 and 7.11, unverified rows)",
+    "de": "Rohrknoten: Gurtplattenversagen von K- und N-Knoten mit Spalt aus RHS (Tabellen 7.8 und 7.11, ungeprüfte Zeilen)"
+   }
+  },
+  {
+   "id": "V-451",
+   "clause": "3.6 / 3.10.2 / 4.5.3.2",
+   "entity": "jointPlates",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-8.3.6.plate",
+     "en1993.1-8.3.10.plateblock",
+     "en1993.1-1.6.2.3.platenet",
+     "en1993.1-8.4.5.plateweld",
+     "en1993.1-8.3.10.block",
+     "en1993.1-8.3.6.shear"
+    ]
+   },
+   "description": {
+    "en": "Fin plate, splice flange cover plates and splice web cover plates as joint plates with the elastic bolt group under shear, axial force and the eccentricity of the bolt line (3.6, Table 3.4), block tearing (3.10.2), the cover plate net section (6.2.3) and the fin plate weld by the directional method (4.5.3.2); the flange force is M/(h - t_f) + N A_f/A, the web cover carries the shear only, and plate bending and local stability of the plates are not checked",
+    "de": "Anschlussblech (Schubblech), Stoßlaschen am Flansch und Stoßlaschen am Steg als Anschlussbleche mit der elastischen Schraubengruppe unter Querkraft, Normalkraft und der Exzentrizität der Schraubenlinie (3.6, Tabelle 3.4), Blockversagen (3.10.2), dem Nettoquerschnitt der Lasche (6.2.3) und der Naht des Anschlussblechs nach dem richtungsbezogenen Verfahren (4.5.3.2); die Flanschkraft ist M/(h - t_f) + N A_f/A, die Stegasche trägt nur die Querkraft, und Blechbiegung und lokale Stabilität der Bleche sind nicht nachgewiesen"
+   }
+  },
+  {
+   "id": "V-452",
+   "clause": "5.1.1 Joint design philosophy",
+   "entity": "jointRows",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-8.6.2.row",
+     "en1993.1-8.6.3.mj"
+    ]
+   },
+   "description": {
+    "en": "Joint force equilibrium between frame action and joint resistance per 5.1.1, realised by the joint checks en1993.1-8.6.2.row and en1993.1-8.6.3.mj",
+    "de": "Gleichgewicht der Anschlusskräfte zwischen Rahmenbeanspruchung und Anschlusstragfähigkeit nach 5.1.1, umgesetzt durch die Anschlussnachweise en1993.1-8.6.2.row und en1993.1-8.6.3.mj"
+   }
+  },
+  {
+   "id": "V-500",
+   "clause": "6.2",
+   "entity": "fatigueDetails",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-9.6.cafl",
+     "en1993.1-9.fat"
+    ]
+   },
+   "description": {
+    "en": "Detail category and S-N curve of fatigue details per 6.2, realised by the fatigue checks en1993.1-9.6.cafl and en1993.1-9.fat",
+    "de": "Kerbfall und Wöhlerlinie von Ermüdungsdetails nach 6.2, umgesetzt durch die Ermüdungsnachweise en1993.1-9.6.cafl und en1993.1-9.fat"
+   }
+  },
+  {
+   "id": "V-501",
+   "clause": "5.1/5.2",
+   "entity": "fatigueStresses",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-9.5.range"
+    ]
+   },
+   "description": {
+    "en": "Stress range derivation per 5.1 to 5.4: the stresses of the highest and the lowest load case at the detail fibre from the member actions, the range with the compressive part counted with 0.6 for non-welded and stress-relieved details (registry row, unverified), the stress concentration k_f, the size effect k_s and the damage n/N_R of the range over its cycles, checked as en1993.1-9.5.range",
+    "de": "Ableitung der Spannungsschwingbreite nach 5.1 bis 5.4: die Spannungen des größten und des kleinsten Lastfalls an der Faser des Details aus den Bauteilwirkungen, die Schwingbreite mit dem um 0,6 abgeminderten Druckanteil bei nicht geschweißten und spannungsarm geglühten Details (Registerzeile, ungeprüft), die Spannungskonzentration k_f, der Größeneinfluss k_s und die Schädigung n/N_R der Schwingbreite über ihre Lastspiele, geprüft als en1993.1-9.5.range"
+   }
+  },
+  {
+   "id": "V-502",
+   "clause": "6.3",
+   "entity": "fatigueDetails",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-9.6.cafl",
+     "en1993.1-9.fat"
+    ]
+   },
+   "description": {
+    "en": "Fatigue assessment with partial factors gM,f for damage tolerant and safe life design per 6.3, realised by the checks en1993.1-9.6.cafl and en1993.1-9.fat",
+    "de": "Ermüdungsnachweis mit Teilsicherheitsbeiwerten gM,f für schadenstolerante und sichere Lebensdauer nach 6.3, umgesetzt durch die Nachweise en1993.1-9.6.cafl und en1993.1-9.fat"
+   }
+  },
+  {
+   "id": "V-503",
+   "clause": "8 / 6.3.2",
+   "entity": "fatigueDetails",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-9.fat"
+    ]
+   },
+   "description": {
+    "en": "Cumulative damage by the Palmgren-Miner sum per 8 and 6.3.2, realised as the fatigue check en1993.1-9.fat",
+    "de": "Kumulative Schädigung nach der Palmgren-Miner-Summe gemäß 8 und 6.3.2, umgesetzt als Ermüdungsnachweis en1993.1-9.fat"
+   }
+  },
+  {
+   "id": "V-504",
+   "clause": "EN 1993-1-9 Annex A",
+   "entity": "fatigueDetails",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-9.fat"
+    ]
+   },
+   "description": {
+    "en": "stress history (stressHistory, MPa) counted by the ASTM three-point rainflow of clauses::fatigue_fire::rainflow into the blocks of the Palmgren-Miner sum when the spectrum is empty; oracle: independent ASTM E1049 implementation (the third-party libraries rainflow and fatpack are not installed)",
+    "de": "Spannungsgeschichte (stressHistory, MPa) wird, wenn das Spektrum leer ist, mit dem ASTM-Drei-Punkt-Rainflow aus clauses::fatigue_fire::rainflow in die Blöcke der Palmgren-Miner-Summe gezählt; Orakel: unabhängige ASTM-E1049-Implementierung (die Fremdbibliotheken rainflow und fatpack sind nicht installiert)"
+   }
+  },
+  {
+   "id": "V-505",
+   "clause": "Table 8.1..8.10",
+   "entity": "fatigueDetails",
+   "realisation": {
+    "kind": "not-modelled",
+    "reason": {
+     "en": "Tables 8.1 to 8.10 are neither in the repository nor in the spec; only the category series and the S-N curve are encoded",
+     "de": "Die Tabellen 8.1 bis 8.10 sind weder im Repository noch in der Spezifikation; nur die Kerbfallreihe und die Wöhlerlinie sind abgebildet"
+    }
+   },
+   "description": {
+    "en": "Fatigue detail catalogue of Tables 8.1 to 8.10 with category and geometry constraints, modelled only as the detail ladder and the orthotropic detail table in bridge_fatigue (unverified values)",
+    "de": "Kerbfallkatalog der Tabellen 8.1 bis 8.10 mit Kategorie und Geometriebedingungen, nur als Kerbfallleiter und Tabelle orthotroper Kerbfälle in bridge_fatigue modelliert (ungeprüfte Werte)"
+   }
+  },
+  {
+   "id": "V-506",
+   "clause": "Annex C / D",
+   "entity": "fatigueDetails",
+   "realisation": {
+    "kind": "not-modelled",
+    "reason": {
+     "en": "informational annex: Paris law constants and the crack geometry are not carried",
+     "de": "informativer Anhang: Konstanten des Paris-Gesetzes und die Risskontur werden nicht geführt"
+    }
+   },
+   "description": {
+    "en": "Fracture mechanics assessment of damage tolerant design with Paris crack growth da/dN = C (ΔK)^m (Annexes C and D) is not implemented",
+    "de": "Bruchmechanische Bewertung der schadenstoleranten Bemessung mit Paris-Rissfortschritt da/dN = C (ΔK)^m (Anhänge C und D) ist nicht umgesetzt"
+   }
+  },
+  {
+   "id": "V-600",
+   "clause": "4.2",
+   "entity": "fireExposures",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-2.theta"
+    ]
+   },
+   "description": {
+    "en": "Reduction factors ky,θ, kp,θ and kE,θ of carbon steel at elevated temperature (Table 3.1), also data in clauses::fatigue_fire (registry ndp.en1993.1-2.t31.*)",
+    "de": "Abminderungsbeiwerte ky,θ, kp,θ und kE,θ von Kohlenstoffstahl bei erhöhter Temperatur (Tabelle 3.1), auch als Daten in clauses::fatigue_fire (Register ndp.en1993.1-2.t31.*)"
+   }
+  },
+  {
+   "id": "V-601",
+   "clause": "3.4",
+   "entity": "fireExposures",
+   "realisation": {
+    "kind": "data",
+    "path": "clauses::fatigue_fire::specific_heat_steel (ndp.en1993.v-601.1 unverified)"
+   },
+   "description": {
+    "en": "Thermal properties of steel at elevated temperature, specific heat ca(θ) and conductivity λa = 54 − 3.33e-2 θ (3.4), data inside fatigue_fire",
+    "de": "Thermische Eigenschaften von Stahl bei erhöhter Temperatur, spezifische Wärme ca(θ) und Wärmeleitfähigkeit λa = 54 − 3,33e-2 θ (3.4), Daten in fatigue_fire"
+   }
+  },
+  {
+   "id": "V-602",
+   "clause": "4.2.5",
+   "entity": "fireExposures",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-2.prot"
+    ]
+   },
+   "description": {
+    "en": "Temperature rise of unprotected steel Δθa,t = ksh (Am/V)/(ca ρa) h_net,d Δt (4.2.5), with the section factor Am/V as an input of the exposure",
+    "de": "Erwärmung ungeschützten Stahls Δθa,t = ksh (Am/V)/(ca ρa) h_net,d Δt (4.2.5), wobei der Profilfaktor Am/V eine Eingabe der Exposition ist"
+   }
+  },
+  {
+   "id": "V-603",
+   "clause": "4.2.5.2",
+   "entity": "fireExposures",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-2.prot"
+    ]
+   },
+   "description": {
+    "en": "Temperature rise of protected steel with the insulation parameter φ = (cp ρp/(ca ρa)) dp (Ap/V) (4.2.5.2), with the section factor as an input of the exposure",
+    "de": "Erwärmung geschützten Stahls mit dem Dämmparameter φ = (cp ρp/(ca ρa)) dp (Ap/V) (4.2.5.2), wobei der Profilfaktor eine Eingabe der Exposition ist"
+   }
+  },
+  {
+   "id": "V-604",
+   "clause": "4.2.3",
+   "entity": "fireExposures",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-2.theta",
+     "en1993.1-2.nfi"
+    ]
+   },
+   "description": {
+    "en": "Critical temperature of steel members in fire from the degree of utilisation per 4.2.3, realised by the fire checks en1993.1-2.theta and en1993.1-2.nfi",
+    "de": "Kritische Temperatur von Stahlbauteilen im Brandfall aus dem Ausnutzungsgrad nach 4.2.3, umgesetzt durch die Brandnachweise en1993.1-2.theta und en1993.1-2.nfi"
+   }
+  },
+  {
+   "id": "V-605",
+   "clause": "4.2.3.2",
+   "entity": "fireExposures",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-2.theta"
+    ]
+   },
+   "description": {
+    "en": "Resistance in fire of class 1 to 3 tension members and beams with reduction factor ky,theta per 4.2.3.2, realised as the fire check en1993.1-2.theta",
+    "de": "Tragfähigkeit im Brandfall von Zugstäben und Trägern der Klassen 1 bis 3 mit Abminderungsfaktor ky,theta nach 4.2.3.2, umgesetzt als Brandnachweis en1993.1-2.theta"
+   }
+  },
+  {
+   "id": "V-606",
+   "clause": "4.2.3.2",
+   "entity": "fireExposures",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-2.nfi"
+    ]
+   },
+   "description": {
+    "en": "Buckling resistance in fire of class 1 to 3 compression members per 4.2.3.2, realised as the fire check en1993.1-2.nfi",
+    "de": "Knicktragfähigkeit im Brandfall von Druckstäben der Klassen 1 bis 3 nach 4.2.3.2, umgesetzt als Brandnachweis en1993.1-2.nfi"
+   }
+  },
+  {
+   "id": "V-607",
+   "clause": "4.2.3.4",
+   "entity": "fireExposures",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-2.4.2.3.ltb"
+    ]
+   },
+   "description": {
+    "en": "Lateral-torsional buckling resistance in fire per 4.2.3.4, realised as the fire check en1993.1-2.4.2.3.ltb",
+    "de": "Biegedrillknicktragfähigkeit im Brandfall nach 4.2.3.4, umgesetzt als Brandnachweis en1993.1-2.4.2.3.ltb"
+   }
+  },
+  {
+   "id": "V-608",
+   "clause": "4.2.3.5",
+   "entity": "fireExposures",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-2.4.2.3.int"
+    ]
+   },
+   "description": {
+    "en": "Interaction of bending and axial force in fire per 4.2.3.5, realised as the fire check en1993.1-2.4.2.3.int",
+    "de": "Interaktion von Biegung und Normalkraft im Brandfall nach 4.2.3.5, umgesetzt als Brandnachweis en1993.1-2.4.2.3.int"
+   }
+  },
+  {
+   "id": "V-609",
+   "clause": "4.3",
+   "entity": "fireExposures",
+   "realisation": {
+    "kind": "not-modelled",
+    "reason": {
+     "en": "advanced calculation methods need a thermal and a mechanical finite element model; the spec itself marks them out of scope for closed forms",
+     "de": "weiterentwickelte Berechnungsverfahren brauchen ein thermisches und ein mechanisches Finite-Elemente-Modell; die Spezifikation selbst stellt sie außerhalb geschlossener Formeln"
+    }
+   },
+   "description": {
+    "en": "advanced fire calculation methods are out of scope",
+    "de": "weiterentwickelte Berechnungsverfahren sind nicht Gegenstand"
+   }
+  },
+  {
+   "id": "V-610",
+   "clause": "4.2.4",
+   "entity": "fireExposures",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-2.prot"
+    ]
+   },
+   "description": {
+    "en": "Section factor Am/V and box value per section and protection exposure (4.2.4), an input of the exposure",
+    "de": "Profilfaktor Am/V und Kastenwert je Querschnitt und Schutzexposition (4.2.4), eine Eingabe der Exposition"
+   }
+  },
+  {
+   "id": "V-611",
+   "clause": "3.2.1/NA",
+   "entity": "fireExposures",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-2.nfi"
+    ]
+   },
+   "description": {
+    "en": "Accidental load combination in fire with factor eta_fi per 3.2.1 and the national annex, realised as the fire check en1993.1-2.nfi",
+    "de": "Außergewöhnliche Lastkombination im Brandfall mit Faktor eta_fi nach 3.2.1 und Nationalem Anhang, umgesetzt als Brandnachweis en1993.1-2.nfi"
+   }
+  },
+  {
+   "id": "V-250",
+   "clause": "3.2.2",
+   "entity": "formingGains",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-3.3.2.2.fya",
+     "en1993.1-3.5.5.dist"
+    ]
+   },
+   "description": {
+    "en": "Enhanced yield strength of cold-formed material f_ya = f_yb + (f_u − f_yb) k n t²/A_g ≤ (f_u + f_yb)/2 (3.2.2) with k from the forming process (registry rows) and the bends counted up to r ≤ 5 t; the yield strength the design uses must not exceed f_ya (en1993.1-3.3.2.2.fya); valid for fully effective cross-sections only",
+    "de": "Erhöhte Streckgrenze kaltgeformten Materials f_ya = f_yb + (f_u − f_yb) k n t²/A_g ≤ (f_u + f_yb)/2 (3.2.2) mit k aus dem Umformverfahren (Registerzeilen) und den Biegungen bis r ≤ 5 t; die im Entwurf angesetzte Streckgrenze darf f_ya nicht überschreiten (en1993.1-3.3.2.2.fya); nur für voll wirksame Querschnitte"
+   }
+  },
+  {
+   "id": "V-251",
+   "clause": "5.5",
+   "entity": "coldFormedMembers",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-3.5.5.dist"
+    ]
+   },
+   "description": {
+    "en": "Effective width of plates with edge stiffeners per 5.5: edge-stiffener spring K, area A_s and I_s, σ_cr,s = 2 sqrt(K E I_s)/A_s, λ_d and the distortional buckling reduction χ_d with the iteration of 5.5.3.2, realised as the check en1993.1-3.5.5.dist; the reduction ρ of the flat elements is V-040 with the k_σ of the cold-formed element; intermediate stiffeners (5.5.3.3) are not modelled: the committed spec digest names the clause but carries none of its equations or coefficients (stiffener spring stiffness, effective stiffener area, χ_d application), which must not be written from memory (unverified), and the cold-formed member row has no intermediate-stiffener fields (position, A_s, I_s, count) yet; a model needs a verified clause text, a snapshot field set with its twins and mutations, and the plate-strip eigenvalue of the stiffener on its elastic foundation as the independent oracle",
+    "de": "Wirksame Breite von Blechen mit Randsteifen nach 5.5: Federsteifigkeit K der Randsteife, A_s und I_s, σ_cr,s = 2 sqrt(K E I_s)/A_s, λ_d und Abminderung χ_d für Verdrehbeulen mit der Iteration nach 5.5.3.2, umgesetzt als Nachweis en1993.1-3.5.5.dist; die Abminderung ρ der ebenen Teile ist V-040 mit dem k_σ des kaltgeformten Elements; Zwischensteifen (5.5.3.3) sind nicht modelliert: der festgeschriebene Spezifikationsauszug nennt die Klausel, enthält aber keine ihrer Gleichungen oder Beiwerte (Federsteifigkeit der Steife, wirksame Steifenfläche, Ansatz von χ_d), die nicht aus dem Gedächtnis geschrieben werden dürfen (ungeprüft), und die Kaltprofil-Zeile hat noch keine Felder für Zwischensteifen (Lage, A_s, I_s, Anzahl); ein Modell braucht einen geprüften Klauseltext, einen Snapshot-Feldsatz samt Zwillingen und Mutationen und den Plattenstreifen-Eigenwert der Steife auf elastischer Bettung als unabhängiges Orakel"
+   }
+  },
+  {
+   "id": "V-252",
+   "clause": "5.?",
+   "entity": "coldFormedMembers",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-3.5.4.curl"
+    ]
+   },
+   "description": {
+    "en": "Flange curling of cold-formed beams per 5.4, realised as the check en1993.1-3.5.4.curl",
+    "de": "Gurtkrümmung kaltgeformter Träger nach 5.4, umgesetzt als Nachweis en1993.1-3.5.4.curl"
+   }
+  },
+  {
+   "id": "V-253",
+   "clause": "6.1.2",
+   "entity": "coldFormedMembers",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-3.cf",
+     "en1993.1-3.6.1."
+    ]
+   },
+   "description": {
+    "en": "Axial tension and compression resistance of cold-formed members per 6.1.2, realised by the checks en1993.1-3.cf and en1993.1-3.6.1.",
+    "de": "Zug- und Drucktragfähigkeit kaltgeformter Bauteile nach 6.1.2, umgesetzt durch die Nachweise en1993.1-3.cf und en1993.1-3.6.1."
+   }
+  },
+  {
+   "id": "V-254",
+   "clause": "6.1.4",
+   "entity": "coldFormedMembers",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-3.6.1.11"
+    ]
+   },
+   "description": {
+    "en": "Bending resistance of cold-formed members with effective section modulus per 6.1.4, realised as the check en1993.1-3.6.1.11",
+    "de": "Biegetragfähigkeit kaltgeformter Bauteile mit wirksamem Widerstandsmoment nach 6.1.4, umgesetzt als Nachweis en1993.1-3.6.1.11"
+   }
+  },
+  {
+   "id": "V-255",
+   "clause": "6.1.5",
+   "entity": "coldFormedMembers",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-3.6.1.5"
+    ]
+   },
+   "description": {
+    "en": "Web shear resistance V_b,Rd = (h_w/sin φ) t f_bv/γM0 with f_bv from the web slenderness λ_w = 0.346 (s_w/t) √(f_yb/E) (6.1.5, Table 6.1 with and without stiffened supports), realised as the check en1993.1-3.6.1.5",
+    "de": "Stegschubtragfähigkeit V_b,Rd = (h_w/sin φ) t f_bv/γM0 mit f_bv aus der Stegschlankheit λ_w = 0,346 (s_w/t) √(f_yb/E) (6.1.5, Tabelle 6.1 mit und ohne ausgesteifte Auflager), umgesetzt als Nachweis en1993.1-3.6.1.5"
+   }
+  },
+  {
+   "id": "V-256",
+   "clause": "6.1.7",
+   "entity": "coldFormedMembers",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-3.6.1.7"
+    ]
+   },
+   "description": {
+    "en": "Web crippling under a local transverse force R_w,Rd = α t² √(f_yb E) (1 − 0.1 √(r/t)) (0.5 + √(0.02 l_a/t)) (2.4 + (φ/90)²)/γM1 for the load categories 1 and 2 (field cripplingCategory, bearing length supportLength), realised as the check en1993.1-3.6.1.7; the category coefficients are registry rows (unverified)",
+    "de": "Stegkrüppeln unter örtlicher Querlast R_w,Rd = α t² √(f_yb E) (1 − 0,1 √(r/t)) (0,5 + √(0,02 l_a/t)) (2,4 + (φ/90)²)/γM1 für die Laststellungen 1 und 2 (Feld cripplingCategory, Lagerlänge supportLength), umgesetzt als Nachweis en1993.1-3.6.1.7; die Kategoriebeiwerte sind Registerzeilen (ungeprüft)"
+   }
+  },
+  {
+   "id": "V-257",
+   "clause": "6.1.8 (code section 6.1.11)",
+   "entity": "coldFormedMembers",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-3.6.1.11"
+    ]
+   },
+   "description": {
+    "en": "Combined bending moment and local transverse force M_Ed/M_c,Rd + F_Ed/R_w,Rd ≤ 1.25, realised as the check en1993.1-3.6.1.11 (id carries the section number of the implementation); registry row ndp.en1993.v-257.1 unverified",
+    "de": "Kombination aus Biegemoment und örtlicher Querkraft M_Ed/M_c,Rd + F_Ed/R_w,Rd ≤ 1,25, umgesetzt als Nachweis en1993.1-3.6.1.11 (die Id trägt die Abschnittsnummer der Umsetzung); Registerzeile ndp.en1993.v-257.1 ungeprüft"
+   }
+  },
+  {
+   "id": "V-258",
+   "clause": "6.1.9",
+   "entity": "coldFormedMembers",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-3.6.1.9"
+    ]
+   },
+   "description": {
+    "en": "Axial compression with bending N_Ed/N_c,Rd + M_Ed/M_c,Rd ≤ 1 with N_c,Rd on the effective area and M_c,Rd as entered, realised as the check en1993.1-3.6.1.9; the shift ΔM of the effective centroid is not carried (no field), bending about one axis (unverified against the print)",
+    "de": "Druck mit Biegung N_Ed/N_c,Rd + M_Ed/M_c,Rd ≤ 1 mit N_c,Rd am wirksamen Querschnitt und eingegebenem M_c,Rd, umgesetzt als Nachweis en1993.1-3.6.1.9; die Verschiebung ΔM des wirksamen Schwerpunkts wird nicht geführt (kein Feld), Biegung um eine Achse (nicht gegen den Druck geprüft)"
+   }
+  },
+  {
+   "id": "V-259",
+   "clause": "8",
+   "entity": "fastenedJoints",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-3.8.3.shear",
+     "en1993.1-3.8.3.net",
+     "en1993.1-3.8.3.tension",
+     "en1993.1-3.8.3.interaction",
+     "en1993.1-3.8.3.spacing"
+    ]
+   },
+   "description": {
+    "en": "Screw and blind-rivet connections of cold-formed sheets per 8.3: bearing and fastener shear, net section, screw pull-over and pull-out, their interaction and the minimum spacings; every coefficient is a registry row ndp.en1993.1-3.fastener.* written from memory and unverified until the printed Tables 8.1 to 8.4 are compared",
+    "de": "Schrauben- und Blindnietverbindungen kaltgeformter Bleche nach 8.3: Lochleibung und Verbindungsmittelabscheren, Nettoquerschnitt, Durchknöpfen und Herausziehen von Schrauben, deren Interaktion und die Mindestabstände; jeder Beiwert ist eine Registerzeile ndp.en1993.1-3.fastener.*, aus dem Gedächtnis geschrieben und ungeprüft, bis die gedruckten Tabellen 8.1 bis 8.4 verglichen sind"
+   }
+  },
+  {
+   "id": "V-260",
+   "clause": "10.1.5",
+   "entity": "coldFormedMembers",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-3.10.1.5"
+    ]
+   },
+   "description": {
+    "en": "Rotational restraint of purlins by sheeting C_D = 1/(1/C_D,C + 1/C_D,B) with the web bending part C_D,B = E t³/(4 (1 − ν²) h_d) against the required C_D,req (10.1.5), realised as the check en1993.1-3.10.1.5; the result feeds V-113c",
+    "de": "Drehbettung von Pfetten durch Trapezblech C_D = 1/(1/C_D,C + 1/C_D,B) mit dem Stegbiegeanteil C_D,B = E t³/(4 (1 − ν²) h_d) gegen das erforderliche C_D,req (10.1.5), umgesetzt als Nachweis en1993.1-3.10.1.5; das Ergebnis speist V-113c"
+   }
+  },
+  {
+   "id": "V-300",
+   "clause": "EN 1993",
+   "entity": "members",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-4.5.5"
+    ]
+   },
+   "description": {
+    "en": "Stainless steel member resistance per EN 1993-1-4, realised as the member check en1993.1-4.5.5",
+    "de": "Tragfähigkeit von Bauteilen aus nichtrostendem Stahl nach EN 1993-1-4, umgesetzt als Stabnachweis en1993.1-4.5.5"
+   }
+  },
+  {
+   "id": "V-301",
+   "clause": "1-4 5.3 Table 5.3",
+   "entity": "members",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-4.5.5"
+    ]
+   },
+   "description": {
+    "en": "Effective width of stainless internal and outstand elements with ρ = 0.772/λ̄_p − 0.125/λ̄_p² (cold-formed) or −0.079/λ̄_p² (welded) and ρ = 1/λ̄_p − 0.231/λ̄_p² (cold-formed) or −0.242/λ̄_p² (welded), realised inside the member check en1993.1-4.5.5 (ρ_outstand, ρ_internal in its explanation); the coefficients are registry rows (unverified)",
+    "de": "Wirksame Breite nichtrostender Innen- und Außenteile mit ρ = 0,772/λ̄_p − 0,125/λ̄_p² (kaltgeformt) bzw. −0,079/λ̄_p² (geschweißt) und ρ = 1/λ̄_p − 0,231/λ̄_p² (kaltgeformt) bzw. −0,242/λ̄_p² (geschweißt), umgesetzt im Stabnachweis en1993.1-4.5.5 (ρ_Outstand, ρ_innen in der Erläuterung); die Beiwerte sind Registerzeilen (ungeprüft)"
+   }
+  },
+  {
+   "id": "V-302",
+   "clause": "1-4 5.4 + 6",
+   "entity": "members",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-4.5.5",
+     "en1993.1-4.ss"
+    ]
+   },
+   "description": {
+    "en": "Cross-section resistance of stainless members N_Rk = A_eff f_y, M_Rk = W f_y with γM1, realised by the member check en1993.1-4.5.5 and the bending check en1993.1-4.ss",
+    "de": "Querschnittstragfähigkeit nichtrostender Stäbe N_Rk = A_eff f_y, M_Rk = W f_y mit γM1, umgesetzt durch den Stabnachweis en1993.1-4.5.5 und den Biegenachweis en1993.1-4.ss"
+   }
+  },
+  {
+   "id": "V-303",
+   "clause": "1-4 5.5",
+   "entity": "members",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-4.5.5"
+    ]
+   },
+   "description": {
+    "en": "Flexural, lateral-torsional and torsional buckling of stainless members with χ from Φ = 0.5 (1 + α (λ̄ − λ̄_0) + λ̄²), α and λ̄_0 by forming route (cold-formed open, welded open, hollow), and the interaction factors k_y, k_z, k_LT, realised as the member check en1993.1-4.5.5; the α/λ̄_0 values are registry rows (unverified)",
+    "de": "Biegeknicken, Biegedrillknicken und Drillknicken nichtrostender Stäbe mit χ aus Φ = 0,5 (1 + α (λ̄ − λ̄_0) + λ̄²), α und λ̄_0 je Herstellart (kaltgeformt offen, geschweißt offen, Hohlprofil), und den Interaktionsbeiwerten k_y, k_z, k_LT, umgesetzt als Stabnachweis en1993.1-4.5.5; die Werte α/λ̄_0 sind Registerzeilen (ungeprüft)"
+   }
+  },
+  {
+   "id": "V-304",
+   "clause": "1-4 fire (EN 1993-1-2 Annex C)",
+   "entity": "fireExposures",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-4.fire"
+    ]
+   },
+   "description": {
+    "en": "Stainless steel fire resistance as the load ratio μ0 against the reduction factor k_0.2p,θ at the design temperature, with k_E,θ and k_u,θ interpolated from the registry table (grade 1.4301 only), realised as the check en1993.1-4.fire (unverified table)",
+    "de": "Brandwiderstand nichtrostenden Stahls als Lastgrad μ0 gegen den Abminderungsfaktor k_0,2p,θ bei der Bemessungstemperatur, mit k_E,θ und k_u,θ aus der Registertabelle interpoliert (nur Güte 1.4301), umgesetzt als Nachweis en1993.1-4.fire (ungeprüfte Tabelle)"
+   }
+  },
+  {
+   "id": "V-305",
+   "clause": "1-4 Annex C",
+   "entity": "materials",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-4.5.5"
+    ]
+   },
+   "description": {
+    "en": "Ramberg-Osgood material curve ε = σ/E + 0.002 (σ/f_y)^n with secant and tangent moduli; the deflection factor E/E_s at the serviceability stress enters the member check en1993.1-4.5.5; the grades 1.4301, 1.4401, 1.4404, 1.4571, 1.4462 and 1.4003 are a typed enum (StainlessGradeId) over registry rows with f_y, f_u, E and n (unverified)",
+    "de": "Ramberg-Osgood-Werkstoffkurve ε = σ/E + 0,002 (σ/f_y)^n mit Sekanten- und Tangentenmodul; der Durchbiegungsfaktor E/E_s bei der Gebrauchsspannung geht in den Stabnachweis en1993.1-4.5.5 ein; die Güten 1.4301, 1.4401, 1.4404, 1.4571, 1.4462 und 1.4003 sind ein typisierter Aufzählungstyp (StainlessGradeId) über Registerzeilen mit f_y, f_u, E und n (ungeprüft)"
+   }
+  },
+  {
+   "id": "V-360",
+   "clause": "3.2",
+   "entity": "platedPanels",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-5.3.sl"
+    ]
+   },
+   "description": {
+    "en": "Shear lag in flanges with effective width beff = β b0 and β from κ = α0 b0/Le (3.2), realised as the plated panel check en1993.1-5.3.sl",
+    "de": "Schubverzerrung in Gurten mit mitwirkender Breite beff = β b0 und β aus κ = α0 b0/Le (3.2), umgesetzt als Beulfeldnachweis en1993.1-5.3.sl"
+   }
+  },
+  {
+   "id": "V-361",
+   "clause": "3.3",
+   "entity": "platedPanels",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-5.3.sl"
+    ]
+   },
+   "description": {
+    "en": "Shear lag and plate buckling effects on the effective area per 3.3, realised as the plated panel check en1993.1-5.3.sl",
+    "de": "Einfluss von Schubverzerrung und Plattenbeulen auf die wirksame Fläche nach 3.3, umgesetzt als Plattenfeldnachweis en1993.1-5.3.sl"
+   }
+  },
+  {
+   "id": "V-362",
+   "clause": "4.4",
+   "entity": "platedPanels",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-5.plate"
+    ]
+   },
+   "description": {
+    "en": "Effective widths of unstiffened and stiffened plates per 4.4/4.5, realised as the plated panel check en1993.1-5.plate",
+    "de": "Mittragende Breiten unversteifter und ausgesteifter Platten nach 4.4/4.5, umgesetzt als Plattenfeldnachweis en1993.1-5.plate"
+   }
+  },
+  {
+   "id": "V-363",
+   "clause": "5.2",
+   "entity": "platedPanels",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-5.5.panel",
+     "en1993.1-5.7.1",
+     "en1993.1-5.5.vbw"
+    ]
+   },
+   "description": {
+    "en": "Shear buckling resistance of web panels per 5.2, realised by the plated panel checks en1993.1-5.7.1 and en1993.1-5.5.vbw",
+    "de": "Schubbeultragfähigkeit von Stegfeldern nach 5.2, umgesetzt durch die Plattenfeldnachweise en1993.1-5.7.1 und en1993.1-5.5.vbw"
+   }
+  },
+  {
+   "id": "V-364",
+   "clause": "4.6",
+   "entity": "platedPanels",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-5.4.5",
+     "en1993.1-5.7.2"
+    ]
+   },
+   "description": {
+    "en": "Plates with transverse stiffeners per 4.6, realised by the plated panel checks en1993.1-5.4.5 and en1993.1-5.7.2",
+    "de": "Platten mit Quersteifen nach 4.6, umgesetzt durch die Plattenfeldnachweise en1993.1-5.4.5 und en1993.1-5.7.2"
+   }
+  },
+  {
+   "id": "V-366",
+   "clause": "Table 4.1/4.2",
+   "entity": "platedPanels",
+   "realisation": {
+    "kind": "data",
+    "path": "clauses::effective_width::k_sigma_internal and k_sigma_outstand (Tables 4.1 and 4.2)"
+   },
+   "description": {
+    "en": "Buckling coefficients kσ of Tables 4.1 and 4.2 for internal and outstand elements, defined in plated_ext",
+    "de": "Beulwerte kσ nach den Tabellen 4.1 und 4.2 für innenliegende und überstehende Elemente, definiert in plated_ext"
+   }
+  },
+  {
+   "id": "V-367",
+   "clause": "5.3 / 5.2",
+   "entity": "platedPanels",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-5.7.1",
+     "en1993.1-5.5.vbw"
+    ]
+   },
+   "description": {
+    "en": "Shear resistance of plated panels with web contribution per 5.3/5.2, realised by the plated panel checks en1993.1-5.7.1 and en1993.1-5.5.vbw",
+    "de": "Querkrafttragfähigkeit von Plattenfeldern mit Stegbeitrag nach 5.3/5.2, umgesetzt durch die Plattenfeldnachweise en1993.1-5.7.1 und en1993.1-5.5.vbw"
+   }
+  },
+  {
+   "id": "V-368",
+   "clause": "7.1",
+   "entity": "platedPanels",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-5.7.1"
+    ]
+   },
+   "description": {
+    "en": "Interaction of bending and shear of plated girders per 7.1, realised as the plated panel check en1993.1-5.7.1",
+    "de": "Interaktion von Biegung und Querkraft bei Plattenbalken nach 7.1, umgesetzt als Plattenfeldnachweis en1993.1-5.7.1"
+   }
+  },
+  {
+   "id": "V-369",
+   "clause": "5.5",
+   "entity": "platedPanels",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-5.9.2",
+     "en1993.1-5.9.3",
+     "en1993.1-5.9."
+    ]
+   },
+   "description": {
+    "en": "Stiffener requirements of end posts and intermediate stiffeners per 5.5, realised by the plated panel checks en1993.1-5.9.2 and en1993.1-5.9.3",
+    "de": "Anforderungen an Endsteifen und Zwischensteifen nach 5.5, umgesetzt durch die Plattenfeldnachweise en1993.1-5.9.2 und en1993.1-5.9.3"
+   }
+  },
+  {
+   "id": "V-370",
+   "clause": "6",
+   "entity": "platedPanels",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-5.6"
+    ]
+   },
+   "description": {
+    "en": "Resistance to local transverse forces on webs per section 6, realised as the plated panel check en1993.1-5.6",
+    "de": "Tragfähigkeit gegen örtliche Querkräfte auf Stege nach Abschnitt 6, umgesetzt als Plattenfeldnachweis en1993.1-5.6"
+   }
+  },
+  {
+   "id": "V-371",
+   "clause": "7.2",
+   "entity": "platedPanels",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-5.7.2"
+    ]
+   },
+   "description": {
+    "en": "Interaction of transverse force, bending and shear per 7.2, realised as the plated panel check en1993.1-5.7.2",
+    "de": "Interaktion von Querkraft, Biegung und Schub nach 7.2, umgesetzt als Plattenfeldnachweis en1993.1-5.7.2"
+   }
+  },
+  {
+   "id": "V-372",
+   "clause": "10",
+   "entity": "platedPanels",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-5.10"
+    ]
+   },
+   "description": {
+    "en": "Reduced stress method for plated panels per section 10, realised as the plated panel check en1993.1-5.10",
+    "de": "Methode der reduzierten Spannungen für Plattenfelder nach Abschnitt 10, umgesetzt als Plattenfeldnachweis en1993.1-5.10"
+   }
+  },
+  {
+   "id": "V-373",
+   "clause": "9",
+   "entity": "platedPanels",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-5.9.2",
+     "en1993.1-5.9.3"
+    ]
+   },
+   "description": {
+    "en": "Stiffener design for plated panels per section 9, realised by the plated panel checks en1993.1-5.9.2 and en1993.1-5.9.3",
+    "de": "Bemessung von Steifen für Plattenfelder nach Abschnitt 9, umgesetzt durch die Plattenfeldnachweise en1993.1-5.9.2 und en1993.1-5.9.3"
+   }
+  },
+  {
+   "id": "V-374",
+   "clause": "6.?",
+   "entity": "platedPanels",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-5.6"
+    ]
+   },
+   "description": {
+    "en": "Web crippling of I-girders under crane wheels with load spread ss at 45° through rail and flange (V-960), realised as the plated panel check en1993.1-5.6",
+    "de": "Stegeindrücken von I-Trägern unter Kranradlasten mit Lastverteilung ss unter 45° durch Schiene und Flansch (V-960), umgesetzt als Beulfeldnachweis en1993.1-5.6"
+   }
+  },
+  {
+   "id": "V-375",
+   "clause": "8",
+   "entity": "platedPanels",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-5.8"
+    ]
+   },
+   "description": {
+    "en": "Flange induced buckling of the web per section 8, realised as the plated panel check en1993.1-5.8",
+    "de": "Stegbeulen infolge Flanschverformung nach Abschnitt 8, umgesetzt als Plattenfeldnachweis en1993.1-5.8"
+   }
+  },
+  {
+   "id": "V-376",
+   "clause": "EN 1993",
+   "entity": "platedPanels",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-5.D.shear"
+    ]
+   },
+   "description": {
+    "en": "Annex D corrugated webs wired in v4; Annex A stiffened-plate k_sigma,p, B and C stay open: the chart and table values are not verifiable in the repo; partial not-modelled: Annexes A to D of EN 1993-1-5 (reduced stress extension, FE, orthotropic plate, corrugated webs) belong to the EN 1993 v4 work package",
+    "de": "Anhang D Wellstegträger in v4 angebunden; Anhang A k_sigma,p ausgesteifter Platten, B und C bleiben offen: die Diagramm- und Tabellenwerte sind im Repository nicht prüfbar; teilweise nicht modelliert: Anhänge A bis D von EN 1993-1-5 (Vergleichsspannungserweiterung, FE, orthotrope Platte, Wellstege) gehören zum Arbeitspaket EN 1993 v4"
+   }
+  },
+  {
+   "id": "V-800",
+   "clause": "1-6 section 8",
+   "entity": "siloShells",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-6.shell",
+     "en1993.1-6.8.5.int"
+    ]
+   },
+   "description": {
+    "en": "Shell limit states LS1 to LS4 and reference resistance method per EN 1993-1-6 section 8, realised by the shell checks en1993.1-6.shell and en1993.1-6.8.5.int",
+    "de": "Grenzzustände LS1 bis LS4 von Schalen und Referenztragfähigkeitsverfahren nach EN 1993-1-6 Abschnitt 8, umgesetzt durch die Schalennachweise en1993.1-6.shell und en1993.1-6.8.5.int"
+   }
+  },
+  {
+   "id": "V-801",
+   "clause": "1-6 section 8.5",
+   "entity": "siloShells",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-6.8.5.x"
+    ]
+   },
+   "description": {
+    "en": "Shell buckling limit state LS3 by the reference resistance method per 8.5, realised as the shell check en1993.1-6.8.5.x",
+    "de": "Grenzzustand LS3 Schalenbeulen nach dem Referenztragfähigkeitsverfahren gemäß 8.5, umgesetzt als Schalennachweis en1993.1-6.8.5.x"
+   }
+  },
+  {
+   "id": "V-802",
+   "clause": "1-6 D.1.?",
+   "entity": "siloShells",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-6.8.5.x",
+     "en1993.1-6.D.ext",
+     "en1993.1-6.D.ring"
+    ]
+   },
+   "description": {
+    "en": "Elastic critical buckling stress of cylinders, axial σx,Rcr = 0.605 E Cx t/r with Cx by shell length (EN 1993-1-6 D.1); external pressure and ring stiffeners wired in v4",
+    "de": "Ideale Beulspannung von Zylindern, axial σx,Rcr = 0,605 E Cx t/r mit Cx nach Schalenlänge (EN 1993-1-6 D.1); Außendruck und Ringsteifen in v4 angebunden"
+   }
+  },
+  {
+   "id": "V-803",
+   "clause": "4-1 silos",
+   "entity": "siloShells",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.4-1.5.2.ph",
+     "en1993.4-1.silo"
+    ]
+   },
+   "description": {
+    "en": "Silo shell design under wall friction loads per EN 1993-4-1, realised by the checks en1993.4-1.5.2.ph and en1993.4-1.silo",
+    "de": "Bemessung von Silowänden unter Wandreibungslasten nach EN 1993-4-1, umgesetzt durch die Nachweise en1993.4-1.5.2.ph und en1993.4-1.silo"
+   }
+  },
+  {
+   "id": "V-804",
+   "clause": "4-2 tanks",
+   "entity": "siloShells",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.4-2.6"
+    ]
+   },
+   "description": {
+    "en": "Tank wall thickness under hydrostatic load per EN 1993-4-2, realised as the check en1993.4-2.6",
+    "de": "Wanddicke von Tanks unter hydrostatischer Last nach EN 1993-4-2, umgesetzt als Nachweis en1993.4-2.6"
+   }
+  },
+  {
+   "id": "V-805",
+   "clause": "EN 1993",
+   "entity": "platedPanels",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-7.lateral"
+    ]
+   },
+   "description": {
+    "en": "Plate bending under transverse load σ = k p b²/t² against fy/γM0 with the entered coefficient k; the Timoshenko or Roark coefficient tables are not encoded (unverified)",
+    "de": "Plattenbiegung unter Querlast σ = k p b²/t² gegen fy/γM0 mit dem eingegebenen Beiwert k; die Beiwerttabellen nach Timoshenko oder Roark sind nicht kodiert (ungeprüft)"
+   }
+  },
+  {
+   "id": "V-806",
+   "clause": "1-5 Annex D",
+   "entity": "platedPanels",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-5.D.shear"
+    ]
+   },
+   "description": {
+    "en": "Corrugated web shear per EN 1993-1-5 Annex D, realised as the check en1993.1-5.D.shear (shared with V-376)",
+    "de": "Schub gewellter Stege nach EN 1993-1-5 Anhang D, umgesetzt als Nachweis en1993.1-5.D.shear (gemeinsam mit V-376)"
+   }
+  },
+  {
+   "id": "V-850",
+   "clause": "3-1",
+   "entity": "towerLegs",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.3-1.5.lambda"
+    ]
+   },
+   "description": {
+    "en": "Effective slenderness of lattice tower members per EN 1993-3-1, realised as the check en1993.3-1.5.lambda",
+    "de": "Wirksame Schlankheit von Gittermaststäben nach EN 1993-3-1, umgesetzt als Nachweis en1993.3-1.5.lambda"
+   }
+  },
+  {
+   "id": "V-851",
+   "clause": "3-2",
+   "entity": "towerLegs",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.3-2.vortex",
+     "en1993.3-2.ovalling"
+    ]
+   },
+   "description": {
+    "en": "Vortex shedding and ovalling of chimneys per EN 1993-3-2, realised by the checks en1993.3-2.vortex and en1993.3-2.ovalling",
+    "de": "Wirbelablösung und Ovalisierung von Schornsteinen nach EN 1993-3-2, umgesetzt durch die Nachweise en1993.3-2.vortex und en1993.3-2.ovalling"
+   }
+  },
+  {
+   "id": "V-860",
+   "clause": "1-11",
+   "entity": "tensionComponents",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-11.6.2.cable",
+     "en1993.1-11.6.2"
+    ]
+   },
+   "description": {
+    "en": "Resistance of cables and wire ropes with partial factor gamma_R per EN 1993-1-11, realised by the checks en1993.1-11.6.2.cable and en1993.1-11.6.2",
+    "de": "Tragfähigkeit von Seilen und Drahtseilen mit Teilsicherheitsbeiwert gamma_R nach EN 1993-1-11, umgesetzt durch die Nachweise en1993.1-11.6.2.cable und en1993.1-11.6.2"
+   }
+  },
+  {
+   "id": "V-861",
+   "clause": "1-11",
+   "entity": "tensionComponents",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-8.3.6.rod"
+    ]
+   },
+   "description": {
+    "en": "Tension resistance of threaded rods and pin joints per EN 1993-1-11 and 1-8, realised as the check en1993.1-8.3.6.rod",
+    "de": "Zugtragfähigkeit von Gewindestäben und Bolzenverbindungen nach EN 1993-1-11 und 1-8, umgesetzt als Nachweis en1993.1-8.3.6.rod"
+   }
+  },
+  {
+   "id": "V-870",
+   "clause": "5",
+   "entity": "piles",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.5.5.2.m"
+    ]
+   },
+   "description": {
+    "en": "Steel piling sections with interlock shear transfer reduction per EN 1993-5, realised as the check en1993.5.5.2.m",
+    "de": "Stahlspundbohlen mit Abminderung der Schubübertragung in den Schlössern nach EN 1993-5, umgesetzt als Nachweis en1993.5.5.2.m"
+   }
+  },
+  {
+   "id": "V-880",
+   "clause": "2",
+   "entity": "bridgeFatigue",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.2.9.5",
+     "en1993.2.9.4"
+    ]
+   },
+   "description": {
+    "en": "Steel bridges per EN 1993-2 with γM0 = 1.0, γM1 = 1.1, γM2 = 1.25 and the plate girder rules of 1-5; deck minima and wheel strip fatigue wired in v4",
+    "de": "Stahlbrücken nach EN 1993-2 mit γM0 = 1,0, γM1 = 1,1, γM2 = 1,25 und den Plattenträgerregeln aus 1-5; Fahrbahnplatten-Mindestwerte und Radstreifen-Ermüdung in v4 angebunden"
+   }
+  },
+  {
+   "id": "V-890",
+   "clause": "6",
+   "entity": "craneRunways",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.6.5.7.vm",
+     "en1993.6.9.fat"
+    ]
+   },
+   "description": {
+    "en": "Crane supporting structures under wheel loads per EN 1993-6, realised by the checks en1993.6.5.7.vm and en1993.6.9.fat",
+    "de": "Kranbahnträger unter Radlasten nach EN 1993-6, umgesetzt durch die Nachweise en1993.6.5.7.vm und en1993.6.9.fat"
+   }
+  },
+  {
+   "id": "V-900",
+   "clause": "1-10 2.1",
+   "entity": "members",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-10.t"
+    ]
+   },
+   "description": {
+    "en": "Brittle fracture avoidance per EN 1993-1-10 2.1 and Table 2.1: the check en1993.1-10.t.<member> compares the larger flange or web thickness with t_max by grade and sub-grade at T_Ed = T_md + dT_r + dT_sigma + dT_R + dT_eps,dot + dT_eps,cf (members carry T_md, the shifts and the cold forming radius); Table 2.1 is registered cell by cell for S235 to S460 and their sub-grades (JR/J0/J2/K2, N/NL, M/ML, Q/QL/QL1), the three stress levels 0.75/0.50/0.25 f_y(t) and T_Ed +10 to -50 C as unverified registry rows ndp.en1993.1-10.t21.<grade>-<sub-grade>.r<level>.t<T>: only the 49 cells of the 0.75 column of S235 JR/J0/J2 and S355 JR/J0/J2/K2 carry a number (from memory), every other cell is Unset and needs the printed table; t_max is interpolated linearly in T_Ed and between the stress columns bracketing sigma_Ed/f_y(t), a missing lower column or a ratio below 0.25 falls back on the next-higher-stress column (conservative, stated in the explanation), a ratio above 0.75, T_Ed below -50 C or no transcribed column is not applicable; the member diagram toughness:<member> plots t_max over T_Ed with the design point (T_Ed, t); a failing member carries a 3D failure glyph and label, plated panels carry no grade and are not checked",
+    "de": "Sprödbruchvermeidung nach EN 1993-1-10 2.1 und Tabelle 2.1: der Nachweis en1993.1-10.t.<Bauteil> vergleicht die größere Flansch- oder Stegdicke mit t_max nach Güte und Gütegruppe bei T_Ed = T_md + dT_r + dT_sigma + dT_R + dT_eps,dot + dT_eps,cf (Bauteile führen T_md, die Zuschläge und den Kaltumformradius); Tabelle 2.1 ist zellenweise für S235 bis S460 und ihre Gütegruppen (JR/J0/J2/K2, N/NL, M/ML, Q/QL/QL1), die drei Spannungsniveaus 0,75/0,50/0,25 f_y(t) und T_Ed +10 bis -50 C als ungeprüfte Registerzeilen ndp.en1993.1-10.t21.<Güte>-<Gütegruppe>.r<Niveau>.t<T> hinterlegt: nur die 49 Zellen der Spalte 0,75 von S235 JR/J0/J2 und S355 JR/J0/J2/K2 tragen einen Zahlenwert (aus dem Gedächtnis), jede andere Zelle ist Unset und braucht die gedruckte Tabelle; t_max wird linear in T_Ed und zwischen den das Verhältnis sigma_Ed/f_y(t) einschließenden Spannungsspalten interpoliert, eine fehlende untere Spalte oder ein Verhältnis unter 0,25 fällt auf die nächsthöhere Spannungsspalte zurück (konservativ, in der Erklärung genannt), ein Verhältnis über 0,75, T_Ed unter -50 C oder keine übertragene Spalte ist nicht anwendbar; das Bauteildiagramm toughness:<Bauteil> zeigt t_max über T_Ed mit dem Bemessungspunkt (T_Ed, t); ein nicht bestandenes Bauteil trägt ein 3D-Versagenszeichen mit Beschriftung, Bleche tragen keine Güte und werden nicht geprüft"
+   }
+  },
+  {
+   "id": "V-901",
+   "clause": "1-2 cross references",
+   "entity": "fireExposures",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-2.nfi"
+    ]
+   },
+   "description": {
+    "en": "Cross-reference row: the accidental fire combination is the check en1993.1-2.nfi (fire V-600 to V-611); seismic design uses the resistances of this artifact through the EN 1998 artifact and owns no check here",
+    "de": "Verweisszeile: die außergewöhnliche Brandkombination ist der Nachweis en1993.1-2.nfi (Brand V-600 bis V-611); die Erdbebenbemessung nutzt die Tragfähigkeiten dieses Artefakts über das Artefakt EN 1998 und führt hier keinen eigenen Nachweis"
+   }
+  },
+  {
+   "id": "V-902",
+   "clause": "1-12 4.1",
+   "entity": "members",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-12.hss"
+    ]
+   },
+   "description": {
+    "en": "Supplementary rules for S460 and higher: bending resistance of members in materials with f_y of at least 460 MPa, realised as the check en1993.1-12.hss; the grade tables S500 to S700 and the relaxed ductility are registry rows and not encoded beyond the entered f_y (unverified)",
+    "de": "Ergänzende Regeln für S460 und höher: Biegetragfähigkeit von Stäben aus Werkstoffen mit f_y von mindestens 460 MPa, umgesetzt als Nachweis en1993.1-12.hss; die Gütetabellen S500 bis S700 und die gelockerte Duktilität sind Registerzeilen und nicht über das eingegebene f_y hinaus abgebildet (ungeprüft)"
+   }
+  },
+  {
+   "id": "V-903",
+   "clause": "1-7",
+   "entity": "platedPanels",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-7.lateral"
+    ]
+   },
+   "description": {
+    "en": "Plate bending under out-of-plane pressure σ = k p b²/t² against f_y/γM0 with the entered coefficient k, realised as the check en1993.1-7.lateral (shared with V-805); the coefficient tables are not encoded (unverified)",
+    "de": "Plattenbiegung unter Querdruck σ = k p b²/t² gegen f_y/γM0 mit eingegebenem Beiwert k, umgesetzt als Nachweis en1993.1-7.lateral (gemeinsam mit V-805); die Beiwerttabellen sind nicht abgebildet (ungeprüft)"
+   }
+  },
+  {
+   "id": "V-904",
+   "clause": "5",
+   "entity": "piles",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.5.5.2.m",
+     "en1993.5.5.2.v",
+     "en1993.5.5.2.il"
+    ]
+   },
+   "description": {
+    "en": "Sheet pile cross-checks per EN 1993-5 5.2: bending, shear and bending-shear interaction with the interlock transfer, realised by the checks en1993.5.5.2.m, en1993.5.5.2.v and en1993.5.5.2.il (shared with V-870)",
+    "de": "Spundwand-Querschnittsnachweise nach EN 1993-5 5.2: Biegung, Querkraft und Biegung-Querkraft-Interaktion mit Schlossübertragung, umgesetzt durch die Nachweise en1993.5.5.2.m, en1993.5.5.2.v und en1993.5.5.2.il (gemeinsam mit V-870)"
+   }
+  },
+  {
+   "id": "V-905",
+   "clause": "4-3",
+   "entity": "siloShells",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.4-3.5.t",
+     "en1993.4-3.5.vm",
+     "en1993.4-3.5.pcr"
+    ]
+   },
+   "description": {
+    "en": "Pipelines per EN 1993-4-3: wall thickness from the hoop stress, von Mises combined stress and buckling under external pressure p_cr, realised by the checks en1993.4-3.5.t, en1993.4-3.5.vm and en1993.4-3.5.pcr; buried-pipe ovalisation is not modelled",
+    "de": "Rohrleitungen nach EN 1993-4-3: Wanddicke aus der Ringspannung, Vergleichsspannung nach von Mises und Beulen unter Außendruck p_cr, umgesetzt durch die Nachweise en1993.4-3.5.t, en1993.4-3.5.vm und en1993.4-3.5.pcr; die Ovalisierung erdverlegter Rohre ist nicht modelliert"
+   }
+  },
+  {
+   "id": "V-906",
+   "clause": "1-6 8.1",
+   "entity": "siloShells",
+   "realisation": {
+    "kind": "check",
+    "checks": [
+     "en1993.1-6.8.thin"
+    ]
+   },
+   "description": {
+    "en": "Thin-shell gate t/r < 1/20 as a check of the wall slenderness, realised as en1993.1-6.8.thin; it reports the gate beside the shell checks V-800 to V-805 and does not suppress them",
+    "de": "Dünnschalen-Schranke t/r < 1/20 als Nachweis der Wandschlankheit, umgesetzt als en1993.1-6.8.thin; er meldet die Schranke neben den Schalennachweisen V-800 bis V-805 und unterdrückt sie nicht"
+   }
+  }
+ ]
+}

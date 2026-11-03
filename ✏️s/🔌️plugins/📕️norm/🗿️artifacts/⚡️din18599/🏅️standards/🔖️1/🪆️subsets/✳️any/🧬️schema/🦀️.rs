@@ -15,8 +15,8 @@ use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
 //#region 🔖️Artifact
 /// 🧬️ Full Din18599 artifact state across the artifact and presence lanes.
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.norm.din18599")]
 pub struct Din18599Artifact {
@@ -58,7 +58,7 @@ pub struct Din18599Artifact {
     pub climate: MonthlyClimate,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
-    #[cfg_attr(test, serde(with = "crate::document::child_identity_oracle"))]
+    #[cfg_attr(any(test, feature = "test-support"), serde(with = "crate::document::child_identity_oracle"))]
     pub climate_table: Din18599ClimateChild,
 }
 //#endregion 🔖️Artifact

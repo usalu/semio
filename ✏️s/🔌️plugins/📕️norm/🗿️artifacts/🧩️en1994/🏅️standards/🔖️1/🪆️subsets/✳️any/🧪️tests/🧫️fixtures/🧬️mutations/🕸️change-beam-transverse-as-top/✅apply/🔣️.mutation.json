@@ -1,0 +1,6 @@
+{
+  "ChangeBeamTransverseAsTop": {
+    "id": "beam-B1",
+    "newTransverseAsTopM2PerM": 0.5
+  }
+}

@@ -1,0 +1,148 @@
+{
+  "artifact": "en1991",
+  "collections": [
+    {
+      "camel": "bridgeLanes",
+      "entity": "BridgeLane",
+      "table": "bridge_lane",
+      "after": "accidentalCases",
+      "emoji": "🛣️",
+      "doc": "Notional lane of the bridge carriageway with its width, lateral offset and LM1 lane number (EN 1991-2, 4.2.3 and Table 4.2).",
+      "label_en": "Bridge lanes",
+      "label_de": "Fahrstreifen",
+      "id_en": "Lane id",
+      "id_de": "Fahrstreifen-Id",
+      "fields": [
+        {
+          "name": "width",
+          "ty": "f64",
+          "unit": "m",
+          "en": "Lane width w_l",
+          "de": "Fahrstreifenbreite w_l",
+          "step": 0.1
+        },
+        {
+          "name": "offset",
+          "ty": "f64",
+          "unit": "m",
+          "en": "Lateral offset of the lane axis",
+          "de": "Seitlicher Versatz der Fahrstreifenachse",
+          "step": 0.1
+        },
+        {
+          "name": "lm1_lane",
+          "ty": "u8",
+          "en": "LM1 lane number",
+          "de": "LM1-Fahrstreifennummer"
+        }
+      ],
+      "kit": {
+        "id": "bridgeLane",
+        "en": "Bridge lane",
+        "de": "Fahrstreifen",
+        "icon": "route",
+        "scene_kind": "Surface"
+      }
+    },
+    {
+      "camel": "constructionStages",
+      "entity": "ConstructionStage",
+      "table": "construction_stage",
+      "after": "bridgeLanes",
+      "emoji": "🏗️",
+      "doc": "Construction stage with its duration, return period of the climatic actions and assumed construction load (EN 1991-1-6, 3.1 and Table 3.1).",
+      "label_en": "Construction stages",
+      "label_de": "Bauzustände",
+      "id_en": "Construction stage id",
+      "id_de": "Bauzustand-Id",
+      "fields": [
+        {
+          "name": "activity",
+          "ty": "String",
+          "en": "Construction activity",
+          "de": "Bautätigkeit"
+        },
+        {
+          "name": "duration_days",
+          "ty": "f64",
+          "unit": "d",
+          "en": "Stage duration",
+          "de": "Dauer des Bauzustands",
+          "step": 1
+        },
+        {
+          "name": "return_years",
+          "ty": "f64",
+          "unit": "a",
+          "en": "Return period of the climatic actions",
+          "de": "Wiederkehrperiode der klimatischen Einwirkungen",
+          "step": 0.5
+        },
+        {
+          "name": "assumed_qk",
+          "ty": "f64",
+          "unit": "Pa",
+          "en": "Assumed construction load q_ca",
+          "de": "Angenommene Bauzustandslast q_ca",
+          "step": 50
+        }
+      ],
+      "kit": {
+        "id": "constructionStage",
+        "en": "Construction stage",
+        "de": "Bauzustand",
+        "icon": "clock",
+        "scene_kind": "Load"
+      }
+    },
+    {
+      "camel": "roofSurfaces",
+      "entity": "RoofSurface",
+      "table": "roof_surface",
+      "after": "constructionStages",
+      "emoji": "🏠",
+      "doc": "Roof surface of a building face with its shape, pitch and extent, several per face (EN 1991-1-3 Table 5.2, EN 1991-1-4 Table 7.4).",
+      "label_en": "Roof surfaces",
+      "label_de": "Dachflächen (je Fassade)",
+      "id_en": "Roof surface id",
+      "id_de": "Dachflächen-Id",
+      "fields": [
+        {
+          "name": "face",
+          "ty": "String",
+          "en": "Building face",
+          "de": "Gebäudeseite"
+        },
+        {
+          "name": "shape",
+          "ty": "String",
+          "en": "Roof shape",
+          "de": "Dachform"
+        },
+        {
+          "name": "pitch_deg",
+          "ty": "f64",
+          "unit": "deg",
+          "en": "Pitch",
+          "de": "Neigung",
+          "step": 1
+        },
+        {
+          "name": "extent",
+          "ty": "f64",
+          "unit": "m",
+          "en": "Horizontal extent normal to the ridge",
+          "de": "Horizontale Ausdehnung quer zum First",
+          "step": 0.5
+        }
+      ],
+      "kit": {
+        "id": "roofSurface",
+        "en": "Roof surface",
+        "de": "Dachfläche",
+        "icon": "home",
+        "scene_kind": "Surface"
+      }
+    }
+  ]
+}

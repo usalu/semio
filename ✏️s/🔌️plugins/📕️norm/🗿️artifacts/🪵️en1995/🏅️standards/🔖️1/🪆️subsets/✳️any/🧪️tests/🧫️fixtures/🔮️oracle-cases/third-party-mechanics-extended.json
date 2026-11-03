@@ -1,0 +1,70 @@
+{
+  "$schema": "../../../../../../../../../🔮️oracles/🏃️harness/🧬️schema/🔣️.json",
+  "schemaVersion": 1,
+  "artifact": "en1995",
+  "annex": "de",
+  "cases": [
+    {
+      "id": "en1995.mechanics.two-span-timber-gamma-arrangement-envelope",
+      "check": "mechanics.beam-span-envelope",
+      "citation": {
+        "standard": "EN 1995-1-1",
+        "edition": "2004",
+        "clause": "6.1 and 2.4.1 with EN 1990 6.4.3.2 load arrangements; A1.3.1 permanent actions as individual actions with gamma_G,sup and gamma_G,inf per span (normative reading unverified against print)"
+      },
+      "inputs": {
+        "E": 11000000000.0,
+        "A": 0.03,
+        "I": 0.00022499999999999997,
+        "spans": [
+          4.5,
+          4.5
+        ],
+        "g": 1500.0,
+        "q": 2500.0,
+        "gamma_G": 1.35,
+        "gamma_Q": 1.5,
+        "gamma_G_inf": 1.0
+      },
+      "expected": {
+        "M_sag_0": {
+          "value": 10376.725313260959,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        },
+        "M_sag_1": {
+          "value": 10376.725313260962,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        },
+        "M_hog_support": {
+          "value": 14617.968750000002,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        },
+        "R_max_support": {
+          "value": 32484.375,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "R_min_0": {
+          "value": 1328.906249999999,
+          "unit": "N",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-pynite",
+          "adapter": "pynite",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-anastruct",
+          "adapter": "anastruct",
+          "kind": "third-party-library"
+        }
+      ]
+    }
+  ]
+}

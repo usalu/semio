@@ -1,0 +1,6 @@
+{
+  "ChangePileMaterialId": {
+    "id": "pile-1",
+    "newMaterialId": "mat-s355-alt"
+  }
+}

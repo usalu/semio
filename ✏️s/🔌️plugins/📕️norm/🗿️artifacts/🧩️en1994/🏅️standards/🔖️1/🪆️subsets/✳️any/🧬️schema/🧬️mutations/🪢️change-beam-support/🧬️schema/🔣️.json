@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-beam-support/schema.json",
+  "title": "ChangeBeamSupport",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newSupport"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Composite beam",
+          "de": "Verbundträger"
+        },
+        "description": {
+          "en": "The composite beam this mutation addresses, by id.",
+          "de": "Das adressierte Element (Verbundträger), per Kennung."
+        },
+        "ref": {
+          "kind": "beam"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newSupport": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/SupportCondition",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Support condition of the beam",
+          "de": "Lagerungsart des Trägers"
+        },
+        "group": "beam",
+        "order": 20
+      }
+    }
+  }
+}

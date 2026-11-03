@@ -1,0 +1,230 @@
+{
+  "source": "26/11/01/NORM-COMPLETE-VISUAL-EUROCODE-PLUGINS 📐️specs/en1994-en1999-target.md section 8 (E2-02 .. E2-12), SI units",
+  "vectors": [
+    {
+      "id": "E2-02-rho-c",
+      "fn": "rho_c",
+      "args": [
+        28.0,
+        true,
+        false,
+        false
+      ],
+      "expected": 0.862245,
+      "relTol": 0.0001
+    },
+    {
+      "id": "E2-06-n-cr",
+      "fn": "n_cr",
+      "args": [
+        2.8658e-06,
+        2.5
+      ],
+      "expected": 316788.0,
+      "relTol": 0.001
+    },
+    {
+      "id": "E2-06-chi",
+      "fn": "chi",
+      "args": [
+        1.2245,
+        0.2,
+        0.1
+      ],
+      "expected": 0.5105,
+      "relTol": 0.001
+    },
+    {
+      "id": "E2-07-m-cr",
+      "fn": "m_cr",
+      "args": [
+        1.0,
+        8.55133e-07,
+        2.5813e-09,
+        6.0533e-08,
+        2.0
+      ],
+      "expected": 17530.0,
+      "relTol": 0.002
+    },
+    {
+      "id": "E2-08-bolt-shear",
+      "fn": "bolt_shear",
+      "args": [
+        "8.8",
+        0.016,
+        1.25
+      ],
+      "expected": 60288.0,
+      "relTol": 0.001
+    },
+    {
+      "id": "E2-08-bolt-bearing",
+      "fn": "bolt_bearing",
+      "args": [
+        0.04,
+        0.06,
+        0.03,
+        0.016,
+        0.008,
+        310000000.0,
+        800000000.0,
+        1.25
+      ],
+      "expected": 58790.0,
+      "relTol": 0.001
+    },
+    {
+      "id": "E2-08-bolt-tension",
+      "fn": "bolt_tension",
+      "args": [
+        "8.8",
+        0.016,
+        1.25
+      ],
+      "expected": 90432.0,
+      "relTol": 0.001
+    },
+    {
+      "id": "E2-09-delta-sigma-d",
+      "fn": "delta_sigma_d",
+      "args": [
+        71000000.0,
+        3.4
+      ],
+      "expected": 54230000.0,
+      "relTol": 0.001
+    },
+    {
+      "id": "E2-09-delta-sigma-l",
+      "fn": "delta_sigma_l",
+      "args": [
+        71000000.0,
+        3.4,
+        5.4
+      ],
+      "expected": 31140000.0,
+      "relTol": 0.002
+    },
+    {
+      "id": "E2-09-cycles",
+      "fn": "cycles",
+      "args": [
+        60000000.0,
+        71000000.0,
+        3.4,
+        5.4
+      ],
+      "expected": 3545000.0,
+      "relTol": 0.001
+    },
+    {
+      "id": "E2-09-damage-block-1",
+      "fn": "damage",
+      "args": [
+        60000000.0,
+        1000000.0,
+        71000000.0,
+        3.4,
+        5.4,
+        1.0,
+        1.0
+      ],
+      "expected": 0.2821,
+      "relTol": 0.002
+    },
+    {
+      "id": "E2-09-damage-block-2",
+      "fn": "damage",
+      "args": [
+        40000000.0,
+        2000000.0,
+        71000000.0,
+        3.4,
+        5.4,
+        1.0,
+        1.0
+      ],
+      "expected": 0.0773,
+      "relTol": 0.003
+    },
+    {
+      "id": "E2-10-fire-step",
+      "fn": "fire_step",
+      "args": [
+        20.0,
+        200.0,
+        5.0
+      ],
+      "expected": 0.856,
+      "relTol": 0.005
+    },
+    {
+      "id": "E2-11-sigma-x-rcr",
+      "fn": "sigma_x_rcr",
+      "args": [
+        0.5,
+        0.003,
+        0.5
+      ],
+      "expected": 254100000.0,
+      "relTol": 0.001
+    },
+    {
+      "id": "E2-12-haz-width",
+      "fn": "haz_width",
+      "args": [
+        0.008
+      ],
+      "expected": 0.03,
+      "relTol": 1e-12
+    },
+    {
+      "id": "stress-area-m16",
+      "fn": "stress_area",
+      "args": [
+        0.016
+      ],
+      "expected": 0.000157,
+      "relTol": 1e-09
+    },
+    {
+      "id": "shear-rho-stiffened-web",
+      "fn": "shear_rho",
+      "args": [
+        120.0,
+        260000000.0,
+        0.6,
+        0.6
+      ],
+      "expected": 0.4288386869632068,
+      "relTol": 1e-09
+    },
+    {
+      "id": "haz-width-tig-t-junction",
+      "fn": "haz_width_for",
+      "args": [
+        0.008,
+        "tig",
+        true
+      ],
+      "expected": 0.05985,
+      "relTol": 1e-12
+    },
+    {
+      "id": "patch-load-rd",
+      "fn": "patch_rd",
+      "args": [
+        0.12,
+        0.008,
+        0.07,
+        0.01,
+        0.05,
+        0.0,
+        260000000.0
+      ],
+      "expected": 244231.3268077018,
+      "relTol": 1e-06
+    }
+  ]
+}

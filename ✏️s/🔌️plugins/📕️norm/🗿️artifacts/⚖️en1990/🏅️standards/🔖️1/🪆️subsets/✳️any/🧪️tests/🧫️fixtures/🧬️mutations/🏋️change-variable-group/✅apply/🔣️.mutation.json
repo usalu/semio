@@ -1,0 +1,5 @@
+{
+  "mutation": "changeVariableGroup",
+  "id": "Q-office",
+  "newGroup": "alt"
+}

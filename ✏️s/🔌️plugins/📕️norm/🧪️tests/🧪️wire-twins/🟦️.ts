@@ -99,19 +99,19 @@ const encode = (schemas: Schemas, value: Json, node: Schema, base: Schema, inden
 //#region 🗂️Corpus
 interface Wire { readonly path: string; readonly text: string; readonly role: "mutation" | "snapshot" | "diff"; readonly negative: boolean }
 const bundles = (directory: string): string[] =>
-  existsSync(join(directory, "🦠️mutation/🔣️.json")) ? [directory] : existsSync(directory) ? readdirSync(directory, { withFileTypes: true }).filter((entry) => entry.isDirectory()).flatMap((entry) => bundles(join(directory, entry.name))) : [];
+  existsSync(join(directory, "🔣️.mutation.json")) ? [directory] : existsSync(directory) ? readdirSync(directory, { withFileTypes: true }).filter((entry) => entry.isDirectory()).flatMap((entry) => bundles(join(directory, entry.name))) : [];
 /** 🚫️ A negative witness (design §11): its committed outcome refuses the payload with `mutation.invariant`, so its leaf schema must too. */
 const negativeWitness = (bundle: string): boolean => {
-  const outcome = join(bundle, "🎯️outcome/🔣️.json");
+  const outcome = join(bundle, "🔣️.outcome.json");
   return existsSync(outcome) && (read(outcome) as { code?: unknown }).code === "mutation.invariant";
 };
 const wires = (subset: string): Wire[] =>
   bundles(join(subset, "🧪️tests/🧫️fixtures/🧬️mutations"))
     .sort()
     .flatMap((bundle) => [
-      { path: join(bundle, "🦠️mutation/🔣️.json"), role: "mutation" as const, negative: negativeWitness(bundle) },
-      ...["⬅️before", "➡️after"].map((role) => ({ path: join(bundle, `📸️snapshot/${role}/🔣️.json`), role: "snapshot" as const, negative: false })).filter((wire) => existsSync(wire.path)),
-      ...[{ path: join(bundle, "🔺️diff/🔣️.json"), role: "diff" as const, negative: false }].filter((wire) => existsSync(wire.path)),
+      { path: join(bundle, "🔣️.mutation.json"), role: "mutation" as const, negative: negativeWitness(bundle) },
+      ...["before", "after"].map((role) => ({ path: join(bundle, `🔣️.${role}.json`), role: "snapshot" as const, negative: false })).filter((wire) => existsSync(wire.path)),
+      ...[{ path: join(bundle, "🔣️.diff.json"), role: "diff" as const, negative: false }].filter((wire) => existsSync(wire.path)),
     ])
     .map((wire) => ({ ...wire, text: readFileSync(wire.path, "utf8") }));
 

@@ -22,7 +22,7 @@ fn walk(path: &str, value: &serde_json::Value, missing: &mut Vec<String>) {
                 } else if field_meta(&child).is_none() && field_meta(&to_template(&child)).is_none() {
                     missing.push(child);
                 } else if let Some(meta) = field_meta(&child).or_else(|| field_meta(&to_template(&child))) {
-                    assert!(!meta.label_en.is_empty() && !meta.label_de.is_empty(), "{child}");
+                    assert!(!meta.label.en.is_empty() && !meta.label.de.is_empty(), "{child}");
                 }
             }
         }

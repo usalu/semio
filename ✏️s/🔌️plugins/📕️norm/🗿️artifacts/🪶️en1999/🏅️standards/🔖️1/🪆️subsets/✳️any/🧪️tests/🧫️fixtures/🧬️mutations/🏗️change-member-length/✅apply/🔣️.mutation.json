@@ -1,0 +1,5 @@
+{
+  "mutation": "changeMemberLength",
+  "memberId": "purlin-1",
+  "newLength": 12.0
+}

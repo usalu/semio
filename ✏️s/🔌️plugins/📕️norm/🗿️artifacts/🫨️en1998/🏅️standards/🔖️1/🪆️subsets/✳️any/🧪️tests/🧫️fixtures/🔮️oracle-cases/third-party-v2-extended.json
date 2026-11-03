@@ -1,0 +1,327 @@
+{
+  "$schema": "../../../../../../../../../🔮️oracles/🏃️harness/🧬️schema/🔣️.json",
+  "schemaVersion": 1,
+  "artifact": "en1998",
+  "annex": "De",
+  "cases": [
+    {
+      "id": "en1998.3.1.vs30-class-c",
+      "check": "en1998.3.1.vs30",
+      "citation": {
+        "standard": "EN 1998-1",
+        "edition": "2004",
+        "clause": "3.1.2 Eq. 3.1 v_s,30 = 30 / sum(h_i / v_i) over the top 30 m and Table 3.1 ground class",
+        "table": "3.1",
+        "annex": "En"
+      },
+      "inputs": {
+        "h": [
+          5.0,
+          10.0,
+          20.0
+        ],
+        "v": [
+          150.0,
+          250.0,
+          400.0
+        ]
+      },
+      "expected": {
+        "vs30": {
+          "value": 270.6766917293233,
+          "unit": "m/s",
+          "profile": "numerical-v1"
+        },
+        "class_index": {
+          "value": 2.0,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1998.3.1.vs30-class-b",
+      "check": "en1998.3.1.vs30",
+      "citation": {
+        "standard": "EN 1998-1",
+        "edition": "2004",
+        "clause": "3.1.2 Eq. 3.1 v_s,30 = 30 / sum(h_i / v_i) over the top 30 m and Table 3.1 ground class",
+        "table": "3.1",
+        "annex": "En"
+      },
+      "inputs": {
+        "h": [
+          4.0,
+          26.0,
+          10.0
+        ],
+        "v": [
+          200.0,
+          500.0,
+          900.0
+        ]
+      },
+      "expected": {
+        "vs30": {
+          "value": 416.66666666666663,
+          "unit": "m/s",
+          "profile": "numerical-v1"
+        },
+        "class_index": {
+          "value": 1.0,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1998.3.1.vs30-class-d-soft",
+      "check": "en1998.3.1.vs30",
+      "citation": {
+        "standard": "EN 1998-1",
+        "edition": "2004",
+        "clause": "3.1.2 Eq. 3.1 v_s,30 = 30 / sum(h_i / v_i) over the top 30 m and Table 3.1 ground class",
+        "table": "3.1",
+        "annex": "En"
+      },
+      "inputs": {
+        "h": [
+          12.0,
+          30.0
+        ],
+        "v": [
+          90.0,
+          160.0
+        ]
+      },
+      "expected": {
+        "vs30": {
+          "value": 122.03389830508476,
+          "unit": "m/s",
+          "profile": "numerical-v1"
+        },
+        "class_index": {
+          "value": 3.0,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1998.3.1.vs30-class-a",
+      "check": "en1998.3.1.vs30",
+      "citation": {
+        "standard": "EN 1998-1",
+        "edition": "2004",
+        "clause": "3.1.2 Eq. 3.1 v_s,30 = 30 / sum(h_i / v_i) over the top 30 m and Table 3.1 ground class",
+        "table": "3.1",
+        "annex": "En"
+      },
+      "inputs": {
+        "h": [
+          2.0,
+          40.0
+        ],
+        "v": [
+          600.0,
+          1200.0
+        ]
+      },
+      "expected": {
+        "vs30": {
+          "value": 1125.0,
+          "unit": "m/s",
+          "profile": "numerical-v1"
+        },
+        "class_index": {
+          "value": 0.0,
+          "unit": "1",
+          "profile": "table-exact-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1998.4.3.5.2.nonstructural-roof",
+      "check": "en1998.4.3.5.2.nonstructural",
+      "citation": {
+        "standard": "EN 1998-1",
+        "edition": "2004",
+        "clause": "4.3.5.2 Eq. 4.24 and 4.25 seismic force of a non-structural element",
+        "annex": "En"
+      },
+      "inputs": {
+        "a_g": 1.5,
+        "S": 1.25,
+        "H": 12.0,
+        "T_a": 0.15,
+        "T_1": 0.45,
+        "W_a": 1000.0,
+        "gamma_a": 1.5,
+        "q_a": 2.0,
+        "Z": 12.0
+      },
+      "expected": {
+        "S_a": {
+          "value": 0.6983650905669253,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "F_a": {
+          "value": 523.773817925194,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1998.4.3.5.2.nonstructural-mid-height-resonance",
+      "check": "en1998.4.3.5.2.nonstructural",
+      "citation": {
+        "standard": "EN 1998-1",
+        "edition": "2004",
+        "clause": "4.3.5.2 Eq. 4.24 and 4.25 seismic force of a non-structural element",
+        "annex": "En"
+      },
+      "inputs": {
+        "a_g": 1.5,
+        "S": 1.25,
+        "H": 12.0,
+        "T_a": 0.45,
+        "T_1": 0.45,
+        "W_a": 1000.0,
+        "gamma_a": 1.5,
+        "q_a": 2.0,
+        "Z": 6.0
+      },
+      "expected": {
+        "S_a": {
+          "value": 0.764525993883792,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "F_a": {
+          "value": 573.394495412844,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1998.4.3.5.2.nonstructural-base",
+      "check": "en1998.4.3.5.2.nonstructural",
+      "citation": {
+        "standard": "EN 1998-1",
+        "edition": "2004",
+        "clause": "4.3.5.2 Eq. 4.24 and 4.25 seismic force of a non-structural element",
+        "annex": "En"
+      },
+      "inputs": {
+        "a_g": 1.5,
+        "S": 1.25,
+        "H": 12.0,
+        "T_a": 0.15,
+        "T_1": 0.45,
+        "W_a": 1000.0,
+        "gamma_a": 1.5,
+        "q_a": 2.0,
+        "Z": 0.0
+      },
+      "expected": {
+        "S_a": {
+          "value": 0.30139967066572565,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "F_a": {
+          "value": 226.04975299929424,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        }
+      ]
+    }
+  ]
+}

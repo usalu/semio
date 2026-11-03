@@ -1,0 +1,6 @@
+syntax = "proto3";
+package semio.s.norm.en1992.mutation.insert_placement;
+message InsertPlacement {
+  uint64 index = 1;
+  Placement placement = 2;
+}

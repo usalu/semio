@@ -1,0 +1,6 @@
+{
+  "ChangeCfRequiredRestraintStiffness": {
+    "id": "cf-1",
+    "newRequiredRestraintStiffness": 1.5
+  }
+}

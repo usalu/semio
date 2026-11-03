@@ -1,0 +1,5 @@
+{
+  "mutation": "changeConnBoltsPitch",
+  "connectionId": "support-weld",
+  "newBoltsPitch": 0.072
+}

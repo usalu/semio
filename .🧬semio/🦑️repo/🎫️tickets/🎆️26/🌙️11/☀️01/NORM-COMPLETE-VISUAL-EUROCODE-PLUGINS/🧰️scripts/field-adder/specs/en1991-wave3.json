@@ -1,0 +1,401 @@
+{
+  "artifact": "en1991",
+  "collections": [
+    {
+      "camel": "specialVehicles",
+      "entity": "SpecialVehicle",
+      "table": "special_vehicle",
+      "after": "placements",
+      "emoji": "🚛",
+      "doc": "LM3 special vehicle placed on the bridge deck by its Annex A designation total/axle in kN (EN 1991-2, 4.3.4 and Annex A).",
+      "label_en": "Special vehicles",
+      "label_de": "Sonderfahrzeuge",
+      "id_en": "Special vehicle id",
+      "id_de": "Sonderfahrzeug-Id",
+      "fields": [
+        {
+          "name": "designation",
+          "ty": "String",
+          "en": "Designation total/axle [kN]",
+          "de": "Bezeichnung Gesamt/Achse [kN]"
+        },
+        {
+          "name": "x",
+          "ty": "f64",
+          "en": "Vehicle centre along the span",
+          "de": "Fahrzeugmitte entlang der Spannweite",
+          "unit": "m",
+          "step": 0.5
+        },
+        {
+          "name": "y",
+          "ty": "f64",
+          "en": "Vehicle axis across the deck",
+          "de": "Fahrzeugachse quer zur Fahrbahn",
+          "unit": "m",
+          "step": 0.1
+        }
+      ],
+      "kit": {
+        "id": "specialVehicle",
+        "en": "Special vehicle",
+        "de": "Sonderfahrzeug",
+        "icon": "route",
+        "scene_kind": "Surface"
+      },
+      "kit_after": "roofSurfaces"
+    },
+    {
+      "camel": "windBridges",
+      "entity": "WindBridge",
+      "table": "wind_bridge",
+      "after": "specialVehicles",
+      "emoji": "🌉",
+      "doc": "Bridge deck exposed to wind: depth, parapets, traffic and height above ground for the force of EN 1991-1-4 section 8.",
+      "label_en": "Wind on bridges",
+      "label_de": "Wind auf Brücken",
+      "id_en": "Bridge wind case id",
+      "id_de": "Brückenwindfall-Id",
+      "fields": [
+        {
+          "name": "deck_width",
+          "ty": "f64",
+          "en": "Deck width b",
+          "de": "Überbaubreite b",
+          "unit": "m",
+          "step": 0.1
+        },
+        {
+          "name": "deck_depth",
+          "ty": "f64",
+          "en": "Deck depth d without parapets",
+          "de": "Überbauhöhe d ohne Geländer",
+          "unit": "m",
+          "step": 0.05
+        },
+        {
+          "name": "parapet_kind",
+          "ty": "u8",
+          "en": "Parapet kind (0 none, 1 open, 2 solid)",
+          "de": "Geländerart (0 keine, 1 offen, 2 geschlossen)"
+        },
+        {
+          "name": "parapet_height",
+          "ty": "f64",
+          "en": "Parapet height d1",
+          "de": "Geländerhöhe d1",
+          "unit": "m",
+          "step": 0.05
+        },
+        {
+          "name": "traffic_kind",
+          "ty": "u8",
+          "en": "Traffic on the deck (0 none, 1 road, 2 rail)",
+          "de": "Verkehr auf dem Überbau (0 keiner, 1 Straße, 2 Schiene)"
+        },
+        {
+          "name": "height_above_ground",
+          "ty": "f64",
+          "en": "Deck height above ground z_e",
+          "de": "Überbauhöhe über Grund z_e",
+          "unit": "m",
+          "step": 0.5
+        },
+        {
+          "name": "span",
+          "ty": "f64",
+          "en": "Loaded length L",
+          "de": "Belastete Länge L",
+          "unit": "m",
+          "step": 0.5
+        },
+        {
+          "name": "assumed_force",
+          "ty": "f64",
+          "en": "Assumed horizontal wind force F_W per metre",
+          "de": "Angenommene horizontale Windkraft F_W je Meter",
+          "unit": "N_m"
+        }
+      ],
+      "kit": {
+        "id": "windBridge",
+        "en": "Bridge wind case",
+        "de": "Brückenwindfall",
+        "icon": "wind",
+        "scene_kind": "Surface"
+      },
+      "kit_after": "specialVehicles"
+    },
+    {
+      "camel": "dynamicElements",
+      "entity": "DynamicElement",
+      "table": "dynamic_element",
+      "after": "windBridges",
+      "emoji": "〰️",
+      "doc": "Slender element for the structural factor c_s c_d and the vortex shedding check (EN 1991-1-4, 6 and Annexes B, E, F).",
+      "label_en": "Dynamic elements",
+      "label_de": "Dynamische Bauteile",
+      "id_en": "Dynamic element id",
+      "id_de": "Id des dynamischen Bauteils",
+      "fields": [
+        {
+          "name": "height",
+          "ty": "f64",
+          "en": "Height h",
+          "de": "Höhe h",
+          "unit": "m",
+          "step": 0.5
+        },
+        {
+          "name": "width",
+          "ty": "f64",
+          "en": "Width or diameter b",
+          "de": "Breite oder Durchmesser b",
+          "unit": "m",
+          "step": 0.1
+        },
+        {
+          "name": "first_frequency",
+          "ty": "f64",
+          "en": "First natural frequency n1 (0 = 46/h)",
+          "de": "Erste Eigenfrequenz n1 (0 = 46/h)",
+          "unit": "Hz"
+        },
+        {
+          "name": "log_decrement",
+          "ty": "f64",
+          "en": "Logarithmic decrement of structural damping delta_s",
+          "de": "Logarithmisches Dämpfungsdekrement delta_s",
+          "precision": 3,
+          "step": 0.005
+        },
+        {
+          "name": "mass_per_length",
+          "ty": "f64",
+          "en": "Equivalent mass per length m_e",
+          "de": "Äquivalente Masse je Länge m_e",
+          "unit": "kg_m"
+        },
+        {
+          "name": "strouhal",
+          "ty": "f64",
+          "en": "Strouhal number St",
+          "de": "Strouhal-Zahl St",
+          "precision": 3,
+          "step": 0.01
+        },
+        {
+          "name": "assumed_cscd",
+          "ty": "f64",
+          "en": "Assumed structural factor c_s c_d",
+          "de": "Angenommener Strukturbeiwert c_s c_d",
+          "precision": 3,
+          "step": 0.01
+        }
+      ],
+      "kit": {
+        "id": "dynamicElement",
+        "en": "Dynamic element",
+        "de": "Dynamisches Bauteil",
+        "icon": "activity",
+        "scene_kind": "Solid"
+      },
+      "kit_after": "windBridges"
+    },
+    {
+      "camel": "impactActions",
+      "entity": "ImpactAction",
+      "table": "impact_action",
+      "after": "dynamicElements",
+      "emoji": "💥",
+      "doc": "Accidental impact of a vehicle, ship or forklift on a structural member (EN 1991-1-7, 4 and Annex C).",
+      "label_en": "Impact actions",
+      "label_de": "Anpralllasten",
+      "id_en": "Impact action id",
+      "id_de": "Anpralllast-Id",
+      "fields": [
+        {
+          "name": "kind",
+          "ty": "u8",
+          "en": "Impact kind (0 road vehicle, 1 ship, 2 forklift)",
+          "de": "Anprallart (0 Straßenfahrzeug, 1 Schiff, 2 Gabelstapler)"
+        },
+        {
+          "name": "mass",
+          "ty": "f64",
+          "en": "Mass m",
+          "de": "Masse m",
+          "unit": "kg"
+        },
+        {
+          "name": "speed",
+          "ty": "f64",
+          "en": "Impact speed v",
+          "de": "Anprallgeschwindigkeit v",
+          "unit": "m_s"
+        },
+        {
+          "name": "stiffness",
+          "ty": "f64",
+          "en": "Equivalent stiffness k (0 = registry value)",
+          "de": "Ersatzsteifigkeit k (0 = Registerwert)",
+          "unit": "N_m"
+        },
+        {
+          "name": "height",
+          "ty": "f64",
+          "en": "Height of the impact",
+          "de": "Anprallhöhe",
+          "unit": "m",
+          "step": 0.05
+        },
+        {
+          "name": "x",
+          "ty": "f64",
+          "en": "Plan position x",
+          "de": "Position x",
+          "unit": "m",
+          "step": 0.5
+        },
+        {
+          "name": "y",
+          "ty": "f64",
+          "en": "Plan position y",
+          "de": "Position y",
+          "unit": "m",
+          "step": 0.5
+        },
+        {
+          "name": "assumed_force",
+          "ty": "f64",
+          "en": "Assumed equivalent static force",
+          "de": "Angenommene statische Ersatzkraft",
+          "unit": "N"
+        }
+      ],
+      "kit": {
+        "id": "impactAction",
+        "en": "Impact action",
+        "de": "Anpralllast",
+        "icon": "zap",
+        "scene_kind": "Load"
+      },
+      "kit_after": "dynamicElements"
+    },
+    {
+      "camel": "internalExplosions",
+      "entity": "InternalExplosion",
+      "table": "internal_explosion",
+      "after": "impactActions",
+      "emoji": "🏠",
+      "doc": "Internal gas explosion of a vented enclosure by its volume and vent area (EN 1991-1-7, Annex D).",
+      "label_en": "Internal explosions",
+      "label_de": "Innere Explosionen",
+      "id_en": "Internal explosion id",
+      "id_de": "Id der inneren Explosion",
+      "fields": [
+        {
+          "name": "volume",
+          "ty": "f64",
+          "en": "Enclosure volume V",
+          "de": "Raumvolumen V",
+          "unit": "m3"
+        },
+        {
+          "name": "vent_area",
+          "ty": "f64",
+          "en": "Vent area A_v",
+          "de": "Entlastungsfläche A_v",
+          "unit": "m2"
+        },
+        {
+          "name": "vent_pressure",
+          "ty": "f64",
+          "en": "Static failure pressure of the vent p_v",
+          "de": "Statischer Ansprechdruck der Entlastung p_v",
+          "unit": "Pa"
+        },
+        {
+          "name": "assumed_pressure",
+          "ty": "f64",
+          "en": "Assumed design pressure p_d",
+          "de": "Angenommener Bemessungsdruck p_d",
+          "unit": "Pa"
+        }
+      ],
+      "kit": {
+        "id": "internalExplosion",
+        "en": "Internal explosion",
+        "de": "Innere Explosion",
+        "icon": "flame",
+        "scene_kind": "Solid"
+      },
+      "kit_after": "impactActions"
+    },
+    {
+      "camel": "thermalSections",
+      "entity": "ThermalSection",
+      "table": "thermal_section",
+      "after": "internalExplosions",
+      "emoji": "🌡️",
+      "doc": "Bridge cross-section for the uniform and the linear temperature actions (EN 1991-1-5, 6.1).",
+      "label_en": "Thermal sections",
+      "label_de": "Temperaturquerschnitte",
+      "id_en": "Thermal section id",
+      "id_de": "Id des Temperaturquerschnitts",
+      "fields": [
+        {
+          "name": "deck_type",
+          "ty": "u8",
+          "en": "Deck type (1 steel, 2 composite, 3 concrete box, 4 concrete slab, 5 concrete beam)",
+          "de": "Überbauart (1 Stahl, 2 Verbund, 3 Betonhohlkasten, 4 Betonplatte, 5 Betonbalken)"
+        },
+        {
+          "name": "surfacing",
+          "ty": "u8",
+          "en": "Surfacing (0 none, 1 waterproofed, 2 50 mm, 3 100 mm, 4 150 mm)",
+          "de": "Belag (0 keiner, 1 Abdichtung, 2 50 mm, 3 100 mm, 4 150 mm)"
+        },
+        {
+          "name": "length",
+          "ty": "f64",
+          "en": "Expansion length L",
+          "de": "Dehnlänge L",
+          "unit": "m",
+          "step": 1
+        },
+        {
+          "name": "depth",
+          "ty": "f64",
+          "en": "Section depth h",
+          "de": "Querschnittshöhe h",
+          "unit": "m",
+          "step": 0.05
+        },
+        {
+          "name": "alpha_micro",
+          "ty": "f64",
+          "en": "Thermal expansion coefficient alpha_T [1e-6/K]",
+          "de": "Wärmeausdehnungskoeffizient alpha_T [1e-6/K]",
+          "precision": 1,
+          "step": 0.5
+        },
+        {
+          "name": "assumed_range",
+          "ty": "f64",
+          "en": "Assumed movement range of the bearings and joints",
+          "de": "Angenommener Bewegungsbereich der Lager und Fugen",
+          "unit": "K"
+        }
+      ],
+      "kit": {
+        "id": "thermalSection",
+        "en": "Thermal section",
+        "de": "Temperaturquerschnitt",
+        "icon": "thermometer",
+        "scene_kind": "Solid"
+      },
+      "kit_after": "internalExplosions"
+    }
+  ]
+}

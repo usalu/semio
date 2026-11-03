@@ -1,0 +1,1698 @@
+{
+  "$schema": "https://json.schemas.assets.semio-tech.com/s/norm/compliance/design-case/schema.json",
+  "artifact": "s.norm.en1996",
+  "inputs": [
+    {
+      "key": "a1_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Distance a₁ from the wall end",
+      "de": "Abstand a₁ vom Wandende",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "a_m2",
+      "scope": "",
+      "kind": "number",
+      "en": "Cross-section area A",
+      "de": "Querschnittsfläche A",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "m²",
+      "unitId": "SquareMetre"
+    },
+    {
+      "key": "a_theta_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Reduced thickness a_θ in fire",
+      "de": "Reduzierte Dicke a_θ im Brandfall",
+      "confidence": "medium",
+      "note": "unit from the key suffix",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "ab_m2",
+      "scope": "",
+      "kind": "number",
+      "en": "Loaded area A_b",
+      "de": "Belastete Fläche A_b",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "m²",
+      "unitId": "SquareMetre"
+    },
+    {
+      "key": "alpha1",
+      "scope": "",
+      "kind": "number",
+      "en": "Annex E coefficient α₁ entered from the print (empty = yield-line stand-in)",
+      "de": "Anhang-E-Beiwert α₁ aus dem Druck eingegeben (leer = Bruchlinien-Ersatzwert)",
+      "confidence": "high",
+      "note": "dimensionless by name",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "anchor_rk_n",
+      "scope": "",
+      "kind": "number",
+      "en": "Characteristic anchor resistance R_k",
+      "de": "Charakteristische Ankertragfähigkeit R_k",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "ap_m2",
+      "scope": "",
+      "kind": "number",
+      "en": "Prestressing steel area A_p",
+      "de": "Spannstahlfläche A_p",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "m²",
+      "unitId": "SquareMetre"
+    },
+    {
+      "key": "as_m2",
+      "scope": "",
+      "kind": "number",
+      "en": "Reinforcement area A_s",
+      "de": "Bewehrungsfläche A_s",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "m²",
+      "unitId": "SquareMetre"
+    },
+    {
+      "key": "asw_m2",
+      "scope": "",
+      "kind": "number",
+      "en": "Shear reinforcement area A_sw",
+      "de": "Querkraftbewehrungsfläche A_sw",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "m²",
+      "unitId": "SquareMetre"
+    },
+    {
+      "key": "av_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Shear span a_v",
+      "de": "Schubspannweite a_v",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "b_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Width b",
+      "de": "Breite b",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "basement",
+      "scope": "",
+      "kind": "number",
+      "en": "Basement wall (1) or not (0)",
+      "de": "Kellerwand (1) oder nicht (0)",
+      "confidence": "high",
+      "note": "dimensionless by name",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "bar_a_m2",
+      "scope": "M-42",
+      "kind": "vector",
+      "en": "Bar area A_s of bar i (one value per element)",
+      "de": "Stabfläche A_s des Stabes i (je ein Wert pro Element)",
+      "confidence": "high",
+      "note": "unit from the key suffix; vector in M-42",
+      "unit": "m²",
+      "unitId": "SquareMetre"
+    },
+    {
+      "key": "bar_y_m",
+      "scope": "M-42",
+      "kind": "vector",
+      "en": "Bar position y of bar i (one value per element)",
+      "de": "Stablage y des Stabes i (je ein Wert pro Element)",
+      "confidence": "high",
+      "note": "unit from the key suffix; vector in M-42",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "beam_a_m2",
+      "scope": "",
+      "kind": "number",
+      "en": "Beam cross-section area",
+      "de": "Balkenquerschnittsfläche",
+      "confidence": "medium",
+      "note": "unit from the key suffix",
+      "unit": "m²",
+      "unitId": "SquareMetre"
+    },
+    {
+      "key": "bearing_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Bearing length",
+      "de": "Auflagerlänge",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "bed_joint_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Bed joint thickness",
+      "de": "Lagerfugendicke",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "cavity_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Cavity width",
+      "de": "Schalenabstand",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "chase_depth_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Chase depth",
+      "de": "Schlitztiefe",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "chase_length_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Chase or recess length",
+      "de": "Schlitz- oder Aussparungslänge",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "chase_width_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Chase or recess width",
+      "de": "Schlitz- oder Aussparungsbreite",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "class",
+      "scope": "",
+      "kind": "number",
+      "en": "Execution class",
+      "de": "Ausführungsklasse",
+      "confidence": "medium",
+      "note": "dimensionless by name",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "col_a_m2",
+      "scope": "",
+      "kind": "number",
+      "en": "Confining column cross-section area",
+      "de": "Querschnittsfläche der Einfassungsstütze",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "m²",
+      "unitId": "SquareMetre"
+    },
+    {
+      "key": "col_as_m2",
+      "scope": "",
+      "kind": "number",
+      "en": "Confining column reinforcement area",
+      "de": "Bewehrungsfläche der Einfassungsstütze",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "m²",
+      "unitId": "SquareMetre"
+    },
+    {
+      "key": "col_min_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Minimum column dimension",
+      "de": "Kleinstes Stützenmaß",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "col_spacing_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Column spacing",
+      "de": "Stützenabstand",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "cover_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Concrete or mortar cover",
+      "de": "Betondeckung oder Mörteldeckung",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "cpe",
+      "scope": "",
+      "kind": "number",
+      "en": "Pressure coefficient c_pe",
+      "de": "Druckbeiwert c_pe",
+      "confidence": "high",
+      "note": "dimensionless by name",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "d_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Effective depth d",
+      "de": "Nutzhöhe d",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "deflection_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Deflection",
+      "de": "Durchbiegung",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "density",
+      "scope": "",
+      "kind": "number",
+      "en": "Density class or value",
+      "de": "Rohdichteklasse oder -wert",
+      "confidence": "low",
+      "note": "free text",
+      "unit": "kg/m³",
+      "unitId": "KilogramPerCubicMetre"
+    },
+    {
+      "key": "diameter_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Bar diameter",
+      "de": "Stabdurchmesser",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "e0_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Eccentricity e₀",
+      "de": "Exzentrizität e₀",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "e_pa",
+      "scope": "",
+      "kind": "number",
+      "en": "Modulus of elasticity E",
+      "de": "Elastizitätsmodul E",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "edges",
+      "scope": "",
+      "kind": "text",
+      "en": "Edge support code (F, S, X: top, bottom, left, right)",
+      "de": "Randlagerung (F, S, X: oben, unten, links, rechts)",
+      "confidence": "high",
+      "note": "format: four letters of F, S, X"
+    },
+    {
+      "key": "ehe_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Eccentricity e_he",
+      "de": "Exzentrizität e_he",
+      "confidence": "medium",
+      "note": "unit from the key suffix",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "ep_pa",
+      "scope": "",
+      "kind": "number",
+      "en": "Prestressing modulus E_p",
+      "de": "Elastizitätsmodul E_p der Spannstähle",
+      "confidence": "medium",
+      "note": "unit from the key suffix",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "eps_cs",
+      "scope": "",
+      "kind": "number",
+      "en": "Shrinkage strain ε_cs",
+      "de": "Schwinddehnung ε_cs",
+      "confidence": "high",
+      "note": "dimensionless by name",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "exposure",
+      "scope": "",
+      "kind": "choice",
+      "en": "Exposure class",
+      "de": "Expositionsklasse",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "mx1",
+          "en": "MX1 dry",
+          "de": "MX1 trocken"
+        },
+        {
+          "value": "mx2",
+          "en": "MX2 wet or exposed to humidity",
+          "de": "MX2 feucht oder Feuchtigkeit ausgesetzt"
+        },
+        {
+          "value": "mx3",
+          "en": "MX3 wet and freeze/thaw",
+          "de": "MX3 nass und Frost-Tau"
+        },
+        {
+          "value": "mx4",
+          "en": "MX4 saturated with salt or de-icing",
+          "de": "MX4 salzbeansprucht oder Tausalz"
+        },
+        {
+          "value": "mx5",
+          "en": "MX5 aggressive chemical environment",
+          "de": "MX5 chemisch aggressive Umgebung"
+        }
+      ],
+      "example": "mx2"
+    },
+    {
+      "key": "fb_decl_pa",
+      "scope": "",
+      "kind": "number",
+      "en": "Declared unit strength f_b",
+      "de": "Deklarierte Steinfestigkeit f_b",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "fb_pa",
+      "scope": "",
+      "kind": "number",
+      "en": "Normalised unit strength f_b",
+      "de": "Normierte Steinfestigkeit f_b",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "fbok_pa",
+      "scope": "",
+      "kind": "number",
+      "en": "Characteristic bond strength f_bok",
+      "de": "Charakteristische Verbundfestigkeit f_bok",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "fd_pa",
+      "scope": "",
+      "kind": "number",
+      "en": "Design compressive strength f_d",
+      "de": "Bemessungsdruckfestigkeit f_d",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "fk_pa",
+      "scope": "",
+      "kind": "number",
+      "en": "Characteristic compressive strength f_k",
+      "de": "Charakteristische Druckfestigkeit f_k",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "flange_len_m",
+      "scope": "M-20",
+      "kind": "vector",
+      "en": "Flange length of flange i (one value per element)",
+      "de": "Flanschlänge des Flansches i (je ein Wert pro Element)",
+      "confidence": "high",
+      "note": "unit from the key suffix; vector in M-20",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "flange_t_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Flange thickness",
+      "de": "Flanschdicke",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "flanges",
+      "scope": "",
+      "kind": "number",
+      "en": "Number of flanges",
+      "de": "Anzahl der Flansche",
+      "confidence": "high",
+      "note": "dimensionless by name",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "fm_pa",
+      "scope": "",
+      "kind": "number",
+      "en": "Mortar compressive strength f_m",
+      "de": "Mörteldruckfestigkeit f_m",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "fpk_pa",
+      "scope": "",
+      "kind": "number",
+      "en": "Characteristic prestressing steel strength f_pk",
+      "de": "Charakteristische Spannstahlfestigkeit f_pk",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "frost_class",
+      "scope": "",
+      "kind": "number",
+      "en": "Frost resistance class",
+      "de": "Frostwiderstandsklasse",
+      "confidence": "medium",
+      "note": "dimensionless by name",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "fvk0_pa",
+      "scope": "",
+      "kind": "number",
+      "en": "Initial shear strength f_vk0",
+      "de": "Haftscherfestigkeit f_vk0",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "fvk_pa",
+      "scope": "",
+      "kind": "number",
+      "en": "Characteristic shear strength f_vk",
+      "de": "Charakteristische Schubfestigkeit f_vk",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "fxk1_pa",
+      "scope": "",
+      "kind": "number",
+      "en": "Flexural strength f_xk1 (parallel to bed joints)",
+      "de": "Biegezugfestigkeit f_xk1 (parallel zur Lagerfuge)",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "fxk2_pa",
+      "scope": "",
+      "kind": "number",
+      "en": "Flexural strength f_xk2 (perpendicular to bed joints)",
+      "de": "Biegezugfestigkeit f_xk2 (senkrecht zur Lagerfuge)",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "fyd_pa",
+      "scope": "",
+      "kind": "number",
+      "en": "Design yield strength f_yd",
+      "de": "Bemessungsstreckgrenze f_yd",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "gamma_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Partial factor γ_M",
+      "de": "Teilsicherheitsbeiwert γ_M",
+      "confidence": "high",
+      "note": "dimensionless by name",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "gamma_soil_n_m3",
+      "scope": "",
+      "kind": "number",
+      "en": "Unit weight of the soil γ",
+      "de": "Wichte des Bodens γ",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "N/m³",
+      "unitId": "NewtonPerCubicMetre"
+    },
+    {
+      "key": "group",
+      "scope": "",
+      "kind": "number",
+      "en": "Masonry unit group",
+      "de": "Steingruppe",
+      "confidence": "high",
+      "note": "dimensionless by name",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "h_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Wall height h",
+      "de": "Wandhöhe h",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "h_trib_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Tributary height",
+      "de": "Einflusshöhe",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "h_wall_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Wall height",
+      "de": "Wandhöhe",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "hc_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Height of the load above the support",
+      "de": "Höhe der Last über dem Auflager",
+      "confidence": "medium",
+      "note": "unit from the key suffix",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "he_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Retained height h_e",
+      "de": "Anschütthöhe h_e",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "head_joint",
+      "scope": "",
+      "kind": "choice",
+      "en": "Head joint type",
+      "de": "Stoßfugenart",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "filled",
+          "en": "Filled",
+          "de": "Vermörtelt"
+        },
+        {
+          "value": "unfilled",
+          "en": "Unfilled",
+          "de": "Unvermörtelt"
+        }
+      ],
+      "example": "filled"
+    },
+    {
+      "key": "hef_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Effective height h_ef",
+      "de": "Knicklänge h_ef",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "height_total_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Total height",
+      "de": "Gesamthöhe",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "hole_pct",
+      "scope": "",
+      "kind": "number",
+      "en": "Hole volume in percent",
+      "de": "Lochanteil in Prozent",
+      "confidence": "high",
+      "note": "dimensionless by name",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "hydrostatic",
+      "scope": "",
+      "kind": "number",
+      "en": "Groundwater at the wall (1) or not (0)",
+      "de": "Grundwasser an der Wand (1) oder nicht (0)",
+      "confidence": "high",
+      "note": "dimensionless by name",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "k0",
+      "scope": "",
+      "kind": "number",
+      "en": "At-rest earth pressure coefficient k₀",
+      "de": "Ruhedruckbeiwert k₀",
+      "confidence": "high",
+      "note": "dimensionless by name",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "k_diaphragm_n_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Floor diaphragm in-plane stiffness G t",
+      "de": "Schubsteifigkeit G t der Deckenscheibe",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "N/m",
+      "unitId": "NewtonPerMetre"
+    },
+    {
+      "key": "k_e",
+      "scope": "",
+      "kind": "number",
+      "en": "Creep eccentricity factor k_e",
+      "de": "Beiwert k_e der Kriechausmitte",
+      "confidence": "medium",
+      "note": "dimensionless by name",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "k_theta",
+      "scope": "",
+      "kind": "number",
+      "en": "Fire reduction factor k_θ",
+      "de": "Brandminderungsbeiwert k_θ",
+      "confidence": "medium",
+      "note": "dimensionless by name",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "l_m",
+      "scope": "M-21",
+      "kind": "vector",
+      "en": "Length l (one value per element)",
+      "de": "Länge l (je ein Wert pro Element)",
+      "confidence": "high",
+      "note": "unit from the key suffix; vector in M-21",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "l_m",
+      "scope": "M-10,M-20,M-31,M-42,M-43,M-80,M-91",
+      "kind": "number",
+      "en": "Length l",
+      "de": "Länge l",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "la_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Arching span l_a",
+      "de": "Gewölbespannweite l_a",
+      "confidence": "medium",
+      "note": "unit from the key suffix",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "lb_avail_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Available anchorage length",
+      "de": "Vorhandene Verankerungslänge",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "lc_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Wall length in compression",
+      "de": "Überdrückte Wandlänge",
+      "confidence": "medium",
+      "note": "unit from the key suffix",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "lefm_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Effective length of the load spread",
+      "de": "Mitwirkende Länge der Lastausbreitung",
+      "confidence": "medium",
+      "note": "unit from the key suffix",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "limit_ratio",
+      "scope": "",
+      "kind": "number",
+      "en": "Limit ratio span/deflection",
+      "de": "Grenzverhältnis Stützweite/Durchbiegung",
+      "confidence": "high",
+      "note": "dimensionless by name",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "m_bot_nm",
+      "scope": "",
+      "kind": "number",
+      "en": "Bending moment at the bottom",
+      "de": "Biegemoment am Fuß",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "N·m",
+      "unitId": "NewtonMetre"
+    },
+    {
+      "key": "m_ed_nm",
+      "scope": "",
+      "kind": "number",
+      "en": "Design bending moment M_Ed",
+      "de": "Bemessungsmoment M_Ed",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "N·m",
+      "unitId": "NewtonMetre"
+    },
+    {
+      "key": "m_hm_nm",
+      "scope": "",
+      "kind": "number",
+      "en": "Moment at mid-height from the horizontal load",
+      "de": "Moment in Wandmitte aus Horizontallast",
+      "confidence": "medium",
+      "note": "unit from the key suffix",
+      "unit": "N·m",
+      "unitId": "NewtonMetre"
+    },
+    {
+      "key": "m_mid_nm",
+      "scope": "",
+      "kind": "number",
+      "en": "Bending moment at mid-height",
+      "de": "Biegemoment in Wandmitte",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "N·m",
+      "unitId": "NewtonMetre"
+    },
+    {
+      "key": "m_top_nm",
+      "scope": "",
+      "kind": "number",
+      "en": "Bending moment at the top",
+      "de": "Biegemoment am Kopf",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "N·m",
+      "unitId": "NewtonMetre"
+    },
+    {
+      "key": "material",
+      "scope": "",
+      "kind": "choice",
+      "en": "Unit material",
+      "de": "Steinmaterial",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "clay",
+          "en": "Clay",
+          "de": "Ziegel"
+        },
+        {
+          "value": "calcium_silicate",
+          "en": "Calcium silicate",
+          "de": "Kalksandstein"
+        },
+        {
+          "value": "concrete",
+          "en": "Concrete",
+          "de": "Beton"
+        },
+        {
+          "value": "aac",
+          "en": "Autoclaved aerated concrete",
+          "de": "Porenbeton"
+        },
+        {
+          "value": "natural_stone",
+          "en": "Natural stone",
+          "de": "Naturstein"
+        }
+      ],
+      "example": "clay"
+    },
+    {
+      "key": "mortar",
+      "scope": "",
+      "kind": "choice",
+      "en": "Mortar type",
+      "de": "Mörtelart",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "gp",
+          "en": "General purpose mortar",
+          "de": "Normalmörtel"
+        },
+        {
+          "value": "tl",
+          "en": "Thin layer mortar",
+          "de": "Dünnbettmörtel"
+        },
+        {
+          "value": "lw",
+          "en": "Lightweight mortar",
+          "de": "Leichtmörtel"
+        }
+      ],
+      "example": "gp"
+    },
+    {
+      "key": "mu_fi",
+      "scope": "",
+      "kind": "number",
+      "en": "Fire load level μ_fi",
+      "de": "Brandlastgrad μ_fi",
+      "confidence": "high",
+      "note": "dimensionless by name",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "n_bot_n",
+      "scope": "",
+      "kind": "number",
+      "en": "Axial force at the bottom",
+      "de": "Normalkraft am Fuß",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "n_ed_fi_n",
+      "scope": "",
+      "kind": "number",
+      "en": "Axial force in fire N_Ed,fi",
+      "de": "Normalkraft im Brandfall N_Ed,fi",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "n_ed_n",
+      "scope": "",
+      "kind": "number",
+      "en": "Design axial force N_Ed",
+      "de": "Bemessungsnormalkraft N_Ed",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "n_max_n",
+      "scope": "",
+      "kind": "number",
+      "en": "Maximum axial force",
+      "de": "Größte Normalkraft",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "n_mid_n",
+      "scope": "",
+      "kind": "number",
+      "en": "Axial force at mid-height",
+      "de": "Normalkraft in Wandmitte",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "n_min_n",
+      "scope": "",
+      "kind": "number",
+      "en": "Minimum axial force",
+      "de": "Kleinste Normalkraft",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "n_per_m2",
+      "scope": "",
+      "kind": "number",
+      "en": "Wall ties per m²",
+      "de": "Drahtanker je m²",
+      "confidence": "high",
+      "note": "dimensionless by name",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "n_pier_n",
+      "scope": "",
+      "kind": "number",
+      "en": "Axial force in the pier",
+      "de": "Normalkraft im Pfeiler",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "n_top_n",
+      "scope": "",
+      "kind": "number",
+      "en": "Axial force at the top",
+      "de": "Normalkraft am Kopf",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "ned_c_n",
+      "scope": "",
+      "kind": "number",
+      "en": "Concentrated load N_Ed,c",
+      "de": "Einzellast N_Ed,c",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "opening_w_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Opening width",
+      "de": "Öffnungsbreite",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "orientation",
+      "scope": "",
+      "kind": "text",
+      "en": "Chase orientation (vertical, horizontal or recess)",
+      "de": "Schlitzrichtung (vertikal, horizontal oder Aussparung)",
+      "confidence": "high",
+      "note": "free text"
+    },
+    {
+      "key": "overlap_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Unit overlap",
+      "de": "Überbindemaß",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "p0_n",
+      "scope": "",
+      "kind": "number",
+      "en": "Initial prestressing force P₀",
+      "de": "Anfangsvorspannkraft P₀",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "phi",
+      "scope": "",
+      "kind": "number",
+      "en": "Capacity reduction factor Φ",
+      "de": "Abminderungsbeiwert Φ",
+      "confidence": "high",
+      "note": "dimensionless by name",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "phi_inf",
+      "scope": "",
+      "kind": "number",
+      "en": "Final creep coefficient φ_∞",
+      "de": "Endkriechzahl φ_∞",
+      "confidence": "high",
+      "note": "dimensionless by name",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "pier_area_m2",
+      "scope": "",
+      "kind": "number",
+      "en": "Pier area",
+      "de": "Pfeilerfläche",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "m²",
+      "unitId": "SquareMetre"
+    },
+    {
+      "key": "pier_l_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Pier length",
+      "de": "Pfeilerlänge",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "plaster_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Plaster thickness",
+      "de": "Putzdicke",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "provided_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Provided anchorage length",
+      "de": "Vorhandene Verankerungslänge",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "q",
+      "scope": "",
+      "kind": "number",
+      "en": "Behaviour factor q",
+      "de": "Verhaltensbeiwert q",
+      "confidence": "high",
+      "note": "dimensionless by name",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "qk_pa",
+      "scope": "",
+      "kind": "number",
+      "en": "Characteristic surcharge q_k",
+      "de": "Charakteristische Auflast q_k",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "qp_pa",
+      "scope": "",
+      "kind": "number",
+      "en": "Peak velocity pressure q_p",
+      "de": "Böengeschwindigkeitsdruck q_p",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "rei",
+      "scope": "",
+      "kind": "number",
+      "en": "Fire resistance class REI in minutes",
+      "de": "Feuerwiderstandsklasse REI in Minuten",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "min",
+      "unitId": "Minute"
+    },
+    {
+      "key": "rho2",
+      "scope": "",
+      "kind": "number",
+      "en": "Support condition factor ρ₂",
+      "de": "Beiwert ρ₂ der Lagerung",
+      "confidence": "medium",
+      "note": "dimensionless by name",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "rho_e_n_m3",
+      "scope": "",
+      "kind": "number",
+      "en": "Unit weight of the backfill ρ_e",
+      "de": "Wichte der Hinterfüllung ρ_e",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "N/m³",
+      "unitId": "NewtonPerCubicMetre"
+    },
+    {
+      "key": "rho_relax",
+      "scope": "",
+      "kind": "number",
+      "en": "Relaxation loss ρ",
+      "de": "Relaxationsverlust ρ",
+      "confidence": "medium",
+      "note": "dimensionless by name",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "ring_tie_n",
+      "scope": "",
+      "kind": "number",
+      "en": "Ring beam tie force",
+      "de": "Zugkraft des Ringbalkens",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "s_anchor_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Anchor spacing",
+      "de": "Ankerabstand",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "s_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Spacing s",
+      "de": "Abstand s",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "sides",
+      "scope": "",
+      "kind": "number",
+      "en": "Number of supported sides",
+      "de": "Anzahl der gehaltenen Ränder",
+      "confidence": "high",
+      "note": "dimensionless by name",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "sigma_d_pa",
+      "scope": "",
+      "kind": "number",
+      "en": "Design compressive stress σ_d",
+      "de": "Bemessungsdruckspannung σ_d",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "sigma_pa",
+      "scope": "",
+      "kind": "number",
+      "en": "Compressive stress σ",
+      "de": "Druckspannung σ",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "sigma_s_pa",
+      "scope": "",
+      "kind": "number",
+      "en": "Reinforcement stress σ_s",
+      "de": "Bewehrungsspannung σ_s",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "simplified",
+      "scope": "",
+      "kind": "number",
+      "en": "Simplified method (1) or not (0)",
+      "de": "Vereinfachtes Verfahren (1) oder nicht (0)",
+      "confidence": "high",
+      "note": "dimensionless by name",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "situation",
+      "scope": "",
+      "kind": "choice",
+      "en": "Design situation",
+      "de": "Bemessungssituation",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "persistent",
+          "en": "Persistent",
+          "de": "Ständig"
+        },
+        {
+          "value": "transient",
+          "en": "Transient",
+          "de": "Vorübergehend"
+        },
+        {
+          "value": "accidental",
+          "en": "Accidental",
+          "de": "Außergewöhnlich"
+        }
+      ],
+      "example": "persistent"
+    },
+    {
+      "key": "span_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Span",
+      "de": "Stützweite",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "spacing_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Movement joint spacing",
+      "de": "Dehnfugenabstand",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "stiff_len_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Length of the stiffening wall",
+      "de": "Länge der aussteifenden Wand",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "stiff_t_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Thickness of the stiffening wall",
+      "de": "Dicke der aussteifenden Wand",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "storeys",
+      "scope": "",
+      "kind": "number",
+      "en": "Number of storeys",
+      "de": "Anzahl der Geschosse",
+      "confidence": "high",
+      "note": "dimensionless by name",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "support",
+      "scope": "",
+      "kind": "choice",
+      "en": "Support condition",
+      "de": "Lagerungsart",
+      "confidence": "high",
+      "choices": [
+        {
+          "value": "pinned",
+          "en": "Pinned",
+          "de": "Gelenkig"
+        },
+        {
+          "value": "simple",
+          "en": "Simply supported",
+          "de": "Frei drehbar"
+        },
+        {
+          "value": "fixed",
+          "en": "Fixed",
+          "de": "Eingespannt"
+        }
+      ],
+      "example": "pinned"
+    },
+    {
+      "key": "system",
+      "scope": "",
+      "kind": "text",
+      "en": "Masonry system",
+      "de": "Mauerwerkssystem",
+      "confidence": "medium",
+      "note": "free text"
+    },
+    {
+      "key": "t1_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Leaf thickness t₁",
+      "de": "Schalendicke t₁",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "t2_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Leaf thickness t₂",
+      "de": "Schalendicke t₂",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "t_m",
+      "scope": "M-21",
+      "kind": "vector",
+      "en": "Wall thickness t (one value per element)",
+      "de": "Wanddicke t (je ein Wert pro Element)",
+      "confidence": "high",
+      "note": "unit from the key suffix; vector in M-21",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "t_m",
+      "scope": "M-10,M-11,M-12,M-13,M-14,M-15,M-16,M-20,M-30,M-31,M-32,M-34,M-43,M-70,M-80,M-81,M-82,M-83,M-90,M-91",
+      "kind": "number",
+      "en": "Wall thickness t",
+      "de": "Wanddicke t",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "tie_rd_n",
+      "scope": "",
+      "kind": "number",
+      "en": "Design tie resistance",
+      "de": "Bemessungstragfähigkeit des Drahtankers",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "unit_h_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Unit height",
+      "de": "Steinhöhe",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "unit_w_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Unit width",
+      "de": "Steinbreite",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "v_ed_n",
+      "scope": "",
+      "kind": "number",
+      "en": "Design shear force V_Ed",
+      "de": "Bemessungsquerkraft V_Ed",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "vrd_n",
+      "scope": "M-21",
+      "kind": "vector",
+      "en": "Shear resistance V_Rd (one value per element)",
+      "de": "Querkrafttragfähigkeit V_Rd (je ein Wert pro Element)",
+      "confidence": "high",
+      "note": "unit from the key suffix; vector in M-21",
+      "unit": "N",
+      "unitId": "Newton"
+    },
+    {
+      "key": "w_ed_pa",
+      "scope": "",
+      "kind": "number",
+      "en": "Design wind or lateral pressure w_Ed",
+      "de": "Bemessungswinddruck w_Ed",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "Pa",
+      "unitId": "Pascal"
+    },
+    {
+      "key": "wall",
+      "scope": "",
+      "kind": "text",
+      "en": "Id of the wall the detail belongs to",
+      "de": "Id der Wand, zu der das Detail gehört",
+      "confidence": "high",
+      "note": "free text"
+    },
+    {
+      "key": "web_shell_ok",
+      "scope": "",
+      "kind": "number",
+      "en": "Web and shell bedding permitted (1) or not (0)",
+      "de": "Steg- und Schalenmörtel zulässig (1) oder nicht (0)",
+      "confidence": "medium",
+      "note": "dimensionless by name",
+      "unit": "1",
+      "unitId": "One"
+    },
+    {
+      "key": "web_spacing_m",
+      "scope": "",
+      "kind": "number",
+      "en": "Web spacing",
+      "de": "Stegabstand",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "x_m",
+      "scope": "M-21",
+      "kind": "vector",
+      "en": "Position x (one value per element)",
+      "de": "Lage x (je ein Wert pro Element)",
+      "confidence": "high",
+      "note": "unit from the key suffix; vector in M-21",
+      "unit": "m",
+      "unitId": "Metre"
+    },
+    {
+      "key": "z_m3",
+      "scope": "",
+      "kind": "number",
+      "en": "Section modulus Z",
+      "de": "Widerstandsmoment Z",
+      "confidence": "high",
+      "note": "unit from the key suffix",
+      "unit": "m³",
+      "unitId": "CubicMetre"
+    }
+  ]
+}

@@ -1,6 +1,10 @@
 use crate::*;
 use semio_framework_plugin::{FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 
+fn inspect(tree: &semio_framework_value::DslValue, locale: Locale, meta: Option<NormFieldMetaFn>, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
+    render_inspector_value(tree, &CheckReport::default(), locale, "norm.mock", meta, windows, &InspectorOptions::new(UnitSystem::Engineering, Tier::Expert))
+}
+
 fn demo_check(section: impl Into<String>) -> semio_s_plugin_norm_compliance::CheckResult {
     use semio_s_plugin_norm_compliance::{AnnexChoice, CheckResult, ClauseId, LocalizedCopy, Quantity, QuantityKind, SubjectRef};
     let section = section.into();
@@ -69,16 +73,16 @@ async fn the_artifact_kind_spec_is_a_data_value_document() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn render_report_falls_back_to_a_placeholder_when_nothing_was_computed() {
+async fn render_checks_falls_back_to_a_placeholder_when_nothing_was_computed() {
     let json = report_body(&CheckReport::default(), Vec::new());
     assert!(json.contains("No checks computed."), "{json}");
 }
 
 #[semio_framework_async_macros::async_test]
-async fn render_report_assigns_a_distinct_identity_to_each_check_row() {
+async fn render_checks_assigns_a_distinct_identity_to_each_check_row() {
     let json = report_body(&oversized_report(2), Vec::new());
-    assert!(json.contains("\"norm-report-check-0\""), "the first row keeps its own identity: {json}");
-    assert!(json.contains("\"norm-report-check-1\""), "the second row keeps its own identity: {json}");
+    assert!(json.contains("\"norm-checks-check-0\""), "the first row keeps its own identity: {json}");
+    assert!(json.contains("\"norm-checks-check-1\""), "the second row keeps its own identity: {json}");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -105,8 +109,8 @@ async fn render_inspection_falls_back_to_the_first_check_for_an_out_of_range_ind
 #[semio_framework_async_macros::async_test]
 async fn byte_properties_render_their_bounded_localized_extent() {
     for (locale, extent) in [(Locale::En, "65537 bytes"), (Locale::De, "65537 Bytes")] {
-        let tree = semio_framework_value::DslValue::Bytes(vec![255; 65_537]);
-        let root = render_value_editor("payload", &tree, locale, "norm.mock", None, &TreeWindows::unhosted(), 0).expect("byte extent");
+        let tree = semio_framework_value::DslValue::object([("payload".into(), semio_framework_value::DslValue::Bytes(vec![255; 65_537]))]);
+        let root = inspect(&tree, locale, None, &TreeWindows::unhosted()).expect("byte extent");
         let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(root)).expect("projection");
         let projected: serde_json::Value = serde_json::from_str(&json).expect("independent JSON oracle");
         assert!(projected.to_string().contains(extent));
@@ -171,7 +175,7 @@ fn oversized_report(checks: usize) -> CheckReport {
 /// 🪟️ The results body exactly as the host reads it, for the host-known windows in `requests`.
 fn report_body(report: &CheckReport, requests: Vec<TreeWindowRequest>) -> String {
     let view = ViewModel { tree_windows: requests, tree_viewport_rows: Some(MEASURED_VIEWPORT_ROWS), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
-    let node = render_report(report, &TreeWindows::for_body(&view, "norm.x.play.results"), Locale::En, None).expect("report tree");
+    let node = render_checks(report, &TreeWindows::for_body(&view, "norm.x.play.results"), Locale::En, None).expect("report tree");
     semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("project the report tree")
 }
 
@@ -182,27 +186,27 @@ fn an_oversized_report_stamps_its_total_and_never_a_continuation_row() {
     assert!(json.contains("\"total\":301"), "the check section stamps its full extent: {json}");
     assert!(!json.contains(".more"), "no continuation row survives: {json}");
     assert!(!json.contains("\"+"), "no `+N` label survives: {json}");
-    assert!(json.matches("norm-report-check-").count() <= MEASURED_VIEWPORT_ROWS as usize, "first paint materialises the measured viewport and stops: {json}");
+    assert!(json.matches("norm-checks-check-").count() <= MEASURED_VIEWPORT_ROWS as usize, "first paint materialises the measured viewport and stops: {json}");
 }
 
 /// 🪟️ Law (b): a section the host closed stamps its total and materialises nothing.
 #[test]
 fn a_closed_report_section_stamps_its_total_and_materialises_no_rows() {
-    let json = report_body(&oversized_report(300), vec![TreeWindowRequest { body_key: "norm.x.play.results".into(), node_key: NORM_REPORT_SECTION_ID.into(), open: Some(false), offset: 0, rows: 0 }]);
+    let json = report_body(&oversized_report(300), vec![TreeWindowRequest { body_key: "norm.x.play.results".into(), node_key: NORM_CHECKS_SECTION_ID.into(), open: Some(false), offset: 0, rows: 0 }]);
     assert!(json.contains("\"total\":301"), "a closed section still stamps its extent: {json}");
-    assert!(!json.contains("norm-report-check-"), "a closed section materialises no rows: {json}");
+    assert!(!json.contains("norm-checks-check-"), "a closed section materialises no rows: {json}");
 }
 
 /// 🪟️ Law (c): a host window materialises exactly `[offset, offset + rows)`, keyed by the row id.
 #[test]
 fn a_host_window_materialises_exactly_its_report_slice() {
-    let json = report_body(&oversized_report(300), vec![TreeWindowRequest { body_key: "norm.x.play.results".into(), node_key: NORM_REPORT_SECTION_ID.into(), open: Some(true), offset: 100, rows: 10 }]);
+    let json = report_body(&oversized_report(300), vec![TreeWindowRequest { body_key: "norm.x.play.results".into(), node_key: NORM_CHECKS_SECTION_ID.into(), open: Some(true), offset: 100, rows: 10 }]);
     assert!(json.contains("\"offset\":100"), "the section reports its offset: {json}");
     for check_index in 99..109 {
-        assert!(json.contains(&format!("\"norm-report-check-{check_index}\"")), "check {check_index} is inside the window: {json}");
+        assert!(json.contains(&format!("\"norm-checks-check-{check_index}\"")), "check {check_index} is inside the window: {json}");
     }
-    assert!(!json.contains("\"norm-report-check-98\""), "the check before the window stays out: {json}");
-    assert!(!json.contains("\"norm-report-check-109\""), "the check after the window stays out: {json}");
+    assert!(!json.contains("\"norm-checks-check-98\""), "the check before the window stays out: {json}");
+    assert!(!json.contains("\"norm-checks-check-109\""), "the check after the window stays out: {json}");
 }
 
 /// 🪟️ Law (d) for a read-only report: no interaction domain, no pick granularity, no row binding.
@@ -218,8 +222,8 @@ fn the_report_tree_binds_no_interaction_domain() {
 async fn report_and_summary_localize_en_and_de() {
     let mut report = CheckReport::default();
     report.push(demo_check("1.1"));
-    let en = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(render_report(&report, &TreeWindows::for_body(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), "norm.x.play.results"), Locale::En, None).expect("en"))).expect("json");
-    let de = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(render_report(&report, &TreeWindows::for_body(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), "norm.x.play.results"), Locale::De, None).expect("de"))).expect("json");
+    let en = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(render_checks(&report, &TreeWindows::for_body(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), "norm.x.play.results"), Locale::En, None).expect("en"))).expect("json");
+    let de = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(render_checks(&report, &TreeWindows::for_body(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), "norm.x.play.results"), Locale::De, None).expect("de"))).expect("json");
     assert!(en.contains("Pass") || en.contains("demo check"), "{en}");
     assert!(de.contains("Bestanden") || de.contains("Demo-Prüfung"), "{de}");
 }
@@ -322,7 +326,7 @@ fn one_of_remedy_application_writes_selected_option() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn render_document_editor_emits_set_field_and_list_verbs() {
+async fn the_inspector_emits_set_field_and_list_verbs() {
     use semio_framework_plugin::TREE_WINDOW_PATH_SEPARATOR;
     const BODY: &str = "norm.mock.inputs";
     let tree = semio_framework_value::DslValue::object([
@@ -338,7 +342,7 @@ async fn render_document_editor_emits_set_field_and_list_verbs() {
         tree_viewport_rows: Some(32),
         ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
-    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(render_value_editor("", &tree, Locale::En, "norm.mock", None, &TreeWindows::for_body(&view, BODY), 0).expect("editor")))
+    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(inspect(&tree, Locale::En, None, &TreeWindows::for_body(&view, BODY)).expect("editor")))
     .expect("json");
     assert!(json.contains("setField"), "{json}");
     assert!(json.contains("insertItem") || json.contains("removeItem"), "{json}");
@@ -355,9 +359,9 @@ async fn locale_switch_en_to_de_changes_chrome_and_check_copy() {
             .annex(AnnexChoice::De)
             .build(),
     );
-    let en = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(render_report(&report, &TreeWindows::unhosted(), Locale::En, None).expect("en")))
+    let en = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(render_checks(&report, &TreeWindows::unhosted(), Locale::En, None).expect("en")))
     .expect("en json");
-    let de = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(render_report(&report, &TreeWindows::unhosted(), Locale::De, None).expect("de")))
+    let de = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(render_checks(&report, &TreeWindows::unhosted(), Locale::De, None).expect("de")))
     .expect("de json");
     assert!(en.contains("Checks") || en.contains("Pass") || en.contains("demo check"), "{en}");
     assert!(de.contains("Nachweise") || de.contains("Bestanden") || de.contains("Demo-Prüfung"), "{de}");
@@ -365,32 +369,16 @@ async fn locale_switch_en_to_de_changes_chrome_and_check_copy() {
 }
 
 #[test]
-fn evaluate_job_progress_and_cancellation() {
-    let mut state = NormEvaluateWorkState::new();
-    let mut buf = [0u8; 4];
-    assert_eq!(state.checkpoint(&mut buf, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).expect("cp"), 1);
-    assert_eq!(buf[0], 0);
-    assert_eq!(state.emit_progress_stage(), Some("norm-evaluate-prepare"));
-    assert_eq!(state.emit_progress_stage(), Some("norm-evaluate-run"));
-    assert!(state.ready_to_evaluate());
-    state.begin_close();
-    assert!(state.cancelled);
-    state.restore(&[1]).expect("restore");
-    assert_eq!(state.phase, 1);
-    assert!(!state.cancelled);
-}
-
-#[test]
 fn field_meta_longest_prefix_and_wildcard_lookup() {
-    const TABLE: &[(&str, NormFieldMeta)] = &[
-        ("buildings", NormFieldMeta { label_en: "Buildings", label_de: "Hochbauten", unit: None, choices: None }),
-        ("buildings[].storeys[].massKg", NormFieldMeta { label_en: "Storey mass", label_de: "Geschossmasse", unit: Some("kg"), choices: None }),
+    const TABLE: &[(&str, FieldSpec)] = &[
+        ("buildings", FieldSpec::new("Buildings", "Hochbauten")),
+        ("buildings[].storeys[].massKg", FieldSpec::quantity("Storey mass", "Geschossmasse", UnitId::Kilogram)),
     ];
     let meta = lookup_norm_field_meta(TABLE, "buildings[0].storeys[2].massKg").expect("wildcard");
-    assert_eq!(meta.label_en, "Storey mass");
-    assert_eq!(meta.unit, Some("kg"));
+    assert_eq!(meta.label.en, "Storey mass");
+    assert_eq!(meta.unit(), Some("kg"));
     let prefix = lookup_norm_field_meta(TABLE, "buildings[3].unknown").expect("prefix");
-    assert_eq!(prefix.label_en, "Buildings");
+    assert_eq!(prefix.label.en, "Buildings");
 }
 
 #[test]
@@ -474,13 +462,10 @@ fn apply_remedy_with_id_path_target_flips_failing_check() {
 
 #[test]
 fn field_meta_wildcard_matches_id_path() {
-    const TABLE: &[(&str, NormFieldMeta)] = &[(
-        "members[].actions[].nEd",
-        NormFieldMeta { label_en: "N_Ed", label_de: "N_Ed", unit: Some("N"), choices: None },
-    )];
+    const TABLE: &[(&str, FieldSpec)] = &[("members[].actions[].nEd", FieldSpec::quantity("N_Ed", "N_Ed", UnitId::Newton))];
     let meta = lookup_norm_field_meta(TABLE, "members[id=B1].actions[id=ULS-1].nEd").expect("id wildcard");
-    assert_eq!(meta.label_en, "N_Ed");
-    assert_eq!(meta.unit, Some("N"));
+    assert_eq!(meta.label.en, "N_Ed");
+    assert_eq!(meta.unit(), Some("N"));
 }
 
 #[test]
@@ -499,20 +484,10 @@ async fn de_locale_inputs_and_inspection_omit_hardcoded_english_chrome() {
         NormFieldChoice { value: "en", label_en: "EN annex", label_de: "EN-Anhang" },
         NormFieldChoice { value: "de", label_en: "DE annex", label_de: "DE-Anhang" },
     ];
-    fn field_meta(path: &str) -> Option<NormFieldMeta> {
+    fn field_meta(path: &str) -> Option<FieldSpec> {
         match path {
-            "annex" => Some(NormFieldMeta {
-                label_en: "National annex",
-                label_de: "Nationaler Anhang",
-                unit: None,
-                choices: Some(ANNEX_CHOICES),
-            }),
-            "note" => Some(NormFieldMeta {
-                label_en: "Note",
-                label_de: "Hinweis",
-                unit: None,
-                choices: None,
-            }),
+            "annex" => Some(FieldSpec::choice("National annex", "Nationaler Anhang", ANNEX_CHOICES)),
+            "note" => Some(FieldSpec::new("Note", "Hinweis")),
             _ => None,
         }
     }
@@ -521,7 +496,7 @@ async fn de_locale_inputs_and_inspection_omit_hardcoded_english_chrome() {
         ("annex".into(), semio_framework_value::DslValue::String("de".into())),
         ("note".into(), semio_framework_value::DslValue::Null),
     ]);
-    let inputs = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(render_value_editor("", &tree, Locale::De, "norm.mock", Some(field_meta), &TreeWindows::unhosted(), 0).expect("inputs")))
+    let inputs = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(inspect(&tree, Locale::De, Some(field_meta), &TreeWindows::unhosted()).expect("inputs")))
     .expect("inputs json");
 
     let mut report = CheckReport::default();
@@ -604,7 +579,7 @@ fn collapsed_deep_document_stays_within_retire_slots() {
         tree_viewport_rows: Some(16),
         ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
-    let root = render_value_editor("", &tree, Locale::En, "norm.mock", None, &TreeWindows::for_body(&view, BODY), 0).expect("assemble");
+    let root = inspect(&tree, Locale::En, None, &TreeWindows::for_body(&view, BODY)).expect("assemble");
     let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(root)).expect("retire within slots");
     assert!(json.contains("norm-inputs-catalogue"), "{json}");
     assert!(json.contains("norm-inputs-dictionary"), "{json}");
@@ -638,7 +613,7 @@ fn expanding_subtree_materialises_windowed_children_within_slots() {
         tree_viewport_rows: Some(8),
         ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
-    let root = render_value_editor("", &tree, Locale::En, "norm.mock", None, &TreeWindows::for_body(&view, BODY), 0).expect("assemble");
+    let root = inspect(&tree, Locale::En, None, &TreeWindows::for_body(&view, BODY)).expect("assemble");
     let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree::new(root)).expect("retire within slots");
     assert!(json.contains("\"offset\":10") || json.contains("\"total\":80"), "{json}");
     assert!(json.contains("g-10") || json.contains("g-11"), "windowed map rows materialise: {json}");
@@ -729,3 +704,218 @@ fn catalogue_large_table_stays_within_retire_slots_when_windowed() {
     assert!(!open.contains("C250"), "rows outside the window stay out: {open}");
 }
 //#endregion 📚️CatalogueTables
+
+#[test]
+fn norm_fault_notices_cover_the_raised_codes_in_both_languages() {
+    let notices = norm_fault_notices();
+    for code in ["mutation.no-op", "mutation.clamped", "mutation.invariant", "mutation.duplicate-id", "norm.edit-unresolved", "norm.value-path", "norm.apply-remedy-missing-check", "norm.set-fields-args", "norm.insert-placement"] {
+        assert!(notices.iter().any(|(known, _)| *known == code), "no notice for {code}");
+    }
+    for (code, label) in notices {
+        let (en, de) = (label.resolve(semio_framework_ui_locale::Terminology::Native, Locale::En), label.resolve(semio_framework_ui_locale::Terminology::Native, Locale::De));
+        assert!(!en.trim().is_empty() && !de.trim().is_empty() && en != de, "{code} lacks a distinct EN and DE notice");
+        assert!(!semio_s_plugin_norm_compliance::looks_english(de), "{code} German notice reads as English: {de}");
+    }
+}
+
+#[test]
+fn an_absent_row_is_addressed_by_its_id_so_the_set_kind_can_create_it() {
+    use semio_framework_value::DslValue;
+    let obj = |entries: Vec<(&str, DslValue)>| DslValue::object(entries.into_iter().map(|(k, v)| (k.to_string(), v)).collect());
+    let case = obj(vec![("id", DslValue::String("C1".into())), ("numbers", DslValue::Array(vec![obj(vec![("id", DslValue::String("h".into())), ("value", DslValue::float(1.0))])]))]);
+    let tree = obj(vec![("cases", DslValue::Array(vec![case]))]);
+    let segments = parse_path("cases[id=C1].numbers[id=b].value").expect("path");
+    let pending = address_pending(&tree, &segments).expect("pending row");
+    assert_eq!(pending.template, "cases[].numbers[].value");
+    assert_eq!(pending.selected, vec![(0, Some("C1".to_string())), (1, Some("b".to_string()))]);
+    assert!(address_pending(&tree, &parse_path("cases[id=C1].numbers[id=h].value").expect("path")).is_none());
+    assert!(address_pending(&tree, &parse_path("cases[id=missing].numbers[id=b].value").expect("path")).is_some());
+    assert!(address_pending(&tree, &parse_path("cases[3].numbers[id=b].value").expect("path")).is_none());
+}
+
+#[test]
+fn nested_rows_are_set_inserted_and_removed_through_parent_selectors() {
+    use semio_framework_value::DslValue;
+    let obj = |entries: Vec<(&str, DslValue)>| DslValue::object(entries.into_iter().map(|(k, v)| (k.to_string(), v)).collect());
+    let action = |id: &str| obj(vec![("id", DslValue::String(id.into())), ("nK", DslValue::float(1.0))]);
+    let member = |id: &str, actions: Vec<DslValue>| obj(vec![("id", DslValue::String(id.into())), ("actions", DslValue::Array(actions))]);
+    let tree = obj(vec![("members", DslValue::Array(vec![member("M1", vec![action("A1")]), member("M2", vec![action("A1"), action("A2")])]))]);
+    const RULES: NormEditRules = NormEditRules {
+        move_item: &[],
+        set_field: &[SetFieldRule { path: "members[].actions[].nK", kind: "change-action-n-k", selectors: &[SelectorKey::Id("memberId"), SelectorKey::Id("actionId")], value: "newNK" }],
+        insert_item: &[InsertItemRule { path: "members[].actions", kind: "insert-member-action", selectors: &[SelectorKey::Id("memberId")], index: "index", item: "action" }],
+        remove_item: &[],
+    };
+    const REMOVALS: &[IdRemoval] = &[IdRemoval { path: "members[].actions", kind: "remove-member-action", selectors: &[SelectorKey::Id("memberId")], id: "id" }];
+    let entry = |entries: &[(String, DslValue)], key: &str| entries.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone());
+    let (kind, entries) = RULES.payload(REMOVALS, &tree, &NormEdit::SetField { path: "members[id=M2].actions[id=A1].nK".into(), value: DslValue::float(5.0) }).expect("set");
+    assert_eq!((kind, entry(&entries, "memberId"), entry(&entries, "actionId")), ("change-action-n-k", Some(DslValue::String("M2".into())), Some(DslValue::String("A1".into()))));
+    let (kind, entries) = RULES.payload(REMOVALS, &tree, &NormEdit::InsertItem { path: "members[id=M1].actions".into(), index: 1, value: Some(action("A9")) }).expect("insert");
+    assert_eq!((kind, entry(&entries, "memberId"), entry(&entries, "index")), ("insert-member-action", Some(DslValue::String("M1".into())), Some(DslValue::uint(1))));
+    for path in ["members[id=M2].actions[id=A2]", "members[1].actions[1]"] {
+        let (kind, entries) = RULES.payload(REMOVALS, &tree, &NormEdit::RemoveItem { path: path.into(), index: 0 }).expect("remove");
+        assert_eq!((kind, entry(&entries, "memberId"), entry(&entries, "id")), ("remove-member-action", Some(DslValue::String("M2".into())), Some(DslValue::String("A2".into()))));
+    }
+    let (_, entries) = RULES.payload(REMOVALS, &tree, &NormEdit::RemoveItem { path: "members[id=M2].actions".into(), index: 0 }).expect("remove by position");
+    assert_eq!(entry(&entries, "id"), Some(DslValue::String("A1".into())));
+    assert!(RULES.payload(REMOVALS, &tree, &NormEdit::RemoveItem { path: "members[id=M3].actions[id=A1]".into(), index: 0 }).is_err());
+}
+
+#[test]
+fn a_reorder_names_its_row_by_position_and_raises_the_order_kind_with_parent_selectors() {
+    use semio_framework_value::DslValue;
+    let obj = |entries: Vec<(&str, DslValue)>| DslValue::object(entries.into_iter().map(|(k, v)| (k.to_string(), v)).collect());
+    let row = |id: &str| obj(vec![("id", DslValue::String(id.into()))]);
+    let tree = obj(vec![("members", DslValue::Array(vec![row("a"), row("b"), row("c")])), ("groups", DslValue::Array(vec![obj(vec![("id", DslValue::String("g1".into())), ("items", DslValue::Array(vec![row("x"), row("y")]))])]))]);
+    const RULES: NormEditRules = NormEditRules {
+        move_item: &[
+            MoveItemRule { path: "members", kind: "change-member-order", selectors: &[], from: "fromIndex", to: "toIndex" },
+            MoveItemRule { path: "groups[].items", kind: "change-group-item-order", selectors: &[SelectorKey::Id("groupId")], from: "fromIndex", to: "toIndex" },
+        ],
+        set_field: &[],
+        insert_item: &[],
+        remove_item: &[],
+    };
+    let edit = move_item_edit(&tree, "members", "a", 2).expect("a drag to the end");
+    assert_eq!(edit, NormEdit::MoveItem { path: "members".into(), from: 0, to: 2 });
+    let (kind, entries) = RULES.payload(&[], &tree, &edit).expect("payload");
+    assert_eq!((kind, entries), ("change-member-order", vec![("fromIndex".to_string(), DslValue::uint(0)), ("toIndex".to_string(), DslValue::uint(2))]));
+    let (kind, entries) = RULES.payload(&[], &tree, &NormEdit::MoveItem { path: "groups[id=g1].items".into(), from: 1, to: 0 }).expect("nested payload");
+    assert_eq!((kind, entries.len(), entries[0].1.clone()), ("change-group-item-order", 3, DslValue::String("g1".into())));
+    assert_eq!(move_item_edit(&tree, "members", "a", 99), Ok(NormEdit::MoveItem { path: "members".into(), from: 0, to: 2 }), "the target is clamped");
+    assert!(move_item_edit(&tree, "members", "c", 2).is_err(), "an unchanged position commits nothing");
+    assert!(move_item_edit(&tree, "members", "ghost", 0).is_err());
+    assert!(RULES.payload(&[], &tree, &NormEdit::MoveItem { path: "groups".into(), from: 0, to: 0 }).is_err(), "a list without a rule is refused");
+    let mut reordered = tree.clone();
+    crate::entity_editing::apply_to_tree(&mut reordered, &[edit]).expect("replay");
+    let ids: Vec<_> = get_value_at_path(&reordered, "members").unwrap().as_array().unwrap().iter().map(|r| object_id_field(r).unwrap().to_string()).collect();
+    assert_eq!(ids, ["b", "c", "a"]);
+}
+
+#[test]
+fn a_null_write_raises_the_clear_kind_of_a_leaf_that_declares_one() {
+    use semio_framework_value::DslValue;
+    let obj = |entries: Vec<(&str, DslValue)>| DslValue::object(entries.into_iter().map(|(k, v)| (k.to_string(), v)).collect());
+    let tree = obj(vec![("members", DslValue::Array(vec![obj(vec![("id", DslValue::String("M1".into())), ("tightness", DslValue::String("leaky".into()))])]))]);
+    const RULES: NormEditRules = NormEditRules {
+        move_item: &[],
+        set_field: &[
+            SetFieldRule { path: "members[].tightness", kind: "change-member-tightness", selectors: &[SelectorKey::Id("memberId")], value: "newTightness" },
+            SetFieldRule { path: "members[].tightness", kind: "clear-member-tightness", selectors: &[SelectorKey::Id("memberId")], value: "" },
+        ],
+        insert_item: &[],
+        remove_item: &[],
+    };
+    let (kind, entries) = RULES.payload(&[], &tree, &NormEdit::SetField { path: "members[id=M1].tightness".into(), value: DslValue::Null }).expect("clear");
+    assert_eq!((kind, entries), ("clear-member-tightness", vec![("memberId".to_string(), DslValue::String("M1".into()))]));
+    let (kind, entries) = RULES.payload(&[], &tree, &NormEdit::SetField { path: "members[id=M1].tightness".into(), value: DslValue::String("tight".into()) }).expect("set");
+    assert_eq!((kind, entries.len()), ("change-member-tightness", 2));
+}
+
+#[test]
+fn a_remove_remedy_deletes_the_row_its_target_selects_and_is_no_value_write() {
+    use semio_framework_value::DslValue;
+    use semio_s_plugin_norm_compliance::{AnnexChoice, CheckResult, ClauseId, LocalizedCopy, Remedy, RemedyBound, SubjectRef};
+    let subject = SubjectRef::new("o1", "factorOverrides[id=o1]", LocalizedCopy::new("Override o1", "Überschreibung o1"));
+    let mut report = CheckReport::default();
+    report.push(
+        CheckResult::assess("mock.override", "demo", ClauseId::new("demo", "§1", "1"), subject.clone(), LocalizedCopy::new("Deviation", "Abweichung"))
+            .explanation(LocalizedCopy::new("reset", "zurücksetzen"))
+            .remedy(Remedy::remove(subject, LocalizedCopy::new("Reset to NA", "Auf NA zurücksetzen")))
+            .annex(AnnexChoice::De)
+            .build(),
+    );
+    assert_eq!(report.checks[0].remedies[0].bound, RemedyBound::Remove);
+    let row = |id: &str| DslValue::object([("id".into(), DslValue::String(id.into())), ("value".into(), DslValue::float(1.5))]);
+    let mut tree = DslValue::object([("factorOverrides".into(), DslValue::Array(vec![row("o0"), row("o1")]))]);
+    assert_eq!(remedy_resolution(&report, "mock.override", 0, 0, &tree).unwrap(), RemedyEdit::Remove { path: "factorOverrides[id=o1]".into() });
+    assert!(remedy_edit(&report, "mock.override", 0, 0, &tree).is_err());
+    apply_remedy_edit(&report, "mock.override", 0, 0, &mut tree).expect("remove");
+    assert!(get_value_at_path(&tree, "factorOverrides[id=o1]").is_err());
+    assert!(get_value_at_path(&tree, "factorOverrides[id=o0]").is_ok());
+}
+
+#[test]
+fn an_insert_remedy_appends_its_typed_row_at_the_computed_position_through_the_insert_rule() {
+    use semio_framework_value::DslValue;
+    use semio_s_plugin_norm_compliance::{AnnexChoice, CheckResult, ClauseId, LocalizedCopy, Quantity, Remedy, RemedyBound, SubjectRef};
+    let subject = SubjectRef::new("g1", "stiffeners", LocalizedCopy::new("Stiffeners of girder g1", "Steifen des Trägers g1"));
+    let mut report = CheckReport::default();
+    report.push(
+        CheckResult::assess("mock.stiffener", "demo", ClauseId::new("demo", "§1", "1"), subject.clone(), LocalizedCopy::new("Web buckling", "Stegbeulen"))
+            .explanation(LocalizedCopy::new("add a stiffener", "Steife ergänzen"))
+            .remedy(Remedy::insert(subject, r#"{"id":"s-mid","girderId":"g1","xM":"$required"}"#, Quantity::length_m(3.0), LocalizedCopy::new("Add a transverse stiffener at 3.0 m", "Quersteife bei 3,0 m ergänzen")))
+            .annex(AnnexChoice::De)
+            .build(),
+    );
+    assert_eq!(report.checks[0].remedies[0].bound, RemedyBound::Insert);
+    let row = |id: &str| DslValue::object([("id".into(), DslValue::String(id.into())), ("girderId".into(), DslValue::String("g1".into())), ("xM".into(), DslValue::float(1.0))]);
+    let mut tree = DslValue::object([("stiffeners".into(), DslValue::Array(vec![row("s-end")]))]);
+    let expected = row("s-mid");
+    let RemedyEdit::Insert { path, index, value } = remedy_resolution(&report, "mock.stiffener", 0, 0, &tree).expect("resolves") else { panic!("an insert") };
+    assert_eq!((path.as_str(), index, value.get("xM").and_then(DslValue::as_f64)), ("stiffeners", 1, Some(3.0)));
+    assert_eq!(value.get("id"), expected.get("id"));
+    assert!(remedy_edit(&report, "mock.stiffener", 0, 0, &tree).is_err(), "an insert is no value write");
+    apply_remedy_edit(&report, "mock.stiffener", 0, 0, &mut tree).expect("insert");
+    assert_eq!(get_value_at_path(&tree, "stiffeners[id=s-mid].xM").ok().and_then(DslValue::as_f64), Some(3.0));
+    assert!(apply_remedy_edit(&report, "mock.stiffener", 0, 0, &mut tree).is_err(), "a second application never duplicates the row");
+    const RULES: NormEditRules = NormEditRules {
+        move_item: &[],
+        set_field: &[],
+        insert_item: &[InsertItemRule { path: "stiffeners", kind: "insert-stiffener", selectors: &[], index: "index", item: "stiffener" }],
+        remove_item: &[],
+    };
+    let edit = NormEdit::InsertItem { path: path.clone(), index, value: Some(value) };
+    let (kind, entries) = RULES.payload(&[], &DslValue::object([("stiffeners".into(), DslValue::Array(vec![row("s-end")]))]), &edit).expect("the insert rule carries the remedy row");
+    assert_eq!((kind, entries.len()), ("insert-stiffener", 2));
+}
+
+mod marker_cells {
+    use super::*;
+    use semio_s_plugin_norm_structural_scene::{Affine, Axis, AxisScale, DataTable, Diagram2d, FieldBinding, Interval, LocalizedCopy, Marker, MarkerShape, QuantityKind, Quantise, TickRule, Tone, Vec2};
+
+    fn diagram() -> Diagram2d {
+        let axis = |unit: &str, domain: Option<Interval>| Axis { label: LocalizedCopy::new("Position", "Lage"), quantity: QuantityKind::Length, unit: unit.into(), scale: AxisScale::Linear, domain, ticks: TickRule::Auto };
+        let mut binding = FieldBinding::new("placements[id=p1].x", Affine { base: 0.0, k: 1.0 }, "m");
+        binding.quantise = Some(Quantise::Round { step: 0.01 });
+        let marker = |id: &str, label: (&str, &str), binding: Option<FieldBinding>| Marker { id: id.into(), at: Vec2::new(2.5, 14.0), shape: MarkerShape::Diamond, tone: Tone::Warning, label: LocalizedCopy::new(label.0, label.1), utilisation: Some(0.93), bound_check: Some("c1".into()), binding };
+        Diagram2d {
+            id: "plan".into(),
+            title: LocalizedCopy::new("Plan", "Grundriss"),
+            description: LocalizedCopy::new("Plan", "Grundriss"),
+            axes: vec![axis("m", Some(Interval::new(0.0, 10.0))), axis("mm", None)],
+            series: Vec::new(),
+            markers: vec![marker("p1", ("Placement P1", "Platzierung P1"), Some(binding)), marker("p2", ("Placement P2", "Platzierung P2"), None)],
+            annotations: Vec::new(),
+            focus: None,
+            legend: false,
+            table_twin: DataTable { columns: Vec::new() },
+        }
+    }
+
+    fn body(controller_id: Option<&'static str>, locale: Locale) -> String {
+        let view = ViewModel::new(locale, semio_framework_ui_locale::Terminology::Native);
+        let spec = DiagramsWindowSpec { controller_id, ..DiagramsWindowSpec::default() };
+        let node = render_diagrams("norm.x.play.diagrams", &[diagram()], &spec, &TreeWindows::for_body(&view, "norm.x.play.diagrams"), locale).expect("diagrams body");
+        semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("project the diagrams body")
+    }
+
+    #[test]
+    fn a_bound_marker_row_carries_an_inline_editor_cell_named_in_both_languages_and_an_unbound_one_stays_read_only() {
+        let cell = "norm.x.play.diagrams.plan.marker.m0.input";
+        let english = body(Some("s.norm.x@1/*#editor"), Locale::En);
+        assert!(english.contains(cell), "{english}");
+        assert!(!english.contains("norm.x.play.diagrams.plan.marker.m1.input"), "an unbound marker has no editor: {english}");
+        assert!(english.contains("Placement P1, edit value"), "{english}");
+        assert!(english.contains("marker:plan:p1") && english.contains("setFields"), "the cell commits the marker grip through setFields: {english}");
+        let german = body(Some("s.norm.x@1/*#editor"), Locale::De);
+        assert!(german.contains(cell) && german.contains("Platzierung P1, Wert bearbeiten"), "{german}");
+        assert!(german.contains("2.5 m"), "the cell shows the bound value in the unit of the field: {german}");
+        assert_eq!(marker_cell_id("norm.x.play.diagrams.plan", 0), cell);
+    }
+
+    #[test]
+    fn without_a_controller_every_marker_row_is_read_only() {
+        assert!(!body(None, Locale::En).contains(".marker.m0.input"));
+    }
+}

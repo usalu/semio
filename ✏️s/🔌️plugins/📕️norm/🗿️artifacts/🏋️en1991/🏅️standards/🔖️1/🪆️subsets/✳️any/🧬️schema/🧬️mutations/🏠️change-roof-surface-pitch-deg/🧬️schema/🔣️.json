@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-roof-surface-pitch-deg/schema.json",
+  "title": "ChangeRoofSurfacePitchDeg",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newPitchDeg"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Roof surface",
+          "de": "Dachfläche"
+        },
+        "description": {
+          "en": "The roof surface this mutation addresses, by id.",
+          "de": "Das adressierte Element (Dachfläche), per Kennung."
+        },
+        "ref": {
+          "kind": "roof-surface"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newPitchDeg": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Pitch",
+          "de": "Neigung"
+        },
+        "widget": "stepper",
+        "unit": "°",
+        "precision": 1,
+        "step": 1,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

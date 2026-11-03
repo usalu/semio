@@ -1,0 +1,5 @@
+{
+  "mutation": "changeBridgePeriodRatio",
+  "id": "br-1",
+  "newPeriodRatio": 4.0
+}

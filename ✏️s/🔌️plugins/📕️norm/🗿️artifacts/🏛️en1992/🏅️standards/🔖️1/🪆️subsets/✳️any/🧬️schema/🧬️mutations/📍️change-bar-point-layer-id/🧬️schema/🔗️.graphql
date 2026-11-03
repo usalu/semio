@@ -1,0 +1,5 @@
+type ChangeBarPointLayerId {
+  memberId: String!
+  barId: String!
+  newLayerId: String!
+}

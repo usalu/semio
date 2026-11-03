@@ -1,0 +1,6 @@
+{
+  "ChangeFrameMemberBasisBasis": {
+    "id": "frame-member-basis-1",
+    "newBasis": "FrameDerived"
+  }
+}

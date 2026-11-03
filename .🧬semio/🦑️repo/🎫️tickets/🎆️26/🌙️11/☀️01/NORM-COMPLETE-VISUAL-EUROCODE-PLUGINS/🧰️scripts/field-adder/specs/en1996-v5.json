@@ -1,0 +1,291 @@
+{
+  "artifact": "en1996",
+  "literals": 2,
+  "enums": [
+    {
+      "name": "BracingSystem",
+      "doc": "🏰 Structural system that braces the building against horizontal actions (EN 1998-1 9.2.1 and 9.3): unreinforced, confined or reinforced masonry.",
+      "variants": [
+        [
+          "Unreinforced",
+          "unreinforced",
+          "Unreinforced masonry",
+          "Unbewehrtes Mauerwerk"
+        ],
+        [
+          "Confined",
+          "confined",
+          "Confined masonry",
+          "Eingefasstes Mauerwerk"
+        ],
+        [
+          "Reinforced",
+          "reinforced",
+          "Reinforced masonry",
+          "Bewehrtes Mauerwerk"
+        ]
+      ]
+    },
+    {
+      "name": "ChaseKind",
+      "doc": "🪚️ Kind of a wall chase: vertical or horizontal chase, or a recess (EN 1996-1-1 8.6).",
+      "variants": [
+        [
+          "Vertical",
+          "vertical",
+          "Vertical chase",
+          "Senkrechter Schlitz"
+        ],
+        [
+          "Horizontal",
+          "horizontal",
+          "Horizontal chase",
+          "Waagerechter Schlitz"
+        ],
+        [
+          "Recess",
+          "recess",
+          "Recess",
+          "Aussparung"
+        ]
+      ]
+    }
+  ],
+  "fields": [
+    {
+      "field": "bracing_system",
+      "type": "BracingSystem",
+      "after": "in_plane_moment_nm",
+      "default": "Unreinforced",
+      "doc": "🧷 Bracing system this wall belongs to (EN 1998-1 9.3 behaviour factor q, check M-95).",
+      "en": "Bracing system",
+      "de": "Aussteifungssystem",
+      "kind": "change-bracing-system"
+    },
+    {
+      "field": "diaphragm_stiffness_n_per_m",
+      "type": "f64",
+      "after": "bracing_system",
+      "default": 0.0,
+      "unit": "N/m",
+      "unit_id": "NewtonPerMetre",
+      "ui_unit": "N/m",
+      "step": 1000000,
+      "precision": 0,
+      "doc": "🥞 In-plane shear stiffness G t of the floor diaphragm that braces this wall [N/m]; 0 = not declared (EN 1998-1 4.3.1(4)).",
+      "en": "Diaphragm in-plane stiffness",
+      "de": "Scheibensteifigkeit der Decke",
+      "kind": "change-diaphragm-stiffness"
+    }
+  ],
+  "examples": [
+    {
+      "after": "        wall.in_plane_moment_nm = 20_000.0;\n",
+      "add": "        wall.bracing_system = BracingSystem::Confined;\n        wall.diaphragm_stiffness_n_per_m = 5.0e7;\n"
+    },
+    {
+      "after": "        doc.walls[0].f_yd_pa = 435e6;\n",
+      "add": "        doc.walls[0].bracing_system = BracingSystem::Reinforced;\n"
+    },
+    {
+      "after": "        wall.diaphragm_stiffness_n_per_m = 5.0e7;\n",
+      "add": "        doc.chases = vec![WallChase { id: \"chase-1\".into(), wall_id: \"wall-members\".into(), kind: ChaseKind::Vertical, x_m: 3.0, y_m: 0.4, width_m: 0.08, length_m: 1.2, depth_m: 0.03 }];\n        doc.movement_joints = vec![MovementJoint { id: \"joint-1\".into(), wall_id: \"wall-members\".into(), position_m: 2.5 }];\n"
+    }
+  ],
+  "snapshot_literals": 2,
+  "collections": [
+    {
+      "camel": "chases",
+      "row": "WallChase",
+      "single": "Chase",
+      "table": "en1996_chase",
+      "const": "CHASE",
+      "label_en": "Chases and recesses",
+      "label_de": "Schlitze und Aussparungen",
+      "id_en": "Chase id",
+      "id_de": "Schlitz-Id",
+      "doc": "🪚️ Chase or recess cut into one wall face with its position, extent and depth — SI base units (EN 1996-1-1 8.6).",
+      "fields": [
+        {
+          "field": "wall_id",
+          "type": "String",
+          "column": "wall_ref",
+          "doc": "🧱️ Id of the wall the chase is cut into.",
+          "en": "Wall",
+          "de": "Wand",
+          "kind_suffix": "wall"
+        },
+        {
+          "field": "kind",
+          "type": "ChaseKind",
+          "default": "Vertical",
+          "doc": "🔀 Vertical chase, horizontal chase or recess.",
+          "en": "Chase kind",
+          "de": "Schlitzart",
+          "kind_suffix": "kind"
+        },
+        {
+          "unit": "m",
+          "unit_id": "Metre",
+          "ui_unit": "m",
+          "step": 0.01,
+          "precision": 3,
+          "field": "x_m",
+          "type": "f64",
+          "doc": "↔️ Horizontal position x of the lower left corner on the wall face [m].",
+          "en": "Chase position x",
+          "de": "Schlitzlage x",
+          "kind_suffix": "x",
+          "family": "geometry"
+        },
+        {
+          "unit": "m",
+          "unit_id": "Metre",
+          "ui_unit": "m",
+          "step": 0.01,
+          "precision": 3,
+          "field": "y_m",
+          "type": "f64",
+          "doc": "↕️ Vertical position y of the lower left corner on the wall face [m].",
+          "en": "Chase position y",
+          "de": "Schlitzlage y",
+          "kind_suffix": "y",
+          "family": "geometry"
+        },
+        {
+          "unit": "m",
+          "unit_id": "Metre",
+          "ui_unit": "m",
+          "step": 0.01,
+          "precision": 3,
+          "field": "width_m",
+          "type": "f64",
+          "doc": "📏️ Width across the cut direction [m].",
+          "en": "Chase width",
+          "de": "Schlitzbreite",
+          "kind_suffix": "width",
+          "family": "geometry"
+        },
+        {
+          "unit": "m",
+          "unit_id": "Metre",
+          "ui_unit": "m",
+          "step": 0.01,
+          "precision": 3,
+          "field": "length_m",
+          "type": "f64",
+          "doc": "📐️ Length along the cut direction [m].",
+          "en": "Chase length",
+          "de": "Schlitzlänge",
+          "kind_suffix": "length",
+          "family": "geometry"
+        },
+        {
+          "unit": "m",
+          "unit_id": "Metre",
+          "ui_unit": "m",
+          "step": 0.01,
+          "precision": 3,
+          "field": "depth_m",
+          "type": "f64",
+          "doc": "🕳️ Depth into the wall thickness [m].",
+          "en": "Chase depth",
+          "de": "Schlitztiefe",
+          "kind_suffix": "depth",
+          "family": "geometry"
+        }
+      ],
+      "slug": "chase",
+      "group": "chases",
+      "emoji": "🪚️",
+      "link": {
+        "coll": "chases",
+        "row": "WallChase",
+        "single": "chase",
+        "en": "Chase",
+        "de": "Schlitz"
+      }
+    },
+    {
+      "camel": "movementJoints",
+      "row": "MovementJoint",
+      "single": "Joint",
+      "table": "en1996_movement_joint",
+      "const": "MOVEMENT_JOINT",
+      "label_en": "Movement joints",
+      "label_de": "Dehnfugen",
+      "id_en": "Movement joint id",
+      "id_de": "Dehnfugen-Id",
+      "doc": "🧵 Vertical movement joint of one wall at a position along the wall — SI base units (EN 1996-2 2.3).",
+      "fields": [
+        {
+          "field": "wall_id",
+          "type": "String",
+          "column": "wall_ref",
+          "doc": "🧱️ Id of the wall the joint divides.",
+          "en": "Wall",
+          "de": "Wand",
+          "kind_suffix": "wall"
+        },
+        {
+          "unit": "m",
+          "unit_id": "Metre",
+          "ui_unit": "m",
+          "step": 0.01,
+          "precision": 3,
+          "field": "position_m",
+          "type": "f64",
+          "doc": "↔️ Position x of the joint along the wall [m].",
+          "en": "Joint position x",
+          "de": "Fugenlage x",
+          "kind_suffix": "position"
+        }
+      ],
+      "slug": "movement-joint",
+      "group": "movement-joints",
+      "emoji": "🧵",
+      "link": {
+        "coll": "movement_joints",
+        "row": "MovementJoint",
+        "single": "joint",
+        "en": "Movement joint",
+        "de": "Dehnfuge"
+      }
+    }
+  ],
+  "sqlite_fixture": {
+    "walls": [
+      {
+        "bracingSystem": "Confined",
+        "diaphragmStiffnessNPerM": 50000000.25
+      },
+      {
+        "bracingSystem": "Reinforced",
+        "diaphragmStiffnessNPerM": -12500000.5
+      }
+    ],
+    "chases": [
+      {
+        "id": "chase 世界",
+        "wallId": "duplicate wall 世界",
+        "kind": "Horizontal",
+        "xM": 1.25,
+        "yM": 0.9,
+        "widthM": 0.06,
+        "lengthM": 2.5,
+        "depthM": 0.03
+      }
+    ],
+    "movementJoints": [
+      {
+        "id": "joint 🧵",
+        "wallId": "duplicate wall 世界",
+        "positionM": 2.5625
+      }
+    ]
+  },
+  "wall_kinds": {
+    "emoji": "🧷",
+    "group": "bracing"
+  }
+}

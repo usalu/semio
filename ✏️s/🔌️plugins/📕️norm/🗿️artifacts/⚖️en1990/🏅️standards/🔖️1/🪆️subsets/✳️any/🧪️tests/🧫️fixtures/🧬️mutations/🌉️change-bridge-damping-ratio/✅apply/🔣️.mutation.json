@@ -1,0 +1,5 @@
+{
+  "mutation": "changeBridgeDampingRatio",
+  "id": "bri-1",
+  "newDampingRatio": 2.0
+}

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeMemberSlsLimitChar",
+  "id": "beam-B1",
+  "newSlsLimitChar": 500000.0
+}

@@ -595,7 +595,7 @@ where
                 cx.set_stage("member-open.retire-input");
                 if cx.should_yield() { return MemberOpenStep::Pending(self.replay_progress()); }
                 let child = RetainedCloneGrant { maximum_items: grant.maximum_items.min(1), ..grant };
-                let step = match semio_framework_os_store_read::retirement_owner_close(&mut self.witness, child) .result {
+                let step = match semio_framework_os_store_read::retirement_owner_close(&mut self.witness, child).result {
                     Ok(step) => step,
                     Err(_) => return self.reject(MemberOpenDiagnostic::Initialization),
                 };

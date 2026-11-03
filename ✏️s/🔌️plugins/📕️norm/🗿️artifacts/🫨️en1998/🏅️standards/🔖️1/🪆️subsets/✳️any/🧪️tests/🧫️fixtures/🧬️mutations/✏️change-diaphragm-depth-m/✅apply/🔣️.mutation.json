@@ -1,0 +1,5 @@
+{
+  "mutation": "changeDiaphragmDepthM",
+  "id": "dia-1",
+  "newDepthM": 1.5
+}

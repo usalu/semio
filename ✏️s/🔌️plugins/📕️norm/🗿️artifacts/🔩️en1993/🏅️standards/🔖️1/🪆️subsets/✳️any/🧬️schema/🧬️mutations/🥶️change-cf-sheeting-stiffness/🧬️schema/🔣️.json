@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-cf-sheeting-stiffness/schema.json",
+  "title": "ChangeCfSheetingStiffness",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newSheetingStiffness"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Cold-formed member",
+          "de": "Kaltprofil"
+        },
+        "description": {
+          "en": "The cold-formed member this mutation addresses, by id.",
+          "de": "Das adressierte Element (Kaltprofil), per Kennung."
+        },
+        "ref": {
+          "kind": "cold-formed"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newSheetingStiffness": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Sheeting rotational stiffness C_D,C",
+          "de": "Drehbettung Trapezblech C_D,C"
+        },
+        "widget": "stepper",
+        "unit": "N·m/m",
+        "precision": 1,
+        "step": 100,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

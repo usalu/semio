@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-cf-psi/schema.json",
+  "title": "ChangeCfPsi",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newPsi"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Cold-formed member",
+          "de": "Kaltprofil"
+        },
+        "description": {
+          "en": "The cold-formed member this mutation addresses, by id.",
+          "de": "Das adressierte Element (Kaltprofil), per Kennung."
+        },
+        "ref": {
+          "kind": "cold-formed"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newPsi": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Stress ratio ψ",
+          "de": "Randspannungsverhältnis ψ"
+        },
+        "widget": "stepper",
+        "precision": 2,
+        "step": 0.05,
+        "snaps": [
+          -1,
+          0,
+          1
+        ],
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

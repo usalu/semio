@@ -1,0 +1,5 @@
+type ChangeTendonPointZ {
+  memberId: String!
+  tendonPointId: String!
+  newZ: Float!
+}

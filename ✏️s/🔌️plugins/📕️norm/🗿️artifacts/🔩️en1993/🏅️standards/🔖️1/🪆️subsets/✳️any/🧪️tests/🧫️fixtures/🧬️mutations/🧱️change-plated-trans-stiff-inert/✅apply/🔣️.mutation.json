@@ -1,0 +1,6 @@
+{
+  "ChangePlatedTransStiffInert": {
+    "id": "pp-1",
+    "newTransverseStiffenerInertia": 1.5
+  }
+}

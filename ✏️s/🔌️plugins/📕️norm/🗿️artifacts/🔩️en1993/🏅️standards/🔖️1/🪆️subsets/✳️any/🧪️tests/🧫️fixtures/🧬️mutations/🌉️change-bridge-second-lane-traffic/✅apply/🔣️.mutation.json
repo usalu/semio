@@ -1,0 +1,6 @@
+{
+  "ChangeBridgeSecondLaneTraffic": {
+    "id": "br-1",
+    "newSecondLaneTraffic": 1.5
+  }
+}

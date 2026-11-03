@@ -1,9 +1,6 @@
-# 💡️ En1999 inference schema — document outline (field/section list + entry count).
-
 type En1999Inference {
-  outline: En1999Outline! @derived
+  outline: En1999Outline!
 }
-
 type En1999Outline {
   sectionOutline: [String!]!
   fieldCount: Int!

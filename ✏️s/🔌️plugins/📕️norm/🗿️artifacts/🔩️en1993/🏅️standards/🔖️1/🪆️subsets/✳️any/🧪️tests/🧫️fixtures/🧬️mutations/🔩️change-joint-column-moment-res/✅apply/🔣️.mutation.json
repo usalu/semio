@@ -1,0 +1,6 @@
+{
+  "ChangeJointColumnMomentRes": {
+    "id": "joint-j1",
+    "newColumnMomentResistance": 1.5
+  }
+}

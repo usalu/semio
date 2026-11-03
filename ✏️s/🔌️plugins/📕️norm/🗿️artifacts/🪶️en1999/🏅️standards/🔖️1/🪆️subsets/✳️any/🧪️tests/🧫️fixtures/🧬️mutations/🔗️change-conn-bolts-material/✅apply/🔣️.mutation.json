@@ -1,0 +1,5 @@
+{
+  "mutation": "changeConnBoltsMaterial",
+  "connectionId": "support-weld",
+  "newBoltsMaterial": "8.8-alt"
+}

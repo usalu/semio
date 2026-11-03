@@ -14,8 +14,8 @@ use framework_schema::ArtifactSchema;
 
 /// 🧬️ Full En1991 artifact state across the artifact and presence lanes.
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.norm.en1991")]
 pub struct En1991Artifact {
@@ -86,7 +86,7 @@ pub struct En1991Artifact {
     #[state(artifact)]
     pub fire_thermal_inertia: f64,
     #[state(artifact)]
-    pub fire_occupancy: String,
+    pub fire_occupancy: semio_s_artifact_norm_en1991_model::FireOccupancy,
     #[state(artifact)]
     pub fire_load_density_qf: f64,
     #[state(artifact)]
@@ -150,6 +150,34 @@ pub struct En1991Artifact {
     #[state(artifact)]
     pub assumed_silo_wall_friction: f64,
     #[state(artifact)]
+    pub bridge_tandem_x: f64,
+    #[state(artifact)]
+    pub rail_alpha: f64,
+    #[state(artifact)]
+    pub assumed_rail_lm71: f64,
+    #[state(artifact)]
+    pub assumed_rail_lm71_udl: f64,
+    #[state(artifact)]
+    pub assumed_rail_sw0: f64,
+    #[state(artifact)]
+    pub assumed_rail_sw2: f64,
+    #[state(artifact)]
+    pub crane_x: f64,
+    #[state(artifact)]
+    pub crane_runway_length: f64,
+    #[state(artifact)]
+    pub crane_wheel_base: f64,
+    #[state(artifact)]
+    pub silo_diameter: f64,
+    #[state(artifact)]
+    pub silo_eccentricity: f64,
+    #[state(artifact)]
+    pub silo_hopper_angle_deg: f64,
+    #[state(artifact)]
+    pub bridge_curve_radius: f64,
+    #[state(artifact)]
+    pub fire_load_basis: semio_s_artifact_norm_en1991_model::FireLoadBasis,
+    #[state(artifact)]
     pub floors: Vec<semio_s_artifact_norm_en1991_model::FloorArea>,
     #[state(artifact)]
     pub self_weight_elements: Vec<semio_s_artifact_norm_en1991_model::SelfWeightElement>,
@@ -159,6 +187,66 @@ pub struct En1991Artifact {
     pub wind_faces: Vec<semio_s_artifact_norm_en1991_model::WindFace>,
     #[state(artifact)]
     pub accidental_cases: Vec<semio_s_artifact_norm_en1991_model::AccidentalCase>,
+    #[state(artifact)]
+    pub bridge_lanes: Vec<semio_s_artifact_norm_en1991_model::BridgeLane>,
+    #[state(artifact)]
+    pub construction_stages: Vec<semio_s_artifact_norm_en1991_model::ConstructionStage>,
+    #[state(artifact)]
+    pub roof_surfaces: Vec<semio_s_artifact_norm_en1991_model::RoofSurface>,
+    #[state(artifact)]
+    pub placements: Vec<semio_s_artifact_norm_en1991_model::Placement>,
+    #[state(artifact)]
+    pub special_vehicles: Vec<semio_s_artifact_norm_en1991_model::SpecialVehicle>,
+    #[state(artifact)]
+    pub wind_bridges: Vec<semio_s_artifact_norm_en1991_model::WindBridge>,
+    #[state(artifact)]
+    pub dynamic_elements: Vec<semio_s_artifact_norm_en1991_model::DynamicElement>,
+    #[state(artifact)]
+    pub impact_actions: Vec<semio_s_artifact_norm_en1991_model::ImpactAction>,
+    #[state(artifact)]
+    pub internal_explosions: Vec<semio_s_artifact_norm_en1991_model::InternalExplosion>,
+    #[state(artifact)]
+    pub thermal_sections: Vec<semio_s_artifact_norm_en1991_model::ThermalSection>,
+    #[state(artifact)]
+    pub cases: Vec<semio_s_artifact_norm_en1991_model::CaseRow>,
+    #[state(artifact)]
+    pub helicopter_landings: Vec<semio_s_artifact_norm_en1991_model::HelicopterLanding>,
+    #[state(artifact)]
+    pub tie_runs: Vec<semio_s_artifact_norm_en1991_model::TieRun>,
+    #[state(artifact)]
+    pub construction_loads: Vec<semio_s_artifact_norm_en1991_model::ConstructionLoad>,
+    #[state(artifact)]
+    pub falling_loads: Vec<semio_s_artifact_norm_en1991_model::FallingLoad>,
+    #[state(artifact)]
+    pub execution_imperfections: Vec<semio_s_artifact_norm_en1991_model::ExecutionImperfection>,
+    #[state(artifact)]
+    pub derailment_cases: Vec<semio_s_artifact_norm_en1991_model::DerailmentCase>,
+    #[state(artifact)]
+    pub crane_hoists: Vec<semio_s_artifact_norm_en1991_model::CraneHoist>,
+    #[state(artifact)]
+    pub footbridges: Vec<semio_s_artifact_norm_en1991_model::Footbridge>,
+    #[state(artifact)]
+    pub rail_dynamics: Vec<semio_s_artifact_norm_en1991_model::RailDynamic>,
+    #[state(artifact)]
+    pub load_dispersals: Vec<semio_s_artifact_norm_en1991_model::LoadDispersal>,
+    #[state(artifact)]
+    pub bulk_solids: Vec<semio_s_artifact_norm_en1991_model::BulkSolid>,
+    #[state(artifact)]
+    pub rotating_machines: Vec<semio_s_artifact_norm_en1991_model::RotatingMachine>,
+    #[state(artifact)]
+    pub dust_explosions: Vec<semio_s_artifact_norm_en1991_model::DustExplosion>,
+    #[state(artifact)]
+    pub rail_load_groups: Vec<semio_s_artifact_norm_en1991_model::RailLoadGroup>,
+    #[state(artifact)]
+    pub rail_derailments: Vec<semio_s_artifact_norm_en1991_model::RailDerailment>,
+    #[state(artifact)]
+    pub fatigue_models: Vec<semio_s_artifact_norm_en1991_model::FatigueModel>,
+    #[state(artifact)]
+    pub support_collisions: Vec<semio_s_artifact_norm_en1991_model::SupportCollision>,
+    #[state(artifact)]
+    pub local_fires: Vec<semio_s_artifact_norm_en1991_model::LocalFire>,
+    #[state(artifact)]
+    pub snow_guards: Vec<semio_s_artifact_norm_en1991_model::SnowGuard>,
 }
 //#endregion 🔖️Artifact
 
@@ -232,11 +320,55 @@ impl En1991Artifact {
             assumed_silo_pressure: self.assumed_silo_pressure,
             assumed_silo_patch: self.assumed_silo_patch,
             assumed_silo_wall_friction: self.assumed_silo_wall_friction,
+            bridge_tandem_x: self.bridge_tandem_x,
+            rail_alpha: self.rail_alpha,
+            assumed_rail_lm71: self.assumed_rail_lm71,
+            assumed_rail_lm71_udl: self.assumed_rail_lm71_udl,
+            assumed_rail_sw0: self.assumed_rail_sw0,
+            assumed_rail_sw2: self.assumed_rail_sw2,
+            crane_x: self.crane_x,
+            crane_runway_length: self.crane_runway_length,
+            crane_wheel_base: self.crane_wheel_base,
+            silo_diameter: self.silo_diameter,
+            silo_eccentricity: self.silo_eccentricity,
+            silo_hopper_angle_deg: self.silo_hopper_angle_deg,
+            bridge_curve_radius: self.bridge_curve_radius,
+            fire_load_basis: self.fire_load_basis,
             floors: self.floors.clone(),
             self_weight_elements: self.self_weight_elements.clone(),
             roofs: self.roofs.clone(),
             wind_faces: self.wind_faces.clone(),
             accidental_cases: self.accidental_cases.clone(),
+            bridge_lanes: self.bridge_lanes.clone(),
+            construction_stages: self.construction_stages.clone(),
+            roof_surfaces: self.roof_surfaces.clone(),
+            placements: self.placements.clone(),
+            special_vehicles: self.special_vehicles.clone(),
+            wind_bridges: self.wind_bridges.clone(),
+            dynamic_elements: self.dynamic_elements.clone(),
+            impact_actions: self.impact_actions.clone(),
+            internal_explosions: self.internal_explosions.clone(),
+            thermal_sections: self.thermal_sections.clone(),
+            cases: self.cases.clone(),
+            helicopter_landings: self.helicopter_landings.clone(),
+            tie_runs: self.tie_runs.clone(),
+            construction_loads: self.construction_loads.clone(),
+            falling_loads: self.falling_loads.clone(),
+            execution_imperfections: self.execution_imperfections.clone(),
+            derailment_cases: self.derailment_cases.clone(),
+            crane_hoists: self.crane_hoists.clone(),
+            footbridges: self.footbridges.clone(),
+            rail_dynamics: self.rail_dynamics.clone(),
+            load_dispersals: self.load_dispersals.clone(),
+            bulk_solids: self.bulk_solids.clone(),
+            rotating_machines: self.rotating_machines.clone(),
+            dust_explosions: self.dust_explosions.clone(),
+            rail_load_groups: self.rail_load_groups.clone(),
+            rail_derailments: self.rail_derailments.clone(),
+            fatigue_models: self.fatigue_models.clone(),
+            support_collisions: self.support_collisions.clone(),
+            local_fires: self.local_fires.clone(),
+            snow_guards: self.snow_guards.clone(),
         }
     }
     /// 🧬️ Lift a snapshot into the full artifact lanes.
@@ -307,11 +439,55 @@ impl En1991Artifact {
             assumed_silo_pressure: snapshot.assumed_silo_pressure,
             assumed_silo_patch: snapshot.assumed_silo_patch,
             assumed_silo_wall_friction: snapshot.assumed_silo_wall_friction,
+            bridge_tandem_x: snapshot.bridge_tandem_x,
+            rail_alpha: snapshot.rail_alpha,
+            assumed_rail_lm71: snapshot.assumed_rail_lm71,
+            assumed_rail_lm71_udl: snapshot.assumed_rail_lm71_udl,
+            assumed_rail_sw0: snapshot.assumed_rail_sw0,
+            assumed_rail_sw2: snapshot.assumed_rail_sw2,
+            crane_x: snapshot.crane_x,
+            crane_runway_length: snapshot.crane_runway_length,
+            crane_wheel_base: snapshot.crane_wheel_base,
+            silo_diameter: snapshot.silo_diameter,
+            silo_eccentricity: snapshot.silo_eccentricity,
+            silo_hopper_angle_deg: snapshot.silo_hopper_angle_deg,
+            bridge_curve_radius: snapshot.bridge_curve_radius,
+            fire_load_basis: snapshot.fire_load_basis,
             floors: snapshot.floors.clone(),
             self_weight_elements: snapshot.self_weight_elements.clone(),
             roofs: snapshot.roofs.clone(),
             wind_faces: snapshot.wind_faces.clone(),
             accidental_cases: snapshot.accidental_cases.clone(),
+            bridge_lanes: snapshot.bridge_lanes.clone(),
+            construction_stages: snapshot.construction_stages.clone(),
+            roof_surfaces: snapshot.roof_surfaces.clone(),
+            placements: snapshot.placements.clone(),
+            special_vehicles: snapshot.special_vehicles.clone(),
+            wind_bridges: snapshot.wind_bridges.clone(),
+            dynamic_elements: snapshot.dynamic_elements.clone(),
+            impact_actions: snapshot.impact_actions.clone(),
+            internal_explosions: snapshot.internal_explosions.clone(),
+            thermal_sections: snapshot.thermal_sections.clone(),
+            cases: snapshot.cases.clone(),
+            helicopter_landings: snapshot.helicopter_landings.clone(),
+            tie_runs: snapshot.tie_runs.clone(),
+            construction_loads: snapshot.construction_loads.clone(),
+            falling_loads: snapshot.falling_loads.clone(),
+            execution_imperfections: snapshot.execution_imperfections.clone(),
+            derailment_cases: snapshot.derailment_cases.clone(),
+            crane_hoists: snapshot.crane_hoists.clone(),
+            footbridges: snapshot.footbridges.clone(),
+            rail_dynamics: snapshot.rail_dynamics.clone(),
+            load_dispersals: snapshot.load_dispersals.clone(),
+            bulk_solids: snapshot.bulk_solids.clone(),
+            rotating_machines: snapshot.rotating_machines.clone(),
+            dust_explosions: snapshot.dust_explosions.clone(),
+            rail_load_groups: snapshot.rail_load_groups.clone(),
+            rail_derailments: snapshot.rail_derailments.clone(),
+            fatigue_models: snapshot.fatigue_models.clone(),
+            support_collisions: snapshot.support_collisions.clone(),
+            local_fires: snapshot.local_fires.clone(),
+            snow_guards: snapshot.snow_guards.clone(),
         }
     }
 }

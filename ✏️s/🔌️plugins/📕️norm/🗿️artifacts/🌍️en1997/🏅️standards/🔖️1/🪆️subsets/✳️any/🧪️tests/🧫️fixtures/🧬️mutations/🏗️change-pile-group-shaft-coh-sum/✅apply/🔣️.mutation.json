@@ -1,0 +1,5 @@
+{
+  "mutation": "changePileGroupShaftCohSum",
+  "id": "group-G1",
+  "newShaftCohesionSum": 800000.0
+}

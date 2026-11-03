@@ -1,0 +1,4 @@
+type ChangeAnchorFUk {
+  anchorId: String!
+  newFUk: Float!
+}

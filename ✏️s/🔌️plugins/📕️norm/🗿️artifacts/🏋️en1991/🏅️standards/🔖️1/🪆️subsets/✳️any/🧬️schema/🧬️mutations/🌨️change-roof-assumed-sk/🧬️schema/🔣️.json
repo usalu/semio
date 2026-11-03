@@ -5,26 +5,26 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "index",
+    "id",
     "newAssumedSk"
   ],
   "properties": {
-    "index": {
-      "type": "integer",
-      "minimum": 0,
+    "id": {
+      "type": "string",
       "x-semio-ui": {
-        "widget": "stepper",
-        "role": "value",
+        "widget": "reference",
+        "role": "target",
         "label": {
           "en": "Roof",
           "de": "Dach"
         },
         "description": {
-          "en": "Zero-based position of the roof in its list.",
-          "de": "Nullbasierte Position des Dachs in der Liste."
+          "en": "The roof this mutation addresses, by id.",
+          "de": "Das adressierte Element (Dach), per Kennung."
         },
-        "step": 1,
-        "precision": 0,
+        "ref": {
+          "kind": "roof"
+        },
         "group": "target",
         "order": 10
       }

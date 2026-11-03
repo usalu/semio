@@ -1,0 +1,7 @@
+{
+  "ChangeConfinedDepth": {
+    "wallId": "wall-north",
+    "id": "column-1",
+    "newDepthM": 0.24
+  }
+}

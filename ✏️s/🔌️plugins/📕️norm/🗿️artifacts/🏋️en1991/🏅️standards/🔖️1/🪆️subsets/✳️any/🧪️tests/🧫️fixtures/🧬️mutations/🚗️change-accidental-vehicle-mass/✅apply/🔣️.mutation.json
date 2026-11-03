@@ -1,0 +1,6 @@
+{
+  "ChangeAccidentalVehicleMass": {
+    "id": "impact-1",
+    "newVehicleMass": 30000.0
+  }
+}

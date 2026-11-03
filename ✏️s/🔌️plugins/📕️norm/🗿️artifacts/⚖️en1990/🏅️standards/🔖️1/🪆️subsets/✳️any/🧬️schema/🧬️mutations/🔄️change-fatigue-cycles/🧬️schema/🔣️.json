@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/mutation/change-fatigue-cycles/schema.json",
+  "title": "ChangeFatigueCycles",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newCycles"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeFatigueCycles"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Fatigue spectrum",
+          "de": "Ermüdungskollektiv"
+        },
+        "description": {
+          "en": "The fatigue spectrum this mutation addresses, by id.",
+          "de": "Das adressierte Element (Ermüdungskollektiv), per Kennung."
+        },
+        "ref": {
+          "kind": "fatigue-spectrum"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newCycles": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Cycles n",
+          "de": "Lastwechsel n"
+        },
+        "widget": "stepper",
+        "description": {
+          "en": "Number of cycles of this bin in the design working life.",
+          "de": "Anzahl der Lastwechsel dieser Klasse in der Nutzungsdauer."
+        },
+        "unit": "1",
+        "precision": 0,
+        "step": 10000,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

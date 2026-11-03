@@ -1,0 +1,5 @@
+{
+  "mutation": "changeBridgeBallastDepth",
+  "id": "bri-1",
+  "newBallastDepth": 2.0
+}

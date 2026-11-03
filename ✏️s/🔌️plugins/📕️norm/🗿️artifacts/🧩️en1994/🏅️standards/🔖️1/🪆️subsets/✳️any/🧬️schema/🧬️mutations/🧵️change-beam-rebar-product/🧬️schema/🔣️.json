@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-beam-rebar-product/schema.json",
+  "title": "ChangeBeamRebarProduct",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newReinforcementProduct"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Composite beam",
+          "de": "Verbundträger"
+        },
+        "description": {
+          "en": "The composite beam this mutation addresses, by id.",
+          "de": "Das adressierte Element (Verbundträger), per Kennung."
+        },
+        "ref": {
+          "kind": "beam"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newReinforcementProduct": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/snapshot.json#/$defs/ReinforcementProduct",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Reinforcement product of the beam",
+          "de": "Bewehrungsprodukt des Trägers"
+        },
+        "group": "beam",
+        "order": 20,
+        "description": {
+          "en": "hot_rolled or cold_worked hogging reinforcement (EN 1992-1-2 Table 3.2a).",
+          "de": "hot_rolled (warmgewalzt) oder cold_worked (kaltverformt) nach EN 1992-1-2 Tabelle 3.2a."
+        }
+      }
+    }
+  }
+}

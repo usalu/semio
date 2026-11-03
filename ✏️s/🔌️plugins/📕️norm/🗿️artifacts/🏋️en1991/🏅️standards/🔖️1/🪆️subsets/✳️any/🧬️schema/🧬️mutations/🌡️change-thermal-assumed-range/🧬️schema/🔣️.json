@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-thermal-assumed-range/schema.json",
+  "title": "ChangeThermalAssumedRange",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newAssumedRange"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Thermal section",
+          "de": "Temperaturquerschnitt"
+        },
+        "description": {
+          "en": "The thermal section this mutation addresses, by id.",
+          "de": "Das adressierte Element (Temperaturquerschnitt), per Kennung."
+        },
+        "ref": {
+          "kind": "thermal-section"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newAssumedRange": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Assumed movement range of the bearings and joints",
+          "de": "Angenommener Bewegungsbereich der Lager und Fugen"
+        },
+        "widget": "stepper",
+        "unit": "K",
+        "precision": 1,
+        "step": 0.5,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

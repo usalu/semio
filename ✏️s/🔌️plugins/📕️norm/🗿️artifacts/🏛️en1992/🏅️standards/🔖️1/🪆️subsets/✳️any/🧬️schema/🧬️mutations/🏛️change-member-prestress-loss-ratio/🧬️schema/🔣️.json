@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-member-prestress-loss-ratio/schema.json",
+  "title": "ChangeMemberPrestressLossRatio",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "memberId",
+    "newPrestressLossRatio"
+  ],
+  "properties": {
+    "memberId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Member",
+          "de": "Bauteil"
+        },
+        "description": {
+          "en": "The member this mutation addresses, by id.",
+          "de": "Das adressierte Element (Bauteil), per Kennung."
+        },
+        "ref": {
+          "kind": "member"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newPrestressLossRatio": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Prestress losses",
+          "de": "Spannkraftverluste"
+        },
+        "widget": "stepper",
+        "unit": "1",
+        "displayUnit": "%",
+        "displayFactor": 100,
+        "precision": 0,
+        "step": 0.01,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

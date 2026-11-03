@@ -1,0 +1,17 @@
+{
+  "mutation": "insertCase",
+  "index": 99,
+  "case": {
+    "id": "case-durability",
+    "labelEn": "Durability period",
+    "labelDe": "Dauerhaftigkeitszeitraum",
+    "entryId": "E90.04",
+    "numbers": [
+      {
+        "id": "years",
+        "value": 50.0
+      }
+    ],
+    "texts": []
+  }
+}

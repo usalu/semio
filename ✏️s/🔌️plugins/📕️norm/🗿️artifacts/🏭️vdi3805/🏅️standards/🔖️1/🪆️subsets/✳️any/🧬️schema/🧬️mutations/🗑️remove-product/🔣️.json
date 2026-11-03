@@ -7,7 +7,7 @@
   "aggregateVariant": "RemoveProduct",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
-  "binaryTag": 7,
+  "binaryTag": 6,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

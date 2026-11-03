@@ -1,0 +1,25 @@
+[package]
+workspace = "../../../../../../../../../"
+name = "semio-s-artifact-draw-drawing-scene-support"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Drawing scene support: raster, flatten and shared scene errors"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-job = { workspace = true }
+semio-framework-2d = { workspace = true }
+semio-framework-pixels = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-persistent = { workspace = true }
+semio-s-artifact-draw-drawing-geometry = { workspace = true }
+semio-s-artifact-draw-drawing-model = { workspace = true }

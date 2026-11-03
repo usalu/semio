@@ -1,6 +1,7 @@
 //! 📚️ EN 1997 play app panel — examples plus DIN 1054 / EN 1997-1 reference tables.
 
-use semio_s_plugin_norm_app_surface::{CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable};
+use semio_s_plugin_norm_app_surface::{spec_trace_table, CatalogueCell, CatalogueColumn, CatalogueRow, CatalogueTable};
+use semio_s_artifact_norm_en1997_checks::spec_trace::TABLE as SPEC_TRACE;
 use semio_s_artifact_norm_en1997_checks::{part_1, resolve_params, resolve_upl_params, DesignApproach};
 use semio_s_plugin_norm_compliance::{AnnexChoice, ClauseId};
 use semio_framework_ui_locale::LocalizedLabel;
@@ -22,7 +23,7 @@ pub fn definition() -> PanelTabDefinition {
 
 /// 📚️ Normative reference tables (partial factors, UPL/HYD, Annex D bearing factors).
 pub fn reference_tables() -> Vec<CatalogueTable> {
-    vec![partial_factors_table(), upl_hyd_factors_table(), bearing_n_factors_table()]
+    vec![partial_factors_table(), upl_hyd_factors_table(), bearing_n_factors_table(), spec_trace_table(&SPEC_TRACE)]
 }
 
 fn partial_factors_table() -> CatalogueTable {
@@ -53,7 +54,7 @@ fn partial_factors_table() -> CatalogueTable {
                 CatalogueRow {
                     id: (*id).into(),
                     cells: vec![
-                        CatalogueCell::text(format!("{en} / {de}")),
+                        CatalogueCell::localized(en.to_string(), de.to_string()),
                         CatalogueCell::number(p.gamma_g, 2),
                         CatalogueCell::number(p.gamma_q, 2),
                         CatalogueCell::number(p.gamma_r_v, 2),
@@ -93,7 +94,7 @@ fn upl_hyd_factors_table() -> CatalogueTable {
                 CatalogueRow {
                     id: (*id).into(),
                     cells: vec![
-                        CatalogueCell::text(format!("{en} / {de}")),
+                        CatalogueCell::localized(en.to_string(), de.to_string()),
                         CatalogueCell::number(p.gamma_g_stb, 2),
                         CatalogueCell::number(p.gamma_g_dst, 2),
                         CatalogueCell::number(p.gamma_q_dst, 2),

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeWeldRunTJunction",
+  "weldRunId": "weld-1",
+  "newTJunction": true
+}

@@ -44,9 +44,3 @@ semio-framework-async-macros = { workspace = true }
 
 [dependencies.semio-s-artifact-stdio-ifc-declarations]
 path = "../../../../../../../📚️catalog/📦️packages/🦀️rust"
-
-[dependencies.semio-s-artifact-stdio-ifc4-catalog]
-path = "../../📚️catalog/📦️packages/🦀️rust"
-
-[dependencies.semio-s-artifact-stdio-ifc-geometry]
-path = "../../../../../../../📐️geometry/📦️packages/🦀️rust"

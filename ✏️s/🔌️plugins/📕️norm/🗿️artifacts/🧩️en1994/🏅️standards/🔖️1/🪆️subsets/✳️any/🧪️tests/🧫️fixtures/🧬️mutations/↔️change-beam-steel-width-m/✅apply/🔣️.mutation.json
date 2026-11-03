@@ -1,0 +1,6 @@
+{
+  "ChangeBeamSteelWidthM": {
+    "id": "beam-B1",
+    "newWidthM": 0.375
+  }
+}

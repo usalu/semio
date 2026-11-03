@@ -1,0 +1,18 @@
+{
+  "artifact": "en1996",
+  "leaf": {
+    "kindSlug": "wall",
+    "after": "diaphragmStiffnessNPerM",
+    "default": 0.0,
+    "field": {
+      "name": "web_spacing_m",
+      "type": "f64",
+      "unit": "m",
+      "label": {"en": "Web spacing of the shear wall (0 = not given)", "de": "Stegabstand der Schubwand (0 = nicht angegeben)"},
+      "doc": "↔️ Centre-to-centre spacing of the webs of a flanged shear wall; bounds the effective flange overhang (EN 1996-1-1 5.5.3, M-20); 0 = not given, no value is assumed.",
+      "precision": 3,
+      "step": 0.05,
+      "range": [0, 50]
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/remove-uplift-case/schema.json",
+  "title": "RemoveUpliftCase",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "index"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "removeUpliftCase"
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Uplift case",
+          "de": "Aufschwimmfall"
+        },
+        "description": {
+          "en": "Zero-based position of the uplift case in its list.",
+          "de": "Nullbasierte Position von Aufschwimmfall in der Liste."
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
+    }
+  }
+}

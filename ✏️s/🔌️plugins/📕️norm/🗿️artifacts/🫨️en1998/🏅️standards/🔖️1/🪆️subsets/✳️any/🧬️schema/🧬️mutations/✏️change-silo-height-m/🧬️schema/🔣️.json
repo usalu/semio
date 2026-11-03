@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-silo-height-m/schema.json",
+  "title": "ChangeSiloHeightM",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newHeightM"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeSiloHeightM"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Silo",
+          "de": "Silo"
+        },
+        "description": {
+          "en": "The silo this mutation addresses, by id.",
+          "de": "Das adressierte Element (Silo), per Kennung."
+        },
+        "ref": {
+          "kind": "silo"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newHeightM": {
+      "type": "number",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Silo height",
+          "de": "Silohöhe"
+        },
+        "group": "value",
+        "order": 20,
+        "widget": "stepper",
+        "step": 0.001,
+        "precision": 3
+      }
+    }
+  }
+}

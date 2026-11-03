@@ -1,0 +1,788 @@
+{
+  "annex": "De",
+  "reliabilityClass": "RC2",
+  "masonryClass": "Class1",
+  "designSituation": "Persistent",
+  "storeys": 2,
+  "walls": [
+    {
+      "id": "wall-concentrated",
+      "labelEn": "Wall with concentrated beam load",
+      "labelDe": "Wand mit Einzellast aus Träger",
+      "wallType": "LoadBearing",
+      "thicknessM": 0.365,
+      "heightM": 2.75,
+      "lengthM": 5.0,
+      "supportSides": 4,
+      "openings": [],
+      "slabBearingDepthM": 0.12,
+      "eccentricityTopM": 0.02,
+      "eccentricityBottomM": 0.015,
+      "unitGroup": "Group1",
+      "unitMaterial": "Clay",
+      "fBPa": 20000000.0,
+      "unitLengthM": 0.24,
+      "unitWidthM": 0.365,
+      "unitHeightM": 0.113,
+      "mortarType": "GeneralPurpose",
+      "mortarClass": "M10",
+      "mortarStrengthPa": 10000000.0,
+      "bedJointThicknessM": 0.012,
+      "reinforced": false,
+      "asVerticalM2": 0.0,
+      "asHorizontalM2": 0.0,
+      "fYdPa": 0.0,
+      "fireReiMin": 90,
+      "exposure": "Mx1",
+      "mu": 0.4,
+      "densityKgM3": 1800.0,
+      "phiInfinity": 1.5,
+      "isBasement": false,
+      "loadCases": [
+        {
+          "id": "ulsinz",
+          "designSituation": "persistent",
+          "imposedCategory": "a",
+          "gKSlabN": 120000.0,
+          "qKImposedPa": 2000.0,
+          "tributaryAreaM2": 12.5,
+          "slabSpanM": 4.5,
+          "qKSnowPa": 0.0,
+          "qPWindPa": 600.0,
+          "cPe": 0.8,
+          "hKEarthN": 0.0,
+          "concentrated": [
+            {
+              "id": "beam-B",
+              "forceN": 35000.0,
+              "bearingAreaM2": 0.04,
+              "bearingLengthM": 0.2,
+              "distanceA1M": 0.0,
+              "positionM": 1.0
+            }
+          ]
+        },
+        {
+          "id": "uls-snow",
+          "designSituation": "persistent",
+          "imposedCategory": "a",
+          "gKSlabN": 120000.0,
+          "qKImposedPa": 2000.0,
+          "tributaryAreaM2": 12.5,
+          "slabSpanM": 4.5,
+          "qKSnowPa": 1000.0,
+          "qPWindPa": 600.0,
+          "cPe": 0.8,
+          "hKEarthN": 15000.0,
+          "concentrated": [
+            {
+              "id": "beam-C",
+              "forceN": 60000.0,
+              "bearingAreaM2": 0.04,
+              "bearingLengthM": 0.2,
+              "distanceA1M": 0.5,
+              "positionM": 1.0
+            }
+          ]
+        },
+        {
+          "id": "seismic",
+          "designSituation": "seismic",
+          "imposedCategory": "a",
+          "gKSlabN": 120000.0,
+          "qKImposedPa": 2000.0,
+          "tributaryAreaM2": 12.5,
+          "slabSpanM": 4.5,
+          "qKSnowPa": 0.0,
+          "qPWindPa": 600.0,
+          "cPe": 0.8,
+          "hKEarthN": 0.0,
+          "concentrated": [
+            {
+              "id": "beam-B",
+              "forceN": 35000.0,
+              "bearingAreaM2": 0.04,
+              "bearingLengthM": 0.2,
+              "distanceA1M": 0.0,
+              "positionM": 1.0
+            }
+          ]
+        }
+      ],
+      "piers": [],
+      "lintels": [],
+      "ties": [],
+      "prestress": [],
+      "confined": [],
+      "flanges": [],
+      "bars": [],
+      "frostClass": "Exempt",
+      "coverM": 0.03,
+      "deflectionLimit": 250.0,
+      "soilHeightM": 0.0,
+      "soilDensityKgM3": 1800.0,
+      "isothermDepthM": 0.0,
+      "planXM": 0.0,
+      "planYM": 0.0,
+      "planAngleDeg": 0.0,
+      "inPlaneShearN": 0.0,
+      "inPlaneMomentNm": 0.0,
+      "bracingSystem": "Unreinforced",
+      "diaphragmStiffnessNPerM": 0.0,
+      "webSpacingM": 0.0
+    },
+    {
+      "id": "wall-slender-ok",
+      "labelEn": "Slender braced wall",
+      "labelDe": "Schlanke ausgesteifte Wand",
+      "wallType": "LoadBearing",
+      "thicknessM": 0.3,
+      "heightM": 3.0,
+      "lengthM": 4.0,
+      "supportSides": 2,
+      "openings": [],
+      "slabBearingDepthM": 0.12,
+      "eccentricityTopM": 0.02,
+      "eccentricityBottomM": 0.015,
+      "unitGroup": "Group1",
+      "unitMaterial": "Clay",
+      "fBPa": 20000000.0,
+      "unitLengthM": 0.24,
+      "unitWidthM": 0.365,
+      "unitHeightM": 0.113,
+      "mortarType": "GeneralPurpose",
+      "mortarClass": "M10",
+      "mortarStrengthPa": 10000000.0,
+      "bedJointThicknessM": 0.012,
+      "reinforced": false,
+      "asVerticalM2": 0.0,
+      "asHorizontalM2": 0.0,
+      "fYdPa": 0.0,
+      "fireReiMin": 90,
+      "exposure": "Mx1",
+      "mu": 0.4,
+      "densityKgM3": 1800.0,
+      "phiInfinity": 1.5,
+      "isBasement": false,
+      "loadCases": [
+        {
+          "id": "ulsinz",
+          "designSituation": "persistent",
+          "imposedCategory": "a",
+          "gKSlabN": 120000.0,
+          "qKImposedPa": 2000.0,
+          "tributaryAreaM2": 12.5,
+          "slabSpanM": 4.5,
+          "qKSnowPa": 0.0,
+          "qPWindPa": 600.0,
+          "cPe": 0.8,
+          "hKEarthN": 0.0,
+          "concentrated": [
+            {
+              "id": "beam-B",
+              "forceN": 35000.0,
+              "bearingAreaM2": 0.04,
+              "bearingLengthM": 0.2,
+              "distanceA1M": 0.0,
+              "positionM": 1.0
+            }
+          ]
+        },
+        {
+          "id": "uls-snow",
+          "designSituation": "persistent",
+          "imposedCategory": "a",
+          "gKSlabN": 120000.0,
+          "qKImposedPa": 2000.0,
+          "tributaryAreaM2": 12.5,
+          "slabSpanM": 4.5,
+          "qKSnowPa": 1000.0,
+          "qPWindPa": 600.0,
+          "cPe": 0.8,
+          "hKEarthN": 15000.0,
+          "concentrated": [
+            {
+              "id": "beam-C",
+              "forceN": 60000.0,
+              "bearingAreaM2": 0.04,
+              "bearingLengthM": 0.2,
+              "distanceA1M": 0.5,
+              "positionM": 1.0
+            }
+          ]
+        }
+      ],
+      "piers": [],
+      "lintels": [],
+      "ties": [],
+      "prestress": [],
+      "confined": [],
+      "flanges": [],
+      "bars": [],
+      "frostClass": "Exempt",
+      "coverM": 0.03,
+      "deflectionLimit": 250.0,
+      "soilHeightM": 0.0,
+      "soilDensityKgM3": 1800.0,
+      "isothermDepthM": 0.0,
+      "planXM": 0.0,
+      "planYM": 3.0,
+      "planAngleDeg": 0.0,
+      "inPlaneShearN": 0.0,
+      "inPlaneMomentNm": 0.0,
+      "bracingSystem": "Unreinforced",
+      "diaphragmStiffnessNPerM": 0.0,
+      "webSpacingM": 0.0
+    },
+    {
+      "id": "wall-a",
+      "labelEn": "Reinforced wall with window",
+      "labelDe": "Bewehrte Wand mit Fenster",
+      "wallType": "Shear",
+      "thicknessM": 0.365,
+      "heightM": 2.75,
+      "lengthM": 5.0,
+      "supportSides": 4,
+      "openings": [
+        {
+          "id": "win-1",
+          "widthM": 1.2,
+          "heightM": 1.4,
+          "sillHeightM": 0.9,
+          "positionM": 0.8
+        }
+      ],
+      "slabBearingDepthM": 0.12,
+      "eccentricityTopM": 0.02,
+      "eccentricityBottomM": 0.015,
+      "unitGroup": "Group1",
+      "unitMaterial": "Clay",
+      "fBPa": 20000000.0,
+      "unitLengthM": 0.24,
+      "unitWidthM": 0.365,
+      "unitHeightM": 0.113,
+      "mortarType": "GeneralPurpose",
+      "mortarClass": "M10",
+      "mortarStrengthPa": 10000000.0,
+      "bedJointThicknessM": 0.012,
+      "reinforced": true,
+      "asVerticalM2": 0.001,
+      "asHorizontalM2": 0.0004,
+      "fYdPa": 435000000.0,
+      "fireReiMin": 90,
+      "exposure": "Mx1",
+      "mu": 0.4,
+      "densityKgM3": 1800.0,
+      "phiInfinity": 1.5,
+      "isBasement": false,
+      "loadCases": [
+        {
+          "id": "ulsinz",
+          "designSituation": "persistent",
+          "imposedCategory": "a",
+          "gKSlabN": 120000.0,
+          "qKImposedPa": 2000.0,
+          "tributaryAreaM2": 12.5,
+          "slabSpanM": 4.5,
+          "qKSnowPa": 0.0,
+          "qPWindPa": 600.0,
+          "cPe": 0.8,
+          "hKEarthN": 0.0,
+          "concentrated": [
+            {
+              "id": "beam-B",
+              "forceN": 35000.0,
+              "bearingAreaM2": 0.04,
+              "bearingLengthM": 0.2,
+              "distanceA1M": 0.0,
+              "positionM": 1.0
+            }
+          ]
+        },
+        {
+          "id": "uls-snow",
+          "designSituation": "persistent",
+          "imposedCategory": "a",
+          "gKSlabN": 120000.0,
+          "qKImposedPa": 2000.0,
+          "tributaryAreaM2": 12.5,
+          "slabSpanM": 4.5,
+          "qKSnowPa": 1000.0,
+          "qPWindPa": 600.0,
+          "cPe": 0.8,
+          "hKEarthN": 15000.0,
+          "concentrated": [
+            {
+              "id": "beam-C",
+              "forceN": 60000.0,
+              "bearingAreaM2": 0.04,
+              "bearingLengthM": 0.2,
+              "distanceA1M": 0.5,
+              "positionM": 1.0
+            }
+          ]
+        }
+      ],
+      "piers": [],
+      "lintels": [
+        {
+          "id": "lintel-1",
+          "positionM": 0.6,
+          "spanM": 1.4,
+          "depthM": 0.25,
+          "bearingLengthM": 0.25
+        }
+      ],
+      "ties": [],
+      "prestress": [],
+      "confined": [],
+      "flanges": [],
+      "bars": [
+        {
+          "id": "bar-shear",
+          "kind": "Shear",
+          "diameterM": 0.008,
+          "lengthM": 0.5,
+          "spacingM": 0.4
+        }
+      ],
+      "frostClass": "Exempt",
+      "coverM": 0.03,
+      "deflectionLimit": 250.0,
+      "soilHeightM": 0.0,
+      "soilDensityKgM3": 1800.0,
+      "isothermDepthM": 0.0,
+      "planXM": 0.0,
+      "planYM": 6.0,
+      "planAngleDeg": 0.0,
+      "inPlaneShearN": 0.0,
+      "inPlaneMomentNm": 0.0,
+      "bracingSystem": "Reinforced",
+      "diaphragmStiffnessNPerM": 1000000000000.0,
+      "webSpacingM": 0.0
+    },
+    {
+      "id": "wall-b",
+      "labelEn": "Second bracing wall",
+      "labelDe": "Zweite Aussteifungswand",
+      "wallType": "Shear",
+      "thicknessM": 0.365,
+      "heightM": 2.75,
+      "lengthM": 4.0,
+      "supportSides": 4,
+      "openings": [],
+      "slabBearingDepthM": 0.12,
+      "eccentricityTopM": 0.02,
+      "eccentricityBottomM": 0.015,
+      "unitGroup": "Group1",
+      "unitMaterial": "Clay",
+      "fBPa": 20000000.0,
+      "unitLengthM": 0.24,
+      "unitWidthM": 0.365,
+      "unitHeightM": 0.113,
+      "mortarType": "GeneralPurpose",
+      "mortarClass": "M10",
+      "mortarStrengthPa": 10000000.0,
+      "bedJointThicknessM": 0.012,
+      "reinforced": true,
+      "asVerticalM2": 0.001,
+      "asHorizontalM2": 0.0004,
+      "fYdPa": 435000000.0,
+      "fireReiMin": 90,
+      "exposure": "Mx1",
+      "mu": 0.4,
+      "densityKgM3": 1800.0,
+      "phiInfinity": 1.5,
+      "isBasement": false,
+      "loadCases": [
+        {
+          "id": "ulsinz",
+          "designSituation": "persistent",
+          "imposedCategory": "a",
+          "gKSlabN": 120000.0,
+          "qKImposedPa": 2000.0,
+          "tributaryAreaM2": 12.5,
+          "slabSpanM": 4.5,
+          "qKSnowPa": 0.0,
+          "qPWindPa": 600.0,
+          "cPe": 0.8,
+          "hKEarthN": 0.0,
+          "concentrated": [
+            {
+              "id": "beam-B",
+              "forceN": 35000.0,
+              "bearingAreaM2": 0.04,
+              "bearingLengthM": 0.2,
+              "distanceA1M": 0.0,
+              "positionM": 1.0
+            }
+          ]
+        },
+        {
+          "id": "uls-snow",
+          "designSituation": "persistent",
+          "imposedCategory": "a",
+          "gKSlabN": 120000.0,
+          "qKImposedPa": 2000.0,
+          "tributaryAreaM2": 12.5,
+          "slabSpanM": 4.5,
+          "qKSnowPa": 1000.0,
+          "qPWindPa": 600.0,
+          "cPe": 0.8,
+          "hKEarthN": 15000.0,
+          "concentrated": [
+            {
+              "id": "beam-C",
+              "forceN": 60000.0,
+              "bearingAreaM2": 0.04,
+              "bearingLengthM": 0.2,
+              "distanceA1M": 0.5,
+              "positionM": 1.0
+            }
+          ]
+        }
+      ],
+      "piers": [],
+      "lintels": [],
+      "ties": [],
+      "prestress": [],
+      "confined": [],
+      "flanges": [],
+      "bars": [],
+      "frostClass": "Exempt",
+      "coverM": 0.03,
+      "deflectionLimit": 250.0,
+      "soilHeightM": 0.0,
+      "soilDensityKgM3": 1800.0,
+      "isothermDepthM": 0.0,
+      "planXM": 0.0,
+      "planYM": 9.0,
+      "planAngleDeg": 0.0,
+      "inPlaneShearN": 0.0,
+      "inPlaneMomentNm": 0.0,
+      "bracingSystem": "Reinforced",
+      "diaphragmStiffnessNPerM": 1000000000000.0,
+      "webSpacingM": 0.0
+    },
+    {
+      "id": "wall-confined",
+      "labelEn": "Confined shear wall with piers and prestress",
+      "labelDe": "Eingefasste Schubwand mit Pfeilern und Vorspannung",
+      "wallType": "Shear",
+      "thicknessM": 0.365,
+      "heightM": 2.75,
+      "lengthM": 4.0,
+      "supportSides": 4,
+      "openings": [],
+      "slabBearingDepthM": 0.12,
+      "eccentricityTopM": 0.02,
+      "eccentricityBottomM": 0.015,
+      "unitGroup": "Group1",
+      "unitMaterial": "Clay",
+      "fBPa": 20000000.0,
+      "unitLengthM": 0.24,
+      "unitWidthM": 0.365,
+      "unitHeightM": 0.113,
+      "mortarType": "GeneralPurpose",
+      "mortarClass": "M10",
+      "mortarStrengthPa": 10000000.0,
+      "bedJointThicknessM": 0.012,
+      "reinforced": true,
+      "asVerticalM2": 0.001,
+      "asHorizontalM2": 0.0004,
+      "fYdPa": 435000000.0,
+      "fireReiMin": 90,
+      "exposure": "Mx1",
+      "mu": 0.4,
+      "densityKgM3": 1800.0,
+      "phiInfinity": 1.5,
+      "isBasement": false,
+      "loadCases": [
+        {
+          "id": "ulsinz",
+          "designSituation": "persistent",
+          "imposedCategory": "a",
+          "gKSlabN": 120000.0,
+          "qKImposedPa": 2000.0,
+          "tributaryAreaM2": 12.5,
+          "slabSpanM": 4.5,
+          "qKSnowPa": 0.0,
+          "qPWindPa": 600.0,
+          "cPe": 0.8,
+          "hKEarthN": 0.0,
+          "concentrated": [
+            {
+              "id": "beam-B",
+              "forceN": 35000.0,
+              "bearingAreaM2": 0.04,
+              "bearingLengthM": 0.2,
+              "distanceA1M": 0.0,
+              "positionM": 1.0
+            }
+          ]
+        },
+        {
+          "id": "uls-snow",
+          "designSituation": "persistent",
+          "imposedCategory": "a",
+          "gKSlabN": 120000.0,
+          "qKImposedPa": 2000.0,
+          "tributaryAreaM2": 12.5,
+          "slabSpanM": 4.5,
+          "qKSnowPa": 1000.0,
+          "qPWindPa": 600.0,
+          "cPe": 0.8,
+          "hKEarthN": 15000.0,
+          "concentrated": [
+            {
+              "id": "beam-C",
+              "forceN": 60000.0,
+              "bearingAreaM2": 0.04,
+              "bearingLengthM": 0.2,
+              "distanceA1M": 0.5,
+              "positionM": 1.0
+            }
+          ]
+        }
+      ],
+      "piers": [
+        {
+          "id": "pier-1",
+          "positionM": 0.0,
+          "widthM": 0.9
+        },
+        {
+          "id": "pier-2",
+          "positionM": 2.7,
+          "widthM": 0.9
+        }
+      ],
+      "lintels": [],
+      "ties": [
+        {
+          "id": "tie-1",
+          "kind": "WallTie",
+          "positionM": 1.0,
+          "levelM": 1.0,
+          "capacityN": 5000.0
+        },
+        {
+          "id": "tie-2",
+          "kind": "RingTie",
+          "positionM": 2.0,
+          "levelM": 2.75,
+          "capacityN": 40000.0
+        }
+      ],
+      "prestress": [
+        {
+          "id": "ps-1",
+          "forceN": 60000.0,
+          "areaM2": 0.0004,
+          "fPkPa": 1770000000.0,
+          "positionM": 2.0,
+          "eccentricityM": 0.05,
+          "lossRatio": 0.15
+        }
+      ],
+      "confined": [
+        {
+          "id": "conf-1",
+          "positionM": 0.5,
+          "widthM": 0.25,
+          "depthM": 0.3,
+          "asM2": 0.0002
+        }
+      ],
+      "flanges": [
+        {
+          "id": "fl-1",
+          "lengthM": 0.9,
+          "thicknessM": 0.365,
+          "positionM": 4.0
+        }
+      ],
+      "bars": [],
+      "frostClass": "Exempt",
+      "coverM": 0.03,
+      "deflectionLimit": 250.0,
+      "soilHeightM": 1.0,
+      "soilDensityKgM3": 1800.0,
+      "isothermDepthM": 0.0,
+      "planXM": 0.0,
+      "planYM": 12.0,
+      "planAngleDeg": 0.0,
+      "inPlaneShearN": 20000.0,
+      "inPlaneMomentNm": 30000.0,
+      "bracingSystem": "Confined",
+      "diaphragmStiffnessNPerM": 5000000000.0,
+      "webSpacingM": 0.0
+    }
+  ],
+  "placements": [
+    {
+      "id": "place-wall-concentrated",
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "yaw": 0.0
+    },
+    {
+      "id": "place-wall-slender-ok",
+      "x": 8.0,
+      "y": 0.0,
+      "z": 0.0,
+      "yaw": 0.0
+    },
+    {
+      "id": "place-wall-a",
+      "x": 16.0,
+      "y": 0.0,
+      "z": 0.0,
+      "yaw": 0.0
+    },
+    {
+      "id": "place-wall-b",
+      "x": 24.0,
+      "y": 0.0,
+      "z": 0.0,
+      "yaw": 0.0
+    },
+    {
+      "id": "place-wall-confined",
+      "x": 32.0,
+      "y": 0.0,
+      "z": 0.0,
+      "yaw": 0.0
+    }
+  ],
+  "cases": [
+    {
+      "id": "case-m-44",
+      "labelEn": "Prestressed masonry",
+      "labelDe": "Vorgespanntes Mauerwerk",
+      "entryId": "M-44",
+      "numbers": [
+        {
+          "id": "a_m2",
+          "value": 0.365
+        },
+        {
+          "id": "ap_m2",
+          "value": 0.00014
+        },
+        {
+          "id": "e_pa",
+          "value": 6000000000.0
+        },
+        {
+          "id": "ep_pa",
+          "value": 195000000000.0
+        },
+        {
+          "id": "eps_cs",
+          "value": 0.0003
+        },
+        {
+          "id": "fd_pa",
+          "value": 5957000.0
+        },
+        {
+          "id": "fpk_pa",
+          "value": 1860000000.0
+        },
+        {
+          "id": "fxk1_pa",
+          "value": 200000.0
+        },
+        {
+          "id": "n_ed_n",
+          "value": 300000.0
+        },
+        {
+          "id": "p0_n",
+          "value": 200000.0
+        },
+        {
+          "id": "phi_inf",
+          "value": 1.5
+        },
+        {
+          "id": "rho_relax",
+          "value": 0.025
+        },
+        {
+          "id": "z_m3",
+          "value": 0.06
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-m-45",
+      "labelEn": "Anchorage of reinforcement bars",
+      "labelDe": "Verankerung der Bewehrungsstäbe",
+      "entryId": "M-45",
+      "numbers": [
+        {
+          "id": "diameter_m",
+          "value": 0.012
+        },
+        {
+          "id": "fyd_pa",
+          "value": 435000000.0
+        },
+        {
+          "id": "gamma_m",
+          "value": 1.5
+        },
+        {
+          "id": "provided_m",
+          "value": 1.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-m-95",
+      "labelEn": "Behaviour factor of masonry",
+      "labelDe": "Verhaltensbeiwert Mauerwerk",
+      "entryId": "M-95",
+      "numbers": [
+        {
+          "id": "k_diaphragm_n_m",
+          "value": 50000000.0
+        },
+        {
+          "id": "q",
+          "value": 2.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "system",
+          "value": "confined"
+        }
+      ]
+    }
+  ],
+  "chases": [
+    {
+      "id": "chase-1",
+      "wallId": "wall-a",
+      "kind": "Vertical",
+      "xM": 3.0,
+      "yM": 0.4,
+      "widthM": 0.05,
+      "lengthM": 1.2,
+      "depthM": 0.02
+    }
+  ],
+  "movementJoints": [
+    {
+      "id": "joint-1",
+      "wallId": "wall-a",
+      "positionM": 2.5
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-restraint-torsional-spring/schema.json",
+  "title": "ChangeRestraintTorsionalSpring",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newTorsionalSpring"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Restraint",
+          "de": "Halterung"
+        },
+        "description": {
+          "en": "The restraint this mutation addresses, by id.",
+          "de": "Das adressierte Element (Halterung), per Kennung."
+        },
+        "ref": {
+          "kind": "restraint"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newTorsionalSpring": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Continuous torsional spring c_θ",
+          "de": "Kontinuierliche Drehbettung c_θ"
+        },
+        "widget": "stepper",
+        "unit": "N·m/m",
+        "precision": 1,
+        "step": 100,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

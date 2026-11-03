@@ -1,4 +1,5 @@
 syntax = "proto3";
+package semio.s.norm.en1992.mutation.change_design_working_life;
 message ChangeDesignWorkingLife {
-  double newYears = 1;
+  double new_years = 1;
 }

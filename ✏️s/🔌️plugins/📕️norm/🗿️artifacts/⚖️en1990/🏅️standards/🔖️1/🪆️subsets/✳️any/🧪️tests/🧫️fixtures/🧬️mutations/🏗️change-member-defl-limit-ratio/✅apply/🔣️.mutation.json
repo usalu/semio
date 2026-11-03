@@ -1,0 +1,5 @@
+{
+  "mutation": "changeMemberDeflLimitRatio",
+  "id": "beam-B1",
+  "newDeflectionLimitRatio": 500.0
+}

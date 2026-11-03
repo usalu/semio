@@ -17,6 +17,6 @@ pub struct SetField {
 //#region 🔖️Handler
 pub fn handle(payload: &SetField, doc: &ArtifactView<'_, En1991Snapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<En1991Mutation, NoConfigMutation>, Fault> {
     let path = crate::field_meta::flatten_editor_path(&payload.path);
-    semio_s_plugin_norm_app_surface::dispatch_set_field(doc.snapshot, &path, &payload.value_json, |document, edit| semio_s_artifact_norm_en1991_mutations::EDIT_RULES.resolve(document, edit))
+    semio_s_plugin_norm_app_surface::dispatch_set_field(doc.snapshot, &path, &payload.value_json, |document, edit| semio_s_artifact_norm_en1991_mutations::resolve_edit(document, edit))
 }
 //#endregion 🔖️Handler

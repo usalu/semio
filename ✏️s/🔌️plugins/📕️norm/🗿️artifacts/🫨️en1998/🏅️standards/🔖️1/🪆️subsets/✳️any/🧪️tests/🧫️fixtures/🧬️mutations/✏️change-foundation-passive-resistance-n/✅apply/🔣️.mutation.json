@@ -1,0 +1,5 @@
+{
+  "mutation": "changeFoundationPassiveResistanceN",
+  "id": "fd-1",
+  "newPassiveResistanceN": 1000000.0
+}

@@ -1,0 +1,2290 @@
+{
+  "cases": [
+    {
+      "entry": "PF-01",
+      "label": "De da2 bsP",
+      "case": {
+        "annex": "De",
+        "num": {},
+        "text": {
+          "approach": "da2",
+          "situation": "bsP"
+        }
+      }
+    },
+    {
+      "entry": "PF-01",
+      "label": "De da2 bsT",
+      "case": {
+        "annex": "De",
+        "num": {},
+        "text": {
+          "approach": "da2",
+          "situation": "bsT"
+        }
+      }
+    },
+    {
+      "entry": "PF-01",
+      "label": "De da2 bsA",
+      "case": {
+        "annex": "De",
+        "num": {},
+        "text": {
+          "approach": "da2",
+          "situation": "bsA"
+        }
+      }
+    },
+    {
+      "entry": "PF-01",
+      "label": "De da2star bsP",
+      "case": {
+        "annex": "De",
+        "num": {},
+        "text": {
+          "approach": "da2star",
+          "situation": "bsP"
+        }
+      }
+    },
+    {
+      "entry": "PF-01",
+      "label": "De da3 bsP",
+      "case": {
+        "annex": "De",
+        "num": {},
+        "text": {
+          "approach": "da3",
+          "situation": "bsP"
+        }
+      }
+    },
+    {
+      "entry": "PF-01",
+      "label": "De geo3 bsT",
+      "case": {
+        "annex": "De",
+        "num": {},
+        "text": {
+          "approach": "geo3",
+          "situation": "bsT"
+        }
+      }
+    },
+    {
+      "entry": "PF-01",
+      "label": "De da1str bsP",
+      "case": {
+        "annex": "De",
+        "num": {},
+        "text": {
+          "approach": "da1str",
+          "situation": "bsP"
+        }
+      }
+    },
+    {
+      "entry": "PF-01",
+      "label": "En da1str bsP",
+      "case": {
+        "annex": "En",
+        "num": {},
+        "text": {
+          "approach": "da1str",
+          "situation": "bsP"
+        }
+      }
+    },
+    {
+      "entry": "PF-01",
+      "label": "En da1geo bsP",
+      "case": {
+        "annex": "En",
+        "num": {},
+        "text": {
+          "approach": "da1geo",
+          "situation": "bsP"
+        }
+      }
+    },
+    {
+      "entry": "PF-01",
+      "label": "En da2 bsP",
+      "case": {
+        "annex": "En",
+        "num": {},
+        "text": {
+          "approach": "da2",
+          "situation": "bsP"
+        }
+      }
+    },
+    {
+      "entry": "PF-01",
+      "label": "En da3 bsP",
+      "case": {
+        "annex": "En",
+        "num": {},
+        "text": {
+          "approach": "da3",
+          "situation": "bsP"
+        }
+      }
+    },
+    {
+      "entry": "PF-01",
+      "label": "En geo3 bsP",
+      "case": {
+        "annex": "En",
+        "num": {},
+        "text": {
+          "approach": "geo3",
+          "situation": "bsP"
+        }
+      }
+    },
+    {
+      "entry": "PF-01",
+      "label": "En da2 bsA",
+      "case": {
+        "annex": "En",
+        "num": {},
+        "text": {
+          "approach": "da2",
+          "situation": "bsA"
+        }
+      }
+    },
+    {
+      "entry": "RW-01",
+      "label": "EX97-11",
+      "case": {
+        "annex": "De",
+        "num": {
+          "gamma": 19000,
+          "h": 5,
+          "phi_deg": 30,
+          "delta_deg": 20,
+          "q": 10000
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "RW-01",
+      "label": "inclined wall and slope",
+      "case": {
+        "annex": "De",
+        "num": {
+          "gamma": 18000,
+          "h": 4,
+          "phi_deg": 32,
+          "delta_deg": 10,
+          "alpha_deg": 8,
+          "beta_deg": 10,
+          "q": 0
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "RW-02",
+      "label": "cohesive Rankine",
+      "case": {
+        "annex": "De",
+        "num": {
+          "gamma": 19000,
+          "h": 5,
+          "phi_deg": 30,
+          "c": 10000
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "RW-02",
+      "label": "sloped Rankine",
+      "case": {
+        "annex": "De",
+        "num": {
+          "gamma": 18000,
+          "h": 4,
+          "phi_deg": 35,
+          "beta_deg": 15,
+          "z": 3
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "RW-03",
+      "label": "Rankine passive",
+      "case": {
+        "annex": "De",
+        "num": {
+          "gamma": 18000,
+          "t": 2,
+          "phi_deg": 30,
+          "delta_deg": 0,
+          "c": 0,
+          "q": 0
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "RW-03",
+      "label": "curved delta phi/2",
+      "case": {
+        "annex": "De",
+        "num": {
+          "gamma": 18000,
+          "t": 2,
+          "phi_deg": 30,
+          "delta_deg": 15,
+          "c": 5000,
+          "q": 10000,
+          "mobilisation": 0.5
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "RW-03",
+      "label": "curved delta phi",
+      "case": {
+        "annex": "De",
+        "num": {
+          "gamma": 18000,
+          "t": 2,
+          "phi_deg": 30,
+          "delta_deg": 30
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "RW-04",
+      "label": "K0",
+      "case": {
+        "annex": "De",
+        "num": {
+          "phi_deg": 30,
+          "gamma": 18000,
+          "h": 4,
+          "ocr": 2,
+          "beta_deg": 10,
+          "q": 10000
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "RW-05",
+      "label": "water and strip",
+      "case": {
+        "annex": "De",
+        "num": {
+          "h": 6,
+          "ka": 0.3,
+          "gamma": 18000,
+          "gamma_sat": 20000,
+          "z_w": 3,
+          "q": 10000,
+          "strip_q": 50000,
+          "strip_b": 2,
+          "strip_a": 1,
+          "strip_z": 3
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "RW-06",
+      "label": "gravity wall",
+      "case": {
+        "annex": "De",
+        "num": {
+          "b": 3,
+          "w": 300000,
+          "x_w": 1.2,
+          "eah_g": 90000,
+          "arm_g": 1.5,
+          "eah_q": 20000,
+          "arm_q": 2.2,
+          "eav": 20000,
+          "x_v": 2.8,
+          "phi_base_deg": 30
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "RW-07",
+      "label": "propped sheet pile",
+      "case": {
+        "annex": "De",
+        "num": {
+          "h": 4,
+          "gamma": 18000,
+          "phi_deg": 32.5,
+          "delta_a_deg": 10,
+          "delta_p_deg": 0,
+          "q": 5000,
+          "prop_depth": 0.5,
+          "cu_k": 40000,
+          "nc": 5.7
+        },
+        "text": {
+          "kind": "free_earth"
+        }
+      }
+    },
+    {
+      "entry": "RW-07",
+      "label": "cantilever sheet pile",
+      "case": {
+        "annex": "De",
+        "num": {
+          "h": 3,
+          "gamma": 18000,
+          "phi_deg": 32.5,
+          "delta_a_deg": 0
+        },
+        "text": {
+          "kind": "cantilever"
+        }
+      }
+    },
+    {
+      "entry": "RW-08",
+      "label": "Mononobe-Okabe",
+      "case": {
+        "annex": "De",
+        "num": {
+          "gamma": 18000,
+          "h": 5,
+          "phi_deg": 33,
+          "delta_deg": 11,
+          "kh": 0.15,
+          "kv": 0.05
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "RW-09",
+      "label": "reinforced soil",
+      "case": {
+        "annex": "De",
+        "num": {
+          "k": 0.3,
+          "sigma_v": 100000,
+          "s_v": 0.5,
+          "f_star": 0.8,
+          "b": 1
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "RW-10",
+      "label": "traffic",
+      "case": {
+        "annex": "De",
+        "num": {
+          "q_total": 40000,
+          "b": 3,
+          "z": 2,
+          "ka": 0.3
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "GEO-F01",
+      "label": "EX97-01 strip (per metre scaled)",
+      "case": {
+        "annex": "De",
+        "num": {
+          "b": 2,
+          "l": 1000000.0,
+          "d": 1,
+          "v_d": 555000000000.0,
+          "phi_k_deg": 30,
+          "gamma1": 18000,
+          "gamma2": 18000
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "GEO-F01",
+      "label": "EX97-03",
+      "case": {
+        "annex": "En",
+        "num": {
+          "b": 2.5,
+          "l": 4,
+          "d": 1.2,
+          "v_d": 1500000,
+          "mb_d": 450000,
+          "ml_d": 600000,
+          "phi_k_deg": 30,
+          "c_k": 5000,
+          "gamma1": 19000,
+          "gamma2": 19000
+        },
+        "text": {
+          "approach": "da1str"
+        }
+      }
+    },
+    {
+      "entry": "GEO-F01",
+      "label": "EX97-04",
+      "case": {
+        "annex": "En",
+        "num": {
+          "b": 2.5,
+          "l": 4,
+          "d": 1.2,
+          "v_d": 1500000,
+          "hb_d": 200000,
+          "mb_d": 450000,
+          "ml_d": 600000,
+          "phi_k_deg": 30,
+          "c_k": 5000,
+          "gamma1": 19000,
+          "gamma2": 19000
+        },
+        "text": {
+          "approach": "da1str"
+        }
+      }
+    },
+    {
+      "entry": "GEO-F01",
+      "label": "two-way H, tilted base, submerged",
+      "case": {
+        "annex": "De",
+        "num": {
+          "b": 3,
+          "l": 5,
+          "d": 1.5,
+          "alpha_deg": 6,
+          "v_d": 2000000,
+          "hb_d": 150000,
+          "hl_d": 100000,
+          "mb_d": 100000,
+          "phi_k_deg": 34,
+          "c_k": 0,
+          "gamma1": 10000,
+          "gamma2": 18000
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "GEO-F01",
+      "label": "DA1-C2 M2",
+      "case": {
+        "annex": "En",
+        "num": {
+          "b": 2,
+          "l": 2,
+          "d": 1,
+          "v_d": 900000,
+          "phi_k_deg": 30,
+          "c_k": 2000,
+          "gamma1": 18000,
+          "gamma2": 18000
+        },
+        "text": {
+          "approach": "da1geo"
+        }
+      }
+    },
+    {
+      "entry": "GEO-F02",
+      "label": "EX97-02",
+      "case": {
+        "annex": "De",
+        "num": {
+          "b": 3,
+          "l": 3,
+          "d": 1,
+          "v_d": 1000000,
+          "cu_k": 60000,
+          "gamma2": 19000
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "GEO-F02",
+      "label": "undrained inclined",
+      "case": {
+        "annex": "De",
+        "num": {
+          "b": 3,
+          "l": 6,
+          "d": 1,
+          "alpha_deg": 5,
+          "v_d": 1500000,
+          "hb_d": 200000,
+          "cu_k": 50000,
+          "gamma2": 19000
+        },
+        "text": {
+          "situation": "bsT"
+        }
+      }
+    },
+    {
+      "entry": "GEO-F03",
+      "label": "DIN 4017",
+      "case": {
+        "annex": "De",
+        "num": {
+          "b": 2.5,
+          "l": 4,
+          "d": 1.2,
+          "v_d": 1500000,
+          "hb_d": 150000,
+          "mb_d": 300000,
+          "phi_k_deg": 30,
+          "c_k": 5000,
+          "gamma1": 19000,
+          "gamma2": 19000
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "GEO-F04",
+      "label": "EX97-05",
+      "case": {
+        "annex": "De",
+        "num": {
+          "h_g": 100000,
+          "h_q": 80000,
+          "v_k": 800000,
+          "delta_deg": 30
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "GEO-F04",
+      "label": "undrained with passive",
+      "case": {
+        "annex": "De",
+        "num": {
+          "h_g": 50000,
+          "h_q": 20000,
+          "a_eff": 9,
+          "cu_k": 40000,
+          "e_p_k": 60000,
+          "passive_share": 0.5
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "EQU-01",
+      "label": "EX97-06 DE",
+      "case": {
+        "annex": "De",
+        "num": {
+          "m_dst_g": 135000,
+          "m_dst_q": 44000,
+          "m_stb_g": 360000
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "EQU-01",
+      "label": "EX97-06 EN",
+      "case": {
+        "annex": "En",
+        "num": {
+          "m_dst_g": 135000,
+          "m_dst_q": 44000,
+          "m_stb_g": 360000
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "UPL-01",
+      "label": "EX97-07",
+      "case": {
+        "annex": "De",
+        "num": {
+          "g_dst": 30,
+          "g_stb": 33
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "UPL-01",
+      "label": "UPL head",
+      "case": {
+        "annex": "En",
+        "num": {
+          "g_stb": 40000,
+          "head": 3,
+          "r_d": 5000,
+          "q_dst": 2000
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "HYD-01",
+      "label": "EX97-08 DE",
+      "case": {
+        "annex": "De",
+        "num": {
+          "delta_h": 2.5,
+          "l_flow": 5,
+          "gamma_prime": 9.5,
+          "gamma_w": 10
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "HYD-01",
+      "label": "EX97-08 EN",
+      "case": {
+        "annex": "En",
+        "num": {
+          "delta_h": 2.5,
+          "l_flow": 5,
+          "gamma_prime": 9.5,
+          "gamma_w": 10
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "SLS-01",
+      "label": "EX97-09",
+      "case": {
+        "annex": "De",
+        "num": {
+          "sigma0": 200000,
+          "a": 1.5,
+          "h1": 2,
+          "e1": 8000000.0,
+          "h2": 2,
+          "e2": 12000000.0
+        },
+        "text": {
+          "shape": "circle"
+        }
+      }
+    },
+    {
+      "entry": "SLS-01",
+      "label": "rect Newmark",
+      "case": {
+        "annex": "De",
+        "num": {
+          "sigma0": 150000,
+          "b": 3,
+          "l": 4.5,
+          "h1": 1.5,
+          "e1": 10000000.0,
+          "h2": 2,
+          "e2": 20000000.0,
+          "h3": 3,
+          "e3": 40000000.0,
+          "s_lim": 0.03
+        },
+        "text": {
+          "shape": "rect"
+        }
+      }
+    },
+    {
+      "entry": "SLS-01",
+      "label": "strip",
+      "case": {
+        "annex": "De",
+        "num": {
+          "sigma0": 100000,
+          "b": 2,
+          "h1": 2,
+          "e1": 15000000.0,
+          "h2": 2,
+          "e2": 15000000.0
+        },
+        "text": {
+          "shape": "strip"
+        }
+      }
+    },
+    {
+      "entry": "SLS-01",
+      "label": "2:1",
+      "case": {
+        "annex": "De",
+        "num": {
+          "sigma0": 100000,
+          "b": 2,
+          "l": 3,
+          "h1": 2,
+          "e1": 15000000.0
+        },
+        "text": {
+          "shape": "two_to_one"
+        }
+      }
+    },
+    {
+      "entry": "SLS-01B",
+      "label": "circle flexible",
+      "case": {
+        "annex": "De",
+        "num": {
+          "p": 200000,
+          "e_m": 30000000.0,
+          "nu": 0.3,
+          "a": 1.5
+        },
+        "text": {
+          "shape": "circle_flexible"
+        }
+      }
+    },
+    {
+      "entry": "SLS-01B",
+      "label": "circle rigid",
+      "case": {
+        "annex": "De",
+        "num": {
+          "p": 200000,
+          "e_m": 30000000.0,
+          "nu": 0.25,
+          "a": 1.5
+        },
+        "text": {
+          "shape": "circle_rigid"
+        }
+      }
+    },
+    {
+      "entry": "SLS-01B",
+      "label": "influence factor",
+      "case": {
+        "annex": "De",
+        "num": {
+          "p": 200000,
+          "e_m": 30000000.0,
+          "b": 3,
+          "f": 0.9
+        },
+        "text": {
+          "shape": "factor"
+        }
+      }
+    },
+    {
+      "entry": "SLS-02",
+      "label": "EX97-10",
+      "case": {
+        "annex": "De",
+        "num": {
+          "h": 3,
+          "cc": 0.3,
+          "e0": 0.9,
+          "sigma0": 60000,
+          "dsigma": 80000,
+          "cv": 1e-07,
+          "h_dr": 1.5
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "SLS-02",
+      "label": "OC and time",
+      "case": {
+        "annex": "De",
+        "num": {
+          "h": 4,
+          "cc": 0.4,
+          "cs": 0.05,
+          "e0": 1.1,
+          "sigma0": 50000,
+          "dsigma": 100000,
+          "sigma_p": 80000,
+          "cv": 2e-07,
+          "h_dr": 2,
+          "t": 30000000.0
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "SLS-03",
+      "label": "creep",
+      "case": {
+        "annex": "De",
+        "num": {
+          "h": 3,
+          "c_alpha": 0.01,
+          "e0": 0.9,
+          "t1": 10000000.0,
+          "t2": 3000000000.0
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "SLS-04",
+      "label": "tilt",
+      "case": {
+        "annex": "De",
+        "num": {
+          "s_a": 0.03,
+          "s_b": 0.012,
+          "l": 6,
+          "limit_den": 500
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "PILE-01",
+      "label": "EX97-12 DE",
+      "case": {
+        "annex": "De",
+        "num": {
+          "rm1": 1450000.0,
+          "rm2": 1500000.0,
+          "rm3": 1650000.0,
+          "f_cd": 1000000.0
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "PILE-01",
+      "label": "EX97-12 EN stiff",
+      "case": {
+        "annex": "En",
+        "num": {
+          "rm1": 1450000.0,
+          "rm2": 1500000.0,
+          "rm3": 1650000.0,
+          "stiff": 1
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "PILE-01",
+      "label": "n=5",
+      "case": {
+        "annex": "De",
+        "num": {
+          "rm1": 1800000.0,
+          "rm2": 1700000.0,
+          "rm3": 1900000.0,
+          "rm4": 1750000.0,
+          "rm5": 1850000.0
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "PILE-02",
+      "label": "ground tests n=3",
+      "case": {
+        "annex": "De",
+        "num": {
+          "rb1": 400000.0,
+          "rb2": 450000.0,
+          "rb3": 420000.0,
+          "rs1": 900000.0,
+          "rs2": 950000.0,
+          "rs3": 870000.0,
+          "f_cd": 900000.0
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "PILE-02",
+      "label": "n=6 interpolated",
+      "case": {
+        "annex": "En",
+        "num": {
+          "rb1": 400000.0,
+          "rb2": 450000.0,
+          "rb3": 420000.0,
+          "rb4": 410000.0,
+          "rb5": 380000.0,
+          "rb6": 470000.0,
+          "rs1": 900000.0,
+          "rs2": 950000.0,
+          "rs3": 870000.0,
+          "rs4": 910000.0,
+          "rs5": 880000.0,
+          "rs6": 960000.0
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "PILE-03",
+      "label": "tension direct",
+      "case": {
+        "annex": "De",
+        "num": {
+          "rt_k": 600000.0,
+          "g_pile": 80000.0,
+          "f_td": 500000.0
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "PILE-03",
+      "label": "tension tests",
+      "case": {
+        "annex": "En",
+        "num": {
+          "rt1": 500000.0,
+          "rt2": 550000.0,
+          "f_td": 300000.0
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "PILE-04",
+      "label": "Winkler and Broms",
+      "case": {
+        "annex": "De",
+        "num": {
+          "d": 0.6,
+          "h_d": 120000.0,
+          "e": 0.5,
+          "k_s": 15000000.0,
+          "ei": 80000000.0,
+          "y_lim": 0.02,
+          "gamma": 18000,
+          "l": 6,
+          "phi_deg": 32,
+          "row": 2
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "PILE-05",
+      "label": "downdrag",
+      "case": {
+        "annex": "De",
+        "num": {
+          "d": 0.5,
+          "beta": 0.25,
+          "h1": 3,
+          "sv1": 30000.0,
+          "h2": 2,
+          "sv2": 60000.0,
+          "f_cd": 600000.0,
+          "r_c_d": 1200000.0
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "PILE-06",
+      "label": "group",
+      "case": {
+        "annex": "De",
+        "num": {
+          "m": 3,
+          "n": 4,
+          "s": 1.8,
+          "d": 0.5,
+          "v": 6000000.0,
+          "mx": 800000.0,
+          "my": 300000.0,
+          "r_c_d": 700000.0,
+          "block_b": 5,
+          "block_l": 7,
+          "cu_h_sum": 300000.0,
+          "cu_b": 100000.0
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "PILE-07",
+      "label": "buckling",
+      "case": {
+        "annex": "De",
+        "num": {
+          "ei": 40000000.0,
+          "l_eff": 6,
+          "n_ed": 800000.0
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "PILE-08",
+      "label": "dynamic",
+      "case": {
+        "annex": "De",
+        "num": {
+          "rm1": 1500000.0,
+          "rm2": 1600000.0,
+          "rm3": 1550000.0,
+          "rm4": 1450000.0,
+          "rm5": 1650000.0,
+          "rm6": 1500000.0,
+          "f_cd": 900000.0,
+          "eta_h": 0.8,
+          "w": 40000.0,
+          "h_drop": 1.2,
+          "s_set": 0.003,
+          "s_e": 0.012
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "PILE-09",
+      "label": "resistance-settlement",
+      "case": {
+        "annex": "De",
+        "num": {
+          "n": 700000.0,
+          "rs_max": 500000.0,
+          "rb_max": 400000.0,
+          "d": 0.6,
+          "ea": 3000000000.0,
+          "l": 15,
+          "s_lim": 0.02
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "ANC-01",
+      "label": "anchor tests",
+      "case": {
+        "annex": "De",
+        "num": {
+          "ra1": 600000.0,
+          "ra2": 650000.0,
+          "ra3": 620000.0,
+          "a_d": 450000.0
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "ANC-02",
+      "label": "anchor empirical",
+      "case": {
+        "annex": "De",
+        "num": {
+          "d": 0.15,
+          "l_f": 7,
+          "tau_f": 200000.0,
+          "a_d": 500000.0
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "ANC-03",
+      "label": "Kranz",
+      "case": {
+        "annex": "De",
+        "num": {
+          "e_h_d": 200000.0,
+          "theta_deg": 15,
+          "a_k": 190000.0,
+          "t_w": 8,
+          "z_m": 10,
+          "x_m": 9,
+          "gamma": 19000,
+          "phi_deg": 30,
+          "e1": 50000.0,
+          "e2": 120000.0
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "ANC-04",
+      "label": "tendon",
+      "case": {
+        "annex": "De",
+        "num": {
+          "a_d": 500000.0,
+          "p_t_k": 900000.0,
+          "l_free": 6
+        },
+        "text": {
+          "tendon": "strand"
+        }
+      }
+    },
+    {
+      "entry": "DEW-01",
+      "label": "EX97-15",
+      "case": {
+        "annex": "De",
+        "num": {
+          "k": 0.0001,
+          "h_aquifer": 10,
+          "h_well": 6,
+          "r_well": 0.3,
+          "q_well": 0.005
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "DEW-01",
+      "label": "confined Kusakin",
+      "case": {
+        "annex": "De",
+        "num": {
+          "k": 5e-05,
+          "h_aquifer": 12,
+          "h_well": 7,
+          "r_well": 0.25,
+          "thickness": 8
+        },
+        "text": {
+          "aquifer": "confined",
+          "radius": "kusakin"
+        }
+      }
+    },
+    {
+      "entry": "DEW-02",
+      "label": "well group",
+      "case": {
+        "annex": "De",
+        "num": {
+          "k": 0.0001,
+          "h_aquifer": 10,
+          "h_well": 5,
+          "area": 400,
+          "x1": 0,
+          "y1": 0,
+          "qw1": 0.004,
+          "x2": 20,
+          "y2": 0,
+          "qw2": 0.004,
+          "px": 10,
+          "py": 0,
+          "thickness": 10,
+          "r_well": 0.3
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "DEW-03",
+      "label": "drawdown settlement",
+      "case": {
+        "annex": "De",
+        "num": {
+          "delta_h": 3,
+          "h": 5,
+          "e_oed": 20000000.0
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "SLOPE-01",
+      "label": "EX97-13 circle",
+      "case": {
+        "annex": "De",
+        "num": {
+          "r": 6,
+          "arc_deg": 80,
+          "cu_k": 40000,
+          "w": 720000.0,
+          "x_w": 1.5
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "SLOPE-01",
+      "label": "Bishop with water",
+      "case": {
+        "annex": "De",
+        "num": {
+          "h": 6,
+          "beta_deg": 30,
+          "xc": 6,
+          "yc": 10,
+          "r": 11,
+          "gamma": 18000,
+          "gamma_sat": 20000,
+          "phi_k_deg": 30,
+          "c_k": 5000,
+          "gwl_level": 1.5,
+          "q": 10000
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "SLOPE-01B",
+      "label": "Fellenius",
+      "case": {
+        "annex": "De",
+        "num": {
+          "h": 6,
+          "beta_deg": 30,
+          "xc": 6,
+          "yc": 10,
+          "r": 11,
+          "gamma": 18000,
+          "phi_k_deg": 30,
+          "c_k": 5000
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "SLOPE-02",
+      "label": "Janbu",
+      "case": {
+        "annex": "De",
+        "num": {
+          "h": 6,
+          "beta_deg": 30,
+          "xc": 6,
+          "yc": 10,
+          "r": 11,
+          "gamma": 18000,
+          "phi_k_deg": 30,
+          "c_k": 5000
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "SLOPE-03",
+      "label": "EX97-13 dry",
+      "case": {
+        "annex": "De",
+        "num": {
+          "beta_deg": 25,
+          "phi_k_deg": 30
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "SLOPE-03",
+      "label": "seepage",
+      "case": {
+        "annex": "De",
+        "num": {
+          "beta_deg": 20,
+          "phi_k_deg": 32,
+          "gamma": 18000,
+          "gamma_sat": 20000,
+          "seepage": 1
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "SLOPE-03",
+      "label": "c-phi",
+      "case": {
+        "annex": "De",
+        "num": {
+          "beta_deg": 25,
+          "phi_k_deg": 28,
+          "c_k": 5000,
+          "z": 2,
+          "gamma": 18000
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "SLOPE-04",
+      "label": "wedge",
+      "case": {
+        "annex": "De",
+        "num": {
+          "h": 6,
+          "beta_deg": 45,
+          "gamma": 18000,
+          "phi_k_deg": 30,
+          "c_k": 5000
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "G-01",
+      "label": "stress profile",
+      "case": {
+        "annex": "De",
+        "num": {
+          "h1": 2,
+          "gamma1": 18000,
+          "gamma_sat1": 20000,
+          "phi1": 30,
+          "h2": 4,
+          "gamma2": 19000,
+          "gamma_sat2": 21000,
+          "phi2": 34,
+          "z": 5,
+          "z_w": 1.5,
+          "gamma_w": 10000
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "G-02",
+      "label": "EX97-14 mean",
+      "case": {
+        "annex": "De",
+        "num": {
+          "x1": 30,
+          "x2": 32,
+          "x3": 34,
+          "x4": 31,
+          "x5": 33
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "G-02",
+      "label": "local n=12",
+      "case": {
+        "annex": "De",
+        "num": {
+          "x1": 28,
+          "x2": 30,
+          "x3": 26,
+          "x4": 33,
+          "x5": 29,
+          "x6": 31,
+          "x7": 27,
+          "x8": 32,
+          "x9": 30,
+          "x10": 34,
+          "x11": 29,
+          "x12": 31
+        },
+        "text": {
+          "mode": "local"
+        }
+      }
+    },
+    {
+      "entry": "G-02",
+      "label": "known V",
+      "case": {
+        "annex": "De",
+        "num": {
+          "x1": 30,
+          "x2": 32,
+          "x3": 34,
+          "x4": 31,
+          "x5": 33,
+          "v_known": 0.1
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "GI-01",
+      "label": "investigation footing",
+      "case": {
+        "annex": "De",
+        "num": {
+          "b": 3,
+          "gk": 3,
+          "z_have": 5
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "GI-01",
+      "label": "investigation pile",
+      "case": {
+        "annex": "De",
+        "num": {
+          "d_b": 0.8
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "GI-02",
+      "label": "CPT classification",
+      "case": {
+        "annex": "De",
+        "num": {
+          "qc": 5000000.0,
+          "fs": 50000.0,
+          "u2": 100000.0,
+          "a": 0.8,
+          "sigma_v0": 100000.0,
+          "sigma_v0_eff": 60000.0
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "GI-03",
+      "label": "CPT cu",
+      "case": {
+        "annex": "De",
+        "num": {
+          "qt": 2400000.0,
+          "sigma_v0": 60000.0,
+          "nkt": 15
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "GI-04",
+      "label": "CPT phi",
+      "case": {
+        "annex": "De",
+        "num": {
+          "qc": 12000000.0,
+          "sigma_v0_eff": 100000.0
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "GI-05",
+      "label": "CPT Eoed",
+      "case": {
+        "annex": "De",
+        "num": {
+          "qc": 8000000.0,
+          "alpha_e": 4
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "GI-06",
+      "label": "SPT correction",
+      "case": {
+        "annex": "De",
+        "num": {
+          "n": 30,
+          "er": 72,
+          "cb": 1.05,
+          "cs": 1.0,
+          "cr": 0.85,
+          "sigma_v0_eff": 80000.0
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "GI-07",
+      "label": "SPT phi",
+      "case": {
+        "annex": "De",
+        "num": {
+          "n1_60": 20
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "GI-08",
+      "label": "SPT Dr",
+      "case": {
+        "annex": "De",
+        "num": {
+          "n1_60": 24
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "GI-09",
+      "label": "DPH",
+      "case": {
+        "annex": "De",
+        "num": {
+          "n10": 14
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "GI-10",
+      "label": "oedometer",
+      "case": {
+        "annex": "De",
+        "num": {
+          "e1": 1.0,
+          "e2": 0.98,
+          "e3": 0.9,
+          "e4": 0.78,
+          "e5": 0.64,
+          "sigma1": 10000.0,
+          "sigma2": 25000.0,
+          "sigma3": 100000.0,
+          "sigma4": 200000.0,
+          "sigma5": 400000.0,
+          "h_dr": 0.01,
+          "t90": 300
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "GI-11",
+      "label": "triaxial",
+      "case": {
+        "annex": "De",
+        "num": {
+          "p1": 100000.0,
+          "p2": 200000.0,
+          "p3": 300000.0,
+          "q1": 95000.0,
+          "q2": 170000.0,
+          "q3": 250000.0
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "GI-12",
+      "label": "direct shear",
+      "case": {
+        "annex": "De",
+        "num": {
+          "sigma1": 50000.0,
+          "sigma2": 100000.0,
+          "sigma3": 200000.0,
+          "sigma4": 300000.0,
+          "tau1": 40000.0,
+          "tau2": 72000.0,
+          "tau3": 130000.0,
+          "tau4": 185000.0
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "GI-13",
+      "label": "characteristic",
+      "case": {
+        "annex": "De",
+        "num": {
+          "x1": 25,
+          "x2": 26,
+          "x3": 24,
+          "x4": 27
+        },
+        "text": {
+          "mode": "mean"
+        }
+      }
+    },
+    {
+      "entry": "GI-14",
+      "label": "Menard",
+      "case": {
+        "annex": "De",
+        "num": {
+          "p_le": 1200000.0,
+          "e_m": 15000000.0,
+          "k_p": 1.3,
+          "alpha_m": 0.5
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "GI-15",
+      "label": "grain size",
+      "case": {
+        "annex": "De",
+        "num": {
+          "d10": 0.1,
+          "d30": 0.3,
+          "d60": 0.8
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "GI-16",
+      "label": "Thiem",
+      "case": {
+        "annex": "De",
+        "num": {
+          "q": 0.01,
+          "r1": 10,
+          "r2": 40,
+          "h1": 8,
+          "h2": 9.5
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "GEO-F01",
+      "label": "Hansen depth factors",
+      "case": {
+        "annex": "De",
+        "num": {
+          "b": 2.5,
+          "l": 2.5,
+          "d": 1.5,
+          "v_d": 900000,
+          "phi_k_deg": 32,
+          "c_k": 3000,
+          "gamma1": 19000,
+          "gamma2": 19000,
+          "include_depth": 1
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "HYD-01",
+      "label": "filter criteria",
+      "case": {
+        "annex": "De",
+        "num": {
+          "delta_h": 2.5,
+          "l_flow": 5,
+          "gamma_prime": 9.5,
+          "gamma_w": 10,
+          "d15_f": 0.5,
+          "d85_b": 0.2,
+          "d15_b": 0.05
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "GI-17",
+      "label": "direct shear lower bound",
+      "case": {
+        "annex": "De",
+        "num": {
+          "sigma1": 50000.0,
+          "sigma2": 100000.0,
+          "sigma3": 150000.0,
+          "sigma4": 200000.0,
+          "sigma5": 250000.0,
+          "tau1": 46500.0,
+          "tau2": 77000.0,
+          "tau3": 107000.0,
+          "tau4": 138500.0,
+          "tau5": 168000.0,
+          "phi_assumed_deg": 30.0,
+          "c_assumed": 10000.0
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "GI-17",
+      "label": "triaxial lower bound",
+      "case": {
+        "annex": "De",
+        "num": {
+          "p1": 90000.0,
+          "p2": 160000.0,
+          "p3": 235000.0,
+          "p4": 310000.0,
+          "p5": 365000.0,
+          "p6": 440000.0,
+          "q1": 58000.0,
+          "q2": 99000.0,
+          "q3": 148000.0,
+          "q4": 192000.0,
+          "q5": 230000.0,
+          "q6": 270000.0
+        },
+        "text": {
+          "kind": "triaxial"
+        }
+      }
+    },
+    {
+      "entry": "PILE-10",
+      "label": "criterion reached, three tests",
+      "case": {
+        "annex": "De",
+        "num": {
+          "ts1": 0.002,
+          "ts2": 0.005,
+          "ts3": 0.01,
+          "ts4": 0.02,
+          "ts5": 0.04,
+          "ts6": 0.06,
+          "tq1": 400000.0,
+          "tq2": 800000.0,
+          "tq3": 1100000.0,
+          "tq4": 1350000.0,
+          "tq5": 1500000.0,
+          "tq6": 1580000.0,
+          "d": 0.6,
+          "rm1": 1500000.0,
+          "rm2": 1650000.0,
+          "f_cd": 1000000.0
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "PILE-10",
+      "label": "criterion not reached EN",
+      "case": {
+        "annex": "En",
+        "num": {
+          "ts1": 0.002,
+          "ts2": 0.005,
+          "ts3": 0.01,
+          "ts4": 0.02,
+          "ts5": 0.04,
+          "ts6": 0.06,
+          "tq1": 400000.0,
+          "tq2": 800000.0,
+          "tq3": 1100000.0,
+          "tq4": 1350000.0,
+          "tq5": 1500000.0,
+          "tq6": 1580000.0,
+          "d": 0.8,
+          "f_cd": 1000000.0
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "PILE-11",
+      "label": "two profiles",
+      "case": {
+        "annex": "De",
+        "num": {
+          "d": 0.6,
+          "p1_h1": 3.0,
+          "p1_h2": 5.0,
+          "p1_qs1": 40000.0,
+          "p1_qs2": 80000.0,
+          "p1_qb": 3000000.0,
+          "p2_h1": 3.0,
+          "p2_h2": 5.0,
+          "p2_qs1": 35000.0,
+          "p2_qs2": 70000.0,
+          "p2_qb": 2500000.0,
+          "f_cd": 1200000.0
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "HYD-02",
+      "label": "Lane creep rule",
+      "case": {
+        "annex": "De",
+        "num": {
+          "delta_h": 1.0,
+          "gamma_prime": 9500.0,
+          "lv1": 2.0,
+          "lv2": 2.0,
+          "lh1": 12.0,
+          "c_lane": 7.0,
+          "c_bligh": 9.0,
+          "k": 0.0001
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "HYD-02",
+      "label": "sheet pile exit gradient",
+      "case": {
+        "annex": "De",
+        "num": {
+          "delta_h": 2.5,
+          "gamma_prime": 9500.0,
+          "d_embed": 3.0
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "HYD-02",
+      "label": "flow-net exit gradient EN",
+      "case": {
+        "annex": "En",
+        "num": {
+          "delta_h": 2.0,
+          "gamma_prime": 9500.0,
+          "i_exit": 0.4,
+          "k": 2e-05
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "SLOPE-05",
+      "label": "cohesive end planes",
+      "case": {
+        "annex": "De",
+        "num": {
+          "h": 6,
+          "beta_deg": 30,
+          "xc": 6,
+          "yc": 10,
+          "r": 11,
+          "gamma": 18000,
+          "gamma_sat": 20000,
+          "phi_k_deg": 30,
+          "gwl_level": 1.5,
+          "q": 10000,
+          "c_k": 5000,
+          "width": 20
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "SLOPE-05",
+      "label": "wide body, high cohesion",
+      "case": {
+        "annex": "De",
+        "num": {
+          "h": 6,
+          "beta_deg": 30,
+          "xc": 6,
+          "yc": 10,
+          "r": 11,
+          "gamma": 18000,
+          "gamma_sat": 20000,
+          "phi_k_deg": 30,
+          "gwl_level": 1.5,
+          "q": 10000,
+          "c_k": 15000,
+          "width": 60
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "HYD-03",
+      "label": "sheet pile, 9 m layer",
+      "case": {
+        "annex": "De",
+        "num": {
+          "delta_h": 2.0,
+          "d_embed": 3.0,
+          "t_layer": 9.0,
+          "gamma_prime": 9500.0,
+          "k": 0.0001
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "HYD-03",
+      "label": "sheet pile, deep layer EN",
+      "case": {
+        "annex": "En",
+        "num": {
+          "delta_h": 2.0,
+          "d_embed": 3.0,
+          "t_layer": 1000.0,
+          "gamma_prime": 9500.0,
+          "cells": 8
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "RW-11",
+      "label": "heel wall, surcharge",
+      "case": {
+        "annex": "De",
+        "num": {
+          "h": 4.0,
+          "t_base": 0.5,
+          "b": 3.2,
+          "a_toe": 0.6,
+          "t_stem": 0.4,
+          "gamma": 18000.0,
+          "phi_deg": 32.0,
+          "q": 10000.0,
+          "d_toe": 0.5,
+          "sigma_rd": 400000.0
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "RW-11",
+      "label": "heel wall, friction 20 deg EN",
+      "case": {
+        "annex": "En",
+        "num": {
+          "h": 3.0,
+          "t_base": 0.4,
+          "b": 2.4,
+          "a_toe": 0.4,
+          "t_stem": 0.3,
+          "gamma": 19000.0,
+          "phi_deg": 30.0,
+          "delta_deg": 20.0,
+          "phi_base_deg": 28.0
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "RW-12",
+      "label": "anchored wall, free earth, water",
+      "case": {
+        "annex": "De",
+        "num": {
+          "h": 5.0,
+          "gamma": 18000.0,
+          "gamma_sat": 20000.0,
+          "phi_deg": 32.5,
+          "delta_a_deg": 16.0,
+          "delta_p_deg": 0.0,
+          "q": 10000.0,
+          "prop_depth": 1.0,
+          "z_w": 2.5,
+          "z_wf": 5.5,
+          "t_provided": 5.0
+        },
+        "text": {
+          "kind": "free_earth"
+        }
+      }
+    },
+    {
+      "entry": "RW-12",
+      "label": "anchored wall, fixed earth, water",
+      "case": {
+        "annex": "De",
+        "num": {
+          "h": 5.0,
+          "gamma": 18000.0,
+          "gamma_sat": 20000.0,
+          "phi_deg": 32.5,
+          "delta_a_deg": 16.0,
+          "delta_p_deg": 0.0,
+          "q": 10000.0,
+          "prop_depth": 1.0,
+          "z_w": 2.5,
+          "z_wf": 5.5,
+          "t_provided": 6.0
+        },
+        "text": {
+          "kind": "fixed_earth"
+        }
+      }
+    },
+    {
+      "entry": "RW-12",
+      "label": "cantilever sheet pile, dry EN",
+      "case": {
+        "annex": "En",
+        "num": {
+          "h": 3.0,
+          "gamma": 18000.0,
+          "phi_deg": 30.0,
+          "delta_a_deg": 0.0,
+          "delta_p_deg": 0.0,
+          "q": 5000.0
+        },
+        "text": {
+          "kind": "cantilever"
+        }
+      }
+    },
+    {
+      "entry": "EMB-01",
+      "label": "embankment on soft clay",
+      "case": {
+        "annex": "De",
+        "num": {
+          "h": 4.0,
+          "b_crest": 10.0,
+          "n_slope": 2.0,
+          "gamma": 19000.0,
+          "phi_deg": 32.0,
+          "cu_k": 25000.0,
+          "t_soft": 8.0,
+          "e_oed": 3000000.0,
+          "q": 10000.0,
+          "s_lim": 0.5
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "EMB-01",
+      "label": "embankment, high on very soft clay EN",
+      "case": {
+        "annex": "En",
+        "num": {
+          "h": 6.0,
+          "b_crest": 8.0,
+          "n_slope": 2.5,
+          "gamma": 20000.0,
+          "phi_deg": 35.0,
+          "cu_k": 15000.0,
+          "t_soft": 12.0,
+          "e_oed": 2000000.0
+        },
+        "text": {
+          "approach": "da1geo"
+        }
+      }
+    },
+    {
+      "entry": "RW-03",
+      "label": "M2 Rankine passive DA3 with c'",
+      "case": {
+        "annex": "En",
+        "num": {
+          "gamma": 18000,
+          "t": 2,
+          "phi_deg": 30,
+          "delta_deg": 0,
+          "c": 10000,
+          "q": 0
+        },
+        "text": {
+          "approach": "da3"
+        }
+      }
+    },
+    {
+      "entry": "RW-03",
+      "label": "M2 Rankine passive DA1-C2 with surcharge",
+      "case": {
+        "annex": "En",
+        "num": {
+          "gamma": 18000,
+          "t": 2,
+          "phi_deg": 30,
+          "delta_deg": 0,
+          "c": 5000,
+          "q": 20000
+        },
+        "text": {
+          "approach": "da1geo"
+        }
+      }
+    },
+    {
+      "entry": "HYD-03",
+      "label": "heave and internal erosion, shallow embedment EN",
+      "case": {
+        "annex": "En",
+        "num": {
+          "delta_h": 3.0,
+          "d_embed": 2.0,
+          "t_layer": 8.0,
+          "gamma_prime": 9500.0,
+          "cells": 12.0
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "GI-03",
+      "label": "CPT cu, N_kt from the registry row (DE)",
+      "case": {
+        "annex": "De",
+        "num": {
+          "qt": 2400000.0,
+          "sigma_v0": 60000.0
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "GI-03",
+      "label": "CPT cu, N_kt from the registry row (EN)",
+      "case": {
+        "annex": "En",
+        "num": {
+          "qt": 2400000.0,
+          "sigma_v0": 60000.0
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "SLS-05",
+      "label": "laboratory c_v, U(t) and residual",
+      "case": {
+        "annex": "De",
+        "num": {
+          "s_final": 0.12,
+          "h_dr": 2.0,
+          "t90_lab": 1800.0,
+          "h_dr_lab": 0.01,
+          "t": 30000000.0,
+          "s_res_lim": 0.03
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "SLS-05",
+      "label": "direct c_v, t50 and t90",
+      "case": {
+        "annex": "De",
+        "num": {
+          "s_final": 0.08,
+          "h_dr": 1.5,
+          "cv": 1e-07
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "PILE-12",
+      "label": "3x4 group on two layers",
+      "case": {
+        "annex": "De",
+        "num": {
+          "m": 3,
+          "n": 4,
+          "s": 1.8,
+          "d": 0.5,
+          "l": 12.0,
+          "v": 6000000.0,
+          "spread": 0.25,
+          "raft_depth_factor": 0.6666666666666666,
+          "h1": 4.0,
+          "h2": 6.0,
+          "e1": 15000000.0,
+          "e2": 30000000.0,
+          "s_lim": 0.05
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "PILE-12",
+      "label": "2x5 group on three layers, unequal spacing",
+      "case": {
+        "annex": "De",
+        "num": {
+          "m": 2,
+          "n": 5,
+          "s": 2.5,
+          "sy": 3.0,
+          "d": 0.8,
+          "l": 18.0,
+          "v": 9000000.0,
+          "spread": 0.25,
+          "raft_depth_factor": 0.6666666666666666,
+          "h1": 3.0,
+          "h2": 5.0,
+          "h3": 8.0,
+          "e1": 12000000.0,
+          "e2": 20000000.0,
+          "e3": 40000000.0
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "SLOPE-06",
+      "label": "Spencer with water and surcharge",
+      "case": {
+        "annex": "De",
+        "num": {
+          "h": 6,
+          "beta_deg": 30,
+          "xc": 6,
+          "yc": 10,
+          "r": 11,
+          "gamma": 18000,
+          "gamma_sat": 20000,
+          "phi_k_deg": 30,
+          "c_k": 5000,
+          "gwl_level": 1.5,
+          "q": 10000
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "SLOPE-06",
+      "label": "Spencer dry cohesionless",
+      "case": {
+        "annex": "De",
+        "num": {
+          "h": 8,
+          "beta_deg": 26.565,
+          "xc": 9,
+          "yc": 14,
+          "r": 15,
+          "gamma": 19000,
+          "phi_k_deg": 35,
+          "c_k": 0
+        },
+        "text": {}
+      }
+    },
+    {
+      "entry": "SLOPE-06",
+      "label": "Spencer with pore-pressure ratio",
+      "case": {
+        "annex": "De",
+        "num": {
+          "h": 10,
+          "beta_deg": 40,
+          "xc": 5,
+          "yc": 15,
+          "r": 16,
+          "gamma": 18000,
+          "gamma_sat": 19500,
+          "phi_k_deg": 22,
+          "c_k": 12000,
+          "ru": 0.25
+        },
+        "text": {}
+      }
+    }
+  ]
+}

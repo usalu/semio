@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1996/mutation/change-chase-x/schema.json",
+  "title": "ChangeChaseX",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newXM"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Chase",
+          "de": "Schlitz"
+        },
+        "description": {
+          "en": "The chase this mutation addresses, by id.",
+          "de": "Das adressierte Element (Schlitz), per Kennung."
+        },
+        "ref": {
+          "kind": "chase"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newXM": {
+      "type": "number",
+      "minimum": -10000,
+      "maximum": 10000,
+      "x-semio-ui": {
+        "label": {
+          "en": "Chase position x",
+          "de": "Schlitzlage x"
+        },
+        "widget": "stepper",
+        "unit": "m",
+        "step": 0.01,
+        "precision": 3,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

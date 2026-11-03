@@ -1,0 +1,6 @@
+{
+  "ChangeWallLength": {
+    "id": "wall-north",
+    "newLengthM": 6.25
+  }
+}

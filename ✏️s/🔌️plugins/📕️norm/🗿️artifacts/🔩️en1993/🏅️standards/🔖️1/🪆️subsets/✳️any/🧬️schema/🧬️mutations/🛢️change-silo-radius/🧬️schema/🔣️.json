@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-silo-radius/schema.json",
+  "title": "ChangeSiloRadius",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newRadius"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Silo shell",
+          "de": "Silo-Schale"
+        },
+        "description": {
+          "en": "The silo shell this mutation addresses, by id.",
+          "de": "Das adressierte Element (Silo-Schale), per Kennung."
+        },
+        "ref": {
+          "kind": "silo"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newRadius": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Shell radius r",
+          "de": "Schalenradius r"
+        },
+        "widget": "stepper",
+        "unit": "m",
+        "precision": 2,
+        "step": 0.05,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

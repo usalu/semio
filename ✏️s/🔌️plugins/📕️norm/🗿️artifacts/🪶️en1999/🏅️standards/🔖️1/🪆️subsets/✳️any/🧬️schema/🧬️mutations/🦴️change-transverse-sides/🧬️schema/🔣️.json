@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-transverse-sides/schema.json",
+  "title": "ChangeTransverseSides",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "transverseStiffenerId",
+    "newSides"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeTransverseSides"
+    },
+    "transverseStiffenerId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Transverse stiffener",
+          "de": "Quersteife"
+        },
+        "description": {
+          "en": "The transverse stiffener this mutation addresses, by id.",
+          "de": "Das adressierte Element (Quersteife), per Kennung."
+        },
+        "ref": {
+          "kind": "transverse-stiffener"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newSides": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/snapshot.json#/$defs/StiffenerSides",
+      "x-semio-ui": {
+        "label": {
+          "en": "Sides of the web",
+          "de": "Stegseiten"
+        },
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

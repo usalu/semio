@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-uls-equation/schema.json",
+  "title": "ChangeUlsEquation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newValue"
+  ],
+  "properties": {
+    "newValue": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/UlsEquation",
+      "x-semio-ui": {
+        "widget": "select",
+        "role": "value",
+        "label": {
+          "en": "ULS combination equation",
+          "de": "Grundkombination (GZT)"
+        },
+        "description": {
+          "en": "6.10, or 6.10ab for the governing one of EN 1990 equations 6.10a and 6.10b (xi = 0.85).",
+          "de": "6.10 oder 6.10ab für die maßgebende der Gleichungen 6.10a und 6.10b nach EN 1990 (xi = 0,85)."
+        },
+        "group": "combination",
+        "order": 10,
+        "options": [
+          "6.10",
+          "6.10ab"
+        ]
+      }
+    }
+  }
+}

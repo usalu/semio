@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-fastened-joint-count/schema.json",
+  "title": "ChangeFastenedJointCount",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newCount"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "FastenedJoint block",
+          "de": "Befestigungsverbindung"
+        },
+        "description": {
+          "en": "The fastenedJoint block this mutation addresses, by id.",
+          "de": "Das adressierte Element (Befestigungsverbindung), per Kennung."
+        },
+        "ref": {
+          "kind": "fastened-joint"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newCount": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "label": {
+          "en": "Count n",
+          "de": "Anzahl der Verbindungsmittel"
+        },
+        "widget": "stepper",
+        "step": 1,
+        "precision": 0,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

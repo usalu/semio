@@ -1,0 +1,340 @@
+{
+ "artifact": "en1997",
+ "conversions": [
+  {
+   "hosts": [
+    "En1997Snapshot.design_situation",
+    "FoundationLoadCase.design_situation"
+   ],
+   "enum": "SituationChoice",
+   "doc": "⚖️ DIN 1054 design situation BS-P, BS-T or BS-A of a geotechnical check.",
+   "default": "Persistent",
+   "variants": [
+    [
+     "Persistent",
+     [
+      "bsp",
+      "persistent"
+     ],
+     "Persistent (BS-P)",
+     "Ständig (BS-P)"
+    ],
+    [
+     "Transient",
+     [
+      "bst",
+      "transient"
+     ],
+     "Transient (BS-T)",
+     "Vorübergehend (BS-T)"
+    ],
+    [
+     "Accidental",
+     [
+      "bsa",
+      "accidental"
+     ],
+     "Accidental (BS-A)",
+     "Außergewöhnlich (BS-A)"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "En1997Snapshot.design_approach"
+   ],
+   "enum": "ApproachChoice",
+   "doc": "🧭 Design approach of EN 1997-1 2.4.7.3.4 (DA1 combinations, DA2, DA2*, DA3, GEO-3).",
+   "default": "Da1Str",
+   "variants": [
+    [
+     "Da1Str",
+     [
+      "da1str"
+     ],
+     "DA1 Combination 1 (STR)",
+     "DA1 Kombination 1 (STR)"
+    ],
+    [
+     "Da1Geo",
+     [
+      "da1geo"
+     ],
+     "DA1 Combination 2 (GEO)",
+     "DA1 Kombination 2 (GEO)"
+    ],
+    [
+     "Da2",
+     [
+      "da2"
+     ],
+     "DA2 (A1 + M1 + R2)",
+     "DA2 (A1 + M1 + R2)"
+    ],
+    [
+     "Da2Star",
+     [
+      "da2star"
+     ],
+     "DA2* (effects factored)",
+     "DA2* (Beanspruchungen faktorisiert)"
+    ],
+    [
+     "Da3",
+     [
+      "da3"
+     ],
+     "DA3 (A1/A2 + M2 + R3)",
+     "DA3 (A1/A2 + M2 + R3)"
+    ],
+    [
+     "Geo3",
+     [
+      "geo3"
+     ],
+     "GEO-3 / GZ 1C (A2 + M2 + R3)",
+     "GEO-3 / GZ 1C (A2 + M2 + R3)"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "SoilLayer.soil_type"
+   ],
+   "enum": "SoilType",
+   "doc": "🪨 Soil class of a layer (GK1 presumptive bearing table).",
+   "default": "Sand",
+   "variants": [
+    [
+     "Sand",
+     [
+      "sand"
+     ],
+     "Sand",
+     "Sand"
+    ],
+    [
+     "Gravel",
+     [
+      "gravel"
+     ],
+     "Gravel",
+     "Kies"
+    ],
+    [
+     "Clay",
+     [
+      "clay"
+     ],
+     "Clay",
+     "Ton"
+    ],
+    [
+     "Silt",
+     [
+      "silt"
+     ],
+     "Silt",
+     "Schluff"
+    ],
+    [
+     "Fill",
+     [
+      "fill"
+     ],
+     "Fill",
+     "Auffüllung"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "Pile.pile_type"
+   ],
+   "enum": "PileType",
+   "doc": "🏗 Pile installation type (bored, driven or CFA).",
+   "default": "Bored",
+   "variants": [
+    [
+     "Bored",
+     [
+      "bored"
+     ],
+     "Bored pile",
+     "Bohrpfahl"
+    ],
+    [
+     "Driven",
+     [
+      "driven"
+     ],
+     "Driven pile",
+     "Rammpfahl"
+    ],
+    [
+     "Cfa",
+     [
+      "cfa"
+     ],
+     "CFA pile",
+     "Schneckenortbetonpfahl (CFA)"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "RetainingWall.earth_pressure_mode"
+   ],
+   "enum": "EarthPressureMode",
+   "doc": "🧱 Earth pressure regime behind a retaining wall (DIN 4085).",
+   "default": "Active",
+   "variants": [
+    [
+     "Active",
+     [
+      "active"
+     ],
+     "Active (Rankine/Coulomb)",
+     "Aktiv (Rankine/Coulomb)"
+    ],
+    [
+     "AtRest",
+     [
+      "atrest"
+     ],
+     "At rest (Jáky K₀)",
+     "Ruhe (Jáky K₀)"
+    ],
+    [
+     "IncreasedActive",
+     [
+      "increasedactive"
+     ],
+     "Increased active (DIN 4085)",
+     "Erhöht aktiv (DIN 4085)"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "RetainingWall.wall_movement"
+   ],
+   "enum": "WallMovement",
+   "doc": "↔️ Wall movement regime of a retaining wall (DIN 4085).",
+   "default": "Free",
+   "variants": [
+    [
+     "Free",
+     [
+      "free"
+     ],
+     "Free (cantilever, sufficient displacement)",
+     "Frei (Kragarm, ausreichende Verschiebung)"
+    ],
+    [
+     "Rigid",
+     [
+      "rigid"
+     ],
+     "Rigid (little displacement)",
+     "Starr (geringe Verschiebung)"
+    ],
+    [
+     "Propped",
+     [
+      "propped"
+     ],
+     "Propped / supported",
+     "Gestützt"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "Anchor.tendon"
+   ],
+   "enum": "TendonType",
+   "doc": "🔗 Tendon type of a ground anchor.",
+   "default": "Strand",
+   "variants": [
+    [
+     "Strand",
+     [
+      "strand"
+     ],
+     "Strand tendon",
+     "Litzenanker"
+    ],
+    [
+     "Bar",
+     [
+      "bar"
+     ],
+     "Bar tendon",
+     "Stabanker"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "EmbeddedWall.kind"
+   ],
+   "enum": "EmbeddedWallKind",
+   "doc": "🧱 Support condition of an embedded wall.",
+   "default": "FreeEarth",
+   "variants": [
+    [
+     "FreeEarth",
+     [
+      "freeearth"
+     ],
+     "Free earth support",
+     "Freie Auflagerung"
+    ],
+    [
+     "Cantilever",
+     [
+      "cantilever"
+     ],
+     "Cantilever (fixed in the ground)",
+     "Einspannung im Boden"
+    ]
+   ]
+  },
+  {
+   "hosts": [
+    "LabTest.kind"
+   ],
+   "enum": "LabTestKind",
+   "doc": "🧪 Laboratory test kind.",
+   "default": "Oedometer",
+   "variants": [
+    [
+     "Oedometer",
+     [
+      "oedometer"
+     ],
+     "Oedometer test",
+     "Ödometerversuch"
+    ],
+    [
+     "Triaxial",
+     [
+      "triaxial"
+     ],
+     "Triaxial test",
+     "Triaxialversuch"
+    ],
+    [
+     "DirectShear",
+     [
+      "directshear"
+     ],
+     "Direct shear test",
+     "Rahmenscherversuch"
+    ]
+   ]
+  }
+ ],
+ "wire": "camel"
+}

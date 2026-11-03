@@ -11,10 +11,19 @@ fn annex_d_n_factors_phi30() {
 }
 
 #[test]
-fn da2_star_de_gamma_r_v_diverges_from_en() {
-    let de = DesignApproach::Da2.annex_params(AnnexChoice::De).gamma_r_v;
-    let en = DesignApproach::Da2.annex_params(AnnexChoice::En).gamma_r_v;
-    assert!((de / en - 1.4).abs() < 1e-9);
+fn da2_de_resistance_factors_follow_din_1054_per_situation() {
+    for (sit, expected) in [("bsP", 1.40), ("bsT", 1.30), ("bsA", 1.20)] {
+        let de = resolve_params(DesignApproach::Da2, AnnexChoice::De, sit);
+        assert!((de.gamma_r_v - expected).abs() < 1e-12 && (de.gamma_r_e - expected).abs() < 1e-12, "{sit}");
+        assert!((de.gamma_r_h - 1.10).abs() < 1e-12 && (de.gamma_b - 1.10).abs() < 1e-12 && (de.gamma_st - 1.15).abs() < 1e-12);
+    }
+    let en = DesignApproach::Da2.annex_params(AnnexChoice::En);
+    assert!((en.gamma_r_v - 1.4).abs() < 1e-12 && (en.gamma_r_h - 1.1).abs() < 1e-12, "EN R2");
+    let de_t = resolve_params(DesignApproach::Da2, AnnexChoice::De, "bsT");
+    let en_t = resolve_params(DesignApproach::Da2, AnnexChoice::En, "bsT");
+    assert!(de_t.gamma_r_v < en_t.gamma_r_v, "DE BS-T 1.30 below EN 1.40");
+    let a = resolve_params(DesignApproach::Da2, AnnexChoice::De, "bsA");
+    assert!((a.gamma_g - 1.10).abs() < 1e-12 && (a.gamma_q - 1.15).abs() < 1e-12);
 }
 
 #[test]
@@ -25,26 +34,34 @@ fn da2_star_uses_characteristic_soil_and_resistance_factors() {
     assert!((p.gamma_g - 1.35).abs() < 1e-12);
     assert!((p.gamma_q - 1.50).abs() < 1e-12);
     assert!((p.gamma_r_v - 1.40).abs() < 1e-12);
-    let da1 = resolve_params(DesignApproach::Da1Str, AnnexChoice::De, "bsP");
-    assert!(da1.gamma_c > 1.0 + 1e-9, "DA1-C1 factors soil — not used for DA2*");
+    let da1 = resolve_params(DesignApproach::Da1Geo, AnnexChoice::De, "bsP");
+    assert!(da1.gamma_c > 1.0 + 1e-9, "DA1-C2 factors soil (M2) — not used for DA2*");
 }
 
 #[test]
-fn da1_str_en_uses_en_material_factors() {
-    let en = DesignApproach::Da1Str.annex_params(AnnexChoice::En);
-    let de = DesignApproach::Da1Str.annex_params(AnnexChoice::De);
-    assert!((en.gamma_c - 1.25).abs() < 1e-9);
-    assert!((de.gamma_c - 1.4).abs() < 1e-9);
+fn da1_combinations_are_a1_m1_r1_and_a2_m2_r1() {
+    for annex in [AnnexChoice::En, AnnexChoice::De] {
+        let c1 = DesignApproach::Da1Str.annex_params(annex);
+        assert!((c1.gamma_g - 1.35).abs() < 1e-12 && (c1.gamma_q - 1.5).abs() < 1e-12, "A1");
+        assert!((c1.gamma_phi - 1.0).abs() < 1e-12 && (c1.gamma_c - 1.0).abs() < 1e-12 && (c1.gamma_cu - 1.0).abs() < 1e-12, "M1");
+        assert!((c1.gamma_r_v - 1.0).abs() < 1e-12 && (c1.gamma_r_h - 1.0).abs() < 1e-12, "R1");
+        let c2 = DesignApproach::Da1Geo.annex_params(annex);
+        assert!((c2.gamma_g - 1.0).abs() < 1e-12 && (c2.gamma_q - 1.3).abs() < 1e-12, "A2");
+        assert!((c2.gamma_phi - 1.25).abs() < 1e-12 && (c2.gamma_c - 1.25).abs() < 1e-12 && (c2.gamma_cu - 1.4).abs() < 1e-12, "M2");
+        assert!((c2.gamma_r_v - 1.0).abs() < 1e-12, "R1");
+    }
+    let da3 = DesignApproach::Da3.annex_params(AnnexChoice::En);
+    assert!((da3.gamma_g - 1.35).abs() < 1e-12 && (da3.gamma_phi - 1.25).abs() < 1e-12 && (da3.gamma_b - 1.0).abs() < 1e-12, "A1 + M2 + R3");
 }
 
 #[test]
 fn bs_p_vs_bs_t_changes_bearing_utilization() {
     let mut doc = compliant_demo();
     doc.annex = AnnexChoice::De;
-    doc.design_approach = "da2".into();
-    doc.design_situation = "bsP".into();
+    doc.design_approach = semio_s_artifact_norm_en1997_model::ApproachChoice::Da2;
+    doc.design_situation = semio_s_artifact_norm_en1997_model::SituationChoice::Persistent;
     if let Some(lc) = doc.footings[0].load_cases.first_mut() {
-        lc.design_situation = "bsP".into();
+        lc.design_situation = semio_s_artifact_norm_en1997_model::SituationChoice::Persistent;
         lc.vertical_permanent = 900_000.0;
         lc.vertical_variable = 400_000.0;
     }
@@ -54,9 +71,9 @@ fn bs_p_vs_bs_t_changes_bearing_utilization() {
         .find(|c| c.id.contains("bearing"))
         .map(|c| c.utilization)
         .expect("bearing");
-    doc.design_situation = "bsT".into();
+    doc.design_situation = semio_s_artifact_norm_en1997_model::SituationChoice::Transient;
     if let Some(lc) = doc.footings[0].load_cases.first_mut() {
-        lc.design_situation = "bsT".into();
+        lc.design_situation = semio_s_artifact_norm_en1997_model::SituationChoice::Transient;
     }
     let u_t = check_project(&doc)
         .checks
@@ -79,7 +96,7 @@ fn bs_p_vs_bs_t_changes_bearing_utilization() {
 fn passive_earth_pressure_can_change_sliding_pass_fail() {
     let mut doc = compliant_demo();
     doc.annex = AnnexChoice::De;
-    doc.design_approach = "da2".into();
+    doc.design_approach = semio_s_artifact_norm_en1997_model::ApproachChoice::Da2;
     {
         let footing = doc.footings.first_mut().expect("footing");
         footing.width = 2.0;
@@ -95,30 +112,22 @@ fn passive_earth_pressure_can_change_sliding_pass_fail() {
         }
     }
     let layer = doc.layers.first().cloned().expect("layer");
-    let approach = parse_design_approach(&doc.design_approach);
-    let p = resolve_params(approach, doc.annex, &doc.design_situation);
-    let footing = &doc.footings[0];
-    let lc = &footing.load_cases[0];
-    let v_d = p.gamma_g * lc.vertical_permanent + p.gamma_q * lc.vertical_variable;
-    let h_d = p.gamma_g * lc.horizontal_permanent + p.gamma_q * lc.horizontal_variable;
+    let approach = parse_design_approach(doc.design_approach.as_str());
+    let p = resolve_params(approach, doc.annex, doc.design_situation.as_str());
+    let (footing, v_k) = (&doc.footings[0], doc.footings[0].load_cases[0].vertical_permanent);
     let a = footing.width * footing.length;
-    let r_base = part_1::sliding_resistance_with_params(
-        layer.phi_prime_deg, layer.cohesion_effective, v_d, a, &p, 0.0, 0.0, layer.gamma, false,
-    );
-    let r_pass = part_1::sliding_resistance_with_params(
-        layer.phi_prime_deg,
-        layer.cohesion_effective,
-        v_d,
-        a,
-        &p,
-        footing.embedment,
-        footing.length,
-        layer.gamma,
-        true,
-    );
+    let r_base = part_1::sliding_resistance_with_params(layer.phi_prime_deg, layer.cohesion_effective, v_k, a, &p, 0.0, 0.0, layer.gamma, false);
+    let r_pass = part_1::sliding_resistance_with_params(layer.phi_prime_deg, layer.cohesion_effective, v_k, a, &p, footing.embedment, footing.length, layer.gamma, true);
     assert!(r_pass > r_base + 1.0, "passive must increase R_h; base={r_base} pass={r_pass}");
+    let h_target = 0.5 * (r_base + r_pass);
+    {
+        let lc = &mut doc.footings[0].load_cases[0];
+        lc.horizontal_permanent = h_target / p.gamma_g;
+        lc.horizontal_variable = 0.0;
+    }
+    let h_d = p.gamma_g * doc.footings[0].load_cases[0].horizontal_permanent;
     assert!(h_d > r_base, "without passive should be over-utilized; H={h_d} R={r_base}");
-    assert!(h_d <= r_pass, "with DIN 1054 ≤0.5·E_p,k should pass; H={h_d} R={r_pass}");
+    assert!(h_d <= r_pass, "with the secured share of E_p,k it should pass; H={h_d} R={r_pass}");
     let report = check_project(&doc);
     let sliding = report.checks.iter().find(|c| c.id.contains("sliding") && c.id.contains("footing")).expect("sliding");
     assert_eq!(sliding.status, CheckStatus::Pass, "wired check must count passive; u={}", sliding.utilization);
@@ -147,7 +156,9 @@ fn pile_correlation_n2() {
 
 #[test]
 fn investigation_depth_rule() {
-    assert!((semio_s_artifact_norm_en1997_checks::part_2::min_investigation_depth_m(2.5) - 7.5).abs() < 1e-9);
+    use semio_s_artifact_norm_en1997_checks::part_2::min_investigation_depth_m;
+    assert!((min_investigation_depth_m(2.5) - 6.0).abs() < 1e-9, "z_a = max(6 m, 2B)");
+    assert!((min_investigation_depth_m(4.0) - 8.0).abs() < 1e-9);
 }
 
 #[test]
@@ -247,7 +258,7 @@ fn settlement_remedy_targets_governing_layer_id_path() {
 fn field_meta_enum_choices_are_localized() {
     use semio_s_artifact_norm_en1997_checks::lookup_field_meta;
     let meta = lookup_field_meta("designSituation").expect("meta");
-    let choices = meta.choices.expect("choices");
+    let choices = meta.choices().expect("choices");
     assert!(choices.iter().any(|c| c.value == "bsP" && c.label_de.contains("BS-P")));
     assert!(lookup_field_meta("piles[].testProfiles[].shaftResistance").is_some());
     assert!(lookup_field_meta("retainingWalls[].stemThickness").is_some());
@@ -258,7 +269,7 @@ fn field_meta_enum_choices_are_localized() {
 
 #[test]
 fn empty_collections_are_not_applicable() {
-    let mut doc = En1997Snapshot::default();
+    let mut doc = En1997Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De);
     doc.footings.clear();
     doc.piles.clear();
     doc.retaining_walls.clear();

@@ -1,0 +1,456 @@
+{
+  "annex": "De",
+  "projectId": "road-bridge-showcase-failing",
+  "structureKind": "roadBridge",
+  "altitudeM": 200.0,
+  "consequenceClass": 2,
+  "reliabilityClass": "RC2",
+  "designWorkingLifeCategory": 5,
+  "designWorkingLifeYears": 100.0,
+  "referencePeriodYears": 100.0,
+  "supervisionLevel": "dsl3",
+  "inspectionLevel": "il3",
+  "betaComputed": 3.0,
+  "permanents": [
+    {
+      "id": "G-deck-s1",
+      "kind": "gSup",
+      "gk": 100000.0
+    },
+    {
+      "id": "G-deck-s2",
+      "kind": "gSup",
+      "gk": 100000.0
+    },
+    {
+      "id": "G-surf-s1",
+      "kind": "gInf",
+      "gk": 30000.0
+    },
+    {
+      "id": "G-surf-s2",
+      "kind": "gInf",
+      "gk": 30000.0
+    }
+  ],
+  "variables": [
+    {
+      "id": "Q-ts",
+      "category": "road_traffic",
+      "qk": 300000.0,
+      "group": "gr1a"
+    },
+    {
+      "id": "Q-udl",
+      "category": "road_udl",
+      "qk": 90000.0,
+      "group": "gr1a"
+    },
+    {
+      "id": "Q-ped",
+      "category": "road_pedestrian",
+      "qk": 25000.0,
+      "group": "gr1a"
+    },
+    {
+      "id": "Q-sa",
+      "category": "road_single_axle",
+      "qk": 400000.0,
+      "group": "gr1b"
+    },
+    {
+      "id": "Q-brake",
+      "category": "road_horizontal",
+      "qk": 120000.0,
+      "group": "gr2"
+    },
+    {
+      "id": "Q-wind",
+      "category": "wind_bridge",
+      "qk": 50000.0,
+      "group": ""
+    },
+    {
+      "id": "Q-temp",
+      "category": "temperature_bridge",
+      "qk": 40000.0,
+      "group": ""
+    }
+  ],
+  "accidentals": [
+    {
+      "id": "A-impact",
+      "ad": 50000.0
+    }
+  ],
+  "seismics": [
+    {
+      "id": "E-1",
+      "aEk": 60000.0,
+      "importanceClass": "III"
+    }
+  ],
+  "members": [
+    {
+      "id": "span-1",
+      "labelEn": "Span 1 of the continuous deck",
+      "labelDe": "Feld 1 des Durchlauftraegers",
+      "rdStr": 600000.0,
+      "rdGeo": 600000.0,
+      "rdEquStab": 1000000.0,
+      "rdEquDestab": 800000.0,
+      "rdFat": 100000.0,
+      "span": 30.0,
+      "precamber": 0.0,
+      "deflectionW1": 0.04,
+      "deflectionW2": 0.008,
+      "deflectionW3": 0.024,
+      "deflectionLimitRatio": 500.0,
+      "deflectionLimitRatioW3": 300.0,
+      "slsLimitChar": 1400000.0,
+      "slsLimitFreq": 1400000.0,
+      "slsLimitQp": 1400000.0,
+      "vibrationFrequency": 4.2,
+      "vibrationFrequencyMin": 3.0,
+      "frameHeight": 0.0,
+      "frameDrift": 0.0,
+      "storeyHeight": 0.0,
+      "storeyDrift": 0.0,
+      "materialStrengthK": 355000000.0,
+      "materialConversionFactor": 1.0,
+      "materialPartialFactor": 1.0,
+      "materialDesignStrength": 300000000.0,
+      "nominalDimension": 0.0,
+      "dimensionTolerance": 0.0,
+      "designDimension": 0.0,
+      "memberAlphaCr": 0.0,
+      "secondOrderAnalysis": 0.0
+    },
+    {
+      "id": "span-2",
+      "labelEn": "Span 2 of the continuous deck",
+      "labelDe": "Feld 2 des Durchlauftraegers",
+      "rdStr": 600000.0,
+      "rdGeo": 600000.0,
+      "rdEquStab": 1000000.0,
+      "rdEquDestab": 800000.0,
+      "rdFat": 100000.0,
+      "span": 30.0,
+      "precamber": 0.0,
+      "deflectionW1": 0.04,
+      "deflectionW2": 0.008,
+      "deflectionW3": 0.024,
+      "deflectionLimitRatio": 500.0,
+      "deflectionLimitRatioW3": 300.0,
+      "slsLimitChar": 1400000.0,
+      "slsLimitFreq": 1400000.0,
+      "slsLimitQp": 1400000.0,
+      "vibrationFrequency": 4.2,
+      "vibrationFrequencyMin": 3.0,
+      "frameHeight": 0.0,
+      "frameDrift": 0.0,
+      "storeyHeight": 0.0,
+      "storeyDrift": 0.0,
+      "materialStrengthK": 355000000.0,
+      "materialConversionFactor": 1.0,
+      "materialPartialFactor": 1.0,
+      "materialDesignStrength": 300000000.0,
+      "nominalDimension": 0.0,
+      "dimensionTolerance": 0.0,
+      "designDimension": 0.0,
+      "memberAlphaCr": 0.0,
+      "secondOrderAnalysis": 0.0
+    }
+  ],
+  "bridgeSls": [
+    {
+      "id": "sls-s1",
+      "memberId": "span-1",
+      "deckAcceleration": 0.0,
+      "deckAccelerationLimit": 0.0,
+      "deckTwist": 0.0,
+      "deckTwistLimit": 0.0,
+      "bridgeDeflection": 0.06,
+      "bridgeDeflectionLimit": 0.0375,
+      "trackGauge": 0.0,
+      "lineSpeed": 0.0,
+      "ballastDepth": 0.0,
+      "deckMass": 0.0,
+      "naturalFrequency": 4.2,
+      "endRotation": 0.0,
+      "basicWindSpeed": 0.0,
+      "dampingRatio": 0.0
+    },
+    {
+      "id": "sls-s2",
+      "memberId": "span-2",
+      "deckAcceleration": 0.0,
+      "deckAccelerationLimit": 0.0,
+      "deckTwist": 0.0,
+      "deckTwistLimit": 0.0,
+      "bridgeDeflection": 0.03,
+      "bridgeDeflectionLimit": 0.0375,
+      "trackGauge": 0.0,
+      "lineSpeed": 0.0,
+      "ballastDepth": 0.0,
+      "deckMass": 0.0,
+      "naturalFrequency": 4.2,
+      "endRotation": 0.0,
+      "basicWindSpeed": 0.0,
+      "dampingRatio": 0.0
+    }
+  ],
+  "effects": [
+    {
+      "memberId": "span-1",
+      "actionId": "G-deck-s1",
+      "influence": 1.0
+    },
+    {
+      "memberId": "span-1",
+      "actionId": "G-deck-s2",
+      "influence": -0.3333333333333333
+    },
+    {
+      "memberId": "span-1",
+      "actionId": "G-surf-s1",
+      "influence": 1.0
+    },
+    {
+      "memberId": "span-1",
+      "actionId": "G-surf-s2",
+      "influence": -0.3333333333333333
+    },
+    {
+      "memberId": "span-1",
+      "actionId": "Q-ts",
+      "influence": 1.0
+    },
+    {
+      "memberId": "span-1",
+      "actionId": "Q-udl",
+      "influence": 1.0
+    },
+    {
+      "memberId": "span-1",
+      "actionId": "Q-ped",
+      "influence": 1.0
+    },
+    {
+      "memberId": "span-1",
+      "actionId": "Q-sa",
+      "influence": 1.0
+    },
+    {
+      "memberId": "span-1",
+      "actionId": "Q-brake",
+      "influence": 1.0
+    },
+    {
+      "memberId": "span-1",
+      "actionId": "Q-wind",
+      "influence": 1.0
+    },
+    {
+      "memberId": "span-1",
+      "actionId": "Q-temp",
+      "influence": 1.0
+    },
+    {
+      "memberId": "span-1",
+      "actionId": "A-impact",
+      "influence": 1.0
+    },
+    {
+      "memberId": "span-1",
+      "actionId": "E-1",
+      "influence": 1.0
+    },
+    {
+      "memberId": "span-2",
+      "actionId": "G-deck-s2",
+      "influence": 1.0
+    },
+    {
+      "memberId": "span-2",
+      "actionId": "G-deck-s1",
+      "influence": -0.3333333333333333
+    },
+    {
+      "memberId": "span-2",
+      "actionId": "G-surf-s2",
+      "influence": 1.0
+    },
+    {
+      "memberId": "span-2",
+      "actionId": "G-surf-s1",
+      "influence": -0.3333333333333333
+    },
+    {
+      "memberId": "span-2",
+      "actionId": "Q-ts",
+      "influence": 1.0
+    },
+    {
+      "memberId": "span-2",
+      "actionId": "Q-udl",
+      "influence": 1.0
+    },
+    {
+      "memberId": "span-2",
+      "actionId": "Q-ped",
+      "influence": 1.0
+    },
+    {
+      "memberId": "span-2",
+      "actionId": "Q-sa",
+      "influence": 1.0
+    },
+    {
+      "memberId": "span-2",
+      "actionId": "Q-brake",
+      "influence": 1.0
+    },
+    {
+      "memberId": "span-2",
+      "actionId": "Q-wind",
+      "influence": 1.0
+    },
+    {
+      "memberId": "span-2",
+      "actionId": "Q-temp",
+      "influence": 1.0
+    },
+    {
+      "memberId": "span-2",
+      "actionId": "A-impact",
+      "influence": 1.0
+    },
+    {
+      "memberId": "span-2",
+      "actionId": "E-1",
+      "influence": 1.0
+    }
+  ],
+  "fatigueSpectra": [
+    {
+      "id": "FS-1",
+      "memberId": "span-1",
+      "detailCategory": 71000000.0,
+      "stressRange": 60000000.0,
+      "cycles": 6000000.0
+    },
+    {
+      "id": "FS-2",
+      "memberId": "span-1",
+      "detailCategory": 71000000.0,
+      "stressRange": 30000000.0,
+      "cycles": 1000000.0
+    },
+    {
+      "id": "FS-3",
+      "memberId": "span-2",
+      "detailCategory": 71000000.0,
+      "stressRange": 50000000.0,
+      "cycles": 300000.0
+    },
+    {
+      "id": "FS-4",
+      "memberId": "span-2",
+      "detailCategory": 71000000.0,
+      "stressRange": 25000000.0,
+      "cycles": 1500000.0
+    }
+  ],
+  "reliabilityAnalyses": [
+    {
+      "id": "rel-1",
+      "resistanceDistribution": "normal",
+      "resistanceMean": 330000.0,
+      "resistanceSd": 30000.0,
+      "actionDistribution": "normal",
+      "actionMean": 150000.0,
+      "actionSd": 30000.0
+    }
+  ],
+  "testSeries": [
+    {
+      "id": "tes-1",
+      "quantity": "strength",
+      "distribution": "normal",
+      "sampleSize": 10,
+      "mean": 40.0,
+      "stdDev": 4.0,
+      "variationKnown": 0.0,
+      "conversionFactor": 0.9,
+      "required": 40.0,
+      "pairs": "",
+      "theoryVariation": 0.0
+    },
+    {
+      "id": "tes-2",
+      "quantity": "bearing-stiffness",
+      "distribution": "lognormal",
+      "sampleSize": 6,
+      "mean": 12.0,
+      "stdDev": 1.5,
+      "variationKnown": 0.0,
+      "conversionFactor": 0.9,
+      "required": 7.0,
+      "pairs": "",
+      "theoryVariation": 0.0
+    }
+  ],
+  "placements": [
+    {
+      "id": "abutment-A",
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "yaw": 0.0
+    },
+    {
+      "id": "pier-P",
+      "x": 30.0,
+      "y": 0.0,
+      "z": 0.0,
+      "yaw": 0.0
+    },
+    {
+      "id": "abutment-B",
+      "x": 60.0,
+      "y": 0.0,
+      "z": 0.0,
+      "yaw": 0.0
+    }
+  ],
+  "cases": [],
+  "factorOverrides": [],
+  "trafficGroups": [
+    {
+      "id": "TG-ts",
+      "group": "GR1A",
+      "variableId": "Q-ts"
+    },
+    {
+      "id": "TG-udl",
+      "group": "GR1A",
+      "variableId": "Q-udl"
+    },
+    {
+      "id": "TG-ped",
+      "group": "GR1A",
+      "variableId": "Q-ped"
+    },
+    {
+      "id": "TG-sa",
+      "group": "GR1A",
+      "variableId": "Q-sa"
+    },
+    {
+      "id": "TG-brake",
+      "group": "GR2",
+      "variableId": "Q-brake"
+    }
+  ]
+}

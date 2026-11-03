@@ -1,0 +1,41 @@
+{
+  "annex": null,
+  "reliabilityClass": "RC2",
+  "materials": null,
+  "sections": null,
+  "members": null,
+  "connections": null,
+  "fireScenarios": null,
+  "fatigueDetails": null,
+  "coldFormed": null,
+  "shells": null,
+  "placements": null,
+  "weldRuns": {
+    "removed": [],
+    "inserted": [
+      {
+        "index": 1,
+        "row": {
+          "id": "weld-1-2",
+          "memberId": "purlin-1",
+          "elementId": "flange-top",
+          "start": 0.5,
+          "length": 2.0,
+          "offset": 0.0,
+          "throat": 0.004,
+          "process": "mig",
+          "tJunction": false,
+          "direction": "longitudinal",
+          "hazExtent": 0.0
+        }
+      }
+    ],
+    "moved": [],
+    "modified": []
+  },
+  "outlineVertices": null,
+  "fatigueCategories": null,
+  "patchLoads": null,
+  "ringStiffeners": null,
+  "transverseStiffeners": null
+}

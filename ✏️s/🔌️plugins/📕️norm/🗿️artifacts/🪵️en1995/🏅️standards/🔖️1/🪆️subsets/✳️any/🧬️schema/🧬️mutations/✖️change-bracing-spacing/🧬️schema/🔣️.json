@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-bracing-spacing/schema.json",
+  "title": "ChangeBracingSpacing",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "bracingId",
+    "newValue"
+  ],
+  "properties": {
+    "bracingId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Bracing",
+          "de": "Aussteifung"
+        },
+        "description": {
+          "en": "The bracing this mutation addresses.",
+          "de": "Das Element, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "bracing"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newValue": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Spacing of the stabilised members",
+          "de": "Abstand der ausgesteiften Bauteile"
+        },
+        "unit": "m",
+        "displayUnit": "mm",
+        "displayFactor": 1000,
+        "precision": 1,
+        "step": 0.005,
+        "group": "fields",
+        "order": 20
+      }
+    }
+  }
+}

@@ -91,8 +91,12 @@ impl MountedCommandEntry {
     pub fn take(&mut self, parent: &mut Option<String>, children: &mut Vec<String>, seq: u64, grant: RetainedCloneGrant) -> Option<CommandLogEntry> {
         if !self.ready() || grant.maximum_items == 0 || parent.is_some() != self.parent_touched || children.len() != self.child_edit_count { return None; }
         let action_id = self.fields[0].take().unwrap();
-        let mut label = LocalizedLabel::default();
-        for (index, cell) in label.texts_mut().enumerate() { *cell = self.fields[index + 1].take().unwrap(); }
+        let mut cell_index = 1;
+        let label = LocalizedLabel::from_fn(|_, _| {
+            let text = self.fields[cell_index].take().unwrap();
+            cell_index += 1;
+            text
+        });
         let timestamp = self.fields[ENTRY_FIELDS - 1].take().unwrap();
         self.closing = true;
         Some(CommandLogEntry { seq, action_id, label, kind: self.kind, timestamp, edit_id: parent.take(), child_edit_ids: std::mem::take(children), transition_id: None, count: self.count, inverse: None })

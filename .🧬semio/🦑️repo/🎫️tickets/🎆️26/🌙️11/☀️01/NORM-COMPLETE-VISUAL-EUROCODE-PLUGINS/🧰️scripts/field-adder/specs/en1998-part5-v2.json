@@ -1,0 +1,74 @@
+{
+ "artifact": "en1998",
+ "fields": [
+  {
+   "entity": "foundation",
+   "field": "base_friction_angle_deg",
+   "default": 0.0,
+   "unit": "Degree",
+   "en": "Interface friction angle δ of the footing base for the seismic sliding resistance (V − u) tan δ / γ_Rd (0 = no friction credited)",
+   "de": "Sohlreibungswinkel δ der Fundamentsohle für den Gleitwiderstand (V − u) tan δ / γ_Rd (0 = keine Reibung angesetzt)",
+   "ui": {
+    "unit": "°",
+    "precision": 1,
+    "step": 0.5
+   }
+  },
+  {
+   "entity": "foundation",
+   "field": "base_pore_pressure_pa",
+   "default": 0.0,
+   "unit": "Pascal",
+   "en": "Pore water pressure u under the footing base (0 = none)",
+   "de": "Porenwasserdruck u unter der Fundamentsohle (0 = keiner)",
+   "ui": {
+    "unit": "Pa",
+    "displayUnit": "kPa",
+    "displayFactor": 0.001,
+    "precision": 1,
+    "step": 1000
+   }
+  },
+  {
+   "entity": "retaining_wall",
+   "field": "water_height_m",
+   "default": 0.0,
+   "unit": "Metre",
+   "en": "Height of the retained water above the wall base for the hydrostatic and hydrodynamic water pressure (0 = none)",
+   "de": "Höhe des angestauten Wassers über der Wandsohle für den hydrostatischen und hydrodynamischen Wasserdruck (0 = keines)",
+   "ui": {
+    "unit": "m",
+    "precision": 2,
+    "step": 0.05
+   }
+  },
+  {
+   "entity": "retaining_wall",
+   "field": "saturated_gamma",
+   "default": 0.0,
+   "unit": "NewtonPerCubicMetre",
+   "en": "Saturated unit weight γ_sat of the backfill below the water (0 = the soil unit weight γ)",
+   "de": "Wichte unter Wasser γ_sat der Hinterfüllung (0 = Wichte des Bodens γ)",
+   "ui": {
+    "unit": "N/m³",
+    "displayUnit": "kN/m³",
+    "displayFactor": 0.001,
+    "precision": 1,
+    "step": 500
+   }
+  },
+  {
+   "entity": "retaining_wall",
+   "field": "permeability_m_s",
+   "default": 0.0,
+   "unit": "MetrePerSecond",
+   "en": "Permeability k of the backfill (0 = low permeability: the water moves with the soil)",
+   "de": "Durchlässigkeit k der Hinterfüllung (0 = geringe Durchlässigkeit: das Wasser bewegt sich mit dem Boden)",
+   "ui": {
+    "unit": "m/s",
+    "precision": 6,
+    "step": 0.0001
+   }
+  }
+ ]
+}

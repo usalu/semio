@@ -1,0 +1,5 @@
+{
+  "mutation": "changeAnchorDesignForce",
+  "id": "anchor-A1",
+  "newDesignForce": 600000.0
+}

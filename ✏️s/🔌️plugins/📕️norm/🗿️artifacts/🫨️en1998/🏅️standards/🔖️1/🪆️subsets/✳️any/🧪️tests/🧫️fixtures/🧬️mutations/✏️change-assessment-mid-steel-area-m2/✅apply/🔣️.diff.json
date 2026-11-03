@@ -1,0 +1,128 @@
+{
+  "annex": null,
+  "site": null,
+  "buildings": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "bridges": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "assessments": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "",
+        "patch": {
+          "knowledgeLevel": null,
+          "limitState": null,
+          "supportedBuildingId": null,
+          "rKN": null,
+          "gammaEl": null,
+          "chordRotationDemandRad": null,
+          "chordRotationYieldRad": null,
+          "chordRotationUltimateRad": null,
+          "sectionDepthM": null,
+          "sectionWidthM": null,
+          "effectiveDepthM": null,
+          "shearSpanM": null,
+          "axialForceN": null,
+          "tensionSteelAreaM2": null,
+          "compressionSteelAreaM2": null,
+          "barDiameterMm": null,
+          "steelYieldMpa": null,
+          "concreteStrengthMpa": null,
+          "stirrupLegAreaM2": null,
+          "stirrupSpacingM": null,
+          "stirrupYieldMpa": null,
+          "coreWidthM": null,
+          "coreDepthM": null,
+          "restrainedBarCount": null,
+          "restrainedBarSpacingM": null,
+          "diagonalReinforcementRatio": null,
+          "shearCrackingBeforeYield": null,
+          "shearForceDemandN": null
+        }
+      }
+    ]
+  },
+  "silos": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "tanks": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "foundations": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "retainingWalls": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "towers": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "joints": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "bearings": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "piers": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "accelerograms": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "diaphragms": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "soilLayers": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "placements": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  }
+}

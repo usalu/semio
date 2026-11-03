@@ -1,0 +1,5 @@
+{
+  "mutation": "changeAccelerogramSamples",
+  "id": "acc-1",
+  "newSamples": "x"
+}

@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-building-t1-method/schema.json",
+  "title": "ChangeBuildingT1Method",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newT1Method"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeBuildingT1Method"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Building",
+          "de": "Gebäude"
+        },
+        "description": {
+          "en": "The building this mutation addresses, by id.",
+          "de": "Das adressierte Element (Gebäude), per Kennung."
+        },
+        "ref": {
+          "kind": "building"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newT1Method": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/snapshot.json#/$defs/T1Method",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "T₁ method",
+          "de": "T₁-Verfahren"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

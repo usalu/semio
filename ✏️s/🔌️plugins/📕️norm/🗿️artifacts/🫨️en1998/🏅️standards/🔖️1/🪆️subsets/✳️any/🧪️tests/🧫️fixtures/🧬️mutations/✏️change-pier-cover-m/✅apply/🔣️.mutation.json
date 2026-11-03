@@ -1,0 +1,5 @@
+{
+  "mutation": "changePierCoverM",
+  "id": "pier-1",
+  "newCoverM": 1.5
+}

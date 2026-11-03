@@ -1,0 +1,16 @@
+{
+  "InsertImpactAction": {
+    "index": 1,
+    "item": {
+      "id": "impact-action-1-new",
+      "kind": 1,
+      "mass": 1.5,
+      "speed": 1.5,
+      "stiffness": 1.5,
+      "height": 1.5,
+      "x": 1.5,
+      "y": 1.5,
+      "assumedForce": 1.5
+    }
+  }
+}

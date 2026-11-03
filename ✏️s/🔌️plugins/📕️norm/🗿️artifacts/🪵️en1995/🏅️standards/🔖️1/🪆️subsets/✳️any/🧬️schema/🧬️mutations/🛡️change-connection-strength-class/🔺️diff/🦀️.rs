@@ -7,5 +7,5 @@ pub fn diff(payload: &ChangeConnectionStrengthClass, base: &En1995Snapshot) -> p
         return protocol::MutationOutcome::fatal("mutation.invariant", "Unknown connection id.", vec![payload.connection_id.clone()]);
     };
     let connection = &base.connections[idx];
-    protocol::MutationOutcome::new(En1995Diff { connections: En1995ConnectionDelta::modification(&connection.id, En1995ConnectionPatch { strength_class: Some(payload.new_value.clone()), ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(En1995Diff { connections: En1995ConnectionDelta::modification(&connection.id, En1995ConnectionPatch { strength_class: Some(payload.new_value), ..Default::default() }), ..Default::default() })
 }

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeCharacteristicBasisParameter",
+  "id": "characteristic-basis-1",
+  "newParameter": "frictionAngle"
+}

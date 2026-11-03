@@ -1,0 +1,17 @@
+{
+  "InsertTieRun": {
+    "index": 1,
+    "item": {
+      "id": "tie-run-1-new",
+      "kind": 1,
+      "spacing": 1.5,
+      "span": 1.5,
+      "deadLoad": 1.5,
+      "imposedLoad": 1.5,
+      "psi": 1.5,
+      "x": 1.5,
+      "y": 1.5,
+      "providedForce": 1.5
+    }
+  }
+}

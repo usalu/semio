@@ -7642,3 +7642,36 @@ table thead.border-b {
   stroke-dasharray: 5 4;
 }
 /* #endregion SelectionMarquee */
+
+/* #region PlatformPrefs */
+/* ♿️ The platform preferences the React shell reads from the media queries (`ShellHost/🎛️platform-prefs`) and states on its root, so the rendering follows the same four values the native shell hands its plugins (`ShellPlatformPrefs`): reduced motion stills every transition and animation, more contrast (and forced colours) draws the keyboard focus and the focused grip heavier. */
+.semio-scope[data-reduced-motion="reduce"] *,
+.semio-scope[data-reduced-motion="reduce"] *::before,
+.semio-scope[data-reduced-motion="reduce"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+.semio-scope[data-contrast="more"] :focus-visible {
+  outline: 3px solid currentColor;
+  outline-offset: 2px;
+}
+
+.semio-scope [data-grip-focused="true"] {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+}
+
+.semio-scope[data-contrast="more"] [data-grip-focused="true"] {
+  outline-width: 4px;
+  outline-color: currentColor;
+}
+
+@media (forced-colors: active) {
+  .semio-scope [data-grip-focused="true"] {
+    outline: 3px solid Highlight;
+  }
+}
+/* #endregion PlatformPrefs */

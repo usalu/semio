@@ -25,6 +25,11 @@ test("concurrent shared compiles overlap, headroom recovery and maintenance are 
  let available=0;const measure=async()=>available,exclusive:string[]=[];
  await withCompilerSharedHeadroomV1(image,lease,control,4096,request,async()=>{exclusive.push("body");return 1;},async()=>{available=8192;recovered++;},measure);
  expect(recovered,"a short image recovers once, exclusively, and then compiles").toBe(1);expect(exclusive).toEqual(["body"]);
+ let held=0;const demands:number[]=[],pool=async()=>held;
+ await withCompilerSharedHeadroomV1(image,lease,control,4096,request,async()=>1,async()=>{recovered+=100;},pool,async demand=>{demands.push(demand);held=8192;});
+ expect(demands,"the unit-cache relief gets the missing bytes before any exclusive recovery").toEqual([4096]);expect(recovered,"relief that suffices never escalates").toBe(1);
+ held=0;const failing=async()=>{throw Error("collector failed");};
+ await withCompilerSharedHeadroomV1(image,lease,control,4096,request,async()=>1,async()=>{held=8192;recovered+=100;},pool,failing);expect(recovered,"a failing relief falls back to the exclusive recovery").toBe(101);
  let polls=0,waited=0;const freed=async()=>++polls>=4?8192:0;
  await withCompilerSharedHeadroomV1(image,lease,control,4096,request,async()=>{waited=polls;return 1;},async()=>{},freed);
  expect(waited,"a short image queues until headroom appears instead of failing").toBeGreaterThanOrEqual(4);

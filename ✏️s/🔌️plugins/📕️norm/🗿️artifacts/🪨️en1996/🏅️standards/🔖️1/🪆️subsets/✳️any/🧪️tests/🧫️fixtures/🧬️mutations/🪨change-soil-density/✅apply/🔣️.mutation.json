@@ -1,0 +1,6 @@
+{
+  "ChangeSoilDensity": {
+    "id": "wall-north",
+    "newSoilDensityKgM3": 1900.0
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-tank-content-category/schema.json",
+  "title": "ChangeTankContentCategory",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newContentCategory"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeTankContentCategory"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Tank",
+          "de": "Tank"
+        },
+        "description": {
+          "en": "The tank this mutation addresses, by id.",
+          "de": "Das adressierte Element (Tank), per Kennung."
+        },
+        "ref": {
+          "kind": "tank"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newContentCategory": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/snapshot.json#/$defs/ImposedCategory",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Content category",
+          "de": "Füllgutkategorie"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

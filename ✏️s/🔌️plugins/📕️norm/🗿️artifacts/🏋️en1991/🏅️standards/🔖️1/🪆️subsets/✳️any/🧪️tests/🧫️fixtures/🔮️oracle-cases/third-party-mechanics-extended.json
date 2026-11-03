@@ -1,0 +1,239 @@
+{
+  "$schema": "../../../../../../../../../🔮️oracles/🏃️harness/🧬️schema/🔣️.json",
+  "schemaVersion": 1,
+  "artifact": "en1991",
+  "annex": "de",
+  "cases": [
+    {
+      "id": "en1991.mechanics.lm1-tandem-span-6_0",
+      "check": "mechanics.lm1-tandem",
+      "citation": {
+        "standard": "EN 1991-2",
+        "edition": "2003",
+        "clause": "EN 1991-2 4.3.2 Load Model 1 tandem system TS (two axles of Q_1k at 1.2 m)"
+      },
+      "inputs": {
+        "E": 33000000000.0,
+        "A": 0.15,
+        "I": 0.003125,
+        "Q": 300000.0,
+        "s": 1.2,
+        "step": 0.3,
+        "span": 6.0
+      },
+      "expected": {
+        "M_max": {
+          "value": 729000.0,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        },
+        "R_max": {
+          "value": 540000.0,
+          "unit": "N",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-pynite",
+          "adapter": "pynite",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-anastruct",
+          "adapter": "anastruct",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.mechanics.lm1-tandem-span-9_6",
+      "check": "mechanics.lm1-tandem",
+      "citation": {
+        "standard": "EN 1991-2",
+        "edition": "2003",
+        "clause": "EN 1991-2 4.3.2 Load Model 1 tandem system TS (two axles of Q_1k at 1.2 m)"
+      },
+      "inputs": {
+        "E": 33000000000.0,
+        "A": 0.15,
+        "I": 0.003125,
+        "Q": 300000.0,
+        "s": 1.2,
+        "step": 0.3,
+        "span": 9.6
+      },
+      "expected": {
+        "M_max": {
+          "value": 1265625.0,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        },
+        "R_max": {
+          "value": 562500.0000000001,
+          "unit": "N",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-pynite",
+          "adapter": "pynite",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-anastruct",
+          "adapter": "anastruct",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.mechanics.lm1-tandem-span-15_6",
+      "check": "mechanics.lm1-tandem",
+      "citation": {
+        "standard": "EN 1991-2",
+        "edition": "2003",
+        "clause": "EN 1991-2 4.3.2 Load Model 1 tandem system TS (two axles of Q_1k at 1.2 m)"
+      },
+      "inputs": {
+        "E": 33000000000.0,
+        "A": 0.15,
+        "I": 0.003125,
+        "Q": 300000.0,
+        "s": 1.2,
+        "step": 0.3,
+        "span": 15.6
+      },
+      "expected": {
+        "M_max": {
+          "value": 2163461.538461539,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        },
+        "R_max": {
+          "value": 576923.076923077,
+          "unit": "N",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-pynite",
+          "adapter": "pynite",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-anastruct",
+          "adapter": "anastruct",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.mechanics.rail-lm71-mid-moment-span-24_0",
+      "check": "mechanics.rail-lm71-mid-moment",
+      "citation": {
+        "standard": "EN 1991-2",
+        "edition": "2003",
+        "clause": "EN 1991-2 6.3.2 Load Model 71 (four axles of Q_vk at 1.6 m, q_vk outside the group; values unverified against the standard text)"
+      },
+      "inputs": {
+        "E": 33000000000.0,
+        "A": 0.15,
+        "I": 0.003125,
+        "Q": 250000.0,
+        "q": 80000.0,
+        "n": 4,
+        "s": 1.6,
+        "lead": 0.8,
+        "step": 0.4,
+        "span": 24.0
+      },
+      "expected": {
+        "M_mid": {
+          "value": 8297600.0,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-pynite",
+          "adapter": "pynite",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-anastruct",
+          "adapter": "anastruct",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1991.mechanics.rail-lm71-mid-moment-span-16_0",
+      "check": "mechanics.rail-lm71-mid-moment",
+      "citation": {
+        "standard": "EN 1991-2",
+        "edition": "2003",
+        "clause": "EN 1991-2 6.3.2 Load Model 71 (four axles of Q_vk at 1.6 m, q_vk outside the group; values unverified against the standard text)"
+      },
+      "inputs": {
+        "E": 33000000000.0,
+        "A": 0.15,
+        "I": 0.003125,
+        "Q": 250000.0,
+        "q": 80000.0,
+        "n": 4,
+        "s": 1.6,
+        "lead": 0.8,
+        "step": 0.4,
+        "span": 16.0
+      },
+      "expected": {
+        "M_mid": {
+          "value": 4121600.0,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-pynite",
+          "adapter": "pynite",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-anastruct",
+          "adapter": "anastruct",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    }
+  ]
+}

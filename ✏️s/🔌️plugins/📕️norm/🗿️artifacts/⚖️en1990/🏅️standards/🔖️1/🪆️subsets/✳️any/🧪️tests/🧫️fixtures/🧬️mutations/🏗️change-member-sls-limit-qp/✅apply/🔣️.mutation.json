@@ -1,0 +1,5 @@
+{
+  "mutation": "changeMemberSlsLimitQp",
+  "id": "beam-B1",
+  "newSlsLimitQp": 500000.0
+}

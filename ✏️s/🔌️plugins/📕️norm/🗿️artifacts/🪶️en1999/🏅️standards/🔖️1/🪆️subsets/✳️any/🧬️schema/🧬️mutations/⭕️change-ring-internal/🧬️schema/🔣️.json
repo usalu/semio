@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-ring-internal/schema.json",
+  "title": "ChangeRingInternal",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "ringStiffenerId",
+    "newInternal"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeRingInternal"
+    },
+    "ringStiffenerId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Ring stiffener",
+          "de": "Ringsteife"
+        },
+        "description": {
+          "en": "The ring stiffener this mutation addresses, by id.",
+          "de": "Das adressierte Element (Ringsteife), per Kennung."
+        },
+        "ref": {
+          "kind": "ring-stiffener"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newInternal": {
+      "type": "boolean",
+      "x-semio-ui": {
+        "label": {
+          "en": "Internal ring",
+          "de": "Innenliegender Ring"
+        },
+        "widget": "toggle",
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeMemberSectionId",
+  "memberId": "purlin-1",
+  "newSectionId": "sec-chs168"
+}

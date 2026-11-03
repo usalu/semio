@@ -1,0 +1,6 @@
+{
+  "ChangeSiloRingInertia": {
+    "id": "silo-1",
+    "newRingInertia": 1.5
+  }
+}

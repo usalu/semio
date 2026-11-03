@@ -1,0 +1,243 @@
+CHANGED ⚖️en1990 🏢️road-bridge-failing/🏢️road-bridge-failing/🗣️.dsl.semio
+    + members: ADD columns ['frame_height', 'frame_drift', 'storey_height', 'storey_drift', 'material_strength_k', 'material_conversion_factor', 'material_partial_factor', 'material_design_strength', 'nominal_dimension', 'dimension_tolerance', 'design_dimension', 'member_alpha_cr', 'second_order_analysis']
+    + bridge-sls: ADD columns ['track_gauge', 'line_speed', 'ballast_depth', 'deck_mass', 'natural_frequency', 'end_rotation', 'basic_wind_speed', 'damping_ratio']
+    + placements: ADD empty collection
+    + cases: ADD empty collection
+    + factor-overrides: ADD empty collection
+CHANGED ⚖️en1990 🏢️accidental-seismic-failing/🏢️accidental-seismic-failing/🗣️.dsl.semio
+    + members: ADD columns ['frame_height', 'frame_drift', 'storey_height', 'storey_drift', 'material_strength_k', 'material_conversion_factor', 'material_partial_factor', 'material_design_strength', 'nominal_dimension', 'dimension_tolerance', 'design_dimension', 'member_alpha_cr', 'second_order_analysis']
+    + bridge-sls: ADD columns ['track_gauge', 'line_speed', 'ballast_depth', 'deck_mass', 'natural_frequency', 'end_rotation', 'basic_wind_speed', 'damping_ratio']
+    + placements: ADD empty collection
+    + cases: ADD empty collection
+    + factor-overrides: ADD empty collection
+CHANGED ⚖️en1990 🏢️accidental-seismic-compliant/🏢️accidental-seismic-compliant/🗣️.dsl.semio
+    + members: ADD columns ['frame_height', 'frame_drift', 'storey_height', 'storey_drift', 'material_strength_k', 'material_conversion_factor', 'material_partial_factor', 'material_design_strength', 'nominal_dimension', 'dimension_tolerance', 'design_dimension', 'member_alpha_cr', 'second_order_analysis']
+    + bridge-sls: ADD columns ['track_gauge', 'line_speed', 'ballast_depth', 'deck_mass', 'natural_frequency', 'end_rotation', 'basic_wind_speed', 'damping_ratio']
+    + placements: ADD empty collection
+    + cases: ADD empty collection
+    + factor-overrides: ADD empty collection
+CHANGED ⚖️en1990 🏢️fatigue-compliant/🏢️fatigue-compliant/🗣️.dsl.semio
+    + members: ADD columns ['frame_height', 'frame_drift', 'storey_height', 'storey_drift', 'material_strength_k', 'material_conversion_factor', 'material_partial_factor', 'material_design_strength', 'nominal_dimension', 'dimension_tolerance', 'design_dimension', 'member_alpha_cr', 'second_order_analysis']
+    + bridge-sls: ADD columns ['track_gauge', 'line_speed', 'ballast_depth', 'deck_mass', 'natural_frequency', 'end_rotation', 'basic_wind_speed', 'damping_ratio']
+    + placements: ADD empty collection
+    + cases: ADD empty collection
+    + factor-overrides: ADD empty collection
+CHANGED ⚖️en1990 🏢️high-consequence-office/🏢️high-consequence-office/🗣️.dsl.semio
+    + members: ADD columns ['frame_height', 'frame_drift', 'storey_height', 'storey_drift', 'material_strength_k', 'material_conversion_factor', 'material_partial_factor', 'material_design_strength', 'nominal_dimension', 'dimension_tolerance', 'design_dimension', 'member_alpha_cr', 'second_order_analysis']
+    + bridge-sls: ADD columns ['track_gauge', 'line_speed', 'ballast_depth', 'deck_mass', 'natural_frequency', 'end_rotation', 'basic_wind_speed', 'damping_ratio']
+    + placements: ADD empty collection
+    + cases: ADD empty collection
+    + factor-overrides: ADD empty collection
+CHANGED ⚖️en1990 🏢️road-bridge-compliant/🏢️road-bridge-compliant/🗣️.dsl.semio
+    + members: ADD columns ['frame_height', 'frame_drift', 'storey_height', 'storey_drift', 'material_strength_k', 'material_conversion_factor', 'material_partial_factor', 'material_design_strength', 'nominal_dimension', 'dimension_tolerance', 'design_dimension', 'member_alpha_cr', 'second_order_analysis']
+    + bridge-sls: ADD columns ['track_gauge', 'line_speed', 'ballast_depth', 'deck_mass', 'natural_frequency', 'end_rotation', 'basic_wind_speed', 'damping_ratio']
+    + placements: ADD empty collection
+    + cases: ADD empty collection
+    + factor-overrides: ADD empty collection
+CHANGED ⚖️en1990 🏢️fatigue-failing/🏢️fatigue-failing/🗣️.dsl.semio
+    + members: ADD columns ['frame_height', 'frame_drift', 'storey_height', 'storey_drift', 'material_strength_k', 'material_conversion_factor', 'material_partial_factor', 'material_design_strength', 'nominal_dimension', 'dimension_tolerance', 'design_dimension', 'member_alpha_cr', 'second_order_analysis']
+    + bridge-sls: ADD columns ['track_gauge', 'line_speed', 'ballast_depth', 'deck_mass', 'natural_frequency', 'end_rotation', 'basic_wind_speed', 'damping_ratio']
+    + placements: ADD empty collection
+    + cases: ADD empty collection
+    + factor-overrides: ADD empty collection
+CHANGED ⚖️en1990 🏢️default-office/🏢️default-office/🗣️.dsl.semio
+    + members: ADD columns ['frame_height', 'frame_drift', 'storey_height', 'storey_drift', 'material_strength_k', 'material_conversion_factor', 'material_partial_factor', 'material_design_strength', 'nominal_dimension', 'dimension_tolerance', 'design_dimension', 'member_alpha_cr', 'second_order_analysis']
+    + bridge-sls: ADD columns ['track_gauge', 'line_speed', 'ballast_depth', 'deck_mass', 'natural_frequency', 'end_rotation', 'basic_wind_speed', 'damping_ratio']
+    + placements: ADD empty collection
+    + cases: ADD empty collection
+    + factor-overrides: ADD empty collection
+CHANGED 🏋️en1991 ⚠️multi-fail-noncompliant/⚠️multi-fail-noncompliant/🗣️.dsl.semio
+    + bridge-tandem-x: ADD scalar default
+    + rail-alpha: ADD scalar default
+    + assumed-rail-lm71: ADD scalar default
+    + assumed-rail-lm71-udl: ADD scalar default
+    + assumed-rail-sw0: ADD scalar default
+    + assumed-rail-sw2: ADD scalar default
+    + crane-x: ADD scalar default
+    + crane-runway-length: ADD scalar default
+    + crane-wheel-base: ADD scalar default
+    + silo-diameter: ADD scalar default
+    + silo-eccentricity: ADD scalar default
+    + silo-hopper-angle-deg: ADD scalar default
+    + bridge-lanes: ADD empty collection
+    + construction-stages: ADD empty collection
+    + roof-surfaces: ADD empty collection
+    + placements: ADD empty collection
+    + special-vehicles: ADD empty collection
+    + wind-bridges: ADD empty collection
+    + dynamic-elements: ADD empty collection
+    + impact-actions: ADD empty collection
+    + internal-explosions: ADD empty collection
+    + thermal-sections: ADD empty collection
+    + cases: ADD empty collection
+CHANGED 🏋️en1991 🏢de-office-compliant/🏢de-office-compliant/🗣️.dsl.semio
+    + bridge-tandem-x: ADD scalar default
+    + rail-alpha: ADD scalar default
+    + assumed-rail-lm71: ADD scalar default
+    + assumed-rail-lm71-udl: ADD scalar default
+    + assumed-rail-sw0: ADD scalar default
+    + assumed-rail-sw2: ADD scalar default
+    + crane-x: ADD scalar default
+    + crane-runway-length: ADD scalar default
+    + crane-wheel-base: ADD scalar default
+    + silo-diameter: ADD scalar default
+    + silo-eccentricity: ADD scalar default
+    + silo-hopper-angle-deg: ADD scalar default
+    + bridge-lanes: ADD empty collection
+    + construction-stages: ADD empty collection
+    + roof-surfaces: ADD empty collection
+    + placements: ADD empty collection
+    + special-vehicles: ADD empty collection
+    + wind-bridges: ADD empty collection
+    + dynamic-elements: ADD empty collection
+    + impact-actions: ADD empty collection
+    + internal-explosions: ADD empty collection
+    + thermal-sections: ADD empty collection
+    + cases: ADD empty collection
+CHANGED 🏛️en1992 🛢️liquid-retaining-fem-anchor/🛢️liquid-retaining-fem-anchor/🗣️.dsl.semio
+    + members: ADD columns ['relative_humidity', 'section_points', 'bars', 'tendon_points', 'stud_rings']
+    + anchors: ADD columns ['head_diameter']
+    + placements: ADD empty collection
+    + cases: ADD empty collection
+CHANGED 🏛️en1992 💥failing-prestressed-beam/💥failing-prestressed-beam/🗣️.dsl.semio
+    + members: ADD columns ['relative_humidity', 'section_points', 'bars', 'tendon_points', 'stud_rings']
+    + anchors: ADD columns ['head_diameter']
+    + placements: ADD empty collection
+    + cases: ADD empty collection
+CHANGED 🏛️en1992 🧵compliant-prestressed-beam/🧵compliant-prestressed-beam/🗣️.dsl.semio
+    + members: ADD columns ['relative_humidity', 'section_points', 'bars', 'tendon_points', 'stud_rings']
+    + anchors: ADD columns ['head_diameter']
+    + placements: ADD empty collection
+    + cases: ADD empty collection
+CHANGED 🏛️en1992 ❌️failing-under-reinforced/❌️failing-under-reinforced/🗣️.dsl.semio
+    + members: ADD columns ['relative_humidity', 'section_points', 'bars', 'tendon_points', 'stud_rings']
+    + anchors: ADD columns ['head_diameter']
+    + placements: ADD empty collection
+    + cases: ADD empty collection
+CHANGED 🏛️en1992 🏢compliant-office-frame/🏢compliant-office-frame/🗣️.dsl.semio
+    + members: ADD columns ['relative_humidity', 'section_points', 'bars', 'tendon_points', 'stud_rings']
+    + anchors: ADD columns ['head_diameter']
+    + placements: ADD empty collection
+    + cases: ADD empty collection
+CHANGED 🔩️en1993 ✅️heb240-compliant/✅️heb240-compliant/🗣️.dsl.semio
+    + placements: ADD empty collection
+    ! stray token dropped: '""'
+    ! stray token dropped: '0.0'
+    ! stray token dropped: '0.0'
+    ! stray token dropped: '0.0'
+    ! stray token dropped: '0.0'
+    ! weld-groups: 5 trailing tokens dropped (partial row)
+CHANGED 🔩️en1993 🔩️high-strength-connection/🔩️high-strength-connection/🗣️.dsl.semio
+    + placements: ADD empty collection
+    ! stray token dropped: '""'
+    ! stray token dropped: '0.0'
+    ! stray token dropped: '0.0'
+    ! stray token dropped: '0.0'
+    ! stray token dropped: '0.0'
+    ! weld-groups: 5 trailing tokens dropped (partial row)
+CHANGED 🧩️en1994 🏢composite-floor-beam/🏢composite-floor-beam/🗣️.dsl.semio
+    + beams: ADD columns ['adjacent_span_m', 'patch_bearing_length_m', 'bridge_lanes', 'cracked_length_fraction', 'stud_transverse_spacing_m', 'stud_edge_distance_m', 'transverse_as_top_m2_per_m', 'end_plate_width_m', 'end_plate_height_m', 'end_zone_length_m']
+    + columns: ADD columns ['introduced_force_n', 'section_height_m', 'section_width_m', 'section_tw_m', 'section_tf_m', 'rebar_cover_m']
+    + placements: ADD empty collection
+CHANGED 🧩️en1994 🏢composite-floor-beam-failing/🏢composite-floor-beam-failing/🗣️.dsl.semio
+    + beams: ADD columns ['adjacent_span_m', 'patch_bearing_length_m', 'bridge_lanes', 'cracked_length_fraction', 'stud_transverse_spacing_m', 'stud_edge_distance_m', 'transverse_as_top_m2_per_m', 'end_plate_width_m', 'end_plate_height_m', 'end_zone_length_m']
+    + columns: ADD columns ['introduced_force_n', 'section_height_m', 'section_width_m', 'section_tw_m', 'section_tf_m', 'rebar_cover_m']
+    + placements: ADD empty collection
+CHANGED 🧩️en1994 🌉️composite-bridge-girder/🌉️composite-bridge-girder/🗣️.dsl.semio
+    + beams: ADD columns ['adjacent_span_m', 'patch_bearing_length_m', 'bridge_lanes', 'cracked_length_fraction', 'stud_transverse_spacing_m', 'stud_edge_distance_m', 'transverse_as_top_m2_per_m', 'end_plate_width_m', 'end_plate_height_m', 'end_zone_length_m']
+    + columns: ADD columns ['introduced_force_n', 'section_height_m', 'section_width_m', 'section_tw_m', 'section_tf_m', 'rebar_cover_m']
+    + placements: ADD empty collection
+CHANGED 🪵️en1995 🌉️glulam-footbridge/🌉️glulam-footbridge/🗣️.dsl.semio
+    + placements: ADD empty collection
+    + tapers: ADD empty collection
+    + cutouts: ADD empty collection
+    + fasteners: ADD empty collection
+    + panels: ADD empty collection
+    + floors: ADD empty collection
+CHANGED 🪵️en1995 🏠️glulam-floor-beam/🏠️glulam-floor-beam/🗣️.dsl.semio
+    + placements: ADD empty collection
+    + tapers: ADD empty collection
+    + cutouts: ADD empty collection
+    + fasteners: ADD empty collection
+    + panels: ADD empty collection
+    + floors: ADD empty collection
+CHANGED 🪵️en1995 ❌️multi-fail-timber/❌️multi-fail-timber/🗣️.dsl.semio
+    + placements: ADD empty collection
+    + tapers: ADD empty collection
+    + cutouts: ADD empty collection
+    + fasteners: ADD empty collection
+    + panels: ADD empty collection
+    + floors: ADD empty collection
+CHANGED 🪵️en1995 ⚠️overloaded-footbridge/⚠️overloaded-footbridge/🗣️.dsl.semio
+    + placements: ADD empty collection
+    + tapers: ADD empty collection
+    + cutouts: ADD empty collection
+    + fasteners: ADD empty collection
+    + panels: ADD empty collection
+    + floors: ADD empty collection
+CHANGED 🪨️en1996 ❌️multi-fail-masonry/❌️multi-fail-masonry/🗣️.dsl.semio
+    + placements: ADD empty collection
+    + cases: ADD empty collection
+    + chases: ADD empty collection
+    + movement-joints: ADD empty collection
+    ! walls[0].load-cases: nested block form left untouched
+CHANGED 🪨️en1996 🧱️loadbearing-wall/🧱️loadbearing-wall/🗣️.dsl.semio
+    + placements: ADD empty collection
+    + cases: ADD empty collection
+    + chases: ADD empty collection
+    + movement-joints: ADD empty collection
+    ! walls[0].load-cases: nested block form left untouched
+CHANGED 🌍️en1997 🎬️demo/🗣️.dsl.semio
+    + placements: ADD empty collection
+    + cases: ADD empty collection
+CHANGED 🌍️en1997 🚨noncompliant/🗣️.dsl.semio
+    + placements: ADD empty collection
+    + cases: ADD empty collection
+CHANGED 🌍️en1997 🏗️compliant/🗣️.dsl.semio
+    + placements: ADD empty collection
+    + cases: ADD empty collection
+CHANGED 🫨️en1998 ⚠️seismic-multipart-fail/⚠️seismic-multipart-fail/🗣️.dsl.semio
+    + placements: ADD empty collection
+    ! buildings[0].storeys: nested block form left untouched
+    ! buildings[0].storeys: nested block form left untouched
+    ! buildings[0].storeys: nested block form left untouched
+    ! buildings[0].storeys: nested block form left untouched
+CHANGED 🫨️en1998 🏢️seismic-rc-frame/🏢️seismic-rc-frame/🗣️.dsl.semio
+    + placements: ADD empty collection
+    ! buildings[0].storeys: nested block form left untouched
+    ! buildings[0].storeys: nested block form left untouched
+    ! buildings[0].storeys: nested block form left untouched
+    ! buildings[0].storeys: nested block form left untouched
+CHANGED 🫨️en1998 ⚠️seismic-rc-frame-fail/⚠️seismic-rc-frame-fail/🗣️.dsl.semio
+    + placements: ADD empty collection
+    ! buildings[0].storeys: nested block form left untouched
+    ! buildings[0].storeys: nested block form left untouched
+    ! buildings[0].storeys: nested block form left untouched
+    ! buildings[0].storeys: nested block form left untouched
+CHANGED 🫨️en1998 🏢️seismic-multipart/🏢️seismic-multipart/🗣️.dsl.semio
+    + placements: ADD empty collection
+    ! buildings[0].storeys: nested block form left untouched
+    ! buildings[0].storeys: nested block form left untouched
+    ! buildings[0].storeys: nested block form left untouched
+    ! buildings[0].storeys: nested block form left untouched
+CHANGED 🪶️en1999 🏚️noncompliant-multi-fail/🏚️noncompliant-multi-fail/🗣️.dsl.semio
+    + materials: ADD columns ['product_form']
+    + members: ADD columns ['stiffener_spacing', 'bearing_length', 'transverse_weld', 'transverse_weld_offset']
+    + shells: ADD columns ['welded', 'fabrication_class']
+    + placements: ADD empty collection
+    + weld-runs: ADD empty collection
+    + outline-vertices: ADD empty collection
+    + fatigue-categories: ADD empty collection
+    + patch-loads: ADD empty collection
+    + ring-stiffeners: ADD empty collection
+CHANGED 🪶️en1999 🏠️aluminium-roof-purlin/🏠️aluminium-roof-purlin/🗣️.dsl.semio
+    + materials: ADD columns ['product_form']
+    + members: ADD columns ['stiffener_spacing', 'bearing_length', 'transverse_weld', 'transverse_weld_offset']
+    + shells: ADD columns ['welded', 'fabrication_class']
+    + placements: ADD empty collection
+    + weld-runs: ADD empty collection
+    + outline-vertices: ADD empty collection
+    + fatigue-categories: ADD empty collection
+    + patch-loads: ADD empty collection
+    + ring-stiffeners: ADD empty collection
+errors 0

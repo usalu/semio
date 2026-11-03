@@ -1,0 +1,657 @@
+{
+  "annex": "En",
+  "reliabilityClass": "RC2",
+  "members": [
+    {
+      "id": "beam-B1",
+      "labelEn": "Main glulam floor beam B1",
+      "labelDe": "Hauptträger BSH Decke B1",
+      "role": "floor",
+      "strengthClass": "gl28h",
+      "serviceClass": 1,
+      "support": "simplySupported",
+      "bM": 0.2,
+      "hM": 0.4,
+      "spanM": 5.0,
+      "supportLengthM": 0.15,
+      "bearingLengthM": 0.15,
+      "bucklingLengthYM": 5.0,
+      "bucklingLengthZM": 1.5,
+      "lateralRestraintSpacingM": 1.5,
+      "notchDepthM": 0.0,
+      "notchDistanceM": 0.0,
+      "massKgPerM": 120.0,
+      "massKgPerM2": 450.0,
+      "dampingXi": 0.04,
+      "fireDurationS": 0.0,
+      "bridgeNObs": 0.0,
+      "bridgeTLYears": 0.0,
+      "bridgeBeta": 0.0,
+      "bridgeA": 0.0,
+      "bridgeB": 0.0,
+      "bridgeCrowdPerM2": 0.0,
+      "actions": [
+        {
+          "id": "g",
+          "kind": "permanent",
+          "category": "notImposed",
+          "loadDuration": "permanent",
+          "qLineNPerM": 2500.0,
+          "fPointN": 0.0,
+          "mKNm": 0.0,
+          "vKN": 0.0,
+          "nKN": 0.0,
+          "nTKN": 0.0,
+          "fC90KN": 0.0
+        },
+        {
+          "id": "q",
+          "kind": "imposed",
+          "category": "a",
+          "loadDuration": "medium",
+          "qLineNPerM": 3000.0,
+          "fPointN": 0.0,
+          "mKNm": 0.0,
+          "vKN": 0.0,
+          "nKN": 0.0,
+          "nTKN": 0.0,
+          "fC90KN": 0.0
+        }
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "conn-C1",
+      "labelEn": "Bolt group at support",
+      "labelDe": "Schraubverbund am Auflager",
+      "fastenerType": "bolt",
+      "strengthClass": "gl28h",
+      "serviceClass": 1,
+      "diameterM": 0.012,
+      "number": 8,
+      "rows": 2,
+      "spacingM": 0.09,
+      "edgeDistanceM": 0.048,
+      "endDistanceM": 0.096,
+      "t1M": 0.2,
+      "t2M": 0.2,
+      "steelPlate": false,
+      "steelPlateThicknessM": 0.0,
+      "shearPlanes": 1,
+      "fUK": 400000000.0,
+      "actions": [
+        {
+          "id": "g",
+          "kind": "permanent",
+          "loadDuration": "permanent",
+          "fKN": 8000.0
+        },
+        {
+          "id": "q",
+          "kind": "imposed",
+          "loadDuration": "medium",
+          "fKN": 10000.0
+        }
+      ]
+    }
+  ],
+  "placements": [
+    {
+      "id": "beam-B1",
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "yaw": 0.0
+    }
+  ],
+  "tapers": [
+    {
+      "id": "taper-1",
+      "memberId": "beam-B1",
+      "kind": "double-tapered",
+      "taperAngleRad": 0.1,
+      "apexDepthM": 0.8,
+      "innerRadiusM": 15.0,
+      "lamellaThicknessM": 0.033,
+      "apexAngleRad": 0.1,
+      "tensionSide": "tension",
+      "rods": 0,
+      "rodResistanceN": 0.0
+    },
+    {
+      "id": "taper-2",
+      "memberId": "beam-B1",
+      "kind": "single-tapered",
+      "taperAngleRad": 0.08,
+      "apexDepthM": 0.0,
+      "innerRadiusM": 15.0,
+      "lamellaThicknessM": 0.033,
+      "apexAngleRad": 0.1,
+      "tensionSide": "compression",
+      "rods": 0,
+      "rodResistanceN": 0.0
+    }
+  ],
+  "cutouts": [
+    {
+      "id": "cutout-1",
+      "memberId": "beam-B1",
+      "kind": "notch",
+      "face": "bottom",
+      "distanceM": 0.0,
+      "lengthM": 0.15,
+      "depthM": 0.06,
+      "centreHeightM": 0.0,
+      "slope": 0.0,
+      "rods": 0,
+      "rodResistanceN": 0.0
+    },
+    {
+      "id": "cutout-2",
+      "memberId": "beam-B1",
+      "kind": "hole",
+      "face": "bottom",
+      "distanceM": 0.0,
+      "lengthM": 0.15,
+      "depthM": 0.06,
+      "centreHeightM": 0.0,
+      "slope": 0.0,
+      "rods": 0,
+      "rodResistanceN": 0.0
+    }
+  ],
+  "fasteners": [
+    {
+      "id": "fastener-1",
+      "connectionId": "conn-C1",
+      "memberId": "beam-B1",
+      "columns": 4,
+      "lines": 2,
+      "spacingParallelM": 0.08,
+      "spacingPerpendicularM": 0.04,
+      "endDistanceM": 0.1,
+      "edgeDistanceM": 0.04,
+      "offsetXM": 0.1,
+      "offsetYM": 0.05,
+      "loadAngleRad": 0.0,
+      "positions": [
+        {
+          "id": "position-1",
+          "xM": 0.1,
+          "yM": 0.05
+        }
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "id": "panel-1",
+      "strengthClass": "c24",
+      "layers": [
+        {
+          "id": "layer-1",
+          "thicknessM": 0.04,
+          "orientation": "longitudinal",
+          "grade": "C24"
+        }
+      ],
+      "spanM": 5.0,
+      "widthM": 1.0,
+      "loadPa": 5000.0,
+      "fireDurationS": 3600.0
+    }
+  ],
+  "floors": [
+    {
+      "id": "floor-1",
+      "memberId": "beam-B1",
+      "spanM": 4.0,
+      "widthM": 5.0,
+      "joistSpacingM": 0.625,
+      "eiLNM2PerM": 1000000.0,
+      "eiBNM2PerM": 200000.0,
+      "massKgPerM2": 150.0,
+      "dampingRatio": 0.02,
+      "permanentLoadPa": 1000.0,
+      "imposedLoadPa": 2000.0,
+      "psi2": 0.3
+    }
+  ],
+  "diaphragms": [
+    {
+      "id": "diaphragm-1",
+      "kind": "wall",
+      "method": "method-a",
+      "panelWidthM": 1.2,
+      "wallHeightM": 2.4,
+      "fastenerSpacingM": 0.075,
+      "panels": 2,
+      "fastenerCapacityN": 3000.0,
+      "shearEdN": 60000.0,
+      "holdDownN": 15000.0,
+      "diaphragmForceN": 15000.0,
+      "diaphragmLengthM": 12.0,
+      "shearResistanceNPerM": 3000.0
+    },
+    {
+      "id": "diaphragm-2",
+      "kind": "roof",
+      "method": "method-a",
+      "panelWidthM": 1.2,
+      "wallHeightM": 2.4,
+      "fastenerSpacingM": 0.075,
+      "panels": 2,
+      "fastenerCapacityN": 3000.0,
+      "shearEdN": 3000.0,
+      "holdDownN": 20000.0,
+      "diaphragmForceN": 60000.0,
+      "diaphragmLengthM": 12.0,
+      "shearResistanceNPerM": 3000.0
+    }
+  ],
+  "trusses": [
+    {
+      "id": "truss-1",
+      "kind": "warren",
+      "product": "solid",
+      "spanM": 12.0,
+      "heightM": 1.5,
+      "bays": 6,
+      "chordWidthM": 0.1,
+      "chordDepthM": 0.2,
+      "webWidthM": 0.08,
+      "webDepthM": 0.12,
+      "chordForceN": 20000.0,
+      "restraintLengthM": 6.0,
+      "bracingCapacityNPerM": 60.0
+    }
+  ],
+  "bracings": [
+    {
+      "id": "bracing-1",
+      "kind": "plan-bracing",
+      "memberId": "beam-B1",
+      "stabilisedCount": 4,
+      "spacingM": 0.8,
+      "lengthM": 6.0,
+      "braceWidthM": 0.06,
+      "braceDepthM": 0.12,
+      "compressionForceN": 20000.0,
+      "resistanceN": 2000.0,
+      "stiffnessNPerM": 100000.0
+    }
+  ],
+  "decks": [
+    {
+      "id": "deck-1",
+      "laminationProduct": "solid",
+      "barProduct": "threaded-bar",
+      "spanM": 8.0,
+      "deckWidthM": 4.0,
+      "deckDepthM": 0.25,
+      "laminationWidthM": 0.05,
+      "barSpacingM": 0.8,
+      "barDiameterM": 0.032,
+      "plateSideM": 0.15,
+      "initialPrestressPa": 1000000.0,
+      "lossRelaxation": 0.15,
+      "lossCreep": 0.25,
+      "lossMoisture": 0.1,
+      "barResistancePa": 700000000.0,
+      "shearStressPa": 100000.0,
+      "compressionPerpendicularPa": 1000000.0,
+      "wheelLoadN": 100000.0,
+      "wheelContactM": 0.4
+    }
+  ],
+  "ulsEquation": "eq610",
+  "cases": [
+    {
+      "id": "net",
+      "labelEn": "net",
+      "labelDe": "net",
+      "entryId": "T-18",
+      "numbers": [
+        {
+          "id": "b",
+          "value": 200.0
+        },
+        {
+          "id": "h",
+          "value": 400.0
+        },
+        {
+          "id": "n_t",
+          "value": 90000.0
+        },
+        {
+          "id": "hole_d",
+          "value": 18.0
+        },
+        {
+          "id": "hole_count",
+          "value": 2.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "class",
+          "value": "GL28h"
+        }
+      ]
+    },
+    {
+      "id": "taper",
+      "labelEn": "taper",
+      "labelDe": "taper",
+      "entryId": "T-30",
+      "numbers": [
+        {
+          "id": "b",
+          "value": 200.0
+        },
+        {
+          "id": "h",
+          "value": 500.0
+        },
+        {
+          "id": "m_d",
+          "value": 36000000.0
+        },
+        {
+          "id": "alpha_deg",
+          "value": 5.0
+        },
+        {
+          "id": "l",
+          "value": 6000
+        }
+      ],
+      "texts": [
+        {
+          "id": "class",
+          "value": "GL28h"
+        },
+        {
+          "id": "side",
+          "value": "tension"
+        },
+        {
+          "id": "load_case",
+          "value": "udl_ss"
+        }
+      ]
+    },
+    {
+      "id": "taperc",
+      "labelEn": "taperc",
+      "labelDe": "taperc",
+      "entryId": "T-30",
+      "numbers": [
+        {
+          "id": "b",
+          "value": 200.0
+        },
+        {
+          "id": "h",
+          "value": 500.0
+        },
+        {
+          "id": "m_d",
+          "value": 36000000.0
+        },
+        {
+          "id": "alpha_deg",
+          "value": 5.0
+        },
+        {
+          "id": "l",
+          "value": 6000
+        }
+      ],
+      "texts": [
+        {
+          "id": "class",
+          "value": "GL28h"
+        },
+        {
+          "id": "side",
+          "value": "compression"
+        },
+        {
+          "id": "load_case",
+          "value": "udl_ss"
+        }
+      ]
+    },
+    {
+      "id": "apexb",
+      "labelEn": "apexb",
+      "labelDe": "apexb",
+      "entryId": "T-31",
+      "numbers": [
+        {
+          "id": "b",
+          "value": 160.0
+        },
+        {
+          "id": "h_ap",
+          "value": 800.0
+        },
+        {
+          "id": "m_ap",
+          "value": 72000000.0
+        },
+        {
+          "id": "r_in",
+          "value": 12000.0
+        },
+        {
+          "id": "t_lam",
+          "value": 33.0
+        },
+        {
+          "id": "alpha_ap_deg",
+          "value": 10.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "class",
+          "value": "GL28h"
+        }
+      ]
+    },
+    {
+      "id": "apext",
+      "labelEn": "apext",
+      "labelDe": "apext",
+      "entryId": "T-32",
+      "numbers": [
+        {
+          "id": "b",
+          "value": 160.0
+        },
+        {
+          "id": "h_ap",
+          "value": 800.0
+        },
+        {
+          "id": "m_ap",
+          "value": 72000000.0
+        },
+        {
+          "id": "r_in",
+          "value": 12000.0
+        },
+        {
+          "id": "alpha_ap_deg",
+          "value": 10.0
+        },
+        {
+          "id": "v_beam",
+          "value": 4000000000.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "class",
+          "value": "GL28h"
+        },
+        {
+          "id": "shape",
+          "value": "double_tapered"
+        }
+      ]
+    },
+    {
+      "id": "apexr",
+      "labelEn": "apexr",
+      "labelDe": "apexr",
+      "entryId": "T-33",
+      "numbers": [
+        {
+          "id": "b",
+          "value": 160.0
+        },
+        {
+          "id": "h_ap",
+          "value": 800.0
+        },
+        {
+          "id": "m_ap",
+          "value": 72000000.0
+        },
+        {
+          "id": "r_in",
+          "value": 12000.0
+        },
+        {
+          "id": "alpha_ap_deg",
+          "value": 10.0
+        },
+        {
+          "id": "n_rods",
+          "value": 4.0
+        },
+        {
+          "id": "r_ax_k",
+          "value": 40000.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "class",
+          "value": "GL28h"
+        }
+      ]
+    },
+    {
+      "id": "notch",
+      "labelEn": "notch",
+      "labelDe": "notch",
+      "entryId": "T-45",
+      "numbers": [
+        {
+          "id": "b",
+          "value": 160.0
+        },
+        {
+          "id": "h",
+          "value": 500.0
+        },
+        {
+          "id": "h_ef",
+          "value": 400.0
+        },
+        {
+          "id": "v_d",
+          "value": 36000.0
+        },
+        {
+          "id": "x",
+          "value": 40.0
+        },
+        {
+          "id": "incl",
+          "value": 0.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "class",
+          "value": "GL28h"
+        },
+        {
+          "id": "side",
+          "value": "support"
+        }
+      ]
+    },
+    {
+      "id": "notchr",
+      "labelEn": "notchr",
+      "labelDe": "notchr",
+      "entryId": "T-46",
+      "numbers": [
+        {
+          "id": "h",
+          "value": 500.0
+        },
+        {
+          "id": "h_ef",
+          "value": 300.0
+        },
+        {
+          "id": "v_d",
+          "value": 36000.0
+        },
+        {
+          "id": "n_rods",
+          "value": 2.0
+        },
+        {
+          "id": "r_ax_k",
+          "value": 30000.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "class",
+          "value": "GL28h"
+        }
+      ]
+    },
+    {
+      "id": "bend",
+      "labelEn": "bend",
+      "labelDe": "bend",
+      "entryId": "T-14",
+      "numbers": [
+        {
+          "id": "b",
+          "value": 160.0
+        },
+        {
+          "id": "h",
+          "value": 360.0
+        },
+        {
+          "id": "m_y",
+          "value": 24000000.0
+        },
+        {
+          "id": "m_z",
+          "value": 1800000.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "class",
+          "value": "GL28h"
+        }
+      ]
+    }
+  ]
+}

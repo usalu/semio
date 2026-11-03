@@ -1,0 +1,5 @@
+{
+  "mutation": "changeTestConversionFactor",
+  "id": "tes-1",
+  "newConversionFactor": 2.0
+}

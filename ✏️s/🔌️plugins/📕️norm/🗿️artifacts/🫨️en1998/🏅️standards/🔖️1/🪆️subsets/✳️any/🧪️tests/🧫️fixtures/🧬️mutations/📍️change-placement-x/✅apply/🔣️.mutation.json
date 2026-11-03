@@ -1,0 +1,5 @@
+{
+  "mutation": "changePlacementX",
+  "id": "bldg-office",
+  "newX": 2.0
+}

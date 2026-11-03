@@ -5,7 +5,7 @@ use crate::En1999Mutation;
 
 #[test]
 fn default_snapshot_has_members() {
-    let s = En1999Snapshot::default();
+    let s = En1999Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De);
     assert!(!s.members.is_empty());
     assert!(!s.materials.is_empty());
 }

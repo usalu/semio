@@ -1,0 +1,395 @@
+{
+  "why": "The grip pick law every viewport host obeys: a hit edge per device (44 px for a finger, 24 px for a pointer, a device profile only raises it), the nearest grip inside half that edge (never less than its drawn radius), and the cursor ray turned into the parameter along the grip's line. `line` expectations are numpy least squares (np.linalg.lstsq of [axis, -dir] [t, u] = rayOrigin - origin), not the implementation. Language-agnostic: Rust and TypeScript replay the same rows.",
+  "hitEdge": [
+    {
+      "device": "touch",
+      "profileMin": 0,
+      "expect": 44
+    },
+    {
+      "device": "touch",
+      "profileMin": 48,
+      "expect": 48
+    },
+    {
+      "device": "touch",
+      "profileMin": 24,
+      "expect": 44
+    },
+    {
+      "device": "pointer",
+      "profileMin": 0,
+      "expect": 24
+    },
+    {
+      "device": "pointer",
+      "profileMin": 44,
+      "expect": 44
+    }
+  ],
+  "pick": [
+    {
+      "name": "a finger 21 px from a grip hits it",
+      "device": "touch",
+      "profileMin": 0,
+      "drawn": 4,
+      "points": [
+        [
+          100,
+          100
+        ]
+      ],
+      "at": [
+        121,
+        100
+      ],
+      "expect": 0
+    },
+    {
+      "name": "a finger exactly on the 22 px radius hits it",
+      "device": "touch",
+      "profileMin": 0,
+      "drawn": 4,
+      "points": [
+        [
+          100,
+          100
+        ]
+      ],
+      "at": [
+        122,
+        100
+      ],
+      "expect": 0
+    },
+    {
+      "name": "a finger 23 px away misses",
+      "device": "touch",
+      "profileMin": 0,
+      "drawn": 4,
+      "points": [
+        [
+          100,
+          100
+        ]
+      ],
+      "at": [
+        123,
+        100
+      ],
+      "expect": null
+    },
+    {
+      "name": "a pointer 11 px from a grip hits it",
+      "device": "pointer",
+      "profileMin": 0,
+      "drawn": 4,
+      "points": [
+        [
+          100,
+          100
+        ]
+      ],
+      "at": [
+        111,
+        100
+      ],
+      "expect": 0
+    },
+    {
+      "name": "a pointer 13 px away misses what a finger would hit",
+      "device": "pointer",
+      "profileMin": 0,
+      "drawn": 4,
+      "points": [
+        [
+          100,
+          100
+        ]
+      ],
+      "at": [
+        113,
+        100
+      ],
+      "expect": null
+    },
+    {
+      "name": "a big drawn grip is never harder to hit than it looks",
+      "device": "pointer",
+      "profileMin": 0,
+      "drawn": 30,
+      "points": [
+        [
+          100,
+          100
+        ]
+      ],
+      "at": [
+        129,
+        100
+      ],
+      "expect": 0
+    },
+    {
+      "name": "the nearer of two grips wins",
+      "device": "touch",
+      "profileMin": 0,
+      "drawn": 4,
+      "points": [
+        [
+          100,
+          100
+        ],
+        [
+          112,
+          100
+        ]
+      ],
+      "at": [
+        109,
+        100
+      ],
+      "expect": 1
+    },
+    {
+      "name": "equally near grips pick the first",
+      "device": "touch",
+      "profileMin": 0,
+      "drawn": 4,
+      "points": [
+        [
+          90,
+          100
+        ],
+        [
+          110,
+          100
+        ]
+      ],
+      "at": [
+        100,
+        100
+      ],
+      "expect": 0
+    },
+    {
+      "name": "a device profile with a larger minimum widens the reach",
+      "device": "pointer",
+      "profileMin": 60,
+      "drawn": 4,
+      "points": [
+        [
+          100,
+          100
+        ]
+      ],
+      "at": [
+        129,
+        100
+      ],
+      "expect": 0
+    },
+    {
+      "name": "no grips pick nothing",
+      "device": "touch",
+      "profileMin": 0,
+      "drawn": 4,
+      "points": [],
+      "at": [
+        0,
+        0
+      ],
+      "expect": null
+    }
+  ],
+  "line": [
+    {
+      "name": "a ray straight across the line",
+      "rayOrigin": [
+        0,
+        -10,
+        0
+      ],
+      "rayDir": [
+        0,
+        1,
+        0
+      ],
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "axis": [
+        1,
+        0,
+        0
+      ],
+      "expect": 0.0
+    },
+    {
+      "name": "a ray above the line along the way",
+      "rayOrigin": [
+        3,
+        0,
+        5
+      ],
+      "rayDir": [
+        0,
+        0,
+        -1
+      ],
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "axis": [
+        1,
+        0,
+        0
+      ],
+      "expect": 3.0
+    },
+    {
+      "name": "a skew ray in a perspective view",
+      "rayOrigin": [
+        -4.0,
+        -8.0,
+        6.0
+      ],
+      "rayDir": [
+        0.31,
+        0.62,
+        -0.48
+      ],
+      "origin": [
+        1.0,
+        2.0,
+        0.5
+      ],
+      "axis": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "expect": -2.241935483870968
+    },
+    {
+      "name": "a line with an offset origin and a diagonal axis",
+      "rayOrigin": [
+        10.0,
+        -3.0,
+        4.0
+      ],
+      "rayDir": [
+        -0.4,
+        0.8,
+        -0.2
+      ],
+      "origin": [
+        2.0,
+        1.0,
+        0.0
+      ],
+      "axis": [
+        0.6,
+        0.8,
+        0.0
+      ],
+      "expect": 6.211764705882355
+    },
+    {
+      "name": "a negative parameter behind the origin",
+      "rayOrigin": [
+        -7.0,
+        0.0,
+        2.0
+      ],
+      "rayDir": [
+        0.0,
+        0.0,
+        -1.0
+      ],
+      "origin": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "axis": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "expect": -7.0
+    },
+    {
+      "name": "a ray parallel to the line has no parameter",
+      "rayOrigin": [
+        0.0,
+        5.0,
+        0.0
+      ],
+      "rayDir": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "origin": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "axis": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "expect": null
+    },
+    {
+      "name": "a ray anti-parallel to the line has no parameter",
+      "rayOrigin": [
+        0.0,
+        5.0,
+        0.0
+      ],
+      "rayDir": [
+        -2.0,
+        0.0,
+        0.0
+      ],
+      "origin": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "axis": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "expect": null
+    }
+  ],
+  "drag": [
+    {
+      "anchorS": 2.0,
+      "pressT": 3.0,
+      "cursorT": 3.0,
+      "expect": 2.0
+    },
+    {
+      "anchorS": 2.0,
+      "pressT": 3.0,
+      "cursorT": 4.5,
+      "expect": 3.5
+    },
+    {
+      "anchorS": -1.0,
+      "pressT": 0.0,
+      "cursorT": -0.25,
+      "expect": -1.25
+    }
+  ]
+}

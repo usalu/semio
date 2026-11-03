@@ -4,7 +4,11 @@
 usage: 🐍️.py graph DIR              canonical graph of a real workspace directory
        🐍️.py check FIXTURE.json     recompute every scenario of the fixture and compare with its expectations (exit 1 on any difference)
 The model shares no code with the TypeScript implementation: hashlib for digests, json.dumps(sort_keys) for canonical bytes, posixpath for paths."""
-import hashlib, json, os, posixpath, re, sys
+import hashlib, importlib.util, json, os, posixpath, re, sys
+
+_rules = importlib.util.spec_from_file_location("edge_reads_rules", os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "🧵️edge-reads", "🧪️tests", "🐍️oracle", "🐍️.py"))
+edge_reads_rules = importlib.util.module_from_spec(_rules)
+_rules.loader.exec_module(edge_reads_rules)
 
 
 def canon(value):
@@ -38,12 +42,12 @@ def model(files):
     owners.sort(key=lambda owner: owner["name"])
     by_package = {owner["package"]: owner["name"] for owner in owners if owner["package"]}
     by_root = sorted(owners, key=lambda owner: -len(owner["root"]))
-    nodes, edges, inputs = {}, {}, {}
+    nodes, edges, inputs, reads = {}, {}, {}, {}
     for owner in owners:
         source_dir = owner["root"] + "/src"
         names = sorted(path[len(source_dir) + 1:] for path in files if path.startswith(source_dir + "/") and "/" not in path[len(source_dir) + 1:])
         listing = names if any(path.startswith(source_dir + "/") for path in files) else None
-        sources, owner_edges = [], {}
+        sources, owner_edges, looked = [], {}, {"owners": set(), "paths": set(), "packages": set()}
         for name in [n for n in names if n.endswith(".ts")]:
             path = source_dir + "/" + name
             sources.append({"path": path, "sha256": sha(files[path])})
@@ -53,20 +57,27 @@ def model(files):
                     continue
                 spec, target = match.group(1), None
                 if spec.startswith("@syn/"):
+                    looked["packages"].add(spec)
                     target = by_package.get(spec)
                 elif spec.startswith("."):
                     resolved = posixpath.normpath(posixpath.join(posixpath.dirname(path), spec))
                     target = next((row["name"] for row in by_root if resolved.startswith(row["root"] + "/")), None)
+                    if target is None:
+                        looked["paths"].add(posixpath.dirname(resolved))
+                    elif target != owner["name"]:
+                        looked["owners"].add(target)
                 if target and target != owner["name"]:
                     edge = {"source": owner["name"], "sourceFile": path, "target": target, "type": "static"}
                     owner_edges[canon(edge)] = edge
         uses = [{"path": path, "sha256": sha(files[path]) if path in files else None} for path in owner["uses"]]
         nodes[owner["name"]] = {"name": owner["name"], "root": owner["root"], "package": owner["package"], "sources": sources, "uses": uses}
         edges[owner["name"]] = [owner_edges[key] for key in sorted(owner_edges)]
+        reads[owner["name"]] = {key: sorted(values) for key, values in looked.items() if values}
         inputs[owner["name"]] = sha(canon({"config": files[owner["config"]], "listing": listing, "files": {s["path"]: s["sha256"] for s in sources}, "uses": {u["path"]: u["sha256"] for u in uses}}))
     env = sha(canon({"owners": sorted([owner["name"], owner["root"]] for owner in owners), "packages": sorted([owner["package"], owner["name"]] for owner in owners if owner["package"])}))
-    members = sorted([path for path in files if path.startswith("pkg/") and (path.endswith("/project.json") or path.endswith(".ts"))])
-    return {"owners": owners, "nodes": nodes, "edges": edges, "inputs": inputs, "env": env, "members": members}
+    members = sorted([path for path in files if path.startswith("pkg/") and (path.endswith("/project.json") or path.endswith("/Cargo.toml") or path.endswith(".ts"))])
+    parts = {"owners": sorted([owner["name"], owner["root"], None] for owner in owners), "packages": sorted([owner["package"], owner["name"]] for owner in owners if owner["package"]), "modules": [], "workspaces": [], "lock": None, "taxonomy": None}
+    return {"owners": owners, "nodes": nodes, "edges": edges, "inputs": inputs, "env": env, "members": members, "reads": reads, "parts": parts}
 
 
 def graph(files, names=None):
@@ -139,6 +150,8 @@ def plan(previous, files, state):
             continue
         else:
             owner = owner_of(path, roots)
+            if owner is None and not directory and posixpath.basename(path) == "Cargo.toml":
+                continue
             if owner is None:
                 env_stale = True
             else:
@@ -150,7 +163,7 @@ def plan(previous, files, state):
 
 
 def simulate(initial, steps):
-    files, previous, generation, out = dict(initial), None, -1, []
+    files, previous, generation, out, stored = dict(initial), None, -1, [], {}
     for step in steps:
         apply_ops(files, step["ops"])
         state = model(files)
@@ -158,15 +171,27 @@ def simulate(initial, steps):
         state["env_fields"] = {owner["config"]: (owner["name"], owner["package"]) for owner in state["owners"]}
         if previous is None:
             full, edges, built = sorted(state["nodes"]), [], True
+            stored = dict(state["reads"])
         else:
             dirty, added, removed, env_stale = plan(previous, files, state)
             old_roots = {owner["name"]: owner["root"] for owner in previous["owners"]}
             roots = {old_roots[name] for name in dirty} | {posixpath.dirname(path) for path in added}
             now = {owner["root"]: owner["name"] for owner in state["owners"]}
             full = sorted(now[root] for root in roots if root in now)
-            edges = sorted(name for name in state["nodes"] if name not in full) if state["env"] != previous["env"] else []
-            built = bool(full or edges or removed or env_stale or added)
-        if built:
+            edges = []
+            if state["env"] != previous["env"]:
+                kept = [name for name in state["nodes"] if name not in full and name in old_roots]
+                rows = {name: {"root": old_roots[name], "reads": stored.get(name)} for name in kept}
+                tables = [{name: [root, None] for name, root in old_roots.items()}, {owner["name"]: [owner["root"], None] for owner in state["owners"]}]
+                _, affected = edge_reads_rules.model(previous["parts"], state["parts"], rows, tables)
+                edges = sorted(affected)
+            built = bool(full or edges or removed or env_stale or added or state["env"] != previous["env"])
+            for name in list(stored):
+                if name not in state["nodes"]:
+                    del stored[name]
+            for name in full + edges:
+                stored[name] = state["reads"][name]
+        if built or (previous is not None and previous["members"] != state["members"]):
             generation += 1
         out.append({"label": step["label"], "full": full, "edges": edges, "built": built, "generation": generation, "graph": graph(files)})
         previous = state

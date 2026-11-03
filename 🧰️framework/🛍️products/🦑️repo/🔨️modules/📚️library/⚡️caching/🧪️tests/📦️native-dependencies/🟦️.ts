@@ -68,6 +68,16 @@ export async function testNativeDependencies(workspace: string, output: string,i
       assert.deepEqual(providers,row.providers,row.kind);
       assert.deepEqual(calls.map(call => call[0] === process.execPath ? ["bun", ...call.slice(1)] : call), row.commands.map((command: string[]) => command.map(interpolate)), row.kind);
     }
+    const boundedGo = { ...process.env, SEMIO_BOUNDED_GO: root };
+    let boundedMarker: string | undefined;
+    await prepareDependencies("go", root, invocation, storage, phaseFor(controller.signal), async (command: string, args: string[], cwd: string, signal: AbortSignal, capture: boolean, env: NodeJS.ProcessEnv) => {
+      assert.equal(cwd, root); assert.equal(signal, phaseFor(controller.signal).leaseControl.signal); assert.equal(capture, false);
+      assert.deepEqual([command, ...args], ["go", "mod", "download"]);
+      boundedMarker = env.SEMIO_BOUNDED_GO;
+      assert.equal(env.GOWORK, join(root, "go.work"));
+      return "";
+    }, boundedGo, async (base: NodeJS.ProcessEnv) => base);
+    assert.equal(boundedMarker, root);
     for (const row of fixture.browserPaths) {
       if (row.input === null) delete process.env.PLAYWRIGHT_BROWSERS_PATH;
       else process.env.PLAYWRIGHT_BROWSERS_PATH = interpolate(row.input);

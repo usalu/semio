@@ -3,8 +3,7 @@
 #[path = "📸️snapshot/🦀️.rs"]
 pub mod snapshot;
 
-#[path = "🧬️mutations/🦀️.rs"]
-pub mod mutations;
+pub use semio_s_artifact_norm_en1992_mutations::binary as mutations;
 
 #[path = "🔺️diff/🦀️.rs"]
 pub mod diff;

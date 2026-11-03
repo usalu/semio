@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-rail-load-group-assumed-udl/schema.json",
+  "title": "ChangeRailLoadGroupAssumedUdl",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newAssumedUdl"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Rail load group",
+          "de": "Eisenbahn-Lastgruppe"
+        },
+        "description": {
+          "en": "The rail load group this mutation addresses, by id.",
+          "de": "Das adressierte Element (Eisenbahn-Lastgruppe), per Kennung."
+        },
+        "ref": {
+          "kind": "rail-load-group"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newAssumedUdl": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Rotation assumed_udl f",
+          "de": "Angesetzte Gruppen-Streckenlast"
+        },
+        "widget": "stepper",
+        "role": "value",
+        "group": "value",
+        "order": 20,
+        "unit": "N/m",
+        "displayUnit": "kN/m",
+        "displayFactor": 0.001,
+        "precision": 1,
+        "step": 1000
+      }
+    }
+  }
+}

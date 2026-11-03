@@ -21,8 +21,8 @@ pub fn text_in(variants: &[LocalizedText], locale: &str) -> String {
 /// `VdiUnit` boundary via `From`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub enum VdiQuantityKind {
     Dimensionless,
@@ -49,6 +49,7 @@ pub enum VdiQuantityKind {
     #[dsl(key = "ventilationRate")]
     VentilationRate,
     Acceleration,
+    Velocity,
 }
 
 impl From<QuantityKind> for VdiQuantityKind {
@@ -73,6 +74,7 @@ impl From<QuantityKind> for VdiQuantityKind {
             QuantityKind::AirPermeability => VdiQuantityKind::AirPermeability,
             QuantityKind::VentilationRate => VdiQuantityKind::VentilationRate,
             QuantityKind::Acceleration => VdiQuantityKind::Acceleration,
+            QuantityKind::Velocity => VdiQuantityKind::Velocity,
         }
     }
 }
@@ -80,8 +82,8 @@ impl From<QuantityKind> for VdiQuantityKind {
 /// 📐️ VDI 3805 unit with absolute vs delta semantics.
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct VdiUnit {
     pub symbol: String,

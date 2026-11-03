@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeHoistingSpeed",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
-  "binaryTag": 24,
+  "binaryTag": 52,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

@@ -1,0 +1,6 @@
+{
+  "ChangeWindBridgeParapetHeight": {
+    "id": "wind-bridge-1",
+    "newParapetHeight": 3.0
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "InsertFatigueBand": {
+    "id": "fat-1",
+    "index": 1,
+    "element": {
+      "id": "fb-1-2",
+      "deltaSigma": 95000000.0,
+      "cycles": 2000000.0
+    }
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "ChangeBarLayerBondCondition": {
+    "memberId": "wall-W1",
+    "layerId": "vert",
+    "newBondCondition": "Good"
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeSeismicSlopeFrictionAngle",
+  "id": "en1998-slope-1",
+  "newFrictionAngle": 32.0
+}

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeWallStemThickness",
+  "id": "wall-W1",
+  "newStemThickness": 0.7
+}

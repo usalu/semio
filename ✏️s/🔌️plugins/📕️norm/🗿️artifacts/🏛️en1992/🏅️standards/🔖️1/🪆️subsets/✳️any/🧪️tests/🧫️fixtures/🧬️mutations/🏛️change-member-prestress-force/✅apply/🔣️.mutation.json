@@ -1,0 +1,6 @@
+{
+  "ChangeMemberPrestressForce": {
+    "memberId": "wall-W1",
+    "newPrestressForce": 2000000.0
+  }
+}

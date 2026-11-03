@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-column-second-moment-m4/schema.json",
+  "title": "ChangeColumnSecondMomentM4",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newIM4"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Composite column",
+          "de": "Verbundstütze"
+        },
+        "description": {
+          "en": "The composite column this mutation addresses, by id.",
+          "de": "Das adressierte Element (Verbundstütze), per Kennung."
+        },
+        "ref": {
+          "kind": "column"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newIM4": {
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Column second moment of area",
+          "de": "Flächenträgheitsmoment der Stütze"
+        },
+        "unit": "m4",
+        "step": 0.000001,
+        "precision": 9,
+        "group": "column",
+        "order": 20
+      }
+    }
+  }
+}

@@ -1,11 +1,11 @@
 /** 🥪️ `change-bed-joint-thickness` wire twin: the leaf payload `ChangeBedJointThickness`, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
- * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
+ * by `repo ./📜️script.ts schema twins generate`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
-import { normWireInteger, normWireNumber, normWireObject, normWireRange, type NormWireReader, normWireRequired } from "@semio-tech/norm-js/registry/contract";
+import { normWireNumber, normWireObject, normWireRange, normWireRequired, normWireString, type NormWireReader } from "@semio-tech/norm-js/registry/contract";
 
 export interface ChangeBedJointThickness {
-  index: number;
+  id: string;
   newBedJointThicknessM: number;
 }
 
-export const parseChangeBedJointThickness: NormWireReader<ChangeBedJointThickness> = normWireObject<ChangeBedJointThickness>({ index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), newBedJointThicknessM: normWireRequired(normWireRange(normWireNumber, {"minimum":0})) });
+export const parseChangeBedJointThickness: NormWireReader<ChangeBedJointThickness> = normWireObject<ChangeBedJointThickness>({ id: normWireRequired(normWireString), newBedJointThicknessM: normWireRequired(normWireRange(normWireNumber, {"minimum":0,"maximum":10000})) });

@@ -1,0 +1,6 @@
+{
+  "ChangeThermalSectionDeckType": {
+    "id": "thermal-section-1",
+    "newDeckType": 2
+  }
+}

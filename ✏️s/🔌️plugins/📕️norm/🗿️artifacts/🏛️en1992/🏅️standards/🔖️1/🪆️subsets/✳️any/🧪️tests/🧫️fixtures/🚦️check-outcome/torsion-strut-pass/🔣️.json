@@ -1,0 +1,6212 @@
+{
+  "annex": "De",
+  "reliabilityClass": "RC2",
+  "title": "Reinforced concrete office building with tank, bridge and fastenings",
+  "designWorkingLifeYears": 50.0,
+  "deltaCDev": 0.01,
+  "cementType": "N",
+  "concreteGrades": [
+    {
+      "id": "c30",
+      "name": "C30/37",
+      "fCk": 30000000.0
+    },
+    {
+      "id": "c35",
+      "name": "C35/45",
+      "fCk": 35000000.0
+    }
+  ],
+  "reinforcementGrades": [
+    {
+      "id": "b500",
+      "name": "B500B",
+      "fYk": 500000000.0,
+      "eS": 200000000000.0,
+      "ductility": "b",
+      "k": 1.08,
+      "epsUk": 0.05
+    },
+    {
+      "id": "b500a",
+      "name": "B500A",
+      "fYk": 500000000.0,
+      "eS": 200000000000.0,
+      "ductility": "a",
+      "k": 1.05,
+      "epsUk": 0.025
+    },
+    {
+      "id": "b500c",
+      "name": "B500C",
+      "fYk": 550000000.0,
+      "eS": 200000000000.0,
+      "ductility": "c",
+      "k": 1.15,
+      "epsUk": 0.075
+    }
+  ],
+  "prestressSteels": [
+    {
+      "id": "yp1860",
+      "name": "Y1860S7",
+      "fPk": 1860000000.0,
+      "fP01k": 1700000000.0
+    },
+    {
+      "id": "yp1860b",
+      "name": "Y1770S7",
+      "fPk": 1770000000.0,
+      "fP01k": 1520000000.0
+    }
+  ],
+  "members": [
+    {
+      "id": "beam-B1",
+      "labelEn": "Floor beam B1",
+      "labelDe": "Deckenbalken B1",
+      "kind": "Beam",
+      "concreteGradeId": "c35",
+      "reinforcementGradeId": "b500",
+      "prestressSteelId": "",
+      "exposure": "Xc1",
+      "width": 0.4,
+      "height": 0.8,
+      "effectiveDepth": 0.74,
+      "cover": 0.04,
+      "span": 6.0,
+      "support": "SimplySupported",
+      "bucklingLength": 0.0,
+      "longitudinal": [
+        {
+          "id": "bot",
+          "diameter": 0.025,
+          "count": 8,
+          "position": "Bottom",
+          "anchorageLength": 1.6,
+          "lapLength": 2.0,
+          "bondCondition": "Good",
+          "aggregateSize": 0.016,
+          "lapShare": 1.0
+        },
+        {
+          "id": "top",
+          "diameter": 0.02,
+          "count": 6,
+          "position": "Top",
+          "anchorageLength": 1.6,
+          "lapLength": 2.0,
+          "bondCondition": "Good",
+          "aggregateSize": 0.016,
+          "lapShare": 1.0
+        }
+      ],
+      "stirrups": {
+        "diameter": 0.01,
+        "spacing": 0.1,
+        "legs": 2
+      },
+      "punching": null,
+      "prestress": null,
+      "fire": {
+        "rating": "R90",
+        "axisDistance": 0.04,
+        "slabSystem": "OneWay"
+      },
+      "actions": [
+        {
+          "id": "G",
+          "kind": "Permanent",
+          "category": "SelfWeight",
+          "source": "Udl",
+          "gKLine": 20000.0,
+          "qKLine": 0.0,
+          "pointForce": 0.0,
+          "mK": 0.0,
+          "nK": 0.0,
+          "vK": 0.0,
+          "tK": 0.0,
+          "vKPunch": 0.0
+        },
+        {
+          "id": "Q",
+          "kind": "Imposed",
+          "category": "Office",
+          "source": "Udl",
+          "gKLine": 0.0,
+          "qKLine": 15000.0,
+          "pointForce": 0.0,
+          "mK": 0.0,
+          "nK": 0.0,
+          "vK": 0.0,
+          "tK": 40000.0,
+          "vKPunch": 0.0
+        }
+      ],
+      "useFem": false,
+      "udl": 0.0,
+      "deflectionSensitive": false,
+      "tightness": "Tc2",
+      "hdOverH": 8.0,
+      "liquidSigmaS": 280000000.0,
+      "liquidRhoPEff": 0.02,
+      "liquidFCtEff": 3200000.0,
+      "liquidSRMax": 0.22,
+      "bridgeSigmaC": 0.0,
+      "bridgeDeltaSigmaS": 0.0,
+      "relativeHumidity": 0.5,
+      "bearingWidth": 0.0,
+      "sectionPoints": [],
+      "bars": [],
+      "tendonPoints": [],
+      "openings": [],
+      "studRows": []
+    },
+    {
+      "id": "slab-S1",
+      "labelEn": "One-way floor slab S1",
+      "labelDe": "Einachsig gespannte Deckenplatte S1",
+      "kind": "Slab",
+      "concreteGradeId": "c35",
+      "reinforcementGradeId": "b500",
+      "prestressSteelId": "",
+      "exposure": "Xc1",
+      "width": 1.0,
+      "height": 0.25,
+      "effectiveDepth": 0.21,
+      "cover": 0.04,
+      "span": 4.5,
+      "support": "SimplySupported",
+      "bucklingLength": 0.0,
+      "longitudinal": [
+        {
+          "id": "bot",
+          "diameter": 0.012,
+          "count": 9,
+          "position": "Bottom",
+          "anchorageLength": 0.45,
+          "lapLength": 0.55,
+          "bondCondition": "Good",
+          "aggregateSize": 0.016,
+          "lapShare": 1.0
+        }
+      ],
+      "stirrups": null,
+      "punching": null,
+      "prestress": null,
+      "fire": {
+        "rating": "R60",
+        "axisDistance": 0.03,
+        "slabSystem": "OneWay"
+      },
+      "actions": [
+        {
+          "id": "G",
+          "kind": "Permanent",
+          "category": "SelfWeight",
+          "source": "Udl",
+          "gKLine": 6000.0,
+          "qKLine": 0.0,
+          "pointForce": 0.0,
+          "mK": 0.0,
+          "nK": 0.0,
+          "vK": 0.0,
+          "tK": 0.0,
+          "vKPunch": 0.0
+        },
+        {
+          "id": "Q",
+          "kind": "Imposed",
+          "category": "Office",
+          "source": "Udl",
+          "gKLine": 0.0,
+          "qKLine": 3000.0,
+          "pointForce": 0.0,
+          "mK": 0.0,
+          "nK": 0.0,
+          "vK": 0.0,
+          "tK": 0.0,
+          "vKPunch": 0.0
+        }
+      ],
+      "useFem": false,
+      "udl": 0.0,
+      "deflectionSensitive": true,
+      "tightness": null,
+      "hdOverH": 0.0,
+      "liquidSigmaS": 0.0,
+      "liquidRhoPEff": 0.0,
+      "liquidFCtEff": 0.0,
+      "liquidSRMax": 0.0,
+      "bridgeSigmaC": 0.0,
+      "bridgeDeltaSigmaS": 0.0,
+      "relativeHumidity": 0.5,
+      "bearingWidth": 0.0,
+      "sectionPoints": [],
+      "bars": [],
+      "tendonPoints": [],
+      "openings": [],
+      "studRows": []
+    },
+    {
+      "id": "slab-R1",
+      "labelEn": "Ribbed slab R1",
+      "labelDe": "Rippendecke R1",
+      "kind": "RibbedSlab",
+      "concreteGradeId": "c35",
+      "reinforcementGradeId": "b500",
+      "prestressSteelId": "",
+      "exposure": "Xc1",
+      "width": 0.6,
+      "height": 0.35,
+      "effectiveDepth": 0.3,
+      "cover": 0.04,
+      "span": 7.5,
+      "support": "SimplySupported",
+      "bucklingLength": 0.0,
+      "longitudinal": [
+        {
+          "id": "bot",
+          "diameter": 0.02,
+          "count": 2,
+          "position": "Bottom",
+          "anchorageLength": 0.45,
+          "lapLength": 0.55,
+          "bondCondition": "Good",
+          "aggregateSize": 0.016,
+          "lapShare": 1.0
+        }
+      ],
+      "stirrups": {
+        "diameter": 0.008,
+        "spacing": 0.15,
+        "legs": 2
+      },
+      "punching": null,
+      "prestress": null,
+      "fire": {
+        "rating": "R60",
+        "axisDistance": 0.03,
+        "slabSystem": "OneWay"
+      },
+      "actions": [
+        {
+          "id": "G",
+          "kind": "Permanent",
+          "category": "SelfWeight",
+          "source": "Udl",
+          "gKLine": 3500.0,
+          "qKLine": 0.0,
+          "pointForce": 0.0,
+          "mK": 0.0,
+          "nK": 0.0,
+          "vK": 0.0,
+          "tK": 0.0,
+          "vKPunch": 0.0
+        },
+        {
+          "id": "Q",
+          "kind": "Imposed",
+          "category": "Office",
+          "source": "Udl",
+          "gKLine": 0.0,
+          "qKLine": 2400.0,
+          "pointForce": 0.0,
+          "mK": 0.0,
+          "nK": 0.0,
+          "vK": 0.0,
+          "tK": 0.0,
+          "vKPunch": 0.0
+        }
+      ],
+      "useFem": false,
+      "udl": 0.0,
+      "deflectionSensitive": true,
+      "tightness": null,
+      "hdOverH": 0.0,
+      "liquidSigmaS": 0.0,
+      "liquidRhoPEff": 0.0,
+      "liquidFCtEff": 0.0,
+      "liquidSRMax": 0.0,
+      "bridgeSigmaC": 0.0,
+      "bridgeDeltaSigmaS": 0.0,
+      "relativeHumidity": 0.5,
+      "bearingWidth": 0.0,
+      "sectionPoints": [],
+      "bars": [],
+      "tendonPoints": [],
+      "openings": [],
+      "studRows": []
+    },
+    {
+      "id": "column-C1",
+      "labelEn": "Braced column C1",
+      "labelDe": "Ausgesteifte Stütze C1",
+      "kind": "Column",
+      "concreteGradeId": "c35",
+      "reinforcementGradeId": "b500",
+      "prestressSteelId": "",
+      "exposure": "Xc1",
+      "width": 0.4,
+      "height": 0.4,
+      "effectiveDepth": 0.35,
+      "cover": 0.04,
+      "span": 3.2,
+      "support": "Fixed",
+      "bucklingLength": 2.4,
+      "longitudinal": [
+        {
+          "id": "tens",
+          "diameter": 0.02,
+          "count": 4,
+          "position": "Bottom",
+          "anchorageLength": 0.7,
+          "lapLength": 0.85,
+          "bondCondition": "Good",
+          "aggregateSize": 0.016,
+          "lapShare": 1.0
+        },
+        {
+          "id": "comp",
+          "diameter": 0.02,
+          "count": 4,
+          "position": "Top",
+          "anchorageLength": 0.7,
+          "lapLength": 0.85,
+          "bondCondition": "Good",
+          "aggregateSize": 0.016,
+          "lapShare": 1.0
+        }
+      ],
+      "stirrups": {
+        "diameter": 0.008,
+        "spacing": 0.15,
+        "legs": 2
+      },
+      "punching": null,
+      "prestress": null,
+      "fire": {
+        "rating": "R90",
+        "axisDistance": 0.04,
+        "slabSystem": "OneWay"
+      },
+      "actions": [
+        {
+          "id": "G",
+          "kind": "Permanent",
+          "category": "SelfWeight",
+          "source": "External",
+          "gKLine": 0.0,
+          "qKLine": 0.0,
+          "pointForce": 0.0,
+          "mK": 25000.0,
+          "nK": -600000.0,
+          "vK": 15000.0,
+          "tK": 0.0,
+          "vKPunch": 0.0
+        },
+        {
+          "id": "Q",
+          "kind": "Imposed",
+          "category": "Office",
+          "source": "External",
+          "gKLine": 0.0,
+          "qKLine": 0.0,
+          "pointForce": 0.0,
+          "mK": 15000.0,
+          "nK": -300000.0,
+          "vK": 10000.0,
+          "tK": 0.0,
+          "vKPunch": 0.0
+        }
+      ],
+      "useFem": false,
+      "udl": 0.0,
+      "deflectionSensitive": false,
+      "tightness": null,
+      "hdOverH": 0.0,
+      "liquidSigmaS": 0.0,
+      "liquidRhoPEff": 0.0,
+      "liquidFCtEff": 0.0,
+      "liquidSRMax": 0.0,
+      "bridgeSigmaC": 0.0,
+      "bridgeDeltaSigmaS": 0.0,
+      "relativeHumidity": 0.5,
+      "bearingWidth": 0.0,
+      "sectionPoints": [],
+      "bars": [],
+      "tendonPoints": [],
+      "openings": [],
+      "studRows": []
+    },
+    {
+      "id": "wall-SW1",
+      "labelEn": "Shear wall SW1",
+      "labelDe": "Schubwand SW1",
+      "kind": "Wall",
+      "concreteGradeId": "c35",
+      "reinforcementGradeId": "b500",
+      "prestressSteelId": "",
+      "exposure": "Xc1",
+      "width": 0.25,
+      "height": 2.5,
+      "effectiveDepth": 2.3,
+      "cover": 0.04,
+      "span": 3.0,
+      "support": "Fixed",
+      "bucklingLength": 2.1,
+      "longitudinal": [
+        {
+          "id": "tens",
+          "diameter": 0.012,
+          "count": 12,
+          "position": "Bottom",
+          "anchorageLength": 0.7,
+          "lapLength": 0.85,
+          "bondCondition": "Good",
+          "aggregateSize": 0.016,
+          "lapShare": 1.0
+        },
+        {
+          "id": "comp",
+          "diameter": 0.012,
+          "count": 12,
+          "position": "Top",
+          "anchorageLength": 0.7,
+          "lapLength": 0.85,
+          "bondCondition": "Good",
+          "aggregateSize": 0.016,
+          "lapShare": 1.0
+        }
+      ],
+      "stirrups": {
+        "diameter": 0.008,
+        "spacing": 0.15,
+        "legs": 2
+      },
+      "punching": null,
+      "prestress": null,
+      "fire": {
+        "rating": "R90",
+        "axisDistance": 0.04,
+        "slabSystem": "OneWay"
+      },
+      "actions": [
+        {
+          "id": "G",
+          "kind": "Permanent",
+          "category": "SelfWeight",
+          "source": "External",
+          "gKLine": 0.0,
+          "qKLine": 0.0,
+          "pointForce": 0.0,
+          "mK": 25000.0,
+          "nK": -600000.0,
+          "vK": 15000.0,
+          "tK": 0.0,
+          "vKPunch": 0.0
+        },
+        {
+          "id": "Q",
+          "kind": "Imposed",
+          "category": "Office",
+          "source": "External",
+          "gKLine": 0.0,
+          "qKLine": 0.0,
+          "pointForce": 0.0,
+          "mK": 15000.0,
+          "nK": -300000.0,
+          "vK": 10000.0,
+          "tK": 0.0,
+          "vKPunch": 0.0
+        }
+      ],
+      "useFem": false,
+      "udl": 0.0,
+      "deflectionSensitive": false,
+      "tightness": null,
+      "hdOverH": 0.0,
+      "liquidSigmaS": 0.0,
+      "liquidRhoPEff": 0.0,
+      "liquidFCtEff": 0.0,
+      "liquidSRMax": 0.0,
+      "bridgeSigmaC": 0.0,
+      "bridgeDeltaSigmaS": 0.0,
+      "relativeHumidity": 0.5,
+      "bearingWidth": 0.0,
+      "sectionPoints": [],
+      "bars": [],
+      "tendonPoints": [],
+      "openings": [],
+      "studRows": []
+    },
+    {
+      "id": "tie-T1",
+      "labelEn": "Tension member T1",
+      "labelDe": "Zugglied T1",
+      "kind": "TensionMember",
+      "concreteGradeId": "c35",
+      "reinforcementGradeId": "b500",
+      "prestressSteelId": "",
+      "exposure": "Xc1",
+      "width": 0.3,
+      "height": 0.3,
+      "effectiveDepth": 0.26,
+      "cover": 0.04,
+      "span": 5.0,
+      "support": "Fixed",
+      "bucklingLength": 0.0,
+      "longitudinal": [
+        {
+          "id": "bot",
+          "diameter": 0.025,
+          "count": 6,
+          "position": "Bottom",
+          "anchorageLength": 0.7,
+          "lapLength": 0.85,
+          "bondCondition": "Good",
+          "aggregateSize": 0.016,
+          "lapShare": 1.0
+        }
+      ],
+      "stirrups": {
+        "diameter": 0.008,
+        "spacing": 0.15,
+        "legs": 2
+      },
+      "punching": null,
+      "prestress": null,
+      "fire": {
+        "rating": "R90",
+        "axisDistance": 0.04,
+        "slabSystem": "OneWay"
+      },
+      "actions": [
+        {
+          "id": "G",
+          "kind": "Permanent",
+          "category": "SelfWeight",
+          "source": "External",
+          "gKLine": 0.0,
+          "qKLine": 0.0,
+          "pointForce": 0.0,
+          "mK": 0.0,
+          "nK": 400000.0,
+          "vK": 0.0,
+          "tK": 0.0,
+          "vKPunch": 0.0
+        },
+        {
+          "id": "Q",
+          "kind": "Imposed",
+          "category": "Office",
+          "source": "External",
+          "gKLine": 0.0,
+          "qKLine": 0.0,
+          "pointForce": 0.0,
+          "mK": 0.0,
+          "nK": 200000.0,
+          "vK": 0.0,
+          "tK": 0.0,
+          "vKPunch": 0.0
+        }
+      ],
+      "useFem": false,
+      "udl": 0.0,
+      "deflectionSensitive": false,
+      "tightness": null,
+      "hdOverH": 0.0,
+      "liquidSigmaS": 0.0,
+      "liquidRhoPEff": 0.0,
+      "liquidFCtEff": 0.0,
+      "liquidSRMax": 0.0,
+      "bridgeSigmaC": 0.0,
+      "bridgeDeltaSigmaS": 0.0,
+      "relativeHumidity": 0.5,
+      "bearingWidth": 0.0,
+      "sectionPoints": [],
+      "bars": [],
+      "tendonPoints": [],
+      "openings": [],
+      "studRows": []
+    },
+    {
+      "id": "deck-D1",
+      "labelEn": "Bridge deck girder D1",
+      "labelDe": "Brückenüberbau D1",
+      "kind": "Bridge",
+      "concreteGradeId": "c35",
+      "reinforcementGradeId": "b500",
+      "prestressSteelId": "",
+      "exposure": "Xd1",
+      "width": 0.5,
+      "height": 1.2,
+      "effectiveDepth": 1.12,
+      "cover": 0.04,
+      "span": 14.0,
+      "support": "SimplySupported",
+      "bucklingLength": 0.0,
+      "longitudinal": [
+        {
+          "id": "bot",
+          "diameter": 0.032,
+          "count": 8,
+          "position": "Bottom",
+          "anchorageLength": 0.7,
+          "lapLength": 0.85,
+          "bondCondition": "Good",
+          "aggregateSize": 0.016,
+          "lapShare": 1.0
+        }
+      ],
+      "stirrups": {
+        "diameter": 0.008,
+        "spacing": 0.15,
+        "legs": 2
+      },
+      "punching": null,
+      "prestress": null,
+      "fire": {
+        "rating": "R90",
+        "axisDistance": 0.04,
+        "slabSystem": "OneWay"
+      },
+      "actions": [
+        {
+          "id": "G",
+          "kind": "Permanent",
+          "category": "SelfWeight",
+          "source": "Udl",
+          "gKLine": 45000.0,
+          "qKLine": 0.0,
+          "pointForce": 0.0,
+          "mK": 0.0,
+          "nK": 0.0,
+          "vK": 0.0,
+          "tK": 0.0,
+          "vKPunch": 0.0
+        },
+        {
+          "id": "Q",
+          "kind": "Imposed",
+          "category": "Office",
+          "source": "Udl",
+          "gKLine": 0.0,
+          "qKLine": 22000.0,
+          "pointForce": 0.0,
+          "mK": 0.0,
+          "nK": 0.0,
+          "vK": 0.0,
+          "tK": 0.0,
+          "vKPunch": 0.0
+        }
+      ],
+      "useFem": false,
+      "udl": 0.0,
+      "deflectionSensitive": false,
+      "tightness": null,
+      "hdOverH": 0.0,
+      "liquidSigmaS": 0.0,
+      "liquidRhoPEff": 0.0,
+      "liquidFCtEff": 0.0,
+      "liquidSRMax": 0.0,
+      "bridgeSigmaC": 10000000.0,
+      "bridgeDeltaSigmaS": 60000000.0,
+      "relativeHumidity": 0.5,
+      "bearingWidth": 0.0,
+      "sectionPoints": [],
+      "bars": [],
+      "tendonPoints": [],
+      "openings": [],
+      "studRows": []
+    },
+    {
+      "id": "wall-W1",
+      "labelEn": "Prestressed tank wall W1",
+      "labelDe": "Vorgespannte Behälterwand W1",
+      "kind": "LiquidRetaining",
+      "concreteGradeId": "c35",
+      "reinforcementGradeId": "b500",
+      "prestressSteelId": "yp1860",
+      "exposure": "Xc4",
+      "width": 0.35,
+      "height": 0.5,
+      "effectiveDepth": 0.45,
+      "cover": 0.04,
+      "span": 7.5,
+      "support": "Continuous",
+      "bucklingLength": 0.0,
+      "longitudinal": [
+        {
+          "id": "vert",
+          "diameter": 0.02,
+          "count": 6,
+          "position": "Bottom",
+          "anchorageLength": 0.7,
+          "lapLength": 0.85,
+          "bondCondition": "Good",
+          "aggregateSize": 0.016,
+          "lapShare": 1.0
+        }
+      ],
+      "stirrups": {
+        "diameter": 0.008,
+        "spacing": 0.15,
+        "legs": 2
+      },
+      "punching": null,
+      "prestress": {
+        "force": 1000000.0,
+        "area": 0.0008,
+        "eccentricity": 0.05,
+        "lossRatio": 0.2
+      },
+      "fire": {
+        "rating": "R90",
+        "axisDistance": 0.04,
+        "slabSystem": "OneWay"
+      },
+      "actions": [
+        {
+          "id": "G",
+          "kind": "Permanent",
+          "category": "SelfWeight",
+          "source": "External",
+          "gKLine": 0.0,
+          "qKLine": 0.0,
+          "pointForce": 0.0,
+          "mK": 100000.0,
+          "nK": 30000.0,
+          "vK": 50000.0,
+          "tK": 0.0,
+          "vKPunch": 0.0
+        },
+        {
+          "id": "Q-office",
+          "kind": "Imposed",
+          "category": "Office",
+          "source": "External",
+          "gKLine": 0.0,
+          "qKLine": 0.0,
+          "pointForce": 0.0,
+          "mK": 50000.0,
+          "nK": 15000.0,
+          "vK": 30000.0,
+          "tK": 0.0,
+          "vKPunch": 0.0
+        }
+      ],
+      "useFem": true,
+      "udl": 24000.0,
+      "deflectionSensitive": false,
+      "tightness": "Tc2",
+      "hdOverH": 8.0,
+      "liquidSigmaS": 280000000.0,
+      "liquidRhoPEff": 0.02,
+      "liquidFCtEff": 3200000.0,
+      "liquidSRMax": 0.22,
+      "bridgeSigmaC": 0.0,
+      "bridgeDeltaSigmaS": 0.0,
+      "relativeHumidity": 0.5,
+      "bearingWidth": 0.0,
+      "sectionPoints": [
+        {
+          "id": "sp-1",
+          "y": -0.175,
+          "z": -0.25
+        },
+        {
+          "id": "sp-2",
+          "y": 0.175,
+          "z": -0.25
+        },
+        {
+          "id": "sp-3",
+          "y": 0.175,
+          "z": 0.25
+        },
+        {
+          "id": "sp-4",
+          "y": -0.175,
+          "z": 0.25
+        }
+      ],
+      "bars": [
+        {
+          "id": "bar-1",
+          "layerId": "vert",
+          "y": -0.125,
+          "z": -0.2,
+          "diameter": 0.02,
+          "length": 0.0,
+          "bend": "Auto"
+        },
+        {
+          "id": "bar-2",
+          "layerId": "vert",
+          "y": -0.075,
+          "z": -0.2,
+          "diameter": 0.02,
+          "length": 0.0,
+          "bend": "Auto"
+        },
+        {
+          "id": "bar-3",
+          "layerId": "vert",
+          "y": -0.024999999999999994,
+          "z": -0.2,
+          "diameter": 0.02,
+          "length": 0.0,
+          "bend": "Auto"
+        },
+        {
+          "id": "bar-4",
+          "layerId": "vert",
+          "y": 0.025000000000000022,
+          "z": -0.2,
+          "diameter": 0.02,
+          "length": 0.0,
+          "bend": "Auto"
+        },
+        {
+          "id": "bar-5",
+          "layerId": "vert",
+          "y": 0.07500000000000001,
+          "z": -0.2,
+          "diameter": 0.02,
+          "length": 0.0,
+          "bend": "Auto"
+        },
+        {
+          "id": "bar-6",
+          "layerId": "vert",
+          "y": 0.125,
+          "z": -0.2,
+          "diameter": 0.02,
+          "length": 0.0,
+          "bend": "Auto"
+        }
+      ],
+      "tendonPoints": [
+        {
+          "id": "t0",
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        {
+          "id": "t1",
+          "x": 3.75,
+          "y": 0.0,
+          "z": -0.12
+        },
+        {
+          "id": "t2",
+          "x": 7.5,
+          "y": 0.0,
+          "z": 0.0
+        }
+      ],
+      "openings": [],
+      "studRows": []
+    },
+    {
+      "id": "slab-FS-interior",
+      "labelEn": "Flat slab interior column, unbalanced moments",
+      "labelDe": "Flachdecke Innenstütze, Momentenanteil",
+      "kind": "FlatSlab",
+      "concreteGradeId": "c30",
+      "reinforcementGradeId": "b500",
+      "prestressSteelId": "",
+      "exposure": "Xc1",
+      "width": 1.0,
+      "height": 0.3,
+      "effectiveDepth": 0.255,
+      "cover": 0.025,
+      "span": 6.0,
+      "support": "Continuous",
+      "bucklingLength": 0.0,
+      "longitudinal": [
+        {
+          "id": "bot",
+          "diameter": 0.014,
+          "count": 8,
+          "position": "Bottom",
+          "anchorageLength": 0.65,
+          "lapLength": 0.85,
+          "bondCondition": "Good",
+          "aggregateSize": 0.016,
+          "lapShare": 1.0
+        }
+      ],
+      "stirrups": null,
+      "punching": {
+        "columnWidth": 0.3,
+        "columnDepth": 0.3,
+        "columnPosition": "Interior",
+        "asw": 0.0,
+        "betaMethod": "UnbalancedMoments",
+        "momentC1": 60000.0,
+        "momentC2": 0.0
+      },
+      "prestress": null,
+      "fire": {
+        "rating": "R60",
+        "axisDistance": 0.035,
+        "slabSystem": "OneWay"
+      },
+      "actions": [
+        {
+          "id": "G",
+          "kind": "Permanent",
+          "category": "SelfWeight",
+          "source": "External",
+          "gKLine": 0.0,
+          "qKLine": 0.0,
+          "pointForce": 0.0,
+          "mK": 30000.0,
+          "nK": 0.0,
+          "vK": 0.0,
+          "tK": 0.0,
+          "vKPunch": 300000.0
+        },
+        {
+          "id": "Q-office",
+          "kind": "Imposed",
+          "category": "Office",
+          "source": "External",
+          "gKLine": 0.0,
+          "qKLine": 0.0,
+          "pointForce": 0.0,
+          "mK": 15000.0,
+          "nK": 0.0,
+          "vK": 0.0,
+          "tK": 0.0,
+          "vKPunch": 110000.0
+        }
+      ],
+      "useFem": true,
+      "udl": 0.0,
+      "deflectionSensitive": false,
+      "tightness": null,
+      "hdOverH": 0.0,
+      "liquidSigmaS": 0.0,
+      "liquidRhoPEff": 0.0,
+      "liquidFCtEff": 0.0,
+      "liquidSRMax": 0.0,
+      "bridgeSigmaC": 0.0,
+      "bridgeDeltaSigmaS": 0.0,
+      "relativeHumidity": 0.5,
+      "bearingWidth": 0.0,
+      "sectionPoints": [],
+      "bars": [],
+      "tendonPoints": [],
+      "openings": [],
+      "studRows": [
+        {
+          "id": "r1",
+          "angle": 0.0,
+          "count": 4,
+          "spacingFirst": 0.1,
+          "spacingRadial": 0.14,
+          "diameter": 0.012
+        },
+        {
+          "id": "r2",
+          "angle": 0.5235987755982988,
+          "count": 4,
+          "spacingFirst": 0.1,
+          "spacingRadial": 0.14,
+          "diameter": 0.012
+        },
+        {
+          "id": "r3",
+          "angle": 1.0471975511965976,
+          "count": 4,
+          "spacingFirst": 0.1,
+          "spacingRadial": 0.14,
+          "diameter": 0.012
+        },
+        {
+          "id": "r4",
+          "angle": 1.5707963267948966,
+          "count": 4,
+          "spacingFirst": 0.1,
+          "spacingRadial": 0.14,
+          "diameter": 0.012
+        },
+        {
+          "id": "r5",
+          "angle": 2.0943951023931953,
+          "count": 4,
+          "spacingFirst": 0.1,
+          "spacingRadial": 0.14,
+          "diameter": 0.012
+        },
+        {
+          "id": "r6",
+          "angle": 2.6179938779914944,
+          "count": 4,
+          "spacingFirst": 0.1,
+          "spacingRadial": 0.14,
+          "diameter": 0.012
+        },
+        {
+          "id": "r7",
+          "angle": 3.141592653589793,
+          "count": 4,
+          "spacingFirst": 0.1,
+          "spacingRadial": 0.14,
+          "diameter": 0.012
+        },
+        {
+          "id": "r8",
+          "angle": 3.6651914291880923,
+          "count": 4,
+          "spacingFirst": 0.1,
+          "spacingRadial": 0.14,
+          "diameter": 0.012
+        },
+        {
+          "id": "r9",
+          "angle": 4.1887902047863905,
+          "count": 4,
+          "spacingFirst": 0.1,
+          "spacingRadial": 0.14,
+          "diameter": 0.012
+        },
+        {
+          "id": "r10",
+          "angle": 4.71238898038469,
+          "count": 4,
+          "spacingFirst": 0.1,
+          "spacingRadial": 0.14,
+          "diameter": 0.012
+        },
+        {
+          "id": "r11",
+          "angle": 5.235987755982989,
+          "count": 4,
+          "spacingFirst": 0.1,
+          "spacingRadial": 0.14,
+          "diameter": 0.012
+        },
+        {
+          "id": "r12",
+          "angle": 5.759586531581287,
+          "count": 4,
+          "spacingFirst": 0.1,
+          "spacingRadial": 0.14,
+          "diameter": 0.012
+        }
+      ]
+    },
+    {
+      "id": "slab-FS-edge",
+      "labelEn": "Flat slab edge column, unbalanced moments",
+      "labelDe": "Flachdecke Randstütze, Momentenanteil",
+      "kind": "FlatSlab",
+      "concreteGradeId": "c30",
+      "reinforcementGradeId": "b500",
+      "prestressSteelId": "",
+      "exposure": "Xc1",
+      "width": 1.0,
+      "height": 0.3,
+      "effectiveDepth": 0.255,
+      "cover": 0.025,
+      "span": 6.0,
+      "support": "Continuous",
+      "bucklingLength": 0.0,
+      "longitudinal": [
+        {
+          "id": "bot",
+          "diameter": 0.014,
+          "count": 8,
+          "position": "Bottom",
+          "anchorageLength": 0.65,
+          "lapLength": 0.85,
+          "bondCondition": "Good",
+          "aggregateSize": 0.016,
+          "lapShare": 1.0
+        }
+      ],
+      "stirrups": null,
+      "punching": {
+        "columnWidth": 0.3,
+        "columnDepth": 0.3,
+        "columnPosition": "Edge",
+        "asw": 0.0,
+        "betaMethod": "UnbalancedMoments",
+        "momentC1": 20000.0,
+        "momentC2": 30000.0
+      },
+      "prestress": null,
+      "fire": {
+        "rating": "R60",
+        "axisDistance": 0.035,
+        "slabSystem": "OneWay"
+      },
+      "actions": [
+        {
+          "id": "G",
+          "kind": "Permanent",
+          "category": "SelfWeight",
+          "source": "External",
+          "gKLine": 0.0,
+          "qKLine": 0.0,
+          "pointForce": 0.0,
+          "mK": 30000.0,
+          "nK": 0.0,
+          "vK": 0.0,
+          "tK": 0.0,
+          "vKPunch": 160000.0
+        },
+        {
+          "id": "Q-office",
+          "kind": "Imposed",
+          "category": "Office",
+          "source": "External",
+          "gKLine": 0.0,
+          "qKLine": 0.0,
+          "pointForce": 0.0,
+          "mK": 15000.0,
+          "nK": 0.0,
+          "vK": 0.0,
+          "tK": 0.0,
+          "vKPunch": 60000.0
+        }
+      ],
+      "useFem": true,
+      "udl": 0.0,
+      "deflectionSensitive": false,
+      "tightness": null,
+      "hdOverH": 0.0,
+      "liquidSigmaS": 0.0,
+      "liquidRhoPEff": 0.0,
+      "liquidFCtEff": 0.0,
+      "liquidSRMax": 0.0,
+      "bridgeSigmaC": 0.0,
+      "bridgeDeltaSigmaS": 0.0,
+      "relativeHumidity": 0.5,
+      "bearingWidth": 0.0,
+      "sectionPoints": [],
+      "bars": [],
+      "tendonPoints": [],
+      "openings": [],
+      "studRows": [
+        {
+          "id": "r1",
+          "angle": 1.5707963267948966,
+          "count": 4,
+          "spacingFirst": 0.1,
+          "spacingRadial": 0.14,
+          "diameter": 0.012
+        },
+        {
+          "id": "r2",
+          "angle": 2.019595277307724,
+          "count": 4,
+          "spacingFirst": 0.1,
+          "spacingRadial": 0.14,
+          "diameter": 0.012
+        },
+        {
+          "id": "r3",
+          "angle": 2.468394227820552,
+          "count": 4,
+          "spacingFirst": 0.1,
+          "spacingRadial": 0.14,
+          "diameter": 0.012
+        },
+        {
+          "id": "r4",
+          "angle": 2.9171931783333793,
+          "count": 4,
+          "spacingFirst": 0.1,
+          "spacingRadial": 0.14,
+          "diameter": 0.012
+        },
+        {
+          "id": "r5",
+          "angle": 3.365992128846207,
+          "count": 4,
+          "spacingFirst": 0.1,
+          "spacingRadial": 0.14,
+          "diameter": 0.012
+        },
+        {
+          "id": "r6",
+          "angle": 3.814791079359035,
+          "count": 4,
+          "spacingFirst": 0.1,
+          "spacingRadial": 0.14,
+          "diameter": 0.012
+        },
+        {
+          "id": "r7",
+          "angle": 4.263590029871862,
+          "count": 4,
+          "spacingFirst": 0.1,
+          "spacingRadial": 0.14,
+          "diameter": 0.012
+        },
+        {
+          "id": "r8",
+          "angle": 4.71238898038469,
+          "count": 4,
+          "spacingFirst": 0.1,
+          "spacingRadial": 0.14,
+          "diameter": 0.012
+        }
+      ]
+    },
+    {
+      "id": "slab-FS-corner",
+      "labelEn": "Flat slab corner column, unbalanced moments",
+      "labelDe": "Flachdecke Eckstütze, Momentenanteil",
+      "kind": "FlatSlab",
+      "concreteGradeId": "c30",
+      "reinforcementGradeId": "b500",
+      "prestressSteelId": "",
+      "exposure": "Xc1",
+      "width": 1.0,
+      "height": 0.3,
+      "effectiveDepth": 0.255,
+      "cover": 0.025,
+      "span": 6.0,
+      "support": "Continuous",
+      "bucklingLength": 0.0,
+      "longitudinal": [
+        {
+          "id": "bot",
+          "diameter": 0.014,
+          "count": 8,
+          "position": "Bottom",
+          "anchorageLength": 0.65,
+          "lapLength": 0.85,
+          "bondCondition": "Good",
+          "aggregateSize": 0.016,
+          "lapShare": 1.0
+        }
+      ],
+      "stirrups": null,
+      "punching": {
+        "columnWidth": 0.3,
+        "columnDepth": 0.3,
+        "columnPosition": "Corner",
+        "asw": 0.0,
+        "betaMethod": "UnbalancedMoments",
+        "momentC1": 10000.0,
+        "momentC2": 10000.0
+      },
+      "prestress": null,
+      "fire": {
+        "rating": "R60",
+        "axisDistance": 0.035,
+        "slabSystem": "OneWay"
+      },
+      "actions": [
+        {
+          "id": "G",
+          "kind": "Permanent",
+          "category": "SelfWeight",
+          "source": "External",
+          "gKLine": 0.0,
+          "qKLine": 0.0,
+          "pointForce": 0.0,
+          "mK": 30000.0,
+          "nK": 0.0,
+          "vK": 0.0,
+          "tK": 0.0,
+          "vKPunch": 85000.0
+        },
+        {
+          "id": "Q-office",
+          "kind": "Imposed",
+          "category": "Office",
+          "source": "External",
+          "gKLine": 0.0,
+          "qKLine": 0.0,
+          "pointForce": 0.0,
+          "mK": 15000.0,
+          "nK": 0.0,
+          "vK": 0.0,
+          "tK": 0.0,
+          "vKPunch": 30000.0
+        }
+      ],
+      "useFem": true,
+      "udl": 0.0,
+      "deflectionSensitive": false,
+      "tightness": null,
+      "hdOverH": 0.0,
+      "liquidSigmaS": 0.0,
+      "liquidRhoPEff": 0.0,
+      "liquidFCtEff": 0.0,
+      "liquidSRMax": 0.0,
+      "bridgeSigmaC": 0.0,
+      "bridgeDeltaSigmaS": 0.0,
+      "relativeHumidity": 0.5,
+      "bearingWidth": 0.0,
+      "sectionPoints": [],
+      "bars": [],
+      "tendonPoints": [],
+      "openings": [],
+      "studRows": [
+        {
+          "id": "r1",
+          "angle": 3.141592653589793,
+          "count": 4,
+          "spacingFirst": 0.1,
+          "spacingRadial": 0.17,
+          "diameter": 0.012
+        },
+        {
+          "id": "r2",
+          "angle": 3.5342917352885173,
+          "count": 4,
+          "spacingFirst": 0.1,
+          "spacingRadial": 0.17,
+          "diameter": 0.012
+        },
+        {
+          "id": "r3",
+          "angle": 3.9269908169872414,
+          "count": 4,
+          "spacingFirst": 0.1,
+          "spacingRadial": 0.17,
+          "diameter": 0.012
+        },
+        {
+          "id": "r4",
+          "angle": 4.319689898685966,
+          "count": 4,
+          "spacingFirst": 0.1,
+          "spacingRadial": 0.17,
+          "diameter": 0.012
+        },
+        {
+          "id": "r5",
+          "angle": 4.71238898038469,
+          "count": 4,
+          "spacingFirst": 0.1,
+          "spacingRadial": 0.17,
+          "diameter": 0.012
+        }
+      ]
+    },
+    {
+      "id": "slab-FS-interior-opening-near",
+      "labelEn": "Flat slab, opening next to the column",
+      "labelDe": "Flachdecke, Öffnung neben der Stütze",
+      "kind": "FlatSlab",
+      "concreteGradeId": "c30",
+      "reinforcementGradeId": "b500",
+      "prestressSteelId": "",
+      "exposure": "Xc1",
+      "width": 1.0,
+      "height": 0.3,
+      "effectiveDepth": 0.255,
+      "cover": 0.025,
+      "span": 6.0,
+      "support": "Continuous",
+      "bucklingLength": 0.0,
+      "longitudinal": [
+        {
+          "id": "bot",
+          "diameter": 0.014,
+          "count": 8,
+          "position": "Bottom",
+          "anchorageLength": 0.65,
+          "lapLength": 0.85,
+          "bondCondition": "Good",
+          "aggregateSize": 0.016,
+          "lapShare": 1.0
+        }
+      ],
+      "stirrups": null,
+      "punching": {
+        "columnWidth": 0.3,
+        "columnDepth": 0.3,
+        "columnPosition": "Interior",
+        "asw": 0.0,
+        "betaMethod": "Simplified",
+        "momentC1": 0.0,
+        "momentC2": 0.0
+      },
+      "prestress": null,
+      "fire": {
+        "rating": "R60",
+        "axisDistance": 0.035,
+        "slabSystem": "OneWay"
+      },
+      "actions": [
+        {
+          "id": "G",
+          "kind": "Permanent",
+          "category": "SelfWeight",
+          "source": "External",
+          "gKLine": 0.0,
+          "qKLine": 0.0,
+          "pointForce": 0.0,
+          "mK": 30000.0,
+          "nK": 0.0,
+          "vK": 0.0,
+          "tK": 0.0,
+          "vKPunch": 300000.0
+        },
+        {
+          "id": "Q-office",
+          "kind": "Imposed",
+          "category": "Office",
+          "source": "External",
+          "gKLine": 0.0,
+          "qKLine": 0.0,
+          "pointForce": 0.0,
+          "mK": 15000.0,
+          "nK": 0.0,
+          "vK": 0.0,
+          "tK": 0.0,
+          "vKPunch": 110000.0
+        }
+      ],
+      "useFem": true,
+      "udl": 0.0,
+      "deflectionSensitive": false,
+      "tightness": null,
+      "hdOverH": 0.0,
+      "liquidSigmaS": 0.0,
+      "liquidRhoPEff": 0.0,
+      "liquidFCtEff": 0.0,
+      "liquidSRMax": 0.0,
+      "bridgeSigmaC": 0.0,
+      "bridgeDeltaSigmaS": 0.0,
+      "relativeHumidity": 0.5,
+      "bearingWidth": 0.0,
+      "sectionPoints": [],
+      "bars": [],
+      "tendonPoints": [],
+      "openings": [
+        {
+          "id": "op-1",
+          "x": 0.9,
+          "y": 0.1,
+          "width": 0.4,
+          "depth": 0.3
+        }
+      ],
+      "studRows": [
+        {
+          "id": "r1",
+          "angle": 0.0,
+          "count": 4,
+          "spacingFirst": 0.1,
+          "spacingRadial": 0.14,
+          "diameter": 0.012
+        },
+        {
+          "id": "r2",
+          "angle": 0.5235987755982988,
+          "count": 4,
+          "spacingFirst": 0.1,
+          "spacingRadial": 0.14,
+          "diameter": 0.012
+        },
+        {
+          "id": "r3",
+          "angle": 1.0471975511965976,
+          "count": 4,
+          "spacingFirst": 0.1,
+          "spacingRadial": 0.14,
+          "diameter": 0.012
+        },
+        {
+          "id": "r4",
+          "angle": 1.5707963267948966,
+          "count": 4,
+          "spacingFirst": 0.1,
+          "spacingRadial": 0.14,
+          "diameter": 0.012
+        },
+        {
+          "id": "r5",
+          "angle": 2.0943951023931953,
+          "count": 4,
+          "spacingFirst": 0.1,
+          "spacingRadial": 0.14,
+          "diameter": 0.012
+        },
+        {
+          "id": "r6",
+          "angle": 2.6179938779914944,
+          "count": 4,
+          "spacingFirst": 0.1,
+          "spacingRadial": 0.14,
+          "diameter": 0.012
+        },
+        {
+          "id": "r7",
+          "angle": 3.141592653589793,
+          "count": 4,
+          "spacingFirst": 0.1,
+          "spacingRadial": 0.14,
+          "diameter": 0.012
+        },
+        {
+          "id": "r8",
+          "angle": 3.6651914291880923,
+          "count": 4,
+          "spacingFirst": 0.1,
+          "spacingRadial": 0.14,
+          "diameter": 0.012
+        },
+        {
+          "id": "r9",
+          "angle": 4.1887902047863905,
+          "count": 4,
+          "spacingFirst": 0.1,
+          "spacingRadial": 0.14,
+          "diameter": 0.012
+        },
+        {
+          "id": "r10",
+          "angle": 4.71238898038469,
+          "count": 4,
+          "spacingFirst": 0.1,
+          "spacingRadial": 0.14,
+          "diameter": 0.012
+        },
+        {
+          "id": "r11",
+          "angle": 5.235987755982989,
+          "count": 4,
+          "spacingFirst": 0.1,
+          "spacingRadial": 0.14,
+          "diameter": 0.012
+        },
+        {
+          "id": "r12",
+          "angle": 5.759586531581287,
+          "count": 4,
+          "spacingFirst": 0.1,
+          "spacingRadial": 0.14,
+          "diameter": 0.012
+        }
+      ]
+    },
+    {
+      "id": "beam-DB1",
+      "labelEn": "Deep beam DB1",
+      "labelDe": "Wandartiger Träger DB1",
+      "kind": "Beam",
+      "concreteGradeId": "c35",
+      "reinforcementGradeId": "b500",
+      "prestressSteelId": "",
+      "exposure": "Xc1",
+      "width": 0.3,
+      "height": 1.2,
+      "effectiveDepth": 1.1,
+      "cover": 0.04,
+      "span": 2.4,
+      "support": "SimplySupported",
+      "bucklingLength": 0.0,
+      "longitudinal": [
+        {
+          "id": "bot",
+          "diameter": 0.016,
+          "count": 4,
+          "position": "Bottom",
+          "anchorageLength": 1.2,
+          "lapLength": 1.5,
+          "bondCondition": "Good",
+          "aggregateSize": 0.016,
+          "lapShare": 1.0
+        }
+      ],
+      "stirrups": {
+        "diameter": 0.01,
+        "spacing": 0.1,
+        "legs": 2
+      },
+      "punching": null,
+      "prestress": null,
+      "fire": {
+        "rating": "R90",
+        "axisDistance": 0.04,
+        "slabSystem": "OneWay"
+      },
+      "actions": [
+        {
+          "id": "G",
+          "kind": "Permanent",
+          "category": "SelfWeight",
+          "source": "Udl",
+          "gKLine": 80000.0,
+          "qKLine": 0.0,
+          "pointForce": 0.0,
+          "mK": 0.0,
+          "nK": 0.0,
+          "vK": 0.0,
+          "tK": 0.0,
+          "vKPunch": 0.0
+        },
+        {
+          "id": "Q",
+          "kind": "Imposed",
+          "category": "Office",
+          "source": "Udl",
+          "gKLine": 0.0,
+          "qKLine": 60000.0,
+          "pointForce": 0.0,
+          "mK": 0.0,
+          "nK": 0.0,
+          "vK": 0.0,
+          "tK": 0.0,
+          "vKPunch": 0.0
+        }
+      ],
+      "useFem": false,
+      "udl": 0.0,
+      "deflectionSensitive": false,
+      "tightness": "Tc2",
+      "hdOverH": 8.0,
+      "liquidSigmaS": 280000000.0,
+      "liquidRhoPEff": 0.02,
+      "liquidFCtEff": 3200000.0,
+      "liquidSRMax": 0.22,
+      "bridgeSigmaC": 0.0,
+      "bridgeDeltaSigmaS": 0.0,
+      "relativeHumidity": 0.5,
+      "bearingWidth": 0.4,
+      "sectionPoints": [],
+      "bars": [],
+      "tendonPoints": [],
+      "openings": [],
+      "studRows": []
+    },
+    {
+      "id": "beam-DB2",
+      "labelEn": "Deep beam DB2",
+      "labelDe": "Wandartiger Träger DB2",
+      "kind": "Beam",
+      "concreteGradeId": "c35",
+      "reinforcementGradeId": "b500",
+      "prestressSteelId": "",
+      "exposure": "Xc1",
+      "width": 0.3,
+      "height": 1.2,
+      "effectiveDepth": 1.1,
+      "cover": 0.04,
+      "span": 2.4,
+      "support": "SimplySupported",
+      "bucklingLength": 0.0,
+      "longitudinal": [
+        {
+          "id": "bot",
+          "diameter": 0.016,
+          "count": 4,
+          "position": "Bottom",
+          "anchorageLength": 1.2,
+          "lapLength": 1.5,
+          "bondCondition": "Good",
+          "aggregateSize": 0.016,
+          "lapShare": 1.0
+        }
+      ],
+      "stirrups": {
+        "diameter": 0.01,
+        "spacing": 0.1,
+        "legs": 2
+      },
+      "punching": null,
+      "prestress": null,
+      "fire": {
+        "rating": "R90",
+        "axisDistance": 0.04,
+        "slabSystem": "OneWay"
+      },
+      "actions": [
+        {
+          "id": "G",
+          "kind": "Permanent",
+          "category": "SelfWeight",
+          "source": "Udl",
+          "gKLine": 80000.0,
+          "qKLine": 0.0,
+          "pointForce": 0.0,
+          "mK": 0.0,
+          "nK": 0.0,
+          "vK": 0.0,
+          "tK": 0.0,
+          "vKPunch": 0.0
+        },
+        {
+          "id": "Q",
+          "kind": "Imposed",
+          "category": "Office",
+          "source": "Udl",
+          "gKLine": 0.0,
+          "qKLine": 60000.0,
+          "pointForce": 0.0,
+          "mK": 0.0,
+          "nK": 0.0,
+          "vK": 0.0,
+          "tK": 0.0,
+          "vKPunch": 0.0
+        }
+      ],
+      "useFem": false,
+      "udl": 0.0,
+      "deflectionSensitive": false,
+      "tightness": "Tc2",
+      "hdOverH": 8.0,
+      "liquidSigmaS": 280000000.0,
+      "liquidRhoPEff": 0.02,
+      "liquidFCtEff": 3200000.0,
+      "liquidSRMax": 0.22,
+      "bridgeSigmaC": 0.0,
+      "bridgeDeltaSigmaS": 0.0,
+      "relativeHumidity": 0.5,
+      "bearingWidth": 0.0,
+      "sectionPoints": [],
+      "bars": [],
+      "tendonPoints": [],
+      "openings": [],
+      "studRows": []
+    }
+  ],
+  "anchors": [
+    {
+      "id": "anc-1",
+      "hEf": 0.1,
+      "cracked": true,
+      "fUk": 900000000.0,
+      "fYk": 720000000.0,
+      "aS": 0.0001,
+      "d": 0.012,
+      "c1": 0.12,
+      "fCk": 35000000.0,
+      "actions": [
+        {
+          "id": "G",
+          "kind": "Permanent",
+          "category": "SelfWeight",
+          "source": "External",
+          "gKLine": 0.0,
+          "qKLine": 0.0,
+          "pointForce": 0.0,
+          "mK": 0.0,
+          "nK": 5600.0,
+          "vK": 2800.0,
+          "tK": 0.0,
+          "vKPunch": 0.0
+        },
+        {
+          "id": "Q-office",
+          "kind": "Imposed",
+          "category": "Office",
+          "source": "External",
+          "gKLine": 0.0,
+          "qKLine": 0.0,
+          "pointForce": 0.0,
+          "mK": 0.0,
+          "nK": 3500.0,
+          "vK": 2100.0,
+          "tK": 0.0,
+          "vKPunch": 0.0
+        }
+      ],
+      "headDiameter": 0.0
+    },
+    {
+      "id": "anc-2",
+      "hEf": 0.15,
+      "cracked": false,
+      "fUk": 800000000.0,
+      "fYk": 640000000.0,
+      "aS": 0.000157,
+      "d": 0.016,
+      "c1": 0.2,
+      "fCk": 30000000.0,
+      "actions": [
+        {
+          "id": "G",
+          "kind": "Permanent",
+          "category": "SelfWeight",
+          "source": "External",
+          "gKLine": 0.0,
+          "qKLine": 0.0,
+          "pointForce": 0.0,
+          "mK": 0.0,
+          "nK": 12000.0,
+          "vK": 3000.0,
+          "tK": 0.0,
+          "vKPunch": 0.0
+        },
+        {
+          "id": "Q-office",
+          "kind": "Imposed",
+          "category": "Office",
+          "source": "External",
+          "gKLine": 0.0,
+          "qKLine": 0.0,
+          "pointForce": 0.0,
+          "mK": 0.0,
+          "nK": 6000.0,
+          "vK": 2000.0,
+          "tK": 0.0,
+          "vKPunch": 0.0
+        }
+      ],
+      "headDiameter": 0.04
+    }
+  ],
+  "placements": [
+    {
+      "id": "place-beam-B1",
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0,
+      "yaw": 0.0
+    },
+    {
+      "id": "place-slab-S1",
+      "x": 8.0,
+      "y": 0.0,
+      "z": 0.0,
+      "yaw": 0.0
+    },
+    {
+      "id": "place-slab-R1",
+      "x": 16.0,
+      "y": 0.0,
+      "z": 0.0,
+      "yaw": 0.0
+    },
+    {
+      "id": "place-column-C1",
+      "x": 24.0,
+      "y": 0.0,
+      "z": 0.0,
+      "yaw": 0.0
+    },
+    {
+      "id": "place-wall-SW1",
+      "x": 32.0,
+      "y": 0.0,
+      "z": 0.0,
+      "yaw": 0.0
+    },
+    {
+      "id": "place-tie-T1",
+      "x": 40.0,
+      "y": 0.0,
+      "z": 0.0,
+      "yaw": 0.0
+    },
+    {
+      "id": "place-deck-D1",
+      "x": 48.0,
+      "y": 0.0,
+      "z": 0.0,
+      "yaw": 0.0
+    },
+    {
+      "id": "place-wall-W1",
+      "x": 56.0,
+      "y": 0.0,
+      "z": 0.0,
+      "yaw": 0.0
+    },
+    {
+      "id": "place-slab-FS-interior",
+      "x": 64.0,
+      "y": 0.0,
+      "z": 0.0,
+      "yaw": 0.0
+    },
+    {
+      "id": "place-slab-FS-edge",
+      "x": 72.0,
+      "y": 0.0,
+      "z": 0.0,
+      "yaw": 0.0
+    },
+    {
+      "id": "place-slab-FS-corner",
+      "x": 80.0,
+      "y": 0.0,
+      "z": 0.0,
+      "yaw": 0.0
+    },
+    {
+      "id": "place-slab-FS-interior-opening-near",
+      "x": 88.0,
+      "y": 0.0,
+      "z": 0.0,
+      "yaw": 0.0
+    }
+  ],
+  "cases": [
+    {
+      "id": "case-pr-05",
+      "labelEn": "Time-dependent losses",
+      "labelDe": "Zeitabhängige Verluste",
+      "entryId": "PR-05",
+      "numbers": [
+        {
+          "id": "ac",
+          "value": 90000.0
+        },
+        {
+          "id": "ap",
+          "value": 1000.0
+        },
+        {
+          "id": "ecm",
+          "value": 33000.0
+        },
+        {
+          "id": "ep",
+          "value": 195000.0
+        },
+        {
+          "id": "eps_cs",
+          "value": 0.0003
+        },
+        {
+          "id": "fpk",
+          "value": 1860.0
+        },
+        {
+          "id": "ic",
+          "value": 6750000000.0
+        },
+        {
+          "id": "phi",
+          "value": 2.0
+        },
+        {
+          "id": "relax_class",
+          "value": 2.0
+        },
+        {
+          "id": "rho1000",
+          "value": 2.5
+        },
+        {
+          "id": "sigma_c_qp",
+          "value": 8.0
+        },
+        {
+          "id": "sigma_pi",
+          "value": 1300.0
+        },
+        {
+          "id": "t_hours",
+          "value": 1000.0
+        },
+        {
+          "id": "zcp",
+          "value": 100.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-pr-06",
+      "labelEn": "Unbonded tendons at ULS",
+      "labelDe": "Spannglieder ohne Verbund im GZT",
+      "entryId": "PR-06",
+      "numbers": [
+        {
+          "id": "delta_sigma",
+          "value": 30.0
+        },
+        {
+          "id": "fp01k",
+          "value": 1640.0
+        },
+        {
+          "id": "fpk",
+          "value": 1860.0
+        },
+        {
+          "id": "sigma_pm_inf",
+          "value": 1100.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-pr-07",
+      "labelEn": "Characteristic prestress values",
+      "labelDe": "Charakteristische Vorspannwerte",
+      "entryId": "PR-07",
+      "numbers": [
+        {
+          "id": "pm_t",
+          "value": 450000.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "bond",
+          "value": "bonded"
+        }
+      ]
+    },
+    {
+      "id": "case-pr-08",
+      "labelEn": "Deviation forces",
+      "labelDe": "Umlenkkräfte",
+      "entryId": "PR-08",
+      "numbers": [
+        {
+          "id": "l",
+          "value": 6000.0
+        },
+        {
+          "id": "p",
+          "value": 500000.0
+        },
+        {
+          "id": "radius",
+          "value": 15000.0
+        },
+        {
+          "id": "sag",
+          "value": 40.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-pr-09",
+      "labelEn": "Anchorage zones of post-tensioned members",
+      "labelDe": "Verankerungsbereiche",
+      "entryId": "PR-09",
+      "numbers": [
+        {
+          "id": "a",
+          "value": 200.0
+        },
+        {
+          "id": "as_provided",
+          "value": 1571.0
+        },
+        {
+          "id": "fyk",
+          "value": 500.0
+        },
+        {
+          "id": "h",
+          "value": 500.0
+        },
+        {
+          "id": "pmax",
+          "value": 1000000.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-pr-10",
+      "labelEn": "Concrete stress at release",
+      "labelDe": "Betonspannung bei Vorspannung",
+      "entryId": "PR-10",
+      "numbers": [
+        {
+          "id": "fck_t",
+          "value": 20.0
+        },
+        {
+          "id": "nonlinear_creep_proven",
+          "value": 0.0
+        },
+        {
+          "id": "sigma_c",
+          "value": 10.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-f-01",
+      "labelEn": "Fatigue verification framework",
+      "labelDe": "Ermüdungsnachweis Ablauf",
+      "entryId": "F-01",
+      "numbers": [],
+      "texts": [
+        {
+          "id": "structure",
+          "value": "building"
+        }
+      ]
+    },
+    {
+      "id": "case-f-02",
+      "labelEn": "Stress ranges for fatigue",
+      "labelDe": "Spannungsschwingbreiten",
+      "entryId": "F-02",
+      "numbers": [
+        {
+          "id": "alpha_e",
+          "value": 6.06
+        },
+        {
+          "id": "ap",
+          "value": 1000.0
+        },
+        {
+          "id": "as",
+          "value": 1571.0
+        },
+        {
+          "id": "b",
+          "value": 300.0
+        },
+        {
+          "id": "d",
+          "value": 450.0
+        },
+        {
+          "id": "h",
+          "value": 500.0
+        },
+        {
+          "id": "m_max",
+          "value": 200000000.0
+        },
+        {
+          "id": "m_min",
+          "value": 50000000.0
+        },
+        {
+          "id": "phi_p",
+          "value": 12.0
+        },
+        {
+          "id": "phi_s",
+          "value": 16.0
+        },
+        {
+          "id": "xi",
+          "value": 0.5
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-f-03",
+      "labelEn": "S-N curves of steel",
+      "labelDe": "Wöhlerlinien Stahl",
+      "entryId": "F-03",
+      "numbers": [],
+      "texts": [
+        {
+          "id": "kind",
+          "value": "straight"
+        }
+      ]
+    },
+    {
+      "id": "case-f-04",
+      "labelEn": "Fatigue verification of steel",
+      "labelDe": "Ermüdungsnachweis Stahl",
+      "entryId": "F-04",
+      "numbers": [
+        {
+          "id": "delta_sigma_equ",
+          "value": 120.0
+        },
+        {
+          "id": "gamma_f_fat",
+          "value": 1.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "kind",
+          "value": "straight"
+        }
+      ]
+    },
+    {
+      "id": "case-f-05",
+      "labelEn": "Concrete compression fatigue",
+      "labelDe": "Betonermüdung Druck",
+      "entryId": "F-05",
+      "numbers": [
+        {
+          "id": "beta_cc_t0",
+          "value": 0.6
+        },
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "sigma_c_max",
+          "value": 12.0
+        },
+        {
+          "id": "sigma_c_min",
+          "value": 2.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-f-06",
+      "labelEn": "Shear fatigue",
+      "labelDe": "Querkraftermüdung",
+      "entryId": "F-06",
+      "numbers": [
+        {
+          "id": "cot_theta",
+          "value": 2.0
+        },
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "v_max",
+          "value": 200000.0
+        },
+        {
+          "id": "v_min",
+          "value": 100000.0
+        },
+        {
+          "id": "v_rd_c",
+          "value": 80000.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-f-07",
+      "labelEn": "Damage-equivalent lambda method",
+      "labelDe": "Lambda-Verfahren",
+      "entryId": "F-07",
+      "numbers": [
+        {
+          "id": "delta_sigma_71",
+          "value": 162.5
+        },
+        {
+          "id": "lambda1",
+          "value": 0.8
+        },
+        {
+          "id": "lambda2",
+          "value": 1.0
+        },
+        {
+          "id": "lambda3",
+          "value": 1.0
+        },
+        {
+          "id": "lambda4",
+          "value": 1.0
+        },
+        {
+          "id": "lambda_max",
+          "value": 1.4
+        },
+        {
+          "id": "phi_fat",
+          "value": 1.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "kind",
+          "value": "straight"
+        }
+      ]
+    },
+    {
+      "id": "case-sl-03",
+      "labelEn": "Cracked section stresses",
+      "labelDe": "Spannungen im Zustand II",
+      "entryId": "SL-03",
+      "numbers": [
+        {
+          "id": "as",
+          "value": 1571.0
+        },
+        {
+          "id": "as2",
+          "value": 628.0
+        },
+        {
+          "id": "b",
+          "value": 300.0
+        },
+        {
+          "id": "d",
+          "value": 450.0
+        },
+        {
+          "id": "d2",
+          "value": 50.0
+        },
+        {
+          "id": "es",
+          "value": 200000.0
+        },
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "h",
+          "value": 500.0
+        },
+        {
+          "id": "m_ed",
+          "value": 250000000.0
+        },
+        {
+          "id": "n_ed",
+          "value": 500000.0
+        },
+        {
+          "id": "phi_inf",
+          "value": 2.4
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-s-24",
+      "labelEn": "State determination cracked or uncracked",
+      "labelDe": "Zustandsbestimmung gerissen oder ungerissen",
+      "entryId": "S-24",
+      "numbers": [
+        {
+          "id": "as",
+          "value": 1571.0
+        },
+        {
+          "id": "as2",
+          "value": 628.0
+        },
+        {
+          "id": "b",
+          "value": 300.0
+        },
+        {
+          "id": "d",
+          "value": 450.0
+        },
+        {
+          "id": "d2",
+          "value": 50.0
+        },
+        {
+          "id": "es",
+          "value": 200000.0
+        },
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "h",
+          "value": 500.0
+        },
+        {
+          "id": "m_ed",
+          "value": 250000000.0
+        },
+        {
+          "id": "n_ed",
+          "value": 500000.0
+        },
+        {
+          "id": "phi_inf",
+          "value": 2.4
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-s-30",
+      "labelEn": "Stress state of the cracked section",
+      "labelDe": "Spannungszustand Zustand II",
+      "entryId": "S-30",
+      "numbers": [
+        {
+          "id": "as",
+          "value": 1571.0
+        },
+        {
+          "id": "as2",
+          "value": 628.0
+        },
+        {
+          "id": "b",
+          "value": 300.0
+        },
+        {
+          "id": "d",
+          "value": 450.0
+        },
+        {
+          "id": "d2",
+          "value": 50.0
+        },
+        {
+          "id": "es",
+          "value": 200000.0
+        },
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "h",
+          "value": 500.0
+        },
+        {
+          "id": "m_ed",
+          "value": 250000000.0
+        },
+        {
+          "id": "n_ed",
+          "value": 500000.0
+        },
+        {
+          "id": "phi_inf",
+          "value": 2.4
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-s-31",
+      "labelEn": "Stress state, characteristic combination",
+      "labelDe": "Spannungszustand, charakteristische Kombination",
+      "entryId": "S-31",
+      "numbers": [
+        {
+          "id": "as",
+          "value": 1571.0
+        },
+        {
+          "id": "as2",
+          "value": 628.0
+        },
+        {
+          "id": "b",
+          "value": 300.0
+        },
+        {
+          "id": "d",
+          "value": 450.0
+        },
+        {
+          "id": "d2",
+          "value": 50.0
+        },
+        {
+          "id": "es",
+          "value": 200000.0
+        },
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "h",
+          "value": 500.0
+        },
+        {
+          "id": "m_ed",
+          "value": 250000000.0
+        },
+        {
+          "id": "n_ed",
+          "value": 500000.0
+        },
+        {
+          "id": "phi_inf",
+          "value": 2.4
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-s-34",
+      "labelEn": "Stress state, quasi-permanent combination",
+      "labelDe": "Spannungszustand, quasi-ständige Kombination",
+      "entryId": "S-34",
+      "numbers": [
+        {
+          "id": "as",
+          "value": 1571.0
+        },
+        {
+          "id": "as2",
+          "value": 628.0
+        },
+        {
+          "id": "b",
+          "value": 300.0
+        },
+        {
+          "id": "d",
+          "value": 450.0
+        },
+        {
+          "id": "d2",
+          "value": 50.0
+        },
+        {
+          "id": "es",
+          "value": 200000.0
+        },
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "h",
+          "value": 500.0
+        },
+        {
+          "id": "m_ed",
+          "value": 250000000.0
+        },
+        {
+          "id": "n_ed",
+          "value": 500000.0
+        },
+        {
+          "id": "phi_inf",
+          "value": 2.4
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-sl-04",
+      "labelEn": "Minimum reinforcement for crack control",
+      "labelDe": "Mindestbewehrung Rissbreitenbegrenzung",
+      "entryId": "SL-04",
+      "numbers": [
+        {
+          "id": "act",
+          "value": 40000.0
+        },
+        {
+          "id": "as_provided",
+          "value": 1571.0
+        },
+        {
+          "id": "b",
+          "value": 300.0
+        },
+        {
+          "id": "f_cr",
+          "value": 100000.0
+        },
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "fct_eff",
+          "value": 2.9
+        },
+        {
+          "id": "fyk",
+          "value": 500.0
+        },
+        {
+          "id": "h",
+          "value": 500.0
+        },
+        {
+          "id": "h_member",
+          "value": 500.0
+        },
+        {
+          "id": "n_ed",
+          "value": 500000.0
+        },
+        {
+          "id": "pure_tension",
+          "value": 0.0
+        },
+        {
+          "id": "sigma_s_allowed",
+          "value": 200.0
+        },
+        {
+          "id": "thin_early_age",
+          "value": 0.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "part",
+          "value": "web"
+        }
+      ]
+    },
+    {
+      "id": "case-sl-05",
+      "labelEn": "Crack control without calculation",
+      "labelDe": "Rissbreitenbegrenzung ohne direkten Nachweis",
+      "entryId": "SL-05",
+      "numbers": [
+        {
+          "id": "d",
+          "value": 450.0
+        },
+        {
+          "id": "fct_eff",
+          "value": 2.9
+        },
+        {
+          "id": "h",
+          "value": 500.0
+        },
+        {
+          "id": "hcr",
+          "value": 250.0
+        },
+        {
+          "id": "kc",
+          "value": 0.4
+        },
+        {
+          "id": "phi",
+          "value": 20.0
+        },
+        {
+          "id": "restraint",
+          "value": 0.0
+        },
+        {
+          "id": "s",
+          "value": 200.0
+        },
+        {
+          "id": "sigma_s",
+          "value": 250.0
+        },
+        {
+          "id": "wk_lim",
+          "value": 0.3
+        }
+      ],
+      "texts": [
+        {
+          "id": "action",
+          "value": "bending"
+        }
+      ]
+    },
+    {
+      "id": "case-m-04",
+      "labelEn": "Strength development in time",
+      "labelDe": "Zeitliche Entwicklung der Festigkeit",
+      "entryId": "M-04",
+      "numbers": [
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "t",
+          "value": 28.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "cement",
+          "value": "N"
+        }
+      ]
+    },
+    {
+      "id": "case-m-05",
+      "labelEn": "Parabola-rectangle diagram",
+      "labelDe": "Parabel-Rechteck-Diagramm",
+      "entryId": "M-05",
+      "numbers": [
+        {
+          "id": "eps",
+          "value": 2.0
+        },
+        {
+          "id": "fck",
+          "value": 30.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-m-06",
+      "labelEn": "Bilinear concrete diagram",
+      "labelDe": "Bilineares Betondiagramm",
+      "entryId": "M-06",
+      "numbers": [
+        {
+          "id": "eps",
+          "value": 2.0
+        },
+        {
+          "id": "fck",
+          "value": 30.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-m-07",
+      "labelEn": "Rectangular stress block",
+      "labelDe": "Rechteckspannungsblock",
+      "entryId": "M-07",
+      "numbers": [
+        {
+          "id": "b",
+          "value": 300.0
+        },
+        {
+          "id": "d",
+          "value": 450.0
+        },
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "narrowing",
+          "value": 0.0
+        },
+        {
+          "id": "x",
+          "value": 150.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-m-12",
+      "labelEn": "Effective modulus",
+      "labelDe": "Effektiver Elastizitätsmodul",
+      "entryId": "M-12",
+      "numbers": [
+        {
+          "id": "es",
+          "value": 200000.0
+        },
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "phi_inf",
+          "value": 2.4
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-s-12",
+      "labelEn": "Effective modulus (section view)",
+      "labelDe": "Effektiver Elastizitätsmodul (Querschnitt)",
+      "entryId": "S-12",
+      "numbers": [
+        {
+          "id": "es",
+          "value": 200000.0
+        },
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "phi_inf",
+          "value": 2.4
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-m-10",
+      "labelEn": "Creep coefficient (materials view)",
+      "labelDe": "Kriechzahl (Baustoffsicht)",
+      "entryId": "M-10",
+      "numbers": [
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "h0",
+          "value": 187.5
+        },
+        {
+          "id": "rh",
+          "value": 50.0
+        },
+        {
+          "id": "sigma_c",
+          "value": 10.0
+        },
+        {
+          "id": "t",
+          "value": 18250.0
+        },
+        {
+          "id": "t0",
+          "value": 28.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "cement",
+          "value": "N"
+        }
+      ]
+    },
+    {
+      "id": "case-m-11",
+      "labelEn": "Shrinkage (materials view)",
+      "labelDe": "Schwinden (Baustoffsicht)",
+      "entryId": "M-11",
+      "numbers": [
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "h0",
+          "value": 187.5
+        },
+        {
+          "id": "rh",
+          "value": 50.0
+        },
+        {
+          "id": "t",
+          "value": 18250.0
+        },
+        {
+          "id": "ts",
+          "value": 3.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "cement",
+          "value": "N"
+        }
+      ]
+    },
+    {
+      "id": "case-d-01",
+      "labelEn": "Exposure classification",
+      "labelDe": "Expositionsklassen",
+      "entryId": "D-01",
+      "numbers": [],
+      "texts": [
+        {
+          "id": "classes",
+          "value": "XC1,XC3"
+        }
+      ]
+    },
+    {
+      "id": "case-d-05",
+      "labelEn": "Cover against ground",
+      "labelDe": "Betondeckung gegen Erdreich",
+      "entryId": "D-05",
+      "numbers": [
+        {
+          "id": "c_provided",
+          "value": 45.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "ground",
+          "value": "none"
+        }
+      ]
+    },
+    {
+      "id": "case-d-07",
+      "labelEn": "Design working life",
+      "labelDe": "Nutzungsdauer",
+      "entryId": "D-07",
+      "numbers": [
+        {
+          "id": "design_life",
+          "value": 50.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-a-01",
+      "labelEn": "Creep coefficient",
+      "labelDe": "Kriechzahl",
+      "entryId": "A-01",
+      "numbers": [
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "h0",
+          "value": 187.5
+        },
+        {
+          "id": "rh",
+          "value": 50.0
+        },
+        {
+          "id": "sigma_c",
+          "value": 10.0
+        },
+        {
+          "id": "t",
+          "value": 18250.0
+        },
+        {
+          "id": "t0",
+          "value": 28.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "cement",
+          "value": "N"
+        }
+      ]
+    },
+    {
+      "id": "case-a-02",
+      "labelEn": "Shrinkage strain",
+      "labelDe": "Schwinddehnung",
+      "entryId": "A-02",
+      "numbers": [
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "h0",
+          "value": 187.5
+        },
+        {
+          "id": "rh",
+          "value": 50.0
+        },
+        {
+          "id": "t",
+          "value": 18250.0
+        },
+        {
+          "id": "ts",
+          "value": 3.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "cement",
+          "value": "N"
+        }
+      ]
+    },
+    {
+      "id": "case-r-01",
+      "labelEn": "Tabulated fire resistance",
+      "labelDe": "Tabellenverfahren",
+      "entryId": "R-01",
+      "numbers": [
+        {
+          "id": "a",
+          "value": 40.0
+        },
+        {
+          "id": "dim",
+          "value": 300.0
+        },
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "mu_fi",
+          "value": 0.7
+        },
+        {
+          "id": "r_class",
+          "value": 90.0
+        },
+        {
+          "id": "width",
+          "value": 300.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "kind",
+          "value": "beam"
+        },
+        {
+          "id": "sub",
+          "value": "one_way"
+        }
+      ]
+    },
+    {
+      "id": "case-d-06",
+      "labelEn": "Cover for fire (axis distance)",
+      "labelDe": "Betondeckung für Brand (Achsabstand)",
+      "entryId": "D-06",
+      "numbers": [
+        {
+          "id": "a",
+          "value": 40.0
+        },
+        {
+          "id": "dim",
+          "value": 300.0
+        },
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "mu_fi",
+          "value": 0.7
+        },
+        {
+          "id": "r_class",
+          "value": 90.0
+        },
+        {
+          "id": "width",
+          "value": 300.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "kind",
+          "value": "beam"
+        },
+        {
+          "id": "sub",
+          "value": "one_way"
+        }
+      ]
+    },
+    {
+      "id": "case-m-13",
+      "labelEn": "Elevated temperature factors",
+      "labelDe": "Faktoren bei erhöhter Temperatur",
+      "entryId": "M-13",
+      "numbers": [
+        {
+          "id": "theta",
+          "value": 500.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-r-02",
+      "labelEn": "Temperature field",
+      "labelDe": "Temperaturfeld",
+      "entryId": "R-02",
+      "numbers": [
+        {
+          "id": "b",
+          "value": 300.0
+        },
+        {
+          "id": "h",
+          "value": 500.0
+        },
+        {
+          "id": "moisture",
+          "value": 1.5
+        },
+        {
+          "id": "t_min",
+          "value": 90.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-r-05",
+      "labelEn": "Column in fire",
+      "labelDe": "Stütze im Brandfall",
+      "entryId": "R-05",
+      "numbers": [
+        {
+          "id": "a",
+          "value": 40.0
+        },
+        {
+          "id": "as",
+          "value": 1571.0
+        },
+        {
+          "id": "az",
+          "value": 20.0
+        },
+        {
+          "id": "b",
+          "value": 300.0
+        },
+        {
+          "id": "e0",
+          "value": 20.0
+        },
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "fyk",
+          "value": 500.0
+        },
+        {
+          "id": "h",
+          "value": 500.0
+        },
+        {
+          "id": "ks",
+          "value": 0.8
+        },
+        {
+          "id": "l0_fi",
+          "value": 3000.0
+        },
+        {
+          "id": "n_ed_fi",
+          "value": 500000.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-r-06",
+      "labelEn": "Fire action and load combination",
+      "labelDe": "Brandeinwirkung und Kombination",
+      "entryId": "R-06",
+      "numbers": [
+        {
+          "id": "gamma_g",
+          "value": 1.35
+        },
+        {
+          "id": "gamma_q",
+          "value": 1.5
+        },
+        {
+          "id": "gk",
+          "value": 200000.0
+        },
+        {
+          "id": "psi_fi",
+          "value": 0.5
+        },
+        {
+          "id": "qk",
+          "value": 100000.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-r-07",
+      "labelEn": "Material properties at elevated temperature",
+      "labelDe": "Baustoffeigenschaften bei erhöhter Temperatur",
+      "entryId": "R-07",
+      "numbers": [
+        {
+          "id": "theta",
+          "value": 500.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-r-08",
+      "labelEn": "Spalling, shear, torsion and anchorage in fire",
+      "labelDe": "Abplatzen, Querkraft, Torsion und Verankerung im Brandfall",
+      "entryId": "R-08",
+      "numbers": [
+        {
+          "id": "fck",
+          "value": 30.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-b-05",
+      "labelEn": "Bundled bars",
+      "labelDe": "Stabbündel",
+      "entryId": "B-05",
+      "numbers": [
+        {
+          "id": "nb",
+          "value": 1.0
+        },
+        {
+          "id": "phi",
+          "value": 20.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "situation",
+          "value": "other"
+        }
+      ]
+    },
+    {
+      "id": "case-b-06",
+      "labelEn": "Large-diameter bars",
+      "labelDe": "Große Stabdurchmesser",
+      "entryId": "B-06",
+      "numbers": [
+        {
+          "id": "act_ext",
+          "value": 3000.0
+        },
+        {
+          "id": "as_surf_provided",
+          "value": 1500.0
+        },
+        {
+          "id": "phi",
+          "value": 20.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-b-07",
+      "labelEn": "Transmission length of prestress",
+      "labelDe": "Übertragungslänge der Vorspannung",
+      "entryId": "B-07",
+      "numbers": [
+        {
+          "id": "d",
+          "value": 450.0
+        },
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "fctd_t",
+          "value": 1.1
+        },
+        {
+          "id": "phi",
+          "value": 20.0
+        },
+        {
+          "id": "sigma_pm0",
+          "value": 1400.0
+        },
+        {
+          "id": "t",
+          "value": 3.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "bond",
+          "value": "good"
+        },
+        {
+          "id": "cement",
+          "value": "N"
+        },
+        {
+          "id": "release",
+          "value": "gradual"
+        },
+        {
+          "id": "tendon",
+          "value": "strand"
+        }
+      ]
+    },
+    {
+      "id": "case-b-08",
+      "labelEn": "Anchorage of links",
+      "labelDe": "Verankerung von Bügeln",
+      "entryId": "B-08",
+      "numbers": [
+        {
+          "id": "phi",
+          "value": 20.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "angle",
+          "value": "135"
+        },
+        {
+          "id": "shape",
+          "value": "hook_135"
+        }
+      ]
+    },
+    {
+      "id": "case-dt-02",
+      "labelEn": "End supports and shift rule",
+      "labelDe": "Endauflager und Versatzmaß",
+      "entryId": "DT-02",
+      "numbers": [
+        {
+          "id": "as_span",
+          "value": 600.0
+        },
+        {
+          "id": "as_support",
+          "value": 600.0
+        },
+        {
+          "id": "cot_alpha",
+          "value": 0.0
+        },
+        {
+          "id": "cot_theta",
+          "value": 2.0
+        },
+        {
+          "id": "v_ed",
+          "value": 200000.0
+        },
+        {
+          "id": "z",
+          "value": 405.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-dt-03",
+      "labelEn": "Shear reinforcement of beams",
+      "labelDe": "Schubbewehrung Balken",
+      "entryId": "DT-03",
+      "numbers": [
+        {
+          "id": "alpha_deg",
+          "value": 90.0
+        },
+        {
+          "id": "asw",
+          "value": 157.0
+        },
+        {
+          "id": "bw",
+          "value": 300.0
+        },
+        {
+          "id": "d",
+          "value": 450.0
+        },
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "fyk",
+          "value": 500.0
+        },
+        {
+          "id": "s",
+          "value": 200.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-dt-04",
+      "labelEn": "Torsion links",
+      "labelDe": "Torsionsbügel",
+      "entryId": "DT-04",
+      "numbers": [
+        {
+          "id": "b",
+          "value": 300.0
+        },
+        {
+          "id": "d",
+          "value": 450.0
+        },
+        {
+          "id": "s",
+          "value": 200.0
+        },
+        {
+          "id": "u",
+          "value": 1600.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-dt-05",
+      "labelEn": "Surface reinforcement",
+      "labelDe": "Oberflächenbewehrung",
+      "entryId": "DT-05",
+      "numbers": [
+        {
+          "id": "act_ext",
+          "value": 3000.0
+        },
+        {
+          "id": "as_provided",
+          "value": 1571.0
+        },
+        {
+          "id": "s",
+          "value": 200.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-dt-06",
+      "labelEn": "Solid slab reinforcement",
+      "labelDe": "Bewehrung Vollplatte",
+      "entryId": "DT-06",
+      "numbers": [
+        {
+          "id": "as_main",
+          "value": 1000.0
+        },
+        {
+          "id": "as_secondary",
+          "value": 400.0
+        },
+        {
+          "id": "d",
+          "value": 450.0
+        },
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "fyk",
+          "value": 500.0
+        },
+        {
+          "id": "h",
+          "value": 500.0
+        },
+        {
+          "id": "s",
+          "value": 200.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-dt-07",
+      "labelEn": "Slab shear reinforcement",
+      "labelDe": "Querkraftbewehrung Platte",
+      "entryId": "DT-07",
+      "numbers": [
+        {
+          "id": "h",
+          "value": 500.0
+        },
+        {
+          "id": "v_ed",
+          "value": 200000.0
+        },
+        {
+          "id": "v_rd_c",
+          "value": 80000.0
+        },
+        {
+          "id": "v_rd_max",
+          "value": 500000.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-dt-08",
+      "labelEn": "Flat slab reinforcement",
+      "labelDe": "Bewehrung Flachdecke",
+      "entryId": "DT-08",
+      "numbers": [
+        {
+          "id": "a_t",
+          "value": 600.0
+        },
+        {
+          "id": "as_through",
+          "value": 400.0
+        },
+        {
+          "id": "b_e",
+          "value": 300.0
+        },
+        {
+          "id": "d",
+          "value": 450.0
+        },
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "fyk",
+          "value": 500.0
+        },
+        {
+          "id": "m_edge",
+          "value": 50000000.0
+        },
+        {
+          "id": "v_ed",
+          "value": 200000.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-dt-09",
+      "labelEn": "Column detailing",
+      "labelDe": "Konstruktive Regeln Stützen",
+      "entryId": "DT-09",
+      "numbers": [
+        {
+          "id": "ac",
+          "value": 90000.0
+        },
+        {
+          "id": "as",
+          "value": 1571.0
+        },
+        {
+          "id": "at_laps",
+          "value": 0.0
+        },
+        {
+          "id": "b",
+          "value": 300.0
+        },
+        {
+          "id": "bars",
+          "value": 4.0
+        },
+        {
+          "id": "fyk",
+          "value": 500.0
+        },
+        {
+          "id": "n_ed",
+          "value": 500000.0
+        },
+        {
+          "id": "phi",
+          "value": 20.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-dt-10",
+      "labelEn": "Wall detailing",
+      "labelDe": "Konstruktive Regeln Wände",
+      "entryId": "DT-10",
+      "numbers": [
+        {
+          "id": "ac",
+          "value": 90000.0
+        },
+        {
+          "id": "asv",
+          "value": 400.0
+        },
+        {
+          "id": "tw",
+          "value": 200.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-dt-11",
+      "labelEn": "Deep beams",
+      "labelDe": "Wandartige Träger",
+      "entryId": "DT-11",
+      "numbers": [
+        {
+          "id": "ac_per_m",
+          "value": 500000.0
+        },
+        {
+          "id": "as_provided",
+          "value": 565.0
+        },
+        {
+          "id": "h",
+          "value": 500.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-dt-12",
+      "labelEn": "Foundations",
+      "labelDe": "Fundamente",
+      "entryId": "DT-12",
+      "numbers": [
+        {
+          "id": "a",
+          "value": 400.0
+        },
+        {
+          "id": "as_provided",
+          "value": 1571.0
+        },
+        {
+          "id": "b",
+          "value": 1500.0
+        },
+        {
+          "id": "c",
+          "value": 400.0
+        },
+        {
+          "id": "d",
+          "value": 450.0
+        },
+        {
+          "id": "fyk",
+          "value": 500.0
+        },
+        {
+          "id": "n_ed",
+          "value": 500000.0
+        },
+        {
+          "id": "s",
+          "value": 1500.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "kind",
+          "value": "strip"
+        }
+      ]
+    },
+    {
+      "id": "case-dt-13",
+      "labelEn": "Regions with discontinuity",
+      "labelDe": "Diskontinuitätsbereiche",
+      "entryId": "DT-13",
+      "numbers": [
+        {
+          "id": "a_b",
+          "value": 200.0
+        },
+        {
+          "id": "f_bt",
+          "value": 20000.0
+        },
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "m_ed",
+          "value": 250000000.0
+        },
+        {
+          "id": "phi",
+          "value": 20.0
+        },
+        {
+          "id": "phi_m",
+          "value": 200.0
+        },
+        {
+          "id": "z",
+          "value": 405.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-dt-14",
+      "labelEn": "Tying systems",
+      "labelDe": "Zugankersysteme",
+      "entryId": "DT-14",
+      "numbers": [
+        {
+          "id": "as_provided",
+          "value": 1571.0
+        },
+        {
+          "id": "fyk",
+          "value": 500.0
+        },
+        {
+          "id": "li",
+          "value": 6.0
+        },
+        {
+          "id": "wall_length_m",
+          "value": 8.0
+        },
+        {
+          "id": "width_m",
+          "value": 6.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "tie",
+          "value": "peripheral"
+        }
+      ]
+    },
+    {
+      "id": "case-a-03",
+      "labelEn": "Imperfections",
+      "labelDe": "Imperfektionen",
+      "entryId": "A-03",
+      "numbers": [
+        {
+          "id": "l0",
+          "value": 6000.0
+        },
+        {
+          "id": "l_m",
+          "value": 6.0
+        },
+        {
+          "id": "m",
+          "value": 1.0
+        },
+        {
+          "id": "n_ed",
+          "value": 500000.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-a-04",
+      "labelEn": "Effective flange width",
+      "labelDe": "Mitwirkende Plattenbreite",
+      "entryId": "A-04",
+      "numbers": [
+        {
+          "id": "b_i.0",
+          "value": 1500.0
+        },
+        {
+          "id": "b_i.1",
+          "value": 1500.0
+        },
+        {
+          "id": "bw",
+          "value": 300.0
+        },
+        {
+          "id": "l0",
+          "value": 6000.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-a-05",
+      "labelEn": "Linear elastic analysis stiffness",
+      "labelDe": "Linear-elastische Berechnung, Steifigkeit",
+      "entryId": "A-05",
+      "numbers": [
+        {
+          "id": "as",
+          "value": 1571.0
+        },
+        {
+          "id": "b",
+          "value": 300.0
+        },
+        {
+          "id": "d",
+          "value": 450.0
+        },
+        {
+          "id": "es",
+          "value": 200000.0
+        },
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "h",
+          "value": 500.0
+        },
+        {
+          "id": "m",
+          "value": 150000000.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-a-06",
+      "labelEn": "Redistribution",
+      "labelDe": "Umlagerung",
+      "entryId": "A-06",
+      "numbers": [
+        {
+          "id": "delta",
+          "value": 0.8
+        },
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "xu_d",
+          "value": 0.3
+        }
+      ],
+      "texts": [
+        {
+          "id": "steel_class",
+          "value": "B"
+        }
+      ]
+    },
+    {
+      "id": "case-a-08",
+      "labelEn": "Non-linear analysis safety format",
+      "labelDe": "Nichtlineare Berechnung, Sicherheitsformat",
+      "entryId": "A-08",
+      "numbers": [
+        {
+          "id": "e_d",
+          "value": 1000000.0
+        },
+        {
+          "id": "r_m",
+          "value": 1500000.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-a-12",
+      "labelEn": "Biaxial bending of slender columns",
+      "labelDe": "Zweiachsige Biegung schlanker Stützen",
+      "entryId": "A-12",
+      "numbers": [
+        {
+          "id": "amp_y",
+          "value": 1.2
+        },
+        {
+          "id": "amp_z",
+          "value": 1.2
+        },
+        {
+          "id": "m_edy",
+          "value": 150000000.0
+        },
+        {
+          "id": "m_edz",
+          "value": 120000000.0
+        },
+        {
+          "id": "m_rdy",
+          "value": 235600000.0
+        },
+        {
+          "id": "m_rdz",
+          "value": 235600000.0
+        },
+        {
+          "id": "n_ed",
+          "value": 500000.0
+        },
+        {
+          "id": "n_rd",
+          "value": 3574000.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-a-13",
+      "labelEn": "General method",
+      "labelDe": "Allgemeines Verfahren",
+      "entryId": "A-13",
+      "numbers": [
+        {
+          "id": "b",
+          "value": 300.0
+        },
+        {
+          "id": "bar_a.0",
+          "value": 490.87
+        },
+        {
+          "id": "bar_a.1",
+          "value": 490.87
+        },
+        {
+          "id": "bar_a.2",
+          "value": 490.87
+        },
+        {
+          "id": "bar_a.3",
+          "value": 490.87
+        },
+        {
+          "id": "bar_y.0",
+          "value": -110.0
+        },
+        {
+          "id": "bar_y.1",
+          "value": 110.0
+        },
+        {
+          "id": "bar_y.2",
+          "value": -110.0
+        },
+        {
+          "id": "bar_y.3",
+          "value": 110.0
+        },
+        {
+          "id": "bar_z.0",
+          "value": -210.0
+        },
+        {
+          "id": "bar_z.1",
+          "value": -210.0
+        },
+        {
+          "id": "bar_z.2",
+          "value": 210.0
+        },
+        {
+          "id": "bar_z.3",
+          "value": 210.0
+        },
+        {
+          "id": "bisect",
+          "value": 14.0
+        },
+        {
+          "id": "e0",
+          "value": 20.0
+        },
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "h",
+          "value": 500.0
+        },
+        {
+          "id": "kappa_points",
+          "value": 28.0
+        },
+        {
+          "id": "l0",
+          "value": 6000.0
+        },
+        {
+          "id": "n_ed",
+          "value": 500000.0
+        },
+        {
+          "id": "steps",
+          "value": 120.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-a-14",
+      "labelEn": "Global second-order effects",
+      "labelDe": "Globale Effekte II. Ordnung",
+      "entryId": "A-14",
+      "numbers": [
+        {
+          "id": "f_v_ed",
+          "value": 100000.0
+        },
+        {
+          "id": "l",
+          "value": 6000.0
+        },
+        {
+          "id": "n_s",
+          "value": 5.0
+        },
+        {
+          "id": "sum_ecd_ic",
+          "value": 100000000000000.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-a-15",
+      "labelEn": "Lateral instability of slender beams",
+      "labelDe": "Kippen schlanker Träger",
+      "entryId": "A-15",
+      "numbers": [
+        {
+          "id": "b",
+          "value": 300.0
+        },
+        {
+          "id": "h",
+          "value": 500.0
+        },
+        {
+          "id": "l0t",
+          "value": 6000.0
+        },
+        {
+          "id": "transient",
+          "value": 0.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-br-01",
+      "labelEn": "Bridge concrete",
+      "labelDe": "Brückenbeton",
+      "entryId": "BR-01",
+      "numbers": [
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "prestressed",
+          "value": 0.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-br-02",
+      "labelEn": "Bridge cover",
+      "labelDe": "Betondeckung Brücken",
+      "entryId": "BR-02",
+      "numbers": [
+        {
+          "id": "c_provided",
+          "value": 45.0
+        },
+        {
+          "id": "design_life",
+          "value": 50.0
+        },
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "phi",
+          "value": 20.0
+        },
+        {
+          "id": "precast",
+          "value": 0.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "exposure",
+          "value": "XC4"
+        }
+      ]
+    },
+    {
+      "id": "case-br-03",
+      "labelEn": "Bridge shear",
+      "labelDe": "Querkraft Brücken",
+      "entryId": "BR-03",
+      "numbers": [
+        {
+          "id": "asw_s",
+          "value": 0.9
+        },
+        {
+          "id": "bi",
+          "value": 300.0
+        },
+        {
+          "id": "bw",
+          "value": 300.0
+        },
+        {
+          "id": "d",
+          "value": 450.0
+        },
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "v_ed",
+          "value": 200000.0
+        },
+        {
+          "id": "z",
+          "value": 405.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "roughness",
+          "value": "rough"
+        }
+      ]
+    },
+    {
+      "id": "case-br-04",
+      "labelEn": "Bridge fatigue",
+      "labelDe": "Ermüdung Brücken",
+      "entryId": "BR-04",
+      "numbers": [
+        {
+          "id": "delta_sigma_71",
+          "value": 162.5
+        },
+        {
+          "id": "delta_sigma_tendon",
+          "value": 80.0
+        },
+        {
+          "id": "lambda1",
+          "value": 0.8
+        },
+        {
+          "id": "lambda2",
+          "value": 1.0
+        },
+        {
+          "id": "lambda3",
+          "value": 1.0
+        },
+        {
+          "id": "lambda4",
+          "value": 1.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "tendon_kind",
+          "value": "post_curved_steel"
+        }
+      ]
+    },
+    {
+      "id": "case-br-05",
+      "labelEn": "Bridge crack control",
+      "labelDe": "Rissbreitenbegrenzung Brücken",
+      "entryId": "BR-05",
+      "numbers": [
+        {
+          "id": "b",
+          "value": 300.0
+        },
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "fct_eff",
+          "value": 2.9
+        },
+        {
+          "id": "h",
+          "value": 500.0
+        },
+        {
+          "id": "prestressed_bonded",
+          "value": 0.0
+        },
+        {
+          "id": "wk",
+          "value": 0.3
+        }
+      ],
+      "texts": [
+        {
+          "id": "exposure",
+          "value": "XC4"
+        }
+      ]
+    },
+    {
+      "id": "case-br-06",
+      "labelEn": "Bridge prestress",
+      "labelDe": "Vorspannung Brücken",
+      "entryId": "BR-06",
+      "numbers": [
+        {
+          "id": "e_p",
+          "value": 100.0
+        },
+        {
+          "id": "l",
+          "value": 6000.0
+        },
+        {
+          "id": "m_total",
+          "value": 600000000.0
+        },
+        {
+          "id": "p",
+          "value": 500000.0
+        },
+        {
+          "id": "sag",
+          "value": 40.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-br-07",
+      "labelEn": "Wheel load punching",
+      "labelDe": "Durchstanzen unter Radlast",
+      "entryId": "BR-07",
+      "numbers": [
+        {
+          "id": "d",
+          "value": 450.0
+        },
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "h",
+          "value": 500.0
+        },
+        {
+          "id": "q_wheel",
+          "value": 150000.0
+        },
+        {
+          "id": "rho_ly",
+          "value": 0.01
+        },
+        {
+          "id": "rho_lz",
+          "value": 0.01
+        },
+        {
+          "id": "wheel_print",
+          "value": 400.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-br-08",
+      "labelEn": "Bridge piers",
+      "labelDe": "Brückenpfeiler",
+      "entryId": "BR-08",
+      "numbers": [
+        {
+          "id": "as",
+          "value": 1571.0
+        },
+        {
+          "id": "b",
+          "value": 300.0
+        },
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "h",
+          "value": 500.0
+        },
+        {
+          "id": "l0",
+          "value": 6000.0
+        },
+        {
+          "id": "n_ed",
+          "value": 500000.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-lq-01",
+      "labelEn": "Tightness classes",
+      "labelDe": "Dichtheitsklassen",
+      "entryId": "LQ-01",
+      "numbers": [
+        {
+          "id": "class",
+          "value": 1.0
+        },
+        {
+          "id": "h",
+          "value": 500.0
+        },
+        {
+          "id": "hd_over_h",
+          "value": 10.0
+        },
+        {
+          "id": "wk",
+          "value": 0.3
+        },
+        {
+          "id": "x_compression",
+          "value": 150.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "exposure",
+          "value": "XC4"
+        }
+      ]
+    },
+    {
+      "id": "case-lq-02",
+      "labelEn": "Early-age restraint cracking",
+      "labelDe": "Zwangrissbildung im jungen Alter",
+      "entryId": "LQ-02",
+      "numbers": [
+        {
+          "id": "alpha_c",
+          "value": 1e-05
+        },
+        {
+          "id": "delta_t",
+          "value": 20.0
+        },
+        {
+          "id": "eps_ca",
+          "value": 5e-05
+        },
+        {
+          "id": "eps_cd",
+          "value": 0.0001
+        },
+        {
+          "id": "eps_free",
+          "value": 0.0002
+        },
+        {
+          "id": "rax",
+          "value": 0.5
+        },
+        {
+          "id": "sr_max",
+          "value": 300.0
+        },
+        {
+          "id": "wk_lim",
+          "value": 0.3
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-lq-03",
+      "labelEn": "Crack width of liquid structures",
+      "labelDe": "Rissbreite Flüssigkeitsbehälter",
+      "entryId": "LQ-03",
+      "numbers": [
+        {
+          "id": "as",
+          "value": 1571.0
+        },
+        {
+          "id": "b",
+          "value": 300.0
+        },
+        {
+          "id": "c",
+          "value": 35.0
+        },
+        {
+          "id": "class",
+          "value": 1.0
+        },
+        {
+          "id": "d",
+          "value": 450.0
+        },
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "h",
+          "value": 500.0
+        },
+        {
+          "id": "hd_over_h",
+          "value": 10.0
+        },
+        {
+          "id": "m_qp",
+          "value": 150000000.0
+        },
+        {
+          "id": "phi",
+          "value": 20.0
+        },
+        {
+          "id": "sigma_s",
+          "value": 250.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-lq-04",
+      "labelEn": "Self-healing",
+      "labelDe": "Selbstheilung",
+      "entryId": "LQ-04",
+      "numbers": [
+        {
+          "id": "hd_over_h",
+          "value": 10.0
+        },
+        {
+          "id": "wk",
+          "value": 0.3
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-lq-05",
+      "labelEn": "Cover of liquid structures",
+      "labelDe": "Betondeckung Flüssigkeitsbehälter",
+      "entryId": "LQ-05",
+      "numbers": [
+        {
+          "id": "c_provided",
+          "value": 45.0
+        },
+        {
+          "id": "design_life",
+          "value": 50.0
+        },
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "phi",
+          "value": 20.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "exposure",
+          "value": "XC4"
+        }
+      ]
+    },
+    {
+      "id": "case-lq-06",
+      "labelEn": "Prestressed tanks",
+      "labelDe": "Vorgespannte Behälter",
+      "entryId": "LQ-06",
+      "numbers": [
+        {
+          "id": "pm_t_per_m",
+          "value": 2500.0
+        },
+        {
+          "id": "pressure",
+          "value": 0.15
+        },
+        {
+          "id": "radius",
+          "value": 15000.0
+        },
+        {
+          "id": "t",
+          "value": 300.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-lq-07",
+      "labelEn": "Joint and corner detailing checklist",
+      "labelDe": "Checkliste Fugen und Ecken",
+      "entryId": "LQ-07",
+      "numbers": [
+        {
+          "id": "checklist.0",
+          "value": 1.0
+        },
+        {
+          "id": "checklist.1",
+          "value": 1.0
+        },
+        {
+          "id": "checklist.2",
+          "value": 0.0
+        },
+        {
+          "id": "checklist.3",
+          "value": 1.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-v-01",
+      "labelEn": "Shear design framework and support reduction",
+      "labelDe": "Querkraftnachweis, Abminderung am Auflager",
+      "entryId": "V-01",
+      "numbers": [
+        {
+          "id": "av",
+          "value": 400.0
+        },
+        {
+          "id": "d",
+          "value": 450.0
+        },
+        {
+          "id": "direct_support",
+          "value": 1.0
+        },
+        {
+          "id": "v_ed",
+          "value": 200000.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-v-05",
+      "labelEn": "Shear at interfaces",
+      "labelDe": "Schubfuge",
+      "entryId": "V-05",
+      "numbers": [
+        {
+          "id": "alpha_deg",
+          "value": 90.0
+        },
+        {
+          "id": "beta",
+          "value": 1.0
+        },
+        {
+          "id": "bi",
+          "value": 300.0
+        },
+        {
+          "id": "fatigue",
+          "value": 0.0
+        },
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "fyk",
+          "value": 500.0
+        },
+        {
+          "id": "rho",
+          "value": 0.002
+        },
+        {
+          "id": "sigma_n",
+          "value": 0.5
+        },
+        {
+          "id": "v_ed",
+          "value": 200000.0
+        },
+        {
+          "id": "z",
+          "value": 405.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "roughness",
+          "value": "rough"
+        }
+      ]
+    },
+    {
+      "id": "case-v-06",
+      "labelEn": "Shear between web and flanges",
+      "labelDe": "Schub zwischen Gurt und Steg",
+      "entryId": "V-06",
+      "numbers": [
+        {
+          "id": "cot_theta_f",
+          "value": 1.2
+        },
+        {
+          "id": "delta_fd",
+          "value": 100000.0
+        },
+        {
+          "id": "delta_x",
+          "value": 1000.0
+        },
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "fyk",
+          "value": 500.0
+        },
+        {
+          "id": "hf",
+          "value": 150.0
+        },
+        {
+          "id": "tension_flange",
+          "value": 0.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-v-09",
+      "labelEn": "Flange shear without reinforcement",
+      "labelDe": "Gurtschub ohne Bewehrung",
+      "entryId": "V-09",
+      "numbers": [
+        {
+          "id": "delta_fd",
+          "value": 100000.0
+        },
+        {
+          "id": "delta_x",
+          "value": 1000.0
+        },
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "hf",
+          "value": 150.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-t-03",
+      "labelEn": "Torsion in composite sections",
+      "labelDe": "Torsion in zusammengesetzten Querschnitten",
+      "entryId": "T-03",
+      "numbers": [
+        {
+          "id": "stiffness.0",
+          "value": 1.0
+        },
+        {
+          "id": "stiffness.1",
+          "value": 2.0
+        },
+        {
+          "id": "t_ed",
+          "value": 20000000.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-p-05",
+      "labelEn": "Shear studs with approval",
+      "labelDe": "Dübelleiste mit Zulassung",
+      "entryId": "P-05",
+      "numbers": [
+        {
+          "id": "approval",
+          "value": 0.0
+        },
+        {
+          "id": "c1",
+          "value": 400.0
+        },
+        {
+          "id": "d",
+          "value": 450.0
+        },
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "rho_ly",
+          "value": 0.01
+        },
+        {
+          "id": "rho_lz",
+          "value": 0.01
+        },
+        {
+          "id": "v_ed",
+          "value": 200000.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-p-06",
+      "labelEn": "Punching of foundations",
+      "labelDe": "Durchstanzen von Fundamenten",
+      "entryId": "P-06",
+      "numbers": [
+        {
+          "id": "beta",
+          "value": 1.15
+        },
+        {
+          "id": "c1",
+          "value": 400.0
+        },
+        {
+          "id": "c2",
+          "value": 400.0
+        },
+        {
+          "id": "d",
+          "value": 450.0
+        },
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "rho_ly",
+          "value": 0.01
+        },
+        {
+          "id": "rho_lz",
+          "value": 0.01
+        },
+        {
+          "id": "sigma_gd",
+          "value": 0.5
+        },
+        {
+          "id": "v_ed",
+          "value": 200000.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-p-07",
+      "labelEn": "Prestressed flat slab punching",
+      "labelDe": "Durchstanzen vorgespannte Flachdecke",
+      "entryId": "P-07",
+      "numbers": [
+        {
+          "id": "c1",
+          "value": 400.0
+        },
+        {
+          "id": "d",
+          "value": 450.0
+        },
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "p_force",
+          "value": 500000.0
+        },
+        {
+          "id": "rho_ly",
+          "value": 0.01
+        },
+        {
+          "id": "rho_lz",
+          "value": 0.01
+        },
+        {
+          "id": "sigma_cp",
+          "value": 1.0
+        },
+        {
+          "id": "tendon_angle",
+          "value": 0.0
+        },
+        {
+          "id": "v_ed",
+          "value": 200000.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-st-01",
+      "labelEn": "Concrete strut capacity",
+      "labelDe": "Druckstreben",
+      "entryId": "ST-01",
+      "numbers": [
+        {
+          "id": "b",
+          "value": 300.0
+        },
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "strut_force",
+          "value": 300000.0
+        },
+        {
+          "id": "w",
+          "value": 100.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "kind",
+          "value": "free"
+        }
+      ]
+    },
+    {
+      "id": "case-st-02",
+      "labelEn": "Ties",
+      "labelDe": "Zugstreben",
+      "entryId": "ST-02",
+      "numbers": [
+        {
+          "id": "as_provided",
+          "value": 1571.0
+        },
+        {
+          "id": "f_td",
+          "value": 150000.0
+        },
+        {
+          "id": "fyk",
+          "value": 500.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-st-03",
+      "labelEn": "Nodes",
+      "labelDe": "Knoten",
+      "entryId": "ST-03",
+      "numbers": [
+        {
+          "id": "confinement",
+          "value": 1.0
+        },
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "sigma_c",
+          "value": 10.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "node",
+          "value": "CCC"
+        }
+      ]
+    },
+    {
+      "id": "case-st-04",
+      "labelEn": "Strut-and-tie model solver",
+      "labelDe": "Stabwerkmodell-Löser",
+      "entryId": "ST-04",
+      "numbers": [
+        {
+          "id": "fyk",
+          "value": 500.0
+        },
+        {
+          "id": "load_x.0",
+          "value": 0.0
+        },
+        {
+          "id": "load_x.1",
+          "value": 0.0
+        },
+        {
+          "id": "load_x.2",
+          "value": 0.0
+        },
+        {
+          "id": "load_y.0",
+          "value": 0.0
+        },
+        {
+          "id": "load_y.1",
+          "value": 0.0
+        },
+        {
+          "id": "load_y.2",
+          "value": -100000.0
+        },
+        {
+          "id": "member_i.0",
+          "value": 0.0
+        },
+        {
+          "id": "member_i.1",
+          "value": 1.0
+        },
+        {
+          "id": "member_i.2",
+          "value": 2.0
+        },
+        {
+          "id": "member_j.0",
+          "value": 1.0
+        },
+        {
+          "id": "member_j.1",
+          "value": 2.0
+        },
+        {
+          "id": "member_j.2",
+          "value": 0.0
+        },
+        {
+          "id": "node_x.0",
+          "value": 0.0
+        },
+        {
+          "id": "node_x.1",
+          "value": 2000.0
+        },
+        {
+          "id": "node_x.2",
+          "value": 1000.0
+        },
+        {
+          "id": "node_y.0",
+          "value": 0.0
+        },
+        {
+          "id": "node_y.1",
+          "value": 0.0
+        },
+        {
+          "id": "node_y.2",
+          "value": 1000.0
+        },
+        {
+          "id": "support_dof.0",
+          "value": 1.0
+        },
+        {
+          "id": "support_dof.1",
+          "value": 1.0
+        },
+        {
+          "id": "support_node.0",
+          "value": 0.0
+        },
+        {
+          "id": "support_node.1",
+          "value": 1.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-pa-01",
+      "labelEn": "Partially loaded areas",
+      "labelDe": "Teilflächenbelastung",
+      "entryId": "PA-01",
+      "numbers": [
+        {
+          "id": "ac0",
+          "value": 40000.0
+        },
+        {
+          "id": "ac1",
+          "value": 360000.0
+        },
+        {
+          "id": "f_ed",
+          "value": 300000.0
+        },
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "full_discontinuity",
+          "value": 0.0
+        },
+        {
+          "id": "fyk",
+          "value": 500.0
+        },
+        {
+          "id": "h",
+          "value": 500.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-af-01",
+      "labelEn": "Reinforcement for in-plane stress",
+      "labelDe": "Bewehrung für ebenen Spannungszustand",
+      "entryId": "AF-01",
+      "numbers": [
+        {
+          "id": "cot_theta",
+          "value": 2.0
+        },
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "fyk",
+          "value": 500.0
+        },
+        {
+          "id": "sx",
+          "value": 2.0
+        },
+        {
+          "id": "sy",
+          "value": 1.0
+        },
+        {
+          "id": "t",
+          "value": 200.0
+        },
+        {
+          "id": "txy",
+          "value": 3.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-aj-01",
+      "labelEn": "Surface reinforcement",
+      "labelDe": "Oberflächenbewehrung",
+      "entryId": "AJ-01",
+      "numbers": [
+        {
+          "id": "as_surf",
+          "value": 1500.0
+        },
+        {
+          "id": "b",
+          "value": 300.0
+        },
+        {
+          "id": "h_ct",
+          "value": 100.0
+        },
+        {
+          "id": "s_surf",
+          "value": 150.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-aj-02",
+      "labelEn": "Frame corners",
+      "labelDe": "Rahmenecken",
+      "entryId": "AJ-02",
+      "numbers": [
+        {
+          "id": "a_b",
+          "value": 200.0
+        },
+        {
+          "id": "a_links",
+          "value": 400.0
+        },
+        {
+          "id": "as_provided",
+          "value": 1571.0
+        },
+        {
+          "id": "b",
+          "value": 300.0
+        },
+        {
+          "id": "d",
+          "value": 450.0
+        },
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "fyk",
+          "value": 500.0
+        },
+        {
+          "id": "m_ed",
+          "value": 250000000.0
+        },
+        {
+          "id": "n_bars",
+          "value": 4.0
+        },
+        {
+          "id": "phi",
+          "value": 20.0
+        },
+        {
+          "id": "phi_m",
+          "value": 200.0
+        },
+        {
+          "id": "z",
+          "value": 405.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "mode",
+          "value": "closing"
+        }
+      ]
+    },
+    {
+      "id": "case-aj-03",
+      "labelEn": "Corbels",
+      "labelDe": "Konsolen",
+      "entryId": "AJ-03",
+      "numbers": [
+        {
+          "id": "a_c",
+          "value": 150.0
+        },
+        {
+          "id": "b",
+          "value": 300.0
+        },
+        {
+          "id": "f_ed",
+          "value": 300000.0
+        },
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "fyk",
+          "value": 500.0
+        },
+        {
+          "id": "h_ed",
+          "value": 20000.0
+        },
+        {
+          "id": "w_strut",
+          "value": 100.0
+        },
+        {
+          "id": "z0",
+          "value": 300.0
+        },
+        {
+          "id": "z_h",
+          "value": 0.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-t-05",
+      "labelEn": "Warping torsion",
+      "labelDe": "Wölbkrafttorsion",
+      "entryId": "T-05",
+      "numbers": [
+        {
+          "id": "as_provided",
+          "value": 1571.0
+        },
+        {
+          "id": "bimoment",
+          "value": 4000000000.0
+        },
+        {
+          "id": "d_f",
+          "value": 250.0
+        },
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "fyk",
+          "value": 500.0
+        },
+        {
+          "id": "h_s",
+          "value": 400.0
+        },
+        {
+          "id": "t_f",
+          "value": 150.0
+        },
+        {
+          "id": "t_w",
+          "value": 2000000.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-ak-01",
+      "labelEn": "Time-dependent behaviour",
+      "labelDe": "Zeitabhängiges Verhalten",
+      "entryId": "AK-01",
+      "numbers": [
+        {
+          "id": "chi",
+          "value": 0.8
+        },
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "m1",
+          "value": 100000000.0
+        },
+        {
+          "id": "m2",
+          "value": 200000000.0
+        },
+        {
+          "id": "phi",
+          "value": 2.0
+        },
+        {
+          "id": "sigma_c",
+          "value": 10.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-al-01",
+      "labelEn": "Shell elements (sandwich model)",
+      "labelDe": "Schalenelemente (Sandwichmodell)",
+      "entryId": "AL-01",
+      "numbers": [
+        {
+          "id": "a",
+          "value": 40.0
+        },
+        {
+          "id": "cot_theta",
+          "value": 2.0
+        },
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "fyk",
+          "value": 500.0
+        },
+        {
+          "id": "h",
+          "value": 500.0
+        },
+        {
+          "id": "mx",
+          "value": 20000.0
+        },
+        {
+          "id": "mxy",
+          "value": 5000.0
+        },
+        {
+          "id": "my",
+          "value": 20000.0
+        },
+        {
+          "id": "nx",
+          "value": 100.0
+        },
+        {
+          "id": "nxy",
+          "value": 20.0
+        },
+        {
+          "id": "ny",
+          "value": 50.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-s-05",
+      "labelEn": "Biaxial bending, simplified",
+      "labelDe": "Zweiachsige Biegung vereinfacht",
+      "entryId": "S-05",
+      "numbers": [
+        {
+          "id": "m_edy",
+          "value": 150000000.0
+        },
+        {
+          "id": "m_edz",
+          "value": 120000000.0
+        },
+        {
+          "id": "m_rdy",
+          "value": 235600000.0
+        },
+        {
+          "id": "m_rdz",
+          "value": 235600000.0
+        },
+        {
+          "id": "n_ed",
+          "value": 500000.0
+        },
+        {
+          "id": "n_rd",
+          "value": 3574000.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-s-06",
+      "labelEn": "Exact biaxial N–My–Mz interaction",
+      "labelDe": "Exakte zweiachsige Interaktionsfläche",
+      "entryId": "S-06",
+      "numbers": [
+        {
+          "id": "b",
+          "value": 300.0
+        },
+        {
+          "id": "bar_a.0",
+          "value": 490.87
+        },
+        {
+          "id": "bar_a.1",
+          "value": 490.87
+        },
+        {
+          "id": "bar_a.2",
+          "value": 490.87
+        },
+        {
+          "id": "bar_a.3",
+          "value": 490.87
+        },
+        {
+          "id": "bar_y.0",
+          "value": -110.0
+        },
+        {
+          "id": "bar_y.1",
+          "value": 110.0
+        },
+        {
+          "id": "bar_y.2",
+          "value": -110.0
+        },
+        {
+          "id": "bar_y.3",
+          "value": 110.0
+        },
+        {
+          "id": "bar_z.0",
+          "value": -210.0
+        },
+        {
+          "id": "bar_z.1",
+          "value": -210.0
+        },
+        {
+          "id": "bar_z.2",
+          "value": 210.0
+        },
+        {
+          "id": "bar_z.3",
+          "value": 210.0
+        },
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "h",
+          "value": 500.0
+        },
+        {
+          "id": "m_edy",
+          "value": 150000000.0
+        },
+        {
+          "id": "m_edz",
+          "value": 120000000.0
+        },
+        {
+          "id": "n_ed",
+          "value": 500000.0
+        },
+        {
+          "id": "step_deg",
+          "value": 15.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-s-08",
+      "labelEn": "Minimum eccentricity",
+      "labelDe": "Mindestausmitte",
+      "entryId": "S-08",
+      "numbers": [
+        {
+          "id": "h",
+          "value": 500.0
+        },
+        {
+          "id": "m_ed",
+          "value": 250000000.0
+        },
+        {
+          "id": "n_ed",
+          "value": 500000.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-s-09",
+      "labelEn": "Plain concrete resistance",
+      "labelDe": "Unbewehrter Beton",
+      "entryId": "S-09",
+      "numbers": [
+        {
+          "id": "b",
+          "value": 1000.0
+        },
+        {
+          "id": "e_tot",
+          "value": 20.0
+        },
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "hw",
+          "value": 200.0
+        },
+        {
+          "id": "l0",
+          "value": 3000.0
+        },
+        {
+          "id": "n_ed",
+          "value": 500000.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-s-11",
+      "labelEn": "Moment-curvature of the cracked section",
+      "labelDe": "Moment-Krümmung des gerissenen Querschnitts",
+      "entryId": "S-11",
+      "numbers": [
+        {
+          "id": "b",
+          "value": 300.0
+        },
+        {
+          "id": "bar_a.0",
+          "value": 490.87
+        },
+        {
+          "id": "bar_a.1",
+          "value": 490.87
+        },
+        {
+          "id": "bar_a.2",
+          "value": 490.87
+        },
+        {
+          "id": "bar_a.3",
+          "value": 490.87
+        },
+        {
+          "id": "bar_y.0",
+          "value": -110.0
+        },
+        {
+          "id": "bar_y.1",
+          "value": 110.0
+        },
+        {
+          "id": "bar_y.2",
+          "value": -110.0
+        },
+        {
+          "id": "bar_y.3",
+          "value": 110.0
+        },
+        {
+          "id": "bar_z.0",
+          "value": -210.0
+        },
+        {
+          "id": "bar_z.1",
+          "value": -210.0
+        },
+        {
+          "id": "bar_z.2",
+          "value": 210.0
+        },
+        {
+          "id": "bar_z.3",
+          "value": 210.0
+        },
+        {
+          "id": "eps_uk",
+          "value": 50.0
+        },
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "fyk",
+          "value": 500.0
+        },
+        {
+          "id": "h",
+          "value": 500.0
+        },
+        {
+          "id": "k",
+          "value": 1.08
+        },
+        {
+          "id": "n_ed",
+          "value": 500000.0
+        },
+        {
+          "id": "points",
+          "value": 24.0
+        },
+        {
+          "id": "poly_y.0",
+          "value": -150.0
+        },
+        {
+          "id": "poly_y.1",
+          "value": 150.0
+        },
+        {
+          "id": "poly_y.2",
+          "value": 150.0
+        },
+        {
+          "id": "poly_y.3",
+          "value": -150.0
+        },
+        {
+          "id": "poly_z.0",
+          "value": -250.0
+        },
+        {
+          "id": "poly_z.1",
+          "value": -250.0
+        },
+        {
+          "id": "poly_z.2",
+          "value": 250.0
+        },
+        {
+          "id": "poly_z.3",
+          "value": 250.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-fa-01",
+      "labelEn": "Anchor load distribution",
+      "labelDe": "Lastverteilung auf Anker",
+      "entryId": "FA-01",
+      "numbers": [
+        {
+          "id": "ax.0",
+          "value": -75.0
+        },
+        {
+          "id": "ax.1",
+          "value": 75.0
+        },
+        {
+          "id": "ax.2",
+          "value": -75.0
+        },
+        {
+          "id": "ax.3",
+          "value": 75.0
+        },
+        {
+          "id": "ay.0",
+          "value": -75.0
+        },
+        {
+          "id": "ay.1",
+          "value": -75.0
+        },
+        {
+          "id": "ay.2",
+          "value": 75.0
+        },
+        {
+          "id": "ay.3",
+          "value": 75.0
+        },
+        {
+          "id": "m_x",
+          "value": 2000000.0
+        },
+        {
+          "id": "m_y",
+          "value": 1000000.0
+        },
+        {
+          "id": "n_ed",
+          "value": 20000.0
+        },
+        {
+          "id": "v_ed",
+          "value": 10000.0
+        },
+        {
+          "id": "y_n",
+          "value": 0.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "method",
+          "value": "elastic"
+        }
+      ]
+    },
+    {
+      "id": "case-fa-06",
+      "labelEn": "Blow-out failure",
+      "labelDe": "Seitlicher Betonausbruch",
+      "entryId": "FA-06",
+      "numbers": [
+        {
+          "id": "c1",
+          "value": 40.0
+        },
+        {
+          "id": "d",
+          "value": 16.0
+        },
+        {
+          "id": "dh",
+          "value": 30.0
+        },
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "hef",
+          "value": 100.0
+        },
+        {
+          "id": "n_ed",
+          "value": 20000.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-fa-11",
+      "labelEn": "Group effects",
+      "labelDe": "Gruppeneffekte",
+      "entryId": "FA-11",
+      "numbers": [
+        {
+          "id": "ax.0",
+          "value": -75.0
+        },
+        {
+          "id": "ax.1",
+          "value": 75.0
+        },
+        {
+          "id": "ax.2",
+          "value": -75.0
+        },
+        {
+          "id": "ax.3",
+          "value": 75.0
+        },
+        {
+          "id": "ay.0",
+          "value": -75.0
+        },
+        {
+          "id": "ay.1",
+          "value": -75.0
+        },
+        {
+          "id": "ay.2",
+          "value": 75.0
+        },
+        {
+          "id": "ay.3",
+          "value": 75.0
+        },
+        {
+          "id": "cracked",
+          "value": 1.0
+        },
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "hef",
+          "value": 100.0
+        },
+        {
+          "id": "ni.0",
+          "value": 5000.0
+        },
+        {
+          "id": "ni.1",
+          "value": 5000.0
+        },
+        {
+          "id": "ni.2",
+          "value": 5000.0
+        },
+        {
+          "id": "ni.3",
+          "value": 5000.0
+        },
+        {
+          "id": "x_max",
+          "value": 100.0
+        },
+        {
+          "id": "x_min",
+          "value": -100.0
+        },
+        {
+          "id": "y_max",
+          "value": 100.0
+        },
+        {
+          "id": "y_min",
+          "value": -100.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "type",
+          "value": "cast_in"
+        }
+      ]
+    },
+    {
+      "id": "case-fa-12",
+      "labelEn": "Fatigue and seismic",
+      "labelDe": "Ermüdung und Erdbeben",
+      "entryId": "FA-12",
+      "numbers": [
+        {
+          "id": "alpha_seis",
+          "value": 0.8
+        },
+        {
+          "id": "delta_n_ed",
+          "value": 5000.0
+        },
+        {
+          "id": "delta_n_rk_s_0",
+          "value": 40000.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-fa-13",
+      "labelEn": "Pry-out of groups",
+      "labelDe": "Betonausbruch Gruppen lastabgewandt",
+      "entryId": "FA-13",
+      "numbers": [
+        {
+          "id": "ax.0",
+          "value": -75.0
+        },
+        {
+          "id": "ax.1",
+          "value": 75.0
+        },
+        {
+          "id": "ax.2",
+          "value": -75.0
+        },
+        {
+          "id": "ax.3",
+          "value": 75.0
+        },
+        {
+          "id": "ay.0",
+          "value": -75.0
+        },
+        {
+          "id": "ay.1",
+          "value": -75.0
+        },
+        {
+          "id": "ay.2",
+          "value": 75.0
+        },
+        {
+          "id": "ay.3",
+          "value": 75.0
+        },
+        {
+          "id": "cracked",
+          "value": 1.0
+        },
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "hef",
+          "value": 100.0
+        },
+        {
+          "id": "v_ed",
+          "value": 10000.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "type",
+          "value": "cast_in"
+        }
+      ]
+    },
+    {
+      "id": "case-fa-14",
+      "labelEn": "Anchor reinforcement",
+      "labelDe": "Rückhängebewehrung",
+      "entryId": "FA-14",
+      "numbers": [
+        {
+          "id": "as_provided",
+          "value": 1571.0
+        },
+        {
+          "id": "fyk",
+          "value": 500.0
+        },
+        {
+          "id": "l_bd",
+          "value": 600.0
+        },
+        {
+          "id": "l_s",
+          "value": 500.0
+        },
+        {
+          "id": "n_ed_re",
+          "value": 100000.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-sg-01",
+      "labelEn": "General section properties",
+      "labelDe": "Allgemeine Querschnittswerte",
+      "entryId": "SG-01",
+      "numbers": [
+        {
+          "id": "bar_a.0",
+          "value": 490.87
+        },
+        {
+          "id": "bar_a.1",
+          "value": 490.87
+        },
+        {
+          "id": "bar_a.2",
+          "value": 490.87
+        },
+        {
+          "id": "bar_a.3",
+          "value": 490.87
+        },
+        {
+          "id": "bar_y.0",
+          "value": -110.0
+        },
+        {
+          "id": "bar_y.1",
+          "value": 110.0
+        },
+        {
+          "id": "bar_y.2",
+          "value": -110.0
+        },
+        {
+          "id": "bar_y.3",
+          "value": 110.0
+        },
+        {
+          "id": "bar_z.0",
+          "value": -210.0
+        },
+        {
+          "id": "bar_z.1",
+          "value": -210.0
+        },
+        {
+          "id": "bar_z.2",
+          "value": 210.0
+        },
+        {
+          "id": "bar_z.3",
+          "value": 210.0
+        },
+        {
+          "id": "c",
+          "value": 35.0
+        },
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "phi_l",
+          "value": 25.0
+        },
+        {
+          "id": "poly_y.0",
+          "value": -150.0
+        },
+        {
+          "id": "poly_y.1",
+          "value": 150.0
+        },
+        {
+          "id": "poly_y.2",
+          "value": 150.0
+        },
+        {
+          "id": "poly_y.3",
+          "value": -150.0
+        },
+        {
+          "id": "poly_z.0",
+          "value": -250.0
+        },
+        {
+          "id": "poly_z.1",
+          "value": -250.0
+        },
+        {
+          "id": "poly_z.2",
+          "value": 250.0
+        },
+        {
+          "id": "poly_z.3",
+          "value": 250.0
+        }
+      ],
+      "texts": []
+    },
+    {
+      "id": "case-sg-02",
+      "labelEn": "Linear-elastic section state",
+      "labelDe": "Linear-elastischer Querschnittszustand",
+      "entryId": "SG-02",
+      "numbers": [
+        {
+          "id": "bar_a.0",
+          "value": 490.87
+        },
+        {
+          "id": "bar_a.1",
+          "value": 490.87
+        },
+        {
+          "id": "bar_a.2",
+          "value": 490.87
+        },
+        {
+          "id": "bar_a.3",
+          "value": 490.87
+        },
+        {
+          "id": "bar_y.0",
+          "value": -110.0
+        },
+        {
+          "id": "bar_y.1",
+          "value": 110.0
+        },
+        {
+          "id": "bar_y.2",
+          "value": -110.0
+        },
+        {
+          "id": "bar_y.3",
+          "value": 110.0
+        },
+        {
+          "id": "bar_z.0",
+          "value": -210.0
+        },
+        {
+          "id": "bar_z.1",
+          "value": -210.0
+        },
+        {
+          "id": "bar_z.2",
+          "value": 210.0
+        },
+        {
+          "id": "bar_z.3",
+          "value": 210.0
+        },
+        {
+          "id": "es",
+          "value": 200000.0
+        },
+        {
+          "id": "fck",
+          "value": 30.0
+        },
+        {
+          "id": "m_ed",
+          "value": 250000000.0
+        },
+        {
+          "id": "n_ed",
+          "value": 500000.0
+        },
+        {
+          "id": "phi_inf",
+          "value": 2.4
+        },
+        {
+          "id": "poly_y.0",
+          "value": -150.0
+        },
+        {
+          "id": "poly_y.1",
+          "value": 150.0
+        },
+        {
+          "id": "poly_y.2",
+          "value": 150.0
+        },
+        {
+          "id": "poly_y.3",
+          "value": -150.0
+        },
+        {
+          "id": "poly_z.0",
+          "value": -250.0
+        },
+        {
+          "id": "poly_z.1",
+          "value": -250.0
+        },
+        {
+          "id": "poly_z.2",
+          "value": 250.0
+        },
+        {
+          "id": "poly_z.3",
+          "value": 250.0
+        }
+      ],
+      "texts": [
+        {
+          "id": "state",
+          "value": "cracked"
+        }
+      ]
+    }
+  ]
+}

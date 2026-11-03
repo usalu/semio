@@ -9,7 +9,15 @@ extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
 use semio_s_artifact_norm_en1992_model::{Anchor, En1992Snapshot, ExposureClass, FireRating, LoadCaseActions, MemberKind, RcMember, SupportCondition, TightnessClass};
-use semio_s_plugin_norm_compliance::{AnnexChoice, CheckResult, CheckStatus, ClauseId, LocalizedCopy, Quantity, QuantityKind, Remedy, SubjectRef};
+use semio_s_plugin_norm_compliance::{ndp_is_verified, record_ndp_reads, NDP_TABLE, AnnexChoice, CheckBuilder, CheckResult, CheckStatus, ClauseId, LocalizedCopy, Quantity, QuantityKind, Remedy, Station, SubjectRef};
+
+pub use semio_s_artifact_norm_en1992_checks_specials::*;
+
+pub use semio_s_artifact_norm_en1992_spec_trace as spec_trace;
+
+#[path = "🗄️registry/🦀️.rs"]
+pub mod catalogue_registry;
+pub use catalogue_registry::*;
 
 //#region 🔖️ComplianceHelpers
 
@@ -21,11 +29,7 @@ pub use helpers_and_annex_parts::*;
 
 //#region 🔖️MemberEvaluate
 
-#[path = "🧮️design-effects/🦀️.rs"]
-mod design_effects;
-pub use design_effects::*;
-
-#[path = "📋️member-evaluation/🦀️.rs"]
+#[path = "📋️members/🦀️.rs"]
 mod member_evaluation;
 pub use member_evaluation::*;
 
@@ -40,3 +44,15 @@ pub use anchor_evaluation::*;
 pub fn field_metadata() -> &'static [(&'static str, &'static str, &'static str, &'static str)] {
     &[]
 }
+
+#[cfg(test)]
+#[path = "🧪️tests/📍️reach/🦀️.rs"]
+mod reach_tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🧭️spec-trace/🦀️.rs"]
+mod spec_trace_tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🩹️remedies/🦀️.rs"]
+mod remedies_tests;

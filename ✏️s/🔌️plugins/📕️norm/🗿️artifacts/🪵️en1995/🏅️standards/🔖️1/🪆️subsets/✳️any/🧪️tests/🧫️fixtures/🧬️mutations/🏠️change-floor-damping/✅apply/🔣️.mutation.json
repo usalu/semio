@@ -1,0 +1,6 @@
+{
+  "ChangeFloorDamping": {
+    "floorId": "floor-1",
+    "newValue": 1.03
+  }
+}

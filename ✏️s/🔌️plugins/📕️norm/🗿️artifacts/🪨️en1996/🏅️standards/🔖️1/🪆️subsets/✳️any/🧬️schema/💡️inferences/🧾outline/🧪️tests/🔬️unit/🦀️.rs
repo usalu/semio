@@ -2,7 +2,7 @@ use crate::outline::*;
 
 #[test]
 fn outline_field_count_matches_section_outline_length() {
-    let outline = En1996Outline::compute(&En1996Snapshot::default());
+    let outline = En1996Outline::compute(&En1996Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De));
     assert_eq!(outline.field_count as usize, outline.section_outline.len());
 }
 

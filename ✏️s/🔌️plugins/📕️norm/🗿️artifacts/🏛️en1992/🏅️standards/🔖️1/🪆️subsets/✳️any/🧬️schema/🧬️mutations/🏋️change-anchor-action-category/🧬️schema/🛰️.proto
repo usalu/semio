@@ -1,0 +1,7 @@
+syntax = "proto3";
+package semio.s.norm.en1992.mutation.change_anchor_action_category;
+message ChangeAnchorActionCategory {
+  string anchor_id = 1;
+  string action_id = 2;
+  PsiCategory new_category = 3;
+}

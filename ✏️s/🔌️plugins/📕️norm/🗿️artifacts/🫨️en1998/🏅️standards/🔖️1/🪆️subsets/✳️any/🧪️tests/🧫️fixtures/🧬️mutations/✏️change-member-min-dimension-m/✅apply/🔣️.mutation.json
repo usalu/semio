@@ -1,0 +1,6 @@
+{
+  "mutation": "changeMemberMinDimensionM",
+  "buildingId": "bldg-office",
+  "id": "col-c1",
+  "newMinDimensionM": 0.7
+}

@@ -16,7 +16,6 @@ fn every_editable_leaf_has_en_de_field_meta() {
         "referencePeriodYears",
         "supervisionLevel",
         "inspectionLevel",
-        "kFiDeclared",
         "betaComputed",
         "permanents",
         "permanents[].id",
@@ -43,10 +42,30 @@ fn every_editable_leaf_has_en_de_field_meta() {
         "members[].rdEquDestab",
         "members[].rdFat",
         "members[].span",
-        "members[].deflectionW",
+        "members[].precamber",
+        "members[].deflectionW1",
+        "members[].deflectionW2",
+        "members[].deflectionW3",
         "members[].deflectionLimitRatio",
+        "members[].deflectionLimitRatioW3",
+        "members[].slsLimitChar",
+        "members[].slsLimitFreq",
+        "members[].slsLimitQp",
         "members[].vibrationFrequency",
         "members[].vibrationFrequencyMin",
+        "members[].frameHeight",
+        "members[].frameDrift",
+        "members[].storeyHeight",
+        "members[].storeyDrift",
+        "members[].materialStrengthK",
+        "members[].materialConversionFactor",
+        "members[].materialPartialFactor",
+        "members[].materialDesignStrength",
+        "members[].nominalDimension",
+        "members[].dimensionTolerance",
+        "members[].designDimension",
+        "members[].memberAlphaCr",
+        "members[].secondOrderAnalysis",
         "bridgeSls",
         "bridgeSls[].id",
         "bridgeSls[].memberId",
@@ -56,16 +75,65 @@ fn every_editable_leaf_has_en_de_field_meta() {
         "bridgeSls[].deckTwistLimit",
         "bridgeSls[].bridgeDeflection",
         "bridgeSls[].bridgeDeflectionLimit",
+        "bridgeSls[].trackGauge",
+        "bridgeSls[].lineSpeed",
+        "bridgeSls[].ballastDepth",
+        "bridgeSls[].deckMass",
+        "bridgeSls[].naturalFrequency",
+        "bridgeSls[].endRotation",
+        "bridgeSls[].basicWindSpeed",
+        "bridgeSls[].dampingRatio",
         "effects",
         "effects[].memberId",
         "effects[].actionId",
         "effects[].influence",
+        "variables[].group",
+        "fatigueSpectra",
+        "reliabilityAnalyses",
+        "testSeries",
+        "fatigueSpectra[].id",
+        "fatigueSpectra[].memberId",
+        "fatigueSpectra[].detailCategory",
+        "fatigueSpectra[].stressRange",
+        "fatigueSpectra[].cycles",
+        "reliabilityAnalyses[].id",
+        "reliabilityAnalyses[].resistanceDistribution",
+        "reliabilityAnalyses[].resistanceMean",
+        "reliabilityAnalyses[].resistanceSd",
+        "reliabilityAnalyses[].actionDistribution",
+        "reliabilityAnalyses[].actionMean",
+        "reliabilityAnalyses[].actionSd",
+        "testSeries[].id",
+        "testSeries[].quantity",
+        "testSeries[].distribution",
+        "testSeries[].sampleSize",
+        "testSeries[].mean",
+        "testSeries[].stdDev",
+        "testSeries[].variationKnown",
+        "testSeries[].conversionFactor",
+        "testSeries[].required",
+        "placements",
+        "placements[].id",
+        "placements[].x",
+        "placements[].y",
+        "placements[].z",
+        "placements[].yaw",
+        "factorOverrides",
+        "factorOverrides[].id",
+        "factorOverrides[].factor",
+        "factorOverrides[].target",
+        "factorOverrides[].value",
+        "factorOverrides[].justification",
+        "trafficGroups",
+        "trafficGroups[].id",
+        "trafficGroups[].group",
+        "trafficGroups[].variableId",
     ];
     for path in wildcards {
         let meta = en1990_field_meta(path).unwrap_or_else(|| panic!("missing field meta for {path}"));
-        assert!(!meta.label_en.is_empty(), "empty en for {path}");
-        assert!(!meta.label_de.is_empty(), "empty de for {path}");
-        if let Some(choices) = meta.choices {
+        assert!(!meta.label.en.is_empty(), "empty en for {path}");
+        assert!(!meta.label.de.is_empty(), "empty de for {path}");
+        if let Some(choices) = meta.choices() {
             for c in choices {
                 assert!(!c.label_en.is_empty(), "empty choice en for {path}");
                 assert!(!c.label_de.is_empty(), "empty choice de for {path}");
@@ -77,12 +145,11 @@ fn every_editable_leaf_has_en_de_field_meta() {
             }
         }
     }
-    let doc = En1990Snapshot::default();
+    let doc = En1990Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De);
     let concrete = [
         "projectId",
         "structureKind",
         "designWorkingLifeCategory",
-        "kFiDeclared",
         "permanents[id=G-sup].gk",
         "variables[id=Q-office].category",
         "variables[id=Q-office].qk",
@@ -93,8 +160,8 @@ fn every_editable_leaf_has_en_de_field_meta() {
     ];
     for path in concrete {
         let meta = en1990_field_meta(path).unwrap_or_else(|| panic!("missing field meta for concrete {path}"));
-        assert!(!meta.label_en.is_empty(), "empty en for {path}");
-        assert!(!meta.label_de.is_empty(), "empty de for {path}");
+        assert!(!meta.label.en.is_empty(), "empty en for {path}");
+        assert!(!meta.label.de.is_empty(), "empty de for {path}");
     }
     let _ = doc;
 }

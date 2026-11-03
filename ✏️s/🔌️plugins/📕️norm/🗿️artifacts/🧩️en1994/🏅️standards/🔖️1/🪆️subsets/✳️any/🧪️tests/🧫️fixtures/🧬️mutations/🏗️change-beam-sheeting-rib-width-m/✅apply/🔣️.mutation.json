@@ -1,0 +1,6 @@
+{
+  "ChangeBeamSheetingRibWidthM": {
+    "id": "beam-B1",
+    "newRibWidthM": 0.125
+  }
+}

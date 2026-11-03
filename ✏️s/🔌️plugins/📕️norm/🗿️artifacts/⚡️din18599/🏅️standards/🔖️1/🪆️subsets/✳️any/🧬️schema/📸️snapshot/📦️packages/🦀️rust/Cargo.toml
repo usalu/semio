@@ -16,6 +16,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+serde = { workspace = true, optional = true }
 semio-framework-composition-admission = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📥️admission/📦️packages/🦀️rust" }
 pack = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }
@@ -33,6 +34,9 @@ semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-semio-table-model = { workspace = true }
 semio-s-artifact-stdio-semio-value-model = { workspace = true }
 semio-s-plugin-norm-app-surface = { workspace = true }
+
+[features]
+test-support = ["dep:serde"]
 
 [dev-dependencies]
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

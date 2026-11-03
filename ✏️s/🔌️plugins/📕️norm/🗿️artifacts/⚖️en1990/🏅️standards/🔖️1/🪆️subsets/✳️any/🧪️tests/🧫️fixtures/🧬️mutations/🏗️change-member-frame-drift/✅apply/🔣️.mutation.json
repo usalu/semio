@@ -1,0 +1,5 @@
+{
+  "mutation": "changeMemberFrameDrift",
+  "id": "beam-B1",
+  "newFrameDrift": 1.5
+}

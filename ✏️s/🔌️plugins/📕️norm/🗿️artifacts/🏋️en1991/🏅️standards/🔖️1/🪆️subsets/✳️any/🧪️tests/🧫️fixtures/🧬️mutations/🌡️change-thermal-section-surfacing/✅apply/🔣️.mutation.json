@@ -1,0 +1,6 @@
+{
+  "ChangeThermalSectionSurfacing": {
+    "id": "thermal-section-1",
+    "newSurfacing": 2
+  }
+}

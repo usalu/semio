@@ -1,0 +1,109 @@
+{
+  "$schema": "../../../../../../../../../🔮️oracles/🏃️harness/🧬️schema/🔣️.json",
+  "schemaVersion": 1,
+  "artifact": "en1993",
+  "annex": "De",
+  "cases": [
+    {
+      "id": "en1993.mechanics.portal-sway",
+      "check": "mechanics.portal-sway",
+      "citation": {
+        "standard": "EN 1993-1-1",
+        "edition": "2005",
+        "clause": "5.2 global analysis; 5.3.2 imperfections (first order sway)"
+      },
+      "inputs": {
+        "E": 210000000000.0,
+        "A": 0.00538,
+        "I_col": 8.356e-05,
+        "I_beam": 0.00016712,
+        "h": 4.0,
+        "span": 6.0,
+        "H": 10000.0
+      },
+      "expected": {
+        "sway": {
+          "value": 0.002045654775047483,
+          "unit": "m",
+          "profile": "numerical-v1"
+        },
+        "M_base_left": {
+          "value": 11185.588865194688,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        },
+        "M_base_right": {
+          "value": 11063.862433157887,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        },
+        "H_base_left": {
+          "value": 5023.9105491500895,
+          "unit": "N",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-pynite",
+          "adapter": "pynite",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-anastruct",
+          "adapter": "anastruct",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1993.mechanics.ss-beam-udl",
+      "check": "mechanics.beam-continuous",
+      "citation": {
+        "standard": "EN 1993-1-1",
+        "edition": "2005",
+        "clause": "7.2 deflections; linear elastic analysis"
+      },
+      "inputs": {
+        "E": 210000000000.0,
+        "A": 0.00538,
+        "I": 8.356e-05,
+        "spans": [
+          6.0
+        ],
+        "w": [
+          10000.0
+        ]
+      },
+      "expected": {
+        "R_0": {
+          "value": 29999.999999999993,
+          "unit": "N",
+          "profile": "numerical-v1"
+        },
+        "M_sag_0": {
+          "value": 45000.0,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        },
+        "delta_0": {
+          "value": 0.009616699719619775,
+          "unit": "m",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-pynite",
+          "adapter": "pynite",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-anastruct",
+          "adapter": "anastruct",
+          "kind": "third-party-library"
+        }
+      ]
+    }
+  ]
+}

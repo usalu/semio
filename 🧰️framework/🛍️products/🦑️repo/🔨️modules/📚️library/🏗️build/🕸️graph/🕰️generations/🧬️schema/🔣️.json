@@ -61,7 +61,7 @@
           "covered": "graph: generation {generation} was sealed by a peer after this command began and already covers it, nothing is checked again",
           "pinned": "graph: generation {generation} pinned by the invoking build serves this command ({count} projects), no queue and no check of the live tree",
           "building": "graph: refreshing {dirty} projects (generation {generation})",
-          "published": "graph: generation {generation} published, {computed} projects refreshed in {seconds} s",
+          "published": "graph: generation {generation} published, {computed} projects refreshed in {seconds} s ({carried} kept their edges)",
           "indexed": "graph: fact index of generation {generation}: {rows} facts of {owners} projects, {expanded} MB expanded ({percent} % of the {limit} MB limit), {packed} MB packed",
           "swept": "graph: {removed} superseded observation blocks removed ({megabytes} MB, {headers} records kept their blocks)",
           "closure": "graph: {count} projects of the closure verified, no other project read",
@@ -80,12 +80,13 @@
           "cutoff": "graph: {questions} derived results asked again after {rows} stale facts: {held} unchanged, {changed} changed",
           "reasonMembership": "the workspace file {path} was {change}",
           "reasonMore": "graph: {count} more stale inputs are not listed",
+          "pendingCrate": "graph: the crate manifest {path} has no build project owner yet; it stays out of the graph and does not make the workspace stale until its owner row is registered (repo verify syncs build-owners)",
           "withheldDependency": "graph: {project} is withheld: {source} depends on projects that this graph snapshot does not contain ({target}), created or removed while the graph was built; run the command again to include them, or remove them from the native sources of {project}",
           "withheldSource": "graph: {project} is withheld: {source} does not parse (sha256 {sha}); fix that file and run the command again",
           "changeAdded": "added",
           "changeRemoved": "removed",
           "changeChanged": "changed",
-          "merged": "graph: generation {generation} published, {computed} projects refreshed in {seconds} s and merged onto the generation a peer published meanwhile ({theirs} projects of peers kept)"
+          "merged": "graph: generation {generation} published, {computed} projects refreshed in {seconds} s ({carried} kept their edges) and merged onto the generation a peer published meanwhile ({theirs} projects of peers kept)"
         },
         "de": {
           "current": "Graph: Generation {generation} wird ohne Prüfung geliefert (Graph-Richtlinie current)",
@@ -94,7 +95,7 @@
           "covered": "Graph: Generation {generation} wurde von einem anderen Prozess nach dem Beginn dieses Befehls versiegelt und deckt ihn bereits ab, nichts wird erneut geprüft",
           "pinned": "Graph: die vom aufrufenden Build gepinnte Generation {generation} bedient diesen Befehl ({count} Projekte), ohne Warteschlange und ohne Prüfung des Arbeitsbaums",
           "building": "Graph: {dirty} Projekte werden erneuert (Generation {generation})",
-          "published": "Graph: Generation {generation} veröffentlicht, {computed} Projekte in {seconds} s erneuert",
+          "published": "Graph: Generation {generation} veröffentlicht, {computed} Projekte in {seconds} s erneuert ({carried} behielten ihre Kanten)",
           "indexed": "Graph: Faktenindex der Generation {generation}: {rows} Fakten von {owners} Projekten, {expanded} MB entpackt ({percent} % der Grenze von {limit} MB), {packed} MB gepackt",
           "swept": "Graph: {removed} überholte Beobachtungsblöcke entfernt ({megabytes} MB, {headers} Aufzeichnungen behalten ihre Blöcke)",
           "closure": "Graph: {count} Projekte des Abschlusses geprüft, kein weiteres Projekt gelesen",
@@ -113,12 +114,13 @@
           "cutoff": "Graph: {questions} abgeleitete Ergebnisse nach {rows} veralteten Fakten erneut abgefragt: {held} unverändert, {changed} verändert",
           "reasonMembership": "die Arbeitsbereichsdatei {path} wurde {change}",
           "reasonMore": "Graph: {count} weitere veraltete Eingaben werden nicht aufgelistet",
+          "pendingCrate": "Graph: das Crate-Manifest {path} hat noch keinen Build-Projekt-Eigner; es bleibt außerhalb des Graphen und macht den Arbeitsbereich nicht veraltet, bis seine Eigner-Zeile eingetragen ist (repo verify gleicht build-owners ab)",
           "withheldDependency": "Graph: {project} wird zurückgehalten: {source} hängt von Projekten ab, die dieser Graph-Schnappschuss nicht enthält ({target}); sie wurden während des Graph-Aufbaus angelegt oder entfernt; den Befehl erneut ausführen, um sie aufzunehmen, oder sie aus den nativen Quellen von {project} entfernen",
           "withheldSource": "Graph: {project} wird zurückgehalten: {source} lässt sich nicht lesen (sha256 {sha}); die Datei korrigieren und den Befehl erneut ausführen",
           "changeAdded": "hinzugefügt",
           "changeRemoved": "entfernt",
           "changeChanged": "geändert",
-          "merged": "Graph: Generation {generation} veröffentlicht, {computed} Projekte in {seconds} s erneuert und auf die Generation eines anderen Prozesses zusammengeführt ({theirs} Projekte anderer Prozesse übernommen)"
+          "merged": "Graph: Generation {generation} veröffentlicht, {computed} Projekte in {seconds} s erneuert ({carried} behielten ihre Kanten) und auf die Generation eines anderen Prozesses zusammengeführt ({theirs} Projekte anderer Prozesse übernommen)"
         }
       }
     },
@@ -253,6 +255,66 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 64
+        },
+        "reads": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "What the edges of this owner read from the environment (owners it resolved to, directories it found no owner for, package and module names, Cargo workspaces, the lock file); an owner whose reads no edited environment row touches keeps its edges. Absent when unknown: such an owner is refreshed whenever the environment moves.",
+          "properties": {
+            "owners": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 65536,
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096
+              }
+            },
+            "paths": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 65536,
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096
+              }
+            },
+            "packages": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 65536,
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096
+              }
+            },
+            "modules": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 65536,
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096
+              }
+            },
+            "workspaces": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 65536,
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096
+              }
+            },
+            "lock": {
+              "const": true
+            }
+          }
         }
       }
     },
@@ -368,6 +430,75 @@
               "items": {
                 "type": "string"
               }
+            }
+          }
+        },
+        "envParts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "packages",
+            "modules",
+            "workspaces",
+            "lock",
+            "taxonomy"
+          ],
+          "description": "The parts of the environment the digest `env` is made of, except the owner table (the owner rows): package and module names with their project, workspace manifests with their digest, the lock and the taxonomy digest. The next build diffs them against its own to find the owners whose edges may differ.",
+          "properties": {
+            "packages": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "modules": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "workspaces": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "lock": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "taxonomy": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             }
           }
         }

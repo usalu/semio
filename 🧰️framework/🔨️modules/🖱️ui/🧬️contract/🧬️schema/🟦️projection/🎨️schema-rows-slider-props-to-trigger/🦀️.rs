@@ -278,7 +278,7 @@ pub(super) const TREE_PRESENTATION: SchemaMetadata = SchemaMetadata {
     name: "TreePresentation",
     version: 1,
     typescript: r####"/** 🌳️ Inherited tree row presentation. */
-export type TreePresentation = "standard" | "compact";"####,
+export type TreePresentation = "standard" | "compact" | "touch";"####,
 };
 
 pub(super) const TREE_PROPS: SchemaMetadata = SchemaMetadata {

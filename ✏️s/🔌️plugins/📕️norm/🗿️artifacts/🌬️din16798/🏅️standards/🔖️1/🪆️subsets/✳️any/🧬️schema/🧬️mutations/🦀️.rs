@@ -59,7 +59,7 @@ use semio_s_artifact_norm_din16798_mut_ventilation::change_vent_design_airflow;
 
 #[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
 #[mutations(snapshot = Din16798Snapshot, diff = Din16798Diff, schema = "s.norm.din16798", reference = Din16798Snapshot, reference_diff = Din16798Diff)]
 pub enum Din16798Mutation {
     ChangeAnnex(change_annex::ChangeAnnex),

@@ -7,5 +7,5 @@ pub fn diff(payload: &InsertBeam, base: &En1994Snapshot) -> protocol::MutationOu
     if payload.index > base.beams.len() {
         return protocol::MutationOutcome::error("mutation.target-missing", "index out of range", [payload.index.to_string()]);
     }
-    protocol::MutationOutcome::new(En1994Diff { beams: Some(En1994BeamsRows { inserted: vec![En1994BeamsInserted { index: payload.index, row: payload.beam.clone() }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(En1994Diff { beams: Some(En1994BeamsRows::insertion(payload.index, payload.beam.clone())), ..Default::default() })
 }

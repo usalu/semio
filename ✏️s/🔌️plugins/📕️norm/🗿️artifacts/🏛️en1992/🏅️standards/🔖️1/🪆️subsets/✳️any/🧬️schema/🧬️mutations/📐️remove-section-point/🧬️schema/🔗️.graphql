@@ -1,0 +1,4 @@
+type RemoveSectionPoint {
+  memberId: String!
+  index: Int!
+}

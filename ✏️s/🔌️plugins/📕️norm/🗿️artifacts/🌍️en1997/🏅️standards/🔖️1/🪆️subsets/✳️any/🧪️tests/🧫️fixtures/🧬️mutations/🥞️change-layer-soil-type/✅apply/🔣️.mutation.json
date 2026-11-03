@@ -1,0 +1,5 @@
+{
+  "mutation": "changeLayerSoilType",
+  "id": "layer-sand",
+  "newSoilType": "sand"
+}

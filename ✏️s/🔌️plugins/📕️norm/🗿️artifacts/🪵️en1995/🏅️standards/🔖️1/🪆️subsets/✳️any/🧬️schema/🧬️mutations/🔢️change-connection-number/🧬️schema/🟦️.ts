@@ -1,11 +1,11 @@
 /** 🔢️ `change-connection-number` wire twin: the leaf payload `ChangeConnectionNumber`, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
- * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
+ * by `repo ./📜️script.ts schema twins generate`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
-import { normWireInteger, normWireObject, normWireRange, type NormWireReader, normWireRequired, normWireString } from "@semio-tech/norm-js/registry/contract";
+import { normWireInteger, normWireObject, normWireRange, normWireRequired, normWireString, type NormWireReader } from "@semio-tech/norm-js/registry/contract";
 
 export interface ChangeConnectionNumber {
   connectionId: string;
   newValue: number;
 }
 
-export const parseChangeConnectionNumber: NormWireReader<ChangeConnectionNumber> = normWireObject<ChangeConnectionNumber>({ connectionId: normWireRequired(normWireString), newValue: normWireRequired(normWireRange(normWireInteger, {"minimum":0})) });
+export const parseChangeConnectionNumber: NormWireReader<ChangeConnectionNumber> = normWireObject<ChangeConnectionNumber>({ connectionId: normWireRequired(normWireString), newValue: normWireRequired(normWireRange(normWireInteger, {"minimum":0,"maximum":4294967295})) });

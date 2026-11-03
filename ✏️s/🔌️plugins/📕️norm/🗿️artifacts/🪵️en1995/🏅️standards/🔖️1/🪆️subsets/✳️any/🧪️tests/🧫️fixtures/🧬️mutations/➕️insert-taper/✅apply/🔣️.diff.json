@@ -1,0 +1,80 @@
+{
+  "annex": null,
+  "reliabilityClass": null,
+  "members": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "connections": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "placements": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "tapers": {
+    "removed": [],
+    "inserted": [
+      {
+        "index": 0,
+        "row": {
+          "id": "taper-1",
+          "memberId": "beam-B1",
+          "kind": "double-tapered",
+          "taperAngleRad": 0.1,
+          "apexDepthM": 0.8,
+          "innerRadiusM": 15.0,
+          "lamellaThicknessM": 0.033,
+          "apexAngleRad": 0.1,
+          "tensionSide": "tension",
+          "rods": 0,
+          "rodResistanceN": 0.0
+        }
+      }
+    ],
+    "moved": [],
+    "modified": []
+  },
+  "cutouts": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "fasteners": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "panels": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "floors": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "diaphragms": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "trusses": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "bracings": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "decks": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "ulsEquation": null,
+  "cases": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  }
+}

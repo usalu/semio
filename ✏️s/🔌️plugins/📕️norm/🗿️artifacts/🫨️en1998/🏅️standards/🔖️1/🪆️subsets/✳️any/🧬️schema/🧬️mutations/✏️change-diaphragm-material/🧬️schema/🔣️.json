@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-diaphragm-material/schema.json",
+  "title": "ChangeDiaphragmMaterial",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newMaterial"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeDiaphragmMaterial"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Diaphragm",
+          "de": "Scheibe"
+        },
+        "description": {
+          "en": "The diaphragm this mutation addresses, by id.",
+          "de": "Das adressierte Element (Scheibe), per Kennung."
+        },
+        "ref": {
+          "kind": "diaphragm"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newMaterial": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/snapshot.json#/$defs/DiaphragmMaterial",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Diaphragm material (concrete, timber, steel-deck)",
+          "de": "Scheibenwerkstoff (Beton, Holz, Stahlprofiltafel)"
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

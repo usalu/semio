@@ -1,6 +1,303 @@
-# 🪵 EN 1995 artifact GraphQL mirror
 type En1995Artifact {
   annex: String!
-  members: [JSON!]!
-  connections: [JSON!]!
+  members: [TimberMember!]!
+  connections: [TimberConnection!]!
+  ulsEquation: UlsEquation!
+  cases: [CaseRow!]!
+  placements: [Placement!]!
+  tapers: [Taper!]!
+  cutouts: [Cutout!]!
+  fasteners: [Fastener!]!
+  panels: [Panel!]!
+  floors: [Floor!]!
+  diaphragms: [Diaphragm!]!
+  trusses: [Truss!]!
+  bracings: [Bracing!]!
+  decks: [Deck!]!
+  reliabilityClass: String!
+}
+enum UlsEquation {
+  eq610
+  eq610ab
+}
+enum StrengthClass {
+  c14
+  c16
+  c18
+  c20
+  c22
+  c24
+  c27
+  c30
+  c35
+  c40
+  c45
+  c50
+  d18
+  d24
+  d30
+  d35
+  d40
+  d50
+  d60
+  d70
+  gl20h
+  gl22h
+  gl24h
+  gl26h
+  gl28h
+  gl30h
+  gl32h
+  gl20c
+  gl22c
+  gl24c
+  gl26c
+  gl28c
+  gl30c
+  gl32c
+  lvl32
+  clt100
+}
+type TimberMember {
+  id: String!
+  labelEn: String!
+  labelDe: String!
+  role: String!
+  strengthClass: StrengthClass!
+  serviceClass: Int!
+  support: String!
+  bM: Float!
+  hM: Float!
+  spanM: Float!
+  supportLengthM: Float!
+  bearingLengthM: Float!
+  bucklingLengthYM: Float!
+  bucklingLengthZM: Float!
+  lateralRestraintSpacingM: Float!
+  notchDepthM: Float!
+  notchDistanceM: Float!
+  massKgPerM: Float!
+  massKgPerM2: Float!
+  dampingXi: Float!
+  fireDurationS: Float!
+  bridgeNObs: Float!
+  bridgeTLYears: Float!
+  bridgeBeta: Float!
+  bridgeA: Float!
+  bridgeB: Float!
+  bridgeCrowdPerM2: Float!
+  actions: [CharacteristicAction!]!
+}
+enum FastenerType {
+  nail
+  screw
+  bolt
+  dowel
+}
+type TimberConnection {
+  id: String!
+  labelEn: String!
+  labelDe: String!
+  fastenerType: FastenerType!
+  strengthClass: StrengthClass!
+  serviceClass: Int!
+  diameterM: Float!
+  number: Int!
+  rows: Int!
+  spacingM: Float!
+  edgeDistanceM: Float!
+  endDistanceM: Float!
+  t1M: Float!
+  t2M: Float!
+  steelPlate: Boolean!
+  steelPlateThicknessM: Float!
+  shearPlanes: Int!
+  fUK: Float!
+  actions: [ConnectionAction!]!
+}
+type CaseRow {
+  id: String!
+  labelEn: String!
+  labelDe: String!
+  entryId: String!
+  numbers: [CaseNumber!]!
+  texts: [CaseText!]!
+}
+type Placement {
+  id: String!
+  x: Float!
+  y: Float!
+  z: Float!
+  yaw: Float!
+}
+type Taper {
+  id: String!
+  memberId: String!
+  kind: String!
+  taperAngleRad: Float!
+  apexDepthM: Float!
+  innerRadiusM: Float!
+  lamellaThicknessM: Float!
+  apexAngleRad: Float!
+  tensionSide: String!
+  rods: Int!
+  rodResistanceN: Float!
+}
+type Cutout {
+  id: String!
+  memberId: String!
+  kind: String!
+  face: String!
+  distanceM: Float!
+  lengthM: Float!
+  depthM: Float!
+  centreHeightM: Float!
+  slope: Float!
+  rods: Int!
+  rodResistanceN: Float!
+}
+type Fastener {
+  id: String!
+  connectionId: String!
+  memberId: String!
+  columns: Int!
+  lines: Int!
+  spacingParallelM: Float!
+  spacingPerpendicularM: Float!
+  endDistanceM: Float!
+  edgeDistanceM: Float!
+  offsetXM: Float!
+  offsetYM: Float!
+  loadAngleRad: Float!
+  positions: [FastenerPosition!]!
+}
+type Panel {
+  id: String!
+  strengthClass: StrengthClass!
+  layers: [PanelLayer!]!
+  spanM: Float!
+  widthM: Float!
+  loadPa: Float!
+  fireDurationS: Float!
+}
+type Floor {
+  id: String!
+  memberId: String!
+  spanM: Float!
+  widthM: Float!
+  joistSpacingM: Float!
+  eiLNM2PerM: Float!
+  eiBNM2PerM: Float!
+  massKgPerM2: Float!
+  dampingRatio: Float!
+  permanentLoadPa: Float!
+  imposedLoadPa: Float!
+  psi2: Float!
+}
+type Diaphragm {
+  id: String!
+  kind: String!
+  method: String!
+  panelWidthM: Float!
+  wallHeightM: Float!
+  fastenerSpacingM: Float!
+  panels: Int!
+  fastenerCapacityN: Float!
+  shearEdN: Float!
+  holdDownN: Float!
+  diaphragmForceN: Float!
+  diaphragmLengthM: Float!
+  shearResistanceNPerM: Float!
+}
+type Truss {
+  id: String!
+  kind: String!
+  product: String!
+  spanM: Float!
+  heightM: Float!
+  bays: Int!
+  chordWidthM: Float!
+  chordDepthM: Float!
+  webWidthM: Float!
+  webDepthM: Float!
+  chordForceN: Float!
+  restraintLengthM: Float!
+  bracingCapacityNPerM: Float!
+}
+type Bracing {
+  id: String!
+  kind: String!
+  memberId: String!
+  stabilisedCount: Int!
+  spacingM: Float!
+  lengthM: Float!
+  braceWidthM: Float!
+  braceDepthM: Float!
+  compressionForceN: Float!
+  resistanceN: Float!
+  stiffnessNPerM: Float!
+}
+type PanelLayer {
+  id: String!
+  thicknessM: Float!
+  orientation: String!
+  grade: String!
+}
+type FastenerPosition {
+  id: String!
+  xM: Float!
+  yM: Float!
+}
+type CaseNumber {
+  id: String!
+  value: Float!
+}
+type CaseText {
+  id: String!
+  value: String!
+}
+type ConnectionAction {
+  id: String!
+  kind: ActionKind!
+  loadDuration: LoadDurationClass!
+  fKN: Float!
+}
+enum ActionKind {
+  permanent
+  imposed
+  snow
+  wind
+  accidental
+}
+enum ImposedCategory {
+  notImposed
+  a
+  b
+  c
+  d
+  e
+  f
+  g
+  h
+  snowHigh
+}
+enum LoadDurationClass {
+  permanent
+  long
+  medium
+  short
+  instantaneous
+}
+type CharacteristicAction {
+  id: String!
+  kind: ActionKind!
+  category: ImposedCategory!
+  loadDuration: LoadDurationClass!
+  qLineNPerM: Float!
+  fPointN: Float!
+  mKNm: Float!
+  vKN: Float!
+  nKN: Float!
+  nTKN: Float!
+  fC90KN: Float!
 }

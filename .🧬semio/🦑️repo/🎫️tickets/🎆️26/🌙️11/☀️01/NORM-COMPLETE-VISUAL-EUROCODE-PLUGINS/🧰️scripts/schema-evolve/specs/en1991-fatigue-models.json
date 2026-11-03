@@ -1,0 +1,74 @@
+{
+  "artifact": "en1991",
+  "reference": "rotatingMachines",
+  "collection": {
+    "name": "fatigueModels",
+    "entity": "FatigueModel",
+    "emoji": "🔁",
+    "doc": "🔁 Road fatigue load model of EN 1991-2, 4.6: FLM1 (LM1 with 0.7 Q_ik and 0.3 q_ik of its lane) or FLM3 (single vehicle of four 120 kN axles) with the axle load and distributed load the design assumes.",
+    "label": {
+      "en": "Fatigue load models",
+      "de": "Ermüdungslastmodelle"
+    },
+    "id": {
+      "en": "Fatigue model ID",
+      "de": "Ermüdungsmodell-ID"
+    },
+    "singular": {
+      "en": "fatigue model",
+      "de": "Ermüdungsmodell"
+    },
+    "kindSlug": "fatigue-model",
+    "fields": [
+      {
+        "name": "model",
+        "type": "String",
+        "label": {
+          "en": "Fatigue load model (FLM1 | FLM3)",
+          "de": "Ermüdungslastmodell (FLM1 | FLM3)"
+        },
+        "doc": "🔁 flm1 | flm3 (anything else is an invalid input).",
+        "sample": "flm1"
+      },
+      {
+        "name": "lane",
+        "type": "u8",
+        "label": {
+          "en": "Lane number",
+          "de": "Fahrstreifennummer"
+        },
+        "doc": "🛣️ Notional lane (1 to 3) that carries the fatigue model.",
+        "sample": 1
+      },
+      {
+        "name": "assumed_axle_load",
+        "type": "f64",
+        "label": {
+          "en": "Assumed axle load",
+          "de": "Angesetzte Achslast"
+        },
+        "doc": "🏋️ Axle load [N] the design assumes per axle (FLM1 tandem axle, FLM3 vehicle axle).",
+        "sample": 210000.0,
+        "unit": "N"
+      },
+      {
+        "name": "assumed_udl",
+        "type": "f64",
+        "label": {
+          "en": "Assumed distributed load (FLM1)",
+          "de": "Angesetzte Flächenlast (FLM1)"
+        },
+        "doc": "📏 Distributed load [Pa] the design assumes on the lane (FLM1 only, not read for FLM3).",
+        "sample": 2700.0,
+        "unit": "Pa"
+      }
+    ]
+  },
+  "kit": {
+    "id": "fatigueModel",
+    "en": "Fatigue load model",
+    "de": "Ermüdungslastmodell",
+    "icon": "repeat",
+    "scene_kind": "Surface"
+  }
+}

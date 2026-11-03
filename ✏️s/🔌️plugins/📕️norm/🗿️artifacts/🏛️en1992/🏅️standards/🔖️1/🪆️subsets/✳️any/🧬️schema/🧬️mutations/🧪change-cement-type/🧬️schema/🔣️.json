@@ -9,9 +9,8 @@
   ],
   "properties": {
     "newCementType": {
-      "type": "string",
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/snapshot.json#/$defs/CementClass",
       "x-semio-ui": {
-        "widget": "text",
         "role": "value",
         "label": {
           "en": "Cement class",
@@ -23,6 +22,9 @@
         },
         "group": "material",
         "order": 10
+      },
+      "x-semio-rust": {
+        "type": "CementClass"
       }
     }
   }

@@ -4,45 +4,45 @@
     "norm-din16798-results",
     "norm-din18599-results",
     "norm-din4108-results",
-    "norm-en1990-results",
+    "norm-en1990-checks",
     "norm-en1991-results",
-    "norm-en1992-results",
-    "norm-en1993-results",
-    "norm-en1994-results",
+    "norm-en1992-checks",
+    "norm-en1993-checks",
+    "norm-en1994-checks",
     "norm-en1995-results",
-    "norm-en1996-results",
+    "norm-en1996-checks",
     "norm-en1997-results",
-    "norm-en1998-results",
-    "norm-en1999-results",
+    "norm-en1998-checks",
+    "norm-en1999-checks",
     "norm-iso16757-results",
     "norm-vdi3805-results"
   ],
   "windowInstances": [
-    { "id": "norm-results-left", "windowKindId": "norm-en1996-results" },
-    { "id": "norm-results-right", "windowKindId": "norm-en1996-results" },
-    { "id": "norm-inputs", "windowKindId": "norm-en1996-inputs" }
+    { "id": "norm-results-left", "windowKindId": "norm-en1996-checks" },
+    { "id": "norm-results-right", "windowKindId": "norm-en1996-checks" },
+    { "id": "norm-inputs", "windowKindId": "norm-en1996-properties" }
   ],
   "baseConfig": {},
   "mutations": [
-    { "windowId": "norm-results-left", "claimedWindowKindId": "norm-en1996-results", "mutation": { "ChangeSelectedCheckIndex": { "index": 1 } } },
-    { "focusedWindowId": "norm-results-right", "claimedWindowKindId": "norm-en1996-results", "mutation": { "ChangeSelectedCheckIndex": { "index": 2 } } }
+    { "windowId": "norm-results-left", "claimedWindowKindId": "norm-en1996-checks", "mutation": { "ChangeSelectedCheckIndex": { "index": 1 } } },
+    { "focusedWindowId": "norm-results-right", "claimedWindowKindId": "norm-en1996-checks", "mutation": { "ChangeSelectedCheckIndex": { "index": 2 } } }
   ],
   "undoMutations": [
-    { "windowId": "norm-results-left", "claimedWindowKindId": "norm-en1996-results", "mutation": { "ChangeSelectedCheckIndex": { "index": null } } },
-    { "focusedWindowId": "norm-results-right", "claimedWindowKindId": "norm-en1996-results", "mutation": { "ChangeSelectedCheckIndex": {} } }
+    { "windowId": "norm-results-left", "claimedWindowKindId": "norm-en1996-checks", "mutation": { "ChangeSelectedCheckIndex": { "index": null } } },
+    { "focusedWindowId": "norm-results-right", "claimedWindowKindId": "norm-en1996-checks", "mutation": { "ChangeSelectedCheckIndex": {} } }
   ],
   "redoMutations": [
-    { "windowId": "norm-results-left", "claimedWindowKindId": "norm-en1996-results", "mutation": { "ChangeSelectedCheckIndex": { "index": 1 } } },
-    { "focusedWindowId": "norm-results-right", "claimedWindowKindId": "norm-en1996-results", "mutation": { "ChangeSelectedCheckIndex": { "index": 2 } } }
+    { "windowId": "norm-results-left", "claimedWindowKindId": "norm-en1996-checks", "mutation": { "ChangeSelectedCheckIndex": { "index": 1 } } },
+    { "focusedWindowId": "norm-results-right", "claimedWindowKindId": "norm-en1996-checks", "mutation": { "ChangeSelectedCheckIndex": { "index": 2 } } }
   ],
   "expected": {
     "norm-results-left": { "selectedCheckIndex": 1 },
     "norm-results-right": { "selectedCheckIndex": 2 }
   },
   "rejections": [
-    { "windowId": "norm-results-missing", "claimedWindowKindId": "norm-en1996-results", "code": "norm-results-window-stale" },
-    { "windowId": "norm-inputs", "claimedWindowKindId": "norm-en1996-results", "code": "norm-results-window-kind-required" },
-    { "claimedWindowKindId": "norm-en1996-results", "code": "norm-results-window-required" }
+    { "windowId": "norm-results-missing", "claimedWindowKindId": "norm-en1996-checks", "code": "norm-results-window-stale" },
+    { "windowId": "norm-inputs", "claimedWindowKindId": "norm-en1996-checks", "code": "norm-results-window-kind-required" },
+    { "claimedWindowKindId": "norm-en1996-checks", "code": "norm-results-window-required" }
   ],
   "validConfigs": [
     {},

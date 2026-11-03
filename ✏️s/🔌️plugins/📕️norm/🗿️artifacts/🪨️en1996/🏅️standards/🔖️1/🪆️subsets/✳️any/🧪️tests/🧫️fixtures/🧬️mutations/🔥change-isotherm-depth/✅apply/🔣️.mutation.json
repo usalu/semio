@@ -1,0 +1,6 @@
+{
+  "ChangeIsothermDepth": {
+    "id": "wall-north",
+    "newIsothermDepthM": 0.04
+  }
+}

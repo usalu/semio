@@ -1,0 +1,5 @@
+type ChangeAnchorActionVK {
+  anchorId: String!
+  actionId: String!
+  newVK: Float!
+}

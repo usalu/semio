@@ -1,0 +1,7 @@
+{
+  "ChangeFastenerPositionY": {
+    "fastenerId": "fastener-1",
+    "positionId": "position-1",
+    "newValue": 1.075
+  }
+}

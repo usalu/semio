@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/mutation/change-test-distribution/schema.json",
+  "title": "ChangeTestDistribution",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newDistribution"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeTestDistribution"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Test series",
+          "de": "Versuchsreihe"
+        },
+        "description": {
+          "en": "The test series this mutation addresses, by id.",
+          "de": "Das adressierte Element (Versuchsreihe), per Kennung."
+        },
+        "ref": {
+          "kind": "test-series"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newDistribution": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/snapshot.json#/$defs/TestDistribution",
+      "x-semio-ui": {
+        "label": {
+          "en": "Distribution",
+          "de": "Verteilung"
+        },
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

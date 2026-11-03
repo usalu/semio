@@ -1,0 +1,10 @@
+{
+  "mutation": "insertTestProfile",
+  "pileId": "pile-P1",
+  "index": 0,
+  "testProfile": {
+    "id": "test-1-new",
+    "shaftResistance": 1600000.0,
+    "baseResistance": 850000.0
+  }
+}

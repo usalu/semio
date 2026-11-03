@@ -1,0 +1,86 @@
+{
+  "artifact": "en1991",
+  "collection": {
+    "name": "localFires",
+    "entity": "LocalFire",
+    "emoji": "🔥",
+    "doc": "🔥 Localised fire of EN 1991-1-2, Annex C: fire diameter, heat release rate, ceiling height and the distance of the member for the flame length, the plume temperature and the heat flux of Hasemi.",
+    "label": {
+      "en": "Localised fires",
+      "de": "Lokale Brände"
+    },
+    "id": {
+      "en": "Fire ID",
+      "de": "Brand-ID"
+    },
+    "singular": {
+      "en": "localised fire",
+      "de": "lokaler Brand"
+    },
+    "kindSlug": "local-fire",
+    "fields": [
+      {
+        "name": "fire_diameter",
+        "type": "f64",
+        "label": {
+          "en": "Fire diameter D",
+          "de": "Branddurchmesser D"
+        },
+        "doc": "⭕ Diameter D [m] of the fire source.",
+        "sample": 2.0,
+        "unit": "m"
+      },
+      {
+        "name": "heat_release_rate",
+        "type": "f64",
+        "label": {
+          "en": "Heat release rate Q",
+          "de": "Wärmefreisetzungsrate Q"
+        },
+        "doc": "🔥 Total heat release rate Q [W].",
+        "sample": 5000000.0,
+        "unit": "W"
+      },
+      {
+        "name": "ceiling_height",
+        "type": "f64",
+        "label": {
+          "en": "Ceiling height H",
+          "de": "Deckenhöhe H"
+        },
+        "doc": "↕️ Height H [m] of the ceiling above the fire source (0 for a fire without ceiling).",
+        "sample": 3.0,
+        "unit": "m"
+      },
+      {
+        "name": "horizontal_distance",
+        "type": "f64",
+        "label": {
+          "en": "Horizontal distance r",
+          "de": "Horizontaler Abstand r"
+        },
+        "doc": "↔️ Horizontal distance r [m] from the fire axis to the member below the ceiling.",
+        "sample": 1.0,
+        "unit": "m"
+      },
+      {
+        "name": "assumed_flux",
+        "type": "f64",
+        "label": {
+          "en": "Assumed heat flux",
+          "de": "Angesetzter Wärmestrom"
+        },
+        "doc": "🌡️ Heat flux [W/m²] the fire design assumes at the member.",
+        "sample": 100000.0,
+        "unit": "W/m2"
+      }
+    ]
+  },
+  "kit": {
+    "id": "localFire",
+    "en": "Localised fire",
+    "de": "Lokaler Brand",
+    "icon": "flame",
+    "scene_kind": "Solid"
+  }
+}

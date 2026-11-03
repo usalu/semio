@@ -1,0 +1,32 @@
+# 🎨️ ThemeBundle GraphQL twin, mirrors ./🦀️.rs. LocalizedCopy and Rgb come from the structural scene schema, LabelDensity from the viewport config.
+enum ThemeVariant { light dark highContrast }
+enum EdgeStyle { none thin bold }
+enum MotionPolicy { system reduced full }
+
+type ResultRamps {
+  stress: String!
+  temperature: String!
+  pressure: String!
+  settlement: String!
+}
+
+type RoleColour {
+  role: String!
+  rgb: Rgb!
+}
+
+type ThemeBundle {
+  id: String!
+  name: LocalizedCopy!
+  variant: ThemeVariant!
+  utilisationRamp: String!
+  resultRamps: ResultRamps!
+  domainMax: Float!
+  background: Rgb
+  roleColours: [RoleColour!]!
+  edgeStyle: EdgeStyle!
+  labelDensity: LabelDensity!
+  sun: Boolean!
+  motion: MotionPolicy!
+  textScale: Float!
+}

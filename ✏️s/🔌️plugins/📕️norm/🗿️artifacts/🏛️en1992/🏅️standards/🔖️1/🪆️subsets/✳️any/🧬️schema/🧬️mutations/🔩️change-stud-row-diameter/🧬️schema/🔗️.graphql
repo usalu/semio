@@ -1,0 +1,5 @@
+type ChangeStudRowDiameter {
+  memberId: String!
+  studRowId: String!
+  newDiameter: Float!
+}

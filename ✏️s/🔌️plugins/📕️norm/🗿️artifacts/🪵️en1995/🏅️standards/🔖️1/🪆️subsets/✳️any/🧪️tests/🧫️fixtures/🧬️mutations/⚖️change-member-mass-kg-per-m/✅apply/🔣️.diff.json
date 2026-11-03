@@ -1,0 +1,71 @@
+{
+  "annex": null,
+  "reliabilityClass": null,
+  "members": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "beam-B1",
+        "patch": {
+          "labelEn": null,
+          "labelDe": null,
+          "role": null,
+          "strengthClass": null,
+          "serviceClass": null,
+          "support": null,
+          "bM": null,
+          "hM": null,
+          "spanM": null,
+          "supportLengthM": null,
+          "bearingLengthM": null,
+          "bucklingLengthYM": null,
+          "bucklingLengthZM": null,
+          "lateralRestraintSpacingM": null,
+          "notchDepthM": null,
+          "notchDistanceM": null,
+          "massKgPerM": 140.0,
+          "massKgPerM2": null,
+          "dampingXi": null,
+          "fireDurationS": null,
+          "bridgeNObs": null,
+          "bridgeTLYears": null,
+          "bridgeBeta": null,
+          "bridgeA": null,
+          "bridgeB": null,
+          "bridgeCrowdPerM2": null,
+          "actions": {
+            "removed": [],
+            "inserted": [],
+            "moved": [],
+            "modified": []
+          }
+        }
+      }
+    ]
+  },
+  "connections": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "placements": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "tapers": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "cutouts": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "fasteners": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "panels": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "floors": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "diaphragms": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "trusses": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "bracings": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "decks": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "ulsEquation": null,
+  "cases": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  }
+}

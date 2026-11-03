@@ -1,0 +1,6 @@
+{
+  "ChangeLocalFireAssumedFlux": {
+    "id": "local-fire-1",
+    "newAssumedFlux": 100001.0
+  }
+}

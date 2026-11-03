@@ -5,53 +5,54 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "wallIndex",
-    "index",
+    "wallId",
+    "id",
     "newSlabSpanM"
   ],
   "properties": {
-    "wallIndex": {
-      "type": "integer",
-      "minimum": 0,
+    "wallId": {
+      "type": "string",
       "x-semio-ui": {
-        "widget": "stepper",
-        "role": "value",
+        "widget": "reference",
+        "role": "target",
         "label": {
           "en": "Wall",
           "de": "Wand"
         },
         "description": {
-          "en": "Zero-based position of the wall in its list.",
-          "de": "Nullbasierte Position der Wand in der Liste."
+          "en": "The wall this mutation addresses, by id.",
+          "de": "Das adressierte Element (Wand), per Kennung."
         },
-        "step": 1,
-        "precision": 0,
+        "ref": {
+          "kind": "wall"
+        },
         "group": "target",
         "order": 10
       }
     },
-    "index": {
-      "type": "integer",
-      "minimum": 0,
+    "id": {
+      "type": "string",
       "x-semio-ui": {
-        "widget": "stepper",
-        "role": "value",
+        "widget": "reference",
+        "role": "target",
         "label": {
           "en": "Load case",
           "de": "Lastfall"
         },
         "description": {
-          "en": "Zero-based position of the load case within the wall in its list.",
-          "de": "Nullbasierte Position des Lastfalls in der Wand in der Liste."
+          "en": "The load case this mutation addresses, by id.",
+          "de": "Das adressierte Element (Lastfall), per Kennung."
         },
-        "step": 1,
-        "precision": 0,
+        "ref": {
+          "kind": "load-case"
+        },
         "group": "target",
         "order": 20
       }
     },
     "newSlabSpanM": {
       "type": "number",
+      "maximum": 10000,
       "minimum": 0,
       "x-semio-ui": {
         "widget": "stepper",

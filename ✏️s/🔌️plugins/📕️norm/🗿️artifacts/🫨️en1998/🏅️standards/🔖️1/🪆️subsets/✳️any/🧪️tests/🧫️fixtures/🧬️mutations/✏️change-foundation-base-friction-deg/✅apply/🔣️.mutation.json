@@ -1,0 +1,5 @@
+{
+  "mutation": "changeFoundationBaseFrictionDeg",
+  "index": 0,
+  "newBaseFrictionAngleDeg": 1.5
+}

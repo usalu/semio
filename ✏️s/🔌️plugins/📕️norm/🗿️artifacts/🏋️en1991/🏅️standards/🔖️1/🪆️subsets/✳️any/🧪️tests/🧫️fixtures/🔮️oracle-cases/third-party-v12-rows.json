@@ -1,0 +1,402 @@
+{
+  "$schema": "../../../../../../../../../🔮️oracles/🏃️harness/🧬️schema/🔣️.json",
+  "schemaVersion": 1,
+  "artifact": "en1991",
+  "annex": "en",
+  "cases": [
+    {
+      "id": "en1991_2_footbridge-load-L-30-b-3",
+      "check": "en1991.2.footbridge-load",
+      "citation": {
+        "standard": "EN 1991-2",
+        "edition": "2003",
+        "clause": "EN 1991-2 5.3.2.1 q_fk = 2.0 + 120/(L + 30) kN/m2 within 2.5 to 5.0 and 5.4 Q_flk = max(10 % of q_fk L b, 10 kN); constants unverified (registry)",
+        "annex": "en"
+      },
+      "inputs": {
+        "L": 30.0,
+        "b": 3.0
+      },
+      "expected": {
+        "q_fk": {
+          "value": 4000.0,
+          "unit": "Pa",
+          "profile": "eurocode-quantities-v1"
+        },
+        "Q_flk": {
+          "value": 36000.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1991_2_footbridge-load-L-10-b-2",
+      "check": "en1991.2.footbridge-load",
+      "citation": {
+        "standard": "EN 1991-2",
+        "edition": "2003",
+        "clause": "EN 1991-2 5.3.2.1 q_fk = 2.0 + 120/(L + 30) kN/m2 within 2.5 to 5.0 and 5.4 Q_flk = max(10 % of q_fk L b, 10 kN); constants unverified (registry)",
+        "annex": "en"
+      },
+      "inputs": {
+        "L": 10.0,
+        "b": 2.0
+      },
+      "expected": {
+        "q_fk": {
+          "value": 5000.0,
+          "unit": "Pa",
+          "profile": "eurocode-quantities-v1"
+        },
+        "Q_flk": {
+          "value": 10000.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1991_2_footbridge-load-L-1000-b-4",
+      "check": "en1991.2.footbridge-load",
+      "citation": {
+        "standard": "EN 1991-2",
+        "edition": "2003",
+        "clause": "EN 1991-2 5.3.2.1 q_fk = 2.0 + 120/(L + 30) kN/m2 within 2.5 to 5.0 and 5.4 Q_flk = max(10 % of q_fk L b, 10 kN); constants unverified (registry)",
+        "annex": "en"
+      },
+      "inputs": {
+        "L": 1000.0,
+        "b": 4.0
+      },
+      "expected": {
+        "q_fk": {
+          "value": 2500.0,
+          "unit": "Pa",
+          "profile": "eurocode-quantities-v1"
+        },
+        "Q_flk": {
+          "value": 1000000.0,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1991_2_rail-dynamic-L-4",
+      "check": "en1991.2.rail-dynamic",
+      "citation": {
+        "standard": "EN 1991-2",
+        "edition": "2003",
+        "clause": "EN 1991-2 6.4.5.2 Phi_2 = 1.44/(sqrt(L_Phi) - 0.2) + 0.82 in 1.00 to 1.67 and Phi_3 = 2.16/(sqrt(L_Phi) - 0.2) + 0.73 in 1.00 to 2.00",
+        "annex": "en"
+      },
+      "inputs": {
+        "L_phi": 4.0
+      },
+      "expected": {
+        "Phi_2": {
+          "value": 1.6199999999999999,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "Phi_3": {
+          "value": 1.93,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1991_2_rail-dynamic-L-25",
+      "check": "en1991.2.rail-dynamic",
+      "citation": {
+        "standard": "EN 1991-2",
+        "edition": "2003",
+        "clause": "EN 1991-2 6.4.5.2 Phi_2 = 1.44/(sqrt(L_Phi) - 0.2) + 0.82 in 1.00 to 1.67 and Phi_3 = 2.16/(sqrt(L_Phi) - 0.2) + 0.73 in 1.00 to 2.00",
+        "annex": "en"
+      },
+      "inputs": {
+        "L_phi": 25.0
+      },
+      "expected": {
+        "Phi_2": {
+          "value": 1.1199999999999999,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "Phi_3": {
+          "value": 1.1800000000000002,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1991_2_rail-dynamic-L-100",
+      "check": "en1991.2.rail-dynamic",
+      "citation": {
+        "standard": "EN 1991-2",
+        "edition": "2003",
+        "clause": "EN 1991-2 6.4.5.2 Phi_2 = 1.44/(sqrt(L_Phi) - 0.2) + 0.82 in 1.00 to 1.67 and Phi_3 = 2.16/(sqrt(L_Phi) - 0.2) + 0.73 in 1.00 to 2.00",
+        "annex": "en"
+      },
+      "inputs": {
+        "L_phi": 100.0
+      },
+      "expected": {
+        "Phi_2": {
+          "value": 1.0,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        },
+        "Phi_3": {
+          "value": 1.0,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1991_4_bulk-k-mean-phi-20",
+      "check": "en1991.4.bulk-k-mean",
+      "citation": {
+        "standard": "EN 1991-4",
+        "edition": "2003",
+        "clause": "EN 1991-4 Annex E K_m = 1.1 (1 - sin phi_i); factor unverified (registry)",
+        "annex": "en"
+      },
+      "inputs": {
+        "phi_i_deg": 20.0
+      },
+      "expected": {
+        "K_m": {
+          "value": 0.7237778423417643,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1991_4_bulk-k-mean-phi-30",
+      "check": "en1991.4.bulk-k-mean",
+      "citation": {
+        "standard": "EN 1991-4",
+        "edition": "2003",
+        "clause": "EN 1991-4 Annex E K_m = 1.1 (1 - sin phi_i); factor unverified (registry)",
+        "annex": "en"
+      },
+      "inputs": {
+        "phi_i_deg": 30.0
+      },
+      "expected": {
+        "K_m": {
+          "value": 0.5499999999999999,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1991_4_bulk-k-mean-phi-40",
+      "check": "en1991.4.bulk-k-mean",
+      "citation": {
+        "standard": "EN 1991-4",
+        "edition": "2003",
+        "clause": "EN 1991-4 Annex E K_m = 1.1 (1 - sin phi_i); factor unverified (registry)",
+        "annex": "en"
+      },
+      "inputs": {
+        "phi_i_deg": 40.0
+      },
+      "expected": {
+        "K_m": {
+          "value": 0.3929336293448067,
+          "unit": "1",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1991_3_machine-force-m-1000-f-25",
+      "check": "en1991.3.machine-force",
+      "citation": {
+        "standard": "EN 1991-3",
+        "edition": "2003",
+        "clause": "EN 1991-3 5 F_dyn = m e omega^2 with omega = 2 pi f (spec line E3.07, unverified)",
+        "annex": "en"
+      },
+      "inputs": {
+        "m": 1000.0,
+        "e": 0.002,
+        "f": 25.0
+      },
+      "expected": {
+        "F_dyn": {
+          "value": 49348.02200544679,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1991_3_machine-force-m-250-f-50",
+      "check": "en1991.3.machine-force",
+      "citation": {
+        "standard": "EN 1991-3",
+        "edition": "2003",
+        "clause": "EN 1991-3 5 F_dyn = m e omega^2 with omega = 2 pi f (spec line E3.07, unverified)",
+        "annex": "en"
+      },
+      "inputs": {
+        "m": 250.0,
+        "e": 0.0005,
+        "f": 50.0
+      },
+      "expected": {
+        "F_dyn": {
+          "value": 12337.005501361698,
+          "unit": "N",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1991_2_dispersal-footprint-0_4-0_4-0_1-0_3",
+      "check": "en1991.2.dispersal-footprint",
+      "citation": {
+        "standard": "EN 1991-2",
+        "edition": "2003",
+        "clause": "EN 1991-2 4.3.6 spreading at 45 degrees through pavement and half the slab",
+        "annex": "en"
+      },
+      "inputs": {
+        "a": 0.4,
+        "b": 0.4,
+        "t_p": 0.1,
+        "t_s": 0.3
+      },
+      "expected": {
+        "A_foot": {
+          "value": 0.81,
+          "unit": "m2",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        }
+      ]
+    },
+    {
+      "id": "en1991_2_dispersal-footprint-0_2-0_6-0-0_25",
+      "check": "en1991.2.dispersal-footprint",
+      "citation": {
+        "standard": "EN 1991-2",
+        "edition": "2003",
+        "clause": "EN 1991-2 4.3.6 spreading at 45 degrees through pavement and half the slab",
+        "annex": "en"
+      },
+      "inputs": {
+        "a": 0.2,
+        "b": 0.6,
+        "t_p": 0.0,
+        "t_s": 0.25
+      },
+      "expected": {
+        "A_foot": {
+          "value": 0.3825,
+          "unit": "m2",
+          "profile": "eurocode-quantities-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "third-party-library"
+        }
+      ]
+    }
+  ]
+}

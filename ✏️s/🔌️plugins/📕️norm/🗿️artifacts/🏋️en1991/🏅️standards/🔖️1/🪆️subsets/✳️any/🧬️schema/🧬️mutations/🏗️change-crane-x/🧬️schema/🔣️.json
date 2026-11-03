@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-crane-x/schema.json",
+  "title": "ChangeCraneX",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "newCraneX"
+  ],
+  "properties": {
+    "newCraneX": {
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Crane position on the runway",
+          "de": "Kranposition auf der Kranbahn"
+        },
+        "unit": "m",
+        "step": 0.25,
+        "precision": 2,
+        "group": "crane",
+        "order": 10,
+        "displayUnit": "m",
+        "displayFactor": 1
+      }
+    }
+  }
+}

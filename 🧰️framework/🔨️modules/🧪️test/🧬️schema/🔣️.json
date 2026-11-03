@@ -2013,6 +2013,15 @@
         "rationale": {
           "type": "string",
           "minLength": 1
+        },
+        "features": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "🧩️ Cargo features of the linked package the generated SUBJECT host enables (for example the test-only `oracle-wiring` registry); rows of one package from two contributions merge to the union."
         }
       }
     },

@@ -1,0 +1,5 @@
+{
+  "mutation": "removeGroundInvestigationReading",
+  "investigationId": "investigation-1",
+  "index": 0
+}

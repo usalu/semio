@@ -1,0 +1,73 @@
+{
+  "annex": null,
+  "reliabilityClass": "RC2",
+  "materials": null,
+  "sections": null,
+  "members": null,
+  "connections": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "support-weld",
+        "patch": {
+          "memberId": null,
+          "materialId": null,
+          "kind": null,
+          "boltsMaterial": null,
+          "boltsDiameter": null,
+          "boltsRows": null,
+          "boltsBoltsPerRow": null,
+          "boltsEdgeDistance": null,
+          "boltsPitch": null,
+          "boltsGauge": null,
+          "boltsPlateThickness": null,
+          "weldsFillerAlloy": null,
+          "weldsThroat": null,
+          "weldsLength": null,
+          "weldsBetaW": null,
+          "weldsHazExtent": null,
+          "actions": {
+            "removed": [],
+            "inserted": [
+              {
+                "index": 2,
+                "row": {
+                  "id": "G-conn-2",
+                  "kind": "permanent",
+                  "category": "selfWeight",
+                  "source": "external",
+                  "gKLine": 800.0,
+                  "qKLine": 0.0,
+                  "nK": 1500.0,
+                  "vYK": 200.0,
+                  "vZK": 3500.0,
+                  "mYK": 400.0,
+                  "mZK": 150.0,
+                  "torsionK": 0.0,
+                  "localLoadK": 0.0
+                }
+              }
+            ],
+            "moved": [],
+            "modified": []
+          },
+          "loadEccentricity": null,
+          "holeStagger": null
+        }
+      }
+    ]
+  },
+  "fireScenarios": null,
+  "fatigueDetails": null,
+  "coldFormed": null,
+  "shells": null,
+  "placements": null,
+  "weldRuns": null,
+  "outlineVertices": null,
+  "fatigueCategories": null,
+  "patchLoads": null,
+  "ringStiffeners": null,
+  "transverseStiffeners": null
+}

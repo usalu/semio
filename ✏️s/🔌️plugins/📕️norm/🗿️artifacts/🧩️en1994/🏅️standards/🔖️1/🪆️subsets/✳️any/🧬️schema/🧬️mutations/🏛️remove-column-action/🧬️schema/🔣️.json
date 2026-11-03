@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/remove-column-action/schema.json",
+  "title": "RemoveColumnAction",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "columnId",
+    "id"
+  ],
+  "properties": {
+    "columnId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Column",
+          "de": "Stütze"
+        },
+        "description": {
+          "en": "The column this mutation addresses, by id.",
+          "de": "Das adressierte Element (Stütze), per Kennung."
+        },
+        "ref": {
+          "kind": "column"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Column action",
+          "de": "Stützeneinwirkung"
+        },
+        "description": {
+          "en": "The column action this mutation addresses, by id.",
+          "de": "Das adressierte Element (Stützeneinwirkung), per Kennung."
+        },
+        "ref": {
+          "kind": "action"
+        },
+        "group": "target",
+        "order": 20
+      }
+    }
+  }
+}

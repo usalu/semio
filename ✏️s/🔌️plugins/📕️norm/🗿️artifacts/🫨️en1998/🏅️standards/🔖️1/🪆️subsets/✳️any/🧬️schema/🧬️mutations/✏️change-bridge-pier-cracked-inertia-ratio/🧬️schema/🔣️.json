@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-bridge-pier-cracked-inertia-ratio/schema.json",
+  "title": "ChangeBridgePierCrackedInertiaRatio",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newPierCrackedInertiaRatio"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeBridgePierCrackedInertiaRatio"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Bridge",
+          "de": "Brücke"
+        },
+        "description": {
+          "en": "The bridge this mutation addresses, by id.",
+          "de": "Das adressierte Element (Brücke), per Kennung."
+        },
+        "ref": {
+          "kind": "bridge"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newPierCrackedInertiaRatio": {
+      "type": "number",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Cracked share I_eff / I_g of the gross pier inertia for the design displacement (required, 0 < share <= 1, zero leaves the piers without stiffness; EN 1998-2 2.3.6.1)",
+          "de": "Gerissener Anteil I_eff / I_g des Brutto-Trägheitsmoments der Pfeiler für die Bemessungsverschiebung (Pflichtangabe, 0 < Anteil <= 1, null lässt die Pfeiler ohne Steifigkeit; EN 1998-2 2.3.6.1)"
+        },
+        "group": "value",
+        "order": 20,
+        "widget": "stepper",
+        "step": 0.001,
+        "precision": 3
+      }
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "annex": null,
+  "structureKind": null,
+  "steelFYPa": null,
+  "beams": null,
+  "columns": {
+    "removed": [
+      {
+        "id": "col-C1",
+        "index": 0
+      }
+    ],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "slabs": null,
+  "fireRating": null,
+  "insulationThicknessM": null,
+  "fatigueDetail": null
+}

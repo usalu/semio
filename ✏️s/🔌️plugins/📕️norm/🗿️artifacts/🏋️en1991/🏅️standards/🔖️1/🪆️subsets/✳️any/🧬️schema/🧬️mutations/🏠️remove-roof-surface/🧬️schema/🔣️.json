@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/remove-roof-surface/schema.json",
+  "title": "RemoveRoofSurface",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Position",
+          "de": "Position"
+        },
+        "description": {
+          "en": "The position this mutation addresses, by id.",
+          "de": "Das adressierte Element (Position), per Kennung."
+        },
+        "ref": {
+          "kind": "roof-surface"
+        },
+        "group": "target",
+        "order": 10
+      }
+    }
+  }
+}

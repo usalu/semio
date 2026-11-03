@@ -9,6 +9,7 @@ extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
 use semio_s_plugin_norm_compliance::{AnnexChoice, CheckResult, CheckStatus, ClauseId, LocalizedCopy, Quantity, QuantityKind, Remedy, SubjectRef};
+use semio_s_artifact_norm_en1992_model::Placement;
 use semio_s_artifact_norm_en1992_model::FireRating;
 use semio_s_artifact_norm_en1992_model::TightnessClass;
 use semio_s_artifact_norm_en1992_model::{Anchor, ExposureClass, LoadCaseActions, MemberKind, RcMember, SupportCondition};
@@ -17,8 +18,8 @@ use framework_schema::ArtifactSchema;
 
 //#region 🔖️Artifact
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.norm.en1992")]
 pub struct En1992Artifact {
@@ -31,7 +32,7 @@ pub struct En1992Artifact {
     #[state(artifact)]
     pub delta_c_dev: f64,
     #[state(artifact)]
-    pub cement_type: String,
+    pub cement_type: semio_s_artifact_norm_en1992_model::CementClass,
     #[state(artifact)]
     pub concrete_grades: Vec<semio_s_artifact_norm_en1992_model::ConcreteGrade>,
     #[state(artifact)]
@@ -42,6 +43,12 @@ pub struct En1992Artifact {
     pub members: Vec<RcMember>,
     #[state(artifact)]
     pub anchors: Vec<Anchor>,
+    #[state(artifact)]
+    pub placements: Vec<Placement>,
+    #[state(artifact)]
+    pub cases: Vec<semio_s_artifact_norm_en1992_model::CaseRow>,
+    #[state(artifact)]
+    pub reliability_class: semio_s_plugin_norm_compliance::ReliabilityClass,
 }
 //#endregion 🔖️Artifact
 
@@ -51,6 +58,7 @@ impl En1992Artifact {
     pub fn to_snapshot(&self) -> En1992Snapshot {
         En1992Snapshot {
             annex: self.annex,
+            reliability_class: self.reliability_class,
             title: self.title.clone(),
             design_working_life_years: self.design_working_life_years,
             delta_c_dev: self.delta_c_dev,
@@ -60,6 +68,8 @@ impl En1992Artifact {
             prestress_steels: self.prestress_steels.clone(),
             members: self.members.clone(),
             anchors: self.anchors.clone(),
+            placements: self.placements.clone(),
+            cases: self.cases.clone(),
         }
     }
 
@@ -67,6 +77,7 @@ impl En1992Artifact {
     pub fn from_snapshot(snapshot: &En1992Snapshot) -> Self {
         Self {
             annex: snapshot.annex,
+            reliability_class: snapshot.reliability_class,
             title: snapshot.title.clone(),
             design_working_life_years: snapshot.design_working_life_years,
             delta_c_dev: snapshot.delta_c_dev,
@@ -76,6 +87,8 @@ impl En1992Artifact {
             prestress_steels: snapshot.prestress_steels.clone(),
             members: snapshot.members.clone(),
             anchors: snapshot.anchors.clone(),
+            placements: snapshot.placements.clone(),
+            cases: snapshot.cases.clone(),
         }
     }
 

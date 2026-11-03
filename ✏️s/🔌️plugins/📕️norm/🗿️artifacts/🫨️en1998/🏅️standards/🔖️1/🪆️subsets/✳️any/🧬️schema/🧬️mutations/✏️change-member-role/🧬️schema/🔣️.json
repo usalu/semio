@@ -1,0 +1,80 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-member-role/schema.json",
+  "title": "ChangeMemberRole",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "buildingId",
+    "id",
+    "newRole"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeMemberRole"
+    },
+    "buildingId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Building",
+          "de": "Gebäude"
+        },
+        "description": {
+          "en": "The building this mutation addresses, by id.",
+          "de": "Das adressierte Element (Gebäude), per Kennung."
+        },
+        "ref": {
+          "kind": "building"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Member",
+          "de": "Bauteil"
+        },
+        "description": {
+          "en": "The member this mutation addresses, by id.",
+          "de": "Das adressierte Element (Bauteil), per Kennung."
+        },
+        "ref": {
+          "kind": "member"
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "newRole": {
+      "type": "string",
+      "enum": [
+        "beam",
+        "column",
+        "wall",
+        "brace"
+      ],
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Member kind",
+          "de": "Bauteilart"
+        },
+        "group": "value",
+        "order": 30,
+        "widget": "select"
+      },
+      "x-semio-rust": {
+        "type": "semio_s_artifact_norm_en1998_model::MemberKind"
+      }
+    }
+  }
+}

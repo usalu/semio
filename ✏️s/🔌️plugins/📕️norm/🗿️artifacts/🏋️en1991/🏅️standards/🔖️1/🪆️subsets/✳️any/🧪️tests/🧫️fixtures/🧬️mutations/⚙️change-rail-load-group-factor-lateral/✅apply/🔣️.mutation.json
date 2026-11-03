@@ -1,0 +1,6 @@
+{
+  "ChangeRailLoadGroupFactorLateral": {
+    "id": "rail-load-group-1",
+    "newFactorLateral": 2.0
+  }
+}

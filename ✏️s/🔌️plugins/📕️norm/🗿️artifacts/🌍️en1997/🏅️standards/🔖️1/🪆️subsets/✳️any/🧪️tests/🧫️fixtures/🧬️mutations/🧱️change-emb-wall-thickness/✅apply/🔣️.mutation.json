@@ -1,0 +1,5 @@
+{
+  "mutation": "changeEmbWallThickness",
+  "id": "ewall-E1",
+  "newThickness": 1.2
+}

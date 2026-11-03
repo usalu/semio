@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-tie-run-imposed-load/schema.json",
+  "title": "ChangeTieRunImposedLoad",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newImposedLoad"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Tie run",
+          "de": "Zuggliedstrang"
+        },
+        "description": {
+          "en": "The tie run this mutation addresses, by id.",
+          "de": "Das adressierte Element (Zuggliedstrang), per Kennung."
+        },
+        "ref": {
+          "kind": "tie-run"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newImposedLoad": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Variable floor load q_k",
+          "de": "Veränderliche Geschosslast q_k"
+        },
+        "widget": "stepper",
+        "unit": "Pa",
+        "displayUnit": "kN/m²",
+        "displayFactor": 0.001,
+        "precision": 2,
+        "step": 50,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

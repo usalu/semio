@@ -1,0 +1,5 @@
+{
+  "mutation": "changeBridgePierShearRdN",
+  "id": "br-1",
+  "newPierShearRdN": 1.5
+}

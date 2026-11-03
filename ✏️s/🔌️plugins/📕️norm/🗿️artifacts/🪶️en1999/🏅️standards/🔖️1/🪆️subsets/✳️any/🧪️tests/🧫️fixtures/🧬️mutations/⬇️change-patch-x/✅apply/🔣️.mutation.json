@@ -1,0 +1,5 @@
+{
+  "mutation": "changePatchX",
+  "patchLoadId": "patch-1",
+  "newX": 1.5
+}

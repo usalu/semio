@@ -1,0 +1,5 @@
+{
+  "mutation": "changePierXM",
+  "id": "pier-1",
+  "newXM": 16.0
+}

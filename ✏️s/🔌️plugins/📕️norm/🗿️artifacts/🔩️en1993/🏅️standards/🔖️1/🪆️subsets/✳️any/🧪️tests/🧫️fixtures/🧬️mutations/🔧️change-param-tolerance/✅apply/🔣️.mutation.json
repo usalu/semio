@@ -1,0 +1,6 @@
+{
+  "ChangeParamTolerance": {
+    "id": "param-1",
+    "newTolerance": 0.1
+  }
+}

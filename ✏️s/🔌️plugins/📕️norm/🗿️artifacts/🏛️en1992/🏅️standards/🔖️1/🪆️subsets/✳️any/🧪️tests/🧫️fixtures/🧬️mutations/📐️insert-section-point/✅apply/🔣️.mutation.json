@@ -1,0 +1,11 @@
+{
+  "InsertSectionPoint": {
+    "memberId": "wall-W1",
+    "index": 1,
+    "sectionPoint": {
+      "id": "sp-1-new",
+      "y": 0.0,
+      "z": 0.25
+    }
+  }
+}

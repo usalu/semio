@@ -1,0 +1,38 @@
+{
+  "annex": null,
+  "reliabilityClass": "RC2",
+  "materials": null,
+  "sections": null,
+  "members": null,
+  "connections": null,
+  "fireScenarios": null,
+  "fatigueDetails": null,
+  "coldFormed": null,
+  "shells": null,
+  "placements": null,
+  "weldRuns": null,
+  "outlineVertices": null,
+  "fatigueCategories": {
+    "removed": [],
+    "inserted": [
+      {
+        "index": 1,
+        "row": {
+          "id": "site-1-2",
+          "memberId": "purlin-1",
+          "elementId": "",
+          "detailCategory": "40",
+          "detailType": "buttWeld",
+          "locationX": 1.5,
+          "m1": 3.4,
+          "m2": 5.4
+        }
+      }
+    ],
+    "moved": [],
+    "modified": []
+  },
+  "patchLoads": null,
+  "ringStiffeners": null,
+  "transverseStiffeners": null
+}

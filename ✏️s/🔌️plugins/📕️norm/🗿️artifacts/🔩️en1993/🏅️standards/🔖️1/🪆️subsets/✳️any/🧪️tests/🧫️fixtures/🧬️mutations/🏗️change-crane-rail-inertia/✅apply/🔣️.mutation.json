@@ -1,0 +1,6 @@
+{
+  "ChangeCraneRailInertia": {
+    "id": "crane-1",
+    "newRailInertia": 1.5
+  }
+}

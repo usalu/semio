@@ -1,0 +1,5 @@
+type InsertStudRow {
+  memberId: String!
+  index: Int!
+  studRow: StudRow!
+}

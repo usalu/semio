@@ -1,0 +1,6 @@
+{
+  "mutation": "changeElementOutstand",
+  "sectionId": "sec-i120",
+  "elementId": "flange-top",
+  "newOutstand": false
+}

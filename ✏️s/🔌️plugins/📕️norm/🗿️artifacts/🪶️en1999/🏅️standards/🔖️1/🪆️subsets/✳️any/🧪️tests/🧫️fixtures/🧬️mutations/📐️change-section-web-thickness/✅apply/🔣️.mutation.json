@@ -1,0 +1,5 @@
+{
+  "mutation": "changeSectionWebThickness",
+  "sectionId": "sec-i120",
+  "newWebThickness": 0.016
+}

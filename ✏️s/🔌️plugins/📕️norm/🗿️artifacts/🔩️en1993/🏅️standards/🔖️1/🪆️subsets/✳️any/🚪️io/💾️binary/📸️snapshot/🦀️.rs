@@ -29,7 +29,7 @@ use crate::binary::snapshot::*;
 use crate::binary::snapshot::*;
 use semio_s_artifact_norm_en1993_model::*;
 use semio_s_plugin_norm_compliance::AnnexChoice;
-use semio_s_artifact_norm_en1993_model::{BridgeFatigue, ColdFormedMember, CraneRunway, DesignAction, FatigueBand, FatigueDetail, FireExposure, ForceAction, JointForceAction, LoadCase, MemberAction, PlatedPanel, SiloShell, SteelJoint, SteelMaterial, SteelMember, SteelPile, SteelSection, TensionComponent, TowerLeg};
+use semio_s_artifact_norm_en1993_model::{BridgeFatigue, ColdFormedMember, CraneRunway, DesignAction, FatigueBand, FatigueDetail, FireExposure, ForceAction, JointForceAction, LoadCase, MemberAction, PlatedPanel, SiloShell, SteelJoint, SteelMaterial, SteelMember, SteelPile, SteelSection, Storey, Restraint, BuiltUpMember, WeldGroup, ParametricSection, HollowJoint, JointRow, FrameNode, FrameBar, Placement, JointPlate, FoundationBlock, TensionComponent, TowerLeg};
 use framework_schema::ArtifactSchema;
 use crate::text::snapshot::*;
 /// 📦️ Decodes a [`En1993Snapshot`] from the binary `.pack.semio` envelope — an independently written
@@ -46,5 +46,3 @@ pub fn encode_en1993_pack(snapshot: &En1993Snapshot) -> Vec<u8> {
 }
 }
 pub use crate::binary::snapshot::native_snapshot_codec::*;
-
-semio_s_plugin_norm_compliance::impl_norm_artifact_record!(@binary En1993Snapshot, extension="en1993", envelope_id="norm.en1993", sqlite=crate::sqlite::snapshot::codec);

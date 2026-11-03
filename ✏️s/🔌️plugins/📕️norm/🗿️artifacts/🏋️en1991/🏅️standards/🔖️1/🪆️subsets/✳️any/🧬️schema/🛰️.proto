@@ -1,8 +1,5 @@
 syntax = "proto3";
-package semio.s.norm.en1991.artifact;
-
-// 🧬️ En1991Artifact schema — every field with its state class.
-
+package semio.s.norm.en1991;
 message En1991Artifact {
   // @state artifact
   string annex = 1;
@@ -39,67 +36,468 @@ message En1991Artifact {
   // @state artifact
   double assumed_delta_t = 17;
   // @state artifact
-  double required_delta_t = 18;
+  double t_max = 18;
   // @state artifact
-  string construction_activity = 19;
+  double t_min = 19;
   // @state artifact
-  double assumed_construction_qk = 20;
+  double t0 = 20;
   // @state artifact
-  bool bridge_claimed = 21;
+  string thermal_element_type = 21;
   // @state artifact
-  uint32 bridge_lane = 22;
+  uint32 thermal_bridge_type = 22;
   // @state artifact
-  double bridge_span = 23;
+  double delta_t_m = 23;
   // @state artifact
-  double bridge_lane_width = 24;
+  uint32 storey_count = 24;
   // @state artifact
-  double assumed_bridge_tandem = 25;
+  string fire_mode = 25;
   // @state artifact
-  double assumed_bridge_udl = 26;
+  string fire_curve = 26;
   // @state artifact
-  double assumed_bridge_lm2 = 27;
+  double fire_duration = 27;
   // @state artifact
-  double assumed_bridge_footway = 28;
+  double assumed_gas_temperature = 28;
   // @state artifact
-  bool crane_claimed = 29;
+  double assumed_h_net = 29;
   // @state artifact
-  string crane_class = 30;
+  double fire_compartment_area = 30;
   // @state artifact
-  string hoist_class = 31;
+  double fire_compartment_height = 31;
   // @state artifact
-  double hoisting_speed = 32;
+  double fire_opening_factor = 32;
   // @state artifact
-  double assumed_crane_wheel = 33;
+  double fire_thermal_inertia = 33;
   // @state artifact
-  double assumed_crane_horizontal = 34;
+  FireOccupancy fire_occupancy = 34;
   // @state artifact
-  bool silo_claimed = 35;
+  double fire_load_density_qf = 35;
   // @state artifact
-  string silo_kind = 36;
+  double assumed_qf_d = 36;
   // @state artifact
-  double silo_bulk_density = 37;
+  string construction_activity = 37;
   // @state artifact
-  double silo_height = 38;
+  double assumed_construction_qk = 38;
   // @state artifact
-  double silo_hydraulic_radius = 39;
+  string structure_kind = 39;
   // @state artifact
-  double silo_mu = 40;
+  uint32 bridge_lane = 40;
   // @state artifact
-  double silo_k = 41;
+  double bridge_span = 41;
   // @state artifact
-  double assumed_silo_pressure = 42;
+  double bridge_lane_width = 42;
   // @state artifact
-  double assumed_silo_patch = 43;
+  double assumed_bridge_tandem = 43;
   // @state artifact
-  double assumed_silo_wall_friction = 44;
+  double assumed_bridge_udl = 44;
   // @state artifact
-  string floors = 45;
+  double assumed_bridge_lm2 = 45;
   // @state artifact
-  string self_weight_elements = 46;
+  double assumed_bridge_footway = 46;
   // @state artifact
-  string roofs = 47;
+  double assumed_bridge_lm3 = 47;
   // @state artifact
-  string wind_faces = 48;
+  double assumed_bridge_lm4 = 48;
   // @state artifact
-  string accidental_cases = 49;
+  string bridge_load_group = 49;
+  // @state artifact
+  bool crane_claimed = 50;
+  // @state artifact
+  string crane_class = 51;
+  // @state artifact
+  string hoist_class = 52;
+  // @state artifact
+  double hoisting_speed = 53;
+  // @state artifact
+  double assumed_crane_wheel = 54;
+  // @state artifact
+  double assumed_crane_horizontal = 55;
+  // @state artifact
+  bool silo_claimed = 56;
+  // @state artifact
+  string silo_kind = 57;
+  // @state artifact
+  double silo_bulk_density = 58;
+  // @state artifact
+  double silo_height = 59;
+  // @state artifact
+  double silo_hydraulic_radius = 60;
+  // @state artifact
+  double silo_mu = 61;
+  // @state artifact
+  double silo_k = 62;
+  // @state artifact
+  double assumed_silo_pressure = 63;
+  // @state artifact
+  double assumed_silo_patch = 64;
+  // @state artifact
+  double assumed_silo_wall_friction = 65;
+  // @state artifact
+  double bridge_tandem_x = 66;
+  // @state artifact
+  double rail_alpha = 67;
+  // @state artifact
+  double assumed_rail_lm71 = 68;
+  // @state artifact
+  double assumed_rail_lm71_udl = 69;
+  // @state artifact
+  double assumed_rail_sw0 = 70;
+  // @state artifact
+  double assumed_rail_sw2 = 71;
+  // @state artifact
+  double crane_x = 72;
+  // @state artifact
+  double crane_runway_length = 73;
+  // @state artifact
+  double crane_wheel_base = 74;
+  // @state artifact
+  double silo_diameter = 75;
+  // @state artifact
+  double silo_eccentricity = 76;
+  // @state artifact
+  double silo_hopper_angle_deg = 77;
+  // @state artifact
+  double bridge_curve_radius = 78;
+  // @state artifact
+  string fire_load_basis = 79;
+  // @state artifact
+  repeated FloorArea floors = 80;
+  // @state artifact
+  repeated SelfWeightElement self_weight_elements = 81;
+  // @state artifact
+  repeated RoofArea roofs = 82;
+  // @state artifact
+  repeated WindFace wind_faces = 83;
+  // @state artifact
+  repeated AccidentalCase accidental_cases = 84;
+  // @state artifact
+  repeated BridgeLane bridge_lanes = 85;
+  // @state artifact
+  repeated ConstructionStage construction_stages = 86;
+  // @state artifact
+  repeated RoofSurface roof_surfaces = 87;
+  // @state artifact
+  repeated Placement placements = 88;
+  // @state artifact
+  repeated SpecialVehicle special_vehicles = 89;
+  // @state artifact
+  repeated WindBridge wind_bridges = 90;
+  // @state artifact
+  repeated DynamicElement dynamic_elements = 91;
+  // @state artifact
+  repeated ImpactAction impact_actions = 92;
+  // @state artifact
+  repeated InternalExplosion internal_explosions = 93;
+  // @state artifact
+  repeated ThermalSection thermal_sections = 94;
+  // @state artifact
+  repeated CaseRow cases = 95;
+  // @state artifact
+  repeated HelicopterLanding helicopter_landings = 96;
+  // @state artifact
+  repeated TieRun tie_runs = 97;
+  // @state artifact
+  repeated ConstructionLoad construction_loads = 98;
+  // @state artifact
+  repeated FallingLoad falling_loads = 99;
+  // @state artifact
+  repeated ExecutionImperfection execution_imperfections = 100;
+  // @state artifact
+  repeated DerailmentCase derailment_cases = 101;
+  // @state artifact
+  repeated CraneHoist crane_hoists = 102;
+  // @state artifact
+  repeated Footbridge footbridges = 103;
+  // @state artifact
+  repeated RailDynamic rail_dynamics = 104;
+  // @state artifact
+  repeated LoadDispersal load_dispersals = 105;
+  // @state artifact
+  repeated BulkSolid bulk_solids = 106;
+  // @state artifact
+  repeated RotatingMachine rotating_machines = 107;
+  // @state artifact
+  repeated FatigueModel fatigue_models = 108;
+  // @state artifact
+  repeated SupportCollision support_collisions = 109;
+  // @state artifact
+  repeated LocalFire local_fires = 110;
+  // @state artifact
+  repeated SnowGuard snow_guards = 111;
+}
+message FloorArea {
+  string id = 1;
+  string category = 2;
+  double area = 3;
+  double assumed_qk = 4;
+  double assumed_qk_concentrated = 5;
+  double assumed_partitions = 6;
+}
+message SelfWeightElement {
+  string id = 1;
+  string material = 2;
+  double thickness = 3;
+  double assumed_gk = 4;
+}
+message RoofArea {
+  string id = 1;
+  string roof_type = 2;
+  double pitch_deg = 3;
+  double c_e = 4;
+  double c_t = 5;
+  bool has_parapet = 6;
+  double parapet_height = 7;
+  double drift_obstruction_height = 8;
+  bool multi_span = 9;
+  double assumed_sk = 10;
+}
+message WindFace {
+  string id = 1;
+  string zone = 2;
+  double z = 3;
+  double c_pe10 = 4;
+  double c_pe1 = 5;
+  double c_pi = 6;
+  double c_s = 7;
+  double c_d = 8;
+  double loaded_area = 9;
+  double assumed_wp = 10;
+}
+message AccidentalCase {
+  string id = 1;
+  repeated AccidentalImpact impact = 2;
+  repeated AccidentalExplosion explosion = 3;
+}
+message AccidentalImpact {
+  double vehicle_mass = 1;
+  double vehicle_speed = 2;
+  double assumed_force = 3;
+}
+message AccidentalExplosion {
+  double explosion_mass = 1;
+  double standoff = 2;
+  double assumed_pressure = 3;
+}
+message BridgeLane {
+  string id = 1;
+  double width = 2;
+  double offset = 3;
+  uint32 lm1_lane = 4;
+}
+message ConstructionStage {
+  string id = 1;
+  string activity = 2;
+  double duration_days = 3;
+  double return_years = 4;
+  double assumed_qk = 5;
+}
+message RoofSurface {
+  string id = 1;
+  string face = 2;
+  string shape = 3;
+  double pitch_deg = 4;
+  double extent = 5;
+}
+message Placement {
+  string id = 1;
+  double x = 2;
+  double y = 3;
+  double z = 4;
+  double yaw = 5;
+}
+message SpecialVehicle {
+  string id = 1;
+  string designation = 2;
+  double x = 3;
+  double y = 4;
+}
+message WindBridge {
+  string id = 1;
+  double deck_width = 2;
+  double deck_depth = 3;
+  uint32 parapet_kind = 4;
+  double parapet_height = 5;
+  uint32 traffic_kind = 6;
+  double height_above_ground = 7;
+  double span = 8;
+  double assumed_force = 9;
+}
+message DynamicElement {
+  string id = 1;
+  double height = 2;
+  double width = 3;
+  double first_frequency = 4;
+  double log_decrement = 5;
+  double mass_per_length = 6;
+  double strouhal = 7;
+  double assumed_cscd = 8;
+}
+message ImpactAction {
+  string id = 1;
+  uint32 kind = 2;
+  double mass = 3;
+  double speed = 4;
+  double stiffness = 5;
+  double height = 6;
+  double x = 7;
+  double y = 8;
+  double assumed_force = 9;
+}
+message InternalExplosion {
+  string id = 1;
+  double volume = 2;
+  double vent_area = 3;
+  double vent_pressure = 4;
+  double assumed_pressure = 5;
+}
+message ThermalSection {
+  string id = 1;
+  uint32 deck_type = 2;
+  uint32 surfacing = 3;
+  double length = 4;
+  double depth = 5;
+  double alpha_micro = 6;
+  double assumed_range = 7;
+}
+message CaseNumber {
+  string id = 1;
+  double value = 2;
+}
+message CaseText {
+  string id = 1;
+  string value = 2;
+}
+message CaseRow {
+  string id = 1;
+  string label_en = 2;
+  string label_de = 3;
+  string entry_id = 4;
+  repeated CaseNumber numbers = 5;
+  repeated CaseText texts = 6;
+}
+message HelicopterLanding {
+  string id = 1;
+  double mass = 2;
+  double x = 3;
+  double y = 4;
+  double height = 5;
+  double assumed_force = 6;
+}
+message TieRun {
+  string id = 1;
+  uint32 kind = 2;
+  double spacing = 3;
+  double span = 4;
+  double dead_load = 5;
+  double imposed_load = 6;
+  double psi = 7;
+  double x = 8;
+  double y = 9;
+  double provided_force = 10;
+}
+message ConstructionLoad {
+  string id = 1;
+  string stage = 2;
+  uint32 kind = 3;
+  double magnitude = 4;
+}
+message FallingLoad {
+  string id = 1;
+  double mass = 2;
+  double drop_height = 3;
+  double stopping_distance = 4;
+  double x = 5;
+  double y = 6;
+  double assumed_force = 7;
+}
+message ExecutionImperfection {
+  string id = 1;
+  double height = 2;
+  double tolerance = 3;
+  double vertical_load = 4;
+  double x = 5;
+  double y = 6;
+  double assumed_force = 7;
+}
+message DerailmentCase {
+  string id = 1;
+  double distance = 2;
+  double design_force_x = 3;
+  double design_force_y = 4;
+  double x = 5;
+  double y = 6;
+  double assumed_force = 7;
+}
+enum FireOccupancy {
+  FIRE_OCCUPANCY_DWELLING = 0;
+  FIRE_OCCUPANCY_OFFICE = 1;
+  FIRE_OCCUPANCY_HOSPITAL = 2;
+  FIRE_OCCUPANCY_SCHOOL = 3;
+  FIRE_OCCUPANCY_HOTEL = 4;
+  FIRE_OCCUPANCY_LIBRARY = 5;
+  FIRE_OCCUPANCY_SHOPPING = 6;
+  FIRE_OCCUPANCY_THEATRE = 7;
+  FIRE_OCCUPANCY_TRANSPORT = 8;
+}
+message CraneHoist {
+  string id = 1;
+  double rated_load = 2;
+  double release_fraction = 3;
+  string release_device = 4;
+}
+message Footbridge {
+  string id = 1;
+  double loaded_length = 2;
+  double deck_width = 3;
+  double natural_frequency = 4;
+}
+message RailDynamic {
+  string id = 1;
+  double determinant_length = 2;
+  string maintenance = 3;
+}
+message LoadDispersal {
+  string id = 1;
+  double wheel_length = 2;
+  double wheel_width = 3;
+  double pavement_thickness = 4;
+  double slab_thickness = 5;
+}
+message BulkSolid {
+  string id = 1;
+  double internal_friction = 2;
+}
+message RotatingMachine {
+  string id = 1;
+  double mass = 2;
+  double eccentricity = 3;
+  double frequency = 4;
+}
+message FatigueModel {
+  string id = 1;
+  string model = 2;
+  uint32 lane = 3;
+  double assumed_axle_load = 4;
+  double assumed_udl = 5;
+}
+message SupportCollision {
+  string id = 1;
+  string location = 2;
+  double assumed_force_x = 3;
+  double assumed_force_y = 4;
+  double height = 5;
+  double position_x = 6;
+}
+message LocalFire {
+  string id = 1;
+  double fire_diameter = 2;
+  double heat_release_rate = 3;
+  double ceiling_height = 4;
+  double horizontal_distance = 5;
+  double assumed_flux = 6;
+}
+message SnowGuard {
+  string id = 1;
+  string roof_id = 2;
+  double slope_length = 3;
+  double assumed_force = 4;
 }

@@ -1,0 +1,7 @@
+{
+  "ChangeTowerActionLoadCaseId": {
+    "id": "tw-1",
+    "elementId": "tw-g",
+    "newLoadCaseId": "g-permanent-alt"
+  }
+}

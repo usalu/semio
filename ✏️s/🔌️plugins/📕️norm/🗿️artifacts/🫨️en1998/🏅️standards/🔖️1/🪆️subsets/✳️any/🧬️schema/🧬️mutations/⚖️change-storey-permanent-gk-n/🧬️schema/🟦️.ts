@@ -1,13 +1,13 @@
 /** ⚖️ `change-storey-permanent-gk-n` wire twin: the leaf payload `ChangeStoreyPermanentGkN`, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
- * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
+ * by `repo ./📜️script.ts schema twins generate`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
-import { normWireInteger, normWireLiteral, normWireNumber, normWireObject, normWireRange, type NormWireReader, normWireRequired } from "@semio-tech/norm-js/registry/contract";
+import { normWireLiteral, normWireNumber, normWireObject, normWireRange, normWireRequired, normWireString, type NormWireReader } from "@semio-tech/norm-js/registry/contract";
 
 export interface ChangeStoreyPermanentGkN {
   mutation: "changeStoreyPermanentGkN";
-  buildingIndex: number;
-  storeyIndex: number;
+  buildingId: string;
+  id: string;
   newPermanentGkN: number;
 }
 
-export const parseChangeStoreyPermanentGkN: NormWireReader<ChangeStoreyPermanentGkN> = normWireObject<ChangeStoreyPermanentGkN>({ mutation: normWireRequired(normWireLiteral("changeStoreyPermanentGkN")), buildingIndex: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), storeyIndex: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), newPermanentGkN: normWireRequired(normWireRange(normWireNumber, {"minimum":0})) });
+export const parseChangeStoreyPermanentGkN: NormWireReader<ChangeStoreyPermanentGkN> = normWireObject<ChangeStoreyPermanentGkN>({ mutation: normWireRequired(normWireLiteral("changeStoreyPermanentGkN")), buildingId: normWireRequired(normWireString), id: normWireRequired(normWireString), newPermanentGkN: normWireRequired(normWireRange(normWireNumber, {"minimum":0})) });

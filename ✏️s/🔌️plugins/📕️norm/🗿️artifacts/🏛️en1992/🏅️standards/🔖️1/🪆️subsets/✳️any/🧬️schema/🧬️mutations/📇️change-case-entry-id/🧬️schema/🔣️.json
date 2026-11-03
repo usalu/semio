@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1992/mutation/change-case-entry-id/schema.json",
+  "title": "ChangeCaseEntryId",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "caseId",
+    "newValue"
+  ],
+  "properties": {
+    "caseId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Case",
+          "de": "Fall"
+        },
+        "description": {
+          "en": "The catalogue case this mutation addresses.",
+          "de": "Der Katalogfall, den diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "case"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newValue": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Catalogue entry",
+          "de": "Katalogeintrag"
+        },
+        "description": {
+          "en": "Verification id T-nn of the EN 1992 catalogue.",
+          "de": "Nachweis-Id T-nn des EN-1995-Katalogs."
+        },
+        "group": "case",
+        "order": 20
+      }
+    }
+  }
+}

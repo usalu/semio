@@ -1,0 +1,13 @@
+{
+ "artifact": "en1998",
+ "fields": [
+  {
+   "entity": "assessment",
+   "field": "shear_force_demand_n",
+   "default": 0.0,
+   "unit": "Newton",
+   "en": "Shear force demand V_Ed of the brittle shear mechanism (0 = not given)",
+   "de": "Querkraftbeanspruchung V_Ed des spröden Schubmechanismus (0 = nicht angegeben)"
+  }
+ ]
+}

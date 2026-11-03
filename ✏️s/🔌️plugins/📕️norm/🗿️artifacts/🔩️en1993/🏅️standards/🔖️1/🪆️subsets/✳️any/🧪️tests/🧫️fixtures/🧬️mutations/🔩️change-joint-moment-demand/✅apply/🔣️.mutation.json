@@ -1,0 +1,6 @@
+{
+  "ChangeJointMomentDemand": {
+    "id": "joint-j1",
+    "newMomentDemand": 1.5
+  }
+}

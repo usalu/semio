@@ -15,7 +15,13 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[features]
+test-support = ["dep:serde", "semio-s-artifact-norm-en1998-diff/test-support", "semio-s-artifact-norm-en1998-model/test-support", "semio-s-artifact-norm-en1998-mutations/test-support", "semio-s-plugin-norm-compliance/test-support"]
+oracle-wiring = ["semio-s-plugin-norm-compliance/compliance-testing"]
+
 [dependencies]
+semio-s-artifact-norm-en1998-schema-formulas = { workspace = true }
+serde = { workspace = true, optional = true }
 semio-framework-dsl-record = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-dsl-record-derive = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
@@ -29,6 +35,7 @@ semio-s-artifact-norm-en1998-diff = { workspace = true }
 semio-s-artifact-norm-en1998-model = { workspace = true }
 semio-s-artifact-norm-en1998-mutations = { workspace = true }
 semio-s-plugin-norm-compliance = { workspace = true }
+semio-s-plugin-norm-mechanics = { workspace = true }
 
 [dev-dependencies]
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

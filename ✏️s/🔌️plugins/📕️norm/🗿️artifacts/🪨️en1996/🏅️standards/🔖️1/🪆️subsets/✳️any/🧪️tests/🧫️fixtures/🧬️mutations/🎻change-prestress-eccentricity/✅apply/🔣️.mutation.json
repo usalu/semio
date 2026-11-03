@@ -1,0 +1,7 @@
+{
+  "ChangePrestressEccentricity": {
+    "wallId": "wall-north",
+    "id": "tendon-1",
+    "newEccentricityM": 0.05
+  }
+}

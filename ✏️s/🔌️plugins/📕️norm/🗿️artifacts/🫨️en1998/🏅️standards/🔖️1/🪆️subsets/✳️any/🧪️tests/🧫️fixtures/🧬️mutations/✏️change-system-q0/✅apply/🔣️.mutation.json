@@ -1,0 +1,6 @@
+{
+  "mutation": "changeSystemQ0",
+  "buildingId": "bldg-office",
+  "id": "sys-x",
+  "newQ0": 9.0
+}

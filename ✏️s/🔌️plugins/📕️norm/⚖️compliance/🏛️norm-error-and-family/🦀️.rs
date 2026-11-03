@@ -1,6 +1,7 @@
-//! 🏛️ Norm errors and families of the norm compliance core: the error type, the family ids and trait, the report cache and the norm host. See [`super`].
+//! 🏛️ Norm errors and families of the norm compliance core: the error type, the family ids and trait, and the norm host. See [`super`].
 
 use super::*;
+use std::sync::Arc;
 
 // #region 🔖️Error
 /// ⚠️ Norm computation error.
@@ -66,78 +67,89 @@ impl NormFamilyId {
             Self::Vdi3805 => "VDI 3805",
         }
     }
+
+    /// 📅️ The designation with the print edition of the principal part the family implements, `None` for families that cite no single print. The editions are the commonly cited ones and stay unverified until the registry records the print edition at verification (see `NdpSource::edition`).
+    pub fn edition(self) -> Option<&'static str> {
+        match self {
+            Self::En1990 => Some("EN 1990:2002+A1:2005"),
+            Self::En1991 => Some("EN 1991-1-1:2002"),
+            Self::En1992 => Some("EN 1992-1-1:2004+A1:2014"),
+            Self::En1993 => Some("EN 1993-1-1:2005+A1:2014"),
+            Self::En1994 => Some("EN 1994-1-1:2004"),
+            Self::En1995 => Some("EN 1995-1-1:2004+A2:2014"),
+            Self::En1996 => Some("EN 1996-1-1:2005+A1:2012"),
+            Self::En1997 => Some("EN 1997-1:2004+A1:2013"),
+            Self::En1998 => Some("EN 1998-1:2004+A1:2013"),
+            Self::En1999 => Some("EN 1999-1-1:2007+A2:2013"),
+            Self::Din4108 | Self::DinEn16798 | Self::DinV18599 | Self::Iso16757 | Self::Vdi3805 => None,
+        }
+    }
 }
 
 /// 🧩️ Headless norm family contract: typed document, undoable operations, and compliance evaluation.
 pub trait NormFamily: Send + Sync + 'static {
-    type Document: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send;
+    type Document: Clone + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + 'static;
     type Mutation: Mutation<Self::Document> + Clone + PartialEq + Send;
 
     fn family_id() -> NormFamilyId;
     fn evaluate(document: &Self::Document) -> CheckReport;
+
+    /// 🛰️ Settled report of exactly `document` for the paint path, as one shared handle so no reader copies it; families with a retained `SharedEvaluation` (`live_report!`) override it so edits re-run only the affected units, the default is the full fold.
+    fn live_report(document: &Self::Document) -> Arc<CheckReport> {
+        Arc::new(Self::evaluate(document))
+    }
+
+    /// 🖼️ Paint path that never freezes: the report as it stands after waiting at most `budget`, plus whether it is the full evaluation (`live_report!` modules override it with `responsive`; the default settles synchronously).
+    fn live_responsive(document: &Self::Document, _budget: std::time::Duration) -> (Arc<CheckReport>, bool) {
+        (Self::live_report(document), true)
+    }
+
+    /// 📊️ Progress of the latest live run, for the transient lane; idle for families without a retained session.
+    fn live_progress() -> incremental_evaluation::EvalProgress {
+        incremental_evaluation::EvalProgress::default()
+    }
+
+    /// 🛑️ Supersedes the live run in flight; a no-op for families without a retained session.
+    fn cancel_live() {}
 }
 
-/// 🧾 Snapshot revision fingerprint used as the paint-path report cache key.
-pub fn document_revision_key<D: semio_framework_value::ToValue>(document: &D) -> u64 {
-    use std::collections::hash_map::DefaultHasher;
-    use std::hash::{Hash, Hasher};
-    let json = semio_framework_pack_json::to_json_string(&semio_framework_value::ToValue::to_value(document));
-    let mut hasher = DefaultHasher::new();
-    json.hash(&mut hasher);
-    hasher.finish()
-}
-
-fn report_cache() -> &'static std::sync::Mutex<std::collections::HashMap<(NormFamilyId, u64), CheckReport>> {
-    static CACHE: std::sync::OnceLock<std::sync::Mutex<std::collections::HashMap<(NormFamilyId, u64), CheckReport>>> = std::sync::OnceLock::new();
-    CACHE.get_or_init(|| std::sync::Mutex::new(std::collections::HashMap::new()))
-}
-
-/// 📥 Reads a previously evaluated report for `(family, revision)` without running `evaluate`.
-pub fn cached_report_for<F: NormFamily>(document: &F::Document) -> Option<CheckReport> {
-    let key = (F::family_id(), document_revision_key(document));
-    report_cache().lock().ok().and_then(|guard| guard.get(&key).cloned())
-}
-
-/// 📤 Stores an evaluated report keyed by `(family, revision)` for paint-path reuse.
-pub fn store_cached_report_for<F: NormFamily>(document: &F::Document, report: CheckReport) {
-    let key = (F::family_id(), document_revision_key(document));
-    if let Ok(mut guard) = report_cache().lock() {
-        if guard.len() > 64 {
-            guard.clear();
-        }
-        guard.insert(key, report);
+/// ⚡️ Norm family whose evaluation is a fold of independently re-runnable check units; adopting it enables retained incremental sessions.
+pub trait IncrementalNormFamily: NormFamily + incremental_evaluation::UnitSource<Document = <Self as NormFamily>::Document> {
+    fn evaluate_incrementally(document: &<Self as NormFamily>::Document) -> CheckReport
+    where
+        Self: Sized,
+    {
+        incremental_evaluation::evaluate_units::<Self>(document)
     }
 }
 
-/// 🗑️ Drops a cached report so the next evaluate job recomputes it.
-pub fn invalidate_cached_report_for<F: NormFamily>(document: &F::Document) {
-    let key = (F::family_id(), document_revision_key(document));
-    if let Ok(mut guard) = report_cache().lock() {
-        guard.remove(&key);
-    }
-}
-
-/// 🧠️ Retained headless session: document inputs plus the last computed compliance report.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(any(test, feature = "compliance-testing"), derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(any(test, feature = "compliance-testing"), serde(bound(serialize = "F::Document: serde::Serialize", deserialize = "F::Document: serde::de::DeserializeOwned")))]
-#[value(bound = "F::Document: semio_framework_value::ToValue, F::Document: semio_framework_value::FromValue")]
+/// 🧠️ Retained headless session: document inputs plus the last computed compliance report, shared by handle with the live session and the lane clock (a host never owns a copy).
+#[derive(Clone, Debug, PartialEq)]
 pub struct NormHost<F: NormFamily> {
     pub document: F::Document,
-    pub report: CheckReport,
+    pub report: Arc<CheckReport>,
 }
 
-impl<F: NormFamily> Default for NormHost<F> {
+impl<F: NormFamily> Default for NormHost<F>
+where
+    F::Document: Default,
+{
     fn default() -> Self {
-        Self::from_artifact(F::Document::default())
+        Self { document: F::Document::default(), report: Arc::new(CheckReport::default()) }
     }
 }
 
 impl<F: NormFamily> NormHost<F> {
-    /// 🖼️ Paint-path constructor: never runs `F::evaluate`. Serves the revision-keyed cache or an empty report.
-    pub fn from_artifact(document: F::Document) -> Self {
-        let report = cached_report_for::<F>(&document).unwrap_or_default();
+    /// 🎐 Host over `document` with its settled live report: every read is current after any edit, no evaluate command in between.
+    pub fn live(document: F::Document) -> Self {
+        let report = F::live_report(&document);
         Self { document, report }
+    }
+
+    /// 🖼️ Like [`Self::live`] but bounded by `budget`: slow units keep running on the session worker and the flag tells whether the report is already complete.
+    pub fn live_within(document: F::Document, budget: std::time::Duration) -> (Self, bool) {
+        let (report, settled) = F::live_responsive(&document, budget);
+        (Self { document, report }, settled)
     }
 
     pub fn document(&self) -> &F::Document {
@@ -148,24 +160,29 @@ impl<F: NormFamily> NormHost<F> {
         &self.report
     }
 
-    pub fn apply(&mut self, mutation: &F::Mutation) -> protocol::MutationApplyResult<()> {
+    /// 🔗️ The report as its shared handle, for readers that keep it beyond the host (the lane clock caches it without a copy).
+    pub fn shared_report(&self) -> Arc<CheckReport> {
+        self.report.clone()
+    }
+
+    pub fn apply(&mut self, mutation: &F::Mutation) -> protocol::MutationApplyResult<()>
+    where
+        F::Mutation: protocol::ColdMutation<F::Document>,
+    {
         let (document, _) = vcs::apply_mutation(&self.document, mutation)?;
-        invalidate_cached_report_for::<F>(&self.document);
         self.document = document;
-        self.report = CheckReport::default();
+        self.report = F::live_report(&self.document);
         Ok(())
     }
 
     pub fn replace_document(&mut self, document: F::Document) {
-        invalidate_cached_report_for::<F>(&self.document);
+        self.report = F::live_report(&document);
         self.document = document;
-        self.report = CheckReport::default();
     }
 
-    /// 🧮️ Runs `F::evaluate` off the paint path and stores the revision-keyed cache entry.
+    /// 🧮️ Re-evaluates the host's document through the live session.
     pub fn evaluate(&mut self) {
-        self.report = F::evaluate(&self.document);
-        store_cached_report_for::<F>(&self.document, self.report.clone());
+        self.report = F::live_report(&self.document);
     }
 }
 // #endregion 🔖️Family

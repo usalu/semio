@@ -1,0 +1,5 @@
+{
+  "mutation": "changeReliabilityResistanceMean",
+  "id": "rel-1",
+  "newResistanceMean": 2.0
+}

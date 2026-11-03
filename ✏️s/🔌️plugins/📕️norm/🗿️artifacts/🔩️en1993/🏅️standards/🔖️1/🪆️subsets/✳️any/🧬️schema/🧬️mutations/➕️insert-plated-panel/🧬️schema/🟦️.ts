@@ -1,8 +1,8 @@
 /** ➕️ `insert-plated-panel` wire twin: the leaf payload `InsertPlatedPanel`, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
- * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
+ * by `repo ./📜️script.ts schema twins generate`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
-import { normWireInteger, normWireNullable, normWireObject, normWireOptional, normWireRange, type NormWireReader, normWireRequired } from "@semio-tech/norm-js/registry/contract";
-import { parsePlatedPanel, type PlatedPanel } from "../../../📸️snapshot/🟦️.ts";
+import { normWireInteger, normWireNullable, normWireObject, normWireOptional, normWireRange, normWireRequired, type NormWireReader } from "@semio-tech/norm-js/registry/contract";
+import { type PlatedPanel, parsePlatedPanel } from "../../../📸️snapshot/🟦️.ts";
 
 export interface InsertPlatedPanel {
   index?: number | null;

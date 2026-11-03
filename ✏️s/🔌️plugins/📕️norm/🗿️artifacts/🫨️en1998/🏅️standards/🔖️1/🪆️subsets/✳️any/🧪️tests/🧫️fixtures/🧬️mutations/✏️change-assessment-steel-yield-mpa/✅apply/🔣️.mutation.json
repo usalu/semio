@@ -1,0 +1,5 @@
+{
+  "mutation": "changeAssessmentSteelYieldMpa",
+  "id": "as-1",
+  "newSteelYieldMpa": 1.5
+}

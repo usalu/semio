@@ -1,0 +1,6 @@
+{
+  "ChangeMemberMemberType": {
+    "id": "member-b1",
+    "newMemberType": "BeamColumn"
+  }
+}

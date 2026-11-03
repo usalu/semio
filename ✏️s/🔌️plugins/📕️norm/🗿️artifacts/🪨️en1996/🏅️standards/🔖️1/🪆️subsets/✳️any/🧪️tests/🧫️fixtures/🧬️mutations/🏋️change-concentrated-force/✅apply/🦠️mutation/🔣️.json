@@ -1,8 +1,0 @@
-{
-  "ChangeConcentratedForce": {
-    "wallIndex": 0,
-    "loadCaseIndex": 0,
-    "index": 0,
-    "newForceN": 42000.0
-  }
-}

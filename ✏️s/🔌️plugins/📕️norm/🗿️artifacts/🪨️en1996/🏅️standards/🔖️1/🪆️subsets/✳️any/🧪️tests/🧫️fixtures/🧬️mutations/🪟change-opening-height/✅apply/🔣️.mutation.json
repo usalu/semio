@@ -1,0 +1,7 @@
+{
+  "ChangeOpeningHeight": {
+    "wallId": "wall-openings",
+    "id": "win-1",
+    "newHeightM": 1.5
+  }
+}

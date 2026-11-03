@@ -1,0 +1,4 @@
+type ChangeMemberPunchingBetaMethod {
+  memberId: String!
+  newPunchingBetaMethod: String!
+}

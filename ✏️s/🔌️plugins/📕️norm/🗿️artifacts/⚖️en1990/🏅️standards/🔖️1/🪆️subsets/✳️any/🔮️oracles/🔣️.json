@@ -8,7 +8,8 @@
       "ecosystem": "python",
       "package": "",
       "capabilities": [
-        "en1990-1-mutate"
+        "en1990-1-mutate",
+        "en1990-1-round-trip"
       ],
       "comparisonProfiles": [
         "ordered-json-v1"
@@ -55,9 +56,182 @@
           ]
         }
       }
+    },
+    {
+      "id": "en1990-1-compliance-independent",
+      "kind": "cross-semio-implementation",
+      "ecosystem": "python",
+      "package": "",
+      "capabilities": [
+        "en1990-1-evaluate"
+      ],
+      "comparisonProfiles": [
+        "closed-form-v1",
+        "eurocode-quantities-v1",
+        "numerical-v1",
+        "method-spread-v1",
+        "table-exact-v1"
+      ],
+      "license": "AGPL-3.0-only",
+      "testOnly": true,
+      "rationale": "🐍️ Independent-formulation compliance oracle of EN1990: the python compliance script recomputes the Rust check chain and the shared harness (`✏️s/🔌️plugins/📕️norm/🔮️oracles/🏃️harness`) replays blessed oracle cases against the third-party references claimed in the norm root registry (`norm-eurocode-structuralcodes`, `-concreteproperties`, `-sectionproperties`, `-blue-prints`, `-sympy`, `-groundhog`, scipy numerics). Labelled honestly as independent formulation, not third-party validation, wherever no library covers the clause. DOC ORACLES V2: the document-level `🚦️check-outcome/🐍️.py` wraps this oracle and covers STR/GEO 6.10/6.10a/b, EQU, 6.11b/6.12b, SLS, A1.4, fatigue, Annex B to D and E90.10 to E90.12 per document; third-party agreement of FORM (scipy.stats), anastruct and PyNite in its `--self-check`.",
+      "engine": {
+        "family": "none",
+        "implementation": "in-repository independent formulation",
+        "version": "0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "en1990-1-anastruct",
+      "kind": "third-party-library",
+      "ecosystem": "python",
+      "package": "anastruct",
+      "version": "1.7.0",
+      "capabilities": [
+        "en1990-1-third-party-cases"
+      ],
+      "comparisonProfiles": [
+        "eurocode-quantities-v1",
+        "numerical-v1",
+        "method-spread-v1",
+        "table-exact-v1"
+      ],
+      "license": "GPL-3.0-only",
+      "testOnly": true,
+      "homepage": "https://anastruct.readthedocs.io",
+      "rationale": "Reference values of the EN1990 oracle case files (`🧪️tests/🧫️fixtures/🔮️oracle-cases/third-party*.json`) for the checks mechanics.beam-span-envelope are computed by anastruct 1.7.0. The harness adapter `✏️s/🔌️plugins/📕️norm/🔮️oracles/🏃️harness/🔌️adapters/anastruct/🐍️.py` is the only importer; values are blessed from the library, never from the Rust. National Annex parameters are inputs of the cases.",
+      "engine": {
+        "family": "anastruct",
+        "implementation": "anastruct 2D direct-stiffness frame solver",
+        "version": "1.7.0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "en1990-1-scipy",
+      "kind": "third-party-library",
+      "ecosystem": "python",
+      "package": "scipy",
+      "version": "1.18.0",
+      "capabilities": [
+        "en1990-1-third-party-cases",
+        "en1990-1-evaluate"
+      ],
+      "comparisonProfiles": [
+        "eurocode-quantities-v1",
+        "numerical-v1",
+        "method-spread-v1",
+        "table-exact-v1"
+      ],
+      "license": "BSD-3-Clause",
+      "testOnly": true,
+      "homepage": "https://scipy.org",
+      "rationale": "Independent formulations (numerical integration, root finding, eigenproblems and closed-form derivations that never reuse the rust expression) of the EN1990 oracle case files (`🧪️tests/🧫️fixtures/🔮️oracle-cases/third-party*.json`) for the checks en1990.6.4.combinations, en1990.C.beta, en1990.C.form-linear, en1990.C.form-nonnormal, en1990.D.7.characteristic-from-tests, en1990.fatigue.miner are computed by scipy 1.18.0. The harness adapter `✏️s/🔌️plugins/📕️norm/🔮️oracles/🏃️harness/🔌️adapters/numerical/🐍️.py` is the only importer; values are blessed from the library, never from the Rust. National Annex parameters are inputs of the cases.",
+      "engine": {
+        "family": "scipy",
+        "implementation": "SciPy quadrature, root finding, constrained minimisation and generalized eigenproblems on NumPy",
+        "version": "1.18.0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "en1990-1-pynite",
+      "kind": "third-party-library",
+      "ecosystem": "python",
+      "package": "PyNiteFEA",
+      "version": "3.0.0",
+      "capabilities": [
+        "en1990-1-third-party-cases"
+      ],
+      "comparisonProfiles": [
+        "eurocode-quantities-v1",
+        "numerical-v1",
+        "method-spread-v1",
+        "table-exact-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "homepage": "https://github.com/JWock82/Pynite",
+      "rationale": "Reference values of the EN1990 oracle case files (`🧪️tests/🧫️fixtures/🔮️oracle-cases/third-party*.json`) for the checks mechanics.beam-span-envelope are computed by PyNiteFEA 3.0.0. The harness adapter `✏️s/🔌️plugins/📕️norm/🔮️oracles/🏃️harness/🔌️adapters/pynite/🐍️.py` is the only importer; values are blessed from the library, never from the Rust. National Annex parameters are inputs of the cases.",
+      "engine": {
+        "family": "pynite",
+        "implementation": "PyNiteFEA 3D finite element frame solver",
+        "version": "3.0.0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
+    },
+    {
+      "id": "en1990-1-sympy",
+      "kind": "third-party-library",
+      "ecosystem": "python",
+      "package": "sympy",
+      "version": "1.14.0",
+      "capabilities": [
+        "en1990-1-third-party-cases"
+      ],
+      "comparisonProfiles": [
+        "eurocode-quantities-v1",
+        "numerical-v1",
+        "method-spread-v1",
+        "table-exact-v1"
+      ],
+      "license": "BSD-3-Clause",
+      "testOnly": true,
+      "homepage": "https://www.sympy.org",
+      "rationale": "Reference values of the EN1990 oracle case files (`🧪️tests/🧫️fixtures/🔮️oracle-cases/third-party*.json`) for the checks en1990.C.beta, en1990.C.form-linear are computed by sympy 1.14.0. The harness adapter `✏️s/🔌️plugins/📕️norm/🔮️oracles/🏃️harness/🔌️adapters/sympy/🐍️.py` is the only importer; values are blessed from the library, never from the Rust. National Annex parameters are inputs of the cases.",
+      "engine": {
+        "family": "sympy",
+        "implementation": "SymPy symbolic algebra",
+        "version": "1.14.0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false
     }
   ],
   "noOracleDecisions": [],
+  "subjectHostPackages": [
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-norm-en1990-mutations",
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+      "rationale": "↩️ The mutation round trip applies the production dispatch and its computed inverse."
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-norm-en1990-io",
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust",
+      "rationale": "↩️ The mutation round trip decodes the committed snapshot and mutation JSON with the io crate."
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-norm-en1990-checks",
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️checks/📦️packages/🦀️rust",
+      "rationale": "📇️ The catalogue fixture case drives the E90.nn evaluators the checks crate owns."
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-s-plugin-norm-compliance",
+      "path": "✏️s/🔌️plugins/📕️norm/⚖️compliance/📦️packages/🦀️rust",
+      "rationale": "🌍️ The catalogue `Case` takes the shared `AnnexChoice` the compliance crate owns.",
+      "features": [
+        "compliance-testing"
+      ]
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-norm-en1990-inferences",
+      "path": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust",
+      "rationale": "🚦️ The check-outcome case runs the production evaluate of the inferences crate on a committed snapshot.",
+      "features": [
+        "oracle-wiring"
+      ]
+    }
+  ],
   "mutationCatalogs": [
     {
       "id": "en1990-1-any",
@@ -179,83 +353,6 @@
           "mutationId": "change-beta-computed",
           "sourceMutationDirectoryName": "📐change-beta-computed",
           "mutationDirectoryName": "📐change-beta-computed",
-          "scenarios": [
-            {
-              "id": "apply",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-permanents",
-          "sourceMutationDirectoryName": "⚓️change-permanents",
-          "mutationDirectoryName": "⚓️change-permanents",
-          "scenarios": [
-            {
-              "id": "apply",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-variables",
-          "sourceMutationDirectoryName": "🏋️change-variables",
-          "mutationDirectoryName": "🏋️change-variables",
-          "scenarios": [
-            {
-              "id": "apply",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-accidentals",
-          "sourceMutationDirectoryName": "💥change-accidentals",
-          "mutationDirectoryName": "💥change-accidentals",
-          "scenarios": [
-            {
-              "id": "apply",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-seismics",
-          "sourceMutationDirectoryName": "🌋️change-seismics",
-          "mutationDirectoryName": "🌋️change-seismics",
-          "scenarios": [
-            {
-              "id": "apply",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-members",
-          "sourceMutationDirectoryName": "🏗️change-members",
-          "mutationDirectoryName": "🏗️change-members",
-          "scenarios": [
-            {
-              "id": "apply",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-bridge-sls",
-          "sourceMutationDirectoryName": "🌉change-bridge-sls",
-          "mutationDirectoryName": "🌉change-bridge-sls",
-          "scenarios": [
-            {
-              "id": "apply",
-              "directoryName": "✅apply"
-            }
-          ]
-        },
-        {
-          "mutationId": "change-effects",
-          "sourceMutationDirectoryName": "🔗change-effects",
-          "mutationDirectoryName": "🔗change-effects",
           "scenarios": [
             {
               "id": "apply",
@@ -462,6 +559,1216 @@
               "directoryName": "📏clamp"
             }
           ]
+        },
+        {
+          "mutationId": "change-permanent-kind",
+          "sourceMutationDirectoryName": "⚓️change-permanent-kind",
+          "mutationDirectoryName": "⚓️change-permanent-kind",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-permanent-gk",
+          "sourceMutationDirectoryName": "⚓️change-permanent-gk",
+          "mutationDirectoryName": "⚓️change-permanent-gk",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-variable-category",
+          "sourceMutationDirectoryName": "🏋️change-variable-category",
+          "mutationDirectoryName": "🏋️change-variable-category",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-variable-qk",
+          "sourceMutationDirectoryName": "🏋️change-variable-qk",
+          "mutationDirectoryName": "🏋️change-variable-qk",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-variable-group",
+          "sourceMutationDirectoryName": "🏋️change-variable-group",
+          "mutationDirectoryName": "🏋️change-variable-group",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-accidental-ad",
+          "sourceMutationDirectoryName": "💥️change-accidental-ad",
+          "mutationDirectoryName": "💥️change-accidental-ad",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-seismic-a-ek",
+          "sourceMutationDirectoryName": "🌋️change-seismic-a-ek",
+          "mutationDirectoryName": "🌋️change-seismic-a-ek",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-seismic-importance-class",
+          "sourceMutationDirectoryName": "🌋️change-seismic-importance-class",
+          "mutationDirectoryName": "🌋️change-seismic-importance-class",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-member-label-en",
+          "sourceMutationDirectoryName": "🏗️change-member-label-en",
+          "mutationDirectoryName": "🏗️change-member-label-en",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-member-label-de",
+          "sourceMutationDirectoryName": "🏗️change-member-label-de",
+          "mutationDirectoryName": "🏗️change-member-label-de",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-member-rd-str",
+          "sourceMutationDirectoryName": "🏗️change-member-rd-str",
+          "mutationDirectoryName": "🏗️change-member-rd-str",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-member-rd-geo",
+          "sourceMutationDirectoryName": "🏗️change-member-rd-geo",
+          "mutationDirectoryName": "🏗️change-member-rd-geo",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-member-rd-equ-stab",
+          "sourceMutationDirectoryName": "🏗️change-member-rd-equ-stab",
+          "mutationDirectoryName": "🏗️change-member-rd-equ-stab",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-member-rd-equ-destab",
+          "sourceMutationDirectoryName": "🏗️change-member-rd-equ-destab",
+          "mutationDirectoryName": "🏗️change-member-rd-equ-destab",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-member-rd-fat",
+          "sourceMutationDirectoryName": "🏗️change-member-rd-fat",
+          "mutationDirectoryName": "🏗️change-member-rd-fat",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-member-span",
+          "sourceMutationDirectoryName": "🏗️change-member-span",
+          "mutationDirectoryName": "🏗️change-member-span",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-member-precamber",
+          "sourceMutationDirectoryName": "🏗️change-member-precamber",
+          "mutationDirectoryName": "🏗️change-member-precamber",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-member-deflection-w1",
+          "sourceMutationDirectoryName": "🏗️change-member-deflection-w1",
+          "mutationDirectoryName": "🏗️change-member-deflection-w1",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-member-deflection-w2",
+          "sourceMutationDirectoryName": "🏗️change-member-deflection-w2",
+          "mutationDirectoryName": "🏗️change-member-deflection-w2",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-member-deflection-w3",
+          "sourceMutationDirectoryName": "🏗️change-member-deflection-w3",
+          "mutationDirectoryName": "🏗️change-member-deflection-w3",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-member-defl-limit-ratio",
+          "sourceMutationDirectoryName": "🏗️change-member-defl-limit-ratio",
+          "mutationDirectoryName": "🏗️change-member-defl-limit-ratio",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-member-defl-limit-ratio-w3",
+          "sourceMutationDirectoryName": "🏗️change-member-defl-limit-ratio-w3",
+          "mutationDirectoryName": "🏗️change-member-defl-limit-ratio-w3",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-member-sls-limit-char",
+          "sourceMutationDirectoryName": "🏗️change-member-sls-limit-char",
+          "mutationDirectoryName": "🏗️change-member-sls-limit-char",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-member-sls-limit-freq",
+          "sourceMutationDirectoryName": "🏗️change-member-sls-limit-freq",
+          "mutationDirectoryName": "🏗️change-member-sls-limit-freq",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-member-sls-limit-qp",
+          "sourceMutationDirectoryName": "🏗️change-member-sls-limit-qp",
+          "mutationDirectoryName": "🏗️change-member-sls-limit-qp",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-member-vibration-frequency",
+          "sourceMutationDirectoryName": "🏗️change-member-vibration-frequency",
+          "mutationDirectoryName": "🏗️change-member-vibration-frequency",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-member-vib-freq-min",
+          "sourceMutationDirectoryName": "🏗️change-member-vib-freq-min",
+          "mutationDirectoryName": "🏗️change-member-vib-freq-min",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-bridge-member-id",
+          "sourceMutationDirectoryName": "🌉️change-bridge-member-id",
+          "mutationDirectoryName": "🌉️change-bridge-member-id",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-bridge-deck-acceleration",
+          "sourceMutationDirectoryName": "🌉️change-bridge-deck-acceleration",
+          "mutationDirectoryName": "🌉️change-bridge-deck-acceleration",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-bridge-deck-accel-limit",
+          "sourceMutationDirectoryName": "🌉️change-bridge-deck-accel-limit",
+          "mutationDirectoryName": "🌉️change-bridge-deck-accel-limit",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-bridge-deck-twist",
+          "sourceMutationDirectoryName": "🌉️change-bridge-deck-twist",
+          "mutationDirectoryName": "🌉️change-bridge-deck-twist",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-bridge-deck-twist-limit",
+          "sourceMutationDirectoryName": "🌉️change-bridge-deck-twist-limit",
+          "mutationDirectoryName": "🌉️change-bridge-deck-twist-limit",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-bridge-deflection",
+          "sourceMutationDirectoryName": "🌉️change-bridge-deflection",
+          "mutationDirectoryName": "🌉️change-bridge-deflection",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-bridge-deflection-limit",
+          "sourceMutationDirectoryName": "🌉️change-bridge-deflection-limit",
+          "mutationDirectoryName": "🌉️change-bridge-deflection-limit",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-effect-member-id",
+          "sourceMutationDirectoryName": "🔗️change-effect-member-id",
+          "mutationDirectoryName": "🔗️change-effect-member-id",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-effect-action-id",
+          "sourceMutationDirectoryName": "🔗️change-effect-action-id",
+          "mutationDirectoryName": "🔗️change-effect-action-id",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-effect-influence",
+          "sourceMutationDirectoryName": "🔗️change-effect-influence",
+          "mutationDirectoryName": "🔗️change-effect-influence",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-fatigue-member-id",
+          "sourceMutationDirectoryName": "🔄️change-fatigue-member-id",
+          "mutationDirectoryName": "🔄️change-fatigue-member-id",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-fatigue-detail-category",
+          "sourceMutationDirectoryName": "🔄️change-fatigue-detail-category",
+          "mutationDirectoryName": "🔄️change-fatigue-detail-category",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-fatigue-stress-range",
+          "sourceMutationDirectoryName": "🔄️change-fatigue-stress-range",
+          "mutationDirectoryName": "🔄️change-fatigue-stress-range",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-fatigue-cycles",
+          "sourceMutationDirectoryName": "🔄️change-fatigue-cycles",
+          "mutationDirectoryName": "🔄️change-fatigue-cycles",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-reliability-resistance-dist",
+          "sourceMutationDirectoryName": "🎲️change-reliability-resistance-dist",
+          "mutationDirectoryName": "🎲️change-reliability-resistance-dist",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-reliability-resistance-mean",
+          "sourceMutationDirectoryName": "🎲️change-reliability-resistance-mean",
+          "mutationDirectoryName": "🎲️change-reliability-resistance-mean",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-reliability-resistance-sd",
+          "sourceMutationDirectoryName": "🎲️change-reliability-resistance-sd",
+          "mutationDirectoryName": "🎲️change-reliability-resistance-sd",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-reliability-action-dist",
+          "sourceMutationDirectoryName": "🎲️change-reliability-action-dist",
+          "mutationDirectoryName": "🎲️change-reliability-action-dist",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-reliability-action-mean",
+          "sourceMutationDirectoryName": "🎲️change-reliability-action-mean",
+          "mutationDirectoryName": "🎲️change-reliability-action-mean",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-reliability-action-sd",
+          "sourceMutationDirectoryName": "🎲️change-reliability-action-sd",
+          "mutationDirectoryName": "🎲️change-reliability-action-sd",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-test-quantity",
+          "sourceMutationDirectoryName": "🧪️change-test-quantity",
+          "mutationDirectoryName": "🧪️change-test-quantity",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-test-pairs",
+          "sourceMutationDirectoryName": "🧪️change-test-pairs",
+          "mutationDirectoryName": "🧪️change-test-pairs",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-test-distribution",
+          "sourceMutationDirectoryName": "🧪️change-test-distribution",
+          "mutationDirectoryName": "🧪️change-test-distribution",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-test-sample-size",
+          "sourceMutationDirectoryName": "🧪️change-test-sample-size",
+          "mutationDirectoryName": "🧪️change-test-sample-size",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-test-mean",
+          "sourceMutationDirectoryName": "🧪️change-test-mean",
+          "mutationDirectoryName": "🧪️change-test-mean",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-test-std-dev",
+          "sourceMutationDirectoryName": "🧪️change-test-std-dev",
+          "mutationDirectoryName": "🧪️change-test-std-dev",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-test-variation-known",
+          "sourceMutationDirectoryName": "🧪️change-test-variation-known",
+          "mutationDirectoryName": "🧪️change-test-variation-known",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-test-conversion-factor",
+          "sourceMutationDirectoryName": "🧪️change-test-conversion-factor",
+          "mutationDirectoryName": "🧪️change-test-conversion-factor",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-test-required",
+          "sourceMutationDirectoryName": "🧪️change-test-required",
+          "mutationDirectoryName": "🧪️change-test-required",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-test-theory-variation",
+          "sourceMutationDirectoryName": "🧪️change-test-theory-variation",
+          "mutationDirectoryName": "🧪️change-test-theory-variation",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-placement-x",
+          "sourceMutationDirectoryName": "📍️change-placement-x",
+          "mutationDirectoryName": "📍️change-placement-x",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-placement-y",
+          "sourceMutationDirectoryName": "📍️change-placement-y",
+          "mutationDirectoryName": "📍️change-placement-y",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-placement-z",
+          "sourceMutationDirectoryName": "📍️change-placement-z",
+          "mutationDirectoryName": "📍️change-placement-z",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-placement-yaw",
+          "sourceMutationDirectoryName": "📍️change-placement-yaw",
+          "mutationDirectoryName": "📍️change-placement-yaw",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-structure-kind",
+          "sourceMutationDirectoryName": "🏛️change-structure-kind",
+          "mutationDirectoryName": "🏛️change-structure-kind",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-bridge-sls",
+          "sourceMutationDirectoryName": "🌉️insert-bridge-sls",
+          "mutationDirectoryName": "🌉️insert-bridge-sls",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-bridge-sls",
+          "sourceMutationDirectoryName": "🌉️remove-bridge-sls",
+          "mutationDirectoryName": "🌉️remove-bridge-sls",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-fatigue-spectrum",
+          "sourceMutationDirectoryName": "🔄️insert-fatigue-spectrum",
+          "mutationDirectoryName": "🔄️insert-fatigue-spectrum",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-fatigue-spectrum",
+          "sourceMutationDirectoryName": "🔄️remove-fatigue-spectrum",
+          "mutationDirectoryName": "🔄️remove-fatigue-spectrum",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-reliability-analysis",
+          "sourceMutationDirectoryName": "🎲️insert-reliability-analysis",
+          "mutationDirectoryName": "🎲️insert-reliability-analysis",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-reliability-analysis",
+          "sourceMutationDirectoryName": "🎲️remove-reliability-analysis",
+          "mutationDirectoryName": "🎲️remove-reliability-analysis",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-test-series",
+          "sourceMutationDirectoryName": "🧪️insert-test-series",
+          "mutationDirectoryName": "🧪️insert-test-series",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-test-series",
+          "sourceMutationDirectoryName": "🧪️remove-test-series",
+          "mutationDirectoryName": "🧪️remove-test-series",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-placement",
+          "sourceMutationDirectoryName": "📍️insert-placement",
+          "mutationDirectoryName": "📍️insert-placement",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-placement",
+          "sourceMutationDirectoryName": "📍️remove-placement",
+          "mutationDirectoryName": "📍️remove-placement",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-case",
+          "sourceMutationDirectoryName": "➕️insert-case",
+          "mutationDirectoryName": "➕️insert-case",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-case",
+          "sourceMutationDirectoryName": "➖️remove-case",
+          "mutationDirectoryName": "➖️remove-case",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-case-number",
+          "sourceMutationDirectoryName": "🔢️change-case-number",
+          "mutationDirectoryName": "🔢️change-case-number",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-case-text",
+          "sourceMutationDirectoryName": "🔤️change-case-text",
+          "mutationDirectoryName": "🔤️change-case-text",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-case-label-en",
+          "sourceMutationDirectoryName": "🏷️change-case-label-en",
+          "mutationDirectoryName": "🏷️change-case-label-en",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-case-label-de",
+          "sourceMutationDirectoryName": "🏷️change-case-label-de",
+          "mutationDirectoryName": "🏷️change-case-label-de",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-case-entry-id",
+          "sourceMutationDirectoryName": "📇️change-case-entry-id",
+          "mutationDirectoryName": "📇️change-case-entry-id",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-member-frame-height",
+          "sourceMutationDirectoryName": "🏗️change-member-frame-height",
+          "mutationDirectoryName": "🏗️change-member-frame-height",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-member-frame-drift",
+          "sourceMutationDirectoryName": "🏗️change-member-frame-drift",
+          "mutationDirectoryName": "🏗️change-member-frame-drift",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-member-storey-height",
+          "sourceMutationDirectoryName": "🏗️change-member-storey-height",
+          "mutationDirectoryName": "🏗️change-member-storey-height",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-member-storey-drift",
+          "sourceMutationDirectoryName": "🏗️change-member-storey-drift",
+          "mutationDirectoryName": "🏗️change-member-storey-drift",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-bridge-track-gauge",
+          "sourceMutationDirectoryName": "🌉️change-bridge-track-gauge",
+          "mutationDirectoryName": "🌉️change-bridge-track-gauge",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-bridge-line-speed",
+          "sourceMutationDirectoryName": "🌉️change-bridge-line-speed",
+          "mutationDirectoryName": "🌉️change-bridge-line-speed",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-bridge-ballast-depth",
+          "sourceMutationDirectoryName": "🌉️change-bridge-ballast-depth",
+          "mutationDirectoryName": "🌉️change-bridge-ballast-depth",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-bridge-deck-mass",
+          "sourceMutationDirectoryName": "🌉️change-bridge-deck-mass",
+          "mutationDirectoryName": "🌉️change-bridge-deck-mass",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-bridge-natural-frequency",
+          "sourceMutationDirectoryName": "🌉️change-bridge-natural-frequency",
+          "mutationDirectoryName": "🌉️change-bridge-natural-frequency",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-bridge-end-rotation",
+          "sourceMutationDirectoryName": "🌉️change-bridge-end-rotation",
+          "mutationDirectoryName": "🌉️change-bridge-end-rotation",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-bridge-basic-wind-speed",
+          "sourceMutationDirectoryName": "🌉️change-bridge-basic-wind-speed",
+          "mutationDirectoryName": "🌉️change-bridge-basic-wind-speed",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-member-material-strength-k",
+          "sourceMutationDirectoryName": "🏗️change-member-material-strength-k",
+          "mutationDirectoryName": "🏗️change-member-material-strength-k",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-member-material-conv-factor",
+          "sourceMutationDirectoryName": "🏗️change-member-material-conv-factor",
+          "mutationDirectoryName": "🏗️change-member-material-conv-factor",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-member-mat-partial-factor",
+          "sourceMutationDirectoryName": "🏗️change-member-mat-partial-factor",
+          "mutationDirectoryName": "🏗️change-member-mat-partial-factor",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-member-mat-design-strength",
+          "sourceMutationDirectoryName": "🏗️change-member-mat-design-strength",
+          "mutationDirectoryName": "🏗️change-member-mat-design-strength",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-member-nominal-dimension",
+          "sourceMutationDirectoryName": "🏗️change-member-nominal-dimension",
+          "mutationDirectoryName": "🏗️change-member-nominal-dimension",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-member-dimension-tolerance",
+          "sourceMutationDirectoryName": "🏗️change-member-dimension-tolerance",
+          "mutationDirectoryName": "🏗️change-member-dimension-tolerance",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-member-design-dimension",
+          "sourceMutationDirectoryName": "🏗️change-member-design-dimension",
+          "mutationDirectoryName": "🏗️change-member-design-dimension",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-member-member-alpha-cr",
+          "sourceMutationDirectoryName": "🏗️change-member-member-alpha-cr",
+          "mutationDirectoryName": "🏗️change-member-member-alpha-cr",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-member-second-order-analysis",
+          "sourceMutationDirectoryName": "🏗️change-member-second-order-analysis",
+          "mutationDirectoryName": "🏗️change-member-second-order-analysis",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-bridge-damping-ratio",
+          "sourceMutationDirectoryName": "🌉️change-bridge-damping-ratio",
+          "mutationDirectoryName": "🌉️change-bridge-damping-ratio",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-factor-override-factor",
+          "sourceMutationDirectoryName": "🎚️change-factor-override-factor",
+          "mutationDirectoryName": "🎚️change-factor-override-factor",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-factor-override-target",
+          "sourceMutationDirectoryName": "🎚️change-factor-override-target",
+          "mutationDirectoryName": "🎚️change-factor-override-target",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-factor-override-value",
+          "sourceMutationDirectoryName": "🎚️change-factor-override-value",
+          "mutationDirectoryName": "🎚️change-factor-override-value",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-factor-override-justif",
+          "sourceMutationDirectoryName": "🎚️change-factor-override-justif",
+          "mutationDirectoryName": "🎚️change-factor-override-justif",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-factor-override",
+          "sourceMutationDirectoryName": "🎚️insert-factor-override",
+          "mutationDirectoryName": "🎚️insert-factor-override",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-factor-override",
+          "sourceMutationDirectoryName": "🎚️remove-factor-override",
+          "mutationDirectoryName": "🎚️remove-factor-override",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-traffic-group-group",
+          "sourceMutationDirectoryName": "🚦️change-traffic-group-group",
+          "mutationDirectoryName": "🚦️change-traffic-group-group",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-traffic-group-variable-id",
+          "sourceMutationDirectoryName": "🚦️change-traffic-group-variable-id",
+          "mutationDirectoryName": "🚦️change-traffic-group-variable-id",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "insert-traffic-group",
+          "sourceMutationDirectoryName": "🚦️insert-traffic-group",
+          "mutationDirectoryName": "🚦️insert-traffic-group",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
+        },
+        {
+          "mutationId": "remove-traffic-group",
+          "sourceMutationDirectoryName": "🚦️remove-traffic-group",
+          "mutationDirectoryName": "🚦️remove-traffic-group",
+          "scenarios": [
+            {
+              "id": "apply",
+              "directoryName": "✅apply"
+            }
+          ]
         }
       ],
       "kinds": [
@@ -476,13 +1783,6 @@
         "change-supervision-level",
         "change-inspection-level",
         "change-beta-computed",
-        "change-permanents",
-        "change-variables",
-        "change-accidentals",
-        "change-seismics",
-        "change-members",
-        "change-bridge-sls",
-        "change-effects",
         "remove-effect",
         "remove-member",
         "remove-seismic",
@@ -494,7 +1794,117 @@
         "insert-seismic",
         "insert-accidental",
         "insert-variable",
-        "insert-permanent"
+        "insert-permanent",
+        "change-permanent-kind",
+        "change-permanent-gk",
+        "change-variable-category",
+        "change-variable-qk",
+        "change-variable-group",
+        "change-accidental-ad",
+        "change-seismic-a-ek",
+        "change-seismic-importance-class",
+        "change-member-label-en",
+        "change-member-label-de",
+        "change-member-rd-str",
+        "change-member-rd-geo",
+        "change-member-rd-equ-stab",
+        "change-member-rd-equ-destab",
+        "change-member-rd-fat",
+        "change-member-span",
+        "change-member-precamber",
+        "change-member-deflection-w1",
+        "change-member-deflection-w2",
+        "change-member-deflection-w3",
+        "change-member-defl-limit-ratio",
+        "change-member-defl-limit-ratio-w3",
+        "change-member-sls-limit-char",
+        "change-member-sls-limit-freq",
+        "change-member-sls-limit-qp",
+        "change-member-vibration-frequency",
+        "change-member-vib-freq-min",
+        "change-bridge-member-id",
+        "change-bridge-deck-acceleration",
+        "change-bridge-deck-accel-limit",
+        "change-bridge-deck-twist",
+        "change-bridge-deck-twist-limit",
+        "change-bridge-deflection",
+        "change-bridge-deflection-limit",
+        "change-effect-member-id",
+        "change-effect-action-id",
+        "change-effect-influence",
+        "change-fatigue-member-id",
+        "change-fatigue-detail-category",
+        "change-fatigue-stress-range",
+        "change-fatigue-cycles",
+        "change-reliability-resistance-dist",
+        "change-reliability-resistance-mean",
+        "change-reliability-resistance-sd",
+        "change-reliability-action-dist",
+        "change-reliability-action-mean",
+        "change-reliability-action-sd",
+        "change-test-quantity",
+        "change-test-pairs",
+        "change-test-distribution",
+        "change-test-sample-size",
+        "change-test-mean",
+        "change-test-std-dev",
+        "change-test-variation-known",
+        "change-test-conversion-factor",
+        "change-test-required",
+        "change-test-theory-variation",
+        "change-placement-x",
+        "change-placement-y",
+        "change-placement-z",
+        "change-placement-yaw",
+        "change-structure-kind",
+        "insert-bridge-sls",
+        "remove-bridge-sls",
+        "insert-fatigue-spectrum",
+        "remove-fatigue-spectrum",
+        "insert-reliability-analysis",
+        "remove-reliability-analysis",
+        "insert-test-series",
+        "remove-test-series",
+        "insert-placement",
+        "remove-placement",
+        "insert-case",
+        "remove-case",
+        "change-case-number",
+        "change-case-text",
+        "change-case-label-en",
+        "change-case-label-de",
+        "change-case-entry-id",
+        "change-member-frame-height",
+        "change-member-frame-drift",
+        "change-member-storey-height",
+        "change-member-storey-drift",
+        "change-bridge-track-gauge",
+        "change-bridge-line-speed",
+        "change-bridge-ballast-depth",
+        "change-bridge-deck-mass",
+        "change-bridge-natural-frequency",
+        "change-bridge-end-rotation",
+        "change-bridge-basic-wind-speed",
+        "change-member-material-strength-k",
+        "change-member-material-conv-factor",
+        "change-member-mat-partial-factor",
+        "change-member-mat-design-strength",
+        "change-member-nominal-dimension",
+        "change-member-dimension-tolerance",
+        "change-member-design-dimension",
+        "change-member-member-alpha-cr",
+        "change-member-second-order-analysis",
+        "change-bridge-damping-ratio",
+        "change-factor-override-factor",
+        "change-factor-override-target",
+        "change-factor-override-value",
+        "change-factor-override-justif",
+        "insert-factor-override",
+        "remove-factor-override",
+        "change-traffic-group-group",
+        "change-traffic-group-variable-id",
+        "insert-traffic-group",
+        "remove-traffic-group"
       ]
     }
   ],
@@ -699,126 +2109,6 @@
             "operation": "change-beta-computed",
             "bridgeVersion": 1,
             "variant": "ChangeBetaComputed"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1990-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-permanents",
-          "capability": "en1990-1-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "change-permanents",
-            "bridgeVersion": 1,
-            "variant": "ChangePermanents"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1990-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-variables",
-          "capability": "en1990-1-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "change-variables",
-            "bridgeVersion": 1,
-            "variant": "ChangeVariables"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1990-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-accidentals",
-          "capability": "en1990-1-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "change-accidentals",
-            "bridgeVersion": 1,
-            "variant": "ChangeAccidentals"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1990-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-seismics",
-          "capability": "en1990-1-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "change-seismics",
-            "bridgeVersion": 1,
-            "variant": "ChangeSeismics"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1990-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-members",
-          "capability": "en1990-1-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "change-members",
-            "bridgeVersion": 1,
-            "variant": "ChangeMembers"
-          },
-          "oracleRequirements": [
-            {
-              "capability": "en1990-1-mutate",
-              "qualifyingKind": "verified-native-second-implementation"
-            }
-          ]
-        },
-        {
-          "id": "change-effects",
-          "capability": "en1990-1-mutate",
-          "payloadSchema": "🧬️schema/🔣️.json",
-          "outcomes": [
-            "applied",
-            "no-op"
-          ],
-          "productionDispatch": {
-            "operation": "change-effects",
-            "bridgeVersion": 1,
-            "variant": "ChangeEffects"
           },
           "oracleRequirements": [
             {
@@ -1087,7 +2377,7 @@
           ]
         },
         {
-          "id": "change-bridge-sls",
+          "id": "change-permanent-kind",
           "capability": "en1990-1-mutate",
           "payloadSchema": "🧬️schema/🔣️.json",
           "outcomes": [
@@ -1095,9 +2385,2189 @@
             "no-op"
           ],
           "productionDispatch": {
-            "operation": "change-bridge-sls",
+            "operation": "change-permanent-kind",
             "bridgeVersion": 1,
-            "variant": "ChangeBridgeSls"
+            "variant": "ChangePermanentKind"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-permanent-gk",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-permanent-gk",
+            "bridgeVersion": 1,
+            "variant": "ChangePermanentGk"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-variable-category",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-variable-category",
+            "bridgeVersion": 1,
+            "variant": "ChangeVariableCategory"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-variable-qk",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-variable-qk",
+            "bridgeVersion": 1,
+            "variant": "ChangeVariableQk"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-variable-group",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-variable-group",
+            "bridgeVersion": 1,
+            "variant": "ChangeVariableGroup"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-accidental-ad",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-accidental-ad",
+            "bridgeVersion": 1,
+            "variant": "ChangeAccidentalAd"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-seismic-a-ek",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-seismic-a-ek",
+            "bridgeVersion": 1,
+            "variant": "ChangeSeismicAEk"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-seismic-importance-class",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-seismic-importance-class",
+            "bridgeVersion": 1,
+            "variant": "ChangeSeismicImportanceClass"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-member-label-en",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-member-label-en",
+            "bridgeVersion": 1,
+            "variant": "ChangeMemberLabelEn"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-member-label-de",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-member-label-de",
+            "bridgeVersion": 1,
+            "variant": "ChangeMemberLabelDe"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-member-rd-str",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-member-rd-str",
+            "bridgeVersion": 1,
+            "variant": "ChangeMemberRdStr"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-member-rd-geo",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-member-rd-geo",
+            "bridgeVersion": 1,
+            "variant": "ChangeMemberRdGeo"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-member-rd-equ-stab",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-member-rd-equ-stab",
+            "bridgeVersion": 1,
+            "variant": "ChangeMemberRdEquStab"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-member-rd-equ-destab",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-member-rd-equ-destab",
+            "bridgeVersion": 1,
+            "variant": "ChangeMemberRdEquDestab"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-member-rd-fat",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-member-rd-fat",
+            "bridgeVersion": 1,
+            "variant": "ChangeMemberRdFat"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-member-span",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-member-span",
+            "bridgeVersion": 1,
+            "variant": "ChangeMemberSpan"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-member-precamber",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-member-precamber",
+            "bridgeVersion": 1,
+            "variant": "ChangeMemberPrecamber"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-member-deflection-w1",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-member-deflection-w1",
+            "bridgeVersion": 1,
+            "variant": "ChangeMemberDeflectionW1"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-member-deflection-w2",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-member-deflection-w2",
+            "bridgeVersion": 1,
+            "variant": "ChangeMemberDeflectionW2"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-member-deflection-w3",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-member-deflection-w3",
+            "bridgeVersion": 1,
+            "variant": "ChangeMemberDeflectionW3"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-member-defl-limit-ratio",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-member-defl-limit-ratio",
+            "bridgeVersion": 1,
+            "variant": "ChangeMemberDeflLimitRatio"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-member-defl-limit-ratio-w3",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-member-defl-limit-ratio-w3",
+            "bridgeVersion": 1,
+            "variant": "ChangeMemberDeflLimitRatioW3"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-member-sls-limit-char",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-member-sls-limit-char",
+            "bridgeVersion": 1,
+            "variant": "ChangeMemberSlsLimitChar"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-member-sls-limit-freq",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-member-sls-limit-freq",
+            "bridgeVersion": 1,
+            "variant": "ChangeMemberSlsLimitFreq"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-member-sls-limit-qp",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-member-sls-limit-qp",
+            "bridgeVersion": 1,
+            "variant": "ChangeMemberSlsLimitQp"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-member-vibration-frequency",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-member-vibration-frequency",
+            "bridgeVersion": 1,
+            "variant": "ChangeMemberVibrationFrequency"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-member-vib-freq-min",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-member-vib-freq-min",
+            "bridgeVersion": 1,
+            "variant": "ChangeMemberVibFreqMin"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-bridge-member-id",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-bridge-member-id",
+            "bridgeVersion": 1,
+            "variant": "ChangeBridgeMemberId"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-bridge-deck-acceleration",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-bridge-deck-acceleration",
+            "bridgeVersion": 1,
+            "variant": "ChangeBridgeDeckAcceleration"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-bridge-deck-accel-limit",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-bridge-deck-accel-limit",
+            "bridgeVersion": 1,
+            "variant": "ChangeBridgeDeckAccelLimit"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-bridge-deck-twist",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-bridge-deck-twist",
+            "bridgeVersion": 1,
+            "variant": "ChangeBridgeDeckTwist"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-bridge-deck-twist-limit",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-bridge-deck-twist-limit",
+            "bridgeVersion": 1,
+            "variant": "ChangeBridgeDeckTwistLimit"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-bridge-deflection",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-bridge-deflection",
+            "bridgeVersion": 1,
+            "variant": "ChangeBridgeDeflection"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-bridge-deflection-limit",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-bridge-deflection-limit",
+            "bridgeVersion": 1,
+            "variant": "ChangeBridgeDeflectionLimit"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-effect-member-id",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-effect-member-id",
+            "bridgeVersion": 1,
+            "variant": "ChangeEffectMemberId"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-effect-action-id",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-effect-action-id",
+            "bridgeVersion": 1,
+            "variant": "ChangeEffectActionId"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-effect-influence",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-effect-influence",
+            "bridgeVersion": 1,
+            "variant": "ChangeEffectInfluence"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-fatigue-member-id",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-fatigue-member-id",
+            "bridgeVersion": 1,
+            "variant": "ChangeFatigueMemberId"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-fatigue-detail-category",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-fatigue-detail-category",
+            "bridgeVersion": 1,
+            "variant": "ChangeFatigueDetailCategory"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-fatigue-stress-range",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-fatigue-stress-range",
+            "bridgeVersion": 1,
+            "variant": "ChangeFatigueStressRange"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-fatigue-cycles",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-fatigue-cycles",
+            "bridgeVersion": 1,
+            "variant": "ChangeFatigueCycles"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-reliability-resistance-dist",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-reliability-resistance-dist",
+            "bridgeVersion": 1,
+            "variant": "ChangeReliabilityResistanceDist"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-reliability-resistance-mean",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-reliability-resistance-mean",
+            "bridgeVersion": 1,
+            "variant": "ChangeReliabilityResistanceMean"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-reliability-resistance-sd",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-reliability-resistance-sd",
+            "bridgeVersion": 1,
+            "variant": "ChangeReliabilityResistanceSd"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-reliability-action-dist",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-reliability-action-dist",
+            "bridgeVersion": 1,
+            "variant": "ChangeReliabilityActionDist"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-reliability-action-mean",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-reliability-action-mean",
+            "bridgeVersion": 1,
+            "variant": "ChangeReliabilityActionMean"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-reliability-action-sd",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-reliability-action-sd",
+            "bridgeVersion": 1,
+            "variant": "ChangeReliabilityActionSd"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-test-quantity",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-test-quantity",
+            "bridgeVersion": 1,
+            "variant": "ChangeTestQuantity"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-test-pairs",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-test-pairs",
+            "bridgeVersion": 1,
+            "variant": "ChangeTestPairs"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-test-distribution",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-test-distribution",
+            "bridgeVersion": 1,
+            "variant": "ChangeTestDistribution"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-test-sample-size",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-test-sample-size",
+            "bridgeVersion": 1,
+            "variant": "ChangeTestSampleSize"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-test-mean",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-test-mean",
+            "bridgeVersion": 1,
+            "variant": "ChangeTestMean"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-test-std-dev",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-test-std-dev",
+            "bridgeVersion": 1,
+            "variant": "ChangeTestStdDev"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-test-variation-known",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-test-variation-known",
+            "bridgeVersion": 1,
+            "variant": "ChangeTestVariationKnown"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-test-conversion-factor",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-test-conversion-factor",
+            "bridgeVersion": 1,
+            "variant": "ChangeTestConversionFactor"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-test-required",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-test-required",
+            "bridgeVersion": 1,
+            "variant": "ChangeTestRequired"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-test-theory-variation",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-test-theory-variation",
+            "bridgeVersion": 1,
+            "variant": "ChangeTestTheoryVariation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-placement-x",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-placement-x",
+            "bridgeVersion": 1,
+            "variant": "ChangePlacementX"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-placement-y",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-placement-y",
+            "bridgeVersion": 1,
+            "variant": "ChangePlacementY"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-placement-z",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-placement-z",
+            "bridgeVersion": 1,
+            "variant": "ChangePlacementZ"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-placement-yaw",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-placement-yaw",
+            "bridgeVersion": 1,
+            "variant": "ChangePlacementYaw"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-structure-kind",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-structure-kind",
+            "bridgeVersion": 1,
+            "variant": "ChangeStructureKind"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "insert-bridge-sls",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "insert-bridge-sls",
+            "bridgeVersion": 1,
+            "variant": "InsertBridgeSls"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-bridge-sls",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "remove-bridge-sls",
+            "bridgeVersion": 1,
+            "variant": "RemoveBridgeSls"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "insert-fatigue-spectrum",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "insert-fatigue-spectrum",
+            "bridgeVersion": 1,
+            "variant": "InsertFatigueSpectrum"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-fatigue-spectrum",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "remove-fatigue-spectrum",
+            "bridgeVersion": 1,
+            "variant": "RemoveFatigueSpectrum"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "insert-reliability-analysis",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "insert-reliability-analysis",
+            "bridgeVersion": 1,
+            "variant": "InsertReliabilityAnalysis"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-reliability-analysis",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "remove-reliability-analysis",
+            "bridgeVersion": 1,
+            "variant": "RemoveReliabilityAnalysis"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "insert-test-series",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "insert-test-series",
+            "bridgeVersion": 1,
+            "variant": "InsertTestSeries"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-test-series",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "remove-test-series",
+            "bridgeVersion": 1,
+            "variant": "RemoveTestSeries"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "insert-placement",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "insert-placement",
+            "bridgeVersion": 1,
+            "variant": "InsertPlacement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-placement",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "remove-placement",
+            "bridgeVersion": 1,
+            "variant": "RemovePlacement"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "insert-case",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "insert-case",
+            "bridgeVersion": 1,
+            "variant": "InsertCase"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-case",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "remove-case",
+            "bridgeVersion": 1,
+            "variant": "RemoveCase"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-case-number",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-case-number",
+            "bridgeVersion": 1,
+            "variant": "ChangeCaseNumber"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-case-text",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-case-text",
+            "bridgeVersion": 1,
+            "variant": "ChangeCaseText"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-case-label-en",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-case-label-en",
+            "bridgeVersion": 1,
+            "variant": "ChangeCaseLabelEn"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-case-label-de",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-case-label-de",
+            "bridgeVersion": 1,
+            "variant": "ChangeCaseLabelDe"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-case-entry-id",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-case-entry-id",
+            "bridgeVersion": 1,
+            "variant": "ChangeCaseEntryId"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-member-frame-height",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-member-frame-height",
+            "bridgeVersion": 1,
+            "variant": "ChangeMemberFrameHeight"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-member-frame-drift",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-member-frame-drift",
+            "bridgeVersion": 1,
+            "variant": "ChangeMemberFrameDrift"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-member-storey-height",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-member-storey-height",
+            "bridgeVersion": 1,
+            "variant": "ChangeMemberStoreyHeight"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-member-storey-drift",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-member-storey-drift",
+            "bridgeVersion": 1,
+            "variant": "ChangeMemberStoreyDrift"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-bridge-track-gauge",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-bridge-track-gauge",
+            "bridgeVersion": 1,
+            "variant": "ChangeBridgeTrackGauge"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-bridge-line-speed",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-bridge-line-speed",
+            "bridgeVersion": 1,
+            "variant": "ChangeBridgeLineSpeed"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-bridge-ballast-depth",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-bridge-ballast-depth",
+            "bridgeVersion": 1,
+            "variant": "ChangeBridgeBallastDepth"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-bridge-deck-mass",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-bridge-deck-mass",
+            "bridgeVersion": 1,
+            "variant": "ChangeBridgeDeckMass"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-bridge-natural-frequency",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-bridge-natural-frequency",
+            "bridgeVersion": 1,
+            "variant": "ChangeBridgeNaturalFrequency"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-bridge-end-rotation",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-bridge-end-rotation",
+            "bridgeVersion": 1,
+            "variant": "ChangeBridgeEndRotation"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-bridge-basic-wind-speed",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-bridge-basic-wind-speed",
+            "bridgeVersion": 1,
+            "variant": "ChangeBridgeBasicWindSpeed"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-member-material-strength-k",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-member-material-strength-k",
+            "bridgeVersion": 1,
+            "variant": "ChangeMemberMaterialStrengthK"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-member-material-conv-factor",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-member-material-conv-factor",
+            "bridgeVersion": 1,
+            "variant": "ChangeMemberMaterialConvFactor"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-member-mat-partial-factor",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-member-mat-partial-factor",
+            "bridgeVersion": 1,
+            "variant": "ChangeMemberMatPartialFactor"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-member-mat-design-strength",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-member-mat-design-strength",
+            "bridgeVersion": 1,
+            "variant": "ChangeMemberMatDesignStrength"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-member-nominal-dimension",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-member-nominal-dimension",
+            "bridgeVersion": 1,
+            "variant": "ChangeMemberNominalDimension"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-member-dimension-tolerance",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-member-dimension-tolerance",
+            "bridgeVersion": 1,
+            "variant": "ChangeMemberDimensionTolerance"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-member-design-dimension",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-member-design-dimension",
+            "bridgeVersion": 1,
+            "variant": "ChangeMemberDesignDimension"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-member-member-alpha-cr",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-member-member-alpha-cr",
+            "bridgeVersion": 1,
+            "variant": "ChangeMemberMemberAlphaCr"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-member-second-order-analysis",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-member-second-order-analysis",
+            "bridgeVersion": 1,
+            "variant": "ChangeMemberSecondOrderAnalysis"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-bridge-damping-ratio",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-bridge-damping-ratio",
+            "bridgeVersion": 1,
+            "variant": "ChangeBridgeDampingRatio"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-factor-override-factor",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-factor-override-factor",
+            "bridgeVersion": 1,
+            "variant": "ChangeFactorOverrideFactor"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-factor-override-target",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-factor-override-target",
+            "bridgeVersion": 1,
+            "variant": "ChangeFactorOverrideTarget"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-factor-override-value",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-factor-override-value",
+            "bridgeVersion": 1,
+            "variant": "ChangeFactorOverrideValue"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-factor-override-justif",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-factor-override-justif",
+            "bridgeVersion": 1,
+            "variant": "ChangeFactorOverrideJustif"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "insert-factor-override",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "insert-factor-override",
+            "bridgeVersion": 1,
+            "variant": "InsertFactorOverride"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-factor-override",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "remove-factor-override",
+            "bridgeVersion": 1,
+            "variant": "RemoveFactorOverride"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-traffic-group-group",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-traffic-group-group",
+            "bridgeVersion": 1,
+            "variant": "ChangeTrafficGroupGroup"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-traffic-group-variable-id",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "change-traffic-group-variable-id",
+            "bridgeVersion": 1,
+            "variant": "ChangeTrafficGroupVariableId"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "insert-traffic-group",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "insert-traffic-group",
+            "bridgeVersion": 1,
+            "variant": "InsertTrafficGroup"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "en1990-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "remove-traffic-group",
+          "capability": "en1990-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op"
+          ],
+          "productionDispatch": {
+            "operation": "remove-traffic-group",
+            "bridgeVersion": 1,
+            "variant": "RemoveTrafficGroup"
           },
           "oracleRequirements": [
             {

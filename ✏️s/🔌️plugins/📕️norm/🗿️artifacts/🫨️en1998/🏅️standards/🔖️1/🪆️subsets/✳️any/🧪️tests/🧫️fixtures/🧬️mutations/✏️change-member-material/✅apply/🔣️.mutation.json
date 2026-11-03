@@ -1,0 +1,6 @@
+{
+  "mutation": "changeMemberMaterial",
+  "buildingId": "bldg-office",
+  "id": "col-c1",
+  "newMaterial": "steel"
+}

@@ -1,0 +1,7 @@
+syntax = "proto3";
+package semio.s.norm.en1992.mutation.change_stud_row_angle;
+message ChangeStudRowAngle {
+  string member_id = 1;
+  string stud_row_id = 2;
+  double new_angle = 3;
+}

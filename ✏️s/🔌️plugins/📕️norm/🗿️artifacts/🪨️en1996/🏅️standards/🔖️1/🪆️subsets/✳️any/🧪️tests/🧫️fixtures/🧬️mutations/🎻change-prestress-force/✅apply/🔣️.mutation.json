@@ -1,0 +1,7 @@
+{
+  "ChangePrestressForce": {
+    "wallId": "wall-north",
+    "id": "tendon-1",
+    "newForceN": 90000.0
+  }
+}

@@ -18,8 +18,8 @@
           "de": "Bauteiltyp für Temperatureinwirkungen"
         },
         "description": {
-          "en": "building, bridge1, bridge2 or bridge3.",
-          "de": "building (Gebäudebauteil), bridge1, bridge2 oder bridge3 (Brückentyp 1 bis 3)."
+          "en": "building or bridge (the deck type comes from the bridge type field).",
+          "de": "building (Gebäudebauteil) oder bridge (Brückenüberbau, Typ aus dem Brückentyp-Feld)."
         },
         "group": "thermal",
         "order": 10

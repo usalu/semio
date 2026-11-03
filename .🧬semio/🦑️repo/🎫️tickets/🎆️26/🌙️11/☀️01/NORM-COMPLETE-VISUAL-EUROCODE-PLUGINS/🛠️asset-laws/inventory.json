@@ -1,0 +1,476 @@
+{
+ "⚖️en1990": [
+  {
+   "mod": "accidental_seismic_compliant",
+   "dir": "🏢️accidental-seismic-compliant",
+   "inc": [
+    "/home/deck/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🏢️accidental-seismic-compliant/🏢️accidental-seismic-compliant/🗣️.dsl.semio"
+   ],
+   "label": [
+    "Accidental Seismic Compliant",
+    "Außergewöhnlich/Erdbeben — konform"
+   ],
+   "ts": null,
+   "listed": true
+  },
+  {
+   "mod": "accidental_seismic_failing",
+   "dir": "🏢️accidental-seismic-failing",
+   "inc": [
+    "/home/deck/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🏢️accidental-seismic-failing/🏢️accidental-seismic-failing/🗣️.dsl.semio"
+   ],
+   "label": [
+    "Accidental Seismic Failing",
+    "Außergewöhnlich/Erdbeben — nicht konform"
+   ],
+   "ts": null,
+   "listed": true
+  },
+  {
+   "mod": "fatigue_compliant",
+   "dir": "🏢️fatigue-compliant",
+   "inc": [
+    "/home/deck/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🏢️fatigue-compliant/🏢️fatigue-compliant/🗣️.dsl.semio"
+   ],
+   "label": [
+    "Fatigue Compliant",
+    "Ermüdung — konform"
+   ],
+   "ts": null,
+   "listed": true
+  },
+  {
+   "mod": "fatigue_failing",
+   "dir": "🏢️fatigue-failing",
+   "inc": [
+    "/home/deck/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🏢️fatigue-failing/🏢️fatigue-failing/🗣️.dsl.semio"
+   ],
+   "label": [
+    "Fatigue Failing",
+    "Ermüdung — nicht konform"
+   ],
+   "ts": null,
+   "listed": true
+  },
+  {
+   "mod": "high_consequence_office",
+   "dir": "🏢️high-consequence-office",
+   "inc": [
+    "/home/deck/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🏢️high-consequence-office/🏢️high-consequence-office/🗣️.dsl.semio"
+   ],
+   "label": [
+    "High Consequence Office",
+    "Büro mit hoher Schadensfolge"
+   ],
+   "ts": [
+    "High Consequence Office",
+    "Büro mit hoher Schadensfolge"
+   ],
+   "listed": true
+  },
+  {
+   "mod": "road_bridge_compliant",
+   "dir": "🏢️road-bridge-compliant",
+   "inc": [
+    "/home/deck/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🏢️road-bridge-compliant/🏢️road-bridge-compliant/🗣️.dsl.semio"
+   ],
+   "label": [
+    "Rail Bridge Compliant",
+    "Eisenbahnbrücke — konform"
+   ],
+   "ts": null,
+   "listed": true
+  },
+  {
+   "mod": "road_bridge_failing",
+   "dir": "🏢️road-bridge-failing",
+   "inc": [
+    "/home/deck/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🏢️road-bridge-failing/🏢️road-bridge-failing/🗣️.dsl.semio"
+   ],
+   "label": [
+    "Rail Bridge Failing",
+    "Eisenbahnbrücke — nicht konform"
+   ],
+   "ts": null,
+   "listed": true
+  }
+ ],
+ "🏋️en1991": [
+  {
+   "mod": "de_office_compliant",
+   "dir": "🏢️de-office-compliant",
+   "inc": [
+    "/home/deck/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🏢de-office-compliant/🏢de-office-compliant/🗣️.dsl.semio"
+   ],
+   "label": [
+    "DE Office Compliant",
+    "DE Büro konform"
+   ],
+   "ts": null,
+   "listed": true
+  },
+  {
+   "mod": "example_subjects",
+   "dir": "🧬️subjects",
+   "inc": [],
+   "label": null,
+   "ts": null,
+   "listed": false
+  },
+  {
+   "mod": "multi_fail_noncompliant",
+   "dir": "⚠️multi-fail-noncompliant",
+   "inc": [
+    "/home/deck/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/⚠️multi-fail-noncompliant/⚠️multi-fail-noncompliant/🗣️.dsl.semio"
+   ],
+   "label": [
+    "Multi-Fail Noncompliant",
+    "Mehrfachversagen nicht konform"
+   ],
+   "ts": null,
+   "listed": true
+  }
+ ],
+ "🏛️en1992": [
+  {
+   "mod": "compliant_office_frame",
+   "dir": "🏢️compliant-office-frame",
+   "inc": [
+    "/home/deck/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🏢compliant-office-frame/🏢compliant-office-frame/🗣️.dsl.semio"
+   ],
+   "label": [
+    "Compliant Office Frame",
+    "Konformes Bürotragwerk"
+   ],
+   "ts": null,
+   "listed": true
+  },
+  {
+   "mod": "failing_under_reinforced",
+   "dir": "❌️failing-under-reinforced",
+   "inc": [
+    "/home/deck/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/❌️failing-under-reinforced/❌️failing-under-reinforced/🗣️.dsl.semio"
+   ],
+   "label": [
+    "Failing Under-Reinforced",
+    "Unterbewehrtes Versagensbeispiel"
+   ],
+   "ts": null,
+   "listed": true
+  },
+  {
+   "mod": "liquid_retaining_fem_anchor",
+   "dir": "🛢️liquid-retaining-fem-anchor",
+   "inc": [
+    "/home/deck/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🛢️liquid-retaining-fem-anchor/🛢️liquid-retaining-fem-anchor/🗣️.dsl.semio"
+   ],
+   "label": [
+    "Liquid-retaining tank",
+    "Flüssigkeitsbehälter"
+   ],
+   "ts": [
+    "Liquid-Retaining FEM Anchor",
+    "Flüssigkeitsdichter Behälter mit FEM-Verankerung"
+   ],
+   "listed": true
+  }
+ ],
+ "🔩️en1993": [
+  {
+   "mod": "heb240_compliant",
+   "dir": "✅️heb240-compliant",
+   "inc": [
+    "/home/deck/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/✅️heb240-compliant/✅️heb240-compliant/🗣️.dsl.semio"
+   ],
+   "label": [
+    "HEB 240 Compliant Frame",
+    "HEB 240 konformer Rahmen"
+   ],
+   "ts": null,
+   "listed": true
+  },
+  {
+   "mod": "high_strength_connection",
+   "dir": "🔩️high-strength-connection",
+   "inc": [
+    "/home/deck/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🔩️high-strength-connection/🔩️high-strength-connection/🗣️.dsl.semio"
+   ],
+   "label": [
+    "Overloaded Steel Frame",
+    "Überlasteter Stahlrahmen"
+   ],
+   "ts": [
+    "High Strength Connection",
+    "Hochfester Anschluss"
+   ],
+   "listed": true
+  }
+ ],
+ "🧩️en1994": [
+  {
+   "mod": "composite_bridge_girder",
+   "dir": "🌉️composite-bridge-girder",
+   "inc": [
+    "/home/deck/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🌉️composite-bridge-girder/🌉️composite-bridge-girder/🗣️.dsl.semio"
+   ],
+   "label": [
+    "Composite Bridge Girder",
+    "Verbundbrückenträger"
+   ],
+   "ts": [
+    "Composite Bridge Girder",
+    "Verbundbrückenträger"
+   ],
+   "listed": true
+  },
+  {
+   "mod": "composite_floor_beam",
+   "dir": "🏢️composite-floor-beam",
+   "inc": [
+    "/home/deck/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🏢composite-floor-beam/🏢composite-floor-beam/🗣️.dsl.semio"
+   ],
+   "label": [
+    "Composite Floor Beam",
+    "Verbundträger Geschossdecke"
+   ],
+   "ts": null,
+   "listed": true
+  },
+  {
+   "mod": "composite_floor_beam_failing",
+   "dir": "🏢️composite-floor-beam-failing",
+   "inc": [
+    "/home/deck/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🏢composite-floor-beam-failing/🏢composite-floor-beam-failing/🗣️.dsl.semio"
+   ],
+   "label": [
+    "Failing Composite Floor Beam",
+    "Versagender Verbundträger Geschossdecke"
+   ],
+   "ts": null,
+   "listed": true
+  }
+ ],
+ "🪵️en1995": [
+  {
+   "mod": "glulam_floor_beam",
+   "dir": "🏠️glulam-floor-beam",
+   "inc": [
+    "/home/deck/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🏠️glulam-floor-beam/🏠️glulam-floor-beam/🗣️.dsl.semio"
+   ],
+   "label": [
+    "Compliant Glulam Floor Beam",
+    "Nachweisfähiger BSH-Deckenträger"
+   ],
+   "ts": [
+    "Compliant Glulam Floor Beam",
+    "Nachweisfähiger BSH-Deckenträger"
+   ],
+   "listed": false
+  },
+  {
+   "mod": "glulam_footbridge",
+   "dir": "🌉️glulam-footbridge",
+   "inc": [
+    "/home/deck/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🌉️glulam-footbridge/🌉️glulam-footbridge/🗣️.dsl.semio"
+   ],
+   "label": [
+    "Compliant Glulam Footbridge",
+    "Nachweisfähige BSH-Fußgängerbrücke"
+   ],
+   "ts": [
+    "Compliant Glulam Footbridge",
+    "Nachweisfähige BSH-Fußgängerbrücke"
+   ],
+   "listed": false
+  },
+  {
+   "mod": "multi_fail_timber",
+   "dir": "❌️multi-fail-timber",
+   "inc": [
+    "/home/deck/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/❌️multi-fail-timber/❌️multi-fail-timber/🗣️.dsl.semio"
+   ],
+   "label": [
+    "Non-Compliant Multi-Fail Timber",
+    "Nicht nachweisbarer Holzbau mit Mehrfachversagen"
+   ],
+   "ts": [
+    "Non-Compliant Multi-Fail Timber",
+    "Nicht nachweisbarer Holzbau mit Mehrfachversagen"
+   ],
+   "listed": false
+  },
+  {
+   "mod": "overloaded_footbridge",
+   "dir": "⚠️overloaded-footbridge",
+   "inc": [
+    "/home/deck/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/⚠️overloaded-footbridge/⚠️overloaded-footbridge/🗣️.dsl.semio"
+   ],
+   "label": [
+    "Non-Compliant Overloaded Footbridge",
+    "Nicht nachweisbare überlastete Fußgängerbrücke"
+   ],
+   "ts": [
+    "Non-Compliant Overloaded Footbridge",
+    "Nicht nachweisbare überlastete Fußgängerbrücke"
+   ],
+   "listed": false
+  }
+ ],
+ "🪨️en1996": [
+  {
+   "mod": "loadbearing_wall",
+   "dir": "🧱️loadbearing-wall",
+   "inc": [
+    "/home/deck/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🧱️loadbearing-wall/🧱️loadbearing-wall/🗣️.dsl.semio"
+   ],
+   "label": [
+    "Load-bearing Clay Wall",
+    "Tragende Ziegelwand"
+   ],
+   "ts": [
+    "Loadbearing Wall",
+    "Tragende Wand"
+   ],
+   "listed": true
+  },
+  {
+   "mod": "multi_fail_masonry",
+   "dir": "❌️multi-fail-masonry",
+   "inc": [
+    "/home/deck/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/❌️multi-fail-masonry/❌️multi-fail-masonry/🗣️.dsl.semio"
+   ],
+   "label": [
+    "Multi-fail Masonry Wall",
+    "Mauerwerkswand mit mehreren Versagen"
+   ],
+   "ts": null,
+   "listed": true
+  }
+ ],
+ "🌍️en1997": [
+  {
+   "mod": "compliant",
+   "dir": "🏗️compliant",
+   "inc": [
+    "/home/deck/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🏗️compliant/🗣️.dsl.semio"
+   ],
+   "label": [
+    "Compliant project",
+    "Konformes Projekt"
+   ],
+   "ts": null,
+   "listed": true
+  },
+  {
+   "mod": "demo",
+   "dir": "🎬️demo",
+   "inc": [
+    "/home/deck/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🎬️demo/🗣️.dsl.semio"
+   ],
+   "label": [
+    "Compliant geotechnical package",
+    "Konformes geotechnisches Paket"
+   ],
+   "ts": [
+    "Foundation Design Demo",
+    "Demonstration Gründungsnachweis"
+   ],
+   "listed": true
+  },
+  {
+   "mod": "noncompliant",
+   "dir": "🚨️noncompliant",
+   "inc": [
+    "/home/deck/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🚨noncompliant/🗣️.dsl.semio"
+   ],
+   "label": [
+    "Non-compliant project",
+    "Nicht konformes Projekt"
+   ],
+   "ts": null,
+   "listed": true
+  }
+ ],
+ "🫨️en1998": [
+  {
+   "mod": "seismic_multipart",
+   "dir": "🏢️seismic-multipart",
+   "inc": [
+    "/home/deck/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🏢️seismic-multipart/🏢️seismic-multipart/🗣️.dsl.semio"
+   ],
+   "label": null,
+   "ts": null,
+   "listed": true
+  },
+  {
+   "mod": "seismic_multipart_fail",
+   "dir": "⚠️seismic-multipart-fail",
+   "inc": [
+    "/home/deck/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/⚠️seismic-multipart-fail/⚠️seismic-multipart-fail/🗣️.dsl.semio"
+   ],
+   "label": null,
+   "ts": null,
+   "listed": true
+  },
+  {
+   "mod": "seismic_rc_frame",
+   "dir": "🏢️seismic-rc-frame",
+   "inc": [
+    "/home/deck/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🏢️seismic-rc-frame/🏢️seismic-rc-frame/🗣️.dsl.semio"
+   ],
+   "label": [
+    "Seismic RC frame (DE S_aP,R 1.5 m/s², compliant)",
+    "Erdbeben-Stahlbetonrahmen (DE S_aP,R 1,5 m/s², konform)"
+   ],
+   "ts": [
+    "Seismic RC Frame",
+    "Stahlbetonrahmen unter Erdbebeneinwirkung"
+   ],
+   "listed": true
+  },
+  {
+   "mod": "seismic_rc_frame_fail",
+   "dir": "⚠️seismic-rc-frame-fail",
+   "inc": [
+    "/home/deck/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/⚠️seismic-rc-frame-fail/⚠️seismic-rc-frame-fail/🗣️.dsl.semio"
+   ],
+   "label": [
+    "Seismic RC frame (DE S_aP,R 1.5 m/s², failing)",
+    "Erdbeben-Stahlbetonrahmen (DE S_aP,R 1,5 m/s², nicht konform)"
+   ],
+   "ts": null,
+   "listed": true
+  }
+ ],
+ "🪶️en1999": [
+  {
+   "mod": "aluminium_roof_purlin",
+   "dir": "🏠️aluminium-roof-purlin",
+   "inc": [
+    "/home/deck/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🏠️aluminium-roof-purlin/🏠️aluminium-roof-purlin/🗣️.dsl.semio"
+   ],
+   "label": [
+    "Aluminium roof purlin",
+    "Aluminium-Dachpfette"
+   ],
+   "ts": [
+    "Aluminium Roof Purlin",
+    "Aluminium-Dachpfette"
+   ],
+   "listed": true
+  },
+  {
+   "mod": "noncompliant_multi_fail",
+   "dir": "🏚️noncompliant-multi-fail",
+   "inc": [
+    "/home/deck/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🏚️noncompliant-multi-fail/🏚️noncompliant-multi-fail/🗣️.dsl.semio"
+   ],
+   "label": [
+    "Non-compliant aluminium beam",
+    "Nicht nachweisbarer Aluminiumträger"
+   ],
+   "ts": null,
+   "listed": true
+  }
+ ]
+}

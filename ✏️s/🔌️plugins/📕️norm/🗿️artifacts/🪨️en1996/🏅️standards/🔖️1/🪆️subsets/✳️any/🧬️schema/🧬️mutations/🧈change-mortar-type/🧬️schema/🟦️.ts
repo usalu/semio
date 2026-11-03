@@ -1,12 +1,12 @@
 /** 🧈 `change-mortar-type` wire twin: the leaf payload `ChangeMortarType`, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
- * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
+ * by `repo ./📜️script.ts schema twins generate`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
-import { normWireInteger, normWireObject, normWireRange, type NormWireReader, normWireRequired } from "@semio-tech/norm-js/registry/contract";
+import { normWireObject, normWireRequired, normWireString, type NormWireReader } from "@semio-tech/norm-js/registry/contract";
 import { type En1996MortarType, parseEn1996MortarType } from "../../../📸️snapshot/🟦️.ts";
 
 export interface ChangeMortarType {
-  index: number;
+  id: string;
   newMortarType: En1996MortarType;
 }
 
-export const parseChangeMortarType: NormWireReader<ChangeMortarType> = normWireObject<ChangeMortarType>({ index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), newMortarType: normWireRequired(parseEn1996MortarType) });
+export const parseChangeMortarType: NormWireReader<ChangeMortarType> = normWireObject<ChangeMortarType>({ id: normWireRequired(normWireString), newMortarType: normWireRequired(parseEn1996MortarType) });

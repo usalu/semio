@@ -1,0 +1,37 @@
+syntax = "proto3";
+package semio.norm.layoutprefs;
+
+enum SheetState { SHEET_STATE_COLLAPSED = 0; SHEET_STATE_HALF = 1; SHEET_STATE_FULL = 2; }
+
+message DockPrefs {
+  double left = 1;
+  double centre = 2;
+  double right = 3;
+  double left_split = 4;
+  double right_split = 5;
+  repeated string hidden = 6;
+}
+
+message TabletPrefs {
+  double viewport = 1;
+  repeated string side_tabs = 2;
+  string side_active = 3;
+}
+
+message MobilePrefs {
+  repeated string tabs = 1;
+  string active = 2;
+  SheetState sheet = 3;
+  double sheet_height = 4;
+}
+
+message LayoutPrefs {
+  DockPrefs dock = 1;
+  TabletPrefs tablet = 2;
+  MobilePrefs mobile = 3;
+}
+
+message DeviceSignal {
+  uint32 width_px = 1;
+  bool touch = 2;
+}

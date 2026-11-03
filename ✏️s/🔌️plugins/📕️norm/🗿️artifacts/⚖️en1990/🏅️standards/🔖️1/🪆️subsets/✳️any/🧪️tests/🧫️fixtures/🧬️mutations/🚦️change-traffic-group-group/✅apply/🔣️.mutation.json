@@ -1,0 +1,5 @@
+{
+  "mutation": "changeTrafficGroupGroup",
+  "id": "tra-1",
+  "newGroup": "GR1B"
+}

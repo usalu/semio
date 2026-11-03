@@ -1,0 +1,23 @@
+{
+  "artifact": "en1990",
+  "leaf": {
+    "kindSlug": "test",
+    "field": {
+      "name": "theory_mean",
+      "type": "f64",
+      "unit": "",
+      "label": {
+        "en": "Theory value g_rt(X_m) (0 = not given)",
+        "de": "Theoriewert g_rt(X_m) (0 = nicht angegeben)"
+      },
+      "doc": "📐 Resistance function g_rt evaluated at the mean values of the basic variables for the standard evaluation of Annex D.7.2; 0 = not given, the evaluation is then not run and no value is assumed.",
+      "precision": 3,
+      "step": 1,
+      "range": [
+        0,
+        1000000000000.0
+      ]
+    },
+    "default": 0.0
+  }
+}

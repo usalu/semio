@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/mutation/change-test-quantity/schema.json",
+  "title": "ChangeTestQuantity",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newQuantity"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeTestQuantity"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Test series",
+          "de": "Versuchsreihe"
+        },
+        "description": {
+          "en": "The test series this mutation addresses, by id.",
+          "de": "Das adressierte Element (Versuchsreihe), per Kennung."
+        },
+        "ref": {
+          "kind": "test-series"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newQuantity": {
+      "type": "string",
+      "x-semio-ui": {
+        "label": {
+          "en": "Quantity",
+          "de": "Größe"
+        },
+        "widget": "text",
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

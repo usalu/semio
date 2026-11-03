@@ -17,7 +17,7 @@ impl FixedKeySlot{
 pub struct FixedKeySlots<K,const N:usize>{keys:[Option<K>;N],generations:[u64;N],issuer:u64,len:usize}
 impl<K:Copy+Eq,const N:usize> FixedKeySlots<K,N>{
  /// 🌱️ Installation creates one fixed registry identity without a heap allocation.
- pub fn new()->Self{Self{keys:[None;N],generations:[0;N],issuer:NEXT_ISSUER.fetch_update(Ordering::Relaxed,Ordering::Relaxed,|value|value.checked_add(1)).expect("fixed registry issuer space exhausted"),len:0}}
+ pub fn new()->Self{Self{keys:[None;N],generations:[0;N],issuer:NEXT_ISSUER.try_update(Ordering::Relaxed,Ordering::Relaxed,|value|value.checked_add(1)).expect("fixed registry issuer space exhausted"),len:0}}
  /// 🔎️ Exact key lookup cannot alias another key through a hash bucket.
  pub fn lookup(&self,key:K)->Option<FixedKeySlot>{self.keys.iter().position(|current|*current==Some(key)).map(|index|FixedKeySlot{index,generation:self.generations[index],issuer:self.issuer})}
  /// 🧭️ Lends one declared position's exact key for bounded ownership scans.

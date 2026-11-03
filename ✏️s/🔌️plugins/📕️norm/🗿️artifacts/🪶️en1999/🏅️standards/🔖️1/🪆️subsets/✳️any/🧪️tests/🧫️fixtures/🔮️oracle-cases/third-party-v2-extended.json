@@ -1,0 +1,617 @@
+{
+  "$schema": "../../../../../../../../../🔮️oracles/🏃️harness/🧬️schema/🔣️.json",
+  "schemaVersion": 1,
+  "artifact": "en1999",
+  "annex": "de",
+  "cases": [
+    {
+      "id": "en1999.6.3.1.flexural-buckling-class-a-L2",
+      "check": "en1999.6.3.1.flexural-buckling",
+      "citation": {
+        "standard": "EN 1999-1-1",
+        "edition": "2004",
+        "clause": "6.3.1.2 Eq. 6.49 to 6.51 flexural buckling of an extruded I section, buckling curve parameters of Table 6.6",
+        "table": "6.6",
+        "annex": "en"
+      },
+      "inputs": {
+        "h": 0.2,
+        "b": 0.1,
+        "tf": 0.01,
+        "tw": 0.006,
+        "E": 70000000000.0,
+        "G": 27000000000.0,
+        "f_o": 240000000.0,
+        "gamma_M1": 1.1,
+        "L": 2.0,
+        "alpha": 0.2,
+        "lambda_0": 0.1
+      },
+      "expected": {
+        "A": {
+          "value": 0.0030799999999999938,
+          "unit": "m^2",
+          "profile": "method-spread-v1"
+        },
+        "Iz": {
+          "value": 1.6699066666666549e-06,
+          "unit": "m^4",
+          "profile": "method-spread-v1"
+        },
+        "N_cr": {
+          "value": 288423.0682679793,
+          "unit": "N",
+          "profile": "method-spread-v1"
+        },
+        "lambda": {
+          "value": 1.6009065547800678,
+          "unit": "1",
+          "profile": "method-spread-v1"
+        },
+        "chi": {
+          "value": 0.3319767258448969,
+          "unit": "1",
+          "profile": "method-spread-v1"
+        },
+        "N_b_Rd": {
+          "value": 223088.35976777025,
+          "unit": "N",
+          "profile": "method-spread-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sectionproperties",
+          "adapter": "sectionproperties",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1999.6.3.1.flexural-buckling-class-a-L4",
+      "check": "en1999.6.3.1.flexural-buckling",
+      "citation": {
+        "standard": "EN 1999-1-1",
+        "edition": "2004",
+        "clause": "6.3.1.2 Eq. 6.49 to 6.51 flexural buckling of an extruded I section, buckling curve parameters of Table 6.6",
+        "table": "6.6",
+        "annex": "en"
+      },
+      "inputs": {
+        "h": 0.2,
+        "b": 0.1,
+        "tf": 0.01,
+        "tw": 0.006,
+        "E": 70000000000.0,
+        "G": 27000000000.0,
+        "f_o": 240000000.0,
+        "gamma_M1": 1.1,
+        "L": 4.0,
+        "alpha": 0.2,
+        "lambda_0": 0.1
+      },
+      "expected": {
+        "A": {
+          "value": 0.0030799999999999938,
+          "unit": "m^2",
+          "profile": "method-spread-v1"
+        },
+        "Iz": {
+          "value": 1.6699066666666549e-06,
+          "unit": "m^4",
+          "profile": "method-spread-v1"
+        },
+        "N_cr": {
+          "value": 72105.76706699483,
+          "unit": "N",
+          "profile": "method-spread-v1"
+        },
+        "lambda": {
+          "value": 3.2018131095601357,
+          "unit": "1",
+          "profile": "method-spread-v1"
+        },
+        "chi": {
+          "value": 0.0914543616034914,
+          "unit": "1",
+          "profile": "method-spread-v1"
+        },
+        "N_b_Rd": {
+          "value": 61457.330997546094,
+          "unit": "N",
+          "profile": "method-spread-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sectionproperties",
+          "adapter": "sectionproperties",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1999.6.3.1.flexural-buckling-class-b-L4",
+      "check": "en1999.6.3.1.flexural-buckling",
+      "citation": {
+        "standard": "EN 1999-1-1",
+        "edition": "2004",
+        "clause": "6.3.1.2 Eq. 6.49 to 6.51 flexural buckling of an extruded I section, buckling curve parameters of Table 6.6",
+        "table": "6.6",
+        "annex": "en"
+      },
+      "inputs": {
+        "h": 0.2,
+        "b": 0.1,
+        "tf": 0.01,
+        "tw": 0.006,
+        "E": 70000000000.0,
+        "G": 27000000000.0,
+        "f_o": 240000000.0,
+        "gamma_M1": 1.1,
+        "L": 4.0,
+        "alpha": 0.32,
+        "lambda_0": 0.0
+      },
+      "expected": {
+        "A": {
+          "value": 0.0030799999999999938,
+          "unit": "m^2",
+          "profile": "method-spread-v1"
+        },
+        "Iz": {
+          "value": 1.6699066666666549e-06,
+          "unit": "m^4",
+          "profile": "method-spread-v1"
+        },
+        "N_cr": {
+          "value": 72105.76706699483,
+          "unit": "N",
+          "profile": "method-spread-v1"
+        },
+        "lambda": {
+          "value": 3.2018131095601357,
+          "unit": "1",
+          "profile": "method-spread-v1"
+        },
+        "chi": {
+          "value": 0.08791253116804099,
+          "unit": "1",
+          "profile": "method-spread-v1"
+        },
+        "N_b_Rd": {
+          "value": 59077.220944923414,
+          "unit": "N",
+          "profile": "method-spread-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sectionproperties",
+          "adapter": "sectionproperties",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1999.6.3.1.flexural-buckling-stocky-plateau",
+      "check": "en1999.6.3.1.flexural-buckling",
+      "citation": {
+        "standard": "EN 1999-1-1",
+        "edition": "2004",
+        "clause": "6.3.1.2 Eq. 6.49 to 6.51 flexural buckling of an extruded I section, buckling curve parameters of Table 6.6",
+        "table": "6.6",
+        "annex": "en"
+      },
+      "inputs": {
+        "h": 0.2,
+        "b": 0.1,
+        "tf": 0.01,
+        "tw": 0.006,
+        "E": 70000000000.0,
+        "G": 27000000000.0,
+        "f_o": 240000000.0,
+        "gamma_M1": 1.1,
+        "L": 0.8,
+        "alpha": 0.2,
+        "lambda_0": 0.1
+      },
+      "expected": {
+        "A": {
+          "value": 0.0030799999999999938,
+          "unit": "m^2",
+          "profile": "method-spread-v1"
+        },
+        "Iz": {
+          "value": 1.6699066666666549e-06,
+          "unit": "m^4",
+          "profile": "method-spread-v1"
+        },
+        "N_cr": {
+          "value": 1802644.1766748703,
+          "unit": "N",
+          "profile": "method-spread-v1"
+        },
+        "lambda": {
+          "value": 0.6403626219120272,
+          "unit": "1",
+          "profile": "method-spread-v1"
+        },
+        "chi": {
+          "value": 0.857157083676513,
+          "unit": "1",
+          "profile": "method-spread-v1"
+        },
+        "N_b_Rd": {
+          "value": 576009.5602306155,
+          "unit": "N",
+          "profile": "method-spread-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sectionproperties",
+          "adapter": "sectionproperties",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1999.6.3.2.ltb-class-2-L2",
+      "check": "en1999.6.3.2.ltb",
+      "citation": {
+        "standard": "EN 1999-1-1",
+        "edition": "2004",
+        "clause": "6.3.2.2 Eq. 6.56 to 6.58 lateral-torsional buckling with M_cr of a simply supported beam under uniform moment (fork supports)",
+        "table": "6.7",
+        "annex": "en"
+      },
+      "inputs": {
+        "h": 0.2,
+        "b": 0.1,
+        "tf": 0.01,
+        "tw": 0.006,
+        "E": 70000000000.0,
+        "G": 27000000000.0,
+        "f_o": 240000000.0,
+        "gamma_M1": 1.1,
+        "alpha_LT": 0.1,
+        "lambda_0": 0.6,
+        "k_s": 0.0,
+        "L": 2.0
+      },
+      "expected": {
+        "Iz": {
+          "value": 1.6699066666666549e-06,
+          "unit": "m^4",
+          "profile": "method-spread-v1"
+        },
+        "It": {
+          "value": 7.730849431626871e-08,
+          "unit": "m^4",
+          "profile": "method-spread-v1"
+        },
+        "Iw": {
+          "value": 1.5026237023652926e-08,
+          "unit": "m^6",
+          "profile": "method-spread-v1"
+        },
+        "M_cr": {
+          "value": 36750.2261321534,
+          "unit": "N*m",
+          "profile": "method-spread-v1"
+        },
+        "lambda_LT": {
+          "value": 1.1705930834007854,
+          "unit": "1",
+          "profile": "method-spread-v1"
+        },
+        "chi_LT": {
+          "value": 0.6518196254960106,
+          "unit": "1",
+          "profile": "method-spread-v1"
+        },
+        "M_b_Rd": {
+          "value": 29840.539480526062,
+          "unit": "N*m",
+          "profile": "method-spread-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sectionproperties",
+          "adapter": "sectionproperties",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1999.6.3.2.ltb-class-2-L4",
+      "check": "en1999.6.3.2.ltb",
+      "citation": {
+        "standard": "EN 1999-1-1",
+        "edition": "2004",
+        "clause": "6.3.2.2 Eq. 6.56 to 6.58 lateral-torsional buckling with M_cr of a simply supported beam under uniform moment (fork supports)",
+        "table": "6.7",
+        "annex": "en"
+      },
+      "inputs": {
+        "h": 0.2,
+        "b": 0.1,
+        "tf": 0.01,
+        "tw": 0.006,
+        "E": 70000000000.0,
+        "G": 27000000000.0,
+        "f_o": 240000000.0,
+        "gamma_M1": 1.1,
+        "alpha_LT": 0.1,
+        "lambda_0": 0.6,
+        "k_s": 0.0,
+        "L": 4.0
+      },
+      "expected": {
+        "Iz": {
+          "value": 1.6699066666666549e-06,
+          "unit": "m^4",
+          "profile": "method-spread-v1"
+        },
+        "It": {
+          "value": 7.730849431626871e-08,
+          "unit": "m^4",
+          "profile": "method-spread-v1"
+        },
+        "Iw": {
+          "value": 1.5026237023652926e-08,
+          "unit": "m^6",
+          "profile": "method-spread-v1"
+        },
+        "M_cr": {
+          "value": 14046.086920848178,
+          "unit": "N*m",
+          "profile": "method-spread-v1"
+        },
+        "lambda_LT": {
+          "value": 1.8934693773237579,
+          "unit": "1",
+          "profile": "method-spread-v1"
+        },
+        "chi_LT": {
+          "value": 0.26585746356236994,
+          "unit": "1",
+          "profile": "method-spread-v1"
+        },
+        "M_b_Rd": {
+          "value": 12171.051357326729,
+          "unit": "N*m",
+          "profile": "method-spread-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sectionproperties",
+          "adapter": "sectionproperties",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1999.6.3.2.ltb-class-3-L6",
+      "check": "en1999.6.3.2.ltb",
+      "citation": {
+        "standard": "EN 1999-1-1",
+        "edition": "2004",
+        "clause": "6.3.2.2 Eq. 6.56 to 6.58 lateral-torsional buckling with M_cr of a simply supported beam under uniform moment (fork supports)",
+        "table": "6.7",
+        "annex": "en"
+      },
+      "inputs": {
+        "h": 0.2,
+        "b": 0.1,
+        "tf": 0.01,
+        "tw": 0.006,
+        "E": 70000000000.0,
+        "G": 27000000000.0,
+        "f_o": 240000000.0,
+        "gamma_M1": 1.1,
+        "alpha_LT": 0.2,
+        "lambda_0": 0.4,
+        "k_s": 0.0,
+        "L": 6.0
+      },
+      "expected": {
+        "Iz": {
+          "value": 1.6699066666666549e-06,
+          "unit": "m^4",
+          "profile": "method-spread-v1"
+        },
+        "It": {
+          "value": 7.730849431633949e-08,
+          "unit": "m^4",
+          "profile": "method-spread-v1"
+        },
+        "Iw": {
+          "value": 1.5026237023652768e-08,
+          "unit": "m^6",
+          "profile": "method-spread-v1"
+        },
+        "M_cr": {
+          "value": 8725.477522527362,
+          "unit": "N*m",
+          "profile": "method-spread-v1"
+        },
+        "lambda_LT": {
+          "value": 2.4023780963187362,
+          "unit": "1",
+          "profile": "method-spread-v1"
+        },
+        "chi_LT": {
+          "value": 0.16004600819657044,
+          "unit": "1",
+          "profile": "method-spread-v1"
+        },
+        "M_b_Rd": {
+          "value": 7326.964453787512,
+          "unit": "N*m",
+          "profile": "method-spread-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-sectionproperties",
+          "adapter": "sectionproperties",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-sympy",
+          "adapter": "sympy",
+          "kind": "independent-formulation"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1999.8.5.pin-bending-moment-equal-plates",
+      "check": "en1999.8.5.pin-bending-moment",
+      "citation": {
+        "standard": "EN 1999-1-1",
+        "edition": "2004",
+        "clause": "8.5.10 pin in double shear: design bending moment M_Ed = F (b + 4 c + 2 a) / 8 with uniform bearing pressures (EN 1993-1-8 Table 3.10 note)",
+        "annex": "en"
+      },
+      "inputs": {
+        "F": 50000.0,
+        "a": 0.02,
+        "b": 0.02,
+        "c": 0.002
+      },
+      "expected": {
+        "M_Ed": {
+          "value": 424.947928675106,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-anastruct",
+          "adapter": "anastruct",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-pynite",
+          "adapter": "pynite",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    },
+    {
+      "id": "en1999.8.5.pin-bending-moment-thick-inner",
+      "check": "en1999.8.5.pin-bending-moment",
+      "citation": {
+        "standard": "EN 1999-1-1",
+        "edition": "2004",
+        "clause": "8.5.10 pin in double shear: design bending moment M_Ed = F (b + 4 c + 2 a) / 8 with uniform bearing pressures (EN 1993-1-8 Table 3.10 note)",
+        "annex": "en"
+      },
+      "inputs": {
+        "F": 80000.0,
+        "a": 0.015,
+        "b": 0.04,
+        "c": 0.003
+      },
+      "expected": {
+        "M_Ed": {
+          "value": 819.8334076777189,
+          "unit": "N*m",
+          "profile": "numerical-v1"
+        }
+      },
+      "references": [
+        {
+          "oracle": "norm-eurocode-anastruct",
+          "adapter": "anastruct",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-pynite",
+          "adapter": "pynite",
+          "kind": "third-party-library"
+        },
+        {
+          "oracle": "norm-eurocode-scipy-numerics",
+          "adapter": "numerical",
+          "kind": "independent-formulation"
+        }
+      ]
+    }
+  ]
+}

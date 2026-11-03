@@ -1,4 +1,4 @@
-use crate::binary::mutations::*;
+use crate::binary::*;
 use semio_s_plugin_norm_compliance::AnnexChoice;
 use semio_s_artifact_norm_en1997_mut_design::change_annex;
 use semio_s_artifact_norm_en1997_model::En1997Snapshot;
@@ -17,7 +17,7 @@ async fn op_binary_round_trips_and_agrees_with_text() {
 
 #[semio_framework_async_macros::async_test]
 async fn document_text_round_trips_through_store() {
-    let envelope = store::os_store::document_materialize::create_document_envelope("norm.en1997/v1", "en1997", En1997Snapshot::default(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let envelope = store::os_store::document_materialize::create_document_envelope("norm.en1997/v1", "en1997", En1997Snapshot::example(semio_s_plugin_norm_compliance::AnnexChoice::De), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut store = store::os_store::test_support::plain_test_store(envelope).await;
     store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![sample_mutation()], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     store::os_store::test_support::assert_document_text_round_trip(&store).await;

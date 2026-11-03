@@ -1,0 +1,11 @@
+{
+  "InsertPier": {
+    "wallId": "wall-north",
+    "index": 1,
+    "pier": {
+      "id": "pier-2",
+      "positionM": 3.0,
+      "widthM": 0.9
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "mutation": "changeMemberWallLengthM",
+  "buildingId": "bldg-office",
+  "id": "col-c1",
+  "newWallLengthM": 1.5
+}

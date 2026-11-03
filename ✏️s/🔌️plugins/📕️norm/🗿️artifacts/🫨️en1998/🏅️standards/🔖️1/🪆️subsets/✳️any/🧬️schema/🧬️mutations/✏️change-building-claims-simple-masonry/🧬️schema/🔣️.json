@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1998/mutation/change-building-claims-simple-masonry/schema.json",
+  "title": "ChangeBuildingClaimsSimpleMasonry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newClaimsSimpleMasonry"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeBuildingClaimsSimpleMasonry"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Building",
+          "de": "Gebäude"
+        },
+        "description": {
+          "en": "The building this mutation addresses, by id.",
+          "de": "Das adressierte Element (Gebäude), per Kennung."
+        },
+        "ref": {
+          "kind": "building"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newClaimsSimpleMasonry": {
+      "type": "boolean",
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Claims simple masonry rules",
+          "de": "Einfache Mauerwerksregeln"
+        },
+        "group": "value",
+        "order": 20,
+        "widget": "toggle"
+      }
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "ChangeDiaphragmMethod": {
+    "diaphragmId": "diaphragm-1",
+    "newValue": "method-b"
+  }
+}

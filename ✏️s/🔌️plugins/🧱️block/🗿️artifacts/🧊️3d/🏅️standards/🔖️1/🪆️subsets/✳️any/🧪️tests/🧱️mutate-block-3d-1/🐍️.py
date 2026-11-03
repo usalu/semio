@@ -447,7 +447,7 @@ def identity_handler(ctx):
     extras, and answers with the whole document. This implementation additionally requires, in role,
     that it really is that document: a catalogue child, at least two local vortex kinds, a placed
     vortex bound to a kind the document declares, and a representation."""
-    uri = uri_in(ctx, "⬅️before")
+    uri = uri_in(ctx, "🔣️.before.json")
     committed = ctx.input_bytes(uri)
     document = json.loads(committed.decode("utf-8"))
     validate(document, "identity-round-trip")

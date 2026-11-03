@@ -1,0 +1,61 @@
+{
+  "annex": null,
+  "reliabilityClass": null,
+  "title": null,
+  "designWorkingLifeYears": null,
+  "deltaCDev": null,
+  "cementType": null,
+  "concreteGrades": null,
+  "reinforcementGrades": null,
+  "prestressSteels": null,
+  "members": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "member",
+        "patch": {
+          "labelEn": null,
+          "labelDe": null,
+          "kind": null,
+          "concreteGradeId": null,
+          "reinforcementGradeId": null,
+          "prestressSteelId": null,
+          "exposure": null,
+          "width": null,
+          "height": null,
+          "effectiveDepth": null,
+          "cover": null,
+          "span": null,
+          "support": null,
+          "bucklingLength": null,
+          "stirrups": null,
+          "punching": null,
+          "prestress": null,
+          "fire": null,
+          "useFem": null,
+          "udl": null,
+          "deflectionSensitive": null,
+          "tightness": null,
+          "hdOverH": null,
+          "liquidSigmaS": null,
+          "liquidRhoPEff": null,
+          "liquidFCtEff": null,
+          "liquidSRMax": null,
+          "bridgeSigmaC": null,
+          "bridgeDeltaSigmaS": null,
+          "relativeHumidity": null
+        }
+      }
+    ]
+  },
+  "anchors": null,
+  "placements": null,
+  "cases": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  }
+}

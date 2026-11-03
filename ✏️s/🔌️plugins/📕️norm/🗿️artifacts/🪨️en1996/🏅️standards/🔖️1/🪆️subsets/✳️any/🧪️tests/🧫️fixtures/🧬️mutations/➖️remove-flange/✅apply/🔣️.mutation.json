@@ -1,0 +1,6 @@
+{
+  "RemoveFlange": {
+    "wallId": "wall-north",
+    "id": "flange-1"
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1999/mutation/change-weld-run-t-junction/schema.json",
+  "title": "ChangeWeldRunTJunction",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "weldRunId",
+    "newTJunction"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeWeldRunTJunction"
+    },
+    "weldRunId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Weld run",
+          "de": "Schweißnaht"
+        },
+        "description": {
+          "en": "The weld run this mutation addresses, by id.",
+          "de": "Das adressierte Element (Schweißnaht), per Kennung."
+        },
+        "ref": {
+          "kind": "weld-run"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newTJunction": {
+      "type": "boolean",
+      "x-semio-ui": {
+        "label": {
+          "en": "T-junction weld",
+          "de": "Schweißnaht im T-Stoß"
+        },
+        "widget": "toggle",
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

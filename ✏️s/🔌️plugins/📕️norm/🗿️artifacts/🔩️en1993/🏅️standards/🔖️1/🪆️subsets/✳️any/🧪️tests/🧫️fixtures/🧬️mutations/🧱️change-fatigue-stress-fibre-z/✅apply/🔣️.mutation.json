@@ -1,0 +1,6 @@
+{
+  "ChangeFatigueStressFibreZ": {
+    "id": "fatigue-stress-1",
+    "newFibreZ": 1.1
+  }
+}

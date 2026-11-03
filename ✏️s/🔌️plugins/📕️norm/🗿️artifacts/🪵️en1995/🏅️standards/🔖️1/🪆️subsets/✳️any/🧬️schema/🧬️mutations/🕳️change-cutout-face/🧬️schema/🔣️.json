@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/mutation/change-cutout-face/schema.json",
+  "title": "ChangeCutoutFace",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cutoutId",
+    "newValue"
+  ],
+  "properties": {
+    "cutoutId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Cutout",
+          "de": "Ausschnitt"
+        },
+        "description": {
+          "en": "The cutout this mutation addresses.",
+          "de": "Das Element, das diese Mutation adressiert."
+        },
+        "ref": {
+          "kind": "cutout"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newValue": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1995/snapshot.json#/$defs/CutoutFace",
+      "x-semio-ui": {
+        "widget": "select",
+        "role": "value",
+        "label": {
+          "en": "Face",
+          "de": "Seite"
+        },
+        "group": "fields",
+        "order": 20
+      }
+    }
+  }
+}

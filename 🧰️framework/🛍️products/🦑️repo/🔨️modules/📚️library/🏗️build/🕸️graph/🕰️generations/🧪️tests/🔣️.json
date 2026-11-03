@@ -2280,11 +2280,7 @@
      "expect": {
       "built": true,
       "edges": [
-       "p0",
-       "p1",
-       "p2",
-       "p3",
-       "p5"
+       "p3"
       ],
       "full": [
        "p4"
@@ -2470,14 +2466,7 @@
     {
      "expect": {
       "built": true,
-      "edges": [
-       "p0",
-       "p1",
-       "p2",
-       "p3",
-       "p4",
-       "p5"
-      ],
+      "edges": [],
       "full": [
        "p6"
       ],
@@ -2686,12 +2675,9 @@
      "expect": {
       "built": true,
       "edges": [
-       "p0",
-       "p1",
        "p2",
        "p3",
-       "p4",
-       "p6"
+       "p4"
       ],
       "full": [],
       "generation": 9,
@@ -2850,13 +2836,7 @@
     {
      "expect": {
       "built": true,
-      "edges": [
-       "p0",
-       "p1",
-       "p2",
-       "p3",
-       "p4"
-      ],
+      "edges": [],
       "full": [
        "p6"
       ],
@@ -3623,10 +3603,7 @@
     {
      "expect": {
       "built": true,
-      "edges": [
-       "b",
-       "c"
-      ],
+      "edges": [],
       "full": [
        "a",
        "inner"
@@ -3837,8 +3814,6 @@
      "expect": {
       "built": true,
       "edges": [
-       "a",
-       "b",
        "inner"
       ],
       "full": [
@@ -3945,10 +3920,7 @@
     {
      "expect": {
       "built": true,
-      "edges": [
-       "b",
-       "c2"
-      ],
+      "edges": [],
       "full": [
        "a"
       ],
@@ -4276,6 +4248,456 @@
      "ops": []
     }
    ]
+  },
+  {
+   "name": "crate-manifest-without-owner",
+   "initial": {
+    "pkg/a/project.json": "{\"name\": \"a\", \"package\": \"@syn/a\", \"uses\": []}",
+    "pkg/a/src/index.ts": "import \"../../b/src/index\";\nexport const v=0;\n",
+    "pkg/b/project.json": "{\"name\": \"b\", \"package\": \"@syn/b\", \"uses\": []}",
+    "pkg/b/src/index.ts": "import \"@syn/a\";\nexport const v=0;\n",
+    "pkg/c/project.json": "{\"name\": \"c\", \"package\": \"@syn/c\", \"uses\": []}",
+    "pkg/c/src/index.ts": "import \"@syn/b\";\nexport const v=0;\n",
+    "shared/common.json": "{\"v\":1}"
+   },
+   "steps": [
+    {
+     "label": "cold",
+     "ops": [],
+     "expect": {
+      "built": true,
+      "edges": [],
+      "full": [
+       "a",
+       "b",
+       "c"
+      ],
+      "generation": 0,
+      "graph": {
+       "dependencies": [
+        {
+         "source": "a",
+         "sourceFile": "pkg/a/src/index.ts",
+         "target": "b",
+         "type": "static"
+        },
+        {
+         "source": "b",
+         "sourceFile": "pkg/b/src/index.ts",
+         "target": "a",
+         "type": "static"
+        },
+        {
+         "source": "c",
+         "sourceFile": "pkg/c/src/index.ts",
+         "target": "b",
+         "type": "static"
+        }
+       ],
+       "externalNodes": {},
+       "projects": {
+        "a": {
+         "name": "a",
+         "package": "@syn/a",
+         "root": "pkg/a",
+         "sources": [
+          {
+           "path": "pkg/a/src/index.ts",
+           "sha256": "3b7f889ceff1a23a464ac74f73572fccf28df03177f87c663a7cd43e6863e488"
+          }
+         ],
+         "uses": []
+        },
+        "b": {
+         "name": "b",
+         "package": "@syn/b",
+         "root": "pkg/b",
+         "sources": [
+          {
+           "path": "pkg/b/src/index.ts",
+           "sha256": "3af7ac9f96bd84ecbf4e0abe6cae05c5bad2367295b387764c0ba896fa71e293"
+          }
+         ],
+         "uses": []
+        },
+        "c": {
+         "name": "c",
+         "package": "@syn/c",
+         "root": "pkg/c",
+         "sources": [
+          {
+           "path": "pkg/c/src/index.ts",
+           "sha256": "80812d7215d3f90f06203058d6fe035bd461b042518cdb9d04e7a279299e1bc2"
+          }
+         ],
+         "uses": []
+        }
+       },
+       "unavailable": []
+      },
+      "label": "cold"
+     }
+    },
+    {
+     "label": "crate manifest without owner appears",
+     "ops": [
+      {
+       "op": "write",
+       "path": "pkg/x/Cargo.toml",
+       "content": "[package]\nname = \"x\"\n"
+      }
+     ],
+     "expect": {
+      "built": false,
+      "edges": [],
+      "full": [],
+      "generation": 1,
+      "graph": {
+       "dependencies": [
+        {
+         "source": "a",
+         "sourceFile": "pkg/a/src/index.ts",
+         "target": "b",
+         "type": "static"
+        },
+        {
+         "source": "b",
+         "sourceFile": "pkg/b/src/index.ts",
+         "target": "a",
+         "type": "static"
+        },
+        {
+         "source": "c",
+         "sourceFile": "pkg/c/src/index.ts",
+         "target": "b",
+         "type": "static"
+        }
+       ],
+       "externalNodes": {},
+       "projects": {
+        "a": {
+         "name": "a",
+         "package": "@syn/a",
+         "root": "pkg/a",
+         "sources": [
+          {
+           "path": "pkg/a/src/index.ts",
+           "sha256": "3b7f889ceff1a23a464ac74f73572fccf28df03177f87c663a7cd43e6863e488"
+          }
+         ],
+         "uses": []
+        },
+        "b": {
+         "name": "b",
+         "package": "@syn/b",
+         "root": "pkg/b",
+         "sources": [
+          {
+           "path": "pkg/b/src/index.ts",
+           "sha256": "3af7ac9f96bd84ecbf4e0abe6cae05c5bad2367295b387764c0ba896fa71e293"
+          }
+         ],
+         "uses": []
+        },
+        "c": {
+         "name": "c",
+         "package": "@syn/c",
+         "root": "pkg/c",
+         "sources": [
+          {
+           "path": "pkg/c/src/index.ts",
+           "sha256": "80812d7215d3f90f06203058d6fe035bd461b042518cdb9d04e7a279299e1bc2"
+          }
+         ],
+         "uses": []
+        }
+       },
+       "unavailable": []
+      },
+      "label": "crate manifest without owner appears"
+     }
+    },
+    {
+     "label": "pending crate manifest edited",
+     "ops": [
+      {
+       "op": "write",
+       "path": "pkg/x/Cargo.toml",
+       "content": "[package]\nname = \"x\"\nversion = \"0.1.0\"\n"
+      }
+     ],
+     "expect": {
+      "built": false,
+      "edges": [],
+      "full": [],
+      "generation": 1,
+      "graph": {
+       "dependencies": [
+        {
+         "source": "a",
+         "sourceFile": "pkg/a/src/index.ts",
+         "target": "b",
+         "type": "static"
+        },
+        {
+         "source": "b",
+         "sourceFile": "pkg/b/src/index.ts",
+         "target": "a",
+         "type": "static"
+        },
+        {
+         "source": "c",
+         "sourceFile": "pkg/c/src/index.ts",
+         "target": "b",
+         "type": "static"
+        }
+       ],
+       "externalNodes": {},
+       "projects": {
+        "a": {
+         "name": "a",
+         "package": "@syn/a",
+         "root": "pkg/a",
+         "sources": [
+          {
+           "path": "pkg/a/src/index.ts",
+           "sha256": "3b7f889ceff1a23a464ac74f73572fccf28df03177f87c663a7cd43e6863e488"
+          }
+         ],
+         "uses": []
+        },
+        "b": {
+         "name": "b",
+         "package": "@syn/b",
+         "root": "pkg/b",
+         "sources": [
+          {
+           "path": "pkg/b/src/index.ts",
+           "sha256": "3af7ac9f96bd84ecbf4e0abe6cae05c5bad2367295b387764c0ba896fa71e293"
+          }
+         ],
+         "uses": []
+        },
+        "c": {
+         "name": "c",
+         "package": "@syn/c",
+         "root": "pkg/c",
+         "sources": [
+          {
+           "path": "pkg/c/src/index.ts",
+           "sha256": "80812d7215d3f90f06203058d6fe035bd461b042518cdb9d04e7a279299e1bc2"
+          }
+         ],
+         "uses": []
+        }
+       },
+       "unavailable": []
+      },
+      "label": "pending crate manifest edited"
+     }
+    },
+    {
+     "label": "owner registered for the crate",
+     "ops": [
+      {
+       "op": "write",
+       "path": "pkg/x/Cargo.toml",
+       "content": "[package]\nname = \"x\"\n"
+      },
+      {
+       "op": "write",
+       "path": "pkg/x/project.json",
+       "content": "{\"name\": \"x\", \"package\": \"@syn/x\", \"uses\": []}"
+      },
+      {
+       "op": "write",
+       "path": "pkg/x/src/index.ts",
+       "content": "import \"@syn/a\";\nexport const v=0;\n"
+      }
+     ],
+     "expect": {
+      "built": true,
+      "edges": [],
+      "full": [
+       "x"
+      ],
+      "generation": 2,
+      "graph": {
+       "dependencies": [
+        {
+         "source": "a",
+         "sourceFile": "pkg/a/src/index.ts",
+         "target": "b",
+         "type": "static"
+        },
+        {
+         "source": "b",
+         "sourceFile": "pkg/b/src/index.ts",
+         "target": "a",
+         "type": "static"
+        },
+        {
+         "source": "c",
+         "sourceFile": "pkg/c/src/index.ts",
+         "target": "b",
+         "type": "static"
+        },
+        {
+         "source": "x",
+         "sourceFile": "pkg/x/src/index.ts",
+         "target": "a",
+         "type": "static"
+        }
+       ],
+       "externalNodes": {},
+       "projects": {
+        "a": {
+         "name": "a",
+         "package": "@syn/a",
+         "root": "pkg/a",
+         "sources": [
+          {
+           "path": "pkg/a/src/index.ts",
+           "sha256": "3b7f889ceff1a23a464ac74f73572fccf28df03177f87c663a7cd43e6863e488"
+          }
+         ],
+         "uses": []
+        },
+        "b": {
+         "name": "b",
+         "package": "@syn/b",
+         "root": "pkg/b",
+         "sources": [
+          {
+           "path": "pkg/b/src/index.ts",
+           "sha256": "3af7ac9f96bd84ecbf4e0abe6cae05c5bad2367295b387764c0ba896fa71e293"
+          }
+         ],
+         "uses": []
+        },
+        "c": {
+         "name": "c",
+         "package": "@syn/c",
+         "root": "pkg/c",
+         "sources": [
+          {
+           "path": "pkg/c/src/index.ts",
+           "sha256": "80812d7215d3f90f06203058d6fe035bd461b042518cdb9d04e7a279299e1bc2"
+          }
+         ],
+         "uses": []
+        },
+        "x": {
+         "name": "x",
+         "package": "@syn/x",
+         "root": "pkg/x",
+         "sources": [
+          {
+           "path": "pkg/x/src/index.ts",
+           "sha256": "3af7ac9f96bd84ecbf4e0abe6cae05c5bad2367295b387764c0ba896fa71e293"
+          }
+         ],
+         "uses": []
+        }
+       },
+       "unavailable": []
+      },
+      "label": "owner registered for the crate"
+     }
+    },
+    {
+     "label": "final no-op",
+     "ops": [],
+     "expect": {
+      "built": false,
+      "edges": [],
+      "full": [],
+      "generation": 2,
+      "graph": {
+       "dependencies": [
+        {
+         "source": "a",
+         "sourceFile": "pkg/a/src/index.ts",
+         "target": "b",
+         "type": "static"
+        },
+        {
+         "source": "b",
+         "sourceFile": "pkg/b/src/index.ts",
+         "target": "a",
+         "type": "static"
+        },
+        {
+         "source": "c",
+         "sourceFile": "pkg/c/src/index.ts",
+         "target": "b",
+         "type": "static"
+        },
+        {
+         "source": "x",
+         "sourceFile": "pkg/x/src/index.ts",
+         "target": "a",
+         "type": "static"
+        }
+       ],
+       "externalNodes": {},
+       "projects": {
+        "a": {
+         "name": "a",
+         "package": "@syn/a",
+         "root": "pkg/a",
+         "sources": [
+          {
+           "path": "pkg/a/src/index.ts",
+           "sha256": "3b7f889ceff1a23a464ac74f73572fccf28df03177f87c663a7cd43e6863e488"
+          }
+         ],
+         "uses": []
+        },
+        "b": {
+         "name": "b",
+         "package": "@syn/b",
+         "root": "pkg/b",
+         "sources": [
+          {
+           "path": "pkg/b/src/index.ts",
+           "sha256": "3af7ac9f96bd84ecbf4e0abe6cae05c5bad2367295b387764c0ba896fa71e293"
+          }
+         ],
+         "uses": []
+        },
+        "c": {
+         "name": "c",
+         "package": "@syn/c",
+         "root": "pkg/c",
+         "sources": [
+          {
+           "path": "pkg/c/src/index.ts",
+           "sha256": "80812d7215d3f90f06203058d6fe035bd461b042518cdb9d04e7a279299e1bc2"
+          }
+         ],
+         "uses": []
+        },
+        "x": {
+         "name": "x",
+         "package": "@syn/x",
+         "root": "pkg/x",
+         "sources": [
+          {
+           "path": "pkg/x/src/index.ts",
+           "sha256": "3af7ac9f96bd84ecbf4e0abe6cae05c5bad2367295b387764c0ba896fa71e293"
+          }
+         ],
+         "uses": []
+        }
+       },
+       "unavailable": []
+      },
+      "label": "final no-op"
+     }
+    }
+   ],
+   "closures": []
   }
  ],
  "version": 1,

@@ -1,0 +1,6 @@
+{
+  "ChangeSiloPlanPerimeter": {
+    "id": "silo-1",
+    "newPlanPerimeter": 1.5
+  }
+}

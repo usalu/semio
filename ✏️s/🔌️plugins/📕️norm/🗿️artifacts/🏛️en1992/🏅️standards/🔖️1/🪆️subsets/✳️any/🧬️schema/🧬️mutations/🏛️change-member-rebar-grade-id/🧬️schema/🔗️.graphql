@@ -1,0 +1,4 @@
+type ChangeMemberRebarGradeId {
+  memberId: String!
+  newReinforcementGradeId: String!
+}

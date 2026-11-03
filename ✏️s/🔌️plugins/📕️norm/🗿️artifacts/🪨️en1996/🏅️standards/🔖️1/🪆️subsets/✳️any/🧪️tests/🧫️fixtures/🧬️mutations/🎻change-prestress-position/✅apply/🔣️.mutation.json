@@ -1,0 +1,7 @@
+{
+  "ChangePrestressPosition": {
+    "wallId": "wall-north",
+    "id": "tendon-1",
+    "newPositionM": 2.5
+  }
+}

@@ -6,6 +6,9 @@ use semio_framework_os_renderer_wgpu_shell_session::SessionCtx;
 use semio_framework_os_renderer_wgpu_shell_view_chrome::ChromeViewCtx;
 use ui_render::{DispatchEvent, ImeEvent, PointerInfo, TextEditTarget};
 
+#[path = "🖐️world-touch/🦀️.rs"]
+mod world_touch;
+
 //#region 📮️RuntimeMailbox
 //#region 🎮️AppInteractionState
 const TEXT_STREAM_CAPACITY: usize = 64;
@@ -42,6 +45,31 @@ pub struct AppInteractionState {
 }
 
 impl AppInteractionState {
+    /// 🖐️ How the touch lane behaves for the open app: the profile its plugin asks for on the device the shell last observed, the neutral default without an app.
+    pub fn touch_profile(&self) -> semio_framework::ShellTouchProfile {
+        self.shell.docs.session.as_ref().map_or_else(Default::default, |session| self.shell.dock.shell_hooks.touch_profile(&session.plugin_id))
+    }
+
+    /// ⏱️ The frame's clock for the touch lane: a finger held still past the long-press deadline becomes its additive press and asks the plugin for its long press without waiting for the next contact event. The gestures are queued on the settle lane (the frame cannot await), which drains them on the same frame.
+    pub fn poll_world_touch(&mut self) {
+        let mut gestures = Vec::new();
+        for (host_id, steps) in world_touch::due(app_now_ms()) {
+            let Some(state) = self.shell.surfaces.world3d_states.get_mut(&host_id) else { continue };
+            if let Err(fault) = world_touch::apply(state, &steps, &self.modifiers, &mut gestures) {
+                self.input.record_action_fault(fault);
+            }
+        }
+        if !gestures.is_empty() {
+            self.shell.settle.touch_gestures.extend(gestures);
+            self.shell.settle.owe_settle();
+        }
+    }
+
+    /// ⏰️ The wake-up deadline of the shell on the monotonic clock: `chrome` (the chrome and tutorial deadline) or the moment a held finger turns into a long press, whichever is earlier, so an idle app wakes exactly when the menu is due and never polls.
+    pub fn wake_deadline(chrome: Option<f64>, monotonic_now_seconds: f64, wall_now_ms: f64) -> Option<f64> {
+        world_touch::merge_wake(chrome, monotonic_now_seconds, wall_now_ms, world_touch::next_deadline_ms())
+    }
+
     pub fn start_text_operation(&mut self, stream: u64, declared_bytes: usize) -> Result<(), String> {
         if self.text_streams.iter().any(|entry| entry.is_some_and(|entry| entry.id == stream)) {
             return Err("text stream was already started".to_string());
@@ -169,6 +197,7 @@ impl AppInteractionState {
     /// exact search/find-Enter-activation this fn used to hand-duplicate around the sync call, so
     /// that duplication is gone, not just moved.
     pub async fn handle_key(&mut self, action: KeyAction, modifiers: PointerModifiers) {
+        self.shell.dock.shell_hooks.note_touch(false);
         if semio_framework_os_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::apply_focused_vfs_control_key(&action, &mut self.input) {
             return;
         }
@@ -221,6 +250,14 @@ impl AppInteractionState {
             self.input.pointer_y = y;
         }
         if pointer.kind == ui_render::PointerKind::Touch {
+            if let Some(target) = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::captured_scene_pointer(pointer.id).filter(|target| target.kind == semio_framework_ui_declaration::ui::SurfaceKind::World3d) {
+                let steps = world_touch::feed(&target.host_id, Default::default(), app_now_ms(), world_touch::Contact::Cancel);
+                if let Some(state) = self.shell.surfaces.world3d_states.get_mut(&target.host_id) {
+                    if let Err(fault) = world_touch::apply(state, &steps, &self.modifiers, &mut Vec::new()) {
+                        self.input.record_action_fault(fault);
+                    }
+                }
+            }
             if let Some(target) = semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::captured_scene_pointer(pointer.id) {
                 let outcome = match target.kind {
                     semio_framework_ui_declaration::ui::SurfaceKind::TiledMap => self
@@ -321,6 +358,7 @@ impl AppInteractionState {
         self.last_pointer_y = y;
         self.pointer_down = down;
         self.pointer_button = button;
+        self.shell.dock.shell_hooks.note_touch(pointer.kind == ui_render::PointerKind::Touch);
         self.modifiers = modifiers.clone();
         self.input.modifiers = modifiers.clone();
         self.input.pointer_x = x;
@@ -367,10 +405,18 @@ impl AppInteractionState {
             }
         }
         let host_id = &target.host_id;
+        let touch_profile = self.touch_profile();
+        let mut touch_gestures = Vec::new();
         let outcome = match target.kind {
-            SurfaceKind::World3d => {
-                self.shell.surfaces.world3d_states.get_mut(host_id).map(|state| enqueue_world3d_event(&mut state.selection, &mut state.authority, WorldInteractionIntent::pointer_button(x, y, down, button, &modifiers)).map(|_| ()).map_err(|_| semio_framework_ui_action::BoundedActionFault::ItemCredits))
-            }
+            SurfaceKind::World3d => self.shell.surfaces.world3d_states.get_mut(host_id).map(|state| {
+                if pointer.kind == ui_render::PointerKind::Touch {
+                    let contact = if down { world_touch::Contact::Down { id: pointer.id.0, x: f64::from(x), y: f64::from(y) } } else { world_touch::Contact::Up { id: pointer.id.0 } };
+                    let steps = world_touch::feed(host_id, touch_profile, app_now_ms(), contact);
+                    world_touch::apply(state, &steps, &modifiers, &mut touch_gestures)
+                } else {
+                    enqueue_world3d_event(&mut state.selection, &mut state.authority, WorldInteractionIntent::pointer_button(x, y, down, button, &modifiers)).map(|_| ()).map_err(|_| semio_framework_ui_action::BoundedActionFault::ItemCredits)
+                }
+            }),
             SurfaceKind::NodeGraph => {
                 let outcome = self.shell.surfaces.node_graph_states.get(host_id).filter(|surface| surface.window_id == target.window_id).map(|surface| {
                     if down {
@@ -426,6 +472,11 @@ impl AppInteractionState {
         if let Some(Err(fault)) = outcome {
             self.input.record_action_fault(fault);
         }
+        for (gesture, gx, gy) in touch_gestures {
+            if let Err(err) = PointerCtx::of(&mut self.shell).handle_touch_gesture(gesture, gx, gy).await {
+                log_debug(&format!("touch gesture failed: {err}"));
+            }
+        }
     }
 
     pub async fn handle_pointer_move(&mut self, pointer: ui_render::PointerInfo, x: f32, y: f32, down: bool, button: i16, modifiers: PointerModifiers) {
@@ -451,8 +502,19 @@ impl AppInteractionState {
             PointerCtx::of(&mut self.shell).handle_pointer_move_for(pointer.id, x, y, down, &mut self.input, &self.theme);
         }
         let world_id = target.as_ref().filter(|target| target.kind == SurfaceKind::World3d).map(|target| target.host_id.as_str());
+        let touch = pointer.kind == ui_render::PointerKind::Touch;
+        let touch_profile = self.touch_profile();
+        let mut touch_gestures = Vec::new();
         for (host_id, state) in self.shell.surfaces.world3d_states.iter_mut() {
             let intent = if Some(host_id.as_str()) == world_id {
+                if touch {
+                    let steps = world_touch::feed(host_id, touch_profile, app_now_ms(), world_touch::Contact::Move { id: pointer.id.0, x: f64::from(x), y: f64::from(y) });
+                    if let Err(fault) = world_touch::apply(state, &steps, &modifiers, &mut touch_gestures) {
+                        self.input.record_action_fault(fault);
+                        return;
+                    }
+                    continue;
+                }
                 WorldInteractionIntent::pointer_move(x, y, drag_dx, drag_dy, down, button, &modifiers)
             } else if world3d_hover_is_published(&state.selection) {
                 WorldInteractionIntent::pointer_leave(x, y)
@@ -462,6 +524,11 @@ impl AppInteractionState {
             if enqueue_world3d_event(&mut state.selection, &mut state.authority, intent).is_err() {
                 self.input.record_action_fault(semio_framework_ui_action::BoundedActionFault::ItemCredits);
                 return;
+            }
+        }
+        for (gesture, gx, gy) in touch_gestures {
+            if let Err(err) = PointerCtx::of(&mut self.shell).handle_touch_gesture(gesture, gx, gy).await {
+                log_debug(&format!("touch gesture failed: {err}"));
             }
         }
         for (host_id, surface) in &self.shell.surfaces.board2d_states {

@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1997/mutation/change-ground-reading-measurement/schema.json",
+  "title": "ChangeGroundReadingMeasurement",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "investigationId",
+    "id",
+    "newMeasurement"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeGroundReadingMeasurement"
+    },
+    "investigationId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Investigation",
+          "de": "Baugrunderkundung"
+        },
+        "description": {
+          "en": "The investigation this mutation addresses, by id.",
+          "de": "Die adressierte Zeile (Baugrunderkundung), per Kennung."
+        },
+        "ref": {
+          "kind": "investigation"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Investigation reading",
+          "de": "Erkundungsmesswert"
+        },
+        "description": {
+          "en": "The investigation reading this mutation addresses, by id.",
+          "de": "Die adressierte Zeile (Erkundungsmesswert), per Kennung."
+        },
+        "ref": {
+          "kind": "investigation-reading"
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "newMeasurement": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Reading value",
+          "de": "Messwert"
+        },
+        "widget": "stepper",
+        "precision": 2,
+        "step": 0.1,
+        "role": "measurement",
+        "group": "measurement",
+        "order": 30
+      }
+    }
+  }
+}

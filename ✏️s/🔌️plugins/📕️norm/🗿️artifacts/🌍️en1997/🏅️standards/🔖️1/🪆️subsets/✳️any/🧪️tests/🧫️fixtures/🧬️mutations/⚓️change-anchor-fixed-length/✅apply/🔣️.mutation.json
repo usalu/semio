@@ -1,0 +1,5 @@
+{
+  "mutation": "changeAnchorFixedLength",
+  "id": "anchor-A1",
+  "newFixedLength": 12.0
+}

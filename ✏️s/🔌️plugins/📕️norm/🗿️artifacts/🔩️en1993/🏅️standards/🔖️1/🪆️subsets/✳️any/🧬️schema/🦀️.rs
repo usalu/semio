@@ -8,7 +8,7 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
-use semio_s_artifact_norm_en1993_model::{BridgeFatigue, ColdFormedMember, CraneRunway, FatigueDetail, FireExposure, LoadCase, MemberAction, PlatedPanel, SiloShell, SteelJoint, SteelMaterial, SteelMember, SteelPile, SteelSection, TensionComponent, TowerLeg};
+use semio_s_artifact_norm_en1993_model::{BridgeFatigue, BucklingLength, BuiltUpMember, ColdFormedMember, CraneRunway, FastenedJoint, FatigueDetail, FatigueStress, FireExposure, FormingGain, FoundationBlock, FrameAction, FrameBar, FrameMemberBasis, FrameNode, HollowJoint, JointPlate, JointRow, LoadCase, MaterialDuctility, MemberAction, ParametricSection, Placement, PlatedPanel, Restraint, SiloShell, SteelJoint, SteelMaterial, SteelMember, SteelPile, SteelSection, Storey, TensionComponent, TowerLeg, WeldGroup};
 use semio_s_plugin_norm_compliance::AnnexChoice;
 use framework_schema::ArtifactSchema;
 use semio_s_artifact_norm_en1993_model::En1993Snapshot;
@@ -16,8 +16,8 @@ use semio_s_artifact_norm_en1993_model::En1993Snapshot;
 //#region 🔖️Artifact
 /// 🧬️ Full En1993 artifact state across the artifact and presence lanes.
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "test-support"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "test-support"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.norm.en1993")]
 pub struct En1993Artifact {
@@ -55,6 +55,40 @@ pub struct En1993Artifact {
     pub piles: Vec<SteelPile>,
     #[state(artifact)]
     pub crane_runways: Vec<CraneRunway>,
+    #[state(artifact)]
+    pub storeys: Vec<Storey>,
+    #[state(artifact)]
+    pub restraints: Vec<Restraint>,
+    #[state(artifact)]
+    pub built_up_members: Vec<BuiltUpMember>,
+    #[state(artifact)]
+    pub weld_groups: Vec<WeldGroup>,
+    #[state(artifact)]
+    pub parametric_sections: Vec<ParametricSection>,
+    #[state(artifact)]
+    pub hollow_joints: Vec<HollowJoint>,
+    #[state(artifact)]
+    pub joint_rows: Vec<JointRow>,
+    #[state(artifact)]
+    pub frame_nodes: Vec<FrameNode>,
+    #[state(artifact)]
+    pub frame_bars: Vec<FrameBar>,
+    #[state(artifact)]
+    pub placements: Vec<Placement>,
+    #[dsl(table)]
+    #[state(artifact)]
+    pub joint_plates: Vec<JointPlate>,
+    #[dsl(table)]
+    #[state(artifact)]
+    pub foundation_blocks: Vec<FoundationBlock>,
+    #[state(artifact)]
+    pub reliability_class: semio_s_plugin_norm_compliance::ReliabilityClass,
+    #[dsl(table)]
+    #[state(artifact)]
+    pub frame_actions: Vec<FrameAction>,
+    #[dsl(table)]
+    #[state(artifact)]
+    pub frame_member_bases: Vec<FrameMemberBasis>,
 }
 //#endregion 🔖️Artifact
 
@@ -64,6 +98,7 @@ impl En1993Artifact {
     pub fn to_snapshot(&self) -> En1993Snapshot {
         En1993Snapshot {
             annex: self.annex,
+            reliability_class: self.reliability_class,
             materials: self.materials.clone(),
             sections: self.sections.clone(),
             members: self.members.clone(),
@@ -80,6 +115,25 @@ impl En1993Artifact {
             tower_legs: self.tower_legs.clone(),
             piles: self.piles.clone(),
             crane_runways: self.crane_runways.clone(),
+            storeys: self.storeys.clone(),
+            restraints: self.restraints.clone(),
+            built_up_members: self.built_up_members.clone(),
+            weld_groups: self.weld_groups.clone(),
+            parametric_sections: self.parametric_sections.clone(),
+            hollow_joints: self.hollow_joints.clone(),
+            joint_rows: self.joint_rows.clone(),
+            frame_nodes: self.frame_nodes.clone(),
+            frame_bars: self.frame_bars.clone(),
+            placements: self.placements.clone(),
+            joint_plates: self.joint_plates.clone(),
+            foundation_blocks: self.foundation_blocks.clone(),
+            material_ductility: vec![],
+            forming_gains: vec![],
+            buckling_lengths: vec![],
+            fatigue_stresses: vec![],
+            frame_member_bases: self.frame_member_bases.clone(),
+            fastened_joints: vec![],
+            frame_actions: self.frame_actions.clone(),
         }
     }
 
@@ -87,6 +141,7 @@ impl En1993Artifact {
     pub fn from_snapshot(snapshot: En1993Snapshot) -> Self {
         Self {
             annex: snapshot.annex,
+            reliability_class: snapshot.reliability_class,
             materials: snapshot.materials,
             sections: snapshot.sections,
             members: snapshot.members,
@@ -103,6 +158,25 @@ impl En1993Artifact {
             tower_legs: snapshot.tower_legs,
             piles: snapshot.piles,
             crane_runways: snapshot.crane_runways,
+            storeys: snapshot.storeys,
+            restraints: snapshot.restraints,
+            built_up_members: snapshot.built_up_members,
+            weld_groups: snapshot.weld_groups,
+            parametric_sections: snapshot.parametric_sections,
+            hollow_joints: snapshot.hollow_joints,
+            joint_rows: snapshot.joint_rows,
+            frame_nodes: snapshot.frame_nodes,
+            frame_bars: snapshot.frame_bars,
+            placements: snapshot.placements,
+            joint_plates: snapshot.joint_plates,
+            foundation_blocks: snapshot.foundation_blocks,
+            material_ductility: vec![],
+            forming_gains: vec![],
+            buckling_lengths: vec![],
+            fatigue_stresses: vec![],
+            frame_member_bases: snapshot.frame_member_bases,
+            fastened_joints: vec![],
+            frame_actions: snapshot.frame_actions,
         }
     }
 }

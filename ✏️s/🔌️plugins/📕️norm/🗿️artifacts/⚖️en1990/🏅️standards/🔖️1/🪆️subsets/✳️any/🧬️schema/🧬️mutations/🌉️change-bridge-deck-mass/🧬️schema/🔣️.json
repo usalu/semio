@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1990/mutation/change-bridge-deck-mass/schema.json",
+  "title": "ChangeBridgeDeckMass",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "newDeckMass"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "changeBridgeDeckMass"
+    },
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Bridge serviceability",
+          "de": "Brückengebrauchstauglichkeit"
+        },
+        "description": {
+          "en": "The bridge serviceability this mutation addresses, by id.",
+          "de": "Das adressierte Element (Brückengebrauchstauglichkeit), per Kennung."
+        },
+        "ref": {
+          "kind": "bridge-sls"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newDeckMass": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Deck mass per length",
+          "de": "Deckmasse je Meter"
+        },
+        "widget": "stepper",
+        "precision": 0,
+        "step": 100,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

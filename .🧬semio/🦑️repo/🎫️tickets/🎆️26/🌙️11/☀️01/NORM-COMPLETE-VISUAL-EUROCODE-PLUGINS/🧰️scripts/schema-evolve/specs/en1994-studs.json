@@ -1,0 +1,103 @@
+{
+  "artifact": "en1994",
+  "collection": {
+    "name": "studs",
+    "entity": "Stud",
+    "emoji": "🔩",
+    "doc": "Headed shear stud of a composite beam (EN 1994-1-1 6.6): one row per stud with its position along the beam and its dimensions.",
+    "label": {
+      "en": "Shear studs",
+      "de": "Kopfbolzendübel"
+    },
+    "id": {
+      "en": "Stud ID",
+      "de": "Dübel-ID"
+    },
+    "singular": {
+      "en": "shear stud",
+      "de": "Kopfbolzendübel"
+    },
+    "kindSlug": "stud",
+    "fields": [
+      {
+        "name": "beam_id",
+        "type": "String",
+        "label": {
+          "en": "Beam",
+          "de": "Träger"
+        },
+        "doc": "🔗 Id of the composite beam the stud belongs to.",
+        "sample": "beam-B1",
+        "settable": false
+      },
+      {
+        "name": "x_m",
+        "type": "f64",
+        "unit": "m",
+        "label": {
+          "en": "Position x",
+          "de": "Position x"
+        },
+        "doc": "↔️ Position x [m] of the stud along the beam axis, measured from the start of the beam (the first support of its span layout).",
+        "sample": 0.0
+      },
+      {
+        "name": "diameter_m",
+        "type": "f64",
+        "unit": "m",
+        "label": {
+          "en": "Shank diameter",
+          "de": "Schaftdurchmesser"
+        },
+        "doc": "⌀ Shank diameter d [m] (EN 1994-1-1 6.6.3.1).",
+        "sample": 0.019
+      },
+      {
+        "name": "height_m",
+        "type": "f64",
+        "unit": "m",
+        "label": {
+          "en": "Overall height",
+          "de": "Gesamthöhe"
+        },
+        "doc": "↕️ Overall height h_sc [m] after welding.",
+        "sample": 0.095
+      },
+      {
+        "name": "f_u_pa",
+        "type": "f64",
+        "unit": "Pa",
+        "label": {
+          "en": "Ultimate strength",
+          "de": "Zugfestigkeit"
+        },
+        "doc": "💪 Specified ultimate tensile strength f_u [Pa], at most 500 MPa.",
+        "sample": 450000000.0
+      }
+    ]
+  },
+  "convert": {
+    "parent": "beams",
+    "field": "studs",
+    "rows": {
+      "count": "obj['totalCount']",
+      "values": {
+        "id": "{parent[id]}-stud-{i}",
+        "beamId": "{parent[id]}",
+        "xM": "=round(((get(parent, 'adjacentSpanM', 0) or parent['spanM']) if (parent['support'] == 'interiorSpan' or parent['support'] == 'cantilever') else 0) + parent['spanM'] / 2 + (i // min(max(obj['countPerRib'], 1), 3) - ((-(-obj['totalCount'] // min(max(obj['countPerRib'], 1), 3))) - 1) / 2) * obj['spacingM'], 9)",
+        "diameterM": "=obj['diameterM']",
+        "heightM": "=obj['heightM']",
+        "fUPa": "=obj['fUPa']"
+      }
+    },
+    "verify": [
+      "len(rows) == obj['totalCount']",
+      "all(r['diameterM'] == obj['diameterM'] and r['heightM'] == obj['heightM'] and r['fUPa'] == obj['fUPa'] for r in rows)",
+      "all(abs(rows[j]['xM'] - rows[j - min(max(obj['countPerRib'], 1), 3)]['xM'] - obj['spacingM']) < 1e-6 for j in range(min(max(obj['countPerRib'], 1), 3), len(rows)))",
+      "obj['totalCount'] % min(max(obj['countPerRib'], 1), 3) != 0 or len(rows) == 0 or abs(sum(r['xM'] for r in rows) / len(rows) - (((get(parent, 'adjacentSpanM', 0) or parent['spanM']) if (parent['support'] == 'interiorSpan' or parent['support'] == 'cantilever') else 0) + parent['spanM'] / 2)) < 1e-6"
+    ],
+    "dropped": [
+      "countPerRib"
+    ]
+  }
+}

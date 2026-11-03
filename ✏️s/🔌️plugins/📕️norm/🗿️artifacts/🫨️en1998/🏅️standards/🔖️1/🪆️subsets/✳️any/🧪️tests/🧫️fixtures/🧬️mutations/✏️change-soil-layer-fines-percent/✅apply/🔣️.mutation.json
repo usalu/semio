@@ -1,0 +1,5 @@
+{
+  "mutation": "changeSoilLayerFinesPercent",
+  "id": "sl-1",
+  "newFinesPercent": 20.0
+}

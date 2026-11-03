@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-rail-dynamic-determinant-length/schema.json",
+  "title": "ChangeRailDynamicDeterminantLength",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newDeterminantLength"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Rail span",
+          "de": "Eisenbahnfeld"
+        },
+        "description": {
+          "en": "The rail span this mutation addresses, by id.",
+          "de": "Das adressierte Element (Eisenbahnfeld), per Kennung."
+        },
+        "ref": {
+          "kind": "rail-dynamic"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newDeterminantLength": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Determinant length L_Φ",
+          "de": "Maßgebende Länge L_Φ"
+        },
+        "widget": "stepper",
+        "unit": "m",
+        "precision": 2,
+        "step": 1,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

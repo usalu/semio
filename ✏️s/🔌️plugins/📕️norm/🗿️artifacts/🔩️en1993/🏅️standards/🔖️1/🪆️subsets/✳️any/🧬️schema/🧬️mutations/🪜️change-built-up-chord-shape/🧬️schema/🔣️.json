@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-built-up-chord-shape/schema.json",
+  "title": "ChangeBuiltUpChordShape",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newChordShape"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Built-up member",
+          "de": "Zusammengesetzter Stab"
+        },
+        "description": {
+          "en": "The built-up member this mutation addresses, by id.",
+          "de": "Das adressierte Element (Zusammengesetzter Stab), per Kennung."
+        },
+        "ref": {
+          "kind": "built-up"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newChordShape": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/snapshot.json#/$defs/ChordShape",
+      "x-semio-ui": {
+        "label": {
+          "en": "Chord section outline shape (sharp-corner outline for I_t and I_w of the chord)",
+          "de": "Konturform des Gurtquerschnitts (scharfkantige Kontur für I_t und I_w des Gurts)"
+        },
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

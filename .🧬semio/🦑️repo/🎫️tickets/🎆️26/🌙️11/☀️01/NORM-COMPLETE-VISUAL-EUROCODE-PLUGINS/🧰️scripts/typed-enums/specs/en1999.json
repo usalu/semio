@@ -1,0 +1,31 @@
+{
+  "artifact": "en1999",
+  "conversions": [
+    {"hosts": ["AluminiumMaterial.product_form"], "enum": "ProductForm", "doc": "🏭️ Product form of EN 1999-1-1 Table 3.2.", "default": "ExtrudedProfile",
+     "variants": [["Sheet", ["sheet"], "Sheet, strip, plate", "Blech, Band, Platte"], ["ExtrudedProfile", ["extrudedProfile"], "Extruded profile (EP)", "Strangpressprofil (EP)"], ["ExtrudedTube", ["extrudedTube"], "Extruded tube (ET)", "Strangpressrohr (ET)"], ["ExtrudedBar", ["extrudedBar"], "Extruded rod/bar (ER/B)", "Strangpressstange (ER/B)"], ["DrawnTube", ["drawnTube"], "Drawn tube (DT)", "Gezogenes Rohr (DT)"], ["Forging", ["forging"], "Forging (FO)", "Schmiedestück (FO)"]]},
+    {"hosts": ["PlateElement.weld_process", "WeldRun.process"], "enum": "WeldProcess", "doc": "🔥 Welding process of a welded plate element or weld run (EN 1999-1-1 6.1.6).", "default": "Mig",
+     "variants": [["Mig", ["mig", ""], "MIG welding", "MIG-Schweißen"], ["Tig", ["tig"], "TIG welding", "WIG-Schweißen"]]},
+    {"hosts": ["PlateElement.weld_direction", "WeldRun.direction"], "enum": "WeldDirection", "doc": "🧵 Direction of a weld against the member axis (heat-affected zone pattern, EN 1999-1-1 6.1.6.2).", "default": "Longitudinal",
+     "variants": [["Longitudinal", ["longitudinal", ""], "Longitudinal weld (HAZ strips)", "Längsnaht (WEZ-Streifen)"], ["Transverse", ["transverse"], "Transverse weld (HAZ across the width)", "Quernaht (WEZ über die Breite)"]]},
+    {"hosts": ["AluminiumSection.kind"], "enum": "SectionKind", "doc": "📐 Kind of a cross-section: its shape family decides the resistance formulas and the outline.", "default": "ExtrudedI",
+     "variants": [["ExtrudedI", ["extrudedI"], "Extruded I-section", "Stranggepresstes I-Profil"], ["Channel", ["channel"], "Channel section", "U-Profil"], ["Angle", ["angle"], "Angle section", "Winkelprofil"], ["Rhs", ["rhs"], "Rectangular hollow section", "Rechteck-Hohlprofil"], ["Box", ["box"], "Box section", "Kastenprofil"], ["Chs", ["chs", "tube"], "Circular hollow section (CHS)", "Kreis-Hohlprofil (CHS)"], ["Free", ["free"], "Free outline (polygon with holes)", "Freier Umriss (Polygon mit Löchern)"]]},
+    {"hosts": ["AluminiumConnection.kind"], "enum": "ConnectionKind", "doc": "🔗 Kind of a connection (EN 1999-1-1 Section 8).", "default": "Combined",
+     "variants": [["Bolted", ["bolted"], "Bolted connection", "Schraubenverbindung"], ["Welded", ["welded"], "Welded connection", "Schweißverbindung"], ["Combined", ["combined"], "Combined bolted and welded", "Kombiniert geschraubt und geschweißt"], ["Pinned", ["pinned"], "Pin connection (double shear)", "Bolzenverbindung (zweischnittig)"]]},
+    {"hosts": ["MemberAction.kind"], "enum": "ActionKind", "doc": "🏋️ Kind of a characteristic action (EN 1990 4.1.1).", "default": "Permanent",
+     "variants": [["Permanent", ["permanent"], "Permanent (G)", "Ständig (G)"], ["Imposed", ["imposed"], "Imposed (Q)", "Nutzlast (Q)"], ["Snow", ["snow"], "Snow (S)", "Schnee (S)"], ["Wind", ["wind"], "Wind (W)", "Wind (W)"], ["Temperature", ["temperature"], "Temperature (T)", "Temperatur (T)"], ["Fire", ["fire"], "Fire", "Brand"]]},
+    {"hosts": ["MemberAction.category"], "enum": "ActionCategory", "doc": "🏷️ Category of an action for the combination factors psi (EN 1990 Table A1.1).", "default": "SelfWeight",
+     "variants": [["SelfWeight", ["self"], "Self-weight", "Eigengewicht"], ["Office", ["office"], "Office (B)", "Büro (B)"], ["Snow", ["snow"], "Snow", "Schnee"], ["Wind", ["wind"], "Wind", "Wind"]]},
+    {"hosts": ["MemberAction.source"], "enum": "ActionSource", "doc": "🧮 Source of the characteristic internal forces of an action.", "default": "Udl",
+     "variants": [["Udl", ["udl"], "Uniformly distributed line load", "Gleichmäßig verteilte Streckenlast"], ["External", ["external"], "Externally analysed characteristic effects", "Äußerlich ermittelte charakteristische Schnittgrößen"]]},
+    {"hosts": ["AluminiumShell.fabrication_class"], "enum": "FabricationClass", "doc": "🏗️ Fabrication quality class of a shell (EN 1999-1-5 Table 5.1).", "default": "B",
+     "variants": [["A", ["A"], "Class A (excellent)", "Klasse A (ausgezeichnet)"], ["B", ["B"], "Class B (high)", "Klasse B (hoch)"], ["C", ["C"], "Class C (normal)", "Klasse C (normal)"]]},
+    {"hosts": ["SectionVertex.ring"], "enum": "OutlineRing", "doc": "⭕ Ring of an outline vertex: the outer boundary or a hole.", "default": "Outer",
+     "variants": [["Outer", ["outer"], "Outer boundary", "Außenkontur"], ["Hole", ["hole"], "Hole", "Loch"]]},
+    {"hosts": ["PatchLoad.position"], "enum": "PatchLoadPosition", "doc": "📍 Position of a patch load along the girder (EN 1999-1-5 6).", "default": "Interior",
+     "variants": [["End", ["end"], "End (near support)", "Ende (nahe Auflager)"], ["Interior", ["interior"], "Interior", "Innen"]]},
+    {"hosts": ["TransverseStiffener.sides"], "enum": "StiffenerSides", "doc": "🦴 Sides of the web a transverse stiffener is welded to.", "default": "Two",
+     "variants": [["One", ["one"], "One-sided", "Einseitig"], ["Two", ["two"], "Two-sided", "Zweiseitig"]]},
+    {"hosts": ["FatigueCategory.detail_type"], "enum": "DetailType", "doc": "🔩 Type of a fatigue detail (EN 1999-1-3 Annex J).", "default": "Plain",
+     "variants": [["Plain", ["plain"], "Plain material", "Grundwerkstoff"], ["ButtWeld", ["butt-weld"], "Butt weld", "Stumpfnaht"], ["FilletWeld", ["fillet-weld"], "Fillet weld", "Kehlnaht"], ["Bolted", ["bolted"], "Bolted connection", "Schraubverbindung"], ["Riveted", ["riveted"], "Riveted connection", "Nietverbindung"], ["Other", ["other"], "Other detail", "Sonstiges Detail"]]}
+  ]
+}

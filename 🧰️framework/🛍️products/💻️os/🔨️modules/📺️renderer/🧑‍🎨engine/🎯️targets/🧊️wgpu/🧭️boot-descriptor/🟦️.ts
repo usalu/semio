@@ -276,6 +276,30 @@ export function resolveWgpuHostAppearance(view: { readonly localStorage?: Pick<S
 }
 // #endregion 🌓️HostAppearance
 
+// #region 🎛️HostPlatformPrefs
+/** 🎛️ The accessibility preferences of the platform, as the media queries the web reports them. Mirrors the Rust `ShellPlatformPrefs` of the shell hook seam (`🛂️manifest/🧱️app-surface/📱️shell-hooks/🧬️schema`), which the native winit host fills from the OS settings. */
+export type WgpuHostPlatformPrefs = { readonly forcedColors: boolean; readonly prefersContrastMore: boolean; readonly prefersDark: boolean; readonly prefersReducedMotion: boolean };
+
+/** 🎛️ The four media queries; `forced-colors` is the web's name for Windows high contrast and the Linux high-contrast themes. */
+export const WGPU_PLATFORM_PREFS_MEDIA_QUERIES = {
+  forcedColors: "(forced-colors: active)",
+  prefersContrastMore: "(prefers-contrast: more)",
+  prefersDark: WGPU_PREFERS_DARK_MEDIA_QUERY,
+  prefersReducedMotion: "(prefers-reduced-motion: reduce)",
+} as const;
+
+/** 🎛️ All four answers from one page realm; every answer is `false` where `matchMedia` is unavailable, so a host that cannot tell reports nothing special. */
+export function resolveWgpuHostPlatformPrefs(view: { readonly matchMedia?: (query: string) => MediaQueryList }): WgpuHostPlatformPrefs {
+  const asked = (query: string): boolean => view.matchMedia?.(query).matches ?? false;
+  return {
+    forcedColors: asked(WGPU_PLATFORM_PREFS_MEDIA_QUERIES.forcedColors),
+    prefersContrastMore: asked(WGPU_PLATFORM_PREFS_MEDIA_QUERIES.prefersContrastMore),
+    prefersDark: asked(WGPU_PLATFORM_PREFS_MEDIA_QUERIES.prefersDark),
+    prefersReducedMotion: asked(WGPU_PLATFORM_PREFS_MEDIA_QUERIES.prefersReducedMotion),
+  };
+}
+// #endregion 🎛️HostPlatformPrefs
+
 // #region ⌨️HostPlatform
 /** ⌨️ The host's own platform string, as React's `keybindingPlatformUsesMetaV1`
  * (`🖱️ui/🔨️modules/🔤️keybinding-text-interpretation/🟦️.ts`) reads it: `userAgentData.platform`

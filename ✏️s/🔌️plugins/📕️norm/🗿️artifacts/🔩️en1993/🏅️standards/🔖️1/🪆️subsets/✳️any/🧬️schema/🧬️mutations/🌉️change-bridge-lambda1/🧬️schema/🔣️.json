@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-bridge-lambda1/schema.json",
+  "title": "ChangeBridgeLambda1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newLambda1"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Bridge fatigue",
+          "de": "Brückenermüdung"
+        },
+        "description": {
+          "en": "The bridge fatigue this mutation addresses, by id.",
+          "de": "Das adressierte Element (Brückenermüdung), per Kennung."
+        },
+        "ref": {
+          "kind": "bridge"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newLambda1": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Damage factor λ_1 (from the curve)",
+          "de": "Schädigungsbeiwert λ_1 (aus Kurve)"
+        },
+        "widget": "stepper",
+        "unit": "1",
+        "precision": 3,
+        "step": 0.01,
+        "role": "value",
+        "group": "value",
+        "order": 20
+      },
+      "x-semio-rust": {
+        "name": "new_lambda_1"
+      }
+    }
+  }
+}

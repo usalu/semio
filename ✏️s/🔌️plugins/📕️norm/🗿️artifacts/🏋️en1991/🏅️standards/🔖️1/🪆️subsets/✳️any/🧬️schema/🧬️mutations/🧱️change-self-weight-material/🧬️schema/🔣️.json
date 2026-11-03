@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1991/mutation/change-self-weight-material/schema.json",
+  "title": "ChangeSelfWeightMaterial",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newMaterial"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Self-weight element",
+          "de": "Eigengewichtselement"
+        },
+        "description": {
+          "en": "The self-weight element this mutation addresses, by id.",
+          "de": "Das adressierte Element (Eigengewichtselement), per Kennung."
+        },
+        "ref": {
+          "kind": "self-weight-element"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newMaterial": {
+      "type": "string",
+      "x-semio-ui": {
+        "label": {
+          "en": "Material (EN 1991-1-1 Annex A)",
+          "de": "Baustoff (EN 1991-1-1 Anhang A)"
+        },
+        "widget": "text",
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

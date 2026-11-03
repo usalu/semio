@@ -1,0 +1,13 @@
+//! ↩️ `change-diaphragm-chord-area-m2` inverse: restores the previous `chord_area_m2`.
+
+use crate::change_diaphragm_chord_area_m2::ChangeDiaphragmChordAreaM2;
+use semio_s_artifact_norm_en1998_model::En1998Snapshot;
+
+pub fn inverse<Op>(payload: &ChangeDiaphragmChordAreaM2, base: &En1998Snapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> where Op: From<crate::change_diaphragm_chord_area_m2::ChangeDiaphragmChordAreaM2> {
+    Ok(previous(payload, base).map(|restore| vec![Op::from(restore)]).unwrap_or_default())
+}
+
+fn previous(payload: &ChangeDiaphragmChordAreaM2, base: &En1998Snapshot) -> Option<ChangeDiaphragmChordAreaM2> {
+    let r0 = base.diaphragms.iter().find(|row| row.id == payload.id)?;
+    Some(ChangeDiaphragmChordAreaM2 { id: payload.id.clone(), new_chord_area_m2: r0.chord_area_m2 })
+}

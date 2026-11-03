@@ -15,7 +15,12 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[features]
+test-support = ["dep:serde", "semio-s-artifact-norm-en1991-model/test-support", "semio-s-plugin-norm-compliance/test-support"]
+
 [dependencies]
+semio-s-artifact-norm-en1991-inferences-rail-silo = { workspace = true }
+serde = { workspace = true, optional = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-schema-composition = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }

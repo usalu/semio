@@ -1,0 +1,5 @@
+{
+  "mutation": "changeAssessmentStrpSpacingM",
+  "id": "as-1",
+  "newStirrupSpacingM": 1.5
+}

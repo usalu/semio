@@ -5,7 +5,77 @@
 use super::*;
 
 //#region ShellInput
+/// 🎯️ What [`ShellDockState::focus_window_of_kind`] did: raised a window that was open, or opened the window first.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum WindowKindFocus {
+    Raised { window_id: String },
+    Opened { window_id: String },
+}
+
+/// 📱️ The device class a window focus resolves against: the layout family the shell presents (a narrow viewport is mobile, otherwise the user's desktop or tablet preference).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum FocusDevice {
+    Desktop,
+    Mobile,
+    Tablet,
+}
+
+impl FocusDevice {
+    /// 🆔️ The device id a named layout is matched by, and the suffix of the vocabulary key `window.focus.device.<id>`.
+    pub fn id(self) -> &'static str {
+        match self {
+            Self::Desktop => "desktop",
+            Self::Mobile => "mobile",
+            Self::Tablet => "tablet",
+        }
+    }
+
+    /// 🌐️ The chrome vocabulary key naming the device in the interface language.
+    pub fn vocab_key(self) -> &'static str {
+        match self {
+            Self::Desktop => "window.focus.device.desktop",
+            Self::Mobile => "window.focus.device.mobile",
+            Self::Tablet => "window.focus.device.tablet",
+        }
+    }
+
+    /// 🔎️ The device of an id (`desktop`, `mobile`, `tablet`).
+    pub fn parse(id: &str) -> Option<Self> {
+        [Self::Desktop, Self::Mobile, Self::Tablet].into_iter().find(|device| device.id() == id)
+    }
+}
+
+/// 🪟️ The window kinds the layout `device` presents holds: the app's named layout whose id is the device id or ends in `-<device id>` (`norm-visual-mobile`); `None` when the app declares no layout for the device, which leaves every declared kind available.
+pub fn device_layout_window_kinds(layouts: &[semio_framework_ui_declaration::layout::NamedLayout], device: FocusDevice) -> Option<Vec<String>> {
+    let suffix = format!("-{}", device.id());
+    layouts.iter().find(|layout| layout.id == device.id() || layout.id.ends_with(&suffix)).map(|layout| semio_framework_ui_declaration::layout::collect_window_kind_ids_from_layout(&layout.layout))
+}
+
+/// 🎯️ The window kind a focus lands on for a device: `requested` when the device layout holds it (or declares no layout), else the `fallback` stand-in when the layout holds that, else `None` (the focus is refused as unavailable).
+pub fn resolve_device_window_kind(available: Option<&[String]>, requested: &str, fallback: Option<&str>) -> Option<String> {
+    let Some(available) = available else {
+        return Some(requested.to_string());
+    };
+    let holds = |kind: &str| available.iter().any(|candidate| candidate == kind);
+    if holds(requested) {
+        Some(requested.to_string())
+    } else {
+        fallback.filter(|kind| holds(kind)).map(str::to_string)
+    }
+}
+
 impl ShellDockState {
+    /// 📱️ The window kind a focus of `requested` lands on on `device` (see [`resolve_device_window_kind`]); a kind the app never declared passes through so [`Self::focus_window_of_kind`] refuses it with its own reason.
+    pub fn resolve_window_kind_for_device(&self, docs: &DocumentState, requested: &str, fallback: Option<&str>, device: FocusDevice) -> Option<String> {
+        let Some(session) = docs.session.as_ref() else {
+            return Some(requested.to_string());
+        };
+        if !session.app.window_kinds.iter().any(|kind| kind.id == requested) {
+            return Some(requested.to_string());
+        }
+        resolve_device_window_kind(device_layout_window_kinds(&session.app.named_layouts, device).as_deref(), requested, fallback)
+    }
+
     /// 🪟️ The body key one live window instance renders — the address a scoped refresh names a window
     /// by, resolved through the dock plan and the app's own window kinds.
     pub fn window_body_key(&self, window_id: &str, docs: &DocumentState) -> Option<String> {
@@ -132,6 +202,45 @@ impl ShellDockState {
         self.persist_dock_layout();
         windows.commit_window_topology_publication(&instance_id, &body_key, None, settle);
         true
+    }
+
+    /// 🎯️ Focuses the window of kind `window_kind_id`: the focused instance of that kind if it is mounted, else the first one, else it opens one as a split at the right of the mode root (the first instance carries the kind id as its id). The window becomes the active one of its stack and of the dock, the keyboard ring starts at it (no chrome stop keeps the focus) and the layout is remembered when a window was opened. Refuses with the reason when no app is mounted, the app never declared the kind or the topology queue is full; the caller announces the outcome.
+    ///
+    /// 🔗️ The ONE verb behind the `focusWindow` action ([`semio_framework::FOCUS_WINDOW_ACTION_ID`]) a chord, a menu row and the palette all raise.
+    pub fn focus_window_of_kind(&mut self, docs: &DocumentState, window_kind_id: &str, windows: &mut WindowState, settle: &mut SettleState) -> Result<WindowKindFocus, String> {
+        let Some(session) = docs.session.as_ref() else {
+            return Err("no mounted app owns a window of that kind".to_string());
+        };
+        let Some(body_key) = session.app.window_kinds.iter().find(|kind| kind.id == window_kind_id).map(|kind| kind.body_key.clone()) else {
+            return Err(format!("window kind {window_kind_id} is not declared by the app"));
+        };
+        let mounted: Vec<String> = self.dock.window_instances().into_iter().filter(|(_, kind_id)| kind_id == window_kind_id).map(|(window_id, _)| window_id).collect();
+        let existing = windows.active_window_id.clone().filter(|active| mounted.contains(active)).or_else(|| mounted.first().cloned());
+        let (window_id, opened) = match existing {
+            Some(window_id) => (window_id, false),
+            None => {
+                if !windows.window_topology_publication_has_credit() {
+                    return Err("the window topology queue is full".to_string());
+                }
+                if !self.dock.split_root_with_window(window_kind_id, semio_framework_os_renderer_wgpu_dock::DockSide::Right) {
+                    return Err(format!("window kind {window_kind_id} could not be opened"));
+                }
+                (window_kind_id.to_string(), true)
+            }
+        };
+        if let Some(path) = self.dock_stack_path_for(&window_id) {
+            self.dock.set_stack_active(&path, &window_id);
+        }
+        self.dock.sync_active_window(&window_id);
+        windows.active_window_id = Some(window_id.clone());
+        if opened {
+            self.persist_dock_layout();
+            windows.commit_window_topology_publication(&window_id, &body_key, None, settle);
+            return Ok(WindowKindFocus::Opened { window_id });
+        }
+        settle.owe_refresh(UiDirtyScope::Full);
+        settle.owe_settle();
+        Ok(WindowKindFocus::Raised { window_id })
     }
     //#endregion ⌨️ShellShortcutDispatch
 }

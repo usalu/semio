@@ -1,0 +1,6 @@
+{
+  "ChangePileShearArea": {
+    "id": "pile-1",
+    "newShearArea": 1.5
+  }
+}

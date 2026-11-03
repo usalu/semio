@@ -1,0 +1,35 @@
+{
+  "annex": null,
+  "reliabilityClass": "RC2",
+  "cases": {"removed": [], "inserted": [], "moved": [], "modified": []},
+  "structureKind": null,
+  "steelFYPa": null,
+  "beams": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": []
+  },
+  "columns": null,
+  "slabs": null,
+  "fireRating": null,
+  "insulationThicknessM": null,
+  "fatigueDetail": null,
+  "placements": {
+    "removed": [],
+    "inserted": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "beam-B1",
+        "patch": {
+          "x": null,
+          "y": 2.5,
+          "z": null,
+          "yaw": null
+        }
+      }
+    ]
+  },
+  "studs": null
+}

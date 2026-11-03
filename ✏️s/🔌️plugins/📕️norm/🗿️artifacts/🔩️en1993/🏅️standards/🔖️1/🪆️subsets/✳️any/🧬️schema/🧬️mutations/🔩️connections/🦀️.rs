@@ -21,10 +21,4 @@ pub mod remove_joint;
 pub mod remove_load_case;
 #[path = "../➖️remove-member-action/🦀️.rs"]
 pub mod remove_member_action;
-#[path = "../🔩️update-bolt-inputs/🦀️.rs"]
-pub mod update_bolt_inputs;
-#[path = "../⬜️update-hss-inputs/🦀️.rs"]
-pub mod update_hss_inputs;
-#[path = "../🧲️update-weld-inputs/🦀️.rs"]
-pub mod update_weld_inputs;
 //#endregion 🪢️Mounts

@@ -1,0 +1,4 @@
+type ChangeMemberBucklingLength {
+  memberId: String!
+  newValue: Float!
+}

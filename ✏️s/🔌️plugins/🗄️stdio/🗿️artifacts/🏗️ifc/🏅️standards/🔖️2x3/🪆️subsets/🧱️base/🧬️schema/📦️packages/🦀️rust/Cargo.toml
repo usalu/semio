@@ -47,6 +47,3 @@ semio-framework-pack-json = { path = "../../../../../../../../../../../../🧰�
 [dependencies.semio-s-artifact-stdio-ifc-declarations]
 path = "../../../../../../../📚️catalog/📦️packages/🦀️rust"
 
-[dependencies.semio-s-artifact-stdio-ifc2x3-catalog]
-path = "../../📚️catalog/📦️packages/🦀️rust"
-

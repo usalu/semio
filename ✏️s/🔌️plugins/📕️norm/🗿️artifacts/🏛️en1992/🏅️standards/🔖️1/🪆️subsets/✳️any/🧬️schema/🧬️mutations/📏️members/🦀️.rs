@@ -17,14 +17,6 @@ pub mod change_member_effective_depth;
 pub mod change_member_exposure;
 #[path = "../↕️change-member-height/🦀️.rs"]
 pub mod change_member_height;
-#[path = "../🌉️change-member-span/🦀️.rs"]
-pub mod change_member_span;
-#[path = "../↔️change-member-width/🦀️.rs"]
-pub mod change_member_width;
-#[path = "../➕️insert-member/🦀️.rs"]
-pub mod insert_member;
-#[path = "../➖️remove-member/🦀️.rs"]
-pub mod remove_member;
-#[path = "../🔀️reorder-members/🦀️.rs"]
-pub mod reorder_members;
 //#endregion 🪢️Mounts
+
+pub use semio_s_artifact_norm_en1992_mut_members_more::{change_member_span, change_member_width, insert_member, remove_member, change_member_order};

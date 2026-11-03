@@ -338,6 +338,9 @@
     ]
   },
   "lifecycle": {
+    "browserDependencies": [
+      "deps-js-all"
+    ],
     "setupDependencies": [
       "deps-js-all",
       "deps-python",

@@ -1,6 +1,7 @@
 syntax = "proto3";
+package semio.s.norm.en1992.mutation.change_bar_layer_count;
 message ChangeBarLayerCount {
-  string memberId = 1;
-  string layerId = 2;
-  uint32 newCount = 3;
+  string member_id = 1;
+  string layer_id = 2;
+  uint32 new_count = 3;
 }

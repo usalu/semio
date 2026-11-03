@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-fatigue-band-cycles/schema.json",
+  "title": "ChangeFatigueBandCycles",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "elementId",
+    "newCycles"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Fatigue band",
+          "de": "Ermüdungsband"
+        },
+        "description": {
+          "en": "The fatigue band this mutation addresses, by id.",
+          "de": "Das adressierte Element (Ermüdungsband), per Kennung."
+        },
+        "ref": {
+          "kind": "fatigue-band"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "elementId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Fatigue band",
+          "de": "Ermüdungsband"
+        },
+        "description": {
+          "en": "The fatigue band element this mutation addresses, by id.",
+          "de": "Das adressierte Element (Ermüdungsband), per Kennung."
+        },
+        "ref": {
+          "kind": "fatigue-band"
+        },
+        "group": "target",
+        "order": 15
+      }
+    },
+    "newCycles": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Number of cycles n_i",
+          "de": "Lastspielzahl n_i"
+        },
+        "widget": "stepper",
+        "precision": 0,
+        "step": 10000,
+        "snaps": [
+          2000000,
+          5000000,
+          100000000
+        ],
+        "role": "value",
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

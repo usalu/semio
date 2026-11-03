@@ -1,0 +1,5 @@
+{
+  "mutation": "changePileGroupColumns",
+  "id": "group-G1",
+  "newColumns": 3
+}

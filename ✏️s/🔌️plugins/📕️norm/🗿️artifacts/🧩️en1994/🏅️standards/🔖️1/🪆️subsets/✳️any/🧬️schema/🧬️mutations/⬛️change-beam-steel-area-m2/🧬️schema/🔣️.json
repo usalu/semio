@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1994/mutation/change-beam-steel-area-m2/schema.json",
+  "title": "ChangeBeamSteelAreaM2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newAM2"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Composite beam",
+          "de": "Verbundträger"
+        },
+        "description": {
+          "en": "The composite beam this mutation addresses, by id.",
+          "de": "Das adressierte Element (Verbundträger), per Kennung."
+        },
+        "ref": {
+          "kind": "beam"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newAM2": {
+      "type": "number",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Steel section area A",
+          "de": "Querschnittsfläche A des Stahlträgers"
+        },
+        "unit": "m2",
+        "step": 0.0001,
+        "precision": 6,
+        "group": "steel-section",
+        "order": 20
+      }
+    }
+  }
+}

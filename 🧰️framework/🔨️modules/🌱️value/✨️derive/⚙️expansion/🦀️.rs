@@ -134,7 +134,7 @@
 //! ToValue`/`impl FromValue` directly) rather than deriving. Also Deliberately NOT supported: tuple
 //! variants with more than one unnamed field.
 
-use quote::{quote, format_ident};
+use quote::{quote};
 use syn::{Data, DeriveInput, Fields};
 
 #[path = "🧭️typed-path/🦀️.rs"]
@@ -760,7 +760,7 @@ pub fn declared_send_only(input:&DeriveInput)->syn::Result<bool>{Ok(parse_contai
 /// 🏗️ Resolves the authored owner namespace of structural retained equality for an actual typed generator owner.
 pub fn declared_equality_crate(input:&DeriveInput)->syn::Result<syn::Path>{Ok(container_equality_path(&parse_container_attrs(&input.attrs)?))}
 #[path="../🛬️receive/🦀️.rs"]mod native_receiving;
-pub fn expand_native_receive(input:&syn::DeriveInput)->syn::Result<proc_macro2::TokenStream>{native_receiving::expand(input)}
+pub fn expand_native_receive(input:&DeriveInput)->syn::Result<proc_macro2::TokenStream>{native_receiving::expand(input)}
 
 /// 📦️ A defining owner explicitly opts into unique allocation field retirement.
 pub fn declared_boxed_original(input:&DeriveInput)->syn::Result<bool>{Ok(parse_container_attrs(&input.attrs)?.boxed_original)}

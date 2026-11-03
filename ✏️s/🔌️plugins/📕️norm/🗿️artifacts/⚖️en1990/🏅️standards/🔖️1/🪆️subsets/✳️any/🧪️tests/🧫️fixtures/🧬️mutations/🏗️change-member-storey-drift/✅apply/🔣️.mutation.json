@@ -1,0 +1,5 @@
+{
+  "mutation": "changeMemberStoreyDrift",
+  "id": "beam-B1",
+  "newStoreyDrift": 1.5
+}

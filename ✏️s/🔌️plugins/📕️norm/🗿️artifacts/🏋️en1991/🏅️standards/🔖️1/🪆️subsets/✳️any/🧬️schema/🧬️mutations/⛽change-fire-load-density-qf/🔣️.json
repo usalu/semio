@@ -7,7 +7,7 @@
   "aggregateVariant": "ChangeFireLoadDensityQf",
   "payloadSchema": "🧬️schema/🔣️.json",
   "textOpcode": null,
-  "binaryTag": 77,
+  "binaryTag": 44,
   "invertibility": "explicit-mutation",
   "diffParticipation": "detect",
   "outcomeClasses": [

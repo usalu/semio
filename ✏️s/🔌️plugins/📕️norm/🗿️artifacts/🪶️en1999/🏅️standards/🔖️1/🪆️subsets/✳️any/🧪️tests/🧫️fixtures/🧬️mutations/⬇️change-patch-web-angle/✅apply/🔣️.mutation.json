@@ -1,0 +1,5 @@
+{
+  "mutation": "changePatchWebAngle",
+  "patchLoadId": "patch-1",
+  "newWebAngle": 1.5
+}

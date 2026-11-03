@@ -1,0 +1,6 @@
+{
+  "ChangePlatedStiffenerEcc": {
+    "id": "pp-1",
+    "newStiffenerEccentricity": 1.5
+  }
+}

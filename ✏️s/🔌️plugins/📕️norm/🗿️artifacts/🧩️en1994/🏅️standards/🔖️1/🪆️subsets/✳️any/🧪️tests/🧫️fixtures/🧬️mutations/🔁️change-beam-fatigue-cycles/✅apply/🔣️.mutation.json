@@ -1,0 +1,6 @@
+{
+  "ChangeBeamFatigueCycles": {
+    "id": "beam-B1",
+    "newNCycles": 2500000.0
+  }
+}

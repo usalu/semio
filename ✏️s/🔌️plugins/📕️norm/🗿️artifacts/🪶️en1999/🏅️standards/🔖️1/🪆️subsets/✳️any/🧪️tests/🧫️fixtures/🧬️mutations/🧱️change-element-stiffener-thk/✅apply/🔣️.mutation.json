@@ -1,0 +1,6 @@
+{
+  "mutation": "changeElementStiffenerThk",
+  "sectionId": "sec-i120",
+  "elementId": "flange-top",
+  "newEdgeStiffenerThickness": 1.5
+}

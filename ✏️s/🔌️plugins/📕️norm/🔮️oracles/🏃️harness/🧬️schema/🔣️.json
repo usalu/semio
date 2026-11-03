@@ -1,0 +1,197 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.dev/norm/oracle-case.schema.json",
+  "title": "OracleCaseFile",
+  "description": "📐️ Language-agnostic Eurocode oracle case file: SI inputs, cited clause and edition, blessed expected quantities and the independent references that produced them.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "artifact",
+    "cases"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "artifact": {
+      "type": "string",
+      "pattern": "^en19(9[0-9])$"
+    },
+    "annex": {
+      "enum": [
+        "en",
+        "de"
+      ]
+    },
+    "seed": {
+      "type": "integer"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/case"
+      }
+    }
+  },
+  "$defs": {
+    "unit": {
+      "type": "string",
+      "pattern": "^(1|[A-Za-z]+(?:[*/^][A-Za-z0-9]+)*)$"
+    },
+    "citation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "standard",
+        "edition",
+        "clause"
+      ],
+      "properties": {
+        "standard": {
+          "type": "string",
+          "pattern": "^EN (199[0-9](-[0-9]+)*|338)$"
+        },
+        "edition": {
+          "type": "string",
+          "pattern": "^[0-9]{4}(\\+A[0-9]+:[0-9]{4})?$"
+        },
+        "clause": {
+          "type": "string",
+          "minLength": 1
+        },
+        "annex": {
+          "enum": [
+            "en",
+            "de"
+          ]
+        },
+        "table": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "reference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "oracle",
+        "adapter"
+      ],
+      "properties": {
+        "oracle": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+        },
+        "adapter": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+        },
+        "check": {
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "third-party-library",
+            "independent-formulation"
+          ]
+        }
+      }
+    },
+    "expectation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value",
+        "unit",
+        "profile"
+      ],
+      "properties": {
+        "value": {
+          "type": "number"
+        },
+        "unit": {
+          "$ref": "#/$defs/unit"
+        },
+        "profile": {
+          "enum": [
+            "closed-form-v1",
+            "eurocode-quantities-v1",
+            "numerical-v1",
+            "method-spread-v1",
+            "table-exact-v1"
+          ]
+        },
+        "tolerance": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "check",
+        "citation",
+        "inputs",
+        "expected",
+        "references"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^en19(9[0-9])\\.[A-Za-z0-9._-]+$"
+        },
+        "check": {
+          "type": "string",
+          "minLength": 1
+        },
+        "citation": {
+          "$ref": "#/$defs/citation"
+        },
+        "inputs": {
+          "type": "object",
+          "additionalProperties": {
+            "type": [
+              "number",
+              "string",
+              "boolean",
+              "array",
+              "object"
+            ]
+          }
+        },
+        "units": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/unit"
+          }
+        },
+        "expected": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "$ref": "#/$defs/expectation"
+          }
+        },
+        "references": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/reference"
+          }
+        }
+      }
+    }
+  }
+}

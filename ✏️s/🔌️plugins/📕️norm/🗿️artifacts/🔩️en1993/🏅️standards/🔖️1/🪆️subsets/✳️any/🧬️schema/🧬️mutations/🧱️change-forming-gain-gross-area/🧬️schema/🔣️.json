@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/norm/en1993/mutation/change-forming-gain-gross-area/schema.json",
+  "title": "ChangeFormingGainGrossArea",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "newGrossArea"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Forming gain",
+          "de": "Kaltverfestigung"
+        },
+        "description": {
+          "en": "The forming gain this mutation addresses, by id.",
+          "de": "Das adressierte Element (Kaltverfestigung), per Kennung."
+        },
+        "ref": {
+          "kind": "forming-gain"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "newGrossArea": {
+      "type": "number",
+      "x-semio-ui": {
+        "label": {
+          "en": "Gross area A_g",
+          "de": "Bruttoquerschnitt A_g"
+        },
+        "widget": "stepper",
+        "role": "value",
+        "group": "value",
+        "order": 20,
+        "unit": "m²",
+        "precision": 6,
+        "step": 1e-05
+      }
+    }
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "mutation": "changeBuildingSetbackRatio",
+  "id": "bldg-office",
+  "newSetbackRatio": 1.5
+}

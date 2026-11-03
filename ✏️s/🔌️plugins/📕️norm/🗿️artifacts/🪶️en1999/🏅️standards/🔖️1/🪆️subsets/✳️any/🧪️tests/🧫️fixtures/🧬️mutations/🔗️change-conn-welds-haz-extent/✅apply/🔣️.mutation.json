@@ -1,0 +1,5 @@
+{
+  "mutation": "changeConnWeldsHazExtent",
+  "connectionId": "support-weld",
+  "newWeldsHazExtent": 0.05
+}

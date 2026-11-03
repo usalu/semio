@@ -1,0 +1,5 @@
+{
+  "mutation": "changeRingX",
+  "ringStiffenerId": "ring-1",
+  "newX": 2.0
+}

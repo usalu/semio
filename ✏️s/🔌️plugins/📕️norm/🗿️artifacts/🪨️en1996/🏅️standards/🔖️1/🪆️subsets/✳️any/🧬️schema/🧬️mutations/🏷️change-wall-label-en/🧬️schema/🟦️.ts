@@ -1,11 +1,11 @@
 /** 🏷️ `change-wall-label-en` wire twin: the leaf payload `ChangeWallLabelEn`, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
- * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
+ * by `repo ./📜️script.ts schema twins generate`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
-import { normWireInteger, normWireObject, normWireRange, type NormWireReader, normWireRequired, normWireString } from "@semio-tech/norm-js/registry/contract";
+import { normWireObject, normWireRequired, normWireString, type NormWireReader } from "@semio-tech/norm-js/registry/contract";
 
 export interface ChangeWallLabelEn {
-  index: number;
+  id: string;
   newLabelEn: string;
 }
 
-export const parseChangeWallLabelEn: NormWireReader<ChangeWallLabelEn> = normWireObject<ChangeWallLabelEn>({ index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), newLabelEn: normWireRequired(normWireString) });
+export const parseChangeWallLabelEn: NormWireReader<ChangeWallLabelEn> = normWireObject<ChangeWallLabelEn>({ id: normWireRequired(normWireString), newLabelEn: normWireRequired(normWireString) });

@@ -12,6 +12,7 @@ PI = math.pi
 GAMMA_G = 1.35
 GAMMA_Q = 1.50
 XI = 0.85
+K_FI = {"RC1": 0.9, "RC2": 1.0, "RC3": 1.1}
 
 
 def chi(lambda_bar: float, alpha: float) -> float:
@@ -40,7 +41,7 @@ def critical_temperature(mu0: float) -> float:
 
 
 def combine_n(doc: dict) -> float:
-    """EN 1990 Eq. 6.10a/b governing |N| for the first member."""
+    """🔩️ EN 1990 Eq. 6.10a/b governing |N| for the first member."""
     mid = doc["members"][0]["id"]
     g = 0.0
     variables = []
@@ -50,15 +51,16 @@ def combine_n(doc: dict) -> float:
             continue
         lc = cases[row["loadCaseId"]]
         n = row["action"]["n"]
-        if lc["kind"] in ("permanent", "prestress"):
+        if lc["kind"].lower() in ("permanent", "prestress"):
             g += n
         else:
             variables.append(n)
+    k_fi = K_FI[doc["reliabilityClass"]]
     if not variables:
-        return abs(GAMMA_G * g)
+        return abs(k_fi * GAMMA_G * g)
     lead = variables[0]
-    a = abs(GAMMA_G * g + GAMMA_Q * lead)
-    b = abs(XI * GAMMA_G * g + GAMMA_Q * lead)
+    a = abs(k_fi * (GAMMA_G * g + GAMMA_Q * lead))
+    b = abs(k_fi * (XI * GAMMA_G * g + GAMMA_Q * lead))
     return max(a, b)
 
 

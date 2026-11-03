@@ -1,0 +1,35 @@
+# 🧩️ LayoutPrefs GraphQL twin, mirrors ./🦀️.rs. A persisted, local-only preference.
+enum SheetState { collapsed half full }
+
+type DockPrefs {
+  left: Float!
+  centre: Float!
+  right: Float!
+  leftSplit: Float!
+  rightSplit: Float!
+  hidden: [String!]!
+}
+
+type TabletPrefs {
+  viewport: Float!
+  sideTabs: [String!]!
+  sideActive: String!
+}
+
+type MobilePrefs {
+  tabs: [String!]!
+  active: String!
+  sheet: SheetState!
+  sheetHeight: Float!
+}
+
+type LayoutPrefs {
+  dock: DockPrefs!
+  tablet: TabletPrefs!
+  mobile: MobilePrefs!
+}
+
+type DeviceSignal {
+  widthPx: Int!
+  touch: Boolean!
+}

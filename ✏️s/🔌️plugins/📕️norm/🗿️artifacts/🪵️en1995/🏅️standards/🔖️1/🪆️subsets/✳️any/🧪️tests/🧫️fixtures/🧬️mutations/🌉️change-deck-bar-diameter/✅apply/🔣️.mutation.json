@@ -1,0 +1,6 @@
+{
+  "ChangeDeckBarDiameter": {
+    "deckId": "deck-1",
+    "newValue": 1.048
+  }
+}

@@ -1,0 +1,30 @@
+# Collection-adder (wave 2)
+
+Nothing compiled or run beyond Python (tool, self-test, SQLite replay). No git writes. Rebuild line is in `🗑️generated/build-en1991/latest.md`.
+
+## 1. Tool: new-collection template
+`🧰️scripts/field-adder/new_collection.py` + `specs/en1991-collections.json` (+ `specs/en1991-placements.json` ready for SCENE v2). Documented in `field-adder.md` under "New collections". Covers: model row, 5 twins (both schema dirs), id-keyed diff lane with local `Key` marker (rs + ts + json + graphql + proto), io imports, SQLite (DDL appended last, Rust + TS codecs, admission ids, Rust + TS tests, table bounds), contract by the replay method (the tool first reproduces the recorded 11760 bytes / 8 tables from the current DDL with python `sqlite3`, aborts otherwise), field-meta EN + DE, `[]` in 298 fixtures per collection, duplicate-id check, outline, incremental scope tag, kit (outliner / insert palette) row, leaf announcement text. Idempotent (`--self-test`: second run is a no-op, JSON parses, contract equals replay), path-guarded (< 256 bytes), crate budget respected (diff schema defs written one line per def: `semio-s-artifact-norm-en1991-diff` 3537 lines; no en1991 crate over 4000 in `source-boundary-scan.py`).
+
+## 2. SCENE v2
+Told in `📌️important/requests.md` ("from: collection-adder"). Their line shows en1990, en1996, en1997 done and en1991, en1993, en1994, en1995, en1998 open. I did not run placements on EN 1991; offer: `specs/en1991-placements.json` anchored on `roofSurfaces`, dry-run on a scratch copy (idempotent), run on their word. Also announced to LEAF-KINDS, catalogue-bridge (anchor after `roofSurfaces`) and shared (NDP row).
+
+## 3. EN 1991 collections (applied)
+- `bridgeLanes[]` `BridgeLane { id, width m, offset m, lm1Lane u8 }`. Replaces the derived lane count: `part_2::lane_layout(carriageway, widths)` (authored rows else Table 4.1) feeds `check_bridge_actions`, the scene (`traffic::bands_of`), the lane handle and the selected-lane grip.
+- `constructionStages[]` `ConstructionStage { id, activity, durationDays d, returnYears a, assumedQk Pa }`.
+- `roofSurfaces[]` `RoofSurface { id, face (= wind face id), shape, pitchDeg, extent m }`. The name differs from the requested `roofs[]` because `roofs[]` (`RoofArea`, snow inputs) already exists; several roof surfaces per wind face.
+- Contract: 11 tables, `schemaBytes` 13183 (was 11760), widths bridge_lane 11, construction_stage 14, roof_surface 12, document 188 unchanged; rows / valueBytes unchanged (17 / 3194 and 1 / 1404) because the fixtures hold `[]`. Admission list ids 77..=84 (0-based struct index). Proto tags 62..64.
+
+## 4. Checks (all with remedies, `🧬️schema/💡️inferences/🧱️collection-checks`, mounted in the inferences root; units groups after the traffic part in `En1991Units`)
+- Lane: `en1991.2.lane-width.<id>` (<= 3 m), `lane-inside.<id>` (inside carriageway), `lm1-lane.<id>` (Q_ik of the lane number against assumed tandem) and `lm1-lane-udl.<id>` (q_ik against assumed UDL); lm1Lane 0 is an invalid input. Integrity: duplicate lane numbers (one_of free numbers), overlapping lanes (exactly offset), lane width sum against the carriageway (exactly width).
+- Stage: `en1991.1-6.stage-load.<id>` (activity load), `stage-return-period.<id>` via `assess_covers_on` with `ndp.en1991.e6-01.1` so a Pass reports UnverifiedBasis (recommended 2 / 2 / 5 / 50 years for <= 3 days or 3 months / 1 year / longer, recalled, NOT checked against the print), `stage-wind.<id>` information = c_prob(1/T)^2 (T = 2 a: 0.602848, python replay agrees).
+- Roof surface: `en1991.1-4.roof-surface-cpe.<id>` (face c_pe,10 against the shape table for this pitch, remedy exactly on the wind face; hipped flagged `ndp.en1991.e14-08.1`), `roof-surface-extent.<id>` (<= building depth), `roof-surface-mu.<id>` (snow mu_1 information); integrity: dangling face (one_of wind faces), extents per face against the depth, wall zones A-E rejected as roof face.
+- Registry: new unverified `ndp.en1991.e6-01.1` (json + regenerated `🗃️table.rs` with the current `codegen.py`, script `🧰️ndp/wave2_en1991_collections.py`).
+- Tests: `collection_rows_are_checked_with_remedies_and_flag_the_unverified_return_periods` (+ path helpers for the new collections in the compliance-report test), `bridge_lanes_stages_and_roof_surfaces_are_projected_with_handles_and_diagrams` (scene).
+
+## 5. Scene, handles, diagrams
+- 3D: lanes stand on the deck at their offset and width with their LM1 UDL patch and tandem wheel loads (stops at the 5 tandem positions) bound to the per-lane checks, derived notional lanes only when no row exists; construction stage timeline strip north of the building (stages one after the other scaled to the building depth, area load glyph of the assumed load bound to the return-period check, duration label); roof surfaces as pitched strips on the building (one after the other per face) bound to the cpe check. Layers `constructionStages`, `roofSurfaces`; kit `Owner::{Lane, Stage, Surface}`, outliner / palette rows, dependencies (face <-> surfaces).
+- Handles: lane `width` (k = 2), `offset`, `number`; stage `duration` (days per metre of the strip), `load`; surface `pitch` (angular, same convention as the roof pitch), `extent`; the old lane-select grip now reads the bands.
+- Diagrams: `bridge-lane-lm1` (Q_ik per lane number against the assumed tandem load) and `construction-stage-timeline` (assumed against required return period over time), both with table twin, bound markers, focus groups `Bridge` / `Stages`.
+
+## Open / unverified
+Everything is read, not compiled. Expected on first build: scene golden bless (`SEMIO_UPDATE_GOLDEN=1`), `EN1991_REGEN_ASSETS=1` for the DSL assets, sqlite tests now expect 11 tables, mutation leaves for the three collections wait for LEAF-KINDS (the edit-rules and `insert-*` kinds do not exist yet, so the editor can not insert rows until then). Table 3.1 return periods and the snow / wind values behind them are unverified. `u32` and `String` columns other than the exercised types, and profiles other than `en1991`, are untested.

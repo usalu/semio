@@ -1,98 +1,321 @@
-# 🧬️ En1994 diff schema — keyed sparse diff: scalar setters, id/index/key keyed row diffs and per-field section patches.
+scalar JSON
 
+type En1994Diff {
+  annex: JSON
+  structureKind: JSON
+  steelFYPa: JSON
+  beams: En1994BeamsRows
+  columns: En1994ColumnsRows
+  slabs: En1994SlabsRows
+  placements: En1994PlacementsRows
+  studs: En1994StudsRows
+  fireRating: JSON
+  insulationThicknessM: JSON
+  fatigueDetail: JSON
+  reliabilityClass: JSON
+  cases: CaseRowDelta
+}
+type En1994BeamsActionsInserted {
+  index: Int!
+  row: CharacteristicAction!
+}
+type En1994BeamsActionsModified {
+  id: String!
+  patch: En1994BeamsActionsPatch!
+}
+type En1994BeamsActionsMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
 type En1994BeamsActionsPatch {
-  index: Int!
-  qAreaPa: Float
+  kind: JSON
+  category: JSON
+  stage: JSON
+  qAreaPa: JSON
+  fKN: JSON
+  deltaSigmaKPa: JSON
+  deltaTauKPa: JSON
+  xM: JSON
 }
-
+type En1994BeamsActionsRemoved {
+  id: String!
+  index: Int!
+}
 type En1994BeamsActionsRows {
-  modified: [En1994BeamsActionsPatch!]!
+  removed: [En1994BeamsActionsRemoved!]!
+  inserted: [En1994BeamsActionsInserted!]!
+  moved: [En1994BeamsActionsMoved!]!
+  modified: [En1994BeamsActionsModified!]!
 }
-
-type En1994BeamsPatch {
-  index: Int!
-  spanM: Float
-  slabThicknessM: Float
-  construction: String
-  transverseAsM2PerM: Float
-  studsDiameterM: Float
-  studsFUPa: Float
-  studsSpacingM: Float
-  studsTotalCount: Int
-  actions: En1994BeamsActionsRows
-}
-
 type En1994BeamsInserted {
   index: Int!
   row: CompositeBeam!
 }
-
+type En1994BeamsModified {
+  id: String!
+  patch: En1994BeamsPatch!
+}
+type En1994BeamsMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1994BeamsPatch {
+  spanM: JSON
+  spacingM: JSON
+  support: JSON
+  construction: JSON
+  steel: SteelSection
+  steelHeightM: JSON
+  steelWidthM: JSON
+  steelTwM: JSON
+  steelTfM: JSON
+  steelAM2: JSON
+  steelWPlYM3: JSON
+  steelIYM4: JSON
+  steelAVM2: JSON
+  steelRM: JSON
+  slabThicknessM: JSON
+  concreteFCkPa: JSON
+  concreteECmPa: JSON
+  sheetingProfile: JSON
+  sheetingHeightM: JSON
+  sheetingRibWidthM: JSON
+  sheetingThicknessM: JSON
+  sheetingRibsParallelToBeam: JSON
+  transverseAsM2PerM: JSON
+  ltbLengthM: JSON
+  asHoggingM2PerM: JSON
+  barSpacingM: JSON
+  wkLimitM: JSON
+  nCycles: JSON
+  adjacentSpanM: JSON
+  patchBearingLengthM: JSON
+  bridgeLanes: JSON
+  crackedLengthFraction: JSON
+  studTransverseSpacingM: JSON
+  studEdgeDistanceM: JSON
+  transverseAsTopM2PerM: JSON
+  endPlateWidthM: JSON
+  endPlateHeightM: JSON
+  endZoneLengthM: JSON
+  reinforcementProduct: JSON
+  actions: En1994BeamsActionsRows
+}
+type En1994BeamsRemoved {
+  id: String!
+  index: Int!
+}
 type En1994BeamsRows {
-  removed: [Int!]!
+  removed: [En1994BeamsRemoved!]!
   inserted: [En1994BeamsInserted!]!
-  modified: [En1994BeamsPatch!]!
+  moved: [En1994BeamsMoved!]!
+  modified: [En1994BeamsModified!]!
 }
-
+type En1994ColumnsActionsInserted {
+  index: Int!
+  row: ColumnAction!
+}
+type En1994ColumnsActionsModified {
+  id: String!
+  patch: En1994ColumnsActionsPatch!
+}
+type En1994ColumnsActionsMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
 type En1994ColumnsActionsPatch {
-  index: Int!
-  nKN: Float
+  kind: JSON
+  category: JSON
+  stage: JSON
+  nKN: JSON
+  mKNm: JSON
 }
-
+type En1994ColumnsActionsRemoved {
+  id: String!
+  index: Int!
+}
 type En1994ColumnsActionsRows {
-  modified: [En1994ColumnsActionsPatch!]!
+  removed: [En1994ColumnsActionsRemoved!]!
+  inserted: [En1994ColumnsActionsInserted!]!
+  moved: [En1994ColumnsActionsMoved!]!
+  modified: [En1994ColumnsActionsModified!]!
 }
-
-type En1994ColumnsPatch {
-  index: Int!
-  kind: String
-  actions: En1994ColumnsActionsRows
-}
-
 type En1994ColumnsInserted {
   index: Int!
   row: CompositeColumn!
 }
-
+type En1994ColumnsModified {
+  id: String!
+  patch: En1994ColumnsPatch!
+}
+type En1994ColumnsMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1994ColumnsPatch {
+  kind: JSON
+  lengthM: JSON
+  outerSizeM: JSON
+  wallThicknessM: JSON
+  steelAM2: JSON
+  steelFYPa: JSON
+  concreteAM2: JSON
+  concreteFCkPa: JSON
+  reinforcementAsM2: JSON
+  reinforcementFYkPa: JSON
+  iM4: JSON
+  bucklingCurve: JSON
+  introducedForceN: JSON
+  sectionHeightM: JSON
+  sectionWidthM: JSON
+  sectionTwM: JSON
+  sectionTfM: JSON
+  rebarCoverM: JSON
+  reinforcementProduct: JSON
+  actions: En1994ColumnsActionsRows
+}
+type En1994ColumnsRemoved {
+  id: String!
+  index: Int!
+}
 type En1994ColumnsRows {
-  removed: [Int!]!
+  removed: [En1994ColumnsRemoved!]!
   inserted: [En1994ColumnsInserted!]!
-  modified: [En1994ColumnsPatch!]!
+  moved: [En1994ColumnsMoved!]!
+  modified: [En1994ColumnsModified!]!
 }
-
+type En1994PlacementsInserted {
+  index: Int!
+  row: Placement!
+}
+type En1994PlacementsModified {
+  id: String!
+  patch: En1994PlacementsPatch!
+}
+type En1994PlacementsMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1994PlacementsPatch {
+  x: JSON
+  y: JSON
+  z: JSON
+  yaw: JSON
+}
+type En1994PlacementsRemoved {
+  id: String!
+  index: Int!
+}
+type En1994PlacementsRows {
+  removed: [En1994PlacementsRemoved!]!
+  inserted: [En1994PlacementsInserted!]!
+  moved: [En1994PlacementsMoved!]!
+  modified: [En1994PlacementsModified!]!
+}
+type En1994SlabsActionsInserted {
+  index: Int!
+  row: SlabAction!
+}
+type En1994SlabsActionsModified {
+  id: String!
+  patch: En1994SlabsActionsPatch!
+}
+type En1994SlabsActionsMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
 type En1994SlabsActionsPatch {
-  index: Int!
-  qAreaPa: Float
+  kind: JSON
+  category: JSON
+  stage: JSON
+  qAreaPa: JSON
+  fKN: JSON
+  deltaSigmaKPa: JSON
+  deltaTauKPa: JSON
+  xM: JSON
+  yM: JSON
 }
-
+type En1994SlabsActionsRemoved {
+  id: String!
+  index: Int!
+}
 type En1994SlabsActionsRows {
-  modified: [En1994SlabsActionsPatch!]!
+  removed: [En1994SlabsActionsRemoved!]!
+  inserted: [En1994SlabsActionsInserted!]!
+  moved: [En1994SlabsActionsMoved!]!
+  modified: [En1994SlabsActionsModified!]!
 }
-
-type En1994SlabsPatch {
-  index: Int!
-  concreteThicknessM: Float
-  actions: En1994SlabsActionsRows
-}
-
 type En1994SlabsInserted {
   index: Int!
   row: CompositeSlab!
 }
-
-type En1994SlabsRows {
-  removed: [Int!]!
-  inserted: [En1994SlabsInserted!]!
-  modified: [En1994SlabsPatch!]!
+type En1994SlabsModified {
+  id: String!
+  patch: En1994SlabsPatch!
 }
-
-type En1994Diff {
-  annex: AnnexChoice @state(class: ARTIFACT)
-  structureKind: String @state(class: ARTIFACT)
-  steelFYPa: Float @state(class: ARTIFACT)
-  beams: En1994BeamsRows @state(class: ARTIFACT)
-  columns: En1994ColumnsRows @state(class: ARTIFACT)
-  slabs: En1994SlabsRows @state(class: ARTIFACT)
-  fireRating: String @state(class: ARTIFACT)
-  insulationThicknessM: Float @state(class: ARTIFACT)
-  fatigueDetail: String @state(class: ARTIFACT)
+type En1994SlabsMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1994SlabsPatch {
+  spanM: JSON
+  support: JSON
+  sheetingProfile: JSON
+  sheetingHeightM: JSON
+  sheetingRibWidthM: JSON
+  sheetingThicknessM: JSON
+  sheetingRibsParallelToBeam: JSON
+  concreteThicknessM: JSON
+  fCkPa: JSON
+  mFactor: JSON
+  kFactor: JSON
+  asM2PerM: JSON
+  actions: En1994SlabsActionsRows
+}
+type En1994SlabsRemoved {
+  id: String!
+  index: Int!
+}
+type En1994SlabsRows {
+  removed: [En1994SlabsRemoved!]!
+  inserted: [En1994SlabsInserted!]!
+  moved: [En1994SlabsMoved!]!
+  modified: [En1994SlabsModified!]!
+}
+type En1994StudsInserted {
+  index: Int!
+  row: Stud!
+}
+type En1994StudsModified {
+  id: String!
+  patch: En1994StudsPatch!
+}
+type En1994StudsMoved {
+  id: String!
+  from: Int!
+  to: Int!
+}
+type En1994StudsRemoved {
+  id: String!
+  index: Int!
+}
+type En1994StudsRows {
+  removed: [En1994StudsRemoved!]!
+  inserted: [En1994StudsInserted!]!
+  moved: [En1994StudsMoved!]!
+  modified: [En1994StudsModified!]!
+}
+type En1994StudsPatch {
+  beamId: JSON
+  xM: JSON
+  diameterM: JSON
+  heightM: JSON
+  fUPa: JSON
 }

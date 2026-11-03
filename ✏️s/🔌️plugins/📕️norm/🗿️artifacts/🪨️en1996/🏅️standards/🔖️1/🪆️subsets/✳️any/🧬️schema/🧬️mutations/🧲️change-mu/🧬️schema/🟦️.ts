@@ -1,11 +1,11 @@
 /** 🧲️ `change-mu` wire twin: the leaf payload `ChangeMu`, exactly as `./🦀️.rs` writes it. Generated from `./🔣️.json`
- * by `🧪️s2-norm-ts-twins.ts`; readers judge structure, the schema's bounds stay Ajv's.
+ * by `repo ./📜️script.ts schema twins generate`; readers judge structure, the schema's bounds stay Ajv's.
  * @see ./🔣️.json */
-import { normWireInteger, normWireNumber, normWireObject, normWireRange, type NormWireReader, normWireRequired } from "@semio-tech/norm-js/registry/contract";
+import { normWireNumber, normWireObject, normWireRange, normWireRequired, normWireString, type NormWireReader } from "@semio-tech/norm-js/registry/contract";
 
 export interface ChangeMu {
-  index: number;
+  id: string;
   newMu: number;
 }
 
-export const parseChangeMu: NormWireReader<ChangeMu> = normWireObject<ChangeMu>({ index: normWireRequired(normWireRange(normWireInteger, {"minimum":0})), newMu: normWireRequired(normWireRange(normWireNumber, {"minimum":0})) });
+export const parseChangeMu: NormWireReader<ChangeMu> = normWireObject<ChangeMu>({ id: normWireRequired(normWireString), newMu: normWireRequired(normWireRange(normWireNumber, {"minimum":0,"maximum":5})) });

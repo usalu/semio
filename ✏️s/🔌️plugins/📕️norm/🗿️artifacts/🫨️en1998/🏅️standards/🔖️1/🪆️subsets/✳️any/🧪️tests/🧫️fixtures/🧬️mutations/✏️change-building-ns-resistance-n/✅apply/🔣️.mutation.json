@@ -1,0 +1,5 @@
+{
+  "mutation": "changeBuildingNsResistanceN",
+  "id": "bldg-office",
+  "newNonstructuralResistanceN": 1.5
+}

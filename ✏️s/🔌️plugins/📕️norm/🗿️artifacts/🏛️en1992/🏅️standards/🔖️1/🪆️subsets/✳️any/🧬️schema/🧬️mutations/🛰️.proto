@@ -1,37 +1,852 @@
 syntax = "proto3";
-package semio.norm.en1992;
-
-message En1992ActionMutation {
-  string id = 1;
-  string kind = 2;
-  string category = 3;
-  string source = 4;
-  double g_k_line = 5;
-  double q_k_line = 6;
-  double point_force = 7;
-  double m_k = 8;
-  double n_k = 9;
-  double v_k = 10;
-  double t_k = 11;
-  double v_k_punch = 12;
-}
-message En1992MemberMutation {
-  string id = 1;
-  double cover = 2;
-  double width = 3;
-  double height = 4;
-  double effective_depth = 5;
-  double span = 6;
-  repeated En1992ActionMutation actions = 7;
-  bool use_fem = 8;
-  double udl = 9;
-  bool deflection_sensitive = 10;
-}
+package semio.s.norm.en1992;
 message En1992Mutation {
-  string annex = 1;
-  string title = 2;
-  double design_working_life_years = 3;
-  double delta_c_dev = 4;
-  string cement_type = 5;
-  repeated En1992MemberMutation members = 6;
+  oneof kind {
+    ChangeAnnex change_annex = 1;
+    ChangeReliabilityClass change_reliability_class = 2;
+    ChangeTitle change_title = 3;
+    ChangeDesignWorkingLife change_design_working_life = 4;
+    ChangeDeltaCDev change_delta_c_dev = 5;
+    ChangeCementType change_cement_type = 6;
+    ChangeConcreteFCk change_concrete_f_ck = 7;
+    ChangeReinforcementFYk change_reinforcement_f_yk = 8;
+    InsertMember insert_member = 9;
+    RemoveMember remove_member = 10;
+    ChangeMemberOrder change_member_order = 11;
+    ChangeMemberWidth change_member_width = 12;
+    ChangeMemberHeight change_member_height = 13;
+    ChangeMemberEffectiveDepth change_member_effective_depth = 14;
+    ChangeMemberCover change_member_cover = 15;
+    ChangeMemberExposure change_member_exposure = 16;
+    ChangeMemberSpan change_member_span = 17;
+    ChangeMemberStirrupSpacing change_member_stirrup_spacing = 18;
+    ChangeMemberAxisDistance change_member_axis_distance = 19;
+    ChangeMemberFireRating change_member_fire_rating = 20;
+    ChangeBarLayerCount change_bar_layer_count = 21;
+    ChangeBarLayerDiameter change_bar_layer_diameter = 22;
+    ChangeActionMk change_action_mk = 23;
+    ChangeActionNk change_action_nk = 24;
+    ChangeActionVk change_action_vk = 25;
+    InsertAnchor insert_anchor = 26;
+    RemoveAnchor remove_anchor = 27;
+    ChangeAnchorHEf change_anchor_h_ef = 28;
+    ChangeAnchorAs change_anchor_as = 29;
+    ChangeMemberRelativeHumidity change_member_relative_humidity = 30;
+    ChangeMemberBucklingLength change_member_buckling_length = 31;
+    ChangeMemberUdl change_member_udl = 32;
+    ChangeMemberHdOverH change_member_hd_over_h = 33;
+    ChangeMemberLiquidSigmaS change_member_liquid_sigma_s = 34;
+    ChangeMemberLiquidRhoPEff change_member_liquid_rho_p_eff = 35;
+    ChangeMemberLiquidFCtEff change_member_liquid_f_ct_eff = 36;
+    ChangeMemberLiquidSRMax change_member_liquid_s_r_max = 37;
+    ChangeMemberBridgeSigmaC change_member_bridge_sigma_c = 38;
+    ChangeMemberBridgeDeltaSigmaS change_member_bridge_delta_sigma_s = 39;
+    ChangeConcreteName change_concrete_name = 40;
+    ChangeReinforcementName change_reinforcement_name = 41;
+    ChangeReinforcementES change_reinforcement_e_s = 42;
+    ChangeReinforcementDuctility change_reinforcement_ductility = 43;
+    ChangeReinforcementK change_reinforcement_k = 44;
+    ChangeReinforcementEpsUk change_reinforcement_eps_uk = 45;
+    ChangePrestressSteelName change_prestress_steel_name = 46;
+    ChangePrestressSteelFPk change_prestress_steel_f_pk = 47;
+    ChangePrestressSteelFP01k change_prestress_steel_f_p01k = 48;
+    ChangeMemberLabelEn change_member_label_en = 49;
+    ChangeMemberLabelDe change_member_label_de = 50;
+    ChangeMemberKind change_member_kind = 51;
+    ChangeMemberConcreteGradeId change_member_concrete_grade_id = 52;
+    ChangeMemberRebarGradeId change_member_rebar_grade_id = 53;
+    ChangeMemberPrestressSteelId change_member_prestress_steel_id = 54;
+    ChangeMemberSupport change_member_support = 55;
+    ChangeMemberStirrupsDiameter change_member_stirrups_diameter = 56;
+    ChangeMemberStirrupsLegs change_member_stirrups_legs = 57;
+    ChangeMemberPunchColumnWidth change_member_punch_column_width = 58;
+    ChangeMemberPunchColumnDepth change_member_punch_column_depth = 59;
+    ChangeMemberPunchColPosition change_member_punch_col_position = 60;
+    ChangeMemberPunchingAsw change_member_punching_asw = 61;
+    ChangeMemberPrestressForce change_member_prestress_force = 62;
+    ChangeMemberPrestressArea change_member_prestress_area = 63;
+    ChangeMemberPrestressEcc change_member_prestress_ecc = 64;
+    ChangeMemberPrestressLossRatio change_member_prestress_loss_ratio = 65;
+    ChangeMemberFireSlabSystem change_member_fire_slab_system = 66;
+    ChangeMemberUseFem change_member_use_fem = 67;
+    ChangeMemberDeflectionSensitive change_member_deflection_sensitive = 68;
+    ChangeBarLayerPosition change_bar_layer_position = 69;
+    ChangeBarLayerAnchorageLength change_bar_layer_anchorage_length = 70;
+    ChangeBarLayerLapLength change_bar_layer_lap_length = 71;
+    ChangeBarLayerBondCondition change_bar_layer_bond_condition = 72;
+    ChangeBarLayerAggregateSize change_bar_layer_aggregate_size = 73;
+    ChangeBarLayerLapShare change_bar_layer_lap_share = 74;
+    ChangeActionKind change_action_kind = 75;
+    ChangeActionCategory change_action_category = 76;
+    ChangeActionSource change_action_source = 77;
+    ChangeActionGKLine change_action_g_k_line = 78;
+    ChangeActionQKLine change_action_q_k_line = 79;
+    ChangeActionPointForce change_action_point_force = 80;
+    ChangeActionTK change_action_t_k = 81;
+    ChangeActionVKPunch change_action_v_k_punch = 82;
+    ChangeSectionPointY change_section_point_y = 83;
+    ChangeSectionPointZ change_section_point_z = 84;
+    ChangeBarPointLayerId change_bar_point_layer_id = 85;
+    ChangeBarPointY change_bar_point_y = 86;
+    ChangeBarPointZ change_bar_point_z = 87;
+    ChangeBarPointDiameter change_bar_point_diameter = 88;
+    ChangeTendonPointX change_tendon_point_x = 89;
+    ChangeTendonPointY change_tendon_point_y = 90;
+    ChangeTendonPointZ change_tendon_point_z = 91;
+    ChangeAnchorCracked change_anchor_cracked = 92;
+    ChangeAnchorFUk change_anchor_f_uk = 93;
+    ChangeAnchorFYk change_anchor_f_yk = 94;
+    ChangeAnchorD change_anchor_d = 95;
+    ChangeAnchorC1 change_anchor_c1 = 96;
+    ChangeAnchorFCk change_anchor_f_ck = 97;
+    ChangeAnchorHeadDiameter change_anchor_head_diameter = 98;
+    ChangeAnchorActionKind change_anchor_action_kind = 99;
+    ChangeAnchorActionCategory change_anchor_action_category = 100;
+    ChangeAnchorActionSource change_anchor_action_source = 101;
+    ChangeAnchorActionGKLine change_anchor_action_g_k_line = 102;
+    ChangeAnchorActionQKLine change_anchor_action_q_k_line = 103;
+    ChangeAnchorActionPointForce change_anchor_action_point_force = 104;
+    ChangeAnchorActionMK change_anchor_action_m_k = 105;
+    ChangeAnchorActionNK change_anchor_action_n_k = 106;
+    ChangeAnchorActionVK change_anchor_action_v_k = 107;
+    ChangeAnchorActionTK change_anchor_action_t_k = 108;
+    ChangeAnchorActionVKPunch change_anchor_action_v_k_punch = 109;
+    InsertConcreteGrade insert_concrete_grade = 110;
+    RemoveConcreteGrade remove_concrete_grade = 111;
+    InsertReinforcementGrade insert_reinforcement_grade = 112;
+    RemoveReinforcementGrade remove_reinforcement_grade = 113;
+    InsertPrestressSteel insert_prestress_steel = 114;
+    RemovePrestressSteel remove_prestress_steel = 115;
+    InsertBarLayer insert_bar_layer = 116;
+    RemoveBarLayer remove_bar_layer = 117;
+    InsertAction insert_action = 118;
+    RemoveAction remove_action = 119;
+    InsertSectionPoint insert_section_point = 120;
+    RemoveSectionPoint remove_section_point = 121;
+    InsertBarPoint insert_bar_point = 122;
+    RemoveBarPoint remove_bar_point = 123;
+    InsertTendonPoint insert_tendon_point = 124;
+    RemoveTendonPoint remove_tendon_point = 125;
+    InsertAnchorAction insert_anchor_action = 126;
+    RemoveAnchorAction remove_anchor_action = 127;
+    ChangePlacementX change_placement_x = 128;
+    ChangePlacementY change_placement_y = 129;
+    ChangePlacementZ change_placement_z = 130;
+    ChangePlacementYaw change_placement_yaw = 131;
+    InsertPlacement insert_placement = 132;
+    RemovePlacement remove_placement = 133;
+    InsertCase insert_case = 134;
+    RemoveCase remove_case = 135;
+    ChangeCaseNumber change_case_number = 136;
+    ChangeCaseText change_case_text = 137;
+    ChangeCaseLabelEn change_case_label_en = 138;
+    ChangeCaseLabelDe change_case_label_de = 139;
+    ChangeCaseEntryId change_case_entry_id = 140;
+    ChangeMemberTightness change_member_tightness = 141;
+    ClearMemberTightness clear_member_tightness = 142;
+    ChangeBarPointLength change_bar_point_length = 143;
+    ChangeBarPointBend change_bar_point_bend = 144;
+    ChangeMemberPunchingBetaMethod change_member_punching_beta_method = 145;
+    ChangeMemberPunchingMomentC1 change_member_punching_moment_c1 = 146;
+    ChangeMemberPunchingMomentC2 change_member_punching_moment_c2 = 147;
+    ChangeOpeningX change_opening_x = 148;
+    ChangeOpeningY change_opening_y = 149;
+    ChangeOpeningWidth change_opening_width = 150;
+    ChangeOpeningDepth change_opening_depth = 151;
+    InsertOpening insert_opening = 152;
+    RemoveOpening remove_opening = 153;
+    ChangeStudRowAngle change_stud_row_angle = 154;
+    ChangeStudRowCount change_stud_row_count = 155;
+    ChangeStudRowSpacingFirst change_stud_row_spacing_first = 156;
+    ChangeStudRowSpacingRadial change_stud_row_spacing_radial = 157;
+    ChangeStudRowDiameter change_stud_row_diameter = 158;
+    InsertStudRow insert_stud_row = 159;
+    RemoveStudRow remove_stud_row = 160;
+  }
+}
+message ChangeAnnex {
+  AnnexChoice new_annex = 1;
+}
+message ChangeReliabilityClass {
+  string new_reliability_class = 1;
+}
+message ChangeTitle {
+  string new_title = 1;
+}
+message ChangeDesignWorkingLife {
+  double new_years = 1;
+}
+message ChangeDeltaCDev {
+  double new_delta_c_dev = 1;
+}
+message ChangeCementType {
+  CementClass new_cement_type = 1;
+}
+message ChangeConcreteFCk {
+  string grade_id = 1;
+  double new_f_ck = 2;
+}
+message ChangeReinforcementFYk {
+  string grade_id = 1;
+  double new_f_yk = 2;
+}
+message InsertMember {
+  uint64 index = 1;
+  RcMember member = 2;
+}
+message RemoveMember {
+  string member_id = 1;
+}
+message ChangeMemberOrder {
+  uint64 from_index = 1;
+  uint64 to_index = 2;
+}
+message ChangeMemberWidth {
+  string member_id = 1;
+  double new_value = 2;
+}
+message ChangeMemberHeight {
+  string member_id = 1;
+  double new_value = 2;
+}
+message ChangeMemberEffectiveDepth {
+  string member_id = 1;
+  double new_value = 2;
+}
+message ChangeMemberCover {
+  string member_id = 1;
+  double new_value = 2;
+}
+message ChangeMemberExposure {
+  string member_id = 1;
+  ExposureClass new_exposure = 2;
+}
+message ChangeMemberSpan {
+  string member_id = 1;
+  double new_value = 2;
+}
+message ChangeMemberStirrupSpacing {
+  string member_id = 1;
+  double new_spacing = 2;
+}
+message ChangeMemberAxisDistance {
+  string member_id = 1;
+  double new_axis_distance = 2;
+}
+message ChangeMemberFireRating {
+  string member_id = 1;
+  FireRating new_rating = 2;
+}
+message ChangeBarLayerCount {
+  string member_id = 1;
+  string layer_id = 2;
+  uint32 new_count = 3;
+}
+message ChangeBarLayerDiameter {
+  string member_id = 1;
+  string layer_id = 2;
+  double new_diameter = 3;
+}
+message ChangeActionMk {
+  string member_id = 1;
+  string action_id = 2;
+  double new_value = 3;
+}
+message ChangeActionNk {
+  string member_id = 1;
+  string action_id = 2;
+  double new_value = 3;
+}
+message ChangeActionVk {
+  string member_id = 1;
+  string action_id = 2;
+  double new_value = 3;
+}
+message InsertAnchor {
+  uint64 index = 1;
+  Anchor anchor = 2;
+}
+message RemoveAnchor {
+  string anchor_id = 1;
+}
+message ChangeAnchorHEf {
+  string anchor_id = 1;
+  double new_value = 2;
+}
+message ChangeAnchorAs {
+  string anchor_id = 1;
+  double new_value = 2;
+}
+message ChangeMemberRelativeHumidity {
+  string member_id = 1;
+  double new_value = 2;
+}
+message ChangeMemberBucklingLength {
+  string member_id = 1;
+  double new_value = 2;
+}
+message ChangeMemberUdl {
+  string member_id = 1;
+  double new_value = 2;
+}
+message ChangeMemberHdOverH {
+  string member_id = 1;
+  double new_value = 2;
+}
+message ChangeMemberLiquidSigmaS {
+  string member_id = 1;
+  double new_value = 2;
+}
+message ChangeMemberLiquidRhoPEff {
+  string member_id = 1;
+  double new_value = 2;
+}
+message ChangeMemberLiquidFCtEff {
+  string member_id = 1;
+  double new_value = 2;
+}
+message ChangeMemberLiquidSRMax {
+  string member_id = 1;
+  double new_value = 2;
+}
+message ChangeMemberBridgeSigmaC {
+  string member_id = 1;
+  double new_value = 2;
+}
+message ChangeMemberBridgeDeltaSigmaS {
+  string member_id = 1;
+  double new_value = 2;
+}
+message ChangeConcreteName {
+  string grade_id = 1;
+  string new_name = 2;
+}
+message ChangeReinforcementName {
+  string grade_id = 1;
+  string new_name = 2;
+}
+message ChangeReinforcementES {
+  string grade_id = 1;
+  double new_e_s = 2;
+}
+message ChangeReinforcementDuctility {
+  string grade_id = 1;
+  DuctilityClass new_ductility = 2;
+}
+message ChangeReinforcementK {
+  string grade_id = 1;
+  double new_k = 2;
+}
+message ChangeReinforcementEpsUk {
+  string grade_id = 1;
+  double new_eps_uk = 2;
+}
+message ChangePrestressSteelName {
+  string grade_id = 1;
+  string new_name = 2;
+}
+message ChangePrestressSteelFPk {
+  string grade_id = 1;
+  double new_f_pk = 2;
+}
+message ChangePrestressSteelFP01k {
+  string grade_id = 1;
+  double new_f_p01k = 2;
+}
+message ChangeMemberLabelEn {
+  string member_id = 1;
+  string new_label_en = 2;
+}
+message ChangeMemberLabelDe {
+  string member_id = 1;
+  string new_label_de = 2;
+}
+message ChangeMemberKind {
+  string member_id = 1;
+  string new_kind = 2;
+}
+message ChangeMemberConcreteGradeId {
+  string member_id = 1;
+  string new_concrete_grade_id = 2;
+}
+message ChangeMemberRebarGradeId {
+  string member_id = 1;
+  string new_reinforcement_grade_id = 2;
+}
+message ChangeMemberPrestressSteelId {
+  string member_id = 1;
+  string new_prestress_steel_id = 2;
+}
+message ChangeMemberSupport {
+  string member_id = 1;
+  string new_support = 2;
+}
+message ChangeMemberStirrupsDiameter {
+  string member_id = 1;
+  double new_stirrups_diameter = 2;
+}
+message ChangeMemberStirrupsLegs {
+  string member_id = 1;
+  uint32 new_stirrups_legs = 2;
+}
+message ChangeMemberPunchColumnWidth {
+  string member_id = 1;
+  double new_punching_column_width = 2;
+}
+message ChangeMemberPunchColumnDepth {
+  string member_id = 1;
+  double new_punching_column_depth = 2;
+}
+message ChangeMemberPunchColPosition {
+  string member_id = 1;
+  ColumnPosition new_punching_column_position = 2;
+}
+message ChangeMemberPunchingAsw {
+  string member_id = 1;
+  double new_punching_asw = 2;
+}
+message ChangeMemberPrestressForce {
+  string member_id = 1;
+  double new_prestress_force = 2;
+}
+message ChangeMemberPrestressArea {
+  string member_id = 1;
+  double new_prestress_area = 2;
+}
+message ChangeMemberPrestressEcc {
+  string member_id = 1;
+  double new_prestress_eccentricity = 2;
+}
+message ChangeMemberPrestressLossRatio {
+  string member_id = 1;
+  double new_prestress_loss_ratio = 2;
+}
+message ChangeMemberFireSlabSystem {
+  string member_id = 1;
+  SlabFireSystem new_fire_slab_system = 2;
+}
+message ChangeMemberUseFem {
+  string member_id = 1;
+  bool new_use_fem = 2;
+}
+message ChangeMemberDeflectionSensitive {
+  string member_id = 1;
+  bool new_deflection_sensitive = 2;
+}
+message ChangeBarLayerPosition {
+  string member_id = 1;
+  string layer_id = 2;
+  BarPosition new_position = 3;
+}
+message ChangeBarLayerAnchorageLength {
+  string member_id = 1;
+  string layer_id = 2;
+  double new_anchorage_length = 3;
+}
+message ChangeBarLayerLapLength {
+  string member_id = 1;
+  string layer_id = 2;
+  double new_lap_length = 3;
+}
+message ChangeBarLayerBondCondition {
+  string member_id = 1;
+  string layer_id = 2;
+  BondCondition new_bond_condition = 3;
+}
+message ChangeBarLayerAggregateSize {
+  string member_id = 1;
+  string layer_id = 2;
+  double new_aggregate_size = 3;
+}
+message ChangeBarLayerLapShare {
+  string member_id = 1;
+  string layer_id = 2;
+  double new_lap_share = 3;
+}
+message ChangeActionKind {
+  string member_id = 1;
+  string action_id = 2;
+  ActionKind new_kind = 3;
+}
+message ChangeActionCategory {
+  string member_id = 1;
+  string action_id = 2;
+  PsiCategory new_category = 3;
+}
+message ChangeActionSource {
+  string member_id = 1;
+  string action_id = 2;
+  ActionSource new_source = 3;
+}
+message ChangeActionGKLine {
+  string member_id = 1;
+  string action_id = 2;
+  double new_g_k_line = 3;
+}
+message ChangeActionQKLine {
+  string member_id = 1;
+  string action_id = 2;
+  double new_q_k_line = 3;
+}
+message ChangeActionPointForce {
+  string member_id = 1;
+  string action_id = 2;
+  double new_point_force = 3;
+}
+message ChangeActionTK {
+  string member_id = 1;
+  string action_id = 2;
+  double new_t_k = 3;
+}
+message ChangeActionVKPunch {
+  string member_id = 1;
+  string action_id = 2;
+  double new_v_k_punch = 3;
+}
+message ChangeSectionPointY {
+  string member_id = 1;
+  string section_point_id = 2;
+  double new_y = 3;
+}
+message ChangeSectionPointZ {
+  string member_id = 1;
+  string section_point_id = 2;
+  double new_z = 3;
+}
+message ChangeBarPointLayerId {
+  string member_id = 1;
+  string bar_id = 2;
+  string new_layer_id = 3;
+}
+message ChangeBarPointY {
+  string member_id = 1;
+  string bar_id = 2;
+  double new_y = 3;
+}
+message ChangeBarPointZ {
+  string member_id = 1;
+  string bar_id = 2;
+  double new_z = 3;
+}
+message ChangeBarPointDiameter {
+  string member_id = 1;
+  string bar_id = 2;
+  double new_diameter = 3;
+}
+message ChangeTendonPointX {
+  string member_id = 1;
+  string tendon_point_id = 2;
+  double new_x = 3;
+}
+message ChangeTendonPointY {
+  string member_id = 1;
+  string tendon_point_id = 2;
+  double new_y = 3;
+}
+message ChangeTendonPointZ {
+  string member_id = 1;
+  string tendon_point_id = 2;
+  double new_z = 3;
+}
+message ChangeAnchorCracked {
+  string anchor_id = 1;
+  bool new_cracked = 2;
+}
+message ChangeAnchorFUk {
+  string anchor_id = 1;
+  double new_f_uk = 2;
+}
+message ChangeAnchorFYk {
+  string anchor_id = 1;
+  double new_f_yk = 2;
+}
+message ChangeAnchorD {
+  string anchor_id = 1;
+  double new_d = 2;
+}
+message ChangeAnchorC1 {
+  string anchor_id = 1;
+  double new_c1 = 2;
+}
+message ChangeAnchorFCk {
+  string anchor_id = 1;
+  double new_f_ck = 2;
+}
+message ChangeAnchorHeadDiameter {
+  string anchor_id = 1;
+  double new_head_diameter = 2;
+}
+message ChangeAnchorActionKind {
+  string anchor_id = 1;
+  string action_id = 2;
+  ActionKind new_kind = 3;
+}
+message ChangeAnchorActionCategory {
+  string anchor_id = 1;
+  string action_id = 2;
+  PsiCategory new_category = 3;
+}
+message ChangeAnchorActionSource {
+  string anchor_id = 1;
+  string action_id = 2;
+  ActionSource new_source = 3;
+}
+message ChangeAnchorActionGKLine {
+  string anchor_id = 1;
+  string action_id = 2;
+  double new_g_k_line = 3;
+}
+message ChangeAnchorActionQKLine {
+  string anchor_id = 1;
+  string action_id = 2;
+  double new_q_k_line = 3;
+}
+message ChangeAnchorActionPointForce {
+  string anchor_id = 1;
+  string action_id = 2;
+  double new_point_force = 3;
+}
+message ChangeAnchorActionMK {
+  string anchor_id = 1;
+  string action_id = 2;
+  double new_m_k = 3;
+}
+message ChangeAnchorActionNK {
+  string anchor_id = 1;
+  string action_id = 2;
+  double new_n_k = 3;
+}
+message ChangeAnchorActionVK {
+  string anchor_id = 1;
+  string action_id = 2;
+  double new_v_k = 3;
+}
+message ChangeAnchorActionTK {
+  string anchor_id = 1;
+  string action_id = 2;
+  double new_t_k = 3;
+}
+message ChangeAnchorActionVKPunch {
+  string anchor_id = 1;
+  string action_id = 2;
+  double new_v_k_punch = 3;
+}
+message InsertConcreteGrade {
+  uint64 index = 1;
+  ConcreteGrade concrete_grade = 2;
+}
+message RemoveConcreteGrade {
+  uint64 index = 1;
+}
+message InsertReinforcementGrade {
+  uint64 index = 1;
+  ReinforcementGrade reinforcement_grade = 2;
+}
+message RemoveReinforcementGrade {
+  uint64 index = 1;
+}
+message InsertPrestressSteel {
+  uint64 index = 1;
+  PrestressSteel prestress_steel = 2;
+}
+message RemovePrestressSteel {
+  uint64 index = 1;
+}
+message InsertBarLayer {
+  string member_id = 1;
+  uint64 index = 2;
+  BarLayer bar_layer = 3;
+}
+message RemoveBarLayer {
+  string member_id = 1;
+  uint64 index = 2;
+}
+message InsertAction {
+  string member_id = 1;
+  uint64 index = 2;
+  LoadCaseActions action = 3;
+}
+message RemoveAction {
+  string member_id = 1;
+  uint64 index = 2;
+}
+message InsertSectionPoint {
+  string member_id = 1;
+  uint64 index = 2;
+  SectionPoint section_point = 3;
+}
+message RemoveSectionPoint {
+  string member_id = 1;
+  uint64 index = 2;
+}
+message InsertBarPoint {
+  string member_id = 1;
+  uint64 index = 2;
+  BarPoint bar_point = 3;
+}
+message RemoveBarPoint {
+  string member_id = 1;
+  uint64 index = 2;
+}
+message InsertTendonPoint {
+  string member_id = 1;
+  uint64 index = 2;
+  TendonPoint tendon_point = 3;
+}
+message RemoveTendonPoint {
+  string member_id = 1;
+  uint64 index = 2;
+}
+message InsertAnchorAction {
+  string anchor_id = 1;
+  uint64 index = 2;
+  LoadCaseActions anchor_action = 3;
+}
+message RemoveAnchorAction {
+  string anchor_id = 1;
+  uint64 index = 2;
+}
+message ChangePlacementX {
+  string id = 1;
+  double new_x = 2;
+}
+message ChangePlacementY {
+  string id = 1;
+  double new_y = 2;
+}
+message ChangePlacementZ {
+  string id = 1;
+  double new_z = 2;
+}
+message ChangePlacementYaw {
+  string id = 1;
+  double new_yaw = 2;
+}
+message InsertPlacement {
+  uint64 index = 1;
+  Placement placement = 2;
+}
+message RemovePlacement {
+  uint64 index = 1;
+}
+message InsertCase {
+  uint64 index = 1;
+  CaseRow case = 2;
+}
+message RemoveCase {
+  string id = 1;
+}
+message ChangeCaseNumber {
+  string case_id = 1;
+  string key = 2;
+  optional double value = 3;
+}
+message ChangeCaseText {
+  string case_id = 1;
+  string key = 2;
+  optional string value = 3;
+}
+message ChangeCaseLabelEn {
+  string case_id = 1;
+  string new_value = 2;
+}
+message ChangeCaseLabelDe {
+  string case_id = 1;
+  string new_value = 2;
+}
+message ChangeCaseEntryId {
+  string case_id = 1;
+  string new_value = 2;
+}
+message ChangeMemberTightness {
+  string member_id = 1;
+  TightnessClass new_tightness = 2;
+}
+message ClearMemberTightness {
+  string member_id = 1;
+}
+message ChangeBarPointLength {
+  string member_id = 1;
+  string bar_id = 2;
+  double new_length = 3;
+}
+message ChangeBarPointBend {
+  string member_id = 1;
+  string bar_id = 2;
+  BarBend new_bend = 3;
+}
+message ChangeMemberPunchingBetaMethod {
+  string member_id = 1;
+  string new_punching_beta_method = 2;
+}
+message ChangeMemberPunchingMomentC1 {
+  string member_id = 1;
+  double new_punching_moment_c1 = 2;
+}
+message ChangeMemberPunchingMomentC2 {
+  string member_id = 1;
+  double new_punching_moment_c2 = 2;
+}
+message ChangeOpeningX {
+  string member_id = 1;
+  string opening_id = 2;
+  double new_x = 3;
+}
+message ChangeOpeningY {
+  string member_id = 1;
+  string opening_id = 2;
+  double new_y = 3;
+}
+message ChangeOpeningWidth {
+  string member_id = 1;
+  string opening_id = 2;
+  double new_width = 3;
+}
+message ChangeOpeningDepth {
+  string member_id = 1;
+  string opening_id = 2;
+  double new_depth = 3;
+}
+message InsertOpening {
+  string member_id = 1;
+  uint64 index = 2;
+  Opening opening = 3;
+}
+message RemoveOpening {
+  string member_id = 1;
+  uint64 index = 2;
+}
+message ChangeStudRowAngle {
+  string member_id = 1;
+  string stud_row_id = 2;
+  double new_angle = 3;
+}
+message ChangeStudRowCount {
+  string member_id = 1;
+  string stud_row_id = 2;
+  uint64 new_count = 3;
+}
+message ChangeStudRowSpacingFirst {
+  string member_id = 1;
+  string stud_row_id = 2;
+  double new_spacing_first = 3;
+}
+message ChangeStudRowSpacingRadial {
+  string member_id = 1;
+  string stud_row_id = 2;
+  double new_spacing_radial = 3;
+}
+message ChangeStudRowDiameter {
+  string member_id = 1;
+  string stud_row_id = 2;
+  double new_diameter = 3;
+}
+message InsertStudRow {
+  string member_id = 1;
+  uint64 index = 2;
+  StudRow stud_row = 3;
+}
+message RemoveStudRow {
+  string member_id = 1;
+  uint64 index = 2;
 }

@@ -1,0 +1,6 @@
+{
+  "ChangeLoadCaseKind": {
+    "id": "g-permanent",
+    "newKind": "Permanent"
+  }
+}

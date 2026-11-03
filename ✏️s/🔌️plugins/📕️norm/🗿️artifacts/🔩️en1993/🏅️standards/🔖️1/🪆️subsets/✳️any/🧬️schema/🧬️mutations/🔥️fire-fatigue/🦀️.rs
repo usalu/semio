@@ -21,10 +21,4 @@ pub mod remove_bridge_fatigue;
 pub mod remove_fatigue_detail;
 #[path = "../➖️remove-fire-exposure/🦀️.rs"]
 pub mod remove_fire_exposure;
-#[path = "../🌉️update-bridge-inputs/🦀️.rs"]
-pub mod update_bridge_inputs;
-#[path = "../🔁️update-fatigue-inputs/🦀️.rs"]
-pub mod update_fatigue_inputs;
-#[path = "../🔥️update-fire-inputs/🦀️.rs"]
-pub mod update_fire_inputs;
 //#endregion 🪢️Mounts

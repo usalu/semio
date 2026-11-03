@@ -1,0 +1,6 @@
+{
+  "ChangeJointPlateJointId": {
+    "id": "joint-plate-1",
+    "newJointId": "member-b1-alt"
+  }
+}

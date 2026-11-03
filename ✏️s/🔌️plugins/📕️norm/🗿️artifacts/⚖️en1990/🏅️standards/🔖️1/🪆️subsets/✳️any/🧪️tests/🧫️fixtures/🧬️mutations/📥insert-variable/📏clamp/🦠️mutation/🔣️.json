@@ -1,9 +1,0 @@
-{
-  "mutation": "insertVariable",
-  "index": 99,
-  "item": {
-    "id": "Q-snow",
-    "category": "snow",
-    "qk": 15000.0
-  }
-}

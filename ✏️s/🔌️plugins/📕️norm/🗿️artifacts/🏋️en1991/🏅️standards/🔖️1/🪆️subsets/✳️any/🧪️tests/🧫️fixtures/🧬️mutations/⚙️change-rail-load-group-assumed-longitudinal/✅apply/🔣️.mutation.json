@@ -1,0 +1,6 @@
+{
+  "ChangeRailLoadGroupAssumedLongitudinal": {
+    "id": "rail-load-group-1",
+    "newAssumedLongitudinal": 1200001.0
+  }
+}

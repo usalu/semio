@@ -1,0 +1,5 @@
+{
+  "mutation": "changeFoundationKFoundation",
+  "id": "fd-1",
+  "newKFoundation": 1600000.0
+}

@@ -1,11 +1,15 @@
-# 💡️ En1997 inference schema — document outline (field/section list + entry count).
-
 type En1997Inference {
-  outline: En1997Outline! @derived
+  outline: En1997Outline!
 }
-
 type En1997Outline {
   sectionOutline: [String!]!
   fieldCount: Int!
   entryCount: Int!
+  checkCount: Int!
+  passCount: Int!
+  allPass: Boolean!
+  governingClause: String!
+  governingUtilization: Float!
+  governingSituation: String!
+  governingApproach: String!
 }

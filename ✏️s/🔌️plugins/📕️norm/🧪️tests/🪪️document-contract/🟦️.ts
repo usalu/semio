@@ -4,14 +4,14 @@ import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { assertDocumentContractOracle } from "@semio-tech/framework/schema/oracles/document";
+import { assertDocumentContractOracle, flatFixtureRole } from "@semio-tech/framework/schema/oracles/document";
 import { ioSchema as ioSchema } from "@semio-tech/framework/io/schema";
 import vectors from "../🧫️fixtures/🪪️document-contract/🔣️.json" with { type: "json" };
 
 function snapshotFiles(root: string): string[] {
   return readdirSync(root, { withFileTypes: true }).flatMap((entry) => {
     const path = join(root, entry.name);
-    return entry.isDirectory() ? snapshotFiles(path) : entry.name === "🔣️.json" && path.includes("/📸️snapshot/") ? [path] : [];
+    return entry.isDirectory() ? snapshotFiles(path) : flatFixtureRole(path.replaceAll("\\", "/")) === "snapshot" ? [path] : [];
   });
 }
 
@@ -35,6 +35,7 @@ export async function testNormDocumentContractOracle(): Promise<void> {
       invalidDocuments: [...Object.entries(owner.invalidFields).map(([field, value]) => ({ ...owner.document, [field]: value })), ...vectors.invalidChildren.map((child) => ({ ...owner.document, [owner.childField]: child }))],
       invalidDiffs: [{ artifact: owner.document }, ...vectors.invalidChildren.filter((child) => child !== null).map((child) => ({ [owner.childField]: child }))],
       mutationRoots: [join(root, "../🧪️tests/🧫️fixtures/🧬️mutations")],
+      fixtureRole: flatFixtureRole,
       committed: owner.committed,
     });
     for (const facet of facets.slice(0, 2)) assert.equal(childKind(facet.schema, owner.childField), "s.stdio.semio");
