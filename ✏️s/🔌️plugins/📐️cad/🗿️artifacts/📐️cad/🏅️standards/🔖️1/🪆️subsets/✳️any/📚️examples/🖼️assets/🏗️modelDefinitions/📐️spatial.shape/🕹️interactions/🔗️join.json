@@ -2,7 +2,10 @@
   "schema": "spatial.interaction",
   "id": "edit.join",
   "version": "1.0.0",
-  "label": "Join",
+  "label": {
+    "native": { "en": "Join", "de": "Verbinden" },
+    "reuse": { "en": "Join", "de": "Verbinden" }
+  },
   "interaction": {
     "spatialGroundPick": false,
     "pickDisabledStates": ["idle", "committed"],
@@ -23,7 +26,10 @@
               {
                 "target": "select_object_for_join",
                 "key": "s",
-                "label": "Start",
+                "label": {
+                  "native": { "en": "Start", "de": "Start" },
+                  "reuse": { "en": "Start", "de": "Start" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -84,7 +90,10 @@
         "selection": {
           "accept": ["edge", "wire", "face"],
           "multiple": true,
-          "prompt": "Select object for join"
+          "prompt": {
+            "native": { "en": "Select object for join", "de": "Objekt zum Verbinden auswählen" },
+            "reuse": { "en": "Select object for join", "de": "Objekt zum Verbinden auswählen" }
+          }
         },
         "on": [
           {
@@ -93,7 +102,10 @@
               {
                 "target": "select_object_for_join",
                 "key": "s",
-                "label": "Select",
+                "label": {
+                  "native": { "en": "Select", "de": "Auswählen" },
+                  "reuse": { "en": "Select", "de": "Auswählen" }
+                },
                 "effects": [
                   {
                     "mutation": "action",
@@ -125,7 +137,10 @@
               {
                 "target": "committed",
                 "key": "Enter",
-                "label": "Finish"
+                "label": {
+                  "native": { "en": "Finish", "de": "Fertig" },
+                  "reuse": { "en": "Finish", "de": "Fertig" }
+                }
               }
             ]
           },
@@ -135,7 +150,10 @@
               {
                 "target": "committed",
                 "key": "RightClick",
-                "label": "Finish"
+                "label": {
+                  "native": { "en": "Finish", "de": "Fertig" },
+                  "reuse": { "en": "Finish", "de": "Fertig" }
+                }
               }
             ]
           }
@@ -156,7 +174,10 @@
             "kind": "label",
             "id": "select_object_for_join-prompt",
             "role": "prompt",
-            "text": "Select object for join",
+            "text": {
+              "native": { "en": "Select object for join", "de": "Objekt zum Verbinden auswählen" },
+              "reuse": { "en": "Select object for join", "de": "Objekt zum Verbinden auswählen" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]

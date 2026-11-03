@@ -52,11 +52,7 @@ semio-framework-ui-locale = { path = "../../../../../../../../../../../../../�
 semio-framework-value = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-derive = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio-s-artifact-sequence-sequence-schema = { path = "../../../📦️packages/🦀️rust" }
-semio-s-artifact-stdio-csv = { workspace = true }
-semio-s-artifact-stdio-json = { workspace = true }
-semio-s-artifact-stdio-md = { workspace = true }
 semio-s-artifact-stdio-semio = { workspace = true }
-semio-s-artifact-stdio-semio-base = { workspace = true }
 semio-s-artifact-stdio-semio-flow = { workspace = true }
 
 [features]

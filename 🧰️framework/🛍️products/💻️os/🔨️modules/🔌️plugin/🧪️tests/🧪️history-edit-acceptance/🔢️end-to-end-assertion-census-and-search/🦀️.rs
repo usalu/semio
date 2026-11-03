@@ -26,8 +26,8 @@ where
     if descriptors.iter().all(|descriptor| withdraw_only.contains(descriptor.semantic_kind)) {
         return format!("{plugin}: withdraw-only artifact (all {} leaves declare editable: false, design §22.20)", descriptors.len());
     }
-    match acceptance_search::<A, M>(plugin, manifest, fixtures, examples, false,cx).await {
-        AcceptanceSearch::Passed(summary) => format!("{summary}\n[history-edit-census] {}", acceptance_census::<A, M>(plugin, manifest, fixtures, examples, &withdraw_only,cx).await),
+    match Box::pin(acceptance_search::<A, M>(plugin, manifest, fixtures, examples, false,cx)).await {
+        AcceptanceSearch::Passed(summary) => format!("{summary}\n[history-edit-census] {}", Box::pin(acceptance_census::<A, M>(plugin, manifest, fixtures, examples, &withdraw_only,cx)).await),
         AcceptanceSearch::Failed(failure) => panic!("{failure}"),
         AcceptanceSearch::Exhausted(report) => panic!("{report}"),
     }
@@ -44,7 +44,7 @@ where
     M: ReferenceSpaceMember + MemberFactory + Send + 'static,
     <A as ArtifactApp>::Snapshot: pack::snapshot::ArtifactDsl,
 {
-    let mut app = match acceptance_seeded::<A, M>(manifest, &case.base, &[&case.op], true,cx).await {
+    let mut app = match Box::pin(acceptance_seeded::<A, M>(manifest, &case.base, &[&case.op], true,cx)).await {
         Ok(app) => app,
         Err(AcceptanceSeedFault::Operation(_, reason)) => return Err(AcceptanceVerdict::SkipCase(reason)),
         Err(AcceptanceSeedFault::Original(reason)) => return Err(AcceptanceVerdict::Fail(reason)),
@@ -57,17 +57,17 @@ where
             .first()
             .map(|op| op.mutation_id.0.clone())
             .ok_or_else(|| AcceptanceVerdict::Fail("the seeded edit left no applied operation".into()))?;
-        acceptance_verb(&mut app, HISTORY_EDIT_BEGIN_ACTION_ID, vec![(HISTORY_EDIT_ARG_MUTATION_ID, DslValue::String(target))],cx).await.map_err(|reason|AcceptanceVerdict::Fail(reason.into()))?;
+        Box::pin(acceptance_verb(&mut app, HISTORY_EDIT_BEGIN_ACTION_ID, vec![(HISTORY_EDIT_ARG_MUTATION_ID, DslValue::String(target))],cx)).await.map_err(|reason|AcceptanceVerdict::Fail(reason.into()))?;
         let offered = match app.time_travel.editor() {
             None => return Err(AcceptanceVerdict::Fail("historyEditBegin opened no editor".into())),
             Some(editor) if editor.inputs_refused.is_some() => return Err(AcceptanceVerdict::Fail((format!("the editor cannot read the leaf's input schema: {:?}", editor.inputs_refused)).into())),
             Some(editor) => acceptance_change_buckets(&editor.inputs, &editor.value).map(|bucket| !bucket.is_empty()),
         };
-        acceptance_verb(&mut app, HISTORY_EDIT_EXIT_ACTION_ID, Vec::new(),cx).await.map_err(|reason|AcceptanceVerdict::Fail(reason.into()))?;
+        Box::pin(acceptance_verb(&mut app, HISTORY_EDIT_EXIT_ACTION_ID, Vec::new(),cx)).await.map_err(|reason|AcceptanceVerdict::Fail(reason.into()))?;
         Ok::<_, AcceptanceVerdict>(offered)
     }
     .await;
-    acceptance_close(&mut app,cx).await;
+    Box::pin(acceptance_close(&mut app,cx)).await;
     offered
 }
 
@@ -88,7 +88,7 @@ where
     let mut cases = acceptance_cases::<A>(fixtures);
     let leaf_of = |case: &AcceptanceCase<A::Mutation>| protocol::SemanticMutation::<A::Snapshot>::semantics(&case.op).kind;
     let committed: BTreeSet<&str> = cases.iter().map(leaf_of).collect();
-    for case in acceptance_example_cases::<A>(fixtures, examples).await {
+    for case in Box::pin(acceptance_example_cases::<A>(fixtures, examples)).await {
         match committed.contains(leaf_of(&case)) {
             true => ::protocol::Mutation::<A::Snapshot>::retire_cold(case.op),
             false => cases.push(case),
@@ -106,7 +106,7 @@ where
         }
         for index in own {
             let case = &cases[index];
-            let offered = match acceptance_offered::<A, M>(manifest, case,cx).await {
+            let offered = match Box::pin(acceptance_offered::<A, M>(manifest, case,cx)).await {
                 Ok(offered) => offered,
                 Err(AcceptanceVerdict::Fail(reason)) => {
                     broken.push(reason.context(format!("{leaf} ({})", case.directory)));
@@ -130,7 +130,7 @@ where
             }
             for kind in wanted {
                 attempted.insert((index, kind));
-                match acceptance_scenario::<A, M>(manifest, case, None, false, Some(kind),cx).await {
+                match Box::pin(acceptance_scenario::<A, M>(manifest, case, None, false, Some(kind),cx)).await {
                     AcceptanceVerdict::Pass(_) => {
                         exercised.insert(leaf);
                         proven[kind].get_or_insert(leaf);
@@ -151,7 +151,7 @@ where
                 break;
             }
             let (case, leaf) = (&cases[index], leaf_of(&cases[index]));
-            match acceptance_scenario::<A, M>(manifest, case, None, false, Some(kind),cx).await {
+            match Box::pin(acceptance_scenario::<A, M>(manifest, case, None, false, Some(kind),cx)).await {
                 AcceptanceVerdict::Pass(_) => {
                     exercised.insert(leaf);
                     proven[kind] = Some(leaf);
@@ -220,14 +220,14 @@ where
     let mut skipped = Vec::new();
     let committed = acceptance_cases::<A>(fixtures);
     let mut counts = vec![committed.len()];
-    let mut outcome = acceptance_first_pass::<A, M>(plugin, manifest, &committed, &mut skipped, reload,cx).await;
+    let mut outcome = Box::pin(acceptance_first_pass::<A, M>(plugin, manifest, &committed, &mut skipped, reload,cx)).await;
     for case in committed {
         ::protocol::Mutation::<A::Snapshot>::retire_cold(case.op);
     }
     if matches!(outcome, Ok(None)) {
-        let derived = acceptance_example_cases::<A>(fixtures, examples).await;
+        let derived = Box::pin(acceptance_example_cases::<A>(fixtures, examples)).await;
         counts.push(derived.len());
-        outcome = acceptance_first_pass::<A, M>(plugin, manifest, &derived, &mut skipped, reload,cx).await;
+        outcome = Box::pin(acceptance_first_pass::<A, M>(plugin, manifest, &derived, &mut skipped, reload,cx)).await;
         for case in derived {
             ::protocol::Mutation::<A::Snapshot>::retire_cold(case.op);
         }

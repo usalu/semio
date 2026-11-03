@@ -1,5 +1,5 @@
 {
-  "name": "@semio-tech/replication-mutation-retained-rs",
+  "name": "@semio-tech/replication-retained-rs",
   "tags": [
     "scope:framework",
     "language:rust"

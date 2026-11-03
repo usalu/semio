@@ -1,11 +1,12 @@
 use super::*;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemAxis;
 use semio_s_artifact_fem_2d_editor_transient::editor::fem2d::transient::fem_gumball_drive;
 use semio_s_artifact_fem_2d_editor_transient::editor::fem2d::transient::FemGumballDrive;
 use semio_s_artifact_fem_2d_editor_transient::editor::fem2d::transient::FemGumballTransient;
 
 fn demo() -> Fem3dSnapshot {
-    semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot()
+    semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot().expect("demo snapshot")
 }
 
 fn ids(values: &[&str]) -> Vec<String> {
@@ -17,13 +18,13 @@ fn targets(values: &[(&str, &str)]) -> Vec<String> {
 }
 
 fn moved(doc: &Fem3dSnapshot, tick: MoveSelection) -> Fem3dSnapshot {
-    let mut snapshot = doc.clone();
-    semio_s_artifact_fem_3d_mutations::central_apply::apply_fem3d_mutation(&mut snapshot, &Fem3dMutation::MoveSelection(tick)).expect("the tick applies");
-    snapshot
+    let mut value = doc.to_reference();
+    semio_s_artifact_fem_3d_mutations::central_apply::apply_fem3d_mutation(&mut value, &Fem3dMutation::MoveSelection(tick)).expect("the tick applies");
+    Fem3dSnapshot::from_reference(value).expect("the moved snapshot")
 }
 
 fn node(doc: &Fem3dSnapshot, id: &str) -> [f64; 3] {
-    let node = doc.nodes.iter().find(|node| node.id == id).expect("node");
+    let node = doc.nodes.iter().find(|node| node.id.as_str() == id).expect("node");
     [node.x, node.y, node.z]
 }
 
@@ -40,16 +41,18 @@ fn targets_resolve_members_supports_and_loads_to_their_geometry() {
 #[test]
 fn wide_selection_resolves_each_geometry_once_in_document_order() {
     let vector: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🎯️projection/🔣️.json")).unwrap();
-    let mut doc = Fem3dSnapshot::default();
+    let mut value = Fem3dSnapshotValue::default();
     for index in 0..vector["nodeCount"].as_u64().unwrap() {
-        doc.nodes.push(semio_s_fem_node::volumetric::FemNodeValue { id: format!("node:{index}"), x: index as f64, y: 0.0, z: 0.0 });
+        value.nodes.push(semio_s_fem_node::volumetric::FemNodeValue { id: format!("node:{index}"), x: index as f64, y: 0.0, z: 0.0 });
     }
-    let selection: Vec<String> = doc.nodes.iter().rev().flat_map(|node| {
-        let identity = super::super::fem3d_entity_target("node", &node.id).unwrap();
+    let doc = Fem3dSnapshot::from_reference(value).expect("wide snapshot");
+    let rows: Vec<_> = doc.nodes.iter().collect();
+    let selection: Vec<String> = rows.into_iter().rev().flat_map(|node| {
+        let identity = super::super::fem3d_entity_target("node", node.id.as_str()).unwrap();
         [identity.clone(), identity]
     }).collect();
     let resolved = fem3d_transform_targets(&doc, &selection);
-    assert_eq!(resolved.node_ids, doc.nodes.iter().map(|node| node.id.clone()).collect::<Vec<_>>());
+    assert_eq!(resolved.node_ids, doc.nodes.iter().map(|node| node.id.as_str().to_owned()).collect::<Vec<_>>());
     assert_eq!(resolved.node_ids.len() as u64, vector["nodeCount"].as_u64().unwrap());
     assert_eq!(fem3d_transform_pivot(&doc, &resolved).unwrap(), [vector["pivot"][0].as_f64().unwrap(), 0.0, 0.0]);
     let interaction = Fem3dInteractionSnapshot::selecting(selection);
@@ -137,7 +140,7 @@ fn streamed_ticks_commit_the_net_leaf_once() {
     let second = drive(&open, "w", "rotateSelection", GesturePhase::Stream, tick(std::f64::consts::FRAC_PI_2 - 0.5), "base");
     let open = second.transient.expect("the second tick advances it");
     assert_eq!(open.gestures["w"].transaction, minted, "every tick rides the same transaction");
-    let preview = open.preview::<Fem3dSnapshot, Fem3dMutation>(&doc).expect("an open gesture previews");
+    let preview = open.preview::<Fem3dSnapshot, Fem3dSnapshotValue, Fem3dMutation>(&doc, Fem3dSnapshot::to_reference, |value| Fem3dSnapshot::from_reference(value).ok()).expect("an open gesture previews");
     let swung = node(&preview, "n20_g");
     assert!((swung[0] - 4.0).abs() < 1e-9 && (swung[1] - 4.0).abs() < 1e-9, "the preview is the net quarter turn: {swung:?}");
     let done = drive(&open, "w", "rotateSelection", GesturePhase::Commit, tick(0.0), "base");
@@ -209,11 +212,11 @@ async fn a_gumball_move_edited_in_history_replays_its_downstream() {
     let result = replay.finish().expect("a finished replay yields its result");
     assert!(!store.replay_report(&result).expect("report").blocks_finalize(), "a re-offset move never blocks finalizing");
     let fold = |mutations: &[Fem3dMutation]| {
-        let mut snapshot = base.clone();
+        let mut value = base.to_reference();
         for mutation in mutations {
-            semio_s_artifact_fem_3d_mutations::central_apply::apply_fem3d_mutation(&mut snapshot, mutation).expect("the log folds");
+            semio_s_artifact_fem_3d_mutations::central_apply::apply_fem3d_mutation(&mut value, mutation).expect("the log folds");
         }
-        snapshot
+        Fem3dSnapshot::from_reference(value).expect("the folded snapshot")
     };
     let fresh = fold(&[edited, log[1].clone(), log[2].clone()]);
     assert_ne!(fresh, fold(&log), "the edit changes the outcome");

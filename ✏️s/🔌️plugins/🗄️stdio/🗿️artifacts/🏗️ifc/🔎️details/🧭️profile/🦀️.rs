@@ -13,7 +13,7 @@ pub use type_metadata::{IfcDetailsTypeMetadata,IfcTypeProjection};
 #[cfg(feature="testkit")]#[path="testkit.rs"]pub mod testkit;
 #[cfg(feature="testkit")]pub use testkit::DetailsTestProfile;
 #[path="retained.rs"]pub mod retained;
-pub use retained::{begun,costed,cursor_step,idle_step,owned_step,refused};
+pub use retained::{own_with,begun,costed,cursor_step,idle_step,owned_step,refused};
 #[path="candidate_rules.rs"]pub mod candidate_rules;
 pub use candidate_rules::{IfcCandidateCheck,IfcCandidateRules,IfcCandidateRuleStep,IfcTypeCandidate};
 

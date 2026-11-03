@@ -29,4 +29,5 @@ semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️val
 serde = { version = "1.0.219", features = ["derive"], optional = true }
 
 [dev-dependencies]
+semio-framework-os-vcs = { path = "../../../../🌿️vcs/📦️packages/🦀️rust", features = ["testkit"] }
 serde = { version = "1.0.219", features = ["derive"] }

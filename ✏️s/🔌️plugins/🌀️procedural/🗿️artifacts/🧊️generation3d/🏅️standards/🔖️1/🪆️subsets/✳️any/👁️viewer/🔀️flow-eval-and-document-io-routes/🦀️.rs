@@ -202,3 +202,10 @@ impl Generation3dViewDocumentIoJobFactoryProofs {
     }
 }
 //#endregion 📤️DocumentIoRoute
+
+/// 🧾️ The flow-evaluation and document-io factories' first-step proofs, in registration order.
+pub(super) fn generation3d_view_flow_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
+    let mut proofs = Generation3dViewFlowEvalJobFactoryProofs::bounded_first_step_tool_proofs();
+    proofs.extend(Generation3dViewDocumentIoJobFactoryProofs::bounded_first_step_tool_proofs());
+    proofs
+}

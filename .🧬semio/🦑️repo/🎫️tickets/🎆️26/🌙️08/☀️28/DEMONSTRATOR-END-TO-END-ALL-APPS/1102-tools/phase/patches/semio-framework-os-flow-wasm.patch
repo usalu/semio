@@ -1,0 +1,11 @@
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧵️dag-input/🦀️.rs
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🧵️dag-input/🦀️.rs
+@@ -88,7 +88,7 @@
+     }
+     fn close_owned<T:RetireOwned>(&mut self,original:&mut Option<T>,admitted:RetainedCloneGrant)->Result<bool,FlowFailure>{
+         if original.is_some(){let capacity=semio_framework_value::retirement::owned_retirement_birth_bytes::<T>();let grant=match self.close_grant(admitted,0,capacity,0,1){Ok(grant)=>grant,Err(_)=>return Ok(false)};
+-            match admit_owned_retirement(original.take().unwrap(),grant).result{Ok((owner,progress))=>{self.close_capacity-=progress.retained_capacity_bytes;self.receipt=self.receipt.checked_add(progress).map_err(dag_input_failure)?;self.retirement=Some(owner)},Err((error,value))=>{*original=Some(value);return Err(dag_input_failure(error))}}
++            let Some(value)=original.take()else{return Ok(true)};match admit_owned_retirement(value,grant).result{Ok((owner,progress))=>{self.close_capacity-=progress.retained_capacity_bytes;self.receipt=self.receipt.checked_add(progress).map_err(dag_input_failure)?;self.retirement=Some(owner)},Err((error,value))=>{*original=Some(value);return Err(dag_input_failure(error))}}
+             return Ok(false)
+         }Ok(true)
+     }

@@ -82,7 +82,7 @@ impl FlowHost {
     /// refusal is kept as [`FlowCoreError::HistoryRefused`] for [`FlowHost::take_history_fault`].
     pub fn record_history_edit(&mut self, baseline: FlowHostSnapshot) {
         let operations = std::mem::take(&mut self.pending_leaves);
-        #[cfg(test)]
+        #[cfg(any(test,feature="testkit"))]
         {
             if !operations.is_empty() {
                 self.recorded.push(operations.clone());

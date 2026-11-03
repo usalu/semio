@@ -21,14 +21,16 @@ use std::collections::BTreeMap;
 
 //#region 🔖️State
 /// 🫧️ Every open gumball gesture of one FEM artifact instance, by owning window id.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct FemGumballTransient {
     pub gestures: BTreeMap<String, FemGumballGesture>,
 }
 
 /// 💾️ One window's in-flight gumball gesture.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct FemGumballGesture {
     pub states: Vec<String>,
@@ -40,7 +42,8 @@ pub struct FemGumballGesture {
 }
 
 /// 🧷️ One provisional entry of the open transaction, its mutation in value form.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct FemGumballEntry {
     pub key: String,
@@ -143,6 +146,27 @@ semio_framework_plugin::transient_root! {
     extension: "femgumballtransient",
     retained: true,
     fields: { gestures: BTreeMap<String, FemGumballGesture> },
+}
+
+impl semio_framework_pack_json::ArtifactCanonicalJsonTree for FemGumballTransientMutation {
+    fn canonical_tree_node(&self) -> Result<semio_framework_pack_json::ArtifactCanonicalJsonNode<'_>, semio_framework_value::ValueError> {
+        Ok(semio_framework_pack_json::ArtifactCanonicalJsonNode::Object(2))
+    }
+    fn canonical_tree_child(&self, ordinal: usize) -> Result<&dyn semio_framework_pack_json::ArtifactCanonicalJsonTree, semio_framework_value::ValueError> {
+        static KIND: &str = "snapshot";
+        match (self, ordinal) {
+            (_, 0) => Ok(&KIND),
+            (Self::Snapshot { transient }, 1) => Ok(transient),
+            _ => Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "canonical gumball mutation ordinal is absent")),
+        }
+    }
+    fn canonical_tree_key(&self, ordinal: usize) -> Result<semio_framework_pack_json::ArtifactCanonicalJsonText<'_>, semio_framework_value::ValueError> {
+        match ordinal {
+            0 => Ok("kind".into()),
+            1 => Ok("transient".into()),
+            _ => Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "canonical gumball mutation key ordinal is absent")),
+        }
+    }
 }
 //#endregion 🔖️Mutation
 

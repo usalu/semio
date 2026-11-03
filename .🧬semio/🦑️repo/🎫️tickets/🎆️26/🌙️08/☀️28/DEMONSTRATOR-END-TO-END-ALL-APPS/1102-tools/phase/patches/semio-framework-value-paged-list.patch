@@ -1,0 +1,11 @@
+--- a/🧰️framework/🔨️modules/🌱️value/📋️list/🪢️concat/🦀️.rs
++++ b/🧰️framework/🔨️modules/🌱️value/📋️list/🪢️concat/🦀️.rs
+@@ -27,7 +27,7 @@
+  pub fn push(&mut self,input:&mut Vec<T>,grant:RetainedCloneGrant)->RetainedWorkOutcome<(bool,RetainedCloneProgress)>{
+   let mut work=0;let result=(||{
+    let d=self.push_demand()?;if !retained_clone_grant_admits(grant,d){return Ok((false,Default::default()))}
+-   if let Some(original)=self.pending.take(){self.chunks.push_reserved(original).unwrap_or_else(|_|unreachable!("paid chunk row remains exclusively reserved"));work=1;return Ok((true,RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}
++   if let Some(original)=self.pending.take(){self.chunks.push_reserved(original).map_err(|_|ValueError::invariant("paid chunk row remains exclusively reserved"))?;work=1;return Ok((true,RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}
+    if !self.chunks.has_reserved_slot(){return match self.chunks.reserve_one(grant.maximum_capacity_bytes){Ok(p)=>{work=p.work;Ok((false,RetainedCloneProgress{copied_items:usize::from(p.progressed),copied_bytes:p.placed_bytes,retained_capacity_bytes:p.allocated_bytes,released_bytes:p.released_allocation_bytes}))},Err(e)=>{work=e.work;Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,e.reason).with_retained_progress(RetainedCloneProgress{retained_capacity_bytes:e.allocated_bytes,..Default::default()}))}}}
+    let total=self.total.checked_add(input.len()).ok_or_else(invalid)?;
+    let turn=OriginalVectorCursor::admit(std::mem::take(input),Self::child(grant));work=turn.work;

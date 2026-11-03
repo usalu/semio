@@ -7,16 +7,16 @@ pub struct DurableOwnedThreeStorePreparedV1<ParentP, ParentMutation, DrawingP, D
     pub parent: DurableStorePreparedOwnerV1<ParentP, ParentMutation>,
     pub drawing: DurableStorePreparedOwnerV1<DrawingP, DrawingMutation>,
     pub value: DurableStorePreparedOwnerV1<ValueP, ValueMutation>,
-    pub(super) decision: Option<Box<DurableOwnedThreeMemberDecisionV1>>,
+    pub decision: Option<Box<DurableOwnedThreeMemberDecisionV1>>,
     pub(super) decision_pack: Option<Vec<u8>>,
-    pub(super) binding_step: u8,
+    pub binding_step: u8,
     pub(super) decision_plan_phase: u8,
     pub(super) decision_packet_hash: Option<semio_framework_hash::Sha256>,
     pub(super) decision_identity:planning::DurableDecisionIdentityV1,
     pub(super) issuers_captured:bool,
     pub(super) decision_retirement:Option<semio_framework_value::retirement::controlled::ControlledRetirement<Box<DurableOwnedThreeMemberDecisionV1>>>,
     pub(super) decision_pack_retirement:Option<semio_framework_value::retirement::controlled::ControlledRetirement<DurablePlanningOutputV1>>,
-    pub(super) retirement_progress:semio_framework_value::RetainedCloneProgress,
+    pub retirement_progress:semio_framework_value::RetainedCloneProgress,
     #[cfg(feature = "deflate")]
     pub(super) decision_encoding: planning::DurablePackOutputV1,
 }
@@ -26,7 +26,7 @@ pub struct DurableOwnedThreeStoreBoundV1<ParentP, ParentMutation, DrawingP, Draw
     pub parent: DurableStoreBoundOutcomeV1<ParentP, ParentMutation>,
     pub drawing: DurableStoreBoundOutcomeV1<DrawingP, DrawingMutation>,
     pub value: DurableStoreBoundOutcomeV1<ValueP, ValueMutation>,
-    pub(super) decision_pack: Option<Vec<u8>>,
+    pub decision_pack: Option<Vec<u8>>,
 }
 
 #[expect(clippy::large_enum_variant, reason = "Recovery hands back all three exact preadmitted store outcomes without allocating at the ownership transition.")]

@@ -178,6 +178,7 @@ impl Fold {
                     BrepBooleanStep::Working(step) => Outcome::Working(progress(step.units_done, step.units_total)),
                     BrepBooleanStep::Ready(handle) => Outcome::Ready(Some(handle)),
                     BrepBooleanStep::Cancelled(_) => return Err(cancelled_fault().into()),
+                    BrepBooleanStep::Failed(error) => return Err(boolean_fault(&error).into()),
                 },
                 Running::CutAll(job) => {
                     let budget = fuel_budget(cx);

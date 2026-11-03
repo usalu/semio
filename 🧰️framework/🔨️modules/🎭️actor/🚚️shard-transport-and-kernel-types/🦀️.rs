@@ -7,10 +7,10 @@ use super::*;
 /// this crate (native, `std::sync::mpsc`); `WorkerTransport` (postMessage) and `ProcessTransport`
 /// (stdio) are host-supplied — all three carry the same `Envelope`/`TurnResult` pack encoding.
 pub trait ShardTransport: Send {
-    async fn send(&self, bytes: &[u8]);
-    async fn recv(&self) -> Option<Vec<u8>>;
-    async fn heartbeat(&self) -> u64;
-    async fn kill(&self);
+    fn send(&self, bytes: &[u8]) -> impl ::core::future::Future<Output = ()>;
+    fn recv(&self) -> impl ::core::future::Future<Output = Option<Vec<u8>>>;
+    fn heartbeat(&self) -> impl ::core::future::Future<Output = u64>;
+    fn kill(&self) -> impl ::core::future::Future<Output = ()>;
 }
 
 //#region 🔖️ThreadTransport

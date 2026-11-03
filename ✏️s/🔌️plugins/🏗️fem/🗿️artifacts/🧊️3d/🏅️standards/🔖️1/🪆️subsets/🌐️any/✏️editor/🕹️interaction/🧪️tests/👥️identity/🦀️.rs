@@ -10,10 +10,20 @@ use semio_framework_plugin::HistoryView;
 use semio_framework_plugin::NoConfig;
 use semio_framework_value::DslValue;
 use semio_framework_value::FromValue;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemDof;
+
+fn reference(doc: &Fem3dSnapshot) -> Fem3dSnapshotValue {
+    doc.to_reference()
+}
+
+fn snapshot(value: Fem3dSnapshotValue) -> Fem3dSnapshot {
+    Fem3dSnapshot::from_reference(value).expect("admitted snapshot")
+}
 
 fn collision_document() -> Fem3dSnapshot {
     let fixture: DslValue = semio_framework_pack_json::from_json_str(include_str!("../../../🎮️commands/🗂️remove-selection/🧪️tests/🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-    let mut doc = Fem3dSnapshot::from_value(fixture.get("snapshot").unwrap().clone()).unwrap();
+    let mut doc = reference(&Fem3dSnapshot::from_value(fixture.get("snapshot").unwrap().clone()).unwrap());
     doc.nodes[0].id = "same".into();
     doc.materials[0].id = "same".into();
     doc.sections[0].id = "same".into();
@@ -23,14 +33,14 @@ fn collision_document() -> Fem3dSnapshot {
     doc.supports[0].id = "same".into();
     doc.supports[0].node_id = "same".into();
     doc.load_cases[0].id = "same".into();
-    doc.load_cases[0].loads = vec![FemLoad::Nodal { id: "共:1".into(), node_id: "n2".into(), dof: crate::FemDof::Tz, value: -1000.0 }];
+    doc.load_cases[0].loads = vec![FemLoad::Nodal { id: "共:1".into(), node_id: "n2".into(), dof: FemDof::Tz, value: -1000.0 }];
     let mut other = doc.load_cases[0].clone();
     other.id = "other:case".into();
-    other.loads = vec![FemLoad::Nodal { id: "共:1".into(), node_id: "same".into(), dof: crate::FemDof::Tz, value: -2000.0 }];
+    other.loads = vec![FemLoad::Nodal { id: "共:1".into(), node_id: "same".into(), dof: FemDof::Tz, value: -2000.0 }];
     doc.load_cases.push(other);
     doc.combinations[0].id = "same".into();
     doc.combinations[0].terms = [("same".into(), 1.5)].into_iter().collect();
-    doc
+    snapshot(doc)
 }
 
 #[test]
@@ -68,12 +78,12 @@ fn scoped_load_commands_modify_only_the_addressed_case_and_reject_raw_ids() {
     let identity = fem3d_load_target("other:case", "共:1").unwrap();
     let patch = patch_load::handle(&patch_load::PatchLoad { id: identity.clone(), field: "value".into(), value: "-3000".into() }, &view, &config).unwrap();
     let after = crate::vcs::apply_mutation(&doc, &patch.artifact_mutations[0]).unwrap().0;
-    assert_eq!(after.load_cases[0], doc.load_cases[0]);
-    assert!(matches!(after.load_cases[1].loads[0], FemLoad::Nodal { value: -3000.0, .. }));
+    assert_eq!(reference(&after).load_cases[0], reference(&doc).load_cases[0]);
+    assert!(matches!(reference(&after).load_cases[1].loads[0], FemLoad::Nodal { value: -3000.0, .. }));
     let removed = remove_selection::handle(&remove_selection::RemoveSelection { ids: vec![identity] }, &view, &config).unwrap();
     let after = crate::vcs::apply_mutation(&doc, &removed.artifact_mutations[0]).unwrap().0;
-    assert_eq!(after.load_cases[0], doc.load_cases[0]);
-    assert!(after.load_cases[1].loads.is_empty());
+    assert_eq!(reference(&after).load_cases[0], reference(&doc).load_cases[0]);
+    assert!(reference(&after).load_cases[1].loads.is_empty());
     assert!(patch_load::handle(&patch_load::PatchLoad { id: "共:1".into(), field: "value".into(), value: "1".into() }, &view, &config).is_err());
     for malformed in ["same", "scope:1:7:unknown4:same", "scope:1:4:node4:same1:x"] {
         assert!(remove_selection::handle(&remove_selection::RemoveSelection { ids: vec![fem3d_entity_target("material", "same").unwrap(), malformed.into()] }, &view, &config).is_err());
@@ -88,17 +98,19 @@ fn viewport_identity_collisions_are_distinct_and_unencodable_ids_refuse_scene() 
     let targets: std::collections::HashSet<_> = instances.as_array().unwrap().iter().filter_map(|instance| instance.get("interactionId").or_else(|| instance.get("id")).and_then(semio_framework_pack_json::Value::as_str)).collect();
     for kind in ["node", "element", "solid", "support"] { assert!(targets.contains(fem3d_entity_target(kind, "same").unwrap().as_str())); }
     for case in ["same", "other:case"] { assert!(targets.contains(fem3d_load_target(case, "共:1").unwrap().as_str())); }
-    let mut malformed = doc;
+    let mut malformed = reference(&doc);
     malformed.nodes[0].id.clear();
-    assert!(semio_s_artifact_fem_3d_scene::standards::v1::subsets::any::scene::fem3d_scene_parts(&malformed, None, 1.0, None).is_err());
+    if let Ok(malformed) = Fem3dSnapshot::from_reference(malformed) {
+        assert!(semio_s_artifact_fem_3d_scene::standards::v1::subsets::any::scene::fem3d_scene_parts(&malformed, None, 1.0, None).is_err());
+    }
 }
 
 /// 🛂️ Public cold JSON and metered typed admission enforce the same owner namespace contract.
 #[test]
 fn public_json_identity_admission_refuses_invalid_owners_and_controlled_scratch_is_metered() {
     let fixture: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(include_str!("../🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("owner admission vectors");
-    let valid = collision_document();
-    let read = |document: &Fem3dSnapshot| semio_framework_pack_json::from_json_str::<Fem3dSnapshot>(&semio_framework_pack_json::to_json_string(document), semio_framework_pack_json::JsonMemberPolicy::Reject);
+    let valid = reference(&collision_document());
+    let read = |document: &Fem3dSnapshotValue| semio_framework_pack_json::from_json_str::<Fem3dSnapshotValue>(&semio_framework_pack_json::to_json_string(document), semio_framework_pack_json::JsonMemberPolicy::Reject);
     assert_eq!(read(&valid).expect("namespace collisions admitted"), valid);
     for row in fixture["invalidOwnerCases"].as_array().expect("invalid owner cases") {
         let mut invalid = valid.clone();
@@ -130,18 +142,24 @@ fn snapshot_identity_admission_preserves_namespaces_and_refuses_invalid_owners()
     use semio_framework_os_kernel::os_store::ArtifactDsl;
     use semio_framework_os_kernel::os_store::ArtifactPack;
     let doc = collision_document();
-    assert!(doc.validate_interaction_identities().is_ok());
+    let value = reference(&doc);
+    assert!(value.validate_interaction_identities().is_ok());
     assert_eq!(Fem3dSnapshot::decode_pack(&doc.encode_pack()).unwrap(), doc);
     assert_eq!(Fem3dSnapshot::parse_dsl(&doc.print_dsl()).unwrap(), doc);
-    let mut duplicate = doc.clone();
-    duplicate.nodes.push(doc.nodes[0].clone());
-    assert!(duplicate.validate_interaction_identities().is_err());
-    assert!(Fem3dSnapshot::decode_pack(&duplicate.encode_pack()).is_err());
-    assert!(Fem3dSnapshot::parse_dsl(&duplicate.print_dsl()).is_err());
-    let mut duplicate_load = doc.clone();
-    duplicate_load.load_cases[0].loads.push(doc.load_cases[0].loads[0].clone());
+    let refused = |invalid: Fem3dSnapshotValue| {
+        assert!(invalid.validate_interaction_identities().is_err());
+        if let Ok(invalid) = Fem3dSnapshot::from_reference(invalid) {
+            assert!(Fem3dSnapshot::decode_pack(&invalid.encode_pack()).is_err());
+            assert!(Fem3dSnapshot::parse_dsl(&invalid.print_dsl()).is_err());
+        }
+    };
+    let mut duplicate = value.clone();
+    duplicate.nodes.push(value.nodes[0].clone());
+    refused(duplicate);
+    let mut duplicate_load = value.clone();
+    duplicate_load.load_cases[0].loads.push(value.load_cases[0].loads[0].clone());
     assert!(duplicate_load.validate_interaction_identities().is_err());
-    let mut oversized = doc.clone();
+    let mut oversized = value.clone();
     oversized.nodes[0].id = "x".repeat(protocol::wire::SCOPED_IDENTITY_MAX_BYTES);
     assert!(oversized.validate_interaction_identities().is_err());
     let invalid_node = semio_s_fem_node::volumetric::FemNodeValue { id: String::new(), x: 1.0, y: 2.0, z: 3.0 };

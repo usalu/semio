@@ -189,19 +189,18 @@ fn owned_store(label: &str, operation_value: u64) -> store::ArtifactStore<Proces
     owned_store_measured(label, operation_value, &mut ReplacementPhaseBudget::default())
 }
 
-fn owned_store_measured(label: &str, operation_value: u64, budget: &mut ReplacementPhaseBudget) -> store::ArtifactStore<Process3dSnapshot, Process3dMutation> {
-    let operation = semio_framework_job::OperationId(operation_value);
-    let generation = semio_framework_job::Generation(51);
+fn owned_store_measured(label: &str, _operation_value: u64, budget: &mut ReplacementPhaseBudget) -> store::ArtifactStore<Process3dSnapshot, Process3dMutation> {
+    let mut caller = semio_framework_plugin::artifact_app_laws::OriginalFixtureCaller::admit().expect("original fixture caller");
+    let mut decoder = semio_framework_job::OriginalJobDecodeOwner::empty();
+    let mut context = caller.context().with_original_decoder(&mut decoder);
+    let operation = context.operation();
+    let generation = context.generation();
     let mut snapshot = semio_s_artifact_process_process3d_model::snapshot::empty_process3d_snapshot();
     snapshot.stock_label = label.into();
     let envelope = store::os_store::document_materialize::create_document_envelope(semio_s_artifact_process_process3d_model::snapshot::PROCESS_3D_SCHEMA, label, snapshot, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut authority = store::ArtifactStoreReplayInitializer::<Process3dSnapshot, Process3dMutation, store::os_store::document_store_owners::BoundedDocumentStoreOwnerProducer>::new(envelope, semio_s_artifact_process_process3d_model::snapshot::PROCESS_3D_SCHEMA, operation, generation, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()));
-    let cancel = semio_framework_job::CancelToken::root_now();
-    let mut preview_sequence = 0;
     let mut complete = false;
     for _ in 0..PROCESS3D_MAXIMUM_DOMAIN_ITEMS {
-        let mut context_retained = semio_framework_job::RetainedCloneProgress::default();
-        let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(4_096, u64::MAX, UNBOUNDED_STEP_GRANT), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence, &mut context_retained);
         let turn = measure_phase(budget, 0, || match semio_framework_plugin::ArtifactStoreInitializationAuthority::step(&mut authority, &mut context).expect("fixture initializer turn") {
             Some(semio_framework_job::JobOutcomeBorrow::Complete { .. }) => Some(true),
             Some(semio_framework_job::JobOutcomeBorrow::Cancelled { .. }) => panic!("fixture initializer cancelled"),
@@ -214,6 +213,10 @@ fn owned_store_measured(label: &str, operation_value: u64, budget: &mut Replacem
         }
     }
     assert!(complete, "fixture initializer must converge");
+    let fuel = context.fuel_remaining();
+    drop(context);
+    let fuel = caller.retire_decoder(&mut decoder, fuel).expect("fixture decoder retirement");
+    caller.retire(fuel).expect("fixture caller retirement");
     let candidate = semio_framework_plugin::ArtifactStoreInitializationAuthority::take_candidate(&mut authority).expect("fixture candidate handoff");
     assert!(semio_framework_plugin::ArtifactStoreInitializationAuthority::terminal_is_empty(&authority));
     drop(authority);
@@ -497,7 +500,14 @@ fn retained_owner_demand_distinguishes_structural_work_from_exact_string_allocat
         value.try_reserve_exact(extent).unwrap();
         assert_eq!(value.capacity(), extent);
         let mut owner = admitted(value);
-        let quote = owner.next_demand(PROCESS3D_MAXIMUM_DOMAIN_BYTES).expect("the owner quotes its next turn");
+        let mut quote = owner.next_demand(PROCESS3D_MAXIMUM_DOMAIN_BYTES).expect("the owner quotes its next turn");
+        let mut structural_turns = 0usize;
+        while quote.release_bytes == 0 && !owner.terminal_is_empty() {
+            structural_turns += 1;
+            assert!(structural_turns < 1 << 16, "structural turns made no progress toward the physical release of {extent} bytes");
+            owner.close_step(grant_of(&quote)).result.expect("structural turns precede the physical release");
+            quote = owner.next_demand(PROCESS3D_MAXIMUM_DOMAIN_BYTES).expect("the owner quotes its next turn");
+        }
         let step = owner.close_step(RetainedCloneGrant { maximum_release_bytes: caller, ..grant_of(&quote) }).result;
         let reported = match &step { Ok(step) => step.progress().released_bytes, Err(_) => 0 };
         let retained = !owner.terminal_is_empty();

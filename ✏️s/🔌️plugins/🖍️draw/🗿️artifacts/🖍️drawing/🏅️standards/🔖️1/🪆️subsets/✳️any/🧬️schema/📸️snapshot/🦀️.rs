@@ -52,7 +52,7 @@ impl Default for DrawingSnapshot {
 pub fn retire_decoded_drawing_snapshot(value: DrawingSnapshot) {
     use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep};
     let birth = RetainedCloneGrant::one_capacity_turn(semio_framework_value::retirement::owned_retirement_birth_bytes::<DrawingSnapshot>(), usize::MAX);
-    let mut cursor = match semio_framework_value::retirement::admit_owned_retirement(value, birth) {
+    let mut cursor = match semio_framework_value::retirement::admit_owned_retirement(value, birth).result {
         Ok((cursor, _)) => cursor,
         Err((error, _)) => panic!("Draw owner retirement refused its exact birth grant: {error:?}"),
     };
@@ -65,7 +65,7 @@ pub fn retire_decoded_drawing_snapshot(value: DrawingSnapshot) {
             maximum_release_bytes: cursor.next_release_byte_demand().expect("Draw owner retirement release demand"),
             maximum_depth: cursor.next_depth_demand().expect("Draw owner retirement depth demand").max(1),
         };
-        if matches!(cursor.close_step(grant).expect("Draw owner retirement"), RetainedCloneStep::Complete(_)) { break; }
+        if matches!(cursor.close_step(grant).result.expect("Draw owner retirement"), RetainedCloneStep::Complete(_)) { break; }
     }
     assert!(cursor.terminal_is_empty());
 }

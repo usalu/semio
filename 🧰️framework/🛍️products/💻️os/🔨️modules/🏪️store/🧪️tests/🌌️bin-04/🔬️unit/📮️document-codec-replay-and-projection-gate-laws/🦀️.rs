@@ -288,13 +288,13 @@ async fn reset_and_apply_reject_malformed_history_before_persisting() {
     let mut store = ArtifactStore::new(fresh(), &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     let generation = store.generation();
     let mut dangling = fresh();
-    dangling.transitions.push(semio_framework_os_spr::history_transition_envelope(
+    dangling.transitions.try_push(semio_framework_os_spr::history_transition_envelope(
         &semio_framework_os_spr::HistoryTransition::Revert { mutation_ids: vec![MutationId("missing".into())] },
         &ArtifactId("demo".into()),
         &ActorId("local".into()),
         Vec::new(),
         HybridLogicalTimestamp::new(0, 1),
-    ));
+    )).unwrap_or_else(|_|panic!("fixture transition admitted"));
     assert!(matches!(store.reset(dangling).await, Err(VcsError::ValidationFailed(message)) if message.contains("missing")), "a transition naming an unknown operation cannot be folded");
     assert_eq!(store.generation(), generation, "failed reset must preserve the live store");
 }

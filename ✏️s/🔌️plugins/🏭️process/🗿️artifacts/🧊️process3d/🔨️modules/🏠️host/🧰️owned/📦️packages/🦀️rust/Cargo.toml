@@ -36,8 +36,6 @@ semio-s-artifact-process-process3d-mut-machines = { workspace = true }
 semio-s-artifact-process-process3d-mut-steps = { workspace = true }
 semio-s-artifact-process-process3d-mut-stock = { workspace = true }
 semio-s-artifact-process-process3d-mutations = { workspace = true }
-semio-s-artifact-stdio-semio-brep = { workspace = true }
-semio-s-artifact-stdio-semio-flow = { workspace = true }
 
 [dev-dependencies]
 semio-s-artifact-process-process3d-host-retained-cursors = { workspace = true, features = ["testkit"] }

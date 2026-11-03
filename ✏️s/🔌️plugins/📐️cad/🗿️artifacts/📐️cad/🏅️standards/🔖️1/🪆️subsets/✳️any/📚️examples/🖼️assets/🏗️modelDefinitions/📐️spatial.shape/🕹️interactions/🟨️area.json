@@ -2,7 +2,10 @@
   "schema": "spatial.interaction",
   "id": "measure.area",
   "version": "1.0.0",
-  "label": "Area",
+  "label": {
+    "native": { "en": "Area", "de": "Fläche" },
+    "reuse": { "en": "Area", "de": "Fläche" }
+  },
   "key": "a",
   "guards": [
     {
@@ -29,7 +32,10 @@
         "selection": {
           "accept": ["face"],
           "multiple": false,
-          "prompt": "Pick face"
+          "prompt": {
+            "native": { "en": "Pick face", "de": "Seitenfläche wählen" },
+            "reuse": { "en": "Pick face", "de": "Seitenfläche wählen" }
+          }
         },
         "on": [
           {

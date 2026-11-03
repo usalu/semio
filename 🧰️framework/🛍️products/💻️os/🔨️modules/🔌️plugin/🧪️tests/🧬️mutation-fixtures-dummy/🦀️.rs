@@ -540,3 +540,20 @@ async fn registered_laws_accept_an_explicit_member_roster() {
     assert_two_registered_instances_converge_with_members::<DummyApp, DummyMembers, i32, _, _>("mem://testkit-converge-members", dummy_manifest, DummyCommand::Increment, DummyCommand::Increment, |app| app.snapshot().unwrap().count, mounted_policy, &mut identity).await;
     assert_registered_ingest_idempotent_with_members::<DummyApp, DummyMembers, i32, _, _>(dummy_manifest, DummyCommand::Increment, |app| app.snapshot().unwrap().count, mounted_policy, &mut identity).await;
 }
+
+/// 🧪️ Law: a fixture app is constructed like production — the framework schema documents are published before the manifest is authored, so a `$ref` to a framework document (the artifact-reference link) resolves inside the manifest.
+#[semio_framework_async_macros::async_test]
+async fn registered_construction_publishes_framework_schemas_before_the_manifest() {
+    const LINK: &str = "https://json.schemas.assets.semio-tech.com/framework/schema/artifact-reference/link/schema.json";
+    let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original caller policy admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+    let (mounted_policy, maximum_identity_bytes) = dummy_fixture_caller();
+    let mut observer = |_| true;
+    let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes, &mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
+    let manifest = async {
+        assert!(semio_framework::registered_input_schema_document(LINK).is_some(), "the link schema must resolve while the manifest is authored");
+        dummy_manifest().await
+    };
+    let mut app = new_registered_app::<DummyApp, _>(manifest, protocol::ActorId("actor".into()), mounted_policy, &mut identity).await;
+    close_registered_fixture_app(&mut app, mounted_policy, cx).expect("original fixture terminal close");
+    }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original caller paid terminal retirement");result
+}

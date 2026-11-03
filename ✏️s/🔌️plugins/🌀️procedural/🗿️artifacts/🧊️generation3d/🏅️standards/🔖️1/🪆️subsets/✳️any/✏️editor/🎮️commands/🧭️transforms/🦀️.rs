@@ -468,7 +468,7 @@ pub fn gumball_splice(host_snapshot: &FlowHostSnapshot, ids: &[String], operatio
         let mut rows = editor.finish();
         rows.extend(inputs);
         Ok((rows, targets, selection))
-    })
+    }).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("generation3d.flow-host.retire-refused"), error.to_string()))?
 }
 
 fn retire_rows(rows: Vec<Generation3dMutation>) {

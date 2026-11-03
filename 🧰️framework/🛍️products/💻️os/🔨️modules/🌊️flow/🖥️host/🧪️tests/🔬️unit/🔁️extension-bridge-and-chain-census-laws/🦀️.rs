@@ -97,10 +97,12 @@ fn the_node_census_advances_as_a_chain_walks_and_never_calls_a_recomputed_node_s
     assert_eq!(census_entries(&armed), [("add".to_string(), "computing".to_string()), ("pass".to_string(), "queued".to_string()), ("preview".to_string(), "ok".to_string()), ("slider".to_string(), "ok".to_string())]);
 
     let after_first = host.evaluate_cold_step(EvalStepBudget::dispatches(1),&|_|true).unwrap();
+    settle_baseline(&mut host);
     let hop1 = build_flow_status_json(&host, &after_first);
     assert_eq!(census_entries(&hop1), [("add".to_string(), "ok".to_string()), ("pass".to_string(), "computing".to_string()), ("preview".to_string(), "ok".to_string()), ("slider".to_string(), "ok".to_string())], "the node this hop recomputed has SETTLED, whatever the frozen baseline still calls dirty");
 
     let after_second = host.evaluate_cold_step(EvalStepBudget::dispatches(1),&|_|true).unwrap();
+    settle_baseline(&mut host);
     assert!(after_second.is_empty(), "two budget-one hops converge this chain");
     let hop2 = build_flow_status_json(&host, &after_second);
     let census = [census_nodes_done(&armed), census_nodes_done(&hop1), census_nodes_done(&hop2)];
@@ -115,6 +117,7 @@ fn the_node_census_advances_as_a_chain_walks_and_never_calls_a_recomputed_node_s
 fn a_coalesced_tick_parks_a_whole_wave_and_paints_every_member_computing() {
     let mut host = host_with_two_extension_siblings();
     let remaining = host.evaluate_cold_step(flow_eval_tick_budget(None),&|_|true).unwrap();
+    settle_baseline(&mut host);
     let parked: Vec<&str> = host.pending_extension_evals.iter().map(|pending| pending.neuron_id.as_str()).collect();
     assert_eq!(parked, ["left", "right"], "both ready contributed nodes park on the SAME hop");
     let census = census_entries(&build_flow_status_json(&host, &remaining));

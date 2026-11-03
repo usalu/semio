@@ -40,7 +40,7 @@ async fn durable_map_three_store_assembly_late_member_rejection_closes_prior_pub
         let (mut assembly, _) = map_assembly(parent, drawing, value, Some(role), FakeJournalResolution::Commit, state.clone());
         let owners = drain_assembly_rejection(&mut assembly);
         assert!(assembly.terminal_is_empty());
-        assert_eq!([owners.parent.generation, owners.drawing.generation, owners.value.generation], [0, 0, 0]);
+        assert_eq!([owners.parent.generation(), owners.drawing.generation(), owners.value.generation()], [0, 0, 0]);
         assert_eq!(state.lock().unwrap().begins, 0);
         assert!(matches!(owners.failure, DurableOwnedThreeStoreMapAssemblyFailureV1::Admission { role: rejected, .. } if rejected == role));
         assert!(owners.parent_mutation.is_none());
@@ -63,7 +63,7 @@ let (parent, drawing, value) = owned_three_stores().await;
     assert!(assembly.cancel());
     let owners = drain_assembly_rejection(&mut assembly);
     assert!(matches!(owners.failure, DurableOwnedThreeStoreMapAssemblyFailureV1::Cancelled));
-    assert_eq!([owners.parent.generation, owners.drawing.generation, owners.value.generation], [0, 0, 0]);
+    assert_eq!([owners.parent.generation(), owners.drawing.generation(), owners.value.generation()], [0, 0, 0]);
     assert_eq!(state.lock().unwrap().begins, 0);
     close_assembly_owners(owners);
 }
@@ -164,9 +164,11 @@ fn durable_group_journal_record_projects_edits_only_after_all_three_bound_outcom
     assert_eq!(verified.document(), &decision.anchor.parent);
     assert_eq!(record.parent_edit_id(), verified.parent().id);
     assert_eq!(record.parent_post_revision(), decision.parent.post_revision);
-    assert_eq!(verified.parent().forwards, ["parent:forward"]);
-    assert_eq!(verified.drawing().forwards, ["drawing:forward"]);
-    assert_eq!(verified.value().forwards, ["value:forward"]);
+    for (edit, member) in [(verified.parent(), &decision.parent), (verified.drawing(), &decision.drawing), (verified.value(), &decision.value)] {
+        let bound = DurableBoundOneItemOutcomeV1::decode_canonical_pack(&member.recovery_pack).expect("independent bound outcome pack");
+        let independent: serde_json::Value = serde_json::from_slice(&bound.edit_canonical_json).expect("independent canonical edit JSON");
+        assert_eq!(serde_json::to_value(&edit.forwards).unwrap(), independent["forwards"], "the verified typed forwards equal the independently decoded canonical edit");
+    }
     for edit in [verified.parent(), verified.drawing(), verified.value()] {
         assert_eq!(edit.mutation_meta.len(), 1);
         assert_eq!(edit.mutation_meta[0].group_id.as_deref(), Some(decision.decision_sha256.as_str()));
@@ -459,7 +461,7 @@ fn durable_binding_plans_before_consumption_and_transfers_one_original_member_pe
                 let grant=copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES);
                 for _ in 0..4_000_000 {
                 if prepared.binding_step!=step{break;}
-                let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| prepared.advance_binding(&parent, &drawing, &value, grant));
+                let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| advance_binding!(prepared,&parent, &drawing, &value, grant));
                 let receipt=match result.unwrap(){Some(receipt)=>receipt,None=>{
 let mut mutation_issuers=[parent.owners.mutation_retirement_factory.take(),drawing.owners.mutation_retirement_factory.take(),value.owners.mutation_retirement_factory.take()];let mut snapshot_issuers=[parent.owners.snapshot_retirement_factory.take(),drawing.owners.snapshot_retirement_factory.take(),value.owners.snapshot_retirement_factory.take()];let mut closed=false;
 for _ in 0..4_000_000{let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||prepared.retire_originals_step(&mut parent,&mut drawing,&mut value,grant));let done=result.expect("blocked original's captured issuers must remain usable for controlled cancellation");let receipt=prepared.retirement_progress;assert!(receipt.fits(grant.retained_grant()));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));if done{closed=true;break;}}
@@ -485,32 +487,32 @@ assert!(closed&&prepared.originals_empty());*parent.owners.mutation_retirement_f
                 assert_eq!(prepared.binding_step,step+1,"logical phase completes its actual child turns");
             }
             if row["id"] == "output-denied" {
-                assert!(prepared.advance_binding(&parent, &drawing, &value, copy_grant(0)).unwrap().is_none());
+                assert!(advance_binding!(prepared,&parent, &drawing, &value, copy_grant(0)).unwrap().is_none());
                 assert_eq!(prepared.binding_step, stop);
             }
             if row["id"] == "later-member-refusal" {
                 let generation = drawing.generation(); drawing.cursor.generation += 1;
-                assert!(matches!(prepared.advance_binding(&parent, &drawing, &value, copy_grant(4096)), Err(DurableOwnedGroupDecisionError::InvalidFrontier)));
+                assert!(matches!(advance_binding!(prepared,&parent, &drawing, &value, copy_grant(4096)), Err(DurableOwnedGroupDecisionError::InvalidFrontier)));
                 drawing.cursor.generation = generation;
                 assert_eq!([prepared.parent.original_addresses(), prepared.drawing.original_addresses(), prepared.value.original_addresses()], addresses);
             }
-            if row["id"]=="later-member-metadata-refusal"{let mut refused=false;let mut accepted=0;for _ in 0..1024{let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||prepared.advance_binding(&parent,&drawing,&value,copy_grant(4096)));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));match result{Err(DurableOwnedGroupDecisionError::InvalidOutcome)=>{refused=true;break;},Ok(Some(receipt))=>{assert!(receipt.fits(copy_grant(4096).retained_grant()));accepted+=1;},other=>panic!("original metadata identity frontier retains exact custody: {other:?}")}}assert!(refused&&accepted>=row["validDependencyCount"].as_u64().unwrap()as usize);assert_eq!([prepared.parent.original_addresses(),prepared.drawing.original_addresses(),prepared.value.original_addresses()],addresses);}
+            if row["id"]=="later-member-metadata-refusal"{let mut refused=false;let mut accepted=0;for _ in 0..1024{let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||advance_binding!(prepared,&parent,&drawing,&value,copy_grant(4096)));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));match result{Err(DurableOwnedGroupDecisionError::InvalidOutcome)=>{refused=true;break;},Ok(Some(receipt))=>{assert!(receipt.fits(copy_grant(4096).retained_grant()));accepted+=1;},other=>panic!("original metadata identity frontier retains exact custody: {other:?}")}}assert!(refused&&accepted>=row["validDependencyCount"].as_u64().unwrap()as usize);assert_eq!([prepared.parent.original_addresses(),prepared.drawing.original_addresses(),prepared.value.original_addresses()],addresses);}
             if row["id"] == "later-member-encoding-refusal" {
                 assert!(prepared.parent.unbound.is_some());
-                let mut rejected=false;for _ in 0..4_000_000 {match prepared.advance_binding(&parent,&drawing,&value,copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES)){Err(DurableOwnedGroupDecisionError::RecoveryPackTooLarge)=>{rejected=true;break;},Ok(Some(receipt))=>assert!(receipt.fits(copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES).retained_grant())),other=>panic!("oversized original retains typed refusal: {other:?}")}}assert!(rejected);
+                let mut rejected=false;for _ in 0..4_000_000 {match advance_binding!(prepared,&parent,&drawing,&value,copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES)){Err(DurableOwnedGroupDecisionError::RecoveryPackTooLarge)=>{rejected=true;break;},Ok(Some(receipt))=>assert!(receipt.fits(copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES).retained_grant())),other=>panic!("oversized original retains typed refusal: {other:?}")}}assert!(rejected);
                 assert_eq!([prepared.parent.original_addresses(), prepared.drawing.original_addresses(), prepared.value.original_addresses()], addresses);
             }
             if row["id"] == "decision-pack-refusal" {
                 prepared.value.plan.as_mut().unwrap().recovery_pack[0] ^= 1;
-                let mut rejected=false;for _ in 0..4_000_000 {match prepared.advance_binding(&parent,&drawing,&value,copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES)){Err(DurableOwnedGroupDecisionError::InvalidHash)=>{rejected=true;break;},Ok(Some(receipt))=>assert!(receipt.fits(copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES).retained_grant())),other=>panic!("tampered packet retains its exact typed refusal: {other:?}")}}assert!(rejected);
+                let mut rejected=false;for _ in 0..4_000_000 {match advance_binding!(prepared,&parent,&drawing,&value,copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES)){Err(DurableOwnedGroupDecisionError::InvalidHash)=>{rejected=true;break;},Ok(Some(receipt))=>assert!(receipt.fits(copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES).retained_grant())),other=>panic!("tampered packet retains its exact typed refusal: {other:?}")}}assert!(rejected);
                 assert_eq!([prepared.parent.original_addresses(), prepared.drawing.original_addresses(), prepared.value.original_addresses()], addresses);
             }
             let originals = [&prepared.parent, &prepared.drawing, &prepared.value].iter().filter(|owner| owner.prepared.is_some()).count();
             assert_eq!(originals, row["originalCount"].as_u64().unwrap() as usize);
             assert_eq!(3 - originals, row["transferCount"].as_u64().unwrap() as usize);
             if row["id"] == "begin-commit-refusal" {
-                for _ in 0..4_000_000 { if prepared.binding_step == 14 { break; } let grant=copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES); let (receipt,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||prepared.advance_binding(&parent, &drawing, &value, grant).unwrap().unwrap()); assert!(receipt.fits(grant.retained_grant())); assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes)); }
-                let mut bound = prepared.take_bound().unwrap();
+                for _ in 0..4_000_000 { if prepared.binding_step == 14 { break; } let grant=copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES); let (receipt,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||advance_binding!(prepared,&parent, &drawing, &value, grant).unwrap().unwrap()); assert!(receipt.fits(grant.retained_grant())); assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes)); }
+                let mut bound = prepared.take_bound(copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES).retained_grant()).unwrap().expect("bound fixed-three result").0;
                 let before = [&bound.parent, &bound.drawing, &bound.value].map(|owner| [owner.prepared.edit() as *const Edit<DemoMutation> as usize, Arc::as_ptr(owner.prepared.post_snapshot()) as usize, Arc::as_ptr(owner.prepared.authority()) as usize]);
                 let issuers = [Arc::clone(&bound.parent.mutation_retirement), Arc::clone(&bound.drawing.mutation_retirement), Arc::clone(&bound.value.mutation_retirement)];
                 bound.decision_pack = None;

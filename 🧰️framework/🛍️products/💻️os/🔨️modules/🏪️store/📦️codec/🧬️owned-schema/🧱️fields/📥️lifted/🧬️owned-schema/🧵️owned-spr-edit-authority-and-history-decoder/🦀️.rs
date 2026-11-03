@@ -105,7 +105,7 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactOwnedSprEditAut
                         let placement=size_of::<Option<semio_framework_value::SharedUtf8>>();
                         if grant.maximum_copy_bytes<placement{return Ok(ArtifactEnvelopeFieldDecodeStep::Pending);}
                         let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-placement,..grant};
-                        match semio_framework_value::SharedUtf8::admit(self.strings[1].take().expect("original actor text retained"),child).result{
+                        match semio_framework_value::SharedUtf8::admit(self.strings[1].take().ok_or_else(||OwnedSchemaDecodeDiagnostic{code:"artifact-spr.edit-actor-owner",offset:token.start,line:0,column:0,path,refusal_kind:semio_framework_value::ValueRefusalKind::InvariantViolated,retained_progress:Default::default()})?,child).result{
                             Ok((original,mut receipt))=>{receipt.copied_bytes+=placement;*self.actor=Some(original);cx.consume_retained(receipt).map_err(|error|OwnedSchemaDecodeDiagnostic{code:"artifact-spr.edit-actor-receipt",offset:token.start,line:0,column:0,path,refusal_kind:error.kind,retained_progress:receipt})?;}
                             Err((_,original))=>{*self.strings[1]=Some(original);return Ok(ArtifactEnvelopeFieldDecodeStep::Pending);}
                         }
@@ -289,7 +289,7 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactOwnedHistoryEnt
         }
         if self.retirement.is_some() { return artifact_retirement_box_close_step(&mut self.retirement, grant).result.map(|step| RetainedCloneStep::Progress(step.progress())).map_err(|error| (diagnostic).with_native(error)); }
         if let Some(value) = self.value.take() {
-            match self.retirement_factory.as_ref().expect("edit retains value factory").retire_owned(value, child).result {
+            match self.retirement_factory.as_ref().ok_or_else(||diagnostic.with_native(semio_framework_value::ValueError::invariant("edit value factory is absent")))?.retire_owned(value, child).result {
                 Ok((owner, progress)) => { *self.retirement = Some(owner); if !progress.fits(child) || progress.retained_capacity_bytes != demand.capacity_bytes { return Err(diagnostic.with_progress(progress)); } return Ok(RetainedCloneStep::Progress(progress)); }
                 Err((error, value)) => { *self.value = Some(value); return Err(diagnostic.with_native(error)); }
             }

@@ -4,7 +4,7 @@ use super::{ColdMutation, Mutation,MutationMessage,MutationMessageLedgerRetireme
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind};
 use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedCloneRef,RetainedCloneBinding,RetainedCloneClose,admit_retained_clone_progress,admit_retained_clone_close};
 use std::mem::{size_of,ManuallyDrop};
-pub use semio_framework_replication_mutation_retained_field::{RetainedFieldPreparation,RetainedFieldChange,RetainedRecordChange,RetainedRecordChangeField,RetainedRecordFieldChange,RetainedRecordChangeOwner,boxed_record_field,retained_mutation_demand_fits};
+pub use semio_framework_replication_retained_field::{RetainedFieldPreparation,RetainedFieldChange,RetainedRecordChange,RetainedRecordChangeField,RetainedRecordFieldChange,RetainedRecordChangeOwner,boxed_record_field,retained_mutation_demand_fits};
 #[path="✂️span/🦀️.rs"] pub mod span;
 pub use span::RetainedByteSpan;
 #[path="🔎️key/🦀️.rs"] pub mod key;

@@ -1,0 +1,13 @@
+W-wco-0 🧰️framework/Cargo.toml rc=0
+W-wco-1 ✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/Cargo.toml rc=0
+W-wco-2 ✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/Cargo.toml rc=0
+W-wco-3 ✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/Cargo.toml rc=0
+W-wco-4 ✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/Cargo.toml rc=0
+W-wco-5 ✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/Cargo.toml rc=1
+W-wco-6 ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/Cargo.toml rc=0
+W-wco-7 ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/Cargo.toml rc=0
+W-wco-8 ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/Cargo.toml rc=0
+W-wco-9 ✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/Cargo.toml rc=0
+W-wco-10 ✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/Cargo.toml rc=1
+W-wco-11 ✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/Cargo.toml rc=1
+W-wco-12 ✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/Cargo.toml rc=1

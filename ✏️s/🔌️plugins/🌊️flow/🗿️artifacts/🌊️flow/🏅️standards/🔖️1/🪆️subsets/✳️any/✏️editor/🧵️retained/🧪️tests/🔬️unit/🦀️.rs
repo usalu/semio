@@ -19,7 +19,7 @@ fn drain(work: &mut crate::editor::flow::FlowDirectStoreWork, body: usize) {
             return;
         }
         let grant = quoted_grant(work, body);
-        match semio_framework_job::close_with_self_funded_context(grant, |cx| work.close_step(cx)).expect("original fixture close turn") {
+        match crate::self_funded_close(grant, |cx| work.close_step(cx)).expect("original fixture close turn") {
             Step::Pending { progress } => assert!(progress.fits(grant)),
             Step::Complete { progress } => {
                 assert!(progress.fits(grant));
@@ -66,13 +66,13 @@ fn retirement_obeys_language_neutral_grants_and_reaches_terminal_empty() {
             RetainedCloneGrant { maximum_items: items, maximum_copy_bytes: copy, maximum_capacity_bytes: retirement.capacity_byte_demand(copy).unwrap(), maximum_release_bytes: retirement.release_byte_demand().unwrap(), maximum_depth: retirement.depth_demand().unwrap().max(1) }
         };
         let zero = quoted(&retirement, 0);
-        assert!(matches!(retirement.step(zero), Step::Pending { progress } if progress == Default::default()));
+        assert!(matches!(retirement.step(zero).unwrap(), Step::Pending { progress } if progress == Default::default()));
         let mut turns = 0;
         loop {
             turns += 1;
             assert!(turns < 100_000);
             let grant = quoted(&retirement, 1);
-            match retirement.step(grant) {
+            match retirement.step(grant).unwrap() {
                 Step::Pending { progress } => assert!(progress.fits(grant)),
                 Step::Complete { progress } => {
                     assert!(progress.fits(grant));

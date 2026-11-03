@@ -2,7 +2,10 @@
   "schema": "spatial.interaction",
   "id": "feature.extrudeWire",
   "version": "1.0.0",
-  "label": "ExtrudeWire",
+  "label": {
+    "native": { "en": "ExtrudeWire", "de": "Drahtkurve extrudieren" },
+    "reuse": { "en": "ExtrudeWire", "de": "Drahtkurve extrudieren" }
+  },
   "key": "e",
   "interaction": {
     "spatialGroundPick": false,
@@ -77,7 +80,10 @@
         "selection": {
           "accept": ["wire"],
           "multiple": false,
-          "prompt": "Pick wire"
+          "prompt": {
+            "native": { "en": "Pick wire", "de": "Drahtkurve wählen" },
+            "reuse": { "en": "Pick wire", "de": "Drahtkurve wählen" }
+          }
         },
         "on": [
           {
@@ -86,7 +92,10 @@
               {
                 "target": "setDistance",
                 "key": "i",
-                "label": "Pick wire",
+                "label": {
+                  "native": { "en": "Pick wire", "de": "Drahtkurve wählen" },
+                  "reuse": { "en": "Pick wire", "de": "Drahtkurve wählen" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -128,7 +137,10 @@
               {
                 "target": "selectWire",
                 "key": "x",
-                "label": "Cancel"
+                "label": {
+                  "native": { "en": "Cancel", "de": "Abbrechen" },
+                  "reuse": { "en": "Cancel", "de": "Abbrechen" }
+                }
               }
             ]
           }
@@ -142,7 +154,10 @@
             "transitions": [
               {
                 "key": "n",
-                "label": "Apply distance",
+                "label": {
+                  "native": { "en": "Apply distance", "de": "Abstand anwenden" },
+                  "reuse": { "en": "Apply distance", "de": "Abstand anwenden" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -177,7 +192,10 @@
                 "target": "committed",
                 "guard": "hasWireAndDistance",
                 "key": "Enter",
-                "label": "Commit extrude"
+                "label": {
+                  "native": { "en": "Commit extrude", "de": "Extrusion übernehmen" },
+                  "reuse": { "en": "Commit extrude", "de": "Extrusion übernehmen" }
+                }
               }
             ]
           },
@@ -187,7 +205,10 @@
               {
                 "target": "selectWire",
                 "key": "x",
-                "label": "Cancel"
+                "label": {
+                  "native": { "en": "Cancel", "de": "Abbrechen" },
+                  "reuse": { "en": "Cancel", "de": "Abbrechen" }
+                }
               }
             ]
           }
@@ -208,7 +229,10 @@
             "kind": "label",
             "id": "hint",
             "role": "prompt",
-            "text": "Set extrude distance",
+            "text": {
+              "native": { "en": "Set extrude distance", "de": "Extrusionsabstand festlegen" },
+              "reuse": { "en": "Set extrude distance", "de": "Extrusionsabstand festlegen" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 2, 0]

@@ -7359,9 +7359,9 @@ dependencies = [
  "semio-framework-replication-local-interaction",
  "semio-framework-replication-mutation",
  "semio-framework-replication-mutation-messages",
- "semio-framework-replication-mutation-retained",
- "semio-framework-replication-mutation-retained-field",
  "semio-framework-replication-presence",
+ "semio-framework-replication-retained",
+ "semio-framework-replication-retained-field",
  "semio-framework-replication-wire-core",
  "semio-framework-schema-registry",
  "semio-framework-trace",
@@ -7648,7 +7648,20 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-framework-replication-mutation-retained"
+name = "semio-framework-replication-presence"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-async-macros",
+ "semio-framework-io-base64",
+ "semio-framework-replication-error",
+ "semio-framework-replication-interaction",
+ "semio-framework-replication-wire-core",
+ "semio-framework-value",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-replication-retained"
 version = "0.1.0"
 dependencies = [
  "semio-framework-diagnostic",
@@ -7656,7 +7669,7 @@ dependencies = [
  "semio-framework-replication-ids",
  "semio-framework-replication-mutation",
  "semio-framework-replication-mutation-messages",
- "semio-framework-replication-mutation-retained-field",
+ "semio-framework-replication-retained-field",
  "semio-framework-test-fixtures",
  "semio-framework-trace",
  "semio-framework-trace-memory-testing",
@@ -7671,7 +7684,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-framework-replication-mutation-retained-field"
+name = "semio-framework-replication-retained-field"
 version = "0.1.0"
 dependencies = [
  "semio-framework-mutation-diff",
@@ -7680,19 +7693,6 @@ dependencies = [
  "semio-framework-trace-memory-testing",
  "semio-framework-value",
  "semio-framework-value-persistent",
- "serde_json",
-]
-
-[[package]]
-name = "semio-framework-replication-presence"
-version = "0.1.0"
-dependencies = [
- "semio-framework-async-macros",
- "semio-framework-io-base64",
- "semio-framework-replication-error",
- "semio-framework-replication-interaction",
- "semio-framework-replication-wire-core",
- "semio-framework-value",
  "serde_json",
 ]
 

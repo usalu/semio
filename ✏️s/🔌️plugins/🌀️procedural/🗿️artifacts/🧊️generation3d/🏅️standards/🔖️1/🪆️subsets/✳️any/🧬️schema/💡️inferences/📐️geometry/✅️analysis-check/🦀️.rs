@@ -202,6 +202,7 @@ impl Interference {
                 }
                 BrepBooleanStep::Ready(handle) => Ok(Some(handle)),
                 BrepBooleanStep::Cancelled(_) => return Err(cancelled().into()),
+                BrepBooleanStep::Failed(error) => return Err(kernel_fault(&error).into()),
             },
             None => match self.session.brep().boolean_job_sync(&a, &b, BooleanOp::Intersect).map_err(|error| kernel_fault(&error)) {
                 Ok(BrepBooleanAdmission::Answered(handle)) => Ok(Some(handle)),

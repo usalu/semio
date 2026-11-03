@@ -5,6 +5,10 @@
 
 extern crate semio_framework_os_kernel as store;
 
+#[cfg(test)]
+#[path = "🧵️serializers/🗿️artifacts/📷️png/🔖️1.2/✳️any/🧪️tests/🔬️unit/🦀️.rs"]
+mod png_raster_oracle;
+
     #[path = "."]
     pub mod serializers {
         #[path = "."]
@@ -27,9 +31,7 @@ extern crate semio_framework_os_kernel as store;
                 pub mod v1_2 {
                     #[path = "."]
                     pub mod any {
-                        #[path = "🧵️serializers/🗿️artifacts/📷️png/🔖️1.2/✳️any/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
+                        pub use semio_s_artifact_stdio_semio_drawing_png_export::*;
                     }
                 }
             }
@@ -98,7 +100,7 @@ fn register() {
 /// into a drawing makes, so each standard format has exactly one writer in the repository.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_drawing(drawing: &semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot, format: SemioDrawingFormat) -> Result<Vec<u8>, String> {
-    use {crate::serializers::artifacts::dwg::v_ac1024::any::SemioDrawingToDwg, crate::serializers::artifacts::dxf::v_r12::any::SemioDrawingToDxf, crate::serializers::artifacts::pdf::v1_7::any::drawing_to_pdf, crate::serializers::artifacts::png::v1_2::any::SemioDrawingToPng, crate::serializers::artifacts::svg::v1_1::any::SemioDrawingToSvg};
+    use {crate::serializers::artifacts::dwg::v_ac1024::any::SemioDrawingToDwg, crate::serializers::artifacts::dxf::v_r12::any::SemioDrawingToDxf, crate::serializers::artifacts::pdf::v1_7::any::drawing_to_pdf, semio_s_artifact_stdio_semio_drawing_png_export::SemioDrawingToPng, crate::serializers::artifacts::svg::v1_1::any::SemioDrawingToSvg};
     use semio_framework_plugin::{ ArtifactSerializer};
     match format {
         SemioDrawingFormat::Svg => ::semio_framework_async::poll::resolve_ready(SemioDrawingToSvg::serialize(drawing)).map_err(|e| e.to_string())?.export_utf8(),

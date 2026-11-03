@@ -459,7 +459,7 @@ async fn op_envelope_from_stored_edit_round_trips_through_ingest() {
     let envelopes = envelopes_from_history_edit(&edit, "demo", "demo/v1", semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64}).await.expect("envelopes from history edit");
     assert_eq!(envelopes.len(), 1, "single-op edit yields one envelope");
     assert_eq!(envelopes[0].mutation_id.0, "ext-1#0", "meta-less fallback: edit id # op index");
-    let recovered = <DemoMutation as OpBinary>::decode_op(&envelopes[0].diff.payload).expect("decode op");
+    let recovered = <DemoMutation as OpBinary>::decode_op(&envelopes[0].diff.payload.to_vec_owner()).expect("decode op");
     assert_eq!(recovered, DemoMutation::SetN { n: 42 });
 }
 //#endregion 🧪️Helpers

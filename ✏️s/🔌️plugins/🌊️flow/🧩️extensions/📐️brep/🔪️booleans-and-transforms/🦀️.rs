@@ -195,6 +195,7 @@ impl BrepBooleanOperatorJob {
                 self.progress = neural_engine::OperatorProgress { units_done: self.progress.units_total.max(self.progress.units_done), units_total: self.progress.units_total.max(self.progress.units_done), phase: "complete" };
                 Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original Boolean dictionary output has no funded producer yet").into())
             }
+            BrepBooleanStep::Failed(_) => Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"the Boolean kernel refused its funded operation").into()),
         }
     }
 }

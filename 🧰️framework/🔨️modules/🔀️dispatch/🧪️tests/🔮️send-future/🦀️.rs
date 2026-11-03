@@ -7,7 +7,6 @@
 //! against an `impl Future` declaration, and this file proves all three halves of that claim — it
 //! compiles, the future really is `Send` (asserted through the generic bound AND moved across a real
 //! thread), and the right variant answers at runtime.
-#![allow(async_fn_in_trait)] // R7 — never resolved by `+ Send` or by making a method sync.
 
 use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
 use std::future::Future;

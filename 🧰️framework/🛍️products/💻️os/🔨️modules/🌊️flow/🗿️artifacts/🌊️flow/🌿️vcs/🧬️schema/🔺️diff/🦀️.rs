@@ -29,20 +29,20 @@ impl FlowDelta {
     fn handoff(self, frontier: &mut FlowRetirement) {
         match self {
             Self::Widgets(delta) => {
-                frontier.push_cold(FlowOwner::Strings(delta.removed));
-                frontier.push_cold(FlowOwner::Widgets(delta.inserted.into_iter().map(|(_, widget)| widget).collect()));
+                frontier.push_cold(FlowOwner::Strings(delta.removed)).expect("cold Flow frontier admission");
+                frontier.push_cold(FlowOwner::Widgets(delta.inserted.into_iter().map(|(_, widget)| widget).collect())).expect("cold Flow frontier admission");
                 let (ids, widgets): (Vec<String>, Vec<Widget>) = delta.replaced.into_iter().unzip();
-                frontier.push_cold(FlowOwner::Strings(ids));
-                frontier.push_cold(FlowOwner::Widgets(widgets));
+                frontier.push_cold(FlowOwner::Strings(ids)).expect("cold Flow frontier admission");
+                frontier.push_cold(FlowOwner::Widgets(widgets)).expect("cold Flow frontier admission");
             }
             Self::Synapses(delta) => {
-                frontier.push_cold(FlowOwner::Strings(delta.removed));
-                frontier.push_cold(FlowOwner::Specs(delta.inserted.into_iter().map(|(_, spec)| spec).collect()));
+                frontier.push_cold(FlowOwner::Strings(delta.removed)).expect("cold Flow frontier admission");
+                frontier.push_cold(FlowOwner::Specs(delta.inserted.into_iter().map(|(_, spec)| spec).collect())).expect("cold Flow frontier admission");
                 let (ids, specs): (Vec<String>, Vec<SynapseSpec>) = delta.replaced.into_iter().unzip();
-                frontier.push_cold(FlowOwner::Strings(ids));
-                frontier.push_cold(FlowOwner::Specs(specs));
+                frontier.push_cold(FlowOwner::Strings(ids)).expect("cold Flow frontier admission");
+                frontier.push_cold(FlowOwner::Specs(specs)).expect("cold Flow frontier admission");
             }
-            Self::Layout(entries) => frontier.push_cold(FlowOwner::Layout(entries)),
+            Self::Layout(entries) => frontier.push_cold(FlowOwner::Layout(entries)).expect("cold Flow frontier admission"),
         }
     }
 }

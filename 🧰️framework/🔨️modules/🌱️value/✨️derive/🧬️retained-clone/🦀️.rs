@@ -280,7 +280,7 @@ fn expand_struct(input: &DeriveInput, fields: &Fields) -> syn::Result<TokenStrea
             }
         }
     });
-    let construct = construct_fields(name, fields, &field_rows.iter().map(|(_, _, _, value)| value.clone()).collect::<Vec<_>>(), None);
+    let construct = construct_fields(&value_crate, name, fields, &field_rows.iter().map(|(_, _, _, value)| value.clone()).collect::<Vec<_>>(), None);
     let controlled_values = field_rows.iter().map(|(_, _, _, value)| quote!(if let Some(step) = {let turn=self.close.begin_granted(&mut self.#value, grant);work+=turn.work;turn.result}? { return Ok(step); }));
     let controlled_children = field_rows.iter().map(|(_, _, cursor, _)| quote! {
         if !#value_crate::retained_clone::RetainedCloneCursor::terminal_is_empty(&self.#cursor) {
@@ -471,7 +471,7 @@ fn expand_enum(input: &DeriveInput, data: &syn::DataEnum) -> syn::Result<TokenSt
             }
         });
         let values=variant_rows.iter().map(|(_,_,_,_,value)|(*value).clone()).collect::<Vec<_>>();
-        let construct=construct_fields(name,&variant.fields,&values,Some(&variant.ident));
+        let construct=construct_fields(&value_crate,name,&variant.fields,&values,Some(&variant.ident));
         let field_count=variant_rows.len();
         
         let demand=quote! {
@@ -604,12 +604,12 @@ fn field_access(fields: &Fields, index: usize) -> TokenStream {
     }
 }
 
-fn construct_fields(name: &syn::Ident, fields: &Fields, values: &[syn::Ident], variant: Option<&syn::Ident>) -> TokenStream {
+fn construct_fields(value_crate: &syn::Path, name: &syn::Ident, fields: &Fields, values: &[syn::Ident], variant: Option<&syn::Ident>) -> TokenStream {
     let prefix = variant.map_or_else(|| quote!(#name), |variant| quote!(#name::#variant));
-    let owners = values.iter().map(|value|quote!(self.#value.take().expect("retained field owner"))).collect::<Vec<_>>();
+    let owners = values.iter().map(|value|quote!(self.#value.take().ok_or_else(||#value_crate::ValueError::literal(#value_crate::ValueRefusalKind::InvariantViolated,"retained field owner is absent"))?)).collect::<Vec<_>>();
     match fields {
         Fields::Named(named) => {
-            let names = named.named.iter().map(|field| field.ident.as_ref().expect("named field"));
+            let names = named.named.iter().filter_map(|field| field.ident.as_ref());
             quote!(#prefix { #(#names: #owners),* })
         }
         Fields::Unnamed(_) => quote!(#prefix ( #(#owners),* )),

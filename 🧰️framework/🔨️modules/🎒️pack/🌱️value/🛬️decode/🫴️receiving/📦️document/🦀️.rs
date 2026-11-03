@@ -5,8 +5,8 @@ use std::mem::MaybeUninit;
 pub(super) struct DocumentOwner{storage:Option<Box<MaybeUninit<RetainedDocumentDriver>>>,initialized:bool,limits:PackLimits,length:usize,maximum:usize,closed:bool}
 impl DocumentOwner{
  pub(super) fn new(limits:PackLimits,length:usize,maximum:usize)->Self{Self{storage:None,initialized:false,limits,length,maximum,closed:false}}
- fn driver(&self)->Option<&RetainedDocumentDriver>{self.initialized.then(||unsafe{self.storage.as_ref().unwrap().assume_init_ref()})}
- fn driver_mut(&mut self)->Option<&mut RetainedDocumentDriver>{if self.initialized{Some(unsafe{self.storage.as_mut().unwrap().assume_init_mut()})}else{None}}
+ fn driver(&self)->Option<&RetainedDocumentDriver>{if self.initialized{self.storage.as_ref().map(|storage|unsafe{storage.assume_init_ref()})}else{None}}
+ fn driver_mut(&mut self)->Option<&mut RetainedDocumentDriver>{if self.initialized{self.storage.as_mut().map(|storage|unsafe{storage.assume_init_mut()})}else{None}}
  fn advance<S:RetainedWireByteSource+?Sized>(&mut self,source:&S,range:(usize,usize),maximum:usize)->RetainedWorkOutcome<Option<Token>,PackRefusal>{
   if self.closed{return RetainedWorkOutcome{result:Err(PackRefusal::from(invalid("closed Document driver cannot advance"))),work:0}}
   if self.storage.is_none(){
@@ -14,8 +14,8 @@ impl DocumentOwner{
    let raw=unsafe{std::alloc::alloc(std::alloc::Layout::new::<RetainedDocumentDriver>())}.cast::<MaybeUninit<RetainedDocumentDriver>>();
    let result=if raw.is_null(){Err(PackRefusal::from(allocation()))}else{self.storage=Some(unsafe{Box::from_raw(raw)});Ok(None)};return RetainedWorkOutcome{result,work:1}
   }
-  if !self.initialized{let result=RetainedDocumentDriver::record(self.limits.clone(),self.length,self.maximum).map(|driver|{self.storage.as_mut().unwrap().write(driver);self.initialized=true;None});return RetainedWorkOutcome{result,work:1}}
-  let driver=self.driver_mut().unwrap();let result=driver.one(source,range,maximum);RetainedWorkOutcome{result,work:driver.last_turn_work()}
+  if !self.initialized{let result=RetainedDocumentDriver::record(self.limits.clone(),self.length,self.maximum).and_then(|driver|{let Some(storage)=self.storage.as_mut()else{return Err(PackRefusal::from(invalid("Document driver storage is absent")))};storage.write(driver);self.initialized=true;Ok(None)});return RetainedWorkOutcome{result,work:1}}
+  let Some(driver)=self.driver_mut()else{return RetainedWorkOutcome{result:Err(PackRefusal::from(invalid("Document driver is not initialized"))),work:0}};let result=driver.one(source,range,maximum);RetainedWorkOutcome{result,work:driver.last_turn_work()}
  }
  fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneStep,PackRefusal>{
   if self.closed{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}

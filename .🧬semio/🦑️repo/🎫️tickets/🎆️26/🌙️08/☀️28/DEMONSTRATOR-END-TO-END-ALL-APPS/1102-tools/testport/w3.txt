@@ -1,0 +1,4 @@
+semio-framework-os-store-replay-operation
+semio-framework-os-store-member-open
+semio-framework-os-store-durable-group
+semio-framework-os-store-engine-stage

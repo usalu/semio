@@ -35,4 +35,5 @@ semio-s-artifact-fem-2d-results-state = { path = "../../../../../../../../../◻
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-s-artifact-fem-3d-io = { workspace = true }

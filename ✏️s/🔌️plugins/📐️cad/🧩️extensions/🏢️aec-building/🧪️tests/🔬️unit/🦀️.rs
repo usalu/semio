@@ -116,8 +116,10 @@ async fn contributed_inference_computes_a_real_building_summary() {
         dependencies: &[],
     };
 
-    let execution = infer_building_structure_summary(&request).expect("inference succeeds");
-    let decoded_value = pack_rt::decode_wire_value(&execution.canonical_payload).expect("summary decodes");
+    let mut original_caller=semio_framework_plugin::app::OriginalFixtureCaller::admit().expect("original extension fixture caller");let mut cx=original_caller.context();
+    let step = infer_building_structure_summary(&request, &mut cx).expect("inference succeeds");
+    let execution = step.execution.expect("terminal inference execution");
+    let decoded_value = pack_rt::decode_wire_value(&execution.canonical_payload.expect("summary payload")).expect("summary decodes");
     let summary = BuildingStructureSummary::from_value(decoded_value).expect("summary decodes");
     assert_eq!(summary.storey_count, 1);
     assert!(!summary.building_model_present);
@@ -125,4 +127,6 @@ async fn contributed_inference_computes_a_real_building_summary() {
     let metadata = building_structure_summary_service().metadata();
     assert_eq!(metadata.owner, EXTENSION_ID);
     assert_eq!(metadata.artifact_kind, CAD_ARTIFACT_KIND);
+
+    let fuel=cx.fuel_remaining();drop(cx);original_caller.retire(fuel).expect("original extension fixture source close");
 }

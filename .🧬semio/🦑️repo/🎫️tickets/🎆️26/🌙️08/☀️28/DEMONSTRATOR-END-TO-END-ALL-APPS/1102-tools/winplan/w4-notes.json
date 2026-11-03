@@ -1,0 +1,385 @@
+{
+ "1102-tools/runtime/patches/apply-genesis-pack-batch.py": {
+  "state": "PENDING",
+  "note": "RUNTIME FIX (browser path): shared Store genesis advances the Pack cursor one unit per turn, so every WindowConfigOwner birth (~45) exhausts the 32768-turn fixture/host opportunity; patch spends a bounded funded batch of cursor units per turn. Fail-closed on 2 anchors (`cursor_step(cx,false/true)`). Single file `🌱️initialization/🌱️genesis/🦀️.rs`",
+  "batch": "B1"
+ },
+ "1102-tools/energy/patches/effect-only-action-producer.py": {
+  "state": "PENDING",
+  "note": "RUNTIME FIX (energie pane): actions without a native mutation descriptor (setActiveExample, other authored verbs) fall through to the typed `command_from_action` instead of failing; adds law `an_action_without_a_native_descriptor_falls_through_to_its_typed_command`; script uses glob lookups asserting exactly one match; writes 2+ files in the energy editor `🎮️commands/🛬️action`",
+  "batch": "B2"
+ },
+ "1102-tools/energy/patches/editor-test-dev-dependency.py": {
+  "state": "PENDING",
+  "note": "TEST-ONLY manifest edit: adds `semio-framework-trace` dev-dependency to the energy editor Cargo.toml (lib-test target includes initialization tests using `observe_heap_allocations_on_this_thread`); Cargo.lock refresh by the coordinator (`dependencies lock`)",
+  "batch": "B2"
+ },
+ "1102-tools/actinfra/patches/prototype-wasm-debug0.py": {
+  "state": "PENDING",
+  "note": "BUILD PROFILE (needs coordinator decision): `prototype-wasm.debug` 1 -> 0 in profile schema + 2 consumption fixture rows (takes the repo root as argv[1]); removes ~330 MB DWARF per component; invalidates every prototype-wasm cache key, so apply only when the next activation starts from the patched tree",
+  "batch": "B6"
+ },
+ "1102-tools/runtime/patches/apply-debug-admission-trace.py": {
+  "state": "PENDING",
+  "note": "OPTIONAL [DEBUG]: rate-limited eprintln in job outcome worker `admit_step` and plugin job session `prepare_pending_params`; only if runtime asks, remove before ticket close",
+  "batch": "B7"
+ },
+ "1102-tools/runtime/patches/apply-debug-settle-cause.py": {
+  "state": "PENDING",
+  "note": "OPTIONAL [DEBUG]: eprintln in the laws settlement fn (registered-app-construction file); only if runtime asks, remove before ticket close",
+  "batch": "B7"
+ },
+ "1102-tools/runtime/patches/apply-debug-genesis-measure.py": {
+  "state": "EXCLUDED (conflicts with genesis-pack-batch)",
+  "note": "[DEBUG] phase/step prints in genesis + store-owners; its genesis anchors are rewritten by `apply-genesis-pack-batch` (which then fails its asserts, and the debug script fails after it); apply the pack-batch patch and skip this one (or run measure strictly first and drop pack-batch)",
+  "batch": "-"
+ },
+ "1102-tools/runtime/patches/NOT-APPLIED-puzzle3d-window-config-pack-receiving.py": {
+  "state": "HELD (not compile-atomic)",
+  "note": "parked by its author: `admit_window_config_native_pair` needs `OriginalArtifactPackReceiving` + `DslOwnedReceiving` on the whole puzzle3d window-config tree; applying only the impl would not compile; birth half (`apply-puzzle3d-window-config-birth`) is already in the tree",
+  "batch": "-"
+ },
+ "1102-tools/puzzle/patches/window-config-pack-receiving.rs.txt": {
+  "state": "HELD (text of the parked item)",
+  "note": "same item as the runtime NOT-APPLIED script, impl text for `Puzzle3dWindowConfig`",
+  "batch": "-"
+ },
+ "1102-tools/runtime/patches/apply-puzzle3d-window-config-birth.py": {
+  "state": "APPLIED",
+  "note": "`fn initial_state_demands` present in puzzle3d window",
+  "batch": "-"
+ },
+ "1102-tools/runtime/patches/apply-worker-continuation-fault.py": {
+  "state": "APPLIED",
+  "note": "`interactive-job.worker-continuation` present in full-operation",
+  "batch": "-"
+ },
+ "1102-tools/energy/patches/hydration-binds-job-authority.py": {
+  "state": "SUPERSEDED by stale/hydration-job-authority.py",
+  "note": "",
+  "batch": "-"
+ },
+ "1102-tools/stale/patches/hydration-job-authority.py": {
+  "state": "APPLIED",
+  "note": "`owner.operation=cx.operation()` present in maintenance-ladder",
+  "batch": "-"
+ },
+ "1102-tools/flowext/patches/flow-examples-dsl-fixture.py": {
+  "state": "APPLIED (tree identical to the script text)",
+  "note": "",
+  "batch": "-"
+ },
+ "1102-tools/stdio/patches/decouple-mesh-export-from-pdf.py": {
+  "state": "APPLIED",
+  "note": "png-export crate dir exists under drawing export serializers",
+  "batch": "-"
+ },
+ "1102-tools/capext/patches/job-value-runtime-dep.py": {
+  "state": "APPLIED",
+  "note": "semio-framework-value is under [dependencies] in both job manifests",
+  "batch": "-"
+ },
+ "1102-tools/gen/patches/step-context-owner-remount.py": {
+  "state": "APPLIED",
+  "note": "`StepContextOwner` mounted in job context",
+  "batch": "-"
+ },
+ "1102-tools/gen/patches/step-context-owner-NOTES.md": {
+  "state": "NOT A PATCH",
+  "note": "",
+  "batch": "-"
+ },
+ "1102-tools/testport/patches/durable-group-test-visibility.py": {
+  "state": "APPLIED",
+  "note": "`pub binding_step` present",
+  "batch": "-"
+ },
+ "1102-tools/testport/patches/member-open-dictionary-public-types.py": {
+  "state": "APPLIED",
+  "note": "`pub mod index;` present",
+  "batch": "-"
+ },
+ "1102-tools/testport/patches/paged-projection-any-output.py": {
+  "state": "APPLIED",
+  "note": "",
+  "batch": "-"
+ },
+ "1102-tools/testport/patches/cursor-dev-vcs-testkit.py": {
+  "state": "APPLIED",
+  "note": "",
+  "batch": "-"
+ },
+ "1102-tools/flowext/patches/flow-child-group-work-detached.py": {
+  "state": "APPLIED",
+  "note": "`fn detached` present",
+  "batch": "-"
+ },
+ "1102-tools/flowext/patches/flow-retirement-push-cold-depth.py": {
+  "state": "APPLIED",
+  "note": "",
+  "batch": "-"
+ },
+ "1102-tools/flowext/patches/directed-dag-facade-exports.py": {
+  "state": "APPLIED",
+  "note": "",
+  "batch": "-"
+ },
+ "1102-tools/cad/patches/mount-puzzle3d-unmounted-tests.md": {
+  "state": "APPLIED",
+  "note": "agent-lane mod present",
+  "batch": "-"
+ },
+ "1102-tools/describe/patches/step-geometry-dev-dep.md": {
+  "state": "APPLIED",
+  "note": "async-macros present in step geometry Cargo.toml",
+  "batch": "-"
+ },
+ "1102-tools/rtpanes/patches/by-example-law-redo.md": {
+  "state": "APPLIED",
+  "note": "",
+  "batch": "-"
+ },
+ "1102-tools/rtpanes/patches/energy-manifest-uses-stdio-semio-edit-mode.md": {
+  "state": "APPLIED",
+  "note": "`use crate::editor_edit as edit;` at line 4",
+  "batch": "-"
+ },
+ "1102-tools/rtpanes/patches/laws-publish-framework-schema-documents.md": {
+  "state": "SUPERSEDED by testkit patch (applied)",
+  "note": "",
+  "batch": "-"
+ },
+ "1102-tools/actinfra/patches/emitter-request-bytes.test.ts": {
+  "state": "APPLIED (target test/module exists)",
+  "note": "",
+  "batch": "-"
+ },
+ "1102-tools/actinfra/patches/retention-size-law.test.ts": {
+  "state": "APPLIED (target test/module exists)",
+  "note": "",
+  "batch": "-"
+ },
+ "1102-tools/actinfra/patches/worker-demand.test.ts": {
+  "state": "APPLIED (target test/module exists)",
+  "note": "",
+  "batch": "-"
+ },
+ "1102-tools/actinfra/patches/strip-debug/module.ts": {
+  "state": "APPLIED (target test/module exists)",
+  "note": "",
+  "batch": "-"
+ },
+ "1102-tools/actinfra/patches/strip-debug/test.ts": {
+  "state": "APPLIED (target test/module exists)",
+  "note": "",
+  "batch": "-"
+ },
+ "1102-tools/actinfra/patches/retention-intermediates.diff": {
+  "state": "SUPERSEDED by retention-intermediates-norows.diff (applied)",
+  "note": "",
+  "batch": "-"
+ },
+ "1102-tools/actinfra/patches/worker-spare-instances.diff": {
+  "state": "SUPERSEDED by worker-demand.diff (applied)",
+  "note": "",
+  "batch": "-"
+ },
+ "1102-tools/phase/patches/order.txt": {
+  "state": "NOT A PATCH",
+  "note": "",
+  "batch": "-"
+ },
+ "1102-tools/phase/patches/supersedes.txt": {
+  "state": "NOT A PATCH",
+  "note": "",
+  "batch": "-"
+ },
+ "_verdict": [
+  "Pending now: 2 runtime-behaviour fixes (`runtime/apply-genesis-pack-batch.py`, `energy/effect-only-action-producer.py`), 1 test-only manifest edit (`energy/editor-test-dev-dependency.py`), the policy W4 set (13 diffs in `policy/patches/w4/`, panic/unwrap removal, no behaviour change intended), 2 fem scripts (`fem3d-test-devdeps.py` test manifests, `model-source-extent.py` detaches tests), 1 build-profile change needing the coordinator's decision (`actinfra/prototype-wasm-debug0.py`) and 2 optional [DEBUG] scripts. Every diff from W3 is in the tree (exactly, or with later edits on top; section 6). The W3 plan `1102-window-plan.md` is closed.",
+  "All pending diffs apply in sequence on a scratch copy (`seq.sh` with `order-w4.txt`: 13 OK / 0 FAIL) and all pending scripts apply in one sandbox tree; the only same-file pair is `debug-genesis-measure` vs `genesis-pack-batch` (excluded, section 3). Policy W4 `draw-drawing-model` needs the new `RetainedOwnedProjection::try_project` from W4 `framework-value`, and `os-flow-host` consumes `try_push_cold` from W4 `artifact-flow-flow`: the order encodes both.",
+  "NOT FOUND in `1102-tools/*/patches/` at the time of writing (named in the coordinator message): stale harness `renew_turn`, testport construction-recipient fix, retained-command test visibility. They are not written yet (or live outside `patches/`); the refresh picks them up as UNCLASSIFIED/PENDING. gis `store-replay-retire-unborn-registry-birth.patch` IS applied (reverse check passes).",
+  "Priority rule used: runtime-behaviour fixes on the browser path first (B1 genesis, B2 energie), then test-only, then build profile, optional debug last."
+ ],
+ "_held": [
+  "HELD: runtime `NOT-APPLIED-puzzle3d-window-config-pack-receiving.py` + puzzle `window-config-pack-receiving.rs.txt`: needs the pack-receiving traits on the whole puzzle3d window-config tree (author: not compile-atomic). The puzzle3d window-config birth fault stays fixed only for the `initial_state` trio. Owner runtime/puzzle must supply the complete tree patch before it can be batched.",
+  "EXCLUDED: `apply-debug-genesis-measure.py` (conflicts with genesis-pack-batch).",
+  "SUPERSEDED: energy `hydration-binds-job-authority.py` (by stale), actinfra `retention-intermediates.diff` (by norows), `worker-spare-instances.diff` (by worker-demand), rtpanes `laws-publish-...md` (by testkit).",
+  "ABSENT: stale-harness `renew_turn`, testport construction-recipient, retained-command test visibility (see verdict)."
+ ],
+ "_overlap_verdicts": {},
+ "_collisions": [
+  "`runtime/apply-genesis-pack-batch.py` x `runtime/apply-debug-genesis-measure.py`: same file `🌱️initialization/🌱️genesis/🦀️.rs`; sequential sandbox run: measure first -> pack-batch fails its asserts; pack-batch first -> measure fails. MUTUALLY EXCLUSIVE; pack-batch wins.",
+  "`runtime/apply-debug-genesis-measure.py` partially writes (store-owners file written before the second file's assert fails): non-atomic if it is ever run after pack-batch; do not.",
+  "`energy/effect-only-action-producer.py` x `energy/editor-test-dev-dependency.py`: different files (rs vs Cargo.toml); both applied cleanly in one scratch tree together with every other pending script.",
+  "Sequence B1..B5 run in ONE scratch tree: all pending scripts applied except the excluded/held ones (asserts only failed for the excluded debug-genesis-measure)."
+ ],
+ "_batches": [
+  {
+   "id": "B1",
+   "title": "runtime: shared Store genesis batches Pack cursor units per turn",
+   "owner": "runtime",
+   "items": [
+    "`1102-tools/runtime/patches/apply-genesis-pack-batch.py` (run from the repo root)"
+   ],
+   "check": "wasm `--lib` check of `semio-framework-plugin` (genesis + window-config crates), then the native window-config / genesis lib tests and the runtime lane's ledger test (`settlement_work_ledger_is_finite_and_progresses`, editor-task-resume, editor-action-producer); browser effect: a puzzle3d/energie window command settles instead of re-queueing 32768 turns",
+   "why": "Shared path used by all ~45 WindowConfigOwner births; every pane's first window command waits on it. Framework layer goes before plugin patches. No limit is raised (bounded page-sized batch, stops on yield/completion)."
+  },
+  {
+   "id": "B2",
+   "title": "energie pane: effect-only action fall-through and test dev-dependency",
+   "owner": "energy",
+   "items": [
+    "`1102-tools/energy/patches/effect-only-action-producer.py` (repo root; fail-closed globs)",
+    "`1102-tools/energy/patches/editor-test-dev-dependency.py` (repo root; Cargo.toml edit: tell the coordinator for `dependencies lock`)"
+   ],
+   "check": "wasm `--lib` check of the energy model editor crate, then native `test -p <energy editor> --lib an_action_without_a_native_descriptor_falls_through_to_its_typed_command` and the energy editor-initialization tests (heap-allocation witness)",
+   "why": "Production edit first, manifest after (the dev-dep only matters for the lib-test target). After B1 so the energie window command can be exercised end to end."
+  },
+  {
+   "id": "B3",
+   "title": "policy W4 framework: value, instance docs, store replay-operation, flow, flow host",
+   "owner": "policy",
+   "items": [
+    "`1102-tools/policy/patches/w4/semio-framework-value.patch`",
+    "`1102-tools/policy/patches/w4/semio-framework-plugin-instance-docs.patch`",
+    "`1102-tools/policy/patches/w4/semio-framework-os-store-replay-operation.patch`",
+    "`1102-tools/policy/patches/w4/semio-framework-artifact-flow-flow.patch`",
+    "`1102-tools/policy/patches/w4/semio-framework-os-flow-host.patch`"
+   ],
+   "check": "native `check -p semio-framework-value -p semio-framework-plugin-instance-docs -p semio-framework-os-store-replay-operation -p semio-framework-artifact-flow-flow -p semio-framework-os-flow-host` (hub manifest), wasm `--lib` for the value and flow-flow crates; order matters (definitions first)",
+   "why": "Definitions before callers: `RetainedOwnedProjection::try_project` (value) is used by the draw model patch in B4; `try_push_cold` (flow-flow) by the flow host. After B1/B2 because those are the runtime behaviour fixes and must be proven alone first."
+  },
+  {
+   "id": "B4",
+   "title": "policy W4 plugins: draw, generation3d, raster, ifc",
+   "owner": "policy",
+   "items": [
+    "`1102-tools/policy/patches/w4/semio-s-artifact-draw-drawing-geometry.patch`",
+    "`1102-tools/policy/patches/w4/semio-s-artifact-draw-drawing-model.patch`",
+    "`1102-tools/policy/patches/w4/semio-s-artifact-draw-drawing-scene.patch`",
+    "`1102-tools/policy/patches/w4/semio-s-artifact-procedural-3d-editor.patch`",
+    "`1102-tools/policy/patches/w4/semio-s-artifact-procedural-3d-viewer.patch`",
+    "`1102-tools/policy/patches/w4/semio-s-artifact-raster-raster-model.patch`",
+    "`1102-tools/policy/patches/w4/semio-s-artifact-stdio-ifc-2x3-base-details.patch`",
+    "`1102-tools/policy/patches/w4/semio-s-artifact-stdio-ifc4x3-templates.patch`"
+   ],
+   "check": "wasm `--lib` check of: draw drawing geometry/model/scene, procedural 3d editor and viewer, raster raster-model, ifc 2x3 base details, ifc4x3 templates (one `repo cargo` run per few crates)",
+   "why": "Plugin layer after the framework batch (draw model uses the B3 definition). Independent crates otherwise."
+  },
+  {
+   "id": "B5",
+   "title": "fem: test dev-dependencies, then detach stale unit-test module",
+   "owner": "fem",
+   "items": [
+    "`python3 -I 1102-tools/fem/patches/fem3d-test-devdeps.py` (repo root; 3 Cargo.toml dev-dependency edits, tell the coordinator for `dependencies lock`)",
+    "`python3 -I 1102-tools/fem/patches/model-source-extent.py` (repo root), then delete the now unreferenced `🧪️tests/🔬️unit/🦀️.rs` and the empty `🧪️tests` dir by hand"
+   ],
+   "check": "`check --tests` of the fem 3d editor panels, interaction and mutations crates (native), wasm `--lib` of the fem 3d model/diff crate",
+   "why": "Tests-only change; after the production batches so it cannot mask them. See risks: it deletes test coverage instead of fixing the stale tests."
+  },
+  {
+   "id": "B6",
+   "title": "build profile: prototype-wasm debug 0",
+   "owner": "actinfra",
+   "items": [
+    "`python3 -I 1102-tools/actinfra/patches/prototype-wasm-debug0.py /Users/ueli/Documents/semio` (needs the coordinator's go)"
+   ],
+   "check": "`bun test ./<profile>/🧪️tests` profile tests (11 pass expected) and `./<profile>/🧪️tests/📥️consumption/` (24 pass expected); the arguments/precedence files fail identically with and without the patch (author)",
+   "why": "Changes the prototype-wasm cache key of every component: apply only right before the activation that should use it, never between B1/B2 and their own wasm checks (they would rebuild with a different profile)."
+  },
+  {
+   "id": "B7",
+   "title": "optional [DEBUG] diagnostics (runtime lane only if asked)",
+   "owner": "runtime",
+   "items": [
+    "`1102-tools/runtime/patches/apply-debug-admission-trace.py`",
+    "`1102-tools/runtime/patches/apply-debug-settle-cause.py`"
+   ],
+   "check": "native check of `semio-framework-job` (outcome worker) and the plugin job session / laws crates; remove the [DEBUG] lines before the ticket closes",
+   "why": "Diagnostics only; last so they never ride into a compile verdict of B1-B3. Do NOT add `apply-debug-genesis-measure`."
+  }
+ ],
+ "_risks": [
+  "B1 genesis-pack-batch (author): changes the shared lifecycle of every window-config birth from one unit per turn to a funded batch per turn; risk = a unit that posts nothing or a yield point mishandled loops the turn (author says it stops on yield, completion, measured length, or a unit that posts nothing). Touches the hottest framework path: run the full window-config lib tests, not only the check.",
+  "B2 effect-only producer: broadens the fallthrough to `command_from_action` for ALL actions without a native descriptor; wrong typed-command mapping would execute an unintended verb instead of refusing (previously a hard refusal). The new law covers setActiveExample only.",
+  "B3 debug0: build-profile change; invalidates all wasm caches; the arguments/precedence fixtures already fail without it (author), so do not read those failures as caused by the patch.",
+  "Held puzzle3d pack-receiving: until a complete patch exists, puzzle3d window-config native-pair birth is unfixed; the browser pane may still fault on the native-pair path.",
+  "fem `model-source-extent.py`: removes the diff crate's unit tests from compilation (and asks for a manual delete) rather than repairing the stale tests; conflicts with the test-driven rule unless the fem lane replaces the tests; owner should confirm.",
+  "policy W4: author-named highest compile risks are none beyond the generic ones (index notes: draw lookup uses a NEW framework API, `try_project`; raster adds `try_close_raster_owner_cold`; flow host adds `try_retire_cold`): each definition ships in the same or an earlier patch of this order."
+ ],
+ "1102-tools/policy/patches/w4/semio-framework-value.patch": {
+  "state": "PENDING",
+  "batch": "B3",
+  "note": "policy W4 (panic/unwrap removal): framework-value retained-clone: RetainedOwnedProjection::try_project (definition for the draw lookup)"
+ },
+ "1102-tools/policy/patches/w4/semio-framework-plugin-instance-docs.patch": {
+  "state": "PENDING",
+  "batch": "B3",
+  "note": "policy W4 (panic/unwrap removal): maintenance ladder: expect -> ValueError (PluginLifecycleFailure: From<ValueError>)"
+ },
+ "1102-tools/policy/patches/w4/semio-framework-os-store-replay-operation.patch": {
+  "state": "PENDING",
+  "batch": "B3",
+  "note": "policy W4 (panic/unwrap removal): os-store replay report: 3 unwraps -> VcsError::HistoryReplaying"
+ },
+ "1102-tools/policy/patches/w4/semio-framework-artifact-flow-flow.patch": {
+  "state": "PENDING",
+  "batch": "B3",
+  "note": "policy W4 (panic/unwrap removal): flow retained: 3 expects + 2 panics removed; typed try_push_cold"
+ },
+ "1102-tools/policy/patches/w4/semio-framework-os-flow-host.patch": {
+  "state": "PENDING",
+  "batch": "B3",
+  "note": "policy W4 (panic/unwrap removal): flow host-close: [DEBUG] eprintln and 5 expects removed; typed try_retire_cold, retire_cold keeps its infallible signature"
+ },
+ "1102-tools/policy/patches/w4/semio-s-artifact-draw-drawing-geometry.patch": {
+  "state": "PENDING",
+  "batch": "B4",
+  "note": "policy W4 (panic/unwrap removal): draw picking paint: unreachable -> Err(String)"
+ },
+ "1102-tools/policy/patches/w4/semio-s-artifact-draw-drawing-model.patch": {
+  "state": "PENDING",
+  "batch": "B4",
+  "note": "policy W4 (panic/unwrap removal): draw lookup: expect -> ValueError::invariant; draw lookup owned: 2 expects + unreachable; uses new RetainedOwnedProjection::try_project; draw validation: expect -> fault(); draw snapshot: retire_decoded_drawing_snapshot expects/panic -> typed try_ core"
+ },
+ "1102-tools/policy/patches/w4/semio-s-artifact-draw-drawing-scene.patch": {
+  "state": "PENDING",
+  "batch": "B4",
+  "note": "policy W4 (panic/unwrap removal): draw raster scene: matches!+let-else(unreachable) -> if let (unrepresentable)"
+ },
+ "1102-tools/policy/patches/w4/semio-s-artifact-procedural-3d-editor.patch": {
+  "state": "PENDING",
+  "batch": "B4",
+  "note": "policy W4 (panic/unwrap removal): generation3d command_from_action returns Result<_,Fault>: 3 unwraps -> ? (Fault)"
+ },
+ "1102-tools/policy/patches/w4/semio-s-artifact-procedural-3d-viewer.patch": {
+  "state": "PENDING",
+  "batch": "B4",
+  "note": "policy W4 (panic/unwrap removal): generation3d command_from_action returns Result<_,Fault>: 3 unwraps -> ? (Fault)"
+ },
+ "1102-tools/policy/patches/w4/semio-s-artifact-raster-raster-model.patch": {
+  "state": "PENDING",
+  "batch": "B4",
+  "note": "policy W4 (panic/unwrap removal): raster asset-content: close_raster_owner_cold expects -> typed try_close_raster_owner_cold"
+ },
+ "1102-tools/policy/patches/w4/semio-s-artifact-stdio-ifc-2x3-base-details.patch": {
+  "state": "PENDING",
+  "batch": "B4",
+  "note": "policy W4 (panic/unwrap removal): ifc work.rs:20/1404: unwrap -> ValueError::invariant"
+ },
+ "1102-tools/policy/patches/w4/semio-s-artifact-stdio-ifc4x3-templates.patch": {
+  "state": "PENDING",
+  "batch": "B4",
+  "note": "policy W4 (panic/unwrap removal): ifc4x3 staging-native: receiver hoisted out of the closure"
+ },
+ "1102-tools/fem/patches/model-source-extent.py": {
+  "state": "PENDING",
+  "batch": "B5",
+  "note": "detaches the unit-test module (`#[cfg(test)] mod tests;`) from the fem 3d `🧬️schema/🔺️diff/🦀️.rs`; the unreferenced tests file/dir must then be deleted by hand; scratch-applies; REMOVES TESTS from the build (see risks)"
+ },
+ "1102-tools/fem/patches/fem3d-test-devdeps.py": {
+  "state": "PENDING",
+  "batch": "B5",
+  "note": "TEST-ONLY manifests (replaces the withdrawn `panels-testing-laws-devdep.py`): `semio-framework-plugin` with feature artifact-app-testing in fem 3d editor panels + interaction dev-deps, `semio-framework-os-kernel` protocol-laws/mutation-testing in mutations dev-deps; coordinator runs `dependencies lock` after"
+ }
+}

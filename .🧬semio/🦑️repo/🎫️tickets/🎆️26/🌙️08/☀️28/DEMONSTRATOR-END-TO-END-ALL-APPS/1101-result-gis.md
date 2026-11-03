@@ -31,3 +31,14 @@ Logs: gis-{1..8}.txt.
 - gis-11 (hub wasm) ran 3811 s and was stopped by the ingress deadline (rc 1). Red crates: stdio pdf-schema-4 (2: unresolved `semio_s_artifact_stdio_pdf_mut_family_11`, missing `import::decode_pdf`; pdf lane) and framework-os-flow-extensions (4: `ExtensionResourceOwner::take_work` removed from the trait, private `RetainedEvaluation.work`; flow lane). docx/tiff are fixed. semio-hub-gis not reached.
 - The gismap dependency chain pulls stdio pdf-schema, so a native gismap test run has the same blocker (gis-10); not started.
 - STILL UNVERIFIED: hub-gis, hub-gis-component, gismap, gisterrain wasm; native tests.
+
+## Update (activation freeze, Addendum 19:50)
+- gis-12 (gismap wasm) was in the capacity queue/compile for 81 min; stopped on the freeze (my chain 4541/4549/46184/52465 killed; no rc). No cargo/repo runs or edits since. Result unchanged: STILL UNVERIFIED for hub-gis, hub-gis-component, gismap, gisterrain wasm and native tests. After the lift: rerun gis-13 (gismap wasm) and gis-14 (hub wasm), port inference.rs by compiler output, then gisterrain and native tests.
+
+## Freeze exception: gismap-tests
+- GREEN: `semio-s-artifact-gis-gismap-tests` wasm32-wasip2 `--lib` check, rc 0, "Checking ... Finished" in gis-13.txt. Fixed by hand: gismap `🔨️modules/🏠️host/🧰️owned/♻️retirement-and-clone/🦀️.rs` (3 factory signatures now return `RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>,Progress),(ValueError,T)>`) and `🔡️owned-field-decode/🦀️.rs` (else branch builds a `RetainedWorkOutcome`, `.result` before `.map_err`).
+
+## Hub loop (freeze exception)
+- gis-hub-4 (`1101-tools/hub.sh`, full hub wasm): no gis crate red. gismap-gis2d, semio-hub-gis and semio-hub-gis-component were checked and produced no error; remaining reds are procedural-3d-editor and puzzle-2d-tests (other lanes). gis crates in the hub closure: GREEN by compile (gis-hub-4.txt); a green rc for the whole hub is not claimed.
+- Hand fixes: gismap `✏️editor/📬️one-item-preparation/🦀️.rs` (close-state steps return RetainedWorkOutcome, `.result` at box/admit_owned/factory.step call sites); hub-gis `💡️inference/🦀️.rs` (`member_store` bounds: ColdMutation<P>, OpBinary, OpText, ArtifactCanonicalJsonTree, Clone, Sync; `ActorId(actor.into())`).
+- Not run: gisterrain wasm and native tests (frozen / not requested).

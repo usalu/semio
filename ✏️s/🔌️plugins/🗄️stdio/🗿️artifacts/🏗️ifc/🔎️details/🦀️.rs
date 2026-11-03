@@ -13,10 +13,10 @@ extern crate semio_framework_os_kernel as protocol;
 
 pub use semio_s_artifact_stdio_ifc_details_provider::*;
 pub use semio_s_artifact_stdio_ifc_details_guidance::*;
-#[path="admission.rs"]mod admission;
-#[path="command_wire.rs"]mod command_wire;
-#[path="entity_remove.rs"]mod entity_remove;
-#[path="work.rs"]mod work;
+#[path="admission.rs"]pub mod admission;
+#[path="command_wire.rs"]pub mod command_wire;
+#[path="entity_remove.rs"]pub mod entity_remove;
+#[path="work.rs"]pub mod work;
 pub use work::IfcDetailsWork;
 
 pub fn details_work_capacity<C: IfcDetailsProfile>() -> semio_framework_plugin::retained_command::ArtifactRetainedWorkCapacity {
@@ -905,3 +905,4 @@ mod profile_tests {
 #[path="domain_tests.rs"]
 mod domain_tests;
                                                                                                         
+

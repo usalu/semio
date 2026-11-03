@@ -138,16 +138,20 @@ pub fn receive_geometry_pack(source: &[u8], owner: &mut NativeSnapshotDecodeOwne
             original.drive_cursor(receiver, |rx, native, grant| {
                 let mut out = None;
                 let ready=rx.is_ready();
-                let result = if ready { rx.take_into(&mut out, grant) } else { rx.step(source, native, grant.maximum_copy_bytes.min(4096), grant) };
+                let result = if ready {
+                    rx.take_into(&mut out, grant).map_err(|e| { let p = e.retained_progress(); (e, p) })
+                } else {
+                    rx.step(source, native, grant.maximum_copy_bytes.min(4096), grant).result.map_err(|e| {
+                        let p = e.retained_progress();
+                        (e.primary.or(e.quote_refusal).or(e.allocation_refusal).unwrap_or_else(|| ValueError::literal(ValueRefusalKind::InvalidValue, "original native construction refused")), p)
+                    })
+                };
                 match result {
                     Ok(p) => {
                         let result = if !ready&&p.copied_items != 0 { native.step().map(|_| out) } else { Ok(out) };
                         (result, p)
                     }
-                    Err(e) => {
-                        let p = e.retained_progress();
-                        (Err(e), p)
-                    }
+                    Err((e, p)) => (Err(e), p),
                 }
             })
         })?;

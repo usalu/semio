@@ -28,6 +28,7 @@ impl FlowHost {
             self.begin_baseline_publication(snapshot,channels,evaluated_generation).unwrap_or_else(|_|unreachable!("original baseline intake was checked before constructing owners"));
             self.dag.paint.clear_computing();
         } else {
+            snapshot.retire_cold();
             channels.retire_cold();
             self.refresh_computing_chrome_from_pending();
         }

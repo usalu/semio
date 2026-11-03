@@ -241,8 +241,11 @@ where
     let archive = PluginApp::document_load_archive(app, files)?;
     PluginApp::begin_document_archive_load(app, LAW_DOCUMENT_LOAD_OPERATION, archive)?;
     let mut polls = 0usize;
+    let fresh = cx.fuel_remaining();
+    let fresh_grant = cx.retained_grant();
     let status = loop {
-        if cx.should_yield(){return Err(semio_framework::Fault::from("document archive requires its next original source turn").into())}cx.consume_fuel(1);let grant=cx.retained_grant();PluginApp::maintenance_step(app,cx,grant)?;
+        semio_framework_job::testkit::renew_turn(cx, fresh, fresh_grant)?;
+        cx.consume_fuel(1);let grant=cx.retained_grant();PluginApp::maintenance_step(app,cx,grant)?;
         let status = PluginApp::poll_document_archive_load(app, LAW_DOCUMENT_LOAD_OPERATION, identity,cx).await?;
         if !law_load_running(&status, &mut polls)? {
             break status;
@@ -272,8 +275,11 @@ pub async fn plugin_load_document<PA: PluginApp>(runtime: &semio_framework_plugi
     let archive = semio_framework_plugin_runtime_ops::ops_document::plugin_document_load_archive(runtime, instance_id, files).await?;
     semio_framework_plugin_runtime_ops::ops_document::plugin_begin_document_archive_load(runtime, instance_id, LAW_DOCUMENT_LOAD_OPERATION, archive).await?;
     let mut polls = 0usize;
+    let fresh = cx.fuel_remaining();
+    let fresh_grant = cx.retained_grant();
     let status = loop {
-        if cx.should_yield(){return Err(semio_framework::Fault::from("runtime archive requires its next original source turn").into())}cx.consume_fuel(1);semio_framework_plugin_runtime_exchange::exch_plugin_exchange::plugin_exchange(runtime,instance_id,None,identity,cx).await?;
+        semio_framework_job::testkit::renew_turn(cx, fresh, fresh_grant)?;
+        cx.consume_fuel(1);semio_framework_plugin_runtime_exchange::exch_plugin_exchange::plugin_exchange(runtime,instance_id,None,identity,cx).await?;
         let status = semio_framework_plugin_runtime_ops::ops_document::plugin_poll_document_archive_load(runtime, instance_id, LAW_DOCUMENT_LOAD_OPERATION, identity,cx).await?;
         if !law_load_running(&status, &mut polls)? {
             break status;
@@ -298,17 +304,20 @@ where
     plugin_load_document(runtime, instance_id, &pack.map_err(semio_framework_diagnostic::FaultFrom::into_fault)?, identity,cx).await
 }
 
-/// ⏳️ Whether a polled law load still runs; a load that never reaches its terminal state within a million polls is a fault.
+/// ⏳️ Whether a polled law load still runs.
 fn law_load_running(status: &protocol::DocumentArchiveLoadStatus, polls: &mut usize) -> Result<bool, semio_framework::Fault> {
     if !matches!(status.state, protocol::DocumentArchiveLoadState::Pending | protocol::DocumentArchiveLoadState::Running) {
         return Ok(false);
     }
     *polls += 1;
-    if *polls >= 1_000_000 {
+    if *polls >= LAW_DOCUMENT_LOAD_MAXIMUM_TURNS {
         return Err(semio_framework::Fault::from("the document archive load never reached a terminal state"));
     }
     Ok(true)
 }
+
+/// 🔁️ The turn bound of one law document load: a load that never reaches its terminal state within it is a fault.
+pub const LAW_DOCUMENT_LOAD_MAXIMUM_TURNS: usize = 1_000_000;
 
 /// 🏁️ A law load's acknowledged terminal: `Ready` loaded, `Cancelled` and `Fault` answer a fault (the archive's own on `Fault`).
 fn law_load_outcome(status: protocol::DocumentArchiveLoadStatus) -> Result<(), semio_framework::Fault> {
@@ -635,3 +644,43 @@ pub fn assert_viewer_genesis_children_declared<V: semio_framework_plugin_decl_su
         fn drop(&mut self) { if !std::thread::panicking() { self.close(); } }
 
     }
+
+#[cfg(test)]
+mod renew_turn_laws {
+    use super::*;
+
+    /// ⚖️ LAW: every renewed turn starts with the full original fuel and the same retained ceiling over the one long-lived source, so more turns than one context's fuel run and the source still retires.
+    #[test]
+    fn a_renewed_turn_restores_fuel_and_retained_ceiling_on_the_one_source() {
+        let mut scope = OriginalFixtureScope::admit();
+        let cx = scope.cx();
+        let fresh = cx.fuel_remaining();
+        let grant = cx.retained_grant();
+        for _ in 0..4 {
+            semio_framework_job::testkit::renew_turn(cx, fresh, grant).expect("the fixture source renews");
+            assert_eq!(cx.fuel_remaining(), fresh);
+            assert_eq!(cx.retained_grant(), grant);
+            cx.consume_fuel(fresh - 1);
+            cx.consume_retained(semio_framework_value::RetainedCloneProgress { copied_items: 1, ..Default::default() }).expect("the renewed ceiling admits one item");
+        }
+        assert_eq!(cx.fuel_remaining(), 1);
+        semio_framework_job::testkit::renew_turn(cx, fresh, grant).expect("the last turn renews so the scope retires from fresh fuel");
+    }
+
+    /// ⚖️ LAW: the production turn bound survives renewal: a load that stays running stops with a fault at the authored bound.
+    #[test]
+    fn a_load_that_never_completes_stops_at_the_turn_bound() {
+        let status = protocol::DocumentArchiveLoadStatus { operation: 0, state: protocol::DocumentArchiveLoadState::Running, completed: 0, total: 0, ahead: 0, fault: Vec::new() };
+        let mut polls = 0usize;
+        let mut turns = 0usize;
+        let outcome = loop {
+            turns += 1;
+            match law_load_running(&status, &mut polls) {
+                Ok(true) => continue,
+                other => break other,
+            }
+        };
+        assert!(outcome.is_err());
+        assert_eq!(turns, LAW_DOCUMENT_LOAD_MAXIMUM_TURNS);
+    }
+}

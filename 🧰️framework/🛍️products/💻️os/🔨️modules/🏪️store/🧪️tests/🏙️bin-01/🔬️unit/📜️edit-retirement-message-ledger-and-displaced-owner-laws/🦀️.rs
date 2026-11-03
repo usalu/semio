@@ -9,7 +9,7 @@ fn artifact_store_edit_retirement_is_interruptible_and_terminal_empty_after_deep
     let mut inverse = semio_framework_value_persistent::list::PagedList::new(); inverse.try_push(DemoMutation::SetN(SetN { n: 7 })).unwrap(); drop(inverse.pop());
     assert!(!inverse.terminal_is_empty());
     let forwards = Vec::with_capacity(law["forwardBackingSlots"].as_u64().unwrap() as usize); let forward_pointer = forwards.as_ptr();
-    let edit = Edit::<DemoMutation> { line: None, id: strings[0].clone(), actor: Some(strings[1].clone().into()), forwards, inverse, mutation_meta: Vec::with_capacity(law["metadataBackingSlots"].as_u64().unwrap() as usize), verb: None, sequence_number: 1, started_at: strings[2].clone(), finished_at: Some(strings[3].clone()) };
+    let edit = Edit::<DemoMutation> { line: None, id: strings[0].clone(), actor: Some(strings[1].clone().into()), forwards, inverse: semio_framework_value::RetainedPublicationRoot::new(inverse), mutation_meta: Vec::with_capacity(law["metadataBackingSlots"].as_u64().unwrap() as usize), verb: None, sequence_number: 1, started_at: strings[2].clone(), finished_at: Some(strings[3].clone()) };
     let payload_bytes = strings.iter().map(String::len).sum::<usize>();
     let (result, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| ArtifactStoreEditRetirement::new(edit));
     let mut retirement = result.unwrap_or_else(|_| panic!("empty original mutation lanes admitted"));

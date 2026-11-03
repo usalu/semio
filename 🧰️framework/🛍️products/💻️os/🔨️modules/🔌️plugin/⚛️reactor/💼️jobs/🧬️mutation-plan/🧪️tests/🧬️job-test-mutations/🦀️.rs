@@ -9,6 +9,16 @@ pub(crate) struct JobTestSnapshot {
     pub value: i32,
 }
 
+impl pack::snapshot::ArtifactDsl for JobTestSnapshot {
+    const EXTENSION: &'static str = "job-test";
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        serde_json::from_str(text).map_err(|error| semio_framework_diagnostic::TextError { kind: semio_framework_value::ValueRefusalKind::InvalidValue, message: error.to_string(), span: Default::default(), expected: None })
+    }
+    fn print_dsl(&self) -> String {
+        format!("{{\"value\":{}}}", self.value)
+    }
+}
+
 impl ArtifactPack for JobTestSnapshot {
     fn encode_pack_with(&self, _: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         serde_json::to_vec(self).map_err(|error| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string())))

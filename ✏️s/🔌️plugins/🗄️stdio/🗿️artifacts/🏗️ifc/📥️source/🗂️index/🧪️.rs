@@ -1,6 +1,6 @@
 //! 🧪️ Original source identity indexing pays actual growth, sorting, cancellation and close.
 use super::*;
-use semio_framework_plugin::app_testing::OriginalWorkFixture;
+use semio_framework_plugin::plugin_app_close_prelude::OriginalWorkFixture;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::IfcEntity;
 struct RequestIds([u64; 3]);
@@ -33,7 +33,7 @@ fn original_id_index_reuses_the_same_bounded_rows_for_actual_request_identity_so
         let demand = close.next_owner_demands::<IfcSourceIndex>(owner.is_some(), &None, 4096).unwrap();
         caller
             .turn(loan, |cx| {
-                cx.with_original_retirement(|cx| semio_framework_job::close_original_retained_step(cx, demand, |grant| if close.is_empty() { close.begin_granted(&mut owner, grant).map(|step| step.unwrap()) } else { close.step_granted(grant) }))
+                cx.with_original_retirement(|cx| semio_framework_job::close_original_retained_step(cx, demand, |grant| if close.is_empty() { { let turn = close.begin_granted(&mut owner, grant); semio_framework_value::RetainedWorkOutcome { work: turn.work, result: turn.result.map(|step| step.unwrap()) } } } else { close.step_granted(grant) }))
             })
             .unwrap();
     }
@@ -105,7 +105,7 @@ fn contextual_source_index_retains_every_exact_id_and_rejects_ambiguous_identity
         let demand = close.next_owner_demands::<IfcSourceIndex>(owner.is_some(), &None, 4096).unwrap();
         caller
             .turn(loan, |cx| {
-                cx.with_original_retirement(|cx| semio_framework_job::close_original_retained_step(cx, demand, |grant| if close.is_empty() { close.begin_granted(&mut owner, grant).map(|step| step.unwrap()) } else { close.step_granted(grant) }))
+                cx.with_original_retirement(|cx| semio_framework_job::close_original_retained_step(cx, demand, |grant| if close.is_empty() { { let turn = close.begin_granted(&mut owner, grant); semio_framework_value::RetainedWorkOutcome { work: turn.work, result: turn.result.map(|step| step.unwrap()) } } } else { close.step_granted(grant) }))
             })
             .unwrap();
     }

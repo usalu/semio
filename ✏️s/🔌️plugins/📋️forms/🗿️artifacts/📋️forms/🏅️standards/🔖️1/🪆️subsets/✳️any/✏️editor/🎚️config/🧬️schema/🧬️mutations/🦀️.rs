@@ -8,7 +8,7 @@ pub use replace_config::ReplaceConfig;
 mod set_contributions;
 pub use set_contributions::SetContributions;
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_dsl_record_derive::DslReceiving, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutations(snapshot = FormsConfig, diff = FormsConfigDiff, schema = "forms.config", reference = FormsConfig, reference_diff = FormsConfigDiff)]
 pub enum FormsConfigMutation {

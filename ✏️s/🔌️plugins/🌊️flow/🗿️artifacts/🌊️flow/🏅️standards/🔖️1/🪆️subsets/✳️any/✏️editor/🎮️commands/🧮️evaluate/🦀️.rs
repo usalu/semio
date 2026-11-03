@@ -24,7 +24,7 @@ pub fn evaluate_result(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, s
     let host = host_from_snapshot(snapshot, config, session);
     let pending = session.sync(&host);
     let servable = may_rearm(&host.host_snapshot);
-    host.retire_cold();
+    host.retire_cold()?;
     if pending {
         session.note_window_tick_outcome(window_id, true, crate::editor::flow::host::cold_grant()).expect("flow cold session grant");
     }

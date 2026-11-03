@@ -128,7 +128,7 @@ impl ValueAdmission {
         Ok(())
     }
 }
-pub(super) struct EventAdmission {
+pub struct EventAdmission {
     values: ValueAdmission,
     codec: store::ArtifactPreparedOperationCursor,
     chunk: [u8; 64],
@@ -142,7 +142,7 @@ impl Default for EventAdmission {
     }
 }
 impl EventAdmission {
-    pub(super) fn complete(&self)->bool{self.done}
+    pub fn complete(&self)->bool{self.done}
     pub fn demands(&self) -> Result<RetirementDemand, ValueError> {
         if !self.values.done {
             return Ok(RetirementDemand { depth: 1, ..Default::default() });

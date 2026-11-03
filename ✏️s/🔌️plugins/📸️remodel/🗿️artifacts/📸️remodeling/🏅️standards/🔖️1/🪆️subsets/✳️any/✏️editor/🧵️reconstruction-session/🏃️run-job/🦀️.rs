@@ -434,7 +434,7 @@ impl ReconstructionRunJob {
                 cx.consume_fuel(1);
                 Ok(None)
             }
-            Owed::Complete => JobOutcomeBorrow::admit_complete(cx, None, None),
+            Owed::Complete => JobOutcomeBorrow::admit_complete(cx, None, None).map_err(semio_framework_job::OriginalTurnFailure::from),
             Owed::Fault => {
                 self.outbox.begin(JobPublicationKind::Fault, Vec::new());
                 cx.consume_fuel(1);
@@ -446,9 +446,9 @@ impl ReconstructionRunJob {
 
 impl ReconstructionRunJob {
     /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
-    fn step_value<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
+    fn step_value<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         if self.closing || cx.is_cancelled() {
-            return JobOutcomeBorrow::admit_cancelled(cx);
+            return JobOutcomeBorrow::admit_cancelled(cx).map_err(semio_framework_job::OriginalTurnFailure::from).map_err(semio_framework_job::OriginalTurnFailure::from);
         }
         match self.outbox.phase(cx)? {
             OutboxPhase::Building => return self.outbox.advance(cx),
@@ -468,7 +468,7 @@ impl ReconstructionRunJob {
                     return Ok(None);
                 }
                 let owed = self.owed.pop_front().expect("owed outcome");
-                return self.settle(cx, owed);
+                return self.settle(cx, owed).map_err(semio_framework_job::OriginalTurnFailure::from);
             }
             if !self.live() {
                 self.owed.clear();
@@ -478,7 +478,7 @@ impl ReconstructionRunJob {
                     cx.consume_fuel(1);
                     return Ok(None);
                 }
-                return JobOutcomeBorrow::admit_yield(cx);
+                return JobOutcomeBorrow::admit_yield(cx).map_err(semio_framework_job::OriginalTurnFailure::from);
             }
             advanced = true;
             match self.advance() {
@@ -494,7 +494,7 @@ impl ReconstructionRunJob {
 }
 
 impl InteractiveJob for ReconstructionRunJob {
-    fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{self.step_value(cx).map_err(semio_framework_job::OriginalTurnFailure::from)}
+    fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>,_return_claim:&mut semio_framework_job::OriginalJobReturnClaim<'_>)->semio_framework_job::InteractiveJobStep<'a>{match self.step_value(cx){Ok(outcome)=>semio_framework_job::InteractiveJobStep::Outcome(outcome),Err(failure)=>semio_framework_job::InteractiveJobStep::Continuation(failure)}}
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, ValueError> {
         borrow_remodel_outcome(&self.outbox, descriptor)
@@ -505,7 +505,7 @@ impl InteractiveJob for ReconstructionRunJob {
     }
 
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        semio_framework_job::close_original_granted_step(cx,|grant|{
+        semio_framework_job::close_original_granted_step(cx,|grant|semio_framework_value::RetainedWorkOutcome{work:1,result:(||{
             self.closing = true;
             if grant.maximum_items == 0 || grant.maximum_depth == 0 {
                 return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
@@ -542,7 +542,7 @@ impl InteractiveJob for ReconstructionRunJob {
                     return Err(error)
                 }
             })
-        })
+        })()})
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> {

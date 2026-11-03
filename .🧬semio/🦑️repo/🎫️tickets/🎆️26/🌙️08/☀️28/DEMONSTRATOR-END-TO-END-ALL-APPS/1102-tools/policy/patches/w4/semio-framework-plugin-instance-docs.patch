@@ -1,0 +1,11 @@
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/📄️docs/📥️staging/🪜️maintenance-ladder/🦀️.rs
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/📄️docs/📥️staging/🪜️maintenance-ladder/🦀️.rs
+@@ -256,7 +256,7 @@
+                     return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: built.copied_items.max(1), ..built }));
+                 }
+                 let before=cx.retained_progress();
+-                let owner=active.hydration.as_mut().expect("recursive document parent hydration remains retained");
++                let owner=active.hydration.as_mut().ok_or_else(||semio_framework_value::ValueError::invariant("recursive document parent hydration is not retained"))?;
+                 owner.operation=cx.operation();
+                 owner.generation=cx.generation();
+                 let step=owner.step(cx,RetainedCloneGrant{maximum_items:1,..grant});

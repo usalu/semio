@@ -2862,6 +2862,7 @@ dependencies = [
  "semio-framework-job-payload",
  "semio-framework-job-testing-caller",
  "semio-framework-trace",
+ "semio-framework-value",
  "semio-framework-value-native-owned",
  "semio-framework-value-retained-clone",
  "semio-framework-value-shared-issuance",
@@ -2888,6 +2889,7 @@ dependencies = [
  "semio-framework-job-payload",
  "semio-framework-job-receiving",
  "semio-framework-trace",
+ "semio-framework-value",
  "semio-framework-value-derive",
  "semio-framework-value-native-owned",
  "semio-framework-value-retained-clone",
@@ -14226,7 +14228,6 @@ dependencies = [
  "semio-framework-plugin",
  "semio-framework-value",
  "semio-s-artifact-stdio-dwg-geometry",
- "semio-s-artifact-stdio-dwg-model",
  "semio-s-artifact-stdio-dwg-snapshot",
  "semio-s-artifact-stdio-dwg-write",
  "semio-s-artifact-stdio-dxf",
@@ -14234,6 +14235,7 @@ dependencies = [
  "semio-s-artifact-stdio-png",
  "semio-s-artifact-stdio-semio-base",
  "semio-s-artifact-stdio-semio-drawing",
+ "semio-s-artifact-stdio-semio-drawing-png-export",
  "semio-s-artifact-stdio-svg",
  "semio-s-artifact-stdio-xml",
 ]
@@ -14354,6 +14356,19 @@ dependencies = [
  "semio-s-artifact-stdio-semio-drawing-snapshot",
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-semio-drawing-png-export"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-artifact-reference",
+ "semio-framework-os-kernel",
+ "semio-framework-plugin",
+ "semio-framework-value",
+ "semio-s-artifact-stdio-png",
+ "semio-s-artifact-stdio-semio-base",
+ "semio-s-artifact-stdio-semio-drawing",
 ]
 
 [[package]]

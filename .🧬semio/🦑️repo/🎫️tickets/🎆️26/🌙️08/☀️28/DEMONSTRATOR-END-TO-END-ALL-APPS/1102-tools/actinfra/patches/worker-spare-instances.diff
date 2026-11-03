@@ -1,0 +1,31 @@
+--- 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👷️workers/🟦️.ts	2026-11-02 14:23:08
++++ 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👷️workers/🟦️.ts	2026-11-02 14:23:08
+@@ -50,6 +50,8 @@
+ /** 🖥️ Reads the facts of the running host. */
+ export function currentWorkerHostV1(environment:Readonly<Record<string,string|undefined>>=process.env):WorkerHostV1{const host=hostProfileV1(environment,{totalMegabytes:Math.floor(totalmem()/1048576),cores:availableParallelism(),declared:false});return Object.freeze({cores:host.cores,memoryBytes:host.totalMegabytes*1048576});}
+ 
++/** 🧭️ Spare instances go first to the kinds that carry the long compiler actions of an activation (build, script), then to the cheap kinds, so a run without tests or checks never idles a pool while its builds queue behind one instance. */
++const SPARE_INSTANCE_ORDER_V1:readonly WorkerActionKindV1[]=Object.freeze(["build","script","generate","check","test"]);
+ /** 🧮️ Resolves the policy for one host: the local job count, the memory the pools may hold in total and how many instances each kind keeps. Every kind that uses workers first gets one instance, in the priority order test, check, generate, build, script, as far as the memory holds instances; the remaining instances then go to the kinds in the same order, up to their bound and the job count. A kind that finds no instance left runs without workers. */
+ export function planWorkersV1(policy:WorkerPolicyV1,host:WorkerHostV1,overrides:WorkerOverridesV1={}):WorkerPlanV1{
+  const enabled=overrides.workers??policy.enabled,jobs=overrides.jobs??clamp(host.cores,1,policy.localJobs.maximum);
+@@ -57,7 +59,7 @@
+  const totalMegabytes=Math.max(64,Math.floor(host.memoryBytes/MEGABYTE*policy.memory.hostShareBasisPoints/10000)),instances=clamp(Math.floor(totalMegabytes/policy.memory.perWorkerMegabytes),1,1024);
+  const wanted=WORKER_ACTION_KINDS_V1.filter(kind=>enabled&&policy.kinds[kind].workers),counts=new Map<WorkerActionKindV1,number>(wanted.slice(0,instances).map(kind=>[kind,1] as const));
+  let remaining=instances-counts.size;
+- for(const kind of counts.keys()){const add=Math.min(Math.max(0,Math.min(policy.kinds[kind].maxInstances,jobs)-1),remaining);counts.set(kind,1+add);remaining-=add;}
++ for(const kind of SPARE_INSTANCE_ORDER_V1.filter(row=>counts.has(row))){const add=Math.min(Math.max(0,Math.min(policy.kinds[kind].maxInstances,jobs)-1),remaining);counts.set(kind,1+add);remaining-=add;}
+  const kinds={} as Record<WorkerActionKindV1,WorkerKindPolicyV1>;
+  for(const kind of WORKER_ACTION_KINDS_V1){
+   const row=policy.kinds[kind],count=counts.get(kind);
+--- 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔣️policy.json	2026-11-02 14:23:08
++++ 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔣️policy.json	2026-11-02 14:23:08
+@@ -431,7 +431,7 @@
+       },
+       {
+         "kind": "build",
+-        "pattern": "^(?:build|prepare|activate|wasm|native|package|bundle|cpp|publish|canonical|preview|setup|deps)(?:-|$)"
++        "pattern": "^(?:build|prepare|activate|wasm|native|package|bundle|cpp|publish|canonical|preview|setup|deps|component)(?:-|$)"
+       }
+     ],
+     "defaultKind": "script",

@@ -149,7 +149,7 @@ fn durable_decision_rejects_deflate_expansion_before_document_body_allocation() 
     let decision = decision();
     let envelope = semio_framework_os_semio::SemioEnvelope::from_envelope_id(<DurableOwnedThreeMemberDecisionV1 as ArtifactDsl>::envelope_id(), semio_framework_os_semio::Component::Pack, 1).unwrap();
     let mut expanded_record = decision.__dsl_to_record();
-    expanded_record.fields.insert(u16::MAX, FieldValue::Bytes64(vec![0; DURABLE_OWNED_GROUP_EVENT_MAX_BYTES + 1]));
+    expanded_record.fields.insert(u16::MAX, FieldValue::Bytes64(semio_framework_dsl_record::RecordBytes::try_from_slice(&vec![0u8; DURABLE_OWNED_GROUP_EVENT_MAX_BYTES + 1]).unwrap()));
     let mut expanded_options = PackEncodeOptions::default();
     expanded_options.chunk_threshold = u64::MAX;
     expanded_options.frame_size = u64::MAX;
@@ -242,7 +242,7 @@ let unbound = DurableUnboundOneItemOutcomeV1 {
         for (binding, spec, record) in [(&contract["bindings"][0], DurableUnboundOneItemOutcomeV1::__dsl_spec(), unbound.__dsl_to_record()), (&contract["bindings"][1], DurableBoundOneItemOutcomeV1::__dsl_spec(), bound.__dsl_to_record())] {
             for key in binding["fields"].as_array().unwrap() {
                 let field = spec.fields.iter().find(|field| field.key == key.as_str().unwrap()).unwrap();
-                assert_eq!(record.get(field.id), Some(&FieldValue::Bytes64(bytes.clone())));
+                assert_eq!(record.get(field.id), Some(&FieldValue::Bytes64(semio_framework_dsl_record::RecordBytes::try_from_slice(&bytes).unwrap())));
             }
         }
         let unbound_pack = unbound.encode_pack();

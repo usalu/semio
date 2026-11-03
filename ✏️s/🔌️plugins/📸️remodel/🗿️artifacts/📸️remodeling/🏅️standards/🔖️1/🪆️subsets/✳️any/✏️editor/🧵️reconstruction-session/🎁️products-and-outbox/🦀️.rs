@@ -31,7 +31,7 @@ impl ContentLeaves {
             .leaves
             .into_iter()
             .enumerate()
-            .map(|(index, leaf)| append_content(AppendContent { content_id: content_id.clone(), kind: self.kind, mime: mime.clone(), width, height, first: index as u64, chunks: vec![ByteBuffer(leaf)] }))
+            .map(|(index, leaf)| append_content::append_content(AppendContent { content_id: content_id.clone(), kind: self.kind, mime: mime.clone(), width, height, first: index as u64, chunks: vec![ByteBuffer(leaf)] }))
             .collect();
         (content_id, count, ops)
     }
@@ -321,14 +321,14 @@ impl Outbox {
         Ok(if delivered { OutboxPhase::Delivered } else { OutboxPhase::Building })
     }
 
-    pub(super) fn advance<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
+    pub(super) fn advance<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         let kind = self.kind.expect("a building outbox owns its publication kind");
         self.publication.advance_from_source(kind, &self.source, cx)
     }
 
     pub(super) fn retire_step(&mut self, cx: &mut StepContext<'_>) -> Result<(), ValueError> {
         self.retiring = true;
-        match self.publication.close_step(cx.retained_grant())? {
+        match self.publication.close_step(cx.retained_grant()).result? {
             RetainedCloneStep::Progress(progress) => cx.consume_retained(progress),
             RetainedCloneStep::Complete(progress) => {
                 cx.consume_retained(progress)?;
@@ -349,7 +349,7 @@ impl Outbox {
             return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()));
         }
         self.retiring = true;
-        let step = self.publication.close_step(grant)?;
+        let step = self.publication.close_step(grant).result?;
         if self.publication.terminal_is_empty() {
             self.kind = None;
             self.retiring = false;

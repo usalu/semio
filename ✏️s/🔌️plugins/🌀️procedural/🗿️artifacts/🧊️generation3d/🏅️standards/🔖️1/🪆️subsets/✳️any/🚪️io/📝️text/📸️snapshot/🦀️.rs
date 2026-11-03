@@ -129,7 +129,9 @@ pub fn evaluate_generation_preview(host_snapshot: &FlowHostSnapshot, values: &se
     let mut host = FlowHost::from_host_snapshot(patched_fixture).with_history_store_factory(::semio_framework_artifact_flow_flow::FLOW_HISTORY_STORE_FACTORY);
     host.set_neuron_kind_info_map(semio_framework_os_flow::flow_neuron_kind_info_map());
     let evaluated = host.evaluate().unwrap_or_default();
-    host.retire_cold();
+    if host.retire_cold().is_err() {
+        return String::new();
+    }
     evaluated
 }
 

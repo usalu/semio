@@ -62,14 +62,17 @@ fn evaluate_runs_after_tree_change() {
     let mut host=FixtureRegistryHost::new(host,FixtureOperatorFamily::Math);
     host.set_neuron_kind_infos_json(&test_kind_infos_json());
     host.evaluate_internal();
+    settle_baseline(&mut host);
     let baseline = calls.load(Ordering::Relaxed);
     host.set_slider_value("slider", 5.0);
     host.evaluate_internal();
+    settle_baseline(&mut host);
     let after_slider = calls.load(Ordering::Relaxed);
     assert!(after_slider > baseline);
     host.disconnect("s1").unwrap();
     host.connect_ports("slider", "number", "add", "b").unwrap();
     host.evaluate_internal();
+    settle_baseline(&mut host);
     assert!(calls.load(Ordering::Relaxed) > after_slider);
     host.retire_cold();
 }
@@ -89,10 +92,12 @@ fn dirty_propagation_only_dispatches_affected_branch() {
     let pass_id = host.add_widget(r#"{"kind":"neuron","id":"pass","neuronKind":"math.passThrough","params":{},"input_ports":[],"preview":false}"#, 600.0, 0.0).unwrap();
     host.connect_ports(&slider_b_id, "number", &pass_id, "number").unwrap();
     host.evaluate_internal();
+    settle_baseline(&mut host);
     calls.lock().unwrap().clear();
 
     host.set_slider_value("slider", 5.0);
     host.evaluate_internal();
+    settle_baseline(&mut host);
 
     let dispatched = calls.lock().unwrap().clone();
     assert!(dispatched.iter().any(|kind| kind == "math.add"), "branch A (add) should re-dispatch after its slider changed");
@@ -112,12 +117,15 @@ fn neural_cache_persists_across_evaluations() {
     let mut host=FixtureRegistryHost::new(host,FixtureOperatorFamily::Math);
     host.set_neuron_kind_infos_json(&test_kind_infos_json());
     host.evaluate_internal();
+    settle_baseline(&mut host);
     let baseline = calls.load(Ordering::Relaxed);
     assert!(baseline > 0, "first evaluation is a cache miss and must dispatch to the bridge");
     host.evaluate_internal();
+    settle_baseline(&mut host);
     assert_eq!(calls.load(Ordering::Relaxed), baseline, "an unchanged tree must be served entirely from the cache");
     host.set_slider_value("slider", 4.0);
     host.evaluate_internal();
+    settle_baseline(&mut host);
     assert_eq!(calls.load(Ordering::Relaxed), baseline + 1, "only the node downstream of the changed slider should re-dispatch");
     host.retire_cold();
 }
@@ -141,6 +149,7 @@ fn apply_eval_outputs_json_preserves_state_on_global_error() {
     let mut host = host_with_test_bridge();
     let good = host.last_eval_json.clone();
     host.apply_eval_outputs_json(r#"{"error":"missing input: geometry"}"#);
+    settle_baseline(&mut host);
     assert_eq!(host.last_eval_json, good);
     assert!(host.current_channels.as_ref().is_some_and(|channels|!channels.outputs.is_empty()));
     host.retire_cold();
@@ -234,6 +243,7 @@ fn slider_drag_does_not_evaluate_until_explicit_evaluate() {
     host.pointer_move_screen(sx + 80.0, sy, false, false, false);
     assert_eq!(host.preview_text(), "3", "a live drag must not synchronously re-evaluate the graph");
     host.evaluate_internal();
+    settle_baseline(&mut host);
     assert_ne!(host.preview_text(), "3", "an explicit evaluate still picks up the dragged value");
     host.pointer_up_screen(sx + 80.0, sy, false, false, false);
     host.retire_cold();

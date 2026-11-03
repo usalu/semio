@@ -6,9 +6,9 @@
     "inserted": [],
     "moved": [
       {
-        "id": "region-old-town",
-        "from": 1,
-        "to": 2
+        "id": "region-park",
+        "from": 2,
+        "to": 1
       }
     ],
     "modified": []

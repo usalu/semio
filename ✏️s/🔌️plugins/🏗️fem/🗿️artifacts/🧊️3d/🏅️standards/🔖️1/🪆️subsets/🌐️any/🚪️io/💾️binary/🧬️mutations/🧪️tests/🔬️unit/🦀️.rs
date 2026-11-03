@@ -13,8 +13,8 @@ use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structur
 use store::os_store::document_materialize::create_document_envelope;
 use store::os_store::store_schema::ArtifactCommand;
 
-fn cantilever_fixture() -> semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot {
-    semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot {
+fn cantilever_value() -> semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue {
+    semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue {
         nodes: vec![FemNodeValue { id: "n1".into(), x: 0.0, y: 0.0, z: 0.0 }, FemNodeValue { id: "n2".into(), x: 3.0, y: 0.0, z: 0.0 }],
         elements: vec![FemElement::Frame { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "hea200".into(), roll: 0.0 }],
         materials: vec![FemMaterialValue { id: "steel".into(), name: "Steel".into(), e: 210e9, g: 80.77e9, nu: 0.3, rho: 7850.0 }],
@@ -25,6 +25,10 @@ fn cantilever_fixture() -> semio_s_artifact_fem_3d_model::standards::v1::subsets
         combinations: vec![],
         analysis: FemAnalysisSettings::default(),
     }
+}
+
+fn cantilever_fixture() -> semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot {
+    semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot::from_reference(cantilever_value()).expect("fixture snapshot")
 }
 
 #[test]
@@ -53,17 +57,18 @@ fn material_field_intent_binary_round_trips_and_agrees_with_text() {
 /// exercising every collection kind (id-keyed create + a nested load) for the text/pack codecs.
 #[semio_framework_async_macros::async_test]
 async fn fem3d_document_text_round_trips_through_the_store() {
+    let value = cantilever_value();
     let fixture = cantilever_fixture();
     let mut store = ::semio_framework_async::poll::resolve_ready(crate::standards::v1::subsets::any::schema::mutations::Fem3dStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(create_document_envelope(semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FEM_3D_SCHEMA, "fem3d", schema::empty_fem3d_snapshot(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).expect("valid store");
     store.install_document_store_owners_exact(semio_framework_os_kernel::os_store::document_store_owners::funded_bounded_artifact_store_owners::<semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot, Fem3dMutation>().expect("funded bounded document owners")).unwrap_or_else(|(error, _)| panic!("bounded document owners install refused: {error}"));
     let mutations = vec![
-        Fem3dMutation::CreateMaterial(schema::mutations::create_material::CreateMaterial { material: fixture.materials[0].clone(), index: None }),
-        Fem3dMutation::CreateSection(schema::mutations::create_section::CreateSection { section: fixture.sections[0].clone(), index: None }),
-        Fem3dMutation::CreateNode(schema::mutations::create_node::CreateNode { node: fixture.nodes[0].clone(), index: None }),
-        Fem3dMutation::CreateNode(schema::mutations::create_node::CreateNode { node: fixture.nodes[1].clone(), index: None }),
-        Fem3dMutation::CreateElement(schema::mutations::create_element::CreateElement { element: Box::new(fixture.elements[0].clone()), index: None }),
-        Fem3dMutation::CreateSupport(schema::mutations::create_support::CreateSupport { support: fixture.supports[0].clone(), index: None }),
-        Fem3dMutation::CreateLoadCase(schema::mutations::create_load_case::CreateLoadCase { load_case: fixture.load_cases[0].clone(), index: None }),
+        Fem3dMutation::CreateMaterial(semio_s_artifact_fem_3d_material::standards::v1::subsets::any::schema::mutations::create_material::CreateMaterial { material: value.materials[0].clone(), index: None }),
+        Fem3dMutation::CreateSection(semio_s_artifact_fem_3d_mesh_sections::standards::v1::subsets::any::schema::mutations::create_section::CreateSection { section: value.sections[0].clone(), index: None }),
+        Fem3dMutation::CreateNode(semio_s_artifact_fem_3d_mesh_topology::standards::v1::subsets::any::schema::mutations::create_node::CreateNode { node: value.nodes[0].clone(), index: None }),
+        Fem3dMutation::CreateNode(semio_s_artifact_fem_3d_mesh_topology::standards::v1::subsets::any::schema::mutations::create_node::CreateNode { node: value.nodes[1].clone(), index: None }),
+        Fem3dMutation::CreateElement(semio_s_artifact_fem_3d_mesh_topology::standards::v1::subsets::any::schema::mutations::create_element::CreateElement { element: Box::new(value.elements[0].clone()), index: None }),
+        Fem3dMutation::CreateSupport(semio_s_artifact_fem_3d_boundary::standards::v1::subsets::any::schema::mutations::create_support::CreateSupport { support: value.supports[0].clone(), index: None }),
+        Fem3dMutation::CreateLoadCase(semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::create_load_case::CreateLoadCase { load_case: value.load_cases[0].clone(), index: None }),
     ];
     store.dispatch(ArtifactCommand::Apply { mutations, transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     assert_eq!(store.snapshot().expect("snapshot"), fixture);

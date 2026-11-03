@@ -1,0 +1,19 @@
+--- a/🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/📦️packages/🦀️rust/🦀️.rs
++++ b/🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/📦️packages/🦀️rust/🦀️.rs
+@@ -1,5 +1,4 @@
+ //! 🎟️ The original retained turn implementation is the canonical native package owner.
+-#![allow(async_fn_in_trait)]
+ #[path="../../🦀️.rs"]
+ pub mod retained_turn;
+ pub use retained_turn::*;
+--- a/🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/💼️job/📥️source/🦀️.rs
++++ b/🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/💼️job/📥️source/🦀️.rs
+@@ -69,7 +69,7 @@
+   if self.prepared.is_none(){let job=self.original.as_ref().unwrap().job;*self.prepared=Some(OriginalJobSource{job,kind:String::new(),input:None,checkpoint:None});cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);return Ok(false)}
+   let source=self.field_source()?;let length=source.map_or(0,<[u8]>::len);
+   if !self.allocated{if grant.maximum_capacity_bytes<length{return Ok(false)}if length>0{self.bytes.try_reserve_exact(length).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"original job crossing destination allocation failed"))?;}self.allocated=true;cx.consume_retained(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:self.bytes.capacity(),..Default::default()})?;cx.consume_fuel(1);return Ok(false)}
+-  if self.position<length{let count=grant.maximum_copy_bytes.min(length-self.position);if count==0{return Ok(false)}let original=self.original.as_ref().unwrap();let source=match self.field{0=>original.kind.as_bytes(),1=>original.input.as_ref().unwrap(),2=>original.checkpoint.as_ref().unwrap(),_=>unreachable!()};self.bytes.extend_from_slice(&source[self.position..self.position+count]);self.position+=count;cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:count,..Default::default()})?;cx.consume_fuel(1);return Ok(false)}
++  if self.position<length{let count=grant.maximum_copy_bytes.min(length-self.position);if count==0{return Ok(false)}let original=self.original.as_ref().ok_or_else(||ValueError::invariant("actor source original is absent"))?;let source=match self.field{0=>original.kind.as_bytes(),1=>original.input.as_ref().ok_or_else(||ValueError::invariant("actor source input is absent"))?,2=>original.checkpoint.as_ref().ok_or_else(||ValueError::invariant("actor source checkpoint is absent"))?,_=>return Err(ValueError::invariant("actor source field is invalid"))};self.bytes.extend_from_slice(&source[self.position..self.position+count]);self.position+=count;cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:count,..Default::default()})?;cx.consume_fuel(1);return Ok(false)}
+   let present=self.field_source()?.is_some();let bytes=std::mem::take(&mut*self.bytes);let prepared=self.prepared.as_mut().unwrap();match self.field{0=>prepared.kind=unsafe{String::from_utf8_unchecked(bytes)},1=>prepared.input=present.then_some(bytes),2=>prepared.checkpoint=present.then_some(bytes),_=>unreachable!()};self.field+=1;self.position=0;self.allocated=false;cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);Ok(self.field==3)
+  }
+  /// 📤️ Transfers only the admitted copy; the exact original source stays held through guest execution.

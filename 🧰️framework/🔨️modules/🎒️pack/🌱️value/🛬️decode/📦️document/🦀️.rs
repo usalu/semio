@@ -70,7 +70,7 @@ impl RetainedDocumentDriver{
   self.input_work=self.input_work.checked_add(self.offset-before).ok_or_else(capacity)?;Ok(None)
  }
  fn chunk_one<S:RetainedWireByteSource+?Sized>(&mut self,input:&S,range:(usize,usize),maximum:usize)->Result<Option<Token>,PackRefusal>{
-  let Chunks::Read{index,end,seen,found,verified}=self.chunks else{unreachable!()};
+  let Chunks::Read{index,end,seen,found,verified}=self.chunks else{return Err(invalid("retained document chunk state is not reading"))};
   if index==end{self.chunks=Chunks::None;return Ok(None)}
   let id=*self.ids.get(index).ok_or_else(||invalid("missing retained chunk reference"))?;let entry=self.catalog.chunk(id).map_err(catalog_fault)?;
   if matches!(self.chunk_segment.preflight(),Err(Admission::Complete)){
@@ -96,7 +96,7 @@ impl RetainedValueDriver for RetainedDocumentDriver{
     if self.catalog.progress().complete{self.verified=self.catalog.take(self.superblock.take().ok_or_else(||invalid("missing verified document anchor"))?).map_err(catalog_fault)?;if self.verified.is_none(){return Err(invalid("catalog has no verified manifest"))}self.phase=Phase::Schema;return Ok(None)}
     let before=self.offset;self.event=segment_one(&mut self.segment,input,range,&mut self.offset,&mut self.source_complete,maximum)?;self.input_work+=self.offset-before;Ok(None)
    },
-   Phase::Schema=>{self.last_work=1;if !self.intrinsic{self.segment.replay()?;self.offset=0;self.source_complete=false;self.phase=Phase::Replay;return Ok(None)}if self.schema_index<INTRINSIC_SCHEMA_GRAPH.len(){self.schema_hash.update(&INTRINSIC_SCHEMA_GRAPH[self.schema_index..self.schema_index+1]);self.schema_index+=1;return Ok(None)}let manifest=self.verified.as_ref().unwrap().manifest;if manifest.field_count!=1||self.schema_hash.finalize().as_bytes()!=&manifest.schema_hash{return Err(invalid("intrinsic document schema mismatch"))}self.segment.replay()?;self.offset=0;self.source_complete=false;self.phase=Phase::Replay;Ok(None)},
+   Phase::Schema=>{self.last_work=1;if !self.intrinsic{self.segment.replay()?;self.offset=0;self.source_complete=false;self.phase=Phase::Replay;return Ok(None)}if self.schema_index<INTRINSIC_SCHEMA_GRAPH.len(){self.schema_hash.update(&INTRINSIC_SCHEMA_GRAPH[self.schema_index..self.schema_index+1]);self.schema_index+=1;return Ok(None)}let manifest=self.verified.as_ref().ok_or_else(||invalid("missing verified document manifest"))?.manifest;if manifest.field_count!=1||self.schema_hash.finalize().as_bytes()!=&manifest.schema_hash{return Err(invalid("intrinsic document schema mismatch"))}self.segment.replay()?;self.offset=0;self.source_complete=false;self.phase=Phase::Replay;Ok(None)},
    Phase::Replay=>{self.last_work=1;let token=self.replay_one(input,range,maximum)?;if matches!(token,Some(Token::Complete{..})){self.phase=Phase::Complete}Ok(token)},
    Phase::Complete=>Ok(None),
   }

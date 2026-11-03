@@ -300,7 +300,7 @@ fn member_canonical_reader_map_retirement_preserves_refused_original_and_paid_ca
         let MapMutation::ReplaceMap(body)=&mut original;body.tracked=true;
         let lifetime=Arc::clone(&body.lifetime);let key_pointer=body.map.0.entry_at_rank(0).unwrap().0.as_ptr();let payload=map_payload_capacity(&body.map);
         for denied in [RetainedCloneGrant{maximum_items:0,..policy},RetainedCloneGrant{maximum_capacity_bytes:0,..policy},RetainedCloneGrant{maximum_depth:0,..policy}] {
-            let (result,heap)=observe_heap_allocations_on_this_thread(||MapRetirementFactory.retire_owned(original,denied));
+            let (result,heap)=observe_heap_allocations_on_this_thread(||MapRetirementFactory.retire_owned(original,denied).result);
             original=match result { Err((_,original))=>original,Ok(_)=>panic!("denied original map moved") };
             assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
             let MapMutation::ReplaceMap(body)=&original;assert!(Arc::ptr_eq(&body.lifetime,&lifetime));assert_eq!(body.map.0.entry_at_rank(0).unwrap().0.as_ptr(),key_pointer);assert_eq!(lifetime.root_drops.load(Ordering::SeqCst),0);

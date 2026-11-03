@@ -1,0 +1,11 @@
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏯️tool-run/🧵️instance/🎟️job-admission-and-finalize-turn/🦀️.rs
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏯️tool-run/🧵️instance/🎟️job-admission-and-finalize-turn/🦀️.rs
+@@ -192,7 +192,7 @@
+             }
+             ToolRunFinalizePhase::Revalidating => self.step_tool_run_job(cx),
+             ToolRunFinalizePhase::Publishing => self.publish_tool_run(cx).await,
+-            ToolRunFinalizePhase::Closing => {let entry=selected_entry_mut!(self.tool_runs).expect("closing original slot");if !entry.operations.terminal_is_empty(){entry.operations.close_step(&self.stores.store,cx)?;return Ok(())}self.close_tool_run_publication(cx)},
++            ToolRunFinalizePhase::Closing => {let Some(entry)=selected_entry_mut!(self.tool_runs)else{return Ok(())};if !entry.operations.terminal_is_empty(){entry.operations.close_step(&self.stores.store,cx)?;return Ok(())}self.close_tool_run_publication(cx)},
+         }
+     }
+ 

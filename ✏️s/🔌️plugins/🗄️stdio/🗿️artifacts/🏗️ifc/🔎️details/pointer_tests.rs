@@ -1,6 +1,6 @@
 //! 🧪️ Original bounded pointer admission preserves native owners across every retained frontier.
 use super::*;
-use semio_framework_plugin::app_testing::OriginalWorkFixture;
+use semio_framework_plugin::plugin_app_close_prelude::OriginalWorkFixture;
 use semio_framework_value::FromValue;
 fn grant() -> semio_framework_value::retained_clone::RetainedCloneGrant {
     semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 65_536, maximum_depth: 256, ..Default::default() }

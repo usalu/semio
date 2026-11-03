@@ -1,0 +1,18 @@
+--- a/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️.rs
++++ b/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️.rs
+@@ -53,6 +53,15 @@
+         ok: native_en "OK", native_de "OK", reuse_en "OK", reuse_de "OK";
+         selected: native_en "selected", native_de "ausgewählt", reuse_en "selected", reuse_de "ausgewählt";
+         step: native_en "Step", native_de "Schritt", reuse_en "Step", reuse_de "Schritt";
++        step_idle: native_en "Idle", native_de "Bereit", reuse_en "Idle", reuse_de "Bereit";
++        step_moved: native_en "Moved", native_de "Verschoben", reuse_en "Moved", reuse_de "Verschoben";
++        step_copied: native_en "Copied", native_de "Kopiert", reuse_en "Copied", reuse_de "Kopiert";
++        step_rotated: native_en "Rotated", native_de "Gedreht", reuse_en "Rotated", reuse_de "Gedreht";
++        step_scaled: native_en "Scaled", native_de "Skaliert", reuse_en "Scaled", reuse_de "Skaliert";
++        step_nothing: native_en "Nothing to commit", native_de "Nichts zu übernehmen", reuse_en "Nothing to commit", reuse_de "Nichts zu übernehmen";
++        step_committed: native_en "object(s) committed", native_de "Objekt(e) übernommen", reuse_en "object(s) committed", reuse_de "Objekt(e) übernommen";
++        step_unsupported: native_en "Unsupported", native_de "Nicht unterstützt", reuse_en "Unsupported", reuse_de "Nicht unterstützt";
++        step_unknown: native_en "Unknown", native_de "Unbekannt", reuse_en "Unknown", reuse_de "Unbekannt";
+     }
+ }
+ 

@@ -80,11 +80,11 @@ async fn registered_editor_consumes_intrinsic_natural_bytes_through_the_real_med
         data,
     };
     let mut app = new_registered_app::<EditorApp<SurfaceEditorFixture>, _>(surface_manifest(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
-    app.consume_media(crate::app_contract::NATURAL_FILE_PORT, artifact).await.expect("registered editor consumes natural bytes");
+    app.consume_media(crate::app_contract::NATURAL_FILE_PORT, artifact, cx).await.expect("registered editor consumes natural bytes");
     let receipt = crate::app_testing::artifact_app_laws::settle_registered_typed_operation(&mut app, meta("local").instance_id, crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity(),cx).await.expect("natural-file import settles");
     let loads = receipt.effects.into_iter().filter_map(|effect| match effect { semio_framework::kernel::Effect::LoadDocument { pack, spr } => Some(store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }), _ => None }).collect::<Vec<_>>();
     assert_eq!(loads.len(), 1, "natural-file Open publishes exactly one document load, no mutation");
-    crate::app_testing::artifact_app_laws::load_document(&mut app, &loads[0], &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("the document load lands");
+    crate::app_testing::artifact_app_laws::load_document(&mut app, &loads[0], &mut crate::app_testing::artifact_app_laws::fixture_identity(), cx).await.expect("the document load lands");
     assert_eq!(app.snapshot().expect("imported surface snapshot").count, expected);
     let history_rows = app.history_snapshot().await.expect("natural-file import history").upserts.into_iter().filter(|entry| entry.edit_id.is_some()).count();
     let expected_history_rows = usize::try_from(fixture["lifecycle"]["expected"]["openedHistoryEntries"].as_u64().expect("opened history entries")).expect("usize history count");

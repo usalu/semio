@@ -134,11 +134,13 @@ fn an_invalidated_session_hands_an_ephemeral_host_a_re_dispatching_baseline() {
     prepare_fixture_window(&mut session);
     capture_fixture_baseline(&mut session,&host);
     let mut settled = replay_host_of(&host);
+    settle_baseline(&mut settled);
     session.install_baseline_into(&mut settled,FIXTURE_SESSION_GRANT).unwrap();
     assert!(settled.pending_eval_widget_ids().is_empty(), "control: an unchanged tree under an unchanged registry owes no dispatch");
     let generation = session.flow_extension_generation();
     assert!(session.invalidate_for_flow_extension_registry(generation + 1,FIXTURE_SESSION_GRANT).unwrap().0, "a moved generation invalidates");
     let mut rearmed = replay_host_of(&host);
+    settle_baseline(&mut rearmed);
     session.install_baseline_into(&mut rearmed,FIXTURE_SESSION_GRANT).unwrap();
     assert_eq!(rearmed.eval_baseline_registry_generation(), generation + 1, "the baseline carries the generation it was computed against");
     assert!(!rearmed.pending_eval_widget_ids().is_empty(), "after a registry-generation invalidation the SAME tree must be re-dispatched");
@@ -197,6 +199,7 @@ fn a_superseded_registry_generation_re_dispatches_an_unchanged_tree() {
     let (snapshot, channels) = source.eval_baseline();
     settled.install_eval_baseline(snapshot, channels, generation, FIXTURE_SESSION_GRANT).map_err(|(error, _, _)| error).unwrap();
     settled.evaluate_internal();
+    settle_baseline(&mut settled);
     assert_eq!(dispatches.load(std::sync::atomic::Ordering::Relaxed), 0, "control: a current baseline over an unchanged tree dispatches nothing");
     assert!(settled.pending_eval_widget_ids().is_empty(), "control: and owes no further work");
 
@@ -207,6 +210,7 @@ fn a_superseded_registry_generation_re_dispatches_an_unchanged_tree() {
     rearmed.install_eval_baseline(snapshot, channels, generation, FIXTURE_SESSION_GRANT).map_err(|(error, _, _)| error).unwrap();
     assert!(!rearmed.pending_eval_widget_ids().is_empty(), "a superseded baseline owes the whole tree again");
     rearmed.evaluate_internal();
+    settle_baseline(&mut rearmed);
     assert!(dispatches.load(std::sync::atomic::Ordering::Relaxed) > 0, "a superseded registry generation must re-dispatch the unchanged tree");
     assert_eq!(rearmed.preview_text(), source.preview_text(), "re-dispatching an unchanged tree reaches the same answer");
 

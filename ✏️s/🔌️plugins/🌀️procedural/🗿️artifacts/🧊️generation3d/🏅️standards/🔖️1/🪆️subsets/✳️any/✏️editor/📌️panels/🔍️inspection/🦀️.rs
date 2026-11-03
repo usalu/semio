@@ -58,7 +58,7 @@ pub fn render(host_snapshot: &FlowHostSnapshot, selected_node_ids: &[String], la
             let fields = if let Some(widget) = host_snapshot.widgets.iter().find(|widget| widget_id(widget) == selected_id) {
                 widget_fields(host_snapshot, selected_id, widget, &prefix, labels, windows, locale, terminology, meshes, eval_json, status_json, export_ready,source_revision)?
             } else { semio_framework_plugin::ui_node_list([tree_item(&format!("{prefix}.none"), labels.no_selection.as_str())])? };
-            semio_framework_ui_contract::tree_item(semio_s_procedural_core_semantic_ui::ui_label(selected_id)?).try_id(&prefix).and_then(|row| row.try_children(fields).map_err(|error| error.builder)).and_then(|row| row.try_build()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.selection", "fixed UI selection admission failed"))
+            semio_framework_ui_contract::tree_item(semio_s_procedural_core_semantic_ui::ui_label(selected_id)?).try_id(&prefix).and_then(|row| row.try_children(fields).map_err(|error| error.builder)).map_err(|_| ()).and_then(|row| row.try_build().map_err(|_| ())).map_err(|()| semio_framework_plugin::PluginAssemblyError::new("ui.inspection.selection", "fixed UI selection admission failed"))
         })?.build();
     }
     let selected_id = &selected_node_ids[0];

@@ -48,8 +48,8 @@ pub struct DurableStorePreparedOwnerV1<P, Mutation> {
     pub bound: Option<DurableStoreBoundOutcomeV1<P, Mutation>>,
     previous_authority: Option<semio_framework_os_store_one_item_publication::lifted_canonical_edit::ArtifactStoreOneItemAuthorityRetirement>,
     discarded_pack: Option<semio_framework_value::retirement::controlled::ControlledRetirement<DurablePlanningOutputV1>>,
-    mutation_retirement: Option<Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<Mutation>>>,
-    snapshot_retirement: Option<Arc<dyn semio_framework_value::SnapshotRetirementFactory<P>>>,
+    pub mutation_retirement: Option<Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<Mutation>>>,
+    pub snapshot_retirement: Option<Arc<dyn semio_framework_value::SnapshotRetirementFactory<P>>>,
     original_retirement: Option<Box<ArtifactStorePreparedRetirement<P, Mutation>>>,
     issuer_retirement: Option<semio_framework_value::FactoryAuthority>,
 }

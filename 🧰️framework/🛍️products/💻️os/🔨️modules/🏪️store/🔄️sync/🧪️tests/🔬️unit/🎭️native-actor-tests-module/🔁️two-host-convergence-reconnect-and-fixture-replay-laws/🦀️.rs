@@ -386,7 +386,7 @@
                     channels.cmd_tx.send(ArtifactActorMsg::ExternalChanged).expect("poke");
                 }
                 FixtureInbound::ReplaceDocument { dsl_text, ops_text } => {
-                    let (pack_files, _dsl_mirror) = (codec.compile_dsl)(dsl_text, ops_text).await.unwrap_or_else(|error| panic!("fixture {} compile_dsl: {error}", fixture.name));
+                    let (pack_files, _dsl_mirror) = (codec.reference().expect("codec reference").compile_dsl)(dsl_text, ops_text).await.unwrap_or_else(|error| panic!("fixture {} compile_dsl: {error}", fixture.name));
                     let archive = semio_framework_os_spr::DocumentArchivePack { parent_pack: pack_files.pack, parent_spr: pack_files.spr, members: Vec::new() };
                     let archive_bytes = semio_framework_os_spr::encode_document_archive_bytes(&archive).expect("encode replacement archive");
                     storage.write_archive(&fixture.document_id, &fixture.schema, &archive_bytes).await.expect("replace archive write");

@@ -148,10 +148,10 @@ pub fn node_graph_edit_result(doc: &ArtifactView<'_, FlowSnapshot>, config: &Flo
         Ok::<(), Fault>(())
     })();
     if let Err(error) = edited {
-        host.retire_cold();
+        host.retire_cold()?;
         return Err(error);
     }
-    host.retire_cold();
+    host.retire_cold()?;
     let leaves: Vec<SemioFlowMutation> = edit.leaves.into_iter().chain(sliders).collect();
     if !drags.is_empty() {
         let authoring_seed = doc.operation_optional().map_or("", |operation| operation.authoring_seed.as_str());

@@ -1,7 +1,7 @@
 //! 🧰️ The one shared app test harness — every test target of the family mounts it as `context`.
 
 use semio_s_artifact_process_process3d_editor::*;
-use semio_s_artifact_process_process3d_kit::builtin_installed_catalogs;
+use semio_s_artifact_process_process3d_kit::{builtin_installed_catalogs, PROCESS_3D_PLAY_APP_ID};
 use semio_s_artifact_process_process3d_commands::{camera, contribution, cursor, document, engagement, inspector, media, step, stock, sun, workshop, world};
 use semio_s_artifact_process_process3d_config::{Process3dConfig, Process3dConfigMutation, PROCESS3D_DEFAULT_UTILITY, Process3dConfigSetCamera, Process3dConfigSetContributions, Process3dConfigSetCursor, Process3dConfigSetEngagementInput, Process3dConfigSetSun};
 use semio_s_artifact_process_process3d_modes;
@@ -290,7 +290,7 @@ pub fn action(app: &mut Process3dApp, action: &str, args: Option<&DslValue>) -> 
 /// operation publishes after the call answers.
 pub fn settled_action(app: &mut Process3dApp, action: &str, args: Option<&DslValue>) -> (InvocationResult, semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt) {
     let admitted = ::semio_framework_async::poll::resolve_ready(dispatch_fixture_action(&mut app.0, action, args.cloned(), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close)).expect("action dispatch");
-    let mut result = ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted)).expect("settle the framework-reserved admission");
+    let mut result = ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted, app.1.cx())).expect("settle the framework-reserved admission");
     let receipt = settle(app);
     result.requested_effects.extend(receipt.effects.iter().cloned());
     (result, receipt)

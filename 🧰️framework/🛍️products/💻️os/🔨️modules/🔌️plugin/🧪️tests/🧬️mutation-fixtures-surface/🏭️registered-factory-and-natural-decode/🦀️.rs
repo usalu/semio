@@ -22,8 +22,8 @@ struct SurfaceFixtureJob {
     page: usize,
 }
 
-impl semio_framework_job::InteractiveJob for SurfaceFixtureJob {
-    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
+impl SurfaceFixtureJob {
+    fn step_body<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         if cx.is_cancelled() {
             return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx).map_err(Into::into);
         }
@@ -41,6 +41,12 @@ impl semio_framework_job::InteractiveJob for SurfaceFixtureJob {
         if self.owners.pending_is_empty(){let value=self.count+1;if !self.owners.prepare_emission(cx,std::mem::size_of::<i32>(),0,||Ok(Emit{artifact_mutations:vec![SetSurfaceCount{value}.into()],..Default::default()}))?{return semio_framework_job::JobOutcomeBorrow::admit_yield(cx).map_err(Into::into)}return semio_framework_job::JobOutcomeBorrow::admit_yield(cx).map_err(Into::into)}
         if !self.owners.complete(cx)?{return semio_framework_job::JobOutcomeBorrow::admit_yield(cx).map_err(Into::into)}
         semio_framework_job::JobOutcomeBorrow::admit_complete(cx, None, None).map_err(Into::into)
+    }
+}
+
+impl semio_framework_job::InteractiveJob for SurfaceFixtureJob {
+    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>, _: &mut semio_framework_job::OriginalJobReturnClaim<'_>) -> semio_framework_job::InteractiveJobStep<'a> {
+        semio_framework_job::InteractiveJobStep::from_callback(self.step_body(cx))
     }
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
@@ -184,11 +190,11 @@ impl crate::app_contract::NaturalFileDecodeCursor<SurfaceSnapshot> for SurfaceNa
 
     fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep, Fault> {
         if self.retirement.is_some() {
-            let step=store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement,grant).map_err(|error|Fault::from(error.into_message()))?;
+            let step=store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement,grant).result.map_err(|error|Fault::from(error.into_message()))?;
             return Ok(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(step.progress()));
         }
         if let Some(original)=self.bytes.take(){
-            return match semio_framework_value::retirement::admit_owned_retirement(original,grant){
+            return match semio_framework_value::retirement::admit_owned_retirement(original,grant).result{
                 Ok((owner,progress))=>{self.retirement=Some(owner);Ok(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(progress))},
                 Err((error,original))=>{self.bytes=Some(original);Err(Fault::from(error.into_message()))},
             };

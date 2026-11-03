@@ -4,7 +4,7 @@ camera {
   x=100 y=-50 zoom=2.5
 }
 layout={
-  rect=x=120 y=-80 width=x=40 y=-120 height=x=40 y=-160
+  rect={x=120 y=-80} width={x=40 y=-120} height={x=40 y=-160}
 }
 synapses [id:TEXT wire:WIRE] {
   e1 width@number->rect@width

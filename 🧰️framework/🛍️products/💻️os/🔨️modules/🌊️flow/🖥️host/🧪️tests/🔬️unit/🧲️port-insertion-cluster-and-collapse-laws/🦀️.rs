@@ -193,6 +193,7 @@ fn set_neuron_params_merges_into_eval_input() {
     host.connect_ports(&id, "number", "preview", "").unwrap();
     host.set_neuron_params(&id, r#"{"number":{"$schema":"number","value":7.5}}"#).unwrap();
     host.evaluate_internal();
+    settle_baseline(&mut host);
     assert_eq!(host.preview_text(), "7.5");
     host.retire_cold();
 }
@@ -223,6 +224,7 @@ fn variable_relay_evaluates_through_flow_host() {
     let slider_id = host.add_widget(r#"{"kind":"inputSlider","label":"Number","value":4.0}"#, -200.0, 0.0).unwrap();
     host.connect_ports(&slider_id, "number", &variable_id, "width").unwrap();
     let eval_json = host.evaluate().expect("evaluate");
+    settle_baseline(&mut host);
     let parsed: serde_json::Value = serde_json::from_str(&eval_json).expect("eval json");
     let width = parsed.get(&variable_id).and_then(|entry| entry.get("out")).and_then(|out| out.get("width")).expect("variable width output");
     assert_eq!(width.get("$schema").and_then(|value| value.as_str()), Some("number"));

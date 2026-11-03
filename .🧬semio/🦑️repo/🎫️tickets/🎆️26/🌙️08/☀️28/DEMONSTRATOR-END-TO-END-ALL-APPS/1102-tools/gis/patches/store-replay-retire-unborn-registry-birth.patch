@@ -1,0 +1,8 @@
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🔁️replay/🦀️.rs
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🔁️replay/🦀️.rs
+@@ -493,4 +493,5 @@
+         if !self.registry_birth.terminal_is_empty(){
+             self.registry_birth.begin_close();let grant=cx.retained_grant();let quote=self.registry_birth.close_demands()?;
++            if self.registry_birth.terminal_is_empty(){return Ok(false);}
+             if !permits(grant,quote){return Ok(false);}
+             let result=cx.with_native_retirement(|control|self.registry_birth.close_step(grant,control));

@@ -35,3 +35,7 @@ pub fn begun(turn: RetainedWorkOutcome<Option<RetainedCloneStep>>) -> Option<Ret
 pub fn costed<T, E>(result: Result<T, E>) -> RetainedWorkOutcome<T, E> {
     RetainedWorkOutcome { result, work: 1 }
 }
+/// 🧭️ A retirement owner that was expected to exist but was omitted becomes the caller's refusal.
+pub fn own_with(turn: RetainedWorkOutcome<Option<RetainedCloneStep>>, missing: impl FnOnce() -> ValueError) -> RetainedWorkOutcome {
+    RetainedWorkOutcome { work: turn.work, result: turn.result.and_then(|step| step.ok_or_else(missing)) }
+}

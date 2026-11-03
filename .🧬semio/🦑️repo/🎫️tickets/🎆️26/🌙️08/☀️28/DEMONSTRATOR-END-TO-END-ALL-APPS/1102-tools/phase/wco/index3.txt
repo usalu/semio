@@ -1,0 +1,3 @@
+W-wco-c0 ✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/Cargo.toml rc=1
+W-wco-c1 ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/Cargo.toml rc=0
+W-wco-c2 ✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/Cargo.toml rc=0

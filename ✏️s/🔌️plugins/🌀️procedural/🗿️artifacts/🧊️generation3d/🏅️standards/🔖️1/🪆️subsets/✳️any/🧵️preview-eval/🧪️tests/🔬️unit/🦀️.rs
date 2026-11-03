@@ -10,6 +10,9 @@ fn fixture() -> serde_json::Value {
     fixture
 }
 
+#[global_allocator]
+static ORIGINAL_CONTEXT_HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
+
 /// 🎟️ The grant every window-tick transition of a direct session law runs under: no axis the preview owner needs is short.
 fn tick_grant() -> semio_framework_value::RetainedCloneGrant {
     semio_framework_value::RetainedCloneGrant { maximum_items: 1 << 20, maximum_copy_bytes: 1 << 26, maximum_capacity_bytes: 1 << 28, maximum_release_bytes: 1 << 28, maximum_depth: 4_096 }
@@ -48,7 +51,7 @@ fn every_run_effects_row_starts_finalizes_or_leaves_the_run() {
             link.settled = Some((run.identity.id.run, settled as u32));
         }
         link.restart_owed = row["restartOwed"].as_bool().unwrap_or(false);
-        let effects = preview_eval_run_effects(&mut session, &mut link, &windows, run.as_ref(), row["servable"].as_bool().unwrap_or(true), 0);
+        let effects = preview_eval_run_effects(&mut session, &mut link, &windows, run.as_ref().map(ToolRunView::poll_view), row["servable"].as_bool().unwrap_or(true), 0);
         let actions: Vec<&str> = effects.iter().map(|effect| match effect {
             Effect::DispatchAction { action, .. } => action.as_str(),
             other => panic!("{id}: the run owes only dispatches, found {other:?}"),
@@ -74,7 +77,7 @@ fn replay_pending_effects(session: &mut FlowEvalSession, link: &mut PreviewEvalR
     let mut starts = 0_usize;
     let mut landing: Option<(usize, ToolRunState)> = None;
     for _ in 0..polls {
-        for effect in preview_eval_run_effects(session, link, windows, view.as_ref(), servable, 0) {
+        for effect in preview_eval_run_effects(session, link, windows, view.as_ref().map(ToolRunView::poll_view), servable, 0) {
             let Effect::DispatchAction { action, .. } = effect else { panic!("the run owes only dispatches") };
             let state = match action.as_str() {
                 TOOL_RUN_START_ACTION_ID => {
@@ -149,7 +152,7 @@ fn every_gesture_rearm_row_owes_one_tick_per_preview_and_at_most_one_start() {
             let complete = run_view(&serde_json::json!({ "run": 1, "generation": 0, "state": "complete" }));
             let mut asked: Vec<&str> = Vec::new();
             for _ in 0..polls {
-                for effect in preview_eval_run_effects(&mut session, &mut link, &windows, complete.as_ref(), true, 0) {
+                for effect in preview_eval_run_effects(&mut session, &mut link, &windows, complete.as_ref().map(ToolRunView::poll_view), true, 0) {
                     let Effect::DispatchAction { action, .. } = effect else { panic!("{id}: the run owes only dispatches") };
                     asked.push(if action == TOOL_RUN_FINALIZE_ACTION_ID { "toolRunFinalize" } else { "toolRunStart" });
                 }
@@ -314,7 +317,7 @@ fn bounded_cancel_replies_poll_the_same_capability_without_rearming_evaluation()
     let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../🧪️tests/🧫️fixtures/🛑️preview-cancel.json")).unwrap();
     let mut session = FlowEvalSession::new();
     for row in fixture["boundedCancelReplies"].as_array().unwrap() {
-        let payload = FlowTessellateCancelResolve { window_id: "preview".into(), window_kind_id: "world3d".into(), output_json: row["reply"].to_string(), ok: row["ok"].as_bool().unwrap() };
+        let payload = FlowTessellateCancelResolve { window_id: "preview".into(), window_kind_id: "world3d".into(), output: semio_framework_value::DslValue::Object(["ok","pending"].iter().filter_map(|key| row["reply"][*key].as_bool().map(|flag| ((*key).to_string(), semio_framework_value::DslValue::Bool(flag)))).collect()), fault: None, ok: row["ok"].as_bool().unwrap(), original_input: None, input_valid: true };
         let invocations = resolve_tessellate_cancel_for(&payload, &mut session, Ok("geometry".into()));
         assert_eq!(!invocations.is_empty(), row["poll"].as_bool().unwrap());
         for invocation in invocations { assert_eq!(invocation.capability, "evaluateCancel"); assert_eq!(invocation.response_action, "flowTessellateCancelResolve"); let request: serde_json::Value = serde_json::from_str(&invocation.request_json).unwrap(); assert_eq!(request["windowId"], "preview"); }
@@ -324,11 +327,11 @@ fn bounded_cancel_replies_poll_the_same_capability_without_rearming_evaluation()
 
 #[test]
 fn inspector_evaluation_wire_uses_actual_neuron_identity_and_context_authority(){
- let law=fixture();let row=&law["evaluationWire"];for resume in [false,true]{let pending=semio_framework_artifact_flow_flow::neural::PendingExtensionEval{neuron_id:text(&row["neuronId"]).into(),extension_id:text(&row["extensionId"]).into(),operator_id:text(&row["operatorId"]).into(),input_json:text(&row["inputJson"]).into(),node_hash:row["nodeHash"].as_u64().unwrap()};let invocation=evaluate_invocation(pending,resume,text(&row["dependencyJson"]).into(),text(&row["windowId"]),text(&row["windowKindId"]));let actual:serde_json::Value=serde_json::from_str(&invocation.request_json).unwrap();let expected=serde_json::json!({"neuronId":row["neuronId"],"operatorId":row["operatorId"],"inputJson":if resume{""}else{text(&row["inputJson"])},"dependencyJson":row["dependencyJson"],"operatorVersion":format!("registry:{};geometry:1;policy:1",semio_framework_os_flow::flow_extension_registry_generation()),"nodeHash":row["nodeHash"],"resume":resume,"windowId":row["windowId"],"windowKindId":row["windowKindId"],"extensionId":row["extensionId"]});assert_eq!(actual,expected);assert_eq!(actual.as_object().unwrap().len(),row["requiredKeys"].as_array().unwrap().len());for field in row["authorityFieldsAbsent"].as_array().unwrap(){assert!(actual.get(field.as_str().unwrap()).is_none());}assert_eq!(invocation.extension_id,row["extensionId"]);assert_eq!(invocation.capability,"evaluate");assert_eq!(invocation.response_action,"flowEvalResolve");invocation.retire_cold();}
+ let law=fixture();let row=&law["evaluationWire"];for resume in [false,true]{let pending=semio_framework_artifact_flow_flow::neural::PendingExtensionEval{neuron_id:text(&row["neuronId"]).into(),extension_id:text(&row["extensionId"]).into(),operator_id:text(&row["operatorId"]).into(),input_json:text(&row["inputJson"]).into(),node_hash:row["nodeHash"].as_u64().unwrap()};let invocation=evaluate_invocation(pending,resume,text(&row["dependencyJson"]).into(),text(&row["windowId"]),text(&row["windowKindId"]));let actual:serde_json::Value=serde_json::from_str(&invocation.request_json).unwrap();let expected=serde_json::json!({"neuronId":row["neuronId"],"operatorId":row["operatorId"],"inputJson":if resume{""}else{text(&row["inputJson"])},"dependencyJson":row["dependencyJson"],"operatorVersion":format!("registry:{};geometry:1;policy:1",semio_framework_os_flow::flow_extension_registry_generation()),"nodeHash":row["nodeHash"],"resume":resume,"windowId":row["windowId"],"windowKindId":row["windowKindId"],"extensionId":row["extensionId"]});assert_eq!(actual,expected);assert_eq!(actual.as_object().unwrap().len(),row["requiredKeys"].as_array().unwrap().len());for field in row["authorityFieldsAbsent"].as_array().unwrap(){assert!(actual.get(field.as_str().unwrap()).is_none());}assert_eq!(invocation.extension_id,row["extensionId"]);assert_eq!(invocation.capability,"evaluate");assert_eq!(invocation.response_action,"flowEvalResolve");drop(invocation);}
 }
 
 #[test]
 fn inspector_close_original_context_reports_one_debit_and_whole_paired_failure(){
- use semio_framework_job::{OperationId,Generation,StepBudget,StepContextOwner,root_cancel_token};use semio_framework_value::{ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress}};
- let law=fixture();let row=&law["originalCloseReceipt"];let(mut owner,_)=StepContextOwner::new(OperationId(row["operation"].as_u64().unwrap()),Generation(row["generation"].as_u64().unwrap()),RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:StepContextOwner::birth_bytes(),maximum_depth:1,..Default::default()}).unwrap();let mut sequence=0;for failed in [false,true]{let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:row["copy"].as_u64().unwrap()as usize,maximum_depth:1,..Default::default()};let progress=RetainedCloneProgress{copied_items:row["progressItems"].as_u64().unwrap()as usize,copied_bytes:row[if failed{"overdrawCopy"}else{"copy"}].as_u64().unwrap()as usize,..Default::default()};let mut physical=Default::default();let mut cx=owner.context(StepBudget::new(row["fuel"].as_u64().unwrap(),u64::MAX,grant),root_cancel_token(),||Some(1),&mut sequence,&mut physical).unwrap();let step=if failed{Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original preview close semantic cause").with_retained_progress(progress))}else{Ok(semio_framework_value::RetainedCloneStep::Progress(progress))};let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_job::close_original_retained_step(&mut cx,semio_framework_value::RetirementDemand{copy_bytes:grant.maximum_copy_bytes,depth:grant.maximum_depth,..Default::default()},|_|step));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(cx.retained_progress(),progress);assert_eq!(cx.fuel_remaining(),row["fuel"].as_u64().unwrap()-row["spent"].as_u64().unwrap());if failed{let failure=result.unwrap_err();assert_eq!(failure.primary.kind,ValueRefusalKind::InvariantViolated);assert!(failure.receipt_refusal.is_some());assert_eq!(failure.primary.retained_progress(),progress);failure.retire_cold();}else{assert_eq!(result.unwrap().progress(),progress);}drop(cx);}assert!(matches!(owner.close_step(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:StepContextOwner::birth_bytes(),maximum_depth:1,..Default::default()}),InteractiveJobCloseStep::Complete{..}));assert!(owner.terminal_is_empty());drop(owner);
+ use semio_framework_job::{OperationId,Generation,OriginalJobFixtureCaller};use semio_framework_value::{ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress}};
+ let law=fixture();let row=&law["originalCloseReceipt"];let source=RetainedCloneGrant{maximum_items:16,maximum_copy_bytes:4096,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:16};let mut caller=OriginalJobFixtureCaller::admit(OperationId(row["operation"].as_u64().unwrap()),Generation(row["generation"].as_u64().unwrap()),source,||Some(1),u64::MAX,64);for failed in [false,true]{let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:row["copy"].as_u64().unwrap()as usize,maximum_depth:1,..Default::default()};let progress=RetainedCloneProgress{copied_items:row["progressItems"].as_u64().unwrap()as usize,copied_bytes:row[if failed{"overdrawCopy"}else{"copy"}].as_u64().unwrap()as usize,..Default::default()};let step=if failed{Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original preview close semantic cause").with_retained_progress(progress))}else{Ok(semio_framework_value::RetainedCloneStep::Progress(progress))};let mut seen=RetainedCloneProgress::default();let result=caller.turn(grant,|cx|{let before=cx.retained_progress();let result=semio_framework_job::close_original_retained_step(cx,semio_framework_value::RetirementDemand{copy_bytes:grant.maximum_copy_bytes,depth:grant.maximum_depth,..Default::default()},|_|semio_framework_value::RetainedWorkOutcome{result:step,work:row["spent"].as_u64().unwrap()});let after=cx.retained_progress();seen=RetainedCloneProgress{copied_items:after.copied_items-before.copied_items,copied_bytes:after.copied_bytes-before.copied_bytes,retained_capacity_bytes:after.retained_capacity_bytes-before.retained_capacity_bytes,released_bytes:after.released_bytes-before.released_bytes};result});assert_eq!(seen,progress);if failed{let failure=result.unwrap_err();assert_eq!(failure.primary_value().unwrap().kind,ValueRefusalKind::InvariantViolated);assert!(failure.receipt_refusal.is_some());assert_eq!(failure.primary.retained_progress(),progress);drop(failure);}else{assert_eq!(result.unwrap().progress(),progress);}}caller.retire(source);
 }

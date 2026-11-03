@@ -6,7 +6,7 @@ use super::*;
 /// 🕸️ Every node's visible port ids (`{nodeId}@{portId}`) — read-only twin of the sibling surface's
 /// own projection, so a world pick in this viewer names the exact same declared target ids.
 fn generation3d_view_port_ids_by_node(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot) -> std::collections::BTreeMap<String, Vec<String>> {
-    let (graph_nodes, _) = semio_s_artifact_procedural_3d_model::with_host(host_snapshot, |host| semio_s_artifact_procedural_3d_preview_eval::dag_host_snapshot_to_workflow(&host.dag.host_snapshot));
+    let Ok((graph_nodes, _)) = semio_s_artifact_procedural_3d_model::with_host(host_snapshot, |host| semio_s_artifact_procedural_3d_preview_eval::dag_host_snapshot_to_workflow(&host.dag.graph.host_snapshot)) else { return std::collections::BTreeMap::new() };
     graph_nodes.into_iter().map(|node| (node.id, node.inputs.into_iter().chain(node.outputs).map(|port| port.id).collect())).collect()
 }
 //#endregion 🔖️InteractionTopology
@@ -51,10 +51,6 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
     /// `interactive-job.publication-authority-missing` (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
         Some(store::snapshot_clone_preparation::config_apply_preparation_factory::<Self::Config, Self::ConfigMutation>())
-    }
-
-    fn build_presence_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::Presence, Self::PresenceMutation>>> {
-        Some(semio_framework_plugin::bounded_transient_preparation_factory::<Self::Presence, Self::PresenceMutation>())
     }
 
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
@@ -105,12 +101,12 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
     /// 📚️ Servability is asked of the graph the run will actually evaluate — the VIEWED document — not
     /// of the one this session happens to have open. They are different documents the moment the
     /// navbar names an example (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    fn pending_effects(owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view: Option<&semio_framework_plugin::ViewModel>) -> Vec<semio_framework_plugin::Effect> {
+    fn pending_effects(owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle, doc: &semio_framework_plugin::ArtifactPendingView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view: Option<&semio_framework_plugin::ViewModel>) -> Vec<semio_framework_plugin::Effect> {
         let windows = generation3d_view_preview_windows(view);
         let viewed = Generation3dViewedDocument::resolve(doc.snapshot, cfg.snapshot);
         let servable = preview_eval::may_rearm(&viewed.snapshot().host_snapshot);
         viewed.retire();
-        let applied_edits = preview_eval::applied_document_edits_digest(doc.history);
+        let applied_edits = doc.provisional_generation();
         owner
             .with_mut::<Generation3dViewInstanceOperationOwner, _>(|owner| {
                 use preview_eval::PreviewEvalRunOwner as _;
@@ -175,11 +171,8 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
     /// off `generation3d_view_bounded_contract()` instead of respelling `8_192, 32, 32, …` seven
     /// times — one declared quantity, one place.
     fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
-        let mut proofs = Generation3dViewBoundedCommandJobFactoryProofs::bounded_first_step_tool_proofs();
-        proofs.extend(Generation3dViewContributionsJobFactoryProofs::bounded_first_step_tool_proofs());
-        proofs.extend(Generation3dViewExampleJobFactoryProofs::bounded_first_step_tool_proofs());
-        proofs.extend(Generation3dViewFlowEvalJobFactoryProofs::bounded_first_step_tool_proofs());
-        proofs.extend(Generation3dViewDocumentIoJobFactoryProofs::bounded_first_step_tool_proofs());
+        let mut proofs = generation3d_view_route_first_step_tool_proofs();
+        proofs.extend(generation3d_view_flow_first_step_tool_proofs());
         proofs
     }
 
@@ -233,23 +226,23 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
             })),
             "flowEvalResolve" => {
                 let input_valid=original_reply_valid(&args,false,false);
-                if !input_valid{return Ok(Generation3dViewCommand::FlowEvalResolve(semio_s_artifact_procedural_3d_preview_eval::FlowEvalResolve{window_id:String::new(),window_kind_id:String::new(),node_hash:0,extension_id:String::new(),output:semio_framework_value::DslValue::Null,ok:original_fault.is_none(),fault:original_fault.take(),original_input:Some(std::mem::replace(args,semio_framework_value::DslValue::Null)),input_valid}))}
+                if !input_valid{return Ok(Generation3dViewCommand::FlowEvalResolve(semio_s_artifact_procedural_3d_preview_eval::FlowEvalResolve{window_id:String::new(),window_kind_id:String::new(),node_hash:0,extension_id:String::new(),output:semio_framework_value::DslValue::Null,ok:original_fault.is_none(),fault:original_fault.take().map(|fault|semio_framework_value::ToValue::to_value(&fault)),original_input:Some(std::mem::replace(args,semio_framework_value::DslValue::Null)),input_valid}))}
                 let node_hash=args.get("nodeHash").and_then(semio_framework_value::DslValue::as_u64).unwrap();
                 let window_id=original_reply_text(&mut args,"windowId",true).unwrap();let window_kind_id=original_reply_text(&mut args,"windowKindId",true).unwrap();let extension_id=original_reply_text(&mut args,"extensionId",false).unwrap();let output=original_reply_output(&mut args).unwrap();
-                Ok(Generation3dViewCommand::FlowEvalResolve(semio_s_artifact_procedural_3d_preview_eval::FlowEvalResolve{window_id,window_kind_id,node_hash,extension_id,output,ok:original_fault.is_none(),fault:original_fault.take(),original_input:Some(std::mem::replace(args,semio_framework_value::DslValue::Null)),input_valid}))
+                Ok(Generation3dViewCommand::FlowEvalResolve(semio_s_artifact_procedural_3d_preview_eval::FlowEvalResolve{window_id,window_kind_id,node_hash,extension_id,output,ok:original_fault.is_none(),fault:original_fault.take().map(|fault|semio_framework_value::ToValue::to_value(&fault)),original_input:Some(std::mem::replace(args,semio_framework_value::DslValue::Null)),input_valid}))
             },
             "flowTessellateResolve" => {
                 let input_valid=original_reply_valid(&args,true,false);
-                if !input_valid{return Ok(Generation3dViewCommand::FlowTessellateResolve(semio_s_artifact_procedural_3d_preview_eval::FlowTessellateResolve{window_id:String::new(),window_kind_id:String::new(),node_hash:0,handle:String::new(),tolerance:0.0,output:semio_framework_value::DslValue::Null,fault:original_fault.take(),original_input:Some(std::mem::replace(args,semio_framework_value::DslValue::Null)),input_valid}))}
+                if !input_valid{return Ok(Generation3dViewCommand::FlowTessellateResolve(semio_s_artifact_procedural_3d_preview_eval::FlowTessellateResolve{window_id:String::new(),window_kind_id:String::new(),node_hash:0,handle:String::new(),tolerance:0.0,output:semio_framework_value::DslValue::Null,fault:original_fault.take().map(|fault|semio_framework_value::ToValue::to_value(&fault)),original_input:Some(std::mem::replace(args,semio_framework_value::DslValue::Null)),input_valid}))}
                 let node_hash=args.get("nodeHash").and_then(semio_framework_value::DslValue::as_u64).unwrap();let tolerance=args.get("tolerance").and_then(|value|value.as_f64()).unwrap();
                 let window_id=original_reply_text(&mut args,"windowId",true).unwrap();let window_kind_id=original_reply_text(&mut args,"windowKindId",true).unwrap();let handle=original_reply_text(&mut args,"handle",true).unwrap();let output=original_reply_output(&mut args).unwrap();
-                Ok(Generation3dViewCommand::FlowTessellateResolve(semio_s_artifact_procedural_3d_preview_eval::FlowTessellateResolve{window_id,window_kind_id,node_hash,handle,tolerance,output,fault:original_fault.take(),original_input:Some(std::mem::replace(args,semio_framework_value::DslValue::Null)),input_valid}))
+                Ok(Generation3dViewCommand::FlowTessellateResolve(semio_s_artifact_procedural_3d_preview_eval::FlowTessellateResolve{window_id,window_kind_id,node_hash,handle,tolerance,output,fault:original_fault.take().map(|fault|semio_framework_value::ToValue::to_value(&fault)),original_input:Some(std::mem::replace(args,semio_framework_value::DslValue::Null)),input_valid}))
             },
             "flowEvalRelease" => Ok(Generation3dViewCommand::FlowEvalRelease(semio_s_artifact_procedural_3d_preview_eval::FlowEvalRelease {
                 window_id: str_arg(&["windowId", "window_id"]).unwrap_or_default(),
                 window_kind_id: str_arg(&["windowKindId", "window_kind_id"]).unwrap_or_default(),
             })),
-            "flowTessellateCancelResolve"=>{let input_valid=original_reply_valid(&args,false,true);if !input_valid{return Ok(Generation3dViewCommand::FlowTessellateCancelResolve(semio_s_artifact_procedural_3d_preview_eval::FlowTessellateCancelResolve{window_id:String::new(),window_kind_id:String::new(),output:semio_framework_value::DslValue::Null,ok:original_fault.is_none(),fault:original_fault.take(),original_input:Some(std::mem::replace(args,semio_framework_value::DslValue::Null)),input_valid}))}let window_id=original_reply_text(&mut args,"windowId",true).unwrap();let window_kind_id=original_reply_text(&mut args,"windowKindId",true).unwrap();let output=original_reply_output(&mut args).unwrap();Ok(Generation3dViewCommand::FlowTessellateCancelResolve(semio_s_artifact_procedural_3d_preview_eval::FlowTessellateCancelResolve{window_id,window_kind_id,output,ok:original_fault.is_none(),fault:original_fault.take(),original_input:Some(std::mem::replace(args,semio_framework_value::DslValue::Null)),input_valid}))},
+            "flowTessellateCancelResolve"=>{let input_valid=original_reply_valid(&args,false,true);if !input_valid{return Ok(Generation3dViewCommand::FlowTessellateCancelResolve(semio_s_artifact_procedural_3d_preview_eval::FlowTessellateCancelResolve{window_id:String::new(),window_kind_id:String::new(),output:semio_framework_value::DslValue::Null,ok:original_fault.is_none(),fault:original_fault.take().map(|fault|semio_framework_value::ToValue::to_value(&fault)),original_input:Some(std::mem::replace(args,semio_framework_value::DslValue::Null)),input_valid}))}let window_id=original_reply_text(&mut args,"windowId",true)?;let window_kind_id=original_reply_text(&mut args,"windowKindId",true)?;let output=original_reply_output(&mut args)?;Ok(Generation3dViewCommand::FlowTessellateCancelResolve(semio_s_artifact_procedural_3d_preview_eval::FlowTessellateCancelResolve{window_id,window_kind_id,output,ok:original_fault.is_none(),fault:original_fault.take().map(|fault|semio_framework_value::ToValue::to_value(&fault)),original_input:Some(std::mem::replace(args,semio_framework_value::DslValue::Null)),input_valid}))},
             "exportDocument" => Ok(Generation3dViewCommand::ExportDocument(export_document::ExportDocument { format: str_arg(&["format", "value"]).unwrap_or_else(|| "stl".into()) })),
             other => Err(Fault::from(format!("action '{other}' is not declared by the generation3d viewer"))),
         }

@@ -229,7 +229,7 @@ fn bound_three(
     let mut prepared = DurableOwnedThreeStorePreparedV1::from_store_prepared(store_prepared(parent, 1, 7), store_prepared(drawing, 2, 11), store_prepared(value, 3, 13))
         .expect("Store owns exactly three unbound candidates");
     let store_grant = semio_framework_os_store_one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: usize::MAX / 2, maximum_capacity_bytes: usize::MAX / 2, maximum_release_bytes: usize::MAX / 2, maximum_depth: 64 };
-    let mut admitted = |_: usize| true;
+    let mut admitted = |_| true;
     let mut native = semio_framework_value::NativeEncodeControl::new(usize::MAX / 2, &mut admitted);
     for _ in 0..4096 {
         if let Some((bound, _)) = prepared.take_bound(store_grant.retained_grant()).expect("bound owners transfer under an unbounded fixture grant") {

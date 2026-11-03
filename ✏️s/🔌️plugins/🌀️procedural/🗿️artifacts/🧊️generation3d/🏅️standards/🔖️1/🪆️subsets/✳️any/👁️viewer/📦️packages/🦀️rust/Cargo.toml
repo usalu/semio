@@ -22,6 +22,9 @@ semio-framework-action-bus = { path = "../../../../../../../../../../../../🧰�
 semio-framework-2d-compute = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🧮️compute/📦️packages/🦀️rust" }
 semio-framework-artifact-flow-flow = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }
+semio-framework-diagnostic = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
+semio-framework-dsl-record = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-dsl-record-derive = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
 semio-framework-os-flow = { workspace = true }
 semio-framework-os-kernel = { workspace = true }

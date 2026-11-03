@@ -5,6 +5,7 @@
 use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{Plugin, PluginApp};
+use semio_framework_plugin::declarations::{EditorSurfaceApp, ViewerSurfaceApp};
 use semio_framework_plugin::PluginBuilder;
 use semio_framework_plugin::kernel::{CapabilityId, CapabilityRequest};
 

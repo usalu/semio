@@ -8,7 +8,7 @@ struct Frame {
     ancestors: usize,
     phase: u8,
 }
-pub(crate) struct TypeMembership {
+pub struct TypeMembership {
     frames: [Option<Frame>; LIMIT + 1],
     depth: usize,
     actual: &'static str,
@@ -20,7 +20,7 @@ impl Default for TypeMembership {
     }
 }
 impl TypeMembership {
-    pub(crate) fn start(&mut self, expected: &'static str, actual: &'static str) {
+    pub fn start(&mut self, expected: &'static str, actual: &'static str) {
         self.depth = 1;
         self.actual = actual;
         self.done = None;
@@ -33,7 +33,7 @@ impl TypeMembership {
             self.done = Some(false);
         }
     }
-    pub(crate) fn advance(&mut self, catalog: &'static IfcCatalog) -> Result<Option<bool>, String> {
+    pub fn advance(&mut self, catalog: &'static IfcCatalog) -> Result<Option<bool>, String> {
         if self.done.is_some() {
             return Ok(self.done);
         }

@@ -2,7 +2,10 @@
   "schema": "spatial.interaction",
   "id": "surface.sweep1",
   "version": "1.0.0",
-  "label": "Sweep1",
+  "label": {
+    "native": { "en": "Sweep1", "de": "Sweep (1 Schiene)" },
+    "reuse": { "en": "Sweep1", "de": "Sweep (1 Schiene)" }
+  },
   "interaction": {
     "spatialGroundPick": false,
     "pickDisabledStates": ["idle", "committed"],
@@ -23,7 +26,10 @@
               {
                 "target": "select_rail",
                 "key": "s",
-                "label": "Start",
+                "label": {
+                  "native": { "en": "Start", "de": "Start" },
+                  "reuse": { "en": "Start", "de": "Start" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -84,7 +90,10 @@
         "selection": {
           "accept": ["wire", "edge"],
           "multiple": true,
-          "prompt": "Select rail"
+          "prompt": {
+            "native": { "en": "Select rail", "de": "Schiene auswählen" },
+            "reuse": { "en": "Select rail", "de": "Schiene auswählen" }
+          }
         },
         "on": [
           {
@@ -93,7 +102,10 @@
               {
                 "target": "select_cross_section_curves",
                 "key": "s",
-                "label": "Select",
+                "label": {
+                  "native": { "en": "Select", "de": "Auswählen" },
+                  "reuse": { "en": "Select", "de": "Auswählen" }
+                },
                 "effects": [
                   {
                     "mutation": "action",
@@ -130,7 +142,10 @@
         "selection": {
           "accept": ["wire", "edge"],
           "multiple": true,
-          "prompt": "Select cross-section curves"
+          "prompt": {
+            "native": { "en": "Select cross-section curves", "de": "Querschnittskurven auswählen" },
+            "reuse": { "en": "Select cross-section curves", "de": "Querschnittskurven auswählen" }
+          }
         },
         "on": [
           {
@@ -139,7 +154,10 @@
               {
                 "target": "select_cross_section_curves",
                 "key": "s",
-                "label": "Select",
+                "label": {
+                  "native": { "en": "Select", "de": "Auswählen" },
+                  "reuse": { "en": "Select", "de": "Auswählen" }
+                },
                 "effects": [
                   {
                     "mutation": "action",
@@ -171,7 +189,10 @@
               {
                 "target": "adjust_seams",
                 "key": "Enter",
-                "label": "Finish"
+                "label": {
+                  "native": { "en": "Finish", "de": "Fertig" },
+                  "reuse": { "en": "Finish", "de": "Fertig" }
+                }
               }
             ]
           },
@@ -181,7 +202,10 @@
               {
                 "target": "adjust_seams",
                 "key": "RightClick",
-                "label": "Finish"
+                "label": {
+                  "native": { "en": "Finish", "de": "Fertig" },
+                  "reuse": { "en": "Finish", "de": "Fertig" }
+                }
               }
             ]
           }
@@ -196,7 +220,10 @@
               {
                 "target": "adjust_seams",
                 "key": "a",
-                "label": "Adjust",
+                "label": {
+                  "native": { "en": "Adjust", "de": "Anpassen" },
+                  "reuse": { "en": "Adjust", "de": "Anpassen" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -224,7 +251,10 @@
               {
                 "target": "sweep1_options_dialog",
                 "key": "Enter",
-                "label": "Accept Adjustments"
+                "label": {
+                  "native": { "en": "Accept Adjustments", "de": "Anpassungen übernehmen" },
+                  "reuse": { "en": "Accept Adjustments", "de": "Anpassungen übernehmen" }
+                }
               }
             ]
           },
@@ -234,7 +264,10 @@
               {
                 "target": "sweep1_options_dialog",
                 "key": "RightClick",
-                "label": "Accept Adjustments"
+                "label": {
+                  "native": { "en": "Accept Adjustments", "de": "Anpassungen übernehmen" },
+                  "reuse": { "en": "Accept Adjustments", "de": "Anpassungen übernehmen" }
+                }
               }
             ]
           }
@@ -249,7 +282,10 @@
               {
                 "target": "committed",
                 "key": "o",
-                "label": "OK",
+                "label": {
+                  "native": { "en": "OK", "de": "OK" },
+                  "reuse": { "en": "OK", "de": "OK" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -288,7 +324,10 @@
             "kind": "label",
             "id": "select_rail-prompt",
             "role": "prompt",
-            "text": "Select rail",
+            "text": {
+              "native": { "en": "Select rail", "de": "Schiene auswählen" },
+              "reuse": { "en": "Select rail", "de": "Schiene auswählen" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]
@@ -351,7 +390,10 @@
             "kind": "label",
             "id": "select_cross_section_curves-prompt",
             "role": "prompt",
-            "text": "Select cross-section curves",
+            "text": {
+              "native": { "en": "Select cross-section curves", "de": "Querschnittskurven auswählen" },
+              "reuse": { "en": "Select cross-section curves", "de": "Querschnittskurven auswählen" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]
@@ -414,7 +456,10 @@
             "kind": "label",
             "id": "adjust_seams-prompt",
             "role": "prompt",
-            "text": "Adjust seams",
+            "text": {
+              "native": { "en": "Adjust seams", "de": "Nähte anpassen" },
+              "reuse": { "en": "Adjust seams", "de": "Nähte anpassen" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]
@@ -477,7 +522,10 @@
             "kind": "label",
             "id": "sweep1_options_dialog-prompt",
             "role": "prompt",
-            "text": "Sweep1 options",
+            "text": {
+              "native": { "en": "Sweep1 options", "de": "Sweep1-Optionen" },
+              "reuse": { "en": "Sweep1 options", "de": "Sweep1-Optionen" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]

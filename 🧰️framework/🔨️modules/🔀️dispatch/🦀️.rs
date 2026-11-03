@@ -230,11 +230,31 @@ pub fn expand_dyn_enum_attribute(attr: TokenStream, item: TokenStream) -> syn::R
     let item_trait: ItemTrait = syn::parse2(item)?;
     let dispatch_macro = build_dispatch_macro(&item_trait);
     let delegate = if delegation { build_typed_delegation(&item_trait)? } else { TokenStream::new() };
+    let item_trait = without_async_fn(item_trait);
     Ok(quote! {
         #item_trait
         #dispatch_macro
         #delegate
     })
+}
+
+/// 🪄️ Declares every `async fn` of the re-emitted trait as `fn .. -> impl Future<Output = T>` (and wraps a default body in `async move`), so the trait never trips `async_fn_in_trait`; implementors may still write `async fn`, and `Send` stays structural (R3).
+fn without_async_fn(mut item: ItemTrait) -> ItemTrait {
+    for entry in &mut item.items {
+        let TraitItem::Fn(method) = entry else { continue };
+        if method.sig.asyncness.take().is_none() {
+            continue;
+        }
+        let value: Type = match &method.sig.output {
+            syn::ReturnType::Default => syn::parse_quote!(()),
+            syn::ReturnType::Type(_, ty) => (**ty).clone(),
+        };
+        method.sig.output = syn::parse_quote!(-> impl ::core::future::Future<Output = #value>);
+        if let Some(block) = method.default.take() {
+            method.default = Some(syn::parse_quote!({ async move #block }));
+        }
+    }
+    item
 }
 
 /// 🎟️ A typed owner can customize lifecycle methods while forwarding the original borrowed contract.
@@ -271,16 +291,31 @@ fn build_typed_delegation(item: &ItemTrait) -> syn::Result<TokenStream> {
         let where_clause = &sig.generics.where_clause;
         let attributes = &method.attrs;
         let declared_output = &sig.output;
-        let (asyncness, output) = match classify_return(method_name, sig)? {
+        let shape = classify_return(method_name, sig)?;
+        let (asyncness, output) = match &shape {
             ReturnShape::Plain => (sig.asyncness.map(|token| quote!{#token}), quote!{#declared_output}),
             ReturnShape::FutureOutput(ty) => (Some(quote!{async}), quote!{-> #ty}),
         };
         let await_result = asyncness.as_ref().map(|_|quote!{.await});
-        defaults.push(quote!{
-            #(#attributes)*
-            #asyncness fn #method_name #generics (#inputs) #output #where_clause {
-                #name::#method_name(#receiver #(, #args)*) #await_result
-            }
+        let value = match (&shape, &sig.output) {
+            (ReturnShape::FutureOutput(ty), _) => Some(quote!{#ty}),
+            (ReturnShape::Plain, _) if sig.asyncness.is_none() => None,
+            (ReturnShape::Plain, syn::ReturnType::Default) => Some(quote!{()}),
+            (ReturnShape::Plain, syn::ReturnType::Type(_, ty)) => Some(quote!{#ty}),
+        };
+        defaults.push(match value {
+            Some(value) => quote!{
+                #(#attributes)*
+                fn #method_name #generics (#inputs) -> impl ::core::future::Future<Output = #value> #where_clause {
+                    async move { #name::#method_name(#receiver #(, #args)*).await }
+                }
+            },
+            None => quote!{
+                #(#attributes)*
+                #asyncness fn #method_name #generics (#inputs) #output #where_clause {
+                    #name::#method_name(#receiver #(, #args)*) #await_result
+                }
+            },
         });
         forwarding.push(quote!{
             #(#attributes)*
@@ -291,7 +326,6 @@ fn build_typed_delegation(item: &ItemTrait) -> syn::Result<TokenStream> {
     }
     Ok(quote!{
         #[doc = "🎟️ Explicit typed delegation retains the actual target and permits authored lifecycle overrides."]
-        #[allow(async_fn_in_trait)]
         #visibility trait #delegate: #bounds {
             type Target: #name;
             fn delegate_ref(&self) -> &Self::Target;

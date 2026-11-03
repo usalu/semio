@@ -6,6 +6,7 @@
 use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingDiff;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 use protocol::Mutation as _;
+use protocol::ColdMutation as _;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Mutations

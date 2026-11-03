@@ -7,12 +7,13 @@ import {PNG} from "pngjs";
 import refusals from "./🧫️fixtures/⚠️invalid/🔣️.json";
 import fixture from "./🧫️fixtures/🔣️.json";
 import {DrawingImageAdmissionJob,DrawingImageEmissionJob,drawingImageDataUri} from "../🟦️.ts";
+import {stock} from "../../../🧬️schema/🎬️scene/🎨️paint/🧪️tests/🎟️funding/🟦️.ts";
 import {RasterSceneJob} from "../../../🧬️schema/🎬️scene/📷️raster/🟦️.ts";
 import {parseDrawingImageAsset} from "../../../🧬️schema/🟦️.ts";
 const funded={maximumItems:4096,maximumCopyBytes:536870912,maximumCapacityBytes:536870912,maximumReleaseBytes:0,maximumDepth:1};
 const sources=new WeakMap<DrawingImageAdmissionJob,string>();
 const admission=(input:ConstructorParameters<typeof DrawingImageAdmissionJob>[0])=>{const job=new DrawingImageAdmissionJob(input);sources.set(job,input.data);return job;};
-const work=(job:DrawingImageAdmissionJob|DrawingImageEmissionJob|RasterSceneJob,items:number)=>job instanceof DrawingImageAdmissionJob?job.advance(sources.get(job)!,{...funded,maximumItems:items}).progress:job.advance(items);
+const work=(job:DrawingImageAdmissionJob|DrawingImageEmissionJob|RasterSceneJob,items:number)=>job instanceof DrawingImageAdmissionJob?job.advance(sources.get(job)!,{...funded,maximumItems:items}).progress:job.advance(items,stock(items));
 export async function testDrawingImageAdmission():Promise<void>{
  const validator=new Ajv({strict:false,validateFormats:false}).addSchema(domainSchema).addSchema(ioSchema),validProgress=validator.compile({$ref:ioSchema.$id+"#/$defs/EmissionProgress"}),validInput=validator.compile({$ref:ioSchema.$id+"#/$defs/EmissionInput"}),validGrant=validator.compile({$ref:ioSchema.$id+"#/$defs/WorkGrant"});
  for(const grant of fixture.grants)assert(validGrant(grant));for(const grant of fixture.invalidGrants)assert(!validGrant(grant));
@@ -21,14 +22,14 @@ export async function testDrawingImageAdmission():Promise<void>{
   const input={mime:"image/png",data,maxSourceBytes:4096,maxBytes:4096,maxPixels:4096,maxChunks:64};
   for(const grant of fixture.grants){const job=admission(input);assert.throws(()=>job.result());let prior=0;for(let i=0;i<100000;i++){const progress=work(job,grant);assert(progress.work-prior<=grant);prior=progress.work;if(progress.done)break;}assert.deepEqual(job.result(),row.expected);laws++;}
   const foreign=PNG.sync.read(Buffer.from(row.png)),asset=parseDrawingImageAsset(row.expected);assert.deepEqual(Array.from(foreign.data),row.expected.samples.flat());
-  const retainedUriOwner=structuredClone(row.expected);let uriWork=0;const uri=drawingImageDataUri(asset,state=>{assert(validProgress(state));assert(state.work>uriWork);uriWork=state.work;return true;}),uriPixels=PNG.sync.read(Buffer.from(uri.slice(uri.indexOf(",")+1),"base64"));assert.deepEqual(Array.from(uriPixels.data),row.expected.samples.flat());assert.deepEqual(row.expected,retainedUriOwner);laws++;
+  const retainedUriOwner=structuredClone(row.expected);let uriWork=0;const uri=drawingImageDataUri(asset,state=>{assert(validProgress(state));assert(state.work>=uriWork);uriWork=state.work;return true;}),uriPixels=PNG.sync.read(Buffer.from(uri.slice(uri.indexOf(",")+1),"base64"));assert.deepEqual(Array.from(uriPixels.data),row.expected.samples.flat());assert.deepEqual(row.expected,retainedUriOwner);laws++;
   for(const stop of ["encoding","base64","done"]){assert.throws(()=>drawingImageDataUri(asset,state=>stop==="done"?!state.done:state.phase!==stop),/cancel/i);assert.deepEqual(row.expected,retainedUriOwner);laws++;}
 
   for(const grant of fixture.grants){const original=structuredClone(asset);assert(validInput({asset:original,maximumPixels:4096,maximumEncodedBytes:4096}));const job=new DrawingImageEmissionJob(original,4096,4096);assert.throws(()=>job.result());let previous=0;for(let at=0;at<100000;at++){const progress=work(job,grant);assert(validProgress(progress));assert(progress.work-previous<=grant);previous=progress.work;if(progress.done)break;}const encoded=PNG.sync.read(Buffer.from(job.result()));assert.equal(encoded.width,row.expected.width);assert.equal(encoded.height,row.expected.height);assert.deepEqual(Array.from(encoded.data),row.expected.samples.flat());assert.deepEqual(original,row.expected);laws++;}
   for(const stop of [0,1,row.expected.samples.length+1]){const original=structuredClone(asset);assert(validInput({asset:original,maximumPixels:4096,maximumEncodedBytes:4096}));const job=new DrawingImageEmissionJob(original,4096,4096);for(let at=0;at<stop;at++){if(work(job,1).done)break;}job.cancel();assert.throws(()=>work(job,1));assert.throws(()=>job.result());assert.deepEqual(original,row.expected);laws++;}
-  const retained=structuredClone(row.expected),refused=new DrawingImageEmissionJob(asset,4096,8);assert.throws(()=>{while(!refused.advance(1).done){}});assert.throws(()=>refused.result());assert.deepEqual(row.expected,retained);
+  const retained=structuredClone(row.expected),refused=new DrawingImageEmissionJob(asset,4096,8);assert.throws(()=>{while(!refused.advance(1,stock(1)).done){}});assert.throws(()=>refused.result());assert.deepEqual(row.expected,retained);
   const pixels=Uint8Array.from(row.expected.samples.flat()),scene=new RasterSceneJob({width:row.expected.width,height:row.expected.height,origin:[0,0],tolerance:.01,maxPixels:4096,maxSourceBytes:4096,assets:[{id:"admitted",image:{width:row.expected.width,height:row.expected.height,pixels}}],nodes:[{id:"image",groups:[],transform:[1,0,0,1,0,0],opacity:1,blendMode:"normal",visible:true,content:{kind:"image",asset:"admitted",width:row.expected.width,height:row.expected.height}}]});
-  let rasterWork=0;for(let i=0;i<100000;i++){const progress=scene.advance(1);assert(progress.work-rasterWork<=1);rasterWork=progress.work;if(progress.done)break;}assert.deepEqual(Array.from(scene.result().pixels),Array.from(foreign.data));assert.deepEqual(Array.from(pixels),row.expected.samples.flat());laws++;
+  let rasterWork=0;for(let i=0;i<100000;i++){const progress=scene.advance(1,stock(1));assert(progress.work-rasterWork<=1);rasterWork=progress.work;if(progress.done)break;}assert.deepEqual(Array.from(scene.result().pixels),Array.from(foreign.data));assert.deepEqual(Array.from(pixels),row.expected.samples.flat());laws++;
 
   for(const stop of [0,1,10,100]){const job=admission(input);for(let i=0;i<stop;i++){if(work(job,1).done)break;}job.cancel();assert.throws(()=>work(job,1));assert.throws(()=>job.result());laws++;}
   for(const grant of fixture.invalidGrants.filter(value=>value!==0)){const job=admission(input);assert.throws(()=>work(job,grant));assert.throws(()=>job.result());}

@@ -2,7 +2,10 @@
   "schema": "spatial.interaction",
   "id": "surface.networkSrf",
   "version": "1.0.0",
-  "label": "NetworkSrf",
+  "label": {
+    "native": { "en": "NetworkSrf", "de": "Netzfläche" },
+    "reuse": { "en": "NetworkSrf", "de": "Netzfläche" }
+  },
   "interaction": {
     "spatialGroundPick": false,
     "pickDisabledStates": ["idle", "committed"],
@@ -23,7 +26,10 @@
               {
                 "target": "select_curves_in_network",
                 "key": "s",
-                "label": "Start",
+                "label": {
+                  "native": { "en": "Start", "de": "Start" },
+                  "reuse": { "en": "Start", "de": "Start" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -84,7 +90,10 @@
         "selection": {
           "accept": ["wire", "edge"],
           "multiple": true,
-          "prompt": "Select curves in network"
+          "prompt": {
+            "native": { "en": "Select curves in network", "de": "Kurven im Netz auswählen" },
+            "reuse": { "en": "Select curves in network", "de": "Kurven im Netz auswählen" }
+          }
         },
         "on": [
           {
@@ -93,7 +102,10 @@
               {
                 "target": "select_curves_in_network",
                 "key": "s",
-                "label": "Select",
+                "label": {
+                  "native": { "en": "Select", "de": "Auswählen" },
+                  "reuse": { "en": "Select", "de": "Auswählen" }
+                },
                 "effects": [
                   {
                     "mutation": "action",
@@ -125,7 +137,10 @@
               {
                 "target": "networksrf_options_dialog",
                 "key": "Enter",
-                "label": "Finish"
+                "label": {
+                  "native": { "en": "Finish", "de": "Fertig" },
+                  "reuse": { "en": "Finish", "de": "Fertig" }
+                }
               }
             ]
           },
@@ -135,7 +150,10 @@
               {
                 "target": "networksrf_options_dialog",
                 "key": "RightClick",
-                "label": "Finish"
+                "label": {
+                  "native": { "en": "Finish", "de": "Fertig" },
+                  "reuse": { "en": "Finish", "de": "Fertig" }
+                }
               }
             ]
           }
@@ -150,7 +168,10 @@
               {
                 "target": "committed",
                 "key": "o",
-                "label": "OK",
+                "label": {
+                  "native": { "en": "OK", "de": "OK" },
+                  "reuse": { "en": "OK", "de": "OK" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -189,7 +210,10 @@
             "kind": "label",
             "id": "select_curves_in_network-prompt",
             "role": "prompt",
-            "text": "Select curves in network",
+            "text": {
+              "native": { "en": "Select curves in network", "de": "Kurven im Netz auswählen" },
+              "reuse": { "en": "Select curves in network", "de": "Kurven im Netz auswählen" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]
@@ -252,7 +276,10 @@
             "kind": "label",
             "id": "networksrf_options_dialog-prompt",
             "role": "prompt",
-            "text": "NetworkSrf options",
+            "text": {
+              "native": { "en": "NetworkSrf options", "de": "Netzflächen-Optionen" },
+              "reuse": { "en": "NetworkSrf options", "de": "Netzflächen-Optionen" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]

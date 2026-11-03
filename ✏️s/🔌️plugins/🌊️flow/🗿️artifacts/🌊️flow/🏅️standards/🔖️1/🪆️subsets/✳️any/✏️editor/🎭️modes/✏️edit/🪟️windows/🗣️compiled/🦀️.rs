@@ -44,7 +44,7 @@ pub fn definition() -> WindowKindDefinition {
 
 //#region 🔖️Render
 pub fn render(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession) -> UiAssemblyResult<BuiltNode> {
-    let wire = with_host_from_snapshot(snapshot, config, session, |host| host.compiled_wire_literal());
+    let wire = with_host_from_snapshot(snapshot, config, session, |host| host.compiled_wire_literal())?;
     let scene = TextEditorScene::base(wire, Some("wire".into()), None);
     scene_surface(FLOW_PLAY_SURFACE_COMPILED, ContractSurfaceKind::TextEditor, &scene)
 }

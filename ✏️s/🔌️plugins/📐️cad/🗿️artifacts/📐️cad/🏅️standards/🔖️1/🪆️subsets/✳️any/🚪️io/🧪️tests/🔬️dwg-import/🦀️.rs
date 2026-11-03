@@ -13,7 +13,7 @@ async fn cad_document_from_dwg_creates_one_object_per_layer_with_geometry() {
     });
     let working = cad_working_scene_from_dwg(&drawing);
     assert_eq!(working.objects.len(), 1, "the empty layer must not contribute an object");
-    assert_eq!(working.objects[0].label, "outline");
+    assert_eq!(working.objects[0].label, semio_s_artifact_cad_cad_model::geometry::CadObjectName::literal("outline"));
     let value = cad_document_from_dwg(&drawing).expect("cad document from dwg");
     let scene: CadSnapshot = semio_framework_value::FromValue::from_value(value).expect("valid cad scene");
     assert!(scene.shape_model.is_some(), "a real per-layer object must mint a shape-model child");

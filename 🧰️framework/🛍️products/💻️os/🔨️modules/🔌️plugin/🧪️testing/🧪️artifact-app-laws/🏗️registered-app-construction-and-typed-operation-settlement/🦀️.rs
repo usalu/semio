@@ -26,9 +26,15 @@ pub fn meta(actor: &str) -> ActionMeta {
 // TS-side `validateTaxonomyTree` (📇️registry/📜️script.ts) and `policyTaxonomyDirsBreaches` (root
 // 📜️script.ts), both already surface-aware.
 
+/// 🪣️ Publishes the framework's shared schema documents before a fixture app's manifest is authored, exactly as production app construction does ([`PluginRuntimeRegistry::publish_framework_schema_documents`]), so a command or input schema that `$ref`s a framework document resolves while the manifest is built. Idempotent.
+pub fn publish_framework_schemas() {
+    semio_framework_plugin_decl_registry::artifact_registration::PluginRuntimeRegistry::publish_framework_schema_documents().expect("the OS's own schema documents never conflict");
+}
+
 /// 🧬️ A registry-less wrapper (`VcsArtifactApp::new`) for store-only tests. UI and typed
 /// command dispatch fail closed until a real registry and exact factory are supplied.
 pub async fn new_app<A: ArtifactApp + Default>(actor: protocol::ActorId, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> VcsArtifactApp<A> {
+    publish_framework_schemas();
     let mut app = VcsArtifactApp::new(A::default(), actor, mounted_policy, identity).await.expect("the reference snapshot births");
     settle_store_constructor(&mut app, mounted_policy);
     app
@@ -43,6 +49,7 @@ pub async fn new_app_with_registry<A: ArtifactApp + Default>(manifest: fn() -> A
 /// 🧬️ `new_app_with_registry` over an explicit member roster `M` — for an app whose snapshot
 /// composes children it derives (`ArtifactApp::genesis_child_pack`), which `NoMembers` can never open.
 pub async fn new_app_with_registry_and_members<A: ArtifactApp + Default, M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static>(manifest: fn() -> App, actor: protocol::ActorId, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> VcsArtifactApp<A, M> {
+    publish_framework_schemas();
     let definition = manifest().definition;
     let registry = AppActionRegistry::from_definition(&definition);
     drop(definition);
@@ -81,6 +88,7 @@ where
     M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static,
     Manifest: std::future::Future<Output = App>,
 {
+    publish_framework_schemas();
     let definition = manifest.await.definition;
     let mut app = VcsArtifactApp::with_registry(A::default(), AppActionRegistry::from_definition(&definition), actor, mounted_policy, identity).await.expect("the reference snapshot births");
     app.bind_instance_id(meta("local").instance_id).await;
@@ -188,7 +196,7 @@ pub async fn settle_registered_typed_operation<P: PluginApp>(app: &mut P, receiv
     crate::artifact_app_laws::ensure_fixture_cancellation_issuer(app,cx)?;
     retain_registered_ownership_receipts(app, mounted_policy, &mut receipt)?;
     while app.has_pending_typed_operations() || !app.maintenance_terminal_is_empty() {
-        if cx.should_yield()||turns>=maximum_turns{return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,format!("[DEBUG] original fixture settlement exhausted its caller opportunity: turns={turns}/{maximum_turns} yield={} fuel={} pending={} runnable={} maint_empty={} grant={:?}",cx.should_yield(),cx.fuel_remaining(),app.has_pending_typed_operations(),app.has_runnable_typed_operations(),app.maintenance_terminal_is_empty(),cx.retained_grant())).into())}turns+=1;semio_framework_job::testkit::renew_payload_page_grant(cx);
+        if cx.should_yield()||turns>=maximum_turns{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original fixture settlement exhausted its caller opportunity").into())}turns+=1;semio_framework_job::testkit::renew_payload_page_grant(cx);
         if !app.has_runnable_typed_operations() {
             let grant = mounted_policy.maintenance;
             let demand = app.maintenance_retirement_demands(grant.maximum_copy_bytes)?;

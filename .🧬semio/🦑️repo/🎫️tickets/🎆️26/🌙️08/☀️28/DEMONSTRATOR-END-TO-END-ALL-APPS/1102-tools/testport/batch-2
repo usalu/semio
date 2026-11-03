@@ -1,0 +1,12 @@
+semio-framework-os-store-engine-replay
+semio-framework-os-store-engine-stage
+semio-framework-os-store-envelope
+semio-framework-os-store-ephemeral
+semio-framework-os-store-initialization-replay
+semio-framework-os-store-initialization-runtime
+semio-framework-os-store-ledger
+semio-framework-os-store-member-open
+semio-framework-os-store-member-open-tests
+semio-framework-os-store-message-ledger
+semio-framework-os-store-one-item
+semio-framework-os-store-one-item-batch

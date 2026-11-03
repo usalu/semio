@@ -48,8 +48,8 @@ impl Puzzle2dConnectHandlesPreparationCursor {
     pub fn advance(&mut self, source: RetainedCloneRef<'_, Puzzle2dSnapshot>, mutation: RetainedCloneRef<'_, ConnectHandles>, grant: RetainedCloneGrant) -> Result<Puzzle2dConnectHandlesPreparationStep, ValueError> {
         if self.closing || self.spent { return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "connect preparation is closing or spent")); }
         if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(Puzzle2dConnectHandlesPreparationStep::Pending(Default::default())); }
-        if let Some(progress)=source.bind(&mut self.source,grant)?{return Ok(Puzzle2dConnectHandlesPreparationStep::Pending(progress))}
-        if let Some(progress)=mutation.bind(&mut self.mutation,grant)?{return Ok(Puzzle2dConnectHandlesPreparationStep::Pending(progress))}
+        if let Some(progress)=source.bind(&mut self.source,grant).result?{return Ok(Puzzle2dConnectHandlesPreparationStep::Pending(progress))}
+        if let Some(progress)=mutation.bind(&mut self.mutation,grant).result?{return Ok(Puzzle2dConnectHandlesPreparationStep::Pending(progress))}
         if let Some(plan) = self.output { return Ok(Puzzle2dConnectHandlesPreparationStep::Complete { plan, progress: Default::default() }); }
         if self.phase < 10 {
             if grant.maximum_copy_bytes < 8 { return Ok(Puzzle2dConnectHandlesPreparationStep::Pending(Default::default())); }
@@ -131,7 +131,7 @@ impl Puzzle2dConnectHandlesPreparationCursor {
         if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}if grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
         if self.output.is_some(){let bytes=size_of_val(&self.output);if grant.maximum_copy_bytes<bytes{return Ok(RetainedCloneStep::Progress(Default::default()));}self.output=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}));}
         if !self.lookup.terminal_is_empty(){return self.lookup.close_step(grant).map(|step|RetainedCloneStep::Progress(step.progress()));}
-        let step=RetainedCloneBinding::close_one(if self.source.is_some(){&mut self.source}else{&mut self.mutation},grant)?;Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})
+        let step=RetainedCloneBinding::close_one(if self.source.is_some(){&mut self.source}else{&mut self.mutation},grant).result?;Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})
     }
     pub fn terminal_is_empty(&self) -> bool { self.closing && self.output.is_none() && self.lookup.terminal_is_empty() && self.source.is_none() && self.mutation.is_none() }
 }

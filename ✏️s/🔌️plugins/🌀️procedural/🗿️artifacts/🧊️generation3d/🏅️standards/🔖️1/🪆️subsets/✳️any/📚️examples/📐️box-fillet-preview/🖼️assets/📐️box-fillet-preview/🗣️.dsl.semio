@@ -4,7 +4,7 @@ camera {
   x=120 y=-80 zoom=2
 }
 layout={
-  box=x=80 y=-60 fillet=x=240 y=-60 preview=x=360 y=-60 radius=x=40 y=-100 size=x=40 y=-140
+  box={x=80 y=-60} fillet={x=240 y=-60} preview={x=360 y=-60} radius={x=40 y=-100} size={x=40 y=-140}
 }
 synapses [id:TEXT wire:WIRE] {
   e1 size@number->box@width

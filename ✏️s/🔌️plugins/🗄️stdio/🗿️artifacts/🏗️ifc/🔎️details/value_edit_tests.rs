@@ -19,7 +19,7 @@ fn grant(demand: RetirementDemand) -> RetainedCloneGrant {
     RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth }
 }
 fn edit(value: IfcValue, mut event: editing::SnapshotEditEvent, cancel_at: Option<usize>) -> (Option<IfcValue>, usize) {
-    let mut caller = semio_framework_plugin::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().unwrap();
+    let mut caller = semio_framework_plugin::plugin_app_close_prelude::artifact_app_laws::OriginalFixtureCaller::admit().unwrap();
     let mut decoder = semio_framework_job::OriginalJobDecodeOwner::empty();
     let mut cx = caller.context().with_original_decoder(&mut decoder);
     let policy = editing::fixture_mounted_owner_policy();

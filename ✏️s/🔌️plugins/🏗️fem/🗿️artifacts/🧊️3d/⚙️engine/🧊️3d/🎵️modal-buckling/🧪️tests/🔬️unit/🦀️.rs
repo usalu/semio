@@ -1,26 +1,27 @@
 use super::*;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemMaterialValue;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemNodeValue;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemElement;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoadCase;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemMaterial;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemNode;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSection;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSupport;
 
 fn cantilever_fixture() -> Fem3dSnapshot {
     let (e, g, a, iy, iz, j, l, p) = (210e9, 80.77e9, 0.00538, 0.0000369, 0.0000133, 0.00000060, 3.0, 5000.0);
-    Fem3dSnapshot {
-        nodes: vec![FemNode { id: "n1".into(), x: 0.0, y: 0.0, z: 0.0 }, FemNode { id: "n2".into(), x: l, y: 0.0, z: 0.0 }],
+    Fem3dSnapshot::from_reference(Fem3dSnapshotValue {
+        nodes: vec![FemNodeValue { id: "n1".into(), x: 0.0, y: 0.0, z: 0.0 }, FemNodeValue { id: "n2".into(), x: l, y: 0.0, z: 0.0 }],
         elements: vec![FemElement::Frame { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "hea200".into(), roll: 0.0 }],
-        materials: vec![FemMaterial { id: "steel".into(), name: "Steel".into(), e, g, nu: 0.3, rho: 7850.0 }],
+        materials: vec![FemMaterialValue { id: "steel".into(), name: "Steel".into(), e, g, nu: 0.3, rho: 7850.0 }],
         sections: vec![FemSection { id: "hea200".into(), name: "HEA200".into(), area: a, iy, iz, j }],
         solids: vec![],
         supports: vec![FemSupport { id: "s1".into(), node_id: "n1".into(), fixed: FemDof::ALL.to_vec() }],
         load_cases: vec![FemLoadCase { id: "point".into(), name: "Point Load".into(), loads: vec![semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoad::Nodal { id: "l1".into(), node_id: "n2".into(), dof: FemDof::Tz, value: -p }], self_weight: false }],
         combinations: vec![],
         analysis: FemAnalysisSettings::default(),
-    }
+    }).expect("fixture snapshot")
 }
 
 #[test]

@@ -6,12 +6,12 @@ use semio_framework_value::retained_clone::{RetainedClone, RetainedCloneClose, R
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
 use std::sync::Arc;
 
-type Source = wire::SnapshotSource;
-type SourceAdmission = semio_framework_value::retained_clone::RetainedCloneSourceAdmission<IfcSnapshot, Arc<IfcSnapshot>>;
-fn snapshot_of(owner: &Arc<IfcSnapshot>) -> &IfcSnapshot {
+pub type Source = wire::SnapshotSource;
+pub type SourceAdmission = semio_framework_value::retained_clone::RetainedCloneSourceAdmission<IfcSnapshot, Arc<IfcSnapshot>>;
+pub fn snapshot_of(owner: &Arc<IfcSnapshot>) -> &IfcSnapshot {
     owner
 }
-fn missing_root_argument(event:&editing::SnapshotEditEvent,snapshot:&IfcSnapshot,address:&pointer::PathAdmission)->Option<pointer::NativeAddress>{
+pub fn missing_root_argument(event:&editing::SnapshotEditEvent,snapshot:&IfcSnapshot,address:&pointer::PathAdmission)->Option<pointer::NativeAddress>{
     let editing::SnapshotEditEvent::InsertValue{path,..}=event else{return None;};
     if address.field_count()!=4||!address.field_is(path,2,"args"){return None;}
     let position=address.position(event)?;let args=&snapshot.entities.get(position)?.args;
@@ -19,8 +19,8 @@ fn missing_root_argument(event:&editing::SnapshotEditEvent,snapshot:&IfcSnapshot
     if argument!=args.len(){return None;}
     Some(pointer::NativeAddress{position,part:None,argument,prefix:address.field_end(3)?,field:4})
 }
-fn insertion_metadata_bytes()->usize{4*std::mem::size_of::<Option<pointer::NativeAddress>>()}
-fn constituent_argument_collection(event:&editing::SnapshotEditEvent,snapshot:&IfcSnapshot,address:&pointer::PathAdmission)->Option<pointer::NativeAddress>{
+pub fn insertion_metadata_bytes()->usize{4*std::mem::size_of::<Option<pointer::NativeAddress>>()}
+pub fn constituent_argument_collection(event:&editing::SnapshotEditEvent,snapshot:&IfcSnapshot,address:&pointer::PathAdmission)->Option<pointer::NativeAddress>{
     let (path,insert)=match event{editing::SnapshotEditEvent::InsertValue{path,..}=>(path,true),editing::SnapshotEditEvent::RemoveValue{path}=>(path,false),_=>return None};
     if address.field_count()!=6||!address.field_is(path,2,"complex")||!address.field_is(path,4,"args"){return None;}
     let position=address.position(event)?;let part=address.field_index(path,3)?;let args=&snapshot.entities.get(position)?.complex.get(part)?.args;
@@ -28,7 +28,7 @@ fn constituent_argument_collection(event:&editing::SnapshotEditEvent,snapshot:&I
     if argument>args.len()||!insert&&argument==args.len(){return None;}
     Some(pointer::NativeAddress{position,part:Some(part),argument,prefix:address.field_end(4)?,field:6})
 }
-fn retained_constituent_argument(event:&editing::SnapshotEditEvent,address:&pointer::PathAdmission)->bool {
+pub fn retained_constituent_argument(event:&editing::SnapshotEditEvent,address:&pointer::PathAdmission)->bool {
     let Some(native)=address.native_address(event)else{return false;};
     native.part.is_some()&&match event {
         editing::SnapshotEditEvent::SetValue{..}=>true,
@@ -37,7 +37,7 @@ fn retained_constituent_argument(event:&editing::SnapshotEditEvent,address:&poin
     }
 }
 
-fn replacement_seed(event: &editing::SnapshotEditEvent, snapshot: &IfcSnapshot, position: Option<usize>, argument: Option<usize>, header: Option<usize>) -> Option<IfcValue> {
+pub fn replacement_seed(event: &editing::SnapshotEditEvent, snapshot: &IfcSnapshot, position: Option<usize>, argument: Option<usize>, header: Option<usize>) -> Option<IfcValue> {
     let (path, set) = match event {
         editing::SnapshotEditEvent::SetValue { path, .. } => (path, true),
         editing::SnapshotEditEvent::InsertValue { path, .. } | editing::SnapshotEditEvent::RemoveValue { path } => (path, false),
@@ -74,7 +74,7 @@ fn replacement_seed(event: &editing::SnapshotEditEvent, snapshot: &IfcSnapshot, 
 }
 
 #[derive(Default)]
-struct ReductionControl {
+pub struct ReductionControl {
     #[cfg(test)]
     cancel_at: Option<usize>,
     #[cfg(test)]
@@ -95,50 +95,50 @@ impl ReductionControl {
 }
 
 pub struct IfcDetailsWork<E: editing::SnapshotEditingEditor, C: IfcDetailsProfile> {
-    tool: &'static str,
-    original_event: Option<editing::SnapshotEditEvent>,
-    value_edit: value_edit::IfcValueEdit,
-    value_edit_done: bool,
-    borrowed_preimage: bool,
-    cursor: <IfcEntity as RetainedClone>::Cursor,
-    value_cursor: <IfcValue as RetainedClone>::Cursor,
-    header_cursor: <Vec<IfcValue> as RetainedClone>::Cursor,
-    parts_cursor:<Vec<IfcComplexType> as RetainedClone>::Cursor,
-    source: Option<Source>,
-    source_admission: Option<SourceAdmission>,
-    entity: Option<IfcEntity>,
-    value: Option<IfcValue>,
-    header_values: Option<Vec<IfcValue>>,
-    parts:Option<Vec<IfcComplexType>>,
-    header_column: Option<usize>,
-    garbage: Option<Vec<IfcValue>>,
-    pending: Option<Vec<IfcMutation>>,
-    semantic_emit: Option<Emit<IfcMutation, E::ConfigMutation, E::DraftMutation>>,
-    unborn: Option<Arc<IfcSnapshot>>,
-    retirement: RetainedCloneClose,
-    control: ReductionControl,
-    position: Option<usize>,
-    argument: Option<usize>,
-    part:Option<usize>,
-    prefix:usize,
-    prepared: bool,
-    admitted: Option<bool>,
-    admission: admission::EventAdmission,
-    address: pointer::PathAdmission,
-    reference:reference::ReferenceReduction,
-    enumeration:contextual_edit::EnumerationEdit,
-    entity_removal:entity_remove::EntityRemoval,
-    constituent_roster:constituent_roster::ConstituentRoster,
-    command_wire:command_wire::CommandWire,
-    publication_validated: bool,
-    domain_validated: bool,
-    domain: domain_work::DomainWork,
-    rules: C::CandidateRules,
-    rules_validated: bool,
-    publication: wire::IfcPublication,
-    complete: bool,
-    closing: bool,
-    marker: std::marker::PhantomData<fn() -> (E, C)>,
+    pub tool: &'static str,
+    pub original_event: Option<editing::SnapshotEditEvent>,
+    pub value_edit: value_edit::IfcValueEdit,
+    pub value_edit_done: bool,
+    pub borrowed_preimage: bool,
+    pub cursor: <IfcEntity as RetainedClone>::Cursor,
+    pub value_cursor: <IfcValue as RetainedClone>::Cursor,
+    pub header_cursor: <Vec<IfcValue> as RetainedClone>::Cursor,
+    pub parts_cursor:<Vec<IfcComplexType> as RetainedClone>::Cursor,
+    pub source: Option<Source>,
+    pub source_admission: Option<SourceAdmission>,
+    pub entity: Option<IfcEntity>,
+    pub value: Option<IfcValue>,
+    pub header_values: Option<Vec<IfcValue>>,
+    pub parts:Option<Vec<IfcComplexType>>,
+    pub header_column: Option<usize>,
+    pub garbage: Option<Vec<IfcValue>>,
+    pub pending: Option<Vec<IfcMutation>>,
+    pub semantic_emit: Option<Emit<IfcMutation, E::ConfigMutation, E::DraftMutation>>,
+    pub unborn: Option<Arc<IfcSnapshot>>,
+    pub retirement: RetainedCloneClose,
+    pub control: ReductionControl,
+    pub position: Option<usize>,
+    pub argument: Option<usize>,
+    pub part:Option<usize>,
+    pub prefix:usize,
+    pub prepared: bool,
+    pub admitted: Option<bool>,
+    pub admission: admission::EventAdmission,
+    pub address: pointer::PathAdmission,
+    pub reference:reference::ReferenceReduction,
+    pub enumeration:contextual_edit::EnumerationEdit,
+    pub entity_removal:entity_remove::EntityRemoval,
+    pub constituent_roster:constituent_roster::ConstituentRoster,
+    pub command_wire:command_wire::CommandWire,
+    pub publication_validated: bool,
+    pub domain_validated: bool,
+    pub domain: domain_work::DomainWork,
+    pub rules: C::CandidateRules,
+    pub rules_validated: bool,
+    pub publication: wire::IfcPublication,
+    pub complete: bool,
+    pub closing: bool,
+    pub marker: std::marker::PhantomData<fn() -> (E, C)>,
 }
 
 impl<E: editing::SnapshotEditingEditor, C: IfcDetailsProfile> IfcDetailsWork<E, C> {
@@ -260,8 +260,8 @@ impl<E: editing::SnapshotEditingEditor, C: IfcDetailsProfile> IfcDetailsWork<E, 
             })
     }
 
-    fn leaf_demand(&self)->RetirementDemand{RetirementDemand{copy_bytes:std::mem::size_of::<IfcMutation>()+std::mem::size_of::<IfcValue>()+if self.part.is_some(){std::mem::size_of::<IfcValue>()+std::mem::size_of::<Vec<IfcComplexType>>()+2*std::mem::size_of::<Vec<IfcValue>>()}else{0},capacity_bytes:std::mem::size_of::<IfcMutation>(),depth:1,..Default::default()}}
-    fn close_demand(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+    pub fn leaf_demand(&self)->RetirementDemand{RetirementDemand{copy_bytes:std::mem::size_of::<IfcMutation>()+std::mem::size_of::<IfcValue>()+if self.part.is_some(){std::mem::size_of::<IfcValue>()+std::mem::size_of::<Vec<IfcComplexType>>()+2*std::mem::size_of::<Vec<IfcValue>>()}else{0},capacity_bytes:std::mem::size_of::<IfcMutation>(),depth:1,..Default::default()}}
+    pub fn close_demand(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         if !self.rules.terminal_is_empty(){return self.rules.close_demands(body);}
         if !self.command_wire.terminal_is_empty(){return self.command_wire.close_demands();}
         if !self.admission.terminal_is_empty() {
@@ -327,7 +327,7 @@ impl<E: editing::SnapshotEditingEditor, C: IfcDetailsProfile> IfcDetailsWork<E, 
     }
 }
 
-fn work_tick(cx: &mut semio_framework_job::StepContext<'_>) -> Result<(), String> {
+pub fn work_tick(cx: &mut semio_framework_job::StepContext<'_>) -> Result<(), String> {
     if cx.is_cancelled() {
         return Err("details-cancelled".into());
     }
@@ -339,13 +339,13 @@ fn work_tick(cx: &mut semio_framework_job::StepContext<'_>) -> Result<(), String
 }
 
 #[cfg(test)]
-fn declared_publication_rows(mutations: &[IfcMutation]) -> Result<usize, Fault> {
+pub fn declared_publication_rows(mutations: &[IfcMutation]) -> Result<usize, Fault> {
     mutations
         .iter()
         .try_fold(0usize, |rows, mutation| rows.checked_add(1).and_then(|rows| rows.checked_add(<IfcMutation as protocol::Mutation<IfcSnapshot>>::inverse_rows(mutation))).ok_or_else(|| Fault::from("IFC edit publication row count overflow")))
 }
 
-fn event_stub(event: &editing::SnapshotEditEvent) -> editing::SnapshotEditEvent {
+pub fn event_stub(event: &editing::SnapshotEditEvent) -> editing::SnapshotEditEvent {
     use editing::SnapshotEditEvent;
     match event {
         SnapshotEditEvent::SetValue { .. } => SnapshotEditEvent::SetValue { path: String::new(), value: DslValue::Null },
@@ -357,7 +357,7 @@ fn event_stub(event: &editing::SnapshotEditEvent) -> editing::SnapshotEditEvent 
     }
 }
 
-fn header_values(snapshot: &IfcSnapshot, column: usize) -> &Vec<IfcValue> {
+pub fn header_values(snapshot: &IfcSnapshot, column: usize) -> &Vec<IfcValue> {
     match column {
         0 => &snapshot.header.file_description,
         1 => &snapshot.header.file_name,
@@ -941,6 +941,4 @@ mod tests {
     }
 }
 
-#[cfg(test)]
-#[path = "work_tests.rs"]
-mod retained_work_tests;
+

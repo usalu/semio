@@ -1,15 +1,7 @@
 //! 📦️ Package glue — proc-macro crate root; implementation in owner `🦀️.rs`.
 //!
-//! `#![allow(async_fn_in_trait)]`: every trait this crate declares in its own tests carries `async fn`
-//! methods (universal async, O1), which trips rustc's "use of `async fn` in public traits is discouraged
-//! .. auto trait bounds cannot be specified" lint on every one of them. Per ruling **R7**: silence it
-//! with this crate-root allow, NEVER by adding `+ Send` to a signature (R3 — guest futures are
-//! deliberately `?Send`; Send comes structurally from the concrete enum, never from a bound) and NEVER
-//! by making the method sync. Every crate that DECLARES a `#[dyn_enum]` trait needs this same one-line
-//! allow at ITS OWN crate root — `dyn_enum`/`dyn_enum!` cannot inject a crate-level inner attribute
-//! across the boundary into a caller's crate, so this is a per-consuming-crate responsibility, called
-//! out in `📓️terra-dyn-enum-macro-report.md`'s "applying dyn_enum: the recipe".
-#![allow(async_fn_in_trait)]
+//! `#[dyn_enum]` re-emits every `async fn` of a trait as `fn .. -> impl Future<Output = T>`, so no
+//! consuming crate needs `#![allow(async_fn_in_trait)]`; `Send` stays structural (R3), never a `+ Send` bound.
 
 #[path = "../../🦀️.rs"]
 mod component;

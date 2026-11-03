@@ -1,9 +1,11 @@
 /** 🔍️ Pixel-cell contours with bounded grants, topology checks and private publication. */
 import {UnitRetirement,type WorkRetirement,type WorkRetirementProgress} from "../🧹️retire/🟦️.ts";
 import type {PathSegment,Vec2} from "../📐️drawing-contract/🟦️.ts";
+import type {RetainedWorkDemand,RetainedWorkLedger} from "../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts";
+import {RetainedWorkProducerRuntime,type RetainedWorkProducerOwner} from "../../🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts";
 export type BitmapTraceInput={width:number;height:number;mask:readonly number[]|Uint8Array;threshold:number;simplifyEpsilon:number;maxPixels:number;maxEdges:number;maxSegments:number;maxWork:number};
 export type BitmapTraceProgress={phase:"scan"|"contours"|"compact"|"simplify"|"topology"|"coverage"|"emit"|"complete";scanned:number;pixels:number;edges:number;contours:number;segments:number;simplified:boolean;work:number;done:boolean};
-export type BitmapTraceOptions={workBudget?:number;signal?:AbortSignal;onProgress?:(progress:BitmapTraceProgress)=>void};
+export type BitmapTraceOptions={work:()=>RetainedWorkLedger;workBudget?:number;signal?:AbortSignal;onProgress?:(progress:BitmapTraceProgress)=>void};
 export type BitmapTraceRetirementProgress=WorkRetirementProgress;
 export type BitmapTraceRetirement=WorkRetirement;
 
@@ -31,6 +33,7 @@ export class BitmapTraceJob {
  private first=0;private current=-1;private ring:Vec2[]=[];private positions=new Map<number,number>();private split:Vec2[]|null=null;private splitAt=0;private splitStop=0;private splitCopy=true;private start:Vec2=[0,0];private contour=0;private at=0;private anchor=0;private farthest=0;
  private mode:"anchor"|"ranges"|"build"|"edges"="anchor";private kept=new Set<number>();private ranges:Range[]=[];private baseArea=0;private candidateArea=0;private previous:Vec2|null=null;private changed=false;
  private left=0;private right=1;private pixel=0;private edge=0;private winding=0;private changes=new Map<number,number>();private covering=false;private output:PathSegment[]=[];private pixels:number;private threshold:number;private edgeCount=0;
+ #runtime=new RetainedWorkProducerRuntime();#owner:RetainedWorkProducerOwner<BitmapTraceProgress>|null=null;#demand:RetainedWorkDemand={copyBytes:0,capacityBytes:0,releaseBytes:0,depth:1};
  constructor(private input:BitmapTraceInput) {
   if(!integer(input.width,8192)||!integer(input.height,8192)||!integer(input.maxPixels,16777216)||!integer(input.maxEdges,65536)||!integer(input.maxSegments,65536)||!integer(input.maxWork,1000000000)||!Number.isFinite(input.threshold)||input.threshold<0||input.threshold>1||!Number.isFinite(input.simplifyEpsilon)||input.simplifyEpsilon<0||input.simplifyEpsilon>8192)invalid("Invalid bitmap trace contract");
   this.input={...input};this.pixels=input.width*input.height;this.threshold=Math.round(input.threshold*255);
@@ -122,10 +125,16 @@ export class BitmapTraceJob {
    if(this.at===ring.length){this.output.push({kind:"close"});this.contour++;this.at=0;}else{this.output.push({kind:this.at===0?"move":"line",to:ring[this.at]!});this.at++;}return;
   }
  }
- advance(budget:number):BitmapTraceProgress {
-  if(!Number.isSafeInteger(budget)||budget<=0)invalid("Bitmap trace grant must be a positive integer");if(this.cancelled)throw new DOMException("Bitmap trace cancelled","AbortError");if(this.failed)throw this.failed;
-  try{for(let at=0;at<budget&&this.phase!=="complete";at++){if(this.work>=this.input.maxWork)invalid("Bitmap trace exceeds work budget");this.step();this.work++;}}catch(error){this.failed=error;throw error;}
-  return {phase:this.phase,scanned:this.scanned,pixels:this.pixels,edges:this.edgeCount,contours:this.base.length,segments:this.output.length,simplified:this.simplified,work:this.work,done:this.phase==="complete"};
+ private progress():BitmapTraceProgress{return {phase:this.phase,scanned:this.scanned,pixels:this.pixels,edges:this.edgeCount,contours:this.base.length,segments:this.output.length,simplified:this.simplified,work:this.work,done:this.phase==="complete"};}
+ lastTurnWork():number{return this.#runtime.lastTurnWork();}
+ lastTurnSemanticWork():number{return this.#runtime.lastTurnSemanticWork();}
+ nextWorkDemand():RetainedWorkDemand{return this.#demand;}
+ failurePending():boolean{return this.failed!==null;}
+ settlementPending():boolean{return this.phase==="complete";}
+ /** 🧭️ Caller-funded turns: every pixel, edge, vertex or validation pair is one semantic step bounded by the caller ledger. */
+ advance(budget:number,work:RetainedWorkLedger):BitmapTraceProgress {
+  if(!Number.isSafeInteger(budget)||budget<=0)invalid("Bitmap trace grant must be a positive integer");
+  return this.#runtime.advance(budget,work,this.#owner??={maximumWork:this.input.maxWork,workLimitMessage:"Bitmap trace exceeds work budget",validate:()=>{if(this.cancelled)throw new DOMException("Bitmap trace cancelled","AbortError");if(this.failed)throw this.failed;},stopped:()=>this.phase==="complete",settlementPending:()=>this.settlementPending(),failurePending:()=>this.failurePending(),semanticWork:()=>this.work,recordSemanticWork:n=>{this.work+=n;},step:c=>{try{this.step();c.commitSemanticWork();}catch(error){this.failed=error;throw error;}finally{this.#demand=c.work.nextDemand;}},progress:()=>this.progress()});
  }
  result():PathSegment[]{if(this.cancelled)throw new DOMException("Bitmap trace cancelled","AbortError");if(this.failed)throw this.failed;if(this.phase!=="complete")throw Error("Bitmap trace incomplete");return this.output;}
  /** 🧹️ Transfers the mask unchanged and closes active geometry without cloning or clearing it eagerly. */
@@ -146,7 +155,7 @@ export class BitmapTraceJob {
  cancel():void{this.cancelled=true;}
 }
 /** 🕰️ Cooperative tracing with abort checks before observer calls and result publication. */
-export async function traceBitmap(input:BitmapTraceInput,options:BitmapTraceOptions={}):Promise<PathSegment[]> {
+export async function traceBitmap(input:BitmapTraceInput,options:BitmapTraceOptions):Promise<PathSegment[]> {
  const job=new BitmapTraceJob(input),check=()=>{if(options.signal?.aborted){job.cancel();throw new DOMException("Bitmap trace cancelled","AbortError");}};
- try{check();for(;;){const p=job.advance(options.workBudget??4096);check();options.onProgress?.(p);check();if(p.done)return job.result();await new Promise<void>(resolve=>setTimeout(resolve,0));}}catch(error){job.cancel();throw error;}finally{const close=job.intoRetirement().job;while(!close.advance(4096).done)await new Promise<void>(resolve=>setTimeout(resolve,0));}
+ try{check();for(;;){const p=job.advance(options.workBudget??4096,options.work());check();options.onProgress?.(p);check();if(p.done)return job.result();await new Promise<void>(resolve=>setTimeout(resolve,0));}}catch(error){job.cancel();throw error;}finally{const close=job.intoRetirement().job;while(!close.advance(4096).done)await new Promise<void>(resolve=>setTimeout(resolve,0));}
 }

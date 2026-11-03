@@ -41,3 +41,27 @@ The fleet is starving itself: checks wait 40+ minutes in the capacity queue, the
 
 ## Addendum 07:20 — hub06 owners
 `C/🗑️generated/1101/hub06.txt` is the current whole-hub frontier. Owners: flow-flow-model → flowext; fem-2d-model → fem; procedural 2d/3d editor and viewer transients → gen; stdio-contract-native-print → describe; puzzle-jobs → hubplug; framework plugin-retained-command, guest-contract, reactor-jobs, publication-mounted → plugcore; plugin-time-travel, typing-edit, infinite-board-engine → plugtools. The framework gate marker still stands.
+
+## Addendum 19:50 — ACTIVATION FREEZE (all lanes)
+act15 and act16 passed 74 of 77 actions and failed because the fleet changed sources mid-compile and starved the compiler. Until `C/🗑️generated/1101/act-green` or `C/🗑️generated/1101/freeze-lifted` exists:
+- Finish your current edit compile-atomically within 2 minutes, then make NO edits under `🧰️framework/`, `✏️s/`, `🌎️hub/`, `♻️mit-bestand/`.
+- Stop your own cargo and repo processes now, killing only pids you recorded. Run no cargo, repo or test commands.
+- Keep working: read code and write proposed patches into `C/1101-tools/<lane>/patches/` to apply after the lift.
+- Wait for the marker with bounded loops (at most 9 minutes per Bash call). Do not end your turn because of the freeze unless you have nothing left to prepare.
+Exception: only the lanes the coordinator names may edit, and only their named crates.
+
+## Addendum 20:55 — ALL 20 SLOTS BUSY, activation freeze narrowed (replaces 19:50 for everyone)
+User: all 20 agent slots busy at all times. Until `C/🗑️generated/1101/act-green` or `freeze-lifted` exists:
+- ALLOWED: run native tests and checks, in small batches that fit the deadline, one at a time per lane. Activation has priority at the capacity gate.
+- ALLOWED edits: only files under a `🧪️tests/` directory, and crates outside the demonstrator closure (ifc-4, ifc-4x3 and their details crates, wfc, draw, layout).
+- FORBIDDEN edits: production source in the activation closure (`🧰️framework/`, pane and stdio crates of the hub closure), any `Cargo.toml` or `Cargo.lock` in it, `♻️mit-bestand/`.
+- A test shows a production fault: diagnose it fully and write the fix as a patch in `C/1101-tools/<lane>/patches/`. Apply patches after the marker.
+Do not end your turn while your tests can run or patches can be prepared. Exception: lane gen keeps fixing procedural crates until the hub is green.
+
+## Addendum 01:05 — PATCH WINDOW
+act17 stopped: component driver regression. The marker `freeze-lifted` exists now. Until `C/🗑️generated/1101/window-closed` exists:
+- Apply your prepared patches from `C/1101-tools/<lane>/patches/` and finish production fixes you diagnosed, compile-atomically, by hand.
+- Check each with a narrow wasm `--lib` or test run. Fix what you broke.
+- Send the coordinator one line when your patches are in and checked.
+When `window-closed` appears: the rules of Addendum 20:55 apply again immediately, and any edit in progress must be finished within 2 minutes.
+No manifest edits without telling the coordinator, except lane closure, which applies its patch once.

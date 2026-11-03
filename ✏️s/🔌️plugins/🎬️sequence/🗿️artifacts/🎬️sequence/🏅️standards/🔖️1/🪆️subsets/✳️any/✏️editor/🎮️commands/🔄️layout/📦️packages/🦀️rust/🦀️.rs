@@ -31,8 +31,7 @@ pub mod standards {
                 pub mod io {
                     #[path = "."]
                     pub mod text {
-                        #[path = "../../../../../🚪️io/📝️text/🔺️diff/🦀️.rs"]
-                        pub mod diff;
+                        pub use semio_s_artifact_sequence_sequence_schema::standards::v1::subsets::any::io::text::diff;
                     }
                     #[path = "../../../../../🚪️io/💾️binary/🦀️.rs"]
                     pub mod binary;

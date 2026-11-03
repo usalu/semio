@@ -11,7 +11,7 @@ use std::mem::ManuallyDrop;
 
 #[must_use="retirement queue payloads and backing must reach terminal-empty"]
 pub struct RetirementQueue {frames:ManuallyDrop<PagedList<Box<dyn ErasedSnapshotRetirement>,{usize::MAX}>>,step_progress:RetainedCloneProgress}
-impl Default for RetirementQueue {fn default()->Self {Self {frames:ManuallyDrop::new(PagedList::default()),step_progress:Default::default()}}}
+impl Default for RetirementQueue {fn default()->Self {Self {frames:ManuallyDrop::new(PagedList::with_page_items(8)),step_progress:Default::default()}}}
 impl RetirementQueue {
     pub fn len(&self)->usize {self.frames.len()}
     pub fn has_reserved_slot(&self)->bool {self.frames.has_reserved_slot()}

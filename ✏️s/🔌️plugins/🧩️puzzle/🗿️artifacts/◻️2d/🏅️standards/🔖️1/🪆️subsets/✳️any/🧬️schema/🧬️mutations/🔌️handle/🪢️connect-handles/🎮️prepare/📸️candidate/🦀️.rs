@@ -42,8 +42,8 @@ impl Puzzle2dConnectHandlesCandidateCursor {
     pub fn advance(&mut self, source: RetainedCloneRef<'_, Puzzle2dSnapshot>, mutation: RetainedCloneRef<'_, ConnectHandles>, body:usize,grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if self.closing || self.phase == 13 { return Err(refusal("connect candidate is closing or spent")); }
         if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if let Some(progress)=source.bind(&mut self.source,grant)?{return Ok(RetainedCloneStep::Progress(progress))}
-        if let Some(progress)=mutation.bind(&mut self.mutation,grant)?{return Ok(RetainedCloneStep::Progress(progress))}
+        if let Some(progress)=source.bind(&mut self.source,grant).result?{return Ok(RetainedCloneStep::Progress(progress))}
+        if let Some(progress)=mutation.bind(&mut self.mutation,grant).result?{return Ok(RetainedCloneStep::Progress(progress))}
         match self.phase {
             0 => {
                 if let Some(step)=self.preparation.ensure(grant)? {return Ok(step);}
@@ -57,18 +57,18 @@ impl Puzzle2dConnectHandlesCandidateCursor {
                 Ok(RetainedCloneStep::Progress(step.progress()))
             }
             2 => {
-                let step = self.snapshot_clone.advance(source,body, grant)?;
+                let step = self.snapshot_clone.advance(source,body, grant).result?;
                 if matches!(step, RetainedCloneStep::Complete(_)) { self.phase = 3; }
                 Ok(RetainedCloneStep::Progress(step.progress()))
             }
             3 => {
                 if grant.maximum_copy_bytes < size_of::<Puzzle2dSnapshot>() { return Ok(RetainedCloneStep::Progress(Default::default())); }
-                self.candidate = Some(self.snapshot_clone.take().ok_or_else(|| refusal("connect candidate snapshot completed without its owner"))?);
+                self.candidate = Some(self.snapshot_clone.take(grant).result?.map(|(owner, _)| owner).ok_or_else(|| refusal("connect candidate snapshot completed without its owner"))?);
                 self.snapshot_clone.begin_close();self.phase = 4;
                 Ok(payload_progress(size_of::<Puzzle2dSnapshot>()))
             }
             4 => {
-                let step = self.snapshot_clone.close_step(grant)?;
+                let step = self.snapshot_clone.close_step(grant).result?;
                 if self.snapshot_clone.terminal_is_empty() { self.phase = 5; }
                 Ok(RetainedCloneStep::Progress(step.progress()))
             }
@@ -145,7 +145,7 @@ impl Puzzle2dConnectHandlesCandidateCursor {
         if !self.closing { return Err(refusal("connect candidate closure was not started")); }
         if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if !self.preparation.terminal_is_empty() { return self.preparation.close_granted(grant); }
-        if !self.snapshot_clone.terminal_is_empty() { return self.snapshot_clone.close_step(grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if !self.snapshot_clone.terminal_is_empty() { return self.snapshot_clone.close_step(grant).result.map(|step| RetainedCloneStep::Progress(step.progress())); }
         if !self.edge_assembly.terminal_is_empty() { return self.edge_assembly.close_granted(grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
         if let Some(owner) = self.pending_close.as_mut() { let step = owner.step(grant)?;if owner.terminal_is_empty() { self.pending_close = None; }return Ok(RetainedCloneStep::Progress(step.progress())); }
         if self.pending.is_some() {
@@ -161,7 +161,7 @@ impl Puzzle2dConnectHandlesCandidateCursor {
         }
         if self.insertion.is_some() { let bytes=size_of::<Option<PagedListEditCursor>>();if grant.maximum_copy_bytes<bytes{return Ok(RetainedCloneStep::Progress(Default::default()));}self.insertion=None;return Ok(payload_progress(bytes)); }
         if self.plan.is_some() { let bytes=size_of::<Option<Puzzle2dConnectHandlesPlan>>();if grant.maximum_copy_bytes<bytes{return Ok(RetainedCloneStep::Progress(Default::default()));}self.plan=None;return Ok(payload_progress(bytes)); }
-        let step = RetainedCloneBinding::close_one(if self.source.is_some(){&mut self.source}else{&mut self.mutation}, grant)?;
+        let step = RetainedCloneBinding::close_one(if self.source.is_some(){&mut self.source}else{&mut self.mutation}, grant).result?;
         Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { close_progress(step) })
     }
 

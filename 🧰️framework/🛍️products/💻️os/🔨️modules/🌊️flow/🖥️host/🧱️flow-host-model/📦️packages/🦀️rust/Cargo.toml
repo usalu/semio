@@ -45,6 +45,9 @@ semio-framework-graph-dsl = { path = "../../../../../../../../🔨️modules/�
 ui_styling = { path = "../../../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
 semio-framework-ui-declaration = { path = "../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
 
+[features]
+testkit = []
+
 [dev-dependencies]
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["mutation-testing"] }

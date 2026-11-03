@@ -2,7 +2,10 @@
   "schema": "spatial.interaction",
   "id": "transform.rotate",
   "version": "1.0.0",
-  "label": "Rotate",
+  "label": {
+    "native": { "en": "Rotate", "de": "Drehen" },
+    "reuse": { "en": "Rotate", "de": "Drehen" }
+  },
   "interaction": {
     "spatialGroundPick": true,
     "pickDisabledStates": ["idle", "committed"],
@@ -36,7 +39,10 @@
               {
                 "target": "select_objects_to_rotate",
                 "key": "s",
-                "label": "Start",
+                "label": {
+                  "native": { "en": "Start", "de": "Start" },
+                  "reuse": { "en": "Start", "de": "Start" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -97,7 +103,10 @@
         "selection": {
           "accept": ["vertex", "edge", "wire", "face", "shell", "solid"],
           "multiple": true,
-          "prompt": "Select objects to rotate"
+          "prompt": {
+            "native": { "en": "Select objects to rotate", "de": "Zu drehende Objekte auswählen" },
+            "reuse": { "en": "Select objects to rotate", "de": "Zu drehende Objekte auswählen" }
+          }
         },
         "on": [
           {
@@ -106,7 +115,10 @@
               {
                 "target": "select_objects_to_rotate",
                 "key": "s",
-                "label": "Select",
+                "label": {
+                  "native": { "en": "Select", "de": "Auswählen" },
+                  "reuse": { "en": "Select", "de": "Auswählen" }
+                },
                 "effects": [
                   {
                     "mutation": "action",
@@ -138,7 +150,10 @@
               {
                 "target": "center_of_rotation",
                 "key": "Enter",
-                "label": "Finish"
+                "label": {
+                  "native": { "en": "Finish", "de": "Fertig" },
+                  "reuse": { "en": "Finish", "de": "Fertig" }
+                }
               }
             ]
           },
@@ -148,7 +163,10 @@
               {
                 "target": "center_of_rotation",
                 "key": "RightClick",
-                "label": "Finish"
+                "label": {
+                  "native": { "en": "Finish", "de": "Fertig" },
+                  "reuse": { "en": "Finish", "de": "Fertig" }
+                }
               }
             ]
           }
@@ -300,7 +318,10 @@
               {
                 "target": "second_reference_point",
                 "key": "n",
-                "label": "Apply Number",
+                "label": {
+                  "native": { "en": "Apply Number", "de": "Zahl anwenden" },
+                  "reuse": { "en": "Apply Number", "de": "Zahl anwenden" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -416,7 +437,10 @@
             "kind": "label",
             "id": "select_objects_to_rotate-prompt",
             "role": "prompt",
-            "text": "Select objects to rotate",
+            "text": {
+              "native": { "en": "Select objects to rotate", "de": "Zu drehende Objekte auswählen" },
+              "reuse": { "en": "Select objects to rotate", "de": "Zu drehende Objekte auswählen" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]
@@ -479,7 +503,10 @@
             "kind": "label",
             "id": "center_of_rotation-prompt",
             "role": "prompt",
-            "text": "Center of rotation",
+            "text": {
+              "native": { "en": "Center of rotation", "de": "Drehzentrum" },
+              "reuse": { "en": "Center of rotation", "de": "Drehzentrum" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]
@@ -582,7 +609,10 @@
             "kind": "label",
             "id": "angle_or_first_reference_point-prompt",
             "role": "prompt",
-            "text": "Angle or first reference point",
+            "text": {
+              "native": { "en": "Angle or first reference point", "de": "Winkel oder erster Referenzpunkt" },
+              "reuse": { "en": "Angle or first reference point", "de": "Winkel oder erster Referenzpunkt" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]
@@ -685,7 +715,10 @@
             "kind": "label",
             "id": "second_reference_point-prompt",
             "role": "prompt",
-            "text": "Second reference point",
+            "text": {
+              "native": { "en": "Second reference point", "de": "Zweiter Referenzpunkt" },
+              "reuse": { "en": "Second reference point", "de": "Zweiter Referenzpunkt" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]

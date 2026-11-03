@@ -32,6 +32,7 @@ use semio_framework_plugin::app::InteractionView;
 use std::collections::HashMap;
 use semio_s_artifact_procedural_3d_preview_eval::PreviewInlineGeometry;
 use semio_s_artifact_procedural_3d_preview_eval::PreviewChannelItem;
+use semio_s_artifact_procedural_3d_preview_eval::{apply_show_mode_mesh, decode_preview_mesh_pack, mesh_data_for_preview_handle, mesh_data_for_session_preview_channel, mesh_has_preview_geometry, point_marker_mesh, preview_channel_items_for_widget, preview_mesh_role, preview_tolerance, vector_marker_mesh};
 
 #[path = "🫧️transient/🦀️.rs"]
 pub mod transient;

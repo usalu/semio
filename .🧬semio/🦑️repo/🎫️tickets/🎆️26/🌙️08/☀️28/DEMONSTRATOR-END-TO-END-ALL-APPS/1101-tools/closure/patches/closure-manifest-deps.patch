@@ -1,0 +1,617 @@
+diff --git a/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust/Cargo.toml b/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust/Cargo.toml
+index 6c88749f949..1adbc5a761b 100644
+--- a/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust/Cargo.toml
++++ b/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🦀️rust/Cargo.toml
+@@ -53,14 +53,12 @@ semio-s-artifact-stdio-dwg-geometry = { workspace = true }
+ semio-s-artifact-stdio-dwg-snapshot = { workspace = true }
+ semio-s-artifact-stdio-dwg-read = { workspace = true }
+ semio-s-artifact-stdio-dwg-write = { workspace = true }
+-semio-s-artifact-stdio-step = { workspace = true }
+ semio-s-artifact-stdio-gltf = { workspace = true }
+ semio-s-artifact-stdio-gltf-model = { workspace = true }
+ semio-s-artifact-stdio-json = { workspace = true }
+ semio-s-artifact-stdio-las = { workspace = true }
+ semio-s-artifact-stdio-obj = { workspace = true }
+ semio-s-artifact-stdio-ply = { workspace = true }
+-semio-s-artifact-stdio-png = { workspace = true }
+ semio-s-artifact-stdio-semio-base = { workspace = true }
+ semio-s-artifact-stdio-semio-mesh = { workspace = true }
+ semio-s-artifact-stdio-semio-mesh-export = { workspace = true }
+diff --git a/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/📦️packages/🦀️rust/Cargo.toml b/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/📦️packages/🦀️rust/Cargo.toml
+index f0967dde876..9b64d09a247 100644
+--- a/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/📦️packages/🦀️rust/Cargo.toml
++++ b/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/📦️packages/🦀️rust/Cargo.toml
+@@ -46,21 +46,7 @@ semio-framework-ui-scene = { workspace = true }
+ semio-framework-value = { path = "../../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+ semio-framework-value-derive = { workspace = true }
+ semio-s-artifact-gis-gismap-demo-asset = { path = "../../../../../../../../🖼️assets/🎬️demo/📦️packages/🦀️rust" }
+-semio-s-artifact-stdio-dwg = { workspace = true }
+-semio-s-artifact-stdio-dxf = { workspace = true }
+-semio-s-artifact-stdio-json = { workspace = true }
+-semio-s-artifact-stdio-pdf = { workspace = true }
+-semio-s-artifact-stdio-png = { workspace = true }
+ semio-s-artifact-stdio-semio = { workspace = true }
+-semio-s-artifact-stdio-semio-base = { workspace = true }
+-semio-s-artifact-stdio-semio-drawing = { workspace = true }
+-semio-s-artifact-stdio-semio-drawing-export = { workspace = true }
+-semio-s-artifact-stdio-semio-drawing-import = { workspace = true }
+-semio-s-artifact-stdio-semio-image = { workspace = true }
+-semio-s-artifact-stdio-semio-value-model = { workspace = true }
+-semio-s-artifact-stdio-semio-value-mutations = { workspace = true }
+-semio-s-artifact-stdio-svg = { workspace = true }
+-semio-s-artifact-stdio-txt = { workspace = true }
+ serde = { workspace = true }
+ serde_json = { workspace = true }
+ 
+diff --git a/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust/Cargo.toml b/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust/Cargo.toml
+index b4cea7e26a0..05b1600d015 100644
+--- a/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust/Cargo.toml
++++ b/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust/Cargo.toml
+@@ -58,21 +58,10 @@ semio-s-artifact-gis-gismap-mutations = { path = "../../../🧬️schema/🔺️
+ semio-s-artifact-gis-gismap-snapshot = { path = "../../../🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
+ semio-s-artifact-gis-gismap-tests = { path = "../../../🧬️schema/💡️inferences/🧪️tests/🔬️unit/📦️packages/🦀️rust" }
+ semio-s-artifact-gis-gismap-tile-coordinates = { path = "../../../../../../../🗺️tiles/🌍️gis-policy/📦️packages/🦀️rust" }
+-semio-s-artifact-stdio-dwg = { workspace = true }
+-semio-s-artifact-stdio-dxf = { workspace = true }
+-semio-s-artifact-stdio-json = { workspace = true }
+-semio-s-artifact-stdio-pdf = { workspace = true }
+-semio-s-artifact-stdio-png = { workspace = true }
+ semio-s-artifact-stdio-semio = { workspace = true }
+-semio-s-artifact-stdio-semio-base = { workspace = true }
+ semio-s-artifact-stdio-semio-drawing = { workspace = true }
+-semio-s-artifact-stdio-semio-drawing-export = { workspace = true }
+-semio-s-artifact-stdio-semio-drawing-import = { workspace = true }
+-semio-s-artifact-stdio-semio-image = { workspace = true }
+ semio-s-artifact-stdio-semio-value-model = { workspace = true }
+ semio-s-artifact-stdio-semio-value-mutations = { workspace = true }
+-semio-s-artifact-stdio-svg = { workspace = true }
+-semio-s-artifact-stdio-txt = { workspace = true }
+ serde = { workspace = true }
+ serde_json = { workspace = true }
+ 
+diff --git a/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🗺️map/📦️packages/🦀️rust/Cargo.toml b/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🗺️map/📦️packages/🦀️rust/Cargo.toml
+index 827269fb2d2..f5a9917b5ba 100644
+--- a/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🗺️map/📦️packages/🦀️rust/Cargo.toml
++++ b/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🗺️map/📦️packages/🦀️rust/Cargo.toml
+@@ -48,21 +48,6 @@ semio-framework-value-derive = { workspace = true }
+ semio-s-artifact-gis-gismap-demo-asset = { path = "../../../../../../../🖼️assets/🎬️demo/📦️packages/🦀️rust" }
+ semio-s-artifact-gis-gismap-snapshot = { path = "../../../../../../../🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
+ semio-s-artifact-gis-gismap-tile-coordinates = { path = "../../../../../../../../../../../🗺️tiles/🌍️gis-policy/📦️packages/🦀️rust" }
+-semio-s-artifact-stdio-dwg = { workspace = true }
+-semio-s-artifact-stdio-dxf = { workspace = true }
+-semio-s-artifact-stdio-json = { workspace = true }
+-semio-s-artifact-stdio-pdf = { workspace = true }
+-semio-s-artifact-stdio-png = { workspace = true }
+-semio-s-artifact-stdio-semio = { workspace = true }
+-semio-s-artifact-stdio-semio-base = { workspace = true }
+-semio-s-artifact-stdio-semio-drawing = { workspace = true }
+-semio-s-artifact-stdio-semio-drawing-export = { workspace = true }
+-semio-s-artifact-stdio-semio-drawing-import = { workspace = true }
+-semio-s-artifact-stdio-semio-image = { workspace = true }
+-semio-s-artifact-stdio-semio-value-model = { workspace = true }
+-semio-s-artifact-stdio-semio-value-mutations = { workspace = true }
+-semio-s-artifact-stdio-svg = { workspace = true }
+-semio-s-artifact-stdio-txt = { workspace = true }
+ serde = { workspace = true }
+ serde_json = { workspace = true }
+ 
+diff --git a/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust/Cargo.toml b/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust/Cargo.toml
+index 61bc48b060d..2c281e96f50 100644
+--- a/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust/Cargo.toml
++++ b/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust/Cargo.toml
+@@ -52,19 +52,13 @@ semio-s-artifact-gis-gismap-snapshot = { path = "../../../🧬️schema/📸️s
+ semio-s-artifact-gis-gismap-tests = { path = "../../../🧬️schema/💡️inferences/🧪️tests/🔬️unit/📦️packages/🦀️rust" }
+ semio-s-artifact-gis-gismap-tile-coordinates = { path = "../../../../../../../🗺️tiles/🌍️gis-policy/📦️packages/🦀️rust" }
+ semio-s-artifact-gis-gismap-windows = { path = "../../🎭️modes/👁️view/🪟️windows/🗺️map/📦️packages/🦀️rust" }
+-semio-s-artifact-stdio-dwg = { workspace = true }
+-semio-s-artifact-stdio-dxf = { workspace = true }
+ semio-s-artifact-stdio-json = { workspace = true }
+-semio-s-artifact-stdio-pdf = { workspace = true }
+ semio-s-artifact-stdio-png = { workspace = true }
+ semio-s-artifact-stdio-semio = { workspace = true }
+ semio-s-artifact-stdio-semio-base = { workspace = true }
+ semio-s-artifact-stdio-semio-drawing = { workspace = true }
+ semio-s-artifact-stdio-semio-drawing-export = { workspace = true }
+ semio-s-artifact-stdio-semio-drawing-import = { workspace = true }
+-semio-s-artifact-stdio-semio-image = { workspace = true }
+-semio-s-artifact-stdio-semio-value-model = { workspace = true }
+-semio-s-artifact-stdio-semio-value-mutations = { workspace = true }
+ semio-s-artifact-stdio-svg = { workspace = true }
+ semio-s-artifact-stdio-txt = { workspace = true }
+ serde = { workspace = true }
+diff --git a/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust/Cargo.toml b/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust/Cargo.toml
+index 0f0b610fad5..35078db091b 100644
+--- a/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust/Cargo.toml
++++ b/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust/Cargo.toml
+@@ -51,21 +51,9 @@ semio-s-artifact-gis-gismap-mutations = { path = "../../../🔺️diff/🧪️te
+ semio-s-artifact-gis-gismap-schema = { path = "../../../📦️packages/🦀️rust" }
+ semio-s-artifact-gis-gismap-snapshot = { path = "../../../📸️snapshot/📦️packages/🦀️rust" }
+ semio-s-artifact-gis-gismap-tile-coordinates = { path = "../../../../../../../../🗺️tiles/🌍️gis-policy/📦️packages/🦀️rust" }
+-semio-s-artifact-stdio-dwg = { workspace = true }
+-semio-s-artifact-stdio-dxf = { workspace = true }
+-semio-s-artifact-stdio-json = { workspace = true }
+-semio-s-artifact-stdio-pdf = { workspace = true }
+-semio-s-artifact-stdio-png = { workspace = true }
+-semio-s-artifact-stdio-semio = { workspace = true }
+-semio-s-artifact-stdio-semio-base = { workspace = true }
+ semio-s-artifact-stdio-semio-drawing = { workspace = true }
+-semio-s-artifact-stdio-semio-drawing-export = { workspace = true }
+-semio-s-artifact-stdio-semio-drawing-import = { workspace = true }
+-semio-s-artifact-stdio-semio-image = { workspace = true }
+ semio-s-artifact-stdio-semio-value-model = { workspace = true }
+ semio-s-artifact-stdio-semio-value-mutations = { workspace = true }
+-semio-s-artifact-stdio-svg = { workspace = true }
+-semio-s-artifact-stdio-txt = { workspace = true }
+ serde = { workspace = true }
+ serde_json = { workspace = true }
+ 
+diff --git a/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🔬️unit/📦️packages/🦀️rust/Cargo.toml b/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🔬️unit/📦️packages/🦀️rust/Cargo.toml
+index 0d4d49584d3..4362bd3a152 100644
+--- a/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🔬️unit/📦️packages/🦀️rust/Cargo.toml
++++ b/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🔬️unit/📦️packages/🦀️rust/Cargo.toml
+@@ -52,21 +52,13 @@ semio-s-artifact-gis-gismap-mutations = { path = "../../../../../🔺️diff/
+ semio-s-artifact-gis-gismap-snapshot = { path = "../../../../../📸️snapshot/📦️packages/🦀️rust" }
+ semio-s-artifact-gis-gismap-tile-coordinates = { path = "../../../../../../../../../../🗺️tiles/🌍️gis-policy/📦️packages/🦀️rust" }
+ semio-s-artifact-gis-gismap-windows = { path = "../../../../../../👁️viewer/🎭️modes/👁️view/🪟️windows/🗺️map/📦️packages/🦀️rust" }
+-semio-s-artifact-stdio-dwg = { workspace = true }
+-semio-s-artifact-stdio-dxf = { workspace = true }
+-semio-s-artifact-stdio-json = { workspace = true }
+-semio-s-artifact-stdio-pdf = { workspace = true }
+ semio-s-artifact-stdio-png = { workspace = true }
+-semio-s-artifact-stdio-semio = { workspace = true }
+ semio-s-artifact-stdio-semio-base = { workspace = true }
+ semio-s-artifact-stdio-semio-drawing = { workspace = true }
+ semio-s-artifact-stdio-semio-drawing-export = { workspace = true }
+-semio-s-artifact-stdio-semio-drawing-import = { workspace = true }
+-semio-s-artifact-stdio-semio-image = { workspace = true }
+ semio-s-artifact-stdio-semio-value-model = { workspace = true }
+ semio-s-artifact-stdio-semio-value-mutations = { workspace = true }
+ semio-s-artifact-stdio-svg = { workspace = true }
+-semio-s-artifact-stdio-txt = { workspace = true }
+ serde = { workspace = true }
+ serde_json = { workspace = true }
+ 
+diff --git a/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust/Cargo.toml b/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust/Cargo.toml
+index 8f08b219383..ce7db665a51 100644
+--- a/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust/Cargo.toml
++++ b/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust/Cargo.toml
+@@ -46,21 +46,13 @@ semio-framework-value-derive = { workspace = true }
+ semio-s-artifact-gis-gismap-demo-asset = { path = "../../../🖼️assets/🎬️demo/📦️packages/🦀️rust" }
+ semio-s-artifact-gis-gismap-mutations = { path = "../../🔺️diff/🧪️tests/🔬️unit/📦️packages/🦀️rust" }
+ semio-s-artifact-gis-gismap-snapshot = { path = "../../📸️snapshot/📦️packages/🦀️rust" }
+-semio-s-artifact-stdio-dwg = { workspace = true }
+-semio-s-artifact-stdio-dxf = { workspace = true }
+-semio-s-artifact-stdio-json = { workspace = true }
+-semio-s-artifact-stdio-pdf = { workspace = true }
+-semio-s-artifact-stdio-png = { workspace = true }
+ semio-s-artifact-stdio-semio = { workspace = true }
+ semio-s-artifact-stdio-semio-base = { workspace = true }
+ semio-s-artifact-stdio-semio-drawing = { workspace = true }
+ semio-s-artifact-stdio-semio-drawing-export = { workspace = true }
+ semio-s-artifact-stdio-semio-drawing-import = { workspace = true }
+-semio-s-artifact-stdio-semio-image = { workspace = true }
+ semio-s-artifact-stdio-semio-value-model = { workspace = true }
+ semio-s-artifact-stdio-semio-value-mutations = { workspace = true }
+-semio-s-artifact-stdio-svg = { workspace = true }
+-semio-s-artifact-stdio-txt = { workspace = true }
+ serde = { workspace = true }
+ serde_json = { workspace = true }
+ 
+diff --git a/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust/Cargo.toml b/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust/Cargo.toml
+index a0ca14bce0c..042c2c478b0 100644
+--- a/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust/Cargo.toml
++++ b/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust/Cargo.toml
+@@ -45,21 +45,12 @@ semio-framework-value = { path = "../../../../../../../../../../../../../🧰️
+ semio-framework-value-native-owned = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
+ semio-framework-value-derive = { workspace = true }
+ semio-s-artifact-gis-gismap-demo-asset = { path = "../../../../🖼️assets/🎬️demo/📦️packages/🦀️rust" }
+-semio-s-artifact-stdio-dwg = { workspace = true }
+-semio-s-artifact-stdio-dxf = { workspace = true }
+-semio-s-artifact-stdio-json = { workspace = true }
+-semio-s-artifact-stdio-pdf = { workspace = true }
+-semio-s-artifact-stdio-png = { workspace = true }
+-semio-s-artifact-stdio-semio = { workspace = true }
+ semio-s-artifact-stdio-semio-base = { workspace = true }
+ semio-s-artifact-stdio-semio-drawing = { workspace = true }
+ semio-s-artifact-stdio-semio-drawing-export = { workspace = true }
+-semio-s-artifact-stdio-semio-drawing-import = { workspace = true }
+ semio-s-artifact-stdio-semio-image = { workspace = true }
+ semio-s-artifact-stdio-semio-value-model = { workspace = true }
+-semio-s-artifact-stdio-semio-value-mutations = { workspace = true }
+ semio-s-artifact-stdio-svg = { workspace = true }
+-semio-s-artifact-stdio-txt = { workspace = true }
+ serde = { workspace = true }
+ serde_json = { workspace = true }
+ 
+diff --git a/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧪️tests/🔬️unit/📦️packages/🦀️rust/Cargo.toml b/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧪️tests/🔬️unit/📦️packages/🦀️rust/Cargo.toml
+index 758dc4c020a..5cd2ac41f4e 100644
+--- a/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧪️tests/🔬️unit/📦️packages/🦀️rust/Cargo.toml
++++ b/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧪️tests/🔬️unit/📦️packages/🦀️rust/Cargo.toml
+@@ -50,20 +50,10 @@ semio-s-artifact-gis-gismap-mut-family = { path = "../../../../../🧬️mutatio
+ semio-s-artifact-gis-gismap-demo-asset = { path = "../../../../../../🖼️assets/🎬️demo/📦️packages/🦀️rust" }
+ semio-s-artifact-gis-gismap-mut-any = { path = "../../../../../🧬️mutations/📦️packages/🦀️rust" }
+ semio-s-artifact-gis-gismap-snapshot = { path = "../../../../../📸️snapshot/📦️packages/🦀️rust" }
+-semio-s-artifact-stdio-dwg = { workspace = true }
+-semio-s-artifact-stdio-dxf = { workspace = true }
+ semio-s-artifact-stdio-json = { workspace = true }
+-semio-s-artifact-stdio-pdf = { workspace = true }
+-semio-s-artifact-stdio-png = { workspace = true }
+-semio-s-artifact-stdio-semio = { workspace = true }
+-semio-s-artifact-stdio-semio-base = { workspace = true }
+ semio-s-artifact-stdio-semio-drawing = { workspace = true }
+ semio-s-artifact-stdio-semio-drawing-export = { workspace = true }
+ semio-s-artifact-stdio-semio-drawing-import = { workspace = true }
+-semio-s-artifact-stdio-semio-image = { workspace = true }
+-semio-s-artifact-stdio-semio-value-model = { workspace = true }
+-semio-s-artifact-stdio-semio-value-mutations = { workspace = true }
+-semio-s-artifact-stdio-svg = { workspace = true }
+ semio-s-artifact-stdio-txt = { workspace = true }
+ serde = { workspace = true }
+ serde_json = { workspace = true }
+diff --git a/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆕create-position/📦️packages/🦀️rust/Cargo.toml b/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆕create-position/📦️packages/🦀️rust/Cargo.toml
+index 9dabd355731..f7875d86600 100644
+--- a/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆕create-position/📦️packages/🦀️rust/Cargo.toml
++++ b/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆕create-position/📦️packages/🦀️rust/Cargo.toml
+@@ -45,21 +45,6 @@ semio-framework-value = { path = "../../../../../../../../../../../../../../🧰
+ semio-framework-value-derive = { workspace = true }
+ semio-s-artifact-gis-gismap-demo-asset = { path = "../../../../../🖼️assets/🎬️demo/📦️packages/🦀️rust" }
+ semio-s-artifact-gis-gismap-snapshot = { path = "../../../../📸️snapshot/📦️packages/🦀️rust" }
+-semio-s-artifact-stdio-dwg = { workspace = true }
+-semio-s-artifact-stdio-dxf = { workspace = true }
+-semio-s-artifact-stdio-json = { workspace = true }
+-semio-s-artifact-stdio-pdf = { workspace = true }
+-semio-s-artifact-stdio-png = { workspace = true }
+-semio-s-artifact-stdio-semio = { workspace = true }
+-semio-s-artifact-stdio-semio-base = { workspace = true }
+-semio-s-artifact-stdio-semio-drawing = { workspace = true }
+-semio-s-artifact-stdio-semio-drawing-export = { workspace = true }
+-semio-s-artifact-stdio-semio-drawing-import = { workspace = true }
+-semio-s-artifact-stdio-semio-image = { workspace = true }
+-semio-s-artifact-stdio-semio-value-model = { workspace = true }
+-semio-s-artifact-stdio-semio-value-mutations = { workspace = true }
+-semio-s-artifact-stdio-svg = { workspace = true }
+-semio-s-artifact-stdio-txt = { workspace = true }
+ serde = { workspace = true }
+ serde_json = { workspace = true }
+ 
+diff --git a/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust/Cargo.toml b/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust/Cargo.toml
+index 98443f02c23..b0998b31843 100644
+--- a/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust/Cargo.toml
++++ b/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust/Cargo.toml
+@@ -45,21 +45,6 @@ semio-framework-value = { path = "../../../../../../../../../../../../../🧰️
+ semio-framework-value-derive = { workspace = true }
+ semio-s-artifact-gis-gismap-demo-asset = { path = "../../../../🖼️assets/🎬️demo/📦️packages/🦀️rust" }
+ semio-s-artifact-gis-gismap-snapshot = { path = "../../../📸️snapshot/📦️packages/🦀️rust" }
+-semio-s-artifact-stdio-dwg = { workspace = true }
+-semio-s-artifact-stdio-dxf = { workspace = true }
+-semio-s-artifact-stdio-json = { workspace = true }
+-semio-s-artifact-stdio-pdf = { workspace = true }
+-semio-s-artifact-stdio-png = { workspace = true }
+-semio-s-artifact-stdio-semio = { workspace = true }
+-semio-s-artifact-stdio-semio-base = { workspace = true }
+-semio-s-artifact-stdio-semio-drawing = { workspace = true }
+-semio-s-artifact-stdio-semio-drawing-export = { workspace = true }
+-semio-s-artifact-stdio-semio-drawing-import = { workspace = true }
+-semio-s-artifact-stdio-semio-image = { workspace = true }
+-semio-s-artifact-stdio-semio-value-model = { workspace = true }
+-semio-s-artifact-stdio-semio-value-mutations = { workspace = true }
+-semio-s-artifact-stdio-svg = { workspace = true }
+-semio-s-artifact-stdio-txt = { workspace = true }
+ serde = { workspace = true }
+ serde_json = { workspace = true }
+ 
+diff --git a/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🗺️tiles/🌍️gis-policy/📦️packages/🦀️rust/Cargo.toml b/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🗺️tiles/🌍️gis-policy/📦️packages/🦀️rust/Cargo.toml
+index e87a7f12222..c3a5ae38d3d 100644
+--- a/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🗺️tiles/🌍️gis-policy/📦️packages/🦀️rust/Cargo.toml
++++ b/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🗺️tiles/🌍️gis-policy/📦️packages/🦀️rust/Cargo.toml
+@@ -43,21 +43,6 @@ semio-framework-ui-locale = { path = "../../../../../../../../../🧰️framewor
+ semio-framework-ui-scene = { workspace = true }
+ semio-s-artifact-gis-gismap-demo-asset = { path = "../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🎬️demo/📦️packages/🦀️rust" }
+ semio-s-artifact-gis-gismap-snapshot = { path = "../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
+-semio-s-artifact-stdio-dwg = { workspace = true }
+-semio-s-artifact-stdio-dxf = { workspace = true }
+-semio-s-artifact-stdio-json = { workspace = true }
+-semio-s-artifact-stdio-pdf = { workspace = true }
+-semio-s-artifact-stdio-png = { workspace = true }
+-semio-s-artifact-stdio-semio = { workspace = true }
+-semio-s-artifact-stdio-semio-base = { workspace = true }
+-semio-s-artifact-stdio-semio-drawing = { workspace = true }
+-semio-s-artifact-stdio-semio-drawing-export = { workspace = true }
+-semio-s-artifact-stdio-semio-drawing-import = { workspace = true }
+-semio-s-artifact-stdio-semio-image = { workspace = true }
+-semio-s-artifact-stdio-semio-value-model = { workspace = true }
+-semio-s-artifact-stdio-semio-value-mutations = { workspace = true }
+-semio-s-artifact-stdio-svg = { workspace = true }
+-semio-s-artifact-stdio-txt = { workspace = true }
+ serde = { workspace = true }
+ serde_json = { workspace = true }
+ 
+diff --git a/✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔄️layout/📦️packages/🦀️rust/Cargo.toml b/✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔄️layout/📦️packages/🦀️rust/Cargo.toml
+index c5ca4e01711..d21d0a4fd40 100644
+--- a/✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔄️layout/📦️packages/🦀️rust/Cargo.toml
++++ b/✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔄️layout/📦️packages/🦀️rust/Cargo.toml
+@@ -54,12 +54,6 @@ semio-framework-value-derive = { path = "../../../../../../../../../../../../../
+ semio-s-artifact-sequence-sequence-inferences = { path = "../../../../../🧬️schema/💡️inferences/📦️packages/🦀️rust" }
+ semio-s-artifact-sequence-sequence-schema = { path = "../../../../../🧬️schema/📦️packages/🦀️rust" }
+ semio-s-artifact-sequence-sequence-tests = { path = "../../../../../🧬️schema/💡️inferences/🧪️tests/🔬️unit/📦️packages/🦀️rust" }
+-semio-s-artifact-stdio-csv = { workspace = true }
+-semio-s-artifact-stdio-json = { workspace = true }
+-semio-s-artifact-stdio-md = { workspace = true }
+-semio-s-artifact-stdio-semio = { workspace = true }
+-semio-s-artifact-stdio-semio-base = { workspace = true }
+-semio-s-artifact-stdio-semio-flow = { workspace = true }
+ 
+ [features]
+ testkit = ["semio-s-artifact-sequence-sequence-schema/testkit", "semio-s-artifact-sequence-sequence-inferences/testkit", "semio-s-artifact-sequence-sequence-tests/testkit"]
+diff --git a/✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust/Cargo.toml b/✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust/Cargo.toml
+index 50b119427c2..bde9c9bd12a 100644
+--- a/✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust/Cargo.toml
++++ b/✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust/Cargo.toml
+@@ -52,11 +52,7 @@ semio-framework-ui-locale = { path = "../../../../../../../../../../../../../
+ semio-framework-value = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+ semio-framework-value-derive = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+ semio-s-artifact-sequence-sequence-schema = { path = "../../../📦️packages/🦀️rust" }
+-semio-s-artifact-stdio-csv = { workspace = true }
+-semio-s-artifact-stdio-json = { workspace = true }
+-semio-s-artifact-stdio-md = { workspace = true }
+ semio-s-artifact-stdio-semio = { workspace = true }
+-semio-s-artifact-stdio-semio-base = { workspace = true }
+ semio-s-artifact-stdio-semio-flow = { workspace = true }
+ 
+ [features]
+diff --git a/✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🔬️unit/📦️packages/🦀️rust/Cargo.toml b/✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🔬️unit/📦️packages/🦀️rust/Cargo.toml
+index 292f580be0f..1e373a1ff34 100644
+--- a/✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🔬️unit/📦️packages/🦀️rust/Cargo.toml
++++ b/✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🔬️unit/📦️packages/🦀️rust/Cargo.toml
+@@ -58,7 +58,6 @@ semio-s-artifact-stdio-csv = { workspace = true }
+ semio-s-artifact-stdio-json = { workspace = true }
+ semio-s-artifact-stdio-md = { workspace = true }
+ semio-s-artifact-stdio-semio = { workspace = true }
+-semio-s-artifact-stdio-semio-base = { workspace = true }
+ semio-s-artifact-stdio-semio-flow = { workspace = true }
+ 
+ [features]
+diff --git a/✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust/Cargo.toml b/✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust/Cargo.toml
+index 6338998b03e..dcc5702923f 100644
+--- a/✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust/Cargo.toml
++++ b/✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust/Cargo.toml
+@@ -52,9 +52,6 @@ semio-framework-ui-locale = { path = "../../../../../../../../../../../../🧰
+ semio-framework-value = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+ semio-framework-value-native-owned = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
+ semio-framework-value-derive = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+-semio-s-artifact-stdio-csv = { workspace = true }
+-semio-s-artifact-stdio-json = { workspace = true }
+-semio-s-artifact-stdio-md = { workspace = true }
+ semio-s-artifact-stdio-semio = { workspace = true }
+ semio-s-artifact-stdio-semio-base = { workspace = true }
+ semio-s-artifact-stdio-semio-flow = { workspace = true }
+diff --git a/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust/Cargo.toml b/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust/Cargo.toml
+index f46bb82dc60..afe7a70ef6b 100644
+--- a/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust/Cargo.toml
++++ b/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust/Cargo.toml
+@@ -34,7 +34,6 @@ semio-s-artifact-stdio-gltf = { workspace = true }
+ semio-s-artifact-stdio-json = { workspace = true }
+ semio-s-artifact-stdio-obj = { workspace = true }
+ semio-s-artifact-stdio-step = { workspace = true }
+-semio-s-artifact-stdio-step-geometry = { workspace = true }
+ semio-s-artifact-stdio-stl = { workspace = true }
+ serde_json = { workspace = true }
+ 
+diff --git a/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust/Cargo.toml b/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust/Cargo.toml
+index 783063c391b..e4c550e073a 100644
+--- a/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust/Cargo.toml
++++ b/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust/Cargo.toml
+@@ -53,7 +53,6 @@ semio-s-artifact-process-process3d-reference-solids = { workspace = true }
+ semio-s-artifact-stdio-semio-base = { workspace = true }
+ semio-s-artifact-stdio-semio-brep = { workspace = true }
+ semio-s-artifact-stdio-semio-flow = { workspace = true }
+-semio-s-artifact-stdio-step-geometry = { workspace = true }
+ serde_json = { workspace = true }
+ semio-s-artifact-stdio-step = { workspace = true }
+ 
+diff --git a/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🔨️modules/🏠️host/🧰️owned/📦️packages/🦀️rust/Cargo.toml b/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🔨️modules/🏠️host/🧰️owned/📦️packages/🦀️rust/Cargo.toml
+index 33fe0595bef..64dfb2a704c 100644
+--- a/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🔨️modules/🏠️host/🧰️owned/📦️packages/🦀️rust/Cargo.toml
++++ b/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🔨️modules/🏠️host/🧰️owned/📦️packages/🦀️rust/Cargo.toml
+@@ -36,8 +36,6 @@ semio-s-artifact-process-process3d-mut-machines = { workspace = true }
+ semio-s-artifact-process-process3d-mut-steps = { workspace = true }
+ semio-s-artifact-process-process3d-mut-stock = { workspace = true }
+ semio-s-artifact-process-process3d-mutations = { workspace = true }
+-semio-s-artifact-stdio-semio-brep = { workspace = true }
+-semio-s-artifact-stdio-semio-flow = { workspace = true }
+ 
+ [dev-dependencies]
+ semio-s-artifact-process-process3d-host-retained-cursors = { workspace = true, features = ["testkit"] }
+diff --git a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/📤️export/📦️packages/🦀️rust/Cargo.toml b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/📤️export/📦️packages/🦀️rust/Cargo.toml
+index 18fe1e537a6..306a2e2daf5 100644
+--- a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/📤️export/📦️packages/🦀️rust/Cargo.toml
++++ b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/📤️export/📦️packages/🦀️rust/Cargo.toml
+@@ -29,7 +29,6 @@ semio-s-artifact-stdio-semio-drawing = { workspace = true }
+ semio-s-artifact-stdio-semio-drawing-export = { workspace = true }
+ semio-s-artifact-stdio-semio-mesh = { workspace = true }
+ # 🧩️ Capability Dependencies
+-semio-s-artifact-stdio-dwg-model = { workspace = true }
+ semio-s-artifact-stdio-dwg-write = { workspace = true }
+ semio-s-artifact-stdio-gltf-model = { workspace = true }
+ semio-s-artifact-stdio-las = { workspace = true }
+diff --git a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/📥️import/📦️packages/🦀️rust/Cargo.toml b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/📥️import/📦️packages/🦀️rust/Cargo.toml
+index 9a225774827..251e7fa59ce 100644
+--- a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/📥️import/📦️packages/🦀️rust/Cargo.toml
++++ b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/📥️import/📦️packages/🦀️rust/Cargo.toml
+@@ -27,7 +27,6 @@ semio-s-artifact-stdio-dwg-snapshot = { workspace = true }
+ semio-s-artifact-stdio-semio-base = { workspace = true }
+ semio-s-artifact-stdio-semio-mesh = { workspace = true }
+ # 🧩️ Capability Dependencies
+-semio-s-artifact-stdio-dwg-model = { workspace = true }
+ semio-s-artifact-stdio-dwg-read = { workspace = true }
+ semio-s-artifact-stdio-gltf-model = { workspace = true }
+ semio-s-artifact-stdio-las = { workspace = true }
+diff --git a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📤️export/📦️packages/🦀️rust/Cargo.toml b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📤️export/📦️packages/🦀️rust/Cargo.toml
+index 95e2bb5a760..5fc15fce9c0 100644
+--- a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📤️export/📦️packages/🦀️rust/Cargo.toml
++++ b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📤️export/📦️packages/🦀️rust/Cargo.toml
+@@ -27,7 +27,6 @@ semio-s-artifact-stdio-dwg-snapshot = { workspace = true }
+ semio-s-artifact-stdio-semio-base = { workspace = true }
+ semio-s-artifact-stdio-semio-drawing = { workspace = true }
+ # 🧩️ Capability Dependencies
+-semio-s-artifact-stdio-dwg-model = { workspace = true }
+ semio-s-artifact-stdio-dwg-write = { workspace = true }
+ semio-s-artifact-stdio-dxf = { workspace = true }
+ semio-s-artifact-stdio-pdf = { workspace = true }
+diff --git a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/📤️export/📦️packages/🦀️rust/Cargo.toml b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/📤️export/📦️packages/🦀️rust/Cargo.toml
+index e9cc3d6381e..614f0434f79 100644
+--- a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/📤️export/📦️packages/🦀️rust/Cargo.toml
++++ b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/📤️export/📦️packages/🦀️rust/Cargo.toml
+@@ -28,7 +28,6 @@ semio-s-artifact-stdio-dwg-geometry = { workspace = true }
+ semio-s-artifact-stdio-semio-base = { workspace = true }
+ semio-s-artifact-stdio-semio-brep = { workspace = true }
+ # 🧩️ Capability Dependencies
+-semio-s-artifact-stdio-dwg-model = { workspace = true }
+ semio-s-artifact-stdio-dwg-write = { workspace = true }
+ semio-s-artifact-stdio-step = { workspace = true }
+ # /🧩️ Capability Dependencies
+diff --git a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/📥️import/📦️packages/🦀️rust/Cargo.toml b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/📥️import/📦️packages/🦀️rust/Cargo.toml
+index c9fd2f6051d..3988762701f 100644
+--- a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/📥️import/📦️packages/🦀️rust/Cargo.toml
++++ b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/📥️import/📦️packages/🦀️rust/Cargo.toml
+@@ -27,7 +27,6 @@ semio-s-artifact-stdio-dwg-geometry = { workspace = true }
+ semio-s-artifact-stdio-semio-base = { workspace = true }
+ semio-s-artifact-stdio-semio-brep = { workspace = true }
+ # 🧩️ Capability Dependencies
+-semio-s-artifact-stdio-dwg-model = { workspace = true }
+ semio-s-artifact-stdio-dwg-read = { workspace = true }
+ semio-s-artifact-stdio-step = { workspace = true }
+ # /🧩️ Capability Dependencies
+diff --git a/✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/📦️packages/🦀️rust/Cargo.toml b/✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/📦️packages/🦀️rust/Cargo.toml
+index 634375bdb11..fd35d2e171a 100644
+--- a/✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/📦️packages/🦀️rust/Cargo.toml
++++ b/✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/📦️packages/🦀️rust/Cargo.toml
+@@ -42,15 +42,8 @@ semio-framework-ui-locale = { path = "../../../../../../../../../../../../../
+ semio-framework-ui-scene = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust" }
+ semio-framework-value = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+ semio-framework-value-derive = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+-semio-s-artifact-stdio-json = { workspace = true }
+-semio-s-artifact-stdio-obj = { workspace = true }
+-semio-s-artifact-stdio-png = { workspace = true }
+ semio-s-artifact-stdio-semio = { workspace = true }
+-semio-s-artifact-stdio-semio-base = { workspace = true }
+ semio-s-artifact-stdio-semio-kit = { workspace = true }
+-semio-s-artifact-stdio-stl = { workspace = true }
+-semio-s-artifact-stdio-txt = { workspace = true }
+-semio-s-artifact-stdio-zip = { workspace = true }
+ 
+ [dev-dependencies]
+ serde.workspace = true
+diff --git a/✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/⚙️operations/📦️packages/🦀️rust/Cargo.toml b/✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/⚙️operations/📦️packages/🦀️rust/Cargo.toml
+index a181520a022..70af14e01cc 100644
+--- a/✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/⚙️operations/📦️packages/🦀️rust/Cargo.toml
++++ b/✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/⚙️operations/📦️packages/🦀️rust/Cargo.toml
+@@ -45,14 +45,7 @@ semio-framework-value-derive = { path = "../../../../../../../../../../../../../
+ semio-s-artifact-sourcing-curation-domain = { path = "../../../🧾️domain/📦️packages/🦀️rust" }
+ semio-s-artifact-sourcing-curation-examples = { path = "../../../../📚️examples/🎬️demo/📦️packages/🦀️rust" }
+ semio-s-artifact-stdio-json = { workspace = true }
+-semio-s-artifact-stdio-obj = { workspace = true }
+-semio-s-artifact-stdio-png = { workspace = true }
+-semio-s-artifact-stdio-semio = { workspace = true }
+-semio-s-artifact-stdio-semio-base = { workspace = true }
+ semio-s-artifact-stdio-semio-kit = { workspace = true }
+-semio-s-artifact-stdio-stl = { workspace = true }
+-semio-s-artifact-stdio-txt = { workspace = true }
+-semio-s-artifact-stdio-zip = { workspace = true }
+ 
+ [dev-dependencies]
+ serde.workspace = true
+diff --git a/✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust/Cargo.toml b/✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust/Cargo.toml
+index db07cecf562..95cb25045b1 100644
+--- a/✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust/Cargo.toml
++++ b/✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust/Cargo.toml
+@@ -44,15 +44,7 @@ semio-s-artifact-sourcing-curation-domain = { path = "../../../🧾️domain/
+ semio-s-artifact-sourcing-curation-examples = { path = "../../../../📚️examples/🎬️demo/📦️packages/🦀️rust" }
+ semio-s-artifact-sourcing-curation-operations = { path = "../../../⚙️operations/📦️packages/🦀️rust" }
+ semio-s-artifact-sourcing-curation-schema = { path = "../../../📦️packages/🦀️rust" }
+-semio-s-artifact-stdio-json = { workspace = true }
+-semio-s-artifact-stdio-obj = { workspace = true }
+-semio-s-artifact-stdio-png = { workspace = true }
+ semio-s-artifact-stdio-semio = { workspace = true }
+-semio-s-artifact-stdio-semio-base = { workspace = true }
+-semio-s-artifact-stdio-semio-kit = { workspace = true }
+-semio-s-artifact-stdio-stl = { workspace = true }
+-semio-s-artifact-stdio-txt = { workspace = true }
+-semio-s-artifact-stdio-zip = { workspace = true }
+ 
+ [dev-dependencies]
+ serde.workspace = true
+diff --git a/✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🔬️unit/📦️packages/🦀️rust/Cargo.toml b/✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🔬️unit/📦️packages/🦀️rust/Cargo.toml
+index 729275720bb..51c0609951c 100644
+--- a/✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🔬️unit/📦️packages/🦀️rust/Cargo.toml
++++ b/✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🔬️unit/📦️packages/🦀️rust/Cargo.toml
+@@ -46,13 +46,9 @@ semio-s-artifact-sourcing-curation-inferences = { path = "../../../../📦️pac
+ semio-s-artifact-sourcing-curation-operations = { path = "../../../../../⚙️operations/📦️packages/🦀️rust" }
+ semio-s-artifact-sourcing-curation-schema = { path = "../../../../../📦️packages/🦀️rust" }
+ semio-s-artifact-stdio-json = { workspace = true }
+-semio-s-artifact-stdio-obj = { workspace = true }
+-semio-s-artifact-stdio-png = { workspace = true }
+ semio-s-artifact-stdio-semio = { workspace = true }
+ semio-s-artifact-stdio-semio-base = { workspace = true }
+ semio-s-artifact-stdio-semio-kit = { workspace = true }
+-semio-s-artifact-stdio-stl = { workspace = true }
+-semio-s-artifact-stdio-txt = { workspace = true }
+ semio-s-artifact-stdio-zip = { workspace = true }
+ 
+ [dev-dependencies]
+diff --git a/✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust/Cargo.toml b/✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust/Cargo.toml
+index 336a29bac1e..0b74c9e9744 100644
+--- a/✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust/Cargo.toml
++++ b/✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust/Cargo.toml
+@@ -43,15 +43,8 @@ semio-framework-value-derive = { path = "../../../../../../../../../../../../
+ semio-s-artifact-sourcing-curation-domain = { path = "../../🧾️domain/📦️packages/🦀️rust" }
+ semio-s-artifact-sourcing-curation-examples = { path = "../../../📚️examples/🎬️demo/📦️packages/🦀️rust" }
+ semio-s-artifact-sourcing-curation-operations = { path = "../../⚙️operations/📦️packages/🦀️rust" }
+-semio-s-artifact-stdio-json = { workspace = true }
+-semio-s-artifact-stdio-obj = { workspace = true }
+-semio-s-artifact-stdio-png = { workspace = true }
+-semio-s-artifact-stdio-semio = { workspace = true }
+ semio-s-artifact-stdio-semio-base = { workspace = true }
+ semio-s-artifact-stdio-semio-kit = { workspace = true }
+-semio-s-artifact-stdio-stl = { workspace = true }
+-semio-s-artifact-stdio-txt = { workspace = true }
+-semio-s-artifact-stdio-zip = { workspace = true }
+ 
+ [dev-dependencies]
+ serde.workspace = true
+diff --git a/✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧾️domain/📦️packages/🦀️rust/Cargo.toml b/✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧾️domain/📦️packages/🦀️rust/Cargo.toml
+index 991f75f3072..6ff0625a667 100644
+--- a/✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧾️domain/📦️packages/🦀️rust/Cargo.toml
++++ b/✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧾️domain/📦️packages/🦀️rust/Cargo.toml
+@@ -45,13 +45,9 @@ semio-framework-value-native-owned = { path = "../../../../../../../../../../../
+ semio-framework-value-derive = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+ semio-s-artifact-sourcing-curation-examples = { path = "../../../../📚️examples/🎬️demo/📦️packages/🦀️rust" }
+ semio-s-artifact-stdio-json = { workspace = true }
+-semio-s-artifact-stdio-obj = { workspace = true }
+-semio-s-artifact-stdio-png = { workspace = true }
+ semio-s-artifact-stdio-semio = { workspace = true }
+ semio-s-artifact-stdio-semio-base = { workspace = true }
+ semio-s-artifact-stdio-semio-kit = { workspace = true }
+-semio-s-artifact-stdio-stl = { workspace = true }
+-semio-s-artifact-stdio-txt = { workspace = true }
+ semio-s-artifact-stdio-zip = { workspace = true }
+ 
+ [dev-dependencies]
+diff --git a/✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/📦️packages/🦀️rust/Cargo.toml b/✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/📦️packages/🦀️rust/Cargo.toml
+index 60e1c81ce10..75ae49c3b96 100644
+--- a/✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/📦️packages/🦀️rust/Cargo.toml
++++ b/✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/📦️packages/🦀️rust/Cargo.toml
+@@ -38,13 +38,9 @@ semio-framework-schema-state = { path = "../../../../../../../🧰️framework/
+ semio-framework-schema-registry = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
+ semio-framework-2d = { path = "../../../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust" }
+ semio-s-artifact-stdio-json = { workspace = true }
+-semio-s-artifact-stdio-obj = { workspace = true }
+-semio-s-artifact-stdio-png = { workspace = true }
+ semio-s-artifact-stdio-semio = { workspace = true }
+ semio-s-artifact-stdio-semio-base = { workspace = true }
+ semio-s-artifact-stdio-semio-kit = { workspace = true }
+-semio-s-artifact-stdio-stl = { workspace = true }
+-semio-s-artifact-stdio-txt = { workspace = true }
+ semio-s-artifact-stdio-zip = { workspace = true }
+ semio-framework-os-kernel = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+ semio-framework = { path = "../../../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }

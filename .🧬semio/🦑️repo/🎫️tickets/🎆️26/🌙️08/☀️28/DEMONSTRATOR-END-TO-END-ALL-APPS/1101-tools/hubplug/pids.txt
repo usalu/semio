@@ -1,0 +1,20 @@
+pid 6604 hubplug-t7 list
+pid 14750 hubplug-t8 host lib tests
+descendants of 14750: 14770
+pid 81520 hubplug-13 narrow check (freeze exception)
+pid 92738 hubplug-hub-1
+pid 15577 hubplug-t9 host lib tests
+pid 35279 hubplug-t10 sourcing curation workspace lib tests
+pid 87893 hubplug-t11 sourcing curation tests
+pid 40776 hubplug-t12 sourcing curation tests
+pid 7277 hubplug-t13 sourcing lib tests 1 thread
+53415
+pid 77335 hubplug-s3 overflow test
+pid 73541 hubplug-s4
+pid 95279 hubplug-s5
+pid 34282 hubplug-s6
+pid 15438 hubplug-s7 (debug residue print in time-travel ledger+ref-reads: REMOVE)
+pid 10604 hubplug-p1 process3d host lib tests
+pid 41336 hubplug-p2
+pid 46026 hubplug-s8
+pid 17298 hubplug-s9

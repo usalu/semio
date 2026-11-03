@@ -53,13 +53,15 @@ fn origin(model: &SemioModelSnapshot, id: &str) -> [f64; 3] {
     objects_from_model_snapshot(model).into_iter().find(|object| object.id == id).expect("object survives").origin
 }
 
+const UNBOUNDED_STEP_GRANT: semio_framework_job::RetainedCloneGrant = semio_framework_job::RetainedCloneGrant { maximum_items: usize::MAX, maximum_copy_bytes: usize::MAX, maximum_capacity_bytes: usize::MAX, maximum_release_bytes: usize::MAX, maximum_depth: usize::MAX };
+
 /// 📦️ `emit` with every owned-child preparation driven to its ready wire group, as the runtime's bounded driver does.
 fn prepared(mut emit: Emit<CadMutation, CadConfigMutation>) -> Emit<CadMutation, CadConfigMutation> {
     for _ in 0..4096 {
-        match emit.prepare_child_one(1, 65_536).expect("bounded child preparation") {
-            ChildEmitPreparationStep::Ready => return emit,
-            ChildEmitPreparationStep::Pending => {}
-            ChildEmitPreparationStep::Refused(fault) => panic!("child preparation refused: {}", fault.message),
+        match emit.prepare_child_one(UNBOUNDED_STEP_GRANT).expect("bounded child preparation") {
+            ChildEmitPreparationStep::Ready(_) => return emit,
+            ChildEmitPreparationStep::Pending(_) => {}
+            ChildEmitPreparationStep::Refused(fault, _) => panic!("child preparation refused: {}", fault.message),
         }
     }
     panic!("child preparation must complete within its authored bound");
@@ -107,7 +109,7 @@ fn nothing_to_move_leaves_zero_trace() {
     let models = models();
     let history = HistoryView::empty();
     let document = semio_s_artifact_cad_cad_model::snapshot::empty_cad_snapshot();
-    let doc = ArtifactView::with_operation(&document, &history, AppOperationContext { app_instance_id: 1, parent_document_id: "cad-test-document".into(), operation_id: 1, generation: 1, canonical_base_revision: [0; 32], authoring_seed: "seed-c".into() });
+    let doc = ArtifactView::with_operation(&document, &history, AppOperationContext { app_instance_id: 1, parent_document_id: "cad-test-document".into(), operation_id: 1, generation: 1, canonical_base_revision: [0; 32], retained: UNBOUNDED_STEP_GRANT, authoring_seed: "seed-c".into() });
     for entries in [
         vec![CadToolEntry::Transform(CadTransformRecord::drag(ids(&["ghost"]), [1.0, 0.0, 0.0]))],
         vec![CadToolEntry::Transform(CadTransformRecord::drag(ids(&["object-a"]), [0.0, 0.0, 0.0]))],

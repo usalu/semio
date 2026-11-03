@@ -1,0 +1,11 @@
+--- a/🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/🫴️receiving/📦️document/🦀️.rs
++++ b/🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/🫴️receiving/📦️document/🦀️.rs
+@@ -6,7 +6,7 @@
+ impl DocumentOwner{
+  pub(super) fn new(limits:PackLimits,length:usize,maximum:usize)->Self{Self{storage:None,initialized:false,limits,length,maximum,closed:false}}
+  fn driver(&self)->Option<&RetainedDocumentDriver>{self.initialized.then(||unsafe{self.storage.as_ref().unwrap().assume_init_ref()})}
+- fn driver_mut(&mut self)->Option<&mut RetainedDocumentDriver>{if self.initialized{Some(unsafe{self.storage.as_mut().unwrap().assume_init_mut()})}else{None}}
++ fn driver_mut(&mut self)->Option<&mut RetainedDocumentDriver>{if self.initialized{self.storage.as_mut().map(|storage|unsafe{storage.assume_init_mut()})}else{None}}
+  fn advance<S:RetainedWireByteSource+?Sized>(&mut self,source:&S,range:(usize,usize),maximum:usize)->RetainedWorkOutcome<Option<Token>,PackRefusal>{
+   if self.closed{return RetainedWorkOutcome{result:Err(PackRefusal::from(invalid("closed Document driver cannot advance"))),work:0}}
+   if self.storage.is_none(){

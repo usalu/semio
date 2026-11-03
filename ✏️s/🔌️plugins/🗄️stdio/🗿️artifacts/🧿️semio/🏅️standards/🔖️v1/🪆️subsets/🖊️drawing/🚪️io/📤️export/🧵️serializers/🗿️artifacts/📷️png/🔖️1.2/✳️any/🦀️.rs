@@ -16,6 +16,8 @@
 //! @see https://www.w3.org/TR/SVG11/painting.html
 //! @see https://www.w3.org/TR/SVG11/implnote.html#ArcImplementationNotes
 
+extern crate semio_framework_os_kernel as store;
+
 use semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba;
 #[cfg(test)] use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioTransform};
 use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawNode, DrawStyle, SemioDrawingSnapshot};
@@ -347,8 +349,3 @@ impl ArtifactSerializer for SemioDrawingToPng {
 }
 //#endregion 🔖️Serializer
 
-//#region 🔖️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🔖️Tests

@@ -118,8 +118,8 @@ impl OriginalCallerSourceLoan{
   if cx.retirement_should_yield(){return Ok(InteractiveJobCloseStep::Blocked);}
   crate::close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|grant|{
    if !self.closing{self.closing=true;return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(metadata())),work:1};}
-   if self.original.as_ref().expect("original absent").terminal_is_empty(){self.original.take();self.clock_authority=None;return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(metadata())),work:1};}
-   let turn=self.original.as_mut().expect("original absent").return_borrowed_alias(witness,grant);RetainedWorkOutcome{result:turn.result.map(RetainedCloneStep::Progress),work:turn.work}
+   let Some(original)=self.original.as_ref()else{return RetainedWorkOutcome{result:Err(semio_framework_value_retained_clone::ValueError::invariant("original absent")),work:0}};if original.terminal_is_empty(){self.original.take();self.clock_authority=None;return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(metadata())),work:1};}
+   let Some(original)=self.original.as_mut()else{return RetainedWorkOutcome{result:Err(semio_framework_value_retained_clone::ValueError::invariant("original absent")),work:0}};let turn=original.return_borrowed_alias(witness,grant);RetainedWorkOutcome{result:turn.result.map(RetainedCloneStep::Progress),work:turn.work}
   })
  }
 }

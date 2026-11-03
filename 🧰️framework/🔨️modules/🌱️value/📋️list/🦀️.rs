@@ -187,6 +187,11 @@ impl<T, const N: usize> PagedList<T, N> {
         Self { root: Vec::new(), length: 0, capacity: 0, allocated: 0, payload_page_bytes: PAGE_BYTES }
     }
 
+    /// 🪶️ Selects exactly `items` elements per payload page so a small owner never reserves the 4096-byte default page.
+    pub fn with_page_items(items: usize) -> Self {
+        Self { payload_page_bytes: items.max(1).saturating_mul(size_of::<T>().max(1)).min(PAGE_BYTES).max(size_of::<T>()), ..Self::empty() }
+    }
+
     /// 🎟️ Selects a payload allocation ceiling before this owner acquires any backing.
     pub fn with_payload_page_bytes(maximum_bytes: usize) -> Result<Self, PagedListError> {
         if maximum_bytes == 0 || maximum_bytes < size_of::<T>() {

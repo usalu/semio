@@ -3169,6 +3169,7 @@ dependencies = [
  "semio-framework-job-payload",
  "semio-framework-job-testing-caller",
  "semio-framework-trace",
+ "semio-framework-value",
  "semio-framework-value-native-owned",
  "semio-framework-value-retained-clone",
  "semio-framework-value-shared-issuance",
@@ -3195,6 +3196,7 @@ dependencies = [
  "semio-framework-job-payload",
  "semio-framework-job-receiving",
  "semio-framework-trace",
+ "semio-framework-value",
  "semio-framework-value-derive",
  "semio-framework-value-native-owned",
  "semio-framework-value-retained-clone",
@@ -8629,9 +8631,9 @@ dependencies = [
  "semio-framework-replication-local-interaction",
  "semio-framework-replication-mutation",
  "semio-framework-replication-mutation-messages",
- "semio-framework-replication-mutation-retained",
- "semio-framework-replication-mutation-retained-field",
  "semio-framework-replication-presence",
+ "semio-framework-replication-retained",
+ "semio-framework-replication-retained-field",
  "semio-framework-replication-wire-core",
  "semio-framework-value",
 ]
@@ -8831,31 +8833,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-framework-replication-mutation-retained"
-version = "0.1.0"
-dependencies = [
- "semio-framework-diagnostic",
- "semio-framework-mutation-diff",
- "semio-framework-replication-mutation",
- "semio-framework-replication-mutation-messages",
- "semio-framework-replication-mutation-retained-field",
- "semio-framework-value",
- "semio-framework-value-factory",
- "semio-framework-value-native-owned",
- "semio-framework-value-persistent",
- "semio-framework-value-snapshot-projection",
-]
-
-[[package]]
-name = "semio-framework-replication-mutation-retained-field"
-version = "0.1.0"
-dependencies = [
- "semio-framework-mutation-diff",
- "semio-framework-value",
- "semio-framework-value-persistent",
-]
-
-[[package]]
 name = "semio-framework-replication-presence"
 version = "0.1.0"
 dependencies = [
@@ -8864,6 +8841,31 @@ dependencies = [
  "semio-framework-replication-interaction",
  "semio-framework-replication-wire-core",
  "semio-framework-value",
+]
+
+[[package]]
+name = "semio-framework-replication-retained"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-diagnostic",
+ "semio-framework-mutation-diff",
+ "semio-framework-replication-mutation",
+ "semio-framework-replication-mutation-messages",
+ "semio-framework-replication-retained-field",
+ "semio-framework-value",
+ "semio-framework-value-factory",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
+ "semio-framework-value-snapshot-projection",
+]
+
+[[package]]
+name = "semio-framework-replication-retained-field"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-mutation-diff",
+ "semio-framework-value",
+ "semio-framework-value-persistent",
 ]
 
 [[package]]
@@ -10357,8 +10359,6 @@ dependencies = [
  "semio-s-artifact-process-process3d-mut-steps",
  "semio-s-artifact-process-process3d-mut-stock",
  "semio-s-artifact-process-process3d-mutations",
- "semio-s-artifact-stdio-semio-brep",
- "semio-s-artifact-stdio-semio-flow",
  "serde_json",
 ]
 
@@ -10416,7 +10416,6 @@ dependencies = [
  "semio-s-artifact-stdio-json",
  "semio-s-artifact-stdio-obj",
  "semio-s-artifact-stdio-step",
- "semio-s-artifact-stdio-step-geometry",
  "semio-s-artifact-stdio-stl",
  "serde_json",
 ]
@@ -10481,7 +10480,6 @@ dependencies = [
  "semio-s-artifact-stdio-semio-brep",
  "semio-s-artifact-stdio-semio-flow",
  "semio-s-artifact-stdio-step",
- "semio-s-artifact-stdio-step-geometry",
  "serde_json",
 ]
 
@@ -16497,30 +16495,6 @@ dependencies = [
  "semio-s-artifact-stdio-step-ladder",
  "semio-s-artifact-stdio-step-mutations",
  "semio-s-artifact-stdio-step-snapshot",
-]
-
-[[package]]
-name = "semio-s-artifact-stdio-step-geometry"
-version = "0.1.0"
-dependencies = [
- "semio-framework-3d-brep-construction",
- "semio-framework-3d-brep-curve",
- "semio-framework-3d-brep-engine",
- "semio-framework-3d-brep-queries",
- "semio-framework-3d-brep-representation",
- "semio-framework-3d-brep-surface",
- "semio-framework-3d-brep-tolerance",
- "semio-framework-3d-brep-validation",
- "semio-framework-3d-brep-vector",
- "semio-framework-dsl-record",
- "semio-framework-os-kernel",
- "semio-framework-pack-json",
- "semio-framework-schema",
- "semio-framework-schema-composition",
- "semio-framework-schema-state",
- "semio-framework-value",
- "semio-framework-value-derive",
- "semio-s-spatial-kernel-semio-session",
 ]
 
 [[package]]

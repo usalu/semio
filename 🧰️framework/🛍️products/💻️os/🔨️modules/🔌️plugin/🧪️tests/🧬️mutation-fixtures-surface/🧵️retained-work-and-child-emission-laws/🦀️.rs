@@ -22,7 +22,7 @@ async fn retained_command_work_borrows_original_fuel_and_fallback_charges_once()
         fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
             use semio_framework_job::{InteractiveJobCloseStep as Step,RetainedCloneProgress};
             if !self.closing{return Ok(Step::Blocked)}let Some(original)=self.observed.as_ref()else{return Ok(Step::Complete{progress:Default::default()})};let copy=std::mem::size_of::<Option<std::sync::Arc<std::sync::atomic::AtomicU64>>>();let physical=semio_framework_value::shared_retirement_allocation_bytes::<std::sync::atomic::AtomicU64>();let demand=semio_framework_value::RetirementDemand{copy_bytes:copy,release_bytes:if std::sync::Arc::strong_count(original)==1{physical}else{0},depth:1,..Default::default()};
-            semio_framework_job::close_original_retained_step(cx,demand,|_|{if std::sync::Arc::weak_count(self.observed.as_ref().unwrap())!=0{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original work probe retains an outstanding weak source"))}let unique=std::sync::Arc::into_inner(self.observed.take().unwrap()).is_some();Ok(semio_framework_value::RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:copy,released_bytes:if unique{physical}else{0},..Default::default()}))})
+            semio_framework_job::close_original_retained_step(cx,demand,|_|semio_framework_value::RetainedWorkOutcome{work:1,result:(||->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>{if std::sync::Arc::weak_count(self.observed.as_ref().unwrap())!=0{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original work probe retains an outstanding weak source"))}let unique=std::sync::Arc::into_inner(self.observed.take().unwrap()).is_some();Ok(semio_framework_value::RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:copy,released_bytes:if unique{physical}else{0},..Default::default()}))})()})
         }
 
         fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(if self.observed.is_some(){std::mem::size_of::<Option<std::sync::Arc<std::sync::atomic::AtomicU64>>>()}else{0})}
@@ -49,8 +49,10 @@ async fn retained_command_work_borrows_original_fuel_and_fallback_charges_once()
         let mut job = ArtifactRetainedCommandJob::new(payload);
         assert!(job.test_admit_original_source(&mut cx).expect("actual original source binds the preborn fixture job"));
         let mut observed_work=false;
+        let mut origin=semio_framework_job::OriginalJobReturnOrigin::empty();
+        for _ in 0..crate::app_testing::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){if origin.body_ready(){break}cx.with_retained_loan(SURFACE_ONE_UNIT_POLICY,|same|origin.admit(same).map(|_|())).expect("original return origin admission")}
         for _ in 0..crate::app_testing::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){
-            let before=cx.fuel_remaining();let mut outcome=None;cx.with_retained_loan(SURFACE_ONE_UNIT_POLICY,|same|{outcome=Some(crate::app_testing::artifact_app_laws::fixture_step(&mut job,same));Ok(())}).unwrap();assert!(!matches!(outcome.unwrap(),crate::app_testing::artifact_app_laws::FixtureStepOutcome::Fault(_)));
+            let before=cx.fuel_remaining();let mut outcome=None;cx.with_retained_loan(SURFACE_ONE_UNIT_POLICY,|same|{outcome=Some(crate::app_testing::artifact_app_laws::fixture_step(&mut job,same,origin.receiver()?));Ok(())}).unwrap();assert!(!matches!(outcome.unwrap(),crate::app_testing::artifact_app_laws::FixtureStepOutcome::Fault(_)));
             if observed.load(std::sync::atomic::Ordering::SeqCst)!=u64::MAX{assert!(before>1);assert_eq!(observed.load(std::sync::atomic::Ordering::SeqCst),before);assert_eq!(cx.fuel_remaining(),before-row["workDebit"].as_u64().unwrap());observed_work=true;break}
         }
         assert!(observed_work);assert_eq!(cx.original_recipient_identity(),recipient);
@@ -59,11 +61,14 @@ async fn retained_command_work_borrows_original_fuel_and_fallback_charges_once()
             let step=cx.with_retained_loan(SURFACE_ONE_UNIT_POLICY,|same|job.close_step(same)).expect("original retained command close");assert!(step.progress().fits(SURFACE_ONE_UNIT_POLICY));match step{semio_framework_job::InteractiveJobCloseStep::Complete{..}=>break,semio_framework_job::InteractiveJobCloseStep::Pending{..}=>{},other=>panic!("one-unit original fixed policy retained its frontier: {other:?}")}
         }
         assert!(job.terminal_is_empty());
+        surface_close_origin(&mut origin,&mut cx);
         assert!(consumer.take_emit().unwrap().is_none());
         crate::app_testing::mutation_fixture::job_close::retire_completion(consumer,&mut cx,SURFACE_ONE_UNIT_POLICY);
         close_registered_fixture_app(&mut app,crate::app_testing::artifact_app_laws::fixture_mounted_policy(),&mut cx).unwrap();assert_eq!(cx.original_recipient_identity(),recipient);let fuel=cx.fuel_remaining();drop(cx);let fuel=original_caller.retire_decoder(&mut decoder,fuel).unwrap();original_caller.retire(fuel).unwrap();
     }
 }
+
+macro_rules! lane_advance{($lane:expr,$member:expr,$visibility:expr,$grant:expr)=>{{let mut observer=|_|true;let mut native=store::MemberNativeDecodeControl::new(1<<20,&mut observer);$lane.advance($member,$visibility,4096,$grant,&mut native)}}}
 
 #[test]
 fn surface_owned_mutation_admission_forwards_exact_birth_and_preserves_every_denied_original() {
@@ -137,7 +142,7 @@ async fn child_emission_private_typed_lanes_stage_three_original_batches_and_ret
             let mut lane = PrivateOwnedPublicationLane::new(request);
             let admitted = lane.next_capacity_byte_demand(&*app.stores.store).unwrap();
             for (items, bytes) in [(0, admitted), (1, admitted - 1)] {
-                let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| lane.advance(&mut app.stores.store, &visibility, store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: items, maximum_capacity_bytes: bytes, ..grant }).unwrap());
+                let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| lane_advance!(lane, &mut *app.stores.store, &visibility, store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: items, maximum_capacity_bytes: bytes, ..grant }).unwrap());
                 assert_eq!(step, store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
                 assert_eq!(events.requested_bytes, 0);
                 assert_eq!(events.released_bytes, 0);
@@ -149,7 +154,7 @@ async fn child_emission_private_typed_lanes_stage_three_original_batches_and_ret
         let mut turns = 0;
         let mut index = 0;
         while index < lanes.len() && stop.is_none_or(|stop| turns < stop) {
-            lanes[index].advance(&mut *apps[index].stores.store, &visibility, grant).unwrap();
+            lane_advance!(lanes[index], &mut *apps[index].stores.store, &visibility, grant).unwrap();
             if lanes[index].prepared_for_staging() {
                 let identity = lanes[index].prepared_edit_id().unwrap();
                 assert!(!identity.is_empty());
@@ -166,7 +171,7 @@ async fn child_emission_private_typed_lanes_stage_three_original_batches_and_ret
                 assert_eq!(same_pointer, pointer);
                 assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
                 let paused = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 0, ..grant };
-                assert_eq!(lanes[index].advance(&mut apps[index].stores.store, &visibility, paused).unwrap(), store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
+                assert_eq!(lane_advance!(lanes[index], &mut *apps[index].stores.store, &visibility, paused).unwrap(), store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
                 assert_eq!(lanes[index].prepared_edit_id().unwrap().as_ptr(), pointer);
             }
             assert_eq!(apps.iter().map(|app| app.stores.store.snapshot_ref().count).collect::<Vec<_>>(), vec![0; 3]);
@@ -180,7 +185,7 @@ async fn child_emission_private_typed_lanes_stage_three_original_batches_and_ret
             let (_, decision_heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| {
                 assert!(owner.commit());
                 for index in 0..3 {
-                    assert!(matches!(lanes[index].adopt(&mut apps[index].stores.store, &visibility, grant).unwrap(), store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(..)));
+                    assert!(matches!(lanes[index].adopt(&mut *apps[index].stores.store, &visibility, grant).unwrap(), store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(..)));
                     assert_eq!(apps[index].stores.store.generation_now(), 1);
                     assert_eq!(apps[index].stores.store.snapshot_ref().count, 1);
                 }
@@ -192,7 +197,7 @@ async fn child_emission_private_typed_lanes_stage_three_original_batches_and_ret
                 let demand = lanes[index].retirement_demands(grant.maximum_copy_bytes).unwrap();
                 assert!(demand.copy_bytes <= grant.maximum_copy_bytes && demand.capacity_bytes <= grant.maximum_capacity_bytes && demand.release_bytes <= grant.maximum_release_bytes && demand.depth <= grant.maximum_depth);
                 let exact = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
-                let step = lanes[index].close_step(&mut *apps[index].stores.store, exact).unwrap();
+                let step = lanes[index].close_step(&mut *apps[index].stores.store, cx, exact).unwrap();
                 assert!(step.progress().fits(exact));
                 if matches!(step, semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) { break; }
             }
@@ -255,7 +260,7 @@ async fn child_emission_private_group_row_frames_preserve_original_sources_on_ev
             let demand = group.retirement_demands(grant.maximum_copy_bytes).unwrap();
             assert!(demand.copy_bytes <= grant.maximum_copy_bytes && demand.capacity_bytes <= grant.maximum_capacity_bytes && demand.release_bytes <= grant.maximum_release_bytes && demand.depth <= grant.maximum_depth);
             let exact=grant;
-            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| original_group_caller.turn(exact,|same|semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(same,exact,demand,|incoming,loan|{let step=group.close_step(&mut app.stores.store,&mut app.child_composition.children,&mut graph,&app.child_composition.child_content_root,incoming,loan)?;Ok((semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(step.progress()),false))}).map_err(Into::into)).unwrap());
+            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| original_group_caller.turn(exact,|same|semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(same,exact,demand,|incoming,loan|{let step=group.close_step(&mut *app.stores.store,&mut app.child_composition.children,&mut graph,&app.child_composition.child_content_root,incoming,loan)?;Ok((semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep::Progress(step.progress()),false))}).map_err(Into::into)).unwrap());
             assert!(step.progress().unwrap().fits(exact));
             assert_eq!((heap.requested_bytes, heap.released_bytes), (step.progress().unwrap().retained_capacity_bytes, step.progress().unwrap().released_bytes));
         }

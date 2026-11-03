@@ -1,6 +1,5 @@
 //! 👥️ Presence retirement witnesses that need the snapshot-read registry: boxed closes, returned-string admission and registry alias closure; the generic factory and observers are re-exported from the testing crate.
 use semio_framework_value::{retained_clone::{RetainedCloneGrant, RetainedCloneStep}, ErasedSnapshotRetirement, RetainedWorkOutcome};
-use semio_framework_value_testing_presence_retirement::observed_step;
 pub use semio_framework_value_testing_presence_retirement::CLOSE_GRANT;
 use std::sync::Arc;
 
@@ -39,7 +38,7 @@ pub fn finish_box(owner: &mut Option<Box<dyn ErasedSnapshotRetirement>>) -> usiz
 pub fn finish_registry(registry: crate::SnapshotReadRegistryHandle) {
     let mut original = Some(crate::SnapshotReadRegistryAliasRetirement::new(registry));
     for _ in 0..4096 {
-        observed_step(CLOSE_GRANT, || RetainedWorkOutcome { result: crate::snapshot_registry_alias_close_step(&mut original, CLOSE_GRANT), work: 1 });
+        semio_framework_value_testing_presence_retirement::observed_step(CLOSE_GRANT, || RetainedWorkOutcome { result: crate::snapshot_registry_alias_close_step(&mut original, CLOSE_GRANT), work: 1 });
         if original.is_none() { return; }
     }
     panic!("original Presence registry failed funded physical closure")

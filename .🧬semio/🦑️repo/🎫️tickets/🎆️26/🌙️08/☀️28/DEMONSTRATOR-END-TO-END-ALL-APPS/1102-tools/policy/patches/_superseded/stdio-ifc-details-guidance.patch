@@ -1,0 +1,29 @@
+--- a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🔎️details/🧶️guidance/type-guidance.rs
++++ b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🔎️details/🧶️guidance/type-guidance.rs
+@@ -1551,7 +1551,7 @@
+                 let (_, length, pin) = self.choice_shape()?;
+                 let count = length + usize::from(pin.is_some());
+                 let physical = OriginalConstructionDemand { items: 1, copy_bytes: base + size_of::<Choices>(), capacity_bytes: count * size_of::<StagedScalarChoice>(), release_bytes: 0, depth: 1 };
+-                if admit_original_construction(cx, &mut self.page.as_mut().unwrap().fields[self.state.field].choices, physical, |_| costed((|| -> Result<_, ValueError> {
++                if admit_original_construction(cx, &mut self.page.as_mut().ok_or_else(invalid)?.fields[self.state.field].choices, physical, |_| costed((|| -> Result<_, ValueError> {
+                     let mut rows = Vec::new();
+                     rows.try_reserve_exact(count).map_err(|_| ValueError::literal(ValueRefusalKind::AllocationFailed, "type declared choices"))?;
+                     let capacity = rows.capacity() * size_of::<StagedScalarChoice>();
+@@ -1598,7 +1598,7 @@
+             }
+             39 => {
+                 let physical = OriginalConstructionDemand { items: 1, copy_bytes: base + size_of::<Vec<(String, DslValue)>>(), capacity_bytes: 2 * size_of::<(String, DslValue)>(), release_bytes: 0, depth: 1 };
+-                if admit_original_construction(cx, &mut self.choice_parts.as_mut().unwrap().payload, physical, |_| costed((|| -> Result<_, ValueError> {
++                if admit_original_construction(cx, &mut self.choice_parts.as_mut().ok_or_else(invalid)?.payload, physical, |_| costed((|| -> Result<_, ValueError> {
+                     let mut fields = Vec::new();
+                     fields.try_reserve_exact(2).map_err(|_| ValueError::literal(ValueRefusalKind::AllocationFailed, "type enum payload"))?;
+                     let capacity = fields.capacity() * size_of::<(String, DslValue)>();
+@@ -1613,7 +1613,7 @@
+             }
+             83=>{
+                 let physical=OriginalConstructionDemand{items:1,copy_bytes:base+size_of::<Vec<(String,DslValue)>>(),capacity_bytes:size_of::<(String,DslValue)>(),release_bytes:0,depth:1};
+-                if admit_original_construction(cx,&mut self.choice_parts.as_mut().unwrap().bits,physical,|_| costed((|| -> Result<_, ValueError> {let mut fields=Vec::new();fields.try_reserve_exact(1).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"numeric bit carrier"))?;let capacity=fields.capacity()*size_of::<(String,DslValue)>();Ok((fields,RetainedCloneProgress{copied_items:1,copied_bytes:physical.copy_bytes,retained_capacity_bytes:capacity,..Default::default()}))})()))?{self.state.phase=40;}
++                if admit_original_construction(cx,&mut self.choice_parts.as_mut().ok_or_else(invalid)?.bits,physical,|_| costed((|| -> Result<_, ValueError> {let mut fields=Vec::new();fields.try_reserve_exact(1).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"numeric bit carrier"))?;let capacity=fields.capacity()*size_of::<(String,DslValue)>();Ok((fields,RetainedCloneProgress{copied_items:1,copied_bytes:physical.copy_bytes,retained_capacity_bytes:capacity,..Default::default()}))})()))?{self.state.phase=40;}
+             }
+             40 => {
+                 let word = self.choice_word()?;

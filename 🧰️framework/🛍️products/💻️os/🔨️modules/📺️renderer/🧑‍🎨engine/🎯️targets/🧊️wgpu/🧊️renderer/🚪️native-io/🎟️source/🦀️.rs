@@ -160,8 +160,8 @@ impl RendererSourceIoNode{
   if self.published_path.is_none()&&!self.path_reservation.as_ref().is_some_and(OriginalNativePathReservation::ready){
    let reservation=&mut self.path_reservation;let identity=&mut self.path_identity;let call=self.caller.dispatch_step(|cx|{*identity=Some(cx.original_source_parent()?.source_identity()?);PATH_RETURNS.reserve(reservation,cx)});self.accept(call);return
   }
-  let reservation=&mut self.path_reservation;let output=&mut self.published_path;let invocation=&mut self.invocation;
-  let call=self.caller.dispatch_step(|cx|invocation.supply_selected_path(reservation.as_mut().unwrap(),output,cx));self.accept(call);
+  let Some(reservation)=self.path_reservation.as_mut()else{self.failure=Some(RendererSourceIoFailureKind::WrongResult);return};let output=&mut self.published_path;let invocation=&mut self.invocation;
+  let call=self.caller.dispatch_step(|cx|invocation.supply_selected_path(reservation,output,cx));self.accept(call);
  }
 
  fn pump_contiguous(&mut self){
@@ -174,7 +174,7 @@ impl RendererSourceIoNode{
     Ok(())
    });self.accept(call);return
   }
-  let maximum=match self.mode{RendererSourceIoMode::Contiguous{maximum}=>maximum,_=>unreachable!()};
+  let RendererSourceIoMode::Contiguous{maximum}=self.mode else{self.failure=Some(RendererSourceIoFailureKind::WrongResult);return};
   if let Some(actual)=self.invocation.known_file_length(){if actual>maximum{self.failure=Some(RendererSourceIoFailureKind::Extent(NativeIoStreamRefusal{length:actual,maximum_bytes:maximum}));return}if let Some(expected)=self.contiguous_extent{if expected!=actual{self.failure=Some(RendererSourceIoFailureKind::ChangedExtent{expected,actual});return}}else{self.contiguous_extent=Some(actual);}}
   if !self.invocation.outcome_is_acknowledged(){
    let failure=match self.invocation.borrow_outcome(){Ok(Some(JobOutcomeView::Fault{..}))=>Some(RendererSourceIoFailureKind::NativeFault),Ok(Some(JobOutcomeView::Cancelled{..}))=>Some(RendererSourceIoFailureKind::Cancelled),Ok(_)=>None,Err(error)=>{self.retain(error);return}};
@@ -194,7 +194,7 @@ impl RendererSourceIoNode{
    if !self.bytes_reservation.as_ref().is_some_and(OriginalJobBytesReservation::ready){let reservation=&mut self.bytes_reservation;let identity=&mut self.bytes_identity;let call=self.caller.dispatch_step(|cx|{*identity=Some(cx.original_source_parent()?.source_identity()?);BYTE_RETURNS.reserve(reservation,cx)});self.accept(call);return}
    let reservation=&mut self.bytes_reservation;let bytes=&mut self.contiguous;let output=&mut self.published_bytes;let call=self.caller.dispatch_step(|cx|reservation.as_mut().unwrap().publish(bytes,output,cx));self.accept(call);return
   }
-  let offset=self.contiguous.as_ref().unwrap().retained_length()as u64;let invocation=&mut self.invocation;let call=self.caller.dispatch_step(|cx|invocation.restart_read_page(offset,semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES,cx));if self.accept(call)==Some(true){self.contiguous_consumed=false;}
+  let Some(contiguous)=self.contiguous.as_ref()else{self.failure=Some(RendererSourceIoFailureKind::WrongResult);return};let offset=contiguous.retained_length()as u64;let invocation=&mut self.invocation;let call=self.caller.dispatch_step(|cx|invocation.restart_read_page(offset,semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES,cx));if self.accept(call)==Some(true){self.contiguous_consumed=false;}
  }
  fn close_one(&mut self){
   use semio_framework_job::InteractiveJob;
@@ -207,7 +207,7 @@ impl RendererSourceIoNode{
   if !self.invocation.terminal_is_empty(){let invocation=&mut self.invocation;invocation.begin_close();let call=self.caller.dispatch_cleanup_step(|cx|invocation.close_step(cx).map(|_|()));self.accept(call);return}
   if self.request.is_some(){let request=&mut self.request;let orphan=&mut self.orphan;let call=self.caller.dispatch_cleanup_step(|cx|{semio_framework_job::close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{*orphan=Some(NativeIoJob::new(request.take().unwrap()));orphan.as_mut().unwrap().begin_close();semio_framework_value::RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}})?;Ok(())});self.accept(call);return}
   if let Some(orphan)=self.orphan.as_ref(){if !orphan.terminal_is_empty(){let orphan=&mut self.orphan;let call=self.caller.dispatch_cleanup_step(|cx|orphan.as_mut().unwrap().close_step(cx).map(|_|()));self.accept(call);}else{let orphan=&mut self.orphan;let call=self.caller.dispatch_cleanup_step(|cx|{semio_framework_job::close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{orphan.take();semio_framework_value::RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}})?;Ok(())});self.accept(call);}return}
-  if let Some(index)=self.refusals.iter().position(Option::is_some){if !self.caller.ready(){if matches!(self.refusals[index].as_ref().unwrap().message,std::borrow::Cow::Borrowed(_)){self.refusals[index].take();}else{return}}else{let refusal=&mut self.refusals[index];let release=match &refusal.as_ref().unwrap().message{std::borrow::Cow::Owned(text)=>text.capacity(),_=>0};let call=self.caller.dispatch_cleanup_step(|cx|{semio_framework_job::close_original_retained_step(cx,RetirementDemand{release_bytes:release,depth:1,..Default::default()},|_|{refusal.take();semio_framework_value::RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:release,..Default::default()})),work:1}})?;Ok(())});self.accept(call);}return}
+  if let Some(index)=self.refusals.iter().position(Option::is_some){if !self.caller.ready(){if self.refusals[index].as_ref().is_some_and(|refusal|matches!(refusal.message,std::borrow::Cow::Borrowed(_))){self.refusals[index].take();}else{return}}else{let refusal=&mut self.refusals[index];let release=match refusal.as_ref().map(|refusal|&refusal.message){Some(std::borrow::Cow::Owned(text))=>text.capacity(),_=>0};let call=self.caller.dispatch_cleanup_step(|cx|{semio_framework_job::close_original_retained_step(cx,RetirementDemand{release_bytes:release,depth:1,..Default::default()},|_|{refusal.take();semio_framework_value::RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:release,..Default::default()})),work:1}})?;Ok(())});self.accept(call);}return}
   if self.bytes_identity.is_some_and(|identity|BYTE_RETURNS.retains_source(identity)){let call=self.caller.dispatch_cleanup_step(|cx|{BYTE_RETURNS.close_returned_step(cx)?;Ok(())});self.accept(call);return}
   if self.path_identity.is_some_and(|identity|PATH_RETURNS.retains_source(identity)){let call=self.caller.dispatch_cleanup_step(|cx|{PATH_RETURNS.close_returned_step(cx)?;Ok(())});self.accept(call);return}
   if !self.caller.original_loans_are_returned(){return}

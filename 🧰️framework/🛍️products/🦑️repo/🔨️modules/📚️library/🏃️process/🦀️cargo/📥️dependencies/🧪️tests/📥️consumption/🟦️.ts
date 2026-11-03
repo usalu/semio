@@ -38,7 +38,7 @@ test("Cargo relay consumption classifies only declared compiler and resolution c
 test("a nested offline registry read is covered by an online declaration and never the converse",async()=>{
  const source=await readFile(new URL("../../🟢️ready/💾️storage/🟦️.ts",import.meta.url),"utf8"),tree=ts.createSourceFile("ready.ts",source,ts.ScriptTarget.Latest,true);let text="";
  tree.forEachChild(node=>{if(ts.isVariableStatement(node)&&node.getText(tree).includes("registryCoveredV1"))text=node.getText(tree);});
- expect(text).toContain('row.args.includes("--offline")&&scope.selections.has(');expect(text).toContain("offline:false");expect(source).toContain("options.requests.some(row=>!registryCoveredV1(scope,row))");expect(source).not.toContain("[DEBUG]");
+ expect(text).toContain('row.args.includes("--offline")&&scope.selections.has(');expect(text).toContain("offline:false");expect(source).toContain("options.requests.find(value=>!registryCoveredV1(scope,value))");expect(source).not.toContain("[DEBUG]");
 });
 
 test("scheduler cold bootstrap retains admitted inputs before capacity and honors original network authority",async()=>{

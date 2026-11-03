@@ -88,9 +88,9 @@ impl semio_framework_dsl_record::BorrowedDslField for ByteBuffer { const SHAPE: 
 impl semio_framework_dsl_record::DslField for ByteBuffer {
     fn shape() -> semio_framework_dsl_record::Shape { semio_framework_dsl_record::Shape::Bytes64 }
     fn shape_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::Shape, semio_framework_value::ValueError> { control.checkpoint()?; Ok(semio_framework_dsl_record::Shape::Bytes64) }
-    fn to_value(&self) -> semio_framework_dsl_record::FieldValue { semio_framework_dsl_record::FieldValue::Bytes64(self.0.clone()) }
-    fn to_value_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_dsl_record::FieldValue, semio_framework_value::ValueError> { control.copy_bytes(&self.0).map(semio_framework_dsl_record::FieldValue::Bytes64) }
-    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> { match value { semio_framework_dsl_record::FieldValue::Bytes64(bytes) => Ok(Self(bytes.clone())), _ => Err("expected literal octets".into()) } }
+    fn to_value(&self) -> semio_framework_dsl_record::FieldValue { semio_framework_dsl_record::FieldValue::Bytes64(semio_framework_value::paged::PagedBytes::try_from_slice(&self.0).unwrap_or_default()) }
+    fn to_value_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_dsl_record::FieldValue, semio_framework_value::ValueError> { semio_framework_value::paged::PagedBytes::copy_encoded(&self.0, control).map(semio_framework_dsl_record::FieldValue::Bytes64) }
+    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> { match value { semio_framework_dsl_record::FieldValue::Bytes64(bytes) => Ok(Self(bytes.to_vec_owner())), _ => Err("expected literal octets".into()) } }
     fn from_value_controlled(value: &semio_framework_dsl_record::FieldValue, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> { match value { semio_framework_dsl_record::FieldValue::Bytes64(bytes) => control.copy_bytes(bytes).map(Self), _ => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected literal octets")) } }
 }
 //#endregion 🔖️Buffers

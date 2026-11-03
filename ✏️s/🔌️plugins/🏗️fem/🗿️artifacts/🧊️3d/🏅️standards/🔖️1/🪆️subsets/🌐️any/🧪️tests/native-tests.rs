@@ -1,5 +1,11 @@
 use super::*;
-use semio_framework_value_native_owned::native_decoding::NativeDecodeConstructionRecipient;
+use semio_framework_value_native_owned::native_decoding::{NativeDecodeConstructionRecipient, NativeDecodeWorkRecipient};
+struct Loan;
+impl NativeDecodeWorkRecipient for Loan {
+    fn admits(&mut self, _: u64, _: u64) -> Result<bool, ValueError> {
+        Ok(true)
+    }
+}
 fn original() -> RetainedCloneGrant {
     RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 16384, maximum_capacity_bytes: 65536, maximum_release_bytes: 65536, maximum_depth: 64 }
 }
@@ -29,7 +35,7 @@ fn close(rx: &mut Fem3dReceiving) {
         }
         let d = rx.close_demands(original().maximum_copy_bytes).unwrap();
         assert!(retained_clone_grant_admits(original(), d));
-        let p = rx.close_step(original()).unwrap().progress();
+        let p = rx.close_step(original()).result.unwrap().progress();
         assert!(p.fits(original()));
     }
     panic!("receiving failed to close");
@@ -94,6 +100,12 @@ fn denied_capture_and_physical_frontier_preserve_original_owner() {
     let (mut rx, _) = Fem3dReceiving::capture(value, original()).map_err(|(e, _)| e).unwrap();
     let mut callback = |_| true;
     let mut control = NativeDecodeControl::new(1_000_000, &mut callback);
+    let mut turns = 0;
+    while rx.demands(4096).unwrap().capacity_bytes == 0 {
+        assert!(turns < 100_000 && !rx.terminal_is_empty(), "no capacity frontier reached");
+        rx.advance(&mut control, 4096, original()).unwrap();
+        turns += 1;
+    }
     let before = rx.demands(4096).unwrap();
     let no_capacity = RetainedCloneGrant { maximum_capacity_bytes: 0, ..original() };
     assert_eq!(rx.advance(&mut control, 4096, no_capacity).unwrap().progress(), RetainedCloneProgress::default());
@@ -135,12 +147,16 @@ fn actual_pack_receiving_retains_original_wallet_and_persistent_output() {
     let mut callback = |_| true;
     let mut native = NativeDecodeControl::new(128 * 1024 * 1024, &mut callback);
     native.install_retirement_recipient(&mut recipient).unwrap();
-    let mut owner = store::NativeSnapshotDecodeOwner::new(&mut native, wallet());
-    let output = <Fem3dSnapshot as store::ArtifactPackReceiving>::receive_pack(&source, &mut owner).unwrap();
-    assert_eq!(output.nodes.get(1).unwrap().z, 6.);
-    assert_eq!(output.materials.get(0).unwrap().e, 2e11);
-    assert!(owner.progress().retained_capacity_bytes > 0);
-    drop(owner);
+    let output = native
+        .with_work_recipient(&mut Loan, |native| {
+            let mut owner = store::NativeSnapshotDecodeOwner::new(native, wallet());
+            let output = <Fem3dSnapshot as store::ArtifactPackReceiving>::receive_pack(&source, &mut owner).unwrap();
+            assert_eq!(output.nodes.get(1).unwrap().z, 6.);
+            assert_eq!(output.materials.get(0).unwrap().e, 2e11);
+            assert!(owner.progress().retained_capacity_bytes > 0);
+            Ok::<_, ValueError>(output)
+        })
+        .unwrap();
     assert!(!native.has_retirement_owner());
     let expected = pack::snapshot::ArtifactPack::encode_pack(&output);
     let mut publish = |_| true;
@@ -168,10 +184,14 @@ fn actual_pack_cancelled_inside_large_material_name_keeps_original_retirement_ow
     let mut callback = |p: semio_framework_value_native_owned::native_decoding::NativeDecodeProgress| p.owned_bytes < 70000;
     let mut native = NativeDecodeControl::new(128 * 1024 * 1024, &mut callback);
     native.install_retirement_recipient(&mut recipient).unwrap();
-    let mut owner = store::NativeSnapshotDecodeOwner::new(&mut native, wallet());
-    let error = <Fem3dSnapshot as store::ArtifactPackReceiving>::receive_pack(&source, &mut owner).unwrap_err();
-    assert_eq!(error.kind, ValueRefusalKind::Canceled);
-    drop(owner);
+    native
+        .with_work_recipient(&mut Loan, |native| {
+            let mut owner = store::NativeSnapshotDecodeOwner::new(native, wallet());
+            let error = <Fem3dSnapshot as store::ArtifactPackReceiving>::receive_pack(&source, &mut owner).unwrap_err();
+            assert_eq!(error.kind, ValueRefusalKind::Canceled);
+            Ok::<_, ValueError>(())
+        })
+        .unwrap();
     assert!(native.has_retirement_owner());
     native
         .with_retirement(wallet(), |native| {
@@ -179,7 +199,7 @@ fn actual_pack_cancelled_inside_large_material_name_keeps_original_retirement_ow
                 if !native.has_retirement_owner() {
                     return Ok(());
                 }
-                native.close_retirement_recipient(wallet())?;
+                native.close_retirement_recipient(wallet()).result?;
             }
             Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "retirement never closed"))
         })
@@ -197,12 +217,16 @@ fn actual_owner_receives_a_ten_thousand_node_fixture_with_bounded_identity_work(
     let mut recipient = semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient::new();
     let mut native = NativeDecodeControl::new(512 * 1048576, &mut observer);
     native.install_retirement_recipient(&mut recipient).unwrap();
-    let mut owner = store::NativeSnapshotDecodeOwner::new(&mut native, grant);
-    let output = Fem3dSnapshot::receive_authoring(&mut value, &mut owner).unwrap();
-    assert_eq!(output.nodes.len(), count);
-    assert_eq!(output.nodes.get(count - 1).unwrap().id.as_str(), "n09999");
-    assert!(owner.progress().copied_items < grant.maximum_items);
-    drop(owner);
+    let output = native
+        .with_work_recipient(&mut Loan, |native| {
+            let mut owner = store::NativeSnapshotDecodeOwner::new(native, grant);
+            let output = Fem3dSnapshot::receive_authoring(&mut value, &mut owner).unwrap();
+            assert_eq!(output.nodes.len(), count);
+            assert_eq!(output.nodes.get(count - 1).unwrap().id.as_str(), "n09999");
+            assert!(owner.progress().copied_items < grant.maximum_items);
+            Ok::<_, ValueError>(output)
+        })
+        .unwrap();
     assert!(!native.has_retirement_owner());
     let mut close = semio_framework_value::retirement::controlled::ControlledRetirement::new(output).ok().unwrap();
     while !close.terminal_is_empty() {
@@ -223,11 +247,15 @@ fn actual_chain_receiving_identity_and_reference_work_scales_below_threefold() {
         let mut recipient = semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient::new();
         let mut native = NativeDecodeControl::new(128 * 1048576, &mut observer);
         native.install_retirement_recipient(&mut recipient).unwrap();
-        let mut owner = store::NativeSnapshotDecodeOwner::new(&mut native, wallet());
-        let output = Fem3dSnapshot::receive_authoring(&mut value, &mut owner).unwrap();
-        assert_eq!(output.elements.len(), count - 1);
-        let work = owner.progress().copied_items;
-        drop(owner);
+        let (output, work) = native
+            .with_work_recipient(&mut Loan, |native| {
+                let mut owner = store::NativeSnapshotDecodeOwner::new(native, wallet());
+                let output = Fem3dSnapshot::receive_authoring(&mut value, &mut owner).unwrap();
+                assert_eq!(output.elements.len(), count - 1);
+                let work = owner.progress().copied_items;
+                Ok::<_, ValueError>((output, work))
+            })
+            .unwrap();
         let mut close = semio_framework_value::retirement::controlled::ControlledRetirement::new(output).ok().unwrap();
         while !close.terminal_is_empty() {
             close.step(wallet()).unwrap();
@@ -240,5 +268,67 @@ fn drain<T: RetireOwned>(value: T) {
     let mut owner = semio_framework_value::retirement::controlled::ControlledRetirement::new(value).ok().unwrap();
     while !owner.terminal_is_empty() {
         owner.step(original()).unwrap();
+    }
+}
+
+#[test]
+fn receiving_charges_below_sixty_four_kibibytes_of_retained_capacity_per_node() {
+    let count = 1000;
+    let mut value = Some(Fem3dSnapshotValue::default());
+    value.as_mut().unwrap().nodes = (0..count).map(|i| FemNodeValue { id: format!("n{i:05}"), x: i as f64, y: 0., z: 0. }).collect();
+    let limit = count * 64 * 1024;
+    let grant = RetainedCloneGrant { maximum_items: 10_000_000, maximum_copy_bytes: 512 * 1048576, maximum_capacity_bytes: limit, maximum_release_bytes: 512 * 1048576, maximum_depth: 128 };
+    let mut observer = |_| true;
+    let mut recipient = semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient::new();
+    let mut native = NativeDecodeControl::new(limit, &mut observer);
+    native.install_retirement_recipient(&mut recipient).unwrap();
+    let output = native
+        .with_work_recipient(&mut Loan, |native| {
+            let mut owner = store::NativeSnapshotDecodeOwner::new(native, grant);
+            let output = Fem3dSnapshot::receive_authoring(&mut value, &mut owner).unwrap();
+            assert!(owner.progress().retained_capacity_bytes <= limit);
+            Ok::<_, ValueError>(output)
+        })
+        .unwrap();
+    let mut close = semio_framework_value::retirement::controlled::ControlledRetirement::new(output).ok().unwrap();
+    while !close.terminal_is_empty() {
+        close.step(grant).unwrap();
+    }
+}
+
+#[test]
+fn debug_per_step_capacity() {
+    const GRANT: RetainedCloneGrant = RetainedCloneGrant { maximum_items: 10_000_000, maximum_copy_bytes: 1 << 26, maximum_capacity_bytes: 1 << 28, maximum_release_bytes: 1 << 28, maximum_depth: 128 };
+    struct Big;
+    impl NativeDecodeConstructionRecipient for Big {
+        fn grant(&mut self, _: RetirementDemand) -> Result<RetainedCloneGrant, ValueError> {
+            Ok(GRANT)
+        }
+        fn accept(&mut self, _: RetainedCloneGrant, _: RetainedCloneProgress) -> Result<(), ValueError> {
+            Ok(())
+        }
+    }
+    for n in [1usize, 3] {
+        let mut v = Fem3dSnapshotValue::default();
+        v.nodes = (0..n).map(|i| FemNodeValue { id: format!("n{i}"), x: 0., y: 0., z: 0. }).collect();
+        let (mut rx, _) = Fem3dReceiving::capture(v, GRANT).map_err(|(e, _)| e).unwrap();
+        let mut callback = |_| true;
+        let mut control = NativeDecodeControl::new(1 << 28, &mut callback);
+        let (mut steps, mut total) = (0usize, 0usize);
+        control
+            .with_construction_recipient(&mut Big, |control| -> Result<(), ValueError> {
+                while !rx.ready() {
+                    let p = rx.advance(control, GRANT.maximum_copy_bytes, GRANT)?.progress();
+                    steps += 1;
+                    total += p.retained_capacity_bytes;
+                    if p.retained_capacity_bytes >= 256 {
+                        eprintln!("[DEBUG] n={n} step {steps} phase-capacity {}", p.retained_capacity_bytes);
+                    }
+                }
+                Ok(())
+            })
+            .unwrap();
+        eprintln!("[DEBUG] n={n} steps {steps} total capacity {total}");
+        close(&mut rx);
     }
 }

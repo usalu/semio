@@ -178,14 +178,14 @@ pub async fn settle(app: &mut FlowAppFixture) {
 
 /// 🚫️ Settles a refused retained command while preserving its typed code and message.
 pub async fn settle_refusal(app: &mut FlowAppFixture) -> semio_framework_plugin::Fault {
-    semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.err().expect("the handler refuses by name")
+    semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.err().map(|failure| match failure.primary { semio_framework_plugin::PluginLifecyclePrimary::Fault(fault) => fault, other => panic!("the handler refuses by a typed fault, not {other:?}") }).expect("the handler refuses by name")
 }
 
 /// 🪆️ The scene the window renders and every verb edits: the composed content child, decoded from its own store —
 /// never the parent's genesis owner (see `crate::flow_composed_snapshot`).
 pub async fn composed_scene(app: &FlowApp) -> semio_framework_artifact_flow_flow::FlowHostSnapshot {
     use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
-    use store::SpaceMember, ReferenceSpaceMember;
+    use store::{SpaceMember, ReferenceSpaceMember};
     let snapshot = app.snapshot().expect("snapshot");
     let child = SemioFlowSnapshot::decode_pack(&app.child_store("content", &snapshot.content.child_id).await.expect("composed content child").document_pack_bytes().await.expect("content child pack")).expect("content child snapshot");
     let (widgets, synapses, layout) = crate::working_from_flow_content_snapshot(&child);
@@ -217,7 +217,58 @@ pub async fn select_graph(app: &mut FlowAppFixture, node_ids: &[&str], edge_ids:
     let mut targets: Vec<Value> = node_ids.iter().map(|id| serde_json::json!({ "granularity": "node", "id": flow_graph_node_target_id(id) })).collect();
     targets.extend(edge_ids.iter().map(|id| serde_json::json!({ "granularity": "edge", "id": flow_graph_edge_target_id(id) })));
     let targets_json = serde_json::to_string(&targets).expect("targets json");
-    let args = semio_framework_value::DslValue::from(serde_json::json!({ "domainId": FLOW_INTERACTION_GRAPH, "targets": targets_json, "merge": "replace" }));
+    let args = semio_framework_dsl::DslValue::from(serde_json::json!({ "domainId": FLOW_INTERACTION_GRAPH, "targets": targets_json, "merge": "replace" }));
     let admitted = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "interactionSelect", Some(args.clone()), &flow_main_window_meta(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("interactionSelect admission");
-    semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await.expect("interactionSelect reserved-job commit");
+    semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted, app.1.cx()).await.expect("interactionSelect reserved-job commit");
+}
+
+/// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
+pub fn every_command() -> Vec<FlowCommand> {
+    use semio_framework_artifact_flow_flow::CameraJson;
+    vec![
+        FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: Some("originalOperator雪".into()), x: Some(10.0), y: Some(20.0), label: Some("originalLabel🌊️".into()), action: Some("originalAction雪".into()), format: Some("originalFormat🌊️".into()) }),
+        FlowCommand::RemoveWidget(remove_widget::RemoveWidget { widget_id: "n1".into() }),
+        FlowCommand::DuplicateWidget(duplicate_widget::DuplicateWidget { widget_id: "n1".into() }),
+        FlowCommand::DeleteSelection(delete_selection::DeleteSelection {}),
+        FlowCommand::Disconnect(disconnect::Disconnect { synapse_id: "s1".into() }),
+        FlowCommand::ConnectMediaPorts(connect_media_ports::ConnectMediaPorts { source_node_id: "n1".into(), source_port_id: "out".into(), target_node_id: "n2".into(), target_port_id: "in".into() }),
+        FlowCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id: "n1".into(), x: 1.0, y: 2.0 }),
+        FlowCommand::Reorganize(reorganize::Reorganize {}),
+        FlowCommand::PatchFlowWidgets(patch_flow_widgets::PatchFlowWidgets { widget_ids: vec!["n1".into(), "n2".into()], field: "value".into(), value: "5".into() }),
+        FlowCommand::RenameFlowWidget(rename_flow_widget::RenameFlowWidget { old_id: "n1".into(), value: "renamed".into() }),
+        FlowCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit {
+            operations: vec![
+                node_graph_edit::FlowNodeGraphEditOp::Delete { node_ids: vec!["n1".into()], synapse_ids: vec!["s1".into()] },
+                node_graph_edit::FlowNodeGraphEditOp::InsertPort { node_id: "n2".into(), side: "input".into(), index: 1 },
+                node_graph_edit::FlowNodeGraphEditOp::Connect { source_node_id: "n1".into(), source_port_id: "out".into(), target_node_id: "n2".into(), target_port_id: "in".into() },
+                node_graph_edit::FlowNodeGraphEditOp::Move { gesture_id: "originalGesture雪".into(), node_ids: vec!["n1".into(), "n2".into()], dx: 2.0, dy: 3.0 },
+                node_graph_edit::FlowNodeGraphEditOp::SetSlider { widget_id: "originalSlider🌊️".into(), value: 4.0 },
+            ],
+        }),
+        FlowCommand::SpotlightCommit(spotlight_commit::SpotlightCommit { operations: vec![spotlight_commit::FlowNodeGraphEditOp::Disconnect { synapse_id: "s1".into() }] }),
+        FlowCommand::RunExtensionAction(run_extension_action::RunExtensionAction { action_id: "flow.extension.reorganize".into() }),
+        FlowCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "demo".into() }),
+        FlowCommand::Evaluate(evaluate::Evaluate {}),
+        FlowCommand::FocusSelection(focus_selection::FocusSelection {}),
+        FlowCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: 1.0, y: 2.0, zoom: 1.5 } }),
+        FlowCommand::SetLodMode(set_lod_mode::SetLodMode { value: "micro".into() }),
+        FlowCommand::SetProximityDistance(set_proximity_distance::SetProximityDistance { value: 48.0 }),
+        FlowCommand::SetGridVisible(set_grid_visible::SetGridVisible { pressed: Some(true) }),
+        FlowCommand::SetGridSnapEnabled(set_grid_snap_enabled::SetGridSnapEnabled { pressed: None }),
+        FlowCommand::SetGridFactor(set_grid_factor::SetGridFactor { value: 10.0 }),
+        FlowCommand::ContextMenuAt(context_menu_at::ContextMenuAt { id: "n1".into() }),
+        FlowCommand::SetPreviewOff(set_preview_off::SetPreviewOff { ids: vec!["n1".into()], value: true }),
+        FlowCommand::OpenSpotlight(open_spotlight::OpenSpotlight {}),
+        FlowCommand::ReplaceImage(replace_image::ReplaceImage { id: "n1".into() }),
+        FlowCommand::SetCatalogueSections(set_catalogue_sections::SetCatalogueSections { sections_json: "[]".into() }),
+        FlowCommand::ToggleExtension(toggle_extension::ToggleExtension { id: "auto-layout".into(), enabled: true }),
+        FlowCommand::AddGeneration(add_generation::AddGeneration {}),
+        FlowCommand::RemoveGeneration(remove_generation::RemoveGeneration { id: "g1".into() }),
+        FlowCommand::SelectGeneration(select_generation::SelectGeneration { id: "g1".into() }),
+        FlowCommand::RenameGeneration(rename_generation::RenameGeneration { id: "g1".into(), name: "Copy".into() }),
+        FlowCommand::UpdateGenerationValues(update_generation_values::UpdateGenerationValues { generation_id: Some("g1".into()), question_id: "q1".into(), value: semio_framework_dsl::DslValue::float(5.0) }),
+        FlowCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick { window_id: FLOW_PLAY_WINDOW_MAIN.into(), window_kind_id: FLOW_PLAY_WINDOW_MAIN.into() }),
+        FlowCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve { window_id: FLOW_PLAY_WINDOW_MAIN.into(), node_hash: 42, output_json: Some(r#"{"done":true,"phase":"complete","unitsDone":1,"unitsTotal":1,"outputJson":"{}"}"#.into()) }),
+        FlowCommand::SetContributions(set_contributions::SetContributions { json: "[]".into(), page: 0, page_count: 1 }),
+    ]
 }

@@ -66,7 +66,7 @@ async fn curation_and_example_actions_survive_registry_enforcement() {
     crate::editor_unit_tests::context::dispatch(&mut app, SourcingCurationCommand::CurationAdd(crate::editor::sourcing::commands::curation_add::CurationAdd { object_id: object_id.clone() })).await;
     assert_eq!(crate::schema::curated_count(&app.snapshot().expect("snapshot"), &object_id), 1, "curationAdd is a document operation");
     let admitted = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, "undo", None, &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("undo");
-    semio_framework_plugin::app::settle_framework_reserved_admission(&mut app, admitted).await.expect("undo settles its reserved job");
+    semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted, app.1.cx()).await.expect("undo settles its reserved job");
     crate::editor_unit_tests::context::settle(&mut app).await;
     assert_eq!(crate::schema::curated_count(&app.snapshot().expect("snapshot"), &object_id), 0, "undo reverts the curation edit");
 }

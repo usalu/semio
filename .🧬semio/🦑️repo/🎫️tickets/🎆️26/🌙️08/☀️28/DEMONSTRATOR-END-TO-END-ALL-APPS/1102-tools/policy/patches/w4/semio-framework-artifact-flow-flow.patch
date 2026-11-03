@@ -1,0 +1,17 @@
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/🦀️.rs
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/🦀️.rs
+@@ -36,10 +36,10 @@
+     pub fn next_push_capacity_byte_demand(&self)->Result<usize,ValueError> {if self.queue.has_reserved_slot(){Ok(RetirementQueue::frame_birth_bytes::<FlowOwner>())}else{self.queue.next_reserve_capacity_byte_demand()}}
+     pub fn reserve_push(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneProgress,ValueError> {self.queue.reserve_step(grant)}
+     pub fn admit_owner(&mut self,owner:FlowOwner,grant:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneProgress,(ValueError,FlowOwner)> {self.queue.admit_owned(owner,grant)}
+-    pub fn push_cold(&mut self,owner:FlowOwner) {
+-        if self.root.is_none(){self.push(owner).unwrap_or_else(|_|panic!("empty Flow root admission refused"));return;}
+-        while !self.queue.has_reserved_slot(){self.reserve_push(RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:self.queue.next_reserve_capacity_byte_demand().expect("cold Flow queue capacity"),maximum_release_bytes:0,maximum_depth:self.queue.reserve_demand().expect("cold Flow queue depth").depth}).result.expect("cold Flow queue reservation");}
+-        self.admit_owner(owner,RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:RetirementQueue::frame_birth_bytes::<FlowOwner>(),maximum_release_bytes:0,maximum_depth:self.queue.len()+1}).result.unwrap_or_else(|(error,_)|panic!("cold Flow frame admission refused: {error}"));
++    pub fn push_cold(&mut self,owner:FlowOwner)->Result<(),ValueError>{
++        if self.root.is_none(){return self.push(owner).map(|_|()).map_err(|_|ValueError::invariant("empty Flow root admission refused"));}
++        while !self.queue.has_reserved_slot(){self.reserve_push(RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:self.queue.next_reserve_capacity_byte_demand()?,maximum_release_bytes:0,maximum_depth:self.queue.reserve_demand()?.depth}).result?;}
++        self.admit_owner(owner,RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:RetirementQueue::frame_birth_bytes::<FlowOwner>(),maximum_release_bytes:0,maximum_depth:self.queue.len()+1}).result.map(|_|()).map_err(|(error,_)|error)
+     }
+     pub fn terminal_is_empty(&self)->bool {self.root.is_none()&&self.queue.terminal_is_empty()}
+     pub fn selected_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{self.root.as_ref().map_or_else(||Ok(semio_framework_value::RetirementDemand{copy_bytes:self.queue.next_copy_byte_demand()?,capacity_bytes:self.queue.next_capacity_byte_demand(body)?,release_bytes:self.queue.next_release_byte_demand()?,depth:self.queue.next_depth_demand()?}),|root|root.selected_demand(body))}

@@ -18,8 +18,8 @@ export type WorkerPlanV1=Readonly<{version:1;enabled:boolean;protocol:"json";loc
 /** ☁️ The host facts a plan depends on. */
 export type WorkerHostV1=Readonly<{cores:number;memoryBytes:number}>;
 
-/** 🧵️ What the caller may override: the local job count and whether workers run at all. */
-export type WorkerOverridesV1=Readonly<{jobs?:number;workers?:boolean}>;
+/** 🧵️ What the caller may override: the local job count, whether workers run at all and how many actions of each kind the invocation actually plans; with `demand`, only kinds that have actions get workers and scarce instances go to the busiest kinds first. */
+export type WorkerOverridesV1=Readonly<{jobs?:number;workers?:boolean;demand?:Readonly<Partial<Record<WorkerActionKindV1,number>>>}>;
 
 /** 👷️ How exactly a build tool honours one contract field. */
 export type WorkerSupportV1="exact"|"approximate"|"unsupported";
@@ -50,14 +50,16 @@ export function workerActionKindV1(policy:WorkerPolicyV1,target:string,continuou
 /** 🖥️ Reads the facts of the running host. */
 export function currentWorkerHostV1(environment:Readonly<Record<string,string|undefined>>=process.env):WorkerHostV1{const host=hostProfileV1(environment,{totalMegabytes:Math.floor(totalmem()/1048576),cores:availableParallelism(),declared:false});return Object.freeze({cores:host.cores,memoryBytes:host.totalMegabytes*1048576});}
 
-/** 🧮️ Resolves the policy for one host: the local job count, the memory the pools may hold in total and how many instances each kind keeps. Every kind that uses workers first gets one instance, in the priority order test, check, generate, build, script, as far as the memory holds instances; the remaining instances then go to the kinds in the same order, up to their bound and the job count. A kind that finds no instance left runs without workers. */
+/** 🧭️ Spare instances go one at a time round-robin, starting with the kinds that carry the long compiler actions of an activation (build, script), so no kind starves and a build-only run never queues its compiles behind one instance. */
+const SPARE_INSTANCE_ORDER_V1:readonly WorkerActionKindV1[]=Object.freeze(["build","script","generate","check","test"]);
+/** 🧮️ Resolves the policy for one host: the local job count, the memory the pools may hold in total and how many instances each kind keeps. Every kind that uses workers first gets one instance, in the priority order test, check, generate, build, script, as far as the memory holds instances; the remaining instances then go one at a time round-robin, build and script first, up to each bound and the job count. A kind that finds no instance left runs without workers. */
 export function planWorkersV1(policy:WorkerPolicyV1,host:WorkerHostV1,overrides:WorkerOverridesV1={}):WorkerPlanV1{
  const enabled=overrides.workers??policy.enabled,jobs=overrides.jobs??clamp(host.cores,1,policy.localJobs.maximum);
  if(!Number.isSafeInteger(jobs)||jobs<1)throw Error("Worker job count must be a positive integer");
  const totalMegabytes=Math.max(64,Math.floor(host.memoryBytes/MEGABYTE*policy.memory.hostShareBasisPoints/10000)),instances=clamp(Math.floor(totalMegabytes/policy.memory.perWorkerMegabytes),1,1024);
- const wanted=WORKER_ACTION_KINDS_V1.filter(kind=>enabled&&policy.kinds[kind].workers),counts=new Map<WorkerActionKindV1,number>(wanted.slice(0,instances).map(kind=>[kind,1] as const));
+ const demand=overrides.demand,priority=(kind:WorkerActionKindV1)=>SPARE_INSTANCE_ORDER_V1.indexOf(kind),order=demand?[...SPARE_INSTANCE_ORDER_V1].sort((left,right)=>(demand[right]??0)-(demand[left]??0)||priority(left)-priority(right)):WORKER_ACTION_KINDS_V1,wanted=order.filter(kind=>enabled&&policy.kinds[kind].workers&&(!demand||(demand[kind]??0)>0)),counts=new Map<WorkerActionKindV1,number>(wanted.slice(0,instances).map(kind=>[kind,1] as const));
  let remaining=instances-counts.size;
- for(const kind of counts.keys()){const add=Math.min(Math.max(0,Math.min(policy.kinds[kind].maxInstances,jobs)-1),remaining);counts.set(kind,1+add);remaining-=add;}
+ for(let granted=true;granted&&remaining>0;){granted=false;for(const kind of demand?order:SPARE_INSTANCE_ORDER_V1)if(remaining>0&&counts.has(kind)&&counts.get(kind)!<Math.min(policy.kinds[kind].maxInstances,jobs)){counts.set(kind,counts.get(kind)!+1);remaining--;granted=true;}}
  const kinds={} as Record<WorkerActionKindV1,WorkerKindPolicyV1>;
  for(const kind of WORKER_ACTION_KINDS_V1){
   const row=policy.kinds[kind],count=counts.get(kind);

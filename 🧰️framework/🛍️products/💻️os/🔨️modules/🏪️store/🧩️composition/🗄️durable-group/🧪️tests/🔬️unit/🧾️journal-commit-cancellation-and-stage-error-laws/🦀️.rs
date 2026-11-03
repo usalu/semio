@@ -56,7 +56,7 @@ async fn durable_store_private_committed_record_recovers_all_three_stores_withou
     assert_eq!(host.phase(), Some(DurableOwnedThreeStoreCommitPhaseV1::StagingDrawing));
     let all_old = host.capture_snapshot().expect("pre-visibility recovery fault keeps one complete old triple visible");
     assert_eq!([all_old.parent.n, all_old.drawing.n, all_old.value.n], [Some(0), Some(0), Some(0)]);
-    *host.operation.as_mut().and_then(|operation| operation.drawing.as_mut()).expect("retained recovery keeps the exact drawing Store").snapshot_retirement_factory = drawing_retirement_factory;
+    *host.operation.as_mut().and_then(|operation| operation.drawing.as_mut()).expect("retained recovery keeps the exact drawing Store").owners.snapshot_retirement_factory = drawing_retirement_factory;
     let mut observed_post_visibility_retry = false;
     for _ in 0..4096 {
         if !observed_post_visibility_retry && host.phase() == Some(DurableOwnedThreeStoreCommitPhaseV1::AdoptingDrawing) {
@@ -65,7 +65,7 @@ async fn durable_store_private_committed_record_recovers_all_three_stores_withou
             assert_eq!(host.phase(), Some(DurableOwnedThreeStoreCommitPhaseV1::AdoptingDrawing));
             let all_new = host.capture_snapshot().expect("post-visibility recovery fault keeps one complete new triple visible");
             assert_eq!([all_new.parent.n, all_new.drawing.n, all_new.value.n], [Some(7), Some(11), Some(13)]);
-            *host.operation.as_mut().and_then(|operation| operation.drawing.as_mut()).expect("retained recovery keeps the exact drawing Store after visibility").snapshot_retirement_factory = drawing_retirement_factory;
+            *host.operation.as_mut().and_then(|operation| operation.drawing.as_mut()).expect("retained recovery keeps the exact drawing Store after visibility").owners.snapshot_retirement_factory = drawing_retirement_factory;
             observed_post_visibility_retry = true;
         }
         match host.advance(grant) {
@@ -251,7 +251,7 @@ async fn durable_store_group_stage_error_retains_abort_owner_until_every_root_is
     let grant = copy_grant(DURABLE_OWNED_GROUP_EVENT_MAX_BYTES);
     coordinator.advance(&mut parent, &mut drawing, &mut value, &mut sink, grant).expect("parent stages before injected drawing failure");
     assert_eq!(coordinator.phase(), DurableOwnedThreeStoreCommitPhaseV1::StagingDrawing);
-        assert!(parent.durable_group_root.as_ref().unwrap().retirement.as_ref().unwrap().planning_output.is_some(),"staged candidate retains its original encoded packet for controlled retirement");
+        assert!(parent.wire.durable_group_root.as_ref().unwrap().retirement.as_ref().unwrap().planning_output.is_some(),"staged candidate retains its original encoded packet for controlled retirement");
 let drawing_retirement_factory = drawing.owners.snapshot_retirement_factory.take();
     assert_eq!(coordinator.advance(&mut parent, &mut drawing, &mut value, &mut sink, grant), Err(DurableOwnedGroupDecisionError::InvalidFrontier));
     assert_eq!(coordinator.phase(), DurableOwnedThreeStoreCommitPhaseV1::AbortingValue);

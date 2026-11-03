@@ -228,6 +228,8 @@ pub use snapshot_wire_codec::*;
 pub fn evaluate_generation_preview(host_snapshot: &FlowHostSnapshot, values: &semio_framework_artifact_playbook_playbook::PlaybookValues) -> String {
     let mut host = generation_preview_host(host_snapshot, values);
     let evaluated = host.evaluate().unwrap_or_default();
-    host.retire_cold();
-    evaluated
+    match host.retire_cold() {
+        Ok(()) => evaluated,
+        Err(error) => format!("{{\"error\":{:?}}}", error.to_string()),
+    }
 }

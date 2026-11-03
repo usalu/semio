@@ -45,8 +45,8 @@ struct DomainFrame<T:OriginalDomainFailure>{owner:ControlledRetirement<DomainPay
 unsafe impl<T:OriginalDomainFailure> Sync for DomainFrame<T>{}
 impl<T:OriginalDomainFailure> DomainOwner for DomainFrame<T>{
  fn original(&self)->&dyn OriginalDomainProjection{self.owner.original().expect("original domain projection precedes retirement")}
- fn code(&self)->&str{let payload=self.owner.original().expect("original domain code precedes retirement");payload.original.as_ref().map_or("original.callback",OriginalDomainFailure::domain_code)}
- fn message(&self)->&str{let payload=self.owner.original().expect("original domain message precedes retirement");if let Some(original)=&payload.original{original.domain_message()}else{payload.callback_refusal.as_ref().or(payload.publication_refusal.as_ref()).expect("original domain retains a cause").primary.message()}}
+ fn code(&self)->&str{self.owner.original().and_then(|payload|payload.original.as_ref()).map_or("original.callback",OriginalDomainFailure::domain_code)}
+ fn message(&self)->&str{let Some(payload)=self.owner.original()else{return "original domain failure payload was retired"};if let Some(original)=&payload.original{original.domain_message()}else{payload.callback_refusal.as_ref().or(payload.publication_refusal.as_ref()).map_or("original domain failure retains no cause",|refusal|refusal.primary.message())}}
  fn progress(&self)->RetainedCloneProgress{self.owner.original().and_then(|payload|payload.original.as_ref()).map_or(Default::default(),OriginalDomainFailure::domain_retained_progress)}
  fn into_retirement(self:Box<Self>)->Box<dyn RetirementCursor>{self}
 }

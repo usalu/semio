@@ -197,8 +197,8 @@ fn archive_edit_arguments_are_required_in_both_dialects() {
     let rows = fixture();
     for row in rows["rejectedArguments"].as_array().unwrap() {
         let args: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(&row.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-        assert!(crate::editor::zip::base::ZipAnyEditor::command_from_action("set-node", Some((args).clone()), None).is_err(), "{row}");
-        assert!(crate::editor::zip::iso21320::ZipIso21320Editor::command_from_action("set-node", Some((args).clone()), None).is_err(), "{row}");
+        assert!(crate::editor::zip::base::ZipAnyEditor::command_from_action("set-node", &mut Some((args).clone()), &mut None).is_err(), "{row}");
+        assert!(crate::editor::zip::iso21320::ZipIso21320Editor::command_from_action("set-node", &mut Some((args).clone()), &mut None).is_err(), "{row}");
     }
 }
 
@@ -382,12 +382,12 @@ fn archive_registered_factory_resumes_the_exact_cursor_and_refuses_another_revis
     bus.register(BoundedNativeEditToolJobFactory::<Editor>::new("zip-replay")).unwrap();
     let operation = Operation::new(OperationId(41), RevisionId(2), Generation(3), 5);
     let key = || ToolFactoryKey::new("zip-replay", "set-node");
-    let wire_bytes = Editor::command_from_action("set-node", Some((arguments).clone()), None).unwrap().encode_op().unwrap();
+    let wire_bytes = Editor::command_from_action("set-node", &mut Some((arguments).clone()), &mut None).unwrap().encode_op().unwrap();
     let payload = |completion, revision: [u8; 32]| {
         let (snapshot_read, lease) = snapshot_read(snapshot.clone(), 3, revision);
         let payload = ArtifactRetainedCommandPayload::<App>::new(
             ArtifactRetainedCommandInputs {
-                command: Editor::command_from_action("set-node", Some((arguments).clone()), None).unwrap(),
+                command: Editor::command_from_action("set-node", &mut Some((arguments).clone()), &mut None).unwrap(),
                 snapshot: snapshot.clone(),
                 snapshot_read,
                 config: Arc::new(Default::default()),

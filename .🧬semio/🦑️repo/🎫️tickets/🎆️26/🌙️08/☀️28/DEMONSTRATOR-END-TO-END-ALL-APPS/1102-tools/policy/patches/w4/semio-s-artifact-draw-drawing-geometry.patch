@@ -1,0 +1,11 @@
+--- a/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/🎯️picking/🎨️paint/🦀️.rs
++++ b/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/🎯️picking/🎨️paint/🦀️.rs
+@@ -70,7 +70,7 @@
+    "stroke"=>{let child=self.outline.as_mut().ok_or("Painted query lost its working state")?;if child.result().is_ok(){let(retired,output)=self.outline.take().ok_or("Painted query lost its working state")?.into_retirement();self.outline_retirement=Some(retired);self.polygons=output.ok_or("Painted query lost its stroke polygons")?;self.phase="strokeCleanup";}else{self.nested=true;let result=child.advance(1,ledger);self.last_turn_work+=child.last_turn_work();self.last_turn_semantic_work+=child.last_turn_semantic_work();result.map_err(|e|e.to_string())?;}return Ok(false);},
+    "strokeCleanup"=>{if let Some(owner)=&mut self.outline_retirement{if !owner.terminal_is_empty(){self.close_child(1,ledger)?;return Ok(false);}self.outline_retirement=None;}self.publish();self.winding=0;self.boundary=false;self.at=0;self.edge=0;self.phase="polygons";return Ok(false);},
+    "polygons"=>{if let Some(polygon)=self.polygons.get(self.at){if self.edge<polygon.len(){let a=map(polygon[self.edge],self.query.transform);let b=map(polygon[(self.edge+1)%polygon.len()],self.query.transform);self.edge+=1;self.line(a,b)?;}else{self.stroke_hit|=self.boundary||self.winding!=0;self.winding=0;self.boundary=false;self.at+=1;self.edge=0;}}else{let fill=self.output.unwrap().contains;self.output=Some(PaintedPathHit{contains:fill||self.stroke_hit,bounds:self.bounds[0].is_finite().then_some(self.bounds)});self.phase="cleanup";}},
+-   "cleanup"=>{if self.retire_one(ledger)?{self.phase="complete";}return Ok(false);},"complete"=>{},_=>unreachable!(),
++   "cleanup"=>{if self.retire_one(ledger)?{self.phase="complete";}return Ok(false);},"complete"=>{},_=>return Err("Painted query phase is invalid".into()),
+   }Ok(true)
+  }
+  fn publish(&mut self){self.output=Some(PaintedPathHit{contains:self.query.fill&&(self.boundary||if self.query.fill_rule==FillRule::Evenodd{self.winding%2!=0}else{self.winding!=0}),bounds:self.bounds[0].is_finite().then_some(self.bounds)});}

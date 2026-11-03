@@ -3,8 +3,9 @@
 //! strings from here; there is deliberately no second label set anywhere in the plugin.
 
 use crate::TYPOLOGY_CATALOG;
-use semio_framework_ui_locale::Locale;
+use semio_framework_ui_locale::{AppLabels, Locale, Terminology};
 use semio_framework_plugin::ViewModel;
+use semio_s_artifact_cad_cad_model::geometry::{CadObject, CadObjectName};
 
 //#region 🔖️Terminology
 semio_framework_ui_locale::app_labels! {
@@ -26,6 +27,8 @@ semio_framework_ui_locale::app_labels! {
         typology_beam: native_en "Beam", native_de "Träger", reuse_en "Beam", reuse_de "Träger";
         typology_wall: native_en "Wall", native_de "Wand", reuse_en "Wall", reuse_de "Wand";
         typology_external_wall: native_en "External Wall", native_de "Außenwand", reuse_en "External Wall", reuse_de "Außenwand";
+        typology_hull: native_en "Hull", native_de "Hülle", reuse_en "Hull", reuse_de "Hülle";
+        typology_windows: native_en "Windows", native_de "Fenster", reuse_en "Windows", reuse_de "Fenster";
         reference: native_en "Reference", native_de "Referenz", reuse_en "Reference", reuse_de "Referenz";
         node: native_en "Node", native_de "Knoten", reuse_en "Node", reuse_de "Knoten";
         hide: native_en "Hide", native_de "Ausblenden", reuse_en "Hide", reuse_de "Ausblenden";
@@ -53,6 +56,15 @@ semio_framework_ui_locale::app_labels! {
         ok: native_en "OK", native_de "OK", reuse_en "OK", reuse_de "OK";
         selected: native_en "selected", native_de "ausgewählt", reuse_en "selected", reuse_de "ausgewählt";
         step: native_en "Step", native_de "Schritt", reuse_en "Step", reuse_de "Schritt";
+        step_idle: native_en "Idle", native_de "Bereit", reuse_en "Idle", reuse_de "Bereit";
+        step_moved: native_en "Moved", native_de "Verschoben", reuse_en "Moved", reuse_de "Verschoben";
+        step_copied: native_en "Copied", native_de "Kopiert", reuse_en "Copied", reuse_de "Kopiert";
+        step_rotated: native_en "Rotated", native_de "Gedreht", reuse_en "Rotated", reuse_de "Gedreht";
+        step_scaled: native_en "Scaled", native_de "Skaliert", reuse_en "Scaled", reuse_de "Skaliert";
+        step_nothing: native_en "Nothing to commit", native_de "Nichts zu übernehmen", reuse_en "Nothing to commit", reuse_de "Nichts zu übernehmen";
+        step_committed: native_en "object(s) committed", native_de "Objekt(e) übernommen", reuse_en "object(s) committed", reuse_de "Objekt(e) übernommen";
+        step_unsupported: native_en "Unsupported", native_de "Nicht unterstützt", reuse_en "Unsupported", reuse_de "Nicht unterstützt";
+        step_unknown: native_en "Unknown", native_de "Unbekannt", reuse_en "Unknown", reuse_de "Unbekannt";
     }
 }
 
@@ -75,7 +87,29 @@ pub fn typology_label<'a>(typology: &'a str, labels: &CadLabels) -> &'a str {
         "building.building.beam" => labels.typology_beam.as_str(),
         "building.building.wall" => labels.typology_wall.as_str(),
         "energy.energy.externalwall" => labels.typology_external_wall.as_str(),
+        "energy.energy.hull" => labels.typology_hull.as_str(),
+        "energy.energy.windows" => labels.typology_windows.as_str(),
         other => TYPOLOGY_CATALOG.iter().find(|entry| entry.typology == other).map_or(other, |entry| entry.label),
+    }
+}
+
+/// 🏷️ A cad object's name as the viewer reads it: typed text as is, a generated name resolved from its stable key with the viewer's `axes`. Without a view context (`None`) a generated name reads as its language-neutral key, never as text of any language.
+pub fn object_name(object: &CadObject, axes: Option<(Terminology, Locale)>) -> String {
+    let numbered = |stem: String, ordinal: Option<u32>, part: Option<u32>| match (ordinal, part) {
+        (Some(ordinal), Some(part)) => format!("{stem} {ordinal}.{part}"),
+        (Some(ordinal), None) => format!("{stem} {ordinal}"),
+        (None, _) => stem,
+    };
+    match &object.label {
+        CadObjectName::Literal { text } => text.clone(),
+        CadObjectName::Interaction { interaction_id, ordinal, part } => {
+            let stem = axes.and_then(|(terminology, locale)| semio_s_artifact_cad_cad_interaction::interaction_by_id(interaction_id).map(|entry| entry.label.resolve(terminology, locale).to_string())).unwrap_or_else(|| interaction_id.clone());
+            numbered(stem, Some(*ordinal), *part)
+        }
+        CadObjectName::Typology { ordinal } => {
+            let stem = axes.map_or_else(|| object.typology.clone(), |(terminology, locale)| typology_label(&object.typology, CadLabels::labels(locale, terminology)).to_string());
+            numbered(stem, *ordinal, None)
+        }
     }
 }
 //#endregion 🔖️Terminology

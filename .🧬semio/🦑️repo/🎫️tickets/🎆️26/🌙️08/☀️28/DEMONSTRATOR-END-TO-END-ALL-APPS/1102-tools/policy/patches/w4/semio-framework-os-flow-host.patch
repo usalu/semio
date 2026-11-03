@@ -1,0 +1,15 @@
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🏁️host-close/🦀️.rs
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🏁️host-close/🦀️.rs
+@@ -80,9 +80,10 @@
+     /// drop (`ordered-map root must be explicitly retired before drop`), so a host is CLOSED, never
+     /// dropped. Retained callers drive [`FlowHostRetirement::retire_step`] under their own grant
+     /// instead; this drains the same ladder in one uninterrupted cold pass.
+-    pub fn retire_cold(self) {
++    pub fn retire_cold(self)->Result<(),ValueError>{
+         let mut retirement=FlowHostRetirement::new(self);
+-        let mut idle=0usize;while !retirement.terminal_is_empty(){let copy=retirement.next_close_copy_byte_demand().expect("cold host copy authority").max(4096);let demand=retirement.close_demands(copy).expect("cold host close demand");let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};let step=retirement.close_step(grant).expect("cold original host close");if step.progress()==RetainedCloneProgress::default(){idle+=1;assert!(idle<=64,"cold original host close stalled at exact demand in {:?}: {demand:?} {step:?}",retirement.close_phase());}else{idle=0;}}
++        let mut idle=0usize;while !retirement.terminal_is_empty(){let copy=retirement.next_close_copy_byte_demand()?.max(4096);let demand=retirement.close_demands(copy)?;let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};let step=retirement.close_step(grant)?;if step.progress()==RetainedCloneProgress::default(){idle+=1;if idle>64{return Err(ValueError::invariant("cold original host close stalled at exact demand"));}}else{idle=0;}}
++        Ok(())
+     }
+ 
+     /// 🏠️ Runs `body` against a host built from `fixture`, then retires that host — the ONE shape a

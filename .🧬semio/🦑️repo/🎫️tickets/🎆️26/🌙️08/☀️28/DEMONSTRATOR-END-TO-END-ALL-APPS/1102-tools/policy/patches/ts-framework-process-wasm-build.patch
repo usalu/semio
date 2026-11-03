@@ -1,0 +1,47 @@
+--- a/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🕸️wasm-build/🟦️.ts
++++ b/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🕸️wasm-build/🟦️.ts
+@@ -37,7 +37,7 @@
+ export type WasmBuildPolicyV1 = Readonly<{ version: 1; cwd: string; workspaceRoot: string; sourceBoundary: CargoSourceBoundaryPolicyV1; compilerConfiguration?: string; sourceOwner: string; mode: BuildMode; artifactDirectory: string; buildDirectory: string; leaseDirectory: string; budgetMs: number; packageName: string; searchPath: string; bindgen: Readonly<{ command: string; args: readonly string[] }>; wasmPack: Readonly<{ command: string; args: readonly string[] }> }>;
+ /** 📦️ Selects one owned browser package publication without discovering repository policy: `rsDir` owns the published package,
+  * `componentDir` is the `🧩️component` cdylib crate wasm-bindgen links (a library crate is never a cdylib). */
+-export type WasmPackWebBuildOptions = Readonly<{ storage:NativeStorageReservationV1;consume:(capture:ProducedWasmPackageV1)=>Promise<void>;environment:Readonly<Record<string,string|undefined>>; control: CompilerAdmissionControl;withCargoInputs?:CargoCompilerInputsPortV1; rsDir: string; componentDir: string; logPrefix: string; pkg: WasmPackWebPkg; wasmBaseName: string; threads?: boolean; cargoFeatures?: readonly string[]; noDefaultFeatures?: boolean; cargoConfigurationSelectors: readonly string[] }>;
++export type WasmPackWebBuildOptions = Readonly<{ storage:NativeStorageReservationV1;consume:(capture:ProducedWasmPackageV1)=>Promise<void>;environment:Readonly<Record<string,string|undefined>>; control: CompilerAdmissionControl;withCargoInputs?:CargoCompilerInputsPortV1; rsDir: string; componentDir: string; logPrefix: string; pkg: WasmPackWebPkg; wasmBaseName: string; threads?: boolean; cargoFeatures?: readonly string[]; noDefaultFeatures?: boolean; cargoConfigurationSelectors: readonly string[]; report?: (line: string) => void }>;
+ /** 🔌️ Executes an explicitly selected compiler with bounded cancellation; `admit` refuses the exact Cargo selection before it compiles. */
+ export type WasmBuildExecutionPortV1 = Readonly<{ run: (command: string, args: readonly string[], options: Readonly<{ cwd: string; environment: Readonly<Record<string,string|undefined>>; budgetMs: number; label: string; signal: AbortSignal;control:CompilerAdmissionControl }>) => Promise<void>; admit: (args: readonly string[], options: Readonly<{ cwd: string; environment: Readonly<Record<string,string|undefined>>; policy: WasmBuildPolicyV1; storage:NativeStorageReservationV1;control: CompilerAdmissionControl }>) => Promise<void> }>;
+ 
+@@ -88,7 +88,7 @@
+   requireIssuedResourceControlV1(opts.control);requireNativeStorageReservationV1(opts.storage,opts.control);if(opts.storage.allocation.kind!=="compiler-workspace"||typeof opts.consume!=="function")throw Error("Actual compiler store and completed WASM consumer required");policy=admitWasmPolicy(policy);opts=Object.freeze({...opts,pkg:Object.freeze({...opts.pkg,files:Object.freeze([...opts.pkg.files])}),cargoConfigurationSelectors:Object.freeze([...opts.cargoConfigurationSelectors]),cargoFeatures:Object.freeze([...(opts.cargoFeatures??[])])});for(const path of[policy.artifactDirectory,policy.buildDirectory])requireNativeStoragePathV1(opts.storage.backing.root,path);if(relative(policy.workspaceRoot,resolve(opts.rsDir)).replaceAll("\\","/")!==policy.sourceOwner)throw Error("Exact declared WASM source owner required");if(opts.pkg.files.length>sourceSchema.properties.maximumFiles.const||opts.pkg.files.some(name=>validateJsonSchemaSubset(sourceSchema.definitions.SourceName,name).length))throw Error("Finite canonical declared package files required");
+   const control = policy.budgetMs === 0 ? requestedCompilerAdmissionControlV1(opts.control, 0) : renewableCompilerAdmissionControlV1(opts.control, progressDeadlinePolicyV1("native-child", 0, opts.environment ?? process.env, { maximumMilliseconds: policy.budgetMs }), 0), signal = control.signal;
+   if (resolve(policy.cwd) !== resolve(opts.rsDir)) throw Error("WASM policy belongs to a different owner");
+-  const { rsDir, componentDir, logPrefix, pkg, wasmBaseName, threads = false, cargoFeatures = [], noDefaultFeatures = false } = opts;
++  const { rsDir, componentDir, logPrefix, report, pkg, wasmBaseName, threads = false, cargoFeatures = [], noDefaultFeatures = false } = opts;
+   const selection=wasmCompilerSelectionArgumentsV1({mode:policy.mode,manifest:join(componentDir,"Cargo.toml"),configuration:policy.compilerConfiguration??null,selectors:opts.cargoConfigurationSelectors,threads,features:cargoFeatures,noDefaultFeatures});
+   const captureRoot = policy.artifactDirectory;
+   mkdirSync(captureRoot, { recursive: true });
+@@ -104,7 +104,7 @@
+     const profileOutDir = profile;
+     const buildEnv:Record<string,string|undefined> = { ...opts.environment, PATH: policy.searchPath, CARGO_TARGET_DIR: cargoOutput, CARGO_BUILD_BUILD_DIR: policy.buildDirectory };
+     const buildLabel = threads ? "cargo build (threaded) + wasm-bindgen" : "wasm-pack build";
+-    console.log(`[${logPrefix}] ${buildLabel} ${packProfileArgs.join(" ")} --target web --out-dir ${pkgDir} --out-name ${wasmBaseName} --no-pack`);
++    report?.(`[${logPrefix}] ${buildLabel} ${packProfileArgs.join(" ")} --target web --out-dir ${pkgDir} --out-name ${wasmBaseName} --no-pack`);
+     const t0 = Date.now();
+     await withCargoCompilerInputsV1({manifest:join(componentDir,"Cargo.toml"),cwd:componentDir,arguments:selection.cargo,environment:buildEnv,control},opts.withCargoInputs,async actual=>{
+     leased=await acquireCargoBuildLeaseV1({directory:policy.leaseDirectory,buildDirectory:policy.buildDirectory,targetDirectory:cargoOutput,args:selection.cargo,signal:actual.control.signal,control:actual.control});
+@@ -130,7 +130,7 @@
+       const buildArgs = ["build", "--mode", "no-install", ...packProfileArgs, "--target", "web", "--out-dir", pkgDir, "--out-name", wasmBaseName, "--no-pack", ...(policy.mode === "prototype" ? ["--no-opt"] : []), "--", ...forwarded];
+       await invoke(policy.wasmPack.command, [...policy.wasmPack.args, ...buildArgs]);
+     }
+-    console.log(`[${logPrefix}] wasm build done in ${((Date.now() - t0) / 1000).toFixed(1)}s`);
++    report?.(`[${logPrefix}] wasm build done in ${((Date.now() - t0) / 1000).toFixed(1)}s`);
+ 
+     if (!existsSync(pkgDir)) mkdirSync(pkgDir, { recursive: true });
+     const snippetFiles=[...(await collectArtifactFiles(pkgDir,signal)).keys()].filter(name=>name.startsWith("snippets/"));
+@@ -156,7 +156,7 @@
+     }
+     });
+     await consumeProducedWasmPackageV1(produced.files,produced.owner,{...opts,control:actual.control},()=>undefined);
+-    console.log(`[${logPrefix}] owned ${policy.mode}/${wasmBaseName}_bg.wasm consumed (${produced.sz} MiB)`);
++    report?.(`[${logPrefix}] owned ${policy.mode}/${wasmBaseName}_bg.wasm consumed (${produced.sz} MiB)`);
+     });
+   }catch(error){primaryFailed=true;throw error;}finally{
+     let failed=false,failure:unknown;for(const cleanup of[async()=>{const held=leased;leased=undefined;try{held?.release();}catch(error){try{await withIssuedResourceOperationV1(opts.control,async()=>{throw error;});}catch{}throw error;}},async()=>rmSync(cargoOutput,{recursive:true,force:true}),async()=>rmSync(packageOutput,{recursive:true,force:true})])try{await cleanup();}catch(error){if(!failed){failed=true;failure=error;}}if(!primaryFailed&&failed)throw failure;

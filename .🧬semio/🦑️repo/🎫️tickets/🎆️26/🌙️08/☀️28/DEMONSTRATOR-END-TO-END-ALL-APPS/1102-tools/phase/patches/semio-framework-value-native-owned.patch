@@ -1,0 +1,44 @@
+--- a/🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🦀️.rs
++++ b/🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🦀️.rs
+@@ -39,7 +39,7 @@
+  pub fn refuse(self,e:ValueError)->RetainedWorkOutcome<RetainedCloneStep,OriginalReceivingPrimary>{RetainedWorkOutcome{result:Err(e.with_retained_progress(self.progress).into()),work:self.work}}
+  /// 📥️ Ok retains the same remaining batch; Err publishes its sole completed outcome, including a genuine child refusal.
+  pub fn record(mut self,turn:RetainedWorkOutcome<RetainedCloneStep,OriginalReceivingPrimary>,unposted:bool,complete:bool)->Result<Self,RetainedWorkOutcome<RetainedCloneStep,OriginalReceivingPrimary>>{
+-  self.work+=turn.work;let step=match turn.result{Ok(s)=>s,Err(mut e)=>{e.progress=self.progress.checked_add(e.progress).expect("actual native progress fits the same grant");return Err(RetainedWorkOutcome{result:Err(e),work:self.work})}};let p=step.progress();self.progress=self.progress.checked_add(p).expect("actual native progress fits the same grant");if complete{return Err(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(self.progress)),work:self.work})}if !unposted||p==RetainedCloneProgress::default(){return Err(self.finish())}
++  self.work+=turn.work;let step=match turn.result{Ok(s)=>s,Err(mut e)=>{e.progress=self.progress.saturating_add(e.progress);return Err(RetainedWorkOutcome{result:Err(e),work:self.work})}};let p=step.progress();self.progress=match self.progress.checked_add(p){Ok(total)=>total,Err(error)=>return Err(self.refuse(error))};if complete{return Err(RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(self.progress)),work:self.work})}if !unposted||p==RetainedCloneProgress::default(){return Err(self.finish())}
+   self.left.maximum_items-=p.copied_items;self.left.maximum_copy_bytes-=p.copied_bytes;self.left.maximum_capacity_bytes-=p.retained_capacity_bytes;self.left.maximum_release_bytes-=p.released_bytes;if self.left.maximum_items==0{Err(self.finish())}else{Ok(self)}
+  }
+ }
+--- a/🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/🔎️schema/🦀️.rs
++++ b/🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/🔎️schema/🦀️.rs
+@@ -30,16 +30,16 @@
+   else if let Some(frame)=self.frames.last_mut(){if frame.role==2{frame.best=alternative(frame.best,self.matched);self.matched=NativeFieldMatch::Missing;frame.role=1;}else if frame.index>=frame.count{if frame.role==1{self.matched=combined(frame.before,frame.best);if self.matched==NativeFieldMatch::Ambiguous{self.done=true;}}self.frames.pop();}else{let index=frame.index;let root=frame.root.unwrap_or(index);let node=(frame.fields)(index).ok_or_else(invalid)?;frame.index+=1;if frame.role==1{frame.role=2;self.matched=NativeFieldMatch::Missing;}match node{NativeRecordSchema::Leaf(leaf)=>{self.leaf=Some(leaf);self.leaf_root=root;self.offset=0;},NativeRecordSchema::Flatten{fields,count}=>{self.pending=Some(SchemaFrame{fields,count,index:0,root:Some(root),role:0,before:NativeFieldMatch::Missing,best:NativeFieldMatch::Missing});},NativeRecordSchema::Union{fields,count}=>{self.pending=Some(SchemaFrame{fields,count,index:0,root:Some(root),role:1,before:self.matched,best:NativeFieldMatch::Missing});self.matched=NativeFieldMatch::Missing;},NativeRecordSchema::Skip=>{}}}}
+   else{self.done=true;}
+   own=receipt(fixed(0));let step=if self.done{RetainedCloneStep::Complete(own)}else{RetainedCloneStep::Progress(own)};own=Default::default();Ok(step)
+- })();let result=result.map_err(|error|{let p=error.retained_progress().checked_add(own).expect("one bounded schema probe fits its original grant");error.with_retained_progress(p)});RetainedWorkOutcome{result,work}}
++ })();let result=result.map_err(|error|{error.with_retained_progress(error.retained_progress().saturating_add(own))});RetainedWorkOutcome{result,work}}
+  /// 🧮️ Several real schema probes spend the same remaining physical grant and publish one independent-work outcome.
+  pub fn advance(&mut self,input:RetainedCloneRef<'_,I>,control:&mut NativeDecodeControl<'_>,body:usize,g:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneStep,OriginalReceivingPrimary>{
+   if self.done{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}
+   let mut progress=RetainedCloneProgress::default();let mut work=0;let mut left=g;let mut actions=0;
+   let result=(||{while left.maximum_items!=0&&actions<g.maximum_items{actions+=1;
+-   let d=self.demands(input,body).map_err(|e|{let p=progress.checked_add(e.retained_progress()).expect("schema quote refusal retains prior funded progress");e.with_retained_progress(p)})?;
++   let d=self.demands(input,body).map_err(|e|{e.with_retained_progress(progress.saturating_add(e.retained_progress()))})?;
+    if !retained_clone_grant_admits(left,d){break}
+    if control.owned_bytes().checked_add(progress.retained_capacity_bytes).and_then(|n|n.checked_add(d.capacity_bytes)).is_none_or(|n|n>control.maximum_bytes()){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"native schema backing exceeds its original decoder ceiling").with_retained_progress(progress))}
+-   let turn=self.advance_one(input,control,body,left);work+=turn.work;let step=turn.result.map_err(|e|{let p=progress.checked_add(e.retained_progress()).expect("schema failure retains every prior funded probe");e.with_retained_progress(p)})?;let p=step.progress();progress=progress.checked_add(p).expect("schema probes fit their same admitted physical grant");if self.done||p==RetainedCloneProgress::default(){break}
++   let turn=self.advance_one(input,control,body,left);work+=turn.work;let step=turn.result.map_err(|e|{e.with_retained_progress(progress.saturating_add(e.retained_progress()))})?;let p=step.progress();progress=progress.checked_add(p).map_err(|e|e.with_retained_progress(progress))?;if self.done||p==RetainedCloneProgress::default(){break}
+    left.maximum_items=left.maximum_items.checked_sub(p.copied_items).ok_or_else(||ValueError::invariant("schema item remains in original grant"))?;left.maximum_copy_bytes=left.maximum_copy_bytes.checked_sub(p.copied_bytes).ok_or_else(||ValueError::invariant("schema copy remains in original grant"))?;left.maximum_capacity_bytes=left.maximum_capacity_bytes.checked_sub(p.retained_capacity_bytes).ok_or_else(||ValueError::invariant("schema allocation remains in original grant"))?;left.maximum_release_bytes=left.maximum_release_bytes.checked_sub(p.released_bytes).ok_or_else(||ValueError::invariant("schema release remains in original grant"))?;
+   }Ok(if self.done{RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})})();
+   if work==0&&progress==RetainedCloneProgress::default(){return RetainedWorkOutcome{result:result.map_err(Into::into),work}}
+--- a/🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🧱️bulk/🦀️.rs
++++ b/🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🧱️bulk/🦀️.rs
+@@ -103,7 +103,7 @@
+     _=>return Err(invalid().into()),
+    }
+    own.copied_items=1;let turn=control.receive_retained_work(g,RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(own)),work});work=turn.work;own=Default::default();turn.result
+-  })();let result=result.map_err(|mut error|{if own!=RetainedCloneProgress::default(){error.progress=error.progress.checked_add(own).expect("one bounded tree probe fits its admitted receipt");}error});RetainedWorkOutcome{result,work}
++  })();let result=result.map_err(|mut error|{if own!=RetainedCloneProgress::default(){error.progress=error.progress.saturating_add(own);}error});RetainedWorkOutcome{result,work}
+  }
+  fn output_ready(&self)->bool{!self.closing&&self.complete&&self.output.is_some()}
+  fn take_demand(&self)->Result<RetirementDemand,ValueError>{if !self.output_ready(){return Err(invalid())}Ok(fixed(0))}

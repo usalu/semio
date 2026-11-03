@@ -1,5 +1,6 @@
 use crate::{schema::snapshot::JsonMember, schema::snapshot::JsonValue};
 use crate::JsonSnapshot;
+use semio_framework_plugin::WindowKit as _;
 use semio_framework_plugin::app::TreeWindowKit;
 use semio_framework_ui_locale::Locale;
 use crate::editor::json_any::modes::edit::windows::main::*;

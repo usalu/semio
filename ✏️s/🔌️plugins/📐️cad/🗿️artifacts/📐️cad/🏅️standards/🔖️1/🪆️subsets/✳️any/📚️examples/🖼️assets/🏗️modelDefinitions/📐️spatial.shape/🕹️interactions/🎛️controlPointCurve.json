@@ -2,7 +2,10 @@
   "schema": "spatial.interaction",
   "id": "curve.controlPointCurve",
   "version": "1.0.0",
-  "label": "ControlPointCurve",
+  "label": {
+    "native": { "en": "ControlPointCurve", "de": "Kontrollpunktkurve" },
+    "reuse": { "en": "ControlPointCurve", "de": "Kontrollpunktkurve" }
+  },
   "interaction": {
     "spatialGroundPick": true,
     "pickDisabledStates": ["idle", "committed"],
@@ -34,7 +37,10 @@
               {
                 "target": "start_of_curve",
                 "key": "s",
-                "label": "Start",
+                "label": {
+                  "native": { "en": "Start", "de": "Start" },
+                  "reuse": { "en": "Start", "de": "Start" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -228,7 +234,10 @@
               {
                 "target": "committed",
                 "key": "Enter",
-                "label": "Finish"
+                "label": {
+                  "native": { "en": "Finish", "de": "Fertig" },
+                  "reuse": { "en": "Finish", "de": "Fertig" }
+                }
               }
             ]
           },
@@ -238,7 +247,10 @@
               {
                 "target": "committed",
                 "key": "RightClick",
-                "label": "Finish"
+                "label": {
+                  "native": { "en": "Finish", "de": "Fertig" },
+                  "reuse": { "en": "Finish", "de": "Fertig" }
+                }
               }
             ]
           }
@@ -259,7 +271,10 @@
             "kind": "label",
             "id": "start_of_curve-prompt",
             "role": "prompt",
-            "text": "Start of curve",
+            "text": {
+              "native": { "en": "Start of curve", "de": "Anfang der Kurve" },
+              "reuse": { "en": "Start of curve", "de": "Anfang der Kurve" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]
@@ -362,7 +377,10 @@
             "kind": "label",
             "id": "next_control_point-prompt",
             "role": "prompt",
-            "text": "Next control point",
+            "text": {
+              "native": { "en": "Next control point", "de": "Nächster Kontrollpunkt" },
+              "reuse": { "en": "Next control point", "de": "Nächster Kontrollpunkt" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]

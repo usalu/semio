@@ -4,16 +4,16 @@ use super::*;
 
 //#region ⏯️RunJob
 impl Puzzle2dFillRunJob {
-    pub(super) fn turn(&mut self, context: &mut StepContext<'_>) -> Result<JobTurn, semio_framework_job::OriginalTurnFailure> {
+    pub(super) fn turn(&mut self, context: &mut StepContext<'_>, claim: &mut semio_framework_job::OriginalJobReturnClaim<'_>) -> Result<JobTurn, semio_framework_job::OriginalTurnFailure> {
         if self.closing || context.is_cancelled() {
             return Ok(JobTurn::Cancelled);
         }
         if let Some(placement) = self.retiring_placement.as_mut() {
             let demand = semio_framework_value::RetirementDemand { release_bytes: placement.next_close_release_byte_demand(), depth: 1, ..Default::default() };
-            semio_framework_job::close_original_retained_step(context, demand, |grant| Ok(match placement.close_step(grant) {
+            semio_framework_job::close_original_retained_step(context, demand, |grant| semio_framework_value::RetainedWorkOutcome { work: 1, result: Ok(match placement.close_step(grant) {
                 InteractiveJobCloseStep::Complete { progress } => semio_framework_value::RetainedCloneStep::Complete(progress),
                 step => semio_framework_value::RetainedCloneStep::Progress(step.progress()),
-            }))?;
+            }) })?;
             if placement.terminal_is_empty() {
                 self.retiring_placement = None;
             }
@@ -56,7 +56,7 @@ impl Puzzle2dFillRunJob {
                 self.stall(context, reason);
                 continue;
             }
-            let (outcome, event) = Self::search_batch(search, context)?;
+            let (outcome, event) = Self::search_batch(search, context, claim)?;
             let fault = match &outcome {
                 Some(FillSearch::Fault) => search.take_fault(),
                 _ => None,
@@ -88,7 +88,7 @@ impl Puzzle2dFillRunJob {
 
 impl Puzzle2dFillRunJob {
     /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
-    fn step_value<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
+    fn step_value<'a>(&'a mut self, cx: &mut StepContext<'_>, claim: &mut semio_framework_job::OriginalJobReturnClaim<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         match self.outbox.phase(cx)? {
             crate::puzzle_job::OutboxPhase::Building => return self.outbox.advance(cx).map_err(semio_framework_job::OriginalTurnFailure::from),
             crate::puzzle_job::OutboxPhase::Delivered | crate::puzzle_job::OutboxPhase::Retiring => {
@@ -97,13 +97,13 @@ impl Puzzle2dFillRunJob {
             }
             crate::puzzle_job::OutboxPhase::Idle => {}
         }
-        let turn = self.turn(cx)?;
+        let turn = self.turn(cx, claim)?;
         self.outbox.settle(turn, cx).map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 }
 
 impl InteractiveJob for Puzzle2dFillRunJob {
-    fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>,_:&mut semio_framework_job::OriginalJobReturnClaim<'_>)->semio_framework_job::InteractiveJobStep<'a>{semio_framework_job::InteractiveJobStep::from_callback(self.step_value(cx))}
+    fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>,claim:&mut semio_framework_job::OriginalJobReturnClaim<'_>)->semio_framework_job::InteractiveJobStep<'a>{semio_framework_job::InteractiveJobStep::from_callback(self.step_value(cx,claim))}
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
         self.outbox.borrow_outcome(descriptor)
@@ -136,10 +136,10 @@ impl InteractiveJob for Puzzle2dFillRunJob {
         }
         if let Some(placement) = self.retiring_placement.as_mut() {
             let demand = semio_framework_value::RetirementDemand { release_bytes: placement.next_close_release_byte_demand(), depth: 1, ..Default::default() };
-            let step = semio_framework_job::close_original_retained_step(cx, demand, |grant| Ok(match placement.close_step(grant) {
+            let step = semio_framework_job::close_original_retained_step(cx, demand, |grant| semio_framework_value::RetainedWorkOutcome { work: 1, result: Ok(match placement.close_step(grant) {
                 InteractiveJobCloseStep::Complete { progress } => semio_framework_value::RetainedCloneStep::Complete(progress),
                 step => semio_framework_value::RetainedCloneStep::Progress(step.progress()),
-            }))?;
+            }) })?;
             if placement.terminal_is_empty() { self.retiring_placement = None; }
             return Ok(InteractiveJobCloseStep::Pending { progress: step.progress() });
         }

@@ -17,7 +17,7 @@ impl RetainedJobPageTransfer{
  pub fn close_step(&mut self,grant:RetainedCloneGrant)->O{
   if self.terminal_is_empty(){return O{result:Ok(S::Complete(Default::default())),work:0}}
   let d=self.retirement_demands();if !admitted(grant,d){return O{result:Ok(S::Progress(Default::default())),work:0}}
-  if self.page.is_some(){let page=self.page.take().unwrap();self.ledger.as_ref().expect("detached backing retains its original operation ledger").release(self.stream,d.release_bytes);drop(page);return O{result:Ok(S::Progress(P{released_bytes:d.release_bytes,..metadata()})),work:1}}
+  if let Some(page)=self.page.take(){let Some(ledger)=self.ledger.as_ref()else{self.page=Some(page);return O{result:Err(refused("detached backing lost its original operation ledger")),work:0}};ledger.release(self.stream,d.release_bytes);drop(page);return O{result:Ok(S::Progress(P{released_bytes:d.release_bytes,..metadata()})),work:1}}
   crate::close_ledger(&mut self.ledger,grant)
  }
 }
@@ -39,11 +39,11 @@ impl RetainedJobPayload{
   let index=self.page_count-1;
   if output.is_none(){
    let Some(source)=self.payload_authority_identity()else{return O{result:Err(refused("original page transfer has no live operation ledger")),work:0}};
-   if self.page_count>1{*output=Some(RetainedJobPageTransfer{page:None,ledger:Some(Arc::clone(self.ledger.as_ref().unwrap())),stream:self.stream,index,source});return O{result:Ok(S::Progress(metadata())),work:1}}
-   let page=self.pop_page().expect("original payload page frontier");
+   if self.page_count>1{let Some(ledger)=self.ledger.as_ref()else{return O{result:Err(refused("original page transfer has no live operation ledger")),work:0}};*output=Some(RetainedJobPageTransfer{page:None,ledger:Some(Arc::clone(ledger)),stream:self.stream,index,source});return O{result:Ok(S::Progress(metadata())),work:1}}
+   let Some(page)=self.pop_page()else{return O{result:Err(refused("original payload page frontier is absent")),work:0}};
    *output=Some(RetainedJobPageTransfer{page:Some(page),ledger:self.ledger.take(),stream:self.stream,index,source});
   }else{
-   let page=self.pop_page().expect("retained pending original page");output.as_mut().unwrap().page=Some(page);
+   let Some(pending)=output.as_mut()else{return O{result:Err(refused("retained pending page transfer is absent")),work:0}};let Some(page)=self.pop_page()else{return O{result:Err(refused("retained pending original page is absent")),work:0}};pending.page=Some(page);
   }
   O{result:Ok(S::Complete(metadata())),work:1}
  }

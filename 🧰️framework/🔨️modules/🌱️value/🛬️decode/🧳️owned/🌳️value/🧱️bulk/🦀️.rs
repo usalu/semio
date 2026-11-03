@@ -103,7 +103,7 @@ impl<I:NativeValueSource+?Sized,T:NativeTreeValue> NativeReceiver<I,T> for Nativ
     _=>return Err(invalid().into()),
    }
    own.copied_items=1;let turn=control.receive_retained_work(g,RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(own)),work});work=turn.work;own=Default::default();turn.result
-  })();let result=result.map_err(|mut error|{if own!=RetainedCloneProgress::default(){error.progress=error.progress.checked_add(own).expect("one bounded tree probe fits its admitted receipt");}error});RetainedWorkOutcome{result,work}
+  })();let result=result.map_err(|mut error|{if own!=RetainedCloneProgress::default(){error.progress=error.progress.saturating_add(own);}error});RetainedWorkOutcome{result,work}
  }
  fn output_ready(&self)->bool{!self.closing&&self.complete&&self.output.is_some()}
  fn take_demand(&self)->Result<RetirementDemand,ValueError>{if !self.output_ready(){return Err(invalid())}Ok(fixed(0))}

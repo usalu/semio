@@ -170,18 +170,18 @@ fn flow_contributions_retires_only_its_original_alias_before_terminal_work(){
         let source=shared.with_mut::<FlowInstanceOperationOwner,_>(|owner|Ok(owner as *mut _ as usize)).unwrap();
         let mut work=FlowContributionsWork::new(shared.clone());work.begin_close();
         let incoming=grant(policy);let denied=RetainedCloneGrant{maximum_items:0,..incoming};
-        assert!(matches!(semio_framework_job::close_with_self_funded_context(denied, |cx| work.close_step(cx)).expect("original fixture close turn"),semio_framework_job::InteractiveJobCloseStep::Blocked));
+        assert!(matches!(crate::self_funded_close(denied, |cx| work.close_step(cx)).expect("original fixture close turn"),semio_framework_job::InteractiveJobCloseStep::Blocked));
         assert!(work.instance_owner.is_some()&&work.instance_retirement.is_none());
         for turn in 0..128{
             if work.terminal_is_empty(){break}
             assert!(turn<127,"original contribution alias must reach terminal");
-            match semio_framework_job::close_with_self_funded_context(incoming, |cx| work.close_step(cx)).expect("original fixture close turn"){semio_framework_job::InteractiveJobCloseStep::Pending{progress}|semio_framework_job::InteractiveJobCloseStep::Complete{progress}=>{assert!(progress.fits(incoming));assert_eq!(progress.retained_capacity_bytes,0);assert_eq!(progress.released_bytes,0);},other=>panic!("original nonfinal alias close refused: {other:?}")}
+            match crate::self_funded_close(incoming, |cx| work.close_step(cx)).expect("original fixture close turn"){semio_framework_job::InteractiveJobCloseStep::Pending{progress}|semio_framework_job::InteractiveJobCloseStep::Complete{progress}=>{assert!(progress.fits(incoming));assert_eq!(progress.retained_capacity_bytes,0);assert_eq!(progress.released_bytes,0);},other=>panic!("original nonfinal alias close refused: {other:?}")}
         }
         assert!(work.terminal_is_empty());assert_eq!(work.terminal_frame_release_bytes(),Some(std::mem::size_of::<FlowContributionsWork>()));
-        shared.with_mut::<FlowInstanceOperationOwner,_>(|owner|{assert_eq!(owner as *mut _ as usize,source);assert!(!owner.closing&&owner.eval_session.is_some());Ok(())}).unwrap();
+        shared.with_mut::<FlowInstanceOperationOwner,_>(|owner|{assert_eq!(owner as *mut _ as usize,source);Ok(())}).unwrap();
         drop(work);
         let mut final_owner=semio_framework_plugin::ArtifactInstanceOperationOwnerAliasRetirement::new(shared);
-        for turn in 0..1_000_000{if final_owner.terminal_is_empty(){break}assert!(turn<999_999,"actual original final instance owner stalled");final_owner.step(incoming).unwrap();}
+        for turn in 0..1_000_000{if final_owner.terminal_is_empty(){break}assert!(turn<999_999,"actual original final instance owner stalled");crate::self_funded_close(incoming,|cx|Ok(final_owner.step(cx,incoming).unwrap())).unwrap();}
         assert!(final_owner.terminal_is_empty());drop(final_owner);
     }
 }

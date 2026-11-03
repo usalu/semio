@@ -18,23 +18,23 @@ fn bounded_value_retirement_preserves_original_owner_and_physical_receipts_under
                 let original = Arc::as_ptr(&owner);
                 let capacity = SnapshotRetirementFactory::retirement_birth_bytes(&factory, &owner);
                 let grant = physical_test_close_grant();
-                let (refusal, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| SnapshotRetirementFactory::retire(&factory, owner, RetainedCloneGrant { maximum_capacity_bytes: capacity - 1, ..grant }));
+                let (refusal, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| SnapshotRetirementFactory::retire(&factory, owner, RetainedCloneGrant { maximum_capacity_bytes: capacity - 1, ..grant }).result);
                 let (_, owner) = match refusal { Err(refusal) => refusal, Ok(_) => panic!("whole constructor undergrant must retain original shared owner") };
                 assert_eq!(Arc::as_ptr(&owner), original);
                 assert_eq!(owner.as_ptr(), pointer);
                 assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-                let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| SnapshotRetirementFactory::retire(&factory, owner, grant));
+                let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| SnapshotRetirementFactory::retire(&factory, owner, grant).result);
                 let (cursor, progress) = match result { Ok(admitted) => admitted, Err(_) => panic!("exact original shared constructor") };
                 assert_eq!((heap.requested_bytes, heap.released_bytes), (progress.retained_capacity_bytes, progress.released_bytes));
                 (Some(cursor), progress.retained_capacity_bytes)
             } else {
                 let capacity = ArtifactOwnedValueRetirementFactory::retirement_birth_bytes(&factory, &owner);
                 let grant = physical_test_close_grant();
-                let (refusal, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| factory.retire_owned(owner, RetainedCloneGrant { maximum_items: 0, ..grant }));
+                let (refusal, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| factory.retire_owned(owner, RetainedCloneGrant { maximum_items: 0, ..grant }).result);
                 let (_, owner) = match refusal { Err(refusal) => refusal, Ok(_) => panic!("zero item must retain original owned value") };
                 assert_eq!(owner.as_ptr(), pointer);
                 assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-                let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| factory.retire_owned(owner, grant));
+                let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| factory.retire_owned(owner, grant).result);
                 let (cursor, progress) = match result { Ok(admitted) => admitted, Err(_) => panic!("exact original typed constructor") };
                 assert_eq!((heap.requested_bytes, heap.released_bytes), (progress.retained_capacity_bytes, progress.released_bytes));
                 (Some(cursor), progress.retained_capacity_bytes)
@@ -78,7 +78,7 @@ fn original_vcs_retirement_preserves_real_history_visibility_genesis_and_full_ph
             if with_edit {
                 let mut reverse = semio_framework_value_persistent::list::PagedList::new();
                 for value in &inverse { reverse.try_push(*value).unwrap(); }
-                let edit = Edit { id: law["edit"].as_str().unwrap().to_owned(), actor: Some(law["actor"].as_str().unwrap().into()), line: None, forwards: forwards.clone(), inverse: reverse, mutation_meta: Vec::with_capacity(3), verb: None, sequence_number: 1, started_at: "started".into(), finished_at: Some("finished".into()) };
+                let edit = Edit { id: law["edit"].as_str().unwrap().to_owned(), actor: Some(law["actor"].as_str().unwrap().into()), line: None, forwards: forwards.clone(), inverse: semio_framework_value::RetainedPublicationRoot::new(reverse), mutation_meta: Vec::with_capacity(3), verb: None, sequence_number: 1, started_at: "started".into(), finished_at: Some("finished".into()) };
                 let mut publisher = semio_framework_os_vcs::ArtifactGroupVisibilityOwner::new();
                 let view = publisher.view();
                 let reservation = edits.reserve_group_one(&view).unwrap();

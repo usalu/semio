@@ -2,7 +2,10 @@
   "schema": "spatial.interaction",
   "id": "building.building.placeWindow",
   "version": "1.0.0",
-  "label": "Place Window",
+  "label": {
+    "native": { "en": "Place Window", "de": "Fenster platzieren" },
+    "reuse": { "en": "Place Window", "de": "Fenster platzieren" }
+  },
   "key": "i",
   "interaction": {
     "spatialGroundPick": true,
@@ -30,7 +33,10 @@
               {
                 "target": "first_point",
                 "key": "s",
-                "label": "Start",
+                "label": {
+                  "native": { "en": "Start", "de": "Start" },
+                  "reuse": { "en": "Start", "de": "Start" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -94,7 +100,10 @@
             "transitions": [
               {
                 "target": "second_point",
-                "label": "First Corner",
+                "label": {
+                  "native": { "en": "First Corner", "de": "Erste Ecke" },
+                  "reuse": { "en": "First Corner", "de": "Erste Ecke" }
+                },
                 "effects": [
                   {
                     "mutation": "action",
@@ -166,7 +175,10 @@
             "transitions": [
               {
                 "target": "committed",
-                "label": "Finish",
+                "label": {
+                  "native": { "en": "Finish", "de": "Fertig" },
+                  "reuse": { "en": "Finish", "de": "Fertig" }
+                },
                 "effects": [
                   {
                     "mutation": "action",
@@ -229,7 +241,10 @@
             "kind": "label",
             "id": "hint-first",
             "role": "prompt",
-            "text": "Place Window: click first footprint corner",
+            "text": {
+              "native": { "en": "Place Window: click first footprint corner", "de": "Fenster platzieren: Ersten Grundrisseckpunkt anklicken" },
+              "reuse": { "en": "Place Window: click first footprint corner", "de": "Fenster platzieren: Ersten Grundrisseckpunkt anklicken" }
+            },
             "position": {
               "kind": "const",
               "value": [
@@ -263,7 +278,10 @@
             "kind": "label",
             "id": "hint-second",
             "role": "prompt",
-            "text": "Place Window: click opposite footprint corner",
+            "text": {
+              "native": { "en": "Place Window: click opposite footprint corner", "de": "Fenster platzieren: Gegenüberliegenden Grundrisseckpunkt anklicken" },
+              "reuse": { "en": "Place Window: click opposite footprint corner", "de": "Fenster platzieren: Gegenüberliegenden Grundrisseckpunkt anklicken" }
+            },
             "position": {
               "kind": "const",
               "value": [
@@ -378,7 +396,10 @@
             "kind": "label",
             "id": "hint-commit",
             "role": "prompt",
-            "text": "Place Window: Accept to create",
+            "text": {
+              "native": { "en": "Place Window: Accept to create", "de": "Fenster platzieren: Zum Erstellen bestätigen" },
+              "reuse": { "en": "Place Window: Accept to create", "de": "Fenster platzieren: Zum Erstellen bestätigen" }
+            },
             "position": {
               "kind": "const",
               "value": [

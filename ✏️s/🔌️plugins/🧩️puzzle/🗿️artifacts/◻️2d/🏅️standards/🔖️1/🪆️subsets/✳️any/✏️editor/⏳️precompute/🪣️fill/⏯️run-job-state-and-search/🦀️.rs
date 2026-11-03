@@ -364,10 +364,14 @@ impl Puzzle2dFillRunJob {
     }
 
     /// 🔎️ Engine transitions until a candidate event, a non-preview outcome, a stall or the wall deadline.
-    pub(super) fn search_batch(search: &mut BoardFillJob, context: &mut StepContext<'_>) -> Result<(Option<FillSearch>, Option<BoardFillCandidateEvent>), semio_framework_job::OriginalTurnFailure> {
+    pub(super) fn search_batch(search: &mut BoardFillJob, context: &mut StepContext<'_>, claim: &mut semio_framework_job::OriginalJobReturnClaim<'_>) -> Result<(Option<FillSearch>, Option<BoardFillCandidateEvent>), semio_framework_job::OriginalTurnFailure> {
         for _ in 0..FILL_RUN_SEARCH_BATCH {
             if search.stage() == BoardFillStage::Complete || context.should_yield() { return Ok((None, None)); }
-            let settled = match InteractiveJob::step(search, context)? {
+            let outcome = match InteractiveJob::step(search, context, claim) {
+                semio_framework_job::InteractiveJobStep::Outcome(outcome) => outcome,
+                semio_framework_job::InteractiveJobStep::Continuation(failure) => return Err(failure),
+            };
+            let settled = match outcome {
                 None | Some(JobOutcomeBorrow::Yield { .. } | JobOutcomeBorrow::PreviewReady { .. }) => None,
                 Some(JobOutcomeBorrow::Cancelled { .. }) => Some(FillSearch::Cancelled),
                 Some(JobOutcomeBorrow::CheckpointReady { .. }) => Some(FillSearch::Checkpoint),

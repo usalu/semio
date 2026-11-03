@@ -1,0 +1,11 @@
+--- a/🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🦀️.rs
++++ b/🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🦀️.rs
+@@ -59,7 +59,7 @@
+  fn shape(&self)->IndexedEditShape{IndexedEditShape{base_len:self.source.len(),removed:0,modified:0,added:0}}
+  fn key_demand(&self,lane:NamedEditLane,ordinal:usize)->Result<RetirementDemand,ValueError>{if lane!=NamedEditLane::Base{return Err(invalid());}self.source.rank_demand(ordinal)}
+  fn observe_key(&self,lane:NamedEditLane,ordinal:usize,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<Option<(&str,RetainedCloneProgress)>>{let mut work=0;let result=(||{if lane!=NamedEditLane::Base{return Err(invalid());}Ok(take_work!(work,self.source.observe_key(ordinal,grant)).map(|(key,p)|(key.get(),p)))})();crate::RetainedWorkOutcome{result,work}}
+- fn added_index(&self,_:usize)->crate::RetainedWorkOutcome<usize>{unreachable!("key admission declares no added coordinates")}
++ fn added_index(&self,_:usize)->crate::RetainedWorkOutcome<usize>{crate::RetainedWorkOutcome{result:Err(invalid()),work:0}}
+ }
+ /// 📥️ Admission reuses the genuine named planner and closes it before sealing its sorted original directory.
+ pub struct NamedKeyIndexPreparation{original:ManuallyDrop<Option<RetainedCloneBinding>>,order:ManuallyDrop<Option<Vec<usize>>>,directory:ManuallyDrop<Option<SealedShared<Vec<usize>>>>,plan:Option<NamedEditPlan>,retirement:RetainedCloneClose,len:usize,projection:usize,phase:u8,fault:Option<NamedEditFault>,closing:bool}

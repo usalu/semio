@@ -43,11 +43,13 @@ test("Drawing initializer closes the original catalog one exactly admitted page 
     }
     expect(state).toEqual({pages:[]});
   }finally{database.close();}
-  const initializer=ownerSlice(owner,"struct DrawingStoreInitializationAuthority","pub fn drawing_document_store_initialization_job");
-  expect(initializer.includes("drop(self.owner_catalog.take())")).toBe(false);
-  expect(initializer.includes("let child = RetainedCloneGrant { maximum_items: 1,")).toBe(true);
-  expect(initializer.includes("close_initialization_catalog(&mut self.owner_catalog, child)")).toBe(true);
-  expect(initializer.includes("RetainedCloneStep::Progress(step.progress())")).toBe(true);
+  const replay=readFileSync(join(frameworkSourcePath("🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🔁️replay"),"🦀️.rs"),"utf8"),from=replay.indexOf("if let Some(catalog) = self.catalog.as_mut()"),catalogClose=replay.slice(from,replay.indexOf("replay initializer catalog",from)+40);
+  expect(from).toBeGreaterThan(0);
+  expect(catalogClose.indexOf("catalog.terminal_is_empty()")).toBeGreaterThan(-1);
+  expect(catalogClose.indexOf("catalog.terminal_is_empty()")).toBeLessThan(catalogClose.indexOf("drop(self.catalog.take())"));
+  expect(replay.includes("let child = RetainedCloneGrant { maximum_items: 1,")).toBe(true);
+  expect(catalogClose.includes("catalog.close_step(child)")).toBe(true);
+  expect(replay.includes("RetainedCloneStep::Progress(step.progress())")).toBe(true);
   const source=readFileSync(join(directory,"🦀️.rs"),"utf8");
   expect(source.includes("catalog.close_step(grant)")).toBe(true);
   expect(source.includes("if !catalog.terminal_is_empty()")).toBe(true);
@@ -67,12 +69,14 @@ test("Drawing initializer holds original owners in typed pending retirement and 
       expect(patched(state,[{op:"remove",path:"/active"}])).toEqual({});
     }
   }finally{database.close();}
-  const initializer=ownerSlice(owner,"struct DrawingStoreInitializationAuthority","pub fn drawing_document_store_initialization_job");
-  expect(initializer.includes("retire_pending: std::mem::ManuallyDrop<Option<DrawingRetirementOwner>>")).toBe(true);
-  for(const kind of law.initializerOwners)expect(initializer.includes(`*self.retire_pending = Some(DrawingRetirementOwner::${kind}(`)).toBe(true);
-  expect(initializer.includes("artifact_retirement_admit_owned(&mut self.retire_pending, &mut self.active, child)")).toBe(true);
-  expect(initializer.includes("Box::new(DrawingOwnedRetirement")).toBe(false);
-  expect(initializer.includes("ArtifactOwnedValueRetirementFactory::retire_owned")).toBe(false);
+  const replay=readFileSync(join(frameworkSourcePath("🛍️products/💻️os/🔨️modules/🏪️store/🏗️initialization/🔁️replay"),"🦀️.rs"),"utf8"),retirement=readFileSync(join(owner,"♻️retirement/🦀️.rs"),"utf8");
+  expect(replay.includes("pub active: ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,")).toBe(true);
+  expect(replay.includes("pub envelope_retirement: ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,")).toBe(true);
+  expect(retirement.includes("#[derive(semio_framework_value::RetireOwned)]")).toBe(true);
+  for(const kind of law.initializerOwners)expect(retirement.includes(`    ${kind}(`)).toBe(true);
+  expect(replay.includes("artifact_retirement_box_close_step(&mut self.active, child)")).toBe(true);
+  expect(replay.includes("Box::new(DrawingOwnedRetirement")).toBe(false);
+  expect(replay.includes("ArtifactOwnedValueRetirementFactory::retire_owned")).toBe(false);
 });
 
 test("Drawing native retirement retains typed variants under independent physical grants",()=>{
@@ -443,7 +447,7 @@ test("Drawing initial snapshot copying retains native paged assets and separate 
   expect(copied.assets[long].samples.length*law.recordFootprint.assetSampleComponents).toBeGreaterThan(law.bodyBytes);
   expect(patched({snapshot:copied},[{op:"remove",path:"/snapshot"}])).toEqual({});
   const source=ownerSource(owner);
-  expect(source).toContain("CloneInitialSnapshot");
+  expect(source).toContain("pub fn initial_snapshot_clone_grant");
   expect(source).toContain("initial_snapshot_clone");
   expect(source).toContain("RetainedCloneGrant::one_release_turn");
   expect(source.includes("data.try_reserve_exact(asset.data.len())")).toBe(false);

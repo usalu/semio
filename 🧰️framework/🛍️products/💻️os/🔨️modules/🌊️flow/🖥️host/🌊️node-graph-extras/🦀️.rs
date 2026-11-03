@@ -31,8 +31,10 @@ pub fn flow_backed_node_graph_extras(host_snapshot: &FlowHostSnapshot, lod_mode:
             Ok((host, _)) => { let status = session.status_json_for_host(&host); (host, status) }
             Err((_, host)) => (host, String::new()),
         };
-        host.retire_cold();
-        status
+        match host.retire_cold() {
+            Ok(()) => status,
+            Err(error) => format!("{{\"error\":{:?}}}", error.to_string()),
+        }
     });
     FlowBackedNodeGraphExtras {
         host_snapshot_json: Some(semio_framework_pack_json::to_json_string(host_snapshot)),

@@ -247,8 +247,8 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> Envelope
                         owner,
                         A::DOCUMENT_SCHEMA.to_string(),
                         owners,
-                        semio_framework_job::OperationId(active.operation),
-                        semio_framework_job::Generation(stores.store.generation_now()),
+                        cx.operation(),
+                        cx.generation(),
                         u64::MAX,
                         store::PersistedDocumentHydrationTarget::Envelope,
                         stores.store.local_actor_id().clone(),
@@ -256,7 +256,10 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> Envelope
                     return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: built.copied_items.max(1), ..built }));
                 }
                 let before=cx.retained_progress();
-                let step=active.hydration.as_mut().expect("recursive document parent hydration remains retained").step(cx,RetainedCloneGrant{maximum_items:1,..grant});
+                let owner=active.hydration.as_mut().ok_or_else(||semio_framework_value::ValueError::invariant("recursive document parent hydration is not retained"))?;
+                owner.operation=cx.operation();
+                owner.generation=cx.generation();
+                let step=owner.step(cx,RetainedCloneGrant{maximum_items:1,..grant});
                 let spent=semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?;
                 let item=RetainedCloneProgress{copied_items:spent.copied_items.max(1),..spent};
                 let envelope = match step {

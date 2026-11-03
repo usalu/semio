@@ -51,7 +51,7 @@ semio-framework-plugin-testing-laws = { path = "../../../../🧪️testing/📦�
 semio-framework-async = { path = "../../../../../../../../🔨️modules/⏳️async/📦️packages/🦀️rust", features = ["entrypoint"], package = "semio-framework-async" }
 semio-framework-async-macros = { path = "../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"], package = "semio-framework-job" }
-semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", features = ["mutation-testing"], package = "semio-framework-os-kernel" }
+semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", features = ["mutation-testing", "protocol-laws"], package = "semio-framework-os-kernel" }
 semio-framework-trace = { workspace = true }
 semio-framework-ui-locale = { path = "../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 serde_json = "1.0.140"

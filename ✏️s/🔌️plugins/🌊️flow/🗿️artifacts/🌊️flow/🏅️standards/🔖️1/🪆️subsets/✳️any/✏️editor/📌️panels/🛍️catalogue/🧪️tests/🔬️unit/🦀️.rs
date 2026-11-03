@@ -82,7 +82,7 @@ async fn catalogue_sections_are_built_once_and_equal_the_host_projection() {
     let first = crate::editor::flow::host::catalogue_sections(&config.catalogue_sections_json);
     let second = crate::editor::flow::host::catalogue_sections(&config.catalogue_sections_json);
     assert!(std::sync::Arc::ptr_eq(&first, &second), "a catalogue render must reuse the shared sections, never rebuild them per render");
-    let raw = with_host_from_snapshot(&FlowSnapshot::default(), &config, &FlowEvalSession::new(), |host| host.catalogue_json()).expect("host catalogue");
+    let raw = with_host_from_snapshot(&FlowSnapshot::default(), &config, &FlowEvalSession::new(), |host| host.catalogue_json()).unwrap().expect("host catalogue");
     let projected: Value = serde_json::from_str(&raw).expect("host catalogue json");
     assert_eq!(*first, projected);
 }

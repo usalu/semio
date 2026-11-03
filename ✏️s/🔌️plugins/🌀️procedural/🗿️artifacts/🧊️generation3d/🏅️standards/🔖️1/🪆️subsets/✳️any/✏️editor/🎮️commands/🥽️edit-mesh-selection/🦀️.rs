@@ -110,7 +110,7 @@ pub(crate) fn mesh_operation_rows(host_snapshot: &FlowHostSnapshot, operation: &
         let mut rows = editor.finish();
         rows.extend(inputs.into_iter().map(|(channel, input)| change_widget_input(id.clone(), channel, input)));
         Ok((id, rows))
-    })
+    })?
 }
 
 /// 🧩️ Inserts a source-scoped topology selector and feature through the recorder's declared graph edits.

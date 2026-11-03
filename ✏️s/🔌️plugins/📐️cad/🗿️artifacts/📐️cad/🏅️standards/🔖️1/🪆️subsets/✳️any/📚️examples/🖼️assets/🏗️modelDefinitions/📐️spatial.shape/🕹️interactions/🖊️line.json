@@ -2,7 +2,10 @@
   "schema": "spatial.interaction",
   "id": "curve.line",
   "version": "1.0.0",
-  "label": "Line",
+  "label": {
+    "native": { "en": "Line", "de": "Linie" },
+    "reuse": { "en": "Line", "de": "Linie" }
+  },
   "interaction": {
     "spatialGroundPick": true,
     "pickDisabledStates": ["idle", "committed"],
@@ -34,7 +37,10 @@
               {
                 "target": "start_of_line",
                 "key": "s",
-                "label": "Start",
+                "label": {
+                  "native": { "en": "Start", "de": "Start" },
+                  "reuse": { "en": "Start", "de": "Start" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -165,7 +171,10 @@
               {
                 "target": "idle",
                 "key": "x",
-                "label": "Cancel"
+                "label": {
+                  "native": { "en": "Cancel", "de": "Abbrechen" },
+                  "reuse": { "en": "Cancel", "de": "Abbrechen" }
+                }
               }
             ]
           }
@@ -212,7 +221,10 @@
               {
                 "target": "start_of_line",
                 "key": "u",
-                "label": "Undo pick",
+                "label": {
+                  "native": { "en": "Undo pick", "de": "Auswahl rückgängig" },
+                  "reuse": { "en": "Undo pick", "de": "Auswahl rückgängig" }
+                },
                 "effects": [
                   {
                     "mutation": "action",
@@ -272,7 +284,10 @@
               {
                 "target": "idle",
                 "key": "x",
-                "label": "Cancel"
+                "label": {
+                  "native": { "en": "Cancel", "de": "Abbrechen" },
+                  "reuse": { "en": "Cancel", "de": "Abbrechen" }
+                }
               }
             ]
           }
@@ -293,7 +308,10 @@
             "kind": "label",
             "id": "start_of_line-prompt",
             "role": "prompt",
-            "text": "Start of line",
+            "text": {
+              "native": { "en": "Start of line", "de": "Anfang der Linie" },
+              "reuse": { "en": "Start of line", "de": "Anfang der Linie" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]
@@ -396,7 +414,10 @@
             "kind": "label",
             "id": "end_of_line-prompt",
             "role": "prompt",
-            "text": "End of line",
+            "text": {
+              "native": { "en": "End of line", "de": "Ende der Linie" },
+              "reuse": { "en": "End of line", "de": "Ende der Linie" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]

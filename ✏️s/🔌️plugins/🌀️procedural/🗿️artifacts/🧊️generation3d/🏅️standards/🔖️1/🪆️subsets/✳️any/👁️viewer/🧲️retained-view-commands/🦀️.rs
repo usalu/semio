@@ -225,7 +225,7 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewComm
         if !self.closing{return Ok(semio_framework_job::InteractiveJobCloseStep::Blocked)}
         if self.terminal_is_empty(){return Ok(semio_framework_job::InteractiveJobCloseStep::Complete{progress:Default::default()})}
         let demand=self.close_demands(cx.retained_grant().maximum_copy_bytes)?;
-        let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|{(
+        let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|{let mut work=1;let result=(
             ||->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_value::ValueError>{
         use semio_framework_job::InteractiveJobCloseStep;
         use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
@@ -252,6 +252,7 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewComm
         }
         if let Some(retirement) = self.emit_retirement.as_mut() {
             let step = retirement.step(grant);
+            work = retirement.last_turn_work();
             if retirement.terminal_is_empty() {
                 self.emit_retirement = None;
             }
@@ -274,6 +275,7 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewComm
         }
         if let Some(retirement) = self.presence_retirement.as_mut() {
             let step = retirement.step(grant);
+            work = retirement.last_turn_work();
             if retirement.terminal_is_empty() {
                 self.presence_retirement = None;
             }
@@ -283,7 +285,7 @@ impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewComm
             };
         }
         Ok(InteractiveJobCloseStep::Complete { progress: idle })
-    })().map(|step|semio_framework_value::RetainedCloneStep::Progress(step.progress()))})?;
+    })().map(|step|semio_framework_value::RetainedCloneStep::Progress(step.progress()));semio_framework_value::RetainedWorkOutcome{result,work}})?;
         Ok(if self.terminal_is_empty(){semio_framework_job::InteractiveJobCloseStep::Complete{progress:step.progress()}}else{step})
     }
 

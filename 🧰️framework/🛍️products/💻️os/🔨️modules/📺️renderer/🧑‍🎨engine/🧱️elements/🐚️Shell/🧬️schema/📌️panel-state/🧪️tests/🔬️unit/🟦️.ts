@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
 import Ajv, { type AnySchema } from "ajv";
 import { applyPatch, getValueByPointer, type Operation } from "fast-json-patch";
 import { buildSpacePanelState, isSpacePanelState, panelJsonFromState, parsePanelState } from "../../../../../🛠️ShellHelpers/📌️panel/🟦️.ts";
+import panelSchema from "../../🔣️.json";
+import panelFixture from "../../../../🧪️tests/🧫️fixtures/📌️panel-state/🔣️.json";
 import routing from "../../../../🧪️tests/🧫️fixtures/🎯️spawned-document-routing/🔣️.json";
 
 type SpawnedAppEntry = {
@@ -28,8 +29,8 @@ type Fixture = {
   configuredPanelLeaves: { valid: string[]; invalid: string[] };
 };
 
-const schema = JSON.parse(readFileSync(new URL("../../🔣️.json", import.meta.url), "utf8")) as AnySchema;
-const fixture = JSON.parse(readFileSync(new URL("../../../../🧪️tests/🧫️fixtures/📌️panel-state/🔣️.json", import.meta.url), "utf8")) as Fixture;
+const schema = panelSchema as unknown as AnySchema;
+const fixture = panelFixture as unknown as Fixture;
 const control = /[\u0000-\u001f\u007f]/u;
 
 function identifier(value: unknown): value is string {

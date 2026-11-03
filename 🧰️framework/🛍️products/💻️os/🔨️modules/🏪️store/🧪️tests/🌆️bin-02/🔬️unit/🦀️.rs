@@ -704,7 +704,7 @@ async fn derived_child_reads_require_the_exact_store_frontier_and_genuine_operat
     let checkpoint_id=store.envelope().vcs.checkpoints[0].id.clone();
     store.dispatch(ArtifactCommand::Apply{mutations:vec![DemoMutation::SetN(SetN{n:checkpoint_case["live"]["n"].as_i64().unwrap()as i32})],transaction:None},&mut identity).await.expect("distinct live frontier after checkpoint");
     let grant=physical_test_close_grant();
-    let birth=ArtifactStore::<DemoSnapshot,DemoMutation>::derived_checkpoint_preview_admission_demands();
+    let birth=semio_framework_os_store_engine::lifted_store::ArtifactStore::<DemoSnapshot,DemoMutation>::derived_checkpoint_preview_admission_demands();
     let birth_grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:birth.copy_bytes,maximum_capacity_bytes:birth.capacity_bytes,maximum_release_bytes:birth.release_bytes,maximum_depth:birth.depth};
     for denied in [RetainedCloneGrant{maximum_items:0,..birth_grant},RetainedCloneGrant{maximum_copy_bytes:birth.copy_bytes-1,..birth_grant},RetainedCloneGrant{maximum_depth:0,..birth_grant}]{assert!(store.begin_derived_checkpoint_preview(&checkpoint_id,denied).unwrap().is_none());}
     let(mut preview,birth_receipt)=store.begin_derived_checkpoint_preview(&checkpoint_id,birth_grant).expect("actual checkpoint source").expect("exact checkpoint source frame");

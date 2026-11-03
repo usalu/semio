@@ -51,7 +51,7 @@ fn add_widget_descriptor(payload: &AddWidget) -> String {
 pub fn handle(payload: &AddWidget, doc: &ArtifactView<'_, Generation2dSnapshot>, _cfg: &ConfigView<'_, Generation2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation2dMutation, Generation2dConfigMutation>, Fault> {
     let fixture = &doc.snapshot.host_snapshot;
     let descriptor = add_widget_descriptor(payload);
-    let operations = with_host(fixture, |host| host_add_widget(host, &descriptor, payload.x.unwrap_or(120.0), payload.y.unwrap_or(120.0))).unwrap_or_default();
+    let operations = with_host(fixture, |host| host_add_widget(host, &descriptor, payload.x.unwrap_or(120.0), payload.y.unwrap_or(120.0)))?.unwrap_or_default();
     Ok(Emit { artifact_mutations: operations, ..Default::default() })
 }
 

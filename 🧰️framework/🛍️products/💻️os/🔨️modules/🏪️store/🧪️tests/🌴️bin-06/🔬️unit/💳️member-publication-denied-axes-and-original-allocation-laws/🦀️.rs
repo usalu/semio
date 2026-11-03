@@ -148,7 +148,7 @@ fn current_typed_option_birth_retains_exact_original_and_paid_shell() {
         RetainedCloneGrant { maximum_capacity_bytes: demand.capacity_bytes - 1, ..paid },
         RetainedCloneGrant { maximum_depth: demand.depth - 1, ..paid },
     ] {
-        let (result, born, freed) = semio_framework_trace_memory_testing::observe_backing(|| artifact_retirement_admit_owned(&mut pending, &mut active, denied));
+        let (result, born, freed) = semio_framework_trace_memory_testing::observe_backing(|| artifact_retirement_admit_owned(&mut pending, &mut active, denied).result);
         if let Ok(step) = result { assert_eq!(step.progress(), Default::default()); }
         assert_eq!((born, freed), (0, 0));
         assert_eq!(pending.as_ref().unwrap().as_ptr(), pointer);

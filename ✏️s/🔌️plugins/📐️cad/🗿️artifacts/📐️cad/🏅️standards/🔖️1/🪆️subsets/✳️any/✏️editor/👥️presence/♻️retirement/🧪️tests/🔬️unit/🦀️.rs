@@ -16,7 +16,7 @@ fn drive(retirement: &mut Box<dyn store::ErasedSnapshotRetirement>, turns: usize
     for turn in 0..turns {
         let demand = retirement.next_demand(usize::MAX).unwrap();
         let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
-        let step = retirement.close_step(grant).unwrap();
+        let step = retirement.close_step(grant).result.unwrap();
         let progress = step.progress();
         assert!(progress.fits(grant));
         total.copied_items += progress.copied_items;

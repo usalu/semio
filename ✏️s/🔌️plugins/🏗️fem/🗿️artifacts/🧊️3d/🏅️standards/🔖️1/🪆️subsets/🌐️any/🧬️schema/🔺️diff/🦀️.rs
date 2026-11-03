@@ -946,9 +946,6 @@ protocol::retained_row_patch!(pub retained_node_fields for Fem3dNodePatch => Fem
 protocol::retained_row_patch!(pub retained_section_fields for Fem3dSectionPatch => FemSection {name:String,area:f64,iy:f64,iz:f64,j:f64});
 protocol::retained_row_patch!(pub retained_solid_fields for Fem3dSolidPatch => FemSolid {name:String,outline:Vec<[f64;2]>,holes:Vec<Vec<[f64;2]>>,base_z:f64,height:f64,layers:usize,axis:crate::standards::v1::subsets::any::schema::structure::FemAxis,material_id:String,mesh_size:f64});
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 
 impl DiffAlgebra<Fem3dSnapshotValue> for Fem3dDiff {fn is_empty(&self)->bool{<Self as DiffAlgebra<Fem3dSnapshot>>::is_empty(self)}}
 impl MutationDiff<Fem3dSnapshotValue> for Fem3dDiff {}
@@ -962,6 +959,11 @@ pub struct Fem3dMaterialKey;
 impl protocol::list_delta::KeyOf<FemMaterialValue> for Fem3dMaterialKey{type Key=String;fn key_of(row:&FemMaterialValue)->String{row.id.clone()}fn retire_cold(row:FemMaterialValue){<FemMaterialValue as semio_framework_value::FromValue>::retire_decoded(row)}}
 
 /// ❄️ Persistent snapshots apply a diff through the explicit reference projection and receive the result back into persistent ownership.
+impl protocol::ColdDiffAlgebra<Fem3dSnapshot> for Fem3dDiff {
+    fn inverse(&self, base: &Fem3dSnapshot) -> Self {
+        <Self as protocol::ColdDiffAlgebra<Fem3dSnapshotValue>>::inverse(self, &base.to_reference())
+    }
+}
 impl protocol::ColdMutationDiff<Fem3dSnapshot> for Fem3dDiff {
     fn absorb(&mut self, other: Self) {
         <Self as protocol::ColdMutationDiff<Fem3dSnapshotValue>>::absorb(self, other)

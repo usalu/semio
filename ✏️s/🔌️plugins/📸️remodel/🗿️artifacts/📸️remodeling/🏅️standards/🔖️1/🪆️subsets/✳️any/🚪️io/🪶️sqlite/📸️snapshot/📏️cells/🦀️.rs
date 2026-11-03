@@ -34,7 +34,7 @@ fn float_buffer(value:&F,slot:&str,c:&mut Census,n:&mut N<'_>)->Result<()>{
  }Ok(())
 }
 fn durable_chunk(kind:&str,value:&F,c:&mut Census,n:&mut N<'_>)->Result<()>{
- let F::Bytes64(bytes)=value else{return Err(invalid("Remodeling durable role requires octets"))};let shape=durable_shape(kind,bytes,|_,_|n.step())?;
+ let F::Bytes64(bytes)=value else{return Err(invalid("Remodeling durable role requires octets"))};let bytes=&bytes.to_vec_owner();let shape=durable_shape(kind,bytes,|_,_|n.step())?;
  let mut cost=semantic_add(32,shape.kind.len())?;if let Some(field)=shape.field{cost=semantic_add(cost,field.len())?}if shape.tag.is_some(){cost=semantic_add(cost,8)?}if shape.kind=="raw"{cost=semantic_add(cost,bytes.len())?}c.row("remodel_durable_chunk",cost,n)?;
  match shape.kind{
   "raw"=>{},"text"=>c.row("remodel_durable_text",semantic_add(16,shape.count)?,n)?,

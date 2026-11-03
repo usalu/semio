@@ -41,6 +41,7 @@ semio-framework-os-presence-native-snapshot = { path="../../../👥️presence/�
 semio-framework-value-native-owned = { path = "../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-job-worker = { path = "../../../../../../../🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-os-store-test-support = { path = "../../../🧰️test-support/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-async-macros = { workspace = true }
@@ -59,5 +60,4 @@ semio-framework-os-command = { path="../../../../📡️spr/🎮️command/📦�
 semio-framework-os-spr = { path="../../../../📡️spr/📦️packages/🦀️rust", features=["protocol-laws"] }
 semio-framework-value-snapshot-read = { path = "../../../../../../../🔨️modules/🌱️value/📸️snapshot/👁️read/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-async = { path = "../../../../../../../🔨️modules/⏳️async/📦️packages/🦀️rust" }
-semio-framework-job-worker = { path = "../../../../../../../🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust" }
 semio-framework-job-worker-authority = { path = "../../../../../../../🔨️modules/🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust" }

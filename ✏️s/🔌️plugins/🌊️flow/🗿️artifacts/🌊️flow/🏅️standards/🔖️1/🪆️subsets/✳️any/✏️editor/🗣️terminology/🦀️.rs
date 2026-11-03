@@ -57,6 +57,8 @@ semio_framework_ui_locale::app_labels! {
         id: native_en "Id", native_de "Id", reuse_en "Id", reuse_de "Id";
         none_placeholder: native_en "(none)", native_de "(keine)", reuse_en "(none)", reuse_de "(keine)";
         widget_not_found: native_en "Widget not found", native_de "Widget nicht gefunden", reuse_en "Widget not found", reuse_de "Widget nicht gefunden";
+        form_no_inputs: native_en "No input widgets to generate from.", native_de "Keine Eingabeelemente zum Generieren vorhanden.", reuse_en "No input widgets to generate from.", reuse_de "Keine Eingabeelemente zum Generieren vorhanden.";
+        form_no_image: native_en "(no image)", native_de "(kein Bild)", reuse_en "(no image)", reuse_de "(kein Bild)";
         generation_needed: native_en "Add a generation to edit input values.", native_de "Füge eine Generation hinzu, um Eingabewerte zu bearbeiten.", reuse_en "Add a generation to edit input values.", reuse_de "Füge eine Generation hinzu, um Eingabewerte zu bearbeiten.";
     }
 }

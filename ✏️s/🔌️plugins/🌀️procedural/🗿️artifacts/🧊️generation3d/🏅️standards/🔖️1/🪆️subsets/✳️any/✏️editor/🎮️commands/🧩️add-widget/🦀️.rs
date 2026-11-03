@@ -47,7 +47,7 @@ impl AddWidget {
         Self { kind: item.kind.clone(), neuron_kind: item.neuron_kind.clone(), format: item.format.clone(), action: item.action.clone(), x: None, y: None, source_widget:None,source_port:None,target_port:None,source_revision:None }
     }
 
-    pub(crate) fn source_request(&self)->Result<Option<semio_framework_os_flow::FlowSourceReadRequest<'_>>,Fault>{
+    pub fn source_request(&self)->Result<Option<semio_framework_os_flow::FlowSourceReadRequest<'_>>,Fault>{
         let fields=[self.source_widget.as_deref(),self.source_port.as_deref(),self.target_port.as_deref(),self.source_revision.as_deref()];
         if fields.iter().all(Option::is_none){return Ok(None)}
         if self.kind!="neuron"||fields.iter().any(|field|field.is_none_or(str::is_empty)){return Err(creation_fault("connected neuron creation requires the complete original source endpoint and revision"))}
@@ -55,7 +55,7 @@ impl AddWidget {
         Ok(Some(semio_framework_os_flow::FlowSourceReadRequest{source_widget:fields[0].unwrap(),source_port:fields[1].unwrap(),target:semio_framework_os_flow::FlowSourceReadTarget::Port{port:fields[2].unwrap(),kind:self.neuron_kind.as_deref().ok_or_else(||creation_fault("connected creation requires a registered neuron kind"))?}}))
     }
 
-    pub(crate) fn source_revision_bytes(&self)->Result<[u8;32],Fault>{
+    pub fn source_revision_bytes(&self)->Result<[u8;32],Fault>{
         let source=self.source_revision.as_deref().ok_or_else(||creation_fault("connected creation requires its displayed source revision"))?;
         if source.len()!=64||!source.bytes().all(|byte|byte.is_ascii_digit()||(b'a'..=b'f').contains(&byte)){return Err(creation_fault("connected creation requires the exact canonical source revision"))}
         let mut revision=[0;32];for(index,pair)in source.as_bytes().chunks_exact(2).enumerate(){let digit=|byte:u8|if byte.is_ascii_digit(){byte-b'0'}else{byte-b'a'+10};revision[index]=digit(pair[0])*16+digit(pair[1]);}Ok(revision)
@@ -132,7 +132,7 @@ fn create(payload:&AddWidget,doc:&ArtifactView<'_,Generation3dSnapshot>,source:O
         editor.move_widget(&id, x, y).map_err(creation_fault)?;
         if let Some(request)=request.as_ref(){editor.connect_ports(request.source_widget,request.source_port,&id,request.target_port().ok_or_else(||creation_fault("connected creation requires a registered input port"))?).map_err(creation_fault)?;}
         Ok(Emit { artifact_mutations: editor.finish(), ..Default::default() })
-    })
+    }).map_err(|error| creation_fault(error.to_string()))?
 }
 
 

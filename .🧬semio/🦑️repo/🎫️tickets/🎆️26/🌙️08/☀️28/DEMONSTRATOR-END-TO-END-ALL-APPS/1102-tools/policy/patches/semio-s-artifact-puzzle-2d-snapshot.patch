@@ -1,0 +1,11 @@
+--- a/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔎️lookup/🦀️.rs
++++ b/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔎️lookup/🦀️.rs
+@@ -67,7 +67,7 @@
+         }
+         let scope = self.scope;
+         let (outer, inner) = (self.outer, self.inner);
+-        match self.comparison.compare(source.project(1, |snapshot| scope.identifier(snapshot, outer, inner).expect("immutable native lookup candidate")), target, BoundedOrdGrant { maximum_items: grant.maximum_items, maximum_bytes: grant.maximum_copy_bytes }, grant).result? {
++        match self.comparison.compare(source.try_project(1, |snapshot| scope.identifier(snapshot, outer, inner).ok_or_else(|| ValueError::invariant("immutable native lookup candidate is absent")))?, target, BoundedOrdGrant { maximum_items: grant.maximum_items, maximum_bytes: grant.maximum_copy_bytes }, grant).result? {
+             BoundedOrdStep::Authority(progress) => Ok(Puzzle2dLookupStep::Pending(progress)),
+             BoundedOrdStep::Progress(progress) => Ok(Puzzle2dLookupStep::Pending(RetainedCloneProgress { copied_items: progress.compared_items, copied_bytes: progress.compared_bytes, ..Default::default() })),
+             BoundedOrdStep::Complete { ordering, progress } => {

@@ -33,7 +33,7 @@ semio-framework-diagnostic = { path = "../../../../../../../../🔨️modules/�
 semio-framework-dsl-record = { path = "../../../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-dsl-record-derive = { path = "../../../../../../../../🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
 semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust" }
-semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", features = ["mutation-testing"] }
+semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", features = ["mutation-testing", "protocol-laws"] }
 semio-framework-plugin-app-builder = { path = "../../../../🏗️builder/🧩️app/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
 semio-framework-plugin-composition-publication = { path = "../../../../🧩️composition/📬️publication/📦️packages/🦀️rust" }
 semio-framework-plugin-decl-app = { path = "../../../../📜️declaration/🧩️app/📦️packages/🦀️rust", features = ["artifact-app-testing"] }

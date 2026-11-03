@@ -58,8 +58,8 @@ impl<P,Mutation:super::Mutation<P>+OpBinary> ReplayOwnedState<P,Mutation>{
                         if deadline() || completed_operations >= maximum_operations { return Ok(ReplayStep::Pending(self.progress)); }
                         continue;
                     }
-                    if !cold{return Err(VcsError::InverseRefused(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"native prefix replay requires its retained original preparation issuer")));}
-                    cold_prefix.expect("admitted cold replay prefix authority")(self,edit)?;
+                    let Some(cold_prefix)=cold_prefix.filter(|_|cold)else{return Err(VcsError::InverseRefused(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"native prefix replay requires its retained original preparation issuer")));};
+                    cold_prefix(self,edit)?;
                     self.operation += 1;
                     completed_operations = completed_operations.saturating_add(1);
                     if self.prefix_work_progress { self.progress.done = self.progress.done.saturating_add(1); }
@@ -70,8 +70,8 @@ impl<P,Mutation:super::Mutation<P>+OpBinary> ReplayOwnedState<P,Mutation>{
             }
             if self.operation < edit.forwards.len() {
                 if self.operation_preparation_factory.is_none(){
-                    if !cold{return Err(VcsError::InverseRefused(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"native replay requires its retained original preparation issuer")));}
-                    cold_operation.expect("admitted cold replay operation authority")(self,edit)?;
+                    let Some(cold_operation)=cold_operation.filter(|_|cold)else{return Err(VcsError::InverseRefused(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"native replay requires its retained original preparation issuer")));};
+                    cold_operation(self,edit)?;
                     self.operation+=1;
                     completed_operations=completed_operations.saturating_add(1);
                     self.progress.done=self.progress.done.saturating_add(1);
@@ -116,8 +116,11 @@ impl<P,Mutation:super::Mutation<P>+OpBinary> ReplayOwnedState<P,Mutation>{
 
             let capacity=settlement.next_capacity_byte_demand().map_err(VcsError::InverseRefused)?;
             if grant.maximum_capacity_bytes<capacity{return Ok(false)}
-            let control=control.ok_or_else(||VcsError::InverseRefused(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"native edit diagnostics require their decoding continuation")))?;
-            control.admit_turn_capacity(grant.maximum_capacity_bytes).map_err(VcsError::InverseRefused)?;control.charge(capacity).map_err(VcsError::InverseRefused)?;
+            match control{
+                Some(control)=>{control.admit_turn_capacity(grant.maximum_capacity_bytes).map_err(VcsError::InverseRefused)?;control.charge(capacity).map_err(VcsError::InverseRefused)?;}
+                None if grant==Self::cold_authority_grant()=>{}
+                None=>return Err(VcsError::InverseRefused(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"native edit diagnostics require their decoding continuation"))),
+            }
             self.native_receipt=settlement.step(&mut self.edit_messages,&mut self.outcomes,grant).map_err(VcsError::InverseRefused)?;
             return Ok(false);
         }
@@ -136,10 +139,10 @@ impl<P,Mutation:super::Mutation<P>+OpBinary> ReplayOwnedState<P,Mutation>{
             if let Some(previous) = self.state.replace(candidate) { self.begin_replay_snapshot_retirement(previous); return Ok(false); }
         }
         let grant=original.ok_or_else(||VcsError::HistoryReplaying)?;
-        macro_rules! reserve_output{($field:ident,$kind:ty)=>{if self.$field.len()==self.$field.capacity(){let old=self.$field.capacity()*std::mem::size_of::<$kind>();let bytes=(self.$field.len()+1).checked_mul(std::mem::size_of::<$kind>()).ok_or_else(||VcsError::HistoryReplaying)?;let d=semio_framework_value::RetirementDemand{copy_bytes:old+std::mem::size_of::<Vec<$kind>>(),capacity_bytes:bytes,release_bytes:old,depth:1};if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Ok(false)}let control=control.as_deref_mut().ok_or_else(||VcsError::HistoryReplaying)?;control.admit_turn_capacity(grant.maximum_capacity_bytes).map_err(VcsError::InverseRefused)?;control.charge(bytes).map_err(VcsError::InverseRefused)?;self.$field.try_reserve_exact(1).map_err(|_|VcsError::HistoryReplaying)?;self.native_receipt=RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:bytes,released_bytes:old};return Ok(false)}};}
+        macro_rules! reserve_output{($field:ident,$kind:ty)=>{if self.$field.len()==self.$field.capacity(){let old=self.$field.capacity()*std::mem::size_of::<$kind>();let bytes=(self.$field.len()+1).checked_mul(std::mem::size_of::<$kind>()).ok_or_else(||VcsError::HistoryReplaying)?;let d=semio_framework_value::RetirementDemand{copy_bytes:old+std::mem::size_of::<Vec<$kind>>(),capacity_bytes:bytes,release_bytes:old,depth:1};if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Ok(false)}match control.as_deref_mut(){Some(control)=>{control.admit_turn_capacity(grant.maximum_capacity_bytes).map_err(VcsError::InverseRefused)?;control.charge(bytes).map_err(VcsError::InverseRefused)?;}None if grant==Self::cold_authority_grant()=>{}None=>return Err(VcsError::HistoryReplaying)}self.$field.try_reserve_exact(1).map_err(|_|VcsError::HistoryReplaying)?;self.native_receipt=RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:bytes,released_bytes:old};return Ok(false)}};}
         reserve_output!(replayed,semio_framework_os_spr::EditMessages);
         if rejects{reserve_output!(quarantined,String);}else{reserve_output!(rebased_inverse,(String,semio_framework_value_persistent::list::PagedList<Mutation,{usize::MAX}>));reserve_output!(committed,String);}
-        let count=if rejects{2}else{3};let bytes=edit_id.len().checked_mul(count).ok_or(VcsError::HistoryReplaying)?;let copy=bytes+std::mem::size_of::<semio_framework_os_spr::EditMessages>()+std::mem::size_of::<semio_framework_os_store_ledger::edit_message_clamp::settlement::EditMessageSettlement>()+std::mem::size_of::<semio_framework_value_persistent::list::PagedList<Mutation,{usize::MAX}>>();let d=semio_framework_value::RetirementDemand{copy_bytes:copy,capacity_bytes:bytes,depth:1,..Default::default()};if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Ok(false)}let control=control.as_deref_mut().ok_or(VcsError::HistoryReplaying)?;control.admit_turn_capacity(grant.maximum_capacity_bytes).map_err(VcsError::InverseRefused)?;control.charge(bytes).map_err(VcsError::InverseRefused)?;self.native_receipt=RetainedCloneProgress{copied_items:1,copied_bytes:copy,retained_capacity_bytes:bytes,..Default::default()};
+        let count=if rejects{2}else{3};let bytes=edit_id.len().checked_mul(count).ok_or(VcsError::HistoryReplaying)?;let copy=bytes+std::mem::size_of::<semio_framework_os_spr::EditMessages>()+std::mem::size_of::<semio_framework_os_store_ledger::edit_message_clamp::settlement::EditMessageSettlement>()+std::mem::size_of::<semio_framework_value_persistent::list::PagedList<Mutation,{usize::MAX}>>();let d=semio_framework_value::RetirementDemand{copy_bytes:copy,capacity_bytes:bytes,depth:1,..Default::default()};if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Ok(false)}match control.as_deref_mut(){Some(control)=>{control.admit_turn_capacity(grant.maximum_capacity_bytes).map_err(VcsError::InverseRefused)?;control.charge(bytes).map_err(VcsError::InverseRefused)?;}None if grant==Self::cold_authority_grant()=>{}None=>return Err(VcsError::HistoryReplaying)}self.native_receipt=RetainedCloneProgress{copied_items:1,copied_bytes:copy,retained_capacity_bytes:bytes,..Default::default()};
         let messages = self.message_settlement.as_mut().expect("completed edit message selection").take_messages().expect("final bounded diagnostic owner");
         drop(self.message_settlement.take());
         self.closed_outcomes = self.outcomes.len();
@@ -377,10 +380,10 @@ where
     /// ⏭️ Folds one prefix operation on the cold diff arithmetic: a prefix replays messageless and stages no rows.
     fn replay_prefix_operation(&mut self, edit: &Edit<Mutation>) -> Result<(), VcsError> {
         let index = self.operation;
-        let id = semio_framework_os_spr::mutation_id_for_edit_operation::<P, Mutation>(edit, index).expect("recorded operation identity");
+        let id = semio_framework_os_spr::mutation_id_for_edit_operation::<P, Mutation>(edit, index).ok_or_else(|| VcsError::ValidationFailed("recorded operation identity is absent".into()))?;
         if edit.forwards[index].may_emit_foreign_steps() {
             let digest = CursorRevisionAccumulator::hash_record(b"edit-id", &[edit.id.as_bytes()]);
-            self.unit_flags.insert((digest, index), semio_framework_os_spr::ColdMutation::foreign_step_source(&edit.forwards[index], self.state.as_ref().expect("replay prefix state"), 0).map_err(VcsError::from)?.is_some());
+            self.unit_flags.insert((digest, index), semio_framework_os_spr::ColdMutation::foreign_step_source(&edit.forwards[index], self.state.as_ref().ok_or_else(|| VcsError::ValidationFailed("edit replay lost its running projection".into()))?, 0).map_err(VcsError::from)?.is_some());
         }
         let effective = effective_operation::<P, Mutation>(&edit.forwards[index], index as u32, id, &self.schema, &self.supersessions);
         if let Some(operation) = effective.operation() {
@@ -392,7 +395,7 @@ where
     /// mutation is edited or withdrawn. A `Merge` replay refuses with [`VcsError::InverseRefused`].
     fn replay_operation(&mut self, edit: &Edit<Mutation>) -> Result<(), VcsError> where P:Clone, Mutation:semio_framework_os_spr::ColdMutation<P> {
         let index = self.operation;
-        let mutation_id = semio_framework_os_spr::mutation_id_for_edit_operation::<P, Mutation>(edit, index).expect("recorded operation identity");
+        let mutation_id = semio_framework_os_spr::mutation_id_for_edit_operation::<P, Mutation>(edit, index).ok_or_else(|| VcsError::ValidationFailed("recorded operation identity is absent".into()))?;
         if edit.forwards[index].may_emit_foreign_steps() {
             let digest = CursorRevisionAccumulator::hash_record(b"edit-id", &[edit.id.as_bytes()]);
             let base = self.candidate.as_ref().or(self.state.as_ref()).expect("replay operation state");
@@ -572,7 +575,7 @@ mod operation_preparation {
                 return Ok(false);
             }
             let index = self.operation;
-            let mutation_id = semio_framework_os_spr::mutation_id_for_edit_operation::<P, M>(edit, index).expect("recorded operation identity");
+            let mutation_id = semio_framework_os_spr::mutation_id_for_edit_operation::<P, M>(edit, index).ok_or_else(|| VcsError::ValidationFailed("recorded operation identity is absent".into()))?;
             if self.prepared_operation.is_none() {
                 if self.operation_preparation.is_none() {
                     return Ok(false);

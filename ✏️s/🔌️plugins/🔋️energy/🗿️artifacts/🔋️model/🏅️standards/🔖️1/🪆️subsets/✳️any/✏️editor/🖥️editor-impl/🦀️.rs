@@ -29,6 +29,9 @@ impl ArtifactEditor for EnergyModelEditor {
     const DIALECT: Dialect = MODEL_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = ENERGY_MODEL_DOCUMENT_SCHEMA;
 
+    /// 🌱️ A fresh editor is born on the canonical empty model, the real empty document.
+    fn reference_birth() -> Option<semio_framework_plugin::ReferenceArtifactAppBirth<Self::Snapshot>> { Some(|| Ok(EnergyModelSnapshot::default())) }
+
     fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
         ENERGY_MODEL_RETAINED_TOOL_IDS.iter().map(|tool| semio_framework_plugin::ArtifactBoundedFirstStepProof::new::<EditorApp<EnergyModelEditor>>(
             "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",

@@ -124,7 +124,8 @@ async fn a_trapped_guest_turn_emits_one_fault_frame_frees_the_retry_slot_and_ret
     assert_eq!(pump(&mut shard).await.expect("a trapped turn is answered, not propagated"), 1);
     let outbound = probe.take_outbound().await;
     assert_eq!(outbound.len(), 1);
-    assert!(matches!(decode_outcome(&outbound[0]).await, ShardOutcome::Fault { actor: reported, message } if reported == 92 && message.contains("scripted deterministic trap")));
+    let outcome = decode_outcome(&outbound[0]).await;
+    assert!(matches!(&outcome, ShardOutcome::Fault { actor: reported, message } if *reported == 92 && message.contains("scripted deterministic trap")), "trap outcome: {outcome:?}");
     assert!(!shard.is_registered(actor).await, "a trapped instance is retired");
     assert!(!shard.has_lifecycle_retry(), "the retry slot is freed");
     assert!(!shard.has_pending_work(), "nothing re-enters the poisoned guest");

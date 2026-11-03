@@ -15,7 +15,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Config
 /// 🎛️ Handle preferences persisted by one exact CAD world-window configuration owner.
-#[derive(Clone, Copy, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(Clone, Copy, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct CadDislocateOptions {
@@ -32,7 +32,7 @@ impl Default for CadDislocateOptions {
 /// 🌞️ Local `dsl::DslRecord`-able mirror of `semio_framework_plugin::WorldSunConfig` (foreign,
 /// out-of-scope crate — cannot gain a `dsl` derive there). `cad_sun_config_from_world`/
 /// `cad_sun_config_to_world` convert at the boundary; field-for-field identical otherwise.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct CadSunConfig {
@@ -61,7 +61,7 @@ pub fn cad_sun_config_to_world(sun: &CadSunConfig) -> semio_framework_plugin::Wo
 /// comment above for the full absorption story.
 /// The per-frame engagement state (action line, REPL step, live session, repeat-last) is NOT config: it lives in the
 /// addressed world window's transient (`🪟️windows/🫧️transient`, design §17.4 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING).
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(extension = "cadcfg")]
@@ -241,7 +241,7 @@ impl protocol::ColdDiffAlgebra<CadConfig> for CadConfigDiff {
 /// 🧮️ `CadConfig`'s operation enum: `Set` assigns the selection, hover, example and reference-selection fields of its payload
 /// (application state mutates in tight clusters, e.g. `worldSelect` touches 5+ fields together); its diff carries only the fields that
 /// differ from the base and its inverse is the absolute `Set` of the base values; `SetContributions` assigns the pushed contributions.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub enum CadConfigMutation {
 
@@ -252,7 +252,7 @@ pub enum CadConfigMutation {
 }
 
 /// 📦️ `Set` payload record — wire-identical to the former named variant.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub struct SetEdit {
     #[dsl(block)]
@@ -260,7 +260,7 @@ pub struct SetEdit {
 }
 
 /// 📦️ `SetContributions` payload record — wire-identical to the former named variant.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub struct SetContributionsEdit {
     pub json: String,
@@ -317,6 +317,7 @@ impl protocol::OpBinary for CadConfigMutation {
         <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
     }
 }
+semio_framework_os_kernel::original_ordinal_operation_receiving!(CadConfigMutation);
 
 //#endregion 🔖️OpCodec
 

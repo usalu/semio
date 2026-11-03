@@ -1,0 +1,104 @@
+--- a/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📐️geometry/🦀️.rs
++++ b/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📐️geometry/🦀️.rs
+@@ -198,7 +198,7 @@
+ #[value(rename_all = "camelCase")]
+ pub struct CadObject {
+     pub id: String,
+-    pub label: String,
++    pub label: CadObjectName,
+     pub typology: String,
+     #[value(default = "default_true")]
+     pub visible: bool,
+@@ -218,6 +218,38 @@
+     pub solid_handle: Option<String>,
+     #[value(default)]
+     pub primitives: Vec<CadPrimitiveSlot>,
++}
++
++/// 🏷️ A cad object's name, stored language-neutrally in the event log and resolved at display time with the viewer's locale (`object_name`, `editor::cad::terminology`): a name the user typed is `Literal` text, a name the editor generated is the stable key it came from plus its ordinal, never a word of any language.
++#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
++#[value(tag = "kind", rename_all = "camelCase")]
++pub enum CadObjectName {
++    Literal { text: String },
++    Interaction {
++        #[value(rename = "interactionId")]
++        interaction_id: String,
++        ordinal: u32,
++        #[value(default)]
++        part: Option<u32>,
++    },
++    Typology {
++        #[value(default)]
++        ordinal: Option<u32>,
++    },
++}
++
++impl CadObjectName {
++    pub fn literal(text: impl Into<String>) -> Self {
++        Self::Literal { text: text.into() }
++    }
++
++    /// 🧩️ The `part`-th piece of a name generated for a multi-object commit (a polyline's segments); any other name is unchanged.
++    pub fn with_part(&self, part: u32) -> Self {
++        match self {
++            Self::Interaction { interaction_id, ordinal, .. } => Self::Interaction { interaction_id: interaction_id.clone(), ordinal: *ordinal, part: Some(part) },
++            other => other.clone(),
++        }
++    }
+ }
+ 
+ fn default_true() -> bool {
+@@ -605,7 +637,7 @@
+             let extent = extent_from_host_snapshot_primitives(geometry, &primitives);
+             Some(CadObject {
+                 id: object_id.into(),
+-                label: object_label_from_id(object_id),
++                label: CadObjectName::literal(object_label_from_id(object_id)),
+                 typology,
+                 visible: true,
+                 locked: false,
+@@ -651,6 +683,18 @@
+ /// 🧱️ One ordered primitive slot is a native logical property set.
+ pub(crate) const CAD_PRIMITIVE_PSET: &str = "cad.primitive";
+ 
++/// 🏷️ The name properties a cad object's [`CAD_OBJECT_PSET`] carries: a typed name as `label` text, a generated name as its key and ordinals only.
++fn object_name_properties(name: &CadObjectName) -> Vec<semio_s_artifact_stdio_semio_model::schema::snapshot::Property> {
++    use semio_s_artifact_stdio_semio_model::schema::snapshot::{Property, PsetValue};
++    let text = |key: &str, value: &str| Property { key: key.into(), value: PsetValue::Text { value: value.into() } };
++    let number = |key: &str, value: u32| Property { key: key.into(), value: PsetValue::Number { value: f64::from(value) } };
++    match name {
++        CadObjectName::Literal { text: literal } => vec![text("label", literal)],
++        CadObjectName::Interaction { interaction_id, ordinal, part } => [vec![text("nameKind", "interaction"), text("nameInteraction", interaction_id), number("nameOrdinal", *ordinal)], part.map(|part| number("namePart", part)).into_iter().collect()].concat(),
++        CadObjectName::Typology { ordinal } => [vec![text("nameKind", "typology")], ordinal.map(|ordinal| number("nameOrdinal", ordinal)).into_iter().collect()].concat(),
++    }
++}
++
+ /// 🌉️ WRITE direction: one `CadObject` → one `SemioModelElement`, exactly invertible by
+ /// [`cad_object_from_model_element`]. `typology` rides `ElementClass::Other{name}`, `origin`/`orientation`/`scale` the
+ /// placement, `solid_handle` `GeometryRef::Brep`, and every authoring field the [`CAD_OBJECT_PSET`] property set.
+@@ -662,7 +706,8 @@
+     let text = |key: &str, value: &str| Property { key: key.into(), value: PsetValue::Text { value: value.into() } };
+     let flag = |key: &str, value: bool| Property { key: key.into(), value: PsetValue::Boolean { value } };
+     let number = |key: &str, value: f64| Property { key: key.into(), value: PsetValue::Number { value } };
+-    let mut properties = vec![text("label", &object.label), flag("visible", object.visible), flag("locked", object.locked), flag("hasOrientation", object.orientation.is_some()), flag("hasScale", object.scale.is_some())];
++    let mut properties = vec![flag("visible", object.visible), flag("locked", object.locked), flag("hasOrientation", object.orientation.is_some()), flag("hasScale", object.scale.is_some())];
++    properties.splice(0..0, object_name_properties(&object.label));
+     properties.extend(object.mesh_url.as_deref().map(|url| text("meshUrl", url)));
+     properties.extend(object.extent.into_iter().flat_map(|[x, y, z]| [number("extentX", x), number("extentY", y), number("extentZ", z)]));
+     let mut psets = vec![PropertySet { name: CAD_OBJECT_PSET.into(), properties }];
+@@ -734,7 +779,14 @@
+     if primitives.is_empty() { primitives = solid_handle.clone().map(|primitive_id| vec![CadPrimitiveSlot { slot: "solid".into(), primitive_id, kind: "solid".into() }]).unwrap_or_default(); }
+     CadObject {
+         id: element.id.clone(),
+-        label: text("label").unwrap_or_else(|| object_label_from_id(&element.id)),
++        label: match text("nameKind").as_deref() {
++            Some("interaction") => match (text("nameInteraction"), number("nameOrdinal")) {
++                (Some(interaction_id), Some(ordinal)) => CadObjectName::Interaction { interaction_id, ordinal: ordinal as u32, part: number("namePart").map(|part| part as u32) },
++                _ => CadObjectName::literal(object_label_from_id(&element.id)),
++            },
++            Some("typology") => CadObjectName::Typology { ordinal: number("nameOrdinal").map(|ordinal| ordinal as u32) },
++            _ => CadObjectName::literal(text("label").unwrap_or_else(|| object_label_from_id(&element.id))),
++        },
+         typology,
+         visible: flag("visible").unwrap_or(true),
+         locked: flag("locked").unwrap_or(false),

@@ -322,8 +322,8 @@ pub fn render(doc: &Fem3dSnapshot, cfg: &Fem3dResultsWindowConfig, interaction: 
             }
             let scale = if display.mode.uses_mode_shape() { normalize_mode_shape(&mut values); mode_shape_scale(doc, cfg.animation.amplitude()) } else { doc.analysis.deformation_scale * cfg.animation.amplitude() };
             let mut caption = match display.mode {
-                DisplayMode::Modal(index) => format!("{} {}: {:.3} Hz{}", labels.mode_shape.as_str(), index + 1, display.mode.display_eigenvalue(eigenvalue).expect("modal display value"), playback_caption(&cfg.animation, labels)),
-                DisplayMode::Buckling(index) => format!("{} {}: {} {:.3}{}", labels.buckling_mode.as_str(), index + 1, labels.factor.as_str(), display.mode.display_eigenvalue(eigenvalue).expect("buckling display value"), playback_caption(&cfg.animation, labels)),
+                DisplayMode::Modal(index) => format!("{} {}: {:.3} Hz{}", labels.mode_shape.as_str(), index + 1, display.mode.display_eigenvalue(eigenvalue).ok_or_else(||semio_framework_plugin::PluginAssemblyError::new("fem3d.results-display","result display mode has no eigenvalue"))?, playback_caption(&cfg.animation, labels)),
+                DisplayMode::Buckling(index) => format!("{} {}: {} {:.3}{}", labels.buckling_mode.as_str(), index + 1, labels.factor.as_str(), display.mode.display_eigenvalue(eigenvalue).ok_or_else(||semio_framework_plugin::PluginAssemblyError::new("fem3d.results-display","result display mode has no eigenvalue"))?, playback_caption(&cfg.animation, labels)),
                 DisplayMode::Static => format!("{}: {}{}", labels.case_caption.as_str(), display.source_id.as_deref().and_then(|identity| semio_s_fem_analyses_model::borrow_result_source_identity(identity).ok()).map(|source| source.id).or_else(|| doc.load_cases.first().map(|case| case.id.as_str())).unwrap_or("∅"), playback_caption(&cfg.animation, labels)),
             };
             if !fields.current_revision() { caption.push_str(" · "); caption.push_str(progress_caption(live_stage, labels)); }

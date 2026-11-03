@@ -3,7 +3,7 @@ use super::{IfcCatalog,IfcTypeExpression};
 use super::domain::{DomainValue,DomainView,NumberView,ValueChange};
 const LIMIT:usize=128;
 #[path="membership.rs"]mod membership;
-pub(crate) use membership::TypeMembership;
+pub use membership::TypeMembership;
 #[derive(Clone,Copy)]
 pub enum Expression{Declared(&'static IfcTypeExpression),Named(&'static str)}
 impl Expression{fn name(self)->Option<&'static str>{match self{Self::Declared(value)=>value.name.as_deref(),Self::Named(name)=>Some(name)}}fn aggregate(self)->Option<&'static IfcTypeExpression>{match self{Self::Declared(value)if value.kind=="aggregate"=>Some(value),_=>None}}}

@@ -1,0 +1,27 @@
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/📨️emission/🛬️lifted/📦️preparation/♻️retirement/🦀️.rs
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/📨️emission/🛬️lifted/📦️preparation/♻️retirement/🦀️.rs
+@@ -45,7 +45,7 @@
+   match source.close_step(grant){
+    Ok(PluginLifecycleStep::Progress(progress)|PluginLifecycleStep::Complete(progress))=>RetirementStep::Progress(progress,1),
+    Ok(PluginLifecycleStep::AwaitingInput{..}|PluginLifecycleStep::Blocked{..})=>RetirementStep::BudgetExhausted,
+-   Err(original)=>{self.fault=Some(ControlledRetirement::new(original).expect("full original diagnostic close authority"));RetirementStep::Failure(ValueError::literal(ValueRefusalKind::InvariantViolated,"original child preparation refusal remains retained"),0)}
++   Err(original)=>{match ControlledRetirement::new(original){Ok(fault)=>self.fault=Some(fault),Err((error,_))=>return RetirementStep::Failure(error,0)}RetirementStep::Failure(ValueError::literal(ValueRefusalKind::InvariantViolated,"original child preparation refusal remains retained"),0)}
+   }
+  }
+  fn terminal_is_empty(&self)->bool{self.original.is_none()&&self.fault.is_none()}
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/📨️emission/🛬️lifted/📦️preparation/🦀️.rs
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/📨️emission/🛬️lifted/📦️preparation/🦀️.rs
+@@ -273,9 +273,10 @@
+             let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};
+             let outcome=match self.retire_builtin{
+                 Some((admit,_))=>admit(&mut self.current,&mut self.retirement,grant).result,
+-                None=>{
+-                    let operation=self.current.take().expect("observed current operation");
+-                    match self.factory.as_ref().expect("nonterminal owned mutation retains its exact retirement factory").retire_owned(operation,child).result {
++                None=>'retire:{
++                    let Some(factory)=self.factory.as_ref()else{break 'retire Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"nonterminal owned mutation lost its retirement factory"))};
++                    let Some(operation)=self.current.take()else{break 'retire Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"observed current operation is absent"))};
++                    match factory.retire_owned(operation,child).result {
+                         Ok((box_,progress))=>{
+                             *self.retirement=Some(box_);
+                             if !progress.fits(child)||progress.retained_capacity_bytes!=demand.capacity_bytes{Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"owned mutation constructor changed its receipt"))}else{Ok(RetainedCloneStep::Progress(progress))}

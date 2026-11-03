@@ -22,7 +22,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [features]
-artifact-app-testing = []
+artifact-app-testing = ["semio-framework-plugin-tool-run/artifact-app-testing"]
 
 [dependencies]
 semio-framework-plugin-typing-edit = { path = "../../../../🛠️tool-machine/⌨️typing/✍️edit/📦️packages/🦀️rust" }
@@ -59,3 +59,4 @@ semio-framework-value-original-aliases = { path = "../../../../../../../../🔨�
 semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 
 [dev-dependencies]
+semio-framework-plugin-tool-run = { path = "../../../../⏯️tool-run/📦️packages/🦀️rust", features = ["artifact-app-testing"] }

@@ -23,7 +23,7 @@ impl RetainedCloneEditCursor<u64,u64> for ScalarCursor{
  fn foreign_step_presence(&self)->bool{false}
  fn cancel(&mut self){self.closing=true;}
  fn begin_close(&mut self)->bool{let first=!self.closing;self.closing=true;first}
- fn close_step(&mut self,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if !self.close.is_empty(){return self.close.step_granted(g);}if let Some(step)=self.close.begin_granted(&mut self.inverse,g).result?{return Ok(step);}Ok(RetainedCloneStep::Complete(Default::default()))}
+ fn close_step(&mut self,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if !self.close.is_empty(){return self.close.step_granted(g).result;}if let Some(step)=self.close.begin_granted(&mut self.inverse,g).result?{return Ok(step);}Ok(RetainedCloneStep::Complete(Default::default()))}
  fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close.next_owner_demands::<Vec<u64>>(self.inverse.is_some(),&None,4096)?.copy_bytes)}
  fn next_close_capacity_byte_demand(&self,b:usize)->Result<usize,ValueError>{Ok(self.close.next_owner_demands::<Vec<u64>>(self.inverse.is_some(),&None,b)?.capacity_bytes)}
  fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close.next_owner_demands::<Vec<u64>>(self.inverse.is_some(),&None,4096)?.release_bytes)}

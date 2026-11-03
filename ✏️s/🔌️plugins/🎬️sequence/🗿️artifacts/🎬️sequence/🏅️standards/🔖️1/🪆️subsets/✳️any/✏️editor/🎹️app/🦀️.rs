@@ -237,13 +237,13 @@ impl ArtifactEditor for SequencePlayApp {
             canonical_base_revision: request.canonical_base_revision,
             authoring_seed: request.authoring_seed.clone(),
         }; if persistent_route {
-            Box::new(SequencePersistentWork::new(tool_id, &operation_context))
+            (Box::new(SequencePersistentWork::new(tool_id, &operation_context)) as Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<SequencePlayApp>>>)
         } else if artifact_route {
-            Box::new(SequenceRetainedArtifactWork::new(tool_id, &operation_context))
+            (Box::new(SequenceRetainedArtifactWork::new(tool_id, &operation_context)) as Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<SequencePlayApp>>>)
         } else if example_route {
-            Box::new(SequenceRetainedExampleWork::new(tool_id, &operation_context))
+            (Box::new(SequenceRetainedExampleWork::new(tool_id, &operation_context)) as Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<SequencePlayApp>>>)
         } else {
-            Box::new(SequenceRetainedConfigWork::new(tool_id, &operation_context))
+            (Box::new(SequenceRetainedConfigWork::new(tool_id, &operation_context)) as Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<SequencePlayApp>>>)
         } })
     }
 

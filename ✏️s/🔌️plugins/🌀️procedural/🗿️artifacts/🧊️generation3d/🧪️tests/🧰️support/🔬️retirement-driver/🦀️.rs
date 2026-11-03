@@ -2,12 +2,20 @@
 
 #![allow(dead_code)]
 
-use semio_framework_job::{CancelToken, Generation, InteractiveJob, InteractiveJobCloseStep, InteractiveStage, JobOutcomeBorrow, OperationId, StepBudget, StepContext};
+use semio_framework_job::{CancelToken, Generation, InteractiveJob, InteractiveJobCloseStep, InteractiveStage, JobOutcomeBorrow, OperationId, OriginalJobFixtureCaller, OriginalJobReturn, OriginalJobReturnOrigin, StepBudget, StepContext};
 use semio_framework_value::retained_clone::{admit_retained_clone_close, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value::{RetirementDemand, ValueError};
 
 /// 🎟️ The retained policy one driven step runs under.
 pub const STEP_GRANT: RetainedCloneGrant = RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 2 << 20, maximum_depth: 128 };
+
+/// 🪙️ The finite original source stock one driven fixture caller lends its turns.
+pub const SOURCE_STOCK: RetainedCloneGrant = RetainedCloneGrant { maximum_items: 1 << 24, maximum_copy_bytes: 1 << 32, maximum_capacity_bytes: 1 << 32, maximum_release_bytes: 1 << 32, maximum_depth: 128 };
+
+/// 🎟️ Admits the original fixture caller one driven close or step runs under.
+fn fixture_caller(operation: OperationId, generation: Generation, deadline_us: u64, fuel: u64) -> OriginalJobFixtureCaller {
+    OriginalJobFixtureCaller::admit(operation, generation, SOURCE_STOCK, semio_framework_job::default_now_us, deadline_us, fuel)
+}
 
 /// 🎟️ A one-item grant paying exactly `demand` in every currency.
 pub fn exact_grant(demand: RetirementDemand) -> RetainedCloneGrant {
@@ -28,7 +36,7 @@ pub fn drive_erased_released(owner: &mut dyn store::ErasedSnapshotRetirement, la
             return released;
         }
         let grant = exact_grant(erased_demand(owner).unwrap_or_else(|error| panic!("{label} refused its close quote: {error}")));
-        let step = owner.close_step(grant).unwrap_or_else(|error| panic!("{label} retirement faulted: {error}"));
+        let step = owner.close_step(grant).result.unwrap_or_else(|error| panic!("{label} retirement faulted: {error}"));
         admit_retained_clone_close(grant, step, owner.terminal_is_empty(), "driven test retirement").unwrap_or_else(|error| panic!("{label} overspent its grant: {error}"));
         released += step.progress().released_bytes;
         if matches!(step, RetainedCloneStep::Complete(_)) {
@@ -52,7 +60,7 @@ pub fn retire_owned_for_test<T: semio_framework_value::retirement::RetireOwned>(
 pub fn retire_shared_for_test<T: semio_framework_value::retirement::RetireOwned + Sync>(value: std::sync::Arc<T>, label: &str) -> Box<dyn store::ErasedSnapshotRetirement> {
     let factory = semio_framework_value::SharedValueRetirementFactory::<T>::default();
     let birth = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: store::SnapshotRetirementFactory::retirement_birth_bytes(&factory, &value), maximum_release_bytes: 0, maximum_depth: 2 };
-    match store::SnapshotRetirementFactory::retire(&factory, value, birth) {
+    match store::SnapshotRetirementFactory::retire(&factory, value, birth).result {
         Ok((owner, _)) => owner,
         Err((error, _)) => panic!("{label} refused its own birth: {error}"),
     }
@@ -68,13 +76,15 @@ pub fn job_grant<J: InteractiveJob + ?Sized>(job: &J) -> RetainedCloneGrant {
 pub fn close_job<J: InteractiveJob + ?Sized>(job: &mut J, label: &str) -> usize {
     job.begin_close();
     let mut released = 0usize;
+    let mut caller = fixture_caller(semio_framework_job::allocate_operation_id(), Generation(1), u64::MAX, 1 << 40);
     for _ in 0..10_000_000 {
         let grant = job_grant(job);
-        match semio_framework_job::close_with_self_funded_context(grant, |cx| job.close_step(cx)).expect("original fixture close turn") {
+        match caller.turn(grant, |cx| job.close_step(cx)).expect("original fixture close turn") {
             InteractiveJobCloseStep::Complete { progress } => {
                 assert!(progress.fits(grant), "{label} close receipt exceeds its quoted grant");
                 released += progress.released_bytes;
                 assert!(job.terminal_is_empty(), "{label} completed without its terminal-empty witness");
+                caller.retire(SOURCE_STOCK);
                 return released;
             }
             InteractiveJobCloseStep::Pending { progress } => {
@@ -90,6 +100,7 @@ pub fn close_job<J: InteractiveJob + ?Sized>(job: &mut J, label: &str) -> usize 
 /// 🧹️ Begins the close of one command work and drives it to its terminal-empty witness under exactly its quoted grants.
 pub fn close_work<A: semio_framework_plugin::ArtifactApp, W: semio_framework_plugin::retained_command::ArtifactCommandWork<A> + ?Sized>(work: &mut W, label: &str) {
     work.begin_close();
+    let mut caller = fixture_caller(semio_framework_job::allocate_operation_id(), Generation(1), u64::MAX, 1 << 40);
     for _ in 0..10_000_000 {
         let copy = work.next_close_copy_byte_demand().unwrap_or_else(|error| panic!("{label} copy quote refused: {error}"));
         let grant = exact_grant(RetirementDemand {
@@ -98,10 +109,11 @@ pub fn close_work<A: semio_framework_plugin::ArtifactApp, W: semio_framework_plu
             release_bytes: work.next_close_release_byte_demand().unwrap_or_else(|error| panic!("{label} release quote refused: {error}")),
             depth: work.next_close_depth_demand().unwrap_or_else(|error| panic!("{label} depth quote refused: {error}")),
         });
-        match semio_framework_job::close_with_self_funded_context(grant, |cx| work.close_step(cx)).expect("original fixture close turn") {
+        match caller.turn(grant, |cx| work.close_step(cx)).expect("original fixture close turn") {
             InteractiveJobCloseStep::Complete { progress } => {
                 assert!(progress.fits(grant), "{label} close receipt exceeds its quoted grant");
                 assert!(work.terminal_is_empty(), "{label} completed without its terminal-empty witness");
+                caller.retire(SOURCE_STOCK);
                 return;
             }
             InteractiveJobCloseStep::Pending { progress } => assert!(progress.fits(grant), "{label} close receipt exceeds its quoted grant"),
@@ -147,19 +159,67 @@ pub enum Stepped {
     Cancelled,
 }
 
-/// 🦶️ Drives one step of `job` under `fuel` and `deadline_us` with the shared test grant and answers what it lent.
-pub fn step_once<J: InteractiveJob + ?Sized>(job: &mut J, fuel: u64, deadline_us: u64, cancel: &CancelToken, operation: OperationId, generation: Generation, sequence: &mut u64) -> Stepped {
-    let mut receipt = RetainedCloneProgress::default();
-    let mut cx = StepContext::new(operation, generation, StepBudget::new(fuel, deadline_us, STEP_GRANT), cancel.clone(), semio_framework_job::default_now_us, sequence, &mut receipt);
-    let mut verdict = None;
-    match semio_framework_job::drive_step(job, &mut cx, "procedural.test", InteractiveStage::InteractiveStep, &mut verdict).expect("job step admission") {
-        None | Some(JobOutcomeBorrow::Yield { .. }) => Stepped::Yield,
-        Some(JobOutcomeBorrow::PreviewReady { payload, .. }) => Stepped::Preview((0..payload.page_count()).flat_map(|index| payload.page(index).expect("preview page").to_vec()).collect()),
-        Some(JobOutcomeBorrow::CheckpointReady { .. }) => Stepped::Checkpoint,
-        Some(JobOutcomeBorrow::Complete { .. }) => Stepped::Complete,
-        Some(JobOutcomeBorrow::Fault { .. }) => Stepped::Fault,
-        Some(JobOutcomeBorrow::Cancelled { .. }) => Stepped::Cancelled,
+/// 🦶️ Drives one step of `job` under `fuel` and `deadline_us` through its own original source and return receiver, and answers what it lent.
+pub fn step_once<J: InteractiveJob + ?Sized>(job: &mut J, fuel: u64, deadline_us: u64, _cancel: &CancelToken, operation: OperationId, generation: Generation, _sequence: &mut u64) -> Stepped {
+    let mut caller = fixture_caller(operation, generation, deadline_us, fuel.saturating_add(1 << 20));
+    let mut origin = OriginalJobReturnOrigin::empty();
+    let one = RetainedCloneGrant { maximum_items: 1, ..SOURCE_STOCK };
+    let mut ready = false;
+    for _ in 0..64 {
+        caller.turn(one, |cx| cx.with_original_work_loan(1, cx.original_absolute_deadline_us(), |cx| { ready = origin.admit(cx)?; Ok(()) })).expect("original return source admission");
+        if ready {
+            break;
+        }
     }
+    assert!(ready, "the original return source never became ready");
+    let mut answered = None;
+    for _ in 0..64 {
+        let mut verdict = None;
+        let mut pending = None;
+        caller
+            .turn(STEP_GRANT, |cx| {
+                cx.with_original_work_loan(fuel, deadline_us, |cx| {
+                    match semio_framework_job::drive_step(job, cx, origin.receiver()?, "procedural.test", InteractiveStage::InteractiveStep, &mut verdict)? {
+                        OriginalJobReturn::Preparing | OriginalJobReturn::Pending => {}
+                        OriginalJobReturn::Outcome(reply) => {
+                            answered = Some(match reply.original() {
+                                None | Some(JobOutcomeBorrow::Yield { .. }) => Stepped::Yield,
+                                Some(JobOutcomeBorrow::PreviewReady { payload, .. }) => Stepped::Preview((0..payload.page_count()).flat_map(|index| payload.page(index).expect("preview page").to_vec()).collect()),
+                                Some(JobOutcomeBorrow::CheckpointReady { .. }) => Stepped::Checkpoint,
+                                Some(JobOutcomeBorrow::Complete { .. }) => Stepped::Complete,
+                                Some(JobOutcomeBorrow::Fault { .. }) => Stepped::Fault,
+                                Some(JobOutcomeBorrow::Cancelled { .. }) => Stepped::Cancelled,
+                            });
+                            pending = Some(reply.into_descriptor());
+                        }
+                        OriginalJobReturn::Continuation(_) => panic!("job step returned a continuation"),
+                    }
+                    if pending.is_some() {
+                        origin.receive_outcome(cx, &mut pending)?;
+                    }
+                    Ok(())
+                })
+            })
+            .expect("job step admission");
+        if answered.is_some() {
+            break;
+        }
+    }
+    for _ in 0..64 {
+        if origin.outcome().is_none() {
+            break;
+        }
+        caller.turn(one, |cx| cx.with_original_work_loan(1, cx.original_absolute_deadline_us(), |cx| origin.acknowledge_outcome(cx).map(|_| ()))).expect("original outcome acknowledgement");
+    }
+    for _ in 0..64 {
+        if origin.terminal_is_empty() {
+            break;
+        }
+        caller.turn(one, |cx| origin.close_step(cx).map(|_| ())).expect("original return source close");
+    }
+    assert!(origin.terminal_is_empty(), "the original return source did not close");
+    caller.retire(SOURCE_STOCK);
+    answered.expect("the job never answered its step")
 }
 
 /// 🦶️ Steps `job` with a fresh operation until it leaves `Yield` and answers the terminal (or preview) it lent.

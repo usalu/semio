@@ -273,9 +273,10 @@ where M:Send+'static {
             let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};
             let outcome=match self.retire_builtin{
                 Some((admit,_))=>admit(&mut self.current,&mut self.retirement,grant).result,
-                None=>{
-                    let operation=self.current.take().expect("observed current operation");
-                    match self.factory.as_ref().expect("nonterminal owned mutation retains its exact retirement factory").retire_owned(operation,child).result {
+                None=>'retire:{
+                    let Some(factory)=self.factory.as_ref()else{break 'retire Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"nonterminal owned mutation lost its retirement factory"))};
+                    let Some(operation)=self.current.take()else{break 'retire Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"observed current operation is absent"))};
+                    match factory.retire_owned(operation,child).result {
                         Ok((box_,progress))=>{
                             *self.retirement=Some(box_);
                             if !progress.fits(child)||progress.retained_capacity_bytes!=demand.capacity_bytes{Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"owned mutation constructor changed its receipt"))}else{Ok(RetainedCloneStep::Progress(progress))}

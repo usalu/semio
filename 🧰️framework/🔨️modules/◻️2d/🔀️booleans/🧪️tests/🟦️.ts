@@ -1,17 +1,23 @@
 /** 🧪️ Neutral filled regions, independent polygon clipping and SVG raster oracles. */
-import {expect,test} from "vitest";
+import {expect,test} from "bun:test";
 import Ajv from "ajv";
 import pc from "polygon-clipping";
 import sharp from "sharp";
 import rows from "./🧫️fixtures/🔣️.json";
 import endpointRows from "./🧫️fixtures/🔗️endpoints/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
-import {BooleanJob,booleanRegions,type BooleanInput,type BooleanProgress} from "../🟦️.ts";
+import {BooleanJob,type BooleanInput,type BooleanProgress} from "../🟦️.ts";
+import {Bank} from "../../🛤️path/📏️flatten/🧪️tests/🎟️work/🟦️ts/funded.test.ts";
+import {RetainedWorkLedger} from "../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts";
 import {pathSegmentsToSvgD,type PathSegment,type Vec2} from "../../🟦️.ts";
 const ajv=new Ajv({strict:true}),valid=ajv.compile<BooleanInput>(schema),progressValid=ajv.compile({$ref:schema.$id+"#/definitions/progress"}),resultValid=ajv.compile({$ref:schema.$id+"#/definitions/result"});
+const banks=new WeakMap<BooleanJob,Bank>(),ample=()=>new RetainedWorkLedger({maximumItems:1000,maximumCopyBytes:2**30,maximumCapacityBytes:2**30,maximumReleaseBytes:2**30,maximumDepth:64});
+function bank(job:BooleanJob):Bank{let value=banks.get(job);if(value===undefined){value=new Bank();banks.set(job,value);}return value;}
+function advance(job:BooleanJob,quantum:number):BooleanProgress{return bank(job).turn(job,work=>job.advance(quantum,work),quantum);}
+function drain(job:BooleanJob):void{const wallet=bank(job);wallet.close(job.intoRetirement().job);wallet.conserved();}
 function finish(input:BooleanInput,grant:number,observer?:(p:BooleanProgress)=>void):PathSegment[]{
- const job=new BooleanJob(input);expect(()=>job.result()).toThrow(/incomplete/);let work=0;
- for(let at=0;at<input.maxWork;at++){const p=job.advance(grant);expect(progressValid(p)).toBe(true);expect(p.work-work).toBeLessThanOrEqual(grant);work=p.work;observer?.(p);if(p.done){const result=job.result();expect(resultValid(result)).toBe(true);return result;}expect(()=>job.result()).toThrow(/incomplete/);}throw Error("Boolean did not terminate");
+ const job=new BooleanJob(input);try{expect(()=>job.result()).toThrow(/incomplete/);let work=0;
+ for(let at=0;at<input.maxWork;at++){const p=advance(job,grant);expect(progressValid(p)).toBe(true);expect(p.work-work).toBeLessThanOrEqual(grant);work=p.work;observer?.(p);if(p.done){const result=job.result();expect(resultValid(result)).toBe(true);return result;}expect(()=>job.result()).toThrow(/incomplete/);}throw Error("Boolean did not terminate");}finally{drain(job);}
 }
 function contours(segments:PathSegment[]):Vec2[][]{const rings:Vec2[][]=[];for(const s of segments)if(s.kind==="move")rings.push([s.to]);else if(s.kind==="line")rings.at(-1)!.push(s.to);return rings;}
 const cross=(a:Vec2,b:Vec2,c:Vec2)=>(b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]);
@@ -55,40 +61,43 @@ test("exact caps admit the same complete output",()=>{
 test("invalid input, precision and cap failures remain sticky and private",()=>{
  const input=rows[0]!.input as unknown as BooleanInput;
  for(const patch of [{operation:"bogus"},{operands:[]},{operands:Array(1025).fill(input.operands[0])},{epsilon:0},{epsilon:Infinity},{maxEdges:0},{maxParameters:0},{maxAtomicEdges:0},{maxSegments:0},{maxWork:0}])expect(()=>new BooleanJob({...input,...patch} as BooleanInput)).toThrow();
- for(const patch of [{operands:[{contours:[[[NaN,0]]],fillRule:"nonzero"}]},{operands:[{contours:[],fillRule:"bogus"}]},{operands:[{contours:[[[1e12+1,0]]],fillRule:"nonzero"}]},{maxEdges:3},{maxParameters:2},{maxAtomicEdges:1},{maxSegments:3},{maxWork:1},{...rows[25]!.input,epsilon:1e-12}]){const job=new BooleanJob({...input,...patch} as BooleanInput);expect(()=>{while(!job.advance(4096).done){}}).toThrow();expect(()=>job.result()).toThrow();expect(()=>job.advance(1)).toThrow();}
- for(const grant of [0,-1,NaN,Infinity,1.5])expect(()=>new BooleanJob(input).advance(grant)).toThrow();
+ for(const patch of [{operands:[{contours:[[[NaN,0]]],fillRule:"nonzero"}]},{operands:[{contours:[],fillRule:"bogus"}]},{operands:[{contours:[[[1e12+1,0]]],fillRule:"nonzero"}]},{maxEdges:3},{maxParameters:2},{maxAtomicEdges:1},{maxSegments:3},{maxWork:1},{...rows[25]!.input,epsilon:1e-12}]){const job=new BooleanJob({...input,...patch} as BooleanInput);try{expect(()=>{while(!advance(job,4096).done){}}).toThrow();expect(()=>job.result()).toThrow();expect(()=>advance(job,1)).toThrow();}finally{drain(job);}}
+ for(const grant of [0,-1,NaN,Infinity,1.5])expect(()=>new BooleanJob(input).advance(grant,ample())).toThrow();
 });
 test("all public phases cancel and published paths survive cancellation",()=>{
  const input=rows[0]!.input as unknown as BooleanInput,seen=new Set<string>();let work=0;
- finish(input,1,p=>{if(!seen.has(p.phase)){const job=new BooleanJob(input);for(let at=0;at<p.work;at++)job.advance(1);job.cancel();expect(()=>job.result()).toThrow(/cancelled/);expect(()=>job.advance(1)).toThrow(/cancelled/);seen.add(p.phase);}work=p.work;});
+ finish(input,1,p=>{if(!seen.has(p.phase)){const job=new BooleanJob(input);try{for(let at=0;at<p.work;at++)advance(job,1);job.cancel();expect(()=>job.result()).toThrow(/cancelled/);expect(()=>advance(job,1)).toThrow(/cancelled/);}finally{drain(job);}seen.add(p.phase);}work=p.work;});
  expect(seen).toEqual(new Set(["preparing","indexing","intersections","splitting","classifying","contours","compacting","emitting","complete"]));expect(work).toBeLessThan(input.maxWork);
- const job=new BooleanJob(input);while(!job.advance(4096).done){}const result=job.result(),copy=structuredClone(result);job.cancel();expect(result).toEqual(copy);
+ const job=new BooleanJob(input);try{while(!advance(job,4096).done){}const result=job.result(),copy=structuredClone(result);job.cancel();expect(result).toEqual(copy);}finally{drain(job);}
 });
-test("async operations yield and reject observer aborts before publication",async()=>{
+async function prepare(input:BooleanInput,policy:{quantum:number;signal?:AbortSignal;onProgress?:(p:BooleanProgress)=>void}):Promise<PathSegment[]>{
+ const job=new BooleanJob(input),check=()=>{if(policy.signal?.aborted)throw new DOMException("Boolean cancelled","AbortError");};
+ try{check();for(;;){const p=advance(job,policy.quantum);check();policy.onProgress?.(p);check();if(p.done)return structuredClone(job.result());await new Promise<void>(resolve=>setTimeout(resolve,0));}}catch(error){job.cancel();throw error;}finally{drain(job);}
+}
+test("caller-funded operations yield and reject observer aborts before publication",async()=>{
  const input=rows[0]!.input as unknown as BooleanInput,events:string[]=[];const timer=setTimeout(()=>events.push("timer"),0);
- expect(await booleanRegions(input,{workBudget:1,onProgress:p=>events.push(p.phase)})).toEqual(finish(input,4096));clearTimeout(timer);expect(events.indexOf("timer")).toBeGreaterThanOrEqual(0);expect(events.indexOf("timer")).toBeLessThan(events.indexOf("complete"));
- for(const when of ["preparing","complete"]){const controller=new AbortController();await expect(booleanRegions(input,{workBudget:1,signal:controller.signal,onProgress:p=>{if(p.phase===when)controller.abort();}})).rejects.toThrow(/cancelled/);}
+ expect(await prepare(input,{quantum:1,onProgress:p=>events.push(p.phase)})).toEqual(finish(input,4096));clearTimeout(timer);expect(events.indexOf("timer")).toBeGreaterThanOrEqual(0);expect(events.indexOf("timer")).toBeLessThan(events.indexOf("complete"));
+ for(const when of ["preparing","complete"]){const controller=new AbortController();await expect(prepare(input,{quantum:1,signal:controller.signal,onProgress:p=>{if(p.phase===when)controller.abort();}})).rejects.toThrow(/cancelled/);}
 });
 
 /** 🧹️ Neutral private arrangements retire without consuming caller geometry. */
 import retirementRows from "./🧫️fixtures/🧹️retirement/🔣️.json";
-const retirementValid=ajv.compile({$ref:schema.$id+"#/definitions/retirementProgress"});
 test("boolean retirement hands off original operands and completed paths while draining private arrangements",()=>{
  for(const row of retirementRows.cases)for(const grant of [1,7,4096]){
   const fixture=rows.find(r=>r.name===row.source)!;expect(fixture).toBeDefined();const source=structuredClone(fixture.input) as unknown as BooleanInput;
   if("maxParameters" in row)source.maxParameters=row.maxParameters!;const before=structuredClone(source),job=new BooleanJob(source),state=job as any;
-  if(row.phase==="failure")expect(()=>job.advance(4096)).toThrow(/parameter/);else if(row.phase!=="fresh"){
-   if(row.phase!=="cancelled"){let reached=false;for(let at=0;at<100000;at++){const p=job.advance(1);if(p.phase===row.phase){reached=true;break;}}expect(reached).toBe(true);}
-   for(let at=0;at<row.offset;at++)job.advance(1);
+  const wallet=bank(job);if(row.phase==="failure")expect(()=>advance(job,4096)).toThrow(/parameter/);else if(row.phase!=="fresh"){
+   if(row.phase!=="cancelled"){let reached=false;for(let at=0;at<100000;at++){const p=advance(job,1);if(p.phase===row.phase){reached=true;break;}}expect(reached).toBe(true);}
+   for(let at=0;at<row.offset;at++)advance(job,1);
   }
   if(row.phase==="cancelled")job.cancel();const published=row.phase==="complete"?job.result():null;
   const inventory=JSON.parse(JSON.stringify({edges:state.source.map((e:any)=>e.parameters.size),grid:state.grid.size,atomic:state.atomicIds.size,outgoing:state.outgoing.size,raw:state.raw.length,positions:state.positions.size,rings:state.rings.length}));
   const expected=retirementRows.flatSlots+inventory.edges.length*retirementRows.sourceEdgeSteps+inventory.edges.reduce((sum:number,n:number)=>sum+n,0)+inventory.grid+inventory.atomic+inventory.outgoing+inventory.raw+inventory.positions+inventory.rings;
   const transferred=job.intoRetirement();expect(transferred.operands).toEqual(before.operands);expect(transferred.operands).toBe(source.operands);
-  expect(transferred.output).toBe(published);expect(()=>job.advance(1)).toThrow(/cancel/i);expect(()=>job.result()).toThrow(/cancel/i);expect(()=>job.intoRetirement()).toThrow(/transferred/i);job.cancel();
-  for(const n of [0,-1,.5,NaN,Infinity,Number.MAX_SAFE_INTEGER+1])expect(()=>transferred.job.advance(n)).toThrow(/grant/i);
-  let work=0;for(let at=0;at<=expected;at++){const beforeEdges=state.source.length,beforeRings=state.rings.length,beforeRaw=state.raw.length,p=transferred.job.advance(grant);expect(beforeEdges-state.source.length).toBeLessThanOrEqual(grant);expect(beforeRings-state.rings.length).toBeLessThanOrEqual(grant);expect(beforeRaw-state.raw.length).toBeLessThanOrEqual(grant);expect(retirementValid(p)).toBe(true);expect(p.work-work).toBeGreaterThan(0);expect(p.work-work).toBeLessThanOrEqual(grant);work=p.work;if(p.done)break;}
-  expect(work).toBe(expected);expect(transferred.job.terminalIsEmpty()).toBe(true);expect(transferred.job.advance(1)).toEqual({phase:"complete",work,done:true});
+  expect(transferred.output).toBe(published);expect(()=>advance(job,1)).toThrow(/cancel/i);expect(()=>job.result()).toThrow(/cancel/i);expect(()=>job.intoRetirement()).toThrow(/transferred/i);job.cancel();
+  for(const n of [0,-1,.5,NaN,Infinity,Number.MAX_SAFE_INTEGER+1])expect(()=>transferred.job.advance(n,ample())).toThrow(/grant/i);
+  let work=0;for(let at=0;at<=expected;at++){const beforeEdges=state.source.length,beforeRings=state.rings.length,beforeRaw=state.raw.length,p=wallet.turn(transferred.job,ledger=>transferred.job.advance(grant,ledger),grant);expect(beforeEdges-state.source.length).toBeLessThanOrEqual(grant);expect(beforeRings-state.rings.length).toBeLessThanOrEqual(grant);expect(beforeRaw-state.raw.length).toBeLessThanOrEqual(grant);if(!p.done)expect(p.work-work).toBeGreaterThan(0);expect(p.work-work).toBeLessThanOrEqual(grant);work=p.work;if(p.done)break;}
+  expect(work).toBe(expected);expect(transferred.job.terminalIsEmpty()).toBe(true);expect(transferred.job.advance(1,ample())).toEqual({work,done:true});wallet.conserved();
   for(const field of ["rules","source","tree","level","nextLevel","query","nodes","atomic","leftWinding","rightWinding","boundary","raw","ring","compactPoints","rings","output"])expect(state[field]).toHaveLength(0);
   for(const field of ["grid","atomicIds","outgoing","positions","indexHeap","splitHeap","ringHeap"])expect(state[field].size).toBe(0);
   expect(state.splitValues).toBe(null);expect(state.splitRing).toBe(null);expect(state.emitting).toBe(null);expect(state.input.operands).toHaveLength(0);expect(source).toEqual(before);
@@ -98,4 +107,4 @@ test("boolean retirement hands off original operands and completed paths while d
 
 import admissionRows from "../../🧹️retire/🧪️tests/🧫️fixtures/📥️admission/🔣️.json";
 import admissionSchema from "../../🧹️retire/🧬️schema/📥️admission/🔣️.json";
-test("retained Boolean admission preserves refused input until close",()=>{expect(new Ajv({strict:true}).compile(admissionSchema)(admissionRows)).toBe(true);for(const row of admissionRows.cases){if(row.kind!=="boolean")continue;const base=rows[0]!.input;if(!valid(base))throw new Error("The first boolean row must satisfy the contract");const input:BooleanInput={...base,maxEdges:row.maxEdges!},operands=input.operands;expect(valid(input)).toBe(false);expect(()=>new BooleanJob(input)).toThrow(/contract/);const job=BooleanJob.admit(input);expect((job as unknown as {input:BooleanInput}).input.operands).toBe(operands);expect(()=>job.advance(1)).toThrow(/contract/);expect(()=>job.result()).toThrow(/contract/);const retired=job.intoRetirement();expect(retired.operands).toBe(operands);expect(retired.output).toBe(null);while(!retired.job.advance(1).done){}expect(retired.job.terminalIsEmpty()).toBe(true);}});
+test("retained Boolean admission preserves refused input until close",()=>{expect(new Ajv({strict:true}).compile(admissionSchema)(admissionRows)).toBe(true);for(const row of admissionRows.cases){if(row.kind!=="boolean")continue;const base=rows[0]!.input;if(!valid(base))throw new Error("The first boolean row must satisfy the contract");const input:BooleanInput={...base,maxEdges:row.maxEdges!},operands=input.operands;expect(valid(input)).toBe(false);expect(()=>new BooleanJob(input)).toThrow(/contract/);const job=BooleanJob.admit(input);expect((job as unknown as {input:BooleanInput}).input.operands).toBe(operands);expect(()=>advance(job,1)).toThrow(/contract/);expect(()=>job.result()).toThrow(/contract/);const retired=job.intoRetirement();expect(retired.operands).toBe(operands);expect(retired.output).toBe(null);bank(job).close(retired.job);expect(retired.job.terminalIsEmpty()).toBe(true);}});

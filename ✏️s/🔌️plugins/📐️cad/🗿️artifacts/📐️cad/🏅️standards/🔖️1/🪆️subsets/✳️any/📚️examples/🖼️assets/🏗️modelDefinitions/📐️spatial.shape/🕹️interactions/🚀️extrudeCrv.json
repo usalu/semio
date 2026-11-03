@@ -2,7 +2,10 @@
   "schema": "spatial.interaction",
   "id": "surface.extrudeCrv",
   "version": "1.0.0",
-  "label": "ExtrudeCrv",
+  "label": {
+    "native": { "en": "ExtrudeCrv", "de": "Kurve extrudieren" },
+    "reuse": { "en": "ExtrudeCrv", "de": "Kurve extrudieren" }
+  },
   "requires": {
     "kernel": {
       "operations": ["wire.extrudeToSolid", "entity.tessellate"]
@@ -122,7 +125,10 @@
               {
                 "target": "select_curves_to_extrude",
                 "key": "s",
-                "label": "Start",
+                "label": {
+                  "native": { "en": "Start", "de": "Start" },
+                  "reuse": { "en": "Start", "de": "Start" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -183,7 +189,10 @@
         "selection": {
           "accept": ["wire", "edge"],
           "multiple": true,
-          "prompt": "Select curves to extrude"
+          "prompt": {
+            "native": { "en": "Select curves to extrude", "de": "Zu extrudierende Kurven auswählen" },
+            "reuse": { "en": "Select curves to extrude", "de": "Zu extrudierende Kurven auswählen" }
+          }
         },
         "on": [
           {
@@ -192,7 +201,10 @@
               {
                 "target": "select_curves_to_extrude",
                 "key": "s",
-                "label": "Select",
+                "label": {
+                  "native": { "en": "Select", "de": "Auswählen" },
+                  "reuse": { "en": "Select", "de": "Auswählen" }
+                },
                 "effects": [
                   {
                     "mutation": "action",
@@ -225,7 +237,10 @@
                 "target": "extrusion_distance",
                 "guard": "selectionHasCurves",
                 "key": "Enter",
-                "label": "Set distance",
+                "label": {
+                  "native": { "en": "Set distance", "de": "Abstand festlegen" },
+                  "reuse": { "en": "Set distance", "de": "Abstand festlegen" }
+                },
                 "effects": [
                   {
                     "mutation": "action",
@@ -392,7 +407,10 @@
               {
                 "target": "committed",
                 "key": "n",
-                "label": "Apply Number",
+                "label": {
+                  "native": { "en": "Apply Number", "de": "Zahl anwenden" },
+                  "reuse": { "en": "Apply Number", "de": "Zahl anwenden" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -426,7 +444,10 @@
               {
                 "target": "committed",
                 "key": "Enter",
-                "label": "Finish",
+                "label": {
+                  "native": { "en": "Finish", "de": "Fertig" },
+                  "reuse": { "en": "Finish", "de": "Fertig" }
+                },
                 "effects": [
                   {
                     "mutation": "action",
@@ -442,7 +463,10 @@
               {
                 "target": "pick_direction",
                 "key": "d",
-                "label": "Direction"
+                "label": {
+                  "native": { "en": "Direction", "de": "Richtung" },
+                  "reuse": { "en": "Direction", "de": "Richtung" }
+                }
               }
             ]
           }
@@ -483,7 +507,10 @@
               {
                 "target": "extrusion_distance",
                 "key": "x",
-                "label": "Cancel"
+                "label": {
+                  "native": { "en": "Cancel", "de": "Abbrechen" },
+                  "reuse": { "en": "Cancel", "de": "Abbrechen" }
+                }
               }
             ]
           }
@@ -504,7 +531,10 @@
             "kind": "label",
             "id": "select_curves_to_extrude-prompt",
             "role": "prompt",
-            "text": "Select curves to extrude",
+            "text": {
+              "native": { "en": "Select curves to extrude", "de": "Zu extrudierende Kurven auswählen" },
+              "reuse": { "en": "Select curves to extrude", "de": "Zu extrudierende Kurven auswählen" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]
@@ -567,7 +597,10 @@
             "kind": "label",
             "id": "extrusion_distance-prompt",
             "role": "prompt",
-            "text": "Extrusion distance (Z default, d = direction)",
+            "text": {
+              "native": { "en": "Extrusion distance (Z default, d = direction)", "de": "Extrusionsabstand (Standard Z, d = Richtung)" },
+              "reuse": { "en": "Extrusion distance (Z default, d = direction)", "de": "Extrusionsabstand (Standard Z, d = Richtung)" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]
@@ -690,7 +723,10 @@
             "kind": "label",
             "id": "pick_direction-prompt",
             "role": "prompt",
-            "text": "Pick extrusion direction",
+            "text": {
+              "native": { "en": "Pick extrusion direction", "de": "Extrusionsrichtung wählen" },
+              "reuse": { "en": "Pick extrusion direction", "de": "Extrusionsrichtung wählen" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]

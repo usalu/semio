@@ -211,7 +211,6 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
     /// keeps advancing it. The operation is terminal the moment its session is refused —
     /// cancel the lease so the next publication unit mints the exact fault page.
     pub fn drive_worker_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<PluginLifecycleStep, semio_framework_job::OriginalTurnFailure> {
-        {static N:std::sync::atomic::AtomicU64=std::sync::atomic::AtomicU64::new(0);let n=N.fetch_add(1,std::sync::atomic::Ordering::Relaxed);if n%2048==0{eprintln!("[DEBUG] drive_worker_step n={n} stage={:?} prod_req={} reserved_pending={} user_cancel={} terminal_seen={} cancelled={} session={} rejected={} sem={} outc={} resume={} fuel={} yield={}",self.stage,self.producer_request.is_some(),self.original_reserved_producer_pending(),self.user_cancel_requested,self.terminal_seen,cx.is_cancelled(),self.session.is_some(),self.session_rejected.is_some(),self.worker_semantic_pending,self.worker_outcome_pending,self.worker_resume_pending,cx.fuel_remaining(),cx.should_yield());}}
         self.validate_original_producer_source(cx)?;
         if self.stage != MountedTypedCommandFullOperationStage::Worker {return Ok(PluginLifecycleStep::Blocked{reason:"typed command awaits its bounded revision-validated publication or ACK turn"});}
         if !self.source_identity.matches(cx){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"mounted worker requires its original source identity independently of its registry record").into())}
@@ -258,8 +257,10 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
             return Ok(step);
         }
         if self.worker_outcome_pending{
+            let before=cx.retained_progress();let reserved=cx.reserved_return_progress();
             if session.acknowledge_checked_out_outcome(cx)?{self.worker_outcome_pending=false;self.worker_resume_pending=true;}
-            return Ok(PluginLifecycleStep::Progress(Default::default()));
+            let after=semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_net_after(cx.retained_progress(),reserved,cx.reserved_return_progress());
+            return Ok(PluginLifecycleStep::Progress(semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,after)?));
         }
         if self.worker_resume_pending{
             if self.terminal_seen{session.begin_close();}else if session.resume().is_err(){return Ok(PluginLifecycleStep::AwaitingInput{reason:"typed operation outcome handback awaits its original worker session"});}
@@ -288,7 +289,15 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
         if self.worker_semantic_pending{
             let outcome=match session.checked_out_outcome(){
                 Ok(Some(original))=>original,
-                Ok(None)=>{self.worker_semantic_pending=false;self.worker_resume_pending=true;return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}));},
+                Ok(None)=>{
+                    if let Some(view)=session.checked_out_continuation(){
+                        let cause=view.callback.or(view.qualification).or(view.receipt_qualification).map_or_else(||"typed operation worker step returned a continuation without a cause".to_owned(),|failure|match &failure.primary{semio_framework_job::OriginalTurnPrimary::Fault(fault)=>format!("{:?}: {}",fault.code,fault.message),semio_framework_job::OriginalTurnPrimary::Value(error)=>format!("{:?}: {}",error.kind,error.message),other=>format!("{other:?}")});
+                        self.terminal_fault.get_or_insert_with(||ArtifactBoundedToolFault::from_fault(&Fault::new(FaultOrigin::Framework,FaultCode::new("interactive-job.worker-continuation"),cause)));
+                        self.terminal_seen=true;
+                        if let Some(lease)=self.cancellation_lease.as_ref(){lease.cancel();}
+                    }
+                    self.worker_semantic_pending=false;self.worker_resume_pending=true;return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}));
+                },
                 Err(_)=>return Ok(PluginLifecycleStep::Blocked{reason:"typed operation original checked-out descriptor cannot be borrowed"}),
             };
             if let semio_framework_job::JobOutcomeView::Fault{detail,..}=&outcome{
@@ -312,12 +321,12 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
             Ok(semio_framework_job_worker::WorkerJobPoll::Outcome|semio_framework_job_worker::WorkerJobPoll::Terminal)=>{
                 let Some((issued,progress))=session.take_checked_out_retained_step_receipt()else{return Ok(PluginLifecycleStep::Blocked{reason:"typed operation original worker receipt awaits its sole recipient"});};
                 self.worker_semantic_pending=true;
-                if !progress.fits(issued)||!progress.fits(grant)||issued.maximum_items>grant.maximum_items||issued.maximum_copy_bytes>grant.maximum_copy_bytes||issued.maximum_capacity_bytes>grant.maximum_capacity_bytes||issued.maximum_release_bytes>grant.maximum_release_bytes||issued.maximum_depth>grant.maximum_depth{return Err(plugin_sdk_fault(format!("[DEBUG] typed operation original worker receipt exceeded its received turn: issued={issued:?} grant={grant:?} progress={progress:?}")).with_retained_progress(progress).into());}
+                if !progress.fits(issued)||!progress.fits(grant)||issued.maximum_items>grant.maximum_items||issued.maximum_copy_bytes>grant.maximum_copy_bytes||issued.maximum_capacity_bytes>grant.maximum_capacity_bytes||issued.maximum_release_bytes>grant.maximum_release_bytes||issued.maximum_depth>grant.maximum_depth{return Err(plugin_sdk_fault("typed operation original worker receipt exceeded its received turn").with_retained_progress(progress).into());}
                 if matches!(session.checked_out_outcome(),Ok(None))&&session.resume().is_ok(){self.worker_semantic_pending=false;}
                 Ok(PluginLifecycleStep::Progress(progress))
             }
             Ok(semio_framework_job_worker::WorkerJobPoll::Submitted|semio_framework_job_worker::WorkerJobPoll::Rejected)=>Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),
-            Ok(other)=>{if cx.fuel_remaining()%256==0{eprintln!("[DEBUG] worker poll {other:?} fuel={} step_fuel={step_fuel}",cx.fuel_remaining());}Ok(PluginLifecycleStep::AwaitingInput{reason:"typed operation mounted worker awaits its next outcome"})}
+            Ok(_)=>Ok(PluginLifecycleStep::AwaitingInput{reason:"typed operation mounted worker awaits its next outcome"}),
             Err(failure)=>Err(failure)
 
         }

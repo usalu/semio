@@ -41,7 +41,7 @@ pub(super) struct FlowHostPayload {
  pending_change:bool,
  pub pending_leaves:Vec<FlowMutation>,
  history_fault:Option<FlowCoreError>,
- #[cfg(test)]
+ #[cfg(any(test,feature="testkit"))]
  pub recorded:Vec<Vec<FlowMutation>>,
  journal_mark:usize,
  pub edited_note:Option<String>,
@@ -87,7 +87,7 @@ impl FlowHostPayload {
    pending_change,
    pending_leaves,
    history_fault,
-   #[cfg(test)]
+   #[cfg(any(test,feature="testkit"))]
    recorded,
    journal_mark,
    edited_note,
@@ -129,7 +129,7 @@ impl FlowHostPayload {
    pending_change:pending_change,
    pending_leaves:pending_leaves,
    history_fault:history_fault,
-   #[cfg(test)]
+   #[cfg(any(test,feature="testkit"))]
    recorded:recorded,
    journal_mark:journal_mark,
    edited_note:edited_note,

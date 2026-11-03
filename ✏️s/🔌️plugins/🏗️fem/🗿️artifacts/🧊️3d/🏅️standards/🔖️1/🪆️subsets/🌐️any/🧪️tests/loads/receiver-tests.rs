@@ -1,7 +1,14 @@
 use super::*;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::{FemLoad, FemLoadCase};
 use semio_framework_value::{NativeDecodeControl, RetainedCloneGrant};
-use semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient;
+use semio_framework_value_native_owned::native_decoding::{NativeDecodeRetirementRecipient, NativeDecodeWorkRecipient};
+
+struct Loan;
+impl NativeDecodeWorkRecipient for Loan {
+    fn admits(&mut self, _: u64, _: u64) -> Result<bool, ValueError> {
+        Ok(true)
+    }
+}
 
 #[derive(semio_framework_value_derive::FromValue, RetireOwned)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
@@ -78,14 +85,18 @@ fn receive(bytes: &[u8], g: RetainedCloneGrant, cut: usize) -> (Result<Fem3dSnap
     let mut recipient = NativeDecodeRetirementRecipient::new();
     let mut native = NativeDecodeControl::new(256 * 1048576, &mut callback);
     native.install_retirement_recipient(&mut recipient).unwrap();
-    let mut owner = NativeSnapshotDecodeOwner::new(&mut native, g);
-    let result = <Fem3dSnapshot as store::ArtifactPackReceiving>::receive_pack(bytes, &mut owner);
-    assert!(owner.progress().copied_items <= g.maximum_items);
-    drop(owner);
+    let result = native
+        .with_work_recipient(&mut Loan, |native| {
+            let mut owner = NativeSnapshotDecodeOwner::new(native, g);
+            let result = <Fem3dSnapshot as store::ArtifactPackReceiving>::receive_pack(bytes, &mut owner);
+            assert!(owner.progress().copied_items <= g.maximum_items);
+            Ok::<_, ValueError>(result)
+        })
+        .unwrap();
     native
         .with_retirement(grant(), |native| {
             while native.has_retirement_owner() {
-                native.close_retirement_recipient(grant())?;
+                native.close_retirement_recipient(grant()).result?;
             }
             Ok(())
         })
@@ -195,13 +206,17 @@ fn declared_variant_dof_and_scalar_shapes_are_closed() {
         let mut recipient = NativeDecodeRetirementRecipient::new();
         let mut native = NativeDecodeControl::new(256 * 1048576, &mut callback);
         native.install_retirement_recipient(&mut recipient).unwrap();
-        let mut owner = NativeSnapshotDecodeOwner::new(&mut native, grant());
-        assert_eq!(Fem3dSnapshot::receive_exchange_record(&record, &mut owner).unwrap_err().kind, ValueRefusalKind::InvalidValue);
-        drop(owner);
+        native
+            .with_work_recipient(&mut Loan, |native| {
+                let mut owner = NativeSnapshotDecodeOwner::new(native, grant());
+                assert_eq!(Fem3dSnapshot::receive_exchange_record(&record, &mut owner).unwrap_err().kind, ValueRefusalKind::InvalidValue);
+                Ok::<_, ValueError>(())
+            })
+            .unwrap();
         native
             .with_retirement(grant(), |native| {
                 while native.has_retirement_owner() {
-                    native.close_retirement_recipient(grant())?;
+                    native.close_retirement_recipient(grant()).result?;
                 }
                 Ok(())
             })
@@ -238,12 +253,16 @@ fn scoped_index_rejects_substitute_source_and_oversized_words() {
     let mut callback = |_| true;
     let mut native = NativeDecodeControl::new(256 * 1048576, &mut callback);
     native.install_retirement_recipient(&mut recipient).unwrap();
-    let mut owner = NativeSnapshotDecodeOwner::new(&mut native, grant());
-    let index = FemIdentityIndex::receive(&input, &mut owner).unwrap();
-    let before = owner.progress();
-    assert_eq!(index.lookup(&substitute, FemIdentityKind::Node, "a", &mut owner).unwrap_err().kind, ValueRefusalKind::InvariantViolated);
-    assert_eq!(owner.progress(), before);
-    drop(owner);
+    let index = native
+        .with_work_recipient(&mut Loan, |native| {
+            let mut owner = NativeSnapshotDecodeOwner::new(native, grant());
+            let index = FemIdentityIndex::receive(&input, &mut owner).unwrap();
+            let before = owner.progress();
+            assert_eq!(index.lookup(&substitute, FemIdentityKind::Node, "a", &mut owner).unwrap_err().kind, ValueRefusalKind::InvariantViolated);
+            assert_eq!(owner.progress(), before);
+            Ok::<_, ValueError>(index)
+        })
+        .unwrap();
     drain(index);
     input.load_cases[0].id = "é".repeat(32768);
     assert_eq!(receive(&pack(&input), grant(), usize::MAX).0.unwrap_err().kind, ValueRefusalKind::InvalidValue);
@@ -265,22 +284,26 @@ fn identity_child_restores_original_finite_parent_stage_on_success_and_error() {
         let mut native = NativeDecodeControl::new(256 * 1048576, &mut callback);
         native.install_retirement_recipient(&mut recipient).unwrap();
         native.begin_stage(1).unwrap();
-        let mut owner = NativeSnapshotDecodeOwner::new(&mut native, grant());
-        let result = FemIdentityIndex::receive(&input, &mut owner);
-        assert_eq!(result.is_err(), duplicate);
-        assert!(owner.progress().copied_items > 0);
-        if let Ok(index) = &result {
-            assert_eq!(index.lookup(&input, FemIdentityKind::LoadCase, "case", &mut owner).unwrap(), 0);
-            assert_eq!(index.lookup(&input, FemIdentityKind::Node, "a", &mut owner).unwrap(), 0);
-        }
-        drop(owner);
+        let result = native
+            .with_work_recipient(&mut Loan, |native| {
+                let mut owner = NativeSnapshotDecodeOwner::new(native, grant());
+                let result = FemIdentityIndex::receive(&input, &mut owner);
+                assert_eq!(result.is_err(), duplicate);
+                assert!(owner.progress().copied_items > 0);
+                if let Ok(index) = &result {
+                    assert_eq!(index.lookup(&input, FemIdentityKind::LoadCase, "case", &mut owner).unwrap(), 0);
+                    assert_eq!(index.lookup(&input, FemIdentityKind::Node, "a", &mut owner).unwrap(), 0);
+                }
+                Ok::<_, ValueError>(result)
+            })
+            .unwrap();
         if let Ok(index) = result {
             drain(index);
         }
         native
             .with_retirement(grant(), |native| {
                 while native.has_retirement_owner() {
-                    native.close_retirement_recipient(grant())?;
+                    native.close_retirement_recipient(grant()).result?;
                 }
                 Ok(())
             })

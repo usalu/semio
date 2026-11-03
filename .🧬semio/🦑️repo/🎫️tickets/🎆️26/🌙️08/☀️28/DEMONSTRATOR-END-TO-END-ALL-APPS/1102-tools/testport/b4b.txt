@@ -1,0 +1,3 @@
+semio-framework-plugin-reactor-jobs
+semio-framework-plugin-instance-render
+semio-framework-test-typed-input-law

@@ -35,7 +35,7 @@ async fn a_site_control_writes_the_number_the_host_merged_not_the_bridges_defaul
     ];
     let borrowed: Vec<(&str, &str)> = authored.iter().map(|(key, value)| (*key, value.as_str())).collect();
     let args = host_merged(&borrowed, "30");
-    let command = <EnergyModelEditor as ArtifactEditor>::command_from_action(SET_SITE_ACTION_ID, Some((args).clone()), None).expect("the site payload resolves");
+    let command = <EnergyModelEditor as ArtifactEditor>::command_from_action(SET_SITE_ACTION_ID, &mut Some((args).clone()), &mut None).expect("the site payload resolves");
     assert_eq!(command, EnergyModelEditorCommand::SetSite { latitude_deg: None, longitude_deg: None, elevation_m: None, time_zone_hours: None, north_axis_deg: Some(30.0) });
 
     let edited = applied(&snapshot, &command);
@@ -61,7 +61,7 @@ async fn a_thermostat_control_writes_the_number_the_host_merged_not_the_bridges_
         ("zone", thermostat.zone_id.0.to_string()),
     ];
     let borrowed: Vec<(&str, &str)> = authored.iter().map(|(key, value)| (*key, value.as_str())).collect();
-    let command = <EnergyModelEditor as ArtifactEditor>::command_from_action(SET_THERMOSTAT_SETPOINTS_ACTION_ID, Some((host_merged(&borrowed, "4.5")).clone()), None).expect("the thermostat payload resolves");
+    let command = <EnergyModelEditor as ArtifactEditor>::command_from_action(SET_THERMOSTAT_SETPOINTS_ACTION_ID, &mut Some((host_merged(&borrowed, "4.5")).clone()), &mut None).expect("the thermostat payload resolves");
     assert_eq!(
         command,
         EnergyModelEditorCommand::SetThermostatSetpoints {
@@ -80,7 +80,7 @@ async fn a_thermostat_control_writes_the_number_the_host_merged_not_the_bridges_
     let other = model.schedules.constants.iter().map(|schedule| schedule.id).find(|id| *id != thermostat.heating_setpoint_schedule_id).expect("a second constant schedule");
     let mut swapped = borrowed.clone();
     swapped[2] = ("field", "heatingSchedule");
-    let command = <EnergyModelEditor as ArtifactEditor>::command_from_action(SET_THERMOSTAT_SETPOINTS_ACTION_ID, Some((host_merged(&swapped, &other.0.to_string())).clone()), None).expect("the schedule payload resolves");
+    let command = <EnergyModelEditor as ArtifactEditor>::command_from_action(SET_THERMOSTAT_SETPOINTS_ACTION_ID, &mut Some((host_merged(&swapped, &other.0.to_string())).clone()), &mut None).expect("the schedule payload resolves");
     assert_eq!(applied(&snapshot, &command).thermostats[0].heating_setpoint_schedule_id, other);
 }
 
@@ -92,7 +92,7 @@ async fn picking_an_interzone_partner_makes_the_surface_interzone() {
     let snapshot = snapshot_of(&model);
     let (first, second) = (model.surfaces[0].id, model.surfaces[1].id);
     let args = host_merged(&[("field", "interzonePartner"), ("id", &first.0.to_string())], &second.0.to_string());
-    let command = <EnergyModelEditor as ArtifactEditor>::command_from_action(SET_SURFACE_PROPERTY_ACTION_ID, Some((args).clone()), None).expect("the partner payload resolves");
+    let command = <EnergyModelEditor as ArtifactEditor>::command_from_action(SET_SURFACE_PROPERTY_ACTION_ID, &mut Some((args).clone()), &mut None).expect("the partner payload resolves");
     assert_eq!(command, EnergyModelEditorCommand::SetSurfaceProperty { surface: first.0, property: "interzonePartner".into(), value: second.0.to_string(), partner_surface: 0 });
     assert_eq!(emitted_kinds(&snapshot, &command), vec!["change-surface-boundary-condition".to_string()]);
     assert_eq!(applied(&snapshot, &command).surfaces[0].outside_boundary_condition, OutsideBoundary::Interzone(second));

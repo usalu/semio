@@ -14,7 +14,7 @@ pub mod editor {
 }
 //#endregion 🧩️Modules
 
-use semio_s_artifact_cad_cad_model::{snapshot::CadCamera, snapshot::CadPaneId, snapshot::CadSnapshot, geometry::CAD_OBJECT_PSET, geometry::CadObject, geometry::cad_object_from_model_element, geometry::model_element_from_cad_object, geometry::objects_from_model_snapshot};
+use semio_s_artifact_cad_cad_model::{snapshot::CadCamera, snapshot::CadPaneId, snapshot::CadSnapshot, geometry::CAD_OBJECT_PSET, geometry::CadObject, geometry::CadObjectName, geometry::cad_object_from_model_element, geometry::model_element_from_cad_object, geometry::objects_from_model_snapshot};
 use semio_s_artifact_cad_cad_play::CadComposedPanes;
 use semio_s_artifact_cad_cad_config::{CadConfig, CadConfigMutation, CadDislocateOptions, SetEdit, cad_sun_config_to_world};
 use semio_s_artifact_cad_cad_interaction::{self, CadEngagementScratch, apply_event, can_commit, keyed_transitions, resolve_interaction_key, start_session};
@@ -25,7 +25,7 @@ use semio_s_artifact_cad_cad_inferences::{CAD_MODEL_DEFINITION_BUILDING, CAD_MOD
 use semio_s_artifact_stdio_semio_model::{schema::mutations::SemioModelMutation, schema::mutations::remove_element::RemoveElement, schema::mutations::set_element::SetElement, schema::snapshot::SemioModelElement};
 use semio_framework::kernel::Effect;
 use semio_framework_plugin::{ActionArgDef, ActionDefinition, ActionDescriptor, ActionKind, ChildContentView, ConfigView, Fault, MediaClass, MediaForm, MediaType, PluginAssemblyError, UiText, UiValue, ViewModel, WorldSunConfig, tree_item as framework_tree_item, tree_item_with_action, world3d_camera_projection_json};
-use semio_framework_ui_locale::{Label, LocalizedLabel};
+use semio_framework_ui_locale::{Label, Locale, LocalizedLabel, Terminology};
 use semio_framework_3d_brep_engine::{Brep, GeometryHandle};
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::HashMap;
@@ -264,11 +264,17 @@ pub struct CadPlayView {
     /// 🕹️ The live `"cad"` domain at this render — empty on the interaction-less `render` path
     /// (exports, tests) and on every `handle`-side view.
     pub interaction: CadInteractionSnapshot,
+    /// 🗣️ The viewer's `(terminology, locale)` when the view is built to be read (`render`, window chrome); `None` for headless uses (exports), where a generated object name reads as its language-neutral key.
+    pub axes: Option<(Terminology, Locale)>,
 }
 impl CadPlayView {
     /// 🎛️ The view over `document` composed with its live `children`.
     pub fn of(document: &CadSnapshot, children: &ChildContentView, runtime: CadPlayRuntime, interaction: CadInteractionSnapshot) -> Self {
-        Self { document: document.clone(), panes: CadComposedPanes::compose(document, children), runtime, interaction }
+        Self { document: document.clone(), panes: CadComposedPanes::compose(document, children), runtime, interaction, axes: None }
+    }
+    /// 🗣️ This view read by a viewer in `terminology` and `locale`.
+    pub fn with_axes(self, terminology: Terminology, locale: Locale) -> Self {
+        Self { axes: Some((terminology, locale)), ..self }
     }
 }
 pub fn cad_action(action: &str, args: Option<UiValue>) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<UiValue>)> {
@@ -394,7 +400,7 @@ pub fn create_object_entry(pane: CadPaneId, object: &CadObject) -> CadToolEntry 
 }
 /// 📄️ `source` under a fresh id and a `copy` label, offset by `offset` so the copy is visibly its own instance.
 pub(crate) fn cad_object_copy(source: &CadObject, offset: [f64; 3]) -> CadObject {
-    CadObject { id: next_cad_id("object"), label: format!("{} copy", source.label), origin: [source.origin[0] + offset[0], source.origin[1] + offset[1], source.origin[2] + offset[2]], ..source.clone() }
+    CadObject { id: next_cad_id("object"), label: source.label.clone(), origin: [source.origin[0] + offset[0], source.origin[1] + offset[1], source.origin[2] + offset[2]], ..source.clone() }
 }
 /// ❌️ `deleteObject`'s leaf: one `remove-element` on the pane child holding `object_id` — an id no pane holds produces
 /// nothing rather than a fabricated target.
@@ -562,7 +568,7 @@ pub fn patch_objects_leaves(models: &CadPaneModels, object_ids: &[String], field
             next.orientation = Some(quat_normalize(orientation));
         } else {
             match field {
-                "label" => next.label = value.and_then(semio_framework_value::DslValue::as_str)?.to_string(),
+                "label" => next.label = CadObjectName::literal(value.and_then(semio_framework_value::DslValue::as_str)?),
                 "typology" => next.typology = value.and_then(semio_framework_value::DslValue::as_str)?.to_string(),
                 "visible" => next.visible = value.and_then(semio_framework_value::DslValue::as_bool)?,
                 "hidden" => next.visible = !value.and_then(semio_framework_value::DslValue::as_bool)?,
@@ -584,7 +590,6 @@ pub fn patch_objects_leaves(models: &CadPaneModels, object_ids: &[String], field
         .collect()
 }
 pub fn make_object_for_typology(typology: &str, label_count: usize, pane: CadPaneId) -> CadObject {
-    let label = TYPOLOGY_CATALOG.iter().find(|entry| entry.typology == typology).map_or("Object", |entry| entry.label);
     let extent = match typology {
         t if t.contains("column") => Some([0.5, 0.5, 3.0]),
         t if t.contains("slab") => Some([4.0, 4.0, 0.25]),
@@ -593,7 +598,7 @@ pub fn make_object_for_typology(typology: &str, label_count: usize, pane: CadPan
     };
     let mut object = CadObject {
         id: next_cad_id("object"),
-        label: format!("{label} {}", label_count + 1),
+        label: CadObjectName::Typology { ordinal: Some(u32::try_from(label_count).unwrap_or(u32::MAX).saturating_add(1)) },
         typology: typology.into(),
         visible: true,
         locked: false,

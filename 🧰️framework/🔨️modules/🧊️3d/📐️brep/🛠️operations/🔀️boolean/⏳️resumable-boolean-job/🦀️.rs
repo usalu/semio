@@ -246,10 +246,15 @@ impl BooleanJob {
         matches!(self.phase, BooleanPhase::Complete | BooleanPhase::Cancelled)
     }
 
+    /// 🧪️ True while the funded validation producer still owns the next unit, so the caller pays it through [`BooleanJob::step`] and every other phase through [`BooleanJob::step_budgeted`].
+    pub fn is_funded_validation(&self) -> bool {
+        self.phase == BooleanPhase::Validate && self.validation.as_ref().is_some_and(|validation| !validation.is_complete())
+    }
+
     /// ♾️ Runs every remaining unit in one call — the unbudgeted façade [`boolean_solid`] is.
     pub fn run_to_completion(mut self, body: &mut Body, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
         loop {
-            match self.step_unbudgeted(body, rec, usize::MAX)? {
+            match self.step_budgeted(body, rec, usize::MAX)? {
                 BooleanStep::Done(id) => return Ok(id),
                 BooleanStep::Cancelled(_) => return Err(KernelError::Boolean(BooleanError::InvalidResult("boolean cancelled".into()))),
                 BooleanStep::Working(_) => continue,
@@ -259,7 +264,7 @@ impl BooleanJob {
 
     /// ⏱️ Advances by at most `budget` units. A `budget` of zero is a legal progress probe that
     /// performs no work.
-    pub(crate) fn step_unbudgeted(&mut self, body: &mut Body, rec: &mut OpRecorder, budget: usize) -> Result<BooleanStep, KernelError> {
+    pub fn step_budgeted(&mut self, body: &mut Body, rec: &mut OpRecorder, budget: usize) -> Result<BooleanStep, KernelError> {
         match self.phase {
             BooleanPhase::Complete => return Ok(BooleanStep::Done(self.result.ok_or_else(|| KernelError::Boolean(BooleanError::InvalidResult("completed boolean carries no solid".into())))?)),
             BooleanPhase::Cancelled => return Ok(BooleanStep::Cancelled(self.progress())),

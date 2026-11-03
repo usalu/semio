@@ -5,6 +5,7 @@
 //! 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION.
 
 use semio_framework_plugin::ExampleSource;
+#[cfg(test)]
 use semio_framework_test_fixtures::repo_root;
 use semio_framework_ui_locale::LocalizedLabel;
 

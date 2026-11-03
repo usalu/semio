@@ -2,7 +2,7 @@
 //! (object multi-selection, a primitive slot, a reference overlay, a node), or a schema summary.
 
 use semio_s_artifact_cad_cad_picking as picking;
-use semio_s_artifact_cad_cad_kit::{editor::cad::terminology::typology_label, editor::cad::terminology::CadLabels};
+use semio_s_artifact_cad_cad_kit::{editor::cad::terminology::object_name, editor::cad::terminology::typology_label, editor::cad::terminology::CadLabels};
 use semio_s_artifact_cad_cad_kit::{cad_pane_suffix, ui_label, ui_value_map, ui_value_text, CadPlayView};
 use semio_s_artifact_cad_cad_model::geometry::CadObject;
 use semio_s_artifact_cad_cad_inferences::object_scale_json;
@@ -93,7 +93,7 @@ fn selected_object_section(envelope: &CadPlayView, labels: &CadLabels, windows: 
     let build = || -> UiAssemblyResult<BuiltNode> {
         let ids: Vec<String> = selected.iter().map(|(_, selected)| selected.id.clone()).collect();
         let mut fields = UiFixedList::default();
-        read_only(&mut fields, "object.label", labels.label.as_str(), &object.label)?;
+        read_only(&mut fields, "object.label", labels.label.as_str(), object_name(object, envelope.axes))?;
         read_only(&mut fields, "object.typology", labels.typology.as_str(), typology_label(&object.typology, labels))?;
         read_only(&mut fields, "object.pane", labels.slot.as_str(), cad_pane_suffix(*pane))?;
         read_only(&mut fields, "object.origin", labels.position.as_str(), vec3(object.origin))?;

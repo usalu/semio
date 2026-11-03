@@ -1,7 +1,6 @@
 //! 🧪️ Supplementary coverage: `&mut self` specifically, including its own zero-variant (`match *self
 //! {}`) case, kept in a SEPARATE file from `🕳️uninhabited.rs` because `#[dyn_enum]` rejects mixing
 //! `&mut self` with `self: Arc<Self>` on the same trait (see `🕳️uninhabited.rs`'s comment).
-#![allow(async_fn_in_trait)] // R7 — never resolved by `+ Send` or by making a method sync.
 
 use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
 

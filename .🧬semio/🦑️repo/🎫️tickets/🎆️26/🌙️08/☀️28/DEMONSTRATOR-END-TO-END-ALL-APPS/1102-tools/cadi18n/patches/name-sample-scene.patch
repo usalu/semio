@@ -1,0 +1,11 @@
+--- a/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🧪️tests/🧩️sample-scene/🦀️.rs
++++ b/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🧪️tests/🧩️sample-scene/🦀️.rs
+@@ -27,7 +27,7 @@
+ pub fn sample_object(id: &str, origin: [f64; 3]) -> semio_s_artifact_cad_cad_model::geometry::CadObject {
+     semio_s_artifact_cad_cad_model::geometry::CadObject {
+         id: id.into(),
+-        label: format!("Object {id}"),
++        label: semio_s_artifact_cad_cad_model::geometry::CadObjectName::literal(format!("Object {id}")),
+         typology: "spatial.shape.primitive.box".into(),
+         visible: true,
+         locked: false,

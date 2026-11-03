@@ -88,6 +88,11 @@ pub struct FlowChildGroupWork {
 }
 
 impl FlowChildGroupWork {
+    #[cfg(feature = "testkit")]
+    pub fn detached(tool_id: &'static str) -> Self {
+        Self { tool_id, instance_owner: None, output: None, output_retirement: None, completed: false, closing: false }
+    }
+
     pub fn new(tool_id: &'static str, instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle) -> Self {
         Self { tool_id, instance_owner: Some(instance_owner), output: None, output_retirement: None, completed: false, closing: false }
     }

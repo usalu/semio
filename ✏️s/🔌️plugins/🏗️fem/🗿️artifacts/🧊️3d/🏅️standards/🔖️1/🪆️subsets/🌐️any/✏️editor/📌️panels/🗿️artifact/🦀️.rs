@@ -35,8 +35,8 @@ use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structur
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemElement;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoad;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoadCase;
-use semio_s_fem_material::volumetric::FemMaterialValue;
-use semio_s_fem_node::volumetric::FemNodeValue;
+use semio_s_fem_material::volumetric::FemMaterial;
+use semio_s_fem_node::volumetric::FemNode;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSection;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSolid;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSupport;
@@ -125,8 +125,8 @@ pub fn dof_symbol(dof: FemDof) -> &'static str {
     }
 }
 
-pub fn fem3d_node_label(node: &FemNodeValue) -> String {
-    format!("{} · ({}, {}, {})", node.id, fem3d_coordinate(node.x), fem3d_coordinate(node.y), fem3d_coordinate(node.z))
+pub fn fem3d_node_label(node: &FemNode) -> String {
+    format!("{} · ({}, {}, {})", node.id.as_str(), fem3d_coordinate(node.x), fem3d_coordinate(node.y), fem3d_coordinate(node.z))
 }
 
 pub fn fem3d_element_label(element: &FemElement, labels: &Fem3dLabels) -> String {
@@ -179,8 +179,8 @@ pub fn fem3d_combination_label(combination: &FemCombination) -> String {
 }
 
 /// 🧱️ `E` in gigapascals — the unit an engineer reads a stiffness in, never the raw 2.1e11 Pa.
-pub fn fem3d_material_label(material: &FemMaterialValue) -> String {
-    format!("{} · E {} GPa", material.name, fem3d_scalar(material.e / 1e9))
+pub fn fem3d_material_label(material: &FemMaterial) -> String {
+    format!("{} · E {} GPa", material.name.as_str(), fem3d_scalar(material.e / 1e9))
 }
 
 pub fn fem3d_section_label(section: &FemSection) -> String {
@@ -235,14 +235,14 @@ fn section_label(noun: &LabelText, count: usize) -> UiAssemblyResult<UiLabel> {
 }
 
 fn has_node(document: &Fem3dSnapshot, id: &str) -> bool {
-    document.nodes.iter().any(|node| node.id == id)
+    document.nodes.iter().any(|node| node.id.as_str() == id)
 }
 
 fn element_is_dangling(document: &Fem3dSnapshot, element: &FemElement) -> bool {
     let (start, end, material_id, section_id) = match element {
         FemElement::Bar { start, end, material_id, section_id, .. } | FemElement::Frame { start, end, material_id, section_id, .. } => (start, end, material_id, section_id),
     };
-    !has_node(document, start) || !has_node(document, end) || !document.materials.iter().any(|material| &material.id == material_id) || !document.sections.iter().any(|section| &section.id == section_id)
+    !has_node(document, start) || !has_node(document, end) || !document.materials.iter().any(|material| material.id.as_str() == material_id.as_str()) || !document.sections.iter().any(|section| section.id == *section_id)
 }
 
 fn load_is_dangling(document: &Fem3dSnapshot, load: &FemLoad) -> bool {
@@ -265,14 +265,16 @@ fn marked_ids(ids: &[String]) -> Vec<String> {
 pub fn build_artifact_tree(document: &Fem3dSnapshot, interaction: &Fem3dInteractionSnapshot, labels: &Fem3dLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
     let placeholder = ui_label(labels.none.as_str())?;
     let analysis = [fem3d_analysis_description(document, labels)];
+    let nodes: Vec<&FemNode> = document.nodes.iter().collect();
+    let materials: Vec<&FemMaterial> = document.materials.iter().collect();
     PanelTreeBuilder::new(TREE_NAMESPACE)?
         .window_section_or_placeholder(
             windows,
             &format!("{TREE_NAMESPACE}.nodes"),
             Some(section_label(&labels.nodes, document.nodes.len())?),
             true,
-            &document.nodes,
-            |node| entity_row(&node.id, FEM3D_GRANULARITY_NODE, &fem3d_node_label(node), &labels.node, "circle-dot", false),
+            &nodes,
+            |node: &&FemNode| entity_row(node.id.as_str(), FEM3D_GRANULARITY_NODE, &fem3d_node_label(node), &labels.node, "circle-dot", false),
             placeholder.clone(),
         )?
         .window_section_or_placeholder(
@@ -291,7 +293,7 @@ pub fn build_artifact_tree(document: &Fem3dSnapshot, interaction: &Fem3dInteract
             true,
             &document.solids,
             |solid| {
-                let dimmed = !document.materials.iter().any(|material| material.id == solid.material_id);
+                let dimmed = !document.materials.iter().any(|material| material.id.as_str() == solid.material_id.as_str());
                 entity_row(&solid.id, FEM3D_GRANULARITY_SOLID, &fem3d_solid_label(solid, labels), &labels.solid, "box", dimmed)
             },
             placeholder.clone(),
@@ -339,8 +341,8 @@ pub fn build_artifact_tree(document: &Fem3dSnapshot, interaction: &Fem3dInteract
             &format!("{TREE_NAMESPACE}.materials"),
             Some(section_label(&labels.materials, document.materials.len())?),
             false,
-            &document.materials,
-            |material| entity_row(&material.id, FEM3D_GRANULARITY_MATERIAL, &fem3d_material_label(material), &labels.material, "layers", false),
+            &materials,
+            |material: &&FemMaterial| entity_row(material.id.as_str(), FEM3D_GRANULARITY_MATERIAL, &fem3d_material_label(material), &labels.material, "layers", false),
             placeholder.clone(),
         )?
         .window_section_or_placeholder(

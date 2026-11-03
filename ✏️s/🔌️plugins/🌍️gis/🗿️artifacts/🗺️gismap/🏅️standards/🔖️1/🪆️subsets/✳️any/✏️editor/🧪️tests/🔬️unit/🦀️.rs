@@ -291,7 +291,7 @@ fn gis_map_envelope_wire() -> Vec<u8> {
     let envelope = store::os_store::document_materialize::create_document_envelope(GIS_MAP_SCHEMA, "gis-map-live-load", snapshot, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut retirement = semio_s_artifact_gis_gismap_gis2d::host::owned::gis_map_envelope_decode_owner_bundle().retire_envelope(envelope);
     for _ in 0..100_000 {
-        match retirement.close_step(semio_framework_value::testing::physical_test_close_grant()).expect("GIS fixture envelope retirement") {
+        match retirement.close_step(semio_framework_value::testing::physical_test_close_grant()).result.expect("GIS fixture envelope retirement") {
             semio_framework_value::RetainedCloneStep::Complete(_) => {
                 assert!(retirement.terminal_is_empty());
                 drop(retirement);

@@ -2,7 +2,10 @@
   "schema": "spatial.interaction",
   "id": "curve.construct",
   "version": "1.0.0",
-  "label": "Construct Curve",
+  "label": {
+    "native": { "en": "Construct Curve", "de": "Kurve konstruieren" },
+    "reuse": { "en": "Construct Curve", "de": "Kurve konstruieren" }
+  },
   "key": "c",
   "invocation": "callable",
   "guards": [
@@ -87,7 +90,10 @@
               {
                 "target": "committed",
                 "key": "1",
-                "label": "Line",
+                "label": {
+                  "native": { "en": "Line", "de": "Linie" },
+                  "reuse": { "en": "Line", "de": "Linie" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -247,7 +253,10 @@
               {
                 "target": "committed",
                 "key": "2",
-                "label": "Polyline",
+                "label": {
+                  "native": { "en": "Polyline", "de": "Polylinie" },
+                  "reuse": { "en": "Polyline", "de": "Polylinie" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -407,7 +416,10 @@
               {
                 "target": "committed",
                 "key": "3",
-                "label": "Arc",
+                "label": {
+                  "native": { "en": "Arc", "de": "Bogen" },
+                  "reuse": { "en": "Arc", "de": "Bogen" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -567,7 +579,10 @@
               {
                 "target": "committed",
                 "key": "4",
-                "label": "Circle",
+                "label": {
+                  "native": { "en": "Circle", "de": "Kreis" },
+                  "reuse": { "en": "Circle", "de": "Kreis" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -727,7 +742,10 @@
               {
                 "target": "committed",
                 "key": "5",
-                "label": "Interpolate",
+                "label": {
+                  "native": { "en": "Interpolate", "de": "Interpolieren" },
+                  "reuse": { "en": "Interpolate", "de": "Interpolieren" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -887,7 +905,10 @@
               {
                 "target": "pick_wires",
                 "key": "6",
-                "label": "Pick wires (loft)",
+                "label": {
+                  "native": { "en": "Pick wires (loft)", "de": "Drahtkurven wählen (Loft)" },
+                  "reuse": { "en": "Pick wires (loft)", "de": "Drahtkurven wählen (Loft)" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -916,7 +937,10 @@
         "selection": {
           "accept": ["wire", "edge"],
           "multiple": true,
-          "prompt": "Pick curves for loft / tween"
+          "prompt": {
+            "native": { "en": "Pick curves for loft / tween", "de": "Kurven für Loft / Zwischenkurven wählen" },
+            "reuse": { "en": "Pick curves for loft / tween", "de": "Kurven für Loft / Zwischenkurven wählen" }
+          }
         },
         "on": [
           {
@@ -925,7 +949,10 @@
               {
                 "target": "pick_wires",
                 "key": "s",
-                "label": "Add",
+                "label": {
+                  "native": { "en": "Add", "de": "Hinzufügen" },
+                  "reuse": { "en": "Add", "de": "Hinzufügen" }
+                },
                 "effects": [
                   {
                     "mutation": "action",
@@ -957,7 +984,10 @@
               {
                 "target": "committed",
                 "key": "Enter",
-                "label": "Finish pick"
+                "label": {
+                  "native": { "en": "Finish pick", "de": "Auswahl beenden" },
+                  "reuse": { "en": "Finish pick", "de": "Auswahl beenden" }
+                }
               }
             ]
           }
@@ -978,7 +1008,10 @@
             "kind": "label",
             "id": "choose-curve",
             "role": "prompt",
-            "text": "Curve: 1=line 2=polyline 3=arc 4=circle 5=interpolate 6=pick wires (loft)",
+            "text": {
+              "native": { "en": "Curve: 1=line 2=polyline 3=arc 4=circle 5=interpolate 6=pick wires (loft)", "de": "Kurve: 1=Linie 2=Polylinie 3=Bogen 4=Kreis 5=Interpolieren 6=Drahtkurven wählen (Loft)" },
+              "reuse": { "en": "Curve: 1=line 2=polyline 3=arc 4=circle 5=interpolate 6=pick wires (loft)", "de": "Kurve: 1=Linie 2=Polylinie 3=Bogen 4=Kreis 5=Interpolieren 6=Drahtkurven wählen (Loft)" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]
@@ -993,7 +1026,10 @@
             "kind": "label",
             "id": "pick-wires-hint",
             "role": "prompt",
-            "text": "Select curves, then Finish pick",
+            "text": {
+              "native": { "en": "Select curves, then Finish pick", "de": "Kurven auswählen, dann „Auswahl beenden“" },
+              "reuse": { "en": "Select curves, then Finish pick", "de": "Kurven auswählen, dann „Auswahl beenden“" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]

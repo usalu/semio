@@ -1,0 +1,92 @@
+{
+ "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/Cargo.toml": [
+  "semio-s-artifact-writer-writer-editor"
+ ],
+ "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/Cargo.toml": [
+  "semio-s-artifact-mathematical-equation-editor"
+ ],
+ "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/Cargo.toml": [
+  "semio-s-artifact-wfc-grid2d-v1"
+ ],
+ "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/Cargo.toml": [
+  "semio-s-artifact-wfc-bitmap-bitmap"
+ ],
+ "✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/Cargo.toml": [
+  "semio-s-artifact-wfc-grid3d-editor"
+ ],
+ "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/Cargo.toml": [
+  "semio-s-artifact-procedural-2d-mode-edit",
+  "semio-s-artifact-procedural-2d-mode-generate"
+ ],
+ "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/Cargo.toml": [
+  "semio-s-artifact-flow-flow-config"
+ ],
+ "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/Cargo.toml": [
+  "semio-s-artifact-gis-gisterrain-editor"
+ ],
+ "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/Cargo.toml": [
+  "semio-s-artifact-gis-gismap-config",
+  "semio-s-artifact-gis-gismap-windows"
+ ],
+ "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/Cargo.toml": [
+  "semio-s-artifact-sequence-sequence-v1"
+ ],
+ "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/Cargo.toml": [
+  "semio-s-artifact-fem-2d-editor-model-window",
+  "semio-s-artifact-fem-2d-results-state"
+ ],
+ "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/Cargo.toml": [
+  "semio-s-artifact-fem-3d-editor-model-window",
+  "semio-s-artifact-fem-3d-editor-results-window"
+ ],
+ "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/Cargo.toml": [
+  "semio-s-artifact-bim-model-v1"
+ ],
+ "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/Cargo.toml": [
+  "semio-s-artifact-architect-program-architect"
+ ],
+ "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/Cargo.toml": [
+  "semio-s-artifact-reasoning-wires-windows"
+ ],
+ "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/Cargo.toml": [
+  "semio-s-artifact-forms-forms-forms"
+ ],
+ "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/Cargo.toml": [
+  "semio-s-artifact-layout-layout-editor"
+ ],
+ "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/Cargo.toml": [
+  "semio-s-artifact-cad-cad-modes"
+ ],
+ "✏️s/🔌️plugins/📕️norm/Cargo.toml": [
+  "semio-s-plugin-norm-results-config"
+ ],
+ "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/Cargo.toml": [
+  "semio-s-artifact-remodel-remodeling-modes"
+ ],
+ "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/Cargo.toml": [
+  "semio-s-artifact-trinity-rewriting-editor"
+ ],
+ "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/Cargo.toml": [
+  "semio-s-artifact-trinity-jack-window-config"
+ ],
+ "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/Cargo.toml": [
+  "semio-s-artifact-draw-drawing-editor",
+  "semio-s-artifact-draw-drawing-viewer"
+ ],
+ "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/Cargo.toml": [
+  "semio-s-artifact-note-note-mut-family"
+ ],
+ "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/Cargo.toml": [
+  "semio-s-artifact-puzzle-2d-v1"
+ ],
+ "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/Cargo.toml": [
+  "semio-s-artifact-puzzle-5d-puzzle5d"
+ ],
+ "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/Cargo.toml": [
+  "semio-s-artifact-sourcing-curation"
+ ],
+ "🧰️framework/Cargo.toml": [
+  "semio-framework-plugin",
+  "semio-framework-plugin-window-config"
+ ]
+}

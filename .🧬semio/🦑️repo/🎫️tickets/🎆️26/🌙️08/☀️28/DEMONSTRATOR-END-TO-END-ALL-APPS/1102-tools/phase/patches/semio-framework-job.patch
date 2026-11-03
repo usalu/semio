@@ -1,0 +1,99 @@
+--- a/🧰️framework/🔨️modules/🧵️job/♻️retirement/📄️payload/🦀️.rs
++++ b/🧰️framework/🔨️modules/🧵️job/♻️retirement/📄️payload/🦀️.rs
+@@ -52,7 +52,7 @@
+         if self.is_empty(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0};}
+         let demand=match self.retirement_demands(){Ok(demand)=>demand,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};
+         if !semio_framework_value_retained_clone::retained_clone::retained_clone_grant_admits(grant,demand){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0};}
+-        let payload=self.original_mut().unwrap();
++        let Some(payload)=self.original_mut()else{return RetainedWorkOutcome{result:Err(semio_framework_value_retained_clone::ValueError::invariant("step payload owner is absent")),work:0}};
+         if payload.terminal_is_empty(){unsafe{self.original.assume_init_drop();}self.present=false;return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1};}
+         let turn=payload.close_step(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant});RetainedWorkOutcome{result:turn.result.map(|step|RetainedCloneStep::Progress(step.progress())),work:turn.work}
+     }
+@@ -72,7 +72,7 @@
+         if self.terminal_is_empty(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0};}
+         let demand=match self.retirement_demands(){Ok(demand)=>demand,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};
+         if !semio_framework_value_retained_clone::retained_clone::retained_clone_grant_admits(grant,demand){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0};}
+-        let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let turn=match self{Self::Yield|Self::Cancelled=>unreachable!(),Self::PreviewReady(payload)=>payload.close_step(child),Self::CheckpointReady(checkpoint)=>checkpoint.state.close_step(child),Self::Complete(candidate)if !candidate.state.terminal_is_empty()=>candidate.state.close_step(child),Self::Complete(candidate)=>candidate.output.close_step(child),Self::Fault(fault)=>fault.detail.close_step(child)};
++        let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let turn=match self{Self::Yield|Self::Cancelled=>return RetainedWorkOutcome{result:Err(semio_framework_value_retained_clone::ValueError::invariant("yield and cancelled step outcomes own no payload")),work:0},Self::PreviewReady(payload)=>payload.close_step(child),Self::CheckpointReady(checkpoint)=>checkpoint.state.close_step(child),Self::Complete(candidate)if !candidate.state.terminal_is_empty()=>candidate.state.close_step(child),Self::Complete(candidate)=>candidate.output.close_step(child),Self::Fault(fault)=>fault.detail.close_step(child)};
+         let terminal=self.terminal_is_empty();RetainedWorkOutcome{result:turn.result.map(|step|if terminal{RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())}),work:turn.work}
+     }
+ }
+@@ -89,7 +89,7 @@
+     if slot.is_empty(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0};}
+     let demand=match step_outcome_slot_retirement_demands(slot){Ok(demand)=>demand,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};
+     if !semio_framework_value_retained_clone::retained_clone::retained_clone_grant_admits(grant,demand){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0};}
+-    let outcome=slot.original_mut().unwrap();
++    let Some(outcome)=slot.original_mut()else{return RetainedWorkOutcome{result:Err(semio_framework_value_retained_clone::ValueError::invariant("step outcome owner is absent")),work:0}};
+     if outcome.terminal_is_empty(){slot.remove_terminal();return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1};}
+     let turn=outcome.close_step(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant});RetainedWorkOutcome{result:turn.result.map(|step|RetainedCloneStep::Progress(step.progress())),work:turn.work}
+ }
+--- a/🧰️framework/🔨️modules/🧵️job/♻️retirement/📄️payload/🧱️payload-owner/🦀️.rs
++++ b/🧰️framework/🔨️modules/🧵️job/♻️retirement/📄️payload/🧱️payload-owner/🦀️.rs
+@@ -21,7 +21,7 @@
+         let demand=match self.retirement_demands(){Ok(demand)=>demand,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};
+         if !crate::retained_clone::retained_clone_grant_admits(grant,demand){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0};}
+         if self.page_count==0{return close_ledger(&mut self.ledger,grant);}
+-        let page=self.pop_page().unwrap();let extent=page.source.allocated_capacity_bytes();if let Some(ledger)=self.ledger.as_ref(){ledger.release(self.stream,extent);}drop(page);
++        let Some(page)=self.pop_page()else{return RetainedWorkOutcome{result:Err(semio_framework_value_retained_clone::ValueError::invariant("payload page count exceeds its pages")),work:0}};let extent=page.source.allocated_capacity_bytes();if let Some(ledger)=self.ledger.as_ref(){ledger.release(self.stream,extent);}drop(page);
+         RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:extent,..Default::default()})),work:1}
+     }
+ }
+--- a/🧰️framework/🔨️modules/🧵️job/📄️payload-pages-and-ledger/🦀️.rs
++++ b/🧰️framework/🔨️modules/🧵️job/📄️payload-pages-and-ledger/🦀️.rs
+@@ -76,7 +76,7 @@
+     pub fn admit(extent:usize,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<Option<(Self,RetainedCloneProgress)>>{
+         if extent==0||extent>JOB_PAYLOAD_PAGE_BYTES{return crate::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"job payload page extent is outside its canonical bound")),work:0}}
+         if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<extent{return crate::RetainedWorkOutcome{result:Ok(None),work:0}}
+-        let layout=std::alloc::Layout::array::<MaybeUninit<u8>>(extent).expect("canonical payload extent has a valid allocation layout");
++        let Ok(layout)=std::alloc::Layout::array::<MaybeUninit<u8>>(extent) else{return crate::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"job payload page extent has no allocation layout")),work:0}};
+         let pointer=unsafe{std::alloc::alloc(layout)}.cast::<MaybeUninit<u8>>();
+         if pointer.is_null(){return crate::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::AllocationFailed,"job payload page allocation refused")),work:1}}
+         let storage=unsafe{Box::from_raw(std::ptr::slice_from_raw_parts_mut(pointer,extent))};
+--- a/🧰️framework/🔨️modules/🧵️job/📬️outcome/⏸️continuation/🎟️source/🦀️.rs
++++ b/🧰️framework/🔨️modules/🧵️job/📬️outcome/⏸️continuation/🎟️source/🦀️.rs
+@@ -61,7 +61,7 @@
+  fn redeem(&mut self,credit:&mut OriginalReturnClaimCredit,witness:&mut OriginalReturnWitness)->Result<(),ValueError>{
+   let origin=self.origin.ok_or_else(||refused("original return source already closed"))?;if !credit.live&&!witness.redeemed||credit.source!=origin.source||credit.clock!=origin.clock||credit.serial!=witness.serial||witness.source!=origin.source||witness.clock!=origin.clock||witness.recipient!=origin.recipient{return Err(refused("original return witness is foreign to its held claim"))}if witness.redeemed{return Ok(())}
+   let observed=match witness.phase{OriginalReturnPhase::Capture=>credit.capture_observed,OriginalReturnPhase::Receive=>credit.receive_observed};if observed||match witness.phase{OriginalReturnPhase::Capture=>credit.capture,OriginalReturnPhase::Receive=>credit.receive}{return Err(refused("original return witness was not issued once by its claim"))}
+-  let held=1+usize::from(witness.release_capture);if self.held_items<held||self.held_fuel<u64::try_from(held).unwrap()||self.claims==0||witness.release_capture&&(witness.phase!=OriginalReturnPhase::Receive||credit.capture_observed){return Err(refused("original return witness lost its genuine held currencies"))}
++  let held=1+usize::from(witness.release_capture);if self.held_items<held||self.held_fuel<u64::try_from(held).unwrap_or(u64::MAX)||self.claims==0||witness.release_capture&&(witness.phase!=OriginalReturnPhase::Receive||credit.capture_observed){return Err(refused("original return witness lost its genuine held currencies"))}
+   let spent=self.spent.checked_add(witness.progress)?;let work=self.work.checked_add(u128::from(witness.work)).ok_or_else(||refused("original reserved return actual CPU overflow"))?;self.held_items-=held;self.held_fuel-=u64::try_from(held).unwrap();self.spent=spent;self.work=work;match witness.phase{OriginalReturnPhase::Capture=>credit.capture_observed=true,OriginalReturnPhase::Receive=>credit.receive_observed=true}if witness.release_capture{credit.capture_observed=true;}if credit.capture_observed&&credit.receive_observed{self.claims-=1;credit.live=false;}witness.redeemed=true;Ok(())
+  }
+ 
+--- a/🧰️framework/🔨️modules/🧵️job/📬️outcome/⏸️continuation/📦️capsule/🦀️.rs
++++ b/🧰️framework/🔨️modules/🧵️job/📬️outcome/⏸️continuation/📦️capsule/🦀️.rs
+@@ -38,7 +38,7 @@
+  }
+  pub(super) fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{
+   if self.terminal_is_empty(){return Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})}self.validate(cx)?;if self.witness.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"owned continuation must redeem its held return before insertion or close").into())}
+-  if !self.inserted{return crate::close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{let frame=self.frame.as_mut().expect("prepaid original continuation frame");let payload=frame.owner.original_mut().expect("uninserted original continuation");assert!(payload.callback.is_none()&&payload.qualification.is_none()&&payload.receipt_qualification.is_none()&&frame.descriptor.is_none(),"one genuine continuation insertion");payload.callback=self.callback.take();payload.qualification=self.qualification.take();payload.receipt_qualification=self.receipt_qualification.take();frame.descriptor=self.descriptor.take();self.inserted=true;RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}})}
++  if !self.inserted{return crate::close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{let fail=|detail:&'static str|RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvariantViolated,detail).into()),work:0};let Some(frame)=self.frame.as_mut()else{return fail("prepaid original continuation frame is absent")};let Some(payload)=frame.owner.original_mut()else{return fail("uninserted original continuation is absent")};if !(payload.callback.is_none()&&payload.qualification.is_none()&&payload.receipt_qualification.is_none()&&frame.descriptor.is_none()){return fail("one genuine continuation insertion")}payload.callback=self.callback.take();payload.qualification=self.qualification.take();payload.receipt_qualification=self.receipt_qualification.take();frame.descriptor=self.descriptor.take();self.inserted=true;RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}})}
+   let frame=self.frame.as_mut().ok_or_else(||ValueError::invariant("frame absent"))?;if !frame.terminal_is_empty(){let demand=frame.demand(cx.retained_grant().maximum_copy_bytes)?;return crate::close_original_retained_step(cx,demand,|grant|frame.close_step(grant))}
+   crate::close_original_retained_step(cx,RetirementDemand{release_bytes:size_of::<OriginalReturnFrame>(),depth:1,..Default::default()},|_|{self.frame.take();self.source=None;RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,released_bytes:size_of::<OriginalReturnFrame>(),..Default::default()})),work:1}})
+  }
+--- a/🧰️framework/🔨️modules/🧵️job/📬️outcome/📖️source/📦️page-transfer/🦀️.rs
++++ b/🧰️framework/🔨️modules/🧵️job/📬️outcome/📖️source/📦️page-transfer/🦀️.rs
+@@ -17,7 +17,7 @@
+  pub fn close_step(&mut self,grant:RetainedCloneGrant)->O{
+   if self.terminal_is_empty(){return O{result:Ok(S::Complete(Default::default())),work:0}}
+   let d=self.retirement_demands();if !admitted(grant,d){return O{result:Ok(S::Progress(Default::default())),work:0}}
+-  if self.page.is_some(){let page=self.page.take().unwrap();self.ledger.as_ref().expect("detached backing retains its original operation ledger").release(self.stream,d.release_bytes);drop(page);return O{result:Ok(S::Progress(P{released_bytes:d.release_bytes,..metadata()})),work:1}}
++  if let Some(page)=self.page.take(){let Some(ledger)=self.ledger.as_ref()else{self.page=Some(page);return O{result:Err(refused("detached backing lost its original operation ledger")),work:0}};ledger.release(self.stream,d.release_bytes);drop(page);return O{result:Ok(S::Progress(P{released_bytes:d.release_bytes,..metadata()})),work:1}}
+   crate::close_ledger(&mut self.ledger,grant)
+  }
+ }
+@@ -39,11 +39,11 @@
+   let index=self.page_count-1;
+   if output.is_none(){
+    let Some(source)=self.payload_authority_identity()else{return O{result:Err(refused("original page transfer has no live operation ledger")),work:0}};
+-   if self.page_count>1{*output=Some(RetainedJobPageTransfer{page:None,ledger:Some(Arc::clone(self.ledger.as_ref().unwrap())),stream:self.stream,index,source});return O{result:Ok(S::Progress(metadata())),work:1}}
+-   let page=self.pop_page().expect("original payload page frontier");
++   if self.page_count>1{let Some(ledger)=self.ledger.as_ref()else{return O{result:Err(refused("original page transfer has no live operation ledger")),work:0}};*output=Some(RetainedJobPageTransfer{page:None,ledger:Some(Arc::clone(ledger)),stream:self.stream,index,source});return O{result:Ok(S::Progress(metadata())),work:1}}
++   let Some(page)=self.pop_page()else{return O{result:Err(refused("original payload page frontier is absent")),work:0}};
+    *output=Some(RetainedJobPageTransfer{page:Some(page),ledger:self.ledger.take(),stream:self.stream,index,source});
+   }else{
+-   let page=self.pop_page().expect("retained pending original page");output.as_mut().unwrap().page=Some(page);
++   let Some(pending)=output.as_mut()else{return O{result:Err(refused("retained pending page transfer is absent")),work:0}};let Some(page)=self.pop_page()else{return O{result:Err(refused("retained pending original page is absent")),work:0}};pending.page=Some(page);
+   }
+   O{result:Ok(S::Complete(metadata())),work:1}
+  }

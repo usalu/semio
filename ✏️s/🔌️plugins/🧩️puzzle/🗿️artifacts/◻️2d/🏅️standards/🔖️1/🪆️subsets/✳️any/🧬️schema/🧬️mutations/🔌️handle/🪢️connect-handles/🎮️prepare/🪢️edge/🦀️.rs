@@ -32,7 +32,7 @@ impl Puzzle2dConnectEdgeCursor {
     pub fn advance(&mut self, mutation: RetainedCloneRef<'_, ConnectHandles>, body:usize,grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if self.closing || self.phase == 5 { return Err(refusal("edge assembly is closing or spent")); }
         if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if let Some(progress)=mutation.bind(&mut self.mutation,grant)?{return Ok(RetainedCloneStep::Progress(progress))}
+        if let Some(progress)=mutation.bind(&mut self.mutation,grant).result?{return Ok(RetainedCloneStep::Progress(progress))}
         if self.phase == 0 {
             if grant.maximum_copy_bytes < size_of::<Puzzle2dEdge>() { return Ok(RetainedCloneStep::Progress(Default::default())); }
             self.edge = Some(Puzzle2dEdge { id: Text::default(), source: Text::default(), target: Text::default(), edge_kind: None, gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 0.0, y: 0.0, source_tip: None, target_tip: None, visible: None, locked: None });
@@ -52,8 +52,8 @@ impl Puzzle2dConnectEdgeCursor {
         if self.phase == 2 {
             let field = self.field;
             if self.child == 0 {
-                let step = if field < 3 { self.text.advance(mutation.project(field as usize + 1, |payload| match field { 0 => &payload.id, 1 => &payload.source, _ => &payload.target }),body, grant)? }
-                else { self.optional.advance(mutation.project(field as usize + 1, |payload| match field { 3 => &payload.edge_kind, 4 => &payload.source_tip, _ => &payload.target_tip }),body, grant)? };
+                let step = if field < 3 { self.text.advance(mutation.project(field as usize + 1, |payload| match field { 0 => &payload.id, 1 => &payload.source, _ => &payload.target }),body, grant).result? }
+                else { self.optional.advance(mutation.project(field as usize + 1, |payload| match field { 3 => &payload.edge_kind, 4 => &payload.source_tip, _ => &payload.target_tip }),body, grant).result? };
                 if matches!(step, RetainedCloneStep::Complete(_)) { self.child = 1; }
                 return Ok(RetainedCloneStep::Progress(step.progress()));
             }
@@ -61,12 +61,12 @@ impl Puzzle2dConnectEdgeCursor {
                 let bytes = if field < 3 { size_of::<Text>() } else { size_of::<Option<Text>>() };
                 if grant.maximum_copy_bytes < bytes { return Ok(RetainedCloneStep::Progress(Default::default())); }
                 if field < 3 {
-                    let value = self.text.take().ok_or_else(|| refusal("edge field completed without text ownership"))?;
+                    let value = self.text.take(grant).result?.map(|(owner, _)| owner).ok_or_else(|| refusal("edge field completed without text ownership"))?;
                     let edge = self.edge.as_mut().ok_or_else(|| refusal("edge assembly lost its native owner"))?;
                     match field { 0 => edge.id = value, 1 => edge.source = value, _ => edge.target = value }
                     self.text.begin_close();
                 } else {
-                    let value = self.optional.take().ok_or_else(|| refusal("edge field completed without optional ownership"))?;
+                    let value = self.optional.take(grant).result?.map(|(owner, _)| owner).ok_or_else(|| refusal("edge field completed without optional ownership"))?;
                     let edge = self.edge.as_mut().ok_or_else(|| refusal("edge assembly lost its native owner"))?;
                     match field { 3 => edge.edge_kind = value, 4 => edge.source_tip = value, _ => edge.target_tip = value }
                     self.optional.begin_close();
@@ -74,7 +74,7 @@ impl Puzzle2dConnectEdgeCursor {
                 self.child = 2;
                 return Ok(copy(bytes));
             }
-            let step = if field < 3 { self.text.close_step(grant)? } else { self.optional.close_step(grant)? };
+            let step = if field < 3 { self.text.close_step(grant).result? } else { self.optional.close_step(grant).result? };
             let empty = if field < 3 { self.text.terminal_is_empty() } else { self.optional.terminal_is_empty() };
             if empty {
                 if field < 3 { self.text = Text::retained_clone_cursor(); } else { self.optional = Option::<Text>::retained_clone_cursor(); }
@@ -125,15 +125,15 @@ impl Puzzle2dConnectEdgeCursor {
     pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if !self.closing { return Err(refusal("edge assembly closure was not started")); }
         if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if !self.text.terminal_is_empty() { return self.text.close_step(grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
-        if !self.optional.terminal_is_empty() { return self.optional.close_step(grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if !self.text.terminal_is_empty() { return self.text.close_step(grant).result.map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if !self.optional.terminal_is_empty() { return self.optional.close_step(grant).result.map(|step| RetainedCloneStep::Progress(step.progress())); }
         if let Some(owner) = self.retirement.as_mut() { let step = owner.step(grant)?; if owner.terminal_is_empty() { self.retirement = None; } return Ok(RetainedCloneStep::Progress(step.progress())); }
         if self.edge.is_some() {
             if grant.maximum_copy_bytes < size_of::<Puzzle2dEdge>() { return Ok(RetainedCloneStep::Progress(Default::default())); }
             match ControlledRetirement::new(self.edge.take().unwrap()) { Ok(owner) => self.retirement = Some(owner), Err((error, edge)) => { self.edge = Some(edge); return Err(error); } }
             return Ok(copy(size_of::<Puzzle2dEdge>()));
         }
-        let step = RetainedCloneBinding::close_one(&mut self.mutation, grant)?;
+        let step = RetainedCloneBinding::close_one(&mut self.mutation, grant).result?;
         Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) })
     }
     pub fn terminal_is_empty(&self) -> bool { self.closing && self.text.terminal_is_empty() && self.optional.terminal_is_empty() && self.edge.is_none() && self.retirement.is_none() && self.mutation.is_none() }

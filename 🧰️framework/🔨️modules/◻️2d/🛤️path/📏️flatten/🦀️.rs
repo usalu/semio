@@ -83,7 +83,7 @@ impl PathFlattenJob {
  }
  fn append(&mut self,p:Vec2,work:&mut RetainedWorkLedger)->Result<bool,PathFlattenError>{
   point(p)?;transformed(p,self.input.transform)?;if self.count>=MAX_POINTS{return Err(PathFlattenError::Invalid("Path preparation exceeds point budget"));}
-  let points=&mut self.contours[self.current.unwrap()].points;if !Self::slot(points,MAX_POINTS,work)?{return Ok(false);}work.vec_push(points,p).map_err(|_|PathFlattenError::Invalid("Path point copy authority lost"))?;self.count+=1;Ok(true)
+  let points=&mut self.contours[self.current.ok_or(PathFlattenError::Invalid("path flatten has no current contour"))?].points;if !Self::slot(points,MAX_POINTS,work)?{return Ok(false);}work.vec_push(points,p).map_err(|_|PathFlattenError::Invalid("Path point copy authority lost"))?;self.count+=1;Ok(true)
  }
  fn begin(&mut self,p:Vec2,work:&mut RetainedWorkLedger)->Result<bool,PathFlattenError>{
   point(p)?;transformed(p,self.input.transform)?;if self.count>=MAX_POINTS{return Err(PathFlattenError::Invalid("Path preparation exceeds point budget"));}

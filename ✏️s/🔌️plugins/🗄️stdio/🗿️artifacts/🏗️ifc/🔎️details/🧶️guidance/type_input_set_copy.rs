@@ -1,6 +1,6 @@
 //! 🧺️ Original selected SET children retain every ordered raw reference through bounded copying.
 use super::*;
-use super::{RetainedWorkOutcome,cursor_step,idle_step,owned_step,refused,costed};
+use super::{RetainedWorkOutcome,cursor_step,idle_step,owned_step,own_with,refused,costed};
 #[derive(semio_framework_value::RetireOwned)]
 struct Parts{strings:[Option<String>;7],root:Option<Vec<(String,DslValue)>>,values:Option<Vec<DslValue>>,member:Option<Vec<(String,DslValue)>>,output:Option<DslValue>}
 #[derive(Clone,Copy,Default)]
@@ -39,7 +39,7 @@ impl Drop for SetCopy{fn drop(&mut self){assert!(std::thread::panicking()||self.
 #[cfg(test)]
 mod tests{
  use super::*;
- use semio_framework_plugin::app_testing::OriginalWorkFixture;
+ use semio_framework_plugin::plugin_app_close_prelude::OriginalWorkFixture;
  #[test]
  fn original_set_member_string_survives_refused_receipt_posting(){let mut caller=OriginalWorkFixture::new();let mut copy=Some(SetCopy::default());*copy.as_mut().unwrap().parts=Some(Parts{strings:Default::default(),root:None,values:None,member:None,output:None});let physical=OriginalConstructionDemand{items:1,copy_bytes:4096,capacity_bytes:19,release_bytes:0,depth:4};let(answer,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.work_turn(OriginalWorkFixture::stock(),1,|cx|construct_row_string(&mut copy.as_mut().unwrap().parts.as_mut().unwrap().strings[6],20,"original typed draft",physical,cx)));assert!(answer.is_err());assert_eq!(copy.as_ref().unwrap().parts.as_ref().unwrap().strings[6].as_deref(),Some("original typed draft"));assert!(heap.requested_bytes>=20);assert_eq!(heap.released_bytes,0);super::super::set_tests::retire(&mut caller,&mut copy);caller.finish();}
 }

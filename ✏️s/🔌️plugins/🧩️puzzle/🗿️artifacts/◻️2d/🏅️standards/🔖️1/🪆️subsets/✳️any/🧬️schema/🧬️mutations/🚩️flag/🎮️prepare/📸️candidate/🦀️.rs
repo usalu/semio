@@ -34,8 +34,8 @@ impl<T:Puzzle2dFlagIntent> Puzzle2dFlagCandidateCursor<T> {
     pub fn advance(&mut self, source: RetainedCloneRef<'_, Puzzle2dSnapshot>, mutation: RetainedCloneRef<'_, T>, body:usize,grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if self.closing || self.phase == 9 { return Err(refusal("flag candidate is closing or spent")); }
         if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if let Some(progress)=source.bind(&mut self.source,grant)?{return Ok(RetainedCloneStep::Progress(progress))}
-        if let Some(progress)=mutation.bind(&mut self.mutation,grant)?{return Ok(RetainedCloneStep::Progress(progress))}
+        if let Some(progress)=source.bind(&mut self.source,grant).result?{return Ok(RetainedCloneStep::Progress(progress))}
+        if let Some(progress)=mutation.bind(&mut self.mutation,grant).result?{return Ok(RetainedCloneStep::Progress(progress))}
         match self.phase {
             0 => {
                 let step = self.preparation.advance(source, mutation, grant)?;
@@ -48,19 +48,19 @@ impl<T:Puzzle2dFlagIntent> Puzzle2dFlagCandidateCursor<T> {
                 Ok(close_progress(step))
             }
             2 => {
-                let step = self.snapshot_clone.advance(source,body, grant)?;
+                let step = self.snapshot_clone.advance(source,body, grant).result?;
                 if matches!(step, RetainedCloneStep::Complete(_)) { self.phase = 3; }
                 Ok(RetainedCloneStep::Progress(step.progress()))
             }
             3 => {
                 if grant.maximum_copy_bytes < size_of::<Puzzle2dSnapshot>() { return Ok(RetainedCloneStep::Progress(Default::default())); }
-                self.candidate = Some(self.snapshot_clone.take().ok_or_else(|| refusal("flag candidate clone completed without its owner"))?);
+                self.candidate = Some(self.snapshot_clone.take(grant).result?.map(|(owner, _)| owner).ok_or_else(|| refusal("flag candidate clone completed without its owner"))?);
                 self.snapshot_clone.begin_close();
                 self.phase = 4;
                 Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<Puzzle2dSnapshot>(), retained_capacity_bytes: 0, released_bytes: 0 }))
             }
             4 => {
-                let step = self.snapshot_clone.close_step(grant)?;
+                let step = self.snapshot_clone.close_step(grant).result?;
                 if self.snapshot_clone.terminal_is_empty() { self.phase = 5; }
                 Ok(RetainedCloneStep::Progress(step.progress()))
             }
@@ -103,7 +103,7 @@ impl<T:Puzzle2dFlagIntent> Puzzle2dFlagCandidateCursor<T> {
         if !self.closing { return Err(refusal("flag candidate closure was not started")); }
         if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if !self.preparation.terminal_is_empty() { return self.preparation.close_step(grant).map(close_progress); }
-        if !self.snapshot_clone.terminal_is_empty() { return self.snapshot_clone.close_step(grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if !self.snapshot_clone.terminal_is_empty() { return self.snapshot_clone.close_step(grant).result.map(|step| RetainedCloneStep::Progress(step.progress())); }
         if let Some(owner) = self.candidate_close.as_mut() {
             let step = owner.step(grant)?;
             if owner.terminal_is_empty() { self.candidate_close = None; }
@@ -115,7 +115,7 @@ impl<T:Puzzle2dFlagIntent> Puzzle2dFlagCandidateCursor<T> {
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<Puzzle2dSnapshot>(), retained_capacity_bytes: 0, released_bytes: 0 }));
         }
         if self.plan.is_some() {let bytes=size_of::<Option<Puzzle2dFlagPlan>>();if grant.maximum_copy_bytes<bytes{return Ok(RetainedCloneStep::Progress(Default::default()));}self.plan=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,copied_bytes:bytes,..Default::default()}));}
-        let step = RetainedCloneBinding::close_one(if self.source.is_some(){&mut self.source}else{&mut self.mutation}, grant)?;
+        let step = RetainedCloneBinding::close_one(if self.source.is_some(){&mut self.source}else{&mut self.mutation}, grant).result?;
         Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{close_progress(step)})
     }
 

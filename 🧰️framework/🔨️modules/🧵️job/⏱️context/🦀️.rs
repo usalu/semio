@@ -487,6 +487,19 @@ pub mod testkit {
     pub(crate) fn narrow_cancel_receipt(cx:&mut StepContext<'_>){if NEXT_CANCEL_REFUSAL.with(|flag|flag.replace(false)){cx.retained_policy=Some((RetainedCloneGrant{maximum_items:0,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:0},cx.retained_progress()))}}
     /// 🔁️ Opens the next fixture turn on one long-lived context: production builds a fresh context, with a fresh one-page payload grant, for every reactor turn.
     pub fn renew_payload_page_grant(cx:&mut StepContext<'_>){cx.payload_page_granted=false}
+    /// 🔁️ Opens the next fixture turn on the one long-lived source: fresh per-turn fuel, payload grant and retained grant on top of the receipts already posted, like the reactor's fresh context per turn on its long-lived source parent; a bound return source restores its admitting lifetime stock and is refused while a claim holds currencies.
+    pub fn renew_turn(cx:&mut StepContext<'_>,fuel:u64,grant:RetainedCloneGrant)->Result<(),ValueError>{
+        let current=retained_delta(*cx.retained_progress,cx.reserved_return_progress);
+        if let Some(budget)=cx.return_budget.as_mut().filter(|budget|budget.get().is_bound()){budget.get_mut().renew_turn()?}
+        let refill=fuel.saturating_sub(cx.fuel_remaining);cx.fuel_remaining=fuel;cx.payload_page_granted=false;
+        cx.retained=RetainedCloneGrant{maximum_items:current.copied_items.saturating_add(grant.maximum_items),maximum_copy_bytes:current.copied_bytes.saturating_add(grant.maximum_copy_bytes),maximum_capacity_bytes:current.retained_capacity_bytes.saturating_add(grant.maximum_capacity_bytes),maximum_release_bytes:current.released_bytes.saturating_add(grant.maximum_release_bytes),maximum_depth:grant.maximum_depth};
+        cx.original_total_retained_start=current;
+        match cx.return_budget.as_ref().filter(|budget|budget.get().is_bound()){
+            Some(budget)=>{let(retained,total)=budget.get().remaining()?;cx.original_total_retained=retained;cx.original_total_fuel=total;cx.original_total_work_start=cx.work_units_spent.saturating_sub(u128::from(cx.reserved_return_work));}
+            None=>{cx.original_total_fuel=cx.original_total_fuel.saturating_add(refill);}
+        }
+        Ok(())
+    }
     /// 👶️ Reads the defining child's actual ready, closing and initiating identity fields.
     pub fn child_source_status(child:&OriginalCallerChildSource)->(bool,bool,usize,OriginalSourceBinding){child.test_status()}
     /// 🪙️ Reads the genuine parent's currently borrowable source ledger.
@@ -545,4 +558,8 @@ pub use original_return_place::OriginalCallerReturnPlace;
 
 #[path="⚠️failure/🦀️.rs"]
 mod original_failure_context;
+
+#[path="📦️owner/🦀️.rs"]
+mod step_context_owner;
+pub use step_context_owner::StepContextOwner;
 

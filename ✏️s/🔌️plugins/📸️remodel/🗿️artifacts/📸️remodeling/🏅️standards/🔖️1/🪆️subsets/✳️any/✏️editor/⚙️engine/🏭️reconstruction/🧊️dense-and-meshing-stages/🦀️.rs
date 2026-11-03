@@ -58,7 +58,7 @@ pub(super) struct MeshingPreparation {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
-enum FinalizationPhase {
+pub(super) enum FinalizationPhase {
     Snapshot,
     CameraIndex,
     Observations,

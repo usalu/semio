@@ -9,7 +9,7 @@ import { DEMONSTRATOR_LOCALES, DEMONSTRATOR_LOCALE_ENDONYMS, demonstratorText, t
 /** 🌐️ Every locale offered in its own words, none preselected, before the page has any language to speak in. */
 export function DemonstratorLocalePicker({ onChoose }: { readonly onChoose: (locale: DemonstratorLocale) => void }) {
   return (
-    <main role="group" aria-labelledby="demonstrator-locale-picker-title" data-slot="demonstrator-locale-picker" className="grid h-full w-full place-items-center">
+    <main aria-labelledby="demonstrator-locale-picker-title" data-slot="demonstrator-locale-picker" className="grid h-full w-full place-items-center">
       <div className="grid justify-items-center gap-double">
         <h1 id="demonstrator-locale-picker-title" className="m-0 text-lg font-semibold">
           {DEMONSTRATOR_LOCALES.map((locale, index) => (

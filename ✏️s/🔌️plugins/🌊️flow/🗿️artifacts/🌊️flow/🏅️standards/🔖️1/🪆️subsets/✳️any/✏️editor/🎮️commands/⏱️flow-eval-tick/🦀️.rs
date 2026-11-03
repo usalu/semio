@@ -85,7 +85,7 @@ pub fn tick_result(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, sessi
     let parked = host.take_pending_extension_evals();
     let servable = may_rearm(&host.host_snapshot);
     let mut dependencies: std::collections::BTreeMap<_, _> = parked.iter().filter(|pending|!session.has_evaluation_progress(pending.node_hash)).map(|pending| (pending.neuron_id.clone(), flow::flow_inference_dependency_json(&host.host_snapshot, &pending.neuron_id))).collect();
-    host.retire_cold();
+    host.retire_cold()?;
     let mut extension_invocations = Vec::new();
     for pending in parked {
         let resume=session.has_evaluation_progress(pending.node_hash);

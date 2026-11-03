@@ -1,0 +1,11 @@
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🧮️decode-owner-bundle-and-bounded-array-authority/🦀️.rs
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🧮️decode-owner-bundle-and-bounded-array-authority/🦀️.rs
+@@ -225,7 +225,7 @@
+         }
+         if let Some(value) = self.rejected.take() {
+             let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
+-            return match self.retirement_factory.as_ref().expect("history entry retains its factory").retire_owned(value, child).result {
++            return match self.retirement_factory.as_ref().ok_or_else(||diagnostic.with_native(semio_framework_value::ValueError::invariant("history entry factory is absent")))?.retire_owned(value, child).result {
+                 Ok((owner, progress)) => { *self.active_retirement = Some(owner); if !progress.fits(child) || progress.retained_capacity_bytes != demand.capacity_bytes { return Err(diagnostic.with_progress(progress)); } Ok(RetainedCloneStep::Progress(progress)) }
+                 Err((error, value)) => { *self.rejected = Some(value); Err(diagnostic.with_native(error)) }
+             };

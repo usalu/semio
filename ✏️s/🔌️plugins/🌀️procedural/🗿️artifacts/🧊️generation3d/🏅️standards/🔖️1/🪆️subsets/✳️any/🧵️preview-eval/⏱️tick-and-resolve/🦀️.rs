@@ -81,7 +81,7 @@ pub fn evaluate_tick(
     let mut host = host_with_session(host_snapshot, session, retained_grant)?;
     let more = session.tick_cold(&mut host, turn_started_us);
     let pending_extension_evals = host.take_pending_extension_evals();
-    host.retire_cold();
+    host.retire_cold()?;
     let mut extension_invocations = Vec::new();
     for pending in pending_extension_evals {
         let resume = session.has_evaluation_progress(pending.node_hash);

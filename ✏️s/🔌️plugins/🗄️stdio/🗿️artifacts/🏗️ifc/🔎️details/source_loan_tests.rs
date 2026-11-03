@@ -23,7 +23,7 @@ fn guided_source_projection_denial_and_cancelled_retirement_preserve_original_au
     caller.cancel().cancel_now();let mut close=RetainedCloneClose::default();
     for _ in 0..10000{
         if loan.is_none()&&close.is_empty(){break;}
-        caller.turn(grant(),|cx|cx.with_original_retirement(|cx|{let demand=close.next_owner_demands::<SourceLoan>(loan.is_some(),&None,4096)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|if close.is_empty(){close.begin_granted(&mut loan,grant)?.ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"source loan close missing"))}else{close.step_granted(grant)})?;Ok(())})).unwrap();
+        caller.turn(grant(),|cx|cx.with_original_retirement(|cx|{let demand=close.next_owner_demands::<SourceLoan>(loan.is_some(),&None,4096)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|if close.is_empty(){own_with(close.begin_granted(&mut loan,grant), ||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"source loan close missing"))}else{close.step_granted(grant)})?;Ok(())})).unwrap();
     }
     assert!(loan.is_none()&&close.is_empty());assert_eq!(Arc::strong_count(&snapshot),1);caller.finish();other.finish();
 }

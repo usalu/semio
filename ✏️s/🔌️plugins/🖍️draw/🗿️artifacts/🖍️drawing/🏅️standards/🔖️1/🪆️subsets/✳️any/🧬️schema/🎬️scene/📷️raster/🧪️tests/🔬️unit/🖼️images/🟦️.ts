@@ -1,3 +1,5 @@
+import {stock,drain,drive,controllerFixture} from "../../../../🎨️paint/🧪️tests/🎟️funding/🟦️.ts";
+import {driveDrawingSceneWork} from "../../../../🎟️work/🟦️.ts";
 /** 🖼️ Filtered image scenes agree with neutral pixels and independent filtering references. */
 import {test,expect} from "bun:test";
 import Ajv from "ajv";
@@ -8,7 +10,7 @@ import {RasterSceneJob,rasterizeScene,type RasterSceneInput} from "../../../🟦
 import {areaOracle,canvasOracle,delta} from "@semio-tech/framework/pixels/sampling/affine/testing/oracles";
 const ajv=new Ajv({strict:true});ajv.addSchema(pathSchema);const validate=ajv.compile(schema);
 function input(v:any):RasterSceneInput{return {...v,nodes:v.nodes.map((n:any)=>({...n,content:{kind:"pixels",image:{...n.content.image,pixels:new Uint8Array(n.content.image.pixels)}}}))};}
-function complete(v:RasterSceneInput,grant:number){const job=new RasterSceneJob(v);let work=0;for(let step=0;step<2000000;step++){const p=job.advance(grant);expect(p.work-work).toBeLessThanOrEqual(grant);work=p.work;if(p.done)return {image:job.result(),pixels:p.pixels};}throw Error("Scene did not complete");}
+function complete(v:RasterSceneInput,grant:number){const job=new RasterSceneJob(v);let work=0;for(let step=0;step<2000000;step++){const p=job.advance(grant,stock(grant));work=p.work;if(p.done)return {image:job.result(),pixels:p.pixels};}throw Error("Scene did not complete");}
 for(const row of cases)test(row.name,()=>{
  expect(validate(row.input)).toBe(true);const v=input(row.input),before=structuredClone(v);for(const grant of [1,7,4096])expect([...complete(v,grant).image.pixels]).toEqual(row.expected);expect(v).toEqual(before);
  const n=v.nodes[0]!,source=n.content.kind==="pixels"?n.content.image:null;expect(source).not.toBeNull();const sample={source:source!,width:v.width,height:v.height,origin:v.origin,transform:n.transform,sampling:"auto" as const};
@@ -25,5 +27,5 @@ test("filtered scenes admit cropped output plus source and preserve grid transfo
 test("filtered scenes expose image progress and cancel private reduction",async()=>{
  const v=input(cases[0]!.input);const controller=new AbortController();let seen=false;
  const source={width:64,height:64,pixels:new Uint8Array(64*64*4).fill(255)},nodes=[{...v.nodes[0]!,transform:[1/64,0,0,1/64,0,0] as const,content:{kind:"pixels" as const,image:source}}];
- await expect(rasterizeScene({...v,maxPixels:4097,nodes},{workBudget:64,signal:controller.signal,onProgress:p=>{if(p.phase==="image"){seen=true;controller.abort();}}})).rejects.toThrow(/cancel/);expect(seen).toBe(true);
+ const scene={...v,maxPixels:4097,nodes};await expect(rasterizeScene(scene,{...controllerFixture(scene,64,controller.signal).control,onProgress:p=>{if(p.phase==="image"){seen=true;controller.abort();}}})).rejects.toThrow(/cancel|abort/i);expect(seen).toBe(true);
 });

@@ -127,7 +127,7 @@ where P:ToValue+RetireOwned+Send+Sync+'static,M:Mutation<P>+ToValue+FromValue+Op
         if !self.retire_owner(cx)?{return Ok(false);}
         if let Some(input)=self.input.as_ref(){
             if input.terminal_is_empty(){Self::physical(cx,demand::<Option<RetainedOwnedProjection<M>>>(),|_|{self.input=None;Ok(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Option<RetainedOwnedProjection<M>>>(),..Default::default()})})?;}
-            else{let quote=input.close_demand(cx.retained_grant().maximum_copy_bytes)?;Self::physical(cx,quote,|grant|self.input.as_mut().unwrap().close_step(grant).result.map(RetainedCloneStep::progress))?;}
+            else{let quote=input.close_demand(cx.retained_grant().maximum_copy_bytes)?;Self::physical(cx,quote,|grant|self.input.as_mut().ok_or_else(||ValueError::invariant("initialization input owner is absent"))?.close_step(grant).result.map(RetainedCloneStep::progress))?;}
             return Ok(false);
         }
         if self.next_close.is_some(){
@@ -158,7 +158,7 @@ where P:ToValue+RetireOwned+Send+Sync+'static,M:Mutation<P>+ToValue+FromValue+Op
         if self.issuer.is_some(){Self::physical(cx,demand::<Arc<dyn semio_framework_value::FactoryRetirement>>(),|_|{self.issuer_close=Some(semio_framework_value::FactoryAuthority::new(self.issuer.take().unwrap()));Ok(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Arc<dyn semio_framework_value::FactoryRetirement>>(),..Default::default()})})?;return Ok(false);}
         if let Some(owner)=self.issuer_close.as_ref(){
             if owner.terminal_is_empty(){Self::physical(cx,demand::<Option<semio_framework_value::FactoryAuthority>>(),|_|{self.issuer_close=None;Ok(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Option<semio_framework_value::FactoryAuthority>>(),..Default::default()})})?;}
-            else{let quote=owner.demands(cx.retained_grant().maximum_copy_bytes)?;Self::physical(cx,quote,|grant|self.issuer_close.as_mut().unwrap().step(grant).result.map(RetainedCloneStep::progress))?;}
+            else{let quote=owner.demands(cx.retained_grant().maximum_copy_bytes)?;Self::physical(cx,quote,|grant|self.issuer_close.as_mut().ok_or_else(||ValueError::invariant("initialization issuer closure is absent"))?.step(grant).result.map(RetainedCloneStep::progress))?;}
             return Ok(false);
         }
         let mut complete=false;

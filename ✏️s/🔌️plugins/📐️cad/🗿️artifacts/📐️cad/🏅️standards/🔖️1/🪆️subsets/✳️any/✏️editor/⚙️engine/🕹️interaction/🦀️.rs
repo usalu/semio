@@ -6,13 +6,14 @@
 //! `placeWall`/`placeBeam`/`placeColumn`/`placeSlab` assets like every other interaction.
 
 
-use semio_s_artifact_cad_cad_model::{geometry::CadObject, geometry::CadPrimitiveSlot};
+use semio_s_artifact_cad_cad_model::{geometry::CadObject, geometry::CadObjectName, geometry::CadPrimitiveSlot};
 use semio_s_artifact_cad_cad_interaction_spec::{evaluate_expr, DisplayItemSpec, Effect, ExprEnv, ExprPathRoot, ExprPathSegment, ExprPathTarget, InteractionSpec};
 use semio_s_artifact_cad_cad_model::snapshot::CadPaneId;
 
 use semio_framework_value::DslValue;
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_framework_3d_brep_engine::{Brep, BrepKernel};
+use semio_framework_ui_locale::{Locale, LocalizedLabel, Terminology};
 use std::collections::HashMap;
 use std::sync::OnceLock;
 
@@ -76,14 +77,14 @@ pub struct CadEngagementScratch {
 #[derive(Clone, Debug)]
 pub struct KeyedTransition {
     pub key: String,
-    pub label: String,
+    pub label: LocalizedLabel,
     pub event_kind: String,
 }
 
 #[derive(Clone, Debug)]
 pub struct InteractionCatalogEntry {
     pub id: String,
-    pub label: String,
+    pub label: LocalizedLabel,
     pub key: String,
     pub model_definition_id: String,
     pub produces_typology: String,
@@ -122,7 +123,7 @@ fn catalog() -> &'static [InteractionCatalogEntry] {
             .iter()
             .map(|(model_def, spec)| InteractionCatalogEntry {
                 id: spec.id.clone(),
-                label: spec.label.clone().unwrap_or_else(|| spec.id.clone()),
+                label: spec.label.clone().unwrap_or_else(|| LocalizedLabel::data(spec.id.clone())),
                 key: spec.key.clone().unwrap_or_default(),
                 model_definition_id: (*model_def).to_string(),
                 produces_typology: spec.produces.typology.clone().unwrap_or_default(),
@@ -176,7 +177,7 @@ pub fn keyed_transitions(session: &CadEngagementScratch) -> Vec<KeyedTransition>
     for handler in &state.on {
         for transition in &handler.transitions {
             if let Some(key) = &transition.key {
-                out.push(KeyedTransition { key: key.clone(), label: transition.label.clone().unwrap_or_else(|| handler.event.clone()), event_kind: handler.event.clone() });
+                out.push(KeyedTransition { key: key.clone(), label: transition.label.clone().unwrap_or_else(|| LocalizedLabel::data(handler.event.clone())), event_kind: handler.event.clone() });
             }
         }
     }
@@ -385,7 +386,6 @@ fn apply_event_generic(session: &mut CadEngagementScratch, event_kind: &str, raw
     if let Some(target) = &transition.target {
         session.state = target.clone();
     }
-    session.last_response = Some("OK".into());
     for raised_event in raised {
         apply_event_generic(session, &raised_event, None, depth + 1);
     }
@@ -434,14 +434,14 @@ pub fn inject_selection(session: &mut CadEngagementScratch, ids: &[String]) -> b
 
 /// 🪧️ The prompt the current state shows: its `selection.prompt`, else the display `label` item in
 /// the `prompt` role, else the state name spelled out.
-pub fn state_prompt(session: &CadEngagementScratch) -> String {
+pub fn state_prompt(session: &CadEngagementScratch, terminology: Terminology, locale: Locale) -> String {
     if let Some(spec) = spec_by_id(&session.interaction_id) {
-        if let Some(prompt) = spec.state(&session.state).and_then(|state| state.selection.as_ref()).and_then(|selection| selection.prompt.clone()) {
-            return prompt;
+        if let Some(prompt) = spec.state(&session.state).and_then(|state| state.selection.as_ref()).and_then(|selection| selection.prompt.as_ref()) {
+            return prompt.resolve(terminology, locale).to_string();
         }
         if let Some(text) = spec.display.states.iter().find(|state| state.state == session.state).and_then(|state| {
             state.items.iter().find_map(|item| match item {
-                DisplayItemSpec::Label { role, text, .. } if role.as_deref() == Some("prompt") => Some(text.clone()),
+                DisplayItemSpec::Label { role, text, .. } if role.as_deref() == Some("prompt") => Some(text.resolve(terminology, locale).to_string()),
                 _ => None,
             })
         }) {
@@ -515,7 +515,7 @@ pub fn parse_repl_line_for(line: &str, session: Option<&CadEngagementScratch>) -
 //#endregion 🔖️Statechart
 
 //#region 🔖️CommitRunner
-fn commit_primitive_box(kernel: &mut Brep, params: &HashMap<String, DslValue>, label_count: usize, next_id: impl Fn(&str) -> String) -> Option<CadObject> {
+fn commit_primitive_box(kernel: &mut Brep, params: &HashMap<String, DslValue>, name: CadObjectName, next_id: impl Fn(&str) -> String) -> Option<CadObject> {
     let corner_a = params.get("cornerA").and_then(parse_vec3)?;
     let corner_b = params.get("cornerB").and_then(parse_vec3)?;
     let height = params.get("height").and_then(|value| value.as_f64()).unwrap_or(1.0);
@@ -524,7 +524,7 @@ fn commit_primitive_box(kernel: &mut Brep, params: &HashMap<String, DslValue>, l
     let solid = kernel.box_prim(width, depth, height.max(0.05)).ok()?;
     Some(CadObject {
         id: next_id("object"),
-        label: format!("Box {}", label_count + 1),
+        label: name,
         typology: "spatial.shape.primitive.box".into(),
         visible: true,
         locked: false,
@@ -542,7 +542,7 @@ fn commit_primitive_box(kernel: &mut Brep, params: &HashMap<String, DslValue>, l
 /// `aec.building.structure.classic`, and `aec.building.structure.fem.*` construction interaction
 /// (`commit.operation.action` ending in `From2PointsAndHeight`/`FromSurface`) — differentiated only
 /// by the `typology` commit param.
-fn commit_from_2_points_and_height(kernel: &mut Brep, params: &HashMap<String, DslValue>, label: &str, label_count: usize, next_id: impl Fn(&str) -> String) -> Option<CadObject> {
+fn commit_from_2_points_and_height(kernel: &mut Brep, params: &HashMap<String, DslValue>, name: &CadObjectName, next_id: impl Fn(&str) -> String) -> Option<CadObject> {
     let typology = params.get("typology").and_then(|value| value.as_str()).unwrap_or("").to_string();
     let lower = typology.to_lowercase();
     let point_a = params.get("pointA").and_then(parse_vec3)?;
@@ -553,7 +553,7 @@ fn commit_from_2_points_and_height(kernel: &mut Brep, params: &HashMap<String, D
         let solid = kernel.cylinder_prim(radius, height.max(0.05)).ok()?;
         return Some(CadObject {
             id: next_id("object"),
-            label: format!("{label} {}", label_count + 1),
+            label: name.clone(),
             typology,
             visible: true,
             locked: false,
@@ -581,7 +581,7 @@ fn commit_from_2_points_and_height(kernel: &mut Brep, params: &HashMap<String, D
     let solid = kernel.box_prim(width, depth, solid_height).ok()?;
     Some(CadObject {
         id: next_id("object"),
-        label: format!("{label} {}", label_count + 1),
+        label: name.clone(),
         typology,
         visible: true,
         locked: false,
@@ -599,7 +599,7 @@ fn commit_from_2_points_and_height(kernel: &mut Brep, params: &HashMap<String, D
 /// (`CadObjectSpec` carries typology + placement + extent; `typology_brep_mesh` rebuilds the kernel
 /// primitive from those at render time, so the ephemeral handle minted here only seeds the first
 /// tessellation).
-fn solid_object(kernel: &mut Brep, typology: &str, label: String, origin: [f64; 3], extent: [f64; 3], orientation: [f64; 4], next_id: impl Fn(&str) -> String) -> Option<CadObject> {
+fn solid_object(kernel: &mut Brep, typology: &str, label: CadObjectName, origin: [f64; 3], extent: [f64; 3], orientation: [f64; 4], next_id: impl Fn(&str) -> String) -> Option<CadObject> {
     let extent = [extent[0].max(0.02), extent[1].max(0.02), extent[2].max(0.02)];
     let solid = match semio_s_artifact_cad_cad_inferences::typology_mesh_kind(typology) {
         "cylinder" => kernel.cylinder_prim(extent[0].max(extent[1]) * 0.5, extent[2]).ok()?,
@@ -638,7 +638,7 @@ pub fn quaternion_from_x_to(direction: [f64; 3]) -> [f64; 4] {
 
 /// 📏️ A bar of `thickness × thickness` cross-section from `p0` to `p1` — the persisted shape of a
 /// line-like result (a `curve.line`, a placed beam/railing, one polyline segment).
-fn bar_object(kernel: &mut Brep, typology: &str, label: String, p0: [f64; 3], p1: [f64; 3], thickness: [f64; 2], next_id: impl Fn(&str) -> String) -> Option<CadObject> {
+fn bar_object(kernel: &mut Brep, typology: &str, label: CadObjectName, p0: [f64; 3], p1: [f64; 3], thickness: [f64; 2], next_id: impl Fn(&str) -> String) -> Option<CadObject> {
     let direction = [p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]];
     let length = (direction[0] * direction[0] + direction[1] * direction[1] + direction[2] * direction[2]).sqrt();
     if length <= 1e-6 {
@@ -661,14 +661,14 @@ fn distance(a: [f64; 3], b: [f64; 3]) -> f64 {
 
 /// 📈️ One bar per consecutive point pair (closed polylines add the closing segment) — a polyline is
 /// persisted as N segment solids sharing one label prefix, the shape `CadObjectSpec` can carry today.
-fn polyline_objects(kernel: &mut Brep, typology: &str, label: &str, points: &[[f64; 3]], closed: bool, label_count: usize, next_id: &impl Fn(&str) -> String) -> Vec<CadObject> {
+fn polyline_objects(kernel: &mut Brep, typology: &str, name: &CadObjectName, points: &[[f64; 3]], closed: bool, next_id: &impl Fn(&str) -> String) -> Vec<CadObject> {
     let mut objects = Vec::new();
     let mut pairs: Vec<([f64; 3], [f64; 3])> = points.windows(2).map(|pair| (pair[0], pair[1])).collect();
     if closed && points.len() > 2 {
         pairs.push((points[points.len() - 1], points[0]));
     }
     for (index, (p0, p1)) in pairs.into_iter().enumerate() {
-        if let Some(object) = bar_object(kernel, typology, format!("{label} {}.{}", label_count + 1, index + 1), p0, p1, [0.02, 0.02], next_id) {
+        if let Some(object) = bar_object(kernel, typology, name.with_part(u32::try_from(index).unwrap_or(u32::MAX).saturating_add(1)), p0, p1, [0.02, 0.02], next_id) {
             objects.push(object);
         }
     }
@@ -705,28 +705,28 @@ fn context_targets(context: &HashMap<String, DslValue>) -> Vec<String> {
 
 /// 🍴️ `command.finish` dispatches by the commit's `resultKind` param, reading whatever context fields
 /// that interaction's machine populated (`points.<key>`, `radius`, `height`, `angle`, …).
-fn commit_command_finish(kernel: &mut Brep, params: &HashMap<String, DslValue>, context: &HashMap<String, DslValue>, label_count: usize, next_id: impl Fn(&str) -> String) -> Option<CommitOutcome> {
+fn commit_command_finish(kernel: &mut Brep, params: &HashMap<String, DslValue>, context: &HashMap<String, DslValue>, name: &CadObjectName, next_id: impl Fn(&str) -> String) -> Option<CommitOutcome> {
     let result_kind = params.get("resultKind").and_then(|value| value.as_str())?;
     let radius_of = |center: [f64; 3]| context.get("radius").and_then(|value| value.as_f64()).or_else(|| context_named_point(context, "radiusPoint").map(|point| distance(point, center))).unwrap_or(1.0).max(0.02);
     match result_kind {
         "sphere" => {
             let center = context_named_point(context, "center")?;
             let radius = radius_of(center);
-            let object = solid_object(kernel, "spatial.shape.solid.sphere", format!("Sphere {}", label_count + 1), center, [radius * 2.0; 3], [0.0, 0.0, 0.0, 1.0], next_id)?;
+            let object = solid_object(kernel, "spatial.shape.solid.sphere", name.clone(), center, [radius * 2.0; 3], [0.0, 0.0, 0.0, 1.0], next_id)?;
             Some(CommitOutcome::Objects(vec![object]))
         }
         "cylinder" => {
             let base = context_named_point(context, "base")?;
             let radius = radius_of(base);
             let height = context.get("height").and_then(|value| value.as_f64()).or_else(|| context_named_point(context, "end").map(|end| (end[2] - base[2]).abs().max(distance(end, base)))).unwrap_or(1.0).max(0.02);
-            let object = solid_object(kernel, "spatial.shape.solid.cylinder", format!("Cylinder {}", label_count + 1), base, [radius * 2.0, radius * 2.0, height], [0.0, 0.0, 0.0, 1.0], next_id)?;
+            let object = solid_object(kernel, "spatial.shape.solid.cylinder", name.clone(), base, [radius * 2.0, radius * 2.0, height], [0.0, 0.0, 0.0, 1.0], next_id)?;
             Some(CommitOutcome::Objects(vec![object]))
         }
         "plane" => {
             let a = context_named_point(context, "cornerA")?;
             let b = context_named_point(context, "cornerB")?;
             let origin = [a[0].min(b[0]), a[1].min(b[1]), a[2].min(b[2])];
-            let object = solid_object(kernel, "spatial.shape.surface.plane", format!("Plane {}", label_count + 1), origin, [(b[0] - a[0]).abs(), (b[1] - a[1]).abs(), 0.02], [0.0, 0.0, 0.0, 1.0], next_id)?;
+            let object = solid_object(kernel, "spatial.shape.surface.plane", name.clone(), origin, [(b[0] - a[0]).abs(), (b[1] - a[1]).abs(), 0.02], [0.0, 0.0, 0.0, 1.0], next_id)?;
             Some(CommitOutcome::Objects(vec![object]))
         }
         "circle" | "arc" => {
@@ -749,14 +749,14 @@ fn commit_command_finish(kernel: &mut Brep, params: &HashMap<String, DslValue>, 
                 let angle = sweep.0 + sweep.1 * (index as f64 / segments as f64);
                 [center[0] + radius * angle.cos(), center[1] + radius * angle.sin(), center[2]]
             }).collect();
-            let (typology, label) = if result_kind == "arc" { ("spatial.shape.curve.arc", "Arc") } else { ("spatial.shape.curve.circle", "Circle") };
-            let objects = polyline_objects(kernel, typology, label, &points, false, label_count, &next_id);
+            let typology = if result_kind == "arc" { "spatial.shape.curve.arc" } else { "spatial.shape.curve.circle" };
+            let objects = polyline_objects(kernel, typology, name, &points, false, &next_id);
             (!objects.is_empty()).then_some(CommitOutcome::Objects(objects))
         }
         "curve" | "interpolateCurve" => {
             let points = context_points_list(context);
-            let (typology, label) = if result_kind == "curve" { ("spatial.shape.curve.control-point-curve", "Curve") } else { ("spatial.shape.curve.interpolate-curve", "Interpolated curve") };
-            let objects = polyline_objects(kernel, typology, label, &points, false, label_count, &next_id);
+            let typology = if result_kind == "curve" { "spatial.shape.curve.control-point-curve" } else { "spatial.shape.curve.interpolate-curve" };
+            let objects = polyline_objects(kernel, typology, name, &points, false, &next_id);
             (!objects.is_empty()).then_some(CommitOutcome::Objects(objects))
         }
         "mirror" => {
@@ -787,29 +787,29 @@ pub fn commit_session(kernel: &mut Brep, session: &CadEngagementScratch, label_c
     let empty_vars = HashMap::new();
     let params: HashMap<String, DslValue> = spec.commit.operation.params.iter().map(|(key, value)| (key.clone(), evaluate_expr(value, &env, &empty_vars))).collect();
     let action = spec.commit.operation.action.as_str();
-    let label = spec.label.clone().unwrap_or_else(|| spec.id.clone());
+    let name = CadObjectName::Interaction { interaction_id: spec.id.clone(), ordinal: u32::try_from(label_count).unwrap_or(u32::MAX).saturating_add(1), part: None };
     let typology = spec.produces.typology.clone().unwrap_or_else(|| format!("spatial.shape.{}", spec.id));
     let context = &session.context.0;
     if action == "primitive.createBoxFromCorners" {
-        return commit_primitive_box(kernel, &params, label_count, next_id).map(|object| CommitOutcome::Objects(vec![object]));
+        return commit_primitive_box(kernel, &params, name, next_id).map(|object| CommitOutcome::Objects(vec![object]));
     }
     if action.ends_with("From2PointsAndHeight") || action.ends_with("FromSurface") {
-        return commit_from_2_points_and_height(kernel, &params, &label, label_count, next_id).map(|object| CommitOutcome::Objects(vec![object]));
+        return commit_from_2_points_and_height(kernel, &params, &name, next_id).map(|object| CommitOutcome::Objects(vec![object]));
     }
     if action == "command.finish" {
-        return commit_command_finish(kernel, &params, context, label_count, next_id);
+        return commit_command_finish(kernel, &params, context, &name, next_id);
     }
     if action == "curve.line" {
         let p0 = params.get("p0").and_then(parse_vec3).or_else(|| context_named_point(context, "start"))?;
         let p1 = params.get("p1").and_then(parse_vec3).or_else(|| context_named_point(context, "end"))?;
         let lower = typology.to_lowercase();
         let thickness = if lower.contains("beam") { [0.3, 0.3] } else if lower.contains("railing") { [0.05, 1.0] } else { [0.02, 0.02] };
-        return bar_object(kernel, &typology, format!("{label} {}", label_count + 1), p0, p1, thickness, next_id).map(|object| CommitOutcome::Objects(vec![object]));
+        return bar_object(kernel, &typology, name.clone(), p0, p1, thickness, next_id).map(|object| CommitOutcome::Objects(vec![object]));
     }
     if action == "curve.polyline" {
         let points = context_points_list(context);
         let closed = context.get("closed").and_then(|value| value.as_bool()).unwrap_or(false);
-        let objects = polyline_objects(kernel, &typology, &label, &points, closed, label_count, &next_id);
+        let objects = polyline_objects(kernel, &typology, &name, &points, closed, &next_id);
         return (!objects.is_empty()).then_some(CommitOutcome::Objects(objects));
     }
     if action == "transform.move" || action == "transform.copy" {
@@ -859,7 +859,7 @@ fn opt_string_value(value: &Option<String>) -> DslValue {
     value.clone().map_or(DslValue::Null, DslValue::String)
 }
 
-fn display_item_to_json(item: &DisplayItemSpec, env: &ExprEnv<'_>, vars: &HashMap<String, DslValue>) -> Option<DslValue> {
+fn display_item_to_json(item: &DisplayItemSpec, env: &ExprEnv<'_>, vars: &HashMap<String, DslValue>, terminology: Terminology, locale: Locale) -> Option<DslValue> {
     match item {
         DisplayItemSpec::Point { id, role, position, .. } => {
             let position = evaluate_expr(position, env, vars);
@@ -870,7 +870,7 @@ fn display_item_to_json(item: &DisplayItemSpec, env: &ExprEnv<'_>, vars: &HashMa
         }
         DisplayItemSpec::Label { id, role, text, position, .. } => {
             let position = evaluate_expr(position, env, vars);
-            Some(DslValue::object([("id".to_string(), DslValue::String(id.clone())), ("kind".to_string(), DslValue::String("label".into())), ("role".to_string(), opt_string_value(role)), ("text".to_string(), DslValue::String(text.clone())), ("position".to_string(), position)]))
+            Some(DslValue::object([("id".to_string(), DslValue::String(id.clone())), ("kind".to_string(), DslValue::String("label".into())), ("role".to_string(), opt_string_value(role)), ("text".to_string(), DslValue::String(text.resolve(terminology, locale).to_string())), ("position".to_string(), position)]))
         }
         DisplayItemSpec::Segment { id, role, from, to, .. } => {
             let from = evaluate_expr(from, env, vars);
@@ -924,7 +924,7 @@ fn display_item_to_json(item: &DisplayItemSpec, env: &ExprEnv<'_>, vars: &HashMa
     }
 }
 
-pub fn preview_display_items(session: &CadEngagementScratch) -> Vec<DslValue> {
+pub fn preview_display_items(session: &CadEngagementScratch, terminology: Terminology, locale: Locale) -> Vec<DslValue> {
     let Some(spec) = spec_by_id(&session.interaction_id) else {
         return Vec::new();
     };
@@ -933,7 +933,7 @@ pub fn preview_display_items(session: &CadEngagementScratch) -> Vec<DslValue> {
     };
     let env = ExprEnv { context: &session.context.0, event: None };
     let empty_vars = HashMap::new();
-    display_state.items.iter().filter_map(|item| display_item_to_json(item, &env, &empty_vars)).collect()
+    display_state.items.iter().filter_map(|item| display_item_to_json(item, &env, &empty_vars, terminology, locale)).collect()
 }
 //#endregion 🔖️Preview
 

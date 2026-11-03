@@ -505,3 +505,38 @@ use semio_framework_value::ArtifactOwnedValueRetirementFactory;
         let (_, born, freed) = semio_framework_trace_memory_testing::observe_backing(|| drop(owner)); assert_eq!((born, freed), (0, 0));
     }
 }
+
+fn authority_hydration() -> (RetainedPersistedDocumentHydration<semio_framework_os_store_testing_fixtures::DemoSnapshot, semio_framework_os_store_testing_fixtures::demo::DemoMutation>, u64) {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📏️store-entry/🔣️.json")).unwrap();
+    let pack = fixture["pack"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as u8).collect();
+    let expected = semio_framework_pack_json::from_json_str::<ArtifactRef>(&fixture["expected"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let hydration = RetainedPersistedDocumentHydration::from_decoded_pack(
+        Default::default(), pack, [7; 32], semio_framework_os_spr::HistoryLog::default(), expected, None, "demo/v1".into(),
+        semio_framework_os_store_testing_doubles::demo_closable_store_owners(), OperationId(811), Generation(1), u64::MAX,
+        PersistedDocumentHydrationTarget::Envelope, semio_framework_os_spr::ActorId("authority".into()),
+    );
+    (hydration, fixture["maximumCloseTurns"].as_u64().unwrap())
+}
+
+#[test]
+fn persisted_hydration_authority_is_the_stepping_job_identity_not_the_archive_load_slot() {
+    let step_under = |bind: bool| {
+        let (mut hydration, turns) = authority_hydration();
+        let mut sequence = 0;
+        let mut retained = semio_framework_value::RetainedCloneProgress::default();
+        let mut cx = StepContext::new(OperationId(900), Generation(7), semio_framework_job::StepBudget::new(1, u64::MAX, semio_framework_value::testing::physical_test_close_grant()), semio_framework_job::root_cancel_token(), || Some(1), &mut sequence, &mut retained);
+        if bind {
+            hydration.operation = cx.operation();
+            hydration.generation = cx.generation();
+        }
+        let stale = matches!(hydration.step(&mut cx, wide_grant()), semio_framework_os_store_document::persisted_document_hydration::PersistedDocumentHydrationStep::Rejected(MemberOpenDiagnostic::Stale));
+        for _ in 0..turns {
+            if hydration.terminal_is_empty() { break; }
+            hydration.close_step(semio_framework_value::testing::physical_test_close_grant()).result.unwrap();
+        }
+        assert!(hydration.terminal_is_empty());
+        stale
+    };
+    assert!(step_under(false), "a slot-id authority differing from the job identity is Stale");
+    assert!(!step_under(true), "authority bound to the stepping job identity is never Stale");
+}

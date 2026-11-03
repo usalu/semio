@@ -10,9 +10,9 @@ pub type DocumentBooleanRetirementProgress=WorkRetirementProgress;
 
 use semio_framework_value::retirement::{RetireOwned,RetirementCursor};
 use semio_framework_value::{work::RetainedWorkLedger,RetirementDemand};
-#[derive(Clone,Copy,Debug)]
+#[derive(Clone,Copy,Debug,semio_framework_value::RetireOwned)]
 pub struct DocumentBooleanLimits{pub tolerance:f64,pub epsilon:f64,pub max_depth:usize,pub max_references:usize,pub max_edges:usize,pub max_parameters:usize,pub max_atomic_edges:usize,pub max_segments:usize,pub max_retained_segments:usize,pub max_work:u64}
-#[derive(Clone,Debug)]
+#[derive(Clone,Debug,semio_framework_value::RetireOwned)]
 pub struct DocumentBooleanInput{pub plan:DocumentScenePlan,pub limits:DocumentBooleanLimits}
 #[derive(Clone,Copy,Debug)]
 pub struct DocumentBooleanProgress{pub phase:&'static str,pub nodes:usize,pub resolved:usize,pub references:usize,pub segments:usize,pub work:u64,pub geometry:Option<PathBooleanProgress>,pub done:bool}

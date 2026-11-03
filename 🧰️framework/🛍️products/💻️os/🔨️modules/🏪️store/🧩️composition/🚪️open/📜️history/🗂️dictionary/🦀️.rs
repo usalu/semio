@@ -4,7 +4,7 @@
 #[path = "🛂️identity/🦀️.rs"]
 mod identity;
 #[path = "📇️index/🦀️.rs"]
-mod index;
+pub mod index;
 #[path = "🧾️record/🦀️.rs"]
 pub mod record;
 
@@ -43,7 +43,7 @@ pub struct MemberHistoryDictionaryAdmissionError {
     pub input: VerifiedMemberHistoryInput,
 }
 
-struct DictionaryOwners {
+pub struct DictionaryOwners {
     pub input: ManuallyDrop<Option<VerifiedMemberHistoryInput>>,
     pub index: ManuallyDrop<Option<RetainedDictionaryIndex>>,
 }
@@ -89,12 +89,12 @@ impl Drop for DictionaryOwners {
     }
 }
 
-struct PendingByte {
+pub struct PendingByte {
     pub offset: u64,
     pub value: u8,
     framed: bool,
 }
-struct DictionaryLookup {
+pub struct DictionaryLookup {
     pub range: DictionaryRange,
     pub copied: u64,
 }

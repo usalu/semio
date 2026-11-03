@@ -55,8 +55,8 @@ impl Puzzle2dDeleteNodeCandidateCursor {
     pub fn advance(&mut self, source: RetainedCloneRef<'_, Puzzle2dSnapshot>, mutation: RetainedCloneRef<'_, DeleteNode>, body:usize,grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if self.closing || self.phase == 23 { return Err(refusal("delete candidate is closing or spent")); }
         if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if let Some(progress)=source.bind(&mut self.source,grant)?{return Ok(RetainedCloneStep::Progress(progress))}
-        if let Some(progress)=mutation.bind(&mut self.mutation,grant)?{return Ok(RetainedCloneStep::Progress(progress))}
+        if let Some(progress)=source.bind(&mut self.source,grant).result?{return Ok(RetainedCloneStep::Progress(progress))}
+        if let Some(progress)=mutation.bind(&mut self.mutation,grant).result?{return Ok(RetainedCloneStep::Progress(progress))}
         match self.phase {
             0 => {
                 if let Some(step)=self.preparation.ensure(grant)? {return Ok(step);}
@@ -74,14 +74,14 @@ impl Puzzle2dDeleteNodeCandidateCursor {
                 if search == source.get().edges.len() { return Err(refusal("delete cascade lost its original edge identifier")); }
                 let left = source.project(1, |snapshot| &snapshot.edges.get(search).expect("immutable first-ID edge").id);
                 let right = source.project(1, |snapshot| &snapshot.edges.get(event).expect("immutable cascade edge").id);
-                match self.comparison.compare(left, right, BoundedOrdGrant { maximum_items: 1, maximum_bytes: grant.maximum_copy_bytes }, grant)? {
+                match self.comparison.compare(left, right, BoundedOrdGrant { maximum_items: 1, maximum_bytes: grant.maximum_copy_bytes }, grant).result? {
                     BoundedOrdStep::Authority(progress) => Ok(RetainedCloneStep::Progress(progress)),
                     BoundedOrdStep::Progress(progress) => Ok(comparison_progress(progress)),
                     BoundedOrdStep::Complete { ordering, progress } => { self.matched = ordering == std::cmp::Ordering::Equal;self.comparison.begin_close();self.phase = 3;Ok(comparison_progress(progress)) }
                 }
             }
             3 => {
-                let step = self.comparison.close_step(grant)?;
+                let step = self.comparison.close_step(grant).result?;
                 if self.comparison.terminal_is_empty() { self.comparison = Default::default();if self.matched { self.position = 0;self.phase = 4; } else { self.search += 1;self.phase = 2; } }
                 Ok(close_progress(step))
             }
@@ -117,16 +117,16 @@ impl Puzzle2dDeleteNodeCandidateCursor {
             }
             9 => { self.phase = if self.disposition == Puzzle2dDeleteNodeDisposition::Changed { 10 } else { 21 };Ok(payload_progress(0)) }
             10 => {
-                let step = self.snapshot_clone.advance(source,body, grant)?;
+                let step = self.snapshot_clone.advance(source,body, grant).result?;
                 if matches!(step, RetainedCloneStep::Complete(_)) { self.phase = 11; }
                 Ok(RetainedCloneStep::Progress(step.progress()))
             }
             11 => {
                 if grant.maximum_copy_bytes < size_of::<Puzzle2dSnapshot>() { return Ok(RetainedCloneStep::Progress(Default::default())); }
-                self.candidate = Some(self.snapshot_clone.take().ok_or_else(|| refusal("delete snapshot clone completed without an owner"))?);self.snapshot_clone.begin_close();self.phase = 12;
+                self.candidate = Some(self.snapshot_clone.take(grant).result?.map(|(owner, _)| owner).ok_or_else(|| refusal("delete snapshot clone completed without an owner"))?);self.snapshot_clone.begin_close();self.phase = 12;
                 Ok(payload_progress(size_of::<Puzzle2dSnapshot>()))
             }
-            12 => { let step = self.snapshot_clone.close_step(grant)?;if self.snapshot_clone.terminal_is_empty() { self.phase = 13; }Ok(RetainedCloneStep::Progress(step.progress())) }
+            12 => { let step = self.snapshot_clone.close_step(grant).result?;if self.snapshot_clone.terminal_is_empty() { self.phase = 13; }Ok(RetainedCloneStep::Progress(step.progress())) }
             13 => {
                 if grant.maximum_copy_bytes < size_of::<PagedListEditCursor>() { return Ok(RetainedCloneStep::Progress(Default::default())); }
                 let index = self.node.ok_or_else(|| refusal("delete candidate lost its first node ordinal"))?;
@@ -206,8 +206,8 @@ impl Puzzle2dDeleteNodeCandidateCursor {
         if !self.closing { return Err(refusal("delete candidate closure was not started")); }
         if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if !self.preparation.terminal_is_empty() { return self.preparation.close_granted(grant); }
-        if !self.comparison.terminal_is_empty() { return self.comparison.close_step(grant).map(close_progress); }
-        if !self.snapshot_clone.terminal_is_empty() { return self.snapshot_clone.close_step(grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if !self.comparison.terminal_is_empty() { return self.comparison.close_step(grant).result.map(close_progress); }
+        if !self.snapshot_clone.terminal_is_empty() { return self.snapshot_clone.close_step(grant).result.map(|step| RetainedCloneStep::Progress(step.progress())); }
         if let Some(owner) = self.node_close.as_mut() { let step = owner.step(grant)?;if owner.terminal_is_empty() { self.node_close = None; }return Ok(RetainedCloneStep::Progress(step.progress())); }
         if self.pending_node.is_some() {
             if grant.maximum_copy_bytes < size_of::<Puzzle2dNode>() { return Ok(RetainedCloneStep::Progress(Default::default())); }
@@ -230,7 +230,7 @@ impl Puzzle2dDeleteNodeCandidateCursor {
         }
         if self.edit.is_some() {let bytes=size_of::<Option<PagedListEditCursor>>();if grant.maximum_copy_bytes<bytes{return Ok(RetainedCloneStep::Progress(Default::default()));}self.edit=None;return Ok(payload_progress(bytes));}
         if self.pending_index.is_some() {let bytes=size_of::<Option<usize>>();if grant.maximum_copy_bytes<bytes{return Ok(RetainedCloneStep::Progress(Default::default()));}self.pending_index=None;return Ok(payload_progress(bytes));}
-        let step = RetainedCloneBinding::close_one(if self.source.is_some(){&mut self.source}else{&mut self.mutation}, grant)?;
+        let step = RetainedCloneBinding::close_one(if self.source.is_some(){&mut self.source}else{&mut self.mutation}, grant).result?;
         Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { close_progress(step) })
     }
 

@@ -1,4 +1,5 @@
 use super::*;
+use protocol::ColdMutation;
 use semio_framework_test_fixtures::fixture_path;
 
 #[semio_framework_async_macros::async_test]

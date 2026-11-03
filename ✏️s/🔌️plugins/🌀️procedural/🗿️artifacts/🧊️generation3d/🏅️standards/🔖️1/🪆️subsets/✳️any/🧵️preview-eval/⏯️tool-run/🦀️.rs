@@ -364,7 +364,7 @@ pub(crate) fn run_action_effect(action: &str, args: semio_framework_value::DslVa
 /// window owes an evaluation, finalize a complete run whose document, settings or contributions moved
 /// on (the next poll then starts the fresh one), and wake a live run so it sees a changed roster. An
 /// aborted run stays down until a gesture owes its windows again.
-pub fn preview_eval_run_effects(session: &mut FlowEvalSession, link: &mut PreviewEvalRunLink, windows: &[(&str, &'static str)], run: Option<&ToolRunView>, servable: bool, applied_edits: u64) -> Vec<Effect> {
+pub fn preview_eval_run_effects(session: &mut FlowEvalSession, link: &mut PreviewEvalRunLink, windows: &[(&str, &'static str)], run: Option<semio_framework_plugin::ToolRunPollView<'_>>, servable: bool, applied_edits: u64) -> Vec<Effect> {
     let identifiers = windows.iter().map(|(window_id, _)| *window_id).collect::<Vec<_>>();
     let mut cursor = 0;
     let mut retained = false;
@@ -575,9 +575,11 @@ impl<O: PreviewEvalRunOwner> PreviewEvalRunJob<O> {
 
 impl<O: PreviewEvalRunOwner> PreviewEvalRunJob<O> {
     /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
-    fn step_value<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+    fn step_value<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         if self.delivered {
-            let step = self.publication.close_step(cx.retained_grant())?;
+            let turn = self.publication.close_step(cx.retained_grant());
+            cx.consume_fuel(turn.work);
+            let step = turn.result?;
             cx.consume_retained(step.progress())?;
             if matches!(step, semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) {
                 self.delivered = false;
@@ -586,7 +588,7 @@ impl<O: PreviewEvalRunOwner> PreviewEvalRunJob<O> {
             return Ok(None);
         }
         if self.closing || cx.is_cancelled() {
-            return JobOutcomeBorrow::admit_cancelled(cx);
+            return JobOutcomeBorrow::admit_cancelled(cx).map_err(Into::into);
         }
         if let Some(kind) = self.publishing {
             let result = self.publication.advance_from_source(kind, &self.source, cx)?;
@@ -597,7 +599,7 @@ impl<O: PreviewEvalRunOwner> PreviewEvalRunJob<O> {
             return Ok(result);
         }
         if self.phase == PreviewEvalRunPhase::Complete {
-            return JobOutcomeBorrow::admit_complete(cx, None, None);
+            return JobOutcomeBorrow::admit_complete(cx, None, None).map_err(Into::into);
         }
         let (port, preview_widget_ids, identity) = (self.port.clone(), &self.preview_widget_ids, self.identity);
         let grant = cx.retained_grant();
@@ -652,7 +654,7 @@ impl<O: PreviewEvalRunOwner> PreviewEvalRunJob<O> {
 }
 
 impl<O: PreviewEvalRunOwner> InteractiveJob for PreviewEvalRunJob<O> {
-    fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{self.step_value(cx).map_err(semio_framework_job::OriginalTurnFailure::from)}
+    fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>,_:&mut semio_framework_job::OriginalJobReturnClaim<'_>)->semio_framework_job::InteractiveJobStep<'a>{semio_framework_job::InteractiveJobStep::from_callback(self.step_value(cx))}
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, semio_framework_value::ValueError> {
         match descriptor.kind() {
@@ -688,7 +690,7 @@ impl<O: PreviewEvalRunOwner> InteractiveJob for PreviewEvalRunJob<O> {
         if !self.closing{return Ok(semio_framework_job::InteractiveJobCloseStep::Blocked)}
         if self.terminal_is_empty(){return Ok(semio_framework_job::InteractiveJobCloseStep::Complete{progress:Default::default()})}
         let demand=self.close_demands(cx.retained_grant().maximum_copy_bytes)?;
-        let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|{(
+        let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|{let mut work=1;let result=(
             ||->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_value::ValueError>{
         use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
         self.closing = true;
@@ -709,7 +711,9 @@ impl<O: PreviewEvalRunOwner> InteractiveJob for PreviewEvalRunJob<O> {
         let item = RetainedCloneProgress { copied_items: 1, ..Default::default() };
         if !self.publication.terminal_is_empty() {
             let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
-            return match self.publication.close_step(child) {
+            let turn = self.publication.close_step(child);
+            work = turn.work;
+            return match turn.result {
                 Ok(step) => Ok(InteractiveJobCloseStep::Pending { progress: step.progress() }),
                 Err(error) => refused(error),
             };
@@ -748,7 +752,7 @@ impl<O: PreviewEvalRunOwner> InteractiveJob for PreviewEvalRunJob<O> {
         }
         let released_bytes = std::mem::take(&mut self.source).capacity();
         Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() } })
-    })().map(|step|semio_framework_value::RetainedCloneStep::Progress(step.progress()))})?;
+    })().map(|step|semio_framework_value::RetainedCloneStep::Progress(step.progress()));semio_framework_value::RetainedWorkOutcome{result,work}})?;
         Ok(if self.terminal_is_empty(){semio_framework_job::InteractiveJobCloseStep::Complete{progress:step.progress()}}else{step})
     }
 

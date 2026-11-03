@@ -1,5 +1,4 @@
 //! 🎟️ An original typed owner customizes closure while forwarding the actual captured contract.
-#![allow(async_fn_in_trait)]
 use semio_framework_dispatch_macros::{dyn_enum,dyn_enum_close};
 #[dyn_enum(delegate)]
 pub trait Counter:Send+'static{fn borrowed(&self)->&u32;fn bump(&mut self,by:u32);async fn total(&self)->u32;fn close(&mut self,releases:usize)->bool;fn closed(&self)->bool;}

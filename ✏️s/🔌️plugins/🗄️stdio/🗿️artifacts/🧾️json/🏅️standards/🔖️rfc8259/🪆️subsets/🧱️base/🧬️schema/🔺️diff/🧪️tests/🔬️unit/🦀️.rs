@@ -1,5 +1,6 @@
 use crate::schema::snapshot::JsonMember;
 use crate::JsonSnapshot;
+use crate::dsl::{ColdDiffAlgebra, ColdMutationDiff, DiffAlgebra};
 use crate::standards::v_rfc8259::subsets::base::schema::diff::*;
 use crate::STDIO_JSON_DOCUMENT_SCHEMA;
 

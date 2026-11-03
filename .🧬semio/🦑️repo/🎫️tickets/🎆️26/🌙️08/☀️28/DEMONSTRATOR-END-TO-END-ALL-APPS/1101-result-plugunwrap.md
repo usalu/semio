@@ -1,4 +1,4 @@
-STATUS: EDITS DONE, UNVERIFIED (wasm checks queued; logs `C/🗑️generated/1101/plugunwrap-{1..6}.txt`, markers `.rc`)
+STATUS: EDITS DONE; PARTLY VERIFIED. GREEN (wasm, logs plugunwrap-2/3.txt rc 0): semio-s-fem-material, semio-s-fem-mesh. UNVERIFIED: generation3d preview-eval (plugunwrap-1 blocked by foreign pdf stdio errors E0433 `modules` in `base`), energy commands (plugunwrap-4: phase deadline exhausted, no rustc error), layout editor/commands (plugunwrap-5: blocked by foreign draw `NativeDefault` trait mismatch in 🛬️receive/🦀️.rs, not mine), draw editor (plugunwrap-6 not run). No further cargo per coordinator (act16 gate); re-verify 1,4,5,6 after `act16.status` has an `exit` line.
 
 Rows came from `aud-policy-unwrap-rows.txt` (28 rows under `✏️s/`). Many line numbers were stale; I fixed every unwrap/expect in the listed files whose function already returns a typed failure.
 

@@ -4,7 +4,7 @@ use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedClonePro
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
 use std::mem::size_of;
 #[derive(Default)]
-pub(super) struct EntityRemoval {
+pub struct EntityRemoval {
     binding: Option<(usize, usize, usize, usize)>,
     id: u64,
     row: usize,
@@ -17,19 +17,19 @@ fn invalid(message: &'static str) -> ValueError {
 }
 impl EntityRemoval {
     #[cfg(test)]
-    pub(super) fn metadata(&self) -> (Option<(usize, usize, usize, usize)>, u64, usize, usize, u8, bool) {
+    pub fn metadata(&self) -> (Option<(usize, usize, usize, usize)>, u64, usize, usize, u8, bool) {
         (self.binding, self.id, self.row, self.matches, self.phase, self.closing)
     }
-    pub(super) fn address(event: &editing::SnapshotEditEvent, address: &pointer::PathAdmission) -> Option<usize> {
+    pub fn address(event: &editing::SnapshotEditEvent, address: &pointer::PathAdmission) -> Option<usize> {
         let editing::SnapshotEditEvent::RemoveValue { path } = event else {
             return None;
         };
         (address.field_count() == 2 && address.field_is(path, 0, "entities")).then(|| address.field_index(path, 1)).flatten()
     }
-    pub(super) fn demands(&self) -> RetirementDemand {
+    pub fn demands(&self) -> RetirementDemand {
         RetirementDemand { copy_bytes: 2 * size_of::<Self>() + 2 * size_of::<IfcMutation>() + size_of::<Option<Vec<IfcMutation>>>(), capacity_bytes: if self.phase == 2 { size_of::<IfcMutation>() } else { 0 }, depth: 1, ..Default::default() }
     }
-    pub(super) fn advance(
+    pub fn advance(
         &mut self,
         event: &editing::SnapshotEditEvent,
         snapshot: &IfcSnapshot,
@@ -86,16 +86,16 @@ impl EntityRemoval {
         cx.consume_fuel(1);
         Ok(self.phase == 3)
     }
-    pub(super) fn begin_close(&mut self) {
+    pub fn begin_close(&mut self) {
         self.closing = true;
     }
-    pub(super) fn terminal_is_empty(&self) -> bool {
+    pub fn terminal_is_empty(&self) -> bool {
         self.binding.is_none()
     }
-    pub(super) fn close_demands(&self) -> RetirementDemand {
+    pub fn close_demands(&self) -> RetirementDemand {
         RetirementDemand { copy_bytes: size_of::<Option<(usize, usize, usize, usize)>>(), depth: 1, ..Default::default() }
     }
-    pub(super) fn close_step(&mut self, grant: RetainedCloneGrant) -> RetainedWorkOutcome {
+    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> RetainedWorkOutcome {
         if !self.closing {
             return refused(invalid("IFC entity removal close was not started"));
         }

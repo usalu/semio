@@ -1,6 +1,6 @@
 //! 🧪️ Recursive Value children retain exact tags and UTF8 drafts through original copying and close.
 use super::*;
-use semio_framework_plugin::app_testing::OriginalWorkFixture;
+use semio_framework_plugin::plugin_app_close_prelude::OriginalWorkFixture;
 fn source(kind:InputKind)->DslValue{let raw="-".repeat(63)+"€"+&"ä".repeat(40);let child=if kind==InputKind::List{DslValue::Object(vec![("kind".into(),DslValue::String("aggregate".into())),("value".into(),DslValue::Array([raw,"-2".into(),"-3".into()].into_iter().map(|word|DslValue::Object(vec![("kind".into(),DslValue::String("integer".into())),("value".into(),DslValue::String(word))])).collect()))])}else{DslValue::Object(vec![("kind".into(),DslValue::String(kind.tag().into())),("value".into(),DslValue::String(raw))])};DslValue::Object(vec![("name".into(),DslValue::String(name(kind).into())),("items".into(),DslValue::Array(vec![child]))])}
 fn name(kind:InputKind)->&'static str{match kind{InputKind::Enum=>"IFCLOGICAL",InputKind::Binary=>"IFCBINARY",InputKind::List=>"IFCCOMPOUNDPLANEANGLEMEASURE",_=>panic!("closed Value child law")}}
 #[test]

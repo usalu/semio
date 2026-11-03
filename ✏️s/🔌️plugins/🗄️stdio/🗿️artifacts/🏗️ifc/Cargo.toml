@@ -27,6 +27,8 @@ members = [
   "📚️catalog/📦️packages/🦀️rust",
   "📚️catalog/⚖️domain/📦️packages/🦀️rust",
   "🔎️details/📦️packages/🦀️rust",
+  "🔎️details/🧪️laws-1/📦️packages/🦀️rust",
+  "🔎️details/🧪️laws-2/📦️packages/🦀️rust",
   "🔎️details/🧭️profile/📦️packages/🦀️rust",
   "🔎️details/📨️wire/📦️packages/🦀️rust",
   "🔎️details/🔤️type/📦️packages/🦀️rust",
@@ -273,3 +275,9 @@ path = "🔎️details/👁️provider/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-stdio-ifc-details-guidance]
 path = "🔎️details/🧶️guidance/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-ifc-details-laws-1]
+path = "🔎️details/🧪️laws-1/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-ifc-details-laws-2]
+path = "🔎️details/🧪️laws-2/📦️packages/🦀️rust"

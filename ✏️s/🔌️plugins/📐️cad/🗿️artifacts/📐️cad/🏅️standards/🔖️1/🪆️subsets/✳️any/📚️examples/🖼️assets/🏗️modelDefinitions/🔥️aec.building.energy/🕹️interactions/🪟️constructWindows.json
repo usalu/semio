@@ -2,7 +2,10 @@
   "schema": "spatial.interaction",
   "id": "energy.energy.constructWindows",
   "version": "1.0.0",
-  "label": "Construct Windows",
+  "label": {
+    "native": { "en": "Construct Windows", "de": "Fenster konstruieren" },
+    "reuse": { "en": "Construct Windows", "de": "Fenster konstruieren" }
+  },
   "key": "w",
   "interaction": {
     "spatialGroundPick": true,
@@ -41,7 +44,10 @@
               {
                 "target": "two_points_first",
                 "key": "1",
-                "label": "2 points + height",
+                "label": {
+                  "native": { "en": "2 points + height", "de": "2 Punkte + Höhe" },
+                  "reuse": { "en": "2 points + height", "de": "2 Punkte + Höhe" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -69,7 +75,10 @@
               {
                 "target": "curve_wire",
                 "key": "2",
-                "label": "Curve + height",
+                "label": {
+                  "native": { "en": "Curve + height", "de": "Kurve + Höhe" },
+                  "reuse": { "en": "Curve + height", "de": "Kurve + Höhe" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -97,7 +106,10 @@
               {
                 "target": "committed",
                 "key": "3",
-                "label": "Surface",
+                "label": {
+                  "native": { "en": "Surface", "de": "Fläche" },
+                  "reuse": { "en": "Surface", "de": "Fläche" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -521,7 +533,10 @@
               {
                 "target": "committed",
                 "key": "n",
-                "label": "Height",
+                "label": {
+                  "native": { "en": "Height", "de": "Höhe" },
+                  "reuse": { "en": "Height", "de": "Höhe" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -556,7 +571,10 @@
         "selection": {
           "accept": ["wire"],
           "multiple": false,
-          "prompt": "Pick path wire"
+          "prompt": {
+            "native": { "en": "Pick path wire", "de": "Pfadkurve wählen" },
+            "reuse": { "en": "Pick path wire", "de": "Pfadkurve wählen" }
+          }
         },
         "on": [
           {
@@ -610,7 +628,10 @@
               {
                 "target": "committed",
                 "key": "n",
-                "label": "Height",
+                "label": {
+                  "native": { "en": "Height", "de": "Höhe" },
+                  "reuse": { "en": "Height", "de": "Höhe" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -655,7 +676,10 @@
             "kind": "label",
             "id": "choose-mode",
             "role": "prompt",
-            "text": "Construct Windows: 1=2pts+height 2=curve+height 3=surface",
+            "text": {
+              "native": { "en": "Construct Windows: 1=2pts+height 2=curve+height 3=surface", "de": "Fenster konstruieren: 1=2 Punkte+Höhe 2=Kurve+Höhe 3=Fläche" },
+              "reuse": { "en": "Construct Windows: 1=2pts+height 2=curve+height 3=surface", "de": "Fenster konstruieren: 1=2 Punkte+Höhe 2=Kurve+Höhe 3=Fläche" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]
@@ -670,7 +694,10 @@
             "kind": "label",
             "id": "hint-first",
             "role": "prompt",
-            "text": "Construct Windows: click first footprint corner",
+            "text": {
+              "native": { "en": "Construct Windows: click first footprint corner", "de": "Fenster konstruieren: Ersten Grundrisseckpunkt anklicken" },
+              "reuse": { "en": "Construct Windows: click first footprint corner", "de": "Fenster konstruieren: Ersten Grundrisseckpunkt anklicken" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]
@@ -700,7 +727,10 @@
             "kind": "label",
             "id": "hint-second",
             "role": "prompt",
-            "text": "Construct Windows: click opposite footprint corner",
+            "text": {
+              "native": { "en": "Construct Windows: click opposite footprint corner", "de": "Fenster konstruieren: Gegenüberliegenden Grundrisseckpunkt anklicken" },
+              "reuse": { "en": "Construct Windows: click opposite footprint corner", "de": "Fenster konstruieren: Gegenüberliegenden Grundrisseckpunkt anklicken" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]
@@ -799,7 +829,10 @@
             "kind": "label",
             "id": "hint-height",
             "role": "prompt",
-            "text": "Construct Windows: height (Z) — drag teal wall, Apply height, or Accept",
+            "text": {
+              "native": { "en": "Construct Windows: height (Z) — drag teal wall, Apply height, or Accept", "de": "Fenster konstruieren: Höhe (Z) — türkise Wand ziehen, Höhe übernehmen oder bestätigen" },
+              "reuse": { "en": "Construct Windows: height (Z) — drag teal wall, Apply height, or Accept", "de": "Fenster konstruieren: Höhe (Z) — türkise Wand ziehen, Höhe übernehmen oder bestätigen" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]
@@ -849,7 +882,10 @@
             "kind": "label",
             "id": "hint-wire",
             "role": "prompt",
-            "text": "Construct Windows: pick path wire",
+            "text": {
+              "native": { "en": "Construct Windows: pick path wire", "de": "Fenster konstruieren: Pfadkurve wählen" },
+              "reuse": { "en": "Construct Windows: pick path wire", "de": "Fenster konstruieren: Pfadkurve wählen" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]
@@ -864,7 +900,10 @@
             "kind": "label",
             "id": "hint-curve-height",
             "role": "prompt",
-            "text": "Construct Windows: set height (Apply height or Accept)",
+            "text": {
+              "native": { "en": "Construct Windows: set height (Apply height or Accept)", "de": "Fenster konstruieren: Höhe festlegen (Höhe übernehmen oder bestätigen)" },
+              "reuse": { "en": "Construct Windows: set height (Apply height or Accept)", "de": "Fenster konstruieren: Höhe festlegen (Höhe übernehmen oder bestätigen)" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]
@@ -879,7 +918,10 @@
             "kind": "label",
             "id": "hint-commit",
             "role": "prompt",
-            "text": "Construct Windows: Accept to create",
+            "text": {
+              "native": { "en": "Construct Windows: Accept to create", "de": "Fenster konstruieren: Zum Erstellen bestätigen" },
+              "reuse": { "en": "Construct Windows: Accept to create", "de": "Fenster konstruieren: Zum Erstellen bestätigen" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.2, 1.55]

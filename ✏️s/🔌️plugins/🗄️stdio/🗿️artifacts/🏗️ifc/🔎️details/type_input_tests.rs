@@ -162,7 +162,7 @@ fn retire_guidance<T: semio_framework_value::retirement::RetireOwned + 'static>(
                 cx.with_original_retirement(|cx| {
                     semio_framework_job::close_original_retained_step(cx, demand, |grant| {
                         if close.is_empty() {
-                            close.begin_granted(owner, grant)?.ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "missing guidance owner"))
+                            own_with(close.begin_granted(owner, grant), || semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "missing guidance owner"))
                         } else {
                             close.step_granted(grant)
                         }

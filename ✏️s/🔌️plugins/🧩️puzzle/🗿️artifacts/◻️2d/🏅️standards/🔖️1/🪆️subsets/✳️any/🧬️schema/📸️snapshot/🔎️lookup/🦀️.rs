@@ -47,11 +47,11 @@ impl Puzzle2dLookupCursor {
     pub fn advance(&mut self, source: RetainedCloneRef<'_, Puzzle2dSnapshot>, target: RetainedCloneRef<'_, PagedUtf8<{usize::MAX}>>, grant: RetainedCloneGrant) -> Result<Puzzle2dLookupStep, ValueError> {
         if self.closing || self.spent { return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "native lookup cursor is closing or spent")); }
         if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(Puzzle2dLookupStep::Pending(Default::default())); }
-        if let Some(progress) = source.bind(&mut self.source, grant)? { return Ok(Puzzle2dLookupStep::Pending(progress)); }
-        if let Some(progress) = target.bind(&mut self.target, grant)? { return Ok(Puzzle2dLookupStep::Pending(progress)); }
+        if let Some(progress) = source.bind(&mut self.source, grant).result? { return Ok(Puzzle2dLookupStep::Pending(progress)); }
+        if let Some(progress) = target.bind(&mut self.target, grant).result? { return Ok(Puzzle2dLookupStep::Pending(progress)); }
         if let Some(location) = self.output { return Ok(Puzzle2dLookupStep::Complete { location, progress: Default::default() }); }
         if self.phase == 1 {
-            let step = self.comparison.close_step(grant)?;
+            let step = self.comparison.close_step(grant).result?;
             if self.comparison.terminal_is_empty() { self.comparison = Default::default(); self.phase = 2; }
             return Ok(Puzzle2dLookupStep::Pending(step.progress()));
         }
@@ -67,7 +67,7 @@ impl Puzzle2dLookupCursor {
         }
         let scope = self.scope;
         let (outer, inner) = (self.outer, self.inner);
-        match self.comparison.compare(source.project(1, |snapshot| scope.identifier(snapshot, outer, inner).expect("immutable native lookup candidate")), target, BoundedOrdGrant { maximum_items: grant.maximum_items, maximum_bytes: grant.maximum_copy_bytes }, grant)? {
+        match self.comparison.compare(source.try_project(1, |snapshot| scope.identifier(snapshot, outer, inner).ok_or_else(|| ValueError::invariant("immutable native lookup candidate is absent")))?, target, BoundedOrdGrant { maximum_items: grant.maximum_items, maximum_bytes: grant.maximum_copy_bytes }, grant).result? {
             BoundedOrdStep::Authority(progress) => Ok(Puzzle2dLookupStep::Pending(progress)),
             BoundedOrdStep::Progress(progress) => Ok(Puzzle2dLookupStep::Pending(RetainedCloneProgress { copied_items: progress.compared_items, copied_bytes: progress.compared_bytes, ..Default::default() })),
             BoundedOrdStep::Complete { ordering, progress } => {
@@ -124,8 +124,8 @@ impl Puzzle2dLookupCursor {
             self.output = None;
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, ..Default::default() }));
         }
-        if !self.comparison.terminal_is_empty() { return self.comparison.close_step(grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
-        let step = RetainedCloneBinding::close_one(if self.source.is_some() { &mut self.source } else { &mut self.target }, grant)?;
+        if !self.comparison.terminal_is_empty() { return self.comparison.close_step(grant).result.map(|step| RetainedCloneStep::Progress(step.progress())); }
+        let step = RetainedCloneBinding::close_one(if self.source.is_some() { &mut self.source } else { &mut self.target }, grant).result?;
         Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) })
     }
 

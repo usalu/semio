@@ -1,0 +1,6 @@
+29 closure/outcome signature: needs fallible variant of the API (ref-returning closure or RetainedWorkOutcome)
+24 test-support module (move under 🧪️tests/ or cfg(test))
+12 embedded-resource/drop-path panic: Result at construction
+11 phase/state machine: typed enum makes arm unrepresentable
+4 arithmetic/layout bound: saturating or typed bound error
+3 proc-macro: emit syn::Error

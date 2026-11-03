@@ -3,14 +3,14 @@
 use super::*;
 
 /// 🧷️ Store-owned fixed-three coordinator retaining all candidates through journal resolution.
-pub(crate) struct DurableOwnedThreeStoreCommitV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> {
+pub struct DurableOwnedThreeStoreCommitV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> {
     pub(super) parent: Option<DurableStoreBoundOutcomeV1<ParentP, ParentMutation>>,
     pub(super) drawing: Option<DurableStoreBoundOutcomeV1<DrawingP, DrawingMutation>>,
-    pub(super) value: Option<DurableStoreBoundOutcomeV1<ValueP, ValueMutation>>,
+    pub value: Option<DurableStoreBoundOutcomeV1<ValueP, ValueMutation>>,
     pub(super) decision: Option<Box<DurableOwnedThreeMemberDecisionV1>>,
     pub(super) decision_retirement:Option<semio_framework_value::retirement::controlled::ControlledRetirement<Box<DurableOwnedThreeMemberDecisionV1>>>,
     pub(super) output_retirement:Option<semio_framework_value::retirement::controlled::ControlledRetirement<DurablePlanningOutputV1>>,
-    pub(super) decision_pack: Option<Vec<u8>>,
+    pub decision_pack: Option<Vec<u8>>,
     pub(super) decision_sha256: String,
     pub(super) visibility_owner: Option<semio_framework_os_vcs::ArtifactGroupVisibilityOwner>,
     pub(super) visibility: Option<Arc<semio_framework_os_vcs::ArtifactGroupVisibility>>,
@@ -118,7 +118,7 @@ where
     pub value: ArtifactStore<ValueP, ValueMutation>,
 }
 
-pub(super) struct DurableOwnedMapRecoveryOperationV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
+pub struct DurableOwnedMapRecoveryOperationV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
     ParentP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
     ParentMutation: StoreMutation<ParentP> + ValueToValue + ValueFromValue + ArtifactCanonicalJsonTree + Clone + semio_framework_os_spr::ColdMutation<ParentP> + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Send + 'static,

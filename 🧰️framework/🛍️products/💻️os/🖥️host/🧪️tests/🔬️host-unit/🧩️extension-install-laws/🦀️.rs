@@ -35,7 +35,7 @@
             extends: extends.into(),
             capabilities,
             topic_contributions: semio_framework_pack_json::Value::Array(Vec::new()),
-            dependencies: vec![store::extension::PackagePluginDependency { plugin_id: extends.into(), version: "^1.0.0".into() }],
+            dependencies: vec![store::extension::PackagePluginDependency { plugin_id: extends.into(), version: "=1.0.0".into() }],
             contributions: semio_framework_pack_json::Value::Array(Vec::new()),
             package_format: store::extension::EXTENSION_PACKAGE_FORMAT,
         };
@@ -82,7 +82,7 @@
             extends: "flow".into(),
             capabilities: vec![],
             topic_contributions: semio_framework_pack_json::Value::Array(Vec::new()),
-            dependencies: vec![store::extension::PackagePluginDependency { plugin_id: "cad".into(), version: "^1.0.0".into() }],
+            dependencies: vec![store::extension::PackagePluginDependency { plugin_id: "cad".into(), version: "=1.0.0".into() }],
             contributions: semio_framework_pack_json::Value::Array(Vec::new()),
             package_format: store::extension::EXTENSION_PACKAGE_FORMAT,
         };

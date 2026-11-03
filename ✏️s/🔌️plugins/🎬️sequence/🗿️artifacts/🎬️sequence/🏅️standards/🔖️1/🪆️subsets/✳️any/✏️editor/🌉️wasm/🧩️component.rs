@@ -72,46 +72,46 @@ impl SequenceDomain for SequenceDomainAdapter {
             SEQUENCE_OPERATION_WHEEL => self.wheel(payload),
             SEQUENCE_OPERATION_REORGANIZE => {
                 let mut progress=|_|true;let mut decode=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64*1024,&mut progress);let options=semio_framework_os_infinite::board::io::text::layout::decode_dag_options_json(std::str::from_utf8(payload).map_err(domain_error)?,&mut decode).map_err(domain_error)?;
-                let mut progress=|_|true;let mut control=semio_framework_os_infinite::board::schema::layout::LayoutControl::new(100_000_000,&mut progress);self.host.dag.reorganize(&options,&mut control).map_err(domain_error)?;
+                let mut progress=|_|true;let mut control=semio_framework_os_infinite::board::schema::layout::LayoutControl::new(100_000_000,&mut progress);self.host.dag.graph.reorganize(&options,&mut control).map_err(domain_error)?;
                 self.host.sync_from_dag();
                 self.host.layout_expanded_slots();
                 Ok(Vec::new())
             }
             SEQUENCE_OPERATION_LOD_SCALE => Ok(infinite_board_port_directed_dag::board::ports::directed_dag::dag_lod_scale_json().into_bytes()),
             SEQUENCE_OPERATION_SET_AUTOMATIC_LOD => {
-                self.host.dag.set_automatic_lod(one_bool(payload)?);
+                self.host.dag.viewport.set_automatic_lod(one_bool(payload)?);
                 Ok(Vec::new())
             }
             SEQUENCE_OPERATION_SET_FORCED_LOD => {
-                self.host.dag.set_forced_draw_lod_label(&one_text(payload)?);
+                self.host.dag.viewport.set_forced_draw_lod_label(&one_text(payload)?);
                 Ok(Vec::new())
             }
-            SEQUENCE_OPERATION_DRAW_LOD => Ok(self.host.dag.draw_lod_label().to_string().into_bytes()),
+            SEQUENCE_OPERATION_DRAW_LOD => Ok(semio_framework_os_infinite::dag_draw_lod_label(&self.host.dag.viewport,&self.host.dag.graph).to_string().into_bytes()),
             SEQUENCE_OPERATION_SET_THEME => {
                 let json = std::str::from_utf8(payload).map_err(|_| abi_failure(AbiErrorCode::InvalidUtf8))?;
                 let mut accepted = |_| true;
                 let mut control = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(64 * 1024, &mut accepted);
                 let overlay = semio_framework_os_infinite::board::io::text::palette::decode_board_palette_overlay_json(json, &mut control).map_err(domain_error)?;
-                self.host.dag.set_canvas_palette(&overlay);
+                semio_framework_os_infinite::dag_set_canvas_palette(&mut self.host.dag.viewport,&mut self.host.dag.paint,&overlay);
                 Ok(Vec::new())
             }
-            SEQUENCE_OPERATION_SELECTED_NODES => Ok(semio_framework_pack_json::to_json_string(&self.host.dag.selected_node_ids()).into_bytes()),
+            SEQUENCE_OPERATION_SELECTED_NODES => Ok(semio_framework_pack_json::to_json_string(&self.host.dag.graph.selected_node_ids()).into_bytes()),
             SEQUENCE_OPERATION_SET_SELECTION => self.set_selection(payload),
             SEQUENCE_OPERATION_LABEL_OVERLAY => self.host.dag.label_overlay_paint_state_json().map(String::into_bytes).map_err(domain_error),
-            SEQUENCE_OPERATION_HOVERED_NODE => Ok(self.host.dag.hovered_node_id().unwrap_or_default().into_bytes()),
+            SEQUENCE_OPERATION_HOVERED_NODE => Ok(semio_framework_os_infinite::directed_dag::hovered_node_id(&self.host.dag.viewport,&self.host.dag.graph).unwrap_or_default().into_bytes()),
             SEQUENCE_OPERATION_PRESELECT_NODES => Ok(semio_framework_pack_json::json!({
-                "ids": self.host.dag.preselect_widget_ids(),
-                "removedIds": self.host.dag.preselect_removed_widget_ids(),
+                "ids": self.host.dag.graph.preselect_widget_ids(),
+                "removedIds": self.host.dag.graph.preselect_removed_widget_ids(),
             })
             .to_string()
             .into_bytes()),
-            SEQUENCE_OPERATION_SELECTION_PREVIEW_POINTS => Ok(self.host.dag.selection_preview_points_json().into_bytes()),
-            SEQUENCE_OPERATION_SELECTION_PREVIEW_CROSSING => Ok(vec![u8::from(self.host.dag.selection_preview_crossing())]),
-            SEQUENCE_OPERATION_SELECTION_PREVIEW_METHOD => Ok(self.host.dag.selection_preview_method().to_string().into_bytes()),
-            SEQUENCE_OPERATION_SELECTION_BOUNDS => Ok(self.host.dag.selection_union_bounds_screen_json().into_bytes()),
+            SEQUENCE_OPERATION_SELECTION_PREVIEW_POINTS => Ok(self.host.dag.graph.selection_preview_points_json().into_bytes()),
+            SEQUENCE_OPERATION_SELECTION_PREVIEW_CROSSING => Ok(vec![u8::from(self.host.dag.graph.selection_preview_crossing())]),
+            SEQUENCE_OPERATION_SELECTION_PREVIEW_METHOD => Ok(self.host.dag.graph.selection_preview_method().to_string().into_bytes()),
+            SEQUENCE_OPERATION_SELECTION_BOUNDS => Ok(semio_framework_os_infinite::directed_dag::selection_union_bounds_screen_json(&self.host.dag.viewport,&self.host.dag.graph).into_bytes()),
             SEQUENCE_OPERATION_SET_SELECTION_OPTIONS => {
                 let (method, mode) = two_texts(payload)?;
-                self.host.dag.set_selection_options(&method, &mode, true, false, false);
+                self.host.dag.graph.set_selection_options(&method, &mode, true, false, false);
                 Ok(Vec::new())
             }
             SEQUENCE_OPERATION_SET_GHOST_STEP => {
@@ -178,7 +178,7 @@ impl SequenceDomainAdapter {
         self.height = reader.u32().map_err(abi_failure)?.max(1);
         self.dpr = reader.f64().map_err(abi_failure)?.max(1.0);
         reader.finish().map_err(abi_failure)?;
-        self.host.dag.set_viewport(self.width, self.height, self.dpr);
+        self.host.dag.viewport.set_viewport(self.width, self.height, self.dpr);
         Ok(Vec::new())
     }
 
@@ -193,7 +193,7 @@ impl SequenceDomainAdapter {
         use semio_framework_canvas::Point;
         let (sx, sy) = point(payload)?;
         let viewport = Viewport { width: self.width.max(1), height: self.height.max(1), dpr: self.dpr.max(1.0) };
-        let camera = Camera { x: self.host.dag.host_snapshot.camera.x, y: self.host.dag.host_snapshot.camera.y, zoom: self.host.dag.host_snapshot.camera.zoom };
+        let camera = Camera { x: self.host.dag.graph.host_snapshot.camera.x, y: self.host.dag.graph.host_snapshot.camera.y, zoom: self.host.dag.graph.host_snapshot.camera.zoom };
         let world = screen_to_world(&camera, &viewport, Point::new(sx, sy));
         Ok(format!("{{\"x\":{},\"y\":{}}}", world.x, world.y).into_bytes())
     }
@@ -226,10 +226,10 @@ impl SequenceDomainAdapter {
             let dx = sx - self.pointer_down.0;
             let dy = sy - self.pointer_down.1;
             if dx * dx + dy * dy <= 64.0 {
-                let selected = self.host.dag.selected_node_ids();
+                let selected = self.host.dag.graph.selected_node_ids();
                 if let Some(id) = self.host.pick_step_id_at_screen(sx, sy, self.width, self.height, self.dpr) {
                     if selected.is_empty() || (selected.len() == 1 && !selected.contains(&id)) {
-                        self.host.dag.set_selection(&[id]);
+                        self.host.dag.graph.set_selection(&[id]);
                     }
                 }
             }
@@ -246,9 +246,9 @@ impl SequenceDomainAdapter {
         reader.finish().map_err(abi_failure)?;
         self.host.dag.set_wheel_zoom_active(true);
         let viewport = Viewport { width: self.width.max(1), height: self.height.max(1), dpr: self.dpr.max(1.0) };
-        let mut camera = Camera { x: self.host.dag.host_snapshot.camera.x, y: self.host.dag.host_snapshot.camera.y, zoom: self.host.dag.host_snapshot.camera.zoom };
+        let mut camera = Camera { x: self.host.dag.graph.host_snapshot.camera.x, y: self.host.dag.graph.host_snapshot.camera.y, zoom: self.host.dag.graph.host_snapshot.camera.zoom };
         wheel_screen(&mut camera, &viewport, sx, sy, delta_y);
-        self.host.dag.set_camera(camera.x, camera.y, camera.zoom);
+        self.host.dag.graph.set_camera(camera.x, camera.y, camera.zoom);
         self.host.dag.set_wheel_zoom_active(false);
         self.host.sync_from_dag();
         Ok(Vec::new())
@@ -262,7 +262,7 @@ impl SequenceDomainAdapter {
             selected.push(reader.text().map_err(abi_failure)?.to_owned());
         }
         reader.finish().map_err(abi_failure)?;
-        self.host.dag.set_selection(&selected);
+        self.host.dag.graph.set_selection(&selected);
         Ok(Vec::new())
     }
 }

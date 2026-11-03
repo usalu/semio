@@ -29,7 +29,7 @@ use crate::presence_test_retirement::{Factory, CLOSE_GRANT, observed_step, obser
 fn close_publication(original: &mut PresencePeersPublication<i32>) -> usize {
     let mut released = 0;
     for _ in 0..4096 {
-        let step = observed_step(CLOSE_GRANT, || original.close_step(CLOSE_GRANT));
+        let step = observed_step(CLOSE_GRANT, || semio_framework_value::RetainedWorkOutcome { result: original.close_step(CLOSE_GRANT), work: 1 });
         released += step.progress().released_bytes;
         if matches!(step, RetainedCloneStep::Complete(_)) { assert!(original.terminal_is_empty()); return released; }
     }

@@ -2,7 +2,10 @@
   "schema": "spatial.interaction",
   "id": "solid.cylinder",
   "version": "1.0.0",
-  "label": "Cylinder",
+  "label": {
+    "native": { "en": "Cylinder", "de": "Zylinder" },
+    "reuse": { "en": "Cylinder", "de": "Zylinder" }
+  },
   "interaction": {
     "spatialGroundPick": true,
     "pickDisabledStates": ["idle", "committed"],
@@ -43,7 +46,10 @@
               {
                 "target": "base_of_cylinder",
                 "key": "s",
-                "label": "Start",
+                "label": {
+                  "native": { "en": "Start", "de": "Start" },
+                  "reuse": { "en": "Start", "de": "Start" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -245,7 +251,10 @@
               {
                 "target": "end_of_cylinder",
                 "key": "n",
-                "label": "Apply Number",
+                "label": {
+                  "native": { "en": "Apply Number", "de": "Zahl anwenden" },
+                  "reuse": { "en": "Apply Number", "de": "Zahl anwenden" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -350,7 +359,10 @@
               {
                 "target": "committed",
                 "key": "n",
-                "label": "Apply Number",
+                "label": {
+                  "native": { "en": "Apply Number", "de": "Zahl anwenden" },
+                  "reuse": { "en": "Apply Number", "de": "Zahl anwenden" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -395,7 +407,10 @@
             "kind": "label",
             "id": "base_of_cylinder-prompt",
             "role": "prompt",
-            "text": "Base of cylinder",
+            "text": {
+              "native": { "en": "Base of cylinder", "de": "Grundpunkt des Zylinders" },
+              "reuse": { "en": "Base of cylinder", "de": "Grundpunkt des Zylinders" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]
@@ -498,7 +513,10 @@
             "kind": "label",
             "id": "radius-prompt",
             "role": "prompt",
-            "text": "Radius",
+            "text": {
+              "native": { "en": "Radius", "de": "Radius" },
+              "reuse": { "en": "Radius", "de": "Radius" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]
@@ -601,7 +619,10 @@
             "kind": "label",
             "id": "end_of_cylinder-prompt",
             "role": "prompt",
-            "text": "End of cylinder",
+            "text": {
+              "native": { "en": "End of cylinder", "de": "Ende des Zylinders" },
+              "reuse": { "en": "End of cylinder", "de": "Ende des Zylinders" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]

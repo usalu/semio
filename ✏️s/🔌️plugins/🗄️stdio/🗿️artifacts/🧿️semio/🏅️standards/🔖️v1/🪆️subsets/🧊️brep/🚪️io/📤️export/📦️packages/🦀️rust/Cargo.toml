@@ -28,7 +28,6 @@ semio-s-artifact-stdio-dwg-geometry = { workspace = true }
 semio-s-artifact-stdio-semio-base = { workspace = true }
 semio-s-artifact-stdio-semio-brep = { workspace = true }
 # 🧩️ Capability Dependencies
-semio-s-artifact-stdio-dwg-model = { workspace = true }
 semio-s-artifact-stdio-dwg-write = { workspace = true }
 semio-s-artifact-stdio-step = { workspace = true }
 # /🧩️ Capability Dependencies

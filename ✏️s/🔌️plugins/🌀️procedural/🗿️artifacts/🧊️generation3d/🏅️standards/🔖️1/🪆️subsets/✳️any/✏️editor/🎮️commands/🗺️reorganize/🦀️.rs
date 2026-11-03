@@ -35,5 +35,5 @@ pub fn apply(snapshot: &Generation3dSnapshot, cx: &mut semio_framework_job::Step
         let mut editor = GraphEditor::new(host);
         editor.reorganize(&options, &mut control).map_err(Fault::from)?;
         Ok(Emit::mutations(editor.finish()))
-    })
+    })?
 }

@@ -144,7 +144,7 @@ pub fn render(document: &Generation2dSnapshot, config: &config::Generation2dMain
         let (nodes, edges) = dag_host_snapshot_to_workflow(&host.dag.graph.host_snapshot);
         let operators = document_operator_records(&host.dag.graph.host_snapshot, &nodes);
         (nodes, edges, operators)
-    });
+    })?;
     let viewport = Viewport2d { x: config.viewport.x, y: config.viewport.y, zoom: config.viewport.zoom };
     let flow_extras = flow_backed_node_graph_extras(host_snapshot, "", 0.0, true, false, semio_framework_ui_styling::metrics::board::GRID_FACTOR_DEFAULT, Some(session));
     let _ = GENERATION2D_PLAY_APP_ID;

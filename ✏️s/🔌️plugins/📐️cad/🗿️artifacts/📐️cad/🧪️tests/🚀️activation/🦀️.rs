@@ -1,4 +1,4 @@
-use super::*;
+use semio_s_artifact_cad_cad_model::snapshot::{artifact_kind, CAD_DIALECT};
 use semio_framework_test_fixtures::fixture_path;
 
 /// 🚀️ CAD owns its declared kind spellings and relay dialect independently of the OS catalog.

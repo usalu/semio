@@ -68,7 +68,7 @@ impl<P: Send + Sync + 'static> PresenceStoreRetirement<P> {
         }
         let slot = if self.local.is_some() { &mut self.local } else { &mut self.terminal_local };
         if let Some(original) = slot.take() {
-            return match self.local_factory.as_ref().expect("observed original local factory").retire(original, child).result {
+            return match self.local_factory.as_ref().ok_or_else(||semio_framework_value::ValueError::invariant("original local factory is absent"))?.retire(original, child).result {
                 Ok((owner, receipt)) => { *self.active_local = Some(owner); if !receipt.fits(child) || receipt.retained_capacity_bytes != demand.capacity_bytes { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "presence local constructor changed its receipt")); } Ok(RetainedCloneStep::Progress(receipt)) },
                 Err((error, original)) => { **slot = Some(original); Err(error) },
             };
@@ -79,7 +79,7 @@ impl<P: Send + Sync + 'static> PresenceStoreRetirement<P> {
         if let Some(reads) = self.reads.as_ref() { if !SnapshotReadLeaseRegistry::terminal_is_empty(reads) { return Ok(RetainedCloneStep::Progress(Default::default())); } return snapshot_registry_alias_close_step(&mut self.reads, grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
         if let Some(factory) = self.local_factory.take() { let factory: Arc<dyn semio_framework_value::FactoryRetirement> = factory; self.factory_close[0] = Some(semio_framework_value::FactoryAuthority::new(factory)); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })); }
         if let Some(factory) = self.peer_factory.take() { let factory: Arc<dyn semio_framework_value::FactoryRetirement> = factory; self.factory_close[1] = Some(semio_framework_value::FactoryAuthority::new(factory)); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })); }
-        if let Some(slot) = self.factory_close.iter_mut().find(|slot| slot.is_some()) { let factory = slot.as_mut().unwrap(); let step = factory.step(child).result?; let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, step, factory.terminal_is_empty(), "presence store factory")?; if factory.terminal_is_empty() { *slot = None; } return Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) }); }
+        if let Some(slot) = self.factory_close.iter_mut().find(|slot| slot.is_some()) { let Some(factory)=slot.as_mut() else { return Err(semio_framework_value::ValueError::invariant("original factory close slot is absent")); }; let step = factory.step(child).result?; let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, step, factory.terminal_is_empty(), "presence store factory")?; if factory.terminal_is_empty() { *slot = None; } return Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) }); }
         Ok(RetainedCloneStep::Complete(Default::default()))
     }
 }

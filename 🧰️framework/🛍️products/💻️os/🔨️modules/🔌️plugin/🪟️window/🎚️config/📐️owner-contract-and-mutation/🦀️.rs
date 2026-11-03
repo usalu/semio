@@ -16,9 +16,9 @@ pub trait WindowConfigOwner: Send + Sync + 'static {
     type Edit: store::snapshot_clone_preparation::RetainedCloneEdit<Self::State,Self::Mutation> + semio_framework_value::FactoryPayloadRetirement;
     const MAXIMUM_PREPARATION_DEPTH: usize;
     const MAXIMUM_INITIAL_PACK_BYTES:usize=Self::MAXIMUM_PUBLICATION_BYTES;
-    fn initial_state_demands()->Result<RetirementDemand,ValueError>{Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"Window owner must declare its original initial state birth"))}
-    fn initial_state(_grant:RetainedCloneGrant)->Result<(Self::State,RetainedCloneProgress),ValueError>{Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"Window owner must supply its original initial state"))}
-    fn initial_state_pack_source(_state:&Self::State)->Result<(&dyn semio_framework_dsl_record::native_encoding::FieldProjectionSource,semio_framework_dsl_record::BorrowedRecordSpec),ValueError>{Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"Window owner must supply its borrowed original initial record"))}
+    fn initial_state_demands()->Result<RetirementDemand,ValueError>;
+    fn initial_state(grant:RetainedCloneGrant)->Result<(Self::State,RetainedCloneProgress),ValueError>;
+    fn initial_state_pack_source(state:&Self::State)->Result<(&dyn semio_framework_dsl_record::native_encoding::FieldProjectionSource,semio_framework_dsl_record::BorrowedRecordSpec),ValueError>;
 
     fn native_pair_demands()->Result<RetirementDemand,ValueError>{Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"Window owner must declare its original native Pack receiver"))}
     fn admit_native_pair(_pack:&[u8],_spr:&[u8],_pack_limits:protocol::PackLimits,_history_limits:semio_framework_os_store_codec_registry::native_snapshot::OriginalArtifactHistoryReadLimits,_native:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,_grant:RetainedCloneGrant,_output:&mut Option<Box<dyn WindowConfigNativePairReceiving<Self::State>>>)->Result<RetainedCloneProgress,semio_framework_os_store_codec_registry::native_snapshot::OriginalArtifactPairFailure>{Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"Window owner did not install its original native Pack receiver").into())}

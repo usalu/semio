@@ -5,7 +5,7 @@ async fn cad_imported_geometry_members_install_exact_typed_publication_authority
     use {semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelSnapshot, semio_s_artifact_stdio_semio_model::schema::mutations::SemioModelMutation, semio_s_artifact_stdio_semio_model::schema::mutations::insert_element::InsertElement, semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot, semio_s_artifact_stdio_semio_brep::schema::mutations::SemioBrepMutation, semio_s_artifact_stdio_semio_brep::schema::mutations::create_vertex::CreateVertex};
     let corpus: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let text = include_str!("🧫️fixtures/⬅️before.obj");
-    let imported = crate::standards::v1::subsets::any::io::import_obj_object(text).unwrap();
+    let imported = semio_s_artifact_cad_cad_io::import_obj_object(text).unwrap();
     macro_rules! member {
         ($snapshot:ty, $mutation:ty, $operation:expr, $index:expr) => {{
             let expected = &corpus["members"][$index];

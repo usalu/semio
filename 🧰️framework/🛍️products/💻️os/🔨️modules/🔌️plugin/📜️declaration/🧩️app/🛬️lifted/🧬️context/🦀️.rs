@@ -39,7 +39,7 @@ impl<A:ArtifactApp> RetirementCursor for Cursor<A>{
   if self.terminal_is_empty(){return RetirementStep::Complete(0);}
   if grant.maximum_items==0{return RetirementStep::Progress(Default::default(),1);}
   match self.source.source.as_ref(){Some(Source::Refused{..})=>return RetirementStep::Failure(unadmitted(),0),Some(Source::Admitted(_))=>{if grant.maximum_depth==0{return RetirementStep::Failure(ValueError::literal(ValueRefusalKind::DepthLimit,"original context handback requires admitted depth"),0);}let Some(Source::Admitted(source))=self.source.source.take()else{unreachable!()};self.owner=Some(ControlledRetirement::new(source).unwrap_or_else(|_|panic!("sealed original context retirement refused")));return RetirementStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()},1);},None=>{}}
-  let owner=self.owner.as_mut().unwrap();match owner.step(grant){Ok(step)=>{let progress=step.progress();if owner.terminal_is_empty(){self.owner.take();}RetirementStep::Progress(progress,1)},Err(error)=>RetirementStep::Failure(error,0)}
+  let Some(owner)=self.owner.as_mut()else{return RetirementStep::Failure(ValueError::literal(ValueRefusalKind::InvariantViolated,"captured context owner is absent"),0)};match owner.step(grant){Ok(step)=>{let progress=step.progress();if owner.terminal_is_empty(){self.owner.take();}RetirementStep::Progress(progress,1)},Err(error)=>RetirementStep::Failure(error,0)}
  }
  fn terminal_is_empty(&self)->bool{self.source.source.is_none()&&self.owner.is_none()}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.copy_bytes)}

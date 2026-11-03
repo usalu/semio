@@ -50,7 +50,7 @@ impl OriginalToolRunNativeState{
     match presentation.begin_tick(tick,end,state,0.0,0,cx.retained_grant()){Ok(((),p))=>{cx.consume_retained(p)?;cx.consume_fuel(1);self.phase=4;},Err((error,tick))=>{owned.tick=Some(tick);return Err(error.into())}}
    },
    4=>{self.phase=5;},
-   5=>{let cursor=self.cursor.as_ref().unwrap();if cursor.terminal_is_empty(){let d=cursor_release_demands();let step=retired(cx,d,|_|{drop(self.cursor.take().unwrap());Ok(semio_framework_value::RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()}))})?;if step.progress().copied_items!=0{self.phase=0;return Ok(true)}return Ok(false)}let d=cursor.close_demands(cx.retained_grant().maximum_copy_bytes)?;retired(cx,d,|grant|self.cursor.as_mut().unwrap().close_step(grant))?;},
+   5=>{let cursor=self.cursor.as_ref().ok_or_else(||invalid("tool-run tick cursor is absent"))?;if cursor.terminal_is_empty(){let d=cursor_release_demands();let step=retired(cx,d,|_|{drop(self.cursor.take());Ok(semio_framework_value::RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()}))})?;if step.progress().copied_items!=0{self.phase=0;return Ok(true)}return Ok(false)}let d=cursor.close_demands(cx.retained_grant().maximum_copy_bytes)?;let cursor=self.cursor.as_mut().ok_or_else(||invalid("tool-run tick cursor is absent"))?;retired(cx,d,|grant|cursor.close_step(grant))?;},
    _=>return Err(invalid("original tick receiving phase is invalid").into()),
   }Ok(false)
  }
@@ -61,7 +61,7 @@ impl OriginalToolRunNativeState{
  }
  pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
   let d=self.next_close_demands(grant.maximum_copy_bytes)?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()))}self.closing=true;
-  if let Some(cursor)=self.cursor.as_mut(){if !cursor.terminal_is_empty(){return cursor.close_step(grant)}drop(self.cursor.take().unwrap());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()}))}
+  if let Some(cursor)=self.cursor.as_mut(){if !cursor.terminal_is_empty(){return cursor.close_step(grant)}drop(self.cursor.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()}))}
   if let Some(close)=self.close.as_mut(){if !close.terminal_is_empty(){return close.step(grant)}self.close=None;}
   else if self.owned.presentation.is_some()||self.owned.tick.is_some(){let owned=std::mem::replace(&mut*self.owned,Owned{presentation:None,tick:None});match ControlledRetirement::new(owned){Ok(close)=>self.close=Some(close),Err((error,owned))=>{*self.owned=owned;return Err(error)}}}
   else{return Ok(RetainedCloneStep::Complete(Default::default()))}

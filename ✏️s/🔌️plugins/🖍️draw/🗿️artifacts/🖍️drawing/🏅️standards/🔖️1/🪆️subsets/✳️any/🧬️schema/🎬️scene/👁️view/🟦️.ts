@@ -1,29 +1,31 @@
 /** 👁️ Complete scene records borrow geometry and preserve semantic text and images. */
-import type { DocumentScenePlan, DocumentSceneNode } from "../🗺️plan-model/🟦️.ts";
-import {sceneSelectionRelation} from "../📋️prepare/🟦️.ts";
+import type {DocumentSceneNode} from "../🗺️plan-model/🟦️.ts";
+import type {ScenePlanRead,ScenePlanNode} from "../🗺️plan-model/🎟️owned/🟦️.ts";
+import {sceneSelectionRelation,list,plainFill,plainStroke} from "../📋️prepare/🟦️.ts";
 import type {RasterSceneGroup} from "../📷️raster/🟦️.ts";
 import type {PathSegment} from "@semio-tech/framework/2d";
 import type { Fill } from "../../🎨️fill/🖌️paint-model/🟦️.ts";
 import type {PathRasterStroke} from "../../🧮️geometry/📷️raster/🟦️.ts";
 import {multiply,segmentBounds,type Matrix,type Point} from "../../🧮️geometry/🟦️.ts";
 export interface PreparedSceneNode{readonly id:string;readonly groups:readonly RasterSceneGroup[];readonly transform:Matrix;readonly segments:readonly PathSegment[];readonly opacity:number;readonly blendMode:DocumentSceneNode["blendMode"];readonly visible:boolean;readonly fillRule?:"nonzero"|"evenodd";readonly fill?:Fill;readonly stroke?:PathRasterStroke;readonly image?:{readonly assetId:string;readonly width:number;readonly height:number};}
+const nodeIndex=(plan:ScenePlanRead):Map<string,ScenePlanNode>=>{const index=new Map<string,ScenePlanNode>();for(let at=0;at<plan.nodes.length;at++){const node=plan.nodes.at(at)!;index.set(node.id,node);}return index;};
 /** 🎯️ Group selection includes all rendered descendants, with authored identity preserved. */
-export function preparedSceneSelection(plan:DocumentScenePlan,ids:readonly string[]):ReadonlySet<string>{const index=new Map(plan.nodes.map(node=>[node.id,node])),selected=new Set<string>(),pending=[...ids];while(pending.length){const id=pending.pop()!;if(selected.has(id))continue;selected.add(id);const node=index.get(id);if(node?.content.kind==="group")pending.push(...node.content.children);}return selected;}
+export function preparedSceneSelection(plan:ScenePlanRead,ids:readonly string[]):ReadonlySet<string>{const index=nodeIndex(plan),selected=new Set<string>(),pending=[...ids];while(pending.length){const id=pending.pop()!;if(selected.has(id))continue;selected.add(id);const node=index.get(id);if(node?.content.kind==="group")pending.push(...list(node.content.children,child=>child));}return selected;}
 /** 🎯️ Resolve membership through the actual prepared group graph. */
-export function preparedSceneSelected(plan:DocumentScenePlan,ids:readonly string[],id:string):boolean{return preparedSceneSelection(plan,ids).has(id);}
+export function preparedSceneSelected(plan:ScenePlanRead,ids:readonly string[],id:string):boolean{return preparedSceneSelection(plan,ids).has(id);}
 /** 🎬️ Borrow paths and paints; complete plans contain no unresolved algorithm nodes. */
-export function preparedSceneNodes(plan:DocumentScenePlan,transformation?:readonly[readonly string[],Matrix]):PreparedSceneNode[]{const out:PreparedSceneNode[]=[],selected=transformation?preparedSceneSelection(plan,transformation[0]):null;for(const node of plan.nodes){const content=node.content;if(content.kind==="group")continue;if(content.kind==="boolean"||content.kind==="trace"||content.kind==="text")throw Error("Unresolved algorithm in completed canvas plan");let transform:Matrix=[...node.transform];if(transformation&&selected!.has(node.id))transform=multiply(transformation[1],transform);const common={id:node.id,groups:node.groups,transform,segments:content.kind==="path"||content.kind==="glyphs"?content.segments:[],opacity:node.opacity,blendMode:node.blendMode,visible:node.visible};if(content.kind==="image"){const asset=plan.assets.find(asset=>asset.id===content.asset);if(!asset)throw Error("Missing completed scene image asset");out.push({...common,image:{assetId:asset.id,width:content.width,height:content.height}});}else out.push({...common,fillRule:content.fillRule,...(content.fill?{fill:content.fill}:{}),...(content.stroke?{stroke:content.stroke}:{})});}return out;}
+export function preparedSceneNodes(plan:ScenePlanRead,transformation?:readonly[readonly string[],Matrix]):PreparedSceneNode[]{const out:PreparedSceneNode[]=[],selected=transformation?preparedSceneSelection(plan,transformation[0]):null;for(let at=0;at<plan.nodes.length;at++){const node=plan.nodes.at(at)!,content=node.content;if(content.kind==="group")continue;if(content.kind==="boolean"||content.kind==="trace"||content.kind==="text")throw Error("Unresolved algorithm in completed canvas plan");let transform:Matrix=[...node.transform] as Matrix;if(transformation&&selected!.has(node.id))transform=multiply(transformation[1],transform);const common={id:node.id,groups:list(node.groups,group=>group),transform,segments:content.kind==="path"||content.kind==="glyphs"?list(content.segments,segment=>segment):[],opacity:node.opacity,blendMode:node.blendMode,visible:node.visible};if(content.kind==="image"){let asset:{id:string}|undefined;for(let index=0;index<plan.assets.length&&!asset;index++){const candidate=plan.assets.at(index)!;if(candidate.id===content.asset)asset=candidate;}if(!asset)throw Error("Missing completed scene image asset");out.push({...common,image:{assetId:asset.id,width:content.width,height:content.height}});}else out.push({...common,fillRule:content.fillRule,...(content.fill?{fill:plainFill(content.fill)!}:{}),...(content.stroke?{stroke:plainStroke(content.stroke)!}:{})});}return out;}
 
 export type PreparedSceneBounds=[number,number,number,number];
 /** 🪢️ Visible descendants contribute handles only through an unlocked selected prefix. */
-export function preparedSceneSelectionBounds(plan:DocumentScenePlan,ids:readonly string[]):PreparedSceneBounds|null{
+export function preparedSceneSelectionBounds(plan:ScenePlanRead,ids:readonly string[]):PreparedSceneBounds|null{
  if(ids.length>256)throw Error("Scene selection exceeds ancestry capacity");
- const index=new Map(plan.nodes.map(node=>[node.id,node])),selected=ids.flatMap(id=>{const node=index.get(id);return node?[node.sourcePath]:[];});
+ const index=nodeIndex(plan),selected=ids.flatMap(id=>{const node=index.get(id);return node?[list(node.sourcePath,step=>step)]:[];});
  let bounds:PreparedSceneBounds|null=null;
  for(const node of preparedSceneNodes(plan)){
   if(!node.visible||node.opacity<=0||node.groups.some(group=>group.opacity<=0))continue;
   const source=index.get(node.id)!;
-  if(sceneSelectionRelation(source.sourcePath,source.lockedAncestors,selected).boundsSelection===null)continue;
+  if(sceneSelectionRelation(list(source.sourcePath,step=>step),source.lockedAncestors,selected).boundsSelection===null)continue;
   const next=preparedSceneNodeBounds(node);if(next)bounds=preparedSceneUnion(bounds,next);
  }
  return bounds;

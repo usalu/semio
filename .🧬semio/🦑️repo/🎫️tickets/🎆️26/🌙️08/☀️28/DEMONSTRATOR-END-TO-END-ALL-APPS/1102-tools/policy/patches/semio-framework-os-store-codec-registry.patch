@@ -1,0 +1,11 @@
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/📸️native-snapshot/🫴️receiving/🦀️.rs
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/📸️native-snapshot/🫴️receiving/🦀️.rs
+@@ -62,7 +62,7 @@
+   match self.phase{
+    0=>{let expected=semio_framework_os_semio::declared_binary_prefix_byte(self.envelope,semio_framework_os_semio::Component::Pack,1,self.position)?;if source.get(self.position).copied()!=expected{return Err(invalid("original snapshot Pack envelope differs from its authored identity"))}self.position+=1;if self.position==self.prefix{self.phase=1;}},
+    1=>{let Some((record,progress))=RetainedRecordReceiving::admit_document(source,(self.prefix,source.len()),T::RECORD,self.limits.clone(),child(grant)).result?else{return Ok(Default::default())};self.record=Some(record);self.phase=2;return Ok(progress)},
+-   2=>{let record=self.record.as_mut().unwrap();if !record.is_ready(){return record.step(source,native,child(grant)).result.map_err(flat)}let mut original=None;let progress=record.take_into(&mut original,child(grant)).result?;if let Some(record)=original{*self.generic.value=Some(FieldValue::Record(record));self.phase=3;}return Ok(progress)},
++   2=>{let record=self.record.as_mut().ok_or_else(||invalid("native snapshot record is absent"))?;if !record.is_ready(){return record.step(source,native,child(grant)).result.map_err(flat)}let mut original=None;let progress=record.take_into(&mut original,child(grant)).result?;if let Some(record)=original{*self.generic.value=Some(FieldValue::Record(record));self.phase=3;}return Ok(progress)},
+    3=>{if !self.binding.is_ready(){return self.binding.step(&mut self.generic.value,native,body,child(grant)).result.map_err(flat)}let progress=self.binding.take_into(&mut self.output.value,child(grant)).result?;if self.output.value.is_some(){self.phase=4;}return Ok(progress)},
+    _=>unreachable!(),
+   }Ok(receipt(demand))

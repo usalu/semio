@@ -51,6 +51,12 @@ async fn shard_grant_invalid_original_operation_preserves_wire_backing_without_h
 /// (R4 clause 5); every `GuestRuntime`/`ShardTransport` impl these tests drive resolves on its
 /// first poll, so `block_on` never actually parks.
 async fn pump(shard: &mut ShardLoop) -> Result<usize, PluginHostError> {
+    let actors: Vec<u64> = shard.instances.keys().copied().collect();
+    for actor in actors {
+        if !shard.granted_budgets.contains_key(&actor) {
+            shard.granted_budgets.insert(actor, IssuedShardTurn::whole(semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive), semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, work: semio_framework_actor::OriginalActorTurnWork{clock_binding:1,absolute_deadline_us:u64::MAX,fuel:1_000_000}, grant: semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 } }, 1).expect("kernel-issued test authority"));
+        }
+    }
     semio_framework_async::block_on(shard.pump())
 }
 

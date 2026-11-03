@@ -153,16 +153,16 @@ impl<V> OrderedMap<V> {
     /// ⚡️ Completes a synchronous convenience upsert; retained jobs must use begin_set and advance.
     pub fn insert(&mut self, key: String, value: V) -> Option<V> {
         let mut cursor = self.begin_set(key, value);
-        while !cursor.is_complete() { cursor.advance(cold_update_grant(&cursor)).result.expect("ordered cold insert admission"); }
-        let removed = cursor.take_removed(); let displaced = std::mem::replace(self, cursor.take_result().unwrap()); retire_cold(displaced.retire()); close_cold(&mut cursor); removed.and_then(release_cold)
+        while !cursor.is_complete() && cursor.advance(cold_update_grant(&cursor)).result.is_ok() {}
+        let removed = cursor.take_removed(); if let Some(result) = cursor.take_result() { retire_cold(std::mem::replace(self, result).retire()); } close_cold(&mut cursor); removed.and_then(release_cold)
     }
     /// 🏪️ Completes a synchronous convenience removal; retained jobs must use begin_remove and advance.
     /// `Some` states that the key WAS present, whatever else still shares its payload: a clone of this map keeps the payload
     /// alive, so only [`Removal::Owned`] hands the value over and [`Removal::Shared`] reports that another owner retains it.
     pub fn remove(&mut self, key: &str) -> Option<Removal<V>> {
         let mut cursor = self.begin_remove(key.to_owned());
-        while !cursor.is_complete() { cursor.advance(cold_update_grant(&cursor)).result.expect("ordered cold removal admission"); }
-        let removed = cursor.take_removed(); let displaced = std::mem::replace(self, cursor.take_result().unwrap()); retire_cold(displaced.retire()); close_cold(&mut cursor);
+        while !cursor.is_complete() && cursor.advance(cold_update_grant(&cursor)).result.is_ok() {}
+        let removed = cursor.take_removed(); if let Some(result) = cursor.take_result() { retire_cold(std::mem::replace(self, result).retire()); } close_cold(&mut cursor);
         removed.map(|shared| release_cold(shared).map_or(Removal::Shared, Removal::Owned))
     }
     /// 🧹️ Moves this root into explicit final-owner retirement.
@@ -261,17 +261,17 @@ impl<V> UpdateState<V> {
     fn admission_growth(&self)->usize{
         if self.pending_entry.is_some()||self.pending_node.is_some(){return 1}if self.plan.is_some(){return 0}
         match self.phase{
-            Phase::Search=>if self.current.is_none(){if self.value.is_some()&&self.entry_arc.is_none(){2}else{0}}else{let current=self.current.as_ref().unwrap();match self.ordering{None=>0,Some(Ordering::Less)=>usize::from(current.left.is_some()),Some(Ordering::Greater)=>usize::from(current.right.is_some()),Some(Ordering::Equal)=>if self.value.is_some(){if self.entry_arc.is_none(){2}else{1+usize::from(current.left.is_some())+usize::from(current.right.is_some())}}else{1+usize::from(current.left.is_some()||current.right.is_some())}}},
-            Phase::Successor=>{let current=self.current.as_ref().unwrap();if current.left.is_some(){1}else{1+usize::from(current.right.is_some())}},
+            Phase::Search=>if self.current.is_none(){if self.value.is_some()&&self.entry_arc.is_none(){2}else{0}}else{let Some(current)=self.current.as_ref()else{return usize::MAX};match self.ordering{None=>0,Some(Ordering::Less)=>usize::from(current.left.is_some()),Some(Ordering::Greater)=>usize::from(current.right.is_some()),Some(Ordering::Equal)=>if self.value.is_some(){if self.entry_arc.is_none(){2}else{1+usize::from(current.left.is_some())+usize::from(current.right.is_some())}}else{1+usize::from(current.left.is_some()||current.right.is_some())}}},
+            Phase::Successor=>{let Some(current)=self.current.as_ref()else{return usize::MAX};if current.left.is_some(){1}else{1+usize::from(current.right.is_some())}},
             Phase::Rebuild=>self.path.front().map_or(usize::from(self.replacement.is_none()),|parent|{let(left,right,sibling)=if parent.left{(&self.replacement,&parent.node.right,usize::from(parent.node.right.is_some()))}else{(&parent.node.left,&self.replacement,usize::from(parent.node.left.is_some()))};1+sibling+BalancePlan::new_aliases(left,right)}),
-            Phase::RebuildSuccessor=>self.successor_path.front().map_or_else(||{let left=&self.removed_node.as_ref().unwrap().left;usize::from(left.is_some())+BalancePlan::new_aliases(left,&self.replacement)},|parent|1+usize::from(parent.right.is_some())+BalancePlan::new_aliases(&self.replacement,&parent.right)),Phase::Complete=>0,
+            Phase::RebuildSuccessor=>self.successor_path.front().map_or_else(||{let Some(removed)=self.removed_node.as_ref()else{return usize::MAX};let left=&removed.left;usize::from(left.is_some())+BalancePlan::new_aliases(left,&self.replacement)},|parent|1+usize::from(parent.right.is_some())+BalancePlan::new_aliases(&self.replacement,&parent.right)),Phase::Complete=>0,
         }
     }
     fn advance(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome{
         self.last_compared_bytes=0;
         if let Some(staged)=self.pending_entry.as_mut(){let value=Entry{key:match staged.key.take(){Some(v)=>v,None=>return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("key absent").into()),work:0}},value:match staged.value.take(){Some(v)=>v,None=>return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("value absent").into()),work:0}}};let turn=crate::retirement::arc_custody::admit_shared_allocation(value,grant);let result=match turn.result{Ok((entry,p))=>{self.entry_arc=Some(entry);self.pending_entry.take();Ok(RetainedCloneStep::Progress(p))},Err((error,value))=>{staged.key=Some(value.key);staged.value=Some(value.value);Err(error)}};return crate::RetainedWorkOutcome{result,work:turn.work}}
-        if let Some(staged)=self.pending_node.as_mut(){let value=staged.take_node();let turn=crate::retirement::arc_custody::admit_shared_allocation(value,grant);let result=match turn.result{Ok((node,p))=>{match self.plan.as_mut(){Some(v)=>v,None=>return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("plan absent").into()),work:0}}.accept(node);self.pending_node.take();Ok(RetainedCloneStep::Progress(p))},Err((error,node))=>{staged.restore(node);Err(error)}};return crate::RetainedWorkOutcome{result,work:turn.work}}
-        if let Some(plan)=self.plan.as_mut(){if plan.ready(){let root=plan.take_result();let after=plan.after;self.plan.take();self.replacement=root;self.phase=after;}else{self.pending_node=Some(plan.prepare());if let Err(error)=match self.pending_node.as_mut(){Some(v)=>v,None=>return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("pending_node absent").into()),work:0}}.validate(){return crate::RetainedWorkOutcome{result:Err(error.with_retained_progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}}return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}
+        if let Some(staged)=self.pending_node.as_mut(){let Some(value)=staged.take_node()else{return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("pending node entry absent").into()),work:0}};let turn=crate::retirement::arc_custody::admit_shared_allocation(value,grant);let result=match turn.result{Ok((node,p))=>{match self.plan.as_mut(){Some(v)=>v,None=>return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("plan absent").into()),work:0}}.accept(node);self.pending_node.take();Ok(RetainedCloneStep::Progress(p))},Err((error,node))=>{staged.restore(node);Err(error)}};return crate::RetainedWorkOutcome{result,work:turn.work}}
+        if let Some(plan)=self.plan.as_mut(){if plan.ready(){let root=plan.take_result();let after=plan.after;self.plan.take();self.replacement=root;self.phase=after;}else{self.pending_node=Some(match plan.prepare(){Ok(node)=>node,Err(error)=>return crate::RetainedWorkOutcome{result:Err(error.into()),work:0}});if let Err(error)=match self.pending_node.as_mut(){Some(v)=>v,None=>return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("pending_node absent").into()),work:0}}.validate(){return crate::RetainedWorkOutcome{result:Err(error.with_retained_progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}}return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}
         match self.phase{
             Phase::Search=>{
                 if self.current.is_none(){if let Some(value)=self.value.as_ref(){if let Some(entry)=self.entry_arc.take(){self.plan=Some(BalancePlan::single(entry,None,None,Phase::Rebuild));}else{self.pending_entry=Some(EntryBuilder{key:Some(match self.key.as_ref(){Some(v)=>v,None=>return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("key absent").into()),work:0}}.clone()),value:Some(value.clone())});}}else{self.phase=Phase::Rebuild;}}
@@ -531,7 +531,7 @@ impl<V> Retirement<V> {
                 self.push(Owner::Entry(node.entry));
             },
             Owner::Entry(entry) => if let Some(entry) = Arc::into_inner(entry) {bytes=demand;self.push(Owner::Key(entry.key)); self.push(Owner::Value(entry.value)); },
-            Owner::Key(_)|Owner::Value(_)=>unreachable!("shared aliases release before their frontier slot transfers"),
+            Owner::Key(_)|Owner::Value(_)=>return RetirementStep::Failure(crate::ValueError::invariant("shared aliases release before their frontier slot transfers")),
         }
         RetirementStep::Progress { released_items: 1, released_bytes: bytes }
     }

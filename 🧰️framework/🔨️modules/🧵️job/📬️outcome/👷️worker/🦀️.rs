@@ -29,8 +29,7 @@ impl OriginalWorkerPageReservation{
   if !self.origin.admit(cx)?{return Ok(false)}
   if self.fault.is_none(){let binding=OriginalSourceBinding::borrow(cx);let turn=RetainedPayloadBuilder::admit_boxed(JobPayloadStream::Fault,&mut self.fault,cx);if self.fault.is_some(){self.binding=Some(binding);}receive_original_retained_work(cx,turn)?;return Ok(false)}
   let builder=self.fault.as_mut().ok_or_else(||ValueError::invariant("fault absent"))?;
-  {static N:std::sync::atomic::AtomicU64=std::sync::atomic::AtomicU64::new(0);let n=N.fetch_add(1,std::sync::atomic::Ordering::Relaxed);if n%2048==0{eprintln!("[DEBUG] admit_step builder n={n} init={} pages={:?} staged={:?} published={} grant={:?} fuel={}",builder.is_initialized(),builder.original().map(|o|o.page_count()),builder.staged_page_len(),builder.published().is_some(),cx.retained_grant(),cx.fuel_remaining());}}
-  let turn=if !builder.is_initialized(){builder.advance_initialization(cx)}else if builder.original().unwrap().page_count()==0{
+  let turn=if !builder.is_initialized(){builder.advance_initialization(cx)}else if builder.original().ok_or_else(||semio_framework_value_retained_clone::ValueError::invariant("payload builder original is absent"))?.page_count()==0{
    match builder.staged_page_len(){
     None=>builder.begin_staged_page_funded(cx),
     Some(written)if written<ORIGINAL_WORKER_FAULT.len()=>{let count=(ORIGINAL_WORKER_FAULT.len()-written).min(grant.maximum_copy_bytes);if count==0{return Ok(false)}builder.write_staged_source_funded(cx,&ORIGINAL_WORKER_FAULT[written..written+count])},

@@ -1,0 +1,12 @@
+semio-framework-os-store-durable-group-tests
+semio-framework-os-store-member-open-tests
+semio-framework-os-store-presence
+semio-framework-os-store-read
+semio-framework-os-store-replay-operation
+semio-framework-os-store-sync-tests-1
+semio-framework-os-store-tests-01
+semio-framework-os-store-tests-02
+semio-framework-os-store-tests-03
+semio-framework-os-store-tests-04
+semio-framework-os-store-tests-06
+semio-framework-os-store-tests-09

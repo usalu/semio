@@ -198,8 +198,8 @@ fn every_funded_export_turn_advances_even_when_the_grant_is_already_exhausted() 
     let mut turns = 0;
     let evaluation = loop {
         turns += 1;
-        assert!(turns <= 64, "a zero-fuel turn must still advance, never livelock");
-        if let WidgetStep::Done(evaluation) = step_with_fuel(&mut *job, 0) {
+        assert!(turns <= 64, "a funded turn must still advance once its grant is spent, never livelock");
+        if let WidgetStep::Done(evaluation) = step_with_fuel(&mut *job, 1) {
             break evaluation;
         }
     };

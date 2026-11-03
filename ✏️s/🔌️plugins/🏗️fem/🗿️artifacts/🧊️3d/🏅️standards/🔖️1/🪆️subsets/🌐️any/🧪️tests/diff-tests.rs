@@ -1,0 +1,295 @@
+//! 🧪️ Unit laws of the fem3d diff algebra: `absorb` coalesces same-key rows, `inverse` is the negative delta, and the absorbed diff applies exactly like its parts in sequence.
+
+use super::*;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::*;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
+
+fn node(id: &str, x: f64) -> FemNodeValue {
+    FemNodeValue { id: id.into(), x, y: 0.0, z: 0.0 }
+}
+
+fn load(id: &str, value: f64) -> FemLoad {
+    FemLoad::Nodal { id: id.into(), node_id: "n1".into(), dof: FemDof::Ty, value }
+}
+
+fn base() -> Fem3dSnapshotValue {
+    Fem3dSnapshotValue {
+        nodes: vec![node("n1", 0.0), node("n2", 1.0), node("n3", 2.0)],
+        load_cases: vec![FemLoadCase { id: "dead".into(), name: "Dead".into(), loads: vec![load("l1", -1.0), load("l2", -2.0)], self_weight: false }],
+        ..Default::default()
+    }
+}
+
+fn nodes(delta: Fem3dNodesDelta) -> Fem3dDiff {
+    Fem3dDiff { nodes: Some(delta), ..Default::default() }
+}
+
+fn patch_node(id: &str, x: f64) -> Fem3dDiff {
+    nodes(Fem3dNodesDelta { modified: vec![Fem3dNodesModification { id: id.into(), patch: Fem3dNodePatch { x: Some(x), ..Default::default() } }], ..Default::default() })
+}
+
+fn apply(diff: &Fem3dDiff, base: &Fem3dSnapshotValue) -> Fem3dSnapshotValue {
+    protocol::apply_diff_cold(diff, base).expect("the diff applies")
+}
+
+fn absorbed(first: &Fem3dDiff, second: &Fem3dDiff) -> Fem3dDiff {
+    let mut sum = first.clone();
+    <Fem3dDiff as protocol::ColdMutationDiff<Fem3dSnapshotValue>>::absorb(&mut sum, second.clone());
+    sum
+}
+
+/// 🩹 Two patches of one id fold into one patch whose application equals the sequence.
+#[test]
+fn absorb_folds_two_patches_of_one_id_into_one() {
+    let (first, second) = (patch_node("n1", 5.0), patch_node("n1", 7.0));
+    let sum = absorbed(&first, &second);
+    assert_eq!(sum.nodes.as_ref().expect("nodes").modified.len(), 1);
+    assert_eq!(apply(&sum, &base()), apply(&second, &apply(&first, &base())));
+}
+
+fn insert(index: usize, row: FemNodeValue) -> Fem3dNodesDelta {
+    Fem3dNodesDelta { inserted: vec![Fem3dNodeInsertion { index, row }], ..Default::default() }
+}
+
+fn remove(id: &str, index: usize) -> Fem3dNodesDelta {
+    Fem3dNodesDelta { removed: vec![Fem3dNodeRemoval { id: id.into(), index }], ..Default::default() }
+}
+
+fn relocate(id: &str, from: usize, to: usize) -> Fem3dNodesDelta {
+    Fem3dNodesDelta { moved: vec![Fem3dNodeRelocation { id: id.into(), from, to }], ..Default::default() }
+}
+
+fn node_ids(snapshot: &Fem3dSnapshotValue) -> Vec<&str> {
+    snapshot.nodes.iter().map(|node| node.id.as_str()).collect()
+}
+
+/// ⚖️ A row inserted and then removed is no row at all.
+#[test]
+fn absorb_cancels_an_inserted_then_removed_row() {
+    let sum = absorbed(&nodes(insert(3, node("n9", 9.0))), &nodes(remove("n9", 3)));
+    assert_eq!(sum.nodes, None);
+    assert_eq!(apply(&sum, &base()), base());
+}
+
+/// 🔁️ A row removed and then inserted again is a replacement: one removal at the base index and one insertion at the final index.
+#[test]
+fn absorb_turns_removed_then_inserted_into_a_replacement() {
+    let first = nodes(remove("n2", 1));
+    let second = nodes(insert(1, node("n2", 8.0)));
+    let sum = absorbed(&first, &second);
+    let delta = sum.nodes.as_ref().expect("nodes");
+    assert_eq!((delta.removed.len(), delta.inserted.len(), delta.moved.len()), (1, 1, 0));
+    assert_eq!(apply(&sum, &base()), apply(&second, &apply(&first, &base())));
+}
+
+/// ➕️ A patch on a row the same diff inserted stays its own modified entry; the inserted row is not rewritten outside the central applier.
+#[test]
+fn absorb_keeps_a_patch_of_an_inserted_row_as_its_own_entry() {
+    let first = nodes(insert(1, node("n9", 9.0)));
+    let second = patch_node("n9", 4.0);
+    let sum = absorbed(&first, &second);
+    let delta = sum.nodes.as_ref().expect("nodes");
+    assert_eq!((delta.inserted.clone(), delta.modified.len()), (vec![Fem3dNodeInsertion { index: 1, row: node("n9", 9.0) }], 1));
+    assert_eq!(apply(&sum, &base()), apply(&second, &apply(&first, &base())));
+}
+
+/// 📍️ An insertion lands at its index and a middle removal restores at the same index through the inverse.
+#[test]
+fn positional_rows_place_and_restore_rows_in_the_middle() {
+    let inserted = nodes(insert(1, node("n9", 9.0)));
+    let after = apply(&inserted, &base());
+    assert_eq!(node_ids(&after), ["n1", "n9", "n2", "n3"]);
+    let removed = nodes(remove("n2", 1));
+    let after = apply(&removed, &base());
+    assert_eq!(node_ids(&after), ["n1", "n3"]);
+    let inverse = <Fem3dDiff as protocol::ColdDiffAlgebra<Fem3dSnapshotValue>>::inverse(&removed, &base());
+    assert_eq!(inverse.nodes.as_ref().expect("nodes").inserted, vec![Fem3dNodeInsertion { index: 1, row: node("n2", 1.0) }]);
+    assert_eq!(node_ids(&apply(&inverse, &after)), ["n1", "n2", "n3"]);
+}
+
+/// ↕️ Moves compose into one move, and a move back to the start applies as the identity.
+#[test]
+fn absorb_composes_moves() {
+    let first = nodes(relocate("n1", 0, 2));
+    let second = nodes(relocate("n1", 2, 1));
+    let sum = absorbed(&first, &second);
+    assert_eq!(sum.nodes.as_ref().expect("nodes").moved, vec![Fem3dNodeRelocation { id: "n1".into(), from: 0, to: 1 }]);
+    assert_eq!(apply(&sum, &base()), apply(&second, &apply(&first, &base())));
+    let back = nodes(relocate("n1", 2, 0));
+    assert_eq!(apply(&absorbed(&first, &back), &base()), base());
+}
+
+/// 🔀️ A move followed by a removal of the same row removes it at its base index.
+#[test]
+fn absorb_turns_moved_then_removed_into_a_base_removal() {
+    let first = nodes(relocate("n1", 0, 2));
+    let second = nodes(remove("n1", 2));
+    let sum = absorbed(&first, &second);
+    assert_eq!(sum.nodes.as_ref().expect("nodes").removed, vec![Fem3dNodeRemoval { id: "n1".into(), index: 0 }]);
+    assert_eq!(apply(&sum, &base()), apply(&second, &apply(&first, &base())));
+}
+
+/// ⚖️ The inverse steps sum to the inverse of the sum.
+#[test]
+fn the_sum_of_inverses_is_the_inverse_of_the_sum() {
+    let first = nodes(insert(1, node("n9", 9.0)));
+    let after_first = apply(&first, &base());
+    let second = nodes(remove("n3", 3));
+    let sum = absorbed(&first, &second);
+    let undo_second = <Fem3dDiff as protocol::ColdDiffAlgebra<Fem3dSnapshotValue>>::inverse(&second, &after_first);
+    let undo_first = <Fem3dDiff as protocol::ColdDiffAlgebra<Fem3dSnapshotValue>>::inverse(&first, &base());
+    assert_eq!(absorbed(&undo_second, &undo_first), <Fem3dDiff as protocol::ColdDiffAlgebra<Fem3dSnapshotValue>>::inverse(&sum, &base()));
+}
+
+/// 🏋️ Owned-field load-case patches compose field by field and row by row.
+#[test]
+fn absorb_composes_load_case_patches() {
+    let rename = Fem3dDiff { load_cases: Some(Fem3dLoadCasesDelta { modified: vec![Fem3dLoadCasesModification { id: "dead".into(), patch: Fem3dLoadCasePatch { name: Some("Self".into()), ..Default::default() } }], ..Default::default() }), ..Default::default() };
+    let add = Fem3dDiff {
+        load_cases: Some(Fem3dLoadCasesDelta {
+            modified: vec![Fem3dLoadCasesModification { id: "dead".into(), patch: Fem3dLoadCasePatch { loads: Some(Fem3dLoadsDelta { inserted: vec![Fem3dLoadInsertion { index: 2, row: load("l3", -3.0) }], ..Default::default() }), ..Default::default() } }],
+            ..Default::default()
+        }),
+        ..Default::default()
+    };
+    let sum = absorbed(&rename, &add);
+    let delta = sum.load_cases.as_ref().expect("load cases");
+    assert_eq!(delta.modified.len(), 1);
+    assert_eq!(delta.modified[0].patch.name.as_deref(), Some("Self"));
+    assert_eq!(apply(&sum, &base()), apply(&add, &apply(&rename, &base())));
+}
+
+/// 🎛️ Analysis patches keep the latest value of every field they set.
+#[test]
+fn absorb_composes_analysis_patches() {
+    let first = Fem3dDiff { analysis: Some(Fem3dAnalysisPatch { modal_count: Some(5), ..Default::default() }), ..Default::default() };
+    let second = Fem3dDiff { analysis: Some(Fem3dAnalysisPatch { modal_count: Some(6), deformation_scale: Some(10.0), ..Default::default() }), ..Default::default() };
+    let sum = absorbed(&first, &second);
+    assert_eq!(sum.analysis, Some(Fem3dAnalysisPatch { modal_count: Some(6), buckling_count: None, deformation_scale: Some(10.0) }));
+}
+
+/// ↩️ The inverse applied after the diff restores the base, for patches, adds, removes and load rows alike.
+#[test]
+fn inverse_restores_the_base() {
+    let cases = [
+        patch_node("n2", 3.0),
+        nodes(insert(3, node("n4", 4.0))),
+        nodes(remove("n2", 1)),
+        nodes(relocate("n3", 2, 0)),
+        Fem3dDiff { analysis: Some(Fem3dAnalysisPatch { modal_count: Some(9), ..Default::default() }), ..Default::default() },
+        Fem3dDiff {
+            load_cases: Some(Fem3dLoadCasesDelta {
+                modified: vec![Fem3dLoadCasesModification { id: "dead".into(), patch: Fem3dLoadCasePatch { self_weight: Some(true), loads: Some(Fem3dLoadsDelta { removed: vec![Fem3dLoadRemoval { id: "l1".into(), index: 0 }], ..Default::default() }), ..Default::default() } }],
+                ..Default::default()
+            }),
+            ..Default::default()
+        },
+    ];
+    for diff in cases {
+        let after = apply(&diff, &base());
+        assert_ne!(after, base());
+        let inverse = <Fem3dDiff as protocol::ColdDiffAlgebra<Fem3dSnapshotValue>>::inverse(&diff, &base());
+        assert_eq!(apply(&inverse, &after), base(), "inverse of {diff:?}");
+    }
+}
+
+/// 🪪️ A raw whole-node diff cannot rename a row or collide with another row's history identity.
+#[test]
+fn stable_identity_refuses_whole_node_renames_atomically() {
+    for wire in [r#"{"id":"fresh","x":8}"#, r#"{"id":"n2","x":8}"#] {
+        assert!(semio_framework_pack_json::from_json_str::<Fem3dNodePatch>(wire, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err(), "node patch cannot author an identity");
+    }
+}
+/// 🪆️ Nested load identity refusal publishes no earlier node change from the same artifact diff.
+#[test]
+fn stable_identity_nested_load_refusal_is_atomic() {
+    let original = base();
+    let mut diff = patch_node("n1", 8.0);
+    diff.load_cases = Some(Fem3dLoadCasesDelta {
+        modified: vec![Fem3dLoadCasesModification { id: "dead".into(), patch: Fem3dLoadCasePatch {
+            name: Some("Renamed".into()),
+            loads: Some(Fem3dLoadsDelta { modified: vec![Fem3dLoadsModification { id: "l1".into(), patch: Fem3dLoadPatch::Area { solid_id: Some("missing".into()), pressure: None } }], ..Default::default() }),
+            ..Default::default()
+        } }],
+        ..Default::default()
+    });
+    let error = protocol::apply_diff_cold(&diff, &original).expect_err("nested identity change refuses");
+    assert_eq!(error.code, "mutation.apply.identity-change");
+    assert_eq!(original, base());
+}
+
+/// 🤝️ Replaying the inverse of one edit preserves a collaborator's independent row and analysis field.
+#[test]
+fn independent_collaborator_diff_survives_inverse_replay() {
+    let original = base();
+    let mut mine = patch_node("n1", 8.0);
+    mine.analysis = Some(Fem3dAnalysisPatch { modal_count: Some(9), ..Default::default() });
+    let mut collaborator = patch_node("n2", 7.0);
+    collaborator.analysis = Some(Fem3dAnalysisPatch { buckling_count: Some(6), ..Default::default() });
+    let combined = apply(&collaborator, &apply(&mine, &original));
+    let undo = <Fem3dDiff as protocol::ColdDiffAlgebra<Fem3dSnapshotValue>>::inverse(&mine, &original);
+    assert_eq!(apply(&undo, &combined), apply(&collaborator, &original));
+}
+
+/// 🏋️ Independent loads inside one load case remain independently addressable during inverse replay.
+#[test]
+fn independent_nested_load_diff_survives_inverse_replay() {
+    let change = |id: &str, value: f64| Fem3dDiff {
+        load_cases: Some(Fem3dLoadCasesDelta {
+            modified: vec![Fem3dLoadCasesModification { id: "dead".into(), patch: Fem3dLoadCasePatch {
+                loads: Some(Fem3dLoadsDelta { modified: vec![Fem3dLoadsModification { id: id.into(), patch: Fem3dLoadPatch::Nodal { node_id: None, dof: None, value: Some(value) } }], ..Default::default() }),
+                ..Default::default()
+            } }],
+            ..Default::default()
+        }),
+        ..Default::default()
+    };
+    let original = base();
+    let (mine, collaborator) = (change("l1", -8.0), change("l2", -7.0));
+    let combined = apply(&collaborator, &apply(&mine, &original));
+    let undo = <Fem3dDiff as protocol::ColdDiffAlgebra<Fem3dSnapshotValue>>::inverse(&mine, &original);
+    assert_eq!(apply(&undo, &combined), apply(&collaborator, &original));
+}
+
+/// 🧱️ A material inverse restores authored fields while preserving a collaborator's sibling field.
+#[test]
+fn independent_material_fields_survive_diff_inverse_replay() {
+    let material = semio_s_fem_material::volumetric::FemMaterialValue { id: "steel".into(), name: "Steel".into(), e: 210e9, g: 80e9, nu: 0.3, rho: 7850.0 };
+    let original = Fem3dSnapshotValue { materials: vec![material], ..Default::default() };
+    let patch = |fields: Fem3dMaterialPatch| Fem3dDiff {
+        materials: Some(Fem3dMaterialsDelta { modified: vec![Fem3dMaterialsModification { id: "steel".into(), patch: fields }], ..Default::default() }),
+        ..Default::default()
+    };
+    let mine = patch(Fem3dMaterialPatch { name: Some("Steel S355".into()), ..Default::default() });
+    let collaborator = patch(Fem3dMaterialPatch { e: Some(190e9), ..Default::default() });
+    let combined = apply(&collaborator, &apply(&mine, &original));
+    assert_eq!(apply(&<Fem3dDiff as protocol::ColdDiffAlgebra<Fem3dSnapshotValue>>::inverse(&mine, &original), &combined), apply(&collaborator, &original));
+    let sum = absorbed(&mine, &collaborator);
+    assert_eq!(apply(&sum, &original), combined);
+    assert_eq!(apply(&<Fem3dDiff as protocol::ColdDiffAlgebra<Fem3dSnapshotValue>>::inverse(&sum, &original), &combined), original);
+}
+
+/// 📨️ Sparse scalar setters omit untouched properties and reject explicit nulls and identity fields.
+#[test]
+fn material_patch_wire_distinguishes_absence_from_null() {
+    let patch = Fem3dMaterialPatch { e: Some(190e9), ..Default::default() };
+    let encoded = semio_framework_pack_json::to_json_string(&patch);
+    assert_eq!(encoded, r#"{"e":190000000000.0}"#);
+    assert_eq!(semio_framework_pack_json::from_json_str::<Fem3dMaterialPatch>(&encoded, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("one-field patch"), patch);
+    assert_eq!(semio_framework_pack_json::from_json_str::<Fem3dMaterialPatch>("{}", semio_framework_pack_json::JsonMemberPolicy::Reject).expect("no fields"), Fem3dMaterialPatch::default());
+    let value = semio_framework_value::ToValue::to_value(&patch);
+    let mut allow = |_| true;
+    let mut control = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(65536, &mut allow);
+    let decoded = <Fem3dMaterialPatch as semio_framework_value::FromValue>::from_value_controlled(&value, &mut control).expect("controlled sparse field decode");
+    assert_eq!(decoded, patch);
+    semio_framework_value::FromValue::retire_decoded(decoded);
+
+    for wire in [r#"{"e":null}"#, r#"{"name":null}"#, r#"{"id":"another"}"#] {
+        assert!(semio_framework_pack_json::from_json_str::<Fem3dMaterialPatch>(wire, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err(), "{wire} must be refused");
+        let value = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(wire, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("wire tree");
+        let mut allow = |_| true;
+        let mut control = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(65536, &mut allow);
+        assert!(<Fem3dMaterialPatch as semio_framework_value::FromValue>::from_value_controlled(&value, &mut control).is_err(), "{wire} controlled decode must be refused");
+    }
+}
+

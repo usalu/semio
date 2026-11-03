@@ -1,7 +1,7 @@
 //! 📚️ The registered examples, the app-level action definitions and the editor manifest constructor.
 
 use super::*;
-use semio_s_artifact_stdio_semio::editor::modes::edit;
+use crate::editor_edit as edit;
 
 //#region 📚️Examples
 /// 📚️ The bundled `📚️examples/🎬️<slug>` fixtures, table-driven — a new example is ONE row here plus

@@ -2,7 +2,10 @@
   "schema": "spatial.interaction",
   "id": "curve.arc",
   "version": "1.0.0",
-  "label": "Arc",
+  "label": {
+    "native": { "en": "Arc", "de": "Bogen" },
+    "reuse": { "en": "Arc", "de": "Bogen" }
+  },
   "interaction": {
     "spatialGroundPick": true,
     "pickDisabledStates": ["idle", "committed"],
@@ -43,7 +46,10 @@
               {
                 "target": "center_of_arc",
                 "key": "s",
-                "label": "Start",
+                "label": {
+                  "native": { "en": "Start", "de": "Start" },
+                  "reuse": { "en": "Start", "de": "Start" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -316,7 +322,10 @@
               {
                 "target": "committed",
                 "key": "n",
-                "label": "Apply Number",
+                "label": {
+                  "native": { "en": "Apply Number", "de": "Zahl anwenden" },
+                  "reuse": { "en": "Apply Number", "de": "Zahl anwenden" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -361,7 +370,10 @@
             "kind": "label",
             "id": "center_of_arc-prompt",
             "role": "prompt",
-            "text": "Center of arc",
+            "text": {
+              "native": { "en": "Center of arc", "de": "Mittelpunkt des Bogens" },
+              "reuse": { "en": "Center of arc", "de": "Mittelpunkt des Bogens" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]
@@ -464,7 +476,10 @@
             "kind": "label",
             "id": "start_of_arc-prompt",
             "role": "prompt",
-            "text": "Start of arc",
+            "text": {
+              "native": { "en": "Start of arc", "de": "Anfang des Bogens" },
+              "reuse": { "en": "Start of arc", "de": "Anfang des Bogens" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]
@@ -567,7 +582,10 @@
             "kind": "label",
             "id": "end_point_or_angle-prompt",
             "role": "prompt",
-            "text": "End point or angle",
+            "text": {
+              "native": { "en": "End point or angle", "de": "Endpunkt oder Winkel" },
+              "reuse": { "en": "End point or angle", "de": "Endpunkt oder Winkel" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]

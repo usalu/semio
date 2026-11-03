@@ -1,0 +1,73 @@
+--- a/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🕹️interaction/🧪️tests/🔬️unit/🦀️.rs
++++ b/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🕹️interaction/🧪️tests/🔬️unit/🦀️.rs
+@@ -8,6 +8,21 @@
+ 
+ fn value_arg(value: f64) -> DslValue {
+     DslValue::object([("value".to_string(), DslValue::float(value))])
++}
++
++#[semio_framework_async_macros::async_test]
++async fn every_interaction_text_carries_both_languages_and_no_blank_cell() {
++    let (mut texts, mut translated) = (0usize, 0usize);
++    for (model_definition, spec) in parsed_specs() {
++        assert!(spec.label.is_some(), "{model_definition}/{} has a label", spec.id);
++        for label in spec.localized_labels() {
++            assert!(!label.has_blank_cell(), "{model_definition}/{}: a blank language cell", spec.id);
++            texts += 1;
++            translated += usize::from(label.resolve(Terminology::Native, Locale::En) != label.resolve(Terminology::Native, Locale::De));
++        }
++    }
++    assert!(texts >= 600, "{texts} localized texts");
++    assert!(translated * 100 >= texts * 85, "{translated} of {texts} texts differ between en and de");
+ }
+ 
+ #[semio_framework_async_macros::async_test]
+@@ -134,7 +149,7 @@
+     let mut session = start_session("structure.structure.constructOneWayReinforcedConcreteSlab", CadPaneId::StructureClassic).expect("session");
+     assert!(apply_event(&mut session, "mode.2points", None));
+     assert!(apply_event(&mut session, "pointer.down", Some(&point_arg(0.0, 0.0, 0.0))));
+-    let items = preview_display_items(&session);
++    let items = preview_display_items(&session, Terminology::Native, Locale::En);
+     assert!(items.iter().any(|item| item.get("kind").and_then(|value| value.as_str()) == Some("point")));
+ }
+ 
+@@ -143,16 +158,17 @@
+     let mut session = start_session("building.building.placeColumn", CadPaneId::Building).expect("session");
+     assert!(apply_event(&mut session, "start", None));
+     assert!(apply_event(&mut session, "pointer.move", Some(&point_arg(0.5, 0.5, 0.0))));
+-    let items = preview_display_items(&session);
++    let items = preview_display_items(&session, Terminology::Native, Locale::En);
+     assert!(items.iter().any(|item| item.get("kind").and_then(|value| value.as_str()) == Some("point")), "first_point paints the cursor: {items:?}");
+     assert!(apply_event(&mut session, "pointer.down", Some(&point_arg(1.0, 2.0, 0.0))));
+     assert!(apply_event(&mut session, "pointer.move", Some(&point_arg(3.0, 4.0, 0.0))));
+-    let items = preview_display_items(&session);
++    let items = preview_display_items(&session, Terminology::Native, Locale::En);
+     let kinds: Vec<&str> = items.iter().filter_map(|item| item.get("kind").and_then(|value| value.as_str())).collect();
+     assert!(kinds.contains(&"point") && kinds.contains(&"segment") && kinds.contains(&"box-preview"), "second_point rubber-bands the footprint: {kinds:?}");
+     let anchor = items.iter().find(|item| item.get("id").and_then(|value| value.as_str()) == Some("anchor-a")).expect("anchor");
+     assert_eq!(anchor.get("position").and_then(parse_vec3), Some([1.0, 2.0, 0.0]));
+-    assert_eq!(state_prompt(&session), "Place Column: click opposite footprint corner");
++    assert_eq!(state_prompt(&session, Terminology::Native, Locale::En), "Place Column: click opposite footprint corner");
++    assert_eq!(state_prompt(&session, Terminology::Native, Locale::De), "Stütze platzieren: Gegenüberliegenden Grundrisseckpunkt anklicken");
+ }
+ 
+ #[semio_framework_async_macros::async_test]
+@@ -168,7 +184,7 @@
+     assert_eq!(object.typology, "building.building.wall");
+     assert_eq!(object.origin, [0.0, 0.0, 0.0]);
+     assert_eq!(object.extent, Some([4.0, 0.2, 2.7]), "span × wall thickness × the asset's 2.7 m height");
+-    let items = preview_display_items(&session);
++    let items = preview_display_items(&session, Terminology::Native, Locale::En);
+     assert!(items.iter().any(|item| item.get("id").and_then(|value| value.as_str()) == Some("preview-final")));
+ }
+ 
+@@ -370,7 +386,8 @@
+     assert_eq!(numeric_entry_event(&session).as_deref(), Some("set.radius"));
+     assert_eq!(parse_repl_line_for("2.5", Some(&session)), Some(("set.radius".to_string(), Some(DslValue::float(2.5)))));
+     assert_eq!(parse_repl_line("SetRadius2.5", None), Some(("set.radius".to_string(), Some(DslValue::float(2.5)))));
+-    assert_eq!(state_prompt(&session), "Radius", "the display prompt label, not the raw state name");
++    assert_eq!(state_prompt(&session, Terminology::Native, Locale::En), "Radius", "the display prompt label, not the raw state name");
++    assert_eq!(state_prompt(&session, Terminology::Native, Locale::De), "Radius");
+     assert!(apply_event(&mut session, "set.radius", Some(&DslValue::float(2.5))));
+     let mut kernel = Brep::new();
+     let Some(CommitOutcome::Objects(objects)) = commit_session(&mut kernel, &session, 0, |prefix| format!("{prefix}-{}", next_test_id())) else { panic!("circle commits") };

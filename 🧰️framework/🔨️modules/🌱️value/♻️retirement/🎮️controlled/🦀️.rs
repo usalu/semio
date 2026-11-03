@@ -79,7 +79,7 @@ impl<T: RetireOwned> ControlledRetirement<T> {
     }
 
     /// 🫴️ Keeps an unfinished original inline so unsupported retirement can refuse without losing custody.
-    pub fn retain(value:T)->Self {Self{value:ManuallyDrop::new(Some(value)),cursors:ManuallyDrop::new(PagedList::default()),step_progress:RetainedCloneProgress::default(),last_work:0}}
+    pub fn retain(value:T)->Self {Self{value:ManuallyDrop::new(Some(value)),cursors:ManuallyDrop::new(PagedList::with_page_items(8)),step_progress:RetainedCloneProgress::default(),last_work:0}}
 
     /// 👁️ Borrows the original typed owner before retirement cursor construction.
     pub fn original(&self) -> Option<&T> { self.value.as_ref() }

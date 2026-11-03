@@ -2,7 +2,7 @@ use super::*;
 use semio_framework_plugin::ViewModel;
 
 fn demo() -> Fem3dSnapshot {
-    semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot()
+    semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::fem3d_demo_snapshot().expect("demo snapshot")
 }
 
 #[test]

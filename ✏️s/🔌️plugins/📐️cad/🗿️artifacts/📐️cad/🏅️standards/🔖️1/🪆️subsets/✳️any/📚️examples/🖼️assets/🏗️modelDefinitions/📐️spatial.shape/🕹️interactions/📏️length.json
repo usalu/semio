@@ -2,7 +2,10 @@
   "schema": "spatial.interaction",
   "id": "measure.distance",
   "version": "1.0.0",
-  "label": "Distance",
+  "label": {
+    "native": { "en": "Distance", "de": "Abstand" },
+    "reuse": { "en": "Distance", "de": "Abstand" }
+  },
   "key": "d",
   "guards": [
     {
@@ -46,7 +49,10 @@
         "selection": {
           "accept": ["vertex"],
           "multiple": false,
-          "prompt": "Pick first vertex"
+          "prompt": {
+            "native": { "en": "Pick first vertex", "de": "Ersten Eckpunkt wählen" },
+            "reuse": { "en": "Pick first vertex", "de": "Ersten Eckpunkt wählen" }
+          }
         },
         "on": [
           {
@@ -104,7 +110,10 @@
         "selection": {
           "accept": ["vertex"],
           "multiple": false,
-          "prompt": "Pick second vertex"
+          "prompt": {
+            "native": { "en": "Pick second vertex", "de": "Zweiten Eckpunkt wählen" },
+            "reuse": { "en": "Pick second vertex", "de": "Zweiten Eckpunkt wählen" }
+          }
         },
         "on": [
           {

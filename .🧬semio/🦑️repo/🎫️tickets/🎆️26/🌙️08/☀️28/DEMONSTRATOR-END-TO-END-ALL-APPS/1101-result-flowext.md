@@ -20,3 +20,16 @@ Caveats: ports of `admit_owned_retirement`/`close_factory_ticket` callers that s
 - flowext-flow-primitive-f (rc 1): no remaining error in a flow crate; only foreign `semio-framework-plugin-instance-commands` (3) and `plugin-tool-run-turns` (5) fail. Flow crates downstream of them are not yet reached, so ext verdicts are UNVERIFIED.
 - 09:50 flow-primitive wasm GREEN (flowext-flow-primitive-l.rc 0, Finished, zero error lines), including every flow framework crate (flow-model/document/copy/host-source/host-read/extensions). Ports since: media/snapshot job (InteractiveJob step+claim, construct outcome), flow-extensions evaluation failure places (OriginalDomainReservation + admit_evaluation_failure), RetirementStep work args. Batch m running: remaining 8 ext, flow plugin workspace, hub components.
 - 11:xx hub flow+playbook components wasm GREEN (flowext-hub-flowplaybook-o.rc 0, Finished). Also green in batch m: flow-list, flow-text, flow-math, flow-logic, flow-dictionary, flow-draw, flow-bim (rc 0 each). Pending: flow-brep, flow-plugin (artifact workspace) after ports of brep tessellate/geometry places, flow retirement factories, editor close/step; batch p.
+
+## Work accounting + os-flow-extensions fix (latest)
+- `semio-framework-os-flow-extensions` GREEN again: wasm flow-primitive check flowext-flow-primitive-t rc 0, zero errors. The two reds (`take_work` placed inside the `ExtensionResourceOwner` impl; `RetainedEvaluation.work` private) are fixed in tree (inherent `pub(crate) take_work`, `pub(crate) work`).
+- Work accounting: `evaluation_admit_original`/`evaluation_child_close` take a `work:&mut u64` sink; evaluation cursor/context/completion/input-preparation/output/retained-evaluation/resources carry `work` + `take_work()` and bill it with `cx.consume_fuel` (invoke step, drive_original, resources close, retire_cancelled_evaluations_close_step). Brep tessellate, geometry inference and mesh operator-core do the same. No remaining `.result` that drops work in flow code.
+- Flow editor retirement test file ported to `.result`; native test runs: flowtest-ret1 (pending), whole-workspace native test timed out at 1 h (flowtest-art2), so per-package runs are used.
+
+## Activation freeze (19:50)
+- All my cargo/repo processes stopped. os-flow-extensions compiles (flowext-flow-primitive-t rc 0).
+- flow-brep (flowext-flow-brep-u rc 1) has ONE open error from my work-accounting edit: `semio_framework_value::geometry_close_ticket` in brep `💡️inferences/📐️geometry/🦀️.rs:71` (regex left the module prefix). Patch ready, apply after the freeze: `python3 C/1101-tools/flowext/patches/geometry-close-ticket.py`, then rerun `run.sh <tag> flow-brep`. Flow tests (ret2 etc.) not yet run. brep is not in the demonstrator closure path of activation unless the freeze note says otherwise.
+
+## Post-freeze verification
+- geometry_close_ticket error already fixed in tree. Hub check flowext-hub-1: no flow crate red (reds are fem-3d-editor, gis2d, procedural-3d, puzzle-2d/5d only).
+- Wasm check of all 9 extensions (flowext-flow-{list,text,math,logic,dictionary,draw,brep,bim,primitive}-v): all rc 0. Native tests still not run.

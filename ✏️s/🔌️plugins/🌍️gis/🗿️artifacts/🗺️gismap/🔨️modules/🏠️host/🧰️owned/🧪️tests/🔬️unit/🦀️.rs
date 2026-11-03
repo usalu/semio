@@ -27,7 +27,7 @@ fn sample_feature(id: &str) -> MapFeature {
 
 fn retire_owned_exact<T>(factory: &dyn store::ArtifactOwnedValueRetirementFactory<T>, value: T) -> Box<dyn store::ErasedSnapshotRetirement> {
     let birth = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: factory.retirement_birth_bytes(&value), maximum_release_bytes: 0, maximum_depth: 2 };
-    match factory.retire_owned(value, birth) {
+    match factory.retire_owned(value, birth).result {
         Ok((owner, receipt)) => {
             assert!(receipt.fits(birth));
             owner
@@ -70,6 +70,47 @@ fn empty_gis_map_initializer(operation: semio_framework_job::OperationId, genera
     gis_map_initializer(envelope, operation, generation)
 }
 
+#[global_allocator]
+static GIS_TEST_HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
+
+const ORIGINAL_STOCK: semio_framework_job::RetainedCloneGrant = semio_framework_job::RetainedCloneGrant { maximum_items: 1 << 24, maximum_copy_bytes: 1 << 30, maximum_capacity_bytes: 1 << 30, maximum_release_bytes: 1 << 30, maximum_depth: 4_096 };
+
+/// 🎟️ One original fixture caller with its decode owner: every GIS initializer turn runs under the Job's original issuer.
+struct GisOriginalTurns {
+    caller: semio_framework_job::OriginalJobFixtureCaller,
+    decoder: semio_framework_job::OriginalJobDecodeOwner,
+}
+
+impl GisOriginalTurns {
+    fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> Self {
+        Self { caller: semio_framework_job::OriginalJobFixtureCaller::admit(operation, generation, ORIGINAL_STOCK, || Some(0), u64::MAX, 1 << 40), decoder: semio_framework_job::OriginalJobDecodeOwner::empty() }
+    }
+
+    fn turn<R>(&mut self, grant: semio_framework_job::RetainedCloneGrant, advance: impl FnOnce(&mut semio_framework_job::StepContext<'_>) -> Result<R, semio_framework_job::OriginalTurnFailure>) -> R {
+        self.caller.turn_with_decoder(grant, &mut self.decoder, advance).expect("GIS original turn")
+    }
+
+    fn finish(mut self) {
+        for _ in 0..4_096 {
+            if self.decoder.terminal_is_empty() {
+                break;
+            }
+            let decoder = &mut self.decoder;
+            self.caller
+                .turn(ORIGINAL_STOCK, |cx| {
+                    let turn = decoder.close_step(cx.retained_grant());
+                    let step = turn.result?;
+                    cx.consume_retained(step.progress())?;
+                    cx.consume_fuel(turn.work);
+                    Ok(())
+                })
+                .expect("GIS decode owner closes");
+        }
+        assert!(self.decoder.terminal_is_empty());
+        self.caller.retire(ORIGINAL_STOCK);
+    }
+}
+
 #[derive(Debug, PartialEq, Eq)]
 enum GisDriveEnd {
     Complete,
@@ -78,18 +119,18 @@ enum GisDriveEnd {
 }
 
 fn drive_gis_map_initializer(authority: &mut GisMapStoreInitializationAuthority, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> GisDriveEnd {
-    let cancel = semio_framework_job::root_cancel_token();
-    let mut preview_sequence = 0;
+    let mut turns = GisOriginalTurns::new(operation, generation);
     for _ in 0..100_000 {
-        let mut context_retained = semio_framework_job::RetainedCloneProgress::default();
-        let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(4_096, u64::MAX, UNBOUNDED_STEP_GRANT), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence, &mut context_retained);
-        let end = match semio_framework_plugin::ArtifactStoreInitializationAuthority::step(authority, &mut context).expect("GIS initializer turn") {
-            Some(semio_framework_job::JobOutcomeBorrow::Complete { .. }) => Some(GisDriveEnd::Complete),
-            Some(semio_framework_job::JobOutcomeBorrow::Cancelled { .. }) => Some(GisDriveEnd::Cancelled),
-            Some(semio_framework_job::JobOutcomeBorrow::Fault { .. }) => Some(GisDriveEnd::Fault),
-            _ => None,
-        };
+        let end = turns.turn(ORIGINAL_STOCK, |context| {
+            Ok(match semio_framework_plugin::ArtifactStoreInitializationAuthority::step(authority, context)? {
+                Some(semio_framework_job::JobOutcomeBorrow::Complete { .. }) => Some(GisDriveEnd::Complete),
+                Some(semio_framework_job::JobOutcomeBorrow::Cancelled { .. }) => Some(GisDriveEnd::Cancelled),
+                Some(semio_framework_job::JobOutcomeBorrow::Fault { .. }) => Some(GisDriveEnd::Fault),
+                _ => None,
+            })
+        });
         if let Some(end) = end {
+            turns.finish();
             return end;
         }
     }
@@ -98,17 +139,18 @@ fn drive_gis_map_initializer(authority: &mut GisMapStoreInitializationAuthority,
 
 fn close_gis_map_initializer(authority: &mut GisMapStoreInitializationAuthority) {
     use semio_framework_plugin::ArtifactStoreInitializationAuthority;
-    let cancel = semio_framework_job::root_cancel_token();
-    let mut preview_sequence = 0;
+    let mut turns = GisOriginalTurns::new(semio_framework_job::OperationId(0), semio_framework_job::Generation(0));
     for _ in 0..100_000 {
         if authority.terminal_is_empty() {
+            turns.finish();
             return;
         }
         authority.begin_close();
         let grant = grant_for(authority.retirement_demands(GIS_MAP_OWNED_FIELD_BYTES).expect("GIS initializer close quote"));
-        let mut retained = semio_framework_job::RetainedCloneProgress::default();
-        let mut context = semio_framework_job::StepContext::new(semio_framework_job::OperationId(0), semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX, grant), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence, &mut retained);
-        authority.close_step(&mut context).expect("GIS initializer close step");
+        turns.turn(grant, |context| {
+            authority.close_step(context).expect("GIS initializer close step");
+            Ok(())
+        });
     }
     panic!("GIS initializer did not reach terminal-empty close")
 }
@@ -123,7 +165,7 @@ fn close_gis_map_candidate(mut candidate: store::ArtifactStore<GisMapSnapshot, G
             drop(candidate);
             return;
         }
-        let demand = disposer.retirement_demands(&candidate, 0).expect("GIS candidate close quote");
+        let demand = disposer.retirement_demands(&candidate, GIS_MAP_OWNED_FIELD_BYTES).expect("GIS candidate close quote");
         let grant = grant_for(demand);
         match disposer.close_step(&mut candidate, grant).expect("GIS candidate close step") {
             semio_framework_plugin::PluginLifecycleStep::Progress(progress) | semio_framework_plugin::PluginLifecycleStep::Complete(progress) => assert!(progress.fits(grant)),
@@ -160,7 +202,7 @@ fn gis_map_store_initializer_cancel_and_stale_generation_return_every_owner_term
     drop(cancelled);
 
     let mut stale = empty_gis_map_initializer(operation, generation);
-    assert_eq!(drive_gis_map_initializer(&mut stale, operation, semio_framework_job::Generation(generation.0 + 1)), GisDriveEnd::Fault);
+    assert_eq!(drive_gis_map_initializer(&mut stale, operation, semio_framework_job::Generation(generation.0 + 1)), GisDriveEnd::Cancelled);
     close_gis_map_initializer(&mut stale);
     assert!(semio_framework_plugin::ArtifactStoreInitializationAuthority::terminal_is_empty(&stale));
     drop(stale);
@@ -171,7 +213,7 @@ fn gis_map_nested_value_mutation_and_all_child_handles_retire_one_owner_per_gran
     fn drain(mut retirement: Box<dyn store::ErasedSnapshotRetirement>) {
         for _ in 0..10_000 {
             let grant = grant_for(retirement.next_demand(GIS_MAP_OWNED_FIELD_BYTES).expect("one nested GIS owner quotes its turn"));
-            match retirement.close_step(grant).expect("one nested GIS owner retires") {
+            match retirement.close_step(grant).result.expect("one nested GIS owner retires") {
                 semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) => assert!(progress.fits(grant)),
                 semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress) => {
                     assert!(progress.fits(grant));
@@ -221,10 +263,10 @@ fn gis_map_all_twelve_mutation_variants_preserve_catalog_order_and_zero_grant_ow
     for mutation in mutations {
         let mut retirement = retire_owned_exact(&GisMapMutationRetirementFactory, mutation);
         let zero = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 0, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 8 };
-        assert!(matches!(retirement.close_step(zero).expect("zero-grant GIS retirement"), semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) if progress == Default::default()));
+        assert!(matches!(retirement.close_step(zero).result.expect("zero-grant GIS retirement"), semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) if progress == Default::default()));
         for _ in 0..1_000 {
             let grant = grant_for(retirement.next_demand(GIS_MAP_OWNED_FIELD_BYTES).expect("one catalog owner quotes its turn"));
-            if matches!(retirement.close_step(grant).expect("one catalog owner retires"), semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) {
+            if matches!(retirement.close_step(grant).result.expect("one catalog owner retires"), semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) {
                 break;
             }
         }
@@ -264,20 +306,25 @@ async fn the_initialization_candidate_projects_its_canonical_child_handles() {
         let operation = semio_framework_job::OperationId(u64::MAX - 401);
         let generation = semio_framework_job::Generation(61);
         let mut authority = gis_map_initializer(envelope, operation, generation);
-        let cancel = semio_framework_job::CancelToken::root_now();
-        let mut preview_sequence = 0;
+        let mut turns = GisOriginalTurns::new(operation, generation);
         let mut complete = false;
         for _ in 0..200_000 {
-            let mut cx_retained = semio_framework_job::RetainedCloneProgress::default();
-            let mut cx = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX, UNBOUNDED_STEP_GRANT), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence, &mut cx_retained);
-            match ArtifactStoreInitializationAuthority::step(&mut authority, &mut cx).expect("GIS initializer turn") {
-                Some(semio_framework_job::JobOutcomeBorrow::Complete { .. }) => {
+            let end = turns.turn(ORIGINAL_STOCK, |cx| {
+                Ok(match ArtifactStoreInitializationAuthority::step(&mut authority, cx)? {
+                    Some(semio_framework_job::JobOutcomeBorrow::Complete { .. }) => Some(GisDriveEnd::Complete),
+                    Some(semio_framework_job::JobOutcomeBorrow::Cancelled { .. }) => Some(GisDriveEnd::Cancelled),
+                    Some(semio_framework_job::JobOutcomeBorrow::Fault { .. }) => Some(GisDriveEnd::Fault),
+                    _ => None,
+                })
+            });
+            match end {
+                Some(GisDriveEnd::Complete) => {
                     complete = true;
                     break;
                 }
-                Some(semio_framework_job::JobOutcomeBorrow::Cancelled { .. }) => panic!("{label} initializer cancelled"),
-                Some(semio_framework_job::JobOutcomeBorrow::Fault { .. }) => panic!("{label} initializer faulted"),
-                _ => {}
+                Some(GisDriveEnd::Cancelled) => panic!("{label} initializer cancelled"),
+                Some(GisDriveEnd::Fault) => panic!("{label} initializer faulted"),
+                None => {}
             }
             if let Some(early) = ArtifactStoreInitializationAuthority::take_candidate(&mut authority) {
                 let early_root = early.snapshot_root();
@@ -288,6 +335,7 @@ async fn the_initialization_candidate_projects_its_canonical_child_handles() {
             }
         }
         assert!(complete, "{label} initializer converges");
+        turns.finish();
 
         let candidate = ArtifactStoreInitializationAuthority::take_candidate(&mut authority).unwrap_or_else(|| panic!("{label} candidate handoff"));
         {

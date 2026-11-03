@@ -455,7 +455,7 @@ impl ApplicationReceiver {
                     cx.consume_retained(receipt(demand))?;
                     cx.consume_fuel(1);
                 } else {
-                    semio_framework_job::close_original_retained_step(cx, demand, |grant| self.close_source(grant))?;
+                    semio_framework_job::close_original_retained_step(cx, demand, |grant| semio_framework_value::RetainedWorkOutcome { result: self.close_source(grant), work: 1 })?;
                 }
                 return Ok(matches!(self.phase, Phase::Ready));
             }
@@ -485,9 +485,9 @@ impl ApplicationReceiver {
     }
     fn close_source(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if !self.retirement.is_empty() {
-            self.retirement.step_granted(grant)
+            self.retirement.step_granted(grant).result
         } else {
-            self.retirement.begin_granted(&mut self.source, grant)?.ok_or_else(|| invalid("Template source close omitted its owner"))
+            self.retirement.begin_granted(&mut self.source, grant).result?.ok_or_else(|| invalid("Template source close omitted its owner"))
         }
     }
     pub fn begin_close(&mut self) {
@@ -520,19 +520,19 @@ impl ApplicationReceiver {
             return self.receiver.close_step(grant);
         }
         if !self.retirement.is_empty() {
-            return self.retirement.step_granted(grant);
+            return self.retirement.step_granted(grant).result;
         }
         if self.input.is_some() {
-            return self.retirement.begin_granted(&mut self.input, grant)?.ok_or_else(|| invalid("Template input close omitted its owner"));
+            return self.retirement.begin_granted(&mut self.input, grant).result?.ok_or_else(|| invalid("Template input close omitted its owner"));
         }
         if self.value.is_some() {
-            return self.retirement.begin_granted(&mut self.value, grant)?.ok_or_else(|| invalid("Template value close omitted its owner"));
+            return self.retirement.begin_granted(&mut self.value, grant).result?.ok_or_else(|| invalid("Template value close omitted its owner"));
         }
         if self.pending.is_some() {
-            return self.retirement.begin_granted(&mut self.pending, grant)?.ok_or_else(|| invalid("Template entry close omitted its owner"));
+            return self.retirement.begin_granted(&mut self.pending, grant).result?.ok_or_else(|| invalid("Template entry close omitted its owner"));
         }
         if self.output.is_some() {
-            return self.retirement.begin_granted(&mut self.output, grant)?.ok_or_else(|| invalid("Template output close omitted its owner"));
+            return self.retirement.begin_granted(&mut self.output, grant).result?.ok_or_else(|| invalid("Template output close omitted its owner"));
         }
         self.close_source(grant)
     }

@@ -34,7 +34,6 @@ semio-s-artifact-stdio-gltf = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }
 semio-s-artifact-stdio-obj = { workspace = true }
 semio-s-artifact-stdio-step = { workspace = true }
-semio-s-artifact-stdio-step-geometry = { workspace = true }
 semio-s-artifact-stdio-stl = { workspace = true }
 serde_json = { workspace = true }
 

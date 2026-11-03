@@ -71,6 +71,7 @@ pub use registered_app_construction_and_typed_operation_settlement::{
     capture_fixture_window_config, close_registered_fixture_app, drain_store_displaced_retirements,
     fixture_close_grant, meta, new_app, new_app_with_registry, new_app_with_registry_and_members,
     new_registered_app, new_registered_app_with_members,
+    publish_framework_schemas,
     register_framework_reserved_action_factories, retain_original_ownership_receipts,
     settle_extension_invocations, settle_registered_typed_operation, settle_store_constructor,
     settle_store_constructor_close, PendingExtensionInvocation, SettledExtensionInvocations,

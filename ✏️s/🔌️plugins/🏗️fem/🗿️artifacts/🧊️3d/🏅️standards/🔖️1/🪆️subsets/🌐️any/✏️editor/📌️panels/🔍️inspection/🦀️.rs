@@ -50,8 +50,8 @@ use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structur
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemElement;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoad;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoadCase;
-use semio_s_fem_material::volumetric::FemMaterialValue;
-use semio_s_fem_node::volumetric::FemNodeValue;
+use semio_s_fem_material::volumetric::FemMaterial;
+use semio_s_fem_node::volumetric::FemNode;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSection;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSolid;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSupport;
@@ -195,7 +195,7 @@ fn select_row(suffix: &str, label: &str, value: &str, options: Vec<(String, Stri
 
 //#region 🔖️Entities
 fn node_options(doc: &Fem3dSnapshot) -> Vec<(String, String)> {
-    doc.nodes.iter().map(|node| (node.id.clone(), node.id.clone())).collect()
+    doc.nodes.iter().map(|node| (node.id.as_str().to_owned(), node.id.as_str().to_owned())).collect()
 }
 
 fn element_options(doc: &Fem3dSnapshot) -> Vec<(String, String)> {
@@ -203,7 +203,7 @@ fn element_options(doc: &Fem3dSnapshot) -> Vec<(String, String)> {
 }
 
 fn material_options(doc: &Fem3dSnapshot) -> Vec<(String, String)> {
-    doc.materials.iter().map(|material| (material.id.clone(), material.name.clone())).collect()
+    doc.materials.iter().map(|material| (material.id.as_str().to_owned(), material.name.as_str().to_owned())).collect()
 }
 
 fn section_options(doc: &Fem3dSnapshot) -> Vec<(String, String)> {
@@ -220,12 +220,12 @@ fn axis_options() -> Vec<(String, String)> {
 //#endregion 🔖️Entities
 
 //#region 🔖️Sections
-fn node_rows(node: &FemNodeValue, labels: &Fem3dLabels) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+fn node_rows(node: &FemNode, labels: &Fem3dLabels) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
     let mut rows = UiFixedList::default();
-    push(&mut rows, read_only_row("node.id", labels.id.as_str(), &node.id))?;
-    push(&mut rows, number_row("node.x", labels.x.as_str(), node.x, 0.1, "patchNode", "x", &node.id))?;
-    push(&mut rows, number_row("node.y", labels.y.as_str(), node.y, 0.1, "patchNode", "y", &node.id))?;
-    push(&mut rows, number_row("node.z", labels.z.as_str(), node.z, 0.1, "patchNode", "z", &node.id))?;
+    push(&mut rows, read_only_row("node.id", labels.id.as_str(), node.id.as_str()))?;
+    push(&mut rows, number_row("node.x", labels.x.as_str(), node.x, 0.1, "patchNode", "x", node.id.as_str()))?;
+    push(&mut rows, number_row("node.y", labels.y.as_str(), node.y, 0.1, "patchNode", "y", node.id.as_str()))?;
+    push(&mut rows, number_row("node.z", labels.z.as_str(), node.z, 0.1, "patchNode", "z", node.id.as_str()))?;
     Ok(rows)
 }
 
@@ -248,14 +248,14 @@ fn element_rows(doc: &Fem3dSnapshot, element: &FemElement, labels: &Fem3dLabels)
     Ok(rows)
 }
 
-fn material_rows(material: &FemMaterialValue, labels: &Fem3dLabels) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+fn material_rows(material: &FemMaterial, labels: &Fem3dLabels) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
     let mut rows = UiFixedList::default();
-    push(&mut rows, read_only_row("material.id", labels.id.as_str(), &material.id))?;
-    push(&mut rows, text_row("material.name", labels.name.as_str(), &material.name, "patchMaterial", "name", &material.id))?;
-    push(&mut rows, number_row("material.e", labels.youngs_modulus.as_str(), material.e, 1e9, "patchMaterial", "e", &material.id))?;
-    push(&mut rows, number_row("material.g", labels.shear_modulus.as_str(), material.g, 1e9, "patchMaterial", "g", &material.id))?;
-    push(&mut rows, slider_row("material.nu", labels.poisson_ratio.as_str(), material.nu, (0.0, 0.49, 0.01), "patchMaterial", "nu", &material.id))?;
-    push(&mut rows, number_row("material.rho", labels.density.as_str(), material.rho, 10.0, "patchMaterial", "rho", &material.id))?;
+    push(&mut rows, read_only_row("material.id", labels.id.as_str(), material.id.as_str()))?;
+    push(&mut rows, text_row("material.name", labels.name.as_str(), material.name.as_str(), "patchMaterial", "name", material.id.as_str()))?;
+    push(&mut rows, number_row("material.e", labels.youngs_modulus.as_str(), material.e, 1e9, "patchMaterial", "e", material.id.as_str()))?;
+    push(&mut rows, number_row("material.g", labels.shear_modulus.as_str(), material.g, 1e9, "patchMaterial", "g", material.id.as_str()))?;
+    push(&mut rows, slider_row("material.nu", labels.poisson_ratio.as_str(), material.nu, (0.0, 0.49, 0.01), "patchMaterial", "nu", material.id.as_str()))?;
+    push(&mut rows, number_row("material.rho", labels.density.as_str(), material.rho, 10.0, "patchMaterial", "rho", material.id.as_str()))?;
     Ok(rows)
 }
 
@@ -478,7 +478,7 @@ pub fn render(doc: &Fem3dSnapshot, interaction: &Fem3dInteractionSnapshot, label
     }
     builder = match kind {
         FEM3D_GRANULARITY_NODE => {
-            let node = doc.nodes.iter().find(|node| node.id == id).ok_or_else(|| ui_error("ui.document"))?;
+            let node = doc.nodes.iter().find(|node| node.id.as_str() == id).ok_or_else(|| ui_error("ui.document"))?;
             builder.section(format!("{ROOT}.node"), Some(ui_label(labels.node.as_str())?), true, node_rows(node, labels)?)?
         }
         FEM3D_GRANULARITY_ELEMENT => {
@@ -490,7 +490,7 @@ pub fn render(doc: &Fem3dSnapshot, interaction: &Fem3dInteractionSnapshot, label
             builder.section(format!("{ROOT}.solid"), Some(ui_label(labels.solid.as_str())?), true, solid_rows(doc, solid, labels)?)?
         }
         FEM3D_GRANULARITY_MATERIAL => {
-            let material = doc.materials.iter().find(|material| material.id == id).ok_or_else(|| ui_error("ui.document"))?;
+            let material = doc.materials.iter().find(|material| material.id.as_str() == id).ok_or_else(|| ui_error("ui.document"))?;
             builder.section(format!("{ROOT}.material"), Some(ui_label(labels.material.as_str())?), true, material_rows(material, labels)?)?
         }
         FEM3D_GRANULARITY_SECTION => {

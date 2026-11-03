@@ -244,7 +244,7 @@ impl DocumentSceneCursor{
   self.last_turn_work=0;self.last_turn_semantic_work=0;if budget==0||budget as u128>9_007_199_254_740_991{return Err(preparation_invalid("Invalid scene preparation work grant"));}if self.cancelled{return Err(DocumentSceneError::Cancelled);}if let Some(error)=&self.failure{return Err(error.clone());}
   let d=self.pending;if !work.admits_absolute(d){work.require_absolute(d);return Ok(self.progress());}
   let Some(root)=work.enter()else{self.pending=work.next_demand();return Ok(self.progress());};
-  let result=(||{for _ in 0..budget{if self.phase=="complete"{break;}if !work.can_step(){break;}let before=work.receipt();self.step_work=0;let exhausted=self.progress.work>=self.limits.max_work&&!settling&&!self.settlement_pending();let result=if exhausted{Err(DocumentSceneError::literal("Document vector work limit exceeded"))}else{self.step(document,work)};let semantic=result.as_ref().copied().unwrap_or(true);let actual=semantic||self.step_work>0||work.receipt()!=before;if actual{work.note_source(root);self.last_turn_work+=1;}if semantic{self.work+=1;self.last_turn_semantic_work+=1;}self.pending=work.next_demand();if let Err(error)=result{self.failure=Some(error.clone());return Err(error);}if work.blocked(){break;}}Ok(self.progress())})();work.exit();result
+  let result=(||{for _ in 0..budget{if self.phase=="complete"{break;}if !work.can_step(){break;}let before=work.receipt();self.step_work=0;let result=self.step(document,work);let semantic=result.as_ref().copied().unwrap_or(true);let actual=semantic||self.step_work>0||work.receipt()!=before;if actual{work.note_source(root);self.last_turn_work+=1;}if semantic{self.work+=1;self.last_turn_semantic_work+=1;}self.pending=work.next_demand();if let Err(error)=result{self.failure=Some(error.clone());return Err(error);}if work.blocked(){break;}}Ok(self.progress())})();work.exit();result
  }
  fn into_retirement(mut self)->(DocumentSceneRetirement,Option<DocumentScenePlan>){let output=if self.phase=="complete"&&!self.cancelled&&self.failure.is_none(){Some(std::mem::take(&mut self.plan))}else{None};self.cancelled=true;(DocumentSceneRetirement::new(self),output)}
  pub fn cancel(&mut self){self.cancelled=true;}
@@ -401,7 +401,7 @@ impl<'a> DocumentVectorJob<'a>{
    let settling=self.failure_pending();let before=work.receipt();let before_cpu=self.last_turn_work;let before_semantic=self.last_turn_semantic_work;self.step_semantic=false;self.step_cpu=false;let entered=work.enter();
    if entered.is_none(){self.pending=work.next_demand();break;}
    let result=self.step(document,work);let child_cpu=self.last_turn_work-before_cpu;let child_semantic=self.last_turn_semantic_work-before_semantic;let actual=child_cpu>0||work.receipt()!=before||self.step_cpu||result.is_err();
-   if actual{work.note_source(entered==Some(true));if child_cpu==0{self.last_turn_work+=1;}}if !settling&&!exhausted&&child_semantic==0&&(self.step_semantic||result.is_err()){self.last_turn_semantic_work+=1;}if !settling{self.progress.work+=self.last_turn_semantic_work-before_semantic;}work.exit();
+   if actual{work.note_source(entered==Some(true));if child_cpu==0{self.last_turn_work+=1;}}if !settling&&child_semantic==0&&(self.step_semantic||result.is_err()){self.last_turn_semantic_work+=1;}if !settling{self.progress.work+=self.last_turn_semantic_work-before_semantic;}work.exit();
    self.pending=work.next_demand();if let Err(error)=result{self.failure=Some(error.clone());return Err(error);}
    if work.blocked()||!actual{break;}
   }Ok(self.progress.clone())

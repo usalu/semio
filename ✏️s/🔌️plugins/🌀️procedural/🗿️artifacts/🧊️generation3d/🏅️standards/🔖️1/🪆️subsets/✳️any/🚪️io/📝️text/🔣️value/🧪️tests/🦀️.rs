@@ -6,19 +6,29 @@ use semio_s_artifact_procedural_3d_mut_widgets::change_widget_input::WidgetInput
 use semio_s_artifact_procedural_3d_mut_generations::select_generation::SelectGeneration;
 use semio_framework_value::{FromValue, ToValue};
 
+/// 🔢️ Compares JSON by numeric value: the codec writes `1.0` where the fixture writes `1`.
+fn canonical(value: serde_json::Value) -> serde_json::Value {
+    match value {
+        serde_json::Value::Number(number) => number.as_f64().and_then(serde_json::Number::from_f64).map_or(serde_json::Value::Number(number), serde_json::Value::Number),
+        serde_json::Value::Array(items) => serde_json::Value::Array(items.into_iter().map(canonical).collect()),
+        serde_json::Value::Object(entries) => serde_json::Value::Object(entries.into_iter().map(|(key, item)| (key, canonical(item))).collect()),
+        other => other,
+    }
+}
+
 #[test]
 fn value_codec_portable_witnesses() {
     let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../🔣️value/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let value = |key: &str| semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(&fixture[key].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());
     let oracle = |projection: &semio_framework_value::DslValue| serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(projection))).unwrap();
-    assert_eq!(oracle(&Localized::from_value(value("localized")).unwrap().to_value()), fixture["localized"]);
+    assert_eq!(canonical(oracle(&Localized::from_value(value("localized")).unwrap().to_value())), canonical(fixture["localized"].clone()));
     assert!(Localized::from_value(value("localizedUnknown")).is_err());
     for key in ["selectionOmitted", "selectionNull"] {
         assert_eq!(SelectGeneration::from_value(value(key)).unwrap().to_value(), value("selectionNull"));
     }
-    assert_eq!(oracle(&SelectGeneration::from_value(value("selectionNamed")).unwrap().to_value()), fixture["selectionNamed"]);
+    assert_eq!(canonical(oracle(&SelectGeneration::from_value(value("selectionNamed")).unwrap().to_value())), canonical(fixture["selectionNamed"].clone()));
     for key in ["inputNumber", "inputVector", "inputPlane"] {
-        assert_eq!(oracle(&WidgetInputValue::from_value(value(key)).unwrap().to_value()), fixture[key]);
+        assert_eq!(canonical(oracle(&WidgetInputValue::from_value(value(key)).unwrap().to_value())), canonical(fixture[key].clone()));
     }
     for key in ["inputMissing", "inputForged", "inputShortVector"] {
         assert!(WidgetInputValue::from_value(value(key)).is_err(), "{key}");
@@ -52,7 +62,7 @@ fn widget_descriptor_io_admission_precedes_native_creation() {
             let leaves = editor.finish();
             assert_eq!(leaves.len(), if accepted { 2 } else { 0 }, "only admitted descriptors author creation and placement");
             for leaf in leaves { leaf.retire_cold(); }
-        });
+        }).unwrap();
     }
     base.retire_cold();
 }

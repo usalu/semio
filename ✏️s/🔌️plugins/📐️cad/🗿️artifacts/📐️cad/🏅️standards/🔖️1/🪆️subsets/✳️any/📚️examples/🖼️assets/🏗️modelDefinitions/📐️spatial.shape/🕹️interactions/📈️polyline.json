@@ -2,7 +2,10 @@
   "schema": "spatial.interaction",
   "id": "curve.polyline",
   "version": "1.0.0",
-  "label": "Polyline",
+  "label": {
+    "native": { "en": "Polyline", "de": "Polylinie" },
+    "reuse": { "en": "Polyline", "de": "Polylinie" }
+  },
   "interaction": {
     "spatialGroundPick": true,
     "pickDisabledStates": ["idle", "committed"],
@@ -34,7 +37,10 @@
               {
                 "target": "start_of_polyline",
                 "key": "s",
-                "label": "Start",
+                "label": {
+                  "native": { "en": "Start", "de": "Start" },
+                  "reuse": { "en": "Start", "de": "Start" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -228,7 +234,10 @@
               {
                 "target": "committed",
                 "key": "c",
-                "label": "Close",
+                "label": {
+                  "native": { "en": "Close", "de": "Schließen" },
+                  "reuse": { "en": "Close", "de": "Schließen" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -256,7 +265,10 @@
               {
                 "target": "committed",
                 "key": "Enter",
-                "label": "Finish"
+                "label": {
+                  "native": { "en": "Finish", "de": "Fertig" },
+                  "reuse": { "en": "Finish", "de": "Fertig" }
+                }
               }
             ]
           },
@@ -266,7 +278,10 @@
               {
                 "target": "committed",
                 "key": "RightClick",
-                "label": "Finish"
+                "label": {
+                  "native": { "en": "Finish", "de": "Fertig" },
+                  "reuse": { "en": "Finish", "de": "Fertig" }
+                }
               }
             ]
           }
@@ -287,7 +302,10 @@
             "kind": "label",
             "id": "start_of_polyline-prompt",
             "role": "prompt",
-            "text": "Start of polyline",
+            "text": {
+              "native": { "en": "Start of polyline", "de": "Anfang der Polylinie" },
+              "reuse": { "en": "Start of polyline", "de": "Anfang der Polylinie" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]
@@ -390,7 +408,10 @@
             "kind": "label",
             "id": "next_point_of_polyline-prompt",
             "role": "prompt",
-            "text": "Next point of polyline",
+            "text": {
+              "native": { "en": "Next point of polyline", "de": "Nächster Punkt der Polylinie" },
+              "reuse": { "en": "Next point of polyline", "de": "Nächster Punkt der Polylinie" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]

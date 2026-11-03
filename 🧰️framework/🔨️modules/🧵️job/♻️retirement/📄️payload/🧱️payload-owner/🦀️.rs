@@ -21,7 +21,7 @@ impl RetainedJobPayload {
         let demand=match self.retirement_demands(){Ok(demand)=>demand,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};
         if !crate::retained_clone::retained_clone_grant_admits(grant,demand){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0};}
         if self.page_count==0{return close_ledger(&mut self.ledger,grant);}
-        let page=self.pop_page().unwrap();let extent=page.source.allocated_capacity_bytes();if let Some(ledger)=self.ledger.as_ref(){ledger.release(self.stream,extent);}drop(page);
+        let Some(page)=self.pop_page()else{return RetainedWorkOutcome{result:Err(semio_framework_value_retained_clone::ValueError::invariant("payload page count exceeds its pages")),work:0}};let extent=page.source.allocated_capacity_bytes();if let Some(ledger)=self.ledger.as_ref(){ledger.release(self.stream,extent);}drop(page);
         RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:extent,..Default::default()})),work:1}
     }
 }

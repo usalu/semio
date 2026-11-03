@@ -61,7 +61,7 @@ async fn live_object_selection_renders_its_fields() {
     let object = &working.building_objects[0];
     let json = forest_object_panel(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), &[object.id.as_str()]);
     assert!(json.contains(&object.id), "{json}");
-    assert!(json.contains(&object.label));
+    assert!(json.contains(&semio_s_artifact_cad_cad_kit::editor::cad::terminology::object_name(object, None)));
     assert!(json.contains("cad-play-inspector.object.origin"));
     assert!(json.contains("cad-play-inspector.object.primitives"));
     assert!(json.contains("building"), "the pane row names the object's home pane");

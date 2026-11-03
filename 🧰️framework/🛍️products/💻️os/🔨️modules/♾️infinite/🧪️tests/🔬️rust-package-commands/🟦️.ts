@@ -12,7 +12,7 @@ import { withRepositoryCacheStoreV1 } from "../../../../../🦑️repo/🔨️mo
 import { withRepositoryPublishedCargoExecutableV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🦀️cargo/🟦️.ts";
 import { scriptInvocationEnvironment } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { readBuildMode } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
-import { scriptCompilerAdmissionControlV1, acquireCompilerCapacityLeaseV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import { scriptCompilerAdmissionControlV1, requestedCompilerAdmissionControlV1, acquireCompilerCapacityLeaseV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { captureOwnedCommandResultV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️owned-execution/🟦️.ts";
 import { fontAssetPublicationRootV1 } from "../../../../../../🔨️modules/🖼️canvas/📦️packages/🟦️typescript/🔤️fonts/📦️publication/🟦️.ts";
 import fontStorageSchema from "../../🔤️fonts/👓️reading/🧬️schema/🔣️.json" with { type: "json" };
@@ -28,14 +28,14 @@ const FONT_TOOL = "pack-typst-font-assets";
 export class FontsScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("fonts takes no arguments");
-    const workspace = this.repoRoot, mode = readBuildMode(process.env.SEMIO_BUILD_MODE), authority = readNativeCallerAuthorityV1(this.invocation.capabilities), phaseControl = scriptCompilerAdmissionControlV1(this.invocation, "font-assets:publication", fontProtocol.maximumElapsedMilliseconds), manifest = resolve(workspace, "🧰️framework/🔨️modules/🖼️canvas/🔤️fonts/📦️packages/🦀️rust/Cargo.toml"), owner = relative(workspace, ROOT).replaceAll("\\", "/");
+    const workspace = this.repoRoot, mode = readBuildMode(process.env.SEMIO_BUILD_MODE), authority = readNativeCallerAuthorityV1(this.invocation.capabilities), phaseControl = scriptCompilerAdmissionControlV1(this.invocation, "font-assets:publication", 0), manifest = resolve(workspace, "🧰️framework/🔨️modules/🖼️canvas/🔤️fonts/📦️packages/🦀️rust/Cargo.toml"), owner = relative(workspace, ROOT).replaceAll("\\", "/");
     if (mode !== authority.original.buildMode) throw new Error("Original font asset build mode required");
     const lease = await acquireCompilerCapacityLeaseV1({ directory: join(workspace, ".cache/b/l/m/data"), control: phaseControl, environment: scriptInvocationEnvironment(this.invocation, {}), request: { kind: "exact", parallelism: 1 } });
     try { await withRepositoryCacheStoreV1(workspace, "products", this.invocation, phaseControl,products => withRepositoryCacheStoreV1(workspace, "diagnostics", this.invocation, products.control,diagnostics => withArtifactScratchV1({ workspace, invocation: this.invocation, storage: diagnostics.storage, control: diagnostics.control, phaseControl, request: { version: 1, mode, owner } }, destination => withArtifactDestinationTaskV1(destination, this.invocation, async sink => {
       const asset = join(sink.directory, FONT_ASSET);
       await withRepositoryPublishedCargoExecutableV1(manifest, FONT_TOOL + (process.platform === "win32" ? ".exe" : ""), workspace, mode, this.invocation, sink.control, async (artifact, control) => {
         const environment = scriptInvocationEnvironment(this.invocation, { ...artifact.environment, ...sink.environment });
-        const result = await captureOwnedCommandResultV1(artifact.path, [asset], ROOT, { control, env: environment, output: { maximumBytes: Math.min(1048576, authority.transport.maximumBytes), maximumLines: Math.min(65536, authority.transport.maximumLines) } });
+        const result = await captureOwnedCommandResultV1(artifact.path, [asset], ROOT, { control: requestedCompilerAdmissionControlV1(control, fontProtocol.maximumElapsedMilliseconds), env: environment, output: { maximumBytes: Math.min(1048576, authority.transport.maximumBytes), maximumLines: Math.min(65536, authority.transport.maximumLines) } });
         if (result.status !== 0 || result.signal !== null) throw new Error("Font asset tool failed: " + result.stderr.slice(-65536));
       });
       const facts = await lstat(asset);

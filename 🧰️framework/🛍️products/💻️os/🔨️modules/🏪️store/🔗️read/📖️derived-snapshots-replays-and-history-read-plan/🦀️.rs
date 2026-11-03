@@ -140,7 +140,7 @@ impl<P, Mu: Mutation<P>> ArtifactDerivedHistoryPreview<P, Mu> {
 /// 📤️ Transfers the completed projection while retaining every original input and planner residue.
     pub fn take_finished_snapshot_owner(&mut self)->Result<Arc<P>,VcsError> {
         if !self.finished{return Err(VcsError::HistoryReplaying);}
-        self.state.take().ok_or(VcsError::HistoryReplaying)
+        self.state.take().ok_or_else(||VcsError::HistoryReplaying)
     }
 
     pub fn retain_completed_plan(&mut self)->usize {

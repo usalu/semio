@@ -4,7 +4,7 @@ camera {
   x=140 y=-60 zoom=2.2
 }
 layout={
-  distance=x=120 y=20 extrude=x=280 y=-40 height=x=40 y=-20 rect=x=120 y=-40 vector=x=200 y=20 volume=x=360 y=-40 width=x=40 y=-60
+  distance={x=120 y=20} extrude={x=280 y=-40} height={x=40 y=-20} rect={x=120 y=-40} vector={x=200 y=20} volume={x=360 y=-40} width={x=40 y=-60}
 }
 synapses [id:TEXT wire:WIRE] {
   e1 width@number->rect@width

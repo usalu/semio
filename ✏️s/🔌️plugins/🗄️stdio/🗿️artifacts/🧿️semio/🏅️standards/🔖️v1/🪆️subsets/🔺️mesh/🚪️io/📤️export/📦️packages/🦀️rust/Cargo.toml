@@ -26,10 +26,9 @@ semio-s-artifact-stdio-dwg-geometry = { workspace = true }
 semio-s-artifact-stdio-dwg-snapshot = { workspace = true }
 semio-s-artifact-stdio-semio-base = { workspace = true }
 semio-s-artifact-stdio-semio-drawing = { workspace = true }
-semio-s-artifact-stdio-semio-drawing-export = { workspace = true }
+semio-s-artifact-stdio-semio-drawing-png-export = { workspace = true }
 semio-s-artifact-stdio-semio-mesh = { workspace = true }
 # 🧩️ Capability Dependencies
-semio-s-artifact-stdio-dwg-model = { workspace = true }
 semio-s-artifact-stdio-dwg-write = { workspace = true }
 semio-s-artifact-stdio-gltf-model = { workspace = true }
 semio-s-artifact-stdio-las = { workspace = true }

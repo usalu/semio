@@ -1,7 +1,7 @@
 //! 🧪️ Actual reference metadata and original input custody obey denied loans and cancellation.
 use super::super::DetailsTestProfile;
 use super::*;
-use semio_framework_plugin::app_testing::OriginalWorkFixture;
+use semio_framework_plugin::plugin_app_close_prelude::OriginalWorkFixture;
 fn grant() -> RetainedCloneGrant {
     RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 65_536, maximum_depth: 256, ..Default::default() }
 }

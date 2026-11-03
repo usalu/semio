@@ -14,9 +14,9 @@ impl semio_framework_dsl_record::BorrowedDslField for Octets {
 impl DslField for Octets{
  fn shape()->semio_framework_dsl_record::Shape{semio_framework_dsl_record::Shape::Bytes64}
  fn shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(control:&mut C)->Result<semio_framework_dsl_record::Shape,ValueError>{control.checkpoint()?;Ok(semio_framework_dsl_record::Shape::Bytes64)}
- fn to_value(&self)->semio_framework_dsl_record::FieldValue{semio_framework_dsl_record::FieldValue::Bytes64(self.0.clone())}
- fn to_value_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::FieldValue,ValueError>{control.copy_bytes(&self.0).map(semio_framework_dsl_record::FieldValue::Bytes64)}
- fn from_value(value:&semio_framework_dsl_record::FieldValue)->Result<Self,String>{match value{semio_framework_dsl_record::FieldValue::Bytes64(bytes)=>Ok(Self(bytes.clone())),_=>Err("Wires native octets differ".into())}}
+ fn to_value(&self)->semio_framework_dsl_record::FieldValue{semio_framework_dsl_record::FieldValue::Bytes64(semio_framework_value::paged::PagedBytes::try_from_slice(&self.0).unwrap_or_default())}
+ fn to_value_controlled(&self,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::FieldValue,ValueError>{semio_framework_value::paged::PagedBytes::copy_encoded(&self.0,control).map(semio_framework_dsl_record::FieldValue::Bytes64)}
+ fn from_value(value:&semio_framework_dsl_record::FieldValue)->Result<Self,String>{match value{semio_framework_dsl_record::FieldValue::Bytes64(bytes)=>Ok(Self(bytes.to_vec_owner())),_=>Err("Wires native octets differ".into())}}
  fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,ValueError>{match value{semio_framework_dsl_record::FieldValue::Bytes64(bytes)=>control.copy_bytes(bytes).map(Self),_=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"Wires native octets differ"))}}
 }
 #[derive(semio_framework_dsl_record_derive::DslRecord)]struct Member{name:String,value:u64}
@@ -78,7 +78,7 @@ use semio_framework_dsl_record::native_encoding::retire_field;
     semio_framework_value::DslValue::Number(Number::Int(value))=>{node.insert(3,semio_framework_dsl_record::FieldValue::Int(*value))?;Kind::Signed},
     semio_framework_value::DslValue::Number(Number::Float(value))=>{node.insert(4,semio_framework_dsl_record::FieldValue::Float(*value))?;Kind::Float},
     semio_framework_value::DslValue::String(value)=>{node.insert(5,semio_framework_dsl_record::FieldValue::Text(control.copy_text(value)?))?;Kind::Text},
-    semio_framework_value::DslValue::Bytes(value)=>{node.insert(6,semio_framework_dsl_record::FieldValue::Bytes64(control.copy_bytes(value)?))?;Kind::Bytes},
+    semio_framework_value::DslValue::Bytes(value)=>{node.insert(6,semio_framework_dsl_record::FieldValue::Bytes64(semio_framework_value::paged::PagedBytes::copy_encoded(value,control)?))?;Kind::Bytes},
     semio_framework_value::DslValue::Array(values)=>{items=fields(values.len(),control)?;control.scoped_stage(|control|{control.begin_stage(values.len())?;for _ in values{items.as_mut().push(semio_framework_dsl_record::FieldValue::UInt(next));next=next.checked_add(1).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Wires native node index overflow"))?;control.step()?;}Ok::<(),ValueError>(())})?;Kind::Array},
     semio_framework_value::DslValue::Object(values)=>{members=fields(values.len(),control)?;control.scoped_stage(|control|{control.begin_stage(values.len())?;for(name,_)in values{let mut member=semio_framework_dsl_record::native_encoding::EncodedRecord::new(2,control)?;member.insert(0,semio_framework_dsl_record::FieldValue::Text(control.copy_text(name)?))?;member.insert(1,semio_framework_dsl_record::FieldValue::UInt(next))?;next=next.checked_add(1).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Wires native node index overflow"))?;members.as_mut().push(semio_framework_dsl_record::FieldValue::Record(member.take()));control.step()?;}Ok::<(),ValueError>(())})?;Kind::Object},
    };

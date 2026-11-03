@@ -802,7 +802,7 @@ impl<E: LayoutRunOpEncoder> LayoutRunJob<E> {
     }
 
     fn retire_delivered<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, OriginalTurnFailure> {
-        let step = self.publication.close_step(cx.retained_grant()).map_err(|error| OriginalTurnFailure::debit_original(error, cx))?;
+        let step = self.publication.close_step(cx.retained_grant()).result.map_err(|error| OriginalTurnFailure::debit_original(error, cx))?;
         cx.consume_retained(step.progress())?;
         if self.publication.terminal_is_empty() {
             if let Some((_, bytes)) = self.staged.as_ref() {
@@ -849,8 +849,8 @@ enum LayoutRunTurn {
     Staged,
 }
 
-impl<E: LayoutRunOpEncoder> InteractiveJob for LayoutRunJob<E> {
-    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, OriginalTurnFailure> {
+impl<E: LayoutRunOpEncoder> LayoutRunJob<E> {
+    fn step_outcome<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, OriginalTurnFailure> {
         if self.delivered {
             return self.retire_delivered(cx);
         }
@@ -879,6 +879,15 @@ impl<E: LayoutRunOpEncoder> InteractiveJob for LayoutRunJob<E> {
             LayoutRunTurn::Complete => JobOutcomeBorrow::admit_complete(cx, None, None).map_err(Into::into),
         }
     }
+}
+
+impl<E: LayoutRunOpEncoder> InteractiveJob for LayoutRunJob<E> {
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>, _return_claim: &mut semio_framework_job::OriginalJobReturnClaim<'_>) -> semio_framework_job::InteractiveJobStep<'a> {
+        match self.step_outcome(cx) {
+            Ok(outcome) => semio_framework_job::InteractiveJobStep::Outcome(outcome),
+            Err(failure) => semio_framework_job::InteractiveJobStep::Continuation(failure),
+        }
+    }
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, ValueError> {
         match descriptor.kind() {
@@ -905,7 +914,7 @@ impl<E: LayoutRunOpEncoder> InteractiveJob for LayoutRunJob<E> {
         }
         cx.consume_fuel(1);
         let progress = if !self.publication.terminal_is_empty() {
-            self.publication.close_step(grant).map_err(|error| OriginalTurnFailure::debit_original(error, cx))?.progress()
+            self.publication.close_step(grant).result.map_err(|error| OriginalTurnFailure::debit_original(error, cx))?.progress()
         } else if let Some((_, bytes)) = self.staged.take() {
             let released_bytes = bytes.capacity();
             drop(bytes);

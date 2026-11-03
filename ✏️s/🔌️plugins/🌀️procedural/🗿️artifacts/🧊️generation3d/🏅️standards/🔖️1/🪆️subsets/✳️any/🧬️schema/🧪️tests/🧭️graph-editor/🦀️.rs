@@ -9,7 +9,7 @@ use semio_s_artifact_procedural_3d_mutations::central_apply::apply_generation3d_
 /// host applies on open is not mistaken for an edit.
 fn normalised_example(example: &str) -> Generation3dSnapshotRead {
     let mut snapshot = example_snapshot(example).expect("bundled example");
-    let host = with_host(&snapshot.host_snapshot, |host| host.host_snapshot.clone());
+    let host = with_host(&snapshot.host_snapshot, |host| host.host_snapshot.clone()).unwrap();
     std::mem::replace(&mut snapshot.host_snapshot, host).retire_cold();
     Generation3dSnapshotRead::new(snapshot)
 }
@@ -21,7 +21,7 @@ fn recorded_replay_reaches_the_host(base: &Generation3dSnapshotRead, edit: impl 
         edit(&mut editor);
         let expected = editor.snapshot().clone();
         (editor.finish(), expected)
-    });
+    }).unwrap();
     let mut replayed = Generation3dSnapshotRead::new((**base).clone());
     for leaf in &leaves {
         apply_generation3d_mutation(&mut replayed, leaf).unwrap_or_else(|refused| panic!("{leaf:?} refused: {refused:?}"));

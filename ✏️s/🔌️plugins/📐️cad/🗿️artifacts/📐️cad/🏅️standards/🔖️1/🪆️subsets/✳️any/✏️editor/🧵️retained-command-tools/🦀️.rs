@@ -159,7 +159,7 @@ pub(super) fn cad_retained_extent(command: &CadCommand, _snapshot: &CadSnapshot,
 /// the operation carries — the panes' composed model children the object writers decide against, the addressed
 /// window's engagement transient in and its next state out (design §17.4, §20.15).
 fn cad_retained_reduce(input: &ArtifactCommandInputs<'_, EditorApp<CadPlayApp>>) -> Result<(Emit<CadMutation, CadConfigMutation, NoDraftMutation>, Option<CadWorldWindowTransient>), Fault> {
-    let ArtifactCommandInputs { snapshot_owner: _, command, snapshot, config, history, interaction, hover, context, operation } = *input;
+    let ArtifactCommandInputs { snapshot_owner: _, snapshot_read: _, command, snapshot, config, history, interaction, hover, context, operation } = *input;
     let doc = match context {
         Some(context) => ArtifactView::with_children(snapshot, history, (*context.children).clone()).bound_to_operation(operation.clone()),
         None => ArtifactView::with_operation(snapshot, history, operation.clone()),

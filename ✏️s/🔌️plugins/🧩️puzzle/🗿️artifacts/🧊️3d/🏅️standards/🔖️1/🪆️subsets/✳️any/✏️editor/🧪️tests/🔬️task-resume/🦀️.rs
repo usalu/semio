@@ -13,6 +13,23 @@ type Puzzle3dMounted = VcsArtifactApp<Puzzle3d>;
 
 const POLICY: MountedOwnerPolicyV1 = MountedOwnerPolicyV1::INTERACTIVE_COMPONENT;
 
+/// 🔬️ Heap-observing fixture laws (`take_fixture_result_page`) need the counting allocator installed in the test binary.
+#[global_allocator]
+static HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
+
+/// 🪟️ The puzzle3d window commands require the host's per-window view state, exactly as the browser host supplies it.
+fn window_view() -> semio_framework_plugin::ViewModel {
+    semio_framework_plugin::ViewModel { window_id: Some("puzzle3d-main".into()), window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: "puzzle3d-main".into(), window_kind_id: "puzzle3d-main".into() }], ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) }
+}
+
+macro_rules! window_meta {
+    ($actor:expr) => {{
+        let mut window_meta = meta($actor);
+        window_meta.view_state = Some(window_view());
+        window_meta
+    }};
+}
+
 /// 🔒️ The worker-job retirement slots are process-global: a parked retirement of ANY mounted app keeps every other app's maintenance non-terminal, so mounted laws of one binary run one at a time.
 static SERIAL: std::sync::Mutex<()> = std::sync::Mutex::new(());
 
@@ -47,7 +64,7 @@ async fn a_queued_task_resume_is_delivered_across_funded_turns_applies_once_and_
     let mut scope = OriginalFixtureScope::admit();
     let mut app = mounted().await;
     let before = target_volumes(&app);
-    let task_meta = meta("local");
+    let task_meta = window_meta!("local");
 
     app.queue_task_resume_command(follow_up(1.0).await, &task_meta).expect("the follow-up queues");
     assert!(app.has_runnable_typed_operations(), "a queued follow-up keeps the actor's turn armed");
@@ -78,11 +95,11 @@ async fn a_refused_task_resume_answers_with_a_fault_and_the_next_one_still_deliv
     let mut scope = OriginalFixtureScope::admit();
     let mut app = mounted().await;
     let before = target_volumes(&app);
-    let mut foreign = meta("local");
+    let mut foreign = window_meta!("local");
     foreign.instance_id = 99;
 
     app.queue_task_resume_command(follow_up(1.0).await, &foreign).expect("the follow-up queues");
-    app.queue_task_resume_command(follow_up(2.0).await, &meta("local")).expect("the follow-up queues");
+    app.queue_task_resume_command(follow_up(2.0).await, &window_meta!("local")).expect("the follow-up queues");
     let mut answers = Vec::new();
     for _ in 0..OriginalFixtureCaller::maximum_turns() {
         if !app.has_pending_typed_operations() { break; }
@@ -106,7 +123,7 @@ async fn a_cancelled_task_resume_queue_returns_every_owner_after_any_number_of_t
         let mut app = mounted().await;
         let before = target_volumes(&app);
         for x in [1.0, 2.0] {
-            app.queue_task_resume_command(follow_up(x).await, &meta("local")).expect("the follow-up queues");
+            app.queue_task_resume_command(follow_up(x).await, &window_meta!("local")).expect("the follow-up queues");
         }
         for _ in 0..cut {
             app.advance_typed_operation_publication(&mut fixture_identity(), scope.cx()).await.expect("one funded publication unit");

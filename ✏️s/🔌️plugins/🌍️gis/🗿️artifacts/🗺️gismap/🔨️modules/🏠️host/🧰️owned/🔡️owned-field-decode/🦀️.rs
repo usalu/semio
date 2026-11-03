@@ -156,8 +156,9 @@ macro_rules! gis_map_owned_field_authority {
                 } else if self.value.is_some() {
                     store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.value, &mut self.retirement, grant)
                 } else {
-                    Ok(RetainedCloneStep::Complete(empty))
+                    semio_framework_value::RetainedWorkOutcome { result: Ok(RetainedCloneStep::Complete(empty)), work: 0 }
                 }
+                .result
                 .map_err(|error| self.diagnostic(concat!("gis-map-envelope.", $kind, "-retirement-fault"), 0).with_native(error))?;
                 self.state = $state::Closing;
                 if self.value.is_none() && self.retirement.is_none() {

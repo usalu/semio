@@ -1,0 +1,4 @@
+semio-framework-pack-record-retained semio-framework-pack-record-retained.patch
+semio-framework-replication-history semio-framework-replication-history.patch
+semio-framework-os-store-replay-operation semio-framework-os-store-replay-operation.patch
+semio-framework-plugin-job-receiving semio-framework-plugin-job-receiving.patch

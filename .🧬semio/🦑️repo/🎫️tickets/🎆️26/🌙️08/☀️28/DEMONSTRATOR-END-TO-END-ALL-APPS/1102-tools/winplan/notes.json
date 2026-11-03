@@ -1,0 +1,368 @@
+{
+ "1101-tools/closure/patches/closure-manifest-deps.patch": {
+  "state": "APPLIED",
+  "batch": "-",
+  "note": "~40 Cargo.toml hunks all present (`git apply -R --check` passes)"
+ },
+ "1101-tools/actinfra/patches/component-scheduler-flag-views.patch": {
+  "state": "OBSOLETE",
+  "batch": "-",
+  "note": "made from /tmp/sa-dep.ts; replaced by `requireCompatibleCargoFlagViewsV1` already in the tree; never apply"
+ },
+ "1101-tools/stdio3/patches/decode-denied-close-grant.patch": {
+  "state": "APPLIED",
+  "batch": "-",
+  "note": "path in patch is relative to `🌱️value/🛬️decode`; one-line guard present at line 60; `git apply --check` fails only on the path form",
+  "targets": 1
+ },
+ "1101-tools/ts2d/patches/admission-within-workspace.diff": {
+  "state": "APPLIED",
+  "batch": "-",
+  "note": "`mkdir` import + `.cache/test-admission` present; diff paths are -p0 relative to `🧰️framework`, so the repo-root check fails on path only",
+  "targets": 1
+ },
+ "1101-tools/energy/patches/bridge-construction-recipient.py": {
+  "state": "APPLIED",
+  "batch": "-",
+  "note": "`StepRecipient` x3 in energy snapshot bridge",
+  "targets": 1
+ },
+ "1101-tools/runtime/patches/apply-lifecycle-reserved-return.py": {
+  "state": "APPLIED",
+  "batch": "-",
+  "note": "per 1101 audit: `reserved_before`/`original_lifecycle_net_after` present",
+  "targets": 2
+ },
+ "1101-tools/runtime/patches/apply-ack-branch-receipt.py": {
+  "state": "APPLIED",
+  "batch": "-",
+  "note": "per 1101 audit: `worker_outcome_pending` branch present",
+  "targets": 1
+ },
+ "1101-tools/flowext/patches/geometry-close-ticket.py": {
+  "state": "APPLIED",
+  "batch": "-",
+  "note": "prefix `semio_framework_value::geometry_close_ticket(` gone",
+  "targets": 1
+ },
+ "1101-tools/testport/patches/cold-reserve-output.py": {
+  "state": "APPLIED",
+  "batch": "-",
+  "note": "`None if grant==Self::cold_authority_grant()` present (testport result confirms); policy `os-store-replay` patch still checks clean over it",
+  "targets": 1
+ },
+ "1101-tools/testport/patches/README-dbg.txt": {
+  "state": "NOT A PATCH",
+  "batch": "-",
+  "note": "debug note"
+ },
+ "1101-tools/compute/patches/trapped-guest-test.md": {
+  "state": "TEST-ONLY PLAN",
+  "batch": "-",
+  "note": "two stale-test layers, 18 tests still failing; needs shard-owner kernel-driving test rewrite, no production edit; allowed any time (tests dirs). Not part of the window"
+ },
+ "1101-tools/fem/patches/PLAN.md": {
+  "state": "APPLIED",
+  "batch": "-",
+  "note": "fem result: PLAN items applied (fem-31/33 wasm --lib GREEN)"
+ },
+ "1101-tools/describe/patches/APPLY-AFTER-FREEZE.md": {
+  "state": "PARTIAL",
+  "batch": "B6",
+  "note": "items 1,2,5 (test dirs) applied; item 4 pending = same edit as `1102 describe/step-geometry-dev-dep.md`",
+  "targets": 1
+ },
+ "1102-tools/describe/patches/step-geometry-dev-dep.md": {
+  "state": "PENDING (hand edit)",
+  "batch": "B6",
+  "note": "add `semio-framework-async-macros = { workspace = true }` to step geometry `[dev-dependencies]` (and step workspace `[workspace.dependencies]` if absent); currently 0 hits",
+  "targets": 1
+ },
+ "1101-tools/flowext/patches/retirement-tests.md": {
+  "state": "PARTIAL",
+  "batch": "-",
+  "note": "`cfg(any(test,feature=\"testkit\"))` + retirement-tests Cargo.toml applied; item 2 (window-config test loop) is a test-dir design task, item 3 optional; nothing to batch",
+  "targets": 3
+ },
+ "1102-tools/flowext/patches/directed-dag-facade-exports.py": {
+  "state": "PENDING (script, fail-closed)",
+  "batch": "B4",
+  "note": "adds 2 re-exports to `♾️infinite/📦️packages/🦀️rust/🦀️.rs`; ran OK on a scratch copy; unblocks flow-host unit tests",
+  "targets": 1
+ },
+ "1102-tools/testport/patches/cursor-dev-vcs-testkit.py": {
+  "state": "PENDING (script, fail-closed)",
+  "batch": "B4",
+  "note": "adds vcs `testkit` dev-dep to store-cursor Cargo.toml; ran OK on a scratch copy",
+  "targets": 1
+ },
+ "1101-tools/testport2/patches/reactor-jobs-cargo-protocol-laws.md": {
+  "state": "PENDING (hand edit)",
+  "batch": "B4",
+  "note": "reactor jobs Cargo.toml line 54: features [\"mutation-testing\"] -> [\"mutation-testing\",\"protocol-laws\"]; tree still old",
+  "targets": 1
+ },
+ "1101-tools/testport2/patches/instance-render-tool-clock-feature.md": {
+  "state": "PENDING (hand edit)",
+  "batch": "B4",
+  "note": "render Cargo.toml line 25 `artifact-app-testing = []` -> add `semio-framework-tool-machine/artifact-app-testing`; plus cfg change in `📥️staging/🛠️tool-machine/🦀️.rs:60`; author offers an alternative, needs a decision",
+  "targets": 2
+ },
+ "1101-tools/testport2/patches/time-travel-instance-jobs-lib-test-cycle.md": {
+  "state": "HOLD (design)",
+  "batch": "-",
+  "note": "gating of test helpers/modules across `♻️retirement/🧪️tests` and instance staging; no exact edit given; UNVERIFIED if applied; do not apply in the window",
+  "targets": 3
+ },
+ "1101-tools/rtpanes/patches/process3d-pane-smoke-target.md": {
+  "state": "PENDING (hand edit)",
+  "batch": "B5",
+  "note": "append `[[test]] process3d_pane_smoke` to process3d editor Cargo.toml (0 hits now); not on the activation path; low priority",
+  "targets": 1
+ },
+ "1102-tools/rtpanes/patches/by-example-law-redo.md": {
+  "state": "APPLIED",
+  "batch": "-",
+  "note": "redo step already in `🪧️pane-smoke-law/🦀️.rs` (`redo must reapply` x1)",
+  "targets": 1
+ },
+ "1102-tools/rtpanes/patches/laws-publish-framework-schema-documents.md": {
+  "state": "SUPERSEDED (do not apply)",
+  "batch": "-",
+  "note": "same file and same fix as `testkit/publish-framework-schemas.patch`; applying both would publish twice and double the helper",
+  "targets": 1
+ },
+ "1101-tools/mutpolicy/patches/gen-host-displaced.py": {
+  "state": "PENDING (script)",
+  "batch": "B5",
+  "note": "generation3d host `close_step(grant).expect(` -> `.result.expect(`; anchor count 1 now",
+  "targets": 1
+ },
+ "1101-tools/mutpolicy/patches/raster-model.py": {
+  "state": "PENDING (script, asserts)",
+  "batch": "B5",
+  "note": "raster-model 3 sites; all anchors still old (1 hit each)",
+  "targets": 2
+ },
+ "1102-tools/stdio/patches/decouple-mesh-export-from-pdf.py": {
+  "state": "PENDING (script, dry-run default)",
+  "batch": "B6",
+  "note": "new crate + 8 manifests (17 edits planned); `--apply` writes. Last in B6; adds crate `semio-s-artifact-stdio-semio-drawing-png-export`",
+  "targets": 9
+ },
+ "1101-tools/ts2d/patches/booleans.ts": {
+  "state": "PENDING (file copy)",
+  "batch": "B11",
+  "note": "whole-file replacement driven by `apply.py`; tree copy still the old UnitRetirement version",
+  "targets": 1
+ },
+ "1101-tools/ts2d/patches/booleans.test.ts": {
+  "state": "PENDING (file copy)",
+  "batch": "B11",
+  "note": "whole-file replacement driven by `apply.py`; tree copy still the old UnitRetirement version",
+  "targets": 1
+ },
+ "1101-tools/ts2d/patches/paths.ts": {
+  "state": "PENDING (file copy)",
+  "batch": "B11",
+  "note": "whole-file replacement driven by `apply.py`; tree copy still the old UnitRetirement version",
+  "targets": 1
+ },
+ "1101-tools/ts2d/patches/apply.py": {
+  "state": "PENDING (script)",
+  "batch": "B11",
+  "note": "copies the 3 files then strips `booleanRegions, `/`BooleanOptions, ` from two index files (anchors still present, 1 + 2 hits); NOT fail-closed, overwrites files",
+  "targets": 5
+ },
+ "_overlaps": [
+  "`cadi18n/cad-mode-edit.patch` x `uii18n/cad-step-labels-2.patch`: same file `…/✏️editor/🎭️modes/✏️edit/🦀️.rs`; hunk ranges OVERLAP (cadi18n 549-556 vs uii18n 547-554; cadi18n's @539 context carries uii18n's edited lines), so ORDER IS MANDATORY: uii18n first. Alone, cadi18n fails.",
+  "`uii18n/cad-step-labels-1.patch` and `flow-form-labels-1.patch` both edit a `✏️editor/🗣️terminology/🦀️.rs`, in different artifacts (cad vs flow): different files, no collision.",
+  "`testkit/publish-framework-schemas.patch` x superseded `rtpanes/laws-publish-...md`: same file `🏗️registered-app-construction-and-typed-operation-settlement/🦀️.rs`, same fix; testkit wins.",
+  "`policy/semio-framework-os-store-replay.patch` x applied `testport/cold-reserve-output.py`: same file `⏩️replay-owned-state-operations/🦀️.rs`; the script is already in the tree and the policy diff checks clean over it (hunks 58-78, 380-402, 575-582 vs the script's cold-reserve region).",
+  "`policy/semio-s-artifact-stdio-ifc-*` x `stdio/decouple-mesh-export-from-pdf.py`: different crates (ifc vs semio drawing/mesh); no shared file. Both are stdio-lane Cargo/manifests-adjacent but disjoint.",
+  "`ts2d/apply.py` x `policy/ts-framework-process-wasm-build.patch`: both TS under `🧰️framework`, different modules (`◻️2d` vs `🏃️process/📦️artifacts/🕸️wasm-build`): no collision.",
+  "Closure-applied Cargo.toml files (sourcing, gis, sequence, process, stdio, procedural/generation3d) are already in the tree; no pending patch edits the same manifest lines except `stdio/decouple` (adds deps to semio drawing/mesh manifests) and `cadi18n/cad-engine-0` + `cad-spec-rust-0` (cad manifests, `semio-framework-ui-locale` dep): re-run `git apply --check` right before those if a Cargo.lock regen happened."
+ ],
+ "_batches": [
+  {
+   "id": "B0",
+   "title": "repo tooling: act18 blockers (emitter request bytes, Cargo retention, worker instances)",
+   "owner": "actinfra",
+   "check": "`bun test ./<emitter contract tests>` (emitter-request-bytes test), `bun test ./<retention>/🧪️tests` (size-law), the worker tests/fixtures named in the actinfra result (`🏗️bazel/👷️workers/🧪️tests`, `🏗️bazel/🏃️execution/🧪️tests/👷️worker`); then the coordinator restarts activation. The 11 other `maximumOutputBytes+maximumManifestBytes` request sites are NOT covered (author: not tested).",
+   "why": "ACTIVATION BLOCKER FIRST: act18 ended `exit 130` at 14:35:50 after the flow-math component failed deterministically for every component (`Actual closed artifact reader custody required`: `descriptorEmitterRequestV1` asks 2149580800 bytes, the reader schema allows 2147483648). `emitter-request-bytes.diff` fixes that; `retention-intermediates.diff` shrinks the emitter tree 1.1 GB -> ~15 MB (1 GiB nx cache-put cap); `worker-spare-instances.diff` rebalances Bazel worker instances (RepoBuild=3) and needs fixture updates in the same window plus a Bazel server restart to take effect. Independent of every Rust patch. Diffs 1 and 2 are -p0 (no a/ b/): `git apply -p0 <diff>` from the repo root.",
+   "extra": [
+    "copy `1102-tools/actinfra/patches/emitter-request-bytes.test.ts` into the emitter contract tests dir (new file)",
+    "copy `1102-tools/actinfra/patches/retention-size-law.test.ts` to `…/📦️retention/🧪️tests/🪶️size-law/🟦️.ts` (new file)",
+    "update the pinned worker-flag fixtures (`🏗️bazel/👷️workers/🧪️tests/🧫️fixtures/🔣️.json`, `🏗️bazel/🏃️execution/🧪️tests/👷️worker/🟦️.ts`) in the same window"
+   ]
+  },
+  {
+   "id": "B1",
+   "title": "framework core: value, pack, pixels, job, plugin",
+   "owner": "policy",
+   "check": "`repo cargo ... check --manifest-path 🌎️hub/Cargo.toml --keep-going -p <the 13 crates of this batch>` native, then the same with `--target wasm32-wasip2` for `semio-framework-plugin`, `-plugin-job`, `-plugin-job-receiving`, `-value-native-storage`, `-job`",
+   "why": "Leaf-to-root by crate layer: value storage, pack, pixels, 2d flatten, job, flow copy, plugin job, reactor, plugin. Every edit replaces unwrap/expect with `ValueError::invariant` (exists from 1101); no signature changes, so order within the batch is by layer only."
+  },
+  {
+   "id": "B2",
+   "title": "framework os-store family",
+   "owner": "policy",
+   "check": "`check -p semio-framework-os-store-replay -p semio-framework-os-store-replay-operation -p semio-framework-os-store-engine-replay -p ...-engine-command -p ...-engine-branch -p ...-presence -p ...-ephemeral -p ...-one-item-batch -p ...-composition -p ...-codec-registry` native, then `describe-1` equivalent (describe Rust closure) as the regression gate",
+   "why": "Depends on B1 only for crates it imports. `replay` and `replay-operation` first: they introduce the `VcsError::{InverseRefused,ValidationFailed,HistoryReplaying}` handling (Option::filter) that the engine crates call."
+  },
+  {
+   "id": "B1P",
+   "title": "framework phase-machine fixes (lane phase), AFTER policy B1/B2",
+   "owner": "phase",
+   "check": "same as B1/B2 for the crates a patch touches (native check, wasm for plugin/job/value crates); plus `semio-framework-value-derive*` proc-macro expansion users (every crate deriving)",
+   "why": "phase patches edit many of the same files and sites as policy B1/B2 (same names: actor-retained-turn, job, os-kernel, os-store-replay-operation, pack-record-retained, replication-history, value-derive, value-retained-map). A phase patch that FAILS in the sequence table conflicts with an applied policy patch: skip it if policy already carries the edit, otherwise rebase it. Phase-only patches (job-failure, job-payload, flow-extensions, flow-wasm, store-initialization-replay, text-splice-native, value-*) apply independently. Proc-macro (`value-derive`, `value-derive-expansion`) first inside the batch: it changes what every derive user compiles."
+  },
+  {
+   "id": "B3",
+   "title": "shared test-law constructors publish framework schemas",
+   "owner": "testkit",
+   "check": "`check --tests -p semio-framework-plugin-testing-artifact-app-laws` and the new law `registered_construction_publishes_framework_schemas_before_the_manifest` (dummy fixture crate), native",
+   "why": "Schema publication before any pane smoke test constructs an app (energie `bind-weather-file` RefUnresolved). Must precede the rtpanes re-run; after B1/B2 because the laws crate links plugin and store."
+  },
+  {
+   "id": "B4",
+   "title": "framework test-support scripts and Cargo edits",
+   "owner": "testport",
+   "check": "`check --tests -p semio-framework-os-store-cursor -p semio-framework-os-flow-host -p <reactor jobs crate> -p <instance render crate>` native",
+   "why": "Pure manifest/facade edits that unblock test compiles; they only add features or re-exports (definitions before callers). Apply scripts first, hand edits (reactor-jobs, render) after reading the current line; render edit needs the author decision recorded in the plan.",
+   "extra": [
+    "`1102-tools/flowext/patches/directed-dag-facade-exports.py` (script, run from repo root)",
+    "`1102-tools/testport/patches/cursor-dev-vcs-testkit.py` (script, run from repo root)",
+    "`1101-tools/testport2/patches/reactor-jobs-cargo-protocol-laws.md` (hand edit, 1 line)",
+    "`1101-tools/testport2/patches/instance-render-tool-clock-feature.md` (hand edit, 2 sites)"
+   ]
+  },
+  {
+   "id": "B5",
+   "title": "plugins: policy fixes, gen brep, raster, gen3d host",
+   "owner": "policy (mutpolicy scripts and gen brep by the same owner in this batch)",
+   "check": "`check --target wasm32-wasip2 --manifest-path <plugin workspace> -p <crate>` for each crate in `policy/patches/index.json` of this batch (draw-drawing-io, energy-model-session, fem-2d-editor-session, gismap-gis2d, puzzle-2d-text-inverse, flow-brep), then `-p semio-s-artifact-raster-model`, the generation3d host crate and the brep crates (`brep-boolean`, `analysis-check`, `resumable-boolean-job`, `brep-session-state`)",
+   "why": "Gen brep adds a `BrepSession::Failed` variant and `step_budgeted`: definition and every match arm are in the same patch (5 files), so it is compile-atomic only if the whole patch applies. Apply it after the flow-brep policy patch (same plugin family, disjoint file).",
+   "extra": [
+    "`1101-tools/mutpolicy/patches/gen-host-displaced.py` (script, fail-closed on count 1)",
+    "`1101-tools/mutpolicy/patches/raster-model.py` (script, asserts exactly one anchor per site)",
+    "`1101-tools/rtpanes/patches/process3d-pane-smoke-target.md` (hand edit, optional, not on the activation path; skip if time is short)",
+    "`1102-tools/rtpanes/patches/energy-manifest-uses-stdio-semio-edit-mode.md` (hand edit, 1 line; REQUIRED for the energie pane, not optional)"
+   ]
+  },
+  {
+   "id": "B5P",
+   "title": "plugin phase-machine fixes (lane phase)",
+   "owner": "phase",
+   "check": "wasm `--lib` check of the draw drawing-scene crate",
+   "why": "single plugin patch after policy B5."
+  },
+  {
+   "id": "B6",
+   "title": "stdio plugins: ifc policy fixes, step dev-dep, mesh/pdf decouple",
+   "owner": "stdio",
+   "check": "wasm `--lib` check of the 4 ifc crates, then `check --tests -p semio-s-artifact-stdio-step-geometry` (describe item), then `check -p semio-s-artifact-stdio-semio-drawing-png-export -p <mesh export> -p <drawing export> -p <pdf>` after the decouple script",
+   "why": "Policy ifc diffs are independent single-crate edits; the decouple script goes LAST because it creates a crate and rewrites 8 manifests (a failure leaves a half-applied set only if `--apply` is interrupted: it plans all 17 edits in memory first).",
+   "extra": [
+    "`1102-tools/describe/patches/step-geometry-dev-dep.md` (hand edit, 1 line + workspace dependency)",
+    "`python3 -I 1102-tools/stdio/patches/decouple-mesh-export-from-pdf.py` (dry-run first, then `--apply`)"
+   ]
+  },
+  {
+   "id": "B7",
+   "title": "uii18n: terminology, form and status labels (cad step labels first)",
+   "owner": "uii18n",
+   "check": "wasm `--lib` check of the cad editor crate, flow editor crate, procedural foundation semantic-ui crate and process workpiece window crate",
+   "why": "cadi18n is built on top of cad-step-labels-1/2, so they land before B8."
+  },
+  {
+   "id": "B8",
+   "title": "cadi18n: schema-first cad interaction texts, then readers, then tests",
+   "owner": "cadi18n",
+   "check": "wasm `--lib` check of cad spec crate, cad engine (interaction), cad editor (modes, windows, callers); then `check --tests` on the cad unit tests; then `python3 <cad>/🧪️tests/🌐️languages/🐍️.py` (language-agnostic, passes on the scratch copy)",
+   "why": "Order = Cargo deps -> spec Rust types (schema owner) -> spec JSON (60 files) -> engine readers -> kit and commands -> modes/windows -> editor callers -> tests. Author: production + schema + data must land in ONE window, compile-atomically; run the batch check only after the whole batch is applied (the embedded JSON is parsed by the new types, so a half batch cannot compile). A reader before its type would not compile."
+  },
+  {
+   "id": "B9",
+   "title": "TS: process wasm-build optional report callback",
+   "owner": "policy",
+   "check": "`bun test ./<wasm-build tests>` with explicit ./ path and `tsc --noEmit` of the framework process package",
+   "why": "Framework TS before demonstrator TS; callers opt in, no break."
+  },
+  {
+   "id": "B10",
+   "title": "TS: ShellHost locale request, demonstrator, acceptance",
+   "owner": "cadi18n",
+   "check": "`bun test ./<locale-request tests>` (explicit ./ path), tsc of the demonstrator, then coordinator-run `test-e2e`",
+   "why": "web-shellhost-0 (new locale-request module) -> -1 (its test) -> -2 (ShellHost uses it) -> demonstrator -> acceptance test. Requires B8 only for the wire shape of cad texts."
+  },
+  {
+   "id": "B11",
+   "title": "TS: framework 2d booleans onto the retained work runtime",
+   "owner": "e2eready",
+   "check": "`bun test ./🧰️framework/🔨️modules/◻️2d/🔀️booleans/🧪️tests/🟦️.ts` (explicit path), tsc of the 2d package",
+   "why": "Independent of everything else; whole-file replacement, so run it last and only if the 2d package is in the demonstrator closure (check `graph`); skip otherwise.",
+   "extra": [
+    "`python3 1101-tools/ts2d/patches/apply.py` (copies booleans.ts, paths.ts, booleans.test.ts; strips two export names)"
+   ]
+  }
+ ],
+ "_conflicts": [
+  "TWINS (policy vs phase): phase's `supersedes.txt` names 4 pairs (pack-record-retained, replication-history, os-store-replay-operation, plugin-job-receiving): the policy twin is SKIPPED, the phase patch replaces it (inventory state SUPERSEDED). `phase/semio-framework-os-kernel.patch` is no longer in phase's `order.txt`: treat as dropped; the policy `os-kernel` patch stays. Remaining phase patches are disjoint from policy except where the sequence table shows FAIL.",
+  "CONFLICT (order): `cadi18n/cad-mode-edit.patch` fails alone (`patch failed … 🎭️modes/✏️edit/🦀️.rs:539`); applies after `uii18n/cad-step-labels-1` and `-2`. Not obsolete.",
+  "OBSOLETE: `1101 actinfra/component-scheduler-flag-views.patch` (target is /tmp/sa-dep.ts; fix already in the tree as `requireCompatibleCargoFlagViewsV1`).",
+  "ALREADY APPLIED (do not re-run): closure manifest deps, stdio3 decode guard, ts2d admission diff, energy bridge, runtime x2, flowext geometry-close-ticket, testport cold-reserve, rtpanes by-example redo, fem PLAN.",
+  "SUPERSEDED: rtpanes `laws-publish-framework-schema-documents.md` (by `testkit`).",
+  "FALSE FAILURES of the repo-root `git apply --check`: stdio3 decode (path relative to `🛬️decode`), ts2d admission (`-p0` from `🧰️framework`). Both content-verified applied.",
+  "STALE-RISK: the 1101 `ts2d` copies were made at 21:02 Nov 1 from a base whose `paths.ts` differs from the tree only in lines 73/91/97 (the tree still has the old `advance(1)` + `commitSemanticWork` code), i.e. the patch is a successor, not a revert. Safe, but whole-file: any edit made to these 3 files after 21:02 is lost; re-diff immediately before B11.",
+  "HOLD (needs design, not applicable as written): testport2 `time-travel-instance-jobs-lib-test-cycle.md`; flowext `retirement-tests.md` item 2 and 3; compute `trapped-guest-test.md`.",
+  "POLICY SIDE: all 34 policy diffs were generated against the tree of ~02:45-13:10; any production edit under the touched files between now and the window invalidates a hunk. Re-run `seq.sh` right before the window (it takes under a minute)."
+ ],
+ "_risks": [
+  "policy (author): energy `run-job` (annotated closure return type), fem2d session (`return` inside a closure arm), ifc2x3 `field_edit` (borrow moved out of the `with_native_receiving` closure), os-store-replay (`Option::filter` shadowing). Check these four crates first inside B2/B5/B6.",
+  "gen `brep-boolean-funded-phases.patch`: 5 files, adds a `BrepSession::Failed` variant, makes `step_unbudgeted` non-pub, adds `is_funded_validation`; every consumer match on the enum must have the new arm (patch adds them in `analysis-check` and `brep-boolean`); a third consumer elsewhere would fail to compile. grep `BrepSession::` workspace-wide before applying.",
+  "cadi18n (author: cargo UNVERIFIED): changes `InteractionSpec.label`, `TransitionSpec.label`, `SelectionSpec.prompt`, `DisplayItemSpec::Label.text` from `String` to `LocalizedLabel` and threads `(terminology, locale)` through ~10 fns and 4 window `render`/`engagement` fns; 60 spec JSON files rewritten (320 KB patch). Largest cross-crate signature change in the window; keep B8 whole or revert whole.",
+  "stdio `decouple-mesh-export-from-pdf.py`: creates a crate, rewrites 8 manifests and a lib path; generated, not reviewed by anyone else; also touches Cargo.lock implicitly on next build.",
+  "testkit patch: adds `.expect` in test-support (`publish_framework_schemas`); policy gate counts it unless the file is under `🧪️testing`/tests. Compile risk low (author: UNVERIFIED).",
+  "ts2d `apply.py`: not fail-closed, overwrites 3 files with copies from Nov 1 21:02; stale-copy risk named in section 4.",
+  "render feature edit (testport2): cfg change in tool-machine staging may need `feature = \"artifact-app-testing\"` only; two alternatives were offered; wrong choice reproduces E0609 in the render lib tests.",
+  "Cargo.lock: the closure Cargo.toml patch already regenerated 7 plugin lockfiles + hub lock; cad-engine-0 and cad-spec-rust-0 add `semio-framework-ui-locale` to cad manifests, which can require a lock refresh the owner may not run (only the coordinator runs `dependencies sync|lock`).",
+  "cadi18n `name-*` (15 patches, appeared 13:50): object-name schema change across cad geometry, terminology, kit, derive, import, panels (3d artifact + inspection), picking/history/dwg/sample-scene tests; edits the same engine file `cad-engine-1` touches. The cadi18n set was regenerated twice (13:20, 13:50; `cad-kit`/`cad-commands`/`cad-tests-5,6` came and went), so B8 order is taken from the alphabetical glob that the author's `verify.sh` proves, and must be re-verified by `seq.sh` immediately before the window.",
+  "actinfra `retention-intermediates.diff` (-p0): changes custody of dependency rlibs from `retained` to `current` in `completedCargoClosureRosterV1`; author-named risk: component-pass wasm builds no longer retain dependency rlibs; run the component-pass tests after applying. It does not touch Rust, so it cannot break the Bazel activation compile.",
+  "actinfra `worker-spare-instances.diff`: changes `--worker_max_instances` planning (RepoBuild=3, RepoScript=2); 3 concurrent wasm builds under a 4017 MB worker budget (author: cargo children are outside the budget, the capacity door covers them); pinned fixtures must change in the same window; a running Bazel server keeps the old flags until restarted."
+ ],
+ "1102-tools/actinfra/patches/retention-size-law.test.ts": {
+  "state": "TEST FILE (add any time)",
+  "batch": "B0",
+  "note": "new test, goes to `🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/📦️retention/🧪️tests/🪶️size-law/🟦️.ts`; under a tests dir so it may be copied even during the freeze; fails on the unpatched module by design",
+  "targets": 1
+ },
+ "1102-tools/runtime/patches/apply-debug-settle-cause.py": {
+  "state": "OPTIONAL [DEBUG] diagnostic",
+  "batch": "-",
+  "note": "inserts an `eprintln!(\"[DEBUG] settle stop ...\")` into the SAME laws file as the testkit patch (`🏗️registered-app-construction-and-typed-operation-settlement/🦀️.rs`, different line); apply only if runtime asks, after B3, and remove again before ticket close. Not part of the plan order",
+  "targets": 1
+ },
+ "1102-tools/phase/patches/order.txt": {
+  "state": "ORDER FILE (not a patch)",
+  "batch": "-",
+  "note": "phase's own apply order / supersedes list; this plan follows them"
+ },
+ "1102-tools/phase/patches/supersedes.txt": {
+  "state": "ORDER FILE (not a patch)",
+  "batch": "-",
+  "note": "phase's own apply order / supersedes list; this plan follows them"
+ },
+ "1102-tools/rtpanes/patches/energy-manifest-uses-stdio-semio-edit-mode.md": {
+  "state": "PENDING (hand edit, 1 line)",
+  "batch": "B5",
+  "note": "energy editor `📚️examples-and-manifest/🦀️.rs:4`: `use semio_s_artifact_stdio_semio::editor::modes::edit;` -> `use crate::editor_edit as edit;`; production fault (energy pane panics at build_definition: undeclared window kind framework.window.mesh); needed for the energie pane boot",
+  "targets": 1
+ },
+ "1102-tools/actinfra/patches/emitter-request-bytes.test.ts": {
+  "state": "TEST FILE (add any time)",
+  "batch": "B0",
+  "note": "test for `emitter-request-bytes.diff`; copy to the describe emitter contract `🧪️tests/` dir named in its header (relative imports ../../📋️contract); validator plus Ajv oracle; fails on the unpatched contract by design",
+  "targets": 1
+ }
+}

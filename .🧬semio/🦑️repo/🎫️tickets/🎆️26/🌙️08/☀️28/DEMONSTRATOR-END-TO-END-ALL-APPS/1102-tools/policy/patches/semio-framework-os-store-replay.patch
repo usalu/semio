@@ -1,0 +1,72 @@
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/⏩️replay-owned-state-operations/🦀️.rs
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/⏩️replay-owned-state-operations/🦀️.rs
+@@ -58,8 +58,8 @@
+                         if deadline() || completed_operations >= maximum_operations { return Ok(ReplayStep::Pending(self.progress)); }
+                         continue;
+                     }
+-                    if !cold{return Err(VcsError::InverseRefused(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"native prefix replay requires its retained original preparation issuer")));}
+-                    cold_prefix.expect("admitted cold replay prefix authority")(self,edit)?;
++                    let Some(cold_prefix)=cold_prefix.filter(|_|cold)else{return Err(VcsError::InverseRefused(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"native prefix replay requires its retained original preparation issuer")));};
++                    cold_prefix(self,edit)?;
+                     self.operation += 1;
+                     completed_operations = completed_operations.saturating_add(1);
+                     if self.prefix_work_progress { self.progress.done = self.progress.done.saturating_add(1); }
+@@ -70,8 +70,8 @@
+             }
+             if self.operation < edit.forwards.len() {
+                 if self.operation_preparation_factory.is_none(){
+-                    if !cold{return Err(VcsError::InverseRefused(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"native replay requires its retained original preparation issuer")));}
+-                    cold_operation.expect("admitted cold replay operation authority")(self,edit)?;
++                    let Some(cold_operation)=cold_operation.filter(|_|cold)else{return Err(VcsError::InverseRefused(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"native replay requires its retained original preparation issuer")));};
++                    cold_operation(self,edit)?;
+                     self.operation+=1;
+                     completed_operations=completed_operations.saturating_add(1);
+                     self.progress.done=self.progress.done.saturating_add(1);
+@@ -380,10 +380,10 @@
+     /// ⏭️ Folds one prefix operation on the cold diff arithmetic: a prefix replays messageless and stages no rows.
+     fn replay_prefix_operation(&mut self, edit: &Edit<Mutation>) -> Result<(), VcsError> {
+         let index = self.operation;
+-        let id = semio_framework_os_spr::mutation_id_for_edit_operation::<P, Mutation>(edit, index).expect("recorded operation identity");
++        let id = semio_framework_os_spr::mutation_id_for_edit_operation::<P, Mutation>(edit, index).ok_or_else(|| VcsError::ValidationFailed("recorded operation identity is absent".into()))?;
+         if edit.forwards[index].may_emit_foreign_steps() {
+             let digest = CursorRevisionAccumulator::hash_record(b"edit-id", &[edit.id.as_bytes()]);
+-            self.unit_flags.insert((digest, index), semio_framework_os_spr::ColdMutation::foreign_step_source(&edit.forwards[index], self.state.as_ref().expect("replay prefix state"), 0).map_err(VcsError::from)?.is_some());
++            self.unit_flags.insert((digest, index), semio_framework_os_spr::ColdMutation::foreign_step_source(&edit.forwards[index], self.state.as_ref().ok_or_else(|| VcsError::ValidationFailed("edit replay lost its running projection".into()))?, 0).map_err(VcsError::from)?.is_some());
+         }
+         let effective = effective_operation::<P, Mutation>(&edit.forwards[index], index as u32, id, &self.schema, &self.supersessions);
+         if let Some(operation) = effective.operation() {
+@@ -395,7 +395,7 @@
+     /// mutation is edited or withdrawn. A `Merge` replay refuses with [`VcsError::InverseRefused`].
+     fn replay_operation(&mut self, edit: &Edit<Mutation>) -> Result<(), VcsError> where P:Clone, Mutation:semio_framework_os_spr::ColdMutation<P> {
+         let index = self.operation;
+-        let mutation_id = semio_framework_os_spr::mutation_id_for_edit_operation::<P, Mutation>(edit, index).expect("recorded operation identity");
++        let mutation_id = semio_framework_os_spr::mutation_id_for_edit_operation::<P, Mutation>(edit, index).ok_or_else(|| VcsError::ValidationFailed("recorded operation identity is absent".into()))?;
+         if edit.forwards[index].may_emit_foreign_steps() {
+             let digest = CursorRevisionAccumulator::hash_record(b"edit-id", &[edit.id.as_bytes()]);
+             let base = self.candidate.as_ref().or(self.state.as_ref()).expect("replay operation state");
+@@ -575,7 +575,7 @@
+                 return Ok(false);
+             }
+             let index = self.operation;
+-            let mutation_id = semio_framework_os_spr::mutation_id_for_edit_operation::<P, M>(edit, index).expect("recorded operation identity");
++            let mutation_id = semio_framework_os_spr::mutation_id_for_edit_operation::<P, M>(edit, index).ok_or_else(|| VcsError::ValidationFailed("recorded operation identity is absent".into()))?;
+             if self.prepared_operation.is_none() {
+                 if self.operation_preparation.is_none() {
+                     return Ok(false);
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🧬️supersession/🦀️.rs
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🧬️supersession/🦀️.rs
+@@ -51,12 +51,12 @@
+   if let Some(input)=self.input.as_mut(){if self.offset<event.diff.payload.len(){let backing=input.0.byte_backing_demand()?;if backing.capacity_bytes!=0{let d=RetirementDemand{copy_bytes:backing.copy_bytes+size_of::<usize>(),..backing};let mut output=None;build(cx,&mut output,d,||{let mut p=input.0.reserve_byte_backing(grant)?;p.copied_bytes+=size_of::<usize>();Ok(((),p))})?;return Ok(None)}let bytes=(event.diff.payload.len()-self.offset).min(input.0.retained_bytes().capacity()-input.0.len()).min(4096-size_of::<usize>()).min(grant.maximum_copy_bytes.saturating_sub(size_of::<usize>()));if bytes==0{return Ok(None)}let d=RetirementDemand{copy_bytes:bytes+size_of::<usize>(),depth:input.0.retained_bytes().next_push_depth_demand().map_err(ValueError::from)?,..Default::default()};let mut output=None;build(cx,&mut output,d,||{let mut fragment=[0;4096];let count=semio_framework_value::ByteReadSource::read_bytes(&event.diff.payload,self.offset,&mut fragment[..bytes]);if count!=bytes{return Err(invalid("original transition payload source changed while receiving"))}for byte in &fragment[..count]{input.0.push_reserved_byte(*byte)?;}self.offset+=count;Ok(((),RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))})?;return Ok(None)}}
+ 
+   if self.job.is_none()&&self.output.is_none(){let input=&mut self.input;let job=&mut self.job;let mut runner=Some(|control:protocol::HistoryFoldControl|original_future(input,control));let d=protocol::HistoryFoldJob::original_birth_demand(runner.as_ref().unwrap())?;if !permits(grant,d){return Ok(None)}receive(cx,|control|protocol::HistoryFoldJob::admit_original(&mut runner,job,control))?;return Ok(None)}
+-  if self.output.is_none(){let job=self.job.as_mut().unwrap();if job.original_rejection_ready(){let d=header::<TransitionFailure>();build(cx,&mut self.failure,d,||Ok((TransitionFailure{source:job.take_rejection().unwrap(),text:None},RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})))?;return Ok(None)}if job.original_output_ready(){if !permits(grant,protocol::HistoryFoldJob::<Output>::original_output_demand()){return Ok(None)}receive(cx,|control|job.take_original_output(&mut self.output,control))?;}else{let body=grant.maximum_copy_bytes.min(4096);let d=job.original_step_demand(body)?;if !permits(grant,d){return Ok(None)}receive(cx,|control|job.step_original(control,body))?;}return Ok(None)}
++  if self.output.is_none(){let job=self.job.as_mut().ok_or_else(||invalid("native supersession job is absent"))?;if job.original_rejection_ready(){let d=header::<TransitionFailure>();build(cx,&mut self.failure,d,||Ok((TransitionFailure{source:job.take_rejection().ok_or_else(||invalid("native supersession rejection is absent"))?,text:None},RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})))?;return Ok(None)}if job.original_output_ready(){if !permits(grant,protocol::HistoryFoldJob::<Output>::original_output_demand()){return Ok(None)}receive(cx,|control|job.take_original_output(&mut self.output,control))?;}else{let body=grant.maximum_copy_bytes.min(4096);let d=job.original_step_demand(body)?;if !permits(grant,d){return Ok(None)}receive(cx,|control|job.step_original(control,body))?;}return Ok(None)}
+   let output=self.output.as_mut().unwrap();let line=source.line.filter(|line|*line!=output.1).unwrap_or(output.1.as_str());
+   if let protocol::HistoryTransition::Supersede(supersede)=&mut output.0{if !supersede.scope.as_deref().is_some_and(|scope|scope!=line){if let Some(input)=supersede.inputs.last(){let capacity=table.next_insert_capacity_byte_demand(&input.target,grant.maximum_copy_bytes)?;let depth=table.next_insert_depth_demand(&input.target)?;if capacity!=0{let d=RetirementDemand{capacity_bytes:capacity,depth,..Default::default()};let mut output=None;build(cx,&mut output,d,||table.reserve_insert_step(&input.target,grant).map(|p|((),p)).map_err(|(error,p)|error.with_retained_progress(p)))?;return Ok(None)}let texts=event.mutation_id.0.len()+supersede.scope.as_ref().map_or(0,String::len);let d=RetirementDemand{copy_bytes:size_of::<(protocol::MutationId,protocol::EffectiveSupersession)>()+texts,capacity_bytes:texts,depth,release_bytes:0};let mut output=None;build(cx,&mut output,d,||{let input=supersede.inputs.pop().unwrap();let value=protocol::EffectiveSupersession{transition_id:event.mutation_id.0.clone(),actor:event.actor.0.clone(),timestamp:event.timestamp,scope:supersede.scope.clone(),replacement:input.replacement};let(previous,_)=table.insert_reserved(input.target,value,grant).unwrap_or_else(|_|unreachable!("original supersession index was reserved"));if let Some(previous)=previous{self.retirement=Some(ControlledRetirement::retain(Residue::Supersession(previous)));}Ok(((),RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,..Default::default()}))})?;return Ok(None)}}}
+   let d=header::<Output>();let mut output=None;build(cx,&mut output,d,||{self.retirement=Some(ControlledRetirement::retain(Residue::Output(self.output.take().unwrap())));self.done=true;Ok(((),RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))})?;Ok(None)
+  }
+- fn close_residue(&mut self,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{let owner=self.retirement.as_ref().unwrap();if owner.terminal_is_empty(){let d=header::<Option<ControlledRetirement<Residue>>>();retire(cx,d,|_|{self.retirement=None;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))})?;}else{let d=owner.next_demand(cx.retained_grant().maximum_copy_bytes)?;close_original_retained_step(cx,d,|grant|{let owner=self.retirement.as_mut().unwrap();let result=owner.step(grant);RetainedWorkOutcome{result,work:owner.last_turn_work()}})?;}Ok(())}
++ fn close_residue(&mut self,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{let owner=self.retirement.as_ref().ok_or_else(||invalid("native supersession retirement is absent"))?;if owner.terminal_is_empty(){let d=header::<Option<ControlledRetirement<Residue>>>();retire(cx,d,|_|{self.retirement=None;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))})?;}else{let d=owner.next_demand(cx.retained_grant().maximum_copy_bytes)?;let owner=self.retirement.as_mut().ok_or_else(||invalid("native supersession retirement is absent"))?;close_original_retained_step(cx,d,|grant|{let result=owner.step(grant);RetainedWorkOutcome{result,work:owner.last_turn_work()}})?;}Ok(())}
+  fn close_job(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{let Some(job)=self.job.as_ref()else{return Ok(true)};if semio_framework_value::ErasedSnapshotRetirement::terminal_is_empty(job){let d=header::<Option<protocol::HistoryFoldJob<'static,Output>>>();retire(cx,d,|_|{self.job=None;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))})?;}else{let d=job.next_original_close_demand(cx.retained_grant().maximum_copy_bytes)?;let grant=cx.retained_grant();if !permits(grant,d){return Ok(false)}let result=cx.with_native_retirement(|native|self.job.as_mut().unwrap().close_original(native,grant));let p=result.as_ref().map(|step|step.progress()).unwrap_or_else(|error|error.retained_progress());cx.consume_retained(p)?;cx.consume_fuel(p.copied_items as u64);result?;}Ok(self.job.is_none())}
+  pub fn begin_close(&mut self){self.closing=true;}
+  pub fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if let Some(owner)=self.retirement.as_ref(){return if owner.terminal_is_empty(){Ok(header::<Option<ControlledRetirement<Residue>>>())}else{owner.next_demand(body)}}if let Some(job)=self.job.as_ref(){return if semio_framework_value::ErasedSnapshotRetirement::terminal_is_empty(job){Ok(header::<Option<protocol::HistoryFoldJob<'static,Output>>>())}else{job.next_original_close_demand(body)}}Ok(header::<Self>())}

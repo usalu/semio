@@ -2,6 +2,8 @@
 //! instead of re-deriving a store/dispatch/render scaffold of its own.
 
 use semio_s_artifact_cad_cad_editor::*;
+use semio_s_artifact_cad_cad_kit::{cad_runtime_from, CadDispatchCtx, CadInteractionSnapshot, CadPlayRuntime, CadPlayView};
+use semio_s_artifact_cad_cad_model::snapshot::CAD_DIALECT;
 use semio_s_artifact_cad_cad_commands::{camera::set_camera, camera::set_projection, camera::set_projection_param};
 use semio_s_artifact_cad_cad_commands::contribution::set_contributions;
 use semio_s_artifact_cad_cad_commands::{engagement::engagement_abort, engagement::engagement_input, engagement::engagement_possible_select, engagement::engagement_repeat_last, engagement::engagement_submit, engagement::world_pointer_down, engagement::world_pointer_move};
@@ -184,7 +186,7 @@ pub fn empty_history() -> HistoryView {
 /// `cad_command_from_action` speaks `DslValue`, so this bridges the `pack::json::Value`-shaped
 /// test-harness `args` via `protocol::json::to_dsl_value` right at the call site.
 pub fn command_from_action(action: &str, args: Option<&Value>) -> CadCommand {
-    cad_command_from_action(action, args.map(semio_framework_pack_json::to_dsl_value).as_ref()).unwrap_or_else(|error| panic!("command_from_action: {error:?}"))
+    <CadPlayApp as semio_framework_plugin::app::ArtifactEditor>::command_from_action(action, &mut args.map(semio_framework_pack_json::to_dsl_value), &mut None).unwrap_or_else(|error| panic!("command_from_action: {error:?}"))
 }
 
 /// 🕹️ Drives one action against a bare `CadPlayApp` (unwrapped, config defaulted) so tests can
@@ -275,7 +277,7 @@ pub fn apply_mutations(scene: &CadSnapshot, operations: &[CadMutation]) -> CadSn
 pub fn config_after(emit: &Emit<CadMutation, CadConfigMutation>, base: &CadConfig) -> CadConfig {
     let mut next = base.clone();
     for operation in &emit.config_mutations {
-        next = operation.diff(&next).diff().clone();
+        next = protocol::apply_diff_cold(operation.diff(&next).diff(), &next).expect("valid config diff");
     }
     next
 }

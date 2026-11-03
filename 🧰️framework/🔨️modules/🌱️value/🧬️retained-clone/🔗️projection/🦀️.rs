@@ -49,6 +49,14 @@ impl<T: ?Sized + Sync> RetainedOwnedProjection<T> {
         unsafe { RetainedOwnedProjection::from_source(match self.borrow(){Ok(source)=>source.project(discriminator,project),Err(error)=>return crate::RetainedWorkOutcome{result:Err(error),work:0}},grant) }
     }
 
+    /// 🪤️ Projects through a fallible accessor so an absent native child refuses instead of aborting.
+    pub fn try_project<U: ?Sized + Sync, F>(&self, discriminator: usize, project: F, grant: RetainedCloneGrant) -> crate::RetainedWorkOutcome<(RetainedOwnedProjection<U>,RetainedCloneProgress)>
+    where F: for<'source> FnOnce(&'source T) -> Option<&'source U> {
+        if let Err(error)=RetainedOwnedProjection::<U>::admit_constructor(grant){return crate::RetainedWorkOutcome{result:Err(error),work:0}}
+        let source=match self.borrow(){Ok(source)=>source,Err(error)=>return crate::RetainedWorkOutcome{result:Err(error),work:0}};
+        match source.try_project(discriminator,|value|project(value).ok_or(())){Ok(child)=>unsafe{RetainedOwnedProjection::from_source(child,grant)},Err(())=>crate::RetainedWorkOutcome{result:Err(ValueError::invariant("native projection child is absent")),work:0}}
+    }
+
     /// ♻️ Releases one alias while the source authority continues to retain the root lease.
     pub fn close_step(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome {
         RetainedCloneBinding::close_one(&mut self.binding,grant)

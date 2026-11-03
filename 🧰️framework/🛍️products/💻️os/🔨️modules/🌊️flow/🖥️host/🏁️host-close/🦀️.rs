@@ -80,17 +80,18 @@ impl FlowHost {
     /// drop (`ordered-map root must be explicitly retired before drop`), so a host is CLOSED, never
     /// dropped. Retained callers drive [`FlowHostRetirement::retire_step`] under their own grant
     /// instead; this drains the same ladder in one uninterrupted cold pass.
-    pub fn retire_cold(self) {
+    pub fn retire_cold(self)->Result<(),ValueError>{
         let mut retirement=FlowHostRetirement::new(self);
-        while !retirement.terminal_is_empty(){let copy=retirement.next_close_copy_byte_demand().expect("cold host copy authority");let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:retirement.next_close_capacity_byte_demand(copy).expect("cold host capacity authority"),maximum_release_bytes:retirement.next_close_release_byte_demand().expect("cold host release authority"),maximum_depth:retirement.next_close_depth_demand().expect("cold host depth authority")};let step=retirement.close_step(grant).expect("cold original host close");assert!(step.progress().copied_items!=0,"cold original host close stalled at exact demand");}
+        let mut idle=0usize;while !retirement.terminal_is_empty(){let copy=retirement.next_close_copy_byte_demand()?.max(4096);let demand=retirement.close_demands(copy)?;let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};let step=retirement.close_step(grant)?;if step.progress()==RetainedCloneProgress::default(){idle+=1;if idle>64{return Err(ValueError::invariant("cold original host close stalled at exact demand"));}}else{idle=0;}}
+        Ok(())
     }
 
     /// 🏠️ Runs `body` against a host built from `fixture`, then retires that host — the ONE shape a
     /// caller that only needs a host for the length of an expression should use.
-    pub fn with_host_snapshot<R>(host_snapshot: &FlowHostSnapshot, body: impl FnOnce(&mut FlowHost) -> R) -> R {
+    pub fn with_host_snapshot<R>(host_snapshot: &FlowHostSnapshot, body: impl FnOnce(&mut FlowHost) -> R) -> Result<R, ValueError> {
         let mut host = Self::from_host_snapshot(host_snapshot.clone());
         let result = body(&mut host);
-        host.retire_cold();
-        result
+        host.retire_cold()?;
+        Ok(result)
     }
 }

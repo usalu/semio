@@ -27,7 +27,7 @@ fn face(id: &str, wire_ids: &[&str]) -> CadFace {
 fn object(id: &str, typology: &str, slot: &str, primitive_id: &str, kind: &str) -> CadObject {
     CadObject {
         id: id.to_string(),
-        label: id.to_string(),
+        label: semio_s_artifact_cad_cad_model::geometry::CadObjectName::literal(id),
         typology: typology.to_string(),
         visible: true,
         locked: false,

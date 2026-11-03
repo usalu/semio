@@ -27,7 +27,6 @@ semio-s-artifact-stdio-dwg-snapshot = { workspace = true }
 semio-s-artifact-stdio-semio-base = { workspace = true }
 semio-s-artifact-stdio-semio-mesh = { workspace = true }
 # 🧩️ Capability Dependencies
-semio-s-artifact-stdio-dwg-model = { workspace = true }
 semio-s-artifact-stdio-dwg-read = { workspace = true }
 semio-s-artifact-stdio-gltf-model = { workspace = true }
 semio-s-artifact-stdio-las = { workspace = true }

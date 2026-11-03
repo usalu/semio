@@ -105,7 +105,7 @@ pub fn close_job(job: &mut impl InteractiveJob) {
 pub fn close_payload(mut payload: RetainedJobPayload) {
     while !payload.terminal_is_empty() {
         let demand = payload.retirement_demands().expect("a locally owned payload quotes its close demand");
-        payload.close_step(close_grant(demand)).expect("a locally owned payload close has no external owner");
+        payload.close_step(close_grant(demand)).result.expect("a locally owned payload close has no external owner");
     }
 }
 
@@ -156,7 +156,7 @@ pub fn close_payload_page_bytes(mut payload: RetainedJobPayload) -> usize {
     while !payload.terminal_is_empty() {
         let demand = payload.retirement_demands().expect("a locally owned payload quotes its close demand");
         let pages = payload.page_count();
-        let step = payload.close_step(close_grant(demand)).expect("a locally owned payload close has no external owner");
+        let step = payload.close_step(close_grant(demand)).result.expect("a locally owned payload close has no external owner");
         if payload.page_count() < pages {
             released += step.progress().released_bytes;
         }

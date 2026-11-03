@@ -7,7 +7,7 @@ mod tests {
         let solid = kernel.box_prim(2.0, 2.0, 3.0).expect("box");
         let source = vec![CadObject {
             id: "object-box".into(),
-            label: "Box".into(),
+            label: semio_s_artifact_cad_cad_model::geometry::CadObjectName::literal("Box"),
             typology: "spatial.shape.primitive.box".into(),
             visible: true,
             locked: false,

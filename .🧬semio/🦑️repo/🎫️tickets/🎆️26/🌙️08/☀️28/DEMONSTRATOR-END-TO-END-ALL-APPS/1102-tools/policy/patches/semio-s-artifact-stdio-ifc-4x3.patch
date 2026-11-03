@@ -1,0 +1,42 @@
+--- a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4x3/🪆️subsets/✳️any/🧬️schema/⚖️validation/machine-domain.rs
++++ b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4x3/🪆️subsets/✳️any/🧬️schema/⚖️validation/machine-domain.rs
+@@ -135,16 +135,17 @@
+             return Err(refusal("express.complex-duplicate"));
+         }
+         this.store_mut().scratch.push(index);
+-        frame.entity = Some(match frame.entity {
++        let chosen = match frame.entity {
+             None => declaration,
+             Some(previous) if metadata::is_subtype(declaration.key, previous.key) => declaration,
+             Some(previous) if metadata::is_subtype(previous.key, declaration.key) => previous,
+             _ => return Err(refusal("express.complex-chain")),
+-        });
++        };
++        frame.entity = Some(chosen);
+         if frame.b == entity.complex.len() {
+             frame.b = 0;
+             frame.c = 0;
+-            frame.owner = frame.entity.unwrap().key;
++            frame.owner = chosen.key;
+             frame.stage = 2;
+         } else {
+             frame.b += 1;
+@@ -275,8 +276,7 @@
+     if this.store().domains[frame.a].name.is_none() && !name.is_empty() {
+         this.store_mut().domains[frame.a].name = Some(name);
+     }
+-    if expression.is_some_and(|expression| expression.kind == "aggregate") {
+-        let expression = expression.unwrap();
++    if let Some(expression) = expression.filter(|expression| expression.kind == "aggregate") {
+         let IfcValue::Aggregate(items) = value else { return Err(refusal("express.domain-aggregate")) };
+         let size = items.len() as i128;
+         let valid = if expression.aggregate == Some("ARRAY") {
+@@ -358,7 +358,7 @@
+         ("LOGICAL", IfcValue::Enum(value)) if ["T", "F", "U"].contains(&value.as_str()) => {}
+         ("BINARY", IfcValue::Binary(value)) => {
+             let length = value.len().saturating_sub(1) as i128 * 4 - value.as_bytes().first().map_or(0, |byte| byte.saturating_sub(b'0')) as i128;
+-            if expression.and_then(|expression| expression.width).is_some_and(|width| if expression.unwrap().fixed { length != width as i128 } else { length > width as i128 }) {
++            if expression.and_then(|expression| expression.width.map(|width| (width, expression.fixed))).is_some_and(|(width, fixed)| if fixed { length != width as i128 } else { length > width as i128 }) {
+                 return Err(refusal("express.domain-width"));
+             }
+         }

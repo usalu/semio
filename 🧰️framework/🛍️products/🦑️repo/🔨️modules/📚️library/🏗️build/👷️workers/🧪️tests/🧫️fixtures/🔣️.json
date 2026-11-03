@@ -97,6 +97,11 @@
    "kind": "test"
   },
   {
+   "target": "component",
+   "continuous": false,
+   "kind": "build"
+  },
+  {
    "target": "typecheck",
    "continuous": false,
    "kind": "check"
@@ -291,31 +296,31 @@
     "kinds": {
      "test": {
       "workers": true,
-      "maxInstances": 8,
+      "maxInstances": 4,
       "multiplex": false,
       "inProcess": true
      },
      "check": {
       "workers": true,
-      "maxInstances": 8,
+      "maxInstances": 5,
       "multiplex": false,
       "inProcess": true
      },
      "generate": {
       "workers": true,
-      "maxInstances": 1,
+      "maxInstances": 4,
       "multiplex": false,
       "inProcess": true
      },
      "build": {
       "workers": true,
-      "maxInstances": 1,
+      "maxInstances": 2,
       "multiplex": false,
       "inProcess": true
      },
      "script": {
       "workers": true,
-      "maxInstances": 1,
+      "maxInstances": 4,
       "multiplex": false,
       "inProcess": true
      },

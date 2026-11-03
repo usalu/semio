@@ -26,7 +26,7 @@ pub fn typed_input_retirement_law<T: RetireOwned>(label: &str, value: T) -> Type
     let demand = store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&pending).unwrap_or_else(|error| panic!("{label}: the typed lane quotes the owner: {error}"));
     let admit = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 1 << 16, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: 1 << 20, maximum_depth: demand.depth };
     let (admitted, heap) = observe(|| store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut pending, &mut active, admit));
-    let admitted = admitted.unwrap_or_else(|error| panic!("{label}: the typed lane admits the owner: {error}"));
+    let admitted = admitted.result.unwrap_or_else(|error| panic!("{label}: the typed lane admits the owner: {error}"));
     let RetainedCloneStep::Progress(progress) = admitted else { panic!("{label}: admission reports its birth as progress") };
     assert!(pending.is_none(), "{label}: admission takes the original owner");
     assert_eq!(heap.requested_bytes, progress.retained_capacity_bytes, "{label}: the admitted frame is exactly its quoted birth");
@@ -43,7 +43,7 @@ pub fn typed_input_retirement_law<T: RetireOwned>(label: &str, value: T) -> Type
             maximum_depth: owner.next_depth_demand().unwrap_or_else(|error| panic!("{label}: depth demand: {error}")).max(1),
         };
         let (step, heap) = observe(|| owner.close_step(grant));
-        let step = step.unwrap_or_else(|error| panic!("{label}: a fully quoted turn closes: {error}"));
+        let step = step.result.unwrap_or_else(|error| panic!("{label}: a fully quoted turn closes: {error}"));
         admit_retained_clone_close(grant, step, owner.terminal_is_empty(), "typed input law").unwrap_or_else(|error| panic!("{label}: the receipt fits its quoted grant: {error}"));
         let progress: RetainedCloneProgress = step.progress();
         assert_eq!(heap.requested_bytes, progress.retained_capacity_bytes, "{label}: turn {} allocates exactly its declared births", law.turns);

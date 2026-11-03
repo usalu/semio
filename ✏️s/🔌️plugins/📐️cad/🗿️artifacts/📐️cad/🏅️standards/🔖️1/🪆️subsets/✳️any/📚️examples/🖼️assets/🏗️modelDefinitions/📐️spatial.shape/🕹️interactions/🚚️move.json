@@ -2,7 +2,10 @@
   "schema": "spatial.interaction",
   "id": "transform.move",
   "version": "1.0.0",
-  "label": "Move",
+  "label": {
+    "native": { "en": "Move", "de": "Verschieben" },
+    "reuse": { "en": "Move", "de": "Verschieben" }
+  },
   "key": "m",
   "guards": [
     {
@@ -85,7 +88,10 @@
               {
                 "target": "select_objects_to_move",
                 "key": "s",
-                "label": "Start",
+                "label": {
+                  "native": { "en": "Start", "de": "Start" },
+                  "reuse": { "en": "Start", "de": "Start" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -178,7 +184,10 @@
         "selection": {
           "accept": ["vertex", "edge", "wire", "face", "shell", "solid"],
           "multiple": true,
-          "prompt": "Select objects to move"
+          "prompt": {
+            "native": { "en": "Select objects to move", "de": "Zu verschiebende Objekte auswählen" },
+            "reuse": { "en": "Select objects to move", "de": "Zu verschiebende Objekte auswählen" }
+          }
         },
         "on": [
           {
@@ -187,7 +196,10 @@
               {
                 "target": "select_objects_to_move",
                 "key": "s",
-                "label": "Select",
+                "label": {
+                  "native": { "en": "Select", "de": "Auswählen" },
+                  "reuse": { "en": "Select", "de": "Auswählen" }
+                },
                 "effects": [
                   {
                     "mutation": "action",
@@ -220,7 +232,10 @@
                 "guard": "hasSelectionTargets",
                 "target": "point_to_move_from",
                 "key": "Enter",
-                "label": "Finish selection"
+                "label": {
+                  "native": { "en": "Finish selection", "de": "Auswahl beenden" },
+                  "reuse": { "en": "Finish selection", "de": "Auswahl beenden" }
+                }
               }
             ]
           },
@@ -231,7 +246,10 @@
                 "guard": "hasSelectionTargets",
                 "target": "point_to_move_from",
                 "key": "RightClick",
-                "label": "Finish selection"
+                "label": {
+                  "native": { "en": "Finish selection", "de": "Auswahl beenden" },
+                  "reuse": { "en": "Finish selection", "de": "Auswahl beenden" }
+                }
               }
             ]
           },
@@ -241,7 +259,10 @@
               {
                 "target": "idle",
                 "key": "x",
-                "label": "Cancel"
+                "label": {
+                  "native": { "en": "Cancel", "de": "Abbrechen" },
+                  "reuse": { "en": "Cancel", "de": "Abbrechen" }
+                }
               }
             ]
           }
@@ -287,7 +308,10 @@
             "transitions": [
               {
                 "key": "f",
-                "label": "Free",
+                "label": {
+                  "native": { "en": "Free", "de": "Frei" },
+                  "reuse": { "en": "Free", "de": "Frei" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -314,7 +338,10 @@
             "transitions": [
               {
                 "key": "n",
-                "label": "Normal",
+                "label": {
+                  "native": { "en": "Normal", "de": "Normal" },
+                  "reuse": { "en": "Normal", "de": "Normal" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -341,7 +368,10 @@
             "transitions": [
               {
                 "key": "v",
-                "label": "Vertical",
+                "label": {
+                  "native": { "en": "Vertical", "de": "Vertikal" },
+                  "reuse": { "en": "Vertical", "de": "Vertikal" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -370,13 +400,19 @@
                 "guard": "hasMoveFrom",
                 "target": "point_to_move_to",
                 "key": "Enter",
-                "label": "Source point picked"
+                "label": {
+                  "native": { "en": "Source point picked", "de": "Quellpunkt gewählt" },
+                  "reuse": { "en": "Source point picked", "de": "Quellpunkt gewählt" }
+                }
               },
               {
                 "guard": "noMoveFrom",
                 "target": "point_to_move_to",
                 "key": "Enter",
-                "label": "Use selection center",
+                "label": {
+                  "native": { "en": "Use selection center", "de": "Auswahlmitte verwenden" },
+                  "reuse": { "en": "Use selection center", "de": "Auswahlmitte verwenden" }
+                },
                 "effects": [
                   {
                     "mutation": "action",
@@ -432,7 +468,10 @@
               {
                 "target": "idle",
                 "key": "x",
-                "label": "Cancel"
+                "label": {
+                  "native": { "en": "Cancel", "de": "Abbrechen" },
+                  "reuse": { "en": "Cancel", "de": "Abbrechen" }
+                }
               }
             ]
           }
@@ -472,7 +511,10 @@
             "transitions": [
               {
                 "key": "f",
-                "label": "Free",
+                "label": {
+                  "native": { "en": "Free", "de": "Frei" },
+                  "reuse": { "en": "Free", "de": "Frei" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -499,7 +541,10 @@
             "transitions": [
               {
                 "key": "n",
-                "label": "Normal",
+                "label": {
+                  "native": { "en": "Normal", "de": "Normal" },
+                  "reuse": { "en": "Normal", "de": "Normal" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -526,7 +571,10 @@
             "transitions": [
               {
                 "key": "v",
-                "label": "Vertical",
+                "label": {
+                  "native": { "en": "Vertical", "de": "Vertikal" },
+                  "reuse": { "en": "Vertical", "de": "Vertikal" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -554,7 +602,10 @@
               {
                 "target": "point_to_move_from",
                 "key": "u",
-                "label": "Undo pick",
+                "label": {
+                  "native": { "en": "Undo pick", "de": "Auswahl rückgängig" },
+                  "reuse": { "en": "Undo pick", "de": "Auswahl rückgängig" }
+                },
                 "effects": [
                   {
                     "mutation": "action",
@@ -614,7 +665,10 @@
               {
                 "target": "idle",
                 "key": "x",
-                "label": "Cancel"
+                "label": {
+                  "native": { "en": "Cancel", "de": "Abbrechen" },
+                  "reuse": { "en": "Cancel", "de": "Abbrechen" }
+                }
               }
             ]
           }
@@ -635,7 +689,10 @@
             "kind": "label",
             "id": "select_objects_to_move-prompt",
             "role": "prompt",
-            "text": "Select objects to move (Enter or Space to finish)",
+            "text": {
+              "native": { "en": "Select objects to move (Enter or Space to finish)", "de": "Zu verschiebende Objekte auswählen (Enter oder Leertaste zum Beenden)" },
+              "reuse": { "en": "Select objects to move (Enter or Space to finish)", "de": "Zu verschiebende Objekte auswählen (Enter oder Leertaste zum Beenden)" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]
@@ -698,7 +755,10 @@
             "kind": "label",
             "id": "point_to_move_from-prompt",
             "role": "prompt",
-            "text": "Point to move from (Enter = selection center; n/v/f = Normal/Vertical/Free)",
+            "text": {
+              "native": { "en": "Point to move from (Enter = selection center; n/v/f = Normal/Vertical/Free)", "de": "Verschiebeausgangspunkt (Enter = Auswahlmitte; n/v/f = Normal/Vertikal/Frei)" },
+              "reuse": { "en": "Point to move from (Enter = selection center; n/v/f = Normal/Vertical/Free)", "de": "Verschiebeausgangspunkt (Enter = Auswahlmitte; n/v/f = Normal/Vertikal/Frei)" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]
@@ -776,7 +836,10 @@
             "kind": "label",
             "id": "point_to_move_to-prompt",
             "role": "prompt",
-            "text": "Point to move to (u = undo pick; n/v/f = Normal/Vertical/Free)",
+            "text": {
+              "native": { "en": "Point to move to (u = undo pick; n/v/f = Normal/Vertical/Free)", "de": "Verschiebezielpunkt (u = Auswahl rückgängig; n/v/f = Normal/Vertikal/Frei)" },
+              "reuse": { "en": "Point to move to (u = undo pick; n/v/f = Normal/Vertical/Free)", "de": "Verschiebezielpunkt (u = Auswahl rückgängig; n/v/f = Normal/Vertikal/Frei)" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]

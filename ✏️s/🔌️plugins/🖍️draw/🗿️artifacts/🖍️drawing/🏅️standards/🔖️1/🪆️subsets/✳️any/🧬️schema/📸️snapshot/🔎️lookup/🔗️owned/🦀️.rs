@@ -39,11 +39,11 @@ impl DrawingOwnedLayerLookupCursor {
     pub fn advance(&mut self, target: RetainedCloneRef<'_, PagedUtf8<{usize::MAX}>>, grant: RetainedCloneGrant) -> Result<DrawingOwnedLayerLookupStep, ValueError> {
         if self.closing || self.spent { return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "owned Drawing lookup is closing or spent")); }
         if grant.maximum_items == 0 { return Ok(DrawingOwnedLayerLookupStep::Pending(Default::default())); }
-        if let Some(progress) = target.bind(&mut self.target, grant)? { return Ok(DrawingOwnedLayerLookupStep::Pending(progress)); }
+        if let Some(progress) = target.bind(&mut self.target, grant).result? { return Ok(DrawingOwnedLayerLookupStep::Pending(progress)); }
         if let Some(node) = &self.output { return Ok(DrawingOwnedLayerLookupStep::Complete { found: node.is_some(), progress: Default::default() }); }
         if self.phase == 7 {
             if !alias_funded(grant) { return Ok(pending_unit_inert()); }
-            let (layers, progress) = self.source.as_ref().expect("retained native Drawing lookup root").project(1, |snapshot| &snapshot.layers, grant)?;
+            let (layers, progress) = self.source.as_ref().ok_or_else(|| ValueError::invariant("retained native Drawing lookup root is absent"))?.project(1,  |snapshot| &snapshot.layers, grant).result?;
             self.pending = Some(Frame { layers, index: 0 });
             self.phase = 0;
             return Ok(DrawingOwnedLayerLookupStep::Pending(progress));
@@ -54,7 +54,7 @@ impl DrawingOwnedLayerLookupCursor {
             return Ok(DrawingOwnedLayerLookupStep::Complete { found: true, progress: RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<Node>(), ..Default::default() } });
         }
         if self.phase == 1 {
-            let step = self.comparison.close_step(grant)?;
+            let step = self.comparison.close_step(grant).result?;
             if self.comparison.terminal_is_empty() { self.comparison = Default::default(); self.phase = 2; }
             return Ok(DrawingOwnedLayerLookupStep::Pending(step.progress()));
         }
@@ -67,14 +67,14 @@ impl DrawingOwnedLayerLookupCursor {
         }
         if self.phase == 6 {
             if !alias_funded(grant) { return Ok(pending_unit_inert()); }
-            let (layers, progress) = self.current.as_ref().expect("compared native Drawing group").project(1, |layer| match layer { DrawingLayerNode::Group(group) => &group.children, _ => unreachable!() }, grant)?;
+            let (layers, progress) = self.current.as_ref().ok_or_else(|| ValueError::invariant("compared native Drawing group is absent"))?.try_project(1, |layer| match layer { DrawingLayerNode::Group(group) => Some(&group.children), _ => None }, grant).result?;
             self.pending = Some(Frame { layers, index: 0 });
             self.phase = 3;
             return Ok(DrawingOwnedLayerLookupStep::Pending(progress));
         }
         if self.phase == 3 {
             let current = self.current.as_mut().expect("owned compared node");
-            let step = current.close_step(grant)?;
+            let step = current.close_step(grant).result?;
             if current.terminal_is_empty() { self.current = None; self.phase = 0; }
             return Ok(DrawingOwnedLayerLookupStep::Pending(step.progress()));
         }
@@ -100,18 +100,18 @@ impl DrawingOwnedLayerLookupCursor {
                 return Ok(DrawingOwnedLayerLookupStep::Complete { found: false, progress: RetainedCloneProgress { copied_items: 1, ..Default::default() } });
             };
             if frame.index == frame.layers.borrow()?.get().len() {
-                let step = frame.layers.close_step(grant)?;
+                let step = frame.layers.close_step(grant).result?;
                 if frame.layers.terminal_is_empty() { self.phase = 5; }
                 return Ok(DrawingOwnedLayerLookupStep::Pending(step.progress()));
             }
             if !alias_funded(grant) { return Ok(pending_unit_inert()); }
             let index = frame.index;
-            let (node, progress) = frame.layers.project(index, |layers| &layers[index], grant)?;
+            let (node, progress) = frame.layers.project(index, |layers| &layers[index], grant).result?;
             self.current = Some(node);
             return Ok(DrawingOwnedLayerLookupStep::Pending(progress));
         }
         let current = self.current.as_ref().expect("selected native Drawing node");
-        let step = self.comparison.compare(current.borrow()?.project(1, crate::layer_id), target, BoundedOrdGrant { maximum_items: 1, maximum_bytes: grant.maximum_copy_bytes }, grant)?;
+        let step = self.comparison.compare(current.borrow()?.project(1, crate::layer_id), target, BoundedOrdGrant { maximum_items: 1, maximum_bytes: grant.maximum_copy_bytes }, grant).result?;
         let (ordering, progress) = match step {
             BoundedOrdStep::Authority(progress) => return Ok(DrawingOwnedLayerLookupStep::Pending(progress)),
             BoundedOrdStep::Progress(progress) => (None, progress),
@@ -147,26 +147,26 @@ impl DrawingOwnedLayerLookupCursor {
     pub fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if !self.closing { return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "owned Drawing lookup closure was not started")); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        let step = self.comparison.close_step(grant)?;
+        let step = self.comparison.close_step(grant).result?;
         if !self.comparison.terminal_is_empty() { return Ok(RetainedCloneStep::Progress(step.progress())); }
         if let Some(Some(node)) = &mut self.output {
-            let step = node.close_step(grant)?;
+            let step = node.close_step(grant).result?;
             if node.terminal_is_empty() { self.output = None; }
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if self.output.take().is_some() { return Ok(close_unit(0)); }
         if let Some(node) = &mut self.current {
-            let step = node.close_step(grant)?;
+            let step = node.close_step(grant).result?;
             if node.terminal_is_empty() { self.current = None; }
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if let Some(frame) = &mut self.pending {
-            let step = frame.layers.close_step(grant)?;
+            let step = frame.layers.close_step(grant).result?;
             if frame.layers.terminal_is_empty() { self.pending = None; }
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if let Some(frame) = self.frames.last_mut() {
-            if !frame.layers.terminal_is_empty() { return Ok(RetainedCloneStep::Progress(frame.layers.close_step(grant)?.progress())); }
+            if !frame.layers.terminal_is_empty() { return Ok(RetainedCloneStep::Progress(frame.layers.close_step(grant).result?.progress())); }
             if grant.maximum_copy_bytes < size_of::<Frame>() { return Ok(RetainedCloneStep::Progress(Default::default())); }
             self.frames.pop();
             return Ok(close_unit(size_of::<Frame>()));
@@ -176,11 +176,11 @@ impl DrawingOwnedLayerLookupCursor {
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: usize::from(progress.progressed), copied_bytes: 0, released_bytes: progress.released_allocation_bytes, ..Default::default() }));
         }
         if self.target.is_some() {
-            let step = RetainedCloneBinding::close_one(&mut self.target, grant)?;
+            let step = RetainedCloneBinding::close_one(&mut self.target, grant).result?;
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if let Some(source) = &mut self.source {
-            let step = source.close_step(grant)?;
+            let step = source.close_step(grant).result?;
             if source.terminal_is_empty() { self.source = None; }
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }

@@ -1,0 +1,11 @@
+W-wco-r0 ✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/Cargo.toml rc=0
+W-wco-r1 ✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/Cargo.toml rc=0
+W-wco-r2 ✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/Cargo.toml rc=1
+W-wco-r3 ✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/Cargo.toml rc=1
+W-wco-r4 ✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/Cargo.toml rc=1
+W-wco-r5 ✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/Cargo.toml rc=1
+W-wco-r6 ✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/Cargo.toml rc=1
+W-wco-r7 ✏️s/🔌️plugins/📕️norm/Cargo.toml rc=0
+W-wco-r8 ✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/Cargo.toml rc=1
+W-wco-r9 ✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/Cargo.toml rc=1
+W-wco-r10 ✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/Cargo.toml rc=1

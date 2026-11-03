@@ -72,7 +72,7 @@ fn sorting_cancellation_and_duplicate_or_absent_keys_keep_original_custody() {
     assert_eq!(error.kind, ValueRefusalKind::Canceled);
     enabled.set(true);
     while native.has_retirement_owner() {
-        native.close_retirement_recipient(grant()).unwrap();
+        native.close_retirement_recipient(grant()).result.unwrap();
     }
     let mut owner = NativeSnapshotDecodeOwner::new(&mut native, grant());
     let index = FemIdentityIndex::receive(&source, &mut owner).unwrap();
@@ -84,6 +84,6 @@ fn sorting_cancellation_and_duplicate_or_absent_keys_keep_original_custody() {
     let error = FemIdentityIndex::receive(&duplicate, &mut NativeSnapshotDecodeOwner::new(&mut native, grant())).err().unwrap();
     assert_eq!(error.kind, ValueRefusalKind::InvalidValue);
     while native.has_retirement_owner() {
-        native.close_retirement_recipient(grant()).unwrap();
+        native.close_retirement_recipient(grant()).result.unwrap();
     }
 }

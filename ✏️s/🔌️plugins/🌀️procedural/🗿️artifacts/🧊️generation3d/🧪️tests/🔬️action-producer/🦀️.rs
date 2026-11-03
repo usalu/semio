@@ -35,6 +35,10 @@ async fn widget_value_edit_and_undo_reach_the_command_through_the_framework_decl
     assert_eq!(slider(&app).1, edited, "the typed command the producer born applied the edit");
     settle_history_verb(&mut app.0, "undo", action_meta.instance_id, MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut fixture_identity(), app.1.cx()).await;
     assert_eq!(slider(&app).1, base, "undo restores the widget value");
+    settle_history_verb(&mut app.0, "redo", action_meta.instance_id, MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut fixture_identity(), app.1.cx()).await;
+    assert_eq!(slider(&app).1, edited, "redo reapplies the widget value");
+    settle_history_verb(&mut app.0, "undo", action_meta.instance_id, MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut fixture_identity(), app.1.cx()).await;
+    assert_eq!(slider(&app).1, base, "a second undo restores it again");
 }
 
 #[semio_framework_async_macros::async_test]

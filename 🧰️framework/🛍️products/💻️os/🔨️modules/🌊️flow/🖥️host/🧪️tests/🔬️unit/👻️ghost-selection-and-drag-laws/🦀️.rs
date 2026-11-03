@@ -152,7 +152,7 @@ fn channel_hover_and_selection_round_trip_at_detail_lod() {
     let hovered=host.hover_facts().channel.unwrap();
     assert_eq!(hovered.widget_id, "add");
     assert_eq!(hovered.port, "a");
-    assert_eq!(hovered.direction, dag::DagChannelDirection::In);
+    assert_eq!(hovered.direction, DagChannelDirection::In);
     host.set_selected_channels(&[semio_framework_os_infinite::board::schema::dag_input::DagChannelRef { widget_id: "add".into(), port: "a".into(), direction: semio_framework_os_infinite::board::schema::dag_input::DagChannelDirection::In }]);
     let selected = host.selected_channels();
     assert_eq!(selected.len(), 1);

@@ -45,7 +45,7 @@ impl RetirementCursor for ChildEmitPreparationRetirement{
   match source.close_step(grant){
    Ok(PluginLifecycleStep::Progress(progress)|PluginLifecycleStep::Complete(progress))=>RetirementStep::Progress(progress,1),
    Ok(PluginLifecycleStep::AwaitingInput{..}|PluginLifecycleStep::Blocked{..})=>RetirementStep::BudgetExhausted,
-   Err(original)=>{self.fault=Some(ControlledRetirement::new(original).expect("full original diagnostic close authority"));RetirementStep::Failure(ValueError::literal(ValueRefusalKind::InvariantViolated,"original child preparation refusal remains retained"),0)}
+   Err(original)=>{match ControlledRetirement::new(original){Ok(fault)=>self.fault=Some(fault),Err((error,_))=>return RetirementStep::Failure(error,0)}RetirementStep::Failure(ValueError::literal(ValueRefusalKind::InvariantViolated,"original child preparation refusal remains retained"),0)}
   }
  }
  fn terminal_is_empty(&self)->bool{self.original.is_none()&&self.fault.is_none()}

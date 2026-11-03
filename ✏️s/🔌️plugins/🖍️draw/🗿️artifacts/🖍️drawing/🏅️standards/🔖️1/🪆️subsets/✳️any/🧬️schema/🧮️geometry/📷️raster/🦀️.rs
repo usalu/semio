@@ -26,8 +26,9 @@ impl std::error::Error for PathRasterError{}
 fn coordinate(v:f64)->bool{v.is_finite()&&v.abs()<=1e9}
 fn invalid(message:&'static str)->PathRasterError{PathRasterError::Invalid(message)}
 fn grow<T>(values:&mut Vec<T>,extra:usize,limit:usize,ledger:&mut RetainedWorkLedger)->Result<bool,PathRasterError>{let needed=values.len().checked_add(extra).ok_or_else(||invalid("Path raster vector extent overflow"))?;if needed>limit{return Err(invalid("Path raster geometry exceeds point budget"))}if values.capacity()>=needed{return Ok(true)}ledger.reserve_vec(values,needed.max(values.capacity().saturating_mul(2).min(limit))).map_err(invalid)}
-struct CloseTurn{cpu:u64,items:usize,error:Option<ValueError>,posting_refusal:Option<&'static str>}
-fn close_one<T:RetireOwned>(owner:&mut ControlledRetirement<T>,ledger:&mut RetainedWorkLedger)->CloseTurn{
+/// 🧹️ One funded close turn of a controlled retirement owner, shared with the painted pick query.
+pub struct CloseTurn{pub cpu:u64,pub items:usize,pub error:Option<ValueError>,pub posting_refusal:Option<&'static str>}
+pub fn close_one<T:RetireOwned>(owner:&mut ControlledRetirement<T>,ledger:&mut RetainedWorkLedger)->CloseTurn{
  let grant=ledger.child_grant();let d=match owner.next_demand(grant.maximum_copy_bytes){Ok(d)=>d,Err(error)=>return CloseTurn{cpu:1,items:0,error:Some(error),posting_refusal:None}};
  if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return match ledger.require_child(d){Ok(())=>CloseTurn{cpu:0,items:0,error:None,posting_refusal:None},Err(message)=>CloseTurn{cpu:1,items:0,error:Some(ValueError::literal(ValueRefusalKind::InvariantViolated,message)),posting_refusal:None}}}
  let result=owner.step(grant);let used=match &result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};let posting=ledger.consume_child(used).err();let(error,posting_refusal)=match result{Err(error)=>(Some(error),posting),Ok(_)=>(posting.map(|message|ValueError::literal(ValueRefusalKind::InvariantViolated,message)),None)};CloseTurn{cpu:1,items:used.copied_items,error,posting_refusal}

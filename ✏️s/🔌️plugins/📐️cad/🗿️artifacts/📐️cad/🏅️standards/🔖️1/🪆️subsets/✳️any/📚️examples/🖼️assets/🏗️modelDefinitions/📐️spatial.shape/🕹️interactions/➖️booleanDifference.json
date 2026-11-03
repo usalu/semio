@@ -2,7 +2,10 @@
   "schema": "spatial.interaction",
   "id": "solid.booleanDifference",
   "version": "1.0.0",
-  "label": "BooleanDifference",
+  "label": {
+    "native": { "en": "BooleanDifference", "de": "Boolesche Differenz" },
+    "reuse": { "en": "BooleanDifference", "de": "Boolesche Differenz" }
+  },
   "interaction": {
     "spatialGroundPick": false,
     "pickDisabledStates": ["idle", "committed"],
@@ -23,7 +26,10 @@
               {
                 "target": "select_surfaces_or_polysurfaces_to_subtract_from",
                 "key": "s",
-                "label": "Start",
+                "label": {
+                  "native": { "en": "Start", "de": "Start" },
+                  "reuse": { "en": "Start", "de": "Start" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -84,7 +90,10 @@
         "selection": {
           "accept": ["shell", "solid"],
           "multiple": true,
-          "prompt": "Select surfaces or polysurfaces to subtract from"
+          "prompt": {
+            "native": { "en": "Select surfaces or polysurfaces to subtract from", "de": "Flächen oder Polyflächen auswählen, von denen subtrahiert wird" },
+            "reuse": { "en": "Select surfaces or polysurfaces to subtract from", "de": "Flächen oder Polyflächen auswählen, von denen subtrahiert wird" }
+          }
         },
         "on": [
           {
@@ -93,7 +102,10 @@
               {
                 "target": "select_surfaces_or_polysurfaces_to_subtract_from",
                 "key": "s",
-                "label": "Select",
+                "label": {
+                  "native": { "en": "Select", "de": "Auswählen" },
+                  "reuse": { "en": "Select", "de": "Auswählen" }
+                },
                 "effects": [
                   {
                     "mutation": "action",
@@ -125,7 +137,10 @@
               {
                 "target": "select_surfaces_or_polysurfaces_to_subtract_with",
                 "key": "Enter",
-                "label": "Finish"
+                "label": {
+                  "native": { "en": "Finish", "de": "Fertig" },
+                  "reuse": { "en": "Finish", "de": "Fertig" }
+                }
               }
             ]
           },
@@ -135,7 +150,10 @@
               {
                 "target": "select_surfaces_or_polysurfaces_to_subtract_with",
                 "key": "RightClick",
-                "label": "Finish"
+                "label": {
+                  "native": { "en": "Finish", "de": "Fertig" },
+                  "reuse": { "en": "Finish", "de": "Fertig" }
+                }
               }
             ]
           }
@@ -146,7 +164,10 @@
         "selection": {
           "accept": ["shell", "solid"],
           "multiple": true,
-          "prompt": "Select surfaces or polysurfaces to subtract with"
+          "prompt": {
+            "native": { "en": "Select surfaces or polysurfaces to subtract with", "de": "Flächen oder Polyflächen zum Subtrahieren auswählen" },
+            "reuse": { "en": "Select surfaces or polysurfaces to subtract with", "de": "Flächen oder Polyflächen zum Subtrahieren auswählen" }
+          }
         },
         "on": [
           {
@@ -155,7 +176,10 @@
               {
                 "target": "select_surfaces_or_polysurfaces_to_subtract_with",
                 "key": "s",
-                "label": "Select",
+                "label": {
+                  "native": { "en": "Select", "de": "Auswählen" },
+                  "reuse": { "en": "Select", "de": "Auswählen" }
+                },
                 "effects": [
                   {
                     "mutation": "action",
@@ -187,7 +211,10 @@
               {
                 "target": "committed",
                 "key": "Enter",
-                "label": "Finish"
+                "label": {
+                  "native": { "en": "Finish", "de": "Fertig" },
+                  "reuse": { "en": "Finish", "de": "Fertig" }
+                }
               }
             ]
           },
@@ -197,7 +224,10 @@
               {
                 "target": "committed",
                 "key": "RightClick",
-                "label": "Finish"
+                "label": {
+                  "native": { "en": "Finish", "de": "Fertig" },
+                  "reuse": { "en": "Finish", "de": "Fertig" }
+                }
               }
             ]
           }
@@ -218,7 +248,10 @@
             "kind": "label",
             "id": "select_surfaces_or_polysurfaces_to_subtract_from-prompt",
             "role": "prompt",
-            "text": "Select surfaces or polysurfaces to subtract from",
+            "text": {
+              "native": { "en": "Select surfaces or polysurfaces to subtract from", "de": "Flächen oder Polyflächen auswählen, von denen subtrahiert wird" },
+              "reuse": { "en": "Select surfaces or polysurfaces to subtract from", "de": "Flächen oder Polyflächen auswählen, von denen subtrahiert wird" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]
@@ -281,7 +314,10 @@
             "kind": "label",
             "id": "select_surfaces_or_polysurfaces_to_subtract_with-prompt",
             "role": "prompt",
-            "text": "Select surfaces or polysurfaces to subtract with",
+            "text": {
+              "native": { "en": "Select surfaces or polysurfaces to subtract with", "de": "Flächen oder Polyflächen zum Subtrahieren auswählen" },
+              "reuse": { "en": "Select surfaces or polysurfaces to subtract with", "de": "Flächen oder Polyflächen zum Subtrahieren auswählen" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]

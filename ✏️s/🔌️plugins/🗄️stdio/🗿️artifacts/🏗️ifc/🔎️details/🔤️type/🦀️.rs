@@ -8,6 +8,8 @@ use semio_s_artifact_stdio_contract::editing;
 use semio_s_artifact_stdio_contract::editing::{DslSnapshotDetailsProvider, SnapshotDetailItemCapabilities, SnapshotDetailPathSegment as P, SnapshotDetailPresentation, SnapshotDetailValue, SnapshotDetailVariant, SnapshotDetailsProvider};
 use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::{ifc_arguments_identical, ifc_complex_identical, IfcComplexType, IfcEntity, IfcSnapshot, IfcTypedValue, IfcValue};
 use semio_s_artifact_stdio_ifc_4_mutations::standards::v4::subsets::any::schema::mutations::{edit_rules, IfcMutation};
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
 pub use semio_s_artifact_stdio_ifc_details_wire::*;
 pub use semio_s_artifact_stdio_ifc_domain as domain;
 pub use semio_s_artifact_stdio_ifc_domain::cursor as domain_cursor;

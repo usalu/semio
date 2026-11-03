@@ -10,13 +10,13 @@ const MAXIMUM_PAGES: usize = 128;
 const PAGE_BYTES: usize = 1024;
 
 #[derive(Clone, Copy, Default, Debug, PartialEq, Eq)]
-pub(super) struct DictionaryRange {
+pub struct DictionaryRange {
     pub offset: u64,
     pub length: u64,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) enum DictionaryIndexError {
+pub enum DictionaryIndexError {
     Malformed,
     Capacity,
     State,
@@ -29,7 +29,7 @@ struct Delta {
 }
 
 /// 🧱️ At most one fixed page is allocated by append; failed deltas remain private until close.
-pub(super) struct RetainedDictionaryIndex {
+pub struct RetainedDictionaryIndex {
     pub pages: ManuallyDrop<[Option<Box<[DictionaryRange; PAGE_ENTRIES]>>; MAXIMUM_PAGES]>,
     pub allocated: usize,
     visible: usize,

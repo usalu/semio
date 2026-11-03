@@ -1,5 +1,6 @@
 //! 🎞️ Sequence reserved media import job.
 
+use semio_framework_pack_json as json;
 use neural_engine::Dictionary;
 use semio_framework_plugin::{DslValue, Emit, Fault, Media, MediaPayload, NoConfigMutation};
 use crate::mutations::SequenceMutation;
@@ -48,7 +49,7 @@ pub struct SequenceImportJob {
     pending_completion_rejection: Option<semio_framework_plugin::app::ArtifactToolCompletionRejection<semio_framework_plugin::EditorApp<SequencePlayApp>>>,
 }
 
-type SequenceJobTurn<'a> = Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError>;
+type SequenceJobTurn<'a> = Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure>;
 
 enum SequenceDecodeTurn {
     Cancelled,
@@ -293,7 +294,7 @@ impl SequenceImportJob {
             return unit();
         }
         if self.retirement.is_some() {
-            return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, child).map(|step| RetainedCloneStep::Progress(step.progress()));
+            return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, child).result.map(|step| RetainedCloneStep::Progress(step.progress()));
         }
         if self.children.take().is_some() {
             return unit();
@@ -305,7 +306,7 @@ impl SequenceImportJob {
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if self.params.is_some() {
-            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.params, &mut self.retirement, child);
+            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.params, &mut self.retirement, child).result;
         }
         if self.media.is_some() {
             return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.media, &mut self.retirement, child);
@@ -324,7 +325,7 @@ impl SequenceImportJob {
             return unit();
         }
         if let Some(snapshot) = self.snapshot.take() {
-            return match semio_framework_value::admit_shared_retirement(snapshot, child, true) {
+            return match semio_framework_value::admit_shared_retirement(snapshot, child, true).result {
                 Ok((owner, progress)) => {
                     self.retirement = Some(owner);
                     Ok(RetainedCloneStep::Progress(progress))
@@ -336,10 +337,10 @@ impl SequenceImportJob {
             };
         }
         if !self.fault_publication.terminal_is_empty() {
-            return self.fault_publication.close_step(child).map(|step| RetainedCloneStep::Progress(step.progress()));
+            return self.fault_publication.close_step(child).result.map(|step| RetainedCloneStep::Progress(step.progress()));
         }
         if !self.checkpoint_publication.terminal_is_empty() {
-            return self.checkpoint_publication.close_step(child).map(|step| RetainedCloneStep::Progress(step.progress()));
+            return self.checkpoint_publication.close_step(child).result.map(|step| RetainedCloneStep::Progress(step.progress()));
         }
         Ok(RetainedCloneStep::Complete(Default::default()))
     }
@@ -349,7 +350,7 @@ impl SequenceImportJob {
     /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
     fn step_value<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> SequenceJobTurn<'a> {
         if cx.is_cancelled() {
-            return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx);
+            return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx).map_err(semio_framework_job::OriginalTurnFailure::from);
         }
         if self.fault_detail.is_some() {
             return self.fault(cx, "");
@@ -361,8 +362,8 @@ impl SequenceImportJob {
             cx.set_stage("sequence-import-decode");
             match self.decode(cx) {
                 Err(detail) => return self.fault(cx, &detail),
-                Ok(SequenceDecodeTurn::Cancelled) => return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx),
-                Ok(SequenceDecodeTurn::Yield) => return semio_framework_job::JobOutcomeBorrow::admit_yield(cx),
+                Ok(SequenceDecodeTurn::Cancelled) => return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx).map_err(semio_framework_job::OriginalTurnFailure::from),
+                Ok(SequenceDecodeTurn::Yield) => return semio_framework_job::JobOutcomeBorrow::admit_yield(cx).map_err(semio_framework_job::OriginalTurnFailure::from),
                 Ok(SequenceDecodeTurn::Done) => {
                     cx.consume_fuel(1);
                 }
@@ -382,7 +383,7 @@ impl SequenceImportJob {
                 Ok(semio_framework_plugin::app::ChildEmitPreparationStep::Ready(_)) => {}
                 Ok(semio_framework_plugin::app::ChildEmitPreparationStep::Pending(_)) => {
                     cx.consume_fuel(1);
-                    return semio_framework_job::JobOutcomeBorrow::admit_yield(cx);
+                    return semio_framework_job::JobOutcomeBorrow::admit_yield(cx).map_err(semio_framework_job::OriginalTurnFailure::from);
                 }
                 Ok(semio_framework_plugin::app::ChildEmitPreparationStep::Refused(fault, _)) | Err(fault) => return self.fault(cx, &fault.message),
             }
@@ -406,12 +407,12 @@ impl SequenceImportJob {
             }
             self.completed = true;
         }
-        semio_framework_job::JobOutcomeBorrow::admit_complete(cx, None, None)
+        semio_framework_job::JobOutcomeBorrow::admit_complete(cx, None, None).map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 }
 
 impl semio_framework_job::InteractiveJob for SequenceImportJob {
-    fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{self.step_value(cx).map_err(semio_framework_job::OriginalTurnFailure::from)}
+    fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>,_return_claim:&mut semio_framework_job::OriginalJobReturnClaim<'_>)->semio_framework_job::InteractiveJobStep<'a>{match self.step_value(cx){Ok(outcome)=>semio_framework_job::InteractiveJobStep::Outcome(outcome),Err(error)=>semio_framework_job::InteractiveJobStep::Continuation(semio_framework_job::OriginalTurnFailure::from(error))}}
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
         match descriptor.kind() {
@@ -429,10 +430,10 @@ impl semio_framework_job::InteractiveJob for SequenceImportJob {
     }
 
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        semio_framework_job::close_original_granted_step(cx,|grant|{
+        semio_framework_job::close_original_granted_step(cx,|grant|semio_framework_value::RetainedWorkOutcome{work:1,result:(||{
             self.closing = true;
             sequence_close_step(self.close_original(grant))
-        })
+        })()})
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demands(0)?.copy_bytes) }

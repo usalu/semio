@@ -46,7 +46,7 @@ test("a cancelled scan touches nothing",async()=>{
 });
 
 test("the build removes superseded blocks after, never inside, its builder custody, and the collector removes them first",()=>{
- const host=readFileSync(fileURLToPath(new URL("../../../../../../../../../../🏗️build/🕸️graph/🟦️.ts",import.meta.url)),"utf8"),build=host.indexOf("generationScopeV1);\n      if(image!==undefined)await sweepSupersededBlocksV1("),sweep=host.indexOf("minimumBlocks:24576,blocksPerHeader:6");
+ const host=readFileSync(fileURLToPath(new URL("../../../../../../../../../../🏗️build/🕸️graph/🟦️.ts",import.meta.url)),"utf8"),build=host.indexOf("markBuildCapacityPhaseV1(\"plan\");\n      if(image!==undefined)await sweepSupersededBlocksV1("),sweep=host.indexOf("minimumBlocks:GRAPH_LIMITS_V1.sweepMinimumBlocks,blocksPerHeader:GRAPH_LIMITS_V1.sweepBlocksPerHeader");
  expect(build).toBeGreaterThan(0);expect(sweep).toBeGreaterThan(0);expect(host).toContain("catch(error){if(invocation.control.signal.aborted)throw error;process.stderr.write(\"graph: sweep");
  const reclaim=readFileSync(fileURLToPath(new URL("../../../../../../../../../../🏗️build/🧹️cache-gc/🚰️reclaim/🟦️.ts",import.meta.url)),"utf8");
  expect(reclaim.indexOf("ports.supersede")).toBeGreaterThan(0);expect(reclaim.indexOf("ports.supersede")).toBeLessThan(reclaim.indexOf("ports.index(image)"));
@@ -181,7 +181,7 @@ test("groups that share a writer namespace take one lease, and a busy namespace 
 
 test("Law: an urgent sweep queues for the writer behind overlapping shared cohort holders and is served once they release, later cohort arrivals wait behind it, and a sweep that is not urgent leaves a busy group alone as before",async()=>{
  const leases=await import("../../../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts") as typeof import("../../../../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts");
- const{root}=image(),directory=mkdtempSync(join(tmpdir(),"sweep-leases-"));roots.push(directory);
+ const{root}=image(),directory=mkdtempSync(join(realpathSync(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir()),"sweep-leases-"));roots.push(directory);
  const resourceOf=(kind:string,identity:string)=>"sweep-test:"+kind+":"+identity,events:string[]=[],signal=new AbortController().signal;
  const port=scan.createSweepLeasePortV1({
   acquire:async(kind,identity)=>{try{return await leases.acquireResourceLease({directory,resource:resourceOf(kind,identity),mode:"exclusive",signal,timeoutMs:0});}catch(error){if(/timed out/iu.test(String((error as Error).message)))return undefined;throw error;}},

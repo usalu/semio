@@ -53,8 +53,8 @@ async fn synthetic_open_conflict(seed: u64) -> semio_framework_os_spr::Conflict 
 async fn conflict_retirement_cursors_quarantined_payloads_messages_actors_and_ids() {
     let mut envelope = foreign_mutation_envelope("conflict-actor", DemoMutation::SetN(SetN { n: 9 })).await;
     envelope.dependencies = (0..32).map(|index| MutationId(format!("dependency-{index}-{}", "d".repeat(128)))).collect();
-    envelope.diff.payload = vec![7; 16 * 1024];
-    envelope.inverse.payload = vec![3; 16 * 1024];
+    envelope.diff.payload = semio_framework_value::paged::PagedBytes::try_from_slice(&vec![7; 16 * 1024]).unwrap();
+    envelope.inverse.payload = semio_framework_value::paged::PagedBytes::try_from_slice(&vec![3; 16 * 1024]).unwrap();
     let kind = semio_framework_os_spr::ConflictKind::Quarantined { envelopes: vec![envelope] };
     let timestamp = HybridLogicalTimestamp::new(41, 43);
     let conflict = semio_framework_os_spr::Conflict {

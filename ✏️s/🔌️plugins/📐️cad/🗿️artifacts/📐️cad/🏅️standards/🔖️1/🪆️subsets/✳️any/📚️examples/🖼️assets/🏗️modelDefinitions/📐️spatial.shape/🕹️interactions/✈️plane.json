@@ -2,7 +2,10 @@
   "schema": "spatial.interaction",
   "id": "surface.plane",
   "version": "1.0.0",
-  "label": "Plane",
+  "label": {
+    "native": { "en": "Plane", "de": "Ebene" },
+    "reuse": { "en": "Plane", "de": "Ebene" }
+  },
   "interaction": {
     "spatialGroundPick": true,
     "pickDisabledStates": ["idle", "committed"],
@@ -34,7 +37,10 @@
               {
                 "target": "first_corner_of_plane",
                 "key": "s",
-                "label": "Start",
+                "label": {
+                  "native": { "en": "Start", "de": "Start" },
+                  "reuse": { "en": "Start", "de": "Start" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -247,7 +253,10 @@
             "kind": "label",
             "id": "first_corner_of_plane-prompt",
             "role": "prompt",
-            "text": "First corner of plane",
+            "text": {
+              "native": { "en": "First corner of plane", "de": "Erste Ecke der Ebene" },
+              "reuse": { "en": "First corner of plane", "de": "Erste Ecke der Ebene" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]
@@ -350,7 +359,10 @@
             "kind": "label",
             "id": "other_corner_or_length-prompt",
             "role": "prompt",
-            "text": "Other corner or length",
+            "text": {
+              "native": { "en": "Other corner or length", "de": "Andere Ecke oder Länge" },
+              "reuse": { "en": "Other corner or length", "de": "Andere Ecke oder Länge" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]

@@ -17,5 +17,5 @@ impl Normalize{
  pub(super)fn begin_close(&mut self){self.closing=true;}
  pub(super)fn terminal_is_empty(&self)->bool{self.retired.iter().all(Option::is_none)&&self.retirement.is_empty()}
  pub(super)fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{self.retirement.next_owner_demands::<DslValue>(self.retired.iter().any(Option::is_some),&None,body)}
- pub(super)fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if !self.closing{return Err(error());}if !self.retirement.is_empty(){return self.retirement.step_granted(grant);}for owner in &mut self.retired{if owner.is_some(){return self.retirement.begin_granted(owner,grant)?.ok_or_else(error);}}Ok(RetainedCloneStep::Complete(Default::default()))}
+ pub(super)fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if !self.closing{return Err(error());}if !self.retirement.is_empty(){return self.retirement.step_granted(grant).result;}for owner in &mut self.retired{if owner.is_some(){return self.retirement.begin_granted(owner,grant).result?.ok_or_else(error);}}Ok(RetainedCloneStep::Complete(Default::default()))}
 }

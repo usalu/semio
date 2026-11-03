@@ -205,7 +205,7 @@ pub fn engagement(snapshot: &Process3dSnapshot, config: &Process3dConfig, active
             on_commit: None,
         }),
         controls: None,
-        status: Some(vec![WindowEngagementStatus { id: "process3d-status".into(), text: format!("{cursor}/{len} steps · {volume:.4} m³") }]),
+        status: Some(vec![WindowEngagementStatus { id: "process3d-status".into(), text: format!("{cursor}/{len} {} · {volume:.4} m³", labels.steps.as_str()) }]),
         possible_engagements: None,
     }
 }

@@ -1,12 +1,12 @@
 /** 🔀️ Filled planar arrangements with spatial queries, bounded grants and private outputs. */
 import type {PathSegment,Vec2} from "../📐️drawing-contract/🟦️.ts";
-import {UnitRetirement,type WorkRetirement,type WorkRetirementProgress} from "../🧹️retire/🟦️.ts";
-export type BooleanRetirement=WorkRetirement;
-export type BooleanRetirementProgress=WorkRetirementProgress;
+import {RetainedWorkRetirement,type RetainedWorkDemand,type RetainedWorkLedger,type RetainedWorkRetirementCursor,type RetainedWorkRetirementProgress} from "../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts";
+import {RetainedWorkProducerRuntime,type RetainedWorkProducerOwner} from "../../🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts";
+export type BooleanRetirement=RetainedWorkRetirementCursor;
+export type BooleanRetirementProgress=RetainedWorkRetirementProgress;
 export type BooleanOperand={contours:readonly (readonly Vec2[])[];fillRule:"nonzero"|"evenodd"};
 export type BooleanInput={operation:"union"|"difference"|"intersection"|"xor";operands:readonly BooleanOperand[];epsilon:number;maxEdges:number;maxParameters:number;maxAtomicEdges:number;maxSegments:number;maxWork:number};
 export type BooleanProgress={phase:"preparing"|"indexing"|"intersections"|"splitting"|"classifying"|"contours"|"compacting"|"emitting"|"complete";operands:number;vertices:number;edges:number;parameters:number;pairs:number;atomicEdges:number;boundaryEdges:number;contours:number;segments:number;work:number;done:boolean};
-export type BooleanOptions={workBudget?:number;signal?:AbortSignal;onProgress?:(progress:BooleanProgress)=>void};
 type Box=[number,number,number,number];
 type Edge={a:Vec2;b:Vec2;operand:number;box:Box;parameters:Set<number>};
 type Node={box:Box;left:number;right:number;edge:number;maximum:number};
@@ -17,6 +17,9 @@ const integer=(n:number,cap:number)=>Number.isSafeInteger(n)&&n>=1&&n<=cap;
 const point=(p:Vec2):Vec2=>{if(!Array.isArray(p)||p.length!==2||!p.every(n=>Number.isFinite(n)&&Math.abs(n)<=1e12))bad("Invalid boolean point");return[p[0]===0?0:p[0],p[1]===0?0:p[1]];};
 const cross=(a:Vec2,b:Vec2,c:Vec2)=>(b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]);
 const length=(a:Vec2,b:Vec2)=>Math.hypot(b[0]-a[0],b[1]-a[1]);
+const CELL_BIAS=2**25;
+/** 🧱️ Grid cell identity: exact numeric key inside the safe window, textual key beyond it. */
+const cell=(x:number,y:number):number|string=>x>=-CELL_BIAS&&x<CELL_BIAS&&y>=-CELL_BIAS&&y<CELL_BIAS?(x+CELL_BIAS)*(2*CELL_BIAS)+y+CELL_BIAS:x+":"+y;
 const box=(a:Vec2,b:Vec2):Box=>[Math.min(a[0],b[0]),Math.min(a[1],b[1]),Math.max(a[0],b[0]),Math.max(a[1],b[1])];
 const merge=(a:Box,b:Box):Box=>[Math.min(a[0],b[0]),Math.min(a[1],b[1]),Math.max(a[2],b[2]),Math.max(a[3],b[3])];
 const intersects=(a:Box,b:Box,e:number)=>a[0]<=b[2]+e&&a[2]+e>=b[0]&&a[1]<=b[3]+e&&a[3]+e>=b[1];
@@ -41,10 +44,11 @@ class Heap<T> {
 /** ⏱️ Prepare, intersect, classify and emit a stable region snapshot under explicit work grants. */
 const retainedAdmission=Symbol("retained Boolean admission");
 export class BooleanJob {
+ #runtime=new RetainedWorkProducerRuntime();#owner:RetainedWorkProducerOwner<BooleanProgress>|null=null;#demand:RetainedWorkDemand={copyBytes:0,capacityBytes:0,releaseBytes:0,depth:1};
  private phase:BooleanProgress["phase"]="preparing";private work=0;private cancelled=false;private transferred=false;private failure:unknown=null;private prepared=0;private vertices=0;private parameters=0;private pairs=0;
  private operand=0;private contour=0;private at=0;private entering=true;private first:Vec2|null=null;private previous:Vec2|null=null;private bounds:Box=[Infinity,Infinity,-Infinity,-Infinity];private rules:BooleanOperand["fillRule"][]=[];private source:Edge[]=[];
  private indexMode:"push"|"leaves"|"levels"="push";private indexAt=0;private indexHeap=new Heap<{key:number;edge:number}>((a,b)=>a.key-b.key||a.edge-b.edge);private tree:Node[]=[];private level:number[]=[];private nextLevel:number[]=[];private root=-1;private query:number[]=[];private pivot=0;
- private splitAt=0;private splitValues:Iterator<number>|null=null;private splitHeap=new Heap<number>((a,b)=>a-b);private splitBuild=true;private splitPrevious:number|null=null;private nodes:Vec2[]=[];private grid=new Map<string,number[]>();private atomic:[number,number][]=[];private atomicIds=new Set<string>();
+ private splitAt=0;private splitValues:Iterator<number>|null=null;private splitHeap=new Heap<number>((a,b)=>a-b);private splitBuild=true;private splitPrevious:number|null=null;private nodes:Vec2[]=[];private grid=new Map<number|string,number[]>();private atomic:[number,number][]=[];private atomicIds=new Set<string>();
  private classifyAt=0;private classifyMode:"start"|"nearest"|"ray"|"fold"="start";private classifyAxis:0|1=0;private classifyDirection=1;private midpoint:Vec2=[0,0];private leftPoint:Vec2=[0,0];private rightPoint:Vec2=[0,0];private nearest=Infinity;private leftWinding:number[]=[];private rightWinding:number[]=[];private foldAt=0;private leftFilled=false;private rightFilled=false;
  private boundary:Boundary[]=[];private outgoing=new Map<number,number[]>();private boundaryAt=0;private current=-1;private start=0;private raw:number[][]=[];private ring:number[]=[];private positions=new Map<number,number>();private selecting=false;private choiceAt=0;private choiceNode=0;private reverseAngle=0;private best=-1;private bestAngle=Infinity;
  private splitRing:number[]|null=null;private ringSplitAt=0;private ringSplitStop=0;private ringSplitCopy=true;
@@ -69,9 +73,9 @@ export class BooleanJob {
  }
  private intern(p:Vec2):number {
   const epsilon=this.input.epsilon,x=Math.floor(p[0]/epsilon),y=Math.floor(p[1]/epsilon);let found=-1;
-  for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)for(const index of this.grid.get((x+dx)+":"+(y+dy))??[])if(length(this.nodes[index]!,p)<=epsilon&&(found<0||index<found))found=index;
+  for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)for(const index of this.grid.get(cell(x+dx,y+dy))??[])if(length(this.nodes[index]!,p)<=epsilon&&(found<0||index<found))found=index;
   if(found>=0)return found;if(this.nodes.length>=this.input.maxAtomicEdges*2)bad("Boolean exceeds vertex budget");
-  const index=this.nodes.length;this.nodes.push(p);const key=x+":"+y,cell=this.grid.get(key)??[];if(cell.length>=16)bad("Boolean spatial precision exceeded");cell.push(index);this.grid.set(key,cell);return index;
+  const index=this.nodes.length;this.nodes.push(p);const key=cell(x,y),bucket=this.grid.get(key)??[];if(bucket.length>=16)bad("Boolean spatial precision exceeded");bucket.push(index);this.grid.set(key,bucket);return index;
  }
  private prepare():void {
   if(this.operand===this.input.operands.length){const magnitude=Math.max(Math.abs(this.bounds[0]),Math.abs(this.bounds[1]),Math.abs(this.bounds[2]),Math.abs(this.bounds[3]));if(this.source.length&&this.input.epsilon<magnitude*Number.EPSILON*16)bad("Boolean epsilon is below coordinate precision");this.phase="indexing";return;}
@@ -144,16 +148,16 @@ export class BooleanJob {
   if(this.emitAt===ring.points.length){this.output.push({kind:"close"});this.emitting=null;return;}this.output.push({kind:this.emitAt===0?"move":"line",to:ring.points[(ring.anchor+this.emitAt++)%ring.points.length]!});
  }
  private step():void {switch(this.phase){case"preparing":this.prepare();break;case"indexing":this.indexing();break;case"intersections":this.intersections();break;case"splitting":this.splitting();break;case"classifying":this.classify();break;case"contours":this.contours();break;case"compacting":this.compact();break;case"emitting":this.emit();break;case"complete":break;}}
- /** 🧭️ Nested owners advance bounded work without allocating observer snapshots per unit. */
- advanceWork(grant:number):boolean {
-  if(!Number.isSafeInteger(grant)||grant<=0)bad("Boolean work grant must be a positive integer");if(this.cancelled)throw new DOMException("Boolean cancelled","AbortError");if(this.failure)throw this.failure;
-  try{for(let at=0;at<grant&&this.phase!=="complete";at++){if(this.work>=this.input.maxWork)bad("Boolean exceeds work budget");this.step();this.work++;}}catch(error){this.failure=error;throw error;}
-  return this.phase==="complete";
+ lastTurnWork():number{return this.#runtime.lastTurnWork();}
+ lastTurnSemanticWork():number{return this.#runtime.lastTurnSemanticWork();}
+ nextWorkDemand():RetainedWorkDemand{return this.#demand;}
+ failurePending():boolean{return this.failure!==null;}
+ settlementPending():boolean{return this.phase==="complete";}
+ /** 🧭️ Caller-funded turns: every arrangement unit is one semantic step and the caller ledger bounds each turn. */
+ advance(items:number,work:RetainedWorkLedger):BooleanProgress {
+  return this.#runtime.advance(items,work,this.#owner??={maximumWork:this.input.maxWork,workLimitMessage:"Boolean exceeds work budget",validate:()=>{if(this.cancelled||this.transferred)throw new DOMException("Boolean cancelled","AbortError");if(this.failure)throw this.failure;},stopped:()=>this.phase==="complete",settlementPending:()=>this.settlementPending(),failurePending:()=>this.failurePending(),semanticWork:()=>this.work,recordSemanticWork:n=>{this.work+=n;},step:c=>{try{this.step();c.commitSemanticWork();}catch(error){this.failure=error;throw error;}finally{this.#demand=c.work.nextDemand;}},progress:()=>this.progress()});
  }
- advance(grant:number):BooleanProgress {
-  this.advanceWork(grant);
-  return{phase:this.phase,operands:this.prepared,vertices:this.vertices,edges:this.source.length,parameters:this.parameters,pairs:this.pairs,atomicEdges:this.atomic.length,boundaryEdges:this.boundary.length,contours:this.rings.length,segments:this.output.length,work:this.work,done:this.phase==="complete"};
- }
+ private progress():BooleanProgress{return{phase:this.phase,operands:this.prepared,vertices:this.vertices,edges:this.source.length,parameters:this.parameters,pairs:this.pairs,atomicEdges:this.atomic.length,boundaryEdges:this.boundary.length,contours:this.rings.length,segments:this.output.length,work:this.work,done:this.phase==="complete"};}
  result():PathSegment[]{if(this.cancelled)throw new DOMException("Boolean cancelled","AbortError");if(this.failure)throw this.failure;if(this.phase!=="complete")throw Error("Boolean incomplete");return this.output;}
  /** 🧹️ Move caller source and completed output; retain every private nested owner until granted cleanup. */
  intoRetirement():{job:BooleanRetirement;operands:readonly BooleanOperand[];output:PathSegment[]|null}{
@@ -162,42 +166,39 @@ export class BooleanJob {
   this.input={...this.input,operands:[]};if(output)this.output=[];this.cancelled=true;this.splitValues=null;this.emitting=null;
   let slot=0,edge:Edge|null=null,entries:Iterator<unknown>|null=null;
   const remove=(collection:Map<unknown,unknown>|Set<unknown>)=>{entries??=collection.keys();const next=entries.next();if(next.done){entries=null;return false;}collection.delete(next.value);return true;};
-  const job=new UnitRetirement(()=>{
+  const job=new RetainedWorkRetirement((work,turn)=>{
+   if(!work.canStep())return false;
+   const one=():boolean=>{turn.commitActualWork();return false;},next=():boolean=>{slot++;turn.commitActualWork();return slot===25;};
    switch(slot){
-    case 0:this.input.operands=[];break;
-    case 1:this.rules=[];break;
-    case 2:if(edge){if(remove(edge.parameters))return false;edge=null;return false;}edge=this.source.pop()??null;if(edge)return false;this.source=[];break;
-    case 3:this.indexHeap.release();break;
-    case 4:this.tree=[];break;
-    case 5:this.level=[];break;
-    case 6:this.nextLevel=[];break;
-    case 7:this.query=[];break;
-    case 8:this.splitHeap.release();break;
-    case 9:this.nodes=[];break;
-    case 10:if(remove(this.grid))return false;this.grid.clear();break;
-    case 11:this.atomic=[];break;
-    case 12:if(remove(this.atomicIds))return false;this.atomicIds.clear();break;
-    case 13:this.leftWinding=[];break;
-    case 14:this.rightWinding=[];break;
-    case 15:this.boundary=[];break;
-    case 16:if(remove(this.outgoing))return false;this.outgoing.clear();break;
-    case 17:if(this.raw.pop())return false;this.raw=[];break;
-    case 18:this.ring=[];break;
-    case 19:if(remove(this.positions))return false;this.positions.clear();break;
-    case 20:this.splitRing=null;break;
-    case 21:this.compactPoints=[];break;
-    case 22:if(this.rings.pop())return false;this.rings=[];break;
-    case 23:this.ringHeap.release();break;
-    case 24:this.output=[];break;
+    case 0:this.input.operands=[];return next();
+    case 1:this.rules=[];return next();
+    case 2:if(edge){if(remove(edge.parameters))return one();edge=null;return one();}edge=this.source.pop()??null;if(edge)return one();this.source=[];return next();
+    case 3:this.indexHeap.release();return next();
+    case 4:this.tree=[];return next();
+    case 5:this.level=[];return next();
+    case 6:this.nextLevel=[];return next();
+    case 7:this.query=[];return next();
+    case 8:this.splitHeap.release();return next();
+    case 9:this.nodes=[];return next();
+    case 10:if(remove(this.grid))return one();this.grid.clear();return next();
+    case 11:this.atomic=[];return next();
+    case 12:if(remove(this.atomicIds))return one();this.atomicIds.clear();return next();
+    case 13:this.leftWinding=[];return next();
+    case 14:this.rightWinding=[];return next();
+    case 15:this.boundary=[];return next();
+    case 16:if(remove(this.outgoing))return one();this.outgoing.clear();return next();
+    case 17:if(this.raw.pop())return one();this.raw=[];return next();
+    case 18:this.ring=[];return next();
+    case 19:if(remove(this.positions))return one();this.positions.clear();return next();
+    case 20:this.splitRing=null;return next();
+    case 21:this.compactPoints=[];return next();
+    case 22:if(this.rings.pop())return one();this.rings=[];return next();
+    case 23:this.ringHeap.release();return next();
+    case 24:this.output=[];return next();
+    default:return true;
    }
-   return ++slot===25;
   });
   return{job,operands,output};
  }
  cancel():void{this.cancelled=true;}
-}
-/** 🕰️ Yield between grants and recheck aborts after complete observers before publication. */
-export async function booleanRegions(input:BooleanInput,options:BooleanOptions={}):Promise<PathSegment[]> {
- const job=new BooleanJob(input),check=()=>{if(options.signal?.aborted){job.cancel();throw new DOMException("Boolean cancelled","AbortError");}};
- try{check();for(;;){const progress=job.advance(options.workBudget??4096);check();options.onProgress?.(progress);check();if(progress.done)return job.result();await new Promise<void>(resolve=>setTimeout(resolve,0));}}catch(error){job.cancel();throw error;}finally{const close=job.intoRetirement().job;while(!close.advance(4096).done)await new Promise<void>(resolve=>setTimeout(resolve,0));}
 }

@@ -1,5 +1,6 @@
 use crate::schema::snapshot::CsvRecord;
 use crate::standards::v_rfc4180::subsets::any::schema::diff::*;
+use protocol::{DiffBinary, DiffText};
 use crate::schema::snapshot::CsvField;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

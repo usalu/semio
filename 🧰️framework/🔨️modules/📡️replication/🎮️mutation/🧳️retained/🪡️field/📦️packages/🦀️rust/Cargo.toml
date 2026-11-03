@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../../.."
-name = "semio-framework-replication-mutation-retained-field"
+name = "semio-framework-replication-retained-field"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -8,7 +8,7 @@ description = "Retained field changes: sparse and record field preparation, orig
 
 [package.metadata.semio]
 role = "framework"
-id = "replication-mutation-retained-field"
+id = "replication-retained-field"
 
 [package.metadata.semio.rust-source-boundary]
 maxSourceBytes = 262144

@@ -1,7 +1,9 @@
 //! 🧪️ Actual details render preparation retains contextual source choices and small original request payloads.
-use super::super::DetailsTestProfile;
+use super::DetailsTestProfile;
 use super::*;
-use semio_framework_plugin::app_testing::OriginalWorkFixture;
+use super::contextual_render::choice_request;
+use semio_framework_value::retained_clone::RetainedCloneGrant;
+use semio_framework_plugin::plugin_app_close_prelude::OriginalWorkFixture;
 fn source() -> IfcSnapshot {
     let typed = |text: &str| IfcValue::TypedValue(IfcTypedValue { name: "IFCLABEL".into(), items: vec![IfcValue::String(text.into())] });
     IfcSnapshot {
@@ -19,7 +21,7 @@ fn close(work: IfcDetailsRenderWork, caller: &mut OriginalWorkFixture, loan: Ret
         let demand = close.next_owner_demands::<IfcDetailsRenderWork>(owner.is_some(), &None, 4096).unwrap();
         caller
             .turn(loan, |cx| {
-                cx.with_original_retirement(|cx| semio_framework_job::close_original_retained_step(cx, demand, |grant| if close.is_empty() { close.begin_granted(&mut owner, grant).map(|step| step.unwrap()) } else { close.step_granted(grant) }))
+                cx.with_original_retirement(|cx| semio_framework_job::close_original_retained_step(cx, demand, |grant| if close.is_empty() { { let turn = close.begin_granted(&mut owner, grant); semio_framework_value::RetainedWorkOutcome { work: turn.work, result: turn.result.map(|step| step.unwrap()) } } } else { close.step_granted(grant) }))
             })
             .unwrap();
     }

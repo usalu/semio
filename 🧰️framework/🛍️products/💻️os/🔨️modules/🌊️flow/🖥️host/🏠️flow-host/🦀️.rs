@@ -124,7 +124,7 @@ pub struct FlowHost {
     /// 🧯️ The refusal of the last history row, kept until [`FlowHost::take_history_fault`] hands it over.
     pub(super) history_fault: Option<FlowCoreError>,
     /// 🧪️ The leaves of every recorded edit, in order, so tests read what each gesture emitted.
-    #[cfg(test)]
+    #[cfg(any(test,feature="testkit"))]
     pub recorded: Vec<Vec<FlowMutation>>,
     /// 🔗️ How many dag journal rows predated the open gesture, so only the gesture's own rows become leaves.
     pub(super) journal_mark: usize,

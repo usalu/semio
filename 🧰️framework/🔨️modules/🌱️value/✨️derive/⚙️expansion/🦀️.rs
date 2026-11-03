@@ -380,9 +380,9 @@ fn container_native_owned_path(container: &ContainerAttrs) -> syn::Path {
 }
 
 /// 🟰️ Resolves the crate that owns `retained_equality`: an explicit `equality` key, else the authored `crate` root that supplies everything, else the owner crate.
-fn container_equality_path(container: &ContainerAttrs) -> syn::Path {
+fn container_equality_path(container: &ContainerAttrs) -> syn::Result<syn::Path> {
     let path = container.equality_path.as_deref().or(container.crate_path.as_deref()).unwrap_or("::semio_framework_value");
-    syn::parse_str(path).expect("valid #[value(equality = \"...\")] path")
+    syn::parse_str(path).map_err(|error| syn::Error::new(error.span(), "#[value(equality = \"...\")] requires a valid path"))
 }
 
 fn parse_variant_attrs(attrs: &[syn::Attribute]) -> syn::Result<VariantAttrs> {
@@ -758,7 +758,7 @@ pub fn declared_value_crate(input:&DeriveInput)->syn::Result<syn::Path>{Ok(conta
 /// 🔐️ Reports whether the owner keeps exclusive Send-only custody and therefore issues no shared original retirement.
 pub fn declared_send_only(input:&DeriveInput)->syn::Result<bool>{Ok(parse_container_attrs(&input.attrs)?.send_only)}
 /// 🏗️ Resolves the authored owner namespace of structural retained equality for an actual typed generator owner.
-pub fn declared_equality_crate(input:&DeriveInput)->syn::Result<syn::Path>{Ok(container_equality_path(&parse_container_attrs(&input.attrs)?))}
+pub fn declared_equality_crate(input:&DeriveInput)->syn::Result<syn::Path>{container_equality_path(&parse_container_attrs(&input.attrs)?)}
 #[path="../🛬️receive/🦀️.rs"]mod native_receiving;
 pub fn expand_native_receive(input:&DeriveInput)->syn::Result<proc_macro2::TokenStream>{native_receiving::expand(input)}
 

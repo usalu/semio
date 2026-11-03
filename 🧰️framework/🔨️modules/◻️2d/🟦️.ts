@@ -8,7 +8,7 @@ export { drawingTextLines, drawingTextFallbackExtent, DRAWING_TEXT_LINE_HEIGHT }
 export { PathFlattenJob, type PathFlattenInput, type FlatContour, type FlatContours, type PathFlattenProgress, type PathFlattenRetirement } from "./🛤️path/📏️flatten/🟦️.ts";
 export { StrokeOutlineJob, type StrokeGeometryStyle, type StrokeOutlineInput, type StrokeOutlineProgress, type StrokeContours } from "./🛤️path/🖊️stroke/🟦️.ts";
 export { BitmapTraceJob, traceBitmap, type BitmapTraceInput, type BitmapTraceProgress, type BitmapTraceOptions, type BitmapTraceRetirement, type BitmapTraceRetirementProgress } from "./🔍️trace/🟦️.ts";
-export { BooleanJob, booleanRegions, type BooleanOperand, type BooleanInput, type BooleanProgress, type BooleanOptions, type BooleanRetirement, type BooleanRetirementProgress } from "./🔀️booleans/🟦️.ts";
+export { BooleanJob, type BooleanOperand, type BooleanInput, type BooleanProgress, type BooleanRetirement, type BooleanRetirementProgress } from "./🔀️booleans/🟦️.ts";
 export { PathBooleanJob, type PathBooleanOperand, type PathBooleanInput, type PathBooleanProgress, type PathBooleanRetirement, type PathBooleanRetirementProgress } from "./🔀️booleans/🛤️paths/🟦️.ts";
 
 

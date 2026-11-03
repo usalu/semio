@@ -2,7 +2,10 @@
   "schema": "spatial.interaction",
   "id": "primitive.box",
   "version": "1.0.0",
-  "label": "Box",
+  "label": {
+    "native": { "en": "Box", "de": "Quader" },
+    "reuse": { "en": "Box", "de": "Quader" }
+  },
   "key": "b",
   "interaction": {
     "spatialGroundPick": true,
@@ -345,7 +348,10 @@
               {
                 "target": "first_corner",
                 "key": "s",
-                "label": "Start",
+                "label": {
+                  "native": { "en": "Start", "de": "Start" },
+                  "reuse": { "en": "Start", "de": "Start" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -425,7 +431,10 @@
             "transitions": [
               {
                 "key": "t",
-                "label": "Point",
+                "label": {
+                  "native": { "en": "Point", "de": "Punkt" },
+                  "reuse": { "en": "Point", "de": "Punkt" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -452,7 +461,10 @@
             "transitions": [
               {
                 "key": "d",
-                "label": "Diagonal",
+                "label": {
+                  "native": { "en": "Diagonal", "de": "Diagonale" },
+                  "reuse": { "en": "Diagonal", "de": "Diagonale" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -479,7 +491,10 @@
             "transitions": [
               {
                 "key": "p",
-                "label": "3Point",
+                "label": {
+                  "native": { "en": "3Point", "de": "3 Punkte" },
+                  "reuse": { "en": "3Point", "de": "3 Punkte" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -506,7 +521,10 @@
             "transitions": [
               {
                 "key": "v",
-                "label": "Vertical",
+                "label": {
+                  "native": { "en": "Vertical", "de": "Vertikal" },
+                  "reuse": { "en": "Vertical", "de": "Vertikal" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -533,7 +551,10 @@
             "transitions": [
               {
                 "key": "e",
-                "label": "Center",
+                "label": {
+                  "native": { "en": "Center", "de": "Mittelpunkt" },
+                  "reuse": { "en": "Center", "de": "Mittelpunkt" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -771,7 +792,10 @@
               {
                 "target": "idle",
                 "key": "x",
-                "label": "Cancel"
+                "label": {
+                  "native": { "en": "Cancel", "de": "Abbrechen" },
+                  "reuse": { "en": "Cancel", "de": "Abbrechen" }
+                }
               }
             ]
           }
@@ -866,7 +890,10 @@
               {
                 "target": "cube_other_corner",
                 "key": "u",
-                "label": "Cube"
+                "label": {
+                  "native": { "en": "Cube", "de": "Würfel" },
+                  "reuse": { "en": "Cube", "de": "Würfel" }
+                }
               }
             ]
           },
@@ -876,7 +903,10 @@
               {
                 "target": "first_corner_length_prompt",
                 "key": "l",
-                "label": "Length"
+                "label": {
+                  "native": { "en": "Length", "de": "Länge" },
+                  "reuse": { "en": "Length", "de": "Länge" }
+                }
               }
             ]
           },
@@ -886,7 +916,10 @@
               {
                 "target": "idle",
                 "key": "x",
-                "label": "Cancel"
+                "label": {
+                  "native": { "en": "Cancel", "de": "Abbrechen" },
+                  "reuse": { "en": "Cancel", "de": "Abbrechen" }
+                }
               }
             ]
           }
@@ -901,7 +934,10 @@
               {
                 "target": "first_corner_height",
                 "key": "w",
-                "label": "Apply L×W",
+                "label": {
+                  "native": { "en": "Apply L×W", "de": "L×B anwenden" },
+                  "reuse": { "en": "Apply L×W", "de": "L×B anwenden" }
+                },
                 "effects": [
                   {
                     "mutation": "action",
@@ -934,7 +970,10 @@
               {
                 "target": "idle",
                 "key": "x",
-                "label": "Cancel"
+                "label": {
+                  "native": { "en": "Cancel", "de": "Abbrechen" },
+                  "reuse": { "en": "Cancel", "de": "Abbrechen" }
+                }
               }
             ]
           }
@@ -1012,7 +1051,10 @@
               {
                 "target": "cube_diagonal_rubber",
                 "key": "u",
-                "label": "Cube",
+                "label": {
+                  "native": { "en": "Cube", "de": "Würfel" },
+                  "reuse": { "en": "Cube", "de": "Würfel" }
+                },
                 "effects": [
                   {
                     "mutation": "clear",
@@ -1036,7 +1078,10 @@
               {
                 "target": "idle",
                 "key": "x",
-                "label": "Cancel"
+                "label": {
+                  "native": { "en": "Cancel", "de": "Abbrechen" },
+                  "reuse": { "en": "Cancel", "de": "Abbrechen" }
+                }
               }
             ]
           }
@@ -1103,7 +1148,10 @@
               {
                 "target": "idle",
                 "key": "x",
-                "label": "Cancel"
+                "label": {
+                  "native": { "en": "Cancel", "de": "Abbrechen" },
+                  "reuse": { "en": "Cancel", "de": "Abbrechen" }
+                }
               }
             ]
           }
@@ -1194,7 +1242,10 @@
               {
                 "target": "idle",
                 "key": "x",
-                "label": "Cancel"
+                "label": {
+                  "native": { "en": "Cancel", "de": "Abbrechen" },
+                  "reuse": { "en": "Cancel", "de": "Abbrechen" }
+                }
               }
             ]
           }
@@ -1255,7 +1306,10 @@
               {
                 "target": "idle",
                 "key": "x",
-                "label": "Cancel"
+                "label": {
+                  "native": { "en": "Cancel", "de": "Abbrechen" },
+                  "reuse": { "en": "Cancel", "de": "Abbrechen" }
+                }
               }
             ]
           }
@@ -1293,7 +1347,10 @@
               {
                 "target": "idle",
                 "key": "x",
-                "label": "Cancel"
+                "label": {
+                  "native": { "en": "Cancel", "de": "Abbrechen" },
+                  "reuse": { "en": "Cancel", "de": "Abbrechen" }
+                }
               }
             ]
           }
@@ -1338,7 +1395,10 @@
               {
                 "target": "idle",
                 "key": "x",
-                "label": "Cancel"
+                "label": {
+                  "native": { "en": "Cancel", "de": "Abbrechen" },
+                  "reuse": { "en": "Cancel", "de": "Abbrechen" }
+                }
               }
             ]
           }
@@ -1399,7 +1459,10 @@
               {
                 "target": "cube_center_corner",
                 "key": "u",
-                "label": "Cube"
+                "label": {
+                  "native": { "en": "Cube", "de": "Würfel" },
+                  "reuse": { "en": "Cube", "de": "Würfel" }
+                }
               }
             ]
           },
@@ -1409,7 +1472,10 @@
               {
                 "target": "idle",
                 "key": "x",
-                "label": "Cancel"
+                "label": {
+                  "native": { "en": "Cancel", "de": "Abbrechen" },
+                  "reuse": { "en": "Cancel", "de": "Abbrechen" }
+                }
               }
             ]
           }
@@ -1459,7 +1525,10 @@
               {
                 "target": "idle",
                 "key": "x",
-                "label": "Cancel"
+                "label": {
+                  "native": { "en": "Cancel", "de": "Abbrechen" },
+                  "reuse": { "en": "Cancel", "de": "Abbrechen" }
+                }
               }
             ]
           }
@@ -1509,7 +1578,10 @@
               {
                 "target": "idle",
                 "key": "x",
-                "label": "Cancel"
+                "label": {
+                  "native": { "en": "Cancel", "de": "Abbrechen" },
+                  "reuse": { "en": "Cancel", "de": "Abbrechen" }
+                }
               }
             ]
           }
@@ -1607,7 +1679,10 @@
             "transitions": [
               {
                 "key": "h",
-                "label": "Apply typed height",
+                "label": {
+                  "native": { "en": "Apply typed height", "de": "Eingegebene Höhe anwenden" },
+                  "reuse": { "en": "Apply typed height", "de": "Eingegebene Höhe anwenden" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -1642,7 +1717,10 @@
                 "target": "ready",
                 "guard": "hasValidBox",
                 "key": "Enter",
-                "label": "Accept height"
+                "label": {
+                  "native": { "en": "Accept height", "de": "Höhe übernehmen" },
+                  "reuse": { "en": "Accept height", "de": "Höhe übernehmen" }
+                }
               }
             ]
           },
@@ -1652,7 +1730,10 @@
               {
                 "target": "idle",
                 "key": "x",
-                "label": "Cancel"
+                "label": {
+                  "native": { "en": "Cancel", "de": "Abbrechen" },
+                  "reuse": { "en": "Cancel", "de": "Abbrechen" }
+                }
               }
             ]
           }
@@ -1668,7 +1749,10 @@
                 "target": "committed",
                 "guard": "hasValidBox",
                 "key": "f",
-                "label": "Finalize"
+                "label": {
+                  "native": { "en": "Finalize", "de": "Abschließen" },
+                  "reuse": { "en": "Finalize", "de": "Abschließen" }
+                }
               }
             ]
           },
@@ -1678,7 +1762,10 @@
               {
                 "target": "idle",
                 "key": "x",
-                "label": "Cancel"
+                "label": {
+                  "native": { "en": "Cancel", "de": "Abbrechen" },
+                  "reuse": { "en": "Cancel", "de": "Abbrechen" }
+                }
               }
             ]
           }
@@ -1714,7 +1801,10 @@
             "kind": "label",
             "id": "hint-first",
             "role": "prompt",
-            "text": "Choose mode (panel), then click construction plane (XY @ Z=0)",
+            "text": {
+              "native": { "en": "Choose mode (panel), then click construction plane (XY @ Z=0)", "de": "Modus wählen (Panel), dann Konstruktionsebene anklicken (XY bei Z=0)" },
+              "reuse": { "en": "Choose mode (panel), then click construction plane (XY @ Z=0)", "de": "Modus wählen (Panel), dann Konstruktionsebene anklicken (XY bei Z=0)" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.45]
@@ -1778,7 +1868,10 @@
             "kind": "label",
             "id": "hint-lw",
             "role": "prompt",
-            "text": "Send set.footprint {length,width} from host (numeric L/W along +X,+Y)",
+            "text": {
+              "native": { "en": "Send set.footprint {length,width} from host (numeric L/W along +X,+Y)", "de": "set.footprint {length,width} vom Host senden (numerische L/B entlang +X,+Y)" },
+              "reuse": { "en": "Send set.footprint {length,width} from host (numeric L/W along +X,+Y)", "de": "set.footprint {length,width} vom Host senden (numerische L/B entlang +X,+Y)" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]
@@ -2226,7 +2319,10 @@
             "kind": "label",
             "id": "hint-height",
             "role": "prompt",
-            "text": "Height (Z): drag teal wall, Apply height, click plane, or Accept",
+            "text": {
+              "native": { "en": "Height (Z): drag teal wall, Apply height, click plane, or Accept", "de": "Höhe (Z): türkise Wand ziehen, Höhe übernehmen, Ebene anklicken oder bestätigen" },
+              "reuse": { "en": "Height (Z): drag teal wall, Apply height, click plane, or Accept", "de": "Höhe (Z): türkise Wand ziehen, Höhe übernehmen, Ebene anklicken oder bestätigen" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]

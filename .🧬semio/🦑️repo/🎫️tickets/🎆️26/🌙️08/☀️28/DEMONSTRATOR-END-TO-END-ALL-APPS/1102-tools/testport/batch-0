@@ -1,0 +1,12 @@
+semio-framework-os-presence-native-snapshot
+semio-framework-os-store-backbone
+semio-framework-os-store-canonical-json
+semio-framework-os-store-child
+semio-framework-os-store-codec-factory
+semio-framework-os-store-codec-registry
+semio-framework-os-store-command
+semio-framework-os-store-composition
+semio-framework-os-store-config
+semio-framework-os-store-cursor
+semio-framework-os-store-document
+semio-framework-os-store-durable-group

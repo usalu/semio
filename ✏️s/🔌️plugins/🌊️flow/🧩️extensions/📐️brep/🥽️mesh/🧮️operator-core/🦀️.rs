@@ -444,7 +444,7 @@ impl MeshOperatorJob {
             if self.cancelled && import.tessellation.is_some() {import.source_retirement=Some(MeshRetirement::Tessellation(import.tessellation.take().unwrap()));}
             let retirement=if import.source_retirement.is_some() {&mut import.source_retirement}else {&mut import.transfer_retirement};
             if let Some(cursor)=retirement {
-                let step=cursor.step(child)?;
+                let step=cursor.step(child,&mut self.work)?;
                 self.receipt=add_progress(self.receipt,step.progress());
                 if cursor.terminal_is_empty() {*retirement=None;}
                 self.progress.phase="mesh-to-brep-retire-source";

@@ -2,7 +2,10 @@
   "schema": "spatial.interaction",
   "id": "curve.interpolateCurve",
   "version": "1.0.0",
-  "label": "InterpCrv",
+  "label": {
+    "native": { "en": "InterpCrv", "de": "Interpolierte Kurve" },
+    "reuse": { "en": "InterpCrv", "de": "Interpolierte Kurve" }
+  },
   "guards": [
     {
       "name": "hasTwoCurvePoints",
@@ -55,7 +58,10 @@
               {
                 "target": "start_of_curve",
                 "key": "s",
-                "label": "Start",
+                "label": {
+                  "native": { "en": "Start", "de": "Start" },
+                  "reuse": { "en": "Start", "de": "Start" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -250,7 +256,10 @@
                 "target": "committed",
                 "guard": "hasTwoCurvePoints",
                 "key": "Enter",
-                "label": "Finish"
+                "label": {
+                  "native": { "en": "Finish", "de": "Fertig" },
+                  "reuse": { "en": "Finish", "de": "Fertig" }
+                }
               }
             ]
           },
@@ -261,7 +270,10 @@
                 "target": "committed",
                 "guard": "hasTwoCurvePoints",
                 "key": "RightClick",
-                "label": "Finish"
+                "label": {
+                  "native": { "en": "Finish", "de": "Fertig" },
+                  "reuse": { "en": "Finish", "de": "Fertig" }
+                }
               }
             ]
           }
@@ -282,7 +294,10 @@
             "kind": "label",
             "id": "start_of_curve-prompt",
             "role": "prompt",
-            "text": "Start of curve",
+            "text": {
+              "native": { "en": "Start of curve", "de": "Anfang der Kurve" },
+              "reuse": { "en": "Start of curve", "de": "Anfang der Kurve" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]
@@ -385,7 +400,10 @@
             "kind": "label",
             "id": "next_point-prompt",
             "role": "prompt",
-            "text": "Next point",
+            "text": {
+              "native": { "en": "Next point", "de": "Nächster Punkt" },
+              "reuse": { "en": "Next point", "de": "Nächster Punkt" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]

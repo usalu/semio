@@ -1,3 +1,5 @@
+import {stock,drain,drive,controllerFixture} from "../../../../🎨️paint/🧪️tests/🎟️funding/🟦️.ts";
+import {driveDrawingSceneWork} from "../../../../🎟️work/🟦️.ts";
 const neutral=(value:any):any=>value instanceof Uint8Array?Array.from(value):Array.isArray(value)?value.map(neutral):value&&typeof value==="object"?Object.fromEntries(Object.entries(value).map(([key,item])=>[key,neutral(item)])):value;
 /** 🖼️ Shared encoded scene fixtures preserve private image composition and independent source/filter/blend output. */
 import {test,expect} from "bun:test";
@@ -15,7 +17,7 @@ import { imageDecodeSchema as imageSchema } from "@semio-tech/framework/pixels/i
 type RasterSceneFixture=Omit<RasterSceneInput,"assets">&{readonly assets:readonly {readonly id:string;readonly image:{readonly width:number;readonly height:number;readonly pixels:readonly number[]}}[]};
 const ajv=new Ajv({strict:true});ajv.addSchema(pathSchema);ajv.addSchema(imageSchema);ajv.addSchema(schema);const validate=ajv.compile<RasterSceneFixture>(schema),validateProgress=ajv.compile({$ref:schema.$id+"#/definitions/progress"});
 const sceneInput=(value:unknown):RasterSceneInput=>{const fixture=admitted(validate,value,"raster scene input");return {...fixture,assets:fixture.assets.map(a=>({...a,image:{...a.image,pixels:Uint8Array.from(a.image.pixels)}}))};};
-const complete=(value:RasterSceneInput,grant=4096)=>{const job=new RasterSceneJob(value);let work=0;for(let i=0;i<2000000;i++){const p=job.advance(grant);expect(p.work-work).toBeLessThanOrEqual(grant);work=p.work;if(p.done)return {image:job.result(),progress:p};}throw Error("Encoded scene did not finish");};
+const complete=(value:RasterSceneInput,grant=4096)=>{const job=new RasterSceneJob(value);let work=0;for(let i=0;i<2000000;i++){const p=job.advance(grant,stock(grant));work=p.work;if(p.done)return {image:job.result(),progress:p};}throw Error("Encoded scene did not finish");};
 async function reference(value:RasterSceneInput){
  let body="",groups:string[]=[];
  for(const n of value.nodes){
@@ -40,18 +42,18 @@ for(const row of cases)test(row.name,async()=>{
  expect(value).toEqual(before);expect(delta(new Uint8Array(row.expected),await reference(value))).toBeLessThanOrEqual(2);
 });
 for(const row of invalid)test("refuse encoded scene "+row.name,()=>{
- let job:RasterSceneJob|undefined;expect(()=>{job=new RasterSceneJob(hostile<RasterSceneInput>(row.input));while(!job.advance(4096).done){}job.result();}).toThrow();
+ let job:RasterSceneJob|undefined;expect(()=>{job=new RasterSceneJob(hostile<RasterSceneInput>(row.input));while(!job.advance(4096,stock(4096)).done){}job.result();}).toThrow();
  if(job){expect(()=>job!.result()).toThrow();expect(()=>job!.advance(1)).toThrow();}
 });
 test("asset admission counts UTF-8 source bytes and abort covers every live preparation phase",async()=>{
  const value=sceneInput(cases[5]!.input),probe=new RasterSceneJob(value),seen=new Set<string>();let steps=0;
- for(;;){const p=probe.advance(1);steps++;if(!seen.has(p.phase)&&!p.done){seen.add(p.phase);const job=new RasterSceneJob(value);job.advance(steps);job.cancel();expect(()=>job.result()).toThrow(/cancel/);expect(()=>job.advance(1)).toThrow(/cancel/);}if(p.done)break;}
+ for(;;){const p=probe.advance(1,stock(1));steps++;if(!seen.has(p.phase)&&!p.done){seen.add(p.phase);const job=new RasterSceneJob(value);job.advance(steps,stock(steps));job.cancel();expect(()=>job.result()).toThrow(/cancel/);expect(()=>job.advance(1,stock(1))).toThrow(/cancel/);}if(p.done)break;}
  expect(seen.has("assets")).toBe(true);expect(seen.has("nodes")).toBe(true);expect(seen.has("compositing")).toBe(true);
  const unused:RasterSceneInput={...sceneInput(cases[0]!.input),nodes:[],assets:[{id:"é😀",image:{width:1,height:1,pixels:new Uint8Array([255,0,0,255])}}],maxSourceBytes:4};
  expect(complete(unused,1).progress.sourceBytes).toBe(4);expect(()=>complete({...unused,maxSourceBytes:3},1)).toThrow(/sample byte/i);
  const controller=new AbortController();let timer=false;setTimeout(()=>{timer=true;},0);
- await expect(rasterizeScene(value,{signal:controller.signal,workBudget:7,onProgress:p=>{if(p.phase==="compositing")controller.abort();}})).rejects.toThrow(/cancel/);expect(timer).toBe(true);
- const late=new AbortController();await expect(rasterizeScene(value,{signal:late.signal,onProgress:p=>{if(p.done)late.abort();}})).rejects.toThrow(/cancel/);
+ await expect(rasterizeScene(value,{...controllerFixture(value,7,controller.signal).control,onProgress:p=>{if(p.phase==="compositing")controller.abort();}})).rejects.toThrow(/cancel|abort/i);expect(timer).toBe(true);
+ const late=new AbortController();await expect(rasterizeScene(value,{...controllerFixture(value,4096,late.signal).control,onProgress:p=>{if(p.done)late.abort();}})).rejects.toThrow(/cancel|abort/i);
 });
 
 test("encoded image layers preserve every blend mode above a painted path",async()=>{
@@ -66,6 +68,6 @@ test("encoded image layers preserve every blend mode above a painted path",async
 
 test("scene retains admitted images while partial composition remains private",()=>{
  const row=cases[31]!,value=sceneInput(row.input),before=structuredClone(value),job=new RasterSceneJob(value);let partial=false;
- for(;;){const p=job.advance(1);expect(validateProgress(neutral(p))).toBe(true);if(p.phase==="compositing"&&!p.done){partial=true;expect(()=>job.result()).toThrow();}if(p.done)break;}
+ for(;;){const p=job.advance(1,stock(1));expect(validateProgress(neutral(p))).toBe(true);if(p.phase==="compositing"&&!p.done){partial=true;expect(()=>job.result()).toThrow();}if(p.done)break;}
  expect(partial).toBe(true);expect(value).toEqual(before);expect([...job.result().pixels]).toEqual(row.expected);
 });

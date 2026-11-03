@@ -1,4 +1,7 @@
 use super::*;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemMaterialValue;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemNodeValue;
 use crate::fem3d_engine::modal_buckling;
 use semio_s_fem_model::Dof;
 use semio_s_fem_model::ElementResult;
@@ -7,8 +10,6 @@ use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structur
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemCombination;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemElement;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoadCase;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemMaterial;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemNode;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSection;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSolid;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSupport;
@@ -24,31 +25,31 @@ fn cantilever_fixture() -> (Fem3dSnapshot, f64, f64, f64, f64, f64) {
     let j = 0.00000060;
     let l = 3.0;
     let p = 5000.0;
-    let doc = Fem3dSnapshot {
-        nodes: vec![FemNode { id: "n1".into(), x: 0.0, y: 0.0, z: 0.0 }, FemNode { id: "n2".into(), x: l, y: 0.0, z: 0.0 }],
+    let doc = Fem3dSnapshot::from_reference(Fem3dSnapshotValue {
+        nodes: vec![FemNodeValue { id: "n1".into(), x: 0.0, y: 0.0, z: 0.0 }, FemNodeValue { id: "n2".into(), x: l, y: 0.0, z: 0.0 }],
         elements: vec![FemElement::Frame { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "hea200".into(), roll: 0.0 }],
-        materials: vec![FemMaterial { id: "steel".into(), name: "Steel".into(), e, g, nu: 0.3, rho: 7850.0 }],
+        materials: vec![FemMaterialValue { id: "steel".into(), name: "Steel".into(), e, g, nu: 0.3, rho: 7850.0 }],
         sections: vec![FemSection { id: "hea200".into(), name: "HEA200".into(), area: a, iy, iz, j }],
         solids: vec![],
         supports: vec![FemSupport { id: "s1".into(), node_id: "n1".into(), fixed: FemDof::ALL.to_vec() }],
         load_cases: vec![FemLoadCase { id: "point".into(), name: "Point Load".into(), loads: vec![semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoad::Nodal { id: "l1".into(), node_id: "n2".into(), dof: FemDof::Tz, value: -p }], self_weight: false }],
         combinations: vec![],
         analysis: FemAnalysisSettings::default(),
-    };
+    }).expect("fixture snapshot");
     (doc, e, iy, l, p, iz)
 }
 
 /// 🔺️ A free 3D joint needs at least 3 non-coplanar bars to be kinematically determinate — two
 /// bars only span a plane, leaving one direction with zero stiffness (a mechanism). Hence n4/b3.
 fn truss_fixture() -> Fem3dSnapshot {
-    Fem3dSnapshot {
-        nodes: vec![FemNode { id: "n1".into(), x: 0.0, y: 0.0, z: 0.0 }, FemNode { id: "n2".into(), x: 2.0, y: 0.0, z: 0.0 }, FemNode { id: "n3".into(), x: 1.0, y: 1.0, z: 2.0 }, FemNode { id: "n4".into(), x: 1.0, y: -1.0, z: 0.0 }],
+    Fem3dSnapshot::from_reference(Fem3dSnapshotValue {
+        nodes: vec![FemNodeValue { id: "n1".into(), x: 0.0, y: 0.0, z: 0.0 }, FemNodeValue { id: "n2".into(), x: 2.0, y: 0.0, z: 0.0 }, FemNodeValue { id: "n3".into(), x: 1.0, y: 1.0, z: 2.0 }, FemNodeValue { id: "n4".into(), x: 1.0, y: -1.0, z: 0.0 }],
         elements: vec![
             FemElement::Bar { id: "b1".into(), start: "n1".into(), end: "n3".into(), material_id: "steel".into(), section_id: "rod".into() },
             FemElement::Bar { id: "b2".into(), start: "n2".into(), end: "n3".into(), material_id: "steel".into(), section_id: "rod".into() },
             FemElement::Bar { id: "b3".into(), start: "n4".into(), end: "n3".into(), material_id: "steel".into(), section_id: "rod".into() },
         ],
-        materials: vec![FemMaterial { id: "steel".into(), name: "Steel".into(), e: 210e9, g: 80.77e9, nu: 0.3, rho: 7850.0 }],
+        materials: vec![FemMaterialValue { id: "steel".into(), name: "Steel".into(), e: 210e9, g: 80.77e9, nu: 0.3, rho: 7850.0 }],
         sections: vec![FemSection { id: "rod".into(), name: "Rod".into(), area: 0.001, iy: 1e-6, iz: 1e-6, j: 1e-6 }],
         solids: vec![],
         supports: vec![
@@ -59,17 +60,17 @@ fn truss_fixture() -> Fem3dSnapshot {
         load_cases: vec![FemLoadCase { id: "drop".into(), name: "Drop".into(), loads: vec![semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoad::Nodal { id: "l1".into(), node_id: "n3".into(), dof: FemDof::Tz, value: -1000.0 }], self_weight: false }],
         combinations: vec![],
         analysis: FemAnalysisSettings::default(),
-    }
+    }).expect("fixture snapshot")
 }
 
 /// 🧱️ A 2m x 1m x 0.5m slab footprint at the origin, meshed at `mesh_size`, with all 4 footprint
 /// corners as pre-placed document nodes fully fixed in translation (`Tet4` has no rotational DOF) —
 /// mirrors `fem_2d`'s `rectangle_region_doc` fixture pattern for `FemSolid`.
 fn solid_slab_doc() -> Fem3dSnapshot {
-    Fem3dSnapshot {
-        nodes: vec![FemNode { id: "sc0".into(), x: 0.0, y: 0.0, z: 0.0 }, FemNode { id: "sc1".into(), x: 2.0, y: 0.0, z: 0.0 }, FemNode { id: "sc2".into(), x: 2.0, y: 1.0, z: 0.0 }, FemNode { id: "sc3".into(), x: 0.0, y: 1.0, z: 0.0 }],
+    Fem3dSnapshot::from_reference(Fem3dSnapshotValue {
+        nodes: vec![FemNodeValue { id: "sc0".into(), x: 0.0, y: 0.0, z: 0.0 }, FemNodeValue { id: "sc1".into(), x: 2.0, y: 0.0, z: 0.0 }, FemNodeValue { id: "sc2".into(), x: 2.0, y: 1.0, z: 0.0 }, FemNodeValue { id: "sc3".into(), x: 0.0, y: 1.0, z: 0.0 }],
         elements: vec![],
-        materials: vec![FemMaterial { id: "concrete".into(), name: "Concrete".into(), e: 30e9, g: 12.5e9, nu: 0.2, rho: 2400.0 }],
+        materials: vec![FemMaterialValue { id: "concrete".into(), name: "Concrete".into(), e: 30e9, g: 12.5e9, nu: 0.2, rho: 2400.0 }],
         sections: vec![],
         solids: vec![FemSolid { id: "sol1".into(), name: "Slab".into(), outline: vec![[0.0, 0.0], [2.0, 0.0], [2.0, 1.0], [0.0, 1.0]], holes: vec![], base_z: 0.0, height: 0.5, layers: 1, mesh_size: 1.0, material_id: "concrete".into(), axis: semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemAxis::Z }],
         supports: vec![
@@ -81,7 +82,7 @@ fn solid_slab_doc() -> Fem3dSnapshot {
         load_cases: vec![FemLoadCase { id: "self".into(), name: "Self Weight".into(), loads: vec![], self_weight: true }],
         combinations: vec![],
         analysis: FemAnalysisSettings::default(),
-    }
+    }).expect("fixture snapshot")
 }
 // #endregion 🔖️Fixtures
 
@@ -207,7 +208,7 @@ fn fem3d_solve_all_returns_case_and_combination_results() {
 #[test]
 fn self_weight_case_produces_nonzero_reactions() {
     let (mut doc, _e, _iy, l, _p, _iz) = cantilever_fixture();
-    let (area, rho) = (doc.sections[0].area, doc.materials[0].rho);
+    let (area, rho) = (doc.sections[0].area, doc.materials.get(0).expect("material").rho);
     doc.load_cases = vec![FemLoadCase { id: "self".into(), name: "Self Weight".into(), loads: vec![], self_weight: true }];
 
     let results = fem3d_solve_all(&doc).expect("solves");

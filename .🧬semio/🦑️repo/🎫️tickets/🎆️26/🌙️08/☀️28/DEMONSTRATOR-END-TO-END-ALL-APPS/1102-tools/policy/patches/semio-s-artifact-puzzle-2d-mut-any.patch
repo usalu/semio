@@ -1,0 +1,29 @@
+--- a/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/🗑️delete-node/🎮️prepare/↩️inverse/🦀️.rs
++++ b/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟢️node/🗑️delete-node/🎮️prepare/↩️inverse/🦀️.rs
+@@ -59,7 +59,7 @@
+             }
+             1 => {
+                 let index=self.node_index;
+-                let step=self.node.advance(source.project(1,|snapshot|&snapshot.nodes).project(1,|nodes|nodes.get(index).expect("immutable inverse node ordinal")),body,grant).result?;
++                let step=self.node.advance(source.project(1,|snapshot|&snapshot.nodes).try_project(1,|nodes|nodes.get(index).ok_or_else(||refusal("immutable inverse node ordinal is absent")))?,body,grant).result?;
+                 if matches!(step,RetainedCloneStep::Complete(_)) {self.phase=2;}
+                 Ok(RetainedCloneStep::Progress(step.progress()))
+             }
+@@ -83,7 +83,7 @@
+             }
+             5 => {
+                 let index=self.edge_index;
+-                let step=self.edge.advance(source.project(1,|snapshot|&snapshot.edges).project(1,|edges|edges.get(index).expect("immutable inverse edge ordinal")),body,grant).result?;
++                let step=self.edge.advance(source.project(1,|snapshot|&snapshot.edges).try_project(1,|edges|edges.get(index).ok_or_else(||refusal("immutable inverse edge ordinal is absent")))?,body,grant).result?;
+                 if matches!(step,RetainedCloneStep::Complete(_)) {self.phase=6;}
+                 Ok(RetainedCloneStep::Progress(step.progress()))
+             }
+@@ -125,7 +125,7 @@
+             }
+             11 => {
+                 let index=self.edge_index;
+-                let step=self.identifier.advance(source.project(1,|snapshot|&snapshot.edges).project(1,|edges|edges.get(index).expect("immutable inverse flag edge")).project(1,|edge|&edge.id),body,grant).result?;
++                let step=self.identifier.advance(source.project(1,|snapshot|&snapshot.edges).try_project(1,|edges|edges.get(index).ok_or_else(||refusal("immutable inverse flag edge is absent")))?.project(1,|edge|&edge.id),body,grant).result?;
+                 if matches!(step,RetainedCloneStep::Complete(_)) {self.phase=12;}
+                 Ok(RetainedCloneStep::Progress(step.progress()))
+             }

@@ -83,7 +83,7 @@ fn evaluate_generation_preview(snapshot: &FlowSnapshot, config: &FlowMainWindowC
     let mut host = FlowHost::from_host_snapshot(patched_fixture).with_history_store_factory(::semio_framework_artifact_flow_flow::FLOW_HISTORY_STORE_FACTORY);
     seed_host_catalogue(&mut host, &config.catalogue_sections_json);
     let preview = host.evaluate().unwrap_or_default();
-    host.retire_cold();
+    host.retire_cold()?;
     preview
 }
 

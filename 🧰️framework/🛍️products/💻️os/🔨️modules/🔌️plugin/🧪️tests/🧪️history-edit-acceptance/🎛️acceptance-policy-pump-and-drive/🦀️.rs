@@ -69,7 +69,7 @@ where
     M: ReferenceSpaceMember + MemberFactory + Send + 'static,
     <A as ArtifactApp>::Snapshot: pack::snapshot::ArtifactDsl,
 {
-    let failed=acceptance_pump(app, |app| !app.time_travel.has_pending_work(),cx).await.err();
+    let failed=Box::pin(acceptance_pump(app, |app| !app.time_travel.has_pending_work(),cx)).await.err();
     artifact_app_laws::close_registered_fixture_app(app,acceptance_policy(),cx).expect("original acceptance app terminal close");
     if let Some(failed)=failed{panic!("original acceptance driver failure after paid app close: {failed}")}
 }
@@ -110,7 +110,7 @@ where
     match seeded {
         Ok(()) => Ok(app),
         Err(reason) => {
-            acceptance_close(&mut app,cx).await;
+            Box::pin(acceptance_close(&mut app,cx)).await;
             Err(reason)
         }
     }
@@ -153,7 +153,7 @@ where
 {
     let mut begin = vec![(HISTORY_EDIT_ARG_MUTATION_ID, DslValue::String(target.to_string()))];
     begin.extend(store.map(|store| (HISTORY_EDIT_ARG_STORE, DslValue::String(store.to_string()))));
-    acceptance_verb(app, HISTORY_EDIT_BEGIN_ACTION_ID, begin.clone(),cx).await.map_err(|reason|AcceptanceVerdict::Fail(reason.into()))?;
+    Box::pin(acceptance_verb(app, HISTORY_EDIT_BEGIN_ACTION_ID, begin.clone(),cx)).await.map_err(|reason|AcceptanceVerdict::Fail(reason.into()))?;
     let (inputs, original) = match app.time_travel.editor() {
         None => return Err(AcceptanceVerdict::Fail("historyEditBegin opened no editor".into())),
         Some(editor) if editor.inputs_refused.is_some() => return Err(AcceptanceVerdict::Fail((format!("the editor cannot read the leaf's input schema: {:?}", editor.inputs_refused)).into())),
@@ -164,7 +164,7 @@ where
         let shown = app.time_travel.render_snapshot_or(&app.tool_runs, &committed);
         let shown = (semio_framework_value::ToValue::to_value(shown.as_ref()), pack::snapshot::ArtifactDsl::print_dsl(shown.as_ref()));
         if shown != *as_of {
-            let _ = acceptance_verb(app, HISTORY_EDIT_EXIT_ACTION_ID, Vec::new(),cx).await;
+            let _ = Box::pin(acceptance_verb(app, HISTORY_EDIT_EXIT_ACTION_ID, Vec::new(),cx)).await;
             return Err(AcceptanceVerdict::Fail((format!("while editing, the preview is not the document as of the edited mutation (downstream not applied) at {}", acceptance_text_difference(&shown.1, &as_of.1))).into()));
         }
     }
@@ -176,18 +176,18 @@ where
     let (mut drafted, mut unchanged) = (None, 0);
     for candidate in changes {
         if app.time_travel.status().is_none() {
-            acceptance_verb(app, HISTORY_EDIT_BEGIN_ACTION_ID, begin.clone(),cx).await.map_err(|reason|AcceptanceVerdict::Fail(reason.into()))?;
+            Box::pin(acceptance_verb(app, HISTORY_EDIT_BEGIN_ACTION_ID, begin.clone(),cx)).await.map_err(|reason|AcceptanceVerdict::Fail(reason.into()))?;
         }
-        if acceptance_verb(app, HISTORY_EDIT_INPUT_ACTION_ID, vec![("path", DslValue::String(candidate.0.clone())), ("value", candidate.1.clone())],cx).await.is_err()
+        if Box::pin(acceptance_verb(app, HISTORY_EDIT_INPUT_ACTION_ID, vec![("path", DslValue::String(candidate.0.clone())), ("value", candidate.1.clone())],cx)).await.is_err()
             || !app.time_travel.editor().is_some_and(|editor| editor.refused.is_none() && editor.value != original)
         {
             continue;
         }
-        acceptance_verb(app, HISTORY_EDIT_ACCEPT_ACTION_ID, Vec::new(),cx).await.map_err(|reason|AcceptanceVerdict::Fail(reason.into()))?;
-        acceptance_pump(app, |app| app.time_travel.status().is_none_or(|status| status.stage != HistoryTimeTravelStage::Replaying),cx).await.map_err(|reason|AcceptanceVerdict::Fail(reason.into()))?;
+        Box::pin(acceptance_verb(app, HISTORY_EDIT_ACCEPT_ACTION_ID, Vec::new(),cx)).await.map_err(|reason|AcceptanceVerdict::Fail(reason.into()))?;
+        Box::pin(acceptance_pump(app, |app| app.time_travel.status().is_none_or(|status| status.stage != HistoryTimeTravelStage::Replaying),cx)).await.map_err(|reason|AcceptanceVerdict::Fail(reason.into()))?;
         if change.is_none() && app.time_travel.status().is_some_and(|status| status.review == Some(HistoryTimeTravelReview::Blocked)) {
-            acceptance_verb(app, HISTORY_EDIT_EXIT_ACTION_ID, Vec::new(),cx).await.map_err(|reason|AcceptanceVerdict::Fail(reason.into()))?;
-            acceptance_pump(app, |app| app.time_travel.status().is_none() && !app.time_travel.has_pending_work(),cx).await.map_err(|reason|AcceptanceVerdict::Fail(reason.into()))?;
+            Box::pin(acceptance_verb(app, HISTORY_EDIT_EXIT_ACTION_ID, Vec::new(),cx)).await.map_err(|reason|AcceptanceVerdict::Fail(reason.into()))?;
+            Box::pin(acceptance_pump(app, |app| app.time_travel.status().is_none() && !app.time_travel.has_pending_work(),cx)).await.map_err(|reason|AcceptanceVerdict::Fail(reason.into()))?;
             if store.is_none() && app.stores.store.supersessions().iter().any(|(id, _)| id.0 == target) {
                 return Err(AcceptanceVerdict::Fail("discarding a blocked trial left a supersession of the mutation".into()));
             }
@@ -204,7 +204,7 @@ where
     }
     let Some(drafted) = drafted else {
         if app.time_travel.status().is_some() {
-            let _ = acceptance_verb(app, HISTORY_EDIT_EXIT_ACTION_ID, Vec::new(),cx).await;
+            let _ = Box::pin(acceptance_verb(app, HISTORY_EDIT_EXIT_ACTION_ID, Vec::new(),cx)).await;
         }
         return Err(AcceptanceVerdict::Skip(format!(
             "no schema-valid{} change of its {} input(s) is accepted ({unchanged} left the operation unchanged)",
@@ -214,18 +214,18 @@ where
     };
     let status = app.time_travel.status().ok_or_else(|| AcceptanceVerdict::Fail("accepting closed the session".into()))?;
     if status.review == Some(HistoryTimeTravelReview::Blocked) {
-        let _ = acceptance_verb(app, HISTORY_EDIT_EXIT_ACTION_ID, Vec::new(),cx).await;
+        let _ = Box::pin(acceptance_verb(app, HISTORY_EDIT_EXIT_ACTION_ID, Vec::new(),cx)).await;
         return Err(AcceptanceVerdict::Skip(format!("drafting {} = {:?} blocks the replay ({:?})", drafted.0, drafted.1, status.worst)));
     }
     if (status.stage, status.review) != (HistoryTimeTravelStage::Reviewing, Some(HistoryTimeTravelReview::Ready)) {
         return Err(AcceptanceVerdict::Fail((format!("the replay ends at {:?}/{:?}, not a ready review", status.stage, status.review)).into()));
     }
-    acceptance_verb(app, HISTORY_EDIT_FINALIZE_ACTION_ID, Vec::new(),cx).await.map_err(|reason|AcceptanceVerdict::Fail(reason.into()))?;
+    Box::pin(acceptance_verb(app, HISTORY_EDIT_FINALIZE_ACTION_ID, Vec::new(),cx)).await.map_err(|reason|AcceptanceVerdict::Fail(reason.into()))?;
     let commit = match alternative {
         Some(name) => vec![("name", DslValue::String(name.to_string()))],
         None => vec![("choice", DslValue::String(HISTORY_EDIT_CHOICE_OVERWRITE.to_string()))],
     };
-    acceptance_verb(app, HISTORY_EDIT_COMMIT_ACTION_ID, commit,cx).await.map_err(|reason|AcceptanceVerdict::Fail(reason.into()))?;
-    acceptance_pump(app, |app| app.time_travel.status().is_none() && !app.time_travel.has_pending_work(),cx).await.map_err(|reason|AcceptanceVerdict::Fail(reason.into()))?;
+    Box::pin(acceptance_verb(app, HISTORY_EDIT_COMMIT_ACTION_ID, commit,cx)).await.map_err(|reason|AcceptanceVerdict::Fail(reason.into()))?;
+    Box::pin(acceptance_pump(app, |app| app.time_travel.status().is_none() && !app.time_travel.has_pending_work(),cx)).await.map_err(|reason|AcceptanceVerdict::Fail(reason.into()))?;
     Ok(drafted)
 }

@@ -1,0 +1,121 @@
+[
+ {
+  "crate": "semio-framework-os-flow-host",
+  "files": 1,
+  "edits": 1,
+  "notes": [
+   "flow host-close: FlowHost::retire_cold now returns Result<(),ValueError> (option a); [DEBUG] eprintln and 5 expects removed"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-framework-artifact-flow-flow",
+  "files": 1,
+  "edits": 1,
+  "notes": [
+   "flow retained: FlowRetirement::push_cold now returns Result<(),ValueError> (option a)"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-framework-os-store-replay-operation",
+  "files": 1,
+  "edits": 3,
+  "notes": [
+   "os-store replay report: 3 unwraps -> VcsError::HistoryReplaying"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-framework-plugin-instance-docs",
+  "files": 1,
+  "edits": 1,
+  "notes": [
+   "maintenance ladder: expect -> ValueError (PluginLifecycleFailure: From<ValueError>)"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-s-artifact-procedural-3d-editor",
+  "files": 1,
+  "edits": 1,
+  "notes": [
+   "generation3d command_from_action returns Result<_,Fault>: 3 unwraps -> ? (Fault)"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-s-artifact-procedural-3d-viewer",
+  "files": 1,
+  "edits": 1,
+  "notes": [
+   "generation3d command_from_action returns Result<_,Fault>: 3 unwraps -> ? (Fault)"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-s-artifact-stdio-ifc-2x3-base-details",
+  "files": 1,
+  "edits": 1,
+  "notes": [
+   "ifc work.rs:20/1404: unwrap -> ValueError::invariant"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-s-artifact-stdio-ifc4x3-templates",
+  "files": 1,
+  "edits": 1,
+  "notes": [
+   "ifc4x3 staging-native: receiver hoisted out of the closure"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-s-artifact-raster-raster-model",
+  "files": 1,
+  "edits": 2,
+  "notes": [
+   "raster asset-content: close_raster_owner_cold and retire_raster_value_cold return Result<(),ValueError> (option a)"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-s-artifact-draw-drawing-scene",
+  "files": 1,
+  "edits": 1,
+  "notes": [
+   "draw raster scene: matches!+let-else(unreachable) -> if let (unrepresentable)"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-s-artifact-draw-drawing-geometry",
+  "files": 1,
+  "edits": 1,
+  "notes": [
+   "draw picking paint: unreachable -> Err(String)"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-s-artifact-draw-drawing-model",
+  "files": 3,
+  "edits": 4,
+  "notes": [
+   "draw lookup: expect -> ValueError::invariant",
+   "draw lookup owned: 2 expects + unreachable; uses new RetainedOwnedProjection::try_project",
+   "draw validation: expect -> fault()"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-framework-value",
+  "files": 1,
+  "edits": 1,
+  "notes": [
+   "framework-value retained-clone: RetainedOwnedProjection::try_project (definition for the draw lookup)"
+  ],
+  "check": "OK"
+ }
+]

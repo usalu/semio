@@ -221,22 +221,21 @@ impl semio_framework_dsl_record::BorrowedDslField for RasterAdjustmentNumber{con
 pub const RASTER_OWNED_FIELD_BYTES: usize = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
 
 /// 🧹️ Closes one cold-owned Raster value to terminal-empty through grants sized exactly by the retirement's own quotes.
-pub fn retire_raster_value_cold<T: semio_framework_value::retirement::RetireOwned>(value: T) {
+pub fn retire_raster_value_cold<T: semio_framework_value::retirement::RetireOwned>(value: T) -> Result<(), semio_framework_value::ValueError> {
     let birth = RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: semio_framework_value::retirement::owned_retirement_birth_bytes::<T>(), maximum_depth: 2, ..Default::default() };
-    match semio_framework_value::retirement::admit_owned_retirement(value, birth) {
-        Ok((owner, _)) => close_raster_owner_cold(owner),
-        Err((error, _value)) => panic!("Raster cold retirement refused its frame: {error}"),
-    }
+    let (owner, _) = semio_framework_value::retirement::admit_owned_retirement(value, birth).result.map_err(|(error, _)| error)?;
+    close_raster_owner_cold(owner)
 }
 
 /// 🚪️ Drives one admitted retirement frame to terminal-empty through grants sized exactly by its own quotes.
-pub fn close_raster_owner_cold(mut owner: Box<dyn store::ErasedSnapshotRetirement>) {
+pub fn close_raster_owner_cold(mut owner: Box<dyn store::ErasedSnapshotRetirement>) -> Result<(), semio_framework_value::ValueError> {
     let mut turns = 0usize;
     while !owner.terminal_is_empty() {
-        let demand = owner.next_demand(RASTER_OWNED_FIELD_BYTES).expect("Raster cold retirement quotes its next turn");
+        let demand = owner.next_demand(RASTER_OWNED_FIELD_BYTES)?;
         let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: RASTER_OWNED_FIELD_BYTES.max(demand.copy_bytes), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
-        owner.close_step(grant).expect("Raster cold retirement closes within its quoted grant");
+        owner.close_step(grant).result?;
         turns += 1;
-        assert!(turns < 1 << 24, "Raster cold retirement made no progress");
+        if turns >= 1 << 24 { return Err(semio_framework_value::ValueError::invariant("Raster cold retirement made no progress")); }
     }
+    Ok(())
 }

@@ -174,7 +174,8 @@ impl<T: Send + 'static> ErasedSnapshotRetirement for ArtifactStoreHistoryLedgerR
 
 if let Some(value) = self.pending.take().or_else(|| ledger.pop()) {
                 let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-                return match self.factory.as_ref().unwrap().retire_owned(value, child).result {
+                let Some(factory) = self.factory.as_ref() else { return Err(ValueError::invariant("cursor ledger factory is absent")); };
+                return match factory.retire_owned(value, child).result {
                     Ok((owner, progress)) => { *self.active = Some(owner); admit_retained_clone_progress(child, progress, "original history entry constructor")?; if progress.retained_capacity_bytes != demand.capacity_bytes { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "history entry factory changed its exact declared birth")); } Ok(RetainedCloneStep::Progress(progress)) }
                     Err((error, value)) => { *self.pending = Some(value); Err(error) }
                 };

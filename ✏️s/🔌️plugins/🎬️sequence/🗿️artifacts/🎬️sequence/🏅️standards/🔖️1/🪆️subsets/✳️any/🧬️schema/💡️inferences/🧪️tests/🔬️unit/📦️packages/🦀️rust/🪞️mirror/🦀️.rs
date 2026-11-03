@@ -36,11 +36,6 @@ pub mod standards {
                     mod component;
                     pub use component::*;
                     #[path = "."]
-                    pub mod binary {
-                        #[path = "../../../../../../../🚪️io/💾️binary/🔺️diff/🦀️.rs"]
-                        pub mod diff;
-                    }
-                    #[path = "."]
                     pub mod import {
                         #[path = "."]
                         pub mod deserializers {

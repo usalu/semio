@@ -117,6 +117,7 @@ pub(super) fn number(value: usize) -> Result<String, ValueError> {
     Ok(result)
 }
 #[derive(Default)]
+#[derive(Clone, Copy)]
 pub(super) struct Membership {
     position: usize,
     expected: &'static str,
@@ -193,6 +194,7 @@ enum Root {
     Header(usize, usize),
     Argument(Owner),
 }
+#[derive(Clone, Copy)]
 pub(super) struct ShapeCursor {
     column: usize,
     entity: usize,
@@ -332,6 +334,7 @@ semio_framework_value::artifact_retire_leaf!(ShapeCursor, Membership);
 
 /// 🔢️ Original consumers fund this bounded borrowed numeric cursor and retain the immutable source.
 #[derive(Default)]
+#[derive(Clone, Copy)]
 pub(super) struct PrimitiveZero {
     owner: Option<Owner>,
     expression: Option<Expression>,

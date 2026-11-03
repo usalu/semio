@@ -104,7 +104,7 @@ async fn transaction_rows(app: &mut EnergyEditorApp) -> Vec<semio_framework::ker
 }
 
 fn latitude(app: &EnergyEditorApp) -> f64 {
-    app.snapshot().expect("projection").model.site.latitude_deg
+    app.snapshot().expect("projection").model.read().site.latitude_deg
 }
 
 /// ⚖️ LAW (W3-T2-CONTROLS): an inspector slider press is ONE tool transaction — the ticks leave the committed model
@@ -180,12 +180,13 @@ async fn a_committed_site_press_edited_in_history_replays_downstream() {
     history_edit(&mut app, "historyEditFinalize", Vec::new()).await;
     history_edit(&mut app, "historyEditCommit", vec![("choice", DslValue::String("overwrite".into()))]).await;
     pump_time_travel(&mut app, |stage| stage.is_none()).await;
-    let edited = app.snapshot().expect("edited head").model;
+    let edited_head = app.snapshot().expect("edited head");
+    let edited = edited_head.model.read();
     assert_eq!((edited.site.latitude_deg, edited.name.as_str()), (15.0, "Edited downstream"), "the overwrite folds the edited latitude under the replayed rename");
     let mut fresh = dispatchable_app().await;
     slide_site(&mut fresh, press(15.0, "site.latitude:5", true)).await;
     rename(&mut fresh, "Edited downstream").await;
-    assert_eq!(edited, fresh.snapshot().expect("fresh head").model, "the edited log equals a fresh run of the edited press");
+    assert_eq!(model_value(&edited_head), model_value(&fresh.snapshot().expect("fresh head")), "the edited log equals a fresh run of the edited press");
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), app.1.cx()).expect("original caller paid app close");
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut fresh.0, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), fresh.1.cx()).expect("original caller paid app close");
 }
@@ -199,7 +200,8 @@ async fn a_history_edit_of_an_earlier_site_press_keeps_a_later_press_of_another_
     slide_site_field(&mut app, "latitudeDeg", press(30.0, "site.latitude:6", true)).await;
     let edited = transaction_rows(&mut app).await.into_iter().max_by_key(|entry| entry.seq).and_then(|row| row.mutations.first().map(|mutation| mutation.mutation_id.clone())).expect("the latitude press's mutation");
     slide_site_field(&mut app, "longitudeDeg", press(50.0, "site.longitude:1", true)).await;
-    let site = app.snapshot().expect("projection").model.site;
+    let projection = app.snapshot().expect("projection");
+    let site = projection.model.read().site;
     assert_eq!((site.latitude_deg, site.longitude_deg), (30.0, 50.0));
     history_edit(&mut app, "historyEditBegin", vec![("mutationId", DslValue::String(edited))]).await;
     history_edit(&mut app, "historyEditInput", vec![("path", DslValue::String("/newLatitudeDeg".into())), ("value", DslValue::float(15.0))]).await;
@@ -210,7 +212,8 @@ async fn a_history_edit_of_an_earlier_site_press_keeps_a_later_press_of_another_
     history_edit(&mut app, "historyEditFinalize", Vec::new()).await;
     history_edit(&mut app, "historyEditCommit", vec![("choice", DslValue::String("overwrite".into()))]).await;
     pump_time_travel(&mut app, |stage| stage.is_none()).await;
-    let site = app.snapshot().expect("edited head").model.site;
+    let edited_head = app.snapshot().expect("edited head");
+    let site = edited_head.model.read().site;
     assert_eq!((site.latitude_deg, site.longitude_deg), (15.0, 50.0), "the edited latitude and the later longitude both survive the replay");
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), app.1.cx()).expect("original caller paid app close");
 }
@@ -432,7 +435,7 @@ async fn the_simulation_is_driven_by_the_framework_tool_run_actions_and_chords_o
     for removed in fixture["lifecycle"]["removedActions"].as_array().unwrap().iter().map(|id| id.as_str().unwrap()) {
         assert!(!ENERGY_MODEL_RETAINED_TOOL_IDS.contains(&removed), "{removed} is still a retained tool");
         assert!(def.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&def, window)).all(|action| action.id != removed), "{removed} is still declared");
-        assert!(<EnergyModelEditor as ArtifactEditor>::command_from_action(removed, None, None).is_err(), "{removed} still resolves to a command");
+        assert!(<EnergyModelEditor as ArtifactEditor>::command_from_action(removed, &mut None, &mut None).is_err(), "{removed} still resolves to a command");
     }
 }
 

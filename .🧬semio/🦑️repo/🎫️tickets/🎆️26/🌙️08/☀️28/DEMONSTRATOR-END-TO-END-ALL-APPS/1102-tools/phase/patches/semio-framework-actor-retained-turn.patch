@@ -1,0 +1,11 @@
+--- a/🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/💼️job/⏸️park/🦀️.rs
++++ b/🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/💼️job/⏸️park/🦀️.rs
+@@ -29,7 +29,7 @@
+   let received=issuer.receive_guest_spent(admission,spent,u64::try_from(cx.original_work_units_spent()-before_work).unwrap_or(u64::MAX),ActorGuestPhase::Ready);
+   let ready=match parked{Ok(ready)=>ready,Err(caller)=>return Err(OriginalActorParkAdmissionFailure{caller:Some(caller),issuer:received.err()})};
+   if !ready{received?;return Ok(None)}
+-  let mut admission_failure=received.err();let turn=self.turn.as_ref().expect("ready Actor admission retains its actual owned turn");let input=if admission_failure.is_none(){match issuer.checkout_guest(turn.original_grant()){Ok(Some(input))=>Some(input),Ok(None)=>{admission_failure=Some(refusal("funded original parked Actor body has no receiving grant"));None},Err(error)=>{admission_failure=Some(error);None}}}else{None};
++  let mut admission_failure=received.err();let Some(turn)=self.turn.as_ref()else{return Err(OriginalActorParkAdmissionFailure{caller:None,issuer:admission_failure})};let input=if admission_failure.is_none(){match issuer.checkout_guest(turn.original_grant()){Ok(Some(input))=>Some(input),Ok(None)=>{admission_failure=Some(refusal("funded original parked Actor body has no receiving grant"));None},Err(error)=>{admission_failure=Some(error);None}}}else{None};
+   Ok(Some(OriginalActorParkedTurn{issuer:ManuallyDrop::new(self.issuer.take()),turn:ManuallyDrop::new(self.turn.take()),input,admission_failure:ManuallyDrop::new(admission_failure)}))
+  }
+  /// ♻️ A failed or cancelled admission retains its actual issuer while the same source loan closes.

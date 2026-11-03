@@ -4,27 +4,25 @@ use super::*;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, retained_clone_grant_admits};
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
 use std::mem::size_of;
-#[cfg(test)]
-#[path = "../contextual_render_tests.rs"]
-mod tests;
+
 #[derive(Default, Clone, Copy, Debug, PartialEq, Eq)]
-struct RenderState {
-    binding: Option<(usize, u64)>,
-    source_len: usize,
-    index_ready: bool,
-    row: usize,
-    component: usize,
-    address: Option<IfcEnumerationAddress>,
-    phase: u8,
-    done: bool,
+pub struct RenderState {
+    pub binding: Option<(usize, u64)>,
+    pub source_len: usize,
+    pub index_ready: bool,
+    pub row: usize,
+    pub component: usize,
+    pub address: Option<IfcEnumerationAddress>,
+    pub phase: u8,
+    pub done: bool,
 }
 semio_framework_value::artifact_retire_leaf!(RenderState);
 #[derive(Default, semio_framework_value::RetireOwned)]
 pub struct IfcDetailsRenderWork {
-    query: IfcEnumerationQuery,
-    entries: Vec<IfcEnumerationEntry>,
-    index: source_index::IfcSourceIndex,
-    state: RenderState,
+    pub query: IfcEnumerationQuery,
+    pub entries: Vec<IfcEnumerationEntry>,
+    pub index: source_index::IfcSourceIndex,
+    pub state: RenderState,
 }
 pub fn choice_request(definition: u64, choice: usize, list: bool) -> DslValue {
     DslValue::Object(vec![(

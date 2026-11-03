@@ -6,7 +6,7 @@ use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base
 use semio_s_artifact_stdio_contract::list_delta::insertion_index;
 use semio_s_artifact_stdio_zip::opc::diff::{OpcContentTypeEntriesDelta, OpcContentTypePatch, OpcContentTypeRow, OpcContentTypesDiff, OpcDiff, OpcOwnerPatch, OpcOwnerRow, OpcOwnerRemoval, OpcOwnersDelta, OpcRelationshipPatch, OpcRelationshipsDelta};
 use semio_s_artifact_stdio_zip::opc::{OpcPackage, OpcRelationship};
-#[cfg(test)] use semio_s_artifact_stdio_zip::opc::{OpcTargetMode};
+#[cfg(any(test, feature = "testkit"))] use semio_s_artifact_stdio_zip::opc::{OpcTargetMode};
 
 /// 📦️ Reads the OPC package of `base` through `read`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -116,7 +116,7 @@ pub(crate) fn content_type_removal_diff(opc: &OpcPackage, is_override: bool, nam
 }
 
 /// 🧪️ The package of `snapshot` with an external root relationship `rIdDemoExternal` and an unused extension default `zzdemo` added: the entries the demo cases remove.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn with_demo_entries(mut snapshot: XlsxSnapshot) -> XlsxSnapshot {
     let external = OpcRelationship { id: "rIdDemoExternal".into(), rel_type: "http://example.invalid/relationships/demo".into(), target: "https://example.invalid/demo".into(), target_mode: OpcTargetMode::External };

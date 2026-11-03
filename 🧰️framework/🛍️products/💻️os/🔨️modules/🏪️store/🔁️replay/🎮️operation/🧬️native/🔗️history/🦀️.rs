@@ -34,7 +34,7 @@ impl<T:Send+Sync+'static> OriginalHistorySource<T>{
   if let Some(key)=self.key{let step=match ledger.return_retained_read(key,&mut self.returned,grant){Ok(step)=>step,Err(error)if error.kind==ValueRefusalKind::WorkLimit&&error.retained_progress()==RetainedCloneProgress::default()=>return Ok(RetainedCloneStep::Progress(Default::default())),Err(error)=>return Err(error)};if matches!(step,RetainedCloneStep::Complete(_)){self.key=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
   if let Some(factory)=self.returned.take(){self.closing_factory[0]=Some(FactoryAuthority::new(factory));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}));}
   if let Some(factory)=self.issuer.take(){self.closing_factory[1]=Some(FactoryAuthority::new(factory));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}));}
-  if let Some(index)=self.closing_factory.iter().position(Option::is_some){let factory=self.closing_factory[index].as_mut().unwrap();let step=factory.step(grant).result?;if factory.terminal_is_empty(){self.closing_factory[index]=None;}return Ok(step);}Ok(RetainedCloneStep::Complete(Default::default()))
+  if let Some(index)=self.closing_factory.iter().position(Option::is_some){let Some(factory)=self.closing_factory[index].as_mut() else { return Err(semio_framework_value::ValueError::invariant("history closing factory slot is absent"))};let step=factory.step(grant).result?;if factory.terminal_is_empty(){self.closing_factory[index]=None;}return Ok(step);}Ok(RetainedCloneStep::Complete(Default::default()))
  }
 }
 impl<T:Sync> OriginalHistorySource<T>{

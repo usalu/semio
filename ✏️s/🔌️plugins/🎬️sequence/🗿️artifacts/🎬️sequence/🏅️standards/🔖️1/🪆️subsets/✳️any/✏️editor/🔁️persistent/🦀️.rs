@@ -1,5 +1,6 @@
 //! 🔁️ Sequence persistent routes: reorganize, node-graph editing and the run order, driven step by step.
 
+use semio_framework_pack_json as json;
 use neural_engine::Value as NeuralValue;
 use std::collections::{BTreeMap, VecDeque};
 use neural_engine::{Dictionary, RegistryRetirement, SharedRegistry, ValueRetirement};
@@ -817,7 +818,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
     _cx: &mut semio_framework_job::StepContext<'_>,
     ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<SequencePlayApp>>, semio_framework_job::OriginalTurnFailure> {
         let original: Result<_, Fault> = (|| {
-        let semio_framework_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: _, command, snapshot, config: _config, history: _history, interaction: _interaction, hover: _hover, context, operation } = *input;
+        let semio_framework_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: _, command, snapshot, config: _config, history: _history, interaction: _interaction, hover: _hover, context, operation, snapshot_read: _ } = *input;
         use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
         if self.completed || self.progress >= SEQUENCE_PERSISTENT_MAXIMUM_UNITS || command.command_id() != self.tool_id {
             return Err(sequence_fault("sequence.editor.capacity", "sequence-persistent-progress-capacity"));
@@ -903,7 +904,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
         self.closing = true;
     }
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        semio_framework_job::close_original_granted_step(cx,|grant|{
+        semio_framework_job::close_original_granted_step(cx,|grant|semio_framework_value::RetainedWorkOutcome{work:1,result:(||{
             if !self.closing {
                 return Ok(semio_framework_job::InteractiveJobCloseStep::Blocked);
             }
@@ -915,7 +916,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
                 return sequence_close_step(self.workspace.release_one(grant));
             }
             sequence_close_step(self.scene_owner.release_one(grant))
-        })
+        })()})
     }
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demand()?.copy_bytes) }
     fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.close_demand()?.capacity_bytes) }

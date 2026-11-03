@@ -1,0 +1,4 @@
+process handle SIGSEGV -s true -n true -p false
+process handle SIGBUS -s true -n true -p false
+run --test-threads=1 --exact editor_unit_tests::context::history_edits_end_to_end --nocapture
+bt -c 80

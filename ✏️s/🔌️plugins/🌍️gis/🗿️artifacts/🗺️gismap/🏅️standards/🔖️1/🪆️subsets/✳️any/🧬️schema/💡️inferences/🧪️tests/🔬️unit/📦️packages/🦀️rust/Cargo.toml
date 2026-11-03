@@ -52,21 +52,13 @@ semio-s-artifact-gis-gismap-mutations = { path = "../../../../../🔺️diff/�
 semio-s-artifact-gis-gismap-snapshot = { path = "../../../../../📸️snapshot/📦️packages/🦀️rust" }
 semio-s-artifact-gis-gismap-tile-coordinates = { path = "../../../../../../../../../../🗺️tiles/🌍️gis-policy/📦️packages/🦀️rust" }
 semio-s-artifact-gis-gismap-windows = { path = "../../../../../../👁️viewer/🎭️modes/👁️view/🪟️windows/🗺️map/📦️packages/🦀️rust" }
-semio-s-artifact-stdio-dwg = { workspace = true }
-semio-s-artifact-stdio-dxf = { workspace = true }
-semio-s-artifact-stdio-json = { workspace = true }
-semio-s-artifact-stdio-pdf = { workspace = true }
 semio-s-artifact-stdio-png = { workspace = true }
-semio-s-artifact-stdio-semio = { workspace = true }
 semio-s-artifact-stdio-semio-base = { workspace = true }
 semio-s-artifact-stdio-semio-drawing = { workspace = true }
 semio-s-artifact-stdio-semio-drawing-export = { workspace = true }
-semio-s-artifact-stdio-semio-drawing-import = { workspace = true }
-semio-s-artifact-stdio-semio-image = { workspace = true }
 semio-s-artifact-stdio-semio-value-model = { workspace = true }
 semio-s-artifact-stdio-semio-value-mutations = { workspace = true }
 semio-s-artifact-stdio-svg = { workspace = true }
-semio-s-artifact-stdio-txt = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 
@@ -74,6 +66,7 @@ serde_json = { workspace = true }
 geo = { version = "0.31.0", default-features = false }
 geojson = { version = "1.0.0", default-features = false }
 semio-framework-async-macros = { workspace = true }
+semio-framework-trace = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 semio-framework-job-worker = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-job-worker-authority = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

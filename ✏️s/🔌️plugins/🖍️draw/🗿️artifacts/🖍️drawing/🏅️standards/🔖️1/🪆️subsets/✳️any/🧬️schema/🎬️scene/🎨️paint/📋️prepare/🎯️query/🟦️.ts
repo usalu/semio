@@ -4,13 +4,15 @@ import {sceneIdentityMatches,type SceneIdentity} from "../../../🪪️identity/
 import {sceneSelectionRelation} from "../../../📋️prepare/🧭️selection/🟦️.ts";
 import {SegmentEnclosureCursor,LassoInteriorCursor} from "./🪢️lasso/🟦️.ts";
 import type {PreparedScene} from "../🟦️.ts";
+import type {ScenePlanNode} from "../../../🗺️plan-model/🎟️owned/🟦️.ts";
 type Point=readonly[number,number];
 export type PreparedSceneIdentity={readonly source:SceneIdentity;readonly build:string;readonly flatness:number};
 export type PreparedScenePick={kind:"point";point:Point;tolerance:number;requiredFlatness:number}|{kind:"rectangle";start:Point;end:Point;crossing:boolean}|{kind:"lasso";points:readonly Point[]};
 export type PreparedScenePickProgress={phase:"nodes"|"paint"|"complete";work:number;done:boolean};
 const valid=(v:number)=>Number.isFinite(v)&&Math.abs(v)<=1e9;
 const point=(p:Point)=>p.length===2&&p.every(valid);
-const visible=(n:PreparedScene["plan"]["nodes"][number])=>n.visible&&n.opacity>0&&n.groups.every(g=>g.opacity>0);
+const visible=(n:ScenePlanNode):boolean=>{if(!n.visible||!(n.opacity>0))return false;for(let at=0;at<n.groups.length;at++)if(!(n.groups.at(at)!.opacity>0))return false;return true;};
+const pathOf=(n:ScenePlanNode):number[]=>Array.from({length:n.sourcePath.length},(_,at)=>n.sourcePath.at(at)!);
 const stamp=(identity:PreparedSceneIdentity,entry:number):PreparedRegionStamp=>({...identity,entry});
 const matches=(a:PreparedSceneIdentity,b:PreparedSceneIdentity)=>sceneIdentityMatches(a.source,b.source)&&a.build===b.build&&a.flatness===b.flatness;
 function segmentCrossesRectangle(a:Point,b:Point,min:Point,max:Point):boolean{let lo=0,hi=1;for(const axis of [0,1]as const){const d=b[axis]-a[axis];if(d===0){if(a[axis]<min[axis]||a[axis]>max[axis])return false;}else{const t0=(min[axis]-a[axis])/d,t1=(max[axis]-a[axis])/d;lo=Math.max(lo,Math.min(t0,t1));hi=Math.min(hi,Math.max(t0,t1));if(lo>hi)return false;}}return true;}
@@ -40,7 +42,7 @@ export class PreparedScenePickJob{
    if(this.path){if(this.path.advance(paint.regions,s,1).done){const hit=this.path.result(s);this.path=null;if(hit){this.admit(this.active);this.phase=this.rectangle?"nodes":"complete";this.rectangle=null;}else if(!this.rectangle)this.phase="nodes";}return;}
    const q=this.rectangle!;if(q.slot===2){this.rectangle=null;this.phase="nodes";return;}const contours=q.slot===0?paint.regions.fill:paint.regions.stroke,c=contours[q.contour];if(!c){q.slot++;q.contour=0;q.edge=0;return;}if(q.edge>=c.length){q.contour++;q.edge=0;return;}const a=c[q.edge]!,b=c[(q.edge+1)%c.length]!;q.edge++;if(segmentCrossesRectangle(a,b,q.min,q.max)){this.admit(this.active);this.rectangle=null;this.phase="nodes";}return;
   }
-  if(this.next===null){this.next=scene.plan.nodes.length;return;}if(this.next===0){this.phase="complete";return;}const index=--this.next,node=scene.plan.nodes[index]!;if(!visible(node)||node.lockedAncestors!==0)return;const g=scene.geometry[index]!,q=this.query;
+  if(this.next===null){this.next=scene.plan.nodes.length;return;}if(this.next===0){this.phase="complete";return;}const index=--this.next,node=scene.plan.nodes.at(index)!;if(!visible(node)||node.lockedAncestors!==0)return;const g=scene.geometry[index]!,q=this.query;
   switch(q.kind){case"point":switch(g.paint.kind){case"empty":break;case"path":this.path=new PreparedRegionQueryJob(stamp(live,index),q.point,q.tolerance,q.requiredFlatness);this.active=index;this.phase="paint";break;case"image":if(quadContains(g.paint.corners,q.point,q.tolerance)){this.admit(index);this.phase="complete";}break;}break;
    case"rectangle":if(g.bounds){const[x,y,r,b]=g.bounds,min:Point=[Math.min(q.start[0],q.end[0]),Math.min(q.start[1],q.end[1])],max:Point=[Math.max(q.start[0],q.end[0]),Math.max(q.start[1],q.end[1])];if(!q.crossing){if(x>=min[0]&&y>=min[1]&&r<=max[0]&&b<=max[1])this.admit(index);}else if(min[0]<=r&&max[0]>=x&&min[1]<=b&&max[1]>=y){switch(g.paint.kind){case"empty":break;case"path":this.rectangle={min,max,slot:0,contour:0,edge:0};this.path=new PreparedRegionQueryJob(stamp(live,index),min,0,live.flatness);this.active=index;this.phase="paint";break;case"image":if(quadCrossesRectangle(g.paint.corners,min,max))this.admit(index);break;}}}break;
    case"lasso":if(g.bounds){const[x,y,r,b]=g.bounds;if(x>=this.lassoBounds![0]&&y>=this.lassoBounds![1]&&r<=this.lassoBounds![2]&&b<=this.lassoBounds![3]){this.lasso={slot:0,contour:0,edge:0,seen:false,segment:null,interior:null};this.active=index;this.phase="paint";}}break;
@@ -53,6 +55,6 @@ export class PreparedScenePickJob{
 /** 📐️ Selection presentation and pointer handles share cached bounds and unlocked ancestry. */
 export function preparedSelectionBounds(scene:PreparedScene,ids:readonly string[]):[number,number,number,number]|null{
  if(ids.length>256||ids.reduce((n,id)=>n+new TextEncoder().encode(id).length,0)>16384)throw new RangeError("Scene selection exceeds identity capacity");
- const selected=ids.flatMap(id=>{const node=scene.plan.nodes.find(n=>n.id===id);return node?[node.sourcePath]:[];});let bounds:[number,number,number,number]|null=null;
- scene.plan.nodes.forEach((node,index)=>{if(!visible(node)||sceneSelectionRelation(node.sourcePath,node.lockedAncestors,selected).boundsSelection===null)return;const next=scene.geometry[index]!.bounds??scene.geometry[index]!.geometryBounds;if(next)bounds=bounds?[Math.min(bounds[0],next[0]),Math.min(bounds[1],next[1]),Math.max(bounds[2],next[2]),Math.max(bounds[3],next[3])]:[...next];});return bounds;
+ const selected:number[][]=[];for(const id of ids)for(let at=0;at<scene.plan.nodes.length;at++){const node=scene.plan.nodes.at(at)!;if(node.id===id){selected.push(pathOf(node));break;}}let bounds:[number,number,number,number]|null=null;
+ for(let index=0;index<scene.plan.nodes.length;index++){const node=scene.plan.nodes.at(index)!;if(!visible(node)||sceneSelectionRelation(pathOf(node),node.lockedAncestors,selected).boundsSelection===null)continue;const next=scene.geometry[index]!.bounds??scene.geometry[index]!.geometryBounds;if(next)bounds=bounds?[Math.min(bounds[0],next[0]),Math.min(bounds[1],next[1]),Math.max(bounds[2],next[2]),Math.max(bounds[3],next[3])]:[...next];}return bounds;
 }

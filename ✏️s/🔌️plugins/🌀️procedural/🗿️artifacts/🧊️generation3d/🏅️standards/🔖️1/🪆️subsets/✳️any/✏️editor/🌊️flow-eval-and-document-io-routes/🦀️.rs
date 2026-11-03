@@ -297,7 +297,7 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dDocumen
         if !self.closing{return Ok(semio_framework_job::InteractiveJobCloseStep::Blocked)}
         if self.terminal_is_empty(){return Ok(semio_framework_job::InteractiveJobCloseStep::Complete{progress:Default::default()})}
         let demand={let d=self.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;semio_framework_value::RetirementDemand{copy_bytes:d.maximum_copy_bytes,capacity_bytes:d.maximum_capacity_bytes,release_bytes:d.maximum_release_bytes,depth:d.maximum_depth}};
-        let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|{(
+        let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|{let result=(
             ||->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_value::ValueError>{
         use semio_framework_job::InteractiveJobCloseStep;
         use semio_framework_value::retained_clone::{RetainedCloneProgress,RetainedCloneStep};
@@ -318,7 +318,7 @@ impl ArtifactCommandWork<EditorApp<Generation3dPlayApp>> for Generation3dDocumen
             Ok(RetainedCloneStep::Progress(progress))=>Ok(InteractiveJobCloseStep::Pending{progress}),
             Err(error)=>Err(error),
         }
-    })().map(|step|semio_framework_value::RetainedCloneStep::Progress(step.progress()))})?;
+    })().map(|step|semio_framework_value::RetainedCloneStep::Progress(step.progress()));semio_framework_value::RetainedWorkOutcome{result,work:1}})?;
         Ok(if self.terminal_is_empty(){semio_framework_job::InteractiveJobCloseStep::Complete{progress:step.progress()}}else{step})
     }
 
@@ -396,3 +396,10 @@ impl Generation3dDocumentIoJobFactoryProofs {
 //#endregion 📄️DocumentIoRoute
 //#endregion 🧵️RetainedCommands
 //#endregion 🔖️Generation3dPlayApp
+
+/// 🧾️ The flow-evaluation and document-io factories' first-step proofs, in registration order.
+pub(super) fn generation3d_flow_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
+    let mut proofs = Generation3dFlowEvalJobFactoryProofs::bounded_first_step_tool_proofs();
+    proofs.extend(Generation3dDocumentIoJobFactoryProofs::bounded_first_step_tool_proofs());
+    proofs
+}

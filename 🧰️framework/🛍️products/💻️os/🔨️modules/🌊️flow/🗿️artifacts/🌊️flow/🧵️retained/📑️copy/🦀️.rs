@@ -507,7 +507,7 @@ impl<R: RetireOwned + Send + Sync + 'static, T: Copy> CopyCursor<R, T> {
             if matches!(step,RetainedCloneStep::Complete(_)){return Ok(RetainedCloneStep::Progress(step.progress()));}
             return Ok(step);
         }
-        else if let Some(root)=state.source.take(){match state.root_retirement.as_ref().expect("selected copy retirement factory").retire(root,grant).result{Ok((owner,progress))=>{state.active_root_retirement=Some(owner);semio_framework_value::retained_clone::admit_retained_clone_progress(grant,progress,"Flow root retirement birth")?;return Ok(RetainedCloneStep::Progress(progress));},Err((error,root))=>{state.source=Some(root);return Err(error);}}}
+        else if let Some(root)=state.source.take(){match state.root_retirement.as_ref().ok_or_else(||ValueError::invariant("selected copy retirement factory is absent"))?.retire(root,grant).result{Ok((owner,progress))=>{state.active_root_retirement=Some(owner);semio_framework_value::retained_clone::admit_retained_clone_progress(grant,progress,"Flow root retirement birth")?;return Ok(RetainedCloneStep::Progress(progress));},Err((error,root))=>{state.source=Some(root);return Err(error);}}}
         else if let Some(active)=state.factory_close.as_mut(){
             if active.terminal_is_empty(){let bytes=size_of_val(active.as_ref());state.factory_close=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,released_bytes:bytes,..empty}));}
             let step=active.close_step(grant).result?;let terminal=active.terminal_is_empty();let step=account(&mut state.stalled_steps,grant,step,terminal,"selected Flow factory retirement")?;return Ok(if matches!(step,RetainedCloneStep::Complete(_)){RetainedCloneStep::Progress(step.progress())}else{step});

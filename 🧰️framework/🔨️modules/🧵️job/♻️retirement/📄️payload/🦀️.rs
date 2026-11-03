@@ -52,7 +52,7 @@ impl JobPayloadSlot {
         if self.is_empty(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0};}
         let demand=match self.retirement_demands(){Ok(demand)=>demand,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};
         if !semio_framework_value_retained_clone::retained_clone::retained_clone_grant_admits(grant,demand){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0};}
-        let payload=self.original_mut().unwrap();
+        let Some(payload)=self.original_mut()else{return RetainedWorkOutcome{result:Err(semio_framework_value_retained_clone::ValueError::invariant("step payload owner is absent")),work:0}};
         if payload.terminal_is_empty(){unsafe{self.original.assume_init_drop();}self.present=false;return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1};}
         let turn=payload.close_step(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant});RetainedWorkOutcome{result:turn.result.map(|step|RetainedCloneStep::Progress(step.progress())),work:turn.work}
     }
@@ -72,7 +72,7 @@ impl StepOutcome {
         if self.terminal_is_empty(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0};}
         let demand=match self.retirement_demands(){Ok(demand)=>demand,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};
         if !semio_framework_value_retained_clone::retained_clone::retained_clone_grant_admits(grant,demand){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0};}
-        let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let turn=match self{Self::Yield|Self::Cancelled=>unreachable!(),Self::PreviewReady(payload)=>payload.close_step(child),Self::CheckpointReady(checkpoint)=>checkpoint.state.close_step(child),Self::Complete(candidate)if !candidate.state.terminal_is_empty()=>candidate.state.close_step(child),Self::Complete(candidate)=>candidate.output.close_step(child),Self::Fault(fault)=>fault.detail.close_step(child)};
+        let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let turn=match self{Self::Yield|Self::Cancelled=>return RetainedWorkOutcome{result:Err(semio_framework_value_retained_clone::ValueError::invariant("yield and cancelled step outcomes own no payload")),work:0},Self::PreviewReady(payload)=>payload.close_step(child),Self::CheckpointReady(checkpoint)=>checkpoint.state.close_step(child),Self::Complete(candidate)if !candidate.state.terminal_is_empty()=>candidate.state.close_step(child),Self::Complete(candidate)=>candidate.output.close_step(child),Self::Fault(fault)=>fault.detail.close_step(child)};
         let terminal=self.terminal_is_empty();RetainedWorkOutcome{result:turn.result.map(|step|if terminal{RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())}),work:turn.work}
     }
 }
@@ -89,7 +89,7 @@ pub fn close_step_outcome_slot(slot:&mut JobOutcomeSlot,grant:RetainedCloneGrant
     if slot.is_empty(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0};}
     let demand=match step_outcome_slot_retirement_demands(slot){Ok(demand)=>demand,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};
     if !semio_framework_value_retained_clone::retained_clone::retained_clone_grant_admits(grant,demand){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0};}
-    let outcome=slot.original_mut().unwrap();
+    let Some(outcome)=slot.original_mut()else{return RetainedWorkOutcome{result:Err(semio_framework_value_retained_clone::ValueError::invariant("step outcome owner is absent")),work:0}};
     if outcome.terminal_is_empty(){slot.remove_terminal();return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1};}
     let turn=outcome.close_step(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant});RetainedWorkOutcome{result:turn.result.map(|step|RetainedCloneStep::Progress(step.progress())),work:turn.work}
 }

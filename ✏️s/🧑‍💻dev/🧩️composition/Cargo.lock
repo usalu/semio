@@ -3364,6 +3364,7 @@ dependencies = [
  "semio-framework-job-payload",
  "semio-framework-job-testing-caller",
  "semio-framework-trace",
+ "semio-framework-value",
  "semio-framework-value-native-owned",
  "semio-framework-value-retained-clone",
  "semio-framework-value-shared-issuance",
@@ -3390,6 +3391,7 @@ dependencies = [
  "semio-framework-job-payload",
  "semio-framework-job-receiving",
  "semio-framework-trace",
+ "semio-framework-value",
  "semio-framework-value-derive",
  "semio-framework-value-native-owned",
  "semio-framework-value-retained-clone",
@@ -8837,9 +8839,9 @@ dependencies = [
  "semio-framework-replication-local-interaction",
  "semio-framework-replication-mutation",
  "semio-framework-replication-mutation-messages",
- "semio-framework-replication-mutation-retained",
- "semio-framework-replication-mutation-retained-field",
  "semio-framework-replication-presence",
+ "semio-framework-replication-retained",
+ "semio-framework-replication-retained-field",
  "semio-framework-replication-wire-core",
  "semio-framework-value",
 ]
@@ -9039,31 +9041,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-framework-replication-mutation-retained"
-version = "0.1.0"
-dependencies = [
- "semio-framework-diagnostic",
- "semio-framework-mutation-diff",
- "semio-framework-replication-mutation",
- "semio-framework-replication-mutation-messages",
- "semio-framework-replication-mutation-retained-field",
- "semio-framework-value",
- "semio-framework-value-factory",
- "semio-framework-value-native-owned",
- "semio-framework-value-persistent",
- "semio-framework-value-snapshot-projection",
-]
-
-[[package]]
-name = "semio-framework-replication-mutation-retained-field"
-version = "0.1.0"
-dependencies = [
- "semio-framework-mutation-diff",
- "semio-framework-value",
- "semio-framework-value-persistent",
-]
-
-[[package]]
 name = "semio-framework-replication-presence"
 version = "0.1.0"
 dependencies = [
@@ -9072,6 +9049,31 @@ dependencies = [
  "semio-framework-replication-interaction",
  "semio-framework-replication-wire-core",
  "semio-framework-value",
+]
+
+[[package]]
+name = "semio-framework-replication-retained"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-diagnostic",
+ "semio-framework-mutation-diff",
+ "semio-framework-replication-mutation",
+ "semio-framework-replication-mutation-messages",
+ "semio-framework-replication-retained-field",
+ "semio-framework-value",
+ "semio-framework-value-factory",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
+ "semio-framework-value-snapshot-projection",
+]
+
+[[package]]
+name = "semio-framework-replication-retained-field"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-mutation-diff",
+ "semio-framework-value",
+ "semio-framework-value-persistent",
 ]
 
 [[package]]
@@ -11079,7 +11081,9 @@ dependencies = [
  "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-composition-admission",
+ "semio-framework-diagnostic",
  "semio-framework-dsl-record",
+ "semio-framework-dsl-record-derive",
  "semio-framework-job",
  "semio-framework-job-payload",
  "semio-framework-os-flow",
@@ -12258,6 +12262,9 @@ dependencies = [
  "semio-framework-artifact-flow-flow",
  "semio-framework-artifact-reference",
  "semio-framework-composition-admission",
+ "semio-framework-diagnostic",
+ "semio-framework-dsl-record",
+ "semio-framework-dsl-record-derive",
  "semio-framework-job",
  "semio-framework-os-flow",
  "semio-framework-os-kernel",
@@ -12437,6 +12444,7 @@ dependencies = [
  "semio-s-artifact-procedural-3d-editor",
  "semio-s-artifact-procedural-3d-editor-commands",
  "semio-s-artifact-procedural-3d-editor-panels",
+ "semio-s-artifact-procedural-3d-editor-selection",
  "semio-s-artifact-procedural-3d-export-document",
  "semio-s-artifact-procedural-3d-flow-eval-tick",
  "semio-s-artifact-procedural-3d-geometry-service",
@@ -12463,12 +12471,10 @@ dependencies = [
  "semio-s-artifact-stdio-las",
  "semio-s-artifact-stdio-obj",
  "semio-s-artifact-stdio-ply",
- "semio-s-artifact-stdio-png",
  "semio-s-artifact-stdio-semio-base",
  "semio-s-artifact-stdio-semio-mesh",
  "semio-s-artifact-stdio-semio-mesh-export",
  "semio-s-artifact-stdio-semio-mesh-import",
- "semio-s-artifact-stdio-step",
  "semio-s-artifact-stdio-stl",
  "semio-s-artifact-stdio-txt",
  "semio-s-procedural-core-generation-sqlite",
@@ -12566,12 +12572,6 @@ dependencies = [
  "semio-s-artifact-sequence-sequence-inferences",
  "semio-s-artifact-sequence-sequence-schema",
  "semio-s-artifact-sequence-sequence-tests",
- "semio-s-artifact-stdio-csv",
- "semio-s-artifact-stdio-json",
- "semio-s-artifact-stdio-md",
- "semio-s-artifact-stdio-semio",
- "semio-s-artifact-stdio-semio-base",
- "semio-s-artifact-stdio-semio-flow",
  "semio-s-imperative",
  "serde",
 ]
@@ -12614,11 +12614,7 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-s-artifact-sequence-sequence-schema",
- "semio-s-artifact-stdio-csv",
- "semio-s-artifact-stdio-json",
- "semio-s-artifact-stdio-md",
  "semio-s-artifact-stdio-semio",
- "semio-s-artifact-stdio-semio-base",
  "semio-s-artifact-stdio-semio-flow",
  "semio-s-imperative",
  "serde",
@@ -12662,9 +12658,6 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-framework-value-native-owned",
- "semio-s-artifact-stdio-csv",
- "semio-s-artifact-stdio-json",
- "semio-s-artifact-stdio-md",
  "semio-s-artifact-stdio-semio",
  "semio-s-artifact-stdio-semio-base",
  "semio-s-artifact-stdio-semio-flow",
@@ -12716,7 +12709,6 @@ dependencies = [
  "semio-s-artifact-stdio-json",
  "semio-s-artifact-stdio-md",
  "semio-s-artifact-stdio-semio",
- "semio-s-artifact-stdio-semio-base",
  "semio-s-artifact-stdio-semio-flow",
  "semio-s-imperative",
  "serde",
@@ -18880,7 +18872,6 @@ dependencies = [
  "semio-framework-value",
  "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-dwg-geometry",
- "semio-s-artifact-stdio-dwg-model",
  "semio-s-artifact-stdio-dwg-write",
  "semio-s-artifact-stdio-semio-base",
  "semio-s-artifact-stdio-semio-brep",
@@ -18899,7 +18890,6 @@ dependencies = [
  "semio-framework-plugin",
  "semio-framework-value",
  "semio-s-artifact-stdio-dwg-geometry",
- "semio-s-artifact-stdio-dwg-model",
  "semio-s-artifact-stdio-dwg-read",
  "semio-s-artifact-stdio-semio-base",
  "semio-s-artifact-stdio-semio-brep",
@@ -19626,7 +19616,6 @@ dependencies = [
  "semio-framework-plugin",
  "semio-framework-value",
  "semio-s-artifact-stdio-dwg-geometry",
- "semio-s-artifact-stdio-dwg-model",
  "semio-s-artifact-stdio-dwg-snapshot",
  "semio-s-artifact-stdio-dwg-write",
  "semio-s-artifact-stdio-dxf",
@@ -19634,6 +19623,7 @@ dependencies = [
  "semio-s-artifact-stdio-png",
  "semio-s-artifact-stdio-semio-base",
  "semio-s-artifact-stdio-semio-drawing",
+ "semio-s-artifact-stdio-semio-drawing-png-export",
  "semio-s-artifact-stdio-svg",
  "semio-s-artifact-stdio-xml",
 ]
@@ -19754,6 +19744,19 @@ dependencies = [
  "semio-s-artifact-stdio-semio-drawing-snapshot",
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-semio-drawing-png-export"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-artifact-reference",
+ "semio-framework-os-kernel",
+ "semio-framework-plugin",
+ "semio-framework-value",
+ "semio-s-artifact-stdio-png",
+ "semio-s-artifact-stdio-semio-base",
+ "semio-s-artifact-stdio-semio-drawing",
 ]
 
 [[package]]
@@ -20947,7 +20950,6 @@ dependencies = [
  "semio-framework-plugin",
  "semio-framework-value",
  "semio-s-artifact-stdio-dwg-geometry",
- "semio-s-artifact-stdio-dwg-model",
  "semio-s-artifact-stdio-dwg-snapshot",
  "semio-s-artifact-stdio-dwg-write",
  "semio-s-artifact-stdio-gltf-model",
@@ -20957,7 +20959,7 @@ dependencies = [
  "semio-s-artifact-stdio-png",
  "semio-s-artifact-stdio-semio-base",
  "semio-s-artifact-stdio-semio-drawing",
- "semio-s-artifact-stdio-semio-drawing-export",
+ "semio-s-artifact-stdio-semio-drawing-png-export",
  "semio-s-artifact-stdio-semio-mesh",
  "semio-s-artifact-stdio-stl",
 ]
@@ -20973,7 +20975,6 @@ dependencies = [
  "semio-framework-plugin",
  "semio-framework-value",
  "semio-s-artifact-stdio-dwg-geometry",
- "semio-s-artifact-stdio-dwg-model",
  "semio-s-artifact-stdio-dwg-read",
  "semio-s-artifact-stdio-dwg-snapshot",
  "semio-s-artifact-stdio-gltf-model",

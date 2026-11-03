@@ -1,0 +1,158 @@
+--- a/🧰️framework/🔨️modules/🔀️dispatch/🦀️.rs
++++ b/🧰️framework/🔨️modules/🔀️dispatch/🦀️.rs
+@@ -230,11 +230,31 @@
+     let item_trait: ItemTrait = syn::parse2(item)?;
+     let dispatch_macro = build_dispatch_macro(&item_trait);
+     let delegate = if delegation { build_typed_delegation(&item_trait)? } else { TokenStream::new() };
++    let item_trait = without_async_fn(item_trait);
+     Ok(quote! {
+         #item_trait
+         #dispatch_macro
+         #delegate
+     })
++}
++
++/// 🪄️ Declares every `async fn` of the re-emitted trait as `fn .. -> impl Future<Output = T>` (and wraps a default body in `async move`), so the trait never trips `async_fn_in_trait`; implementors may still write `async fn`, and `Send` stays structural (R3).
++fn without_async_fn(mut item: ItemTrait) -> ItemTrait {
++    for entry in &mut item.items {
++        let TraitItem::Fn(method) = entry else { continue };
++        if method.sig.asyncness.take().is_none() {
++            continue;
++        }
++        let value: Type = match &method.sig.output {
++            syn::ReturnType::Default => syn::parse_quote!(()),
++            syn::ReturnType::Type(_, ty) => (**ty).clone(),
++        };
++        method.sig.output = syn::parse_quote!(-> impl ::core::future::Future<Output = #value>);
++        if let Some(block) = method.default.take() {
++            method.default = Some(syn::parse_quote!({ async move #block }));
++        }
++    }
++    item
+ }
+ 
+ /// 🎟️ A typed owner can customize lifecycle methods while forwarding the original borrowed contract.
+@@ -271,16 +291,31 @@
+         let where_clause = &sig.generics.where_clause;
+         let attributes = &method.attrs;
+         let declared_output = &sig.output;
+-        let (asyncness, output) = match classify_return(method_name, sig)? {
++        let shape = classify_return(method_name, sig)?;
++        let (asyncness, output) = match &shape {
+             ReturnShape::Plain => (sig.asyncness.map(|token| quote!{#token}), quote!{#declared_output}),
+             ReturnShape::FutureOutput(ty) => (Some(quote!{async}), quote!{-> #ty}),
+         };
+         let await_result = asyncness.as_ref().map(|_|quote!{.await});
+-        defaults.push(quote!{
+-            #(#attributes)*
+-            #asyncness fn #method_name #generics (#inputs) #output #where_clause {
+-                #name::#method_name(#receiver #(, #args)*) #await_result
+-            }
++        let value = match (&shape, &sig.output) {
++            (ReturnShape::FutureOutput(ty), _) => Some(quote!{#ty}),
++            (ReturnShape::Plain, _) if sig.asyncness.is_none() => None,
++            (ReturnShape::Plain, syn::ReturnType::Default) => Some(quote!{()}),
++            (ReturnShape::Plain, syn::ReturnType::Type(_, ty)) => Some(quote!{#ty}),
++        };
++        defaults.push(match value {
++            Some(value) => quote!{
++                #(#attributes)*
++                fn #method_name #generics (#inputs) -> impl ::core::future::Future<Output = #value> #where_clause {
++                    async move { #name::#method_name(#receiver #(, #args)*).await }
++                }
++            },
++            None => quote!{
++                #(#attributes)*
++                #asyncness fn #method_name #generics (#inputs) #output #where_clause {
++                    #name::#method_name(#receiver #(, #args)*) #await_result
++                }
++            },
+         });
+         forwarding.push(quote!{
+             #(#attributes)*
+@@ -291,7 +326,6 @@
+     }
+     Ok(quote!{
+         #[doc = "🎟️ Explicit typed delegation retains the actual target and permits authored lifecycle overrides."]
+-        #[allow(async_fn_in_trait)]
+         #visibility trait #delegate: #bounds {
+             type Target: #name;
+             fn delegate_ref(&self) -> &Self::Target;
+--- a/🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust/🦀️.rs
++++ b/🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust/🦀️.rs
+@@ -1,15 +1,7 @@
+ //! 📦️ Package glue — proc-macro crate root; implementation in owner `🦀️.rs`.
+ //!
+-//! `#![allow(async_fn_in_trait)]`: every trait this crate declares in its own tests carries `async fn`
+-//! methods (universal async, O1), which trips rustc's "use of `async fn` in public traits is discouraged
+-//! .. auto trait bounds cannot be specified" lint on every one of them. Per ruling **R7**: silence it
+-//! with this crate-root allow, NEVER by adding `+ Send` to a signature (R3 — guest futures are
+-//! deliberately `?Send`; Send comes structurally from the concrete enum, never from a bound) and NEVER
+-//! by making the method sync. Every crate that DECLARES a `#[dyn_enum]` trait needs this same one-line
+-//! allow at ITS OWN crate root — `dyn_enum`/`dyn_enum!` cannot inject a crate-level inner attribute
+-//! across the boundary into a caller's crate, so this is a per-consuming-crate responsibility, called
+-//! out in `📓️terra-dyn-enum-macro-report.md`'s "applying dyn_enum: the recipe".
+-#![allow(async_fn_in_trait)]
++//! `#[dyn_enum]` re-emits every `async fn` of a trait as `fn .. -> impl Future<Output = T>`, so no
++//! consuming crate needs `#![allow(async_fn_in_trait)]`; `Send` stays structural (R3), never a `+ Send` bound.
+ 
+ #[path = "../../🦀️.rs"]
+ mod component;
+--- a/🧰️framework/🔨️modules/🔀️dispatch/🧪️tests/🧩️mixed-receivers/🦀️.rs
++++ b/🧰️framework/🔨️modules/🔀️dispatch/🧪️tests/🧩️mixed-receivers/🦀️.rs
+@@ -4,7 +4,6 @@
+ //! as an ordinary crate, so `#[dyn_enum]`/`dyn_enum_close!` run exactly as any downstream consumer
+ //! would use them (a proc-macro crate cannot invoke its OWN macros from inside itself — see
+ //! `📓️terra-dyn-enum-macro-report.md`).
+-#![allow(async_fn_in_trait)] // R7 — never resolved by `+ Send` or by making a method sync.
+ 
+ use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
+ use std::cell::Cell;
+--- a/🧰️framework/🔨️modules/🔀️dispatch/🧪️tests/🔮️send-future/🦀️.rs
++++ b/🧰️framework/🔨️modules/🔀️dispatch/🧪️tests/🔮️send-future/🦀️.rs
+@@ -7,7 +7,6 @@
+ //! against an `impl Future` declaration, and this file proves all three halves of that claim — it
+ //! compiles, the future really is `Send` (asserted through the generic bound AND moved across a real
+ //! thread), and the right variant answers at runtime.
+-#![allow(async_fn_in_trait)] // R7 — never resolved by `+ Send` or by making a method sync.
+ 
+ use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
+ use std::future::Future;
+--- a/🧰️framework/🔨️modules/🔀️dispatch/🧪️tests/✍️mutable-receiver/🦀️.rs
++++ b/🧰️framework/🔨️modules/🔀️dispatch/🧪️tests/✍️mutable-receiver/🦀️.rs
+@@ -1,7 +1,6 @@
+ //! 🧪️ Supplementary coverage: `&mut self` specifically, including its own zero-variant (`match *self
+ //! {}`) case, kept in a SEPARATE file from `🕳️uninhabited.rs` because `#[dyn_enum]` rejects mixing
+ //! `&mut self` with `self: Arc<Self>` on the same trait (see `🕳️uninhabited.rs`'s comment).
+-#![allow(async_fn_in_trait)] // R7 — never resolved by `+ Send` or by making a method sync.
+ 
+ use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
+ 
+--- a/🧰️framework/🔨️modules/🔀️dispatch/🧪️tests/🕳️uninhabited/🦀️.rs
++++ b/🧰️framework/🔨️modules/🔀️dispatch/🧪️tests/🕳️uninhabited/🦀️.rs
+@@ -3,7 +3,6 @@
+ //! NoMembers` with `match *self {}` bodies (verified against real rustc — matching a REFERENCE to an
+ //! uninhabited type with zero arms is rejected as "non-exhaustive .. references are always considered
+ //! inhabited"; matching the DEREF'd place is accepted — `📓️terra-dyn-enum-macro-report.md`).
+-#![allow(async_fn_in_trait)] // R7 — never resolved by `+ Send` or by making a method sync.
+ 
+ use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
+ 
+--- a/🧰️framework/🔨️modules/🔀️dispatch/🧪️tests/📈️scale/🦀️.rs
++++ b/🧰️framework/🔨️modules/🔀️dispatch/🧪️tests/📈️scale/🦀️.rs
+@@ -1,7 +1,6 @@
+ //! 🧪️ Acceptance test 2: a trait with >=40 methods (generated by this file's own build step, not
+ //! typed by hand) proves the macro scales to `BrepKernel`'s 92 / `PluginApp`'s 51 without blowing up
+ //! compile time or producing incorrect delegation on any one of them.
+-#![allow(async_fn_in_trait)] // R7 — never resolved by `+ Send` or by making a method sync.
+ 
+ use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
+ 
+--- a/🧰️framework/🔨️modules/🔀️dispatch/🧪️tests/🎟️delegation/🦀️.rs
++++ b/🧰️framework/🔨️modules/🔀️dispatch/🧪️tests/🎟️delegation/🦀️.rs
+@@ -1,5 +1,4 @@
+ //! 🎟️ An original typed owner customizes closure while forwarding the actual captured contract.
+-#![allow(async_fn_in_trait)]
+ use semio_framework_dispatch_macros::{dyn_enum,dyn_enum_close};
+ #[dyn_enum(delegate)]
+ pub trait Counter:Send+'static{fn borrowed(&self)->&u32;fn bump(&mut self,by:u32);async fn total(&self)->u32;fn close(&mut self,releases:usize)->bool;fn closed(&self)->bool;}

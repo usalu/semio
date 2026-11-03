@@ -1,0 +1,15 @@
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/📥️receiving/staged.rs
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/📥️receiving/staged.rs
+@@ -62,10 +62,10 @@
+                     let result=receiver.step(wire,control,grant);let progress=match &result.result {Ok(progress)=>*progress,Err(error)=>error.retained_progress()};
+                     OriginalNativeDecodeIssued{value:result.result.map(|_|()),grant,progress,work:u64::from(progress.copied_items!=0)}
+                 })?else{return Ok(None)};
+-                if let Some(failure)=outcome.receiving_refusal{if let Err(error)=outcome.value{self.inputs.as_mut().unwrap().issue=Some(fold(error));}return Err(failure);}outcome.value.map_err(fold)?;Ok(None)
++                if let Some(failure)=outcome.receiving_refusal{if let Err(error)=outcome.value{self.inputs.as_mut().ok_or_else(invalid)?.issue=Some(fold(error));}return Err(failure);}outcome.value.map_err(fold)?;Ok(None)
+             },
+             2=>{
+-                let progress=take_received_wire_value(self.receiver.as_mut().unwrap(),&mut self.inputs.as_mut().unwrap().value,cx.retained_grant()).result?;
++                let progress=take_received_wire_value(self.receiver.as_mut().ok_or_else(invalid)?,&mut self.inputs.as_mut().ok_or_else(invalid)?.value,cx.retained_grant()).result?;
+                 post(cx,progress)?;if progress.copied_items!=0{self.phase=3;}Ok(None)
+             },
+             3=>{

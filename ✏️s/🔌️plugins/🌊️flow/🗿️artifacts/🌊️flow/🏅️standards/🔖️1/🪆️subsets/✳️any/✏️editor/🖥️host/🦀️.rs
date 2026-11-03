@@ -66,7 +66,7 @@ pub fn host_with_session(live: semio_framework_artifact_flow_flow::FlowHostSnaps
     match flow_host_with_session(FlowHost::from_host_snapshot(live).with_history_store_factory(::semio_framework_artifact_flow_flow::FLOW_HISTORY_STORE_FACTORY), session, cold_grant()) {
         Ok((host, _)) => host,
         Err((error, host)) => {
-            host.retire_cold();
+            let _ = host.retire_cold();
             panic!("flow cold host baseline refused: {error}")
         }
     }
@@ -83,11 +83,11 @@ pub fn host_from_snapshot(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig
 /// shape every render, probe and evaluation step that only needs a host for the length of a call must
 /// use. A `FlowHost` owns a `FlowHostSnapshot` whose `layout: OrderedMap<WidgetLayout>` aborts the
 /// guest on a bare drop, so a host is closed, never dropped (the twin of `FlowHost::with_host_snapshot`).
-pub fn with_host_from_snapshot<R>(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession, body: impl FnOnce(&mut FlowHost) -> R) -> R {
+pub fn with_host_from_snapshot<R>(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession, body: impl FnOnce(&mut FlowHost) -> R) -> Result<R, semio_framework_value::ValueError> {
     let mut host = host_from_snapshot(snapshot, config, session);
     let result = body(&mut host);
-    host.retire_cold();
-    result
+    host.retire_cold()?;
+    Ok(result)
 }
 
 /// 📸️ Runs `body` against the live host projection of `snapshot`, then retires that projection — a
@@ -146,7 +146,7 @@ pub fn focus_selection_camera(snapshot: &FlowSnapshot, config: &FlowMainWindowCo
         host.set_viewport(1280, 800, 1.0);
         host.set_selection(selected_node_ids);
         host.focus_selection_camera(1.2)
-    })
+    }).ok()?
 }
 //#endregion 🔖️Selection
 

@@ -317,10 +317,11 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> P
     }
 
     fn typed_operation_diagnostic(&self) -> String {
-        (0..ARTIFACT_LIVE_OUTPUT_SLOTS).filter_map(|index| {
+let operations=(0..ARTIFACT_LIVE_OUTPUT_SLOTS).filter_map(|index| {
             let (id, operation) = self.tools.tool_operations.entry(index)?;
-            Some(format!("operation {id} '{}' stage={:?} session={} terminal={} refusal={}", operation.verb, operation.stage, operation.session.is_some(), operation.terminal_seen, operation.retained_structural_refusal().unwrap_or_else(|| "none".into())))
-        }).collect::<Vec<_>>().join("; ")
+            Some(format!("op {id} '{}' {:?} s={} rej={}/{} cancel={} term={} sem={} out={} res={} fc={} prod={} ref={}", operation.verb, operation.stage, operation.session.is_some(), operation.session_rejected.is_some(), operation.session_rejected.as_ref().is_some_and(|rejected| rejected.admission_pending()), operation.user_cancel_requested, operation.terminal_seen, operation.worker_semantic_pending, operation.worker_outcome_pending, operation.worker_resume_pending, operation.worker_fault_capture.is_some(), operation.producer_request.is_some(), operation.retained_structural_refusal().unwrap_or_else(|| "none".into())))
+        }).collect::<Vec<_>>().join("; ");
+        format!("{operations} | lw={} ob={}/{}/{}/{} pr={} fa={} q={}", self.tools.latest_wins_commands.len(), self.tools.typed_effect_outbox.len(), self.tools.typed_event_outbox.len(), self.tools.typed_ui_outbox.len(), self.tools.typed_completion_outbox.len(), self.tools.operation_progress_retired, self.child_composition.derivable_follow_awaits_retirement(&self.stores), self.interaction.local_interaction_query.as_ref().is_some_and(|query| query.has_pending_work()))
     }
 
     fn has_pending_typed_operations(&self) -> bool {

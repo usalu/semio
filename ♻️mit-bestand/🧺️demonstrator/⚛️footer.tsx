@@ -3,7 +3,6 @@
 // #endregion 🧲️Header
 
 import type { NavbarItem } from "@semio-tech/ui-react";
-import { cn } from "@semio-tech/ui-react";
 import { demonstratorFooterItems } from "./🪧️brand.ts";
 import { demonstratorFormat, demonstratorText, type DemonstratorLocale } from "./🔨️modules/🌐️locale/🟦️.ts";
 

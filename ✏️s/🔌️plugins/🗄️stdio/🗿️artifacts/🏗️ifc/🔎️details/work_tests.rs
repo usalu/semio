@@ -1,9 +1,9 @@
 //! 🧪️ Real retained IFC work branches preserve captured graph, original control and owned close.
-use super::super::super::{DetailsTestEditor, DetailsTestProfile, details_test_command};
+use super::super::{DetailsTestEditor, DetailsTestProfile, details_test_command};
 use super::*;
 use protocol::ColdMutation;
 use semio_framework_job::StepContext;
-use semio_framework_plugin::app_testing::OriginalWorkFixture;
+use semio_framework_plugin::plugin_app_close_prelude::OriginalWorkFixture;
 use semio_framework_plugin::retained_command::ArtifactCommandSnapshotRead;
 use semio_framework_plugin::{AppOperationContext, HistoryView, NoConfig};
 type Work = IfcDetailsWork<DetailsTestEditor, DetailsTestProfile>;

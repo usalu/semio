@@ -1,6 +1,7 @@
 /// 🧰️ Definition, roster, dispatch classification, document verb and granular vocabulary laws of the editor.
 
 fn definition() -> semio_framework_plugin::AppDefinition {
+    semio_framework_plugin::artifact_app_laws::publish_framework_schemas();
     create_energy_model_editor()
 }
 
@@ -52,7 +53,7 @@ async fn every_declared_action_is_classified_and_resolves_to_a_command() {
         assert_ne!(action.semantics.execution.interactive_job, InteractiveJobClassification::Unclassified, "action {} is unclassified", action.id);
     }
     for tool_id in ENERGY_MODEL_RETAINED_TOOL_IDS {
-        let command = <EnergyModelEditor as ArtifactEditor>::command_from_action(tool_id, None, None).unwrap_or_else(|error| panic!("action {tool_id} has no command: {error:?}"));
+        let command = <EnergyModelEditor as ArtifactEditor>::command_from_action(tool_id, &mut None, &mut None).unwrap_or_else(|error| panic!("action {tool_id} has no command: {error:?}"));
         assert_eq!(command.action_id(), *tool_id);
     }
 }
@@ -62,7 +63,7 @@ async fn document_verbs_publish_to_the_artifact_lane_settings_to_the_config_lane
     use semio_framework_plugin::ArtifactOwnedToolJobFactory;
     for contract in <EnergyModelCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS {
         let expected = match contract.tool_id {
-            id if ENERGY_MODEL_DOCUMENT_TOOL_IDS.contains(&id) => ArtifactToolPublicationLane::Artifact,
+            id if crate::editor_commands::ENERGY_MODEL_DOCUMENT_TOOL_IDS.contains(&id) => ArtifactToolPublicationLane::Artifact,
             simulation::SET_SETTINGS_ACTION_ID | simulation::SET_RESULT_FIELD_ACTION_ID => ArtifactToolPublicationLane::Config,
             model_window::SET_CAMERA_ACTION_ID => ArtifactToolPublicationLane::WindowConfig,
             _ => ArtifactToolPublicationLane::HostOnly,
@@ -107,7 +108,7 @@ async fn loading_an_example_swaps_the_document_through_an_effect_and_never_a_mut
         let [semio_framework_plugin::kernel::Effect::LoadDocument { pack, spr }] = emit.effects.as_slice() else { panic!("example {id} must emit exactly one LoadDocument effect") };
         assert!(!pack.is_empty() && !spr.is_empty(), "example {id} emitted an empty document");
         let loaded = <EnergyModelSnapshot as pack::snapshot::ArtifactPack>::decode_pack(pack).expect("the emitted pack decodes");
-        assert_eq!(loaded.model, model, "example {id} loaded a different model than its own leaf declares");
+        assert_eq!(model_value(&loaded), plain_value(&model), "example {id} loaded a different model than its own leaf declares");
     }
     let fault = reduce(&EnergyModelEditorCommand::SetActiveExample { example_id: "nonsense".into() }, &doc).err().expect("an unknown example id is refused");
     assert_eq!(fault.code.0.as_str(), "mutation.target-missing");
@@ -156,11 +157,12 @@ fn populated_model() -> crate::model::Model {
 }
 
 fn snapshot_of(model: &crate::model::Model) -> EnergyModelSnapshot {
-    crate::snapshot::energy_snapshot_with_state(ENERGY_MODEL_DOCUMENT_SCHEMA, model, None)
+    EnergyModelSnapshot::from_model(model).expect("admissible fixture model")
 }
 
 fn applied(snapshot: &EnergyModelSnapshot, command: &EnergyModelEditorCommand) -> crate::model::Model {
     use protocol::Mutation as _;
+    use protocol::ColdMutation as _;
     let history = HistoryView::empty();
     let doc = ArtifactView::new(snapshot, &history);
     let emit = reduce(command, &doc).expect("document verb reduces");
@@ -168,7 +170,7 @@ fn applied(snapshot: &EnergyModelSnapshot, command: &EnergyModelEditorCommand) -
     for mutation in &emit.artifact_mutations {
         next = protocol::apply_diff_cold(mutation.diff(&next).diff(), &next).expect("diff applies");
     }
-    next.model
+    plain_model(&next)
 }
 
 /// 🧬️ The verbs whose semantic mutation kinds W-D0's model-root group has already landed —

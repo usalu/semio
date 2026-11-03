@@ -1,6 +1,14 @@
 /// 🧰️ Fixture session, operators and registry host: the session grant and fixture drain helpers, the preview phase projection law, the fixture operator and dispatch observer, the registry host and the math bridge.
 
 const FIXTURE_SESSION_GRANT:RetainedCloneGrant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:64,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:4096};
+fn settle_baseline(host:&mut FlowHost){
+    for _ in 0..1_000_000{
+        if host.baseline_publication_terminal_is_empty(){return}
+        let demand=host.next_baseline_publication_demands(FIXTURE_SESSION_GRANT.maximum_copy_bytes).unwrap();
+        host.baseline_publication_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:FIXTURE_SESSION_GRANT.maximum_copy_bytes.max(demand.copy_bytes),maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth}).unwrap();
+    }
+    panic!("original fixture baseline publication stalled");
+}
 fn prepare_fixture_window(session:&mut FlowEvalSession){
     for _ in 0..1000{let step=session.prepare_window_tick_latch("preview-1",FIXTURE_SESSION_GRANT).unwrap();if matches!(step,RetainedCloneStep::Complete(_)){return}}
     panic!("original fixture window preparation stalled");

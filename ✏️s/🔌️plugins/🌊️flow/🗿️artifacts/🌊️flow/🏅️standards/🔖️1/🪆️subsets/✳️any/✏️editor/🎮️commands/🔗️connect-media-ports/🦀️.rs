@@ -27,7 +27,7 @@ pub struct ConnectMediaPorts {
 pub fn connect_edit(payload: &ConnectMediaPorts, composed: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
     let mut host = host_from_snapshot(composed, config, session);
     let connected = host.connect_ports(&payload.source_node_id, &payload.source_port_id, &payload.target_node_id, &payload.target_port_id);
-    host.retire_cold();
+    host.retire_cold()?;
     let Ok(id) = connected else {
         return Err(Fault::new(
             semio_framework_plugin::FaultOrigin::App,

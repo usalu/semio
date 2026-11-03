@@ -75,6 +75,8 @@ pub mod manifest {
     use semio_s_artifact_procedural_3d_editor_commands::cycle_lod_mode;
     use semio_s_artifact_procedural_3d_editor_commands::cycle_show_mode;
     use semio_s_artifact_procedural_3d_delete_selection as delete_selection;
+    use semio_s_artifact_procedural_3d_editor_selection as selection;
+    use semio_framework_plugin::ArtifactEditor as _;
     use semio_s_artifact_procedural_3d_export_document as export_document;
     use semio_s_artifact_procedural_3d_editor_commands::flow_eval_release;
     use semio_s_artifact_procedural_3d_editor_commands::flow_eval_resolve;

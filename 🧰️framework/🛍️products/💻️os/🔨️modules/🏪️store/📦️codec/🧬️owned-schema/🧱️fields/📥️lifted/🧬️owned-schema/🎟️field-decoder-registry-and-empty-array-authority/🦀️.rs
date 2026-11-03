@@ -54,7 +54,7 @@ impl<T: FromValue + Send + 'static> ArtifactOwnedHistoryEntryAuthority<T> for Ar
         if self.retirement.is_some() { return artifact_retirement_box_close_step(&mut self.retirement, grant).result.map(|step| RetainedCloneStep::Progress(step.progress())).map_err(|error| (self.diagnostic("artifact-envelope.history-entry-retirement-fault", 0)).with_native(error)); }
         if let Some(value) = self.value.take() {
             let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-            match self.retirement_factory.as_ref().expect("history value retains its factory").retire_owned(value, child).result {
+            match self.retirement_factory.as_ref().ok_or_else(|| self.diagnostic("artifact-envelope.history-factory-absent", 0).with_native(semio_framework_value::ValueError::invariant("history value factory is absent")))?.retire_owned(value, child).result {
                 Ok((owner, progress)) => {
                     *self.retirement = Some(owner);
                     if !progress.fits(child) || progress.retained_capacity_bytes != demand.capacity_bytes { return Err(self.diagnostic("artifact-envelope.history-entry-constructor-receipt", 0).with_progress(progress)); }

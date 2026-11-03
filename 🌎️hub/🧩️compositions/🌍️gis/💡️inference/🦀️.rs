@@ -127,7 +127,7 @@ const PACK_PRODUCER: semio_framework_os_kernel::os_vcs::io::binary::genesis::Art
 fn member_store<P, M>(schema: &str, id: &str, snapshot: P, dialect: semio_framework_artifact_reference::ArtifactDialect, owner: Option<semio_framework_os_kernel::os_store::OwnerRef>, actor: protocol::ActorId) -> Result<ArtifactStore<P, M>, MapBindingRefusalV1>
 where
     P: ArtifactPack + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Clone + Send + Sync + 'static,
-    M: Mutation<P> + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + 'static,
+    M: Mutation<P> + protocol::ColdMutation<P> + semio_framework_os_kernel::OpBinary + semio_framework_os_kernel::OpText + semio_framework_pack_json::ArtifactCanonicalJsonTree + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Clone + Send + Sync + 'static,
 {
     let mut envelope = semio_framework_os_kernel::os_store::document_materialize::create_document_envelope::<P, M>(schema, id, snapshot, None, &PACK_PRODUCER);
     envelope.dialect = Some(dialect);
@@ -268,7 +268,7 @@ impl ComposedMapCommitBindingV1 for GisMapInferenceBindingV1 {
         let (drawing, value) = Self::derived_members(&snapshot);
         let drawing_id = snapshot.drawing.child_id.clone();
         let value_id = snapshot.value.child_id.clone();
-        let actor = protocol::ActorId(actor.to_owned());
+        let actor = protocol::ActorId(actor.into());
         let parent = parent_store(parent_id, snapshot, actor.clone())?;
         let parent_reference = semio_framework_artifact_reference::ArtifactRef { artifact_id: parent_id.to_owned(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.gis.gismap".into(), standard: "1".into(), subset: "*".into() } };
         Ok(ComposedMapMemberStoresV1 { parent, drawing: drawing_store(&drawing_id, parent_reference.clone(), drawing, actor.clone())?, value: value_store(&value_id, parent_reference, value, actor)? })

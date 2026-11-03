@@ -427,6 +427,24 @@ export function builtNodeToSnapshot(surface: SurfaceId, root: BuiltNode, revisio
 //#region 🔖️Store
 type Listener = () => void;
 
+/** 🟰️ Structural equality over plain JSON-like data, bigint and typed arrays, so a resynchronising snapshot keeps the previous record reference of every unchanged node. */
+function sameUiStructure(a: unknown, b: unknown): boolean {
+  if (Object.is(a, b)) return true;
+  if (typeof a !== "object" || typeof b !== "object" || a === null || b === null) return false;
+  if (ArrayBuffer.isView(a) || ArrayBuffer.isView(b)) {
+    if (!ArrayBuffer.isView(a) || !ArrayBuffer.isView(b) || a.byteLength !== b.byteLength) return false;
+    const left = new Uint8Array(a.buffer, a.byteOffset, a.byteLength);
+    const right = new Uint8Array(b.buffer, b.byteOffset, b.byteLength);
+    return left.every((byte, index) => byte === right[index]);
+  }
+  if (Array.isArray(a) !== Array.isArray(b)) return false;
+  if (Array.isArray(a) && Array.isArray(b)) return a.length === b.length && a.every((item, index) => sameUiStructure(item, b[index]));
+  const left = a as Record<string, unknown>;
+  const right = b as Record<string, unknown>;
+  const keys = Object.keys(left);
+  return keys.length === Object.keys(right).length && keys.every(key => Object.hasOwn(right, key) && sameUiStructure(left[key], right[key]));
+}
+
 /** 🗄️ A per-surface retained store — see this file's header doc for the transactional/subscription
  * contract. One instance per live surface; the caller (typically `PluginRuntime`) owns its lifetime. */
 export class UiDocumentStore {
@@ -456,7 +474,13 @@ export class UiDocumentStore {
    * unchecked and only asserts the FOLLOWING `.patch.json` is rejected. */
   loadSnapshot(snapshot: UiSnapshot): void {
     const previous = this.state;
-    this.state = uiDocumentStateFromSnapshot(snapshot);
+    const next = uiDocumentStateFromSnapshot(snapshot);
+    const nodes = new Map(next.nodes);
+    for (const [id, record] of next.nodes) {
+      const prior = previous.nodes.get(id);
+      if (prior !== undefined && sameUiStructure(prior, record)) nodes.set(id, prior);
+    }
+    this.state = { ...next, nodes };
     this.notifyDiff(previous, this.state);
   }
 

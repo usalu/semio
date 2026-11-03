@@ -75,7 +75,7 @@ where
     let mut app = semio_framework_plugin_testing_laws::with_authoring_identity!(|identity| artifact_app_laws::new_app_with_registry_and_members::<A, M>(manifest, protocol::ActorId(ACCEPTANCE_ACTOR.into()), acceptance_policy(), &mut identity).await);
     let declared = acceptance_withdraw_only_kinds(fixtures);
     let failures = input_schema_resolution_failures::<A>(&declared);
-    acceptance_close(&mut app,cx).await;
+    Box::pin(acceptance_close(&mut app,cx)).await;
     assert!(failures.is_empty(), "{plugin}: {} leaf payload schema(s) do not resolve through the runtime resolver:\n{}", failures.len(), failures.join("\n"));
     let withdraw_only = <A::Mutation as ::protocol::Mutation<A::Snapshot>>::DESCRIPTORS.iter().filter(|descriptor| declared.contains(descriptor.semantic_kind)).count();
     (<A::Mutation as ::protocol::Mutation<A::Snapshot>>::INPUT_SCHEMAS.len() - withdraw_only, withdraw_only)
@@ -135,13 +135,13 @@ where
     M: ReferenceSpaceMember + MemberFactory + Send + 'static,
     <A as ArtifactApp>::Snapshot: pack::snapshot::ArtifactDsl,
 {
-    match acceptance_verb(app, HISTORY_EDIT_WITHDRAW_ACTION_ID, vec![(HISTORY_EDIT_ARG_MUTATION_ID, DslValue::String(id.to_string()))],cx).await {
+    match Box::pin(acceptance_verb(app, HISTORY_EDIT_WITHDRAW_ACTION_ID, vec![(HISTORY_EDIT_ARG_MUTATION_ID, DslValue::String(id.to_string()))],cx)).await {
         Ok(()) => {}
         Err(refusal) if refusal.message.ends_with(semio_framework_time_travel::TIME_TRAVEL_NOT_WITHDRAWABLE_CODE) => return Ok(false),
         Err(refusal) => return Err(AcceptanceVerdict::Fail(refusal.context("the withdraw of {id} does not open".into()))),
     }
-    acceptance_verb(app, HISTORY_EDIT_ACCEPT_ACTION_ID, Vec::new(),cx).await.map_err(|refusal| AcceptanceVerdict::Fail(refusal.context("the withdrawal of {id} is not accepted".into())))?;
-    acceptance_pump(app, |app| app.time_travel.status().is_none_or(|status| status.stage != HistoryTimeTravelStage::Replaying),cx).await.map_err(|reason|AcceptanceVerdict::Fail(reason.into()))?;
+    Box::pin(acceptance_verb(app, HISTORY_EDIT_ACCEPT_ACTION_ID, Vec::new(),cx)).await.map_err(|refusal| AcceptanceVerdict::Fail(refusal.context("the withdrawal of {id} is not accepted".into())))?;
+    Box::pin(acceptance_pump(app, |app| app.time_travel.status().is_none_or(|status| status.stage != HistoryTimeTravelStage::Replaying),cx)).await.map_err(|reason|AcceptanceVerdict::Fail(reason.into()))?;
     Ok(true)
 }
 
@@ -167,7 +167,7 @@ where
         if resolved.contains(&blocker) {
             return Err(AcceptanceVerdict::Fail((format!("nextProblem names {blocker} again after it was withdrawn")).into()));
         }
-        if !acceptance_withdraw_accept(app, &blocker,cx).await? {
+        if !Box::pin(acceptance_withdraw_accept(app, &blocker,cx)).await? {
             return Err(AcceptanceVerdict::Fail((format!("the blocking mutation {blocker} cannot be withdrawn")).into()));
         }
         resolved.push(blocker);
@@ -182,14 +182,14 @@ where
     M: ReferenceSpaceMember + MemberFactory + Send + 'static,
     <A as ArtifactApp>::Snapshot: pack::snapshot::ArtifactDsl,
 {
-    acceptance_verb(app, HISTORY_EDIT_FINALIZE_ACTION_ID, Vec::new(),cx).await.map_err(|refusal| AcceptanceVerdict::Fail(refusal.context("the resolved review does not finalize".into())))?;
-    acceptance_verb(app, HISTORY_EDIT_COMMIT_ACTION_ID, vec![("choice", DslValue::String(HISTORY_EDIT_CHOICE_OVERWRITE.to_string()))],cx).await.map_err(|refusal| AcceptanceVerdict::Fail(refusal.context("the resolved review does not commit".into())))?;
-    acceptance_pump(app, |app| app.time_travel.status().is_none() && !app.time_travel.has_pending_work(),cx).await.map_err(|reason|AcceptanceVerdict::Fail(reason.into()))?;
+    Box::pin(acceptance_verb(app, HISTORY_EDIT_FINALIZE_ACTION_ID, Vec::new(),cx)).await.map_err(|refusal| AcceptanceVerdict::Fail(refusal.context("the resolved review does not finalize".into())))?;
+    Box::pin(acceptance_verb(app, HISTORY_EDIT_COMMIT_ACTION_ID, vec![("choice", DslValue::String(HISTORY_EDIT_CHOICE_OVERWRITE.to_string()))],cx)).await.map_err(|refusal| AcceptanceVerdict::Fail(refusal.context("the resolved review does not commit".into())))?;
+    Box::pin(acceptance_pump(app, |app| app.time_travel.status().is_none() && !app.time_travel.has_pending_work(),cx)).await.map_err(|reason|AcceptanceVerdict::Fail(reason.into()))?;
     let head = acceptance_head(app).map_err(|reason|AcceptanceVerdict::Fail(reason.into()))?;
-    let reloaded = acceptance_reloaded_head(app, manifest,cx).await.map_err(|reason| AcceptanceVerdict::Fail(reason.context("after the conflict was resolved the finalized document does not survive save and load".into())))?;
-    let mut fresh = acceptance_seeded::<A, M>(manifest, &case.base, kept, false,cx).await.map_err(|fault| AcceptanceVerdict::Fail(fault.into_error().context("a fresh fold of the effective history does not seed".into())))?;
+    let reloaded = Box::pin(acceptance_reloaded_head(app, manifest,cx)).await.map_err(|reason| AcceptanceVerdict::Fail(reason.context("after the conflict was resolved the finalized document does not survive save and load".into())))?;
+    let mut fresh = Box::pin(acceptance_seeded::<A, M>(manifest, &case.base, kept, false,cx)).await.map_err(|fault| AcceptanceVerdict::Fail(fault.into_error().context("a fresh fold of the effective history does not seed".into())))?;
     let fold = acceptance_head(&fresh);
-    acceptance_close(&mut fresh,cx).await;
+    Box::pin(acceptance_close(&mut fresh,cx)).await;
     let fold = fold.map_err(|reason|AcceptanceVerdict::Fail(reason.into()))?;
     if head != fold {
         return Err(AcceptanceVerdict::Fail((format!("after the conflict was resolved the overwrite head differs from a fresh fold of the effective history at {}", acceptance_text_difference(&head.1, &fold.1))).into()));

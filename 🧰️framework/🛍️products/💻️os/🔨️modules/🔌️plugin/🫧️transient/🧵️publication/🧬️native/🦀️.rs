@@ -78,7 +78,7 @@ impl<P:Send+Sync+'static,M:Send+Sync+'static> Preparation<P,M>{
   if let Some(owner)=self.snapshots.take(){self.factories[0]=Some(FactoryAuthority::new(owner));return Ok(RetainedCloneStep::Progress(progress(demand)));}
   if let Some(owner)=self.mutations.take(){self.factories[1]=Some(FactoryAuthority::new(owner));return Ok(RetainedCloneStep::Progress(progress(demand)));}
   if let Some(owner)=self.semantics.take(){self.factories[2]=Some(FactoryAuthority::new(owner));return Ok(RetainedCloneStep::Progress(progress(demand)));}
-  if let Some(slot)=self.factories.iter_mut().find(|slot|slot.is_some()){let owner=slot.as_mut().unwrap();let step=owner.step(grant).result?;if owner.terminal_is_empty(){*slot=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
+  if let Some(slot)=self.factories.iter_mut().find(|slot|slot.is_some()){let Some(owner)=slot.as_mut()else{return Err(invalid("transient publication factory close slot is absent"))};let step=owner.step(grant).result?;if owner.terminal_is_empty(){*slot=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
   Ok(RetainedCloneStep::Complete(Default::default()))
  }
 }
@@ -91,9 +91,9 @@ impl<P:Send+Sync+'static,M:Send+Sync+'static> store::ArtifactEphemeralOneItemPre
   let identity=(receiving.ledger_identity(),receiving.retirement_recipient_identity());if self.original.is_some_and(|prior|prior!=identity){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"ephemeral preparation requires its original decoder and recipient"));}self.original=Some(identity);receiving.checkpoint()?;
   if self.phase!=4{receiving.admit_turn_capacity(grant.maximum_capacity_bytes)?;receiving.charge(demand.capacity_bytes)?;}
   let receipt=match self.phase{
-   0=>{*self.admission=Some(RetainedCloneSource::admission_borrowed(FactoryOwnedSourceAuthority::new(self.mutation.take().unwrap(),Arc::clone(self.mutations.as_ref().unwrap())),FactoryOwnedSourceAuthority::get));self.phase=1;progress(demand)},
+   0=>{*self.admission=Some(RetainedCloneSource::admission_borrowed(FactoryOwnedSourceAuthority::new(self.mutation.take().ok_or_else(||invalid("transient publication mutation is absent"))?,Arc::clone(self.mutations.as_ref().ok_or_else(||invalid("transient publication mutations are absent"))?)),FactoryOwnedSourceAuthority::get));self.phase=1;progress(demand)},
    1=>{let admission=self.admission.as_mut().ok_or_else(||invalid("ephemeral original source admission absent"))?;if admission.phase()!="ready"{admission.advance(grant).result?.progress()}else{let mut output=None;let step=admission.take_output(&mut output,grant).result?;if let Some(source)=output{*self.source=Some(source);self.admission.take();self.phase=2;}step.progress()}},
-   2=>{let(input,receipt)=self.source.as_ref().unwrap().retain_original(grant).result?;*self.input=Some(input);self.phase=3;receipt},
+   2=>{let(input,receipt)=self.source.as_ref().ok_or_else(||invalid("transient publication source is absent"))?.retain_original(grant).result?;*self.input=Some(input);self.phase=3;receipt},
    3=>{
 
     let factory=self.semantics.as_ref().unwrap();let parent=demand.copy_bytes-factory.preparation_birth_demand().copy_bytes;let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-parent,..grant};

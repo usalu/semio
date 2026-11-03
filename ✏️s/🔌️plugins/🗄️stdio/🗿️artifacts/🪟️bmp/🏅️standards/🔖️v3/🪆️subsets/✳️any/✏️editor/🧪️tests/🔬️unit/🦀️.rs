@@ -61,9 +61,9 @@ fn drive(command: &BmpEditCommand, snapshot: &BmpSnapshot, tool_id: &'static str
     for _ in 0..paint_region::MAXIMUM_INTERACTIVE_ROWS as usize + 2 {
         let mut step_progress = semio_framework_value::retained_clone::RetainedCloneProgress::default(); let mut cx =
             semio_framework_job::StepContext::new(semio_framework_job::OperationId(2), semio_framework_job::Generation(3), semio_framework_job::StepBudget::new(1, u64::MAX, semio_s_artifact_stdio_contract::testing::unbounded_grant()), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut step_progress);
-        match work.step(&ArtifactCommandInputs { command, snapshot, snapshot_owner: Some(&reader), config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation }, &mut cx).expect("BMP paint work step") {
+        match work.step(&ArtifactCommandInputs { command, snapshot, snapshot_owner: Some(&reader), config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation, snapshot_read: semio_framework_plugin::retained_command::ArtifactCommandSnapshotRead::unavailable(&operation) }, &mut cx).expect("BMP paint work step") {
             ArtifactCommandWorkStep::Progress { preview, .. } => assert!(std::str::from_utf8(preview).expect("localized progress").contains("de")),
-            ArtifactCommandWorkStep::Complete(emit) => {work.begin_close();for _ in 0..10000{if matches!(semio_framework_job::close_with_self_funded_context(semio_s_artifact_stdio_contract::editing::ample_close_grant(), |cx| work.close_step(cx)).expect("original fixture close turn"),semio_framework_job::InteractiveJobCloseStep::Complete{..}){assert!(work.terminal_is_empty());return emit.artifact_mutations;}}panic!("BMP paint retained result did not close");},
+            ArtifactCommandWorkStep::Complete(emit) => {work.begin_close();for _ in 0..10000{if matches!(close_work(&mut work).expect("original fixture close turn"),semio_framework_job::InteractiveJobCloseStep::Complete{..}){assert!(work.terminal_is_empty());return emit.artifact_mutations;}}panic!("BMP paint retained result did not close");},
             ArtifactCommandWorkStep::Replay { .. } | ArtifactCommandWorkStep::CompleteWithEphemeral { .. } | ArtifactCommandWorkStep::CompleteDownload { .. } => panic!("unexpected BMP paint work step"),
         }
     }
@@ -153,17 +153,24 @@ fn cancelled_retained_paint_discards_revision_without_publication() {
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
     let operation = AppOperationContext { app_instance_id: 1, parent_document_id: "bmp-paint-cancel".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32], authoring_seed: "bmp-paint-cancel".into(), retained: semio_s_artifact_stdio_contract::editing::ample_close_grant() };
     let mut work = paint_region::PaintRegionWork::new(paint_region::DIRECT_ACTION_ID);
-    let input = ArtifactCommandInputs { command: &command, snapshot, snapshot_owner: Some(&reader), config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation };
+    let input = ArtifactCommandInputs { command: &command, snapshot, snapshot_owner: Some(&reader), config: &config, history: &history, interaction: &interaction, hover: &hover, context: None, operation: &operation, snapshot_read: semio_framework_plugin::retained_command::ArtifactCommandSnapshotRead::unavailable(&operation) };
     let mut sequence = 0;
     let mut step_progress = semio_framework_value::retained_clone::RetainedCloneProgress::default(); let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(2), semio_framework_job::Generation(3), semio_framework_job::StepBudget::new(1, u64::MAX, semio_s_artifact_stdio_contract::testing::unbounded_grant()), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut step_progress);
     assert!(matches!(work.step(&input, &mut cx).unwrap(), ArtifactCommandWorkStep::Progress { stage: "bmp-paint-region-copy", .. }));
     let mut step_progress = semio_framework_value::retained_clone::RetainedCloneProgress::default(); let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(2), semio_framework_job::Generation(3), semio_framework_job::StepBudget::new(1, u64::MAX, semio_s_artifact_stdio_contract::testing::unbounded_grant()), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut step_progress);
     assert!(matches!(work.step(&input, &mut cx).unwrap(), ArtifactCommandWorkStep::Progress { stage: "bmp-paint-region-copy", .. }));
     work.begin_close();
-    assert!(matches!(semio_framework_job::close_with_self_funded_context(semio_s_artifact_stdio_contract::editing::ample_close_grant(), |cx| work.close_step(cx)).expect("original fixture close turn"),semio_framework_job::InteractiveJobCloseStep::Complete{..}));
-    for _ in 0..100_000 {if work.terminal_is_empty() {break;}semio_framework_job::close_with_self_funded_context(semio_s_artifact_stdio_contract::editing::ample_close_grant(), |cx| work.close_step(cx)).expect("original fixture close turn");}
+    assert!(matches!(close_work(&mut work).expect("original fixture close turn"),semio_framework_job::InteractiveJobCloseStep::Complete{..}));
+    for _ in 0..100_000 {if work.terminal_is_empty() {break;}close_work(&mut work).expect("original fixture close turn");}
     assert!(work.terminal_is_empty());
     assert_eq!(snapshot, &direct_snapshot());
 }
 
 semio_framework_plugin::history_edit_acceptance_law!("stdio", crate::editor::bmp::BmpEditor, || semio_framework_plugin::App { definition: crate::editor::bmp::create_bmp_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️v3/🪆️subsets/✳️any");
+
+fn close_work(work: &mut paint_region::PaintRegionWork) -> Result<semio_framework_job::InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> {
+    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
+    let step = semio_framework_plugin::retained_command::ArtifactCommandWork::<semio_framework_plugin::EditorApp<BmpEditor>>::close_step(work, scope.cx());
+    scope.retire();
+    step
+}

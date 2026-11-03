@@ -146,7 +146,8 @@ impl<P: Send + Sync + 'static> ErasedSnapshotRetirement for ArtifactStoreDisplac
         if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
         if let Some(snapshot) = self.pending.take() {
-            return match self.factory.as_ref().expect("pending displaced snapshot retains its original factory").retire(snapshot, child).result {
+            let Some(factory) = self.factory.as_ref() else { return Err(ValueError::invariant("pending displaced snapshot factory is absent")); };
+            return match factory.retire(snapshot, child).result {
                 Ok((owner, progress)) => {
                     *self.active = Some(owner);
                     if !progress.fits(child) || progress.retained_capacity_bytes != demand.capacity_bytes { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "displaced snapshot constructor changed its admitted receipt")); }

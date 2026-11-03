@@ -78,7 +78,7 @@ function DemonstratorShell({ pane, locale, opened }: { readonly pane: Demonstrat
   const catalog = useMemo(() => composeSpecificOsCatalogV1(window.location.href, { maxBytes: 2097152, maxRows: 512, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => false, progress: () => {} }).catalog, []);
   const runtimeBoot = useMemo(() => resolvePlaygroundBoot(catalog, variants.runtime), [catalog, variants.runtime]);
   const manifestBoot = useMemo(() => resolvePlaygroundBoot(catalog, variants.manifest), [catalog, variants.manifest]);
-  const locks = useMemo(() => resolveShellLocks(pane.brand.locks), [pane.brand]);
+  const locks = useMemo(() => resolveShellLocks(pane.brand.locks), [pane.brand.locks]);
   const defaults = useMemo(() => resolveShellDefaults(pane.brand, undefined), [pane.brand]);
   return (
     <FrameworkOsShell catalog={catalog}
@@ -203,7 +203,6 @@ function DemonstratorLocaleLanding({ locale, onChooseLocale }: { readonly locale
   return (
     <main className="h-full w-full">
       <LayeredOverview
-        key={locale}
         panes={pages}
         cells={DEMONSTRATOR_CELLS}
         renderCard={renderCard}

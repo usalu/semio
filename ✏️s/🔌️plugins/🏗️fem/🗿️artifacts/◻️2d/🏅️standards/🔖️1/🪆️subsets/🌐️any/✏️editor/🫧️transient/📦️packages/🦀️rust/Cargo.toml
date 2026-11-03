@@ -16,6 +16,7 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-pack-json = { workspace = true }
 machine = { workspace = true }
 pack = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
@@ -26,4 +27,3 @@ semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 
 [dev-dependencies]
-semio-framework-pack-json = { workspace = true }

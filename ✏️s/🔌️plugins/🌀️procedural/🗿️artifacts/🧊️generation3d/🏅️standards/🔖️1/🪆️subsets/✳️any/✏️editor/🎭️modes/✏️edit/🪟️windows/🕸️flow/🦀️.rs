@@ -308,7 +308,7 @@ pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, sess
         let (nodes, edges) = dag_host_snapshot_to_workflow(&host.dag.graph.host_snapshot);
         let operators = document_operator_records(&host.dag.graph.host_snapshot, &nodes);
         (nodes, edges, operators)
-    });
+    })?;
     let viewport = Viewport2d { x: host_snapshot.camera.x, y: host_snapshot.camera.y, zoom: host_snapshot.camera.zoom };
     let flow_extras = flow_backed_node_graph_extras(host_snapshot, &config.lod_mode, 0.0, true, false, semio_framework_ui_styling::metrics::board::GRID_FACTOR_DEFAULT, Some(session));
     let hover = marks.hovered_graph_target().map(|(node_id, port_id)| NodeGraphHover { node_id: Some(node_id), port_id });

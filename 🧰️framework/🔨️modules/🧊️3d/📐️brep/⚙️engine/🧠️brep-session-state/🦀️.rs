@@ -104,6 +104,8 @@ pub enum BrepBooleanStep {
     Ready(GeometryHandle),
     /// 🛑️ Terminal: the job was cancelled; nothing is produced.
     Cancelled(BooleanProgress),
+    /// ❌️ Terminal: the exact kernel refused the operands or its result; the caller localizes the refusal.
+    Failed(BrepError),
 }
 
 impl Default for Brep {

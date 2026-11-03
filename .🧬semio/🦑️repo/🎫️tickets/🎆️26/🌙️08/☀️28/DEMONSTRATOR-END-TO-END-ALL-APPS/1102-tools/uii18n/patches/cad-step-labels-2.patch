@@ -1,0 +1,36 @@
+--- a/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs
++++ b/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs
+@@ -521,6 +521,24 @@
+     ActionDescriptor { controller_id: CAD_PLAY_APP_ID.into(), action: action.into(), args }
+ }
+ 
++/// 🪧️ The engagement step as the viewer reads it: the kit stores the step as a machine key, so the status row words it through `labels` and shows engine state names as data.
++fn engagement_step_text(labels: &CadLabels, step: &str) -> String {
++    match step {
++        "Idle" => labels.step_idle.as_str().into(),
++        "Moved" => labels.step_moved.as_str().into(),
++        "Copied" => labels.step_copied.as_str().into(),
++        "Rotated" => labels.step_rotated.as_str().into(),
++        "Scaled" => labels.step_scaled.as_str().into(),
++        "Nothing to commit" => labels.step_nothing.as_str().into(),
++        _ => match (step.strip_prefix("Committed ").and_then(|rest| rest.strip_suffix(" object(s)")), step.strip_prefix("Unsupported: "), step.strip_prefix("Unknown: ")) {
++            (Some(count), _, _) => format!("{count} {}", labels.step_committed.as_str()),
++            (_, Some(action), _) => format!("{}: {action}", labels.step_unsupported.as_str()),
++            (_, _, Some(input)) => format!("{}: {input}", labels.step_unknown.as_str()),
++            _ => step.into(),
++        },
++    }
++}
++
+ pub fn cad_window_engagement(envelope: &CadPlayView, pane: CadPaneId, labels: &CadLabels) -> WindowEngagement {
+     let selected_count = envelope.interaction.ids.len();
+     let model_definition_id = pane.model_definition_id();
+@@ -547,7 +565,7 @@
+             })
+             .collect()
+     };
+-    let step_text = pane_session.map_or_else(|| envelope.runtime.engagement_step.clone(), state_prompt);
++    let step_text = pane_session.map_or_else(|| engagement_step_text(labels, &envelope.runtime.engagement_step), state_prompt);
+     WindowEngagement {
+         session_active: Some(session_active),
+         options: None,

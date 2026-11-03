@@ -1,0 +1,186 @@
+{
+ "semio-framework-actor-retained-turn": [
+  "Option owner invariant: Result<_,ValueError::invariant> (same recipe as patched sites) x1"
+ ],
+ "semio-framework-artifact-flow-flow": [
+  "Option owner invariant: Result<_,ValueError::invariant> (same recipe as patched sites) x1"
+ ],
+ "semio-framework-job": [
+  "Option owner invariant: Result<_,ValueError::invariant> (same recipe as patched sites) x8",
+  "arithmetic/layout bound: saturating or typed bound error x1",
+  "closure/outcome signature: needs fallible variant of the API (ref-returning closure or RetainedWorkOutcome) x2",
+  "phase/state machine: typed enum makes arm unrepresentable x1"
+ ],
+ "semio-framework-job-failure": [
+  "Option owner invariant: Result<_,ValueError::invariant> (same recipe as patched sites) x2"
+ ],
+ "semio-framework-job-payload": [
+  "Option owner invariant: Result<_,ValueError::invariant> (same recipe as patched sites) x1"
+ ],
+ "semio-framework-os-flow-extensions": [
+  "arithmetic/layout bound: saturating or typed bound error x1"
+ ],
+ "semio-framework-os-flow-wasm": [
+  "arithmetic/layout bound: saturating or typed bound error x1"
+ ],
+ "semio-framework-os-history": [
+  "Option owner invariant: Result<_,ValueError::invariant> (same recipe as patched sites) x2"
+ ],
+ "semio-framework-os-io": [
+  "test-support module (move under 🧪️tests/ or cfg(test)) x4"
+ ],
+ "semio-framework-os-kernel": [
+  "Option owner invariant: Result<_,ValueError::invariant> (same recipe as patched sites) x1"
+ ],
+ "semio-framework-os-kernel-dsl-derive": [
+  "proc-macro: emit syn::Error x1"
+ ],
+ "semio-framework-os-renderer-wgpu": [
+  "Option owner invariant: Result<_,ValueError::invariant> (same recipe as patched sites) x1",
+  "closure/outcome signature: needs fallible variant of the API (ref-returning closure or RetainedWorkOutcome) x2"
+ ],
+ "semio-framework-os-services-native-io": [
+  "Option owner invariant: Result<_,ValueError::invariant> (same recipe as patched sites) x2",
+  "phase/state machine: typed enum makes arm unrepresentable x1"
+ ],
+ "semio-framework-os-store-document": [
+  "Option owner invariant: Result<_,ValueError::invariant> (same recipe as patched sites) x1"
+ ],
+ "semio-framework-os-store-engine-replay": [
+  "closure/outcome signature: needs fallible variant of the API (ref-returning closure or RetainedWorkOutcome) x1"
+ ],
+ "semio-framework-os-store-initialization-replay": [
+  "closure/outcome signature: needs fallible variant of the API (ref-returning closure or RetainedWorkOutcome) x2"
+ ],
+ "semio-framework-os-store-read": [
+  "closure/outcome signature: needs fallible variant of the API (ref-returning closure or RetainedWorkOutcome) x1"
+ ],
+ "semio-framework-os-store-replay-operation": [
+  "Option owner invariant: Result<_,ValueError::invariant> (same recipe as patched sites) x3",
+  "phase/state machine: typed enum makes arm unrepresentable x1"
+ ],
+ "semio-framework-os-store-snapshot-clone": [
+  "closure/outcome signature: needs fallible variant of the API (ref-returning closure or RetainedWorkOutcome) x1"
+ ],
+ "semio-framework-os-store-sync-native": [
+  "embedded-resource/drop-path panic: Result at construction x3"
+ ],
+ "semio-framework-pack-record-retained": [
+  "closure/outcome signature: needs fallible variant of the API (ref-returning closure or RetainedWorkOutcome) x3"
+ ],
+ "semio-framework-plugin": [
+  "closure/outcome signature: needs fallible variant of the API (ref-returning closure or RetainedWorkOutcome) x1"
+ ],
+ "semio-framework-plugin-decl-app": [
+  "Option owner invariant: Result<_,ValueError::invariant> (same recipe as patched sites) x1"
+ ],
+ "semio-framework-plugin-decl-emission": [
+  "Option owner invariant: Result<_,ValueError::invariant> (same recipe as patched sites) x2"
+ ],
+ "semio-framework-plugin-job": [
+  "closure/outcome signature: needs fallible variant of the API (ref-returning closure or RetainedWorkOutcome) x1"
+ ],
+ "semio-framework-plugin-job-receiving": [
+  "closure/outcome signature: needs fallible variant of the API (ref-returning closure or RetainedWorkOutcome) x1"
+ ],
+ "semio-framework-plugin-retained-command": [
+  "closure/outcome signature: needs fallible variant of the API (ref-returning closure or RetainedWorkOutcome) x2"
+ ],
+ "semio-framework-plugin-tool-run-turns": [
+  "Option owner invariant: Result<_,ValueError::invariant> (same recipe as patched sites) x1"
+ ],
+ "semio-framework-plugin-window-config": [
+  "closure/outcome signature: needs fallible variant of the API (ref-returning closure or RetainedWorkOutcome) x1"
+ ],
+ "semio-framework-replication-history": [
+  "Option owner invariant: Result<_,ValueError::invariant> (same recipe as patched sites) x2",
+  "closure/outcome signature: needs fallible variant of the API (ref-returning closure or RetainedWorkOutcome) x1",
+  "embedded-resource/drop-path panic: Result at construction x1"
+ ],
+ "semio-framework-replication-mutation": [
+  "embedded-resource/drop-path panic: Result at construction x1"
+ ],
+ "semio-framework-text-splice-native": [
+  "phase/state machine: typed enum makes arm unrepresentable x2"
+ ],
+ "semio-framework-value-allocation-return": [
+  "Option owner invariant: Result<_,ValueError::invariant> (same recipe as patched sites) x1",
+  "arithmetic/layout bound: saturating or typed bound error x1"
+ ],
+ "semio-framework-value-clone-source": [
+  "closure/outcome signature: needs fallible variant of the API (ref-returning closure or RetainedWorkOutcome) x1",
+  "phase/state machine: typed enum makes arm unrepresentable x1"
+ ],
+ "semio-framework-value-derive": [
+  "proc-macro: emit syn::Error x1"
+ ],
+ "semio-framework-value-derive-expansion": [
+  "proc-macro: emit syn::Error x1"
+ ],
+ "semio-framework-value-edit": [
+  "closure/outcome signature: needs fallible variant of the API (ref-returning closure or RetainedWorkOutcome) x1"
+ ],
+ "semio-framework-value-native-owned": [
+  "Option owner invariant: Result<_,ValueError::invariant> (same recipe as patched sites) x4",
+  "closure/outcome signature: needs fallible variant of the API (ref-returning closure or RetainedWorkOutcome) x6"
+ ],
+ "semio-framework-value-ordered": [
+  "Option owner invariant: Result<_,ValueError::invariant> (same recipe as patched sites) x10",
+  "closure/outcome signature: needs fallible variant of the API (ref-returning closure or RetainedWorkOutcome) x1",
+  "phase/state machine: typed enum makes arm unrepresentable x1"
+ ],
+ "semio-framework-value-paged-list": [
+  "Option owner invariant: Result<_,ValueError::invariant> (same recipe as patched sites) x1"
+ ],
+ "semio-framework-value-persistent": [
+  "phase/state machine: typed enum makes arm unrepresentable x3"
+ ],
+ "semio-framework-value-retained-map": [
+  "closure/outcome signature: needs fallible variant of the API (ref-returning closure or RetainedWorkOutcome) x1"
+ ],
+ "semio-framework-value-retirement": [
+  "Option owner invariant: Result<_,ValueError::invariant> (same recipe as patched sites) x1"
+ ],
+ "semio-s-artifact-draw-drawing-scene": [
+  "phase/state machine: typed enum makes arm unrepresentable x1"
+ ],
+ "semio-s-artifact-fem-2d-model": [
+  "Option owner invariant: Result<_,ValueError::invariant> (same recipe as patched sites) x1"
+ ],
+ "semio-s-artifact-fem-2d-mutations": [
+  "test-support module (move under 🧪️tests/ or cfg(test)) x6"
+ ],
+ "semio-s-artifact-fem-3d-editor-results-window": [
+  "Option owner invariant: Result<_,ValueError::invariant> (same recipe as patched sites) x1"
+ ],
+ "semio-s-artifact-procedural-3d-geometry-compute": [
+  "Option owner invariant: Result<_,ValueError::invariant> (same recipe as patched sites) x1"
+ ],
+ "semio-s-artifact-procedural-3d-host": [
+  "embedded-resource/drop-path panic: Result at construction x1"
+ ],
+ "semio-s-artifact-stdio-contract-testing": [
+  "test-support module (move under 🧪️tests/ or cfg(test)) x11"
+ ],
+ "semio-s-artifact-stdio-docx-base": [
+  "embedded-resource/drop-path panic: Result at construction x2"
+ ],
+ "semio-s-artifact-stdio-ifc-4x3": [
+  "Option owner invariant: Result<_,ValueError::invariant> (same recipe as patched sites) x1"
+ ],
+ "semio-s-artifact-stdio-ifc-declarations": [
+  "embedded-resource/drop-path panic: Result at construction x1"
+ ],
+ "semio-s-artifact-stdio-ifc4x3-express": [
+  "embedded-resource/drop-path panic: Result at construction x1"
+ ],
+ "semio-s-artifact-stdio-ifc4x3-mvd-catalog": [
+  "embedded-resource/drop-path panic: Result at construction x1"
+ ],
+ "semio-s-artifact-stdio-ifc4x3-templates": [
+  "embedded-resource/drop-path panic: Result at construction x1"
+ ],
+ "semio-s-plugin-puzzle-jobs": [
+  "test-support module (move under 🧪️tests/ or cfg(test)) x3"
+ ]
+}

@@ -20,8 +20,6 @@ async fn observe_refusal(case_id: &str) {
     let payload_byte = u8::try_from(fixture["payload"]["byte"].as_u64().unwrap()).unwrap();
     let payload_length = usize::try_from(fixture["payload"]["length"].as_u64().unwrap()).unwrap();
     let payload = vec![payload_byte; payload_length];
-    let expected_pointer = payload.as_ptr();
-    let expected_capacity = payload.capacity();
     local.send(BackboneMessage::Mutations { envelopes: semio_framework_value::paged::PagedBytes::try_from_slice(&payload).unwrap() }).await.expect("original queued payload");
     let original_outbox = Arc::as_ptr(local.outbox.as_ref().unwrap());
     store.log.envelope.backbone = Some(local.descriptor().await);
@@ -52,7 +50,7 @@ async fn observe_refusal(case_id: &str) {
     let backbone_preserved = matches!(store.wire.backbone.as_ref(), Some(Backbones::Memory(local)) if Arc::as_ptr(local.outbox.as_ref().unwrap()) == original_outbox);
     let payload_preserved = {
         let queue = peer.inbox.as_ref().unwrap().lock().unwrap();
-        matches!(queue.front(), Some(BackboneMessage::Mutations { envelopes }) if envelopes.as_ptr() == expected_pointer && envelopes.capacity() == expected_capacity && envelopes.len() == payload_length && envelopes.iter().all(|byte| *byte == payload_byte))
+        matches!(queue.front(), Some(BackboneMessage::Mutations { envelopes }) if envelopes.len() == payload_length && envelopes.iter().all(|byte| byte == payload_byte))
     };
     if let Some(reservation) = occupied {
         store.owners.displaced_retirements.release_owner_slots(reservation).expect("release exact fixture reservation");

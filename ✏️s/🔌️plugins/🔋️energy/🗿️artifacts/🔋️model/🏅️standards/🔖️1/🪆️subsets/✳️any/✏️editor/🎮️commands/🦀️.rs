@@ -688,6 +688,7 @@ impl original_action::EnergyOriginalCommand<semio_s_artifact_energy_model_mutati
  fn from_original_mutation(kind:String,mutation:semio_s_artifact_energy_model_mutations::EnergyModelMutation)->Self{Self::ApplyNativeMutation{kind,mutation:Some(mutation)}}
  fn original_wire(&self)->semio_framework_plugin_command::command_admission::original_typed_command::original_wire::ArtifactPreparedOperationSource<'_>{let(_,ordinal,spec)=semio_framework_dsl_record::BorrowedDslVariants::projected_borrowed_variant_identity(self);semio_framework_plugin_command::command_admission::original_typed_command::original_wire::ArtifactPreparedOperationSource::Pack{tag:ordinal as u64,body:self,spec}}
  const MAXIMUM_WIRE_BYTES:usize=262144;
+ fn from_action(action:&str,args:&mut Option<semio_framework_value::DslValue>,fault:&mut Option<Fault>)->Result<Self,Fault>{if let Some(fault)=fault.take(){return Err(fault)}args_bridge::command_from_action(action,args.as_ref())}
 }
 impl semio_framework_dsl_record::native_encoding::FieldProjectionSource for EnergyModelEditorCommand{
  fn projection_view(&self,path:&[usize])->Result<semio_framework_dsl_record::native_encoding::FieldProjectionView<'_>,semio_framework_value::ValueError>{semio_framework_dsl_record::BorrowedDslVariants::projected_borrowed_variant_view(self,path)}

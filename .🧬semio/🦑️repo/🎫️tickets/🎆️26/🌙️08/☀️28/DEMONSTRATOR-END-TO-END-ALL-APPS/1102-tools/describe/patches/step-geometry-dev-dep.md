@@ -1,0 +1,1 @@
+Frozen Cargo.toml edit (apply in window): in `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/📐️geometry/📦️packages/🦀️rust/Cargo.toml` add under `[dev-dependencies]`: `semio-framework-async-macros = { workspace = true }` (add to step workspace `[workspace.dependencies]` if absent). Test-only; fixes 7x E0433 in step-geometry lib tests.

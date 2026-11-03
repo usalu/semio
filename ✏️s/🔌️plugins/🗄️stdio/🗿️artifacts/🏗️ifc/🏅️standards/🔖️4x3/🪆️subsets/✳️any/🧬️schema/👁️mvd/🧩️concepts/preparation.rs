@@ -2,13 +2,14 @@
 use super::population::{IfcMvdPopulationLookup, IfcMvdPopulationPin, IfcMvdPopulationRequestPin, IfcMvdPopulationRequestView, IfcMvdPopulationStatus, IfcMvdPopulationView, IfcMvdPopulationWork};
 use super::source_index::{IfcSourceIds, IfcSourceIndex, IdMatch};
 use semio_framework_job::{OriginalSourceBinding, OriginalTurnFailure, StepContext};
-use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneSource, retained_clone_grant_admits};
+use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneSource, StagedSourceAdmission, retained_clone_grant_admits};
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, retirement::RetireOwned};
 use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::IfcSnapshot;
 use std::{mem::size_of, sync::Arc};
 /// 🔐️ Metadata access stays immutable, bounded and allocation-free under the original row grant.
 pub(super) trait IfcMvdRequest: IfcSourceIds + RetireOwned + Sync { fn valid_row(&self, ordinal: usize) -> bool; }
 type RequestSource<R> = RetainedCloneSource<R, Arc<R>>;
+type RequestAdmission<R> = StagedSourceAdmission<R, Arc<R>>;
 fn invalid(message: &'static str) -> ValueError { ValueError::literal(ValueRefusalKind::InvalidValue, message) }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) struct IfcMvdRequestIndexPin { request: IfcMvdPopulationRequestPin, rows: (usize, usize), population: Option<IfcMvdPopulationPin> }
@@ -46,16 +47,16 @@ pub(super) struct IfcMvdPreparation<R: IfcMvdRequest> {
     state: State,
     population: IfcMvdPopulationWork<R>,
     unborn_snapshot: Option<Arc<IfcSnapshot>>,
-    unborn_request: Option<Arc<R>>,
+    request_admission: Option<RequestAdmission<R>>,
     request: Option<RequestSource<R>>,
 }
-impl<R: IfcMvdRequest> Default for IfcMvdPreparation<R> { fn default() -> Self { Self { request_index: Default::default(), state: Default::default(), population: Default::default(), unborn_snapshot: None, unborn_request: None, request: None } } }
+impl<R: IfcMvdRequest> Default for IfcMvdPreparation<R> { fn default() -> Self { Self { request_index: Default::default(), state: Default::default(), population: Default::default(), unborn_snapshot: None, request_admission: None, request: None } } }
 impl<R: IfcMvdRequest> IfcMvdPreparation<R> {
     fn base() -> RetirementDemand { RetirementDemand { copy_bytes: 4 * size_of::<State>() + 2 * size_of::<Option<RequestSource<R>>>(), depth: 1, ..Default::default() } }
     pub(super) fn demands(&self, snapshot: &Arc<IfcSnapshot>, request: &Arc<R>) -> Result<RetirementDemand, ValueError> {
         if self.state.binding.is_some_and(|(source, input, _)| source != Arc::as_ptr(snapshot) as usize || input != Arc::as_ptr(request) as usize) { return Err(invalid("mvd.original-source")); }
         let child = match self.state.phase {
-            0 => { let birth = RequestSource::<R>::borrowed_constructor_demand::<Arc<R>>(); RetirementDemand { copy_bytes: size_of::<Arc<R>>() + 2 * size_of::<Arc<IfcSnapshot>>() + RequestSource::<R>::borrowed_constructor_copy_bytes::<Arc<R>>(), capacity_bytes: birth.capacity_bytes, depth: birth.depth, ..Default::default() } },
+            0 => match self.request_admission.as_ref() { Some(admission) => admission.next_demand()?, None => RetirementDemand { copy_bytes: size_of::<Arc<R>>() + 2 * size_of::<Arc<IfcSnapshot>>(), depth: 1, ..Default::default() } },
             1 => self.request_index.demands(request.as_ref())?,
             3 => IfcMvdPopulationWork::<R>::receive_demands(),
             4 => self.population.demands(snapshot, self.state.binding.ok_or_else(|| invalid("mvd.original-source"))?.2)?,
@@ -100,33 +101,39 @@ impl<R: IfcMvdRequest> IfcMvdPreparation<R> {
         let mut progress = RetainedCloneProgress { copied_items: 1, copied_bytes: Self::base().copy_bytes, ..Default::default() };
         match self.state.phase {
             0 => {
-                if request.source_len() == 0 || request.source_len() > 1_000_000 { return Err(invalid("mvd.request").into()); }
-                self.state.binding = Some(binding);
-                self.state.original = Some(semio_framework_job::OriginalSourceBinding::borrow(cx));
-                let alias = size_of::<Arc<R>>();
-                let source_alias = 2 * size_of::<Arc<IfcSnapshot>>();
-                self.unborn_snapshot = Some(Arc::clone(snapshot));
-                progress.copied_bytes += source_alias;
-                let grant = RetainedCloneGrant { maximum_copy_bytes: cx.retained_grant().maximum_copy_bytes - progress.copied_bytes - alias, ..cx.retained_grant() };
-                let child = match RequestSource::<R>::admit_borrowed(Arc::clone(request), |value| value.as_ref(), grant) {
-                    Ok((owner, child)) => { self.request = Some(owner); child },
-                    Err((error, owner)) => {
-                        self.unborn_request = Some(owner);
-                        let child = error.retained_progress();
-                        progress.copied_bytes += alias + child.copied_bytes;
-                        progress.retained_capacity_bytes = child.retained_capacity_bytes;
-                        progress.released_bytes = child.released_bytes;
-                        let mut failure = semio_framework_job::OriginalTurnFailure::from(error);
-                        *posted = true;
-                        if let Err(error) = cx.consume_retained(progress) { failure.context_refusal = Some(error); }
-                        cx.consume_fuel(1);
-                        return Err(failure);
+                if self.request_admission.is_none() {
+                    if request.source_len() == 0 || request.source_len() > 1_000_000 { return Err(invalid("mvd.request").into()); }
+                    self.state.binding = Some(binding);
+                    self.state.original = Some(semio_framework_job::OriginalSourceBinding::borrow(cx));
+                    self.unborn_snapshot = Some(Arc::clone(snapshot));
+                    self.request_admission = Some(RequestAdmission::<R>::borrowed(Arc::clone(request), |value| value.as_ref()));
+                    progress.copied_bytes += size_of::<Arc<R>>() + 2 * size_of::<Arc<IfcSnapshot>>();
+                } else {
+                    let grant = cx.retained_grant();
+                    let admission = self.request_admission.as_mut().ok_or_else(|| invalid("mvd.request"))?;
+                    let turn = admission.advance(&mut self.request, grant);
+                    cx.consume_fuel(turn.work);
+                    match turn.result {
+                        Ok(step) => {
+                            let child = step.progress();
+                            progress.copied_bytes += child.copied_bytes;
+                            progress.retained_capacity_bytes = child.retained_capacity_bytes;
+                            progress.released_bytes = child.released_bytes;
+                            if self.request.is_some() { self.request_admission = None; self.state.phase = 1; }
+                        }
+                        Err(error) => {
+                            let child = error.retained_progress();
+                            progress.copied_bytes += child.copied_bytes;
+                            progress.retained_capacity_bytes = child.retained_capacity_bytes;
+                            progress.released_bytes = child.released_bytes;
+                            let mut failure = semio_framework_job::OriginalTurnFailure::from(error);
+                            *posted = true;
+                            if let Err(error) = cx.consume_retained(progress) { failure.context_refusal = Some(error); }
+                            cx.consume_fuel(1);
+                            return Err(failure);
+                        }
                     }
-                };
-                self.state.phase = 1;
-                progress.copied_bytes += alias + child.copied_bytes;
-                progress.retained_capacity_bytes = child.retained_capacity_bytes;
-                progress.released_bytes = child.released_bytes;
+                }
             },
             1 => {
                 progress.copied_items = 0;

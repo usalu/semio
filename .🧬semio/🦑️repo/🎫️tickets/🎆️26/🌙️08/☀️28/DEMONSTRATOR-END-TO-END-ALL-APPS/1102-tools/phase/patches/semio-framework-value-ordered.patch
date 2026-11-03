@@ -1,0 +1,113 @@
+--- a/🧰️framework/🔨️modules/🌱️value/🗂️ordered/🎮️update/🎬️plan/🦀️.rs
++++ b/🧰️framework/🔨️modules/🌱️value/🗂️ordered/🎮️update/🎬️plan/🦀️.rs
+@@ -7,24 +7,33 @@
+  pub(super) fn validate(&mut self)->Result<(),crate::ValueError>{self.height=1+height(&self.left).max(height(&self.right));self.len=1usize.checked_add(len(&self.left)).and_then(|n|n.checked_add(len(&self.right))).ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"ordered staged node length overflow"))?;if self.height>MAX_AVL_HEIGHT{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"ordered staged node exceeds AVL metadata height"))}Ok(())}
+  pub(super) fn held(&self)->usize{usize::from(self.entry.is_some())+usize::from(self.left.is_some())+usize::from(self.right.is_some())}
+  pub(super) fn take_owner(&mut self)->Option<Owner<V>>{self.left.take().or_else(||self.right.take()).map(Owner::Node).or_else(||self.entry.take().map(Owner::Entry))}
+- pub(super) fn take_node(&mut self)->Node<V>{Node{entry:self.entry.take().unwrap(),left:self.left.take(),right:self.right.take(),height:self.height,len:self.len}}
++ pub(super) fn take_node(&mut self)->Option<Node<V>>{let entry=self.entry.take()?;Some(Node{entry,left:self.left.take(),right:self.right.take(),height:self.height,len:self.len})}
+  pub(super) fn restore(&mut self,node:Node<V>){self.entry=Some(node.entry);self.left=node.left;self.right=node.right;self.height=node.height;self.len=node.len;}
+ }
+ enum Link<V>{Existing(Root<V>),Built(usize)}
+-impl<V> Link<V>{fn held(&self)->usize{match self{Self::Existing(root)=>usize::from(root.is_some()),Self::Built(_)=>0}}fn resolve(self,outputs:&mut[Root<V>;3])->Root<V>{match self{Self::Existing(root)=>root,Self::Built(index)=>Some(outputs[index].take().expect("prior planned node exists"))}}fn take_owner(&mut self)->Option<Owner<V>>{match self{Self::Existing(root)=>root.take().map(Owner::Node),Self::Built(_)=>None}}}
++impl<V> Link<V>{fn held(&self)->usize{match self{Self::Existing(root)=>usize::from(root.is_some()),Self::Built(_)=>0}}fn resolve(self,outputs:&mut[Root<V>;3])->Result<Root<V>,crate::ValueError>{match self{Self::Existing(root)=>Ok(root),Self::Built(index)=>outputs.get_mut(index).and_then(Option::take).map(Some).ok_or_else(||crate::ValueError::invariant("prior planned node is absent"))}}fn take_owner(&mut self)->Option<Owner<V>>{match self{Self::Existing(root)=>root.take().map(Owner::Node),Self::Built(_)=>None}}}
+ struct Spec<V>{entry:Option<Arc<Entry<V>>>,left:Link<V>,right:Link<V>}
+ pub(super) struct BalancePlan<V>{specs:[Option<Spec<V>>;3],outputs:[Root<V>;3],pub(super) next:usize,count:usize,pub(super) after:Phase}
+ impl<V> BalancePlan<V>{
+  pub(super) fn single(entry:Arc<Entry<V>>,left:Root<V>,right:Root<V>,after:Phase)->Self{let mut specs=std::array::from_fn(|_|None);specs[0]=Some(Spec{entry:Some(entry),left:Link::Existing(left),right:Link::Existing(right)});Self{specs,outputs:std::array::from_fn(|_|None),next:0,count:1,after}}
+- pub(super) fn new_aliases(left:&Root<V>,right:&Root<V>)->usize{if height(left)>height(right)+1{let branch=left.as_ref().unwrap();if height(&branch.left)>=height(&branch.right){1+usize::from(branch.left.is_some())+usize::from(branch.right.is_some())}else{let pivot=branch.right.as_ref().unwrap();2+usize::from(branch.left.is_some())+usize::from(pivot.left.is_some())+usize::from(pivot.right.is_some())}}else if height(right)>height(left)+1{let branch=right.as_ref().unwrap();if height(&branch.right)>=height(&branch.left){1+usize::from(branch.left.is_some())+usize::from(branch.right.is_some())}else{let pivot=branch.left.as_ref().unwrap();2+usize::from(branch.right.is_some())+usize::from(pivot.left.is_some())+usize::from(pivot.right.is_some())}}else{0}}
++ pub(super) fn new_aliases(left:&Root<V>,right:&Root<V>)->usize{
++  let children=|branch:&Node<V>|usize::from(branch.left.is_some())+usize::from(branch.right.is_some());
++  if let Some(branch)=left.as_ref().filter(|_|height(left)>height(right)+1){if height(&branch.left)>=height(&branch.right){1+children(branch)}else{2+usize::from(branch.left.is_some())+branch.right.as_ref().map_or(0,|pivot|children(pivot))}}
++  else if let Some(branch)=right.as_ref().filter(|_|height(right)>height(left)+1){if height(&branch.right)>=height(&branch.left){1+children(branch)}else{2+usize::from(branch.right.is_some())+branch.left.as_ref().map_or(0,|pivot|children(pivot))}}
++  else{0}
++ }
+  pub(super) fn balanced(entry:Arc<Entry<V>>,left:Root<V>,right:Root<V>,after:Phase,retired:&mut InlineStack<Arc<Node<V>>,UPDATE_RETIRED_ROOTS>)->Self{
+   let mut specs=std::array::from_fn(|_|None);let count;
+-  if height(&left)>height(&right)+1{let root=left.unwrap();let branch=&root;if height(&branch.left)>=height(&branch.right){specs[0]=Some(Spec{entry:Some(entry),left:Link::Existing(branch.right.clone()),right:Link::Existing(right)});specs[1]=Some(Spec{entry:Some(Arc::clone(&branch.entry)),left:Link::Existing(branch.left.clone()),right:Link::Built(0)});count=2;}else{let pivot=branch.right.as_ref().unwrap();specs[0]=Some(Spec{entry:Some(Arc::clone(&branch.entry)),left:Link::Existing(branch.left.clone()),right:Link::Existing(pivot.left.clone())});specs[1]=Some(Spec{entry:Some(entry),left:Link::Existing(pivot.right.clone()),right:Link::Existing(right)});specs[2]=Some(Spec{entry:Some(Arc::clone(&pivot.entry)),left:Link::Built(0),right:Link::Built(1)});count=3;}retired.push_front(root);
+-  }else if height(&right)>height(&left)+1{let root=right.unwrap();let branch=&root;if height(&branch.right)>=height(&branch.left){specs[0]=Some(Spec{entry:Some(entry),left:Link::Existing(left),right:Link::Existing(branch.left.clone())});specs[1]=Some(Spec{entry:Some(Arc::clone(&branch.entry)),left:Link::Built(0),right:Link::Existing(branch.right.clone())});count=2;}else{let pivot=branch.left.as_ref().unwrap();specs[0]=Some(Spec{entry:Some(entry),left:Link::Existing(left),right:Link::Existing(pivot.left.clone())});specs[1]=Some(Spec{entry:Some(Arc::clone(&branch.entry)),left:Link::Existing(pivot.right.clone()),right:Link::Existing(branch.right.clone())});specs[2]=Some(Spec{entry:Some(Arc::clone(&pivot.entry)),left:Link::Built(0),right:Link::Built(1)});count=3;}retired.push_front(root);
+-  }else{return Self::single(entry,left,right,after)}Self{specs,outputs:std::array::from_fn(|_|None),next:0,count,after}
++  let(left_heavy,right_heavy)=(height(&left)>height(&right)+1,height(&right)>height(&left)+1);
++  match(left_heavy,right_heavy,left,right){
++   (true,_,Some(root),right)=>{let branch=&root;match branch.right.as_ref().filter(|_|height(&branch.left)<height(&branch.right)){None=>{specs[0]=Some(Spec{entry:Some(entry),left:Link::Existing(branch.right.clone()),right:Link::Existing(right)});specs[1]=Some(Spec{entry:Some(Arc::clone(&branch.entry)),left:Link::Existing(branch.left.clone()),right:Link::Built(0)});count=2;},Some(pivot)=>{specs[0]=Some(Spec{entry:Some(Arc::clone(&branch.entry)),left:Link::Existing(branch.left.clone()),right:Link::Existing(pivot.left.clone())});specs[1]=Some(Spec{entry:Some(entry),left:Link::Existing(pivot.right.clone()),right:Link::Existing(right)});specs[2]=Some(Spec{entry:Some(Arc::clone(&pivot.entry)),left:Link::Built(0),right:Link::Built(1)});count=3;}}retired.push_front(root);},
++   (_,true,left,Some(root))=>{let branch=&root;match branch.left.as_ref().filter(|_|height(&branch.right)<height(&branch.left)){None=>{specs[0]=Some(Spec{entry:Some(entry),left:Link::Existing(left),right:Link::Existing(branch.left.clone())});specs[1]=Some(Spec{entry:Some(Arc::clone(&branch.entry)),left:Link::Built(0),right:Link::Existing(branch.right.clone())});count=2;},Some(pivot)=>{specs[0]=Some(Spec{entry:Some(entry),left:Link::Existing(left),right:Link::Existing(pivot.left.clone())});specs[1]=Some(Spec{entry:Some(Arc::clone(&branch.entry)),left:Link::Existing(pivot.right.clone()),right:Link::Existing(branch.right.clone())});specs[2]=Some(Spec{entry:Some(Arc::clone(&pivot.entry)),left:Link::Built(0),right:Link::Built(1)});count=3;}}retired.push_front(root);},
++   (_,_,left,right)=>return Self::single(entry,left,right,after),
++  }
++  Self{specs,outputs:std::array::from_fn(|_|None),next:0,count,after}
+  }
+  pub(super) fn ready(&self)->bool{self.next==self.count}
+- pub(super) fn prepare(&mut self)->NodeBuilder<V>{let spec=self.specs[self.next].take().unwrap();NodeBuilder{entry:spec.entry,left:spec.left.resolve(&mut self.outputs),right:spec.right.resolve(&mut self.outputs),height:0,len:0}}
++ pub(super) fn prepare(&mut self)->Result<NodeBuilder<V>,crate::ValueError>{let spec=self.specs.get_mut(self.next).and_then(Option::take).ok_or_else(||crate::ValueError::invariant("planned node spec is absent"))?;Ok(NodeBuilder{entry:spec.entry,left:spec.left.resolve(&mut self.outputs)?,right:spec.right.resolve(&mut self.outputs)?,height:0,len:0})}
+  pub(super) fn accept(&mut self,node:Arc<Node<V>>){self.outputs[self.next]=Some(node);self.next+=1;}
+  pub(super) fn take_result(&mut self)->Root<V>{self.outputs[self.count-1].take()}
+  pub(super) fn held(&self)->usize{self.outputs.iter().filter(|root|root.is_some()).count()+self.specs.iter().flatten().map(|spec|usize::from(spec.entry.is_some())+spec.left.held()+spec.right.held()).sum::<usize>()}
+--- a/🧰️framework/🔨️modules/🌱️value/🗂️ordered/🦀️.rs
++++ b/🧰️framework/🔨️modules/🌱️value/🗂️ordered/🦀️.rs
+@@ -153,16 +153,16 @@
+     /// ⚡️ Completes a synchronous convenience upsert; retained jobs must use begin_set and advance.
+     pub fn insert(&mut self, key: String, value: V) -> Option<V> {
+         let mut cursor = self.begin_set(key, value);
+-        while !cursor.is_complete() { cursor.advance(cold_update_grant(&cursor)).result.expect("ordered cold insert admission"); }
+-        let removed = cursor.take_removed(); let displaced = std::mem::replace(self, cursor.take_result().unwrap()); retire_cold(displaced.retire()); close_cold(&mut cursor); removed.and_then(release_cold)
++        while !cursor.is_complete() && cursor.advance(cold_update_grant(&cursor)).result.is_ok() {}
++        let removed = cursor.take_removed(); if let Some(result) = cursor.take_result() { retire_cold(std::mem::replace(self, result).retire()); } close_cold(&mut cursor); removed.and_then(release_cold)
+     }
+     /// 🏪️ Completes a synchronous convenience removal; retained jobs must use begin_remove and advance.
+     /// `Some` states that the key WAS present, whatever else still shares its payload: a clone of this map keeps the payload
+     /// alive, so only [`Removal::Owned`] hands the value over and [`Removal::Shared`] reports that another owner retains it.
+     pub fn remove(&mut self, key: &str) -> Option<Removal<V>> {
+         let mut cursor = self.begin_remove(key.to_owned());
+-        while !cursor.is_complete() { cursor.advance(cold_update_grant(&cursor)).result.expect("ordered cold removal admission"); }
+-        let removed = cursor.take_removed(); let displaced = std::mem::replace(self, cursor.take_result().unwrap()); retire_cold(displaced.retire()); close_cold(&mut cursor);
++        while !cursor.is_complete() && cursor.advance(cold_update_grant(&cursor)).result.is_ok() {}
++        let removed = cursor.take_removed(); if let Some(result) = cursor.take_result() { retire_cold(std::mem::replace(self, result).retire()); } close_cold(&mut cursor);
+         removed.map(|shared| release_cold(shared).map_or(Removal::Shared, Removal::Owned))
+     }
+     /// 🧹️ Moves this root into explicit final-owner retirement.
+@@ -261,17 +261,17 @@
+     fn admission_growth(&self)->usize{
+         if self.pending_entry.is_some()||self.pending_node.is_some(){return 1}if self.plan.is_some(){return 0}
+         match self.phase{
+-            Phase::Search=>if self.current.is_none(){if self.value.is_some()&&self.entry_arc.is_none(){2}else{0}}else{let current=self.current.as_ref().unwrap();match self.ordering{None=>0,Some(Ordering::Less)=>usize::from(current.left.is_some()),Some(Ordering::Greater)=>usize::from(current.right.is_some()),Some(Ordering::Equal)=>if self.value.is_some(){if self.entry_arc.is_none(){2}else{1+usize::from(current.left.is_some())+usize::from(current.right.is_some())}}else{1+usize::from(current.left.is_some()||current.right.is_some())}}},
+-            Phase::Successor=>{let current=self.current.as_ref().unwrap();if current.left.is_some(){1}else{1+usize::from(current.right.is_some())}},
++            Phase::Search=>if self.current.is_none(){if self.value.is_some()&&self.entry_arc.is_none(){2}else{0}}else{let Some(current)=self.current.as_ref()else{return usize::MAX};match self.ordering{None=>0,Some(Ordering::Less)=>usize::from(current.left.is_some()),Some(Ordering::Greater)=>usize::from(current.right.is_some()),Some(Ordering::Equal)=>if self.value.is_some(){if self.entry_arc.is_none(){2}else{1+usize::from(current.left.is_some())+usize::from(current.right.is_some())}}else{1+usize::from(current.left.is_some()||current.right.is_some())}}},
++            Phase::Successor=>{let Some(current)=self.current.as_ref()else{return usize::MAX};if current.left.is_some(){1}else{1+usize::from(current.right.is_some())}},
+             Phase::Rebuild=>self.path.front().map_or(usize::from(self.replacement.is_none()),|parent|{let(left,right,sibling)=if parent.left{(&self.replacement,&parent.node.right,usize::from(parent.node.right.is_some()))}else{(&parent.node.left,&self.replacement,usize::from(parent.node.left.is_some()))};1+sibling+BalancePlan::new_aliases(left,right)}),
+-            Phase::RebuildSuccessor=>self.successor_path.front().map_or_else(||{let left=&self.removed_node.as_ref().unwrap().left;usize::from(left.is_some())+BalancePlan::new_aliases(left,&self.replacement)},|parent|1+usize::from(parent.right.is_some())+BalancePlan::new_aliases(&self.replacement,&parent.right)),Phase::Complete=>0,
++            Phase::RebuildSuccessor=>self.successor_path.front().map_or_else(||{let Some(removed)=self.removed_node.as_ref()else{return usize::MAX};let left=&removed.left;usize::from(left.is_some())+BalancePlan::new_aliases(left,&self.replacement)},|parent|1+usize::from(parent.right.is_some())+BalancePlan::new_aliases(&self.replacement,&parent.right)),Phase::Complete=>0,
+         }
+     }
+     fn advance(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome{
+         self.last_compared_bytes=0;
+         if let Some(staged)=self.pending_entry.as_mut(){let value=Entry{key:match staged.key.take(){Some(v)=>v,None=>return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("key absent").into()),work:0}},value:match staged.value.take(){Some(v)=>v,None=>return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("value absent").into()),work:0}}};let turn=crate::retirement::arc_custody::admit_shared_allocation(value,grant);let result=match turn.result{Ok((entry,p))=>{self.entry_arc=Some(entry);self.pending_entry.take();Ok(RetainedCloneStep::Progress(p))},Err((error,value))=>{staged.key=Some(value.key);staged.value=Some(value.value);Err(error)}};return crate::RetainedWorkOutcome{result,work:turn.work}}
+-        if let Some(staged)=self.pending_node.as_mut(){let value=staged.take_node();let turn=crate::retirement::arc_custody::admit_shared_allocation(value,grant);let result=match turn.result{Ok((node,p))=>{match self.plan.as_mut(){Some(v)=>v,None=>return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("plan absent").into()),work:0}}.accept(node);self.pending_node.take();Ok(RetainedCloneStep::Progress(p))},Err((error,node))=>{staged.restore(node);Err(error)}};return crate::RetainedWorkOutcome{result,work:turn.work}}
+-        if let Some(plan)=self.plan.as_mut(){if plan.ready(){let root=plan.take_result();let after=plan.after;self.plan.take();self.replacement=root;self.phase=after;}else{self.pending_node=Some(plan.prepare());if let Err(error)=match self.pending_node.as_mut(){Some(v)=>v,None=>return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("pending_node absent").into()),work:0}}.validate(){return crate::RetainedWorkOutcome{result:Err(error.with_retained_progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}}return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}
++        if let Some(staged)=self.pending_node.as_mut(){let Some(value)=staged.take_node()else{return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("pending node entry absent").into()),work:0}};let turn=crate::retirement::arc_custody::admit_shared_allocation(value,grant);let result=match turn.result{Ok((node,p))=>{match self.plan.as_mut(){Some(v)=>v,None=>return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("plan absent").into()),work:0}}.accept(node);self.pending_node.take();Ok(RetainedCloneStep::Progress(p))},Err((error,node))=>{staged.restore(node);Err(error)}};return crate::RetainedWorkOutcome{result,work:turn.work}}
++        if let Some(plan)=self.plan.as_mut(){if plan.ready(){let root=plan.take_result();let after=plan.after;self.plan.take();self.replacement=root;self.phase=after;}else{self.pending_node=Some(match plan.prepare(){Ok(node)=>node,Err(error)=>return crate::RetainedWorkOutcome{result:Err(error.into()),work:0}});if let Err(error)=match self.pending_node.as_mut(){Some(v)=>v,None=>return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("pending_node absent").into()),work:0}}.validate(){return crate::RetainedWorkOutcome{result:Err(error.with_retained_progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}}return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}
+         match self.phase{
+             Phase::Search=>{
+                 if self.current.is_none(){if let Some(value)=self.value.as_ref(){if let Some(entry)=self.entry_arc.take(){self.plan=Some(BalancePlan::single(entry,None,None,Phase::Rebuild));}else{self.pending_entry=Some(EntryBuilder{key:Some(match self.key.as_ref(){Some(v)=>v,None=>return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("key absent").into()),work:0}}.clone()),value:Some(value.clone())});}}else{self.phase=Phase::Rebuild;}}
+@@ -531,7 +531,7 @@
+                 self.push(Owner::Entry(node.entry));
+             },
+             Owner::Entry(entry) => if let Some(entry) = Arc::into_inner(entry) {bytes=demand;self.push(Owner::Key(entry.key)); self.push(Owner::Value(entry.value)); },
+-            Owner::Key(_)|Owner::Value(_)=>unreachable!("shared aliases release before their frontier slot transfers"),
++            Owner::Key(_)|Owner::Value(_)=>return RetirementStep::Failure(crate::ValueError::invariant("shared aliases release before their frontier slot transfers")),
+         }
+         RetirementStep::Progress { released_items: 1, released_bytes: bytes }
+     }
+--- a/🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🎟️work/🦀️.rs
++++ b/🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🎟️work/🦀️.rs
+@@ -5,7 +5,11 @@
+ use crate::retirement::{RetireOwned,RetirementCursor};
+ fn repair_one<K:Copy+Ord,V>(index:&mut NumericIndex<K,V>,current:usize)->Option<usize>{
+  index.update(current);let(left,right)={let node=index.node(current);(node.left,node.right)};let balance=index.height(left)as i16-index.height(right)as i16;
+- let top=if balance>1{let child=left.unwrap();if index.height(index.node(child).left)<index.height(index.node(child).right){index.rotate_left(child);}index.rotate_right(current)}else if balance< -1{let child=right.unwrap();if index.height(index.node(child).right)<index.height(index.node(child).left){index.rotate_right(child);}index.rotate_left(current)}else{current};
++ let top=match(balance,left,right){
++  (2..,Some(child),_)=>{if index.height(index.node(child).left)<index.height(index.node(child).right){index.rotate_left(child);}index.rotate_right(current)},
++  (..=-2,_,Some(child))=>{if index.height(index.node(child).right)<index.height(index.node(child).left){index.rotate_right(child);}index.rotate_left(current)},
++  _=>current,
++ };
+  index.node(top).parent
+ }
+ enum NumericWorkStep{Pending,Progress,Complete}

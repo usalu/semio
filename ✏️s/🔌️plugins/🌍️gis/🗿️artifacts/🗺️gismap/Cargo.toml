@@ -115,6 +115,9 @@ path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/�
 [workspace.dependencies.semio-s-artifact-stdio-semio-drawing-export]
 path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📤️export/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-s-artifact-stdio-semio-drawing-png-export]
+path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📷️png/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-s-artifact-stdio-semio-drawing-import]
 path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📥️import/📦️packages/🦀️rust"
 

@@ -5,5 +5,5 @@ T="$(cd "$(dirname "$0")/.." && pwd)"; L="$1"; shift
 cd /Users/ueli/Documents/semio
 O="$T/🗑️generated/1101/$L"
 echo "start $(date '+%F %T') repo $*" > "$O.status"
-SEMIO_LEASE_PRIORITY=interactive SEMIO_LANGUAGE=en repo "$@" > "$O.log" 2>&1
+SEMIO_PROGRESS_DEADLINE_TRACE=1 SEMIO_LEASE_PRIORITY=interactive SEMIO_LANGUAGE=en repo "$@" > "$O.log" 2>&1
 echo "exit $? $(date '+%F %T')" >> "$O.status"

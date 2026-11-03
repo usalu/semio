@@ -249,14 +249,14 @@
       ]
     },
     {
-      "package": "semio-framework-replication-mutation-retained",
+      "package": "semio-framework-replication-retained",
       "manifest": "🎮️mutation/🧳️retained/📦️packages/🦀️rust/Cargo.toml",
       "entry": "🎮️mutation/🧳️retained/📦️packages/🦀️rust/🦀️.rs",
       "level": 7,
       "dependencies": [
         "semio-framework-replication-mutation",
         "semio-framework-replication-mutation-messages",
-        "semio-framework-replication-mutation-retained-field"
+        "semio-framework-replication-retained-field"
       ],
       "devDependencies": [
         "semio-framework-replication-ids"
@@ -266,7 +266,7 @@
       ]
     },
     {
-      "package": "semio-framework-replication-mutation-retained-field",
+      "package": "semio-framework-replication-retained-field",
       "manifest": "🎮️mutation/🧳️retained/🪡️field/📦️packages/🦀️rust/Cargo.toml",
       "entry": "🎮️mutation/🧳️retained/🪡️field/📦️packages/🦀️rust/🦀️.rs",
       "level": 0,

@@ -5,7 +5,11 @@ use crate::RetirementDemand;
 use crate::retirement::{RetireOwned,RetirementCursor};
 fn repair_one<K:Copy+Ord,V>(index:&mut NumericIndex<K,V>,current:usize)->Option<usize>{
  index.update(current);let(left,right)={let node=index.node(current);(node.left,node.right)};let balance=index.height(left)as i16-index.height(right)as i16;
- let top=if balance>1{let child=left.unwrap();if index.height(index.node(child).left)<index.height(index.node(child).right){index.rotate_left(child);}index.rotate_right(current)}else if balance< -1{let child=right.unwrap();if index.height(index.node(child).right)<index.height(index.node(child).left){index.rotate_right(child);}index.rotate_left(current)}else{current};
+ let top=match(balance,left,right){
+  (2..,Some(child),_)=>{if index.height(index.node(child).left)<index.height(index.node(child).right){index.rotate_left(child);}index.rotate_right(current)},
+  (..=-2,_,Some(child))=>{if index.height(index.node(child).right)<index.height(index.node(child).left){index.rotate_right(child);}index.rotate_left(current)},
+  _=>current,
+ };
  index.node(top).parent
 }
 enum NumericWorkStep{Pending,Progress,Complete}

@@ -1,0 +1,44 @@
+--- a/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs
++++ b/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs
+@@ -201,20 +201,20 @@
+     /// 🪟️ The one window-chrome implementation both trait entry points share — `interaction` is the
+     /// live `"cad"` domain for the request-context twin and empty for the interaction-less one.
+     fn window_engagements_body(doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, view_state: &ViewModel, transient: &CadWorldWindowTransient, interaction: CadInteractionSnapshot) -> HashMap<String, WindowEngagement> {
+-        let view = CadPlayView::of(doc.snapshot, &doc.children, runtime_of(cfg, transient), interaction);
++        let view = CadPlayView::of(doc.snapshot, &doc.children, runtime_of(cfg, transient), interaction).with_axes(view_state.terminology, view_state.locale);
+         let labels = cad_labels(view_state);
+         HashMap::from([
+-            (shape::WINDOW_KIND_ID.to_string(), shape::engagement(&view, labels)),
+-            (building::WINDOW_KIND_ID.to_string(), building::engagement(&view, labels)),
+-            (energy::WINDOW_KIND_ID.to_string(), energy::engagement(&view, labels)),
+-            (structure_classic::WINDOW_KIND_ID.to_string(), structure_classic::engagement(&view, labels)),
++            (shape::WINDOW_KIND_ID.to_string(), shape::engagement(&view, labels, view_state.terminology, view_state.locale)),
++            (building::WINDOW_KIND_ID.to_string(), building::engagement(&view, labels, view_state.terminology, view_state.locale)),
++            (energy::WINDOW_KIND_ID.to_string(), energy::engagement(&view, labels, view_state.terminology, view_state.locale)),
++            (structure_classic::WINDOW_KIND_ID.to_string(), structure_classic::engagement(&view, labels, view_state.terminology, view_state.locale)),
+         ])
+     }
+ 
+     /// 🖼️ The one render implementation both trait entry points share.
+     fn render_body(body_key: &str, doc: &ArtifactView<'_, CadSnapshot>, cfg: &ConfigView<'_, CadConfig>, view_state: &ViewModel, transient: &CadWorldWindowTransient, interaction: CadInteractionSnapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+         semio_s_artifact_cad_cad_inferences::validate_cad_computer_contributions(&cfg.snapshot.contributions_json);
+-        let view = CadPlayView::of(doc.snapshot, &doc.children, runtime_of(cfg, transient), interaction);
++        let view = CadPlayView::of(doc.snapshot, &doc.children, runtime_of(cfg, transient), interaction).with_axes(view_state.terminology, view_state.locale);
+         let labels = cad_labels(view_state);
+         let window_kind_id = match body_key {
+             shape::BODY_KEY => shape::WINDOW_KIND_ID,
+@@ -226,10 +226,10 @@
+         let active_utility = view_state.active_utility_id.as_deref();
+         let options = view.runtime.dislocate_options(window_kind_id);
+         match body_key {
+-            shape::BODY_KEY => shape::render(&view, active_utility, options).map(semio_framework_plugin::built_to_component_tree),
+-            building::BODY_KEY => building::render(&view, active_utility, options).map(semio_framework_plugin::built_to_component_tree),
+-            energy::BODY_KEY => energy::render(&view, active_utility, options).map(semio_framework_plugin::built_to_component_tree),
+-            structure_classic::BODY_KEY => structure_classic::render(&view, active_utility, options).map(semio_framework_plugin::built_to_component_tree),
++            shape::BODY_KEY => shape::render(&view, active_utility, options, view_state.terminology, view_state.locale).map(semio_framework_plugin::built_to_component_tree),
++            building::BODY_KEY => building::render(&view, active_utility, options, view_state.terminology, view_state.locale).map(semio_framework_plugin::built_to_component_tree),
++            energy::BODY_KEY => energy::render(&view, active_utility, options, view_state.terminology, view_state.locale).map(semio_framework_plugin::built_to_component_tree),
++            structure_classic::BODY_KEY => structure_classic::render(&view, active_utility, options, view_state.terminology, view_state.locale).map(semio_framework_plugin::built_to_component_tree),
+             document::CAD_PLAY_BODY_ARTIFACT => document::build_document_tree(&view, labels, &TreeWindows::for_body(view_state, document::CAD_PLAY_BODY_ARTIFACT)).map(semio_framework_plugin::built_to_component_tree),
+             catalogue::CAD_PLAY_BODY_CATALOGUE => catalogue::build_catalogue_tree(labels, &TreeWindows::for_body(view_state, catalogue::CAD_PLAY_BODY_CATALOGUE)).map(semio_framework_plugin::built_to_component_tree),
+             inspection::CAD_PLAY_BODY_PROPERTIES => {

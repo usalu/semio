@@ -113,7 +113,7 @@ async fn forest_structure_curve_wires_tessellate_as_centerlines() {
 async fn cad_object_model_element_round_trip_preserves_identity_placement_and_geometry() {
     let object = CadObject {
         id: "object-7".into(),
-        label: "ignored on the way in — restored from the id on the way out".into(),
+        label: CadObjectName::literal("U7"),
         typology: "building.building.column".into(),
         visible: false,
         locked: true,
@@ -138,11 +138,29 @@ async fn cad_object_model_element_round_trip_preserves_identity_placement_and_ge
 }
 
 #[semio_framework_async_macros::async_test]
+async fn cad_object_names_round_trip_language_neutrally() {
+    let names = [
+        CadObjectName::literal("U2"),
+        CadObjectName::Interaction { interaction_id: "building.building.placeBeam".into(), ordinal: 3, part: Some(2) },
+        CadObjectName::Interaction { interaction_id: "primitive.box".into(), ordinal: 1, part: None },
+        CadObjectName::Typology { ordinal: Some(4) },
+        CadObjectName::Typology { ordinal: None },
+    ];
+    for name in names {
+        let object = CadObject { id: "object-n".into(), label: name.clone(), typology: "spatial.shape.primitive.box".into(), visible: true, locked: false, origin: [0.0; 3], orientation: None, scale: None, mesh_url: None, extent: None, solid_handle: None, primitives: Vec::new() };
+        let element = model_element_from_cad_object(&object);
+        let typed = matches!(name, CadObjectName::Literal { .. });
+        assert_eq!(element.psets[0].properties.iter().any(|property| property.key == "label"), typed, "only a typed name is stored as text: {name:?}");
+        assert_eq!(cad_object_from_model_element(&element).label, name);
+    }
+}
+
+#[semio_framework_async_macros::async_test]
 async fn semio_model_snapshot_from_objects_round_trips_via_objects_from_model_snapshot() {
     let objects = vec![
         CadObject {
             id: "object-a".into(),
-            label: "A".into(),
+            label: CadObjectName::literal("A"),
             typology: "spatial.shape.primitive.box".into(),
             visible: true,
             locked: false,
@@ -156,7 +174,7 @@ async fn semio_model_snapshot_from_objects_round_trips_via_objects_from_model_sn
         },
         CadObject {
             id: "object-b".into(),
-            label: "B".into(),
+            label: CadObjectName::literal("B"),
             typology: "building.building.slab".into(),
             visible: true,
             locked: false,

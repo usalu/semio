@@ -5,6 +5,7 @@ use crate::editor::sourcing::config::SourcingCurationConfig;
 use semio_framework_plugin::SurfaceKind;
 use crate::editor::sourcing::modes::edit::windows::pool::{SOURCING_CURATION_BODY_POOL, definition, filter_bar, pool_kinds, pool_row, render};
 use crate::editor::sourcing::SourcingCurationCommand;
+use crate::editor::sourcing::config::SetContributionsEdit;
 use crate::editor::sourcing::commands::{curation_add, set_contributions, set_filter_query, sort_table, stock_from_catalogue};
 use crate::editor::sourcing::modes::edit::windows::curated::SOURCING_CURATION_BODY_CURATED;
 use crate::editor_unit_tests::context::{dispatch, new_app, row_ids, settle, table_of};

@@ -1,0 +1,554 @@
+[
+ {
+  "crate": "semio-s-artifact-stdio-ifc-2x3-base-details",
+  "files": 2,
+  "sites": 7,
+  "notes": [
+   "ifc2x3 field_edit: ValueError via invalid() (OriginalTurnFailure: From<ValueError>), 4 sites; work.rs: Fault via err(), 1 site",
+   "ifc2x3 field_edit: ValueError via invalid() (OriginalTurnFailure: From<ValueError>), 4 sites; work.rs: Fault via err(), 1 site"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-s-artifact-stdio-ifc-details-provider",
+  "files": 1,
+  "sites": 1,
+  "notes": [
+   "String (fn returns Result<bool,String>), 1 site"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-s-artifact-gis-gismap-gis2d",
+  "files": 1,
+  "sites": 1,
+  "notes": [
+   "ValueError::invariant, 1 site"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-s-artifact-puzzle-2d-text-inverse",
+  "files": 1,
+  "sites": 2,
+  "notes": [
+   "ValueError via refusal(), 2 sites"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-framework-os-store-replay",
+  "files": 2,
+  "sites": 12,
+  "notes": [
+   "VcsError::{InverseRefused(ValueError),ValidationFailed,HistoryReplaying}; cold_prefix/cold_operation made unrepresentable via Option::filter, 9 sites",
+   "ValueError via invalid() (OriginalTurnFailure: From<ValueError>); 2 sites"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-framework-os-store-replay-operation",
+  "files": 4,
+  "sites": 12,
+  "notes": [
+   "VcsError::{InverseRefused(ValueError),ValidationFailed,HistoryReplaying}; cold_prefix/cold_operation made unrepresentable via Option::filter, 9 sites",
+   "ValueError::invariant; 1 site",
+   "ValueError::invariant; advance/close_step -> Result<_,ValueError>; 7 sites",
+   "auto: Option owner -> ValueError::invariant via ?, outside closures, fn returns Result<_,OriginalTurnFailure|ValueError>; 2 site(s)"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-s-plugin-flow-brep",
+  "files": 1,
+  "sites": 1,
+  "notes": [
+   "ValueError via invalid() -> ExtensionInvokeStep.refusal, 1 site"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-s-artifact-fem-2d-editor-session",
+  "files": 1,
+  "sites": 4,
+  "notes": [
+   "JobStep failure b\"fem2d.session-stage-owner-absent\" via self.fail, 4 sites"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-s-artifact-energy-model-session",
+  "files": 2,
+  "sites": 5,
+  "notes": [
+   "ValueError::invariant / invalid(), 5 sites",
+   "ValueError::invariant / invalid(), 5 sites"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-s-artifact-draw-drawing-io",
+  "files": 1,
+  "sites": 1,
+  "notes": [
+   "ImageDecodeError::Invalid, 1 site"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-s-artifact-stdio-ifc-4x3",
+  "files": 1,
+  "sites": 5,
+  "notes": [
+   "unrepresentable (match result bound once / Option::filter / Option::map), 3 sites"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-s-artifact-stdio-ifc-details-guidance",
+  "files": 1,
+  "sites": 3,
+  "notes": [
+   "ValueError via invalid() (advance_inner -> OriginalTurnFailure), 3 sites"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-framework-os-store-presence",
+  "files": 2,
+  "sites": 3,
+  "notes": [
+   "ValueError::invariant; close_step -> Result<_,ValueError>; 2 sites",
+   "RetainedWorkOutcome{result:Err(ValueError::invariant)}; 1 site"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-framework-os-store-one-item-batch",
+  "files": 1,
+  "sites": 3,
+  "notes": [
+   "ValueError::invariant; 3 sites"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-framework-os-store-ephemeral",
+  "files": 2,
+  "sites": 3,
+  "notes": [
+   "ValueError::invariant; 1 site",
+   "ValueError::invariant; 2 sites"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-framework-os-store-engine-command",
+  "files": 1,
+  "sites": 2,
+  "notes": [
+   "ValueError via refusal(); 2 sites"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-framework-os-store-engine-replay",
+  "files": 4,
+  "sites": 9,
+  "notes": [
+   "ValueError::invariant -> OriginalTurnFailure; 2 sites",
+   "ValueError::invariant -> OriginalTurnFailure; 3 sites",
+   "ValueError::invariant; 2 sites",
+   "ValueError via invalid(); 1 site"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-framework-os-store-engine-branch",
+  "files": 1,
+  "sites": 3,
+  "notes": [
+   "ValueError::invariant -> OriginalTurnFailure; 2 sites"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-framework-plugin-job-receiving",
+  "files": 3,
+  "sites": 12,
+  "notes": [
+   "ValueError via invalid(reason) -> OriginalTurnFailure; 9 sites",
+   "ValueError via invalid(); 3 sites",
+   "unrepresentable (if let / let-else with invalid()); 2 sites",
+   "ValueError via invalid(); 1 site",
+   "ValueError via invalid(reason); 1 site"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-framework-plugin",
+  "files": 3,
+  "sites": 14,
+  "notes": [
+   "ValueError via invalid(message); 8 sites",
+   "ValueError via invalid(message); 3 sites",
+   "ValueError via invalid(message); 3 sites",
+   "ValueError via invalid(message); 1 site"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-framework-plugin-reactor-turn",
+  "files": 1,
+  "sites": 2,
+  "notes": [
+   "ValueError via invalid(); 3 sites"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-framework-plugin-reactor-core",
+  "files": 2,
+  "sites": 6,
+  "notes": [
+   "ValueError via invalid(); 3 sites",
+   "ValueError::invariant -> OriginalTurnFailure; receiver hoisted out of the closures; 3 sites"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "ts-framework-process-wasm-build",
+  "files": 1,
+  "sites": 5,
+  "notes": [
+   "TS: console.log x3 -> optional progress sink `report?.(line)` on WasmPackWebBuildOptions (callers opt in; no new default); 3 sites"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-framework-2d-path-flatten",
+  "files": 1,
+  "sites": 1,
+  "notes": [
+   "PathFlattenError::Invalid; 1 site"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-framework-value-native-storage",
+  "files": 1,
+  "sites": 2,
+  "notes": [
+   "unrepresentable (Option::map keeps the Option return); 2 sites"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-framework-pack-record-retained",
+  "files": 1,
+  "sites": 1,
+  "notes": [
+   "unrepresentable (Option::map); 1 site"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-framework-pixels",
+  "files": 1,
+  "sites": 1,
+  "notes": [
+   "ImageDecodeError::Invalid; 2 sites"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-framework-job",
+  "files": 2,
+  "sites": 4,
+  "notes": [
+   "ValueError::invariant -> OriginalTurnFailure; 1 site",
+   "RetainedWorkOutcome{result:Err(ValueError::invariant)} / if let; 3 sites"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-framework-artifact-flow-flow-copy",
+  "files": 1,
+  "sites": 1,
+  "notes": [
+   "ValueError::invariant; 1 site"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-framework-os-store-codec-registry",
+  "files": 1,
+  "sites": 1,
+  "notes": [
+   "ValueError via invalid(message); 1 site"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-framework-os-store-composition",
+  "files": 1,
+  "sites": 1,
+  "notes": [
+   "ValueError via invalid(); 1 site"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-framework-plugin-job",
+  "files": 2,
+  "sites": 3,
+  "notes": [
+   "ValueError::invariant -> OriginalTurnFailure; 1 site",
+   "ValueError via invalid(); 2 sites"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-framework-plugin-decl-registry",
+  "files": 1,
+  "sites": 2,
+  "notes": [
+   "ValueError via refusal(message); 2 sites"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-framework-plugin-window-config",
+  "files": 1,
+  "sites": 10,
+  "notes": [
+   "ValueError via invalid(message) -> OriginalTurnFailure; 4 sites",
+   "ValueError via invalid(message); 7 sites"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-framework-dispatch-macros",
+  "files": 8,
+  "sites": 11,
+  "notes": [
+   "dispatch macro: re-emitted and delegate traits declare `fn .. -> impl Future<Output=T>` instead of `async fn`; allow removed; 4 edits",
+   "dispatch packages: crate-root allow and its R7 doc removed",
+   "dispatch test crate root allow removed (test file)",
+   "dispatch test crate root allow removed (test file)",
+   "dispatch test crate root allow removed (test file)",
+   "dispatch test crate root allow removed (test file)",
+   "dispatch test crate root allow removed (test file)",
+   "dispatch delegation test allow removed (test file)"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-framework-actor-retained-turn",
+  "files": 2,
+  "sites": 2,
+  "notes": [
+   "actor retained-turn: superseded allow (its only trait is sync)",
+   "ValueError::invariant; 4 sites"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-framework-actor",
+  "files": 2,
+  "sites": 2,
+  "notes": [
+   "actor packages: allow and R3/R7 comment removed",
+   "actor ShardTransport: RPITIT shape instead of async fn"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-framework-value-derive",
+  "files": 1,
+  "sites": 1,
+  "notes": [
+   "syn::Error (fn returns syn::Result<TokenStream>); 1 site"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-s-artifact-puzzle-2d-mut-any",
+  "files": 1,
+  "sites": 3,
+  "notes": [
+   "RetainedCloneRef::try_project (existing fallible API) + ValueError via refusal(); 3 sites"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-s-artifact-puzzle-2d-snapshot",
+  "files": 1,
+  "sites": 1,
+  "notes": [
+   "try_project + ValueError::invariant; 1 site"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-framework-value-retained-map",
+  "files": 1,
+  "sites": 1,
+  "notes": [
+   "ValueError::invariant; 1 site"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-framework-os-flow-host",
+  "files": 2,
+  "sites": 8,
+  "notes": [
+   "ValueError via invalid(message); 2 sites",
+   "ValueError via invalid(message); 2 sites",
+   "flow evaluation: receiver hoisted out of the close closure (ValueError via invalid); 4 sites",
+   "flow preview: receivers hoisted out of the close closures; 4 sites"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-framework-plugin-tool-run",
+  "files": 1,
+  "sites": 4,
+  "notes": [
+   "ValueError via invalid(message); closure unwrap removed (drop(Option)) / hoisted; 3 sites"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-framework-plugin-decl-emission",
+  "files": 1,
+  "sites": 4,
+  "notes": [
+   "ValueError via invalid(); 4 sites"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-framework-plugin-instance-jobs",
+  "files": 1,
+  "sites": 1,
+  "notes": [
+   "ValueError via invalid(message); 1 site"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-framework-plugin-instance-typed-ops",
+  "files": 1,
+  "sites": 1,
+  "notes": [
+   "ValueError via invalid(); 1 site"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-framework-plugin-retained-command",
+  "files": 1,
+  "sites": 1,
+  "notes": [
+   "ValueError::invariant; 1 site"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-framework-os-store-read",
+  "files": 2,
+  "sites": 2,
+  "notes": [
+   "RetainedWorkOutcome{result:Err(ValueError::invariant)}; 1 site",
+   "RetainedWorkOutcome{result:Err(ValueError::invariant)}; 1 site"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-framework-os-kernel",
+  "files": 2,
+  "sites": 2,
+  "notes": [
+   "ValueError::invariant inside the existing Result closure; 1 site",
+   "auto: Option owner -> ValueError::invariant via ?, outside closures, fn returns Result<_,OriginalTurnFailure|ValueError>; 1 site(s)"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-framework-job-context",
+  "files": 1,
+  "sites": 2,
+  "notes": [
+   "RetainedWorkOutcome{result:Err(ValueError::invariant)}; 2 sites"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-framework-os-services-native-paths",
+  "files": 1,
+  "sites": 2,
+  "notes": [
+   "native-io rows: let-else arms return ValueError::invariant -> OriginalTurnFailure (unreachable!/unwrap removed); 7 sites"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-framework-os-services-native-io",
+  "files": 1,
+  "sites": 7,
+  "notes": [
+   "native-io read: all state-machine unreachable!() arms return ValueError::invariant -> OriginalTurnFailure; 9 sites"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-s-artifact-draw-drawing-scene-paint",
+  "files": 2,
+  "sites": 4,
+  "notes": [
+   "DocumentSceneError::literal; 2 sites",
+   "DocumentSceneError::literal; 2 sites"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-s-artifact-draw-drawing-scene",
+  "files": 1,
+  "sites": 1,
+  "notes": [
+   "DocumentSceneError::literal; 1 site"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-framework-replication-history",
+  "files": 1,
+  "sites": 2,
+  "notes": [
+   "ValueError::invariant; 2 sites"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-framework-os-store-owned-schema-decode",
+  "files": 1,
+  "sites": 1,
+  "notes": [
+   "SchemaDecodeDiagnostic::with_native(ValueError::invariant) via the in-scope `diagnostic`; 1 site"
+  ],
+  "check": "OK"
+ },
+ {
+  "crate": "semio-framework-os-store-owned-schema-fields",
+  "files": 3,
+  "sites": 4,
+  "notes": [
+   "same; 1 site",
+   "same; 1 site",
+   "same; explicit diagnostic for the actor text; 2 sites"
+  ],
+  "check": "OK"
+ }
+]

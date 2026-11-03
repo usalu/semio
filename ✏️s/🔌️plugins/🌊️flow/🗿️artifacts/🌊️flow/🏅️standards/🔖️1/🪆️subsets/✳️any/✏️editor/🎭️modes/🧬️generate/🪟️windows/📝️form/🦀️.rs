@@ -114,13 +114,13 @@ fn question_control(question: &PlaybookBlock, value: &semio_framework_value::Dsl
 /// 🏷️ One question, wrapped in its labeled `Field` row — `None` when the question is conditionally
 /// hidden. `"note"`/`"image"` questions render as bare text (no field wrapper, no control), matching the
 /// retired `render_question_field`'s identical early-return shape.
-fn question_field(question: &PlaybookBlock, values: &PlaybookValues, patch_action: &str, generation_id: &str) -> UiAssemblyResult<Option<BuiltNode>> {
+fn question_field(question: &PlaybookBlock, values: &PlaybookValues, patch_action: &str, generation_id: &str, labels: &crate::editor::flow::terminology::FlowPlayLabels) -> UiAssemblyResult<Option<BuiltNode>> {
     if !is_block_visible(question, values) {
         return Ok(None);
     }
     match question.kind.as_str() {
         "note" => return Ok(Some(ui::text(ui_label(question.text.clone().unwrap_or_default())?).try_build().map_err(|_| form_error("note-build"))?)),
-        "image" => return Ok(Some(ui::text(ui_label(question.src.clone().unwrap_or_else(|| "(no image)".into()))?).try_build().map_err(|_| form_error("image-build"))?)),
+        "image" => return Ok(Some(ui::text(ui_label(question.src.clone().unwrap_or_else(|| labels.form_no_image.as_str().into()))?).try_build().map_err(|_| form_error("image-build"))?)),
         _ => {}
     }
     let value = values.get(&question.id).cloned().unwrap_or_else(|| default_value_for_block(question));
@@ -147,13 +147,13 @@ pub fn render(snapshot: &FlowSnapshot, _config: &FlowMainWindowConfig, transient
             children.try_push(ui::text(ui_label(&step.title)?).try_build().map_err(|_| form_error("step-title-build"))?).map_err(|_| form_error("children"))?;
         }
         for question in &step.blocks {
-            if let Some(field) = question_field(question, &active.values, "updateGenerationValues", &active.id)? {
+            if let Some(field) = question_field(question, &active.values, "updateGenerationValues", &active.id, labels)? {
                 children.try_push(field).map_err(|_| form_error("children"))?;
             }
         }
     }
     if children.is_empty() {
-        return ui::text(ui_label("No input widgets to generate from.")?).try_build().map_err(|_| form_error("empty-build"));
+        return ui::text(ui_label(labels.form_no_inputs.as_str())?).try_build().map_err(|_| form_error("empty-build"));
     }
     let builder = ui::column().try_children(children).map_err(|_| form_error("root-children"))?;
     builder.try_build().map_err(|_| form_error("root-build"))

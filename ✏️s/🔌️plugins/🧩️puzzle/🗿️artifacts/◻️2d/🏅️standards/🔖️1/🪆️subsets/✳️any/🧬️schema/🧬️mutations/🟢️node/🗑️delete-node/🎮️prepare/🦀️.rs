@@ -34,8 +34,8 @@ impl Puzzle2dDeleteNodePreparationCursor {
     pub fn advance(&mut self, source: RetainedCloneRef<'_, Puzzle2dSnapshot>, mutation: RetainedCloneRef<'_, DeleteNode>, grant: RetainedCloneGrant) -> Result<Puzzle2dDeleteNodePreparationStep, ValueError> {
         if self.closing { return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "delete preparation is closing")); }
         if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(Puzzle2dDeleteNodePreparationStep::Pending(Default::default())); }
-        if let Some(progress)=source.bind(&mut self.source,grant)?{return Ok(Puzzle2dDeleteNodePreparationStep::Pending(progress))}
-        if let Some(progress)=mutation.bind(&mut self.mutation,grant)?{return Ok(Puzzle2dDeleteNodePreparationStep::Pending(progress))}
+        if let Some(progress)=source.bind(&mut self.source,grant).result?{return Ok(Puzzle2dDeleteNodePreparationStep::Pending(progress))}
+        if let Some(progress)=mutation.bind(&mut self.mutation,grant).result?{return Ok(Puzzle2dDeleteNodePreparationStep::Pending(progress))}
         let item = RetainedCloneProgress { copied_items: 1, ..Default::default() };
         match self.phase {
             0 => match self.lookup.advance(source, mutation.project(1, |payload| &payload.id), grant)? {
@@ -60,13 +60,13 @@ impl Puzzle2dDeleteNodePreparationCursor {
                 let (edge, handle, endpoint) = (self.edge, self.handle, self.endpoint);
                 let left = source.project(1, |snapshot| { let edge = snapshot.edges.get(edge).expect("immutable deletion edge"); if endpoint { &edge.target } else { &edge.source } });
                 let right = source.project(1, |snapshot| &snapshot.nodes.get(node).expect("immutable deletion node").handles.get(handle).expect("immutable deletion handle").id);
-                match self.comparison.compare(left, right, BoundedOrdGrant { maximum_items:grant.maximum_items,maximum_bytes:grant.maximum_copy_bytes }, grant)? {
+                match self.comparison.compare(left, right, BoundedOrdGrant { maximum_items:grant.maximum_items,maximum_bytes:grant.maximum_copy_bytes }, grant).result? {
                     BoundedOrdStep::Authority(progress) => Ok(Puzzle2dDeleteNodePreparationStep::Pending(progress)),
                     BoundedOrdStep::Progress(progress) => Ok(Puzzle2dDeleteNodePreparationStep::Pending(RetainedCloneProgress{copied_items:progress.compared_items,copied_bytes:progress.compared_bytes,..Default::default()})),
                     BoundedOrdStep::Complete { ordering, progress } => { self.matched = ordering == std::cmp::Ordering::Equal; self.comparison.begin_close(); self.phase = 5; Ok(Puzzle2dDeleteNodePreparationStep::Pending(RetainedCloneProgress{copied_items:progress.compared_items,copied_bytes:progress.compared_bytes,..Default::default()})) },
                 }
             }
-            5 => {let step=self.comparison.close_step(grant)?;if self.comparison.terminal_is_empty(){self.comparison=Default::default();self.phase=if self.matched{7}else{6};}Ok(Puzzle2dDeleteNodePreparationStep::Pending(step.progress()))},
+            5 => {let step=self.comparison.close_step(grant).result?;if self.comparison.terminal_is_empty(){self.comparison=Default::default();self.phase=if self.matched{7}else{6};}Ok(Puzzle2dDeleteNodePreparationStep::Pending(step.progress()))},
             6 => { if self.endpoint { self.handle += 1; self.endpoint = false; } else { self.endpoint = true; } self.phase = 4; Ok(Puzzle2dDeleteNodePreparationStep::Pending(item)) }
             7 => {
                 let bytes = size_of::<usize>();
@@ -90,8 +90,8 @@ impl Puzzle2dDeleteNodePreparationCursor {
         if !self.closing { return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "delete preparation closure was not started")); }
         if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}if grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
         if !self.lookup.terminal_is_empty(){return self.lookup.close_step(grant).map(|step|RetainedCloneStep::Progress(step.progress()));}
-        if !self.comparison.terminal_is_empty(){return self.comparison.close_step(grant).map(|step|RetainedCloneStep::Progress(step.progress()));}
-        let step=RetainedCloneBinding::close_one(if self.source.is_some(){&mut self.source}else{&mut self.mutation},grant)?;Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})
+        if !self.comparison.terminal_is_empty(){return self.comparison.close_step(grant).result.map(|step|RetainedCloneStep::Progress(step.progress()));}
+        let step=RetainedCloneBinding::close_one(if self.source.is_some(){&mut self.source}else{&mut self.mutation},grant).result?;Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})
     }
 
     pub fn terminal_is_empty(&self) -> bool { self.closing && self.lookup.terminal_is_empty() && self.comparison.terminal_is_empty() && self.source.is_none() && self.mutation.is_none() }

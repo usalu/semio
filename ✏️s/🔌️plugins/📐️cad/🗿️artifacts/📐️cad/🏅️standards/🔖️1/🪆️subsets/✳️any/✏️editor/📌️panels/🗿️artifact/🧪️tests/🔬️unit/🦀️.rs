@@ -4,7 +4,7 @@ extern crate semio_framework_os_kernel as store;
 mod context;
 use semio_s_artifact_cad_cad_panels::document::*;
 use semio_s_artifact_cad_cad_modes as edit;
-use semio_s_artifact_cad_cad_kit::{editor::cad::terminology::typology_label, editor::cad::terminology::CadLabels};
+use semio_s_artifact_cad_cad_kit::{editor::cad::terminology::object_name, editor::cad::terminology::typology_label, editor::cad::terminology::CadLabels};
 use semio_s_artifact_cad_cad_kit::{cad_action, cad_tree_item, cad_tree_item_static, ui_label, ui_value_bool, ui_value_list, ui_value_map, ui_value_text, CadPlayRuntime, CadPlayView, CAD_INTERACTION_DOMAIN, CAD_PLAY_CONTROLLER_ID};
 use semio_s_artifact_cad_cad_model::geometry::CadObject;
 use semio_s_artifact_cad_cad_inferences::{CAD_MODEL_DEFINITION_BUILDING, CAD_MODEL_DEFINITION_ENERGY, CAD_MODEL_DEFINITION_SHAPE, CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC};
@@ -266,12 +266,26 @@ async fn a_whole_open_document_stamps_every_total_and_stays_inside_the_body_node
 }
 
 #[semio_framework_async_macros::async_test]
+async fn generated_object_names_resolve_per_viewer_language() {
+    let axes = |locale| Some((semio_framework_ui_locale::Terminology::Native, locale));
+    let mut object = make_object_for_typology("building.building.beam", 1, CadPaneId::Shape);
+    assert_eq!(object_name(&object, axes(semio_framework_ui_locale::Locale::En)), "Beam 2");
+    assert_eq!(object_name(&object, axes(semio_framework_ui_locale::Locale::De)), "Träger 2");
+    object.label = semio_s_artifact_cad_cad_model::geometry::CadObjectName::Interaction { interaction_id: "building.building.placeBeam".into(), ordinal: 3, part: None };
+    assert_eq!(object_name(&object, axes(semio_framework_ui_locale::Locale::En)), "Place Beam 3");
+    assert_eq!(object_name(&object, axes(semio_framework_ui_locale::Locale::De)), "Träger platzieren 3");
+    assert_eq!(object_name(&object, None), "building.building.placeBeam 3", "without a view context the key is shown, in no language");
+    object.label = semio_s_artifact_cad_cad_model::geometry::CadObjectName::literal("U2");
+    assert_eq!(object_name(&object, axes(semio_framework_ui_locale::Locale::De)), "U2");
+}
+
+#[semio_framework_async_macros::async_test]
 async fn object_tree_item_shows_name_with_kind_as_secondary_label() {
     let mut object = make_object_for_typology("building.building.beam", 0, CadPaneId::Shape);
-    object.label = "U2".into();
+    object.label = semio_s_artifact_cad_cad_model::geometry::CadObjectName::literal("U2");
     let windows = TreeWindows::unhosted();
     let labels = cad_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
-    let item = object_tree_item(&windows, "shape", &object, labels).expect("object tree item");
+    let item = object_tree_item(&windows, "shape", &object, labels, None).expect("object tree item");
     let semio_framework_plugin::Component::TreeItem(props) = &item.component else {
         panic!("expected tree item");
     };
@@ -281,7 +295,7 @@ async fn object_tree_item_shows_name_with_kind_as_secondary_label() {
     let de_view = ViewModel { locale: Locale::De, ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     let de_labels = cad_labels(&de_view);
     let de_windows = TreeWindows::unhosted();
-    let de_item = object_tree_item(&de_windows, "shape", &object, de_labels).expect("German object tree item");
+    let de_item = object_tree_item(&de_windows, "shape", &object, de_labels, Some((semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De))).expect("German object tree item");
     let semio_framework_plugin::Component::TreeItem(props) = &de_item.component else {
         panic!("expected German tree item");
     };
@@ -295,13 +309,13 @@ async fn object_tree_item_streams_its_primitive_children_on_expand() {
     let mut object = make_object_for_typology("spatial.shape.primitive.box", 0, CadPaneId::Shape);
     object.primitives = vec![CadPrimitiveSlot { slot: "solid".into(), primitive_id: "solid-1".into(), kind: "solid".into() }];
     let labels = cad_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
-    let collapsed = object_tree_item(&TreeWindows::unhosted(), "shape", &object, labels).expect("collapsed object row");
+    let collapsed = object_tree_item(&TreeWindows::unhosted(), "shape", &object, labels, None).expect("collapsed object row");
     assert_eq!(collapsed.key.as_str(), object.id.as_str(), "object rows are keyed by the raw domain id");
     assert_eq!(window_of(&collapsed).total, 1, "a collapsed object row still reports its primitive count");
     assert!(collapsed.children.is_empty(), "a collapsed object row builds no primitive rows: {:?}", row_keys(&collapsed));
 
     let view_state = windowed(vec![request(object.id.as_str(), Some(true), 0, 8)]);
-    let opened = object_tree_item(&TreeWindows::for_body(&view_state, CAD_PLAY_BODY_ARTIFACT), "shape", &object, labels).expect("opened object row");
+    let opened = object_tree_item(&TreeWindows::for_body(&view_state, CAD_PLAY_BODY_ARTIFACT), "shape", &object, labels, None).expect("opened object row");
     assert_eq!(window_of(&opened).total, 1);
     let json = snapshot_json(opened);
     assert!(json.contains("cad-primitive:"), "{json}");

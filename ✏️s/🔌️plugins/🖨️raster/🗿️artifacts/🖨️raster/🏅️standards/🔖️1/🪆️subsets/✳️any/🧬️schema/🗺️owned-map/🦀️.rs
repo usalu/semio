@@ -439,7 +439,7 @@ impl<V: semio_framework_value::retirement::RetireOwned> semio_framework_value::r
         }
         let bytes = self.page_bytes();
         if bytes == 0 {
-            return RetirementStep::Complete;
+            return RetirementStep::Complete(1);
         }
         if bytes > grant.maximum_release_bytes {
             return RetirementStep::BudgetExhausted;

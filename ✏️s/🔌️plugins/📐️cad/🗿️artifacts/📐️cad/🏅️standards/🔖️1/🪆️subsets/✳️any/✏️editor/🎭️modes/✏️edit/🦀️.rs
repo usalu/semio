@@ -36,7 +36,7 @@ use semio_s_artifact_cad_cad_interaction::{accepts_selection, keyed_transitions,
 use semio_s_artifact_cad_cad_picking as picking;
 use semio_s_artifact_cad_cad_typology::resolve_typology_style;
 use crate::{windows::building, windows::energy, windows::shape, windows::structure_classic};
-use semio_s_artifact_cad_cad_kit::editor::cad::terminology::CadLabels;
+use semio_s_artifact_cad_cad_kit::editor::cad::terminology::{object_name, CadLabels};
 use semio_s_artifact_cad_cad_kit::{cad_pane_camera_runtime, cad_pane_suffix, camera_json, CadPlayView, CAD_DISLOCATE_UTILITY_ID, CAD_FALLBACK_MESH_KIND, CAD_INTERACTION_DOMAIN, CAD_PLAY_APP_ID};
 use semio_s_artifact_cad_cad_model::{geometry::CadGeometry, geometry::CadObject};
 use semio_s_artifact_cad_cad_inferences::{object_mesh_data, object_scale_json, resolve_object_mesh_url};
@@ -50,7 +50,7 @@ use semio_framework_plugin::world3d_mesh_id_from_url;
 use semio_framework_plugin::world3d_selection_json;
 use semio_framework_plugin::ActionDescriptor;
 use semio_framework_plugin::BuiltNode;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_ui_locale::{Locale, LocalizedLabel, Terminology};
 use semio_framework_plugin::ModeDefinition;
 use semio_framework_plugin::UiAssemblyResult;
 use semio_framework_plugin::WindowEngagement;
@@ -157,7 +157,7 @@ pub fn world_instances_json(objects: &[CadObject], view: &CadPlayView) -> String
                 ("position".to_string(), f64_array_value(&object.origin)),
                 ("rotation".to_string(), f64_array_value(&object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]))),
                 ("scale".to_string(), f64_array_value(&object_scale_json(object))),
-                ("label".to_string(), DslValue::String(object.label.clone())),
+                ("label".to_string(), DslValue::String(object_name(object, view.axes))),
                 ("color".to_string(), DslValue::String(resolve_typology_style(&object.typology).color)),
                 ("selected".to_string(), DslValue::Bool(selected)),
                 ("hovered".to_string(), DslValue::Bool(hovered)),
@@ -485,7 +485,7 @@ pub(crate) fn pick_target_lane_items(view: &CadPlayView, objects: &[CadObject], 
 /// 🌍️ One pane's world scene: its objects as the pane's composed `s.stdio.semio@v1/model` child holds them now and the
 /// raw geometry of the genesis scene its stable child id names (`envelope.panes`, design §20.15) — a pane without a
 /// handle renders empty, never a fabricated one.
-pub fn build_world_scene_for_pane(envelope: &CadPlayView, pane: CadPaneId, surface_id: &str, active_utility: Option<&str>, options: CadDislocateOptions) -> UiAssemblyResult<BuiltNode> {
+pub fn build_world_scene_for_pane(envelope: &CadPlayView, pane: CadPaneId, surface_id: &str, active_utility: Option<&str>, options: CadDislocateOptions, terminology: Terminology, locale: Locale) -> UiAssemblyResult<BuiltNode> {
     let composed = envelope.panes.pane(pane);
     let (objects, geometry) = (composed.objects.as_slice(), composed.geometry(pane));
     let mut scene = World3dScene::base(
@@ -496,7 +496,7 @@ pub fn build_world_scene_for_pane(envelope: &CadPlayView, pane: CadPaneId, surfa
     );
     scene.references_json = world_references_json(&envelope.document, pane);
     scene.engagement_preview_json = envelope.runtime.engagement_session.as_ref().filter(|session| session.pane == pane).map(|session| {
-        let mut items = preview_display_items(session);
+        let mut items = preview_display_items(session, terminology, locale);
         if accepts_selection(session) {
             items.extend(pick_target_preview_items(objects, geometry, pane));
         }
@@ -521,7 +521,25 @@ fn cad_action(action: &str, args: Option<DslValue>) -> ActionDescriptor {
     ActionDescriptor { controller_id: CAD_PLAY_APP_ID.into(), action: action.into(), args }
 }
 
-pub fn cad_window_engagement(envelope: &CadPlayView, pane: CadPaneId, labels: &CadLabels) -> WindowEngagement {
+/// 🪧️ The engagement step as the viewer reads it: the kit stores the step as a machine key, so the status row words it through `labels` and shows engine state names as data.
+fn engagement_step_text(labels: &CadLabels, step: &str) -> String {
+    match step {
+        "Idle" => labels.step_idle.as_str().into(),
+        "Moved" => labels.step_moved.as_str().into(),
+        "Copied" => labels.step_copied.as_str().into(),
+        "Rotated" => labels.step_rotated.as_str().into(),
+        "Scaled" => labels.step_scaled.as_str().into(),
+        "Nothing to commit" => labels.step_nothing.as_str().into(),
+        _ => match (step.strip_prefix("Committed ").and_then(|rest| rest.strip_suffix(" object(s)")), step.strip_prefix("Unsupported: "), step.strip_prefix("Unknown: ")) {
+            (Some(count), _, _) => format!("{count} {}", labels.step_committed.as_str()),
+            (_, Some(action), _) => format!("{}: {action}", labels.step_unsupported.as_str()),
+            (_, _, Some(input)) => format!("{}: {input}", labels.step_unknown.as_str()),
+            _ => step.into(),
+        },
+    }
+}
+
+pub fn cad_window_engagement(envelope: &CadPlayView, pane: CadPaneId, labels: &CadLabels, terminology: Terminology, locale: Locale) -> WindowEngagement {
     let selected_count = envelope.interaction.ids.len();
     let model_definition_id = pane.model_definition_id();
     let pane_session = envelope.runtime.engagement_session.as_ref().filter(|session| session.pane == pane);
@@ -531,7 +549,7 @@ pub fn cad_window_engagement(envelope: &CadPlayView, pane: CadPaneId, labels: &C
             .into_iter()
             .map(|transition| WindowEngagementPossible {
                 id: transition.event_kind.clone(),
-                label: transition.label,
+                label: transition.label.resolve(terminology, locale).to_string(),
                 detail: Some(transition.key),
                 action: Some(cad_action("engagementPossibleSelect", Some(DslValue::object([("pane".to_string(), DslValue::String(cad_pane_suffix(pane).to_string())), ("possibleId".to_string(), DslValue::String(transition.event_kind))])))),
             })
@@ -541,13 +559,13 @@ pub fn cad_window_engagement(envelope: &CadPlayView, pane: CadPaneId, labels: &C
             .into_iter()
             .map(|entry| WindowEngagementPossible {
                 id: entry.id.clone(),
-                label: entry.label.clone(),
+                label: entry.label.resolve(terminology, locale).to_string(),
                 detail: Some(entry.key.clone()),
                 action: Some(cad_action("engagementPossibleSelect", Some(DslValue::object([("pane".to_string(), DslValue::String(cad_pane_suffix(pane).to_string())), ("possibleId".to_string(), DslValue::String(entry.id.clone()))])))),
             })
             .collect()
     };
-    let step_text = pane_session.map_or_else(|| envelope.runtime.engagement_step.clone(), state_prompt);
+    let step_text = pane_session.map_or_else(|| engagement_step_text(labels, &envelope.runtime.engagement_step), |session| state_prompt(session, terminology, locale));
     WindowEngagement {
         session_active: Some(session_active),
         options: None,

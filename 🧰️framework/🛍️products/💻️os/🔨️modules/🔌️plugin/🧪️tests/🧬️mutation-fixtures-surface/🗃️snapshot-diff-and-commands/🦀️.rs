@@ -78,7 +78,7 @@ fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSql
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::RetireOwned)]
 pub struct SurfaceDiff {
     pub(crate) count: Option<i32>,
 }

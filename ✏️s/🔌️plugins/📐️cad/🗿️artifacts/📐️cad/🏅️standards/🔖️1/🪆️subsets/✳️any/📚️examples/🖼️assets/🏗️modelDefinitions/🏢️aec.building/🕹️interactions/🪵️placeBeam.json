@@ -2,7 +2,10 @@
   "schema": "spatial.interaction",
   "id": "building.building.placeBeam",
   "version": "1.0.0",
-  "label": "Place Beam",
+  "label": {
+    "native": { "en": "Place Beam", "de": "Träger platzieren" },
+    "reuse": { "en": "Place Beam", "de": "Träger platzieren" }
+  },
   "key": "m",
   "interaction": {
     "spatialGroundPick": true,
@@ -30,7 +33,10 @@
               {
                 "target": "first_point",
                 "key": "s",
-                "label": "Start",
+                "label": {
+                  "native": { "en": "Start", "de": "Start" },
+                  "reuse": { "en": "Start", "de": "Start" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -94,7 +100,10 @@
             "transitions": [
               {
                 "target": "second_point",
-                "label": "Start Point",
+                "label": {
+                  "native": { "en": "Start Point", "de": "Startpunkt" },
+                  "reuse": { "en": "Start Point", "de": "Startpunkt" }
+                },
                 "effects": [
                   {
                     "mutation": "action",
@@ -166,7 +175,10 @@
             "transitions": [
               {
                 "target": "committed",
-                "label": "End Point",
+                "label": {
+                  "native": { "en": "End Point", "de": "Endpunkt" },
+                  "reuse": { "en": "End Point", "de": "Endpunkt" }
+                },
                 "effects": [
                   {
                     "mutation": "action",
@@ -213,7 +225,10 @@
             "kind": "label",
             "id": "hint-first",
             "role": "prompt",
-            "text": "Place Beam: click start point",
+            "text": {
+              "native": { "en": "Place Beam: click start point", "de": "Träger platzieren: Startpunkt anklicken" },
+              "reuse": { "en": "Place Beam: click start point", "de": "Träger platzieren: Startpunkt anklicken" }
+            },
             "position": {
               "kind": "const",
               "value": [
@@ -247,7 +262,10 @@
             "kind": "label",
             "id": "hint-second",
             "role": "prompt",
-            "text": "Place Beam: click end point",
+            "text": {
+              "native": { "en": "Place Beam: click end point", "de": "Träger platzieren: Endpunkt anklicken" },
+              "reuse": { "en": "Place Beam: click end point", "de": "Träger platzieren: Endpunkt anklicken" }
+            },
             "position": {
               "kind": "const",
               "value": [
@@ -329,7 +347,10 @@
             "kind": "label",
             "id": "hint-commit",
             "role": "prompt",
-            "text": "Place Beam: Accept to create",
+            "text": {
+              "native": { "en": "Place Beam: Accept to create", "de": "Träger platzieren: Zum Erstellen bestätigen" },
+              "reuse": { "en": "Place Beam: Accept to create", "de": "Träger platzieren: Zum Erstellen bestätigen" }
+            },
             "position": {
               "kind": "const",
               "value": [

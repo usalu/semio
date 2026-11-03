@@ -336,7 +336,7 @@
       ]
     },
     {
-      "package": "semio-framework-replication-mutation-retained",
+      "package": "semio-framework-replication-retained",
       "manifest": "../../🔨️modules/📡️replication/🎮️mutation/🧳️retained/📦️packages/🦀️rust/Cargo.toml",
       "entry": "../../🔨️modules/📡️replication/🎮️mutation/🧳️retained/📦️packages/🦀️rust/🦀️.rs",
       "maximumActiveLines": 4000,

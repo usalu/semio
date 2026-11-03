@@ -206,3 +206,10 @@ impl Generation3dContributionsJobFactoryProofs {
 }
 //#endregion 🧩️ContributionsRoute
 //#endregion 🔖️Generation3dPlayApp
+
+/// 🧾️ The bounded-command and contributions factories' first-step proofs, in registration order.
+pub(super) fn generation3d_bounded_contributions_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
+    let mut proofs = Generation3dBoundedCommandJobFactoryProofs::bounded_first_step_tool_proofs();
+    proofs.extend(Generation3dContributionsJobFactoryProofs::bounded_first_step_tool_proofs());
+    proofs
+}

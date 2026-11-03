@@ -76,7 +76,7 @@ impl JobPayloadPageSource {
     pub fn admit(extent:usize,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<Option<(Self,RetainedCloneProgress)>>{
         if extent==0||extent>JOB_PAYLOAD_PAGE_BYTES{return crate::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"job payload page extent is outside its canonical bound")),work:0}}
         if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<extent{return crate::RetainedWorkOutcome{result:Ok(None),work:0}}
-        let layout=std::alloc::Layout::array::<MaybeUninit<u8>>(extent).expect("canonical payload extent has a valid allocation layout");
+        let Ok(layout)=std::alloc::Layout::array::<MaybeUninit<u8>>(extent) else{return crate::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"job payload page extent has no allocation layout")),work:0}};
         let pointer=unsafe{std::alloc::alloc(layout)}.cast::<MaybeUninit<u8>>();
         if pointer.is_null(){return crate::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::AllocationFailed,"job payload page allocation refused")),work:1}}
         let storage=unsafe{Box::from_raw(std::ptr::slice_from_raw_parts_mut(pointer,extent))};

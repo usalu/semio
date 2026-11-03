@@ -483,7 +483,7 @@ impl Puzzle5dPlannerToolRunJob {
         Ok(())
     }
 
-    fn turn(&mut self, context: &mut StepContext<'_>) -> Result<JobTurn, semio_framework_job::OriginalTurnFailure> {
+    fn turn(&mut self, context: &mut StepContext<'_>, claim: &mut semio_framework_job::OriginalJobReturnClaim<'_>) -> Result<JobTurn, semio_framework_job::OriginalTurnFailure> {
         if self.closing || context.is_cancelled() {
             return Ok(JobTurn::Cancelled);
         }
@@ -499,7 +499,11 @@ impl Puzzle5dPlannerToolRunJob {
             Checkpoint(u64, Vec<u8>),
             Fault(Vec<u8>),
         }
-        let planned = match self.inner.step(context)? {
+        let outcome = match self.inner.step(context, claim) {
+            semio_framework_job::InteractiveJobStep::Outcome(outcome) => outcome,
+            semio_framework_job::InteractiveJobStep::Continuation(failure) => return Err(failure),
+        };
+        let planned = match outcome {
             None => Planned::Idle,
             Some(JobOutcomeBorrow::Yield { .. }) => Planned::Yield,
             Some(JobOutcomeBorrow::Cancelled { .. }) => Planned::Cancelled,
@@ -574,7 +578,7 @@ pub fn puzzle5d_planner_tick_pages(tick: ToolRunTick) -> Result<Vec<Vec<u8>>, Fa
 
 impl Puzzle5dPlannerToolRunJob {
     /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
-    fn step_value<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
+    fn step_value<'a>(&'a mut self, cx: &mut StepContext<'_>, claim: &mut semio_framework_job::OriginalJobReturnClaim<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         match self.outbox.phase(cx)? {
             crate::puzzle_job::OutboxPhase::Building => return self.outbox.advance(cx).map_err(semio_framework_job::OriginalTurnFailure::from),
             crate::puzzle_job::OutboxPhase::Delivered | crate::puzzle_job::OutboxPhase::Retiring => {
@@ -583,13 +587,13 @@ impl Puzzle5dPlannerToolRunJob {
             }
             crate::puzzle_job::OutboxPhase::Idle => {}
         }
-        let turn = self.turn(cx)?;
+        let turn = self.turn(cx, claim)?;
         self.outbox.settle(turn, cx).map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 }
 
 impl InteractiveJob for Puzzle5dPlannerToolRunJob {
-    fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>,_:&mut semio_framework_job::OriginalJobReturnClaim<'_>)->semio_framework_job::InteractiveJobStep<'a>{semio_framework_job::InteractiveJobStep::from_callback(self.step_value(cx))}
+    fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>,claim:&mut semio_framework_job::OriginalJobReturnClaim<'_>)->semio_framework_job::InteractiveJobStep<'a>{semio_framework_job::InteractiveJobStep::from_callback(self.step_value(cx,claim))}
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
         self.outbox.borrow_outcome(descriptor)

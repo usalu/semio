@@ -1,0 +1,34 @@
+--- a/🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🦀️.rs
++++ b/🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🦀️.rs
+@@ -63,7 +63,7 @@
+     pub fn completed(&self) -> u64 { self.0.completed.load(Ordering::Relaxed) }
+     /// 🪙️ Reports only directly observed shared admission and lease work, independently of semantic pulses.
+     pub fn shared_work(&self)->u64{self.0.shared_work.load(Ordering::Relaxed)}
+-    fn record_shared_work(&self,actual:u64){self.0.shared_work.fetch_update(Ordering::Relaxed,Ordering::Relaxed,|before|before.checked_add(actual)).expect("finite shared operations preserve their actual work counter");}
++    fn record_shared_work(&self,actual:u64){let _=self.0.shared_work.fetch_update(Ordering::Relaxed,Ordering::Relaxed,|before|Some(before.saturating_add(actual)));}
+ 
+     fn original_grant(&self)->RetainedCloneGrant {RetainedCloneGrant{maximum_items:self.0.retirement_items.load(Ordering::Relaxed),maximum_copy_bytes:self.0.original_copy.load(Ordering::Relaxed),maximum_capacity_bytes:self.0.retirement_capacity.load(Ordering::Relaxed),maximum_release_bytes:self.0.original_release.load(Ordering::Relaxed),maximum_depth:self.0.original_depth.load(Ordering::Relaxed)}}
+     fn accept_original_progress(&self,progress:RetainedCloneProgress){self.0.retirement_items.fetch_sub(progress.copied_items,Ordering::Relaxed);self.0.retirement_capacity.fetch_sub(progress.retained_capacity_bytes,Ordering::Relaxed);self.0.original_copy.fetch_sub(progress.copied_bytes,Ordering::Relaxed);self.0.original_release.fetch_sub(progress.released_bytes,Ordering::Relaxed);self.0.admitted_original_release.fetch_add(progress.released_bytes,Ordering::Relaxed);self.0.admitted_retirement_items.fetch_add(progress.copied_items,Ordering::Relaxed);self.0.admitted_retirement_capacity.fetch_add(progress.retained_capacity_bytes,Ordering::Relaxed);self.0.admitted_original_copy.fetch_add(progress.copied_bytes,Ordering::Relaxed);}
+@@ -134,11 +134,11 @@
+         assert!(!self.done,"completed shared actor admission cannot be polled again");
+         let grant=self.control.original_grant();
+         if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<self.capacity{return Poll::Pending}
+-        let original=std::mem::take(&mut **self.original.as_mut().expect("original actor retains its preborn donor frame"));
++        let Some(frame)=self.original.as_mut()else{self.done=true;return Poll::Ready(Err(ValueError::invariant("original actor lost its preborn donor frame")))};let original=std::mem::take(&mut **frame);
+         let turn=semio_framework_value::SharedUtf8::admit(original,grant);self.control.record_shared_work(turn.work);
+         let result=match turn.result{
+             Ok((owner,progress))=>{self.control.accept_original_progress(progress);drop(self.original.take());Ok(owner)},
+-            Err((error,original))=>{**self.original.as_mut().unwrap()=original;self.control.accept_original_progress(error.retained_progress());Err(error)},
++            Err((error,original))=>{if let Some(frame)=self.original.as_mut(){**frame=original;}self.control.accept_original_progress(error.retained_progress());Err(error)},
+         };self.done=true;Poll::Ready(result)
+     }
+ }
+@@ -261,7 +261,7 @@
+         if self.control.empty()&&self.future.is_some()&&grant.maximum_items<self.control.0.pending_retirement_items.load(Ordering::Relaxed){return Ok(RetainedCloneStep::Progress(empty));}
+         if !self.control.empty(){let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};return self.control.close_one(child);}
+         if self.future.is_some(){self.control.0.retirement_capacity.store(grant.maximum_capacity_bytes,Ordering::Relaxed);self.control.0.admitted_retirement_capacity.store(0,Ordering::Relaxed);self.control.0.retirement_items.store(grant.maximum_items,Ordering::Relaxed);self.control.0.admitted_retirement_items.store(0,Ordering::Relaxed);drop(self.future.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:self.control.0.admitted_retirement_items.load(Ordering::Relaxed).max(1),retained_capacity_bytes:self.control.0.admitted_retirement_capacity.load(Ordering::Relaxed),released_bytes:release,..empty}));}
+-        if cancelled&&self.result.is_some(){let Some(result)=self.result.take()else{unreachable!()};match result{Ok(value)=>{match admit_owned_retirement(value,grant).result{Ok((owner,progress))=>{let mut queue=self.control.0.retirements.lock();assert!(queue.len()<queue.capacity(),"fold result retirement requires reserved slot");queue.push_back(owner);return Ok(RetainedCloneStep::Progress(progress));},Err((error,value))=>{self.result=Some(Ok(value));return Err(error);}}},Err(error)=>{self.result=Some(Err(error));let Some(Err(error))=self.result.as_mut()else{unreachable!()};let step=semio_framework_replication_error::close_protocol_cause_one(error,grant)?;if matches!(step,RetainedCloneStep::Complete(_)){drop(self.result.take());}return Ok(RetainedCloneStep::Progress(step.progress()));}}}
++        if cancelled&&self.result.is_some(){let Some(result)=self.result.take()else{return Err(ValueError::invariant("fold cleanup result is absent"))};match result{Ok(value)=>{match admit_owned_retirement(value,grant).result{Ok((owner,progress))=>{let mut queue=self.control.0.retirements.lock();assert!(queue.len()<queue.capacity(),"fold result retirement requires reserved slot");queue.push_back(owner);return Ok(RetainedCloneStep::Progress(progress));},Err((error,value))=>{self.result=Some(Ok(value));return Err(error);}}},Err(error)=>{self.result=Some(Err(error));let Some(Err(error))=self.result.as_mut()else{return Err(ValueError::invariant("fold cleanup error is absent"))};let step=semio_framework_replication_error::close_protocol_cause_one(error,grant)?;if matches!(step,RetainedCloneStep::Complete(_)){drop(self.result.take());}return Ok(RetainedCloneStep::Progress(step.progress()));}}}
+         let mut queue=self.control.0.retirements.lock();if queue.capacity()!=0{drop(std::mem::take(&mut*queue));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:release,..empty}));}drop(queue);
+         if self.waker.is_some(){drop(self.waker.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:release,..empty}));}
+         self.completed_final=self.control.completed();unsafe{ManuallyDrop::drop(&mut self.control)};self.control_closed=true;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:release,..empty}))

@@ -2,7 +2,10 @@
   "schema": "spatial.interaction",
   "id": "edit.trim",
   "version": "1.0.0",
-  "label": "Trim",
+  "label": {
+    "native": { "en": "Trim", "de": "Stutzen" },
+    "reuse": { "en": "Trim", "de": "Stutzen" }
+  },
   "interaction": {
     "spatialGroundPick": false,
     "pickDisabledStates": ["idle", "committed"],
@@ -23,7 +26,10 @@
               {
                 "target": "select_cutting_objects",
                 "key": "s",
-                "label": "Start",
+                "label": {
+                  "native": { "en": "Start", "de": "Start" },
+                  "reuse": { "en": "Start", "de": "Start" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -84,7 +90,10 @@
         "selection": {
           "accept": ["edge", "wire", "face"],
           "multiple": true,
-          "prompt": "Select cutting objects"
+          "prompt": {
+            "native": { "en": "Select cutting objects", "de": "Schneidende Objekte auswählen" },
+            "reuse": { "en": "Select cutting objects", "de": "Schneidende Objekte auswählen" }
+          }
         },
         "on": [
           {
@@ -93,7 +102,10 @@
               {
                 "target": "select_cutting_objects",
                 "key": "s",
-                "label": "Select",
+                "label": {
+                  "native": { "en": "Select", "de": "Auswählen" },
+                  "reuse": { "en": "Select", "de": "Auswählen" }
+                },
                 "effects": [
                   {
                     "mutation": "action",
@@ -125,7 +137,10 @@
               {
                 "target": "select_object_to_trim",
                 "key": "Enter",
-                "label": "Finish"
+                "label": {
+                  "native": { "en": "Finish", "de": "Fertig" },
+                  "reuse": { "en": "Finish", "de": "Fertig" }
+                }
               }
             ]
           },
@@ -135,7 +150,10 @@
               {
                 "target": "select_object_to_trim",
                 "key": "RightClick",
-                "label": "Finish"
+                "label": {
+                  "native": { "en": "Finish", "de": "Fertig" },
+                  "reuse": { "en": "Finish", "de": "Fertig" }
+                }
               }
             ]
           }
@@ -146,7 +164,10 @@
         "selection": {
           "accept": ["edge", "wire", "face"],
           "multiple": true,
-          "prompt": "Select object to trim"
+          "prompt": {
+            "native": { "en": "Select object to trim", "de": "Zu stutzendes Objekt auswählen" },
+            "reuse": { "en": "Select object to trim", "de": "Zu stutzendes Objekt auswählen" }
+          }
         },
         "on": [
           {
@@ -155,7 +176,10 @@
               {
                 "target": "select_object_to_trim",
                 "key": "s",
-                "label": "Select",
+                "label": {
+                  "native": { "en": "Select", "de": "Auswählen" },
+                  "reuse": { "en": "Select", "de": "Auswählen" }
+                },
                 "effects": [
                   {
                     "mutation": "action",
@@ -187,7 +211,10 @@
               {
                 "target": "committed",
                 "key": "Enter",
-                "label": "Finish"
+                "label": {
+                  "native": { "en": "Finish", "de": "Fertig" },
+                  "reuse": { "en": "Finish", "de": "Fertig" }
+                }
               }
             ]
           },
@@ -197,7 +224,10 @@
               {
                 "target": "committed",
                 "key": "RightClick",
-                "label": "Finish"
+                "label": {
+                  "native": { "en": "Finish", "de": "Fertig" },
+                  "reuse": { "en": "Finish", "de": "Fertig" }
+                }
               }
             ]
           }
@@ -218,7 +248,10 @@
             "kind": "label",
             "id": "select_cutting_objects-prompt",
             "role": "prompt",
-            "text": "Select cutting objects",
+            "text": {
+              "native": { "en": "Select cutting objects", "de": "Schneidende Objekte auswählen" },
+              "reuse": { "en": "Select cutting objects", "de": "Schneidende Objekte auswählen" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]
@@ -281,7 +314,10 @@
             "kind": "label",
             "id": "select_object_to_trim-prompt",
             "role": "prompt",
-            "text": "Select object to trim",
+            "text": {
+              "native": { "en": "Select object to trim", "de": "Zu stutzendes Objekt auswählen" },
+              "reuse": { "en": "Select object to trim", "de": "Zu stutzendes Objekt auswählen" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]

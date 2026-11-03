@@ -168,10 +168,8 @@ impl ArtifactEditor for Generation3dPlayApp {
     /// catalogue against the registered factories exactly, so a second factory that is registered
     /// and not proved (or proved and not registered) fails the app closed at boot.
     fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
-        let mut proofs = Generation3dBoundedCommandJobFactoryProofs::bounded_first_step_tool_proofs();
-        proofs.extend(Generation3dFlowEvalJobFactoryProofs::bounded_first_step_tool_proofs());
-        proofs.extend(Generation3dContributionsJobFactoryProofs::bounded_first_step_tool_proofs());
-        proofs.extend(Generation3dDocumentIoJobFactoryProofs::bounded_first_step_tool_proofs());
+        let mut proofs = generation3d_bounded_contributions_first_step_tool_proofs();
+        proofs.extend(generation3d_flow_first_step_tool_proofs());
         proofs
     }
 
@@ -433,23 +431,23 @@ impl ArtifactEditor for Generation3dPlayApp {
             })),
             "flowEvalResolve" => {
                 let input_valid=original_reply_valid(&args,false,false);
-                if !input_valid{return Ok(Generation3dCommand::FlowEvalResolve(semio_s_artifact_procedural_3d_preview_eval::FlowEvalResolve{window_id:String::new(),window_kind_id:String::new(),node_hash:0,extension_id:String::new(),output:semio_framework_value::DslValue::Null,ok:original_fault.is_none(),fault:original_fault.take(),original_input:Some(std::mem::replace(args,semio_framework_value::DslValue::Null)),input_valid}))}
+                if !input_valid{return Ok(Generation3dCommand::FlowEvalResolve(semio_s_artifact_procedural_3d_preview_eval::FlowEvalResolve{window_id:String::new(),window_kind_id:String::new(),node_hash:0,extension_id:String::new(),output:semio_framework_value::DslValue::Null,ok:original_fault.is_none(),fault:original_fault.take().map(|fault|semio_framework_value::ToValue::to_value(&fault)),original_input:Some(std::mem::replace(args,semio_framework_value::DslValue::Null)),input_valid}))}
                 let node_hash=args.get("nodeHash").and_then(semio_framework_value::DslValue::as_u64).unwrap();
                 let window_id=original_reply_text(&mut args,"windowId",true).unwrap();let window_kind_id=original_reply_text(&mut args,"windowKindId",true).unwrap();let extension_id=original_reply_text(&mut args,"extensionId",false).unwrap();let output=original_reply_output(&mut args).unwrap();
-                Ok(Generation3dCommand::FlowEvalResolve(semio_s_artifact_procedural_3d_preview_eval::FlowEvalResolve{window_id,window_kind_id,node_hash,extension_id,output,ok:original_fault.is_none(),fault:original_fault.take(),original_input:Some(std::mem::replace(args,semio_framework_value::DslValue::Null)),input_valid}))
+                Ok(Generation3dCommand::FlowEvalResolve(semio_s_artifact_procedural_3d_preview_eval::FlowEvalResolve{window_id,window_kind_id,node_hash,extension_id,output,ok:original_fault.is_none(),fault:original_fault.take().map(|fault|semio_framework_value::ToValue::to_value(&fault)),original_input:Some(std::mem::replace(args,semio_framework_value::DslValue::Null)),input_valid}))
             },
             "flowTessellateResolve" => {
                 let input_valid=original_reply_valid(&args,true,false);
-                if !input_valid{return Ok(Generation3dCommand::FlowTessellateResolve(semio_s_artifact_procedural_3d_preview_eval::FlowTessellateResolve{window_id:String::new(),window_kind_id:String::new(),node_hash:0,handle:String::new(),tolerance:0.0,output:semio_framework_value::DslValue::Null,fault:original_fault.take(),original_input:Some(std::mem::replace(args,semio_framework_value::DslValue::Null)),input_valid}))}
+                if !input_valid{return Ok(Generation3dCommand::FlowTessellateResolve(semio_s_artifact_procedural_3d_preview_eval::FlowTessellateResolve{window_id:String::new(),window_kind_id:String::new(),node_hash:0,handle:String::new(),tolerance:0.0,output:semio_framework_value::DslValue::Null,fault:original_fault.take().map(|fault|semio_framework_value::ToValue::to_value(&fault)),original_input:Some(std::mem::replace(args,semio_framework_value::DslValue::Null)),input_valid}))}
                 let node_hash=args.get("nodeHash").and_then(semio_framework_value::DslValue::as_u64).unwrap();let tolerance=args.get("tolerance").and_then(|value|value.as_f64()).unwrap();
                 let window_id=original_reply_text(&mut args,"windowId",true).unwrap();let window_kind_id=original_reply_text(&mut args,"windowKindId",true).unwrap();let handle=original_reply_text(&mut args,"handle",true).unwrap();let output=original_reply_output(&mut args).unwrap();
-                Ok(Generation3dCommand::FlowTessellateResolve(semio_s_artifact_procedural_3d_preview_eval::FlowTessellateResolve{window_id,window_kind_id,node_hash,handle,tolerance,output,fault:original_fault.take(),original_input:Some(std::mem::replace(args,semio_framework_value::DslValue::Null)),input_valid}))
+                Ok(Generation3dCommand::FlowTessellateResolve(semio_s_artifact_procedural_3d_preview_eval::FlowTessellateResolve{window_id,window_kind_id,node_hash,handle,tolerance,output,fault:original_fault.take().map(|fault|semio_framework_value::ToValue::to_value(&fault)),original_input:Some(std::mem::replace(args,semio_framework_value::DslValue::Null)),input_valid}))
             },
             "flowEvalRelease" => Ok(Generation3dCommand::FlowEvalRelease(semio_s_artifact_procedural_3d_preview_eval::FlowEvalRelease {
                 window_id: str_arg(&["windowId", "window_id"]).unwrap_or_default(),
                 window_kind_id: str_arg(&["windowKindId", "window_kind_id"]).unwrap_or_default(),
             })),
-            "flowTessellateCancelResolve"=>{let input_valid=original_reply_valid(&args,false,true);if !input_valid{return Ok(Generation3dCommand::FlowTessellateCancelResolve(semio_s_artifact_procedural_3d_preview_eval::FlowTessellateCancelResolve{window_id:String::new(),window_kind_id:String::new(),output:semio_framework_value::DslValue::Null,ok:original_fault.is_none(),fault:original_fault.take(),original_input:Some(std::mem::replace(args,semio_framework_value::DslValue::Null)),input_valid}))}let window_id=original_reply_text(&mut args,"windowId",true).unwrap();let window_kind_id=original_reply_text(&mut args,"windowKindId",true).unwrap();let output=original_reply_output(&mut args).unwrap();Ok(Generation3dCommand::FlowTessellateCancelResolve(semio_s_artifact_procedural_3d_preview_eval::FlowTessellateCancelResolve{window_id,window_kind_id,output,ok:original_fault.is_none(),fault:original_fault.take(),original_input:Some(std::mem::replace(args,semio_framework_value::DslValue::Null)),input_valid}))},
+            "flowTessellateCancelResolve"=>{let input_valid=original_reply_valid(&args,false,true);if !input_valid{return Ok(Generation3dCommand::FlowTessellateCancelResolve(semio_s_artifact_procedural_3d_preview_eval::FlowTessellateCancelResolve{window_id:String::new(),window_kind_id:String::new(),output:semio_framework_value::DslValue::Null,ok:original_fault.is_none(),fault:original_fault.take().map(|fault|semio_framework_value::ToValue::to_value(&fault)),original_input:Some(std::mem::replace(args,semio_framework_value::DslValue::Null)),input_valid}))}let window_id=original_reply_text(&mut args,"windowId",true)?;let window_kind_id=original_reply_text(&mut args,"windowKindId",true)?;let output=original_reply_output(&mut args)?;Ok(Generation3dCommand::FlowTessellateCancelResolve(semio_s_artifact_procedural_3d_preview_eval::FlowTessellateCancelResolve{window_id,window_kind_id,output,ok:original_fault.is_none(),fault:original_fault.take().map(|fault|semio_framework_value::ToValue::to_value(&fault)),original_input:Some(std::mem::replace(args,semio_framework_value::DslValue::Null)),input_valid}))},
             "setContributions" => Ok(Generation3dCommand::SetContributions(set_contributions::SetContributions {
                 json: str_arg(&["json"]).unwrap_or_default(),
                 page: u64_arg(&["page"]).unwrap_or_default(),
@@ -588,10 +586,10 @@ impl ArtifactEditor for Generation3dPlayApp {
     /// 🚧️ A graph the live registry cannot serve is not slow work: a hop would recompute the identical
     /// `flow.extension-not-contributed` miss. Only `setContributions` can move it, and it owes every
     /// attached preview an evaluation itself.
-    fn pending_effects(owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle, doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>, view: Option<&semio_framework_plugin::ViewModel>) -> Vec<Effect> {
+    fn pending_effects(owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle, doc: &semio_framework_plugin::ArtifactPendingView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>, view: Option<&semio_framework_plugin::ViewModel>) -> Vec<Effect> {
         let windows = generation3d_preview_windows(view);
         let servable = flow_eval_tick::may_rearm(&doc.snapshot.host_snapshot);
-        let applied_edits = semio_s_artifact_procedural_3d_preview_eval::applied_document_edits_digest(doc.history) ^ doc.provisional_generation().wrapping_mul(0x9e37_79b9_7f4a_7c15);
+        let applied_edits = doc.provisional_generation();
         owner
             .with_mut::<Generation3dInstanceOperationOwner, _>(|owner| {
                 use semio_s_artifact_procedural_3d_preview_eval::PreviewEvalRunOwner as _;

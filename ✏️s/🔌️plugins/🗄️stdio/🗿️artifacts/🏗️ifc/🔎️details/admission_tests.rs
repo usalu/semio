@@ -1,6 +1,6 @@
 //! 🧪️ Actual retained admission preserves cold byte limits and original cancellation/close owners.
 use super::*;
-use semio_framework_plugin::app_testing::OriginalWorkFixture;
+use semio_framework_plugin::plugin_app_close_prelude::OriginalWorkFixture;
 use semio_framework_value::retained_clone::RetainedCloneClose;
 fn grant() -> RetainedCloneGrant {
     RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 262144, maximum_release_bytes: 33554432, maximum_depth: 256 }
@@ -32,7 +32,7 @@ fn close(caller: &mut OriginalWorkFixture, admission: &mut EventAdmission, event
                 cx.with_original_retirement(|cx| {
                     let demand = retirement.next_owner_demands::<editing::SnapshotEditEvent>(event.is_some(), &None, 4096)?;
                     semio_framework_job::close_original_retained_step(cx, demand, |grant| {
-                        if !retirement.is_empty() { retirement.step_granted(grant) } else { retirement.begin_granted(event, grant)?.ok_or_else(|| invalid("admission original event owner absent")) }
+                        if !retirement.is_empty() { retirement.step_granted(grant) } else { own_with(retirement.begin_granted(event, grant), || invalid("admission original event owner absent")) }
                     })?;
                     Ok(())
                 })
@@ -200,7 +200,7 @@ fn original_event_retirement_denies_actual_nonzero_release_without_losing_payloa
     let denied_birth=RetainedCloneGrant{maximum_capacity_bytes:birth.capacity_bytes-1,..grant()};
     let (heap,before,after)=caller.turn(denied_birth,|cx|cx.with_original_retirement(|cx|{
         let before=cx.retained_progress();
-        let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_job::close_original_retained_step(cx,birth,|g|retirement.begin_granted(&mut event,g)?.ok_or_else(||invalid("original event owner absent"))));
+        let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_job::close_original_retained_step(cx,birth,|g|own_with(retirement.begin_granted(&mut event,g), ||invalid("original event owner absent"))));
         result?;Ok((heap,before,cx.retained_progress()))
     })).unwrap();
     assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(before,after);assert_eq!(custody(event.as_ref().unwrap()),original);assert!(retirement.is_empty());
@@ -213,7 +213,7 @@ fn original_event_retirement_denies_actual_nonzero_release_without_losing_payloa
             let (heap, before, after) = caller.turn(loan, |cx| cx.with_original_retirement(|cx| {
                 let before = cx.retained_progress();
                 let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| semio_framework_job::close_original_retained_step(cx, demand, |grant| {
-                    if retirement.is_empty() { retirement.begin_granted(&mut event, grant)?.ok_or_else(|| invalid("event owner absent")) } else { retirement.step_granted(grant) }
+                    if retirement.is_empty() { own_with(retirement.begin_granted(&mut event, grant), || invalid("event owner absent")) } else { retirement.step_granted(grant) }
                 }));
                 result?;
                 Ok((heap, before, cx.retained_progress()))
@@ -228,7 +228,7 @@ fn original_event_retirement_denies_actual_nonzero_release_without_losing_payloa
         }
         caller.turn(grant(), |cx| cx.with_original_retirement(|cx| {
             semio_framework_job::close_original_retained_step(cx, demand, |grant| {
-                if retirement.is_empty() { retirement.begin_granted(&mut event, grant)?.ok_or_else(|| invalid("event owner absent")) } else { retirement.step_granted(grant) }
+                if retirement.is_empty() { own_with(retirement.begin_granted(&mut event, grant), || invalid("event owner absent")) } else { retirement.step_granted(grant) }
             })?;
             Ok(())
         })).unwrap();
@@ -238,7 +238,7 @@ fn original_event_retirement_denies_actual_nonzero_release_without_losing_payloa
         if retirement.is_empty() && event.is_none() { caller.finish(); return; }
         caller.turn(grant(), |cx| cx.with_original_retirement(|cx| {
             let demand = retirement.next_owner_demands::<editing::SnapshotEditEvent>(event.is_some(), &None, 4096)?;
-            semio_framework_job::close_original_retained_step(cx, demand, |grant| if retirement.is_empty() { retirement.begin_granted(&mut event, grant)?.ok_or_else(|| invalid("event owner absent")) } else { retirement.step_granted(grant) })?;
+            semio_framework_job::close_original_retained_step(cx, demand, |grant| if retirement.is_empty() { own_with(retirement.begin_granted(&mut event, grant), || invalid("event owner absent")) } else { retirement.step_granted(grant) })?;
             Ok(())
         })).unwrap();
     }

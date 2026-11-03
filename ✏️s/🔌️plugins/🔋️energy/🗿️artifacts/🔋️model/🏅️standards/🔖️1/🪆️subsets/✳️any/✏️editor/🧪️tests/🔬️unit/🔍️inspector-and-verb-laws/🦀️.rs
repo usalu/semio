@@ -167,7 +167,7 @@ async fn a_zone_property_verb_refuses_the_three_bad_payloads() {
 async fn the_action_bridge_accepts_the_inspector_field_id_value_payload() {
     let text = |value: &str| semio_framework_value::DslValue::String(value.to_string());
     let args = semio_framework_value::DslValue::Object(vec![("field".to_string(), text("uValueWM2K")), ("id".to_string(), text("50")), ("value".to_string(), text("1.4"))]);
-    let command = <EnergyModelEditor as ArtifactEditor>::command_from_action(SET_FENESTRATION_PROPERTY_ACTION_ID, Some((args).clone()), None).expect("the inspector payload resolves");
+    let command = <EnergyModelEditor as ArtifactEditor>::command_from_action(SET_FENESTRATION_PROPERTY_ACTION_ID, &mut Some((args).clone()), &mut None).expect("the inspector payload resolves");
     assert_eq!(command, fenestration_property(50, "uValueWM2K", "1.4"));
 }
 
@@ -176,7 +176,7 @@ async fn the_action_bridge_accepts_the_inspector_field_id_value_payload() {
 async fn the_material_and_thermostat_verbs_emit_only_their_own_kinds() {
     let snapshot = snapshot_of(&inspector_model());
     assert_eq!(emitted_kinds(&snapshot, &material_property(10, "name", "Cedar Siding")), vec!["rename-material".to_string()]);
-    let stored = snapshot.model.materials[0].name.clone();
+    let stored = plain_model(&snapshot).materials[0].name.clone();
     assert!(emitted_kinds(&snapshot, &material_property(10, "name", &stored)).is_empty(), "restating the stored name is not an edit");
 }
 
@@ -524,24 +524,21 @@ async fn load_inspector_law_spans_people_lighting_equipment_and_infiltration() {
 async fn native_catalog_action_publishes_a_granular_mutation_and_its_original_inverse() {
     use protocol::{ColdMutation, Mutation};
     let snapshot = snapshot_of(&inspector_model());
-    let command = EnergyModelEditorCommand::ApplyNativeMutation { kind: "change-zone-volume".into(), payload: r#"{"id":1,"newVolumeM3":200}"#.into() };
+    let command = EnergyModelEditorCommand::ApplyNativeMutation { kind: "change-zone-volume".into(), mutation: Some(crate::zone_mutations::change_zone_volume(crate::model::EntityId(1), 200.0)) };
     assert_eq!(emitted_kinds(&snapshot, &command), vec!["change-zone-volume"]);
     let history = HistoryView::empty();
     let emit = reduce(&command, &ArtifactView::new(&snapshot, &history)).unwrap();
     let mutation = &emit.artifact_mutations[0];
     let outcome = mutation.diff(&snapshot);
     let changed = protocol::apply_diff_cold(outcome.diff(), &snapshot).unwrap();
-    assert_eq!(changed.model.zones[0].volume_m3, 200.0);
+    assert_eq!(plain_model(&changed).zones[0].volume_m3, 200.0);
     let inverse = <EnergyModelMutation as ColdMutation<EnergyModelSnapshot>>::inverse(mutation, &snapshot).unwrap();
     let mut undone = changed;
     for mutation in inverse.iter().rev() {
         let outcome = mutation.diff(&undone);
         undone = protocol::apply_diff_cold(outcome.diff(), &undone).unwrap();
     }
-    assert_eq!(undone.model, snapshot.model);
-    for (kind, payload) in [("unknown-native-kind", "{}"), ("change-zone-volume", "{}"), ("change-zone-volume", "not JSON")] {
-        assert_eq!(refusal(&snapshot, &EnergyModelEditorCommand::ApplyNativeMutation { kind: kind.into(), payload: payload.into() }), "app.command.invalid-payload");
-    }
+    assert_eq!(model_value(&undone), model_value(&snapshot));
 }
 
 /// 🗂️ Every native mutation has one schema-derived typed payload form in the retained action.
@@ -578,7 +575,7 @@ async fn ideal_loads_properties_emit_native_intents() {
 #[semio_framework_async_macros::async_test]
 async fn native_action_extent_accounts_for_all_nested_model_owners() {
     let mut model = inspector_model();
-    let command = EnergyModelEditorCommand::ApplyNativeMutation { kind: "change-zone-volume".into(), payload: r#"{"id":1,"newVolumeM3":200}"#.into() };
+    let command = EnergyModelEditorCommand::ApplyNativeMutation { kind: "change-zone-volume".into(), mutation: Some(crate::zone_mutations::change_zone_volume(crate::model::EntityId(1), 200.0)) };
     assert!(energy_model_extent(&command, &snapshot_of(&model), &protocol::InteractionState::default()).is_some());
     model.schedules.time_series.push(crate::schedule::TimeSeriesSchedule { id: crate::schedule::ScheduleId(999), values: vec![1.0; ENERGY_MODEL_RETAINED_WORK_ITEMS + 1], timestep_seconds: 3600 });
     assert!(energy_model_extent(&command, &snapshot_of(&model), &protocol::InteractionState::default()).is_none());

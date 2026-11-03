@@ -1,6 +1,6 @@
 [package]
 workspace = "../../../../../.."
-name = "semio-framework-replication-mutation-retained"
+name = "semio-framework-replication-retained"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
@@ -8,7 +8,7 @@ description = "Retained mutation: required granular semantic preparation, field 
 
 [package.metadata.semio]
 role = "framework"
-id = "replication-mutation-retained"
+id = "replication-retained"
 
 [package.metadata.semio.rust-source-boundary]
 maxSourceBytes = 262144
@@ -24,7 +24,7 @@ path = "🦀️.rs"
 [dependencies]
 semio-framework-value-factory = { path = "../../../../../🌱️value/♻️retirement/🏭️factory/📦️packages/🦀️rust" }
 semio-framework-mutation-diff = { path = "../../../🔺️diff/📦️packages/🦀️rust" }
-semio-framework-replication-mutation-retained-field = { path = "../../🪡️field/📦️packages/🦀️rust" }
+semio-framework-replication-retained-field = { path = "../../🪡️field/📦️packages/🦀️rust" }
 semio-framework-replication-mutation = { path = "../../../📦️packages/🦀️rust" }
 semio-framework-replication-mutation-messages = { path = "../../../📨️messages/📦️packages/🦀️rust" }
 semio-framework-value.workspace = true

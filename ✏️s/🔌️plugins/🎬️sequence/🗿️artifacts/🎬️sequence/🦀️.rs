@@ -82,7 +82,7 @@ pub mod standards {
                     pub use semio_s_artifact_sequence_sequence_tests::standards::v1::subsets::any::io::*;
 pub mod binary {
     pub use semio_s_artifact_sequence_sequence_editor::standards::v1::subsets::any::io::binary::*;
-    pub use semio_s_artifact_sequence_sequence_tests::standards::v1::subsets::any::io::binary::diff;
+    pub use semio_s_artifact_sequence_sequence_schema::standards::v1::subsets::any::io::binary::diff;
     pub use semio_s_artifact_sequence_sequence_inferences::standards::v1::subsets::any::io::binary::inferences;
     pub use semio_s_artifact_sequence_sequence_schema::standards::v1::subsets::any::io::binary::mutations;
     pub use semio_s_artifact_sequence_sequence_schema::standards::v1::subsets::any::io::binary::snapshot;

@@ -44,7 +44,7 @@ fn selected_brep_edits_insert_one_scoped_branch_and_preserve_consumers() {
             let ids = vec![format!("{source}@{channel}#{}.{}.1~{}~9007199254740993~{}",case["index"],case["granularity"].as_str().unwrap(),"a".repeat(64),"b".repeat(64))];
             let payload=if let Some(payload)=case.get("payload"){semio_framework_pack_json::from_json_str(&payload.to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()}else{EditMeshSelection{operation:case["operation"].as_str().unwrap().into(),..Default::default()}};
             edit_rows(&payload, &host.host_snapshot, &ids).map(|(feature, rows)| (feature, rows, host.host_snapshot.clone()))
-        });
+        }).unwrap();
         snapshot.retire_cold();
         let (feature, rows, initial) = prepared.unwrap();
             assert!(rows.iter().any(|row| format!("{row:?}").contains(if case["granularity"] == "edge" { "edgeLabels" } else { "faceLabels" })));

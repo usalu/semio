@@ -82,7 +82,7 @@ impl FlowHost {
             pending_change: false,
             pending_leaves: Vec::new(),
             history_fault: None,
-            #[cfg(test)]
+            #[cfg(any(test,feature="testkit"))]
             recorded: Vec::new(),
             journal_mark: 0,
             edited_note: None,

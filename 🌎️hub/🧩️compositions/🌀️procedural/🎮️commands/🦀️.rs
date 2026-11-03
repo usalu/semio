@@ -21,7 +21,7 @@ pub(crate) fn list_flow_extensions_command() -> CommandDefinition {
 
 /// 🧾️ Projects `super::FLOW_EXTENSIONS` as `[{ id, extension, label, version }]`, in declaration
 /// order. `ActionKind::View` forbids mutations, so the result carries output only.
-pub(crate) fn list_flow_extensions(_invocation: &ManifestCommandInvocation, _meta: &ActionMeta) -> Result<InvocationResult, Fault> {
+pub(crate) fn list_flow_extensions(_invocation: &semio_framework::manifest::CommandInvocationView<'_>, _meta: &ActionMeta) -> Result<InvocationResult, Fault> {
     let rows = super::FLOW_EXTENSIONS
         .iter()
         .map(|(slug, extension, label)| {

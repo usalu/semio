@@ -225,3 +225,11 @@ impl Generation3dViewExampleJobFactoryProofs {
     }
 }
 //#endregion 🎨️ExampleRoute
+
+/// 🧾️ The bounded-command, contributions and example factories' first-step proofs, in registration order.
+pub(super) fn generation3d_view_route_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
+    let mut proofs = Generation3dViewBoundedCommandJobFactoryProofs::bounded_first_step_tool_proofs();
+    proofs.extend(Generation3dViewContributionsJobFactoryProofs::bounded_first_step_tool_proofs());
+    proofs.extend(Generation3dViewExampleJobFactoryProofs::bounded_first_step_tool_proofs());
+    proofs
+}

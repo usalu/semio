@@ -3,6 +3,7 @@
 use semio_s_artifact_cad_cad_config::CadDislocateOptions;
 use crate as edit;
 use crate::options;
+use semio_framework_ui_locale::{Locale, Terminology};
 use semio_s_artifact_cad_cad_kit::editor::cad::terminology::CadLabels;
 use semio_s_artifact_cad_cad_kit::{CadPlayRuntime, CadPlayView};
 use semio_s_artifact_cad_cad_model::snapshot::CadPaneId;
@@ -56,11 +57,11 @@ pub fn window_measures(runtime: &CadPlayRuntime, is_de: bool) -> Vec<WindowMeasu
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(view: &CadPlayView, active_utility: Option<&str>, options: CadDislocateOptions) -> UiAssemblyResult<BuiltNode> {
-    edit::build_world_scene_for_pane(view, PANE, SURFACE_ID, active_utility, options)
+pub fn render(view: &CadPlayView, active_utility: Option<&str>, options: CadDislocateOptions, terminology: Terminology, locale: Locale) -> UiAssemblyResult<BuiltNode> {
+    edit::build_world_scene_for_pane(view, PANE, SURFACE_ID, active_utility, options, terminology, locale)
 }
 
-pub fn engagement(view: &CadPlayView, labels: &CadLabels) -> WindowEngagement {
-    edit::cad_window_engagement(view, PANE, labels)
+pub fn engagement(view: &CadPlayView, labels: &CadLabels, terminology: Terminology, locale: Locale) -> WindowEngagement {
+    edit::cad_window_engagement(view, PANE, labels, terminology, locale)
 }
 //#endregion 🔖️Render

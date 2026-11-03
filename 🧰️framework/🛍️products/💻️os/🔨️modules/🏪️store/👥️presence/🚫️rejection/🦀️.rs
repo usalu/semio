@@ -112,7 +112,8 @@ impl<P: Send + Sync + 'static> ErasedSnapshotRetirement for PresencePeerRejectio
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, retained_capacity_bytes: demand.capacity_bytes, ..Default::default() }));
         }
         if let Some(original_arc) = self.original_arc.take() {
-            return match self.factory.as_ref().expect("original presence factory").retire(original_arc, child).result {
+            let Some(factory) = self.factory.as_ref() else { return Err(semio_framework_value::ValueError::invariant("original presence factory is absent")); };
+            return match factory.retire(original_arc, child).result {
                 Ok((active, progress)) => {
                     if !progress.fits(child) || progress.retained_capacity_bytes != demand.capacity_bytes { *self.active = Some(active); return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "presence rejection constructor changed its declared receipt")); }
                     *self.active = Some(active);

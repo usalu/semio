@@ -2,7 +2,10 @@
   "schema": "spatial.interaction",
   "id": "surface.loft",
   "version": "1.0.0",
-  "label": "Loft",
+  "label": {
+    "native": { "en": "Loft", "de": "Loft" },
+    "reuse": { "en": "Loft", "de": "Loft" }
+  },
   "interaction": {
     "spatialGroundPick": false,
     "pickDisabledStates": ["idle", "committed"],
@@ -23,7 +26,10 @@
               {
                 "target": "select_curves_to_loft",
                 "key": "s",
-                "label": "Start",
+                "label": {
+                  "native": { "en": "Start", "de": "Start" },
+                  "reuse": { "en": "Start", "de": "Start" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -84,7 +90,10 @@
         "selection": {
           "accept": ["wire", "edge"],
           "multiple": true,
-          "prompt": "Select curves to loft"
+          "prompt": {
+            "native": { "en": "Select curves to loft", "de": "Zu loftende Kurven auswählen" },
+            "reuse": { "en": "Select curves to loft", "de": "Zu loftende Kurven auswählen" }
+          }
         },
         "on": [
           {
@@ -93,7 +102,10 @@
               {
                 "target": "select_curves_to_loft",
                 "key": "s",
-                "label": "Select",
+                "label": {
+                  "native": { "en": "Select", "de": "Auswählen" },
+                  "reuse": { "en": "Select", "de": "Auswählen" }
+                },
                 "effects": [
                   {
                     "mutation": "action",
@@ -125,7 +137,10 @@
               {
                 "target": "adjust_curve_seams",
                 "key": "Enter",
-                "label": "Finish"
+                "label": {
+                  "native": { "en": "Finish", "de": "Fertig" },
+                  "reuse": { "en": "Finish", "de": "Fertig" }
+                }
               }
             ]
           },
@@ -135,7 +150,10 @@
               {
                 "target": "adjust_curve_seams",
                 "key": "RightClick",
-                "label": "Finish"
+                "label": {
+                  "native": { "en": "Finish", "de": "Fertig" },
+                  "reuse": { "en": "Finish", "de": "Fertig" }
+                }
               }
             ]
           }
@@ -150,7 +168,10 @@
               {
                 "target": "adjust_curve_seams",
                 "key": "a",
-                "label": "Adjust",
+                "label": {
+                  "native": { "en": "Adjust", "de": "Anpassen" },
+                  "reuse": { "en": "Adjust", "de": "Anpassen" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -178,7 +199,10 @@
               {
                 "target": "loft_options_dialog",
                 "key": "Enter",
-                "label": "Accept Adjustments"
+                "label": {
+                  "native": { "en": "Accept Adjustments", "de": "Anpassungen übernehmen" },
+                  "reuse": { "en": "Accept Adjustments", "de": "Anpassungen übernehmen" }
+                }
               }
             ]
           },
@@ -188,7 +212,10 @@
               {
                 "target": "loft_options_dialog",
                 "key": "RightClick",
-                "label": "Accept Adjustments"
+                "label": {
+                  "native": { "en": "Accept Adjustments", "de": "Anpassungen übernehmen" },
+                  "reuse": { "en": "Accept Adjustments", "de": "Anpassungen übernehmen" }
+                }
               }
             ]
           }
@@ -203,7 +230,10 @@
               {
                 "target": "committed",
                 "key": "o",
-                "label": "OK",
+                "label": {
+                  "native": { "en": "OK", "de": "OK" },
+                  "reuse": { "en": "OK", "de": "OK" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -242,7 +272,10 @@
             "kind": "label",
             "id": "select_curves_to_loft-prompt",
             "role": "prompt",
-            "text": "Select curves to loft",
+            "text": {
+              "native": { "en": "Select curves to loft", "de": "Zu loftende Kurven auswählen" },
+              "reuse": { "en": "Select curves to loft", "de": "Zu loftende Kurven auswählen" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]
@@ -305,7 +338,10 @@
             "kind": "label",
             "id": "adjust_curve_seams-prompt",
             "role": "prompt",
-            "text": "Adjust curve seams",
+            "text": {
+              "native": { "en": "Adjust curve seams", "de": "Kurvennähte anpassen" },
+              "reuse": { "en": "Adjust curve seams", "de": "Kurvennähte anpassen" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]
@@ -368,7 +404,10 @@
             "kind": "label",
             "id": "loft_options_dialog-prompt",
             "role": "prompt",
-            "text": "Loft options",
+            "text": {
+              "native": { "en": "Loft options", "de": "Loft-Optionen" },
+              "reuse": { "en": "Loft options", "de": "Loft-Optionen" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]

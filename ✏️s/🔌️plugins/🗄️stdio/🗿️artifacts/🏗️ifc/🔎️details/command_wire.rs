@@ -7,8 +7,8 @@ use std::mem::size_of;
 #[derive(Clone,Copy,Default,PartialEq,Eq)]
 enum Phase{#[default]Init,Parse,Outer,Inner,Operation,Fields,Construct,Ready}
 #[derive(Default)]
-pub(super) struct CommandWire{
- source:Option<(usize,usize)>,parser:Option<JsonGrammarCursor<DslValue>>,root:Option<DslValue>,inner:Option<DslValue>,body:Option<DslValue>,fields:[Option<DslValue>;5],pub(super) output:Option<editing::SnapshotEditEvent>,error:Option<JsonError>,retirement:RetainedCloneClose,phase:Phase,next:usize,operation:Option<u8>,closing:bool,
+pub struct CommandWire{
+ source:Option<(usize,usize)>,parser:Option<JsonGrammarCursor<DslValue>>,root:Option<DslValue>,inner:Option<DslValue>,body:Option<DslValue>,fields:[Option<DslValue>;5],pub output:Option<editing::SnapshotEditEvent>,error:Option<JsonError>,retirement:RetainedCloneClose,phase:Phase,next:usize,operation:Option<u8>,closing:bool,
 }
 fn invalid(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,message)}
 fn object(value:&Option<DslValue>)->Result<&[(String,DslValue)],ValueError>{match value{Some(DslValue::Object(entries))=>Ok(entries),_=>Err(invalid("IFC command requires its closed object"))}}

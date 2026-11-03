@@ -38,7 +38,7 @@ where
     match loaded {
         Ok(()) => Ok(reloaded),
         Err(reason) => {
-            acceptance_close(&mut reloaded,cx).await;
+            Box::pin(acceptance_close(&mut reloaded,cx)).await;
             Err(reason)
         }
     }
@@ -52,9 +52,9 @@ where
     M: ReferenceSpaceMember + MemberFactory + Send + 'static,
     <A as ArtifactApp>::Snapshot: pack::snapshot::ArtifactDsl,
 {
-    let mut reloaded = acceptance_reloaded(app, manifest,cx).await?;
+    let mut reloaded = Box::pin(acceptance_reloaded(app, manifest,cx)).await?;
     let head = acceptance_head(&reloaded);
-    acceptance_close(&mut reloaded,cx).await;
+    Box::pin(acceptance_close(&mut reloaded,cx)).await;
     head
 }
 
@@ -126,25 +126,25 @@ where
         let outcome = async {
             if let Some(example) = example {
                 assert_eq!(saved.stores.store.local_actor_id(), &protocol::ActorId(ACCEPTANCE_ACTOR.into()));
-                acceptance_verb(&mut saved, CATALOGUE_EXAMPLE_ACTION_ID, vec![("exampleId", DslValue::String(example))],cx).await.map_err(|refusal|refusal.context("the app's own example route does not load it".into()))?;
+                Box::pin(acceptance_verb(&mut saved, CATALOGUE_EXAMPLE_ACTION_ID, vec![("exampleId", DslValue::String(example))],cx)).await.map_err(|refusal|refusal.context("the app's own example route does not load it".into()))?;
                 semio_framework_plugin_testing_laws::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut saved, acceptance_meta().instance_id, acceptance_policy(), &mut identity,cx).await)?;
             }
             saved.render_ctx().refresh_cache().await.map_err(|fault| AcceptanceError::from(fault).context("the history does not backfill".into()))?;
-            let before = acceptance_document_view(&mut saved, manifest,cx).await?;
-            let mut reloaded = acceptance_reloaded(&saved, manifest,cx).await?;
-            let after = acceptance_document_view(&mut reloaded, manifest,cx).await;
-            acceptance_close(&mut reloaded,cx).await;
+            let before = Box::pin(acceptance_document_view(&mut saved, manifest,cx)).await?;
+            let mut reloaded = Box::pin(acceptance_reloaded(&saved, manifest,cx)).await?;
+            let after = Box::pin(acceptance_document_view(&mut reloaded, manifest,cx)).await;
+            Box::pin(acceptance_close(&mut reloaded,cx)).await;
             Ok::<_, AcceptanceError>(acceptance_view_difference(&before, &after?))
         }
         .await;
-        acceptance_close(&mut saved,cx).await;
+        Box::pin(acceptance_close(&mut saved,cx)).await;
         match outcome {
             Ok(None) => reloaded_documents += 1,
             Ok(Some(difference)) => panic!("{plugin}: the {name} document does not reload identically: {difference}"),
             Err(reason) => panic!("{plugin}: the {name} document does not survive save and load: {reason}"),
         }
     }
-    let edit = match acceptance_search::<A, M>(plugin, manifest, fixtures, examples, true,cx).await {
+    let edit = match Box::pin(acceptance_search::<A, M>(plugin, manifest, fixtures, examples, true,cx)).await {
         AcceptanceSearch::Passed(summary) => summary,
         AcceptanceSearch::Failed(failure) => panic!("{failure} (on a reloaded document)"),
         AcceptanceSearch::Exhausted(report) if report.contains("none of the 0 committed and 0 derived") => format!("{plugin}: no parent-lane leaf to edit on a reloaded document"),
@@ -191,7 +191,7 @@ where
             let DslValue::Object(args) = semio_framework_pack_json::to_dsl_value(&args) else {
                 return Err((format!("the seed args of {action} are not a JSON object")).into());
             };
-            acceptance_verb(&mut app, action, args.iter().map(|(key, value)| (key.as_str(), value.clone())).collect(),cx).await?;
+            Box::pin(acceptance_verb(&mut app, action, args.iter().map(|(key, value)| (key.as_str(), value.clone())).collect(),cx)).await?;
             semio_framework_plugin_testing_laws::with_authoring_identity!(|identity| artifact_app_laws::settle_registered_typed_operation(&mut app, acceptance_meta().instance_id, acceptance_policy(), &mut identity,cx).await).map_err(|fault|AcceptanceError::from(fault).context(format!("the seed gesture {action} does not publish")))?;
         }
         app.render_ctx().refresh_cache().await.map_err(|fault| AcceptanceError::from(fault).context("the history does not backfill".into()))
@@ -200,7 +200,7 @@ where
     match seeded {
         Ok(()) => Ok(app),
         Err(reason) => {
-            acceptance_close(&mut app,cx).await;
+            Box::pin(acceptance_close(&mut app,cx)).await;
             Err(reason)
         }
     }
@@ -225,12 +225,12 @@ where
     M: ReferenceSpaceMember + MemberFactory + Send + 'static,
     <A as ArtifactApp>::Snapshot: pack::snapshot::ArtifactDsl,
 {
-    let saved = acceptance_document_view(app, manifest,cx).await?;
-    let heads = acceptance_child_heads(app).await?;
-    let mut reloaded = acceptance_reloaded(app, manifest,cx).await?;
-    let fresh = acceptance_document_view(&mut reloaded, manifest,cx).await;
-    let fresh_heads = acceptance_child_heads(&reloaded).await;
-    acceptance_close(&mut reloaded,cx).await;
+    let saved = Box::pin(acceptance_document_view(app, manifest,cx)).await?;
+    let heads = Box::pin(acceptance_child_heads(app)).await?;
+    let mut reloaded = Box::pin(acceptance_reloaded(app, manifest,cx)).await?;
+    let fresh = Box::pin(acceptance_document_view(&mut reloaded, manifest,cx)).await;
+    let fresh_heads = Box::pin(acceptance_child_heads(&reloaded)).await;
+    Box::pin(acceptance_close(&mut reloaded,cx)).await;
     if let Some(difference) = acceptance_view_difference(&saved, &fresh?) {
         return Ok(Some(difference));
     }
@@ -244,51 +244,51 @@ where
     M: ReferenceSpaceMember + MemberFactory + Send + 'static,
     <A as ArtifactApp>::Snapshot: pack::snapshot::ArtifactDsl,
 {
-    let mut overwrite = acceptance_child_seeded::<A, M>(manifest, seed,cx).await.map_err(|reason|reason.context("the seed does not land".into()))?;
+    let mut overwrite = Box::pin(acceptance_child_seeded::<A, M>(manifest, seed,cx)).await.map_err(|reason|reason.context("the seed does not land".into()))?;
     let outcome = async {
-        if let Some(difference) = acceptance_child_reload_difference(&mut overwrite, manifest,cx).await? {
+        if let Some(difference) = Box::pin(acceptance_child_reload_difference(&mut overwrite, manifest,cx)).await? {
             return Err((format!("the seeded document with child-lane history does not reload identically: {difference}")).into());
         }
-        let (target, store, label) = acceptance_child_row(&mut overwrite).await?.ok_or("the seed lands no editable child-lane mutation in the history")?;
-        let before = acceptance_child_heads(&overwrite).await?;
-        let change = match acceptance_drive(&mut overwrite, &target, Some(&store), None, None, None, None,cx).await {
+        let (target, store, label) = Box::pin(acceptance_child_row(&mut overwrite)).await?.ok_or("the seed lands no editable child-lane mutation in the history")?;
+        let before = Box::pin(acceptance_child_heads(&overwrite)).await?;
+        let change = match Box::pin(acceptance_drive(&mut overwrite, &target, Some(&store), None, None, None, None,cx)).await {
             Ok(change) => change,
             Err(AcceptanceVerdict::Fail(error)) => return Err(error.context(format!("the overwrite of {target} in {store}"))),
             Err(verdict) => return Err((format!("the overwrite of {target} in {store}: {}", verdict.text())).into()),
         };
-        let heads = acceptance_child_heads(&overwrite).await?;
+        let heads = Box::pin(acceptance_child_heads(&overwrite)).await?;
         if heads == before {
             return Err((format!("the overwrite {} = {:?} of {target} leaves every member head unchanged", change.0, change.1)).into());
         }
-        if let Some(difference) = acceptance_child_reload_difference(&mut overwrite, manifest,cx).await? {
+        if let Some(difference) = Box::pin(acceptance_child_reload_difference(&mut overwrite, manifest,cx)).await? {
             return Err((format!("the overwritten document does not fold freshly to the same state after save and load: {difference}")).into());
         }
         Ok::<_, AcceptanceError>((change, store, label, heads))
     }
     .await;
-    acceptance_close(&mut overwrite,cx).await;
+    Box::pin(acceptance_close(&mut overwrite,cx)).await;
     let (change, store, label, heads) = outcome?;
-    let mut seeded = acceptance_child_seeded::<A, M>(manifest, seed,cx).await.map_err(|reason|reason.context("the alternative instance does not seed".into()))?;
-    let reloaded = acceptance_reloaded(&seeded, manifest,cx).await;
-    acceptance_close(&mut seeded,cx).await;
+    let mut seeded = Box::pin(acceptance_child_seeded::<A, M>(manifest, seed,cx)).await.map_err(|reason|reason.context("the alternative instance does not seed".into()))?;
+    let reloaded = Box::pin(acceptance_reloaded(&seeded, manifest,cx)).await;
+    Box::pin(acceptance_close(&mut seeded,cx)).await;
     let mut branched = reloaded.map_err(|reason|reason.context("the seeded document does not reload for the alternative".into()))?;
     let alternative = async {
-        let (target, _, _) = acceptance_child_row(&mut branched).await?.ok_or("the reloaded seeded document lists no editable child-lane mutation")?;
-        match acceptance_drive(&mut branched, &target, Some(&store), Some(&change), Some(ACCEPTANCE_ALTERNATIVE), None, None,cx).await {
+        let (target, _, _) = Box::pin(acceptance_child_row(&mut branched)).await?.ok_or("the reloaded seeded document lists no editable child-lane mutation")?;
+        match Box::pin(acceptance_drive(&mut branched, &target, Some(&store), Some(&change), Some(ACCEPTANCE_ALTERNATIVE), None, None,cx)).await {
             Ok(_) => {}
             Err(AcceptanceVerdict::Fail(error)) => return Err(error.context("the change the overwrite accepted fails as a new alternative on the reloaded document".into())),
             Err(verdict) => return Err((format!("the change the overwrite accepted fails as a new alternative on the reloaded document: {}", verdict.text())).into()),
         }
-        if acceptance_child_heads(&branched).await? != heads {
+        if Box::pin(acceptance_child_heads(&branched)).await? != heads {
             return Err("the new alternative's member heads differ from the overwrite's".into());
         }
-        if let Some(difference) = acceptance_child_reload_difference(&mut branched, manifest,cx).await? {
+        if let Some(difference) = Box::pin(acceptance_child_reload_difference(&mut branched, manifest,cx)).await? {
             return Err((format!("the new alternative does not fold freshly to the same state after save and load: {difference}")).into());
         }
         Ok::<(), AcceptanceError>(())
     }
     .await;
-    acceptance_close(&mut branched,cx).await;
+    Box::pin(acceptance_close(&mut branched,cx)).await;
     alternative?;
     Ok(format!("{store}: {} = {:?}, row \"{label}\", seeded, overwritten and alternative documents reload identically", change.0, change.1))
 }
@@ -306,7 +306,7 @@ where
     <A as ArtifactApp>::Snapshot: pack::snapshot::ArtifactDsl,
 {
     let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original acceptance caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
-    match acceptance_child_scenario::<A, M>(manifest, seed,cx).await {
+    match Box::pin(acceptance_child_scenario::<A, M>(manifest, seed,cx)).await {
         Ok(summary) => format!("{plugin}: child lane {summary}"),
         Err(reason) => panic!("{plugin}: the child-lane history edit breaks the generic mechanism: {reason}"),
     }

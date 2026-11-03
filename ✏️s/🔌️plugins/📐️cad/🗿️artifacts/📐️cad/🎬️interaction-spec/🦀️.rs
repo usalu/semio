@@ -5,6 +5,7 @@
 
 
 use semio_framework_value::DslValue;
+use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️InteractionSpec
@@ -308,7 +309,7 @@ pub struct TransitionSpec {
     #[value(default)]
     pub key: Option<String>,
     #[value(default)]
-    pub label: Option<String>,
+    pub label: Option<LocalizedLabel>,
     #[value(default)]
     pub effects: Vec<Effect>,
 }
@@ -329,7 +330,7 @@ pub struct SelectionSpec {
     #[value(default)]
     pub multiple: bool,
     #[value(default)]
-    pub prompt: Option<String>,
+    pub prompt: Option<LocalizedLabel>,
 }
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
@@ -443,7 +444,7 @@ pub enum DisplayItemSpec {
         id: String,
         #[value(default)]
         role: Option<String>,
-        text: String,
+        text: LocalizedLabel,
         position: Expr,
     },
     Segment {
@@ -552,7 +553,7 @@ pub struct InteractionSpec {
     pub id: String,
     pub version: String,
     #[value(default)]
-    pub label: Option<String>,
+    pub label: Option<LocalizedLabel>,
     #[value(default)]
     pub key: Option<String>,
     #[value(default)]
@@ -568,6 +569,17 @@ pub struct InteractionSpec {
 }
 
 impl InteractionSpec {
+    /// 🌐️ Every text the viewer reads in this spec (its label, transition labels, selection prompts and display label texts), each a complete locale matrix; see [`LocalizedLabel`].
+    pub fn localized_labels(&self) -> Vec<&LocalizedLabel> {
+        let transitions = self.machine.states.iter().flat_map(|state| state.on.iter()).flat_map(|handler| handler.transitions.iter()).filter_map(|transition| transition.label.as_ref());
+        let prompts = self.machine.states.iter().filter_map(|state| state.selection.as_ref()).filter_map(|selection| selection.prompt.as_ref());
+        let texts = self.display.states.iter().flat_map(|state| state.items.iter()).filter_map(|item| match item {
+            DisplayItemSpec::Label { text, .. } => Some(text),
+            _ => None,
+        });
+        self.label.iter().chain(transitions).chain(prompts).chain(texts).collect()
+    }
+
     pub fn state<'a>(&'a self, name: &str) -> Option<&'a StateDefSpec> {
         self.machine.states.iter().find(|state| state.name == name)
     }

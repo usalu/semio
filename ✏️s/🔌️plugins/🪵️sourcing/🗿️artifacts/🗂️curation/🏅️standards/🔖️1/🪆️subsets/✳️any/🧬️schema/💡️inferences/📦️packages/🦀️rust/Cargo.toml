@@ -44,15 +44,7 @@ semio-s-artifact-sourcing-curation-domain = { path = "../../../🧾️domain/�
 semio-s-artifact-sourcing-curation-examples = { path = "../../../../📚️examples/🎬️demo/📦️packages/🦀️rust" }
 semio-s-artifact-sourcing-curation-operations = { path = "../../../⚙️operations/📦️packages/🦀️rust" }
 semio-s-artifact-sourcing-curation-schema = { path = "../../../📦️packages/🦀️rust" }
-semio-s-artifact-stdio-json = { workspace = true }
-semio-s-artifact-stdio-obj = { workspace = true }
-semio-s-artifact-stdio-png = { workspace = true }
 semio-s-artifact-stdio-semio = { workspace = true }
-semio-s-artifact-stdio-semio-base = { workspace = true }
-semio-s-artifact-stdio-semio-kit = { workspace = true }
-semio-s-artifact-stdio-stl = { workspace = true }
-semio-s-artifact-stdio-txt = { workspace = true }
-semio-s-artifact-stdio-zip = { workspace = true }
 
 [dev-dependencies]
 serde.workspace = true

@@ -38,7 +38,7 @@ fn group_read_fixture_envelope(snapshot: GroupReadTriggerSnapshot) -> ArtifactEn
         viewer_checkpoint_id: None,
         edit_messages: ArtifactEditMessageLedger::new(),
         conflicts: Vec::new(),
-        transitions: Vec::new(),
+        transitions: semio_framework_os_vcs::ArtifactHistoryLedger::new(),
         history_shape: semio_framework_os_spr::HistoryShape::Document,
         open_transaction: None,
     })
@@ -264,7 +264,7 @@ async fn rejected_remote_ingest_keeps_state_and_dag_unpoisoned() {
     let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), &semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<_>::new()).await;
     let valid = foreign_mutation_envelope("peer", DemoMutation::SetN(SetN { n: 7 })).await;
     let mut malformed = valid.clone();
-    malformed.diff.payload = vec![0xff];
+    malformed.diff.payload = semio_framework_value::paged::PagedBytes::try_from_slice(&[0xff]).unwrap();
     let before = owned_test_envelope(&store).await;
 
     assert!(store.ingest_remote(malformed).await.is_err(), "malformed remote data must reject before committing the DAG or history");
@@ -307,7 +307,7 @@ async fn a_remote_transition_repeating_a_known_id_with_another_payload_is_refuse
     let before = owned_test_envelope(&replica).await;
     let mut forged = events.last().expect("the revert transition").clone();
     let semio_framework_os_spr::HistoryTransition::Revert { mutation_ids } = semio_framework_os_spr::history_transition_from_envelope(&forged).expect("decode").expect("a transition") else { panic!("the last event is the revert") };
-    forged.diff.payload = semio_framework_os_spr::encode_history_transition(&semio_framework_os_spr::HistoryTransition::Reinstate { mutation_ids });
+    forged.diff.payload = semio_framework_value::paged::PagedBytes::try_from_slice(&semio_framework_os_spr::encode_history_transition(&semio_framework_os_spr::HistoryTransition::Reinstate { mutation_ids })).unwrap();
     let error = replica.ingest_remote(forged).await.expect_err("a known transition id may not carry another payload");
     assert!(matches!(error, VcsError::ValidationFailed(message) if message.contains("conflicts with its established payload")));
     assert_eq!(replica.envelope(), &before);

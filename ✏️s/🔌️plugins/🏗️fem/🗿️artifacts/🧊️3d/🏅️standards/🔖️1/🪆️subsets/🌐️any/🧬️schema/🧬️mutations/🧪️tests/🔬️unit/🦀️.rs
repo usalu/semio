@@ -1,5 +1,6 @@
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
 use super::*;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::element_id;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::load_id;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
@@ -71,10 +72,11 @@ fn solid_slab_doc() -> Fem3dSnapshotValue {
 /// `mutation.target-referenced` and its own committed vector pins that branch; a round-trip over
 /// a refusal would pass vacuously and prove nothing.
 fn round_trip(snapshot: &Fem3dSnapshotValue, operation: &Fem3dMutation) -> Fem3dSnapshotValue {
-    let forward = vcs::apply_mutation(snapshot, operation).expect("valid mutation").0;
+    let mut forward = snapshot.clone();
+    crate::central_apply::apply_fem3d_mutation(&mut forward, operation).expect("valid mutation");
     let mut restored = forward.clone();
     for back in operation.inverse(snapshot).expect("valid retained mutation inverse fixture") {
-        restored = vcs::apply_mutation(&restored, &back).expect("valid inverse mutation").0;
+        crate::central_apply::apply_fem3d_mutation(&mut restored, &back).expect("valid inverse mutation");
     }
     assert_eq!(&restored, snapshot, "inverse() must restore the pre-mutation document");
     forward
@@ -309,7 +311,7 @@ async fn fem3d_op_text_round_trips_every_variant() {
 // #region 🔖️MutationLaws
 #[semio_framework_async_macros::async_test]
 async fn mutation_law_create_node_inverse_and_diff_absorb() {
-    let base = Fem3dSnapshotValue::default();
+    let base = Fem3dSnapshot::from_reference(Fem3dSnapshotValue::default()).expect("law base");
     let mutation = Fem3dMutation::CreateNode(semio_s_artifact_fem_3d_mesh_topology::standards::v1::subsets::any::schema::mutations::create_node::CreateNode { node: FemNodeValue { id: "n1".into(), x: 1.0, y: 2.0, z: 3.0 }, index: None });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
@@ -321,7 +323,7 @@ async fn mutation_law_create_node_inverse_and_diff_absorb() {
 
 #[semio_framework_async_macros::async_test]
 async fn mutation_law_replace_material_inverse() {
-    let (base, ..) = cantilever_fixture();
+    let base = Fem3dSnapshot::from_reference(cantilever_fixture().0).expect("law base");
     let mutation = Fem3dMutation::ReplaceMaterial(semio_s_artifact_fem_3d_material::standards::v1::subsets::any::schema::mutations::replace_material::ReplaceMaterial { id: "steel".into(), new_material: FemMaterialValue { id: "steel".into(), name: "Steel 2".into(), e: 200e9, g: 79e9, nu: 0.3, rho: 7900.0 } });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
@@ -329,7 +331,7 @@ async fn mutation_law_replace_material_inverse() {
 
 #[semio_framework_async_macros::async_test]
 async fn mutation_law_add_load_inverse_and_diff_absorb() {
-    let base = solid_slab_doc();
+    let base = Fem3dSnapshot::from_reference(solid_slab_doc()).expect("law base");
     let mutation = Fem3dMutation::AddLoad(semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::add_load::AddLoad { case_id: "self".into(), load: Box::new(FemLoad::Area { id: "l9".into(), solid_id: "sol1".into(), pressure: 400.0 }), index: None });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &mutation).await;
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
@@ -342,7 +344,7 @@ async fn mutation_law_add_load_inverse_and_diff_absorb() {
 #[semio_framework_async_macros::async_test]
 async fn every_mutation_registers_a_semantic_descriptor() {
     register_fem3d_mutation_descriptors(::semio_framework_schema_state::StateClass::Artifact).expect("mutation descriptor registration");
-    let kinds = <Fem3dMutation as protocol::SemanticMutation<Fem3dSnapshotValue>>::kinds();
+    let kinds = <Fem3dMutation as protocol::SemanticMutation<Fem3dSnapshot>>::kinds();
     assert_eq!(kinds.len(), 39, "every semantic mutation kind must be registered exactly once");
     for descriptor in kinds {
         assert!(protocol::is_approved_verb(descriptor.verb), "verb '{}' must be in APPROVED_VERBS", descriptor.verb);
@@ -357,19 +359,19 @@ async fn every_mutation_registers_a_semantic_descriptor() {
 /// create-duplicate-id case.
 #[semio_framework_async_macros::async_test]
 async fn create_support_missing_node_is_error() {
-    let base = Fem3dSnapshotValue::default();
+    let base = Fem3dSnapshot::from_reference(Fem3dSnapshotValue::default()).expect("law base");
     protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &Fem3dMutation::CreateSupport(semio_s_artifact_fem_3d_boundary::standards::v1::subsets::any::schema::mutations::create_support::CreateSupport { support: FemSupport { id: "s1".into(), node_id: "ghost".into(), fixed: vec![] }, index: None })).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn delete_node_missing_target_is_error() {
-    let base = Fem3dSnapshotValue::default();
+    let base = Fem3dSnapshot::from_reference(Fem3dSnapshotValue::default()).expect("law base");
     protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &Fem3dMutation::DeleteNode(semio_s_artifact_fem_3d_mesh_topology::standards::v1::subsets::any::schema::mutations::delete_node::DeleteNode { id: "ghost".into() })).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn replace_material_missing_target_is_error() {
-    let base = Fem3dSnapshotValue::default();
+    let base = Fem3dSnapshot::from_reference(Fem3dSnapshotValue::default()).expect("law base");
     protocol::os_spr::protocol_laws::assert_missing_target_is_error(
         &base,
         &Fem3dMutation::ReplaceMaterial(semio_s_artifact_fem_3d_material::standards::v1::subsets::any::schema::mutations::replace_material::ReplaceMaterial { id: "ghost".into(), new_material: FemMaterialValue { id: "ghost".into(), name: "x".into(), e: 1.0, g: 1.0, nu: 0.3, rho: 1.0 } }),
@@ -379,49 +381,49 @@ async fn replace_material_missing_target_is_error() {
 
 #[semio_framework_async_macros::async_test]
 async fn add_load_missing_case_is_error() {
-    let base = Fem3dSnapshotValue::default();
+    let base = Fem3dSnapshot::from_reference(Fem3dSnapshotValue::default()).expect("law base");
     protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &Fem3dMutation::AddLoad(semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::add_load::AddLoad { case_id: "ghost".into(), load: Box::new(FemLoad::Nodal { id: "l1".into(), node_id: "n1".into(), dof: FemDof::Tz, value: 1.0 }), index: None })).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn remove_load_missing_case_is_error() {
-    let base = Fem3dSnapshotValue::default();
+    let base = Fem3dSnapshot::from_reference(Fem3dSnapshotValue::default()).expect("law base");
     protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &Fem3dMutation::RemoveLoad(semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::remove_load::RemoveLoad { case_id: "ghost".into(), load_id: "ghost".into() })).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn change_load_case_self_weight_missing_target_is_error() {
-    let base = Fem3dSnapshotValue::default();
+    let base = Fem3dSnapshot::from_reference(Fem3dSnapshotValue::default()).expect("law base");
     protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &Fem3dMutation::ChangeLoadCaseSelfWeight(semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::change_load_case_self_weight::ChangeLoadCaseSelfWeight { case_id: "ghost".into(), new_self_weight: true })).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn replace_node_missing_target_is_error() {
-    let base = Fem3dSnapshotValue::default();
+    let base = Fem3dSnapshot::from_reference(Fem3dSnapshotValue::default()).expect("law base");
     protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &Fem3dMutation::ReplaceNode(semio_s_artifact_fem_3d_mesh_topology::standards::v1::subsets::any::schema::mutations::replace_node::ReplaceNode { id: "ghost".into(), new_node: FemNodeValue { id: "ghost".into(), x: 0.0, y: 0.0, z: 0.0 } })).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn replace_load_missing_load_is_error() {
-    let (base, ..) = cantilever_fixture();
+    let base = Fem3dSnapshot::from_reference(cantilever_fixture().0).expect("law base");
     protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &Fem3dMutation::ReplaceLoad(semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::replace_load::ReplaceLoad { case_id: "point".into(), load_id: "ghost".into(), new_load: Box::new(FemLoad::Nodal { id: "ghost".into(), node_id: "n1".into(), dof: FemDof::Tz, value: 1.0 }) })).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn change_load_case_name_missing_target_is_error() {
-    let base = Fem3dSnapshotValue::default();
+    let base = Fem3dSnapshot::from_reference(Fem3dSnapshotValue::default()).expect("law base");
     protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &Fem3dMutation::ChangeLoadCaseName(semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::change_load_case_name::ChangeLoadCaseName { case_id: "ghost".into(), new_name: "x".into() })).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn replace_combination_missing_target_is_error() {
-    let base = Fem3dSnapshotValue::default();
+    let base = Fem3dSnapshot::from_reference(Fem3dSnapshotValue::default()).expect("law base");
     protocol::os_spr::protocol_laws::assert_missing_target_is_error(&base, &Fem3dMutation::ReplaceCombination(semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::replace_combination::ReplaceCombination { id: "ghost".into(), new_combination: FemCombination { id: "ghost".into(), name: "x".into(), terms: BTreeMap::new() } })).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn replace_node_rename_is_a_target_mismatch_error() {
-    let (base, ..) = cantilever_fixture();
+    let base = Fem3dSnapshot::from_reference(cantilever_fixture().0).expect("law base");
     let outcome = Fem3dMutation::ReplaceNode(semio_s_artifact_fem_3d_mesh_topology::standards::v1::subsets::any::schema::mutations::replace_node::ReplaceNode { id: "n1".into(), new_node: FemNodeValue { id: "n9".into(), x: 0.0, y: 0.0, z: 0.0 } }).diff(&base);
     assert_eq!(outcome.worst_level(), Some(semio_framework_diagnostic::Severity::Error));
     assert_eq!(outcome.messages()[0].code.0, "mutation.target-mismatch");
@@ -430,7 +432,7 @@ async fn replace_node_rename_is_a_target_mismatch_error() {
 
 #[semio_framework_async_macros::async_test]
 async fn create_node_duplicate_id_is_fatal() {
-    let (base, ..) = cantilever_fixture();
+    let base = Fem3dSnapshot::from_reference(cantilever_fixture().0).expect("law base");
     let outcome = Fem3dMutation::CreateNode(semio_s_artifact_fem_3d_mesh_topology::standards::v1::subsets::any::schema::mutations::create_node::CreateNode { node: FemNodeValue { id: "n1".into(), x: 0.0, y: 0.0, z: 0.0 }, index: None }).diff(&base);
     protocol::os_spr::protocol_laws::assert_fatal_never_applies(&outcome).await;
     assert_eq!(outcome.worst_level(), Some(semio_framework_diagnostic::Severity::Fatal));

@@ -3,7 +3,7 @@ use super::*;
 #[test]
 fn original_declared_choice_backing_survives_posting_refusal_and_denied_retirement_axes() {
     use semio_framework_job::{OriginalConstructionDemand, admit_original_construction};
-    use semio_framework_plugin::app_testing::OriginalWorkFixture;
+    use semio_framework_plugin::plugin_app_close_prelude::OriginalWorkFixture;
     use semio_framework_value::retained_clone::RetainedCloneClose;
     let mut caller = OriginalWorkFixture::new();
     let stock = OriginalWorkFixture::stock();
@@ -11,14 +11,14 @@ fn original_declared_choice_backing_survives_posting_refusal_and_denied_retireme
     let demand = OriginalConstructionDemand { items: 1, copy_bytes: 4096, capacity_bytes: size_of::<StagedScalarChoice>(), release_bytes: 0, depth: 1 };
     let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| {
         caller.work_turn(stock, 1, |cx| {
-            admit_original_construction(cx, &mut owner, demand, |_| {
+            admit_original_construction(cx, &mut owner, demand, |_| costed((|| -> Result<_, ValueError> {
                 let mut rows = Vec::new();
                 rows.try_reserve_exact(2).unwrap();
                 rows.push(StagedScalarChoice { key: "T", label: "True" });
                 rows.push(StagedScalarChoice { key: "F", label: "False" });
                 let capacity = rows.capacity() * size_of::<StagedScalarChoice>();
                 Ok((Choices::new(rows), RetainedCloneProgress { copied_items: 1, copied_bytes: 4096, retained_capacity_bytes: capacity, ..Default::default() }))
-            })
+            })()))
         })
     });
     assert!(result.is_err());
@@ -57,7 +57,7 @@ fn original_declared_choice_backing_survives_posting_refusal_and_denied_retireme
                         let before = cx.retained_progress();
                         semio_framework_job::close_original_retained_step(cx, demand, |grant| {
                             if close.is_empty() {
-                                close.begin_granted(&mut owner, grant)?.ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "missing original choice retirement"))
+                                own_with(close.begin_granted(&mut owner, grant), || semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "missing original choice retirement"))
                             } else {
                                 close.step_granted(grant)
                             }
@@ -73,7 +73,7 @@ fn original_declared_choice_backing_survives_posting_refusal_and_denied_retireme
                 cx.with_original_retirement(|cx| {
                     let step = semio_framework_job::close_original_retained_step(cx, demand, |grant| {
                         if close.is_empty() {
-                            close.begin_granted(&mut owner, grant)?.ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "missing original choice retirement"))
+                            own_with(close.begin_granted(&mut owner, grant), || semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "missing original choice retirement"))
                         } else {
                             close.step_granted(grant)
                         }

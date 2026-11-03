@@ -4,6 +4,7 @@ use crate::apply_mutation;
 use crate::standards::v_rfc4180::subsets::any::schema::mutations::*;
 use crate::schema::snapshot::CsvField;
 use protocol::command::{ColdDiffAlgebra, DiffAlgebra};
+use protocol::{ColdMutation, ColdMutationDiff, DiffBinary, DiffText, OpBinary, OpText};
 use semio_framework_test_fixtures::fixture_text;
 
 //#region 🔖️Fixtures

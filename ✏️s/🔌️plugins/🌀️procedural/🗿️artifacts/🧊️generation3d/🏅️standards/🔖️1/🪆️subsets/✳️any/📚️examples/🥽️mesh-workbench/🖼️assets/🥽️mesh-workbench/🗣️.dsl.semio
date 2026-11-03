@@ -2,7 +2,7 @@ semio procedural.generation3d.dsl v1
 schema="flow.host_snapshot"
 camera { x=100 y=-40 zoom=1.5 }
 layout={
-  box=x=20 y=0 inset=x=220 y=0 extrude=x=420 y=0 analysis=x=620 y=140 preview=x=620 y=-80 amount=x=20 y=160 distance=x=220 y=160
+  box={x=20 y=0} inset={x=220 y=0} extrude={x=420 y=0} analysis={x=620 y=140} preview={x=620 y=-80} amount={x=20 y=160} distance={x=220 y=160}
 }
 synapses [id:TEXT wire:WIRE] {
   e1 box@meshOut->inset@mesh

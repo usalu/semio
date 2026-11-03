@@ -1,0 +1,11 @@
+--- a/🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/🦀️.rs
++++ b/🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/🦀️.rs
+@@ -106,7 +106,7 @@
+   let(new,_)=match self.append_metadata(){Ok(value)=>value,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};
+   if new{return self.reserve_page(demand.capacity_bytes,cx)}
+   let payload=unsafe{self.original.assume_init_mut()};if payload.ledger.as_ref().is_some_and(|ledger|!Arc::ptr_eq(ledger,cx.payload_ledger())){return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original payload append requires its same operation ledger")),work:0}}
+-  let page=payload.last_page_mut().unwrap();let count=grant.maximum_copy_bytes.min(page.source.allocated_capacity_bytes()-page.length).min(source.len()-*cursor);unsafe{std::ptr::copy_nonoverlapping(source.as_ptr().add(*cursor),page.source.storage.as_mut_ptr().cast::<u8>().add(page.length),count);}page.length+=count;payload.length+=count;*cursor+=count;cx.grant_payload_page();let p=RetainedCloneProgress{copied_items:1,copied_bytes:count,..Default::default()};
++  let Some(page)=payload.last_page_mut()else{return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original payload append has no open page")),work:0}};let count=grant.maximum_copy_bytes.min(page.source.allocated_capacity_bytes()-page.length).min(source.len()-*cursor);unsafe{std::ptr::copy_nonoverlapping(source.as_ptr().add(*cursor),page.source.storage.as_mut_ptr().cast::<u8>().add(page.length),count);}page.length+=count;payload.length+=count;*cursor+=count;cx.grant_payload_page();let p=RetainedCloneProgress{copied_items:1,copied_bytes:count,..Default::default()};
+   RetainedWorkOutcome{result:Ok(if *cursor==source.len(){RetainedCloneStep::Complete(p)}else{RetainedCloneStep::Progress(p)}),work:1}
+  }
+  /// 📏️ Quotes the scalar header publication without charging a payload copy.

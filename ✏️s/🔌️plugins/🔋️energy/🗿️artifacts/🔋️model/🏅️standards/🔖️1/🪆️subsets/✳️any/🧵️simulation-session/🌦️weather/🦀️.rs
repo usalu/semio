@@ -104,7 +104,7 @@ impl LinkedWeather {
                 let wire=self.owned.wire.as_ref().unwrap();
                 let decoder=self.decoder.as_mut().unwrap();
                 let demand=decoder.demands(wire,4096)?;
-                receive(cx,demand,|native,grant|decoder.step(wire,native,4096,grant).map(RetainedCloneStep::Progress))?;
+                receive(cx,demand,|native,grant|decoder.step(wire,native,4096,grant).result.map(RetainedCloneStep::Progress).map_err(|primary|{let progress=primary.progress;primary.primary.or(primary.quote_refusal).or(primary.allocation_refusal).unwrap_or_else(||ValueError::invariant("weather decode lost its primary refusal")).with_retained_progress(progress)}))?;
                 if decoder.record_is_ready() { self.phase=4; }
             }
             4 => {

@@ -48,8 +48,19 @@ fn surface_natural_file_reserved_job(
 
 const SURFACE_JOB_POLICY:semio_framework_job::RetainedCloneGrant=semio_framework_job::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:262144,maximum_depth:64};
 const SURFACE_ONE_UNIT_POLICY:semio_framework_job::RetainedCloneGrant=semio_framework_job::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32768,maximum_capacity_bytes:262144,maximum_release_bytes:1048576,maximum_depth:4096};
+thread_local!{static SURFACE_ORIGINS:std::cell::RefCell<std::collections::HashMap<usize,semio_framework_job::OriginalJobReturnOrigin>>=std::cell::RefCell::new(std::collections::HashMap::new());}
+fn surface_prepare_origin(origin:&mut semio_framework_job::OriginalJobReturnOrigin,cx:&mut semio_framework_job::StepContext<'_>){
+    for _ in 0..crate::app_testing::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){if origin.body_ready(){return}cx.with_retained_loan(SURFACE_ONE_UNIT_POLICY,|same|origin.admit(same).map(|_|())).expect("original surface return origin admission")}
+    assert!(origin.body_ready(),"original surface return origin admitted within its turn bound")
+}
+fn surface_close_origin(origin:&mut semio_framework_job::OriginalJobReturnOrigin,cx:&mut semio_framework_job::StepContext<'_>){
+    for _ in 0..crate::app_testing::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){if origin.terminal_is_empty(){return}cx.with_retained_loan(SURFACE_ONE_UNIT_POLICY,|same|origin.close_step(same).map(|_|())).expect("original surface return origin close")}
+    assert!(origin.terminal_is_empty(),"original surface return origin closed within its turn bound")
+}
 fn surface_natural_file_step(job:&mut ArtifactReservedToolJob,cx:&mut semio_framework_job::StepContext<'_>)->crate::app_testing::artifact_app_laws::FixtureStepOutcome{
-    let mut outcome=None;cx.with_retained_loan(SURFACE_JOB_POLICY,|same|{outcome=Some(crate::app_testing::artifact_app_laws::fixture_step(job,same));Ok(())}).expect("original surface job event");outcome.expect("original surface event returned")
+    let key=job as *const ArtifactReservedToolJob as usize;
+    SURFACE_ORIGINS.with(|origins|{let mut origins=origins.borrow_mut();let origin=origins.entry(key).or_insert_with(semio_framework_job::OriginalJobReturnOrigin::empty);surface_prepare_origin(origin,cx);
+        let mut outcome=None;cx.with_retained_loan(SURFACE_JOB_POLICY,|same|{outcome=Some(crate::app_testing::artifact_app_laws::fixture_step(job,same,origin.receiver()?));Ok(())}).expect("original surface job event");outcome.expect("original surface event returned")})
 }
 fn surface_natural_file_outcome(job:&mut ArtifactReservedToolJob,cx:&mut semio_framework_job::StepContext<'_>)->crate::app_testing::artifact_app_laws::FixtureStepOutcome{
     for _ in 0..crate::app_testing::artifact_app_laws::OriginalFixtureCaller::maximum_turns(){let outcome=surface_natural_file_step(job,cx);if !matches!(outcome,crate::app_testing::artifact_app_laws::FixtureStepOutcome::Idle|crate::app_testing::artifact_app_laws::FixtureStepOutcome::Yield){return outcome}}
@@ -64,7 +75,9 @@ fn close_surface_natural_file_job(job:&mut ArtifactReservedToolJob,cx:&mut semio
         if demand>64{let denied=semio_framework_job::RetainedCloneGrant{maximum_release_bytes:64,..SURFACE_JOB_POLICY};let step=cx.with_retained_loan(denied,|same|Job::close_step(job,same)).expect("original short-release close");assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!(Job::next_close_release_byte_demand(job).unwrap(),demand);assert!(!Job::terminal_is_empty(job));}
         let step=cx.with_retained_loan(SURFACE_JOB_POLICY,|same|Job::close_step(job,same)).expect("original surface full close");assert!(step.progress().fits(SURFACE_JOB_POLICY));match step{Step::Pending{progress}=>assert!(progress!=RetainedCloneProgress::default(),"original Surface fixed policy made no progress"),Step::Complete{..}=>{},other=>panic!("original Surface fixed policy close retained its frontier: {other:?}")}
     }
-    assert!(Job::terminal_is_empty(job),"original Surface exact terminal witness")
+    assert!(Job::terminal_is_empty(job),"original Surface exact terminal witness");
+    let key=job as *const ArtifactReservedToolJob as usize;
+    if let Some(mut origin)=SURFACE_ORIGINS.with(|origins|origins.borrow_mut().remove(&key)){surface_close_origin(&mut origin,cx)}
 }
 
 /// 🧵️ A mounted natural-file importer accounts owned input bytes across turns, observes

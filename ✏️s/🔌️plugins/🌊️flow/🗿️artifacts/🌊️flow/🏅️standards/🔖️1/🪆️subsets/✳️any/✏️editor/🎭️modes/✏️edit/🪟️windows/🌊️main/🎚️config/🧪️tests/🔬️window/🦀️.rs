@@ -146,7 +146,16 @@ fn flow_window_ownership_runtime_isolates_restores_and_resets_exact_windows() {
                     }
                     let mut reopened = Box::new(artifact_app_laws::new_app_with_registry_and_members::<EditorApp<FlowPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(manifest, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await);
                     reopened.bind_instance_id(72).await;
-                    for pack in config_packs { reopened.load_window_config_pack(pack).await.map_err(|error| format!("{error:?}"))?; }
+                    for pack in config_packs {
+                        let envelope_pack = match pack.source { semio_framework_plugin_window_config::WindowConfigPackSource::Pair(files) => semio_framework_os_kernel::os_store::serialization::encode_document_pack_bytes(&files.pack, &files.spr).await, semio_framework_plugin_window_config::WindowConfigPackSource::Framed(bytes) => bytes };
+                        let mut entry = protocol::WindowConfigPackEntry { window_id: pack.window_id, window_kind_id: pack.window_kind_id, envelope_pack };
+                        let mut load = semio_framework_plugin_window_config::WindowConfigCommandLoad::default();
+                        let mut turns = 0usize;
+                        while !reopened.advance_window_config_load(&mut load, &mut entry, scope.cx()).map_err(|error| format!("{error:?}"))? {
+                            turns += 1;
+                            if turns >= 1_000_000 { return Err("Flow window config restore never reached a terminal state".into()); }
+                        }
+                    }
                     let reopened_left = scene(&mut reopened, &left, scope.cx()).await?.viewport.ok_or("reopened left Flow viewport missing")?;
                     let reopened_right = scene(&mut reopened, &right, scope.cx()).await?.viewport.ok_or("reopened right Flow viewport missing")?;
                     artifact_app_laws::close_registered_fixture_app(&mut *reopened, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, scope.cx()).expect("original caller paid app close");

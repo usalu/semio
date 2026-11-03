@@ -31,11 +31,11 @@ semio_framework_plugin::app_commands! {
         "setSunIntensity" as "sun-intensity" => set_sun_intensity::SetSunIntensity,
         "setCamera" as "camera" => set_camera::SetCamera,
         "selectGeneration" as "select-generation" => select_generation::SelectGeneration,
-        "flowEvalTick" as "flow-eval-tick" => semio_s_artifact_procedural_3d_preview_eval::FlowEvalTick,
-        "flowEvalResolve" as "flow-eval-resolve" => semio_s_artifact_procedural_3d_preview_eval::FlowEvalResolve,
-        "flowTessellateResolve" as "flow-tessellate-resolve" => semio_s_artifact_procedural_3d_preview_eval::FlowTessellateResolve,
-        "flowEvalRelease" as "flow-eval-release" => semio_s_artifact_procedural_3d_preview_eval::FlowEvalRelease,
-        "flowTessellateCancelResolve" as "flow-tessellate-cancel-resolve" => semio_s_artifact_procedural_3d_preview_eval::FlowTessellateCancelResolve,
+        "flowEvalTick" as "flow-eval-tick" => flow_eval_tick::FlowEvalTick,
+        "flowEvalResolve" as "flow-eval-resolve" => flow_eval_resolve::FlowEvalResolve,
+        "flowTessellateResolve" as "flow-tessellate-resolve" => flow_tessellate_resolve::FlowTessellateResolve,
+        "flowEvalRelease" as "flow-eval-release" => flow_eval_release::FlowEvalRelease,
+        "flowTessellateCancelResolve" as "flow-tessellate-cancel-resolve" => flow_tessellate_cancel_resolve::FlowTessellateCancelResolve,
         "setContributions" as "set-contributions" => set_contributions::SetContributions,
         "importDocumentRequest" as "import-document-request" => import_document_request::ImportDocumentRequest,
         "importDocument" as "import-document" => import_document::ImportDocument,
@@ -47,8 +47,8 @@ semio_framework_plugin::app_commands! {
         "selectUpstreamNode" as "select-upstream-node" => select_upstream_node::SelectUpstreamNode,
         "selectDownstreamNode" as "select-downstream-node" => select_downstream_node::SelectDownstreamNode,
         "activateSelection" as "activate-selection" => activate_selection::ActivateSelection,
-        "editMeshSelection" as "edit-mesh-selection" => semio_s_artifact_procedural_3d_editor_commands::edit_mesh_selection::EditMeshSelection,
-        "knifeMeshSelection" as "knife-mesh-selection" => semio_s_artifact_procedural_3d_editor_commands::knife_mesh_selection::KnifeMeshSelection,
+        "editMeshSelection" as "edit-mesh-selection" => edit_mesh_selection::EditMeshSelection,
+        "knifeMeshSelection" as "knife-mesh-selection" => knife_mesh_selection::KnifeMeshSelection,
         "setWidgetInput" as "set-widget-input" => set_widget_input::SetWidgetInput}
 }
 //#endregion 🔖️Commands

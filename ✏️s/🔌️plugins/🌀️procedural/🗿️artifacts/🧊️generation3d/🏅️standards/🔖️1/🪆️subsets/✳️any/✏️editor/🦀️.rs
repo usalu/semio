@@ -5,6 +5,7 @@
 //! `🎭️modes/*/🪟️windows/*`, panel trees in `📌️panels/*`, labels in `🦀️terminology.rs`, view state in
 //! `🦀️config.rs`, shared compute in the artifact's `⚙️engine`.
 #![allow(clippy::result_large_err)]
+extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 
@@ -17,6 +18,9 @@ use semio_s_artifact_procedural_3d_editor_commands::add_generation;
 use semio_s_artifact_procedural_3d_add_widget as add_widget;
 use semio_s_artifact_procedural_3d_editor_commands::cycle_lod_mode;
 use semio_s_artifact_procedural_3d_editor_commands::cycle_show_mode;
+use semio_s_artifact_procedural_3d_preview_eval as preview_eval;
+use semio_s_artifact_procedural_3d_editor_commands::edit_mesh_selection;
+use semio_s_artifact_procedural_3d_editor_commands::knife_mesh_selection;
 use semio_s_artifact_procedural_3d_delete_selection as delete_selection;
 use semio_s_artifact_procedural_3d_export_document as export_document;
 use semio_s_artifact_procedural_3d_editor_commands::flow_eval_release;

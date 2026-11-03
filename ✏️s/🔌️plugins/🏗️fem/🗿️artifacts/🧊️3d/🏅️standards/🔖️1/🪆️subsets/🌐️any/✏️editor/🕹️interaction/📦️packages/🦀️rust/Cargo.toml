@@ -36,6 +36,7 @@ semio-s-artifact-fem-3d-scene = { workspace = true }
 
 [dev-dependencies]
 semio-framework-value-native-owned = { workspace = true }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-framework-async-macros = { workspace = true }
 semio-s-artifact-fem-3d-editor-commands = { workspace = true }
 semio-s-fem-node = { path = "../../../../../../../../../../⚙️engine/📍node/📦️packages/🦀️rust" }

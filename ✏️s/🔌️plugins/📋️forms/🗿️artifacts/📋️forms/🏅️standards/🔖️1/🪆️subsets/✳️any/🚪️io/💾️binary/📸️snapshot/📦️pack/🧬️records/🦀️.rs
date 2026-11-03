@@ -12,9 +12,9 @@ impl semio_framework_dsl_record::BorrowedDslField for Octets {
 impl DslField for Octets{
  fn shape()->semio_framework_dsl_record::Shape{semio_framework_dsl_record::Shape::Bytes64}
  fn shape_controlled<C:semio_framework_dsl_record::NativeSchemaControl>(c:&mut C)->Result<semio_framework_dsl_record::Shape,ValueError>{c.checkpoint()?;Ok(semio_framework_dsl_record::Shape::Bytes64)}
- fn to_value(&self)->FieldValue{FieldValue::Bytes64(self.0.clone())}
- fn to_value_controlled(&self,c:&mut NativeEncodeControl<'_>)->Result<FieldValue,ValueError>{c.copy_bytes(&self.0).map(FieldValue::Bytes64)}
- fn from_value(v:&FieldValue)->Result<Self,String>{match v{FieldValue::Bytes64(v)=>Ok(Self(v.clone())),_=>Err("Forms octet field differs".into())}}
+ fn to_value(&self)->FieldValue{FieldValue::Bytes64(semio_framework_value::paged::PagedBytes::try_from_slice(&self.0).unwrap_or_default())}
+ fn to_value_controlled(&self,c:&mut NativeEncodeControl<'_>)->Result<FieldValue,ValueError>{semio_framework_value::paged::PagedBytes::copy_encoded(&self.0,c).map(FieldValue::Bytes64)}
+ fn from_value(v:&FieldValue)->Result<Self,String>{match v{FieldValue::Bytes64(v)=>Ok(Self(v.to_vec_owner())),_=>Err("Forms octet field differs".into())}}
  fn from_value_controlled(v:&FieldValue,c:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{match v{FieldValue::Bytes64(v)=>c.copy_bytes(v).map(Self),_=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"Forms octet field differs"))}}
 }
 #[derive(semio_framework_dsl_record_derive::DslRecord)]pub(super) struct Member{pub name:String,pub value:u64}

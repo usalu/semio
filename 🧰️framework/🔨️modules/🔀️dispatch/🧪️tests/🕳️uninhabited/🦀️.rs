@@ -3,7 +3,6 @@
 //! NoMembers` with `match *self {}` bodies (verified against real rustc — matching a REFERENCE to an
 //! uninhabited type with zero arms is rejected as "non-exhaustive .. references are always considered
 //! inhabited"; matching the DEREF'd place is accepted — `📓️terra-dyn-enum-macro-report.md`).
-#![allow(async_fn_in_trait)] // R7 — never resolved by `+ Send` or by making a method sync.
 
 use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
 

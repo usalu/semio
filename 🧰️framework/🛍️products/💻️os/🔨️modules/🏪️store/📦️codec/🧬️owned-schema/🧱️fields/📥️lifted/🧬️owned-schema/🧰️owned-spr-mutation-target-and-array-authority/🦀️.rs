@@ -293,7 +293,7 @@ impl<P, Mutation: Send + 'static> ArtifactOwnedSprMutationArrayAuthority<P, Muta
         }
         if let Some(value) = self.target.value.take() {
             let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-            return match self.mutation_factory.as_ref().expect("mutation target retains original factory").retire_owned(value, child).result {
+            return match self.mutation_factory.as_ref().ok_or_else(||diagnostic.with_native(semio_framework_value::ValueError::invariant("mutation target factory is absent")))?.retire_owned(value, child).result {
                 Ok((owner, progress)) => { *self.retirement = Some(owner); if !progress.fits(child) || progress.retained_capacity_bytes != demand.capacity_bytes { return Err(diagnostic.with_progress(progress)); } Ok(RetainedCloneStep::Progress(progress)) }
                 Err((error, value)) => { *self.target.value = Some(value); Err(diagnostic.with_native(error)) }
             };

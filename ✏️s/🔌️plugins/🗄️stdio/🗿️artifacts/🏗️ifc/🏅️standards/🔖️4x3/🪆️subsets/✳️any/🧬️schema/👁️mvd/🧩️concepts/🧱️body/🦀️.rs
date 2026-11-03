@@ -55,6 +55,7 @@ impl BodyPolicy {
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) enum BodyFamilyResult { Pending, Resolved(bool), Unknown }
+#[derive(Clone, Copy)]
 pub(super) struct BodyFamilyMembership {
     policy: BodyPolicy,
     member: Membership,

@@ -59,6 +59,8 @@ pub mod standards {
                         pub mod snapshot;
                         #[path = "../../../🚪️io/💾️binary/🧬️mutations/🦀️.rs"]
                         pub mod mutations;
+                        #[path = "../../../🚪️io/💾️binary/🔺️diff/🦀️.rs"]
+                        pub mod diff;
                     }
                     #[path = "."]
                     pub mod text {
@@ -66,6 +68,8 @@ pub mod standards {
                         pub mod snapshot;
                         #[path = "../../../🚪️io/📝️text/🧬️mutations/🦀️.rs"]
                         pub mod mutations;
+                        #[path = "../../../🚪️io/📝️text/🔺️diff/🦀️.rs"]
+                        pub mod diff;
                     }
                     #[path = "."]
                     pub mod sqlite {

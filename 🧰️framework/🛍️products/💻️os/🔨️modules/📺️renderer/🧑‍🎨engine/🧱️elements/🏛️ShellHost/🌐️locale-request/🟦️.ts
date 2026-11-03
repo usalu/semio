@@ -1,0 +1,6 @@
+/** 🌐️ The language a hosting page asks of a shell that is already running, as an ephemeral local-only preference: the page's choice reaches the running shell (and the plugin guests behind it) without remounting it. */
+
+/** 🔁️ The requested locale to commit now: `requested` when it is new to the shell (`applied` is the last one it was given), the shell is not locked to a language, and the host actually asked; otherwise `undefined`. */
+export function localeRequestToApply<L extends string>(applied: L, requested: L | undefined, locked: L | undefined): L | undefined {
+  return requested === undefined || requested === applied || locked !== undefined ? undefined : requested;
+}

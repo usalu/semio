@@ -1,0 +1,51 @@
+--- a/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🦀️.rs
++++ b/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🦀️.rs
+@@ -2,7 +2,7 @@
+ //! and reference overlays, plus the scene's nodes.
+ 
+ use semio_s_artifact_cad_cad_modes as edit;
+-use semio_s_artifact_cad_cad_kit::{editor::cad::terminology::typology_label, editor::cad::terminology::CadLabels};
++use semio_s_artifact_cad_cad_kit::{editor::cad::terminology::object_name, editor::cad::terminology::typology_label, editor::cad::terminology::CadLabels};
+ use semio_s_artifact_cad_cad_kit::{cad_action, cad_tree_item, cad_tree_item_static, ui_label, ui_value_bool, ui_value_list, ui_value_map, ui_value_text, CadPlayRuntime, CadPlayView, CAD_INTERACTION_DOMAIN, CAD_PLAY_CONTROLLER_ID};
+ use semio_s_artifact_cad_cad_model::geometry::CadObject;
+ use semio_s_artifact_cad_cad_inferences::{CAD_MODEL_DEFINITION_BUILDING, CAD_MODEL_DEFINITION_ENERGY, CAD_MODEL_DEFINITION_SHAPE, CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC};
+@@ -58,8 +58,8 @@
+ /// tree-level `interactionSelect` binding and `granularity` makes this row a pick target of it, so a
+ /// pane of objects costs zero `UiValue` arena credit (the per-row pick map is what pushed a
+ /// 24-object document past the one-page argument arena before 2026-09-17).
+-pub(crate) fn object_tree_item(windows: &TreeWindows<'_>, id_suffix: &str, object: &CadObject, labels: &CadLabels) -> UiAssemblyResult<BuiltNode> {
+-    let mut item = ui::tree_item(ui_label(&object.label)?)
++pub(crate) fn object_tree_item(windows: &TreeWindows<'_>, id_suffix: &str, object: &CadObject, labels: &CadLabels, axes: Option<(semio_framework_ui_locale::Terminology, semio_framework_ui_locale::Locale)>) -> UiAssemblyResult<BuiltNode> {
++    let mut item = ui::tree_item(ui_label(&object_name(object, axes))?)
+         .try_id(object.id.clone())
+         .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "cad object row id admission failed"))?
+         .icon(ui_key("box")?)
+@@ -133,8 +133,8 @@
+ /// 🌳️ One pane's object section: namespaced by `id_suffix`, always expanded, windowed against the
+ /// host's own open/scroll state so the section reports its full `total` and materialises only the
+ /// rows on screen.
+-pub(crate) fn document_pane_section(builder: PanelTreeBuilder, windows: &TreeWindows<'_>, label: LabelText, id_suffix: &str, objects: &[CadObject], labels: &CadLabels) -> UiAssemblyResult<PanelTreeBuilder> {
+-    builder.window_section(windows, &format!("cad-play-document.{id_suffix}"), Some(ui_label(label.as_str())?), true, objects, |object| object_tree_item(windows, id_suffix, object, labels))
++pub(crate) fn document_pane_section(builder: PanelTreeBuilder, windows: &TreeWindows<'_>, label: LabelText, id_suffix: &str, objects: &[CadObject], labels: &CadLabels, axes: Option<(semio_framework_ui_locale::Terminology, semio_framework_ui_locale::Locale)>) -> UiAssemblyResult<PanelTreeBuilder> {
++    builder.window_section(windows, &format!("cad-play-document.{id_suffix}"), Some(ui_label(label.as_str())?), true, objects, |object| object_tree_item(windows, id_suffix, object, labels, axes))
+ }
+ 
+ /// 🌳️ One pane's references section: collapsed by default, "(none)"-placeholder when empty.
+@@ -158,13 +158,13 @@
+     let document = &envelope.document;
+ 
+     let mut builder = PanelTreeBuilder::new("cad-play-document")?.interaction_domain(CAD_PLAY_CONTROLLER_ID, CAD_INTERACTION_DOMAIN)?;
+-    builder = document_pane_section(builder, windows, labels.pane_shape, "shape", objects_of(CadPaneId::Shape), labels)?;
++    builder = document_pane_section(builder, windows, labels.pane_shape, "shape", objects_of(CadPaneId::Shape), labels, envelope.axes)?;
+     builder = artifact_references_section(builder, windows, document, CAD_MODEL_DEFINITION_SHAPE, labels)?;
+-    builder = document_pane_section(builder, windows, labels.pane_building, "building", objects_of(CadPaneId::Building), labels)?;
++    builder = document_pane_section(builder, windows, labels.pane_building, "building", objects_of(CadPaneId::Building), labels, envelope.axes)?;
+     builder = artifact_references_section(builder, windows, document, CAD_MODEL_DEFINITION_BUILDING, labels)?;
+-    builder = document_pane_section(builder, windows, labels.pane_energy, "energy", objects_of(CadPaneId::Energy), labels)?;
++    builder = document_pane_section(builder, windows, labels.pane_energy, "energy", objects_of(CadPaneId::Energy), labels, envelope.axes)?;
+     builder = artifact_references_section(builder, windows, document, CAD_MODEL_DEFINITION_ENERGY, labels)?;
+-    builder = document_pane_section(builder, windows, labels.pane_structure_classic, "structure-classic", objects_of(CadPaneId::StructureClassic), labels)?;
++    builder = document_pane_section(builder, windows, labels.pane_structure_classic, "structure-classic", objects_of(CadPaneId::StructureClassic), labels, envelope.axes)?;
+     builder = artifact_references_section(builder, windows, document, CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC, labels)?;
+     builder = builder.window_section(windows, "cad-play-document.nodes", Some(ui_label(labels.nodes.as_str())?), true, &document.nodes, |node| {
+         let args = ui_value_map([("nodeIds", ui_value_list([ui_value_text(&node.id)?])?)])?;

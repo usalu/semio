@@ -492,6 +492,7 @@ where
 
         if !self.registry_birth.terminal_is_empty(){
             self.registry_birth.begin_close();let grant=cx.retained_grant();let quote=self.registry_birth.close_demands()?;
+            if self.registry_birth.terminal_is_empty(){return Ok(false);}
             if !permits(grant,quote){return Ok(false);}
             let result=cx.with_native_retirement(|control|self.registry_birth.close_step(grant,control));
             let progress=match &result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};cx.consume_retained(progress)?;cx.consume_fuel(progress.copied_items as u64);result?;

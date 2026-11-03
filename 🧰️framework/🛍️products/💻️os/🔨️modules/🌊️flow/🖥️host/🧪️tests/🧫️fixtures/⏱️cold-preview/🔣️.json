@@ -11,7 +11,7 @@
       "cancellable": true
     },
     {
-      "phase": "collectingTopology",
+      "phase": "admittingSource",
       "unitsDone": 1,
       "unitsTotal": 8,
       "facesDone": 0,

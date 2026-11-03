@@ -74,7 +74,14 @@ pub(crate) mod context {
     /// 🎬️ Dispatches one typed command and drives its retained operation to publication, the way the
     /// host does — a migrated command's document and config edits land only once it settles.
     pub async fn dispatch(app: &mut SourcingTestApp, command: SourcingCurationCommand) -> InvocationResult {
-        let result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
+        let result = match &command {
+            SourcingCurationCommand::SetContributions(payload) => {
+                let address = semio_framework::manifest::CommandAddress { owner: semio_framework::manifest::CommandOwnerAddress::App { plugin_id: "sourcing".into(), app_id: "s.sourcing.curation@1/*#editor".into() }, command_id: "setContributions".into() };
+                let arguments = Some(semio_framework_value::DslValue::object([("json".to_owned(), semio_framework_value::DslValue::String(payload.json.clone()))]));
+                semio_framework_plugin::artifact_app_laws::dispatch_fixture_command(&mut app.0, &address, arguments, None, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).await.expect("dispatch")
+            }
+            _ => semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch"),
+        };
         settle(app).await;
         result
     }
@@ -85,8 +92,9 @@ pub(crate) mod context {
         for turn in 0usize..100_000 {
             app.0.maintenance_step(app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("maintenance step");
             app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("typed operation publication");
-            if let Some(page) = app.take_typed_operation_result_page(1) {
-                assert!(app.acknowledge_typed_operation_result(page.token).expect("typed operation acknowledgement"));
+            if let Some(mut page) = semio_framework_plugin::artifact_app_laws::take_fixture_result_page(&mut app.0, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("typed operation result page") {
+                let token = semio_framework_plugin::artifact_app_laws::close_fixture_result_page(&mut page, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance);
+                assert!(app.acknowledge_typed_operation_result(token).expect("typed operation acknowledgement"));
             }
             if let Some(effect) = app.take_typed_operation_effect() {
                 effects.push(effect);
@@ -194,10 +202,11 @@ async fn retained_example_load_publishes_authored_stock_and_closes_exact_owners(
         for turn in 0usize..100_000 {
             app.0.maintenance_step(app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).unwrap();
             app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();
-            if let Some(page) = app.take_typed_operation_result_page(7) {
+            if let Some(mut page) = semio_framework_plugin::artifact_app_laws::take_fixture_result_page(&mut app.0, 7, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).unwrap() {
                 assert_ne!(page.lane, TypedOperationResultLane::Fault, "{}", String::from_utf8_lossy(page.bytes()));
                 terminal |= page.lane == TypedOperationResultLane::Terminal;
-                assert!(app.acknowledge_typed_operation_result(page.token).unwrap());
+                let token = semio_framework_plugin::artifact_app_laws::close_fixture_result_page(&mut page, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance);
+                assert!(app.acknowledge_typed_operation_result(token).unwrap());
             }
             if let Some(effect) = app.take_typed_operation_effect() {
                 let semio_framework::kernel::Effect::LoadDocument { pack, spr } = effect else { panic!("example must publish a document load") };
@@ -206,7 +215,7 @@ async fn retained_example_load_publishes_authored_stock_and_closes_exact_owners(
                 assert!(history.composition.as_ref().and_then(|composition| composition.dialect.as_ref()).is_some(), "the load carries the dialect archive hydration checks");
                 assert_eq!(history.schema, SOURCING_CURATION_SCHEMA);
                 assert!(history.edits.is_empty());
-                document = Some(CurationSnapshot::decode_pack(&pack).unwrap());
+                document = Some(<CurationSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&pack).unwrap());
             }
             app.take_typed_operation_event();
             app.take_typed_operation_ui_scope();
@@ -249,8 +258,9 @@ async fn example_load_settles_through_the_host_document_archive_door() {
     for _ in 0..100_000 {
         app.0.maintenance_step(app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).unwrap();
         app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();
-        if let Some(page) = app.take_typed_operation_result_page(7) {
-            assert!(app.acknowledge_typed_operation_result(page.token).unwrap());
+        if let Some(mut page) = semio_framework_plugin::artifact_app_laws::take_fixture_result_page(&mut app.0, 7, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).unwrap() {
+            let token = semio_framework_plugin::artifact_app_laws::close_fixture_result_page(&mut page, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance);
+            assert!(app.acknowledge_typed_operation_result(token).unwrap());
         }
         if let Some(semio_framework::kernel::Effect::LoadDocument { pack, spr }) = app.take_typed_operation_effect() {
             loaded = Some((pack, spr));
@@ -318,7 +328,7 @@ fn retained_config_preparation_matches_the_json_oracle_and_rejects_maximum_plus_
     let base = SourcingCurationConfig::default();
     let mut expected = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&base)).expect("JSON oracle base");
     expected["filters"]["query"] = serde_json::json!("timber");
-    let (post, inverse, _) = prepare_sourcing_curation_config(&base, SourcingCurationConfigMutation::SetFilterQuery(SetFilterQueryEdit { value: "timber".into() })).expect("bounded config candidate");
+    let (post, inverse) = prepare_sourcing_curation_config(&base, &SourcingCurationConfigMutation::SetFilterQuery(SetFilterQueryEdit { value: "timber".into() })).expect("bounded config candidate");
     assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&post)).expect("JSON oracle post"), expected);
     assert!(matches!(&inverse[0], SourcingCurationConfigMutation::SetFilterQuery(SetFilterQueryEdit { value }) if value == &base.filters.query));
     assert!(sourcing_curation_config_mutation_retained_bytes(&SourcingCurationConfigMutation::SetFilterQuery(SetFilterQueryEdit { value: "x".repeat(SOURCING_CURATION_CONFIG_TEXT_BYTES) })).is_ok());
@@ -341,7 +351,7 @@ fn the_contributions_lane_is_priced_apart_from_the_filter_text_envelope() {
     let over = SourcingCurationConfigMutation::SetContributions(SetContributionsEdit { json: "x".repeat(SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES + 1) });
     assert!(sourcing_curation_config_mutation_retained_bytes(&over).is_err(), "one byte past the lane is refused, never truncated");
     let base = SourcingCurationConfig { contributions_json: "x".repeat(SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES), ..Default::default() };
-    let (post, inverse, _) = prepare_sourcing_curation_config(&base, SourcingCurationConfigMutation::SetFilterQuery(SetFilterQueryEdit { value: "timber".into() })).expect("a filter edit over a full contributions lane stays bounded");
+    let (post, inverse) = prepare_sourcing_curation_config(&base, &SourcingCurationConfigMutation::SetFilterQuery(SetFilterQueryEdit { value: "timber".into() })).expect("a filter edit over a full contributions lane stays bounded");
     assert_eq!(post.contributions_json.len(), SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES, "a filter edit never disturbs the retained pack");
     assert!(matches!(&inverse[0], SourcingCurationConfigMutation::SetFilterQuery(_)));
 }
@@ -431,7 +441,7 @@ async fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
 async fn the_production_action_bridge_admits_every_declared_command() {
     for command in every_command() {
         let action = command.command_id();
-        let built = <SourcingCurationApp as ArtifactEditor>::command_from_action(action, None, None).unwrap_or_else(|fault| panic!("action '{action}' is declared but the production bridge rejects it: {fault:?}"));
+        let built = <SourcingCurationApp as ArtifactEditor>::command_from_action(action, &mut None, &mut None).unwrap_or_else(|fault| panic!("action '{action}' is declared but the production bridge rejects it: {fault:?}"));
         assert_eq!(built.command_id(), action, "the bridge routed '{action}' to the wrong command");
     }
 }
@@ -451,11 +461,11 @@ async fn every_rendered_action_bridges_through_the_framework_harness() {
 /// vocabularies are joined here and nowhere else.
 #[semio_framework_async_macros::async_test]
 async fn the_action_bridge_reads_the_declared_arg_names() {
-    let built = <SourcingCurationApp as ArtifactEditor>::command_from_action("setActiveExample", Some((semio_framework_value::DslValue::from(&serde_json::json!({ "exampleId": DEMO_STOCK_EXAMPLE_ID }))).clone()), None).expect("setActiveExample must convert");
+    let built = <SourcingCurationApp as ArtifactEditor>::command_from_action("setActiveExample", &mut Some((semio_framework_value::DslValue::from(&serde_json::json!({ "exampleId": DEMO_STOCK_EXAMPLE_ID }))).clone()), &mut None).expect("setActiveExample must convert");
     assert_eq!(built, SourcingCurationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: DEMO_STOCK_EXAMPLE_ID.into() }));
-    let filter = <SourcingCurationApp as ArtifactEditor>::command_from_action("setFilterModule", Some((semio_framework_value::DslValue::from(&serde_json::json!({ "moduleId": "walls", "enabled": true }))).clone()), None).expect("setFilterModule must convert");
+    let filter = <SourcingCurationApp as ArtifactEditor>::command_from_action("setFilterModule", &mut Some((semio_framework_value::DslValue::from(&serde_json::json!({ "moduleId": "walls", "enabled": true }))).clone()), &mut None).expect("setFilterModule must convert");
     assert_eq!(filter, SourcingCurationCommand::SetFilterModule(set_filter_module::SetFilterModule { module_id: "walls".into(), enabled: true }));
-    assert!(<SourcingCurationApp as ArtifactEditor>::command_from_action("noSuchAction", None, None).is_err(), "an undeclared action must fault, not silently no-op");
+    assert!(<SourcingCurationApp as ArtifactEditor>::command_from_action("noSuchAction", &mut None, &mut None).is_err(), "an undeclared action must fault, not silently no-op");
 }
 
 /// 🔲️ LAW (S15 matrix, 2026-09-25): the rail stages `curationSetCount`'s `delta`/`value` through the argument schema
@@ -470,7 +480,7 @@ async fn the_rail_stages_numeric_curation_counts_into_one_curated_edit() {
         let arg = action.args.iter().find(|arg| arg.id == id).unwrap_or_else(|| panic!("curationSetCount declares {id}"));
         assert!(matches!(arg.schema, semio_framework_plugin::ArgSchema::Number { .. }), "curationSetCount.{id} must be a number argument, found {:?}", arg.schema);
     }
-    let built = <SourcingCurationApp as ArtifactEditor>::command_from_action("curationSetCount", Some((semio_framework_value::DslValue::from(&serde_json::json!({ "objectId": "beam-glulam-gl24h", "delta": 1 }))).clone()), None).expect("curationSetCount must convert");
+    let built = <SourcingCurationApp as ArtifactEditor>::command_from_action("curationSetCount", &mut Some((semio_framework_value::DslValue::from(&serde_json::json!({ "objectId": "beam-glulam-gl24h", "delta": 1 }))).clone()), &mut None).expect("curationSetCount must convert");
     assert_eq!(built, SourcingCurationCommand::CurationSetCount(curation_set_count::CurationSetCount { object_id: "beam-glulam-gl24h".into(), delta: Some(1.0), value: None }));
 }
 

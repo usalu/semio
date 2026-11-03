@@ -2,7 +2,10 @@
   "schema": "spatial.interaction",
   "id": "surface.sweep2",
   "version": "1.0.0",
-  "label": "Sweep2",
+  "label": {
+    "native": { "en": "Sweep2", "de": "Sweep (2 Schienen)" },
+    "reuse": { "en": "Sweep2", "de": "Sweep (2 Schienen)" }
+  },
   "interaction": {
     "spatialGroundPick": false,
     "pickDisabledStates": ["idle", "committed"],
@@ -23,7 +26,10 @@
               {
                 "target": "select_first_rail",
                 "key": "s",
-                "label": "Start",
+                "label": {
+                  "native": { "en": "Start", "de": "Start" },
+                  "reuse": { "en": "Start", "de": "Start" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -84,7 +90,10 @@
         "selection": {
           "accept": ["wire", "edge"],
           "multiple": true,
-          "prompt": "Select first rail"
+          "prompt": {
+            "native": { "en": "Select first rail", "de": "Erste Schiene auswählen" },
+            "reuse": { "en": "Select first rail", "de": "Erste Schiene auswählen" }
+          }
         },
         "on": [
           {
@@ -93,7 +102,10 @@
               {
                 "target": "select_second_rail",
                 "key": "s",
-                "label": "Select",
+                "label": {
+                  "native": { "en": "Select", "de": "Auswählen" },
+                  "reuse": { "en": "Select", "de": "Auswählen" }
+                },
                 "effects": [
                   {
                     "mutation": "action",
@@ -130,7 +142,10 @@
         "selection": {
           "accept": ["wire", "edge"],
           "multiple": true,
-          "prompt": "Select second rail"
+          "prompt": {
+            "native": { "en": "Select second rail", "de": "Zweite Schiene auswählen" },
+            "reuse": { "en": "Select second rail", "de": "Zweite Schiene auswählen" }
+          }
         },
         "on": [
           {
@@ -139,7 +154,10 @@
               {
                 "target": "select_cross_section_curves",
                 "key": "s",
-                "label": "Select",
+                "label": {
+                  "native": { "en": "Select", "de": "Auswählen" },
+                  "reuse": { "en": "Select", "de": "Auswählen" }
+                },
                 "effects": [
                   {
                     "mutation": "action",
@@ -176,7 +194,10 @@
         "selection": {
           "accept": ["wire", "edge"],
           "multiple": true,
-          "prompt": "Select cross-section curves"
+          "prompt": {
+            "native": { "en": "Select cross-section curves", "de": "Querschnittskurven auswählen" },
+            "reuse": { "en": "Select cross-section curves", "de": "Querschnittskurven auswählen" }
+          }
         },
         "on": [
           {
@@ -185,7 +206,10 @@
               {
                 "target": "select_cross_section_curves",
                 "key": "s",
-                "label": "Select",
+                "label": {
+                  "native": { "en": "Select", "de": "Auswählen" },
+                  "reuse": { "en": "Select", "de": "Auswählen" }
+                },
                 "effects": [
                   {
                     "mutation": "action",
@@ -217,7 +241,10 @@
               {
                 "target": "sweep2_options_dialog",
                 "key": "Enter",
-                "label": "Finish"
+                "label": {
+                  "native": { "en": "Finish", "de": "Fertig" },
+                  "reuse": { "en": "Finish", "de": "Fertig" }
+                }
               }
             ]
           },
@@ -227,7 +254,10 @@
               {
                 "target": "sweep2_options_dialog",
                 "key": "RightClick",
-                "label": "Finish"
+                "label": {
+                  "native": { "en": "Finish", "de": "Fertig" },
+                  "reuse": { "en": "Finish", "de": "Fertig" }
+                }
               }
             ]
           }
@@ -242,7 +272,10 @@
               {
                 "target": "committed",
                 "key": "o",
-                "label": "OK",
+                "label": {
+                  "native": { "en": "OK", "de": "OK" },
+                  "reuse": { "en": "OK", "de": "OK" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -281,7 +314,10 @@
             "kind": "label",
             "id": "select_first_rail-prompt",
             "role": "prompt",
-            "text": "Select first rail",
+            "text": {
+              "native": { "en": "Select first rail", "de": "Erste Schiene auswählen" },
+              "reuse": { "en": "Select first rail", "de": "Erste Schiene auswählen" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]
@@ -344,7 +380,10 @@
             "kind": "label",
             "id": "select_second_rail-prompt",
             "role": "prompt",
-            "text": "Select second rail",
+            "text": {
+              "native": { "en": "Select second rail", "de": "Zweite Schiene auswählen" },
+              "reuse": { "en": "Select second rail", "de": "Zweite Schiene auswählen" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]
@@ -407,7 +446,10 @@
             "kind": "label",
             "id": "select_cross_section_curves-prompt",
             "role": "prompt",
-            "text": "Select cross-section curves",
+            "text": {
+              "native": { "en": "Select cross-section curves", "de": "Querschnittskurven auswählen" },
+              "reuse": { "en": "Select cross-section curves", "de": "Querschnittskurven auswählen" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]
@@ -470,7 +512,10 @@
             "kind": "label",
             "id": "sweep2_options_dialog-prompt",
             "role": "prompt",
-            "text": "Sweep2 options",
+            "text": {
+              "native": { "en": "Sweep2 options", "de": "Sweep2-Optionen" },
+              "reuse": { "en": "Sweep2 options", "de": "Sweep2-Optionen" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]

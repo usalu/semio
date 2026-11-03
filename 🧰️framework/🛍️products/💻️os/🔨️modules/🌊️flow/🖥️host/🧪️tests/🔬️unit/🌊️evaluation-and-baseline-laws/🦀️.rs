@@ -29,6 +29,7 @@ fn slider_updates_preview() {
     let mut host = host_with_test_bridge();
     host.set_slider_value("slider", 5.0);
     host.evaluate_internal();
+    settle_baseline(&mut host);
     assert_eq!(host.preview_text(), "5");
     host.retire_cold();
 }
@@ -45,9 +46,11 @@ fn evaluate_skips_unchanged_tree_after_move_widget() {
     let mut host=FixtureRegistryHost::new(host,FixtureOperatorFamily::Math);
     host.set_neuron_kind_infos_json(&test_kind_infos_json());
     host.evaluate_internal();
+    settle_baseline(&mut host);
     let baseline = calls.load(Ordering::Relaxed);
     host.move_widget("slider", -120.0, 20.0).unwrap();
     host.evaluate_internal();
+    settle_baseline(&mut host);
     assert_eq!(calls.load(Ordering::Relaxed), baseline);
     host.retire_cold();
 }
@@ -87,6 +90,7 @@ fn apply_eval_outputs_json_establishes_baseline_for_dirty_probe() {
     let mut fresh=FixtureRegistryHost::new(fresh,FixtureOperatorFamily::Math);
     fresh.set_neuron_kind_infos_json(&test_kind_infos_json());
     fresh.apply_eval_outputs_json(&eval_json);
+    settle_baseline(&mut fresh);
     fresh.set_slider_value("slider", 4.0);
     let pending = fresh.pending_eval_widget_ids();
     assert!(pending.contains(&"add".to_string()));
@@ -102,13 +106,16 @@ fn apply_eval_outputs_json_skips_baseline_when_outputs_stale_for_seeds() {
     let stale_eval_json = host.last_eval_json.clone();
     host.set_slider_value("slider", 9.0);
     host.apply_eval_outputs_json(&stale_eval_json);
+    settle_baseline(&mut host);
     let pending = host.pending_eval_widget_ids();
     assert!(pending.contains(&"add".to_string()), "stale channel outputs must not converge the baseline after a seed change");
     assert!(!pending.contains(&"slider".to_string()));
     host.evaluate_internal();
+    settle_baseline(&mut host);
     assert_eq!(host.preview_text(), "9");
     let fresh_eval_json = host.last_eval_json.clone();
     host.apply_eval_outputs_json(&fresh_eval_json);
+    settle_baseline(&mut host);
     assert!(host.pending_eval_widget_ids().is_empty(), "fresh eval for the current seeds must establish a converged baseline");
     host.retire_cold();
 }
@@ -125,6 +132,7 @@ fn flow_eval_session_retains_baseline_across_ephemeral_hosts() {
     let mut replay=FixtureRegistryHost::new(replay,FixtureOperatorFamily::Math);
     replay.set_neuron_kind_infos_json(&test_kind_infos_json());
     replay.replace_host_snapshot(host.host_snapshot.clone());
+    settle_baseline(&mut replay);
     session.install_baseline_into(&mut replay,FIXTURE_SESSION_GRANT).unwrap();
     let pending = replay.pending_eval_widget_ids();
     assert!(pending.contains(&"add".to_string()));
@@ -160,6 +168,7 @@ fn host_with_two_node_chain() -> (FixtureRegistryHost, String) {
         host.disconnect(&id).unwrap();
     }
     host.evaluate_internal();
+    settle_baseline(&mut host);
     (host, pass_id)
 }
 
@@ -171,9 +180,11 @@ fn evaluate_step_budget_one_converges_over_multiple_calls() {
     host.set_slider_value("slider", 6.0);
     assert_eq!(host.preview_text(), "3");
     let remaining_after_tick1 = host.evaluate_cold_step(EvalStepBudget::dispatches(1),&|_|true).unwrap();
+    settle_baseline(&mut host);
     assert_eq!(remaining_after_tick1.first(), Some(&"pass".to_string()), "pass is the next node blocking completion");
     assert_eq!(host.preview_text(), "3", "the chain hasn't reached \"pass\" (and thus \"preview\") yet");
     let remaining_after_tick2 = host.evaluate_cold_step(EvalStepBudget::dispatches(1),&|_|true).unwrap();
+    settle_baseline(&mut host);
     assert!(remaining_after_tick2.is_empty(), "the walk reached the end of the topo order");
     assert_eq!(host.preview_text(), "6", "converged to the dragged value after both ticks");
     host.retire_cold();

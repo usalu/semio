@@ -1,7 +1,7 @@
 //! 🧪️ Native Store bytes use each immediate preimage and retain all original owners through close.
 use super::*;
 use protocol::command::ColdDiffAlgebra;
-use semio_framework_plugin::app_testing::OriginalWorkFixture;
+use semio_framework_plugin::plugin_app_close_prelude::OriginalWorkFixture;
 fn grant() -> RetainedCloneGrant {
     RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 2097152, maximum_release_bytes: 2097152, maximum_depth: 256 }
 }
@@ -40,18 +40,24 @@ fn close(cursor: &mut IfcPublication, caller: &mut OriginalWorkFixture) {
 }
 fn capture(snapshot: &Arc<IfcSnapshot>, caller: &mut OriginalWorkFixture) -> IfcPublication {
     let mut cursor = IfcPublication::default();
-    caller
-        .work_turn(grant(), 1, |cx| {
-            let alias_bytes = std::mem::size_of::<Arc<IfcSnapshot>>();
-            let source_grant = RetainedCloneGrant { maximum_copy_bytes: cx.retained_grant().maximum_copy_bytes - alias_bytes, ..cx.retained_grant() };
-            let (source, mut progress) = SnapshotSource::admit_borrowed(Arc::clone(snapshot), |snapshot| snapshot.as_ref(), source_grant).map_err(|(error, _)| error)?;
-            progress.copied_bytes += alias_bytes;
-            cursor.view.source = Some(source);
-            cx.consume_retained(progress)?;
-            Ok(())
-        })
-        .unwrap();
-    cursor
+    let mut admission = Some(SnapshotSource::admission_borrowed(Arc::clone(snapshot), |snapshot: &Arc<IfcSnapshot>| snapshot.as_ref()));
+    for _ in 0..64 {
+        caller
+            .work_turn(grant(), 1, |cx| {
+                let grant = cx.retained_grant();
+                let admission = admission.as_mut().unwrap();
+                let turn = if admission.phase() == "ready" { admission.take_output(&mut cursor.view.source, grant) } else { admission.advance(grant) };
+                cx.consume_fuel(turn.work);
+                cx.consume_retained(turn.result?.progress())?;
+                Ok(())
+            })
+            .unwrap();
+        if cursor.view.source.is_some() {
+            admission = None;
+            return cursor;
+        }
+    }
+    panic!("original publication source admission did not finish")
 }
 fn encoded(source: store::ArtifactPreparedOperationSource<'_>, caller: &mut OriginalWorkFixture) -> Vec<u8> {
     let mut cursor = store::ArtifactPreparedOperationCursor::default();
@@ -77,8 +83,10 @@ fn encoded(source: store::ArtifactPreparedOperationSource<'_>, caller: &mut Orig
                         cx.with_original_retirement(|cx| {
                             let demand = cursor.retirement_demands()?;
                             semio_framework_job::close_original_retained_step(cx, demand, |grant| {
-                                let step = cursor.close(grant).map_err(|error| error.reason)?;
-                                Ok(if step.complete { RetainedCloneStep::Complete(receipt(step)) } else { RetainedCloneStep::Progress(receipt(step)) })
+                                costed((|| -> Result<_, ValueError> {
+                                    let step = cursor.close(grant).map_err(|error| error.reason)?;
+                                    Ok(if step.complete { RetainedCloneStep::Complete(receipt(step)) } else { RetainedCloneStep::Progress(receipt(step)) })
+                                })())
                             })?;
                             Ok(())
                         })
@@ -204,8 +212,10 @@ fn temporary_canonical_facades_keep_their_retained_original_identity() {
                 cx.with_original_retirement(|cx| {
                     let demand = cursor.retirement_demands()?;
                     semio_framework_job::close_original_retained_step(cx, demand, |grant| {
-                        let progress = cursor.close(grant).map_err(|error| error.reason)?;
-                        Ok(if progress.complete { RetainedCloneStep::Complete(receipt(progress)) } else { RetainedCloneStep::Progress(receipt(progress)) })
+                        costed((|| -> Result<_, ValueError> {
+                            let progress = cursor.close(grant).map_err(|error| error.reason)?;
+                            Ok(if progress.complete { RetainedCloneStep::Complete(receipt(progress)) } else { RetainedCloneStep::Progress(receipt(progress)) })
+                        })())
                     })?;
                     Ok(())
                 })

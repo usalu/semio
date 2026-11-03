@@ -1,0 +1,102 @@
+STATUS: B1P APPLIED (35 framework patches minus B5P pair) and wasm --lib check GREEN (log 🗑️generated/1102/W-b1p-5.txt, rc 0) for 27 crates; B5P deferred (not applied). UNVERIFIED: value-derive/derive-expansion (compiled only as proc-macro deps), os-flow-wasm and os-renderer-wgpu (not in hub graph), text-splice-native (pre-existing break, see below).
+
+# 1102 result: phase
+
+Generator (fail-closed, every edit asserts its exact match count): `1102-tools/phase/{ph.py,s_*.py,all.py}`, re-run `python3 all.py` (rebuilds patches, ordering `patches/order.txt`, supersessions `patches/supersedes.txt`) and `python3 seq.py` (sequence test on a scratch copy). Apply from the repo root with `git apply <patch>`, order = `patches/order.txt` (definition first). Panic constructs on changed lines after applying everything: 0.
+
+## Supersedes four policy patches (apply the phase patch INSTEAD of the policy patch)
+Same file touched by both, so the phase patch is built on top of the policy edits and contains them: `semio-framework-pack-record-retained`, `semio-framework-replication-history`, `semio-framework-os-store-replay-operation`, `semio-framework-plugin-job-receiving`. The window plan must drop those four policy diffs (the other 53 policy patches stay and apply before or after, independent of mine).
+
+## Finding: the policy blocker table is stale and under-counts
+Policy's `blockers.md` was generated before its own patches. Re-reading the post-policy tree: `ifc-4x3 machine-domain` (row 279) and `os-kernel mutation-apply` (row 68) are already fixed by policy patches (identical to the fix I had drafted, so I dropped mine); `pack-record-retained` rows 8/17/18 and `wgpu` rows 164/197/210 pointed to the wrong sibling file (the real sites are in `receiving/📦️document` and `native-io/🎟️source`). The surrounding files hold many more sites than the table lists (e.g. `os-history/🧵️edit` ~40 `.unwrap()` on `partial/ops/metas`, `os-store-document/pack-scan` ~15 `.expect`, `engine-replay/checkout.rs` ~25); I fixed all of checkout.rs and the table rows, not the extra history/document sites (see residual).
+
+## Decisions
+- (b) `RetainedCloneProgress` gets `saturating_add` (new, `value-control-contract`). Error-path accounting (a `map_err` closure that must keep its error type) saturates: an overflowed total fits no grant (`fits` compares to bounded grants), so it fails closed without a second error channel. Success paths keep `checked_add` and return the typed `ValueError` (`NativeReceivingBatch::record` -> `refuse(error)`, schema probe loop -> `with_retained_progress(progress)`). Informational counters saturate (`record_shared_work`, evaluation `units.saturating_sub`, cumulative `physical` receipt in flow extensions: saturated receipt then fails `physical.fits(memory_grant)` and takes the existing fault path). Sites: native-owned x7 (owned.rs x2, schema x4, bulk x1), flow-extensions x2, replication-history x1.
+- (a) Integer/string phase machines: where the arm sits in a closure or fn with an error channel I replaced `_=>unreachable!(..)` with the file's typed invariant error (persistent splice/build/path, clone-source admission `failure(..)`, ordered retirement `RetirementStep::Failure`). I did NOT rewrite the phases into `enum Phase` with data-owning variants: that is a whole-file rewrite of 1-2 KB lines with `unsafe` field ownership, not checkable without a compile, and it risks the 1M-function/stack ceilings the memory notes warn about. Two machines already are enums (`ordered Phase`, `build Phase`). Typed-error arms remove the panics now; enum conversion is listed as follow-up per file below.
+- (c) Proc macros: `container_equality_path` now returns `syn::Result<syn::Path>` (single caller `declared_equality_crate`); `construct_fields` no longer `.expect`s field idents (`filter_map`) and emits `.ok_or_else(..ValueError InvariantViolated..)?` instead of `.expect` in generated code (both generated sites are inside `Result<_,ValueError>` closures). `os-kernel-dsl-derive:287` (`panic!` inside generated `const { .. }`) is a const-eval assertion = compile-time error in the user's crate; it is the intended compile-failure mechanism, left as is (a `compile_error!` cannot see the const result).
+
+## Patch table (order of `patches/order.txt`; risk = compile risk)
+| # | patch | sites | risk | note |
+|---|---|---|---|---|
+| 1 | semio-framework-value-control-contract | new `saturating_add` | low | definition, must precede native-owned and flow-extensions, replication-history |
+| 2 | semio-framework-value-allocation-return | layout `.expect` -> `map_or(usize::MAX)` (fails every grant closed); `Arc::get_mut` unique -> let-else returning the input value | low | |
+| 3 | semio-framework-value-native-owned | 7 `checked_add.expect` | medium | borrow of `self` in `refuse(error)` return inside `match` assignment |
+| 4 | semio-framework-value-persistent | splice x4, build x1, path x6 | low | all inside `Result<_,ValueError>` closures |
+| 5 | semio-framework-value-derive-expansion | equality path -> `syn::Result` | low | |
+| 6 | semio-framework-value-derive | `construct_fields(&value_crate,..)`, generated `?`, `filter_map` | medium | proc-macro; check derive tests first, then any `#[derive(RetainedClone)]` user |
+| 7 | semio-framework-value-edit | `added_index` unreachable -> `invalid()` outcome | low | |
+| 8 | semio-framework-value-paged-list | `push_reserved` -> `map_err(..)?` | low | |
+| 9 | semio-framework-value-ordered | plan.rs: `take_node`->Option, `resolve`/`prepare`->Result, `new_aliases`/`balanced` rewritten with patterns (no unwrap), numeric repair via `match (balance,left,right)`, cold `insert/remove` end without panic, `admission_growth` fails closed (`usize::MAX`), retirement `Failure` | HIGH | `balanced` moves `left/right` in a 4-tuple match; `insert/remove` on an admission refusal now leave the map unchanged and return `None`/dropped value instead of panicking (decision: the cold grant is derived from the cursor so refusal means a broken invariant; a `Result` return would ripple through every caller) |
+| 10 | semio-framework-value-clone-source | admission phase arm; `ControlledRetirement::new` failure restores owner | low | |
+| 11 | semio-framework-value-retained-map | `get_index(..).unwrap()` -> `try_project(.. ok_or_else ..)?` | medium | relies on `RetainedCloneRef::try_project` (exists) |
+| 12 | semio-framework-pack-record-retained | decode/document x2, receiving/document x3 (driver, record init, advance) | low | SUPERSEDES policy patch of the same name |
+| 13 | semio-framework-actor-retained-turn | park `.expect` -> `Err(OriginalActorParkAdmissionFailure{caller:None,..})` | low | |
+| 14 | semio-framework-replication-history | `record_shared_work` saturates; `poll` donor frame -> typed `Ready(Err)`; restore only if frame present | medium | SUPERSEDES policy patch; `Pin<&mut Self>` deref, `self.done=true` in the else arm |
+| 15 | semio-framework-text-splice-native | `Scalars::get/get_mut`, `output_mut` -> `Result`, 7 call sites `?` | low | |
+| 16 | semio-framework-job | step-payload owners x3, payload page owner, page layout, `u64::try_from`, capsule frame (closure `fail`), page-transfer x4 | medium | |
+| 17 | semio-framework-job-failure | `code()/message()` total with static fallbacks | low | |
+| 18 | semio-framework-job-payload | open-page let-else | low | |
+| 19 | semio-framework-os-flow-wasm | `original.take().unwrap()` -> let-else `Ok(true)` | low | |
+| 20 | semio-framework-os-flow-extensions | `checked_sub/checked_add.expect` -> saturating | low | needs patch 1 |
+| 21 | semio-framework-os-store-initialization-replay | 2 close closures -> `ok_or_else(..)?` | low | |
+| 22 | semio-framework-os-store-replay-operation | derived: inverse refusal, inverse pop/release, 3 factory takes -> `if let Some`, factory_close | medium | SUPERSEDES policy patch; `Result::is_ok_and`, `else if let` chain |
+| 23 | semio-framework-os-store-engine-replay | checkout.rs: ~25 sites; publish transaction resolves every owner (`result`, `metadata`, `redo`, `gate`, `state`) before the first swap so a failure leaves the store untouched | HIGH | slice pattern `[Some(a),Some(b)]` on `&mut self.redo`, 5-way tuple let-else; `?` from `ValueError` into `OriginalTurnFailure` relies on the existing `From` used by `validate()?` |
+| 24 | semio-framework-os-store-document | transition ledger let-else -> `self.reject(..)` | low | |
+| 25 | semio-framework-os-history | partial let-else in edit/metadata receive | low | |
+| 26 | semio-framework-os-renderer-wgpu | native-io source: 5 sites use `self.failure=WrongResult; return` | medium | `let RendererSourceIoMode::Contiguous{maximum}=self.mode else{..}` |
+| 27 | semio-framework-plugin | snapshot cursor/snapshot/page | low | |
+| 28 | semio-framework-plugin-job | capture host mutation `ok_or_else(refusal)?` | low | |
+| 29 | semio-framework-plugin-job-receiving | copies cursor/values | low | SUPERSEDES policy patch |
+| 30 | semio-framework-plugin-tool-run-turns | closing slot -> `Ok(())` (same style as the sibling `else{return Ok(())}`) | low | |
+| 31 | semio-framework-plugin-decl-emission | retirement `ControlledRetirement::new`; preparation labeled block `'retire:{..}` | medium | labeled block in a match arm |
+| 32 | semio-framework-plugin-decl-app | context owner -> `RetirementStep::Failure(..,0)` | low | |
+| 33 | semio-framework-plugin-window-config | `inner.take().ok_or_else(..)?` | low | |
+| 34 | semio-s-artifact-draw-drawing-scene | trace `start_trace` returns `Result`, 2 callers `?` | low | |
+| 35 | semio-s-artifact-fem-3d-editor-results-window | 2 `display_eigenvalue.expect` -> `PluginAssemblyError` | low | |
+
+## Narrow checks for the window (wasm `--lib`, via `1102-tools/chk.sh`, batch in this order)
+1. `semio-framework-value-control-contract semio-framework-value-allocation-return semio-framework-value-native-owned semio-framework-value-persistent semio-framework-value-edit semio-framework-value-paged-list semio-framework-value-ordered semio-framework-value-clone-source semio-framework-value-retained-map` then the derive pair (`semio-framework-value-derive-expansion semio-framework-value-derive` + one `#[derive(RetainedClone)]` user, e.g. `semio-framework-job`).
+2. `semio-framework-pack-record-retained semio-framework-actor-retained-turn semio-framework-replication-history semio-framework-text-splice-native semio-framework-job semio-framework-job-failure semio-framework-job-payload`.
+3. `semio-framework-os-flow-wasm semio-framework-os-flow-extensions semio-framework-os-store-initialization-replay semio-framework-os-store-replay-operation semio-framework-os-store-engine-replay semio-framework-os-store-document semio-framework-os-history semio-framework-os-renderer-wgpu`.
+4. `semio-framework-plugin semio-framework-plugin-job semio-framework-plugin-job-receiving semio-framework-plugin-tool-run-turns semio-framework-plugin-decl-emission semio-framework-plugin-decl-app semio-framework-plugin-window-config`, then `semio-s-artifact-draw-drawing-scene`, `semio-s-artifact-fem-3d-editor-results-window` (plugin workspace).
+Bisect inside a batch in table order; HIGH rows first suspects: ordered, engine-replay.
+
+## Not patched (concrete reason, each with the fix I would make)
+- Test drivers / test support (leave `.expect`, allowed in test code, already outside production): `procedural-3d compute:199 step_with_fuel` (`#[cfg(any(test,feature="funded-turns"))]`, 40 test call sites; fix = return `Result<WidgetStep,OriginalTurnFailure>` and `.expect` in tests), `os-store-snapshot-clone ⚖️law:109`, `plugin-retained-command raw-allocation-close-oracle:73,79` (oracle `assert!(matches!(..expect..))`), plus the 24 dev-support crates (need `repo` workspace tooling).
+- Embedded resources / lazy decode (need const decoding or a `Result` accessor rippling through `ifc4x3_*()`/`embedded_*()`): `procedural-3d host:180`, ifc4x3 express/templates/mvd-catalog/declarations, docx-base snapshot x2, `replication-mutation leaf-descriptor-validation:217`, `os-store-sync-native` x3.
+- Drop / no-error-channel owners where the right design is a poisoned slot instead of a panic: `fem-2d-model snapshot/retiring.rs:15` (`Deref` of `Option` guard; needs `ManuallyDrop` + `unsafe` or `Fem2dSnapshot: Default`), `value-retirement original:49` (`alias`/`get`/`identity`... on `ManuallyDrop<Option<Arc>>`; fix = make the Option an enum `Live/Taken` with a typed accessor), `replication-history fold:87` (`retire` + `assert!` on reserved slot, needs `Result` through `FoldControl::retire` callers), `job-failure domain:47` (`original()` must return `&dyn`; needs a static retired-projection impl), `job bytes return_bytes:100` and `native-io path-return:60,78,82,84` (void return/Drop with `checkout(..).expect`; fix = mark the slot `poisoned`, log, and let the waiting side observe `Stale`), `artifact-flow-flow retained:62 retire_cold` (cold drop path, the owner's own `Drop` asserts terminal), `persistent:48` (`admit_leaf` Err returns a Branch page, needs a leaf-only error type).
+- Enum conversion of the remaining integer phases (follow-up, per file): `value-persistent splice/path` (`u8` phase 0..6), `ordered numeric work` (`u8` 0..4), `clone-source admission` (`&'static str`), `draw trace` (`&'static str` phase, 144-line machine), `os-history edit/metadata` (u8, ~60 further unwraps on `partial/ops/metas/dependencies`), `os-store-document pack-scan` (~15 `.expect`), `native-io read.rs` (already clean after policy). Each is a whole-file `enum Phase` with data-owning variants; do them with a compile available.
+- `os-kernel-dsl-derive:287`: const-eval assertion, intended (see (c)).
+
+
+## Window B1P outcome
+- Fix after apply: engine-replay checkout.rs E0499 (`state` borrow held across `result.order`; re-taken at the swap site). native-owned schema E0382 was fixed by the coordinator.
+- `semio-framework-text-splice-native` fails to compile with 9 errors unrelated to my edits: `admit_original_construction` closures there (`🦀️.rs:51,60,64,67,68`) return `Result` but the API now wants `RetainedWorkOutcome`; owner = text-splice/job lane.
+- B5P (draw scene, fem-3d results window) prepared, not applied.
+## Window B5P outcome
+- Applied: draw-drawing-scene trace patch, fem-3d results-window patch. fem-3d results window wasm check GREEN (W-b5p-6, rc 0).
+- Added (coordinator request): ported `draw-drawing-model` to the Cursor/default_cursor shape (`🛬️receive/🦀️.rs`: `NativeDefaultValue` + `NativeDefault` with `NativeDefaultValueCursor`) and `RetainedWorkOutcome` (`.result` at ~28 call sites in `📸️snapshot/🔎️lookup/*`, `✅️validation`, `📸️snapshot`). draw-drawing-model and -io: no errors in W-b5p-5.txt.
+- draw-drawing-scene (hence scene-paint) UNVERIFIED/RED, 45 errors NOT from my edits: `semio_framework_2d` lacks `booleans::boolean_paths_many` and `trace::trace_bitmap_paths`; `DocumentSceneError` unimported in `📷️raster` (20x); `settling`/`exhausted` unbound in `📋️prepare`; `DocumentBooleanInput: RetireOwned` missing; `DocumentSceneLimits.max_work` missing. Owner: draw/scene lane.
+
+## WindowConfigOwner sweep (status 2026-11-03)
+- Trait: the three `initial_state*` defaults in `WindowConfigOwner` (`🪟️window/🎚️config/📐️owner-contract-and-mutation/🦀️.rs`) are removed; they are required now. 132 fns inserted into ~45 impl blocks (`1102-tools/phase/wco/apply.py`, fail-closed, skips impls that already declare each fn; puzzle3d untouched = runtime's fix). Each impl uses the puzzle3d shape: demand `2*size_of::<State>()` depth 1, `State::default()` with a funded-grant check, `initial_state_pack_source = (state, BorrowedDslRecord::RECORD)`.
+- GREEN wasm `--lib` (logs `🗑️generated/1102/W-wco-*.txt`): framework-plugin + window-config (hub), generation2d, flow, gisterrain, gismap, puzzle 5d, puzzle 2d.
+- RED but not a compile error: note (`W-wco-r2`: Cargo source admission refused, `files` limit on `semio-s-artifact-note-note-schema`).
+- Running / queued (3 runners, slot-limited): cad, sequence, sourcing, fem 2d/3d, then 18 off-closure groups (writer, equation, wfc x3, bim, architect, wires, forms, layout, norm, remodel, rewriting, jack, draw editor/viewer, energy). Runner indexes: `1102-tools/phase/wco/index{,2,3}.txt`.
+- Runtime note: every inserted trio has the identical shape (demand `copy 2*size_of::<State>()`, depth 1; `State::default()`; one-field `BorrowedDslRecord::RECORD` pack source), so ALL ~45 inserted owners (all except energy and puzzle3d) are exposed to the shared `ensure_original_partition` birth spin that runtime reported for multi-field records; I did not classify field counts per State. The fix belongs in the shared birth path; the per-owner demand needs no change if it quotes `size_of::<State>()`.
+- Pre-existing reds (not from the sweep): note (Cargo source `files` limit on `note-note-schema`, a crate my edit did not touch), draw editor/viewer (draw-drawing-diff/scene errors), sequence-tests (`DagHost` methods missing), jack (`graph-layout-run` `InteractiveJob::step` arity + `RetainedWorkOutcome.map_err`).
+- Closure GREEN (cad, flow, gismap, gisterrain, generation2d, fem 2d/3d, sourcing, framework; sequence owner crate compiles, only sequence-tests red). win-wco-done touched; off-closure groups continue (index*.txt).
+- Update: 21 of 28 groups checked; non-green are only sequence-tests, note, draw, jack, rewriting, remodel, layout, all from dependency crates (graph-layout-run, remodel model/reconstruct, draw diff/scene), none mention initial_state. Note-schema file-count refusal is pre-existing; the +580-line edit is in the note editor window file (another lane): owner must split the crate's files. Chains still running at hand-off.
+
+## Off-closure follow-up (Nov 3)
+- graph-layout-run: GREEN (W-llr-1). `LayoutRunJob::step` split into `step_outcome` (old body) + trait `step(cx, return_claim) -> InteractiveJobStep` (Outcome/Continuation); the two `close_step` calls take `.result`.
+- remodeling: ported `FieldValue::Bytes64` to `PagedBytes` in `📸️snapshot/🧮️buffers` (`try_from_slice`/`copy_encoded`/`to_vec_owner`) and `sqlite/📸️snapshot/📏️cells` (`bytes.to_vec_owner()`); check W-rem-2 queued behind the single act20 slot (UNVERIFIED). The same `Bytes64(Vec<u8>)` pattern remains in reasoning wires (`🚪️io/💾️binary/📸️snapshot/📦️pack`) and forms (lines 17-29/81/95): owners should port the same way.
+- note-note-schema: the refusal is NOT this crate's own file count (36 non-test files, 48 total). The admission counts files/bytes across the whole build batch (`remainingFiles:0, maximumBytes:821` at `💡️inferences/🔣️.json`), so splitting the crate does not help; owner of the admission budget (actinfra) must size it for the note group, or the group must be checked in smaller `-p` batches. The +580-line edit is in the note editor `✏️editor/🪟️window/🦀️.rs` (3 lines mine, rest another lane).
+- sequence-tests: `DagHost` methods used by `✏️editor/🌉️wasm/🧩️component.rs` (`reorganize`, `set_automatic_lod`, `set_selection`, `host_snapshot` field ...) are not resolvable on the current `DagHost` although `reorganize`/`automatic_lod` exist elsewhere under `♾️infinite/.../🕸️dag`: this is a flowext facade/trait-visibility break, needs flowext lane.
+- Killed my own wco sweep runners so they stop occupying the act20 slot.
+
+## Off-closure round 3 (Nov 3, slots 5)
+- GREEN: jack (W-jack-3), wires (W-wires-4; Bytes64->PagedBytes in `💾️binary/📸️snapshot/📦️pack`), graph-layout-run (W-llr-1), remodeling-model (PagedBytes, `paged::PagedBytes`).
+- remodeling: reconstruct fixed (`FinalizationPhase` -> `pub(super)`); mutations fixed (`semio-framework-schema-state` moved dev-dependency -> dependency in its Cargo.toml, `use protocol::ColdMutation as _`; Cargo.lock needs `dependencies lock`). STILL RED (W-rem-5): `reconstruction-session` needs the InteractiveJob port: `run-job:497` and `revalidate-job:85` `step` arity (add `return_claim`, return `InteractiveJobStep`, same wrapper as graph-layout-run), `products-and-outbox` `append_content` path/`?` on outcomes (326/331/352).
+- forms: Bytes64 port + `DslReceiving`/`RetainedClone` derives on `FormsConfigMutation` applied; W-forms-4 red only in `semio-framework-artifact-flow-flow-document` (`🔺️diff:45` incompatible match arms; flow lane).
+- Open framework item: `semio-framework-value-dictionary` `🟰️equal` (and layout deps) use `RetainedWorkOutcome.map_err` -> needs `.result` (4 sites, `left.bind(..).map_err`).

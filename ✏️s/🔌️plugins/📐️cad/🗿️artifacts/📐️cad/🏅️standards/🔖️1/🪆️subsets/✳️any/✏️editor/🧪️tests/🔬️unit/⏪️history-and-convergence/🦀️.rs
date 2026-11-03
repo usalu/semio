@@ -133,7 +133,7 @@ async fn ingest_operations_is_idempotent_for_cad() {
 //#region 🪆️ObjectChildLane
 /// 🥽️ The `instances` lane the shape pane's world-3d surface publishes for the mounted app — the rendered transform.
 fn shape_instances_lane(app: &CadFixtureApp) -> String {
-    let node = edit::build_world_scene_for_pane(&live_view(app), CadPaneId::Shape, "cad.play.scene3d/shape", None, CadDislocateOptions::default()).expect("shape world scene");
+    let node = edit::build_world_scene_for_pane(&live_view(app), CadPaneId::Shape, "cad.play.scene3d/shape", None, CadDislocateOptions::default(), semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En).expect("shape world scene");
     scene_lane(&node, "instances")
 }
 
@@ -183,6 +183,38 @@ async fn add_object_yields_a_new_rendered_instance() {
     close(&mut app);
 }
 
+/// 🛍️ Koordinator law: a catalogue add (box) in the shape window grows that pane only, lands one document row, and undo then redo remove and restore exactly that object.
+#[semio_framework_async_macros::async_test]
+async fn catalogue_add_box_grows_only_the_shape_pane_with_one_row_and_undoes_and_redoes() {
+    let mut app = new_app().await;
+    let others = [CadPaneId::Building, CadPaneId::Energy, CadPaneId::StructureClassic];
+    let shape_before = pane_objects(&app, CadPaneId::Shape).await;
+    let mut others_before = Vec::new();
+    for pane in others {
+        others_before.push(pane_objects(&app, pane).await);
+    }
+    let rows_before = member_rows(&mut app).await.len();
+    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &CadCommand::AddObject(add_object::AddObject { typology: Some("spatial.shape.primitive.box".into()) }), &window_meta("cad-window-shape", shape::WINDOW_KIND_ID), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("addObject dispatch");
+    settle(&mut app).await;
+    let shape_added = pane_objects(&app, CadPaneId::Shape).await;
+    assert_eq!(shape_added.len(), shape_before.len() + 1, "the shape pane gains one object");
+    let created = shape_added.last().expect("the created object is appended").clone();
+    assert!(shape_instances_lane(&app).contains(created.id.as_str()), "the new instance renders in the shape window");
+    for (pane, before) in others.into_iter().zip(&others_before) {
+        assert_eq!(&pane_objects(&app, pane).await, before, "{pane:?} never changes");
+    }
+    assert_eq!(member_rows(&mut app).await.len(), rows_before + 1, "one document row for the add");
+    semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app.0, "undo", TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+    assert_eq!(pane_objects(&app, CadPaneId::Shape).await, shape_before, "undo removes the added object");
+    assert!(!shape_instances_lane(&app).contains(created.id.as_str()), "undo removes the rendered instance");
+    semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app.0, "redo", TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+    assert_eq!(pane_objects(&app, CadPaneId::Shape).await, shape_added, "redo restores the added object exactly");
+    for (pane, before) in others.into_iter().zip(&others_before) {
+        assert_eq!(&pane_objects(&app, pane).await, before, "{pane:?} never changes through undo and redo");
+    }
+    close(&mut app);
+}
+
 /// ↩️ Law (c): undo restores. Every object gesture is an ordinary child-lane edit with an exact inverse (a relative leaf
 /// undoes as the absolute `set-element` placement of each addressed element, a removal as the element's re-insertion), so
 /// undoing the gestures newest-first brings the pane's model back exactly and the parent never moved.
@@ -227,7 +259,7 @@ async fn an_inspector_edit_is_one_set_element_and_an_origin_delta_is_a_relative_
     settle(&mut app).await;
     let renamed = pane_objects(&app, CadPaneId::Shape).await.into_iter().find(|object| object.id == target.id).expect("the object survives");
     assert_eq!(CadObject { label: target.label.clone(), ..renamed.clone() }, target, "a rename changes the label and nothing else");
-    assert_eq!(renamed.label, "Renamed");
+    assert_eq!(renamed.label, semio_s_artifact_cad_cad_model::geometry::CadObjectName::literal("Renamed"));
     semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &CadCommand::PatchObject(patch_object::PatchObject { object_id: target.id.clone(), field: "origin.x".into(), value: None, delta: Some(0.75) }), &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("origin delta dispatch");
     settle(&mut app).await;
     let rows = member_rows(&mut app).await;

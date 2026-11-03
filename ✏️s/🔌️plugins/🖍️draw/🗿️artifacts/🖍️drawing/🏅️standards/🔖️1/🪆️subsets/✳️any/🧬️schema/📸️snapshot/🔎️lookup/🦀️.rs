@@ -51,7 +51,7 @@ impl<'a> DrawingLayerLookupCursor<'a> {
             return Ok(DrawingLayerLookupStep::Pending(RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<Frame<'a>>(), ..Default::default() }));
         }
         if self.phase == 1 {
-            let step = self.comparison.close_step(grant)?;
+            let step = self.comparison.close_step(grant).result?;
             if self.comparison.terminal_is_empty() { self.comparison = Default::default(); self.phase = 2; }
             return Ok(DrawingLayerLookupStep::Pending(step.progress()));
         }
@@ -80,7 +80,7 @@ impl<'a> DrawingLayerLookupCursor<'a> {
             return Ok(DrawingLayerLookupStep::Pending(RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<RetainedCloneRef<'a, DrawingLayerNode>>(), ..Default::default() }));
         }
         let current = self.current.expect("selected Drawing lookup candidate");
-        let step = self.comparison.compare(current.project(1, crate::layer_id), self.target.expect("retained Drawing lookup target"), BoundedOrdGrant { maximum_items: 1, maximum_bytes: grant.maximum_copy_bytes }, grant)?;
+        let step = self.comparison.compare(current.project(1, crate::layer_id), self.target.ok_or_else(||ValueError::invariant("retained Drawing lookup target is absent"))?, BoundedOrdGrant { maximum_items: 1, maximum_bytes: grant.maximum_copy_bytes }, grant).result?;
         let (ordering, progress) = match step {
             BoundedOrdStep::Authority(progress) => return Ok(DrawingLayerLookupStep::Pending(progress)),
             BoundedOrdStep::Progress(progress) => (None, progress),
@@ -120,7 +120,7 @@ impl<'a> DrawingLayerLookupCursor<'a> {
     pub fn close_granted(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if !self.closing { return Err(ValueError::new(ValueRefusalKind::InvariantViolated, "Drawing lookup closure was not started")); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        let step = self.comparison.close_step(grant)?;
+        let step = self.comparison.close_step(grant).result?;
         if !self.comparison.terminal_is_empty() { return Ok(RetainedCloneStep::Progress(step.progress())); }
         if self.output.take().is_some() || self.current.take().is_some() || self.pending.take().is_some() { return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })); }
         if !self.frames.is_empty() {

@@ -125,6 +125,9 @@
     "x-semio-preview-progress": {
       "type": "object"
     },
+    "x-semio-retained": {
+      "type": "object"
+    },
     "x-semio-retained-discriminator": {
       "type": "string"
     },

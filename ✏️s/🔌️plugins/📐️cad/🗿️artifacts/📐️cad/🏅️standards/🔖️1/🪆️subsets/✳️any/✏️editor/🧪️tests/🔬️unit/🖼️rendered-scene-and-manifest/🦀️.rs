@@ -26,7 +26,7 @@ async fn renders_world_scene_for_each_pane() {
 async fn world_scene_binds_the_cad_interaction_domain_at_object_granularity() {
     let scene = forest_play_scene();
     let view = view(scene, CadPlayRuntime::default());
-    let node = edit::build_world_scene_for_pane(&view, CadPaneId::Shape, shape::SURFACE_ID, None, CadDislocateOptions::default()).expect("scene surface");
+    let node = edit::build_world_scene_for_pane(&view, CadPaneId::Shape, shape::SURFACE_ID, None, CadDislocateOptions::default(), semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En).expect("scene surface");
     assert_eq!(node.key.as_str(), shape::SURFACE_ID);
     let semio_framework_plugin::plugin_app_close_prelude::Component::Surface(props) = &node.component else { panic!("world-3d surface node") };
     let world: semio_framework_plugin::World3dScene = semio_framework_ui_scene::decode(props).expect("world-3d spine");
@@ -176,7 +176,7 @@ async fn the_engagement_hud_counts_the_threaded_cad_selection() {
     let labels = cad_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     let count_of = |interaction: CadInteractionSnapshot| -> String {
         let view = view_with_interaction(forest_play_scene(), CadPlayRuntime::default(), interaction);
-        let engagement = shape::engagement(&view, labels);
+        let engagement = shape::engagement(&view, labels, semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En);
         engagement.status.expect("cad status rows").into_iter().find(|row| row.id == "cad-status").expect("cad-status row").text
     };
     assert!(count_of(CadInteractionSnapshot::default()).starts_with('0'), "an empty cad domain must report zero selected");

@@ -65,7 +65,7 @@ const bazelLimits=componentSchema.definitions.Limits.const,repositoryPathUnits=c
 import{captureBuildSourceClosureV1,buildSourceClosureIdentityV1,buildSourceClosureLoaderV1,type BuildSourceScopeV1}from"../../📥️source/🔏️closure/🟦️.ts";
 import{buildSchedulingOverlayNameV1,splitBuildSourceClosureV1}from"../../📥️source/🔏️closure/🗓️scheduling/🟦️.ts";
 import buildPolicy from "../../🔣️policy.json" with { type: "json" };
-import {readWorkerPolicyV1,planWorkersV1,currentWorkerHostV1,workerActionKindV1} from "../../👷️workers/🟦️.ts";
+import {readWorkerPolicyV1,planWorkersV1,currentWorkerHostV1,workerActionKindV1,type WorkerActionKindV1} from "../../👷️workers/🟦️.ts";
 import {bazelWorkerMnemonicV1,bazelWorkerSettingsV1} from "./👷️workers/🟦️.ts";
 import {bazelGrantedWorkerHostV1,bazelHostPlanV1,bazelStartJobsV1,bazelHostResourceSettingsV1,bazelLiveHostJobsV1,bazelResourceSetsV1,createBazelActionWidthV1} from "./🌡️host-capacity/🟦️.ts";
 import {BUILD_HOST_CAPACITY_POLICY_V1,createCapacityControlV1,upgradeBuildCapacityV1} from "../../🌡️host-capacity/🟦️.ts";
@@ -395,6 +395,11 @@ export function bazelUncachedReportV1(plan:BazelTaskPlanV1,emitted:ReadonlyMap<s
 export function bazelActionWorkerV1(task:BazelTaskV1):BazelActionWorkerV1{
  const kind=workerActionKindV1(workerPolicy,task.target,task.definition.continuous===true);
  return {kind,mnemonic:bazelWorkerMnemonicV1(kind),multiplex:workerPolicy.kinds[kind].multiplex};
+}
+
+/** 🧮️ Counts the planned actions of each neutral worker kind, so the worker plan serves the kinds this invocation actually runs. */
+export function bazelWorkerDemandV1(emitted:ReadonlyMap<string,BazelActionV1>,plan:BazelTaskPlanV1):Partial<Record<WorkerActionKindV1,number>>{
+ const demand:Partial<Record<WorkerActionKindV1,number>>={};for(const[id,action]of emitted){if(action.kind==="noop")continue;const kind=bazelActionWorkerV1(plan.tasks[id]!).kind;demand[kind]=(demand[kind]??0)+1;}return demand;
 }
 
 /** ⛓️ Resolves each emitted action to the dependency outputs it consumes; pure ordering tasks vanish behind their producers and unselected ones are never emitted. With `hermetic`, a cacheable task carrying the neutral hermetic declaration becomes a `hermetic` action that a sandbox or a remote executor may run. */
@@ -980,7 +985,7 @@ async function runBazelTasksInStorageV1(root:string,graph:BuildGraphV1,request:B
  await collectBazelGarbageV1(hold,phaseControl);
  const {session,servers}=hold;
  return (async()=>{
-  const {workspace,plan,implementation,adapter,scopes}=await profilePhaseV1("bazel.publish",()=>publishBazelGraphV1(root,graph,request,invocation,storage,phaseControl,session.slot)),emitted=bazelActionsV1(graph,plan,request.skipCache===true,{hermetic:true}),hostPlan=bazelHostPlanV1(process.env),workers=planWorkersV1(workerPolicy,bazelGrantedWorkerHostV1(hostPlan,currentWorkerHostV1()),{...(bazelStartJobsV1(request.parallel,hostPlan)?{jobs:bazelStartJobsV1(request.parallel,hostPlan)!}:{}),...(request.workers===undefined?{}:{workers:request.workers})}),settings=bazelWorkerSettingsV1(workers),cache=bazelCacheFlagsV1(storage.paths,session.slot,{environment:process.env,skipCache:request.skipCache,skipRemoteCache:request.skipRemoteCache,checkout:root}),profile=requireBazelPlatformProfileV1(cache,await readBazelPathsV1(workspace)),startup=bazelStartupOptionsV1(root,storage,cache,profile,servers),options=["--lockfile_mode=off","--incompatible_strict_action_env",...cache.command,...settings.flags,...(hostPlan?bazelHostResourceSettingsV1(hostPlan).flags:bazelSessionResourcesV1(servers)),...bazelSessionCommandV1(bazelRepositoryContentsV1(storage.paths.outputs))];
+  const {workspace,plan,implementation,adapter,scopes}=await profilePhaseV1("bazel.publish",()=>publishBazelGraphV1(root,graph,request,invocation,storage,phaseControl,session.slot)),emitted=bazelActionsV1(graph,plan,request.skipCache===true,{hermetic:true}),hostPlan=bazelHostPlanV1(process.env),workers=planWorkersV1(workerPolicy,bazelGrantedWorkerHostV1(hostPlan,currentWorkerHostV1()),{demand:bazelWorkerDemandV1(emitted,plan),...(bazelStartJobsV1(request.parallel,hostPlan)?{jobs:bazelStartJobsV1(request.parallel,hostPlan)!}:{}),...(request.workers===undefined?{}:{workers:request.workers})}),settings=bazelWorkerSettingsV1(workers),cache=bazelCacheFlagsV1(storage.paths,session.slot,{environment:process.env,skipCache:request.skipCache,skipRemoteCache:request.skipRemoteCache,checkout:root}),profile=requireBazelPlatformProfileV1(cache,await readBazelPathsV1(workspace)),startup=bazelStartupOptionsV1(root,storage,cache,profile,servers),options=["--lockfile_mode=off","--incompatible_strict_action_env",...cache.command,...settings.flags,...(hostPlan?bazelHostResourceSettingsV1(hostPlan).flags:bazelSessionResourcesV1(servers)),...bazelSessionCommandV1(bazelRepositoryContentsV1(storage.paths.outputs))];
   const continuous=Object.values(plan.tasks).filter(task=>task.definition.continuous),orchestrated=new Set(continuous.filter(task=>bazelTaskOrchestratedV1(graph,task)).map(task=>task.id)),assignments=continuous.length?bazelScopeAssignmentsV1(graph,plan,emitted):undefined;
   await planned?.();
   if(cache.helper){await mkdir(dirname(cache.helper.path),{recursive:true});await writeChanged(cache.helper.path,cache.helper.content);await chmod(cache.helper.path,cache.helper.mode);}

@@ -1,0 +1,24 @@
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🗑️envelope-genesis-and-displaced-snapshot-retirements/🦀️.rs
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🗑️envelope-genesis-and-displaced-snapshot-retirements/🦀️.rs
+@@ -146,7 +146,8 @@
+         if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
+         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
+         if let Some(snapshot) = self.pending.take() {
+-            return match self.factory.as_ref().expect("pending displaced snapshot retains its original factory").retire(snapshot, child).result {
++            let Some(factory) = self.factory.as_ref() else { return semio_framework_value::RetainedWorkOutcome{result:Err(semio_framework_value::ValueError::invariant("pending displaced snapshot factory is absent")),work:0}; };
++            return match factory.retire(snapshot, child).result {
+                 Ok((owner, progress)) => {
+                     *self.active = Some(owner);
+                     if !progress.fits(child) || progress.retained_capacity_bytes != demand.capacity_bytes { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "displaced snapshot constructor changed its admitted receipt")); }
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🧮️cursor-ledger-and-vcs-retirements/🦀️.rs
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🧮️cursor-ledger-and-vcs-retirements/🦀️.rs
+@@ -174,7 +174,8 @@
+ 
+ if let Some(value) = self.pending.take().or_else(|| ledger.pop()) {
+                 let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
+-                return match self.factory.as_ref().unwrap().retire_owned(value, child).result {
++                let Some(factory) = self.factory.as_ref() else { return semio_framework_value::RetainedWorkOutcome{result:Err(semio_framework_value::ValueError::invariant("cursor ledger factory is absent")),work:0}; };
++                return match factory.retire_owned(value, child).result {
+                     Ok((owner, progress)) => { *self.active = Some(owner); admit_retained_clone_progress(child, progress, "original history entry constructor")?; if progress.retained_capacity_bytes != demand.capacity_bytes { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "history entry factory changed its exact declared birth")); } Ok(RetainedCloneStep::Progress(progress)) }
+                     Err((error, value)) => { *self.pending = Some(value); Err(error) }
+                 };

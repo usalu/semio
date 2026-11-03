@@ -1,0 +1,13 @@
+W4 1102-tools/policy/patches/w4/semio-framework-value.patch
+W4 1102-tools/policy/patches/w4/semio-framework-plugin-instance-docs.patch
+W4 1102-tools/policy/patches/w4/semio-framework-os-store-replay-operation.patch
+W4 1102-tools/policy/patches/w4/semio-framework-artifact-flow-flow.patch
+W4 1102-tools/policy/patches/w4/semio-framework-os-flow-host.patch
+W4 1102-tools/policy/patches/w4/semio-s-artifact-draw-drawing-geometry.patch
+W4 1102-tools/policy/patches/w4/semio-s-artifact-draw-drawing-model.patch
+W4 1102-tools/policy/patches/w4/semio-s-artifact-draw-drawing-scene.patch
+W4 1102-tools/policy/patches/w4/semio-s-artifact-procedural-3d-editor.patch
+W4 1102-tools/policy/patches/w4/semio-s-artifact-procedural-3d-viewer.patch
+W4 1102-tools/policy/patches/w4/semio-s-artifact-raster-raster-model.patch
+W4 1102-tools/policy/patches/w4/semio-s-artifact-stdio-ifc-2x3-base-details.patch
+W4 1102-tools/policy/patches/w4/semio-s-artifact-stdio-ifc4x3-templates.patch

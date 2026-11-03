@@ -40,6 +40,11 @@ impl RetainedCloneProgress {
     pub fn wire_fields(self)->[(&'static str,usize);4]{[("copiedItems",self.copied_items),("copiedBytes",self.copied_bytes),("retainedCapacityBytes",self.retained_capacity_bytes),("releasedBytes",self.released_bytes)]}
 }
 impl RetainedCloneProgress {
+    /// ➕️ Error-path accounting saturates: an overflowed total fits no grant, so it fails closed without a second error channel; success paths keep `checked_add`.
+    pub fn saturating_add(self, other: Self) -> Self {
+        Self { copied_items: self.copied_items.saturating_add(other.copied_items), copied_bytes: self.copied_bytes.saturating_add(other.copied_bytes), retained_capacity_bytes: self.retained_capacity_bytes.saturating_add(other.retained_capacity_bytes), released_bytes: self.released_bytes.saturating_add(other.released_bytes) }
+    }
+
     pub fn checked_add(self, other: Self) -> Result<Self, ValueError> {
         Ok(Self {
             copied_items: self.copied_items.checked_add(other.copied_items).ok_or_else(|| ValueError::literal(ValueRefusalKind::WorkLimit, "retained clone item progress overflow"))?,

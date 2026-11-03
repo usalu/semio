@@ -2,7 +2,10 @@
   "schema": "spatial.interaction",
   "id": "solid.sphere",
   "version": "1.0.0",
-  "label": "Sphere",
+  "label": {
+    "native": { "en": "Sphere", "de": "Kugel" },
+    "reuse": { "en": "Sphere", "de": "Kugel" }
+  },
   "interaction": {
     "spatialGroundPick": true,
     "pickDisabledStates": ["idle", "committed"],
@@ -34,7 +37,10 @@
               {
                 "target": "center_of_sphere",
                 "key": "s",
-                "label": "Start",
+                "label": {
+                  "native": { "en": "Start", "de": "Start" },
+                  "reuse": { "en": "Start", "de": "Start" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -236,7 +242,10 @@
               {
                 "target": "committed",
                 "key": "n",
-                "label": "Apply Number",
+                "label": {
+                  "native": { "en": "Apply Number", "de": "Zahl anwenden" },
+                  "reuse": { "en": "Apply Number", "de": "Zahl anwenden" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -281,7 +290,10 @@
             "kind": "label",
             "id": "center_of_sphere-prompt",
             "role": "prompt",
-            "text": "Center of sphere",
+            "text": {
+              "native": { "en": "Center of sphere", "de": "Mittelpunkt der Kugel" },
+              "reuse": { "en": "Center of sphere", "de": "Mittelpunkt der Kugel" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]
@@ -384,7 +396,10 @@
             "kind": "label",
             "id": "radius-prompt",
             "role": "prompt",
-            "text": "Radius",
+            "text": {
+              "native": { "en": "Radius", "de": "Radius" },
+              "reuse": { "en": "Radius", "de": "Radius" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]

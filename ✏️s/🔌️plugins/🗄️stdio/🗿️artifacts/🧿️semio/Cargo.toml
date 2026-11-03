@@ -141,6 +141,7 @@ members = [
   "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/📦️packages/🦀️rust",
   "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/💾️binary/📦️packages/🦀️rust",
   "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📤️export/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📷️png/📦️packages/🦀️rust",
   "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📥️import/📦️packages/🦀️rust",
   "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📦️packages/🦀️rust",
   "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/💡️inferences/📦️packages/🦀️rust",
@@ -559,6 +560,9 @@ path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📥�
 
 [workspace.dependencies.semio-s-artifact-stdio-semio-drawing-export]
 path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📤️export/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-drawing-png-export]
+path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📷️png/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-stdio-semio-flow-import]
 path = "🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🚪️io/📥️import/📦️packages/🦀️rust"

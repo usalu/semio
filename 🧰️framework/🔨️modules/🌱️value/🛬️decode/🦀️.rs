@@ -57,7 +57,7 @@ impl<'a> NativeDecodeControl<'a> {
     /// 👓️ Reports the original return slot without moving its pending physical owner.
     pub fn has_retirement_owner(&self)->bool{self.retirement.as_ref().is_some_and(|recipient|recipient.has_owner())}
     /// ♻️ Drains one original return turn after forwarding its exact physical capacity demand.
-    pub fn close_retirement_recipient(&mut self,grant:crate::retained_clone::RetainedCloneGrant)->crate::RetainedWorkOutcome{match self.with_retirement(grant,|original|Ok(original.close_retirement_recipient(grant))){Ok(turn)=>turn,Err(error)=>crate::RetainedWorkOutcome{result:Err(error),work:0}}}
+    pub fn close_retirement_recipient(&mut self,grant:crate::retained_clone::RetainedCloneGrant)->crate::RetainedWorkOutcome{if grant.maximum_items==0||grant.maximum_depth==0{return crate::RetainedWorkOutcome{result:Ok(crate::retained_clone::RetainedCloneStep::Progress(Default::default())),work:0};}match self.with_retirement(grant,|original|Ok(original.close_retirement_recipient(grant))){Ok(turn)=>turn,Err(error)=>crate::RetainedWorkOutcome{result:Err(error),work:0}}}
 
     /// 🆕️ Installs one explicit caller recipient before any retained decoder ownership is created.
     pub fn install_retirement_recipient(&mut self,recipient:&'a mut NativeDecodeRetirementRecipient)->Result<(),ValueError>{

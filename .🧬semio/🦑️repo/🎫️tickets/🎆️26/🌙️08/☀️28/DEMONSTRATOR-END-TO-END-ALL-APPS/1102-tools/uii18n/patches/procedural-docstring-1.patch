@@ -1,0 +1,18 @@
+--- a/✏️s/🔌️plugins/🌀️procedural/🫀️foundation/🖼️semantic-ui/🦀️.rs
++++ b/✏️s/🔌️plugins/🌀️procedural/🫀️foundation/🖼️semantic-ui/🦀️.rs
+@@ -203,7 +203,6 @@
+     ui_value_map(values)
+ }
+ 
+-/// 📝 Renders generation questions as semantic controls with typed change bindings.
+ /// 🏷️ The three user-visible words of the generated input form, resolved by the calling app.
+ pub struct GenerationFormLabels<'a> {
+     pub no_inputs: &'a str,
+@@ -211,6 +210,7 @@
+     pub no_image: &'a str,
+ }
+ 
++/// 📝 Renders generation questions as semantic controls with typed change bindings.
+ pub fn generation_form(
+     spec: &semio_framework_os_playbook_contract::PlaybookSpec,
+     values: &semio_framework_os_playbook_contract::PlaybookValues,

@@ -34,10 +34,10 @@ impl FillCapture {
         ingress.begin_close();
         let demand = self.close_demands()?;
         let ingress = self.ingress.as_mut().expect("original fill ingress remains staged");
-        let step = semio_framework_job::close_original_retained_step(cx, demand, |grant| Ok(match ingress.close_step(grant) {
+        let step = semio_framework_job::close_original_retained_step(cx, demand, |grant| semio_framework_value::RetainedWorkOutcome { work: 1, result: Ok(match ingress.close_step(grant) {
             InteractiveJobCloseStep::Complete { progress } => semio_framework_value::RetainedCloneStep::Complete(progress),
             step => semio_framework_value::RetainedCloneStep::Progress(step.progress()),
-        }))?;
+        }) })?;
         if ingress.terminal_is_empty() { self.ingress = None; }
         Ok(if self.ingress.is_none() { InteractiveJobCloseStep::Complete { progress: step.progress() } } else { step })
     }

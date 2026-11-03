@@ -1,0 +1,31 @@
+--- a/🧰️framework/🔨️modules/🧵️job/📬️outcome/👷️worker/🦀️.rs
++++ b/🧰️framework/🔨️modules/🧵️job/📬️outcome/👷️worker/🦀️.rs
+@@ -29,7 +29,7 @@
+   if !self.origin.admit(cx)?{return Ok(false)}
+   if self.fault.is_none(){let binding=OriginalSourceBinding::borrow(cx);let turn=RetainedPayloadBuilder::admit_boxed(JobPayloadStream::Fault,&mut self.fault,cx);if self.fault.is_some(){self.binding=Some(binding);}receive_original_retained_work(cx,turn)?;return Ok(false)}
+   let builder=self.fault.as_mut().ok_or_else(||ValueError::invariant("fault absent"))?;
+-  let turn=if !builder.is_initialized(){builder.advance_initialization(cx)}else if builder.original().unwrap().page_count()==0{
++  let turn=if !builder.is_initialized(){builder.advance_initialization(cx)}else if builder.original().ok_or_else(||semio_framework_value::ValueError::invariant("payload builder original is absent"))?.page_count()==0{
+    match builder.staged_page_len(){
+     None=>builder.begin_staged_page_funded(cx),
+     Some(written)if written<ORIGINAL_WORKER_FAULT.len()=>{let count=(ORIGINAL_WORKER_FAULT.len()-written).min(grant.maximum_copy_bytes);if count==0{return Ok(false)}builder.write_staged_source_funded(cx,&ORIGINAL_WORKER_FAULT[written..written+count])},
+--- a/🧰️framework/🔨️modules/🧵️job/📬️outcome/⏸️continuation/🎟️origin/🦀️.rs
++++ b/🧰️framework/🔨️modules/🧵️job/📬️outcome/⏸️continuation/🎟️origin/🦀️.rs
+@@ -78,7 +78,7 @@
+   self.validate_source(cx)?;if self.closing||self.continuation.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original outcome acknowledgement requires its live receiving place").into())}
+   let Some(outcome)=self.outcome.as_ref()else{return Ok(true)};let acknowledged=outcome.is_acknowledged();let depth=if acknowledged{1}else{2};
+   crate::close_original_retained_step(cx,RetirementDemand{depth,..Default::default()},|grant|{
+-   if !acknowledged{let turn=self.outcome.as_mut().expect("outcome absent").acknowledge(semio_framework_value_retained_clone::RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant});return RetainedWorkOutcome{result:turn.result.map(|step|RetainedCloneStep::Progress(step.progress())),work:turn.work}}
++   if !acknowledged{let Some(outcome)=self.outcome.as_mut()else{return semio_framework_value::RetainedWorkOutcome{result:Err(semio_framework_value::ValueError::invariant("outcome absent")),work:0}};let turn=outcome.acknowledge(semio_framework_value_retained_clone::RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant});return RetainedWorkOutcome{result:turn.result.map(|step|RetainedCloneStep::Progress(step.progress())),work:turn.work}}
+    self.outcome.take();RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(metadata())),work:1}
+   })?;Ok(self.outcome.is_none())
+  }
+@@ -99,7 +99,7 @@
+  }
+  fn close_resources(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{
+   self.validate_source(cx)?;if let Some(capsule)=self.continuation.as_mut(){if !capsule.terminal_is_empty(){return capsule.close_step(cx).map(|step|match step{InteractiveJobCloseStep::Complete{progress}|InteractiveJobCloseStep::Pending{progress}=>InteractiveJobCloseStep::Pending{progress},InteractiveJobCloseStep::Blocked=>InteractiveJobCloseStep::Blocked})}return crate::close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{self.continuation.take();RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(metadata())),work:1}})}
+-  if self.outcome.is_some(){let acknowledged=self.outcome.as_ref().expect("outcome absent").is_acknowledged();let depth=if acknowledged{1}else{2};return crate::close_original_retained_step(cx,RetirementDemand{depth,..Default::default()},|grant|{if !acknowledged{let turn=self.outcome.as_mut().expect("outcome absent").acknowledge(semio_framework_value_retained_clone::RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant});return RetainedWorkOutcome{result:turn.result.map(|step|RetainedCloneStep::Progress(step.progress())),work:turn.work}}self.outcome.take();RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(metadata())),work:1}})}
++  if let Some(outcome)=self.outcome.as_ref(){let acknowledged=outcome.is_acknowledged();let depth=if acknowledged{1}else{2};return crate::close_original_retained_step(cx,RetirementDemand{depth,..Default::default()},|grant|{if !acknowledged{let Some(outcome)=self.outcome.as_mut()else{return semio_framework_value::RetainedWorkOutcome{result:Err(semio_framework_value::ValueError::invariant("outcome absent")),work:0}};let turn=outcome.acknowledge(semio_framework_value_retained_clone::RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant});return RetainedWorkOutcome{result:turn.result.map(|step|RetainedCloneStep::Progress(step.progress())),work:turn.work}}self.outcome.take();RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(metadata())),work:1}})}
+   if self.credit.as_ref().is_some_and(|credit|!credit.has_unused_capture())&&!self.witness.as_ref().is_some_and(OriginalReturnWitness::releases_unused_capture){return Ok(InteractiveJobCloseStep::Blocked)}if self.credit.is_some()||self.witness.is_some(){if self.witness.is_none(){cx.preflight_original_reserved_return(metadata(),1)?;let credit=self.credit.as_mut().ok_or_else(||ValueError::invariant("credit absent"))?;self.witness=Some(if credit.has_unused_capture(){credit.issue_success_return()?}else{credit.issue_return(OriginalReturnPhase::Receive)?});}receive_original_return_witness(cx,self.credit.as_mut().ok_or_else(||ValueError::invariant("credit absent"))?,&mut self.witness)?;if self.credit.as_ref().is_some_and(OriginalReturnClaimCredit::terminal_is_empty){self.credit.take();}return Ok(InteractiveJobCloseStep::Pending{progress:metadata()})}
+   if let Some(frame)=self.frame.as_mut(){if !frame.terminal_is_empty(){let demand=frame.demand(cx.retained_grant().maximum_copy_bytes)?;return crate::close_original_retained_step(cx,demand,|grant|frame.close_step(grant))}return crate::close_original_retained_step(cx,RetirementDemand{release_bytes:size_of::<OriginalReturnFrame>(),depth:1,..Default::default()},|_|{self.frame.take();RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{released_bytes:size_of::<OriginalReturnFrame>(),..metadata()})),work:1}})}Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})
+  }

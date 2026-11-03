@@ -431,7 +431,7 @@
       },
       {
         "kind": "build",
-        "pattern": "^(?:build|prepare|activate|wasm|native|package|bundle|cpp|publish|canonical|preview|setup|deps)(?:-|$)"
+        "pattern": "^(?:build|prepare|activate|wasm|native|package|bundle|cpp|publish|canonical|preview|setup|deps|component)(?:-|$)"
       }
     ],
     "defaultKind": "script",

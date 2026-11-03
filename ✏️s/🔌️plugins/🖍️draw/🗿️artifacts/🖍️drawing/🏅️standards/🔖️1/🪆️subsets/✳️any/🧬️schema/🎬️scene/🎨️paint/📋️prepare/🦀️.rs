@@ -57,7 +57,7 @@ impl ScenePaintJob{
     else{match &node.content{
      DocumentSceneContent::Path{stroke,..}|DocumentSceneContent::Glyphs{stroke,..}=>{if stroke.as_ref().and_then(|s|s.dash.as_ref()).is_some_and(|d|d.len()>1024){return Err(DocumentSceneError::literal("Painted scene stroke limit exceeded"));}self.phase="bounds";self.step_semantic_work=1;}
      DocumentSceneContent::Image{width,height,..}=>{self.pending=Some(rectangle(0.,0.,*width,*height,node.transform)?);self.phase="pathCleanup";}
-     DocumentSceneContent::Text{..}=>return Err(DocumentSceneError::literal("Unresolved semantic text in painted scene")),_=>unreachable!()
+     DocumentSceneContent::Text{..}=>return Err(DocumentSceneError::literal("Unresolved semantic text in painted scene")),_=>return Err(DocumentSceneError::literal("Drawing scene content kind is not paintable"))
     }}
    }
    "bounds"=>{
@@ -81,7 +81,7 @@ impl ScenePaintJob{
      let(close,output)=self.path.take().ok_or_else(DocumentSceneError::held)?.into_retirement();self.path_retirement=Some(close);let regions=output.ok_or_else(DocumentSceneError::held)?;self.pending=Some(PreparedGeometry{geometry_bounds:self.bounds,bounds:regions.bounds,paint:PreparedPaint::Path(regions)});self.phase="pathCleanup";
     }else{let child=self.path.as_mut().ok_or_else(DocumentSceneError::held)?;let result=child.advance(1,|index|segments.get(index).cloned(),work);self.last_turn_work+=child.last_turn_work();self.step_semantic_work+=child.last_turn_semantic_work();result?;}
    }
-   "pathCleanup"=>self.admit(work)?,"complete"=>{},_=>unreachable!()
+   "pathCleanup"=>self.admit(work)?,"complete"=>{},_=>return Err(DocumentSceneError::literal("Drawing scene prepare phase is invalid"))
   }Ok(())
  }
  fn semantic_step_pending(&self)->bool{if !self.validated{return true}if self.path_retirement.is_some(){return false}match self.phase{"nodes"=>self.plan.as_ref().is_some_and(|plan|self.index<plan.nodes.len()),"pathInput"=>false,"pathCleanup"=>true,"bounds"=>self.plan.as_ref().and_then(|plan|plan.nodes.get(self.index)).is_some_and(|node|match &node.content{DocumentSceneContent::Path{segments,..}|DocumentSceneContent::Glyphs{segments,..}=>self.segment<segments.len(),_=>false}),_=>false}}

@@ -121,12 +121,13 @@ async fn viewer_rejects_every_contract_mutating_verb() {
     let mut original_caller=crate::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().expect("original caller policy admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     let mut app = new_viewer::<SurfaceViewerFixture>(protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
     for verb in ["undo", "redo", "commitCheckpoint", "createAlternative", REVERT_TO_COMMAND_ACTION_ID, "cut", "paste"] {
-        let error = app.handle_action(verb, None, &meta("local"), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.err().unwrap_or_else(|| panic!("'{verb}' must be rejected on a viewer instance"));
+        let failure = app.handle_action(verb, &mut None, &mut Some(meta("local")), &mut crate::app_testing::artifact_app_laws::fixture_identity(), cx).await.err().unwrap_or_else(|| panic!("'{verb}' must be rejected on a viewer instance"));
+        let semio_framework_job::OriginalTurnPrimary::Fault(error) = failure.primary else { panic!("'{verb}' rejection must be a typed fault") };
         assert_eq!(error.origin, FaultOrigin::Framework, "'{verb}' rejection must carry FaultOrigin::Framework");
         assert_eq!(error.code.0, "viewer.read-only", "'{verb}' rejection must carry the frozen viewer.read-only code");
     }
     let media = Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: "semio.testkit-surface/v1".into(), json: "{}".into() } };
-    let error = app.import_media("any-port", media, &meta("local")).await.err().expect("'import' must be rejected on a viewer instance");
+    let error = app.import_media("any-port", media, &meta("local"), cx).await.err().expect("'import' must be rejected on a viewer instance");
     assert_eq!(error.origin, FaultOrigin::Framework, "'import' rejection must carry FaultOrigin::Framework");
     assert_eq!(error.code.0, "viewer.read-only", "'import' rejection must carry the frozen viewer.read-only code");
     close_registered_fixture_app(&mut app, crate::app_testing::artifact_app_laws::fixture_mounted_policy(),cx).expect("original fixture terminal close");

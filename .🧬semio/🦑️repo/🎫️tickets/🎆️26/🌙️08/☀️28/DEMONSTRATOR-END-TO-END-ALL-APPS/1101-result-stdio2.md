@@ -1,8 +1,13 @@
-STATUS: GREEN for the two assigned crates (`C/🗑️generated/1101/stdio2-1.rc`=0, zero `^error` lines, wasm32-wasip2 --lib, hub manifest). Follow-up `hub.sh stdio2-hub-1` running.
+STATUS: FROZEN (Addendum 19:50). GREEN proven: wav-io-registry, bmp-editor-2 (`stdio2-1.rc`=0); pdf-schema-4, pdf-schema-5, pdf-mut-family-15, docx-base together (`stdio2-8.rc`=0, no `^error`). `semio-s-artifact-stdio-pdf` edit UNVERIFIED: `stdio2-9` was killed by me on freeze (pids 93233, 93225).
 
-- `stdio-wav-io-registry`: `🎮️commands/🔊️edit-audio/🦀️.rs` `close_step` closure now returns `semio_framework_value::RetainedWorkOutcome{result,work}`; the inner body runs in an immediately-invoked closure, `work` accumulates `.work` of `artifact_retirement_box_close_step` / `artifact_retirement_admit_owned` (x2), `.result` matched.
-- `stdio-bmp-editor-2`: `🎭️modes/✏️edit/🎮️commands/🎨️paint-region/🦀️.rs` close closure wrapped in `RetainedWorkOutcome{..,work:0}`.
-- Observed (not mine): png paint-native-region, tiff paint-region and raster close_step closures still use the old `Ok(..)` form; they may be red in the hub run.
+## Done
+- wav `🎮️commands/🔊️edit-audio` close_step and bmp `paint-region` close closure now return `semio_framework_value::RetainedWorkOutcome{result,work}`.
+- docx-base `✏️editor/🦀️.rs` (2 close_step closures) wrapped the same way.
+- pdf-schema-4 (`🪞️mirror/🦀️.rs`): the 6 `edit::windows::main` now are `#[path]` components of the production `🪟️main/🦀️.rs` (no testkit); `io::export` is production: component `🚪️io/📤️export` + serializers, `base::modules {lexer, fonts, content (mut-family-8), lift, lower, writer}`, `io::error` (mut-family-8), `io::import` (mut-family-11). `export` still compiles only with the new deps: Cargo.toml adds `pdf-lift`, `pdf-lower`, `pdf-mut-family-11`; lib root adds `extern crate semio_framework_os_kernel as store`.
+- Cargo.lock: schema-4's `dependencies` array got `pdf-lift`, `pdf-lower`, `pdf-mut-family-11` by hand in all 37 tracked lockfiles containing it (list was `/tmp/claude-501/s4locks.txt`, scratch). Coordinator: `dependencies lock` should confirm them.
+- pdf-schema-5 (vt) mirror: base root via `#[path] 🧱️base/🦀️.rs` component, `export` re-exported from schema-4 (un-gated), pdf17a edit via component, other windows from schema-4.
+- pdf-mut-family-15 (🗄️a schema) mirror: base root component instead of testkit; `🧾️vt/🚪️io` and `♿️ua/🚪️io` binary/text are `#[path]` modules instead of testkit re-exports; `🧾️vt/👁️viewer` windows from schema-4.
+- `pdf/🦀️.rs` (pdf crate root): testkit references replaced (base root component, export from schema-4, bachelor-thesis and pdf17a edit as `#[path]` components, windows from schema-4). Not compiled yet.
 
-## Follow-up hub run
-`stdio2-hub-1` (rc=1, `C/🗑️generated/1101/stdio2-hub-1.txt`): the only red `stdio-*` crate is `stdio-deflate-zlib` (2 errors), owned by `describe`. wav-io-registry and bmp-editor-2 compile clean there. Other red (not stdio, not mine): energy-model-native-mutations-lifecycle (10), -singletons (1), energy-model-session (5), flow-flow-inferences (2), process3d-editor (1). No unclaimed stdio crate remains.
+## Pending after the freeze
+`chk.sh stdio2-10 ... -p semio-s-artifact-stdio-pdf`, then `hub.sh stdio2-hub-3`. Hub run `stdio2-hub-2` (before pdf fixes) showed only pdf-schema-5, mut-family-15, docx-base red among stdio crates (now fixed); stdio-deflate-zlib belongs to describe.

@@ -73,7 +73,7 @@ impl FlowHost {
             self.host_snapshot.layout.insert(widget_id.clone(), layout);
         }
         let mut retirement = semio_framework_artifact_flow_flow::retained::FlowRetirement::default();
-        retirement.push_cold(semio_framework_artifact_flow_flow::retained::FlowOwner::Layouts(previous));
+        retirement.push_cold(semio_framework_artifact_flow_flow::retained::FlowOwner::Layouts(previous)).expect("cold Flow retirement admission");
         retirement.retire_cold();
         let moved = self.layout_leaf(shifted.iter().map(String::as_str));
         self.note_leaves(moved);

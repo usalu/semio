@@ -149,7 +149,7 @@ fn rejected_child_preparation_remains_owned_until_bounded_flow_work_close(){
     use {semio_s_artifact_stdio_semio_flow::schema::mutations::SemioFlowMutation, semio_s_artifact_stdio_semio_flow::schema::mutations::drag_nodes::DragNodes};
     let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../../../✏️node-graph-edit/🧪️tests/🧫️fixtures/child-preparation/🔣️.json")).unwrap();
     let child_id=fixture["childId"].as_str().unwrap();
-    let mut work=FlowChildGroupWork{tool_id:"nodeGraphEdit",instance_owner:None,output:None,completed:false,closing:false};
+    let mut work=FlowChildGroupWork::detached("nodeGraphEdit");
     for (slot,accepted) in [(fixture["foreignSlot"].as_str().unwrap(),false),(fixture["slot"].as_str().unwrap(),true)]{
         let operation=SemioFlowMutation::DragNodes(DragNodes{targets:vec![fixture["target"].as_str().unwrap().into()],dx:fixture["dx"].as_f64().unwrap(),dy:fixture["dy"].as_f64().unwrap()});
         let emit=semio_framework_plugin::Emit{child_preparations:std::collections::VecDeque::from([ChildEmitPreparation::of::<SemioFlowSnapshot,_>(slot,child_id,vec![operation])]),..Default::default()};
@@ -171,13 +171,13 @@ fn rejected_child_preparation_remains_owned_until_bounded_flow_work_close(){
         }
         work.begin_close();
         let zero=semio_framework_value::RetainedCloneGrant{maximum_items:0,..quoted_close_grant(&work,4096)};
-        assert_eq!(semio_framework_job::close_with_self_funded_context(zero, |cx| work.close_step(cx)).expect("original fixture close turn"),InteractiveJobCloseStep::Pending{progress:Default::default()});
+        assert_eq!(crate::self_funded_close(zero, |cx| work.close_step(cx)).expect("original fixture close turn"),InteractiveJobCloseStep::Pending{progress:Default::default()});
         assert_eq!(work.output.as_ref().unwrap().child_preparations.front().unwrap().retained_operation_count(),1);
         let body=fixture["closeGrant"].as_u64().unwrap()as usize;
         let mut terminal=false;
         for _ in 0..fixture["closeSteps"].as_u64().unwrap(){
             let grant=quoted_close_grant(&work,body);
-            match semio_framework_job::close_with_self_funded_context(grant, |cx| work.close_step(cx)).expect("original fixture close turn"){
+            match crate::self_funded_close(grant, |cx| work.close_step(cx)).expect("original fixture close turn"){
                 InteractiveJobCloseStep::Pending{progress}=>assert!(progress.fits(grant)),
                 InteractiveJobCloseStep::Complete{progress}=>{assert!(progress.fits(grant));assert!(work.terminal_is_empty());terminal=true;break;},
                 other=>panic!("[DEBUG] actual child owner did not close: {other:?}"),

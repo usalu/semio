@@ -90,7 +90,7 @@ impl Drop for Members{fn drop(&mut self){while let Some((_,value))=self.0.pop(){
 
 struct Items(Vec<semio_framework_value::DslValue>);
 impl Drop for Items{fn drop(&mut self){while let Some(value)=self.0.pop(){<semio_framework_value::DslValue as semio_framework_value::FromValue>::retire_decoded(value);}}}
-pub fn retire_snapshot(snapshot:RasterSnapshot){crate::retire_raster_value_cold(snapshot);}
+pub fn retire_snapshot(snapshot:RasterSnapshot){if let Err(error)=crate::retire_raster_value_cold(snapshot){assert!(std::thread::panicking(),"Raster snapshot retirement refused: {error}");}}
 pub fn retire_layer(root:RasterLayerNode){retire_snapshot(RasterSnapshot{schema:String::new(),id:String::new(),title:None,layers:vec![root],assets:RasterOwnedMap::new()});}
 struct LayerOwned(Option<RasterLayerNode>);
 impl Drop for LayerOwned{fn drop(&mut self){if let Some(node)=self.0.take(){retire_layer(node);}}}

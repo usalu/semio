@@ -12,6 +12,7 @@
 //! app-owned bounded reducer, publishing on the CONFIG lane only. That publication contract is the
 //! runtime half of the read-only guarantee whose compile-time half is `ViewEmit`.
 #![allow(clippy::result_large_err)]
+extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 

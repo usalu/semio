@@ -1,0 +1,10 @@
+--- a/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🎬️interaction-spec/📦️packages/🦀️rust/Cargo.toml
++++ b/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🎬️interaction-spec/📦️packages/🦀️rust/Cargo.toml
+@@ -17,6 +17,7 @@
+ 
+ [dependencies]
+ semio-framework-value = { workspace = true }
++semio-framework-ui-locale = { workspace = true }
+ semio-framework-value-derive = { workspace = true }
+ 
+ [dev-dependencies]

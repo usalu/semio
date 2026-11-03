@@ -1,5 +1,11 @@
 STATUS: GREEN (type-check only; native tests + bazel describe build RED, see Task 2) on wasm for the claimed crates, one batched hub check `C/🗑️generated/1101/desc-w7.txt`, rc 0: stdio-contract-media-export, stdio-contract-editing-patch, stdio-semio-base, stdio-semio, stdio-step-geometry, stdio-deflate-examples, stdio-deflate-zlib, stdio-gltf-model-snapshot-root. NOT green: IFC crates (lane ifcsplit); native describe emitter was green earlier (`describe-5.rc`). No tests run, only type-check.
 
+## Task 3 (contract-testing port + native tests) — FROZEN at 19:50
+- `semio-s-artifact-stdio-contract-testing` was ported by a peer (registered-job/routed-io/native-owners edited 15:54-15:56 with `OriginalJobReturnOrigin` + `drive`); native check `ct-1` rc 0.
+- Native tests `test5.sh`: contract workspace 21 pass, 1 fail (`moved_values_resolve_the_destination_parent_after_removal`: fixture row lacked `schema`; fixed in test, not rerun). semio workspace: lib test of `semio-s-artifact-stdio-semio` does not compile (2 errors, `SnapshotRetirementFactory::retire` now returns `RetainedWorkOutcome`; fix in `patches/APPLY-AFTER-FREEZE.md`). deflate, step, gltf not reached. Own processes stopped at the freeze (pids 2191, 47806).
+- STATUS stays: wasm type-check GREEN; native tests incomplete.
+
+
 ## Claimed crates (lane describe)
 stdio-contract-media-export, stdio-contract-editing-patch, stdio-semio(-base), stdio-step-geometry, stdio-deflate-examples, stdio-deflate-zlib, stdio-gltf-model-snapshot-root, every other `stdio-*` red in a hub run except IFC (ifcsplit) and `wav-io-registry`/`bmp-editor-2` (lane stdio2).
 

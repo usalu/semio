@@ -164,6 +164,7 @@ fn add_widget_and_connect() {
     host.connect_ports(&id, "number", "preview", "").unwrap();
     host.set_slider_value("slider", 4.0);
     host.evaluate_internal();
+    settle_baseline(&mut host);
     assert_eq!(host.preview_text(), "4");
     host.retire_cold();
 }
@@ -180,6 +181,7 @@ fn output_export_widget_catalogue_descriptor_and_payload() {
     host.connect_ports("add", "sum", &id, "").unwrap();
     host.set_slider_value("slider", 4.0);
     host.evaluate_internal();
+    settle_baseline(&mut host);
     let payload_json = host.export_payload_json(&id).expect("export payload");
     assert_ne!(payload_json, "{}");
     assert!(payload_json.contains("4") || payload_json.contains("value") || payload_json.contains("sum"));

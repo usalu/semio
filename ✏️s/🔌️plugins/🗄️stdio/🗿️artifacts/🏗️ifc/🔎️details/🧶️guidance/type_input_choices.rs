@@ -1,6 +1,6 @@
 //! 🔤️ Resident choices borrow immutable declaration words while their contiguous backing retires under the original owner.
 use semio_framework_plugin_decl_staged_form::StagedScalarChoice;
-use super::{RetainedWorkOutcome,cursor_step,idle_step,owned_step,refused,costed};
+use super::{RetainedWorkOutcome,cursor_step,idle_step,owned_step,own_with,refused,costed};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, retained_clone_grant_admits};
 use semio_framework_value::retirement::{RetireOwned, RetirementCursor, RetirementStep};
 use semio_framework_value::{RetirementDemand, ValueError};

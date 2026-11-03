@@ -1,0 +1,11 @@
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/📨️emission/🎟️capture/🦀️.rs
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/📨️emission/🎟️capture/🦀️.rs
+@@ -39,7 +39,7 @@
+   self.validate(cx)?;if self.host_emit.is_some(){return Ok(true)}let host=self.host.as_mut().ok_or_else(refusal)?;
+   if self.host_mutation.is_none(){if host.ready(){host.take_into(&mut self.host_mutation,cx)?;}else{host.advance(cx)?;}return Ok(false)}
+   let d=RetirementDemand{capacity_bytes:size_of::<A::ConfigMutation>(),..fixed::<(Emit<A::Mutation,A::ConfigMutation,A::DraftMutation>,Emit<A::Mutation,A::ConfigMutation,A::DraftMutation>,Option<A::ConfigMutation>)>()};
+-  built(cx,&mut self.host_emit,original(d),||{let mut values=Vec::with_capacity(1);values.push(self.host_mutation.take().unwrap());Ok((Emit::config(values),progress(d)))})
++  built(cx,&mut self.host_emit,original(d),||{let mut values=Vec::with_capacity(1);values.push(self.host_mutation.take().ok_or_else(refusal)?);Ok((Emit::config(values),progress(d)))})
+  }
+  /// 🈳️ A genuinely settled host control publishes an explicit empty source without invoking its app producer.
+  pub fn finish_empty_host(&mut self,verb:&str,meta:&mut Option<ActionMeta>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.validate_host_metadata(meta.as_ref().ok_or_else(refusal)?)?;if self.admit_empty(verb,meta,cx)?{self.host_finished=true;return Ok(true)}Ok(false)}

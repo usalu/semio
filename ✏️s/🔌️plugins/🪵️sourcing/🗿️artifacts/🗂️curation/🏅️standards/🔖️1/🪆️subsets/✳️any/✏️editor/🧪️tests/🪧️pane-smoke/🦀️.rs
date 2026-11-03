@@ -22,6 +22,6 @@ async fn aussuchen_pane_loads_applies_undoes_and_closes() {
     let command = SourcingCurationCommand::CurationAdd(curation_add::CurationAdd { object_id: object_id.clone() });
     let (loaded, applied) = laws::assert_pane_smoke(&mut app, semio_s_artifact_sourcing_curation::standards::v1::subsets::any::io::text::snapshot::DEMO_STOCK_TEXT, command, |app| app.snapshot().expect("snapshot"), MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut laws::fixture_identity(), scope.cx()).await;
     assert!(!loaded.stock_extra.is_empty(), "the loaded demo carries its stock");
-    assert_eq!(semio_s_artifact_sourcing_curation_domain::curated_count(&loaded, &object_id), 0);
-    assert_eq!(semio_s_artifact_sourcing_curation_domain::curated_count(&applied, &object_id), 1);
+    assert_eq!(semio_s_artifact_sourcing_curation::schema::curated_count(&loaded, &object_id), 0);
+    assert_eq!(semio_s_artifact_sourcing_curation::schema::curated_count(&applied, &object_id), 1);
 }

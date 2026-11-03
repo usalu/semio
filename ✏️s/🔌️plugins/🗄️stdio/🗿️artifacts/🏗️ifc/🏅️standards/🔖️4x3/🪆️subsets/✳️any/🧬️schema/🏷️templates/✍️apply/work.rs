@@ -6,7 +6,7 @@ use crate::editor::{Ifc4x3AnyEditor, Ifc4x3EditCommand};
 use semio_framework_job::{OriginalTurnFailure, StepContext};
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedWorkCapacity};
 use semio_framework_plugin::{EditorApp, Fault};
-use semio_framework_value::retained_clone::{RetainedCloneClose, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
+use semio_framework_value::retained_clone::{RetainedCloneClose, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneSourceAdmission, RetainedCloneStep};
 use semio_framework_value::{DslValue, RetirementDemand, ValueError, ValueRefusalKind};
 use std::{mem::size_of, sync::Arc};
 
@@ -43,6 +43,7 @@ pub struct IfcTemplateWork {
     publication: IfcPublication,
     semantic: crate::validation::admission::RetainedExpressAdmission,
     unborn: Option<Arc<IfcSnapshot>>,
+    admission: Option<RetainedCloneSourceAdmission<IfcSnapshot, Arc<IfcSnapshot>>>,
     retirement: RetainedCloneClose,
     phase: Phase,
     closing: bool,
@@ -57,6 +58,7 @@ impl Default for IfcTemplateWork {
             publication: Default::default(),
             semantic: Default::default(),
             unborn: None,
+            admission: None,
             retirement: Default::default(),
             phase: Phase::Receive,
             closing: false,
@@ -98,6 +100,9 @@ impl IfcTemplateWork {
         if self.planner.properties.is_some() || self.planner.enumeration_values.is_some() {
             return self.retirement.next_owner_demands::<Vec<IfcValue>>(true, &None, body);
         }
+        if let Some(admission) = self.admission.as_ref() {
+            return if admission.phase() == "ready" { admission.next_demand() } else { admission.next_return_demand() };
+        }
         if self.unborn.is_some() {
             return self.retirement.next_owner_demands::<Arc<IfcSnapshot>>(true, &None, body);
         }
@@ -117,11 +122,11 @@ impl IfcTemplateWork {
             return self.receiver.close_step(grant);
         }
         if !self.retirement.is_empty() {
-            return self.retirement.step_granted(grant);
+            return self.retirement.step_granted(grant).result;
         }
         macro_rules! retire {
             ($owner:expr) => {
-                return self.retirement.begin_granted($owner, grant)?.ok_or_else(|| invalid("Template retained retirement omitted its original owner"));
+                return self.retirement.begin_granted($owner, grant).result?.ok_or_else(|| invalid("Template retained retirement omitted its original owner"));
             };
         }
         if self.original.is_some() {
@@ -150,6 +155,22 @@ impl IfcTemplateWork {
         }
         if self.planner.enumeration_values.is_some() {
             retire!(&mut self.planner.enumeration_values);
+        }
+        if let Some(admission) = self.admission.as_mut() {
+            let turn = if admission.phase() == "ready" {
+                admission.take_output(&mut self.publication.view.source, grant)
+            } else {
+                let mut inputs = None;
+                let turn = admission.return_inputs(&mut inputs, grant);
+                if let Some((owner, ())) = inputs {
+                    self.unborn = Some(owner);
+                }
+                turn
+            };
+            if admission.terminal_is_empty() || self.publication.view.source.is_some() {
+                self.admission = None;
+            }
+            return turn.result;
         }
         if self.unborn.is_some() {
             retire!(&mut self.unborn);
@@ -199,8 +220,15 @@ impl ArtifactCommandWork<EditorApp<Ifc4x3AnyEditor>> for IfcTemplateWork {
             Phase::Decode => self.receiver.demands(),
             Phase::Take => Ok(fixed(2 * size_of::<Option<IfcTemplateApplication>>() + size_of::<usize>())),
             Phase::Source => {
-                let demand = SnapshotSource::borrowed_constructor_demand::<Arc<IfcSnapshot>>();
-                Ok(RetirementDemand { copy_bytes: size_of::<Arc<IfcSnapshot>>(), capacity_bytes: demand.capacity_bytes, depth: demand.depth, ..Default::default() })
+                let alias = size_of::<Arc<IfcSnapshot>>();
+                match self.admission.as_ref() {
+                    Some(admission) => {
+                        let mut demand = admission.next_demand()?;
+                        demand.copy_bytes = demand.copy_bytes.max(alias);
+                        Ok(demand)
+                    }
+                    None => Ok(RetirementDemand { copy_bytes: alias, depth: 1, ..Default::default() }),
+                }
             }
             Phase::Plan => self.planner.demand(input.snapshot),
             Phase::Wire => self.publication.demands(),
@@ -226,7 +254,8 @@ impl ArtifactCommandWork<EditorApp<Ifc4x3AnyEditor>> for IfcTemplateWork {
         if matches!(self.phase, Phase::Plan) && (self.planner.garbage.is_some() || !self.retirement.is_empty()) {
             semio_framework_job::close_original_retained_step(cx, demand, |grant| {
                 if self.retirement.is_empty() {
-                    self.retirement.begin_granted(&mut self.planner.garbage, grant)?.ok_or_else(|| invalid("Template scalar envelope omitted its retirement owner"))
+                    let turn = self.retirement.begin_granted(&mut self.planner.garbage, grant);
+                    semio_framework_value::RetainedWorkOutcome { result: turn.result.and_then(|step| step.ok_or_else(|| invalid("Template scalar envelope omitted its retirement owner"))), work: turn.work }
                 } else {
                     self.retirement.step_granted(grant)
                 }
@@ -256,19 +285,23 @@ impl ArtifactCommandWork<EditorApp<Ifc4x3AnyEditor>> for IfcTemplateWork {
                 let owner = input.snapshot_owner.ok_or_else(|| invalid("Template preparation requires its original captured snapshot"))?;
                 let grant = cx.retained_grant();
                 let alias = size_of::<Arc<IfcSnapshot>>();
-                let result = SnapshotSource::admit_borrowed(Arc::clone(owner), |snapshot| snapshot.as_ref(), RetainedCloneGrant { maximum_copy_bytes: grant.maximum_copy_bytes - alias, ..grant });
-                match result {
-                    Ok((source, mut progress)) => {
-                        self.publication.view.source = Some(source);
-                        progress.copied_bytes += alias;
-                        cx.consume_retained(progress)?;
-                        cx.consume_fuel(1);
-                        self.phase = Phase::Plan;
-                    }
-                    Err((error, original)) => {
-                        self.unborn = Some(original);
-                        cx.consume_retained(RetainedCloneProgress { copied_items: 1, copied_bytes: alias, ..Default::default() })?;
-                        return Err(error.into());
+                if self.admission.is_none() {
+                    self.admission = Some(SnapshotSource::admission_borrowed(Arc::clone(owner), |snapshot| snapshot.as_ref()));
+                    cx.consume_retained(RetainedCloneProgress { copied_items: 1, copied_bytes: alias, ..Default::default() })?;
+                    cx.consume_fuel(1);
+                } else {
+                    let admission = self.admission.as_mut().ok_or_else(|| invalid("Template source admission is missing"))?;
+                    let turn = if admission.phase() == "ready" { admission.take_output(&mut self.publication.view.source, grant) } else { admission.advance(grant) };
+                    cx.consume_fuel(turn.work);
+                    match turn.result {
+                        Ok(step) => {
+                            cx.consume_retained(step.progress())?;
+                            if self.publication.view.source.is_some() {
+                                self.admission = None;
+                                self.phase = Phase::Plan;
+                            }
+                        }
+                        Err(error) => return Err(OriginalTurnFailure::debit_original(error, cx)),
                     }
                 }
             }
@@ -312,6 +345,7 @@ impl ArtifactCommandWork<EditorApp<Ifc4x3AnyEditor>> for IfcTemplateWork {
             && self.planner.enumeration_values.is_none()
             && self.planner.garbage.is_none()
             && self.unborn.is_none()
+            && self.admission.is_none()
             && self.retirement.is_empty()
             && !self.publication.codec_live()
             && self.publication.view.source.as_ref().is_none_or(SnapshotSource::terminal_is_empty)
@@ -336,7 +370,7 @@ impl ArtifactCommandWork<EditorApp<Ifc4x3AnyEditor>> for IfcTemplateWork {
             return Ok(semio_framework_job::InteractiveJobCloseStep::Complete { progress: Default::default() });
         }
         let demand = self.close_demand(cx.retained_grant().maximum_copy_bytes.min(4096))?;
-        semio_framework_job::close_original_retained_step(cx, demand, |grant| self.close_owned(RetainedCloneGrant { maximum_copy_bytes: grant.maximum_copy_bytes.min(4096), ..grant }))
+        semio_framework_job::close_original_retained_step(cx, demand, |grant| semio_framework_value::RetainedWorkOutcome { result: self.close_owned(RetainedCloneGrant { maximum_copy_bytes: grant.maximum_copy_bytes.min(4096), ..grant }), work: 1 })
     }
 }
 
@@ -393,7 +427,8 @@ fn test_planning(original: DslValue, snapshot: &IfcSnapshot, cancel_at: Option<u
                         let demand = retirement.next_owner_demands::<IfcValue>(planner.garbage.is_some(), &None, 4096)?;
                         semio_framework_job::close_original_retained_step(cx, demand, |grant| {
                             if retirement.is_empty() {
-                                retirement.begin_granted(&mut planner.garbage, grant)?.ok_or_else(|| invalid("Template scalar envelope omitted its owner"))
+                                let turn = retirement.begin_granted(&mut planner.garbage, grant);
+                                semio_framework_value::RetainedWorkOutcome { result: turn.result.and_then(|step| step.ok_or_else(|| invalid("Template scalar envelope omitted its owner"))), work: turn.work }
                             } else {
                                 retirement.step_granted(grant)
                             }

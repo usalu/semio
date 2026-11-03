@@ -14,8 +14,8 @@ impl<T> NativeOwnedStorage<T>{
  pub fn reserved(&self)->bool{self.pointer.is_some()}
  pub fn initialized(&self)->bool{self.initialized}
  pub fn address(&self)->Option<usize>{self.pointer.map(|p|p.as_ptr()as usize)}
- pub fn get(&self)->Option<&T>{if !self.initialized{return None}Some(unsafe{self.pointer.unwrap().as_ref()})}
- pub fn get_mut(&mut self)->Option<&mut T>{if !self.initialized{return None}Some(unsafe{self.pointer.as_mut().unwrap().as_mut()})}
+ pub fn get(&self)->Option<&T>{if !self.initialized{return None}self.pointer.map(|pointer|unsafe{pointer.as_ref()})}
+ pub fn get_mut(&mut self)->Option<&mut T>{if !self.initialized{return None}self.pointer.as_mut().map(|pointer|unsafe{pointer.as_mut()})}
  pub fn reserve(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome{
   if self.reserved(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}let d=Self::reserve_demand();if !admitted(grant,d){return pending()}let layout=Layout::new::<T>();let pointer=if layout.size()==0{Some(NonNull::dangling())}else{NonNull::new(unsafe{alloc(layout)}.cast::<T>())};let Some(pointer)=pointer else{return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::AllocationFailed,"native typed backing allocation refused")),work:1}};self.pointer=Some(pointer);RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:layout.size(),..Default::default()})),work:1}
  }

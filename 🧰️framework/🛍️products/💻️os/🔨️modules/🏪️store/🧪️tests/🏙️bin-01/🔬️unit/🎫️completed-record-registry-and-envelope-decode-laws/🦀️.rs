@@ -138,7 +138,7 @@ fn artifact_envelope_decode_withholds_success_until_field_and_page_owners_are_te
             semio_framework_job::default_now_us,
             &mut preview_sequence,
          &mut original_retained_progress_5);
-        match job.step(&mut context).expect("original decoder outcome admission") {
+        match job.step_original(&mut context).expect("original decoder outcome admission") {
             None | Some(semio_framework_job::JobOutcomeBorrow::Yield { .. }) => assert!(!job.terminal_is_empty() || registry.terminal_is_empty(), "a yielded decode retains exact owner authority until its funded outcome turn"),
             Some(semio_framework_job::JobOutcomeBorrow::Complete { state: None, output: None, .. }) => {
                 assert!(job.terminal_is_empty(), "success is exposed only after exact field and page terminal witnesses");
@@ -181,7 +181,7 @@ fn cancelled_and_rejected_envelope_decodes_close_one_exact_owner_per_grant() {
             &mut preview_sequence,
          &mut original_retained_progress_6);
         turns += 1;
-        match cancelled.step(&mut context).expect("original cancelled decoder outcome admission") {
+        match cancelled.step_original(&mut context).expect("original cancelled decoder outcome admission") {
             None | Some(semio_framework_job::JobOutcomeBorrow::Yield { .. }) => assert!(!cancelled.terminal_is_empty() || registry.terminal_is_empty(), "a cancelled decode retains exact owner authority until its funded outcome turn"),
             Some(semio_framework_job::JobOutcomeBorrow::Cancelled { .. }) => break,
             outcome => panic!("cancelled envelope decode produced {outcome:?}"),

@@ -2,7 +2,10 @@
   "schema": "spatial.interaction",
   "id": "transform.mirror",
   "version": "1.0.0",
-  "label": "Mirror",
+  "label": {
+    "native": { "en": "Mirror", "de": "Spiegeln" },
+    "reuse": { "en": "Mirror", "de": "Spiegeln" }
+  },
   "interaction": {
     "spatialGroundPick": true,
     "pickDisabledStates": ["idle", "committed"],
@@ -34,7 +37,10 @@
               {
                 "target": "select_objects_to_mirror",
                 "key": "s",
-                "label": "Start",
+                "label": {
+                  "native": { "en": "Start", "de": "Start" },
+                  "reuse": { "en": "Start", "de": "Start" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -95,7 +101,10 @@
         "selection": {
           "accept": ["vertex", "edge", "wire", "face", "shell", "solid"],
           "multiple": true,
-          "prompt": "Select objects to mirror"
+          "prompt": {
+            "native": { "en": "Select objects to mirror", "de": "Zu spiegelnde Objekte auswählen" },
+            "reuse": { "en": "Select objects to mirror", "de": "Zu spiegelnde Objekte auswählen" }
+          }
         },
         "on": [
           {
@@ -104,7 +113,10 @@
               {
                 "target": "select_objects_to_mirror",
                 "key": "s",
-                "label": "Select",
+                "label": {
+                  "native": { "en": "Select", "de": "Auswählen" },
+                  "reuse": { "en": "Select", "de": "Auswählen" }
+                },
                 "effects": [
                   {
                     "mutation": "action",
@@ -136,7 +148,10 @@
               {
                 "target": "start_of_mirror_plane",
                 "key": "Enter",
-                "label": "Finish"
+                "label": {
+                  "native": { "en": "Finish", "de": "Fertig" },
+                  "reuse": { "en": "Finish", "de": "Fertig" }
+                }
               }
             ]
           },
@@ -146,7 +161,10 @@
               {
                 "target": "start_of_mirror_plane",
                 "key": "RightClick",
-                "label": "Finish"
+                "label": {
+                  "native": { "en": "Finish", "de": "Fertig" },
+                  "reuse": { "en": "Finish", "de": "Fertig" }
+                }
               }
             ]
           }
@@ -309,7 +327,10 @@
             "kind": "label",
             "id": "select_objects_to_mirror-prompt",
             "role": "prompt",
-            "text": "Select objects to mirror",
+            "text": {
+              "native": { "en": "Select objects to mirror", "de": "Zu spiegelnde Objekte auswählen" },
+              "reuse": { "en": "Select objects to mirror", "de": "Zu spiegelnde Objekte auswählen" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]
@@ -372,7 +393,10 @@
             "kind": "label",
             "id": "start_of_mirror_plane-prompt",
             "role": "prompt",
-            "text": "Start of mirror plane",
+            "text": {
+              "native": { "en": "Start of mirror plane", "de": "Anfang der Spiegelebene" },
+              "reuse": { "en": "Start of mirror plane", "de": "Anfang der Spiegelebene" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]
@@ -475,7 +499,10 @@
             "kind": "label",
             "id": "end_of_mirror_plane-prompt",
             "role": "prompt",
-            "text": "End of mirror plane",
+            "text": {
+              "native": { "en": "End of mirror plane", "de": "Ende der Spiegelebene" },
+              "reuse": { "en": "End of mirror plane", "de": "Ende der Spiegelebene" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]

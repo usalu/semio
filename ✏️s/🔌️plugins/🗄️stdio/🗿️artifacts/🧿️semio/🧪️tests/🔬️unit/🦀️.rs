@@ -17,7 +17,7 @@ fn quoted(demand: semio_framework_value::RetirementDemand) -> semio_framework_va
 }
 
 fn retire_snapshot<P: Send + Sync + 'static>(factory: &impl dsl::SnapshotRetirementFactory<P>, snapshot: Arc<P>) -> Box<dyn semio_framework_value::ErasedSnapshotRetirement> {
-    match dsl::SnapshotRetirementFactory::retire(factory, snapshot, semio_s_artifact_stdio_contract::testing::unbounded_grant()) {
+    match dsl::SnapshotRetirementFactory::retire(factory, snapshot, semio_s_artifact_stdio_contract::testing::unbounded_grant()).result {
         Ok((retirement, _)) => retirement,
         Err((error, _)) => panic!("snapshot retirement admits: {error:?}"),
     }

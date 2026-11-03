@@ -50,7 +50,7 @@ async fn stateful_current_matches_full_replay_across_interleaved_commands() {
 
 
 /// 🪄️ Downcasts a registered `dyn SpaceMember` back to its concrete demo store.
-async fn demo_member<'a, Mutation: self::Mutation<DemoSnapshot> + Clone + ColdMutation<DemoSnapshot> + 'static, M: SpaceMember + 'static>(host: &'a mut SpaceHost<M>, document_id: &str) -> &'a mut ArtifactStore<DemoSnapshot, Mutation> {
+async fn demo_member<'a, Mutation: self::Mutation<DemoSnapshot> + Clone + ColdMutation<DemoSnapshot> + OpBinary + OpText + Send + 'static, M: SpaceMember + 'static>(host: &'a mut SpaceHost<M>, document_id: &str) -> &'a mut ArtifactStore<DemoSnapshot, Mutation> {
     host.member_mut(document_id).await.expect("member registered").as_any_mut().await.downcast_mut::<ArtifactStore<DemoSnapshot, Mutation>>().expect("concrete member type matches")
 }
 

@@ -11,7 +11,7 @@ async fn bundle_contributes_spatial_shape_for_cad_play() {
     assert_eq!(topic_contribution.payload["appId"].as_str(), Some(HOST_APP_ID));
     assert_eq!(topic_contribution.payload["moduleId"].as_str(), Some(MODULE_ID));
     let computers_json = topic_contribution.payload["computersJson"].as_str().expect("computersJson");
-    let parsed = json::parse(computers_json).expect("computers_json");
+    let parsed = json::parse(computers_json, json::JsonMemberPolicy::Reject).expect("computers_json");
     assert_eq!(parsed.get("statComputers"), Some(&json::array([json::Value::from("spatial.shape.geometry")])));
 
     let fuel=cx.fuel_remaining();drop(cx);original_caller.retire(fuel).expect("original extension fixture source close");

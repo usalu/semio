@@ -76,7 +76,7 @@ fn set_active_example_chunks_by_kind_and_emits_one_uncoalesced_edit() {
         progress_steps <= PUZZLE3D_SET_ACTIVE_EXAMPLE_FIXED_STEPS + items.div_ceil(PUZZLE3D_SET_ACTIVE_EXAMPLE_CHUNK) + 10,
         "per-stage ceil(len/chunk) plus transitions must stay a bounded handful; observed {progress_steps} for {items} items"
     );
-    semio_s_plugin_puzzle_retained::testing::close(&mut original, &mut work);
+    semio_s_plugin_puzzle_retained::testing::close::<EditorApp<Puzzle3dPlayApp>, _>(&mut original, &mut work);
     original.finish();
 }
 
@@ -180,7 +180,7 @@ fn set_active_example_history_is_one_set_active_example_row() {
         }
     };
     assert!(emit.window_config_mutations.is_empty(), "a scene_snapshot switch must not emit a separate window-resize undo step");
-    semio_s_plugin_puzzle_retained::testing::close(&mut original, &mut work);
+    semio_s_plugin_puzzle_retained::testing::close::<EditorApp<Puzzle3dPlayApp>, _>(&mut original, &mut work);
     original.finish();
 }
 

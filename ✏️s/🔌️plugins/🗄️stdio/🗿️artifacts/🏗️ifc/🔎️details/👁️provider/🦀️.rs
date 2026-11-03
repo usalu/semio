@@ -8,6 +8,8 @@ use semio_s_artifact_stdio_contract::editing;
 use semio_s_artifact_stdio_contract::editing::{DslSnapshotDetailsProvider, SnapshotDetailItemCapabilities, SnapshotDetailPathSegment as P, SnapshotDetailPresentation, SnapshotDetailValue, SnapshotDetailVariant, SnapshotDetailsProvider};
 use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::{ifc_arguments_identical, ifc_complex_identical, IfcComplexType, IfcEntity, IfcSnapshot, IfcTypedValue, IfcValue};
 use semio_s_artifact_stdio_ifc_4_mutations::standards::v4::subsets::any::schema::mutations::{edit_rules, IfcMutation};
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
 pub use semio_s_artifact_stdio_ifc_details_edit::*;
 
 const REFERENCE_WINDOW: usize = 256;
@@ -166,7 +168,7 @@ impl<'a, C: IfcDetailsProfile> IfcDetailsProvider<'a, C> {
             if entity.id == id {
                 for name in std::iter::once(entity.name.as_str()).chain(entity.complex.iter().map(|part| part.name.as_str())) {
                     tick()?;
-                    if Self::accepts_entity(expression.item.as_deref().expect("reference collection item"), name, 0) {
+                    if Self::accepts_entity(expression.item.as_deref().ok_or("reference collection item is absent")?, name, 0) {
                         return Ok(true);
                     }
                 }
@@ -717,3 +719,6 @@ impl<C: IfcDetailsProfile> SnapshotDetailsProvider for IfcDetailsProvider<'_, C>
     }
 }
 
+#[cfg(test)]
+#[path="../contextual_render_tests.rs"]
+mod contextual_render_tests;

@@ -201,11 +201,35 @@ mod tests {
         RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4_096, maximum_capacity_bytes: 1_048_576, maximum_release_bytes: 1_048_576, maximum_depth: 8 }
     }
 
+    fn close_source<T: semio_framework_value::retirement::RetireOwned + Sync>(mut source: semio_framework_value::RetainedCloneSource<T>) {
+        for _ in 0..4_096 {
+            if source.terminal_is_empty() {
+                return;
+            }
+            let copy = source.next_close_copy_byte_demand().expect("source close copy quote");
+            let grant = RetainedCloneGrant { maximum_items: 16, maximum_copy_bytes: copy, maximum_capacity_bytes: source.next_close_capacity_byte_demand(copy).expect("source close capacity quote"), maximum_release_bytes: source.next_close_release_byte_demand().expect("source close release quote"), maximum_depth: source.next_close_depth_demand().expect("source close depth quote") };
+            source.close_step(grant).result.expect("source close turn");
+        }
+        panic!("source failed bounded closure");
+    }
+
+    fn advance(edit: &mut ZipTextEdit, post: &mut ZipSnapshot, mutation: &ZipMutation, grant: RetainedCloneGrant) -> Result<PagedOneItemEditStep<ZipMutation>, ValueError> {
+        let (before, _, _) = semio_framework_value::testing::admit_owned_source(post.clone(), ());
+        let (owned, _, _) = semio_framework_value::testing::admit_owned_source(mutation.clone(), ());
+        let mut observer = |_| true;
+        let mut receiving = NativeDecodeControl::new(16_777_216, &mut observer);
+        let step = edit.advance(before.borrow(), owned.borrow(), PagedOneItemPost::Mutable(post), 0, grant, &mut receiving);
+        drop(receiving);
+        close_source(before);
+        close_source(owned);
+        step
+    }
+
     fn drive(post: &mut ZipSnapshot, mutation: &ZipMutation) -> Result<(usize, RetainedCloneProgress, ZipMutation), ValueError> {
         let mut edit = ZipTextEdit::default();
         let mut turns = 0;
         loop {
-            match edit.advance(post, mutation, grant())? {
+            match advance(&mut edit, post, mutation, grant())? {
                 PagedOneItemEditStep::Progress(progress) => assert!(progress.fits(grant()) && progress.copied_items <= 1),
                 PagedOneItemEditStep::Complete(progress, inverse) => return Ok((turns, progress, inverse)),
                 PagedOneItemEditStep::CompleteRows(..) => panic!("a ZIP text edit completes with one inverse mutation"),
@@ -267,9 +291,9 @@ mod tests {
         let mutation = ZipMutation::SetArchiveComment(set_archive_comment::SetArchiveComment { comment: "replaced".into(), comment_utf8: true });
         let mut post = source.clone();
         let mut edit = ZipTextEdit::default();
-        assert!(matches!(edit.advance(&mut post, &mutation, grant()).expect("envelope turn"), PagedOneItemEditStep::Progress(_)));
+        assert!(matches!(advance(&mut edit, &mut post, &mutation, grant()).expect("envelope turn"), PagedOneItemEditStep::Progress(_)));
         let starved = RetainedCloneGrant { maximum_capacity_bytes: 0, ..grant() };
-        match edit.advance(&mut post, &mutation, starved).expect("starved comment turn") {
+        match advance(&mut edit, &mut post, &mutation, starved).expect("starved comment turn") {
             PagedOneItemEditStep::Progress(progress) => assert_eq!(progress, RetainedCloneProgress::default()),
             PagedOneItemEditStep::Complete(..) | PagedOneItemEditStep::CompleteRows(..) => panic!("starved grant must not complete"),
         }

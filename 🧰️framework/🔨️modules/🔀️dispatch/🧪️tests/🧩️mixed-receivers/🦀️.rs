@@ -4,7 +4,6 @@
 //! as an ordinary crate, so `#[dyn_enum]`/`dyn_enum_close!` run exactly as any downstream consumer
 //! would use them (a proc-macro crate cannot invoke its OWN macros from inside itself — see
 //! `📓️terra-dyn-enum-macro-report.md`).
-#![allow(async_fn_in_trait)] // R7 — never resolved by `+ Send` or by making a method sync.
 
 use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
 use std::cell::Cell;

@@ -62,3 +62,13 @@ STATUS: AMBER. Crates now past the compiler (not in "could not compile" of energ
 
 ## Update 16:00 HUB ENERGY WASM GREEN
 STATUS: `semio-hub-energy-component` GREEN on wasm32-wasip2: `C/🗑️generated/1101/energy-26.rc` = 0, 0 `error` lines, `energy-26.txt` (hub manifest `🌎️hub/🧩️compositions/🔋️energy/🧩️component/📦️packages/🦀️rust/Cargo.toml`, `--target wasm32-wasip2 --keep-going`). The energy plugin workspace (artifact crates) was compiled as part of the hub closure (snapshot+bridge, native-mutations (+lifecycle, singletons), session, mut-model, initialization, editor, editor-commands, viewer, engine-sim). Native tests and the non-empty 3D proof: NOT run yet (UNVERIFIED).
+
+## Update 19:55 FREEZE
+Obeyed Addendum 19:50: killed my queued native test run etest-3 (pids 28192/28206; the earlier etest-2 died on a 1 h cargo-test timeout in the cold stdio-semio compile). No cargo/repo/test commands and no edits since.
+- `semio-hub-energy-component` wasm32-wasip2: GREEN at energy-26 (`C/🗑️generated/1101/energy-26.rc`=0, 0 errors) — state of the tree at 15:xx; later edits by me: none after that check.
+- Native tests (snapshot-tests, mut-membership-tests, editor-mounted-tests) and the non-empty 3D proof: NOT run, UNVERIFIED. Resume after the lift with `C/1101-tools/energy/t.sh etest-4 ✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/Cargo.toml -p semio-s-artifact-energy-model-snapshot-tests -p semio-s-artifact-energy-model-mut-membership-tests -p semio-s-artifact-energy-model-editor-mounted-tests --no-fail-fast` (cold compile is long; expect a capacity queue), then the viewer `energy.model.3d` bestest-600 expectation of 9 meshes.
+
+## Update (Nov 2) native tests, snapshot-tests lib compiles and runs
+- etest-9 (`C/🗑️generated/1101/etest-9.txt`): `semio-s-artifact-energy-model-snapshot-tests` 14 passed, 12 failed. Test code ported (only under 🧪️tests/: staged admission helpers, `.result` on outcomes, local `OriginalConstructionFixture` recipient, relaxed `OriginalConstruction` test recipient).
+- PRODUCTION FAULT (found by `bestest_load::*`, 4 tests): `EnergyModelSnapshot::from_model` -> `receive_stepped` fails "native sealed field requires its original construction recipient": the bridge does not install a `NativeDecodeConstructionRecipient` around `receiver.advance` (fem does per step). Fix is written as `C/1101-tools/energy/patches/bridge-construction-recipient.py` (apply after act-green/freeze-lifted; production crate in the demonstrator closure).
+- The other 8 failures asserted `self.issued` in the old test recipient (accept called by the new backing path without a prior grant); recipient relaxed in `📸️snapshot/🧳️state/🧪️tests/🧰️helpers`, rerun etest-10 pending.

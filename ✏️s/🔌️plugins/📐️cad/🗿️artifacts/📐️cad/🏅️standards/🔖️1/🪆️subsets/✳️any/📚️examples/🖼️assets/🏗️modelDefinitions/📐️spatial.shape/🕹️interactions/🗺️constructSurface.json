@@ -2,7 +2,10 @@
   "schema": "spatial.interaction",
   "id": "surface.construct",
   "version": "1.0.0",
-  "label": "Construct Surface",
+  "label": {
+    "native": { "en": "Construct Surface", "de": "Fläche konstruieren" },
+    "reuse": { "en": "Construct Surface", "de": "Fläche konstruieren" }
+  },
   "key": "s",
   "invocation": "callable",
   "guards": [
@@ -87,7 +90,10 @@
               {
                 "target": "committed",
                 "key": "1",
-                "label": "Rectangle",
+                "label": {
+                  "native": { "en": "Rectangle", "de": "Rechteck" },
+                  "reuse": { "en": "Rectangle", "de": "Rechteck" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -268,7 +274,10 @@
               {
                 "target": "pick_face",
                 "key": "2",
-                "label": "Pick face",
+                "label": {
+                  "native": { "en": "Pick face", "de": "Seitenfläche wählen" },
+                  "reuse": { "en": "Pick face", "de": "Seitenfläche wählen" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -296,7 +305,10 @@
               {
                 "target": "extrude_after_curve",
                 "key": "3",
-                "label": "Line + extrude",
+                "label": {
+                  "native": { "en": "Line + extrude", "de": "Linie + Extrusion" },
+                  "reuse": { "en": "Line + extrude", "de": "Linie + Extrusion" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -456,7 +468,10 @@
               {
                 "target": "loft_run",
                 "key": "4",
-                "label": "Tween curves (loft)",
+                "label": {
+                  "native": { "en": "Tween curves (loft)", "de": "Zwischenkurven (Loft)" },
+                  "reuse": { "en": "Tween curves (loft)", "de": "Zwischenkurven (Loft)" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -616,7 +631,10 @@
               {
                 "target": "committed",
                 "key": "5",
-                "label": "Sweep 1",
+                "label": {
+                  "native": { "en": "Sweep 1", "de": "Sweep 1" },
+                  "reuse": { "en": "Sweep 1", "de": "Sweep 1" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -797,7 +815,10 @@
               {
                 "target": "committed",
                 "key": "6",
-                "label": "Sweep 2",
+                "label": {
+                  "native": { "en": "Sweep 2", "de": "Sweep 2" },
+                  "reuse": { "en": "Sweep 2", "de": "Sweep 2" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -978,7 +999,10 @@
               {
                 "target": "committed",
                 "key": "7",
-                "label": "Network surface",
+                "label": {
+                  "native": { "en": "Network surface", "de": "Netzfläche" },
+                  "reuse": { "en": "Network surface", "de": "Netzfläche" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -1160,7 +1184,10 @@
         "selection": {
           "accept": ["face"],
           "multiple": false,
-          "prompt": "Pick face"
+          "prompt": {
+            "native": { "en": "Pick face", "de": "Seitenfläche wählen" },
+            "reuse": { "en": "Pick face", "de": "Seitenfläche wählen" }
+          }
         },
         "on": [
           {
@@ -1214,7 +1241,10 @@
               {
                 "target": "committed",
                 "key": "e",
-                "label": "Extrude profile",
+                "label": {
+                  "native": { "en": "Extrude profile", "de": "Profil extrudieren" },
+                  "reuse": { "en": "Extrude profile", "de": "Profil extrudieren" }
+                },
                 "effects": [
                   {
                     "mutation": "interaction.call",
@@ -1384,7 +1414,10 @@
               {
                 "target": "committed",
                 "key": "l",
-                "label": "Loft curves",
+                "label": {
+                  "native": { "en": "Loft curves", "de": "Kurven loften" },
+                  "reuse": { "en": "Loft curves", "de": "Kurven loften" }
+                },
                 "effects": [
                   {
                     "mutation": "interaction.call",
@@ -1560,7 +1593,10 @@
             "kind": "label",
             "id": "choose-surface",
             "role": "prompt",
-            "text": "Surface: 1=rectangle 2=pick 3=line+extrude 4=loft 5=sweep1 6=sweep2 7=network",
+            "text": {
+              "native": { "en": "Surface: 1=rectangle 2=pick 3=line+extrude 4=loft 5=sweep1 6=sweep2 7=network", "de": "Fläche: 1=Rechteck 2=Wählen 3=Linie+Extrusion 4=Loft 5=Sweep1 6=Sweep2 7=Netz" },
+              "reuse": { "en": "Surface: 1=rectangle 2=pick 3=line+extrude 4=loft 5=sweep1 6=sweep2 7=network", "de": "Fläche: 1=Rechteck 2=Wählen 3=Linie+Extrusion 4=Loft 5=Sweep1 6=Sweep2 7=Netz" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]
@@ -1575,7 +1611,10 @@
             "kind": "label",
             "id": "pick-face-hint",
             "role": "prompt",
-            "text": "Pick a face",
+            "text": {
+              "native": { "en": "Pick a face", "de": "Eine Seitenfläche wählen" },
+              "reuse": { "en": "Pick a face", "de": "Eine Seitenfläche wählen" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]
@@ -1590,7 +1629,10 @@
             "kind": "label",
             "id": "extrude-hint",
             "role": "prompt",
-            "text": "Line drawn — confirm to extrude profile",
+            "text": {
+              "native": { "en": "Line drawn — confirm to extrude profile", "de": "Linie gezeichnet — zum Extrudieren des Profils bestätigen" },
+              "reuse": { "en": "Line drawn — confirm to extrude profile", "de": "Linie gezeichnet — zum Extrudieren des Profils bestätigen" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]
@@ -1605,7 +1647,10 @@
             "kind": "label",
             "id": "loft-hint",
             "role": "prompt",
-            "text": "Curves ready — confirm to loft",
+            "text": {
+              "native": { "en": "Curves ready — confirm to loft", "de": "Kurven bereit — zum Loften bestätigen" },
+              "reuse": { "en": "Curves ready — confirm to loft", "de": "Kurven bereit — zum Loften bestätigen" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]

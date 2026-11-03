@@ -1,6 +1,6 @@
 //! 🧷️ Collection operations bind exact original array addresses without manufacturing semantic members.
 use super::*;
-use super::{RetainedWorkOutcome,cursor_step,idle_step,owned_step,refused,costed};
+use super::{RetainedWorkOutcome,cursor_step,idle_step,owned_step,own_with,refused,costed};
 fn segments<'a>(field:&Field,row:&'a str,member:&'a str,create:bool)->([&'a str;10],usize){let words=["value","$ifcInputs",row,"value","value","items","0","value",member,"value"];let count=if create{6}else if field.operation==Some(false){8}else if field.operation==Some(true){9}else{10};(words,count)}
 fn spec(field:&Field,request:&StagedFormRequest)->Result<bool,ValueError>{if !field.selection||field.operation.is_none(){return Err(invalid());}Ok(super::super::type_input::typed_constructor(constructor(request,field.row)?).ok_or_else(invalid)?.1.is_empty())}
 pub(super) fn capacity(field:&Field,request:&StagedFormRequest)->Result<usize,ValueError>{let create=spec(field,request)?;let mut row=[0;20];let row=decimal(field.row,&mut row);let mut member=[0;20];let member=decimal(field.member.unwrap_or(0),&mut member);let(words,count)=segments(field,row,member,create);let path=count*size_of::<String>()+words[..count].iter().map(|word|word.len()).sum::<usize>();Ok(path+if field.operation==Some(false){if !create&&field.kind==InputKind::Array{3*size_of::<(String,DslValue)>()+17}else{2*size_of::<(String,DslValue)>()+18}}else{0})}

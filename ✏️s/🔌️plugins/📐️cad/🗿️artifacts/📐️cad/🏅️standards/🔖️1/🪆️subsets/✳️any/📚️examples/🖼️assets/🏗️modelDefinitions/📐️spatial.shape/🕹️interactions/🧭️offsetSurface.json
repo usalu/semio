@@ -2,7 +2,10 @@
   "schema": "spatial.interaction",
   "id": "feature.offsetSurface",
   "version": "1.0.0",
-  "label": "OffsetSurface",
+  "label": {
+    "native": { "en": "OffsetSurface", "de": "Fläche versetzen" },
+    "reuse": { "en": "OffsetSurface", "de": "Fläche versetzen" }
+  },
   "key": "o",
   "interaction": {
     "spatialGroundPick": false,
@@ -77,7 +80,10 @@
         "selection": {
           "accept": ["face"],
           "multiple": false,
-          "prompt": "Pick face"
+          "prompt": {
+            "native": { "en": "Pick face", "de": "Seitenfläche wählen" },
+            "reuse": { "en": "Pick face", "de": "Seitenfläche wählen" }
+          }
         },
         "on": [
           {
@@ -86,7 +92,10 @@
               {
                 "target": "setDistance",
                 "key": "i",
-                "label": "Pick surface",
+                "label": {
+                  "native": { "en": "Pick surface", "de": "Fläche wählen" },
+                  "reuse": { "en": "Pick surface", "de": "Fläche wählen" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -162,7 +171,10 @@
               {
                 "target": "selectSurface",
                 "key": "x",
-                "label": "Cancel"
+                "label": {
+                  "native": { "en": "Cancel", "de": "Abbrechen" },
+                  "reuse": { "en": "Cancel", "de": "Abbrechen" }
+                }
               }
             ]
           }
@@ -176,7 +188,10 @@
             "transitions": [
               {
                 "key": "n",
-                "label": "Apply offset",
+                "label": {
+                  "native": { "en": "Apply offset", "de": "Versatz anwenden" },
+                  "reuse": { "en": "Apply offset", "de": "Versatz anwenden" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -211,7 +226,10 @@
                 "target": "committed",
                 "guard": "hasSurfaceAndDistance",
                 "key": "Enter",
-                "label": "Commit offset"
+                "label": {
+                  "native": { "en": "Commit offset", "de": "Versatz übernehmen" },
+                  "reuse": { "en": "Commit offset", "de": "Versatz übernehmen" }
+                }
               }
             ]
           },
@@ -221,7 +239,10 @@
               {
                 "target": "selectSurface",
                 "key": "x",
-                "label": "Cancel"
+                "label": {
+                  "native": { "en": "Cancel", "de": "Abbrechen" },
+                  "reuse": { "en": "Cancel", "de": "Abbrechen" }
+                }
               }
             ]
           }

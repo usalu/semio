@@ -464,7 +464,7 @@ mod preimage_tests {
         for case in fixture["cases"].as_array().unwrap() {
             let parsed = semio_framework_pack_json::parse(&case["mutations"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
             let mutations = Vec::<IfcMutation>::from_value(semio_framework_pack_json::to_dsl_value(&parsed)).unwrap();
-            let mut caller = semio_framework_plugin::app_testing::OriginalWorkFixture::with_identity(semio_framework_job::OperationId(891), semio_framework_job::Generation(1));
+            let mut caller = semio_framework_plugin::plugin_app_close_prelude::OriginalWorkFixture::with_identity(semio_framework_job::OperationId(891), semio_framework_job::Generation(1));
             let mut cursor = IfcPublication::default();
             let mut refused = false;
             for _ in 0..10_000 {

@@ -44,9 +44,9 @@ impl DocumentTraceJob{
   let failure=Self::validate_limits(input.limits).err().or_else(||(input.plan.nodes.len()>1024||input.plan.assets.len()>1024).then(||invalid("Invalid document trace plan or work limit")));
   Self{input,phase:"assets",assets:0,nodes:0,resolved:0,admitted_images:0,pixels:0,source_bytes:0,segments:0,work:0,at:0,pixel:0,publish_at:0,masks:Vec::new(),source:0,image:None,mask:Vec::new(),tracer:None,trace:None,candidate:Vec::new(),output:None,failure,cancelled:false,closing_tracer:None,closing_mask:None,retired_tracers:Vec::new(),retired_sources:Vec::new(),retired_masks:Vec::new(),pending:RetirementDemand{depth:1,..Default::default()},last_turn_work:0,last_turn_semantic_work:0,step_child_work:None,step_control_work:0,error_buffer:String::new(),error_kind:0,error_part:0}
  }
- fn start_trace(&mut self,width:u32,height:u32,mask:Arc<Vec<u8>>){
-  let DocumentSceneContent::Trace{threshold,simplify_epsilon,..}=&self.input.plan.nodes[self.at].content else{unreachable!()};let l=self.input.limits;
-  self.tracer=Some(BitmapTraceJob::new(BitmapTraceInput{width,height,mask:TraceMask(mask),threshold:*threshold,simplify_epsilon:*simplify_epsilon,max_pixels:l.max_pixels,max_edges:l.max_edges,max_segments:l.max_segments.min(l.max_retained_segments-self.segments).max(1),max_work:l.max_work}));self.phase="tracing";
+ fn start_trace(&mut self,width:u32,height:u32,mask:Arc<Vec<u8>>)->Result<(),DocumentSceneError>{
+  let DocumentSceneContent::Trace{threshold,simplify_epsilon,..}=&self.input.plan.nodes[self.at].content else{return Err(invalid("Document trace node lost its trace content"))};let l=self.input.limits;
+  self.tracer=Some(BitmapTraceJob::new(BitmapTraceInput{width,height,mask:TraceMask(mask),threshold:*threshold,simplify_epsilon:*simplify_epsilon,max_pixels:l.max_pixels,max_edges:l.max_edges,max_segments:l.max_segments.min(l.max_retained_segments-self.segments).max(1),max_work:l.max_work}));self.phase="tracing";Ok(())
  }
  fn step(&mut self,work:&mut RetainedWorkLedger)->Result<bool,DocumentSceneError>{
   match self.phase{
@@ -73,7 +73,7 @@ impl DocumentTraceJob{
    "nodes"=>{
     let Some(node)=self.input.plan.nodes.get(self.at)else{self.step_control_work=1;self.output=Some(std::mem::take(&mut self.input.plan));self.phase="complete";return Ok(true);};
     let DocumentSceneContent::Trace{source,..}=&node.content else{self.at+=1;return Ok(true);};let index=self.input.plan.assets.iter().position(|asset|&asset.id==source).ok_or_else(||invalid("Captured trace source disappeared"))?;
-    if let Some((_,width,height,mask))=self.masks.iter().find(|(key,_,_,_)|*key==index){if !work.can_step(){return Ok(false);}let(width,height,mask)=(*width,*height,Arc::clone(&mask.0));self.start_trace(width,height,mask);return Ok(true);}
+    if let Some((_,width,height,mask))=self.masks.iter().find(|(key,_,_,_)|*key==index){if !work.can_step(){return Ok(false);}let(width,height,mask)=(*width,*height,Arc::clone(&mask.0));self.start_trace(width,height,mask)?;return Ok(true);}
     let asset=&self.input.plan.assets[index];let l=self.input.limits;let count=asset.image.width as usize*asset.image.height as usize;
     if asset.image.pixels.len()>l.max_source_bytes.saturating_sub(self.source_bytes)||count>l.max_pixels.min(l.max_admitted_pixels.saturating_sub(self.pixels)){return Err(invalid("Document trace intrinsic image budget exceeded"));}
     if !work.can_step(){return Ok(false);}
@@ -85,7 +85,7 @@ impl DocumentTraceJob{
      if !slot(&mut self.masks,work)?{return Ok(false);}let copy=0;let capacity=semio_framework_value::retirement::arc_custody::arc_bytes::<Vec<u8>>();let remaining=work.child_grant();let demand=RetirementDemand{copy_bytes:copy+size_of::<Vec<u8>>(),capacity_bytes:capacity,depth:1,release_bytes:0};
      if remaining.maximum_items==0||remaining.maximum_copy_bytes<demand.copy_bytes||remaining.maximum_capacity_bytes<capacity||remaining.maximum_depth<1{work.require_child(demand).map_err(invalid)?;return Ok(false);}
      if !work.copy_bytes(copy){return Ok(false);}let(width,height)=(image.width,image.height);let mask=work.arc_new(std::mem::take(&mut self.mask)).map_err(|(error,_)|invalid(error))?;
-     work.vec_push(&mut self.masks,(self.source,width,height,TraceMask(Arc::clone(&mask)))).map_err(|(error,_)|invalid(error))?;self.image=None;self.start_trace(width,height,mask);return Ok(true);
+     work.vec_push(&mut self.masks,(self.source,width,height,TraceMask(Arc::clone(&mask)))).map_err(|(error,_)|invalid(error))?;self.image=None;self.start_trace(width,height,mask)?;return Ok(true);
     }
     if !slot(&mut self.mask,work)?{return Ok(false);}let p=&image.pixels;let i=self.pixel*4;let value=((299.0*p[i]as f64+587.0*p[i+1]as f64+114.0*p[i+2]as f64)*p[i+3]as f64/255000.0).round()as u8;
     work.vec_push(&mut self.mask,value).map_err(|(error,_)|invalid(error))?;self.pixel+=1;

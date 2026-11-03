@@ -203,7 +203,6 @@ fn generation_control_args(generation_id: &str, question_id: &str, field_index: 
     ui_value_map(values)
 }
 
-/// 📝 Renders generation questions as semantic controls with typed change bindings.
 /// 🏷️ The three user-visible words of the generated input form, resolved by the calling app.
 pub struct GenerationFormLabels<'a> {
     pub no_inputs: &'a str,
@@ -211,6 +210,7 @@ pub struct GenerationFormLabels<'a> {
     pub no_image: &'a str,
 }
 
+/// 📝 Renders generation questions as semantic controls with typed change bindings.
 pub fn generation_form(
     spec: &semio_framework_os_playbook_contract::PlaybookSpec,
     values: &semio_framework_os_playbook_contract::PlaybookValues,

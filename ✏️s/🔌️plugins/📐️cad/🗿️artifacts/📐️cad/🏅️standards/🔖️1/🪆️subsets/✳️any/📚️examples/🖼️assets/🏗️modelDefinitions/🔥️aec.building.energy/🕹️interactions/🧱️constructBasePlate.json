@@ -2,7 +2,10 @@
   "schema": "spatial.interaction",
   "id": "energy.energy.constructBasePlate",
   "version": "1.0.0",
-  "label": "Construct Base Plate",
+  "label": {
+    "native": { "en": "Construct Base Plate", "de": "Bodenplatte konstruieren" },
+    "reuse": { "en": "Construct Base Plate", "de": "Bodenplatte konstruieren" }
+  },
   "key": "b",
   "interaction": {
     "spatialGroundPick": true,
@@ -41,7 +44,10 @@
               {
                 "target": "committed",
                 "key": "1",
-                "label": "Surface",
+                "label": {
+                  "native": { "en": "Surface", "de": "Fläche" },
+                  "reuse": { "en": "Surface", "de": "Fläche" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -465,7 +471,10 @@
               {
                 "target": "committed",
                 "key": "n",
-                "label": "Height",
+                "label": {
+                  "native": { "en": "Height", "de": "Höhe" },
+                  "reuse": { "en": "Height", "de": "Höhe" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -500,7 +509,10 @@
         "selection": {
           "accept": ["wire"],
           "multiple": false,
-          "prompt": "Pick path wire"
+          "prompt": {
+            "native": { "en": "Pick path wire", "de": "Pfadkurve wählen" },
+            "reuse": { "en": "Pick path wire", "de": "Pfadkurve wählen" }
+          }
         },
         "on": [
           {
@@ -554,7 +566,10 @@
               {
                 "target": "committed",
                 "key": "n",
-                "label": "Height",
+                "label": {
+                  "native": { "en": "Height", "de": "Höhe" },
+                  "reuse": { "en": "Height", "de": "Höhe" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -599,7 +614,10 @@
             "kind": "label",
             "id": "choose-mode",
             "role": "prompt",
-            "text": "Construct Base Plate: 1=surface (rectangle, pick, line+extrude, loft, …)",
+            "text": {
+              "native": { "en": "Construct Base Plate: 1=surface (rectangle, pick, line+extrude, loft, …)", "de": "Bodenplatte konstruieren: 1=Fläche (Rechteck, Wählen, Linie+Extrusion, Loft, …)" },
+              "reuse": { "en": "Construct Base Plate: 1=surface (rectangle, pick, line+extrude, loft, …)", "de": "Bodenplatte konstruieren: 1=Fläche (Rechteck, Wählen, Linie+Extrusion, Loft, …)" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]
@@ -614,7 +632,10 @@
             "kind": "label",
             "id": "hint-first",
             "role": "prompt",
-            "text": "Construct Base Plate: click first footprint corner",
+            "text": {
+              "native": { "en": "Construct Base Plate: click first footprint corner", "de": "Bodenplatte konstruieren: Ersten Grundrisseckpunkt anklicken" },
+              "reuse": { "en": "Construct Base Plate: click first footprint corner", "de": "Bodenplatte konstruieren: Ersten Grundrisseckpunkt anklicken" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]
@@ -644,7 +665,10 @@
             "kind": "label",
             "id": "hint-second",
             "role": "prompt",
-            "text": "Construct Base Plate: click opposite footprint corner",
+            "text": {
+              "native": { "en": "Construct Base Plate: click opposite footprint corner", "de": "Bodenplatte konstruieren: Gegenüberliegenden Grundrisseckpunkt anklicken" },
+              "reuse": { "en": "Construct Base Plate: click opposite footprint corner", "de": "Bodenplatte konstruieren: Gegenüberliegenden Grundrisseckpunkt anklicken" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]
@@ -743,7 +767,10 @@
             "kind": "label",
             "id": "hint-height",
             "role": "prompt",
-            "text": "Construct Base Plate: height (Z) — drag teal wall, Apply height, or Accept",
+            "text": {
+              "native": { "en": "Construct Base Plate: height (Z) — drag teal wall, Apply height, or Accept", "de": "Bodenplatte konstruieren: Höhe (Z) — türkise Wand ziehen, Höhe übernehmen oder bestätigen" },
+              "reuse": { "en": "Construct Base Plate: height (Z) — drag teal wall, Apply height, or Accept", "de": "Bodenplatte konstruieren: Höhe (Z) — türkise Wand ziehen, Höhe übernehmen oder bestätigen" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]
@@ -793,7 +820,10 @@
             "kind": "label",
             "id": "hint-wire",
             "role": "prompt",
-            "text": "Construct Base Plate: pick path wire",
+            "text": {
+              "native": { "en": "Construct Base Plate: pick path wire", "de": "Bodenplatte konstruieren: Pfadkurve wählen" },
+              "reuse": { "en": "Construct Base Plate: pick path wire", "de": "Bodenplatte konstruieren: Pfadkurve wählen" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]
@@ -808,7 +838,10 @@
             "kind": "label",
             "id": "hint-curve-height",
             "role": "prompt",
-            "text": "Construct Base Plate: set height (Apply height or Accept)",
+            "text": {
+              "native": { "en": "Construct Base Plate: set height (Apply height or Accept)", "de": "Bodenplatte konstruieren: Höhe festlegen (Höhe übernehmen oder bestätigen)" },
+              "reuse": { "en": "Construct Base Plate: set height (Apply height or Accept)", "de": "Bodenplatte konstruieren: Höhe festlegen (Höhe übernehmen oder bestätigen)" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]
@@ -823,7 +856,10 @@
             "kind": "label",
             "id": "hint-commit",
             "role": "prompt",
-            "text": "Construct Base Plate: Accept to create",
+            "text": {
+              "native": { "en": "Construct Base Plate: Accept to create", "de": "Bodenplatte konstruieren: Zum Erstellen bestätigen" },
+              "reuse": { "en": "Construct Base Plate: Accept to create", "de": "Bodenplatte konstruieren: Zum Erstellen bestätigen" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.2, 1.55]

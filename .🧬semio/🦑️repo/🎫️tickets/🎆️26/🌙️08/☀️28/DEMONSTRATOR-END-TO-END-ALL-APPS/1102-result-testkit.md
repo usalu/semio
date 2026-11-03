@@ -1,0 +1,33 @@
+STATUS: B3 patch applied and effective (energie smoke passes the former RefUnresolved point). Energie smoke NOT green (0/2, load-example step); law test UNVERIFIED (host crate blocked by surface-fixture).
+
+## Root cause
+`artifact_app_laws::new_app_with_registry*`/`new_registered_app_with_members` call `manifest()` (which builds command/input schemas that `$ref` framework documents, e.g. energy bind-weather-file -> artifact-reference/link) BEFORE `VcsArtifactApp::with_registry`, which is the first place `publish_framework_schema_documents` runs (ingress L66). Publishing inside with_registry is too late for manifest(); production publishes before authoring manifests.
+
+## Patch
+`C/1102-tools/testkit/patches/publish-framework-schemas.patch` (apply: `cd /Users/ueli/Documents/semio && patch -p1 < <patch>`; dry-run OK). Adds `publish_framework_schemas()` in the registered-app-construction helper file, called first in `new_app`, `new_app_with_registry_and_members` (so `new_app_with_registry`) and `new_registered_app_with_members` (so `new_registered_app`). Uses `semio_framework_plugin_decl_registry::artifact_registration::PluginRuntimeRegistry` (already a dep of the testing-laws crate). Idempotent.
+Law test (same patch, mutation-fixtures-dummy): `registered_construction_publishes_framework_schemas_before_the_manifest` - an async manifest asserts the framework link schema $id resolves via `registered_input_schema_document` while the manifest is authored. Oracle: the same resolver production uses (stdio component-assembly test).
+
+## Registryless new_app: decision
+KEEP (do not remove now): ~20 live callers are store-only/generic tests with no manifest: paired-apps laws (4 in `👯️paired-apps-history-and-convergence-laws`), viewer fixture (`🔭️bounded-viewer-fixture...:360`), plugin tests `♻️publication-retirement-authority` (3, RetirementApp), `🎞️media-owner-context` (1), `🧬️mutation-fixtures-dummy` (2, DummyApp), `🧬️mutation-fixtures-surface` (~8). Removing needs a manifest per fixture app; separate refactor. It now publishes schemas like the rest; typed dispatch still fails closed by design (empty registry). The per-app wrappers named `new_app()` in writer/sequence/etc are unrelated local helpers.
+
+## Pending at apply time
+1. apply patch; 2. remove the workaround line 17 in energy `🔬️mounted-bestest/🦀️.rs` manifest() (kept until the patch lands so the test is not broken meanwhile); 3. wasm `--lib` check + native test of plugin-testing-laws/tests crate and the energie smoke via `C/1102-tools/slot.sh`.
+Rtpanes: other panes' RefUnresolved should disappear once this lands.
+
+## 16:3x window B3
+APPLIED patch (laws helper + dummy law test); removed energy mounted-bestest workaround. Helper lives under `🧪️testing/` so its `.expect` is test code. First checks failed on my command lines, not code: hub manifest cannot resolve testing-laws (cargo resolver panic), `cargo test` takes no --keep-going. Rerun via `1102-tools/testkit/b3b.sh` (logs `🗑️generated/1102/b3b-{law,wasm}.txt`), energie smoke log `b3-energy.txt`. UNVERIFIED until those finish.
+
+## Window B3 outcome (win-B3-done touched)
+- Applied: laws helper `publish_framework_schemas()` + dummy law test; energy mounted-bestest workaround removed; `.expect` stays (file is under `🧪️testing/`).
+- Extra fix: `semio-framework-plugin-instance-render` Cargo.toml feature `artifact-app-testing` now forwards to `semio-framework-plugin-tool-run/artifact-app-testing` (E0609 `now_ms` when building tests-04-2 alone).
+- GREEN: wasm `--lib` check testing-laws (`b3b-wasm.txt`).
+- BLOCKED (not B3 code): law host `semio-framework-plugin-tests-04-2` fails in `semio-framework-plugin-surface-fixture` (E0050 `step` has 2 params, 30 errors; `b3d-law.txt`) = testport/B4 scope. Energie smoke (`b3c-energy.txt`) fails in `semio-framework-os-store-presence` E0308 (B2 policy churn).
+- Rerun when those are fixed: `1102-tools/testkit/b3d.sh` (law) and `b3c.sh` (energie; manifest `✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/Cargo.toml`, not the root one).
+- FOR LANE rtpanes: the patch has landed. Panes' `new_app_with_registry*` now publish framework schemas before the manifest; the energie test no longer publishes itself. Rerun smokes once os-store-presence compiles.
+18:37:51 energy editor-impl: added reference_birth() (EnergyModelSnapshot::default()) by testkit lane; energy mounted smoke died app.reference-birth.missing
+21:45:25 energie smoke progress: RefUnresolved gone (testkit fix works), reference_birth added, now load-example path (dispatch via setActiveExample action); 'original command receiving source' missing for EnergyModelEditorCommand through dispatch_original_fixture_command = energy-lane production gap if action route fails too. Law host tests-04-2 blocked by surface-fixture E0050 (registered-factory-and-natural-decode:26, natural-file-reserved-job-laws:52, media-owner-context:46) = testport.
+
+## 22:2x verdicts
+- Energie smoke (`b3c-energy.txt`, rc 1, 0 passed 2 failed). Chain of faults, each past the previous: RefUnresolved (FIXED by B3) -> `app.reference-birth.missing` (FIXED: `reference_birth()` added to `EnergyModelEditor` in `editor-impl/🦀️.rs`, returns `EnergyModelSnapshot::default()`) -> hand-built Pack/SPR `Stale` and `document_text()` "snapshot owner declares no reference DSL printer" (energy snapshot has only `native_pack_source`, no reference codec; the `io/binary/snapshot` impl is not compiled) -> test now loads via the `setActiveExample` action + `LoadDocument` effect -> `WorkLimit: original action fixture dispatch exceeded its authored turn bound` at `mounted-bestest/🦀️.rs:30` (`laws::dispatch_fixture_action`, loading bestest-600 is heavier than the fixture turn bound; `dispatch_original_fixture_command` instead says "Energy action has no declared original command receiving source"). Owner next step (energy lane): declare the original command receiving source for `EnergyModelEditorCommand::SetActiveExample`, or raise nothing and load the example through the production load door; then rerun `1102-tools/testkit/b3c.sh` (~1 h under fleet load).
+- Law (`b3e-law.txt`, rc 1): host `semio-framework-plugin-tests-04-2` cannot build, `semio-framework-plugin-surface-fixture` 30 errors, first: `🧬️mutation-fixtures-surface/🏭️registered-factory-and-natural-decode/🦀️.rs:26:17` E0050 (`InteractiveJob::step` takes 3 params), `…/📄️natural-file-reserved-job-laws/🦀️.rs:52:87` E0061, `🎞️media-owner-context/🦀️.rs:46:11`. Testport owns; rerun `1102-tools/testkit/b3e.sh` (wait loop on b3c rc; or run its cargo line directly).
+- Cargo.toml edit for lock run: instance-render `artifact-app-testing` feature forwards to tool-run.

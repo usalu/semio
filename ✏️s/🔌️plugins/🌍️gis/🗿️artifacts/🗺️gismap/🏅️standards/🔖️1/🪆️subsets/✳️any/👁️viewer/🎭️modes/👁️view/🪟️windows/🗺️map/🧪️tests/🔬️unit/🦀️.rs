@@ -56,3 +56,19 @@ async fn render_publishes_the_default_camera_until_the_window_retains_one() {
     let panned = semio_framework_plugin::artifact_app_laws::built_surface_scene::<TiledMapScene>(&render(&document, Some(&window)).expect("render")).expect("tiled map scene");
     assert_eq!(panned.camera_json, window.camera.scene_camera_json());
 }
+
+/// ⚖️ LAW: the read-only map window never selects or hovers — it declares no pointer interactions and its
+/// rendered scene keeps the host defaults (nothing selected, nothing hovered), unchanged by a retained camera.
+#[semio_framework_async_macros::async_test]
+async fn the_viewer_map_scene_selects_and_hovers_nothing_and_declares_no_interactions() {
+    assert!(definition().interactions.is_empty(), "a viewer has no pick or hover interaction");
+    let document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let window = config::GisMapViewerWindowConfig { camera: config::GisMapViewerCamera { x: 1.0, y: 2.0, zoom: 3.0 } };
+    for retained in [None, Some(&window)] {
+        let scene = semio_framework_plugin::artifact_app_laws::built_surface_scene::<TiledMapScene>(&render(&document, retained).expect("render")).expect("tiled map scene");
+        let defaults = TiledMapScene::base(String::new(), String::new());
+        assert_eq!(scene.selection_json, defaults.selection_json);
+        assert_eq!(scene.hover_json, defaults.hover_json);
+        assert_eq!(scene.hover_json, "null");
+    }
+}

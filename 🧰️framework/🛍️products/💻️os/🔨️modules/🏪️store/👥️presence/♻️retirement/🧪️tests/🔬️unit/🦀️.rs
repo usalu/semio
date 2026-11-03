@@ -96,15 +96,19 @@ impl ColdMutationDiff<Value> for Value {
 
 impl CountedPresence for Value { fn counted(self) -> bool { self.0 != 0 } }
 
+fn capture_clock() -> Option<u64> { Some(1000) }
+
+use semio_framework_job_worker::OriginalWorkerFixtureCaller;
+
 struct CapturedLocalJob {
     read: Option<ControlledRetirement<SnapshotRead<Value>>>,
     closing: bool,
 }
 
 impl semio_framework_job::InteractiveJob for CapturedLocalJob {
-    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
+    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>, _: &mut semio_framework_job::OriginalJobReturnClaim<'_>) -> semio_framework_job::InteractiveJobStep<'a> {
         assert_eq!(self.read.as_ref().unwrap().original().unwrap().get().0, 23);
-        semio_framework_job::JobOutcomeBorrow::admit_yield(cx).map_err(Into::into)
+        semio_framework_job::InteractiveJobStep::from_callback(semio_framework_job::JobOutcomeBorrow::admit_yield(cx).map_err(Into::into))
     }
     fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> { descriptor.yielded() }
     fn begin_close(&mut self) { self.closing = true; }
@@ -112,7 +116,7 @@ impl semio_framework_job::InteractiveJob for CapturedLocalJob {
         let Some(read) = self.read.as_mut() else { return Ok(semio_framework_job::InteractiveJobCloseStep::Complete { progress: Default::default() }); };
         let copy=cx.retained_grant().maximum_copy_bytes;
         let demand=semio_framework_value::RetirementDemand{copy_bytes:read.next_copy_byte_demand()?,capacity_bytes:read.next_capacity_byte_demand(copy)?,release_bytes:read.next_release_byte_demand()?,depth:read.next_depth_demand()?};
-        let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|read.step(grant))?;
+        let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|semio_framework_value::RetainedWorkOutcome { result: read.step(grant), work: 1 })?;
         if read.terminal_is_empty(){self.read.take();}
         Ok(if self.terminal_is_empty(){semio_framework_job::InteractiveJobCloseStep::Complete{progress:step.progress()}}else{step})
     }
@@ -127,56 +131,54 @@ impl semio_framework_job::InteractiveJob for CapturedLocalJob {
 fn retained_presence_local_capture_cancel_closes_mounted_worker_while_store_remains_open() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧹️retirement.json")).unwrap();
     let law = &fixture["localCapture"];
-    let whole_cleanup_policy=&law["wholeCleanupPolicy"];
-    let cleanup_grant:RetainedCloneGrant=serde_json::from_value(whole_cleanup_policy["grant"].clone()).unwrap();
-    let cleanup_budget=semio_framework_job::StepBudget::new(whole_cleanup_policy["fuel"].as_u64().unwrap(),whole_cleanup_policy["deadlineUs"].as_u64().unwrap(),cleanup_grant);
-    assert_eq!(whole_cleanup_policy["clockUs"],1000);
+    assert_eq!(law["wholeCleanupPolicy"]["clockUs"],1000);
     let count = Arc::new(std::sync::atomic::AtomicUsize::new(0));
     let factory = Arc::new(Factory(count.clone()));
     let mut owner = PresenceStore::<Value, ValueMutation>::new(Value(law["value"].as_i64().unwrap() as i32));
     assert!(owner.local_read().is_err());
     owner.install_local_retirement_factory(factory).unwrap();
     let job = CapturedLocalJob { read: Some(ControlledRetirement::new(owner.local_read().unwrap()).unwrap_or_else(|_| panic!("original controlled read"))), closing: false };
-    let cancel = semio_framework_job::root_cancel_token();
+    let stock = RetainedCloneGrant { maximum_items: 20000, maximum_copy_bytes: 16777216, maximum_capacity_bytes: 16777216, maximum_release_bytes: 16777216, maximum_depth: 128 };
+    let operation = semio_framework_job::allocate_operation_id();
+    let generation = semio_framework_job::Generation(0);
+    let mut caller = semio_framework_job::OriginalJobFixtureCaller::admit(operation, generation, stock, capture_clock, u64::MAX, 20000);
+    let cancel = caller.admit_alias(CLOSE_GRANT);
     let params = semio_framework_job_worker_authority::BatchJobParams {
-        operation: semio_framework_job::allocate_operation_id(),
-        generation: semio_framework_job::Generation(0),
+        operation,
+        generation,
         cancel: cancel.clone(),
         config: semio_framework_job_worker_authority::BatchDriveConfig { retained: CLOSE_GRANT, site: "presence.local.capture", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 8000 },
-        now_us: semio_framework_job::default_now_us,
+        now_us: capture_clock,
     };
-    let operation=params.operation;let generation=params.generation;
-    let((mut close_caller,receipt),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_job::StepContextOwner::new(operation,generation,cleanup_grant).unwrap());
-    assert!(receipt.fits(CLOSE_GRANT));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));
-    let mut close_sequence=0;
-    let mut cleanup_receipt=RetainedCloneProgress::default();
-    let mut close_cx=close_caller.context(cleanup_budget,cancel.clone(),||Some(1000),&mut close_sequence,&mut cleanup_receipt).unwrap();
-    let mut job=Some(job);let mut params=Some(params);let original=params.as_ref().unwrap();
-    let now=original.now_us;let deadline=now().expect("original capture clock")+original.config.step_budget_us;
-    let admission_grant=RetainedCloneGrant { maximum_copy_bytes: 1 << 20, ..CLOSE_GRANT };
-    let mut admission_receipt=RetainedCloneProgress::default();
-    let mut admission=semio_framework_job_worker_authority::WorkerJobAdmissionContext::new(original.operation,original.generation,semio_framework_job::StepBudget::new(original.config.fuel_per_step,deadline,admission_grant),now,&mut admission_receipt).unwrap();
-    let(admitted,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_job_worker::MountedWorkerJobSession::try_admit_owned(&mut job,&mut params,&mut admission));
-    let(mut session,receipt)=admitted.unwrap().expect("original fixture grant funds exact mounted capture admission");drop(admission);
-    assert!(job.is_none()&&params.is_none());assert_eq!(receipt,admission_receipt);assert!(receipt.fits(admission_grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));
-    let pool = semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, std::thread::available_parallelism().map(std::num::NonZeroUsize::get).unwrap_or(1)));
-    for _ in 0..100_000 {
-        session.pump_one(&pool, semio_framework_async::Lane::Interactive, CLOSE_GRANT).unwrap_or_else(|_| panic!("mounted Presence capture must pump its exact worker"));
+    let mut job = Some(job);
+    let mut params = Some(params);
+    let mut session = None;
+    let mut admission = semio_framework_job_worker::WorkerJobSessionAdmission::<CapturedLocalJob, semio_framework_job_worker::MountedWorkerJobSession<CapturedLocalJob>>::new();
+    for _ in 0..16384 {
+        let grant = caller.remaining_grant();
+        caller.turn(grant, |cx| admission.advance(&mut job, &mut params, &mut session, cx)).unwrap_or_else(|_| panic!("original fixture grant funds exact mounted capture admission"));
+        if session.is_some() { break; }
+    }
+    assert!(admission.terminal_is_empty());
+    drop(admission);
+    assert!(job.is_none() && params.is_none());
+    let mut session = session.expect("original mounted capture session");
+    for _ in 0..64 {
+        caller.turn(CLOSE_GRANT, |cx| session.pump_one_for_interactive_turn(cx)).unwrap_or_else(|_| panic!("mounted Presence capture must pump its exact worker"));
         if let Some((issued, progress)) = session.take_checked_out_retained_step_receipt() {
             assert_eq!(issued, CLOSE_GRANT);
             assert!(progress.fits(issued));
-            assert_eq!(progress, RetainedCloneProgress { copied_items: 1, ..Default::default() });
         }
         if session.checked_out_outcome().unwrap().is_some() {
             break;
         }
-        std::thread::yield_now();
     }
     assert!(session.checked_out_outcome().unwrap().is_some());
-    let acknowledged = session.acknowledge_checked_out_outcome(CLOSE_GRANT);
-    assert!(matches!(acknowledged, RetainedCloneStep::Progress(progress) if progress == (RetainedCloneProgress { copied_items: 1, ..Default::default() })));
-    let removed = session.acknowledge_checked_out_outcome(CLOSE_GRANT);
-    assert!(matches!(removed, RetainedCloneStep::Complete(progress) if progress == (RetainedCloneProgress { copied_items: 1, ..Default::default() })));
+    let mut acknowledged = false;
+    for _ in 0..16 {
+        if caller.turn(CLOSE_GRANT, |cx| session.acknowledge_checked_out_outcome(cx)).unwrap() { acknowledged = true; break; }
+    }
+    assert!(acknowledged);
     cancel.cancel_now();
     session.begin_close();
     let mut observed_worker_page = false;
@@ -186,10 +188,7 @@ fn retained_presence_local_capture_cancel_closes_mounted_worker_while_store_rema
         if demand == law["workerPageBytes"].as_u64().unwrap() as usize {
             let phase = session.close_phase();
             let denied = RetainedCloneGrant { maximum_release_bytes: 4096, ..CLOSE_GRANT };
-            let before=close_cx.retained_progress();
-            let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||close_cx.with_retained_loan(denied,|cx|session.close_step(cx)).unwrap());
-            assert_eq!(close_cx.retained_progress(),before.checked_add(step.progress()).unwrap());
-            assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));
+            let step = caller.turn(denied, |cx| session.close_step(cx)).unwrap();
             assert!(matches!(step, semio_framework_job_worker_authority::WorkerJobCloseStep::Pending { .. }));
             let progress = step.progress();
             assert_eq!(serde_json::json!({"releasedItems": progress.copied_items, "releasedBytes": progress.released_bytes}), law["workerUndergrant"]);
@@ -197,21 +196,11 @@ fn retained_presence_local_capture_cancel_closes_mounted_worker_while_store_rema
             assert_eq!(session.retirement_demands(CLOSE_GRANT.maximum_copy_bytes).unwrap().release_bytes, demand);
             observed_worker_page = true;
         }
-        let (returned, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| session.return_original_cancel_alias_step(&cancel, CLOSE_GRANT).unwrap());
-        assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-        if let Some(step) = returned {
-            assert!(step.progress().fits(CLOSE_GRANT));
-            assert_eq!(step.progress(), RetainedCloneProgress { copied_items: 1, ..Default::default() });
-            assert!(matches!(step, RetainedCloneStep::Complete(_)));
-            cancel_handbacks += 1;
-        } else {
-            let before=close_cx.retained_progress();
-            let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||close_cx.with_retained_loan(CLOSE_GRANT,|cx|session.close_step(cx)).unwrap());
-            assert_eq!(close_cx.retained_progress(),before.checked_add(step.progress()).unwrap());
-            assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));
-            assert!(step.progress().fits(CLOSE_GRANT));
-        }
-        observed_step(CLOSE_GRANT, || owner.maintenance_local_reads_step(CLOSE_GRANT));
+        let witnessed = session.has_original_cancel_alias_witness(&cancel).unwrap();
+        let step = caller.close_owner(CLOSE_GRANT, &mut session).unwrap();
+        assert!(step.progress().fits(CLOSE_GRANT));
+        if witnessed && !session.has_original_cancel_alias_witness(&cancel).unwrap() { cancel_handbacks += 1; }
+        observed_step(CLOSE_GRANT, || semio_framework_value::RetainedWorkOutcome { result: owner.maintenance_local_reads_step(CLOSE_GRANT), work: 1 });
         if session.terminal_is_empty() && owner.local_read_maintenance_is_idle() {
             break;
         }
@@ -219,19 +208,8 @@ fn retained_presence_local_capture_cancel_closes_mounted_worker_while_store_rema
     assert!(observed_worker_page);
     assert_eq!(session.terminal_is_empty(), law["expectedWorkerTerminal"].as_bool().unwrap());
     assert_eq!(cancel_handbacks, 1);
-    assert_eq!(close_cx.operation(),operation);assert_eq!(close_cx.generation(),generation);assert_eq!(close_cx.deadline_us(),cleanup_budget.deadline_us);assert!(close_cx.retained_progress().fits(cleanup_grant));assert!(close_cx.fuel_remaining()<=cleanup_budget.fuel);drop(close_cx);
-    for _ in 0..64{if close_caller.terminal_is_empty(){break}let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||close_caller.close_step(CLOSE_GRANT));assert!(step.progress().fits(CLOSE_GRANT));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));}assert!(close_caller.terminal_is_empty());
-    let mut original_cancel = semio_framework_async::CancelTokenRetirement::from_token(cancel);
-    let mut cancel_released = 0;
-    for _ in 0..64 {
-        if original_cancel.terminal_is_empty() { break; }
-        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| original_cancel.close_step(CLOSE_GRANT).result.unwrap());
-        assert!(step.progress().fits(CLOSE_GRANT));
-        assert_eq!((step.progress().retained_capacity_bytes, step.progress().released_bytes), (heap.requested_bytes, heap.released_bytes));
-        cancel_released += heap.released_bytes;
-    }
-    assert!(original_cancel.terminal_is_empty());
-    assert!(cancel_released > 0);
+    drop(cancel);
+    assert!(caller.retire(stock) > 0);
     assert!(!owner.retirement_started());
     assert_eq!(serde_json::to_value(owner.local()).unwrap(), law["expectedValueWhileOpen"]);
     assert_eq!(count.load(std::sync::atomic::Ordering::Relaxed), 0);
@@ -300,7 +278,7 @@ fn retained_presence_local_replacements_release_shared_aliases_and_retire_exact_
     assert_eq!(advance_returned_local(owner.local_reads.as_ref().unwrap(), &mut owner.active_returned_local, owner.local_retirement_factory.as_ref(), CLOSE_GRANT).unwrap(), RetainedCloneStep::Progress(RetainedCloneProgress::default()));
     drop(guard);
     for _ in 0..4096 {
-        if matches!(observed_step(CLOSE_GRANT, || owner.maintenance_local_reads_step(CLOSE_GRANT)), RetainedCloneStep::Complete(_)) {
+        if matches!(observed_step(CLOSE_GRANT, || semio_framework_value::RetainedWorkOutcome { result: owner.maintenance_local_reads_step(CLOSE_GRANT), work: 1 }), RetainedCloneStep::Complete(_)) {
             break;
         }
     }

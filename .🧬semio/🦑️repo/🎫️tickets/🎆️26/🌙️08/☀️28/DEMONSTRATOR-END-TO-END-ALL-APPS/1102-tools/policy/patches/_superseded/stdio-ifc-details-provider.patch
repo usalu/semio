@@ -1,0 +1,11 @@
+--- a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🔎️details/👁️provider/🦀️.rs
++++ b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🔎️details/👁️provider/🦀️.rs
+@@ -168,7 +168,7 @@
+             if entity.id == id {
+                 for name in std::iter::once(entity.name.as_str()).chain(entity.complex.iter().map(|part| part.name.as_str())) {
+                     tick()?;
+-                    if Self::accepts_entity(expression.item.as_deref().expect("reference collection item"), name, 0) {
++                    if Self::accepts_entity(expression.item.as_deref().ok_or("reference collection item is absent")?, name, 0) {
+                         return Ok(true);
+                     }
+                 }

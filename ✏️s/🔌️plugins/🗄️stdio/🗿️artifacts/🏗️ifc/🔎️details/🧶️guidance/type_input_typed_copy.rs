@@ -1,6 +1,6 @@
 //! 🔀️ Original request-owned scalar constructors retain exact compatible children.
 use super::{construct_row_string,invalid,DslValue,InputKind};
-use super::{RetainedWorkOutcome,cursor_step,idle_step,owned_step,refused,costed};
+use super::{RetainedWorkOutcome,cursor_step,idle_step,owned_step,own_with,refused,costed};
 use semio_framework_job::{OriginalConstructionDemand,OriginalSourceBinding,OriginalTurnFailure,StepContext,admit_original_construction};
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneClose,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,retained_clone_grant_admits},retirement::{RetireOwned,RetirementCursor,RetirementStep}};
 use std::mem::{ManuallyDrop,size_of};

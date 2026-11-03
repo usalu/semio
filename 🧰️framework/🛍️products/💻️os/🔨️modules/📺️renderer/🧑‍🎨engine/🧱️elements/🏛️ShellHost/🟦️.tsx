@@ -2,7 +2,8 @@ import { OwnedShellDialog } from "./🗨️dialog-origin/🌐️browser/🟦️.
 import { isTerminalDocumentCheckInPhaseV1 } from "@semio-tech/framework/document/check-in";
 import { SessionAuthorityNotice } from "./🔖️session-notice/🟦️.tsx";
 import * as React from "../⚛️react-port/🟦️.ts";
-import { useCallback, useEffect, useLayoutEffect, useState } from "../⚛️react-port/🟦️.ts";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "../⚛️react-port/🟦️.ts";
+import { localeRequestToApply } from "./🌐️locale-request/🟦️.ts";
 import { type Anchor, ANCHORS, CanvasSkeleton, cn, ContextMenuController, createShellScope, detectShellLocale, disposeShellI18nInstance, Footer, Layout, LevelProvider, Navbar, PanelDockProvider, type ShellScope, ShellScopeProvider, TextSelectionContextMenuHost, TutorialBar, UIIntroduction, UiKeybindingsProvider } from "@semio-tech/ui-react";
 import { commitUiPreferencesConfigMutation, readUiPreferences } from "../🎚️UiPreferences/🟦️.ts";
 import { setLocale } from "@semio-tech/framework/config/mutations";
@@ -142,11 +143,11 @@ export function FrameworkOsShell(props: FrameworkOsShellProps): React.ReactEleme
     commitUiPreferencesConfigMutation(resolveShellScopeStorage(isEphemeralShellBrand(brand), storageNamespace), setLocale(locale));
     setChosenLocale(locale);
   }, [brand, storageNamespace]);
-  return initialLocale === undefined ? <ShellLocalePicker onChoose={choose} /> : <FrameworkOsShellMounted {...props} initialLocale={initialLocale} />;
+  return initialLocale === undefined ? <ShellLocalePicker onChoose={choose} /> : <FrameworkOsShellMounted {...props} initialLocale={initialLocale} requestedLocale={requestedLocale} />;
 }
 
-function FrameworkOsShellMounted(props: FrameworkOsShellProps & { readonly initialLocale: ShellLocale }): React.ReactElement {
-  const { shellId, storageNamespace, ownsPage = false, brand, locks, initialLocale, ...innerProps } = props;
+function FrameworkOsShellMounted(props: FrameworkOsShellProps & { readonly initialLocale: ShellLocale; readonly requestedLocale: ShellLocale | undefined }): React.ReactElement {
+  const { shellId, storageNamespace, ownsPage = false, brand, locks, initialLocale, requestedLocale, ...innerProps } = props;
   const ephemeral = isEphemeralShellBrand(brand);
   const wasmBindings = props.hostPorts?.wasmBindings;
   useLayoutEffect(() => (wasmBindings === undefined ? undefined : registerWasmBindingsV1(wasmBindings)), [wasmBindings]);
@@ -167,6 +168,13 @@ function FrameworkOsShellMounted(props: FrameworkOsShellProps & { readonly initi
   const [rootAttached, setRootAttached] = useState<Element | null>(null);
   useLayoutEffect(() => setRootAttached(scope.rootRef.current));
   useShellPlatformPrefs(scope.rootRef, rootAttached);
+  const appliedLocale = useRef<ShellLocale>(requestedLocale ?? initialLocale);
+  useEffect(() => {
+    const next = localeRequestToApply(appliedLocale.current, requestedLocale, locks?.locale);
+    if (next === undefined) return;
+    appliedLocale.current = next;
+    commitUiPreferencesConfigMutation(scope.storage, setLocale(next));
+  }, [requestedLocale, locks?.locale, scope]);
   return (
     <div ref={setRoot} className="semio-scope" data-shell-id={scope.shellId} style={{ position: "relative", height: "100%", width: "100%", isolation: "isolate" }}>
       <ShellScopeProvider scope={scope}>

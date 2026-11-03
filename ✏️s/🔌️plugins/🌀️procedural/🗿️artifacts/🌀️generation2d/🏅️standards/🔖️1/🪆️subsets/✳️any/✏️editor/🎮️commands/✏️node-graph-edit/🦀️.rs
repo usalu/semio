@@ -98,7 +98,7 @@ fn apply_rows(doc: &ArtifactView<'_, Generation2dSnapshot>, rows: &[NodeGraphEdi
                     }
                 }
             }
-        });
+        })?;
     }
     if let Some(reason) = refusal {
         for leaf in leaves {

@@ -1,0 +1,87 @@
+--- a/🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🔀️boolean/⏳️resumable-boolean-job/🦀️.rs
++++ b/🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🔀️boolean/⏳️resumable-boolean-job/🦀️.rs
+@@ -246,10 +246,15 @@
+         matches!(self.phase, BooleanPhase::Complete | BooleanPhase::Cancelled)
+     }
+ 
++    /// 🧪️ True while the funded validation producer still owns the next unit, so the caller pays it through [`BooleanJob::step`] and every other phase through [`BooleanJob::step_budgeted`].
++    pub fn is_funded_validation(&self) -> bool {
++        self.phase == BooleanPhase::Validate && self.validation.as_ref().is_some_and(|validation| !validation.is_complete())
++    }
++
+     /// ♾️ Runs every remaining unit in one call — the unbudgeted façade [`boolean_solid`] is.
+     pub fn run_to_completion(mut self, body: &mut Body, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
+         loop {
+-            match self.step_unbudgeted(body, rec, usize::MAX)? {
++            match self.step_budgeted(body, rec, usize::MAX)? {
+                 BooleanStep::Done(id) => return Ok(id),
+                 BooleanStep::Cancelled(_) => return Err(KernelError::Boolean(BooleanError::InvalidResult("boolean cancelled".into()))),
+                 BooleanStep::Working(_) => continue,
+@@ -259,7 +264,7 @@
+ 
+     /// ⏱️ Advances by at most `budget` units. A `budget` of zero is a legal progress probe that
+     /// performs no work.
+-    pub(crate) fn step_unbudgeted(&mut self, body: &mut Body, rec: &mut OpRecorder, budget: usize) -> Result<BooleanStep, KernelError> {
++    pub fn step_budgeted(&mut self, body: &mut Body, rec: &mut OpRecorder, budget: usize) -> Result<BooleanStep, KernelError> {
+         match self.phase {
+             BooleanPhase::Complete => return Ok(BooleanStep::Done(self.result.ok_or_else(|| KernelError::Boolean(BooleanError::InvalidResult("completed boolean carries no solid".into())))?)),
+             BooleanPhase::Cancelled => return Ok(BooleanStep::Cancelled(self.progress())),
+--- a/🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧠️brep-session-state/🦀️.rs
++++ b/🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🧠️brep-session-state/🦀️.rs
+@@ -104,6 +104,8 @@
+     Ready(GeometryHandle),
+     /// 🛑️ Terminal: the job was cancelled; nothing is produced.
+     Cancelled(BooleanProgress),
++    /// ❌️ Terminal: the exact kernel refused the operands or its result; the caller localizes the refusal.
++    Failed(BrepError),
+ }
+ 
+ impl Default for Brep {
+--- a/🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🔀️boolean-transform-and-copy/🦀️.rs
++++ b/🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🔀️boolean-transform-and-copy/🦀️.rs
+@@ -48,12 +48,19 @@
+     /// nothing, so a host may retain it across turns and re-present the kernel on every step — the
+     /// same contract [`Brep::tessellation_body`] states for tessellation.
+     pub fn step_boolean_job_sync(&mut self,job:&mut BrepBooleanJob,cx:&mut semio_framework_job::StepContext<'_>)->Result<BrepBooleanStep,semio_framework_job::OriginalTurnFailure>{
+-        use semio_framework_value::{ValueError,ValueRefusalKind};
+-        match job.job.step(&mut self.body,&mut job.rec,cx)?{
+-            BooleanStep::Working(progress)=>Ok(BrepBooleanStep::Working(progress)),
+-            BooleanStep::Cancelled(progress)=>Ok(BrepBooleanStep::Cancelled(progress)),
+-            BooleanStep::Done(_)=>Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original boolean result registration has no funded producer yet").into()),
+-        }
++        if cx.should_yield(){return Ok(BrepBooleanStep::Working(job.job.progress()))}
++        let step=if job.job.is_funded_validation(){job.job.step(&mut self.body,&mut job.rec,cx)?}else{
++            let budget=usize::try_from(cx.fuel_remaining()).unwrap_or(usize::MAX).max(1);
++            let before=job.job.progress().units_done;
++            let outcome=job.job.step_budgeted(&mut self.body,&mut job.rec,budget);
++            cx.consume_fuel(u64::try_from(job.job.progress().units_done.saturating_sub(before)).unwrap_or(u64::MAX).max(1));
++            match outcome{Ok(step)=>step,Err(error)=>return Ok(BrepBooleanStep::Failed(map_err(&error)))}
++        };
++        Ok(match step{
++            BooleanStep::Working(progress)=>BrepBooleanStep::Working(progress),
++            BooleanStep::Cancelled(progress)=>BrepBooleanStep::Cancelled(progress),
++            BooleanStep::Done(solid)=>BrepBooleanStep::Ready(self.register_solid(solid)),
++        })
+     }
+     pub fn intersect_sync(&mut self, a: &GeometryHandle, b: &GeometryHandle) -> Result<GeometryHandle, BrepError> {
+         let sa = self.solid_id(a)?;
+--- a/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🔗️brep-boolean/🦀️.rs
++++ b/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🔗️brep-boolean/🦀️.rs
+@@ -178,6 +178,7 @@
+                     BrepBooleanStep::Working(step) => Outcome::Working(progress(step.units_done, step.units_total)),
+                     BrepBooleanStep::Ready(handle) => Outcome::Ready(Some(handle)),
+                     BrepBooleanStep::Cancelled(_) => return Err(cancelled_fault().into()),
++                    BrepBooleanStep::Failed(error) => return Err(boolean_fault(&error).into()),
+                 },
+                 Running::CutAll(job) => {
+                     let budget = fuel_budget(cx);
+--- a/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/✅️analysis-check/🦀️.rs
++++ b/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/✅️analysis-check/🦀️.rs
+@@ -202,6 +202,7 @@
+                 }
+                 BrepBooleanStep::Ready(handle) => Ok(Some(handle)),
+                 BrepBooleanStep::Cancelled(_) => return Err(cancelled().into()),
++                BrepBooleanStep::Failed(error) => return Err(kernel_fault(&error).into()),
+             },
+             None => match self.session.brep().boolean_job_sync(&a, &b, BooleanOp::Intersect).map_err(|error| kernel_fault(&error)) {
+                 Ok(BrepBooleanAdmission::Answered(handle)) => Ok(Some(handle)),

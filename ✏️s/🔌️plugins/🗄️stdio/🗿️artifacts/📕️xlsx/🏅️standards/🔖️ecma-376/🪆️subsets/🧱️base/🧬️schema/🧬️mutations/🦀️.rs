@@ -4,18 +4,18 @@
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::diff::XlsxDiff;
 use semio_s_artifact_stdio_zip::opc::diff::{OpcContentTypeEntriesDelta, OpcContentTypePatch, OpcContentTypeRow, OpcContentTypesDiff, OpcDiff};
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxCell;
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxWorkbook;
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxCellValue;
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSheet;
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
 use protocol::{ColdMutation, Mutation};
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlNode};
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 use semio_s_artifact_stdio_zip::opc::OpcRelationship;
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 use semio_s_artifact_stdio_zip::opc::OpcTargetMode;
 
 //#region 🔖️Mutations
@@ -247,7 +247,7 @@ pub fn xml_part_positions(base: &XlsxSnapshot, path: &str) -> Option<(usize, Opt
 /// conformance tests, same shape docx's own `demo_mutation_cases()` establishes (this wave's OPC
 /// pattern-setter). Promoted from the former test-only `fixture`/`sweep_a`/`sweep_b`/
 /// `sample_mutations` (the last renamed for the same convention).
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn fixture() -> XlsxSnapshot {
     opc_layer::with_demo_entries(semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(XlsxWorkbook {
@@ -258,7 +258,7 @@ pub(crate) fn fixture() -> XlsxSnapshot {
 
 //#region 🔖️Fixtures
 /// 📦️ Content type of the sweep fixtures' binary OPC parts.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 const SWEEP_BINARY_CONTENT_TYPE: &str = "application/octet-stream";
 
 /// 🌱 `sweep_a`/`sweep_b`: differ in EVERY lane the snapshot carries. The authoritative XML parts
@@ -268,7 +268,7 @@ const SWEEP_BINARY_CONTENT_TYPE: &str = "application/octet-stream";
 /// modifies). The lossless OPC lane: binary parts (one removed, one modified in bytes AND content type,
 /// one added), a content-type default and overrides, and part-owned relationships (one owner removed,
 /// one modified, one added — the added one External).
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn sweep_a() -> XlsxSnapshot {
     let mut snapshot = semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(XlsxWorkbook {
@@ -288,7 +288,7 @@ pub(crate) fn sweep_a() -> XlsxSnapshot {
     snapshot
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn sweep_b() -> XlsxSnapshot {
     let mut snapshot = semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_xlsx(XlsxWorkbook {

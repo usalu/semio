@@ -12,7 +12,7 @@ impl FlowHost {
         let mut node = widget_to_dag_node(&widget, 0, &layout, &[], &self.kind_infos, widget_node_size(&widget, &[], &self.kind_infos));
         widget.retire_cold();
         let mut retirement = semio_framework_artifact_flow_flow::retained::FlowRetirement::default();
-        retirement.push_cold(semio_framework_artifact_flow_flow::retained::FlowOwner::Layouts(layout));
+        retirement.push_cold(semio_framework_artifact_flow_flow::retained::FlowOwner::Layouts(layout)).expect("cold Flow retirement admission");
         retirement.retire_cold();
         fit_node_size(&mut node);
         self.ghost_node = Some(node.clone());

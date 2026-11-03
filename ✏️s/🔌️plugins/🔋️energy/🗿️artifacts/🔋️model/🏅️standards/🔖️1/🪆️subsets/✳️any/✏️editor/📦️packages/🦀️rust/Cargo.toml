@@ -92,6 +92,7 @@ semio-framework-plugin-instance-initialization = { path = "../../../../../../../
 
 [dev-dependencies]
 semio-s-artifact-energy-model-import = { workspace = true }
+semio-framework-trace = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 semio-framework-tool-run = { workspace = true }
 semio-framework-async-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

@@ -70,7 +70,7 @@ export class PathBooleanJob{
    this.contourAt++;this.pointAt=0;this.contour=null;c.commitControlWork();return;
   }
   if(this.phase==="boolean"){
-   this.booleanProgress=this.boolean!.advance(1);c.commitSemanticWork();if(this.booleanProgress.done){const transferred=this.boolean!.intoRetirement();this.output=transferred.output!;this.booleanRetirement=transferred.job;this.retained=transferred.operands as BooleanOperand[];this.boolean=null;this.phase="complete";}
+   this.booleanProgress=c.advanceChild(this.boolean!);if(this.booleanProgress.done){const transferred=this.boolean!.intoRetirement();this.output=transferred.output!;this.booleanRetirement=transferred.job;this.retained=transferred.operands as BooleanOperand[];this.boolean=null;this.phase="complete";}
   }
  }
  private progress():PathBooleanProgress{return{phase:this.phase,operands:this.operands,sourceSegments:this.sourceSegments,points:this.points,work:this.work,flatten:this.flatProgress,boolean:this.booleanProgress,done:this.phase==="complete"};}
@@ -88,13 +88,13 @@ export class PathBooleanJob{
   if(this.boolean){const moved=this.boolean.intoRetirement();this.booleanRetirement=moved.job;this.retained=moved.operands as BooleanOperand[];if(moved.output)this.output=moved.output;this.boolean=null;}
   const output=this.phase==="complete"&&!this.cancelled&&!this.failure?this.output:null;if(output)this.output=[];this.cancelled=true;
   let slot=0;const job=new RetainedWorkRetirement((work,turn)=>{
-   const child=slot===0?this.retiredFlats[0]:undefined;
+   const child=slot===0?this.retiredFlats[0]:slot===1?this.booleanRetirement??undefined:undefined;
    if(child!==undefined&&!child.terminalIsEmpty()){try{child.advance(1,work);}finally{turn.commitActualWork(child.lastTurnWork());}if(!child.terminalIsEmpty()||turn.actualWork()>0)return false;}
    if(!work.canStep())return false;
    const next=():boolean=>{slot++;turn.commitActualWork();return slot===11;};
    switch(slot){
     case 0:if(child!==undefined){this.retiredFlats.shift();turn.commitActualWork();return false;}return next();
-    case 1:if(this.booleanRetirement){if(!this.booleanRetirement.advance(1).done){turn.commitActualWork();return false;}this.booleanRetirement=null;}return next();
+    case 1:this.booleanRetirement=null;return next();
     case 2:if(!this.retireOperands(this.retained)){turn.commitActualWork();return false;}this.retained=[];return next();
     case 3:this.input={...this.input,operands:[]};return next();
     case 4:this.current=null;return next();

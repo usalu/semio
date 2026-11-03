@@ -1,0 +1,34 @@
+--- 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts
++++ 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts
+@@ -10,12 +10,13 @@
+  * change that lifts that ceiling. */
+ import { compilerCapacityWorkerCountV1, type CompilerAdmissionControl } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+ import { captureOwnedCommandV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+-import { readFileSync, writeFileSync } from "node:fs";
++import { readFileSync, rmSync, writeFileSync } from "node:fs";
+ import { dirname, join, relative } from "node:path";
+ import { resolveWorkspaceBin, runNodeBinStatus } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+ import { rewritePreview2ShimImportSource } from "../🕸️imports/🟦️.ts";
+ import type { PluginWebMaterializeContext } from "./🧾️contract/🟦️.ts";
+ import { optimizePluginCoreModules, optimizePluginCoreModulesAsync } from "./🪶️wasm-opt/🟦️.ts";
++import { stripWasmDebugSectionsV1 } from "./🪶️strip-debug/🟦️.ts";
+ import { rewriteJcoAsyncResultLiftingAt, rewriteJcoComponentAssetUrlsAt } from "./🧬️jco-module-rewrites/🟦️.ts";
+ 
+ export function rewritePreview2ShimImports(componentJsPath: string, preview2VendorDir: string): void {
+@@ -52,11 +53,15 @@
+  * rewritten, before any `wasm-opt` pass and before the preview2 shim imports are pointed at a vendor directory. A pure function of the component bytes,
+  * the jco version, `componentBase` and this file, so it is cached by content. */
+ export async function transpilePluginComponentModulesAsync(artifact: string, outDir: string, componentBase: string, ctx: PluginWebMaterializeContext): Promise<void> {
++  const slim = join(dirname(outDir), `${componentBase}.nodebug.wasm`);
+   try {
+-    await spawnNodeBinAsync(["@bytecodealliance/jco", "transpile", artifact, "-o", outDir, "--name", componentBase, "--map", "semio:framework/pure=./🟨️.js", "--map", "semio:framework/host-async=./🟨️.js"], ctx.repoRoot, ctx.signal, ctx.environment, ctx.control);
++    writeFileSync(slim, stripWasmDebugSectionsV1(readFileSync(artifact)));
++    await spawnNodeBinAsync(["@bytecodealliance/jco", "transpile", slim, "-o", outDir, "--name", componentBase, "--map", "semio:framework/pure=./🟨️.js", "--map", "semio:framework/host-async=./🟨️.js"], ctx.repoRoot, ctx.signal, ctx.environment, ctx.control);
+   } catch (cause) {
+     ctx.signal?.throwIfAborted();
+     throw new Error(`jco transpile failed for ${artifact}`, { cause });
++  } finally {
++    rmSync(slim, { force: true });
+   }
+   rewriteJcoAsyncResultLiftingAt(join(outDir, `${componentBase}.js`));
+   rewriteJcoComponentAssetUrlsAt(join(outDir, `${componentBase}.js`));

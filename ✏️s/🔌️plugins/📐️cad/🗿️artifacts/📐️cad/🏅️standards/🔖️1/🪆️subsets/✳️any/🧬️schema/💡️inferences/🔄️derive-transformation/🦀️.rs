@@ -1,6 +1,6 @@
 //! 🔄️ Derive transformation of the cad inference: the classification rules, face analytics, solid construction and derive engine. See [`super`].
 
-use semio_s_artifact_cad_cad_model::geometry::CadObject;
+use semio_s_artifact_cad_cad_model::geometry::{CadObject, CadObjectName};
 #[cfg(any(test, feature = "derive-testing"))]
 use semio_s_artifact_cad_cad_model::geometry::CadPrimitiveSlot;
 
@@ -248,7 +248,7 @@ pub fn run_derive_from_geometry(kernel: &mut Brep, source_objects: &[CadObject],
     if face_meta.is_empty() {
         return vec![CadObject {
             id: next_object_id(id_seed, 0),
-            label: "Hull".into(),
+            label: CadObjectName::Typology { ordinal: None },
             typology: "energy.energy.hull".into(),
             visible: true,
             locked: false,
@@ -269,7 +269,7 @@ pub fn run_derive_from_geometry(kernel: &mut Brep, source_objects: &[CadObject],
     let hull_id = next_object_id(id_seed, 0);
     objects.push(CadObject {
         id: hull_id,
-        label: "Hull".into(),
+        label: CadObjectName::Typology { ordinal: None },
         typology: "energy.energy.hull".into(),
         visible: true,
         locked: false,
@@ -294,10 +294,9 @@ pub fn run_derive_from_geometry(kernel: &mut Brep, source_objects: &[CadObject],
     for (_key, faces) in grouped {
         let face = faces[0];
         let rule = FROM_GEOMETRY_CLASSIFY_RULES.iter().find(|rule| classify_rule_matches(rule, face.normal, face.centroid[2], z_min, z_max, z_tol)).unwrap_or(&FROM_GEOMETRY_CLASSIFY_RULES[FROM_GEOMETRY_CLASSIFY_RULES.len() - 1]);
-        let label = rule.role.replace("externalwall", "External Wall").replace("slab", "Slab");
         objects.push(CadObject {
             id: next_object_id(id_seed, index),
-            label,
+            label: CadObjectName::Typology { ordinal: None },
             typology: rule.typology.into(),
             visible: true,
             locked: false,
@@ -314,7 +313,7 @@ pub fn run_derive_from_geometry(kernel: &mut Brep, source_objects: &[CadObject],
     if !objects.iter().any(|object| object.typology == "energy.energy.windows") {
         objects.push(CadObject {
             id: next_object_id(id_seed, index),
-            label: "Windows".into(),
+            label: CadObjectName::Typology { ordinal: None },
             typology: "energy.energy.windows".into(),
             visible: true,
             locked: false,

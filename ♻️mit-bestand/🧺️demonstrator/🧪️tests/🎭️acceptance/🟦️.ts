@@ -541,6 +541,27 @@ test("language switch", async ({ page }) => {
     await expect(tagline).toHaveText(catalogText(`demonstrator.brand.pane.${first}.tagline`, language), { timeout: SHELL_READY_TIMEOUT_MS });
   }
 });
+
+/** 🔤️ Switching the language leaves an opened pane running: the very shell element (marked once it is ready) survives both switches and its root follows the language. */
+test("language switch keeps panes", async ({ page }) => {
+  test.setTimeout(TEST_TIMEOUT_MS);
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await dismissIntroduction(page, page.locator('[id="ui.introduction.skip"]'));
+  const paneId = "koordinator";
+  await page.locator(`[data-layered-card="${paneId}"] [data-slot="demonstrator-pane-card-open-chip"]`).click();
+  expect(await waitForPaneShellOutcome(page, paneId)).toBe("ready");
+  await dismissIntroductionIfPresent(page, paneId);
+  const shell = page.locator(`[data-shell-id="${paneId}"]`);
+  await shell.evaluate((element) => element.setAttribute("data-remount-probe", "kept"));
+  await page.locator("[data-layered-overview-button]").click();
+  const switcher = page.locator('[data-slot="demonstrator-locale-switcher"]');
+  for (const { language } of [LANGUAGE_CASES[1], LANGUAGE_CASES[0]]) {
+    await switcher.locator(`button[data-locale="${language}"]`).click();
+    await expect(page.locator("html")).toHaveAttribute("lang", language);
+    await expect(shell).toHaveAttribute("lang", language);
+    await expect(shell).toHaveAttribute("data-remount-probe", "kept");
+  }
+});
 //#endregion 🃏️OverviewCards
 
 for (const paneCase of PANE_CASES) {

@@ -132,11 +132,11 @@ async fn world_scene_render_cost_probe() {
     let view = forest_view();
     let options = CadDislocateOptions::default();
     let cold = std::time::Instant::now();
-    let _ = edit::build_world_scene_for_pane(&view, CadPaneId::Building, "cad.play.scene3d/building", None, options).expect("scene");
+    let _ = edit::build_world_scene_for_pane(&view, CadPaneId::Building, "cad.play.scene3d/building", None, options, semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En).expect("scene");
     let cold = cold.elapsed();
     let warm = std::time::Instant::now();
     for _ in 0..10 {
-        let _ = edit::build_world_scene_for_pane(&view, CadPaneId::Building, "cad.play.scene3d/building", None, options).expect("scene");
+        let _ = edit::build_world_scene_for_pane(&view, CadPaneId::Building, "cad.play.scene3d/building", None, options, semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En).expect("scene");
     }
     let warm = warm.elapsed() / 10;
     let composed = view.panes.pane(CadPaneId::Building);

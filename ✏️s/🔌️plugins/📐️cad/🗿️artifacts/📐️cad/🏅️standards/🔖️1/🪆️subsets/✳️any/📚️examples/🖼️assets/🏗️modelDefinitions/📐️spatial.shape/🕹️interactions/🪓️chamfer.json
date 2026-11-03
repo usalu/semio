@@ -2,7 +2,10 @@
   "schema": "spatial.interaction",
   "id": "edit.chamfer",
   "version": "1.0.0",
-  "label": "Chamfer",
+  "label": {
+    "native": { "en": "Chamfer", "de": "Fase" },
+    "reuse": { "en": "Chamfer", "de": "Fase" }
+  },
   "interaction": {
     "spatialGroundPick": false,
     "pickDisabledStates": ["idle", "committed"],
@@ -23,7 +26,10 @@
               {
                 "target": "select_first_curve_to_chamfer",
                 "key": "s",
-                "label": "Start",
+                "label": {
+                  "native": { "en": "Start", "de": "Start" },
+                  "reuse": { "en": "Start", "de": "Start" }
+                },
                 "effects": [
                   {
                     "mutation": "assign",
@@ -84,7 +90,10 @@
         "selection": {
           "accept": ["edge", "wire"],
           "multiple": true,
-          "prompt": "Select first curve to chamfer"
+          "prompt": {
+            "native": { "en": "Select first curve to chamfer", "de": "Erste Kurve für die Fase auswählen" },
+            "reuse": { "en": "Select first curve to chamfer", "de": "Erste Kurve für die Fase auswählen" }
+          }
         },
         "on": [
           {
@@ -93,7 +102,10 @@
               {
                 "target": "select_second_curve_to_chamfer",
                 "key": "s",
-                "label": "Select",
+                "label": {
+                  "native": { "en": "Select", "de": "Auswählen" },
+                  "reuse": { "en": "Select", "de": "Auswählen" }
+                },
                 "effects": [
                   {
                     "mutation": "action",
@@ -130,7 +142,10 @@
         "selection": {
           "accept": ["edge", "wire"],
           "multiple": true,
-          "prompt": "Select second curve to chamfer"
+          "prompt": {
+            "native": { "en": "Select second curve to chamfer", "de": "Zweite Kurve für die Fase auswählen" },
+            "reuse": { "en": "Select second curve to chamfer", "de": "Zweite Kurve für die Fase auswählen" }
+          }
         },
         "on": [
           {
@@ -139,7 +154,10 @@
               {
                 "target": "committed",
                 "key": "s",
-                "label": "Select",
+                "label": {
+                  "native": { "en": "Select", "de": "Auswählen" },
+                  "reuse": { "en": "Select", "de": "Auswählen" }
+                },
                 "effects": [
                   {
                     "mutation": "action",
@@ -186,7 +204,10 @@
             "kind": "label",
             "id": "select_first_curve_to_chamfer-prompt",
             "role": "prompt",
-            "text": "Select first curve to chamfer",
+            "text": {
+              "native": { "en": "Select first curve to chamfer", "de": "Erste Kurve für die Fase auswählen" },
+              "reuse": { "en": "Select first curve to chamfer", "de": "Erste Kurve für die Fase auswählen" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]
@@ -249,7 +270,10 @@
             "kind": "label",
             "id": "select_second_curve_to_chamfer-prompt",
             "role": "prompt",
-            "text": "Select second curve to chamfer",
+            "text": {
+              "native": { "en": "Select second curve to chamfer", "de": "Zweite Kurve für die Fase auswählen" },
+              "reuse": { "en": "Select second curve to chamfer", "de": "Zweite Kurve für die Fase auswählen" }
+            },
             "position": {
               "kind": "const",
               "value": [0, 0.25, 1.55]

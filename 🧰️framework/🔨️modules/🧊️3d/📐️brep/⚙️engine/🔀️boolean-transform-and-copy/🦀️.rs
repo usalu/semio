@@ -48,12 +48,19 @@ impl Brep {
     /// nothing, so a host may retain it across turns and re-present the kernel on every step — the
     /// same contract [`Brep::tessellation_body`] states for tessellation.
     pub fn step_boolean_job_sync(&mut self,job:&mut BrepBooleanJob,cx:&mut semio_framework_job::StepContext<'_>)->Result<BrepBooleanStep,semio_framework_job::OriginalTurnFailure>{
-        use semio_framework_value::{ValueError,ValueRefusalKind};
-        match job.job.step(&mut self.body,&mut job.rec,cx)?{
-            BooleanStep::Working(progress)=>Ok(BrepBooleanStep::Working(progress)),
-            BooleanStep::Cancelled(progress)=>Ok(BrepBooleanStep::Cancelled(progress)),
-            BooleanStep::Done(_)=>Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original boolean result registration has no funded producer yet").into()),
-        }
+        if cx.should_yield(){return Ok(BrepBooleanStep::Working(job.job.progress()))}
+        let step=if job.job.is_funded_validation(){job.job.step(&mut self.body,&mut job.rec,cx)?}else{
+            let budget=usize::try_from(cx.fuel_remaining()).unwrap_or(usize::MAX).max(1);
+            let before=job.job.progress().units_done;
+            let outcome=job.job.step_budgeted(&mut self.body,&mut job.rec,budget);
+            cx.consume_fuel(u64::try_from(job.job.progress().units_done.saturating_sub(before)).unwrap_or(u64::MAX).max(1));
+            match outcome{Ok(step)=>step,Err(error)=>return Ok(BrepBooleanStep::Failed(map_err(&error)))}
+        };
+        Ok(match step{
+            BooleanStep::Working(progress)=>BrepBooleanStep::Working(progress),
+            BooleanStep::Cancelled(progress)=>BrepBooleanStep::Cancelled(progress),
+            BooleanStep::Done(solid)=>BrepBooleanStep::Ready(self.register_solid(solid)),
+        })
     }
     pub fn intersect_sync(&mut self, a: &GeometryHandle, b: &GeometryHandle) -> Result<GeometryHandle, BrepError> {
         let sa = self.solid_id(a)?;

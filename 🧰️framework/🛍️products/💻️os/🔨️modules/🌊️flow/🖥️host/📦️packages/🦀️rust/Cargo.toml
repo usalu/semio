@@ -41,6 +41,7 @@ semio-framework-graph-manifest = { path = "../../../../../../../🔨️modules/�
 semio-framework-graph-dsl = { path = "../../../../../../../🔨️modules/🕸️graph/🗣️dsl/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-os-flow-host-core = { path = "../../🧱️flow-host-model/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-os-kernel = { path = "../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["mutation-testing"] }
 semio-framework-artifact-flow-flow = { workspace = true, features = ["protocol-laws"] }
 semio-framework-replication = { workspace = true }

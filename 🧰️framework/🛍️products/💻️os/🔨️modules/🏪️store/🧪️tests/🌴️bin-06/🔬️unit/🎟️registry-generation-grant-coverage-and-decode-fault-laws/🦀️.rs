@@ -88,7 +88,7 @@ fn field_close_failure_preserves_real_receipts_through_the_original_decode_job()
 
 #[test]
 fn normal_decode_release_records_original_wallet_even_after_child_fault(){
- use semio_framework_job::{InteractiveJob,StepContextOwner,StepBudget,OperationId,Generation};
+ use semio_framework_job::{InteractiveJob,OriginalJobFixtureCaller,OperationId,Generation};
  use semio_framework_value::retirement::controlled::ControlledRetirement;
  struct WalletField{first:bool,old:Vec<u8>,owned:Option<ControlledRetirement<Vec<u8>>>}
  impl WalletField{fn demand(&self,copy:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{if self.first{return Ok(semio_framework_value::RetirementDemand{copy_bytes:23,capacity_bytes:64,release_bytes:32,depth:3})}let owner=self.owned.as_ref().unwrap();Ok(semio_framework_value::RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(copy)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?})}}
@@ -111,15 +111,15 @@ fn normal_decode_release_records_original_wallet_even_after_child_fault(){
  }
  let mut cleanup_caller=OriginalEnvelopeCaller::admit_cleanup("wallet-cleanup");let mut cleanup_cx=cleanup_caller.context();
  let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🚪️io/🚫️refusal/⏱️step/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let supplied:RetainedCloneGrant=serde_json::from_value(fixture["grant"].clone()).unwrap();let registry=ArtifactEnvelopeFieldDecoderRegistry::new();let mut job=ArtifactEnvelopeDecodeAuthority::<(),()>::try_new(artifact_envelope_decode_test_cursor(&[b"{}"]),&registry,Box::new(WalletField{first:true,old:vec![7;32],owned:None})).unwrap_or_else(|_|panic!("original wallet field admission"));job.begin_release(ArtifactEnvelopeDecodeState::ReleaseCancelled);
- let((mut owner,receipt),born,freed)=semio_framework_trace_memory_testing::observe_backing(||StepContextOwner::new(OperationId(98146),Generation(17),supplied).unwrap());assert!(receipt.fits(supplied));assert_eq!((receipt.retained_capacity_bytes,receipt.released_bytes),(born,freed));let((cancel,receipt),born,freed)=semio_framework_trace_memory_testing::observe_backing(||semio_framework_job::CancelToken::admit_root(supplied).result.unwrap().unwrap());assert!(receipt.fits(supplied));assert_eq!((receipt.retained_capacity_bytes,receipt.released_bytes),(born,freed));
- for axis in fixture["deniedAxes"].as_array().unwrap(){let mut grant=supplied;match axis.as_str().unwrap(){"maximumItems"=>grant.maximum_items=0,"maximumCopyBytes"=>grant.maximum_copy_bytes=0,"maximumCapacityBytes"=>grant.maximum_capacity_bytes=0,"maximumReleaseBytes"=>grant.maximum_release_bytes=0,"maximumDepth"=>grant.maximum_depth=0,_=>panic!("closed original grant axis")};let mut receipt=RetainedCloneProgress::default();let mut sequence=0;let mut cx=owner.context(StepBudget::new(7,1500,grant),cancel.clone(),||Some(1000),&mut sequence,&mut receipt).unwrap();cx.set_stage("wallet.heap-warmup");let(step,born,freed)=semio_framework_trace_memory_testing::observe_backing(||job.step(&mut cx));assert!(matches!(step,Ok(None)),"denied axis {axis} answered {:?}",step.as_ref().map(|value|value.is_some()).map_err(|error|(&error.primary,&error.receipt_refusal)));assert_eq!((born,freed),(0,0),"denied axis {axis}");assert_eq!(cx.retained_progress(),Default::default());assert_eq!(cx.fuel_remaining(),7);assert_eq!(job.released_field_bytes(),0);assert!(matches!(job.state,ArtifactEnvelopeDecodeState::ReleaseCancelled));}
- let mut receipt=RetainedCloneProgress::default();let mut sequence=0;let mut cx=owner.context(StepBudget::new(7,1500,supplied),cancel.clone(),||Some(1000),&mut sequence,&mut receipt).unwrap();let(step,born,freed)=semio_framework_trace_memory_testing::observe_backing(||job.step(&mut cx));let failure=step.expect_err("funded original field failure remains complete");assert_eq!((born,freed),(64,32));let field_receipt:RetainedCloneProgress=serde_json::from_value(fixture["receipt"].clone()).unwrap();assert_eq!(failure.primary.retained_progress(),field_receipt);assert!(failure.receipt_refusal.is_none()&&failure.context_refusal.is_none());assert_eq!(cx.retained_progress(),field_receipt,"the failed field posts once and publishes no yield outcome");assert_eq!(cx.operation(),OperationId(98146));assert_eq!(cx.generation(),Generation(17));assert_eq!(cx.deadline_us(),1500);assert_eq!(cx.fuel_remaining(),6);assert_eq!(job.released_field_bytes(),32);let ArtifactEnvelopeDecodeState::ReleaseFault(diagnostic)=job.state else{panic!("real field fault remains attached")};assert_eq!(diagnostic.code,"field.wallet-after-real-turn");assert_eq!(diagnostic.retained_progress,field_receipt);drop(cx);
- let mut detached=None;for _ in 0..4096{drive_test_envelope_field_return(&registry,&mut detached);if job.terminal_is_empty(){break}let before=cleanup_cx.retained_progress();let(step,born,freed)=semio_framework_trace_memory_testing::observe_backing(||cleanup_cx.with_retained_loan(supplied,|cx|job.close_step(cx)).unwrap());assert_eq!(cleanup_cx.retained_progress(),before.checked_add(step.progress()).unwrap());assert!(step.progress().fits(supplied));assert_eq!((born,freed),(step.progress().retained_capacity_bytes,step.progress().released_bytes));}assert!(job.terminal_is_empty());assert!(registry.terminal_is_empty());while !owner.terminal_is_empty(){let(step,born,freed)=semio_framework_trace_memory_testing::observe_backing(||owner.close_step(supplied));assert!(step.progress().fits(supplied));assert_eq!((step.progress().retained_capacity_bytes,step.progress().released_bytes),(born,freed));}retire_original_envelope_cancel(cancel,supplied);drop(cleanup_cx);cleanup_caller.retire(supplied);
+ let mut caller=OriginalJobFixtureCaller::admit(OperationId(98146),Generation(17),supplied,||Some(1000),1500,7);
+ for axis in fixture["deniedAxes"].as_array().unwrap(){let mut grant=supplied;match axis.as_str().unwrap(){"maximumItems"=>grant.maximum_items=0,"maximumCopyBytes"=>grant.maximum_copy_bytes=0,"maximumCapacityBytes"=>grant.maximum_capacity_bytes=0,"maximumReleaseBytes"=>grant.maximum_release_bytes=0,"maximumDepth"=>grant.maximum_depth=0,_=>panic!("closed original grant axis")};caller.turn(grant,|cx|{cx.set_stage("wallet.heap-warmup");let(step,born,freed)=semio_framework_trace_memory_testing::observe_backing(||job.step_original(cx));assert!(matches!(step,Ok(None)),"denied axis {axis} answered {:?}",step.as_ref().map(|value|value.is_some()).map_err(|error|(&error.primary,&error.receipt_refusal)));assert_eq!((born,freed),(0,0),"denied axis {axis}");assert_eq!(cx.retained_progress(),Default::default());assert_eq!(job.released_field_bytes(),0);assert!(matches!(job.state,ArtifactEnvelopeDecodeState::ReleaseCancelled));Ok(())}).unwrap();}
+ caller.turn(supplied,|cx|{let(step,born,freed)=semio_framework_trace_memory_testing::observe_backing(||job.step_original(cx));let failure=step.expect_err("funded original field failure remains complete");assert_eq!((born,freed),(64,32));let field_receipt:RetainedCloneProgress=serde_json::from_value(fixture["receipt"].clone()).unwrap();assert_eq!(failure.primary.retained_progress(),field_receipt);assert!(failure.receipt_refusal.is_none()&&failure.context_refusal.is_none());assert_eq!(cx.retained_progress(),field_receipt,"the failed field posts once and publishes no yield outcome");assert_eq!(cx.operation(),OperationId(98146));assert_eq!(cx.generation(),Generation(17));assert_eq!(cx.deadline_us(),1500);assert_eq!(job.released_field_bytes(),32);let ArtifactEnvelopeDecodeState::ReleaseFault(diagnostic)=&job.state else{panic!("real field fault remains attached")};assert_eq!(diagnostic.code,"field.wallet-after-real-turn");assert_eq!(diagnostic.retained_progress,field_receipt);Ok(())}).unwrap();
+ let mut detached=None;for _ in 0..4096{drive_test_envelope_field_return(&registry,&mut detached);if job.terminal_is_empty(){break}let before=cleanup_cx.retained_progress();let(step,born,freed)=semio_framework_trace_memory_testing::observe_backing(||cleanup_cx.with_retained_loan(supplied,|cx|job.close_step(cx)).unwrap());assert_eq!(cleanup_cx.retained_progress(),before.checked_add(step.progress()).unwrap());assert!(step.progress().fits(supplied));assert_eq!((born,freed),(step.progress().retained_capacity_bytes,step.progress().released_bytes));}assert!(job.terminal_is_empty());assert!(registry.terminal_is_empty());drop(cleanup_cx);cleanup_caller.retire(supplied);caller.retire(supplied);
 }
 
 #[test]
 fn decode_fault_descriptor_borrows_original_payload_until_paid_nested_close() {
-    use semio_framework_job::{InteractiveJob, JobOutcomeKind, JobOutcomeView, StepContextOwner, StepBudget, OperationId, Generation};
+    use semio_framework_job::{InteractiveJob, JobOutcomeKind, JobOutcomeView, OriginalJobFixtureCaller, OperationId, Generation};
     let law: serde_json::Value = serde_json::from_str(include_str!("../../../../🚪️io/🚫️refusal/📬️outcome/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let wallet: serde_json::Value = serde_json::from_str(include_str!("../../../../🚪️io/🚫️refusal/⏱️step/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let original_grant: RetainedCloneGrant = serde_json::from_value(wallet["grant"].clone()).unwrap();
@@ -131,24 +131,23 @@ fn decode_fault_descriptor_borrows_original_payload_until_paid_nested_close() {
     let diagnostic = ArtifactEnvelopeDecodeAuthority::<(), ()>::diagnostic("field.wallet-after-real-turn");
     assert_eq!(diagnostic.code, law["diagnostic"].as_str().unwrap());
     job.begin_release(ArtifactEnvelopeDecodeState::ReleaseFault(diagnostic));
-    let((mut owner,receipt),born,freed)=semio_framework_trace_memory_testing::observe_backing(||StepContextOwner::new(OperationId(98146),Generation(17),original_grant).unwrap());assert!(receipt.fits(original_grant));assert_eq!((receipt.retained_capacity_bytes,receipt.released_bytes),(born,freed));
-    let mut sequence = 0;
+    let mut caller=OriginalJobFixtureCaller::admit(OperationId(98146),Generation(17),original_grant,||Some(1000),1500,1_000_000);
     let mut detached = None;
     let mut descriptor = None;
-    let((cancel,receipt),born,freed)=semio_framework_trace_memory_testing::observe_backing(||semio_framework_job::CancelToken::admit_root(original_grant).result.unwrap().unwrap());assert!(receipt.fits(original_grant));assert_eq!((receipt.retained_capacity_bytes,receipt.released_bytes),(born,freed));
     for _ in 0..4096 {
         drive_test_envelope_field_return(&registry, &mut detached);
-        let mut receipt = RetainedCloneProgress::default();
-        let mut cx = owner.context(StepBudget::new(7, 1500, original_grant), cancel.clone(), || Some(1000), &mut sequence, &mut receipt).unwrap();
-        let result = job.step(&mut cx).unwrap().map(|result| result.into_descriptor());
-        assert!(cx.retained_progress().fits(original_grant));
+        let result = caller.turn(original_grant, |cx| {
+            let result = job.step_original(cx)?.map(|result| result.into_descriptor());
+            assert!(cx.retained_progress().fits(original_grant));
+            Ok(result)
+        }).unwrap();
         let Some(mut result) = result else { continue };
         if result.kind() == JobOutcomeKind::Fault {
             descriptor = Some(result);
             break;
         }
         assert_eq!(result.kind(), JobOutcomeKind::Yield);
-        assert!(matches!(result.acknowledge(original_grant), RetainedCloneStep::Complete(_)));
+        assert!(matches!(result.acknowledge(original_grant).result.unwrap(), RetainedCloneStep::Complete(_)));
     }
     let mut descriptor = descriptor.expect("original fault is published after exact source owners close");
     assert!(registry.terminal_is_empty());
@@ -162,28 +161,29 @@ fn decode_fault_descriptor_borrows_original_payload_until_paid_nested_close() {
         assert!(std::ptr::eq(admission, descriptor.admission()));
         assert_eq!(detail.single_page().unwrap(), law["diagnostic"].as_str().unwrap().as_bytes());
     }
-    assert!(matches!(descriptor.acknowledge(original_grant), RetainedCloneStep::Complete(_)));
+    assert!(matches!(descriptor.acknowledge(original_grant).result.unwrap(), RetainedCloneStep::Complete(_)));
     drop(descriptor);
     let child_depth = job.fault.retirement_demands().unwrap().depth;
     assert_eq!(job.next_close_depth_demand().unwrap(), child_depth + law["parentDepth"].as_u64().unwrap() as usize);
     for denied in [RetainedCloneGrant { maximum_items: 0, ..original_grant }, RetainedCloneGrant { maximum_depth: child_depth, ..original_grant }] {
-        let mut receipt=RetainedCloneProgress::default();let mut cx=owner.context(StepBudget::new(7,1500,denied),cancel.clone(),||Some(1000),&mut sequence,&mut receipt).unwrap();
-        let (step, born, freed) = semio_framework_trace_memory_testing::observe_backing(|| job.close_step(&mut cx).unwrap());assert_eq!(step.progress(),cx.retained_progress());
-        assert_eq!((born, freed), (0, 0));
-        assert_eq!(step.progress(), RetainedCloneProgress::default());
-        assert_eq!(job.fault.published().unwrap() as *const _, original);
-        assert!(!job.terminal_is_empty());
+        caller.turn(denied, |cx| {
+            let (step, born, freed) = semio_framework_trace_memory_testing::observe_backing(|| job.close_step(cx).unwrap());assert_eq!(step.progress(),cx.retained_progress());
+            assert_eq!((born, freed), (0, 0));
+            assert_eq!(step.progress(), RetainedCloneProgress::default());
+            assert_eq!(job.fault.published().unwrap() as *const _, original);
+            assert!(!job.terminal_is_empty());
+            Ok(())
+        }).unwrap();
     }
     for _ in 0..4096 {
         if job.terminal_is_empty() { break; }
-        let mut receipt=RetainedCloneProgress::default();let mut cx=owner.context(StepBudget::new(7,1500,original_grant),cancel.clone(),||Some(1000),&mut sequence,&mut receipt).unwrap();
-        let (step, born, freed) = semio_framework_trace_memory_testing::observe_backing(|| job.close_step(&mut cx).unwrap());assert_eq!(step.progress(),cx.retained_progress());
-        assert!(step.progress().fits(original_grant));
-        assert_eq!((step.progress().retained_capacity_bytes, step.progress().released_bytes), (born, freed));
+        caller.turn(original_grant, |cx| {
+            let (step, born, freed) = semio_framework_trace_memory_testing::observe_backing(|| job.close_step(cx).unwrap());assert_eq!(step.progress(),cx.retained_progress());
+            assert!(step.progress().fits(original_grant));
+            assert_eq!((step.progress().retained_capacity_bytes, step.progress().released_bytes), (born, freed));
+            Ok(())
+        }).unwrap();
     }
     assert!(job.terminal_is_empty());
-    while !owner.terminal_is_empty() {
-        let(step,born,freed)=semio_framework_trace_memory_testing::observe_backing(||owner.close_step(original_grant));assert!(step.progress().fits(original_grant));assert_eq!((step.progress().retained_capacity_bytes,step.progress().released_bytes),(born,freed));
-    }
-    retire_original_envelope_cancel(cancel,original_grant);
+    caller.retire(original_grant);
 }

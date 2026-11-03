@@ -133,7 +133,9 @@ impl OriginalArtifactSnapshotReceiving<IfcSnapshot> for IfcOriginalPackReceiving
                     }
                     Ok(p)
                 } else {
-                    record.step(source, native, body, grant)
+                    record.step(source, native, body, grant).result.map_err(|e| {
+                        e.primary.or(e.quote_refusal).or(e.allocation_refusal).unwrap_or_else(|| ValueError::literal(ValueRefusalKind::InvalidValue, "original native construction refused"))
+                    })
                 }
             }
             2 => self.graph.step(native, body, grant),

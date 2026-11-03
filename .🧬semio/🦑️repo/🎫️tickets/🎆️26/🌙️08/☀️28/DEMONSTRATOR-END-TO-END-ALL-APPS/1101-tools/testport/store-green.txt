@@ -31,7 +31,9 @@ semio-framework-os-store-ledger
 semio-framework-os-store-member-open
 semio-framework-os-store-message-ledger
 semio-framework-os-store-one-item
+semio-framework-os-store-one-item-batch
 semio-framework-os-store-one-item-publication
+semio-framework-os-store-operation-wire
 semio-framework-os-store-owned-schema-decode
 semio-framework-os-store-owned-schema-fields
 semio-framework-os-store-projection

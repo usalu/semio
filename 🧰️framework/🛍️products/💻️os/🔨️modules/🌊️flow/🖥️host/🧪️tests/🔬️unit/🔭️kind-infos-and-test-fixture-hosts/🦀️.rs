@@ -66,7 +66,7 @@ fn test_kind_infos_json() -> String {
 }
 
 fn host_with_test_fixture() -> FlowHost {
-    let mut host = FlowHost::default();
+    let mut host = FlowHost::default().with_history_store_factory(::semio_framework_artifact_flow_flow::FLOW_HISTORY_STORE_FACTORY);
     host.set_neuron_kind_infos_json(&test_kind_infos_json());
     host.set_host_catalogue_json(
         &serde_json::to_string(&[CatalogueSection {
@@ -90,6 +90,7 @@ fn host_with_test_bridge() -> FixtureRegistryHost {
     let mut host = host_with_test_fixture();
     let mut host=FixtureRegistryHost::new(host,FixtureOperatorFamily::Math);
     host.evaluate_internal();
+    settle_baseline(&mut host);
     host
 }
 

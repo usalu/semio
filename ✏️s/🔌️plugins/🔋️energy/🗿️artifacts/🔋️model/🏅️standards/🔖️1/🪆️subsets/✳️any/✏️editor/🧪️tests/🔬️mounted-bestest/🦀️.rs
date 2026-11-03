@@ -25,12 +25,15 @@ async fn bestest_pane() -> Pane {
     let mut app = laws::new_app_with_registry_and_members::<EditorApp<EnergyModelEditor>, SemioMembers>(manifest, ActorId(LOCAL_ACTOR_ID.into()), laws::fixture_mounted_policy(), &mut laws::fixture_identity()).await;
     app.bind_instance_id(laws::meta("local").instance_id).await;
     let mut pane = Pane(app, scope);
-    let model = semio_s_plugin_energy_engine_bestest::model("600").expect("case 600 is registered");
-    let snapshot = EnergyModelSnapshot::from_model(&model).expect("case 600 is an admissible native document");
-    let pack = <EnergyModelSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&snapshot);
-    let envelope = os_store::document_materialize::create_document_envelope::<EnergyModelSnapshot, EnergyModelMutation>(ENERGY_MODEL_DOCUMENT_SCHEMA, "model", snapshot, None, &semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).into_owners();
-    let spr = os_store::text_format::print_document_spr(&envelope).await.expect("case 600 spr");
-    laws::load_document(&mut pane.0, &os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut laws::fixture_identity(), pane.1.cx()).await.expect("case 600 loads");
+    let receiver = laws::meta("local").instance_id;
+    let args = DslValue::Object(vec![("exampleId".to_string(), DslValue::String("bestest-600".to_string()))]);
+    laws::dispatch_fixture_action(&mut pane.0, "setActiveExample", Some(args), &laws::meta("local"), &mut laws::fixture_identity(), pane.1.cx(), MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("dispatch the load-example action");
+    let published = laws::settle_registered_typed_operation(&mut pane.0, receiver, laws::fixture_mounted_policy(), &mut laws::fixture_identity(), pane.1.cx()).await.expect("load-example publication");
+    let (pack, spr) = published.effects.iter().find_map(|effect| match effect {
+        semio_framework_plugin::plugin_app_close_prelude::Effect::LoadDocument { pack, spr } => Some((pack.clone(), spr.clone())),
+        _ => None,
+    }).expect("the load-example command publishes a LoadDocument effect");
+    laws::load_document(&mut pane.0, &os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut laws::fixture_identity(), pane.1.cx()).await.expect("case 600 crosses the archive door");
     pane
 }
 

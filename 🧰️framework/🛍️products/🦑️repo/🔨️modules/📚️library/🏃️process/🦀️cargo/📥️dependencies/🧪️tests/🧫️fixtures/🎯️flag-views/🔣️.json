@@ -1,0 +1,9 @@
+{
+  "cases": [
+    {"name": "wasm passes beside the host scheduler with different flags pass", "selections": [{"args": ["build", "--target", "wasm32-wasip2"], "flags": "a"}, {"args": ["build", "--target=wasm32-wasip2"], "flags": "a"}, {"args": ["build", "--bins"], "flags": "h"}], "refused": false},
+    {"name": "two space-form selections of one target with different flags refuse", "selections": [{"args": ["build", "--target", "wasm32-wasip2"], "flags": "a"}, {"args": ["build", "--target", "wasm32-wasip2"], "flags": "b"}], "refused": true},
+    {"name": "equals-form and space-form select the same target and refuse on different flags", "selections": [{"args": ["build", "--target=wasm32-wasip2"], "flags": "a"}, {"args": ["build", "--target", "wasm32-wasip2"], "flags": "b"}], "refused": true},
+    {"name": "two host selections with different flags refuse", "selections": [{"args": ["build"], "flags": "h"}, {"args": ["test"], "flags": "x"}], "refused": true},
+    {"name": "different targets with different flags pass", "selections": [{"args": ["build", "--target", "wasm32-wasip2"], "flags": "a"}, {"args": ["build", "--target=aarch64-apple-darwin"], "flags": "b"}], "refused": false}
+  ]
+}

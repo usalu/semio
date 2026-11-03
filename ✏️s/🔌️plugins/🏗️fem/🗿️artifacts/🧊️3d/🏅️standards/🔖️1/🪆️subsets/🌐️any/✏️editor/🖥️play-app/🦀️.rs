@@ -270,7 +270,7 @@ impl ArtifactEditor for Fem3dPlayApp {
                 let height = value.get("height").and_then(Value::as_f64).unwrap_or(1.0);
                 let layers = value.get("layers").and_then(Value::as_u64).map_or(1, |v| v as usize);
                 let axis = value.get("axis").and_then(Value::as_str).and_then(semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemAxis::from_key).unwrap_or_default();
-                let material_id = doc.snapshot.materials.first().map_or_else(|| "unassigned".into(), |material| material.id.clone());
+                let material_id = doc.snapshot.materials.iter().next().map_or_else(|| "unassigned".to_owned(), |material| material.id.as_str().to_owned());
                 let id = doc.operation().and_then(|operation| operation.entity_id("sol", "solids")).map_err(|fault| MediaError::Payload(port.into(), format!("{fault:?}")))?;
                 let solid = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSolid { id, name: "Imported Geometry".into(), outline, holes, base_z, height, layers, mesh_size: 0.5, material_id, axis };
                 Ok(Emit::mutations(vec![Fem3dMutation::CreateSolid(semio_s_artifact_fem_3d_mesh_solids::standards::v1::subsets::any::schema::mutations::create_solid::CreateSolid { solid, index: None })]))

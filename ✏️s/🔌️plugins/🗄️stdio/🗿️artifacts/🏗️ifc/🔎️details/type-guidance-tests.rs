@@ -2,7 +2,7 @@
 use super::*;
 #[test]
 fn original_multiple_reference_row_retains_constructed_text_when_receipt_quote_refuses() {
-    use semio_framework_plugin::app_testing::OriginalWorkFixture;
+    use semio_framework_plugin::plugin_app_close_prelude::OriginalWorkFixture;
     let mut caller = OriginalWorkFixture::new();
     let stock = OriginalWorkFixture::stock();
     let mut parts = Some(RowParts { strings: Default::default(), outer: None, inner: None, bits:None, structured:None });
@@ -22,7 +22,7 @@ fn original_multiple_reference_row_retains_constructed_text_when_receipt_quote_r
         caller
             .turn(stock, |cx| {
                 cx.with_original_retirement(|cx| {
-                    let step = semio_framework_job::close_original_retained_step(cx, demand, |grant| if closing.is_empty() { closing.begin_granted(&mut parts, grant)?.ok_or_else(invalid) } else { closing.step_granted(grant) })?;
+                    let step = semio_framework_job::close_original_retained_step(cx, demand, |grant| if closing.is_empty() { own_with(closing.begin_granted(&mut parts, grant), invalid) } else { closing.step_granted(grant) })?;
                     released += step.progress().released_bytes;
                     Ok(())
                 })

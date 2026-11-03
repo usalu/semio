@@ -22,6 +22,18 @@ impl FlowEvalSession {
         if self.state.window_tick_latches.contains_key(&key){Ok(0)}else{self.state.window_tick_latches.next_insert_depth_demand(&key)}
     }
 
+    /// 🪜️ Drives the staged latch backing admission to completion inside one grant, so the first arming source never mutates an unadmitted latch.
+    pub fn admit_window_tick_latch(&mut self,window_id:&str,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
+        let mut total=RetainedCloneProgress::default();
+        for _ in 0..8{
+            let step=self.prepare_window_tick_latch(window_id,grant).map_err(|(error,_)|error)?;
+            let progress=step.progress();
+            total=RetainedCloneProgress{copied_items:total.copied_items.saturating_add(progress.copied_items),copied_bytes:total.copied_bytes.saturating_add(progress.copied_bytes),retained_capacity_bytes:total.retained_capacity_bytes.saturating_add(progress.retained_capacity_bytes),released_bytes:total.released_bytes.saturating_add(progress.released_bytes)};
+            if matches!(step,RetainedCloneStep::Complete(_)){return Ok(total)}
+        }
+        Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original latch preparation did not complete within its admission turns"))
+    }
+
     /// 🌱️ Admits original backing before placing the original Copy-keyed latch.
     pub fn prepare_window_tick_latch(&mut self,window_id:&str,grant:RetainedCloneGrant)->Result<RetainedCloneStep,(ValueError,RetainedCloneProgress)>{
         let key=flow_eval_window_key(window_id);
@@ -56,8 +68,9 @@ impl FlowEvalSession {
     /// request, which is how one graph turned into 298 invocations against 111 settles in 80 s of
     /// live console (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     pub fn arm_window_tick(&mut self, window_id: &str,grant:RetainedCloneGrant) -> Result<(bool,RetainedCloneProgress),ValueError> {
+        let admitted=self.admit_window_tick_latch(window_id,grant)?;
         let latch = self.window_tick_latch_mut(window_id,grant)?;
-        let progress=RetainedCloneProgress{copied_items:1,..Default::default()};
+        let progress=RetainedCloneProgress{copied_items:admitted.copied_items.saturating_add(1),copied_bytes:admitted.copied_bytes,retained_capacity_bytes:admitted.retained_capacity_bytes,released_bytes:admitted.released_bytes};
         if latch.armed {
             return Ok((false,progress));
         }
@@ -111,8 +124,9 @@ impl FlowEvalSession {
     /// compute". Only this makes a refresh poll able to answer [`FlowEvalSession::window_tick_owed`]
     /// without evaluating anything.
     pub fn note_window_tick_outcome(&mut self, window_id: &str, unfinished: bool,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError> {
+        let admitted=self.admit_window_tick_latch(window_id,grant)?;
         self.window_tick_latch_mut(window_id,grant)?.unfinished=unfinished;
-        Ok(RetainedCloneProgress{copied_items:1,..Default::default()})
+        Ok(RetainedCloneProgress{copied_items:admitted.copied_items.saturating_add(1),copied_bytes:admitted.copied_bytes,retained_capacity_bytes:admitted.retained_capacity_bytes,released_bytes:admitted.released_bytes})
     }
 
     /// 🚧️ Marks `window_id`'s chain as GIVEN UP: an extension answer this process cannot fold (a

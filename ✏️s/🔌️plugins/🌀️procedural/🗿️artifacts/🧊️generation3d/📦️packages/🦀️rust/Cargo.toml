@@ -53,14 +53,12 @@ semio-s-artifact-stdio-dwg-geometry = { workspace = true }
 semio-s-artifact-stdio-dwg-snapshot = { workspace = true }
 semio-s-artifact-stdio-dwg-read = { workspace = true }
 semio-s-artifact-stdio-dwg-write = { workspace = true }
-semio-s-artifact-stdio-step = { workspace = true }
 semio-s-artifact-stdio-gltf = { workspace = true }
 semio-s-artifact-stdio-gltf-model = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }
 semio-s-artifact-stdio-las = { workspace = true }
 semio-s-artifact-stdio-obj = { workspace = true }
 semio-s-artifact-stdio-ply = { workspace = true }
-semio-s-artifact-stdio-png = { workspace = true }
 semio-s-artifact-stdio-semio-base = { workspace = true }
 semio-s-artifact-stdio-semio-mesh = { workspace = true }
 semio-s-artifact-stdio-semio-mesh-export = { workspace = true }
@@ -81,6 +79,7 @@ semio-s-artifact-procedural-3d-delete-selection = { workspace = true }
 semio-s-artifact-procedural-3d-editor = { workspace = true }
 semio-s-artifact-procedural-3d-editor-commands = { workspace = true }
 semio-s-artifact-procedural-3d-editor-panels = { workspace = true }
+semio-s-artifact-procedural-3d-editor-selection = { workspace = true }
 semio-s-artifact-procedural-3d-export-document = { workspace = true }
 semio-s-artifact-procedural-3d-flow-eval-tick = { workspace = true }
 semio-s-artifact-procedural-3d-geometry-service = { workspace = true }

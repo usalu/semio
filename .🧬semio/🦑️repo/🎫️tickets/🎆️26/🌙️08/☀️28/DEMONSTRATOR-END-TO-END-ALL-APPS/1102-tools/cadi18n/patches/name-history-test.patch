@@ -1,0 +1,11 @@
+--- a/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/⏪️history-and-convergence/🦀️.rs
++++ b/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/⏪️history-and-convergence/🦀️.rs
+@@ -259,7 +259,7 @@
+     settle(&mut app).await;
+     let renamed = pane_objects(&app, CadPaneId::Shape).await.into_iter().find(|object| object.id == target.id).expect("the object survives");
+     assert_eq!(CadObject { label: target.label.clone(), ..renamed.clone() }, target, "a rename changes the label and nothing else");
+-    assert_eq!(renamed.label, "Renamed");
++    assert_eq!(renamed.label, semio_s_artifact_cad_cad_model::geometry::CadObjectName::literal("Renamed"));
+     semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &CadCommand::PatchObject(patch_object::PatchObject { object_id: target.id.clone(), field: "origin.x".into(), value: None, delta: Some(0.75) }), &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("origin delta dispatch");
+     settle(&mut app).await;
+     let rows = member_rows(&mut app).await;

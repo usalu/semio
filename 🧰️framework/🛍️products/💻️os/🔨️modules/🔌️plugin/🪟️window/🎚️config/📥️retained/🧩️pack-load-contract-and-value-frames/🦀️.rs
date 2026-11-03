@@ -92,7 +92,7 @@ impl WindowConfigPackLoad {
         let Some(inner)=self.inner.as_ref()else{return Ok(PluginLifecycleStep::Complete(Default::default()))};
         if !inner.terminal_is_empty(){return self.inner.as_mut().unwrap().close_step_context(cx).map(|step|match step{PluginLifecycleStep::Complete(progress)=>PluginLifecycleStep::Progress(progress),other=>other})}
         let demand=self.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;
-        let step=retired(cx,demand,|_|{let original=self.inner.take().unwrap();self.closed_progress=original.progress();self.closed_diagnostic=original.diagnostic();drop(original);Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()}))})?;
+        let step=retired(cx,demand,|_|{let original=self.inner.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"window load frame owner is absent"))?;self.closed_progress=original.progress();self.closed_diagnostic=original.diagnostic();drop(original);Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()}))})?;
         Ok(if self.inner.is_none(){PluginLifecycleStep::Complete(step.progress())}else{PluginLifecycleStep::Progress(step.progress())})
     }
 

@@ -4,7 +4,7 @@ camera {
   x=140 y=-70 zoom=2
 }
 layout={
-  box=x=80 y=-80 fuse=x=280 y=-80 preview=x=400 y=-80 radius=x=40 y=-120 size=x=40 y=-160
+  box={x=80 y=-80} fuse={x=280 y=-80} preview={x=400 y=-80} radius={x=40 y=-120} size={x=40 y=-160}
 }
 synapses [id:TEXT wire:WIRE] {
   e1 radius@number->sphere@radius

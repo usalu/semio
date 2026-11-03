@@ -97,7 +97,7 @@ pub fn render(document: &FlowSnapshot) -> UiAssemblyResult<BuiltNode> {
     let viewport = Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 };
     let snapshot_json = Some(semio_framework_pack_json::to_json_string(document));
     let flow_extras = flow_backed_node_graph_extras(&live, FLOW_LOD_MODE_AUTOMATIC, FLOW_DEFAULT_PROXIMITY_DISTANCE, true, false, FLOW_DEFAULT_GRID_FACTOR, Some(&session));
-    host.retire_cold();
+    host.retire_cold()?;
     live.retire_cold();
     session.retire_cold();
     let scene = NodeGraphScene {

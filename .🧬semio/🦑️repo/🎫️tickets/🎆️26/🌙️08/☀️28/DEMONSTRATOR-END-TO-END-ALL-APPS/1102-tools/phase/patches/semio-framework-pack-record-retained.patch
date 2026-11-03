@@ -1,0 +1,44 @@
+--- a/🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/📦️document/🦀️.rs
++++ b/🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/📦️document/🦀️.rs
+@@ -70,7 +70,7 @@
+   self.input_work=self.input_work.checked_add(self.offset-before).ok_or_else(capacity)?;Ok(None)
+  }
+  fn chunk_one<S:RetainedWireByteSource+?Sized>(&mut self,input:&S,range:(usize,usize),maximum:usize)->Result<Option<Token>,PackRefusal>{
+-  let Chunks::Read{index,end,seen,found,verified}=self.chunks else{unreachable!()};
++  let Chunks::Read{index,end,seen,found,verified}=self.chunks else{return Err(invalid("retained document chunk state is not reading"))};
+   if index==end{self.chunks=Chunks::None;return Ok(None)}
+   let id=*self.ids.get(index).ok_or_else(||invalid("missing retained chunk reference"))?;let entry=self.catalog.chunk(id).map_err(catalog_fault)?;
+   if matches!(self.chunk_segment.preflight(),Err(Admission::Complete)){
+@@ -96,7 +96,7 @@
+     if self.catalog.progress().complete{self.verified=self.catalog.take(self.superblock.take().ok_or_else(||invalid("missing verified document anchor"))?).map_err(catalog_fault)?;if self.verified.is_none(){return Err(invalid("catalog has no verified manifest"))}self.phase=Phase::Schema;return Ok(None)}
+     let before=self.offset;self.event=segment_one(&mut self.segment,input,range,&mut self.offset,&mut self.source_complete,maximum)?;self.input_work+=self.offset-before;Ok(None)
+    },
+-   Phase::Schema=>{self.last_work=1;if !self.intrinsic{self.segment.replay()?;self.offset=0;self.source_complete=false;self.phase=Phase::Replay;return Ok(None)}if self.schema_index<INTRINSIC_SCHEMA_GRAPH.len(){self.schema_hash.update(&INTRINSIC_SCHEMA_GRAPH[self.schema_index..self.schema_index+1]);self.schema_index+=1;return Ok(None)}let manifest=self.verified.as_ref().unwrap().manifest;if manifest.field_count!=1||self.schema_hash.finalize().as_bytes()!=&manifest.schema_hash{return Err(invalid("intrinsic document schema mismatch"))}self.segment.replay()?;self.offset=0;self.source_complete=false;self.phase=Phase::Replay;Ok(None)},
++   Phase::Schema=>{self.last_work=1;if !self.intrinsic{self.segment.replay()?;self.offset=0;self.source_complete=false;self.phase=Phase::Replay;return Ok(None)}if self.schema_index<INTRINSIC_SCHEMA_GRAPH.len(){self.schema_hash.update(&INTRINSIC_SCHEMA_GRAPH[self.schema_index..self.schema_index+1]);self.schema_index+=1;return Ok(None)}let manifest=self.verified.as_ref().ok_or_else(||invalid("missing verified document manifest"))?.manifest;if manifest.field_count!=1||self.schema_hash.finalize().as_bytes()!=&manifest.schema_hash{return Err(invalid("intrinsic document schema mismatch"))}self.segment.replay()?;self.offset=0;self.source_complete=false;self.phase=Phase::Replay;Ok(None)},
+    Phase::Replay=>{self.last_work=1;let token=self.replay_one(input,range,maximum)?;if matches!(token,Some(Token::Complete{..})){self.phase=Phase::Complete}Ok(token)},
+    Phase::Complete=>Ok(None),
+   }
+--- a/🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/🫴️receiving/📦️document/🦀️.rs
++++ b/🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/🫴️receiving/📦️document/🦀️.rs
+@@ -5,8 +5,8 @@
+ pub(super) struct DocumentOwner{storage:Option<Box<MaybeUninit<RetainedDocumentDriver>>>,initialized:bool,limits:PackLimits,length:usize,maximum:usize,closed:bool}
+ impl DocumentOwner{
+  pub(super) fn new(limits:PackLimits,length:usize,maximum:usize)->Self{Self{storage:None,initialized:false,limits,length,maximum,closed:false}}
+- fn driver(&self)->Option<&RetainedDocumentDriver>{self.initialized.then(||unsafe{self.storage.as_ref().unwrap().assume_init_ref()})}
+- fn driver_mut(&mut self)->Option<&mut RetainedDocumentDriver>{if self.initialized{Some(unsafe{self.storage.as_mut().unwrap().assume_init_mut()})}else{None}}
++ fn driver(&self)->Option<&RetainedDocumentDriver>{if self.initialized{self.storage.as_ref().map(|storage|unsafe{storage.assume_init_ref()})}else{None}}
++ fn driver_mut(&mut self)->Option<&mut RetainedDocumentDriver>{if self.initialized{self.storage.as_mut().map(|storage|unsafe{storage.assume_init_mut()})}else{None}}
+  fn advance<S:RetainedWireByteSource+?Sized>(&mut self,source:&S,range:(usize,usize),maximum:usize)->RetainedWorkOutcome<Option<Token>,PackRefusal>{
+   if self.closed{return RetainedWorkOutcome{result:Err(PackRefusal::from(invalid("closed Document driver cannot advance"))),work:0}}
+   if self.storage.is_none(){
+@@ -14,8 +14,8 @@
+    let raw=unsafe{std::alloc::alloc(std::alloc::Layout::new::<RetainedDocumentDriver>())}.cast::<MaybeUninit<RetainedDocumentDriver>>();
+    let result=if raw.is_null(){Err(PackRefusal::from(allocation()))}else{self.storage=Some(unsafe{Box::from_raw(raw)});Ok(None)};return RetainedWorkOutcome{result,work:1}
+   }
+-  if !self.initialized{let result=RetainedDocumentDriver::record(self.limits.clone(),self.length,self.maximum).map(|driver|{self.storage.as_mut().unwrap().write(driver);self.initialized=true;None});return RetainedWorkOutcome{result,work:1}}
+-  let driver=self.driver_mut().unwrap();let result=driver.one(source,range,maximum);RetainedWorkOutcome{result,work:driver.last_turn_work()}
++  if !self.initialized{let result=RetainedDocumentDriver::record(self.limits.clone(),self.length,self.maximum).and_then(|driver|{let Some(storage)=self.storage.as_mut()else{return Err(PackRefusal::from(invalid("Document driver storage is absent")))};storage.write(driver);self.initialized=true;Ok(None)});return RetainedWorkOutcome{result,work:1}}
++  let Some(driver)=self.driver_mut()else{return RetainedWorkOutcome{result:Err(PackRefusal::from(invalid("Document driver is not initialized"))),work:0}};let result=driver.one(source,range,maximum);RetainedWorkOutcome{result,work:driver.last_turn_work()}
+  }
+  fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneStep,PackRefusal>{
+   if self.closed{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}

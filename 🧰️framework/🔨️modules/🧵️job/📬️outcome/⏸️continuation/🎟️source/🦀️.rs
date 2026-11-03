@@ -45,6 +45,12 @@ impl OriginalReturnBudget{
   if !input.spent.fits(input.granted)||input.work>u128::from(input.fuel){return Err(refused("original return source exceeds its admitting lifetime stock"))}
   self.origin=Some(input);self.spent=input.spent;self.work=input.work;Ok(true)
  }
+ /// 🔁️ Restores the admitting lifetime stock for the next turn on the same long-lived source; refused while a claim holds currencies or the budget failed.
+ pub fn renew_turn(&mut self)->Result<(),ValueError>{
+  let origin=self.origin.ok_or_else(||refused("original return source has not admitted its lifetime stock"))?;
+  if self.claims!=0||self.held_items!=0||self.held_fuel!=0||self.failure.is_some(){return Err(refused("original return source with live claims cannot renew its turn"))}
+  self.spent=origin.spent;self.work=origin.work;Ok(())
+ }
  pub fn snapshot(&self)->OriginalReturnBudgetSnapshot{let(origin,fuel)=self.origin.map_or((RetainedCloneGrant{maximum_items:0,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:0},0),|origin|(origin.granted,origin.fuel));OriginalReturnBudgetSnapshot{granted:origin,fuel,spent:self.spent,work:self.work,held_items:self.held_items,held_fuel:self.held_fuel,claims:self.claims,serial:self.serial}}
  pub fn refusal(&self)->Option<ValueError>{self.failure.as_ref().map(|(kind,message)|ValueError::literal(kind.clone(),message))}
  pub fn raw_remaining(&self)->Result<(RetainedCloneGrant,u64),ValueError>{if let Some(error)=self.refusal(){return Err(error)}let origin=self.origin.ok_or_else(||refused("original return source has not admitted its lifetime stock"))?;if !self.spent.fits(origin.granted)||self.work>u128::from(origin.fuel){return Err(refused("original return source spent exceeds its original stock"))}Ok((super::super::retained_remaining(origin.granted,self.spent),origin.fuel-u64::try_from(self.work).map_err(|_|refused("original return source CPU extent overflow"))?))}
@@ -61,7 +67,7 @@ impl OriginalReturnBudget{
  fn redeem(&mut self,credit:&mut OriginalReturnClaimCredit,witness:&mut OriginalReturnWitness)->Result<(),ValueError>{
   let origin=self.origin.ok_or_else(||refused("original return source already closed"))?;if !credit.live&&!witness.redeemed||credit.source!=origin.source||credit.clock!=origin.clock||credit.serial!=witness.serial||witness.source!=origin.source||witness.clock!=origin.clock||witness.recipient!=origin.recipient{return Err(refused("original return witness is foreign to its held claim"))}if witness.redeemed{return Ok(())}
   let observed=match witness.phase{OriginalReturnPhase::Capture=>credit.capture_observed,OriginalReturnPhase::Receive=>credit.receive_observed};if observed||match witness.phase{OriginalReturnPhase::Capture=>credit.capture,OriginalReturnPhase::Receive=>credit.receive}{return Err(refused("original return witness was not issued once by its claim"))}
-  let held=1+usize::from(witness.release_capture);if self.held_items<held||self.held_fuel<u64::try_from(held).unwrap()||self.claims==0||witness.release_capture&&(witness.phase!=OriginalReturnPhase::Receive||credit.capture_observed){return Err(refused("original return witness lost its genuine held currencies"))}
+  let held=1+usize::from(witness.release_capture);if self.held_items<held||self.held_fuel<u64::try_from(held).unwrap_or(u64::MAX)||self.claims==0||witness.release_capture&&(witness.phase!=OriginalReturnPhase::Receive||credit.capture_observed){return Err(refused("original return witness lost its genuine held currencies"))}
   let spent=self.spent.checked_add(witness.progress)?;let work=self.work.checked_add(u128::from(witness.work)).ok_or_else(||refused("original reserved return actual CPU overflow"))?;self.held_items-=held;self.held_fuel-=u64::try_from(held).unwrap();self.spent=spent;self.work=work;match witness.phase{OriginalReturnPhase::Capture=>credit.capture_observed=true,OriginalReturnPhase::Receive=>credit.receive_observed=true}if witness.release_capture{credit.capture_observed=true;}if credit.capture_observed&&credit.receive_observed{self.claims-=1;credit.live=false;}witness.redeemed=true;Ok(())
  }
 

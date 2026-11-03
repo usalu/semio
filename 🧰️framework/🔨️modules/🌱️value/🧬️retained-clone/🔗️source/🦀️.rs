@@ -87,7 +87,7 @@ impl<T:Sync+'static,A:RetireOwned+Sync> RetainedCloneSource<T,A>{
  pub fn close_step(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome{
   if self.terminal_is_empty(){return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}
   if grant.maximum_items==0||grant.maximum_depth==0{return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
-  if self.owner_close.is_none(){if let Some(owner)=self.owner.take(){*self.owner_close=Some(RetainedOwnerGate::new(ControlledRetirement::new(owner).unwrap_or_else(|(error,_)|unreachable!("sealed source authority lost its retirement: {error}"))));return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}}
+  if self.owner_close.is_none(){if let Some(owner)=self.owner.take(){match ControlledRetirement::new(owner){Ok(retirement)=>*self.owner_close=Some(RetainedOwnerGate::new(retirement)),Err((error,owner))=>{*self.owner=Some(owner);return crate::RetainedWorkOutcome{result:Err(error.into()),work:1}}}return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}}
   if let Some(owner)=self.owner_close.as_mut(){let owner=owner.get_mut();if owner.terminal_is_empty(){*self.owner_close=None;return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}let result=owner.step(grant);return crate::RetainedWorkOutcome{result,work:owner.last_turn_work()}}
   RetainedCloneBinding::close_one(&mut self.lease,grant)
  }
