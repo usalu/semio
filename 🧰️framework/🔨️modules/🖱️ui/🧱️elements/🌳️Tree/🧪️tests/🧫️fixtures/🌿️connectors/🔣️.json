@@ -1,0 +1,24 @@
+{
+  "title": "Connector Termination",
+  "items": [
+    { "id": "branch-first", "children": [
+      { "id": "nested-first", "children": [{ "id": "deep-only" }] },
+      { "id": "nested-last", "children": [{ "id": "deep-last" }] }
+    ] },
+    { "id": "branch-last", "children": [
+      { "id": "last-first" },
+      { "id": "last-last", "children": [{ "id": "final-only" }] }
+    ] }
+  ],
+  "rows": [
+    { "id": "branch-first", "last": false, "ancestorGuides": [] },
+    { "id": "nested-first", "last": false, "ancestorGuides": [0] },
+    { "id": "deep-only", "last": true, "ancestorGuides": [0, 1] },
+    { "id": "nested-last", "last": true, "ancestorGuides": [0] },
+    { "id": "deep-last", "last": true, "ancestorGuides": [0] },
+    { "id": "branch-last", "last": true, "ancestorGuides": [] },
+    { "id": "last-first", "last": false, "ancestorGuides": [] },
+    { "id": "last-last", "last": true, "ancestorGuides": [] },
+    { "id": "final-only", "last": true, "ancestorGuides": [] }
+  ]
+}

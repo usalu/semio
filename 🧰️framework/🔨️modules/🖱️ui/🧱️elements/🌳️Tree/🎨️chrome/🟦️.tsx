@@ -24,8 +24,8 @@ export const treePropertyHeaderGridClassName = "grid min-w-0 w-full items-center
 export const treePropertyHeaderGridStyle: React.CSSProperties = { gridTemplateColumns: `minmax(0, 1fr) var(--tree-value-column, ${uiSpacingLen(STYLING_DOM.controlValueColumnUiSpacing)})` };
 export const treeItemControlClassName =
   "min-w-0 w-full flex items-stretch justify-[var(--tree-value-justify,flex-end)] [&_[data-detail-panel-control='fill']]:min-w-0 [&_[data-detail-panel-control='fill']]:w-full [&_[data-detail-panel-control='fit']]:ms-auto [&_[data-detail-panel-control='fit']]:max-w-full [&_[data-detail-panel-control='fit']]:shrink-0";
-/** 🌳️ Ancestor guide indices for a branch at {@link level}: parent level always continues through expanded children; deeper ancestors stop after last siblings. */
-const treeBranchGuideIndices = (level: number, isLastAtLevel: readonly boolean[]): number[] => Array.from({ length: level }, (_, index) => index).filter((index) => index === level - 1 || !isLastAtLevel[index]);
+/** 🌳️ Continue the owning non-final sibling through its children; outer branches already paint earlier ancestors, and rows own their terminating parent connector. */
+const treeBranchGuideIndices = (level: number, isLastAtLevel: readonly boolean[]): number[] => level > 1 && !isLastAtLevel[level - 1] ? [level - 2] : [];
 const treeRowInlineGapPx = domSizePx("propertyInlineGapUiSpacing");
 const treeToggleSlotWidthPx = domSizePx("treeToggleUiSpacing");
 export const treeRowVerticalPaddingPx = 0;
@@ -68,7 +68,7 @@ export const IndentationLines: React.FC<{ level: number; showLines: boolean }> =
   return (
     <div data-dim data-slot="tree-guide" className="absolute start-0 top-0 bottom-0 pointer-events-none">
       {guideIndices.map((guideIndex) => (
-        <div key={guideIndex} className="absolute top-0 bottom-0" style={{ insetInlineStart: `calc(${indentationLineLen(guideIndex, indentMultiplier)} - var(--stroke-hairline) / 2)` }}>
+        <div key={guideIndex} data-tree-guide-index={guideIndex} className="absolute top-0 bottom-0" style={{ insetInlineStart: `calc(${indentationLineLen(guideIndex, indentMultiplier)} - var(--stroke-hairline) / 2)` }}>
           <div data-tree-guide-line="" className={cn("w-px h-full", treeGuideLineStrokeClassName)} />
         </div>
       ))}

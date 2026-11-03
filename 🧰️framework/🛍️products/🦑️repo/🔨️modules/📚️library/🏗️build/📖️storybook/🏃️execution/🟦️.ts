@@ -1,6 +1,6 @@
 import {countedCompilerCapacityRequestV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import type{ResourceLeaseControl}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
-import{createIssuedResourceControlV1,requireIssuedResourceControlRefinementV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import{checkScriptInvocation,createIssuedResourceControlV1,requireIssuedResourceControlRefinementV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {requireNativeStorageReservationV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
 import {createRequire} from "node:module";
 import {dirname,join,resolve} from "node:path";
@@ -14,6 +14,7 @@ import {requireNativeStoragePathV1} from "../../../../../../../🔨️modules/�
 import {stageRepositoryArtifacts,withRepositoryArtifactDestinationV1} from "../../../⚡️caching/📦️artifacts/🟦️.ts";
 import {withRepositoryCacheStoreV1,type RepositoryCacheStoreV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
 import {withStorybookStorageV1} from "../💾️storage/🟦️.ts";
+import {prepareStorybookAssets} from "../🧰️preparation/🟦️.ts";
 import schema from "../💾️storage/🧬️schema/🔣️.json" with {type:"json"};
 import {assertNoOwnedStorybookMdx,assertUiStorybookDiscovery} from "../🟦️.ts";
 import { runtimeFileV1, runtimeServeV1 } from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🌍️serve/🟦️.ts";
@@ -21,7 +22,7 @@ import { runtimeKeyV1 } from "../../../../../../../📦️packages/🟦️typesc
 
 /** 📖️ Builds and publishes Storybook inside retained dependency and product filesystem owners. */
 export async function buildRepositoryStorybookV1(workspace:string,mode:string,invocation:ScriptInvocation):Promise<void>{
- if(process.env.STORYBOOK_OUTPUT_DIR!==undefined)throw Error("Storybook output belongs to the declared finite products store");assertNoOwnedStorybookMdx(workspace);const scope=process.env.STORYBOOK_SCOPE??"",control=scriptCompilerAdmissionControlV1(invocation,"storybook:build",600000);
+ if(process.env.STORYBOOK_OUTPUT_DIR!==undefined)throw Error("Storybook output belongs to the declared finite products store");prepareStorybookAssets(()=>checkScriptInvocation(invocation));assertNoOwnedStorybookMdx(workspace);const scope=process.env.STORYBOOK_SCOPE??"",control=scriptCompilerAdmissionControlV1(invocation,"storybook:build",600000);
  await withRepositoryCacheStoreV1(workspace,"dependencies",invocation,control,(_dependencies,dependencyPhase)=>withStorybookStorageV1(workspace,mode,scope,invocation,dependencyPhase,async(store,layout,temporary,storePhase)=>{
   const require=createRequire(join(workspace,"package.json")),manifest=require.resolve("storybook/package.json"),installed=require(manifest) as {version:string;bin:string};if(typeof installed.bin!=="string")throw Error("Original Storybook CLI entry required");const cli=join(dirname(manifest),installed.bin);
   await withCompilerState({capacity:countedCompilerCapacityRequestV1(),root:layout.state,owner:"storybook",compiler:`storybook:${installed.version}:${runtimeKeyV1()}`,configuration:scope,mode:mode as "prototype"|"release",control:storePhase,environment:store.environment,storage:store.storage,storageControl:store.control,files:[".semio-artifact.json"]},async(directory,compilerEnvironment,control)=>{
@@ -36,7 +37,7 @@ export function storybookPollingDefaultV1(environment:Readonly<Record<string,str
 
 /** 🔭️ Holds the prototype development compiler and bounded cache through original server settlement. */
 export async function serveRepositoryStorybookV1(workspace:string,scope:string,args:readonly string[],invocation:ScriptInvocation):Promise<void>{
- if(args.some(arg=>!["--quiet","--debug","--ci","--no-manager-cache","--no-version-updates"].includes(arg)))throw Error("Storybook development arguments must preserve owned configuration and storage");const control=scriptCompilerAdmissionControlV1(invocation,"storybook:dev",0);await withRepositoryCacheStoreV1(workspace,"dependencies",invocation,control,(_dependencies,dependencyPhase)=>withStorybookStorageV1(workspace,"prototype",scope,invocation,dependencyPhase,async(store,layout,_temporary,storePhase)=>{
+ if(args.some(arg=>!["--quiet","--debug","--ci","--no-manager-cache","--no-version-updates"].includes(arg)))throw Error("Storybook development arguments must preserve owned configuration and storage");prepareStorybookAssets(()=>checkScriptInvocation(invocation));const control=scriptCompilerAdmissionControlV1(invocation,"storybook:dev",0);await withRepositoryCacheStoreV1(workspace,"dependencies",invocation,control,(_dependencies,dependencyPhase)=>withStorybookStorageV1(workspace,"prototype",scope,invocation,dependencyPhase,async(store,layout,_temporary,storePhase)=>{
   const require=createRequire(join(workspace,"package.json")),manifest=require.resolve("storybook/package.json"),installed=require(manifest) as {version:string;bin:string};if(typeof installed.bin!=="string")throw Error("Original Storybook CLI entry required");
   await withCompilerState({root:layout.state,owner:"storybook",compiler:`storybook:${installed.version}:${runtimeKeyV1()}`,configuration:scope,mode:"prototype",control:storePhase,capacity:null,environment:store.environment,storage:store.storage,storageControl:store.control,files:[".semio-artifact.json"]},async(directory,environment,control)=>{
    requireNativeStoragePathV1(store.root,directory);await store.recheck();const host=process.env.DEVCONTAINER==="true"?"0.0.0.0":"127.0.0.1",port=process.env.STORYBOOK_PORT??"6010",exact=["1","true"].includes(process.env.STORYBOOK_EXACT_PORT??"");

@@ -36,7 +36,7 @@ import { type ControlIcon, renderControlIcon, CheckIcon } from "../🔣️Icons/
 /**
  * 🎮️ actionGroupItemVariants holds the data fields for a actionGroupItemVariants record.
  **/
-const actionGroupItemVariants = styleVariants(cn(chromeControlItemBaseClass, interactiveHoverClass, "shrink-0 [&_svg]:size-tiny aspect-square h-small p-single"));
+const actionGroupItemVariants = styleVariants(cn(chromeControlItemBaseClass, interactiveHoverClass, "shrink-0 [&_svg]:size-tiny [&_svg:not([class*='size-'])]:size-tiny aspect-square min-h-0 h-full p-single"));
 
 /**
  * ⌨️ ActionGroupContext holds the data fields for a ActionGroupContext record.
@@ -59,7 +59,7 @@ function ActionGroup({ className, children, ...props }: ActionGroupProps) {
   const level = useLevel();
   const contextValue = reactHostPort.useMemo(() => ({ level }), [level]);
   return (
-    <div data-slot="action-group" data-detail-panel-control="fit" data-level={level} className={cn("group/action-group", chromeControlGroupShellClass, "h-small", className)} {...props}>
+    <div data-slot="action-group" data-detail-panel-control="fit" data-level={level} className={cn("group/action-group", chromeControlGroupShellClass, "h-medium", className)} {...props}>
       <ActionGroupContext.Provider value={contextValue}>{children}</ActionGroupContext.Provider>
     </div>
   );

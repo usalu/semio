@@ -1,0 +1,21 @@
+{
+  "badge": {
+    "required": ["px-double", "gap-single", "py-0.5"],
+    "forbidden": ["px-half", "gap-half"],
+    "paddingPx": 6.4,
+    "gapPx": 3.2
+  },
+  "actionGroup": {
+    "shellRequired": ["h-medium", "overflow-visible"],
+    "itemRequired": ["min-h-0", "h-full", "p-single", "aspect-square", "overflow-visible", "[&_svg]:size-tiny", "[&_svg:not([class*='size-'])]:size-tiny"],
+    "itemForbidden": ["min-h-medium", "h-small", "[&_svg:not([class*='size-'])]:size-small", "overflow-hidden"],
+    "shellPx": 22.4,
+    "shellBorderPx": 1,
+    "itemPx": 20.4,
+    "paddingPx": 3.2,
+    "dividerPx": 1,
+    "iconPx": 9.6,
+    "verticalClearancePx": 5.4,
+    "horizontalClearancePx": 4.9
+  }
+}

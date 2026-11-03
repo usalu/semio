@@ -41,6 +41,6 @@ function conform(ctx: AdapterContext): { projection: unknown } {
 
 export default defineTestAdapter({
   implementation: "typescript",
-  scenarios: Object.fromEntries(["last-surface-fill-wins", "last-utility-in-a-family-wins", "modifiers-scope-the-conflict", "independent-inset-edges-survive"].map((scenario) => [scenario, { subject: conform }])),
+  scenarios: Object.fromEntries(["last-surface-fill-wins", "last-utility-in-a-family-wins", "modifiers-scope-the-conflict", "independent-inset-edges-survive", "font-size-and-color-are-independent"].map((scenario) => [scenario, { subject: conform }])),
 });
 // #endregion 🧭️Adapter

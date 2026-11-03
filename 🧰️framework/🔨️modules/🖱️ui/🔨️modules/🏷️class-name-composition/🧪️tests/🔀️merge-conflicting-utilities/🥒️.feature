@@ -45,6 +45,26 @@ Feature: Resolve conflicting utilities by last-winner
       | aspect-auto aspect-square                                         | aspect-square                         |
     Then every composition matches its specified result
 
+  @id-font-size-and-color-are-independent
+  @level-fundamental
+  @mode-conformance
+  Scenario: Font size and arbitrary text colors remain independent
+    Given the composed class list and its specified result
+      | input                                                                             | expected                                                                  |
+      | text-xs text-[color:var(--active-foreground)]                                      | text-xs text-[color:var(--active-foreground)]                              |
+      | text-[color:var(--active-foreground)] text-xs                                      | text-[color:var(--active-foreground)] text-xs                              |
+      | text-xs text-[#ff0000]                                                            | text-xs text-[#ff0000]                                                    |
+      | text-sm text-[rgb(10_20_30)]                                                      | text-sm text-[rgb(10_20_30)]                                              |
+      | text-xs text-[12px] text-[color:red]                                              | text-[12px] text-[color:red]                                              |
+      | text-[length:var(--font-size)] text-[color:var(--ink)]                             | text-[length:var(--font-size)] text-[color:var(--ink)]                     |
+      | text-xs text-[calc(1rem+2px)] text-[hsl(0_0%_0%)]                                  | text-[calc(1rem+2px)] text-[hsl(0_0%_0%)]                                |
+      | text-xs text-(length:--font-size) text-(color:--ink)                               | text-(length:--font-size) text-(color:--ink)                               |
+      | text-element text-tiny                                                            | text-element text-tiny                                                    |
+      | text-tiny text-2xs text-[color:red]                                                | text-2xs text-[color:red]                                                 |
+      | text-xs hover:text-[color:var(--ink)] hover:text-sm                               | text-xs hover:text-[color:var(--ink)] hover:text-sm                       |
+      | text-[length:1rem]/6 text-xs text-[color:red]                                      | text-xs text-[color:red]                                                 |
+    Then every composition matches its specified result
+
   @id-modifiers-scope-the-conflict
   @level-quick
   @mode-conformance

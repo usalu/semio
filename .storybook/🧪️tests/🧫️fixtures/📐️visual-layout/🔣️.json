@@ -1,0 +1,13 @@
+{
+  "badge": { "subject": "Badge", "paddingUnits": 2, "gapUnits": 1 },
+  "actions": { "subject": "ActionGroup", "heightUnits": 7, "iconUnits": 3 },
+  "presence": { "subject": "PresenceBar", "gapUnits": 1 },
+  "avatar": { "subject": "TableAvatar", "minimumTextClearance": 1 },
+  "label": { "subject": "Label", "inlineWidths": [280, 360, 640], "stackedWidth": 128 },
+  "connectors": [
+    { "subject": "Catalogue", "expand": ["Example"], "last": ["example"], "continuing": ["file"] },
+    { "subject": "Tree", "expand": ["Kit", "Types", "Capsules", "Variants", "Balcony", "Bases"], "last": ["tree.story.kit.types.capsules.variants.p", "tree.story.kit.types.capsules.balcony.l", "tree.story.kit.types.bases.blob"], "continuing": ["tree.story.kit.types.capsules.variants.j"] }
+  ],
+  "grid": { "subject": "Scene", "storySuffix": "--below-floor", "minimumChangedPixels": 50, "contrast": 8 },
+  "tolerance": 0.75
+}

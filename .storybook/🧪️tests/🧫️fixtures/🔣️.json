@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "canvasRendererAlias": "@semio-tech/infinite-canvas-react-renderer",
+  "canvasRendererEntry": "🧰️framework/🔨️modules/🖼️canvas/🎨️react-renderer/🟦️.tsx",
+  "sourceAliasScopes": ["ui", "infinite"],
+  "storybookVersion": "10.6.5",
+  "previewDependencies": ["react-dom", "@react-three/drei/core/OrbitControls.js", "@react-three/drei/core/Outlines.js", "three/addons/loaders/OBJLoader.js", "pdfjs-dist", "react-resizable-panels"],
+  "runtimeChunks": [
+    { "path": "/repo/node_modules/storybook/dist/preview/runtime.js", "chunk": "storybook-runtime" },
+    { "path": "C:\\repo\\node_modules\\storybook\\dist\\preview\\runtime.js", "chunk": "storybook-runtime" },
+    { "path": "/repo/node_modules/react/index.js", "chunk": null }
+  ],
+  "storybookPackages": ["storybook", "@storybook/react-vite", "@storybook/addon-docs", "@storybook/addon-vitest", "eslint-plugin-storybook"]
+}

@@ -8,6 +8,7 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import { sizeVar } from "@semio-tech/ui-styling";
+import { resolvePropertyRowStacked, type PropertyLayout } from "./📐️layout/🟦️.ts";
 import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
 import { type UiLabel } from "../🎗️UiLabel/🟦️.tsx";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
@@ -174,9 +175,10 @@ interface LabelProps {
    * (gutter, tree-label slot, trailing control) so collection rows do not drift into the value column.
    */
   labelLayoutKind?: "property" | "treeGroupHeader";
+  propertyLayout?: PropertyLayout;
   children?: React.ReactNode;
 }
-export function Label({ id, rowId, label, labelElementId, className, children, labelLayoutKind = "property" }: LabelProps) {
+export function Label({ id, rowId, label, labelElementId, className, children, labelLayoutKind = "property", propertyLayout = "auto" }: LabelProps) {
   const localizedLabel = useIdLabel(id);
   const resolvedLabel = label ?? localizedLabel;
   const fallbackLabel = reactHostPort.useMemo(() => {
@@ -197,6 +199,7 @@ export function Label({ id, rowId, label, labelElementId, className, children, l
   const propertyRowRef = reactHostPort.useRef<HTMLDivElement>(null);
   const propertyLabelRef = reactHostPort.useRef<HTMLDivElement>(null);
   const propertyControlRef = reactHostPort.useRef<HTMLDivElement>(null);
+  const propertyMetricsRef = reactHostPort.useRef<HTMLSpanElement>(null);
   const [propertyRowStacked, setPropertyRowStacked] = reactHostPort.useState(false);
   const propertyRowStackedRef = reactHostPort.useRef(propertyRowStacked);
   propertyRowStackedRef.current = propertyRowStacked;
@@ -212,15 +215,21 @@ export function Label({ id, rowId, label, labelElementId, className, children, l
     let animationFrame = 0;
     const resolvePropertyLayout = () => {
       animationFrame = 0;
-      const rowWidthPx = rowElement.clientWidth;
-      const labelWidthPx = Math.ceil(labelElement.scrollWidth);
-      const controlMinWidthPx = Math.ceil(controlElement.scrollWidth);
-      const minimumInlineWidthPx = labelWidthPx + controlMinWidthPx + detailPanelPropertyInlineGapPx;
-      const labelRect = labelElement.getBoundingClientRect();
-      const controlRect = controlElement.getBoundingClientRect();
-      const overlaps = labelRect.right + detailPanelPropertyInlineGapPx > controlRect.left;
-      const stacked = propertyRowStackedRef.current;
-      const shouldStack = stacked ? overlaps || minimumInlineWidthPx > rowWidthPx - detailPanelPropertyStackedToInlineHysteresisPx : overlaps || minimumInlineWidthPx > rowWidthPx;
+      const content = labelElement.querySelector<HTMLElement>('[data-slot="property-label"]');
+      const metrics = propertyMetricsRef.current;
+      if (!content || !metrics) return;
+      const labelStyle = getComputedStyle(labelElement);
+      const gap = Number.parseFloat(getComputedStyle(rowElement).columnGap);
+      const shouldStack = resolvePropertyRowStacked({
+        width: rowElement.getBoundingClientRect().width,
+        label: Math.max(content.scrollWidth, content.getBoundingClientRect().width) + (Number.parseFloat(labelStyle.paddingInlineStart) || 0),
+        track: metrics.getBoundingClientRect().width,
+        control: metrics.firstElementChild!.getBoundingClientRect().width,
+        gap: Number.isFinite(gap) ? gap : detailPanelPropertyInlineGapPx,
+        hysteresis: detailPanelPropertyStackedToInlineHysteresisPx,
+        wasStacked: propertyRowStackedRef.current,
+        mode: propertyLayout,
+      });
       setPropertyRowStacked((current) => (current === shouldStack ? current : shouldStack));
     };
 
@@ -235,6 +244,11 @@ export function Label({ id, rowId, label, labelElementId, className, children, l
     observer.observe(rowElement);
     observer.observe(labelElement);
     observer.observe(controlElement);
+    const content = labelElement.querySelector('[data-slot="property-label"]');
+    if (content) observer.observe(content);
+    if (propertyMetricsRef.current) observer.observe(propertyMetricsRef.current);
+    const controlMetric = propertyMetricsRef.current?.firstElementChild;
+    if (controlMetric) observer.observe(controlMetric);
     scheduleResolvePropertyLayout();
 
     return () => {
@@ -243,7 +257,15 @@ export function Label({ id, rowId, label, labelElementId, className, children, l
         cancelAnimationFrame(animationFrame);
       }
     };
-  }, [id, label, level, treePropertyRowOffsetPx]);
+  }, [id, displayLabel, level, treePropertyRowOffsetPx, propertyLayout, labelLayoutKind]);
+
+  const stacked = propertyLayout === "auto" ? propertyRowStacked : propertyLayout === "stacked";
+  const focusControl = () => {
+    const control = propertyControlRef.current;
+    const identified = id ? document.getElementById(id) : null;
+    const target = (identified && control?.contains(identified) ? identified : null) || control?.querySelector<HTMLElement>('input, select, textarea, button, [tabindex="0"]');
+    target?.focus();
+  };
 
   if (labelLayoutKind === "treeGroupHeader") {
     const treeGroupHeaderLabel = (
@@ -281,23 +303,25 @@ export function Label({ id, rowId, label, labelElementId, className, children, l
   }
 
   const propertyLabelElement = isTree ? (
-    <div ref={propertyLabelRef} data-slot="property-label-tree" className="min-w-0" style={{ paddingInlineStart: detailPanelIndentLen(level, indentMultiplier) }}>
+    <div ref={propertyLabelRef} data-slot="property-label-tree" className="flex min-w-0 items-center" style={{ paddingInlineStart: detailPanelIndentLen(level, indentMultiplier) }}>
       <div className="inline-flex min-w-0 h-medium">
-        <span data-slot="property-label" id={labelElementId} title={controlHint} className="inline-flex items-center text-xs font-medium flex-shrink-0 text-start truncate cursor-pointer transition-colors h-medium ps-single">
-          {resolvedLabel}
-        </span>
+        <label htmlFor={id} data-slot="property-label" id={labelElementId} title={controlHint} onClick={focusControl} className="inline-flex w-max max-w-full items-center text-xs font-medium flex-shrink-0 text-start truncate cursor-pointer transition-colors h-medium ps-single">
+          {displayLabel}
+        </label>
       </div>
     </div>
   ) : (
-    <div ref={propertyLabelRef} data-slot="property-label-inline" className="min-w-0">
-      <span
+    <div ref={propertyLabelRef} data-slot="property-label-inline" className="flex min-w-0 items-center">
+      <label
+        htmlFor={id}
         data-slot="property-label"
         id={labelElementId}
         title={controlHint}
-        className="inline-flex items-center text-xs font-medium flex-shrink-0 text-start truncate cursor-pointer transition-colors text-element hover:bg-hover-interactive-fill hover:text-emphasized h-medium"
+        onClick={focusControl}
+        className="inline-flex w-max max-w-full items-center text-xs font-medium flex-shrink-0 text-start truncate cursor-pointer transition-colors text-element hover:bg-hover-interactive-fill hover:text-emphasized h-medium"
       >
-        {resolvedLabel}
-      </span>
+        {displayLabel}
+      </label>
     </div>
   );
 
@@ -307,16 +331,21 @@ export function Label({ id, rowId, label, labelElementId, className, children, l
       id={rowId}
       data-dim
       data-slot="property-row"
-      data-property-layout={propertyRowStacked ? "stacked" : "inline"}
+      data-property-layout={stacked ? "stacked" : "inline"}
       style={{
         ...(isTree ? { marginInlineStart: `calc(-1 * ${detailPanelIndentLen(level, indentMultiplier)})`, width: level > 0 ? `calc(100% + ${detailPanelIndentLen(level, indentMultiplier)})` : "100%" } : {}),
-        gridTemplateColumns: propertyRowStacked ? "minmax(0, 1fr)" : `${sizeVar("layoutLabel")} minmax(0, 1fr)`,
-        rowGap: propertyRowStacked ? sizeVar("spacingSingle") : "0",
+        position: "relative",
+        alignItems: stacked ? "start" : "center",
+        gridTemplateColumns: stacked ? "minmax(0, 1fr)" : `minmax(${sizeVar("layoutLabel")}, max-content) minmax(0, 1fr)`,
+        rowGap: stacked ? sizeVar("spacingSingle") : "0",
       }}
       className={cn(detailPanelPropertyRowClassName, !isTree && "w-full", className)}
     >
+      <span ref={propertyMetricsRef} data-slot="property-layout-metrics" aria-hidden="true" style={{ position: "absolute", visibility: "hidden", pointerEvents: "none", height: 0, width: sizeVar("layoutLabel") }}>
+        <span style={{ display: "block", width: `var(--property-control-min-width, ${sizeVar("layoutLabel")})` }} />
+      </span>
       {propertyLabelElement}
-      <div ref={propertyControlRef} data-slot="property-control" className={detailPanelPropertyControlClassName} style={propertyRowStacked ? { paddingInlineStart: `calc(${sizeVar("layoutLabel")} + ${sizeVar("spacingDouble")})` } : undefined}>
+      <div ref={propertyControlRef} data-slot="property-control" className={detailPanelPropertyControlClassName} style={{ alignSelf: stacked ? "start" : "center" }}>
         <PropertyValueColumnContext.Provider value={true}>{children}</PropertyValueColumnContext.Provider>
       </div>
     </div>

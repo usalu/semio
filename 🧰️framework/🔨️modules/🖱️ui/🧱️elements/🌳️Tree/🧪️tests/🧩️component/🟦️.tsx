@@ -6,11 +6,14 @@ import Ajv2020 from "ajv/dist/2020.js";
 import { describe, expect, it, vi } from "vitest";
 import { TREE_WINDOW_BODY_NODE_BUDGET, TREE_WINDOW_OVERSCAN_ROWS, TREE_WINDOW_PATH_SEPARATOR, TREE_WINDOW_ROWS_MAX, capTreeWindowRequests, treeWindowPathOf, treeWindowRequestsForViewport, treeWindowRowAriaAttributes, treeWindowVisibleRowsForViewport, type TreeDataWindow, type TreeWindowContainerMeasure, type TreeWindowVisibleRows } from "../../🔭️virtual-window/🟦️.tsx";
 import { Tree } from "../../🟦️.tsx";
+import { Catalogue } from "../../📚️catalogue/🟦️.tsx";
+import { hierarchy } from "d3-hierarchy";
+import connectorCases from "../🧫️fixtures/🌿️connectors/🔣️.json";
 import { TreeCheckbox } from "../../⚡️actions/🟦️.tsx";
 import { TreeItem } from "../../🍃️item/🟦️.tsx";
 import { TreeSection } from "../../🌱️section/🟦️.tsx";
 import { type TreeDataSection } from "../../📋️data/🟦️.ts";
-import { treeRowHeightPx } from "../../📏️row-alignment/🟦️.tsx";
+import { TreeContext, treeRowHeightPx } from "../../📏️row-alignment/🟦️.tsx";
 import type { TreeWindowRowExtent } from "@semio-tech/framework-manifest/ui-contract-and-canvas-types";
 import { uiDataLabel } from "../../../🎗️UiLabel/🟦️.tsx";
 import rowExtentFixture from "../../../../🧪️tests/🧫️fixtures/🌳️tree-window-row-extent/🔣️.json";
@@ -19,6 +22,110 @@ import actionCases from "../🧫️fixtures/♿️actions/🔣️.json";
 import focusCases from "../🧫️fixtures/♿️focus-retention/🔣️.json";
 import disabledActionCases from "../../../../🧪️tests/🧫️fixtures/♿️disabled-row-action/🔣️.json";
 // #endregion 🔌️Adapters
+
+describe("Tree connector termination", () => {
+  type Node = { id: string; children?: Node[] };
+  const items = (nodes: Node[]): TreeDataSection["items"] => nodes.map((node) => ({ id: node.id, label: node.id, defaultOpen: true, items: items(node.children ?? []) }));
+  const guideIndices = (branch: Element) => {
+    const indices: number[] = [];
+    for (let ancestor: Element | null = branch; ancestor; ancestor = ancestor.parentElement) {
+      indices.push(...Array.from(ancestor.querySelectorAll(':scope > [data-slot="tree-guide"] [data-tree-guide-index]'), (line) => Number(line.getAttribute("data-tree-guide-index"))));
+    }
+    return indices.sort((a, b) => a - b);
+  };
+
+  it("matches a language-neutral corpus against d3 hierarchy's independent sibling ancestry", () => {
+    const root = hierarchy<Node>({ id: "section", children: connectorCases.items });
+    const oracle = root.descendants().filter((node) => node.parent).map((node) => ({
+      id: node.data.id,
+      last: node === node.parent!.children!.at(-1),
+      ancestorGuides: node.ancestors().slice(1, -1).reverse().flatMap((ancestor, index) => ancestor !== ancestor.parent!.children!.at(-1) ? [index] : []),
+    })).sort((a, b) => a.id.localeCompare(b.id));
+    expect(oracle).toEqual([...connectorCases.rows].sort((a, b) => a.id.localeCompare(b.id)));
+  });
+
+  it.each(["down", "up"] as const)("terminates each final row and its nested ancestry when growing %s", (direction) => {
+    for (const trailingSection of [false, true]) {
+      const sections: TreeDataSection[] = [{ id: "connector-section", label: connectorCases.title, defaultOpen: true, items: items(connectorCases.items) }];
+      if (trailingSection) sections.push({ id: "trailing-section", label: "Trailing", items: [] });
+      const { container, unmount } = render(<Tree sections={sections} direction={direction} />);
+      for (const entry of connectorCases.rows) {
+        const row = container.querySelector(`[id="${entry.id}"]`)!;
+        const guide = row.querySelector<HTMLElement>('[data-slot="tree-parent-guide"]');
+        expect(guide, entry.id).not.toBeNull();
+        expect(guide!.style.top, entry.id).toBe(entry.last && direction === "up" ? "var(--tree-gutter-center, calc(var(--tree-row-height) / 2))" : "0px");
+        expect(guide!.style.bottom, entry.id).toBe(entry.last && direction === "down" ? "calc(100% - var(--tree-gutter-center, calc(var(--tree-row-height) / 2)))" : "0px");
+        expect(row.querySelector('[data-slot="tree-branch-elbow"]'), entry.id).not.toBeNull();
+        const branch = row.closest('[data-slot="tree-section-content"], [data-slot="tree-item-content"]')!;
+        expect(guideIndices(branch), entry.id).toEqual(entry.ancestorGuides);
+      }
+      unmount();
+    }
+  });
+
+  it.each(["default", "property", "sortable"] as const)("preserves the expanded final %s row's child stem while ending its incoming connector", (layout) => {
+    const { container, unmount } = render(
+      <TreeContext.Provider value={{ level: 1, isLastAtLevel: [false], isTree: true, showLines: true, indentMultiplier: 1 }}>
+        <TreeItem id="final-group" label="Group" defaultOpen isLastItem sortable={layout === "sortable"} sortableId="final-group" layoutKind={layout === "property" ? "property" : "default"}>
+          <TreeItem label="Only Child" isLastItem />
+        </TreeItem>
+      </TreeContext.Provider>,
+    );
+    const row = container.querySelector('[id="final-group"]')!;
+    expect(row.querySelector<HTMLElement>('[data-slot="tree-parent-guide"]')!.style.bottom).not.toBe("0px");
+    expect(row.querySelector('[data-slot="tree-branch-stem"]')).not.toBeNull();
+    expect(container.querySelectorAll('[data-tree-guide-line]')).toHaveLength(0);
+    unmount();
+  });
+
+  it("does not render connector strokes when lines are disabled", () => {
+    const { container, unmount } = render(<Tree showLines={false} sections={[{ id: "no-lines", label: "No Lines", defaultOpen: true, items: items(connectorCases.items) }]} />);
+    expect(container.querySelector('[data-slot="tree-parent-guide"], [data-slot="tree-branch-elbow"], [data-slot="tree-branch-stem"], [data-tree-guide-line]')).toBeNull();
+    unmount();
+  });
+
+  it.each(["down", "up"] as const)("keeps virtual siblings connected beyond the materialised slice growing %s", (direction) => {
+    for (const offset of [0, 2]) {
+      const { container, unmount } = render(<Tree direction={direction} sections={[{ id: "window-connectors", label: "Window", defaultOpen: true, window: { offset, total: 3, rowExtent: "standard" }, items: [{ id: "window-item", label: "Item" }] }]} />);
+      const guide = container.querySelector<HTMLElement>('[id="window-item"] [data-slot="tree-parent-guide"]')!;
+      const end = direction === "up" ? guide.style.top : guide.style.bottom;
+      expect(end).toBe(offset === 2 ? direction === "up" ? "var(--tree-gutter-center, calc(var(--tree-row-height) / 2))" : "calc(100% - var(--tree-gutter-center, calc(var(--tree-row-height) / 2)))" : "0px");
+      const spacer = container.querySelector<HTMLElement>('[data-slot="tree-window-spacer"] [data-slot="tree-parent-guide"]');
+      expect(spacer).not.toBeNull();
+      expect(direction === "up" ? spacer!.style.top : spacer!.style.bottom).toBe(offset === 0 ? `${treeRowHeightPx / 2}px` : "0px");
+      unmount();
+    }
+  });
+
+  it("recomputes the final Catalogue item on insertion, removal and emptying", () => {
+    const catalogue = (ids: string[]) => <Catalogue title="Changing" items={ids.map((id) => ({ id, label: id, payload: { id } }))} />;
+    const { container, getByRole, rerender, unmount } = render(catalogue(["one"]));
+    fireEvent.click(getByRole("button", { name: "Changing" }));
+    const guide = (id: string) => container.querySelector<HTMLElement>(`[id="${id}"] [data-slot="tree-parent-guide"]`)!;
+    expect(guide("one").style.bottom).not.toBe("0px");
+    rerender(catalogue(["one", "two"]));
+    expect(guide("one").style.bottom).toBe("0px");
+    expect(guide("two").style.bottom).not.toBe("0px");
+    rerender(catalogue(["one"]));
+    expect(guide("one").style.bottom).not.toBe("0px");
+    rerender(catalogue([]));
+    expect(container.querySelector('[data-slot="tree-parent-guide"]')).toBeNull();
+    unmount();
+  });
+
+  it.each([1, 3])("ends the real Catalogue's %i-item branch at the last elbow", (count) => {
+    const { container, getByRole, unmount } = render(<Catalogue title={connectorCases.title} items={Array.from({ length: count }, (_, index) => ({ id: `catalogue-${index}`, label: `Item ${index}`, payload: { index } }))} />);
+    fireEvent.click(getByRole("button", { name: connectorCases.title }));
+    for (let index = 0; index < count; index++) {
+      const row = container.querySelector(`[id="catalogue-${index}"]`)!;
+      const guide = row.querySelector<HTMLElement>('[data-slot="tree-parent-guide"]');
+      expect(guide).not.toBeNull();
+      expect(guide!.style.bottom).toBe(index === count - 1 ? "calc(100% - var(--tree-gutter-center, calc(var(--tree-row-height) / 2)))" : "0px");
+    }
+    expect(container.querySelector('[data-slot="tree-section-content"] [data-tree-guide-line]')).toBeNull();
+    unmount();
+  });
+});
 
 describe("Disabled row action focus", () => {
   it("matches the closed corpus and independent native button focus and dispatch", () => {

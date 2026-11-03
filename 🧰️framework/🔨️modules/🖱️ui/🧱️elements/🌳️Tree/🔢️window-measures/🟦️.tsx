@@ -80,6 +80,7 @@ export const WindowMeasureTreeGroup: React.FC<WindowMeasureTreeGroupProps> = ({ 
   const { level, isLastAtLevel, showLines, isTree, indentMultiplier, direction = "down" } = reactHostPort.useContext(TreeContext);
   const { block, inline } = useFlow();
   const itemId = `window-measure-group-${id}`;
+  const labelId = React.useId();
   const { open, setOpen } = useTreeOpenState(itemId, defaultOpen);
   const hasChildren = hasNonEmptyChildren(children);
   const ToggleChevron = treeFoldChevronIcon(block, inline, open);
@@ -98,6 +99,8 @@ export const WindowMeasureTreeGroup: React.FC<WindowMeasureTreeGroupProps> = ({ 
             hasChildren ? (
               <button
                 type="button"
+                aria-labelledby={labelId}
+                aria-expanded={open}
                 className="flex-shrink-0 cursor-pointer border-0 bg-transparent p-0"
                 onClick={(event) => {
                   event.preventDefault();
@@ -111,7 +114,7 @@ export const WindowMeasureTreeGroup: React.FC<WindowMeasureTreeGroupProps> = ({ 
           }
           contentClassName="flex min-w-0 items-center gap-double"
         >
-          <span data-slot="tree-label" className={cn("flex-1 truncate select-none", windowMeasureTreeGroupLabelClass)} style={treeItemLabelStyle}>
+          <span id={labelId} data-slot="tree-label" className={cn("flex-1 truncate select-none", windowMeasureTreeGroupLabelClass)} style={treeItemLabelStyle}>
             {label}
           </span>
         </TreeAlignedRow>

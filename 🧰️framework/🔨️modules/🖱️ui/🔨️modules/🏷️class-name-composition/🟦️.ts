@@ -96,7 +96,7 @@ const CLASS_GROUPS: readonly ClassGroup[] = [
   ["aspect-ratio", /^aspect-(?:auto|square)$/],
   ["font-family", /^font-(?:sans|serif|mono|\[)/],
   ["font-weight", /^font-(?:thin|extralight|light|normal|medium|semibold|bold|extrabold|black|\d+)$/],
-  ["text-size", /^text-(?:xs|sm|base|lg|xl|[2-9]xl|\[.+\])(?:\/.+)?$/],
+  ["text-size", /^text-(?:tiny|2xs|xs|sm|base|lg|xl|[2-9]xl|\[(?:length:.+|(?:calc|min|max|clamp)\(.+\)|0|-?(?:\d*\.)?\d+(?:px|r?em|ex|ch|cap|ic|r?lh|(?:[sld]?v|cq)(?:[whib]|min|max)|cm|mm|q|Q|in|pt|pc|%))\]|\(length:.+\))(?:\/.+)?$/],
   ["text-align", /^text-(?:left|center|right|justify|start|end)$/],
   ["text-color", /^text-/],
   ["leading", /^leading-/],

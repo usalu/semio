@@ -6,7 +6,7 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
-import { TableAvatar } from "../📻️TableAvatar/🟦️.tsx";
+import { TableAvatar, tableAvatarSizeClassName, tableAvatarTextClassName } from "../📻️TableAvatar/🟦️.tsx";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { surfaceClass } from "../../🔨️modules/🌈️surface-presentation/🟦️.ts";
 import { useLabel } from "../🏷️Label/🟦️.tsx";
@@ -82,14 +82,14 @@ export const PresenceBar: React.FC<PresenceBarProps> = ({ peers, max = PRESENCE_
 
   if (peers.length === 0) {
     return (
-      <div id={id} role="list" aria-label={rosterLabel} className={cn("flex items-center gap-1 text-xs text-muted-foreground", className)}>
+      <div id={id} role="list" aria-label={rosterLabel} className={cn("flex items-center gap-single text-xs text-muted-foreground", className)}>
         {emptyLabel}
       </div>
     );
   }
 
   return (
-    <div id={id} role="list" aria-label={rosterLabel} className={cn("flex items-center -space-x-2", className)}>
+    <div id={id} role="list" aria-label={rosterLabel} className={cn("flex items-center gap-single", className)}>
       {visible.map((peer) => {
         const roleLabel = peer.role === "author" ? authorRoleLabel : peer.role === "spectator" ? spectatorRoleLabel : undefined;
         const qualifiers = [peer.isAgent === true ? agentKindLabel : undefined, roleLabel, peer.activity?.text].filter((value): value is string => value !== undefined);
@@ -137,7 +137,7 @@ export const PresenceBar: React.FC<PresenceBarProps> = ({ peers, max = PRESENCE_
           tabIndex={0}
           title={overflowLabel}
           aria-label={overflowLabel}
-          className={cn(surfaceClass, "flex size-small shrink-0 items-center justify-center rounded-full border text-xs font-medium text-muted-foreground")}
+          className={cn(surfaceClass, tableAvatarSizeClassName, tableAvatarTextClassName, "flex shrink-0 items-center justify-center rounded-full border font-medium text-muted-foreground")}
         >
           +{overflowCount}
         </div>

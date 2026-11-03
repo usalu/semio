@@ -109,6 +109,7 @@ export const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
             <TreeAlignedRow
               level={level}
               isLastAtLevel={isLastAtLevel}
+              isLastItem={isLastItem}
               showLines={showLines}
               connectCurrentLevel={level > 0}
               extendBranchStem={open && hasChildren}
@@ -182,6 +183,7 @@ export const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
           <TreeAlignedRow
             level={level}
             isLastAtLevel={isLastAtLevel}
+            isLastItem={isLastItem}
             showLines={showLines}
             connectCurrentLevel={level > 0}
             extendBranchStem={open && hasChildren}
@@ -254,7 +256,7 @@ export const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
           onDoubleClick(event);
         }}
       >
-        <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} contentClassName="min-w-0" contentChromeClassName={itemContentFillClassName}>
+        <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} isLastItem={isLastItem} showLines={showLines} connectCurrentLevel={level > 0} contentClassName="min-w-0" contentChromeClassName={itemContentFillClassName}>
           <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
             <div className={treeHeaderMainClassName}>
               {renderTreeRowIcon(icon, "file-text", rowEmphasized)}
@@ -296,7 +298,7 @@ export const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
         onDoubleClick(event);
       }}
     >
-      <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} contentClassName="min-w-0" contentChromeClassName={itemContentFillClassName}>
+      <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} isLastItem={isLastItem} showLines={showLines} connectCurrentLevel={level > 0} contentClassName="min-w-0" contentChromeClassName={itemContentFillClassName}>
         <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
           <div className={treeHeaderMainClassName}>
             {renderTreeRowIcon(icon, "file-text", rowEmphasized)}

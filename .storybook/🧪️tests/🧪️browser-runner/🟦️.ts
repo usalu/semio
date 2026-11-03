@@ -25,7 +25,10 @@ const baseURL = withTrailingSlash(process.env.PLAYWRIGHT_BASE_URL ?? `http://127
 
 export default defineConfig({
   testDir: workspaceRoot,
+  outputDir: process.env.PLAYWRIGHT_OUTPUT_DIR ? resolve(workspaceRoot, process.env.PLAYWRIGHT_OUTPUT_DIR) : undefined,
   testMatch: [
+    ".storybook/🧪️tests/🧪️catalog-browser/🟦️.ts",
+    ".storybook/🧪️tests/🧪️visual-layout/🟦️.ts",
     "🧰️framework/🛍️products/🎤️presentation/🧪️tests/🎞️storybook-deck/🟦️.ts",
     "✏️s/🔌️plugins/📐️cad/🧪️tests/🎨️storybook-renderer/🟦️.ts",
     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/📚️storybook-hosts-no-wasm/🟦️.ts",
@@ -55,6 +58,7 @@ export default defineConfig({
       use: {
         ...devices["Desktop Chrome"],
         launchOptions: {
+          executablePath: process.env.STORYBOOK_CHROMIUM_PATH || undefined,
           args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"],
         },
       },

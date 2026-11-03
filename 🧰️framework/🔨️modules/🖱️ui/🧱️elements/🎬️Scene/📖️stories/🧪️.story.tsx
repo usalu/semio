@@ -57,6 +57,17 @@ export const Orthographic: Story = {
   ),
 };
 
+export const BelowFloor: Story = {
+  args: { showGrid: true },
+  render: (args) => (
+    <div className="h-[30rem] w-full">
+      <Scene {...args} camera={{ position: { x: 5, y: -5, z: 5 }, forward: { x: -5, y: 5, z: -5 }, up: { x: 0, y: 1, z: 0 } }}>
+        <StoryBox />
+      </Scene>
+    </div>
+  ),
+};
+
 export const WithoutChrome: Story = {
   name: "No grid / gizmo (bare canvas)",
   render: () => (

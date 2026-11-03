@@ -9,6 +9,9 @@ export const standalonePlay = async ({ canvasElement }: { canvasElement: HTMLEle
 };
 
 export const withControlPlay = async ({ canvasElement }: { canvasElement: HTMLElement }): Promise<void> => {
-  expect(within(canvasElement).getByText("Height")).toBeTruthy();
+  const canvas = within(canvasElement);
+  expect(canvas.getByText("Step: Height")).toBeTruthy();
+  expect(canvas.getByText("Height (m)")).toBeTruthy();
+  expect(canvas.getByRole("spinbutton")).toHaveValue(3);
   expect(canvasElement.querySelector('[data-slot="engagement-control"][data-control-kind="stepper"]')).toBeTruthy();
 };

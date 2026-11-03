@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "subjects": [
+    { "component": "Badge", "directory": "🎭️badge", "variants": ["Default", "Tones", "WithIcon"] },
+    { "component": "StatusChip", "directory": "🎭️status-chip", "variants": ["Default", "States"] },
+    { "component": "StatCard", "directory": "🎭️stat-card", "variants": ["Default", "PositiveDelta", "NegativeDelta"] },
+    { "component": "EmptyState", "directory": "🎭️empty-state", "variants": ["Default", "WithAction"] },
+    { "component": "ErrorView", "directory": "🎭️error-view", "variants": ["Default", "Retryable"] },
+    { "component": "DesktopTitlebar", "directory": "🎭️desktop-titlebar", "variants": ["Default", "WithControls"] },
+    { "component": "TutorialBar", "directory": "🎭️tutorial-bar", "variants": ["Default", "Recording", "EmptyTimeline"] },
+    { "component": "TutorialCaptions", "directory": "🎭️tutorial-captions", "variants": ["Default", "Hidden", "NoCue"] },
+    { "component": "TutorialGhostPointer", "directory": "🎭️tutorial-ghost-pointer", "variants": ["Default", "Drag", "Orbit", "NoCue"] },
+    { "component": "TutorialVideoOverlay", "directory": "🎭️tutorial-video-overlay", "variants": ["Default", "Playing", "NoSource"] },
+    { "component": "ChromeControlHint", "directory": "🎭️chrome-control-hint", "variants": ["Default", "Always"] },
+    { "component": "DisabledReasonHint", "directory": "🎭️disabled-reason-hint", "variants": ["Default", "Runnable"] },
+    { "component": "Aside", "directory": "🎭️aside", "variants": ["Default", "Tones"] },
+    { "component": "NotFound", "directory": "🎭️not-found", "variants": ["Default", "WithDescription", "LocalBackNavigation"] },
+    { "component": "Catalogue", "directory": "🎭️catalogue", "variants": ["Default", "Empty", "Palette"] },
+    { "component": "Pane", "directory": "🎭️pane", "variants": ["Default", "Open", "Expanded"], "companions": ["PaneHost"] },
+    { "component": "WindowMeasuresTree", "directory": "🎭️window-measures-tree", "variants": ["Default", "LoadingAndWaiting", "Upward"], "companions": ["WindowMeasureTreeGroup", "WindowMeasureTreeLeaf"] }
+  ]
+}

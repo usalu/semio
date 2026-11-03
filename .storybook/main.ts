@@ -15,11 +15,11 @@ import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
 
 import type { StorybookConfig } from "@storybook/react-vite";
-import { semioAssetsVitePlugin } from "../🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🏗️builder/🌐️vite/🗃️assets/🟦️.ts";
+import { semioReferencedAssetsVitePlugin } from "../🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🏗️builder/🌐️vite/🗃️assets/🟦️.ts";
 import { createWorkspaceViteResolveConfig, findWorkspacePackages } from "../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
 import { playgroundFlowWasmDevStubPlugin } from "../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🪝️playground-stubs/🟦️.ts";
 import { hostBuildPlugins, uiTailwindBuildPlugins } from "../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
-import { resolveActiveScopes, buildScopeStoryGlobs, buildScopeAliases, buildExactAliasEntries, buildScopeWatchIgnores, buildScopeWatchRoots, isWatchedPathV1, type StoryScope } from "./📖️stories/🧭️coordination/🟦️.ts";
+import { resolveActiveScopes, buildScopeStoryGlobs, buildScopeAliases, buildExactAliasEntries, buildScopeWatchIgnores, buildScopeWatchRoots, isWatchedPathV1, scopeActive, storybookRuntimeChunk, STORYBOOK_PREVIEW_DEPENDENCIES, type StoryScope } from "./📖️stories/🧭️coordination/🟦️.ts";
 import { repositoryCachePartitionRootDataV1 } from "../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/💾️storage/🟦️.ts";
 import { createAssetBuildPluginsV1 } from "../🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/🔍️resolver/🧭️dispatch/🟦️.ts";
 import { PLAYGROUND_ASSET_PROVIDERS_V1 } from "../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🖼️assets/🧩️composition/🟦️.ts";
@@ -91,15 +91,12 @@ const config: StorybookConfig = {
     options: {},
   },
   docs: {},
+  previewHead: (head) => `${head}<link rel="icon" href="data:,">`,
   typescript: {
     reactDocgen: "react-docgen",
   },
   core: {
     disableTelemetry: true,
-  },
-  /** 📡️ Storybook 10.4's `changeDetection` builder-agnostic resolver defaults on and crashes (`Cannot read properties of undefined (reading 'buildError')`) against this repo's workspace alias set; keep it off until upstream stabilizes it. */
-  features: {
-    changeDetection: false,
   },
   async viteFinal(config, { configType }) {
     // ⚡️ Routes Storybook's Vite dependency-optimizer cache into the ONE shared cache root instead of
@@ -150,9 +147,9 @@ const config: StorybookConfig = {
     if (!hasTailwindPlugin) {
       config.plugins.push(...hostBuildPlugins(uiTailwindBuildPlugins({ sourceBase: __dirname })));
     }
-    const hasUiAssetsPlugin = config.plugins.some((plugin) => plugin && typeof plugin === "object" && "name" in plugin && plugin.name === "ui-assets-serve");
+    const hasUiAssetsPlugin = config.plugins.some((plugin) => plugin && typeof plugin === "object" && "name" in plugin && plugin.name === "semio-referenced-assets");
     if (!hasUiAssetsPlugin) {
-      config.plugins.push(...hostBuildPlugins(semioAssetsVitePlugin(repoRootPath)));
+      config.plugins.push(...hostBuildPlugins(semioReferencedAssetsVitePlugin(repoRootPath)));
     }
     if (configType !== "DEVELOPMENT") config.plugins.unshift(...hostBuildPlugins([canonicalWasmBuildVitePlugin(repoRootPath, buildMode)]));
     config.plugins.push(...hostBuildPlugins([playgroundFlowWasmDevStubPlugin(repoRootPath, flowBrowserDeliveryV1(repoRootPath, repositoryCachePartitionRootDataV1(repoRootPath, "products"), { version: 1, mode: buildMode, command: configType === "DEVELOPMENT" ? "serve" : "build" }))]));
@@ -190,18 +187,24 @@ const config: StorybookConfig = {
     }
 
     config.optimizeDeps = config.optimizeDeps || {};
-    config.optimizeDeps.include = [...(config.optimizeDeps.include || []), "golden-layout"];
-    const optimizeExclude = new Set<string>([...(config.optimizeDeps.exclude || []), "@semio-tech/ui-react", "@semio-tech/infinite-canvas-react-renderer", ...findWorkspacePackages(repoRootPath), ...activeScopes.flatMap((s) => s.optimizeDepsExclude ?? [])]);
+    const optimizeExclude = new Set<string>([...(config.optimizeDeps.exclude || []), ...findWorkspacePackages(repoRootPath), ...activeScopes.flatMap((s) => s.optimizeDepsExclude ?? [])]);
+    config.optimizeDeps.include = [...new Set([...(config.optimizeDeps.include ?? []), ...STORYBOOK_PREVIEW_DEPENDENCIES])];
     config.optimizeDeps.exclude = Array.from(optimizeExclude);
     config.optimizeDeps.esbuildOptions = {
       ...(config.optimizeDeps.esbuildOptions || {}),
       target: "es2022",
-      loader: { ...(config.optimizeDeps.esbuildOptions?.loader || {}), ".ts": "tsx" },
     };
     const currentRollup = config.build?.rollupOptions;
     config.build = { ...config.build, ...semioViteBuild(undefined, buildModePolicy(buildMode)) };
     config.build.target = "es2022";
     config.build.rollupOptions = { ...currentRollup, ...config.build.rollupOptions };
+    const outputs = [currentRollup?.output ?? {}].flat();
+    config.build.rollupOptions.output = outputs.map((output) => ({
+      ...output,
+      manualChunks: (id, api) => storybookRuntimeChunk(id)
+        ?? (typeof output.manualChunks === "function" ? output.manualChunks(id, api)
+          : Object.entries(output.manualChunks ?? {}).find(([, members]) => members.includes(id))?.[0]),
+    }));
     const existingExternal = config.build.rollupOptions.external;
     config.build.rollupOptions.external = Array.isArray(existingExternal)
       ? [...existingExternal, /\.node$/]
@@ -210,6 +213,7 @@ const config: StorybookConfig = {
       "import.meta.vitest": "undefined",
       __STORYBOOK_SCOPE__: JSON.stringify(storybookScope),
       __STORYBOOK_ACTIVE_SCOPES__: JSON.stringify(activeScopeIds),
+      __STORYBOOK_HOST_WASM__: JSON.stringify(scopeActive(activeScopeIds, "framework")),
     };
     if (configType === "DEVELOPMENT") {
       config.mode = "development";

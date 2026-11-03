@@ -11,6 +11,7 @@ import { DEFAULT_UI_DRIVER, COMPACT_UI_DRIVER, resolveUiDriver } from "@semio-te
 import { installPageRuntimeAssets } from "../🧰️framework/🔨️modules/🖼️canvas/📦️packages/🟦️typescript/🔌️runtime-assets/🟦️.ts";
 
 declare const __STORYBOOK_ACTIVE_SCOPES__: string[];
+declare const __STORYBOOK_HOST_WASM__: boolean;
 
 //#region 🔖️ScopeStyles
 if (__STORYBOOK_ACTIVE_SCOPES__.length > 0) {
@@ -372,21 +373,21 @@ function singleFlightWasmInit(id: string, load: () => Promise<{ readonly default
 }
 // #endregion 🔌️FrameworkHostsWasmLoaders
 
-const WASM_LOADERS: Record<string, () => Promise<void>> = {
+const WASM_LOADERS: Record<string, () => Promise<void>> = __STORYBOOK_HOST_WASM__ ? {
   "node-graph": singleFlightWasmInit("node-graph", () => import("@semio-tech/framework-surface-node-graph-rs/pkg/framework_surface_node_graph.js")),
   editor: singleFlightWasmInit("editor", () => import("@semio-tech/framework-editor-rs/pkg/framework_editor.js")),
   "paint-2d": singleFlightWasmInit("paint-2d", () => import("@semio-tech/framework-surface-paint-rs/pkg/framework_surface_paint.js")),
   "tiled-map": singleFlightWasmInit("tiled-map", () => import("@semio-tech/framework-surface-tiled-map-rs/pkg/framework_surface_tiled_map.js")),
   terrain: singleFlightWasmInit("terrain", () => import("@semio-tech/framework-surface-terrain-rs/pkg/framework_surface_terrain.js")),
   flow: singleFlightWasmInit("flow", () => import("@semio-tech/flow-core/flow_core.js")),
-};
+} : {};
 
 let hostWasmBindingsInstalled: Promise<void> | undefined;
 /** 🪝️ Installs the wasm bindings port the renderer's session loaders read, once per page: a story that mounts a host without the shell still reaches the engines. */
 function installHostWasmBindings(): Promise<void> {
-  hostWasmBindingsInstalled ??= Promise.all([import("@semio-tech/framework-renderer-react"), import("../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🪝️host-ports/🕸️wasm-bindings/🟦️.ts")]).then(([renderer, bindings]) => {
+  hostWasmBindingsInstalled ??= __STORYBOOK_HOST_WASM__ ? Promise.all([import("@semio-tech/framework-renderer-react"), import("../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🪝️host-ports/🕸️wasm-bindings/🟦️.ts")]).then(([renderer, bindings]) => {
     renderer.registerWasmBindingsV1(bindings.WASM_BINDINGS_V1);
-  });
+  }) : Promise.reject(new Error("Host WASM requires an active framework scope"));
   return hostWasmBindingsInstalled;
 }
 
