@@ -18,6 +18,8 @@ pub struct ShellChromeChildCursor {
     pub flag: bool,
     pub fault: bool,
     pub group_phase: u8,
+    pub shared_border_plan: HashMap<String, Vec<ChromeBorderPaint>>,
+    pub shared_border_rects: HashMap<String, Rect>,
     pub document: UiDocumentFrameCursor,
     pub window: Option<UiText>,
     pub rect: Option<Rect>,
@@ -202,7 +204,7 @@ impl<'ctx> ChromeViewCtx<'ctx> {
     /// the committed tree — everything below (plan, drop registries, chrome, hits) reads THIS.
     pub fn plan_dock_windows(&mut self, rect: Rect, theme: &Theme, atlas: &mut FontAtlas) {
         self.dock.dock_canvas_bounds = rect;
-        self.dock.dock_axis_separator = theme.gap_standard;
+        self.dock.dock_axis_separator = 0.0;
         self.dock.dock.mobile = self.chrome.screen_w <= semio_framework_os_renderer_wgpu_dock::MODE_DOCK_MOBILE_MAX_WIDTH_PX;
         self.dock.shell_hooks.note_selection(self.input.interaction_selection.values().any(|selection| !selection.ids.is_empty()));
         if let Some(session) = self.docs.session.as_ref() {

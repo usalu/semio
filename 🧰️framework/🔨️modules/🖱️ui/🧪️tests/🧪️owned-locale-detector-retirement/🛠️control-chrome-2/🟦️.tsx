@@ -28,11 +28,11 @@ describe("control chrome", () => {
         const active = container.querySelector('[data-slot="panel-tab-button"][data-active="true"]') as HTMLElement;
         expect(inactive.className).toContain("bg-transparent");
         expect(inactive.className).not.toContain("ui-surface");
-        expect(inactive.className).toContain("border-e");
-        expect(inactive.className).toContain("!border-normal");
+        expect(inactive.className).toContain("shared-border-cell");
+        expect(inactive.hasAttribute("data-shared-border-cell")).toBe(true);
         expect(active.className).toContain("bg-active-base");
-        expect(active.className).toContain("border-e");
-        expect(active.className).toContain("!border-normal");
+        expect(active.className).toContain("shared-border-cell");
+        expect(active.hasAttribute("data-shared-border-cell")).toBe(true);
         expect(active.className).toContain("border-0");
         expect(body.style.zIndex).toBe("1");
         expect((container.querySelector('[data-slot="window-chrome-cap"]') as HTMLElement).style.zIndex).toBe("2");

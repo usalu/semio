@@ -7,6 +7,7 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
+import { sharedBorderStroke, useSharedWindowBorder, sizeSharedBorderOverlay } from "./shared-border.ts";
 import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
 import { SurfaceScope, type Level, type SurfaceActiveBindProps } from "../🌈️Surface/🟦️.tsx";
 import {
@@ -18,6 +19,7 @@ import {
   type WindowSilhouetteGeometry,
   type WindowSilhouetteMetrics,
 } from "../🔲️WindowSilhouette/🟦️.tsx";
+import { sharedBorderAxisScale as windowSilhouetteScale } from "../🔲️WindowSilhouette/shared-border.ts";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { modeDockTabClassName } from "../../🔨️modules/🎛️chrome-control-presentation/🟦️.ts";
 import { interactiveHoverClass } from "../../🔨️modules/🖱️interaction-presentation/🟦️.ts";
@@ -103,11 +105,6 @@ function windowSilhouetteOwnsElement(stack: HTMLElement, element: Element): bool
   return owner === null || owner === stack;
 }
 
-/** 🔍️ How much an element is scaled on screen along one axis: its painted size over its layout size — 1 while they agree to a pixel (layout sizes are whole pixels) or it has no layout size (jsdom). A stack inside a scaled host (a page on the grid of a layered overview) is measured in its own pixels, so its outline stays put when the host scales. */
-function windowSilhouetteScale(painted: number, layout: number): number {
-  return layout > 0 && Math.abs(painted - layout) > 1 ? painted / layout : 1;
-}
-
 /** 🖱️ Reads fused submenu wing rects for a context menu stack, in the stack's own pixels (`scale` from {@link windowSilhouetteScale}). */
 function measureContextMenuFusion(stack: HTMLElement, stackRect: DOMRect, base: WindowSilhouetteMetrics, scale: { readonly x: number; readonly y: number }): WindowSilhouetteMetrics {
   const fusionBody = stack.querySelector<HTMLElement>('[data-slot="context-menu-fusion-body"]');
@@ -122,7 +119,10 @@ function measureContextMenuFusion(stack: HTMLElement, stackRect: DOMRect, base: 
     right: (rect.right - stackRect.left) / scale.x,
     bottom: (rect.bottom - stackRect.top) / scale.y,
   });
-  const fusion = { primary: toLocal(primary.getBoundingClientRect()), wings: wings.map((wing) => toLocal(wing.getBoundingClientRect())) };
+  const viewport = fusionBody.getBoundingClientRect();
+  const clip = (rect: DOMRect) => toLocal({ left: Math.max(rect.left, viewport.left), top: Math.max(rect.top, viewport.top), right: Math.min(rect.right, viewport.right), bottom: Math.min(rect.bottom, viewport.bottom) } as DOMRect);
+  const fusion = { primary: clip(primary.getBoundingClientRect()), wings: wings.map((wing) => clip(wing.getBoundingClientRect())).filter(rect => rect.right > rect.left && rect.bottom > rect.top) };
+  if (!fusion.wings.length) return base;
   let width = base.width;
   let height = base.height;
   for (const wing of fusion.wings) {
@@ -210,11 +210,13 @@ export function useWindowSilhouetteGeometry(stack: HTMLElement | null, enabled =
           });
     commit();
     refreshResizeTargets();
+    stack.addEventListener("scroll", schedule, true);
     mutationObserver?.observe(stack, { attributes: true, attributeFilter: ["data-dock", "data-silhouette-remeasure", "data-slot", "data-window-silhouette-chip"], childList: true, subtree: true });
     return () => {
       if (frame && typeof cancelAnimationFrame === "function") cancelAnimationFrame(frame);
       resizeObserver?.disconnect();
       mutationObserver?.disconnect();
+      stack.removeEventListener("scroll", schedule, true);
     };
   }, [enabled, stack]);
   return geometry;
@@ -340,16 +342,21 @@ export const WindowChromeSilhouetteBorder: React.FC<{
           ? "introduced"
           : kind;
   const metrics = resolvedGeometry.metrics;
+  const sharedSegments = useSharedWindowBorder(stack, resolvedGeometry, resolvedKind);
   void epoch;
 
   if (resolvedGeometry.state === "pending") {
     return <div data-slot={silhouetteSlot} data-window-silhouette-border data-kind={resolvedKind} data-pending="" data-dim="" aria-hidden className="pointer-events-none absolute inset-0 z-[40] overflow-visible" />;
   }
-  const path = resolvedGeometry.borderPath;
+  const path = sharedSegments === null ? resolvedGeometry.borderPath : sharedSegments.filter(segment => segment.state === resolvedKind).map(segment => segment.d).join(" ");
   const paint = windowSilhouetteBorderPaint(resolvedKind);
+  const sharedPaint = sharedSegments?.filter(segment => segment.state !== resolvedKind).map((segment, index) => (
+    <path key={index} d={segment.d} fill="none" stroke={sharedBorderStroke(segment.state)} strokeLinejoin="miter" strokeLinecap="square" vectorEffect="non-scaling-stroke" className={`window-silhouette-border window-silhouette-border-${segment.state}`} data-shared-border-segment="" data-shared-border-state={segment.state} />
+  ));
   if (resolvedKind === "celebrated") {
     return (
       <svg
+        ref={svg => sizeSharedBorderOverlay(svg, metrics.width, metrics.height)}
         data-slot={silhouetteSlot}
         data-window-silhouette-border
         data-kind={resolvedKind}
@@ -369,11 +376,13 @@ export const WindowChromeSilhouetteBorder: React.FC<{
         <foreignObject x={0} y={0} width={metrics.width} height={metrics.height} mask={`url(#${celebrateMaskId})`}>
           <div className="window-silhouette-border-celebrated-fill" style={{ width: "100%", height: "100%" }} />
         </foreignObject>
+        {sharedPaint}
       </svg>
     );
   }
   return (
     <svg
+      ref={svg => sizeSharedBorderOverlay(svg, metrics.width, metrics.height)}
       data-slot={silhouetteSlot}
       data-window-silhouette-border
       data-kind={resolvedKind}
@@ -384,7 +393,8 @@ export const WindowChromeSilhouetteBorder: React.FC<{
       viewBox={`0 0 ${metrics.width} ${metrics.height}`}
       aria-hidden
     >
-      <path d={path} fill="none" stroke={paint.stroke} strokeLinejoin="miter" vectorEffect="non-scaling-stroke" className={paint.className} />
+      <path d={path} fill="none" stroke={paint.stroke} strokeLinejoin="miter" strokeLinecap="square" vectorEffect="non-scaling-stroke" className={paint.className} data-shared-border-segment="" data-shared-border-state={resolvedKind} />
+      {sharedPaint}
     </svg>
   );
 };

@@ -35,7 +35,10 @@ impl<'ctx> ChromeViewCtx<'ctx> {
                     cursor.phase = 2;
                     return false;
                 }
+                self.prepare_panel_row_borders(cursor, atlas, input, theme, PanelAnchor::TopLeft, theme.padding_standard, width - theme.padding_standard, btn_y, btn_h, false);
                 let Some((anchor, node, chip)) = self.navbar_leading_tab_row_rect(atlas, theme, cursor.item, cursor.x, btn_y, btn_h) else {
+                    cursor.shared_border_plan.clear();
+                    cursor.shared_border_rects.clear();
                     let layout = self.navbar_chrome_layout(atlas, theme, width);
                     cursor.x = layout.center.centered.left;
                     cursor.right = layout.center.centered.right;
@@ -60,7 +63,8 @@ impl<'ctx> ChromeViewCtx<'ctx> {
                     cursor.item += 1;
                     return false;
                 };
-                match render_retained_panel_chrome_item_step(&mut cursor.group_phase, &mut cursor.glyph, draw, atlas, icons, input, theme, rect, &item, true) {
+                let borders = cursor.shared_border_plan.get(&control_id).map(Vec::as_slice);
+                match render_retained_panel_chrome_item_step_with_borders(&mut cursor.group_phase, &mut cursor.glyph, draw, atlas, icons, input, theme, rect, &item, true, borders) {
                     RetainedChromeGroupStep::Pending => return false,
                     RetainedChromeGroupStep::Complete => {}
                     RetainedChromeGroupStep::Fault => self.chrome.error = Some("Shell navbar leading panel tab exceeded the retained glyph boundary".to_string()),
@@ -197,7 +201,11 @@ impl<'ctx> ChromeViewCtx<'ctx> {
                 cursor.phase = 12;
             }
             12 => {
+                let (left, right) = (cursor.x, cursor.right);
+                self.prepare_panel_row_borders(cursor, atlas, input, theme, PanelAnchor::TopMiddle, left, right, btn_y, btn_h, false);
                 let Some((anchor, node)) = self.navbar_center_tab_row_item(cursor.item) else {
+                    cursor.shared_border_plan.clear();
+                    cursor.shared_border_rects.clear();
                     cursor.item = 0;
                     cursor.rect = None;
                     cursor.phase = 7;
@@ -223,7 +231,8 @@ impl<'ctx> ChromeViewCtx<'ctx> {
                     cursor.item += 1;
                     return false;
                 };
-                match render_retained_panel_chrome_item_step(&mut cursor.group_phase, &mut cursor.glyph, draw, atlas, icons, input, theme, rect, &item, true) {
+                let borders = cursor.shared_border_plan.get(&control_id).map(Vec::as_slice);
+                match render_retained_panel_chrome_item_step_with_borders(&mut cursor.group_phase, &mut cursor.glyph, draw, atlas, icons, input, theme, rect, &item, true, borders) {
                     RetainedChromeGroupStep::Pending => return false,
                     RetainedChromeGroupStep::Complete => {}
                     RetainedChromeGroupStep::Fault => self.chrome.error = Some("Shell navbar centered panel tab exceeded the retained glyph boundary".to_string()),
@@ -262,8 +271,14 @@ impl<'ctx> ChromeViewCtx<'ctx> {
                 cursor.phase = 8;
             }
             8 => {
+                if !mobile {
+                    let right = self.navbar_chrome_layout(atlas, theme, width).trailing_right;
+                    self.prepare_panel_row_borders(cursor, atlas, input, theme, PanelAnchor::TopRight, theme.padding_standard, right, btn_y, btn_h, true);
+                }
                 let row = (!mobile).then(|| self.navbar_trailing_tab_row_item(cursor.item)).flatten();
                 if !mobile && row.is_none() {
+                    cursor.shared_border_plan.clear();
+                    cursor.shared_border_rects.clear();
                     cursor.phase = 9;
                     return false;
                 }
@@ -308,7 +323,8 @@ impl<'ctx> ChromeViewCtx<'ctx> {
                     return false;
                 };
                 let step = if row.is_some() {
-                    render_retained_panel_chrome_item_step(&mut cursor.group_phase, &mut cursor.glyph, draw, atlas, icons, input, theme, rect, &item, true)
+                    let borders = cursor.shared_border_plan.get(&control_id).map(Vec::as_slice);
+                    render_retained_panel_chrome_item_step_with_borders(&mut cursor.group_phase, &mut cursor.glyph, draw, atlas, icons, input, theme, rect, &item, true, borders)
                 } else {
                     render_retained_chrome_group_item_step(&mut cursor.group_phase, &mut cursor.glyph, draw, atlas, icons, input, theme, rect, &item, true)
                 };
@@ -407,26 +423,43 @@ impl<'ctx> ChromeViewCtx<'ctx> {
         btn_y: f32,
         btn_h: f32,
     ) -> bool {
+        if cursor.item == 0 && cursor.group_phase == 0 && cursor.shared_border_rects.is_empty() {
+            let mut x = cursor.x;
+            let mut frames = Vec::new();
+            for control in controls {
+                let Some(width) = self.navbar_control_width(atlas, theme, control) else { continue };
+                let Some(rect) = shell_chrome_clip_horizontal(Rect::new(x, btn_y, width, btn_h), ShellChromeBandSpan { left: x, right: cursor.right }) else { break };
+                let hovered = rect.contains(input.pointer_x, input.pointer_y);
+                let state = if hovered { semio_framework_os_renderer_wgpu_dock::shared_borders::BorderState::Hover } else if control.active { semio_framework_os_renderer_wgpu_dock::shared_borders::BorderState::Active } else { semio_framework_os_renderer_wgpu_dock::shared_borders::BorderState::Normal };
+                frames.push(ChromeBorderFrame { owner: control.control_id.clone(), rect: [rect.x, rect.y, rect.w, rect.h], state });
+                cursor.shared_border_rects.insert(control.control_id.clone(), rect);
+                x = rect.x + rect.w;
+            }
+            match chrome_border_plan(&frames, theme.stroke_hairline) {
+                Ok(plan) => cursor.shared_border_plan = plan,
+                Err(error) => {
+                    self.chrome.error = Some(error.into());
+                }
+            }
+        }
         let Some(control) = controls.get(cursor.item) else {
             cursor.item = 0;
             cursor.rect = None;
+            cursor.shared_border_plan.clear();
+            cursor.shared_border_rects.clear();
             return true;
         };
         let label = self.chrome.chrome_control_label(&control.control_id, &control.label);
         let item = ChromeGroupItem { control_id: control.control_id.as_str(), icon_id: control.icon_id, label: Some(label.as_str()), active: control.active, disabled: false, kind: HitKind::NavbarItem };
         if cursor.rect.is_none() {
-            let Some(item_w) = self.navbar_control_width(atlas, theme, control) else {
-                self.chrome.error = Some("Shell navbar cluster item exceeded the retained chrome boundary".to_string());
-                cursor.item += 1;
-                return false;
-            };
-            cursor.rect = shell_chrome_clip_horizontal(Rect::new(cursor.x, btn_y, item_w, btn_h), ShellChromeBandSpan { left: cursor.x, right: cursor.right });
+            cursor.rect = cursor.shared_border_rects.get(&control.control_id).copied();
         }
         let Some(rect) = cursor.rect else {
             cursor.item += 1;
             return false;
         };
-        match render_retained_chrome_group_item_step(&mut cursor.group_phase, &mut cursor.glyph, draw, atlas, icons, input, theme, rect, &item, true) {
+        let borders = cursor.shared_border_plan.get(&control.control_id).map(Vec::as_slice);
+        match render_retained_chrome_group_item_step_with_borders(&mut cursor.group_phase, &mut cursor.glyph, draw, atlas, icons, input, theme, rect, &item, true, borders) {
             RetainedChromeGroupStep::Pending => return false,
             RetainedChromeGroupStep::Complete => {}
             RetainedChromeGroupStep::Fault => self.chrome.error = Some("Shell navbar cluster item exceeded the retained glyph boundary".to_string()),

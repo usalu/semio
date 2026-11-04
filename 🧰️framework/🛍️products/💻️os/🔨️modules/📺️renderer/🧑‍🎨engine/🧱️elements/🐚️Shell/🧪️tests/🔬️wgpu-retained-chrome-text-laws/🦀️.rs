@@ -59,6 +59,48 @@ fn dynamic_chrome_group_retains_every_glyph_and_border_opportunity() {
     assert!(complete);
 }
 
+/// 🧷 Resolved siblings keep one hover seam and one-output retained opportunities.
+#[test]
+fn shared_chrome_group_preserves_hover_seam_and_retained_hit_publication() {
+    use semio_framework_os_renderer_wgpu_shell_view_chrome::{chrome_border_plan, ChromeBorderFrame, render_retained_chrome_group_item_step_with_borders};
+    use semio_framework_os_renderer_wgpu_dock::shared_borders::BorderState;
+    let theme = Theme::light();
+    let frames = [
+        ChromeBorderFrame { owner: "a".into(), rect: [0.0, 0.0, 40.0, 20.0], state: BorderState::Active },
+        ChromeBorderFrame { owner: "b".into(), rect: [40.0, 0.0, 40.0, 20.0], state: BorderState::Hover },
+    ];
+    let plan = chrome_border_plan(&frames, theme.stroke_hairline).unwrap();
+    let mut draw = DrawList::default();
+    let mut atlas = FontAtlas::builtin();
+    let icons = IconAtlas::default();
+    let mut input = InputState::<ActionDescriptor>::default();
+    input.pointer_x = 60.0;
+    input.pointer_y = 10.0;
+    for (index, frame) in frames.iter().enumerate() {
+        let [x, y, w, h] = frame.rect;
+        let item = ChromeGroupItem { control_id: &frame.owner, icon_id: None, label: None, active: index == 0, disabled: false, kind: HitKind::Button };
+        let mut phase = 0;
+        let mut glyph = RetainedGlyphCursor::default();
+        let mut complete = false;
+        for _ in 0..32 {
+            let before = draw.layers.iter().map(|layer| layer.ui_instances.len()).sum::<usize>();
+            let step = render_retained_chrome_group_item_step_with_borders(&mut phase, &mut glyph, &mut draw, &mut atlas, &icons, &mut input, &theme, Rect::new(x, y, w, h), &item, true, Some(&plan[&frame.owner]));
+            let after = draw.layers.iter().map(|layer| layer.ui_instances.len()).sum::<usize>();
+            assert!(after.saturating_sub(before) <= 1);
+            if step == RetainedChromeGroupStep::Complete {
+                complete = true;
+                break;
+            }
+        }
+        assert!(complete);
+    }
+    let seam = draw.layers.iter().flat_map(|layer| &layer.ui_instances).filter(|instance| instance.rect[2] == theme.stroke_hairline && instance.rect[0] >= 40.0 - theme.stroke_hairline && instance.rect[0] <= 40.0 && instance.rect[1] <= 10.0 && instance.rect[1] + instance.rect[3] > 10.0).collect::<Vec<_>>();
+    assert_eq!(seam.len(), 1);
+    let color = theme.border_emphasized;
+    assert_eq!(seam[0].color, [color.r, color.g, color.b, color.a]);
+    assert_eq!(input.staged_hits().len(), 2);
+}
+
 /// 🚫️ A MAX + 1 chrome label is rejected before a retained owner or output is staged.
 #[test]
 fn dynamic_chrome_group_max_plus_one_is_identity_preserving() {

@@ -6,6 +6,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
+import { useSharedBorderFrameRef } from "../🗂️WindowChrome/shared-border.ts";
 import * as React from "react";
 import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
@@ -86,6 +87,7 @@ const ToggleGroupContext = reactHostPort.createContext<ToggleGroupContextValue |
 /** 🎛️ Owns exact single/multiple selection and independent roving focus. */
 function ToggleGroup(props: ToggleGroupProps) {
   const { className, id, showLabel, items, kind = "single", disabled = false, orientation = "horizontal", dir = "ltr", loop = true, rovingFocus = true, ref, ...rootProps } = props;
+  const borderRef = useSharedBorderFrameRef(ref);
   const level = useLevel();
   const isMultiple = kind === "multiple";
   const radio = !isMultiple && (props as ToggleGroupSingleProps).semantics === "radio";
@@ -150,17 +152,19 @@ function ToggleGroup(props: ToggleGroupProps) {
   const element = (
     <div
       {...htmlProps}
-      ref={ref}
+      ref={borderRef}
       id={id}
       role={radio ? "radiogroup" : "group"}
       dir={dir}
       aria-disabled={disabled || undefined}
       data-slot="toggle-group"
+      data-shared-border-frame=""
+      data-shared-border-edges="top right bottom left"
       data-detail-panel-control="fit"
       data-state={rootDataState}
       data-disabled={disabled ? "" : undefined}
       data-orientation={orientation}
-      className={cn(chromeControlGroupClass, "group/toggle-group has-[_[data-slot=inline-label]]:overflow-visible", className)}
+      className={cn(chromeControlGroupClass, "relative group/toggle-group has-[_[data-slot=inline-label]]:overflow-visible", orientation === "vertical" && "flex-col h-auto", className)}
     >
       <ToggleGroupContext.Provider value={context}>
         {items.map((item) => (
@@ -191,7 +195,7 @@ function ToggleGroupItem({ className, id, icon, text, action, value, disabled = 
   const ariaLabel = suppliedAriaLabel ?? (inlineText ? undefined : accessibleLabel);
   const title = suppliedTitle ?? tooltipText;
   return (
-    <div data-slot="toggle-group-item-shell" className={action ? cn("flex min-w-0 flex-1 items-stretch", chromeControlGroupSiblingDividerClass) : "contents"}>
+    <div data-slot="toggle-group-item-shell" data-shared-border-cell="" data-orientation={context.orientation} className={cn("flex min-w-0 items-stretch", !action && inlineText ? "w-auto shrink-0" : "flex-1", chromeControlGroupSiblingDividerClass)}>
       <button
         {...props}
         ref={ref}
@@ -212,7 +216,6 @@ function ToggleGroupItem({ className, id, icon, text, action, value, disabled = 
         data-orientation={context.orientation}
         className={cn(
           toggleVariants(),
-          !action && chromeControlGroupSiblingDividerClass,
           inlineText ? "w-auto shrink-0 focus:z-panel focus-visible:z-panel" : "min-w-medium flex-1 shrink-0 focus:z-panel focus-visible:z-panel",
           (inlineText || action) && "flex items-center gap-single py-single px-double aspect-auto",
           inlineText && "w-auto",

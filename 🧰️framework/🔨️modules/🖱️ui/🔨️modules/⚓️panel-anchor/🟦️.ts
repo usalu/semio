@@ -35,25 +35,25 @@ export function flowFromAnchor(anchor: Anchor): Flow {
   return { inline: anchorHorizontal(anchor) === "right" ? "rtl" : "ltr", block: anchorVertical(anchor) === "bottom" ? "up" : "down" };
 }
 
-/** 📍️ Edge insets for an {@link Anchor} plus responsive width/height clamps to its containing region — corners inset on both axes, an edge-middle anchor centers along its middle axis via a translate. Shared by {@link Panel} and {@link Pane} so both float from identical math. */
-export function anchorPositionStyle(anchor: Anchor): React.CSSProperties {
+/** 📍️ Anchor positioning with matched bounds clamps: Panels use their floating inset; contained Panes pass zero to meet their host edges. Edge-middle anchors remain centered by a translate. */
+export function anchorPositionStyle(anchor: Anchor, inset = "var(--panel-inset)"): React.CSSProperties {
   const horizontal = anchorHorizontal(anchor);
   const vertical = anchorVertical(anchor);
   const style: React.CSSProperties = {
-    maxWidth: "calc(100% - (var(--panel-inset) * 2))",
-    maxHeight: "calc(100% - (var(--panel-inset) * 2))",
+    maxWidth: `calc(100% - (${inset} * 2))`,
+    maxHeight: `calc(100% - (${inset} * 2))`,
   };
   if (horizontal === "middle") {
     style.left = "50%";
     style.transform = "translateX(-50%)";
   } else {
-    style[horizontal] = "var(--panel-inset)";
+    style[horizontal] = inset;
   }
   if (vertical === "middle") {
     style.top = "50%";
     style.transform = style.transform ? `${style.transform} translateY(-50%)` : "translateY(-50%)";
   } else {
-    style[vertical] = "var(--panel-inset)";
+    style[vertical] = inset;
   }
   return style;
 }

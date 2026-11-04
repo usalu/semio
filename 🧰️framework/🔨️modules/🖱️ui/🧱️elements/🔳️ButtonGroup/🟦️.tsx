@@ -6,12 +6,12 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
+import { useSharedBorderFrameRef } from "../🗂️WindowChrome/shared-border.ts";
 import * as React from "react";
 import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { Slot } from "../../🔨️modules/🏷️class-name-composition/🪆️slot/🟦️.tsx";
 import { styleVariants, type StyleVariantProps } from "../../🔨️modules/🧬️style-variants/🟦️.ts";
-import { borderElementClass } from "../../🔨️modules/📏️border-presentation/🟦️.ts";
 import { ControlHotkeyBadge } from "../../🔨️modules/⌨️control-hotkey-presentation/🟦️.tsx";
 import { chromeControlGroupClass, chromeControlGroupSiblingDividerClass, chromeControlItemClass } from "../../🔨️modules/🎛️chrome-control-presentation/🟦️.ts";
 import { useLevel, type Level } from "../🌈️Surface/🟦️.tsx";
@@ -31,7 +31,7 @@ const buttonGroupItemVariants = styleVariants(chromeControlItemClass, {
     variant: {
       default: "",
       ghost: "border-transparent bg-transparent",
-      outline: `border ${borderElementClass}`,
+      outline: "",
     },
   },
   defaultVariants: {
@@ -59,17 +59,22 @@ interface ButtonGroupProps extends Omit<React.ComponentProps<"div">, "id"> {
 /**
  * ⏺️ ButtonGroup holds the data fields for a ButtonGroup record.
  **/
-function ButtonGroup({ className, detailPanelWidthMode = "fit", id, showLabel, children, ...props }: ButtonGroupProps) {
+function ButtonGroup({ className, detailPanelWidthMode = "fit", id, showLabel, children, ref, ...props }: ButtonGroupProps) {
+  const borderRef = useSharedBorderFrameRef(ref);
   const level = useLevel();
   const buttonGroupContextValue = reactHostPort.useMemo(() => ({ level }), [level]);
   const buttonGroupElement = (
     <ButtonGroupContext.Provider value={buttonGroupContextValue}>
       <div
+        ref={borderRef}
         data-slot="button-group"
+        data-shared-border-frame=""
+        data-shared-border-edges="top right bottom left"
+        data-orientation="horizontal"
         data-detail-panel-control={detailPanelWidthMode}
         id={id}
         data-level={level}
-        className={cn(chromeControlGroupClass, detailPanelWidthMode === "fill" ? "w-full min-w-0" : "", "group/button-group", className)}
+        className={cn(chromeControlGroupClass, detailPanelWidthMode === "fill" ? "w-full min-w-0" : "", "relative group/button-group", className)}
         {...props}
       >
         {children}
@@ -120,6 +125,7 @@ function ButtonGroupItem({ className, children, id, icon, text, asChild = false,
   );
   const itemProps = {
     "data-slot": "button-group-item",
+    "data-shared-border-cell": "",
     id,
     "aria-label": ariaLabel,
     title: tooltipText,

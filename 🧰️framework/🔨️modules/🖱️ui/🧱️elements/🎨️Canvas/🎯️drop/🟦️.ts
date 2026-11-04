@@ -39,6 +39,7 @@ export interface ModePendingDrag {
 
 export interface ModeStackDropTargets {
   corners: Partial<Record<WindowStackCorner, { rect: DOMRect; element: HTMLElement }>>;
+  /** 📐️ Full stack bounds, including chip rows, matching the frame allocated by a split. */
   body: DOMRect | null;
 }
 

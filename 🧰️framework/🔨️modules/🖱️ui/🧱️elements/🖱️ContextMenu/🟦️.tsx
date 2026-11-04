@@ -94,7 +94,7 @@ export function findCheckedContextMenuItem(items: readonly ContextMenuItem[]): C
 }
 
 /**
- * 🧩️ Controlled right-click menu whose title chip bottom-left anchors at viewport coordinates (puzzle 2d canvas bridge), keeping the first row beside the pointer. Portals to `document.body` for correct `fixed` placement under transformed UI; outside-dismiss uses a `window` capture listener (same as {@link CanvasPickMenu}) so a canvas `stopImmediatePropagation` on pointer-down cannot swallow the bubble phase and leave the menu stuck open.
+ * 🧩️ Controlled right-click menu whose title chip bottom-left anchors at viewport coordinates (puzzle 2d canvas bridge), keeping the first row beside the pointer. Portals to the owning shell's floating layer (or `document.body` standalone) for unclipped `fixed` placement; outside-dismiss uses a `window` capture listener (same as {@link CanvasPickMenu}) so a canvas `stopImmediatePropagation` on pointer-down cannot swallow the bubble phase and leave the menu stuck open.
  **/
 export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ open, position, items, onOpenChange, title, titleIcon = "list", closeOnSelect = true }) => {
   const close = reactHostPort.useCallback(() => onOpenChange(false), [onOpenChange]);
@@ -137,6 +137,14 @@ export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ op
     }
     const node = activePath.length ? rowNodesRef.current.get(contextMenuPathKey(activePath)) : undefined;
     (node ?? menuRef.current)?.focus({ preventScroll: true });
+    const scroller = fusionBodyRef.current;
+    if (!node || !scroller) return;
+    const row = node.getBoundingClientRect();
+    const viewport = scroller.getBoundingClientRect();
+    if (row.top < viewport.top) scroller.scrollTop += row.top - viewport.top;
+    else if (row.bottom > viewport.bottom) scroller.scrollTop += row.bottom - viewport.bottom;
+    if (row.left < viewport.left) scroller.scrollLeft += row.left - viewport.left;
+    else if (row.right > viewport.right) scroller.scrollLeft += row.right - viewport.right;
   }, [open, activePath]);
   const seededRef = reactHostPort.useRef(false);
   reactHostPort.useEffect(() => {
@@ -263,92 +271,71 @@ export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ op
       bindings.dispose();
     };
   }, [applyActivePath, close, closeOnSelect, items.length, onOpenChange, open, position?.x, position?.y]);
-  reactHostPort.useLayoutEffect(() => {
-    if (!open || !position) {
-      return;
-    }
-    const node = chromeRef.current;
-    if (!node) {
-      return;
-    }
-    const rect = node.getBoundingClientRect();
-    const maxLeft = Math.max(0, window.innerWidth - rect.width);
-    const maxTop = Math.max(0, window.innerHeight - rect.height);
-    const clampedLeft = Math.min(Math.max(rect.left, 0), maxLeft);
-    const clampedTop = Math.min(Math.max(rect.top, 0), maxTop);
-    if (clampedLeft !== rect.left) {
-      node.style.left = `${clampedLeft}px`;
-    }
-    if (clampedTop !== rect.top) {
-      node.style.top = `${clampedTop}px`;
-    }
-  }, [open, position?.x, position?.y, items]);
   const fusionPanels = reactHostPort.useMemo(() => (open ? contextMenuOpenFusionPanels(items, activePath, submenuCollapsedAt) : CONTEXT_MENU_NO_FUSION_PANELS), [open, activePath, items, submenuCollapsedAt]);
   reactHostPort.useLayoutEffect(() => {
     const body = fusionBodyRef.current;
-    if (!open || !body || fusionPanels.length === 0) {
-      setFusionOffsets((previous) => (previous.size === 0 ? previous : new Map()));
-      if (body) {
-        body.style.removeProperty("padding-right");
-        body.style.removeProperty("padding-bottom");
-      }
-      return;
-    }
-    const primary = body.querySelector<HTMLElement>('[data-slot="context-menu-fusion-primary"]');
-    if (!primary) {
-      return;
-    }
-    const bodyRect = body.getBoundingClientRect();
-    const primaryRect = primary.getBoundingClientRect();
-    const next = new Map<string, ContextMenuFusionPlacement>();
-    for (let index = 0; index < fusionPanels.length; index += 1) {
-      const panel = fusionPanels[index]!;
-      const panelKey = contextMenuPathKey(panel.parentPath);
-      const anchor = rowNodesRef.current.get(panelKey);
-      if (!anchor) {
-        continue;
-      }
-      const anchorRect = anchor.getBoundingClientRect();
-      let attachRight = primaryRect.right;
-      if (index > 0) {
-        const previousKey = contextMenuPathKey(fusionPanels[index - 1]!.parentPath);
-        const previousWing = body.querySelector<HTMLElement>(`[data-context-menu-submenu-of="${previousKey}"]`);
-        if (previousWing) {
-          attachRight = previousWing.getBoundingClientRect().right;
-        }
-      }
-      next.set(panelKey, { left: attachRight - bodyRect.left, top: anchorRect.top - bodyRect.top });
-    }
-    setFusionOffsets((previous) => (contextMenuFusionOffsetsEqual(previous, next) ? previous : next));
-  }, [fusionPanels, open]);
-  reactHostPort.useLayoutEffect(() => {
-    const body = fusionBodyRef.current;
-    if (!open || !body || fusionPanels.length === 0) {
-      return;
-    }
-    const primary = body.querySelector<HTMLElement>('[data-slot="context-menu-fusion-primary"]');
-    if (!primary) {
-      return;
-    }
-    const primaryRect = primary.getBoundingClientRect();
-    let maxRight = primaryRect.right;
-    let maxBottom = primaryRect.bottom;
-    for (const panel of fusionPanels) {
-      const wing = body.querySelector<HTMLElement>(`[data-context-menu-submenu-of="${contextMenuPathKey(panel.parentPath)}"]`);
-      if (!wing) {
-        continue;
-      }
-      const wingRect = wing.getBoundingClientRect();
-      maxRight = Math.max(maxRight, wingRect.right);
-      maxBottom = Math.max(maxBottom, wingRect.bottom);
-    }
-    body.style.paddingRight = `${Math.max(0, maxRight - primaryRect.right)}px`;
-    body.style.paddingBottom = `${Math.max(0, maxBottom - primaryRect.bottom)}px`;
     const chrome = chromeRef.current;
-    if (chrome) {
-      chrome.setAttribute("data-silhouette-remeasure", String(performance.now()));
+    const primary = body?.querySelector<HTMLElement>('[data-slot="context-menu-fusion-primary"]');
+    if (!open || !position || !body || !chrome || !primary) return;
+    const wings = fusionPanels.map((panel) => ({
+      key: contextMenuPathKey(panel.parentPath),
+      node: body.querySelector<HTMLElement>(`[data-context-menu-submenu-of="${contextMenuPathKey(panel.parentPath)}"]`),
+    }));
+    const measure = (): void => {
+      const bodyRect = body.getBoundingClientRect();
+      const primaryRect = primary.getBoundingClientRect();
+      const next = new Map<string, ContextMenuFusionPlacement>();
+      let right = primaryRect.right;
+      let bottom = primaryRect.bottom;
+      let changed = false;
+      for (const { key, node } of wings) {
+        const anchor = rowNodesRef.current.get(key);
+        if (!node || !anchor) continue;
+        const placement = { left: right - bodyRect.left + body.scrollLeft, top: anchor.getBoundingClientRect().top - bodyRect.top + body.scrollTop };
+        const left = `${placement.left}px`;
+        const top = `${placement.top}px`;
+        changed ||= node.style.left !== left || node.style.top !== top;
+        node.style.left = left;
+        node.style.top = top;
+        next.set(key, placement);
+        const rect = node.getBoundingClientRect();
+        right = rect.right;
+        bottom = Math.max(bottom, rect.bottom);
+      }
+      const paddingRight = `${Math.max(0, right - primaryRect.right)}px`;
+      const paddingBottom = `${Math.max(0, bottom - primaryRect.bottom)}px`;
+      changed ||= body.style.paddingRight !== paddingRight || body.style.paddingBottom !== paddingBottom;
+      body.style.paddingRight = paddingRight;
+      body.style.paddingBottom = paddingBottom;
+      setFusionOffsets((previous) => contextMenuFusionOffsetsEqual(previous, next) ? previous : next);
+      chrome.style.left = `${position.x}px`;
+      chrome.style.top = `calc(${position.y}px - var(--size-medium))`;
+      const rect = chrome.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        const left = Math.min(Math.max(rect.left, 0), Math.max(0, window.innerWidth - rect.width));
+        const top = Math.min(Math.max(rect.top, 0), Math.max(0, window.innerHeight - rect.height));
+        chrome.style.left = `${left}px`;
+        chrome.style.top = `${top}px`;
+      }
+      if (changed) chrome.setAttribute("data-silhouette-remeasure", String(performance.now()));
+    };
+    measure();
+    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(measure);
+    observer?.observe(chrome);
+    observer?.observe(primary);
+    for (const { key, node } of wings) {
+      if (node) observer?.observe(node);
+      const anchor = rowNodesRef.current.get(key);
+      if (anchor) observer?.observe(anchor);
     }
-  }, [fusionOffsets, fusionPanels, open]);
+    window.addEventListener("resize", measure);
+    window.addEventListener("scroll", measure, true);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("resize", measure);
+      window.removeEventListener("scroll", measure, true);
+    };
+  }, [fusionPanels, open, position?.x, position?.y, floatingHost]);
   if (!items.length) {
     return null;
   }
@@ -370,7 +357,8 @@ export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ op
         dir={flow.inline === "rtl" ? "rtl" : undefined}
         onContextMenu={(event) => event.preventDefault()}
         ref={fusionBodyRef}
-        className="relative w-fit max-w-none"
+        className="relative w-fit max-w-none overflow-auto"
+        style={{ maxWidth: "calc(100vw - 2px)", maxHeight: "calc(100dvh - var(--size-medium) - 2px)" }}
       >
         <div aria-label={title} data-slot="context-menu-fusion-primary" ref={menuRef} role="menu" tabIndex={-1} className="w-max shrink-0">
           {renderFixedContextMenuItems(items, [], renderOptions)}

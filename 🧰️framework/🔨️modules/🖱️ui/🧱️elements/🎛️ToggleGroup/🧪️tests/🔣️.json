@@ -1,0 +1,8 @@
+[
+  {"name":"buttons","frame":"button-group","edges":"top right bottom left","cells":2},
+  {"name":"toggle","frame":"toggle-group","edges":"top right bottom left","cells":1},
+  {"name":"toggle-actions","frame":"toggle-group","edges":"top right bottom left","cells":2},
+  {"name":"actions","frame":"action-group","edges":"top right bottom left","cells":2},
+  {"name":"navbar","frame":"navbar","edges":"bottom","cells":0},
+  {"name":"footer","frame":"footer","edges":"top","cells":0}
+]

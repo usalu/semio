@@ -6,6 +6,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
+import { useSharedBorderFrameRef } from "../🗂️WindowChrome/shared-border.ts";
 import * as React from "react";
 // 🧱️core: reactHostPort imported directly from 🫀️core/Ports, NOT via the barrel — this component calls
 // reactHostPort.createContext at module top level, which requires a non-circular import (see
@@ -55,11 +56,12 @@ interface ActionGroupProps extends Omit<React.ComponentProps<"div">, "children">
 /**
  * 🎬️ ActionGroup holds the data fields for a ActionGroup record.
  **/
-function ActionGroup({ className, children, ...props }: ActionGroupProps) {
+function ActionGroup({ className, children, ref, ...props }: ActionGroupProps) {
+  const borderRef = useSharedBorderFrameRef(ref);
   const level = useLevel();
   const contextValue = reactHostPort.useMemo(() => ({ level }), [level]);
   return (
-    <div data-slot="action-group" data-detail-panel-control="fit" data-level={level} className={cn("group/action-group", chromeControlGroupShellClass, "h-medium", className)} {...props}>
+    <div ref={borderRef} data-slot="action-group" data-shared-border-frame="" data-shared-border-edges="top right bottom left" data-orientation="horizontal" data-detail-panel-control="fit" data-level={level} className={cn("relative group/action-group", chromeControlGroupShellClass, "h-medium", className)} {...props}>
       <ActionGroupContext.Provider value={contextValue}>{children}</ActionGroupContext.Provider>
     </div>
   );
@@ -94,6 +96,7 @@ function ActionGroupItem({
   const actionGroupItemElement = (
     <Component
       data-slot="action-group-item"
+      data-shared-border-cell=""
       id={id}
       type={Component === "button" ? "button" : undefined}
       role={Component === "div" && (props as any).onClick ? "button" : undefined}
@@ -201,7 +204,8 @@ interface ActionProps extends Omit<React.ComponentProps<"button">, "children"> {
 /**
  * 📦️ Action holds the data fields for a Action record.
  **/
-function Action({ className, id, icon, text, as = "button", loading = false, waiting = false, ...props }: ActionProps) {
+function Action({ className, id, icon, text, as = "button", loading = false, waiting = false, ref, ...props }: ActionProps) {
+  const borderRef = useSharedBorderFrameRef(ref);
   const level = useLevel();
   const Comp = as;
   const inlineText = useControlInlineText(id, text);
@@ -212,7 +216,11 @@ function Action({ className, id, icon, text, as = "button", loading = false, wai
 
   const actionElement = (
     <Comp
+      ref={borderRef as React.Ref<HTMLButtonElement & HTMLDivElement>}
       data-slot="action"
+      data-shared-border-frame=""
+      data-shared-border-edges="top right bottom left"
+      data-shared-border-state={loading ? "loading" : waiting ? "waiting" : undefined}
       type={Comp === "button" ? "button" : undefined}
       role={Comp === "div" && (props as any).onClick ? "button" : undefined}
       tabIndex={Comp === "div" && (props as any).onClick ? 0 : undefined}
@@ -222,7 +230,7 @@ function Action({ className, id, icon, text, as = "button", loading = false, wai
       title={tooltipText}
       data-level={level}
       className={cn(
-        `text-element inline-flex items-center justify-center shrink-0 cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:size-tiny [&_svg]:shrink-0 overflow-hidden aspect-square p-single h-medium border ${formControlFocusBorderClass}`,
+        `relative text-element inline-flex items-center justify-center shrink-0 cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:size-tiny [&_svg]:shrink-0 overflow-hidden aspect-square p-single h-medium border ${formControlFocusBorderClass}`,
         hasText && "aspect-auto gap-single",
         interactiveHoverClass,
         borderNormalClass,

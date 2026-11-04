@@ -72,7 +72,7 @@ fn row_layout_stack_content_rects_match_per_window() {
     let flow_rect = flow_rect.expect("flow body rect");
     let preview_rect = preview_rect.expect("preview body rect");
     assert!(flow_rect.w > preview_rect.w);
-    assert!((preview_rect.x - (flow_rect.x + flow_rect.w) - theme.gap_standard - theme.padding_standard * 2.0).abs() < 0.01, "📐️ one separator plus both adjacent body insets separate scene content");
+    assert!((preview_rect.x - (flow_rect.x + flow_rect.w) - theme.padding_standard * 2.0).abs() < 0.01, "📐️ abutting frames retain both adjacent body insets");
     assert!(flow_rect.h > 0.0 && preview_rect.h > 0.0);
 }
 

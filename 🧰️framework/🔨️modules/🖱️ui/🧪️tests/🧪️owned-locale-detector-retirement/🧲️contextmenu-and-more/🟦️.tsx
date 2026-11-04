@@ -436,12 +436,14 @@ export async function registerContextmenuAndMoreTests(vitest: Tests1Vitest, depe
       expect(parent.textContent).toContain("⌘️T");
     });
 
-    it("caps the menu surface height with a scrolling overflow class", async () => {
+    it("caps menu content while keeping the silhouette host unclipped", async () => {
       render(<ContextMenuController title={uiDataLabel("Menu")} open position={{ x: 4, y: 4 }} items={[{ id: "a", label: uiDataLabel("Alpha") }]} onOpenChange={vi.fn()} />);
       const menu = await waitFor(() => screen.getByRole("menu"));
       const chrome = menu.closest<HTMLElement>('[data-slot="context-menu-content"]');
-      expect(chrome?.className).toContain("max-h-layout-command");
-      expect(chrome?.className).toContain("overflow-y-auto");
+      expect(chrome?.className).toContain("overflow-visible");
+      const scroller = chrome?.querySelector<HTMLElement>('[data-slot="context-menu-fusion-body"]');
+      expect(scroller?.className).toContain("overflow-auto");
+      expect(scroller?.style.maxHeight).toBe("calc(100dvh - var(--size-medium) - 2px)");
     });
   });
 

@@ -4,6 +4,16 @@ import { fireEvent, render } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { ToggleGroup } from "../../🟦️.tsx";
+import cases from "../🔣️.json";
+import { ButtonGroup, ButtonGroupItem } from "../../../🔳️ButtonGroup/🟦️.tsx";
+import { Toggle } from "../../../🔀️Toggle/🟦️.tsx";
+import { Action, ActionGroup, ActionGroupItem } from "../../../⚡️ActionGroup/🟦️.tsx";
+import { Navbar } from "../../../🔝️Navbar/🟦️.tsx";
+import { Footer } from "../../../🔚️Footer/🟦️.tsx";
+import { Ribbon } from "../../../🎀️Ribbon/🟦️.tsx";
+import { DragHandle } from "../../../🧱️DragHandle/🟦️.tsx";
+import { Button } from "../../../🔘️Button/🟦️.tsx";
+import { PanelTabBar } from "../../../🧭️PanelTabBar/🟦️.tsx";
 import { chromeControlGroupShellClass, chromeControlGroupSiblingDividerClass, chromeControlItemBaseClass } from "../../../../🔨️modules/🎛️chrome-control-presentation/🟦️.ts";
 // #endregion 🔌️Adapters
 
@@ -224,3 +234,84 @@ describe("ToggleGroup", () => {
   });
 });
 // #endregion 🎛️ToggleGroupMatrix
+
+/** 📏️ Declarative ownership stays identical in server markup and the interactive target. */
+describe("shared control border ownership", () => {
+  const fixtures = {
+    buttons: <ButtonGroup><ButtonGroupItem icon="x" text="First" variant="outline" /><ButtonGroupItem icon="x" text="Second" /></ButtonGroup>,
+    toggle: <Toggle icon="x" text="Toggle" />,
+    "toggle-actions": <ToggleGroup items={[{ value: "a", icon: "x", text: "First", action: <Action icon="x" text="Secondary" /> }, { value: "b", icon: "x", text: "Second" }]} />,
+    actions: <ActionGroup><ActionGroupItem icon="x" text="First" /><ActionGroupItem icon="x" text="Second" /></ActionGroup>,
+    navbar: <Navbar items={[]} showFullscreenToggle={false} label="Navigation" />,
+    footer: <Footer items={[]} />,
+  };
+  for (const fixture of cases) {
+    it(`declares only the painted edges of ${fixture.name}`, () => {
+      const element = fixtures[fixture.name as keyof typeof fixtures];
+      const server = document.createElement("div");
+      server.innerHTML = renderToStaticMarkup(element);
+      const { container } = render(element);
+      for (const root of [server, container]) {
+        const frame = root.querySelector(`[data-slot="${fixture.frame}"]`)!;
+        expect(frame.hasAttribute("data-shared-border-frame")).toBe(true);
+        expect(frame.classList.contains("relative")).toBe(true);
+        expect(frame.getAttribute("data-shared-border-edges")).toBe(fixture.edges);
+        expect(frame.querySelectorAll(":scope > [data-shared-border-cell]").length).toBe(fixture.cells);
+        expect(root.querySelector("[data-shared-border-attached]")).toBeNull();
+      }
+    });
+  }
+
+  it("keeps an outlined button's only outer frame on the group", () => {
+    const { container } = render(fixtures.buttons);
+    expect(container.querySelectorAll("[data-shared-border-frame]").length).toBe(1);
+    for (const button of container.querySelectorAll("button")) expect(button.classList.contains("border")).toBe(false);
+  });
+
+  it("forwards a standalone button's focus and disabled semantics through one registered frame", () => {
+    const onClick = vi.fn();
+    const { container, getByRole } = render(<Button icon="x" text="Standalone" disabled onClick={onClick} />);
+    const button = getByRole("button", { name: "Standalone" });
+    expect(container.querySelectorAll("[data-shared-border-frame]").length).toBe(1);
+    expect(button.hasAttribute("data-shared-border-cell")).toBe(true);
+    fireEvent.click(button);
+    expect(onClick).not.toHaveBeenCalled();
+  });
+
+  it("registers panel tab rows without replacing chip geometry or pressed semantics", () => {
+    const Icon = () => <svg />;
+    const markup = renderToStaticMarkup(<PanelTabBar variant="chrome" activePath={["one"]} onActivePathChange={() => {}} tabs={[{ kind: "leaf", id: "one", name: "One", icon: Icon, trees: [] }, { kind: "leaf", id: "two", name: "Two", icon: Icon, trees: [] }]} />);
+    const root = document.createElement("div");
+    root.innerHTML = markup;
+    const row = root.querySelector('[data-slot="panel-tabs"]')!;
+    expect(row.hasAttribute("data-shared-border-group")).toBe(true);
+    expect(row.hasAttribute("data-shared-border-frame")).toBe(false);
+    expect(row.querySelectorAll("[data-shared-border-cell]").length).toBe(2);
+    expect(root.querySelectorAll('[aria-pressed="true"]').length).toBe(1);
+    expect(root.querySelector("[data-shared-border-attached]")).toBeNull();
+  });
+
+  it("keeps action borders and native semantics independent of toggle selection", () => {
+    const { container, getByRole } = render(fixtures["toggle-actions"]);
+    expect(container.querySelectorAll('[data-slot="toggle-group"] > [data-shared-border-cell]').length).toBe(2);
+    const secondary = getByRole("button", { name: "Secondary" });
+    expect(secondary.hasAttribute("data-shared-border-frame")).toBe(true);
+    expect(getByRole("button", { name: "First" }).contains(secondary)).toBe(false);
+  });
+
+  it("declares vertical shell cells without turning their actions into vertical siblings", () => {
+    const { container } = render(<ToggleGroup orientation="vertical" items={[{ value: "a", icon: "x", action: <Action icon="x" text="Action" /> }, { value: "b", icon: "x" }]} />);
+    const group = container.querySelector('[data-slot="toggle-group"]')!;
+    expect(group.getAttribute("data-orientation")).toBe("vertical");
+    expect(group.classList.contains("flex-col")).toBe(true);
+    expect(group.querySelectorAll(":scope > [data-shared-border-cell]").length).toBe(2);
+  });
+
+  it("registers gapped ribbon rows as attachment groups, never painted frames", () => {
+    const { container } = render(<Ribbon direction="down" rows={[{ key: "a", content: <DragHandle /> }]} />);
+    const ribbon = container.querySelector('[data-slot="ribbon"]')!;
+    expect(ribbon.hasAttribute("data-shared-border-group")).toBe(true);
+    expect(ribbon.hasAttribute("data-shared-border-frame")).toBe(false);
+    expect(container.querySelector('[data-slot="drag-handle"]')?.hasAttribute("data-shared-border-cell")).toBe(false);
+  });
+});

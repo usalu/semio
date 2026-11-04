@@ -292,11 +292,13 @@ impl DockState {
                 let rect = bounds;
                 if let DockNode::Stack { .. } = node {
                     render_stack(self, ctx, path, node, rect, true, true, &mut |_, _| {});
+                    paint_dock_borders(self, ctx, bounds);
                     return;
                 }
             }
         }
         render_node(self, ctx, &self.root, bounds, &empty_path(), true, &mut |_, _| {}, None);
+        paint_dock_borders(self, ctx, bounds);
     }
 
     pub fn paint_chrome(&self, ctx: &mut DockRenderContext<'_>, bounds: Rect, body_fill: bool) {
@@ -304,11 +306,13 @@ impl DockState {
             if let Some(node) = node_at(&self.root, path) {
                 if let DockNode::Stack { .. } = node {
                     render_stack(self, ctx, path, node, bounds, true, body_fill, &mut |_, _| {});
+                    paint_dock_borders(self, ctx, bounds);
                     return;
                 }
             }
         }
         render_node(self, ctx, &self.root, bounds, &empty_path(), body_fill, &mut |_, _| {}, None);
+        paint_dock_borders(self, ctx, bounds);
     }
 
     pub fn register_resize_hits(&self, ctx: &mut DockRenderContext<'_>, bounds: Rect) {

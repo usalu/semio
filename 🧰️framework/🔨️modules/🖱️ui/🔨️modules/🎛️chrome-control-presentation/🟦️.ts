@@ -9,7 +9,7 @@ import { cn } from "../🏷️class-name-composition/🟦️.ts";
 import { borderNormalClass } from "../📏️border-presentation/🟦️.ts";
 
 /** 📏️ Logical-end divider between siblings inside a chrome control group shell. */
-export const chromeControlGroupSiblingDividerClass = `border-e border-solid ${borderNormalClass} last:border-e-0`;
+export const chromeControlGroupSiblingDividerClass = "shared-border-cell";
 import { formControlFocusBorderClass } from "../📝️form-control-presentation/🟦️.ts";
 import { hoverExcludingHandleBgFillClass, hoverExcludingHandleTextEmphasizedClass, interactiveHoverClass, interactiveOnClass } from "../🖱️interaction-presentation/🟦️.ts";
 import { glassClass } from "../🌈️surface-presentation/🟦️.ts";
@@ -43,7 +43,7 @@ export const windowPaneChromeToggleClass = cn(
 );
 
 /** 🗂️ Shared outer chrome control shell. */
-export const chromeControlGroupShellClass = cn("box-border flex items-stretch overflow-visible border w-fit shrink-0", borderNormalClass, glassClass);
+export const chromeControlGroupShellClass = cn("shared-border-frame box-border flex items-stretch overflow-visible border w-fit shrink-0", borderNormalClass, glassClass);
 
 /** 👥️ Standard chrome control group height. */
 export const chromeControlGroupClass = cn(chromeControlGroupShellClass, "h-medium");

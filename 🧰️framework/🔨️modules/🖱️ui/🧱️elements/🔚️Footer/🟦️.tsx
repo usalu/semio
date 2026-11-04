@@ -6,6 +6,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
+import { useSharedBorderFrameRef } from "../🗂️WindowChrome/shared-border.ts";
 import * as React from "react";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { NavbarBandBody, type NavbarItem } from "../🔝️Navbar/🟦️.tsx";
@@ -27,6 +28,7 @@ export interface FooterProps {
 
 /** 🪟️ Footer mirrors {@link Navbar} exactly (normal flow, centered-item overlay, BASE stacking level — see `Navbar`'s own note for why chrome must never paint above `z-panel`) but anchored to the bottom edge with the border on top instead of the bottom. */
 const Footer: React.FC<FooterProps> = ({ items, className = "" }) => {
+  const borderRef = useSharedBorderFrameRef<HTMLElement>();
   const parent = useSurface();
   const paints = shellFloorPaints(parent);
   const bgClass = shellFloorFillClass(parent);
@@ -34,7 +36,7 @@ const Footer: React.FC<FooterProps> = ({ items, className = "" }) => {
   const centeredItems = items.filter((item) => item.centered);
   const body = <NavbarBandBody normalItems={normalItems} centeredItems={centeredItems} />;
   return (
-    <footer id="ui.footer" data-slot="footer" data-level="base" data-ui-reveal-region="footer" data-elevation-root="" className={cn("relative h-[var(--footer-height)]", getLevelZClass("base"), bgClass, className)}>
+    <footer ref={borderRef} id="ui.footer" data-slot="footer" data-shared-border-frame="" data-shared-border-edges="top" data-level="base" data-ui-reveal-region="footer" data-elevation-root="" className={cn("relative h-[var(--footer-height)]", getLevelZClass("base"), bgClass, className)}>
       {paints ? <SurfaceScope level="base" fill="surface">{body}</SurfaceScope> : body}
     </footer>
   );

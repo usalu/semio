@@ -31,18 +31,18 @@ describe("Shell components", () => {
       expect(container.querySelector('[data-slot="window-search-overlay"] [data-icon="chevron-down"]')).toBeNull();
     });
 
-    it("Window built-in panes anchor with frame inset via anchorPositionStyle, not extra padding", () => {
+    it("Window built-in panes share the window frame via anchorPositionStyle, not extra padding", () => {
       const { container } = render(
         <Window id="inset-window" measures={<div>LOD</div>} engagement={{ status: [{ id: "s", content: "Idle" }] }}>
           <div>Body</div>
         </Window>,
       );
       const measures = container.querySelector('[data-slot="window-measures-overlay"]') as HTMLElement;
-      expect(measures.style.right).toBe("var(--spacing-single)");
-      expect(measures.style.top).toBe("var(--spacing-single)");
+      expect(measures.style.right).toBe("0px");
+      expect(measures.style.top).toBe("0px");
       const engagement = container.querySelector('[data-slot="window-engagement-overlay"]') as HTMLElement;
-      expect(engagement.style.left).toBe("var(--spacing-single)");
-      expect(engagement.style.top).toBe("var(--spacing-single)");
+      expect(engagement.style.left).toBe("0px");
+      expect(engagement.style.top).toBe("0px");
     });
 
     it("reserves an in-window affordance against the box an anchored chrome panel occupies", () => {
@@ -86,15 +86,15 @@ describe("Shell components", () => {
           </Window>,
         );
         const overlay = container.querySelector('[data-slot="window-measures-overlay"]') as HTMLElement;
-        expect(overlay.style.right).toBe("var(--spacing-single)");
+        expect(overlay.style.right).toBe("0px");
         act(() => {
           publishShellChromePanelBox(undefined, "panel:top-right", "top-right", { left: 1137, top: 26, right: 1437, bottom: 840 });
         });
-        expect(overlay.style.right).toBe("var(--spacing-single)");
+        expect(overlay.style.right).toBe("0px");
         act(() => {
           publishShellChromePanelBox(undefined, "panel:top-right", "top-right", null);
         });
-        expect(overlay.style.right).toBe("var(--spacing-single)");
+        expect(overlay.style.right).toBe("0px");
       } finally {
         Element.prototype.getBoundingClientRect = originalRect;
         publishShellChromePanelBox(undefined, "panel:top-right", "top-right", null);
@@ -185,7 +185,7 @@ describe("Shell components", () => {
       fireEvent.click(container.querySelector('[id="framework.window.measuresWindow.measures.unfold"]')!);
       const overlay = container.querySelector('[data-slot="window-measures-overlay"]') as HTMLElement;
       expect(overlay.style.width).toBe(`${windowMeasuresDefaultWidthPx}px`);
-      expect(overlay.style.right).toBe("var(--spacing-single)");
+      expect(overlay.style.right).toBe("0px");
       expect(container.querySelector('[data-testid="measure-slot"]')).toBeTruthy();
       expect(container.querySelector('[data-slot="window-chrome-gap"]')).toBeTruthy();
       expect(container.querySelector('[data-slot="pane-resize-handle"]')).toBeTruthy();
@@ -291,8 +291,8 @@ describe("Shell components", () => {
         </Window>,
       );
       const overlay = container.querySelector('[data-slot="utility-bar-overlay"]') as HTMLElement;
-      expect(overlay.style.bottom).toBe("var(--spacing-single)");
-      expect(overlay.style.left).toBe("var(--spacing-single)");
+      expect(overlay.style.bottom).toBe("0px");
+      expect(overlay.style.left).toBe("0px");
       fireEvent.click(container.querySelector('[id="framework.window.utilityBarMeasuresWindow.measures.unfold"]')!);
       expect(container.querySelector('[data-slot="utility-bar-overlay"]')).toBeTruthy();
     });

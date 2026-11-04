@@ -22,7 +22,23 @@ impl<'ctx> PanelsViewCtx<'ctx> {
                 cursor.phase = 2;
             }
             2 => {
+                if cursor.item == 0 && cursor.group_phase == 0 && cursor.shared_border_rects.is_empty() {
+                    let mut frames = Vec::new();
+                    let mut index = 0;
+                    while let Some((anchor, node, rect)) = self.footer_tab_row_rect(atlas, theme, index, width, btn_y, btn_h) {
+                        let active = self.dock.anchor_open(anchor) && self.dock.anchor_state(anchor).path.first() == Some(&node.id);
+                        let state = if rect.contains(input.pointer_x, input.pointer_y) { semio_framework_os_renderer_wgpu_dock::shared_borders::BorderState::Hover } else if active { semio_framework_os_renderer_wgpu_dock::shared_borders::BorderState::Active } else { semio_framework_os_renderer_wgpu_dock::shared_borders::BorderState::Normal };
+                        frames.push(semio_framework_os_renderer_wgpu_shell_view_chrome::ChromeBorderFrame { owner: node.id.clone(), rect: [rect.x, rect.y, rect.w, rect.h], state });
+                        cursor.shared_border_rects.insert(node.id, rect);
+                        index += 1;
+                    }
+                    if let Ok(plan) = semio_framework_os_renderer_wgpu_shell_view_chrome::chrome_border_plan(&frames, theme.stroke_hairline) {
+                        cursor.shared_border_plan = plan;
+                    }
+                }
                 let Some((anchor, node, band_rect)) = self.footer_tab_row_rect(atlas, theme, cursor.item, width, btn_y, btn_h) else {
+                    cursor.shared_border_plan.clear();
+                    cursor.shared_border_rects.clear();
                     cursor.item = 0;
                     cursor.rect = None;
                     cursor.phase = 3;
@@ -41,7 +57,8 @@ impl<'ctx> PanelsViewCtx<'ctx> {
                     cursor.rect = Some(band_rect);
                 }
                 let Some(rect) = cursor.rect else { return false };
-                match render_retained_panel_chrome_item_step(&mut cursor.group_phase, &mut cursor.glyph, draw, atlas, icons, input, theme, rect, &item, true) {
+                let borders = cursor.shared_border_plan.get(&control_id).map(Vec::as_slice);
+                match semio_framework_os_renderer_wgpu_shell_view_chrome::render_retained_panel_chrome_item_step_with_borders(&mut cursor.group_phase, &mut cursor.glyph, draw, atlas, icons, input, theme, rect, &item, true, borders) {
                     RetainedChromeGroupStep::Pending => return false,
                     RetainedChromeGroupStep::Complete => {}
                     RetainedChromeGroupStep::Fault => self.chrome.error = Some("Shell footer panel tab exceeded the retained glyph boundary".to_string()),

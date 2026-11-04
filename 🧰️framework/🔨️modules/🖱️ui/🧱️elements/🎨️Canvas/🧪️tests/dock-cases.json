@@ -1,0 +1,18 @@
+{
+  "cases": [
+    { "id": "row-even", "orientation": "horizontal", "extent": 800, "sizes": [50, 50], "boundaries": [0, 400, 800], "delta": 40, "resized": [55, 45] },
+    { "id": "column-even", "orientation": "vertical", "extent": 600, "sizes": [50, 50], "boundaries": [0, 300, 600], "delta": 30, "resized": [55, 45] },
+    { "id": "row-three", "orientation": "horizontal", "extent": 1000, "sizes": [20, 30, 50], "boundaries": [0, 200, 500, 1000], "delta": 50, "resized": [25, 25, 50] }
+  ],
+  "hitCases": [
+    { "offset": -11, "resize": false },
+    { "offset": -10, "resize": true },
+    { "offset": 0, "resize": true },
+    { "offset": 9, "resize": true },
+    { "offset": 11, "resize": false }
+  ],
+  "fineHitSize": 20,
+  "coarseHitSize": 28,
+  "frameInset": 0,
+  "separatorExtent": 0
+}

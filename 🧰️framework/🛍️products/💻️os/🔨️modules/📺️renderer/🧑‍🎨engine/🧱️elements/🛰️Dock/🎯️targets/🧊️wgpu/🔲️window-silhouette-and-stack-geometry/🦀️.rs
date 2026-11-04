@@ -142,39 +142,9 @@ impl WindowSilhouette {
 /// stays within the box (`🔲️WindowSilhouette/🟦️.tsx:85`, `:225`; the golden path `M1,1 H60 V25 H160
 /// V1 H199 …` starts one inset in, not on the edge).
 pub fn push_window_silhouette_border(draw: &mut DrawList, silhouette: &WindowSilhouette, stroke: f32, color: Rgba) {
-    let b = silhouette.bounds;
-    let mut paint_edge = |edge: &WindowSilhouetteEdge, outer: f32, inner: f32| {
-        let downward = outer < inner;
-        let outer_y = if downward { outer } else { outer - stroke };
-        let inner_y = if downward { inner - stroke } else { inner };
-        let wall_y = outer.min(inner);
-        let wall_h = (outer - inner).abs();
-        let mut cursor = 0.0;
-        for span in &edge.spans {
-            if span.left > cursor + WindowSilhouette::CHIP_EPSILON {
-                draw.push_solid([b.x + cursor, inner_y, span.left - cursor, stroke], color);
-            }
-            draw.push_solid([b.x + span.left, outer_y, span.right - span.left, stroke], color);
-            if span.left > WindowSilhouette::CHIP_EPSILON {
-                draw.push_solid([b.x + span.left, wall_y, stroke, wall_h], color);
-            }
-            if span.right < b.w - WindowSilhouette::CHIP_EPSILON {
-                draw.push_solid([b.x + span.right - stroke, wall_y, stroke, wall_h], color);
-            }
-            cursor = span.right;
-        }
-        if cursor < b.w - WindowSilhouette::CHIP_EPSILON {
-            draw.push_solid([b.x + cursor, inner_y, b.w - cursor, stroke], color);
-        }
-    };
-    paint_edge(&silhouette.top, b.y, b.y + silhouette.top.depth);
-    paint_edge(&silhouette.bottom, b.y + b.h, b.y + b.h - silhouette.bottom.depth);
-    let left_top = if silhouette.top.spans.first().is_some_and(|span| span.left <= WindowSilhouette::CHIP_EPSILON) { b.y } else { b.y + silhouette.top.depth };
-    let left_bottom = if silhouette.bottom.spans.first().is_some_and(|span| span.left <= WindowSilhouette::CHIP_EPSILON) { b.y + b.h } else { b.y + b.h - silhouette.bottom.depth };
-    let right_top = if silhouette.top.spans.last().is_some_and(|span| span.right >= b.w - WindowSilhouette::CHIP_EPSILON) { b.y } else { b.y + silhouette.top.depth };
-    let right_bottom = if silhouette.bottom.spans.last().is_some_and(|span| span.right >= b.w - WindowSilhouette::CHIP_EPSILON) { b.y + b.h } else { b.y + b.h - silhouette.bottom.depth };
-    draw.push_solid([b.x, left_top, stroke, (left_bottom - left_top).max(0.0)], color);
-    draw.push_solid([b.x + b.w - stroke, right_top, stroke, (right_bottom - right_top).max(0.0)], color);
+    for edge in window_silhouette_border_edges(silhouette) {
+        draw.push_solid(edge.paint_rect(stroke), color);
+    }
 }
 //#endregion WindowSilhouetteGeometry
 
@@ -297,14 +267,14 @@ pub(super) fn collect_stack_bodies(
 ) {
     match node {
         DockNode::Row(children) => {
-            for slot in dock_axis_slots(children, bounds, true, theme.gap_standard) {
+            for slot in dock_axis_slots(children, bounds, true, 0.0) {
                 let mut child_path = path.to_vec();
                 child_path.push(slot.index);
                 collect_stack_bodies(slot.node, slot.rect, &child_path, theme, window_labels, atlas, state, action_count, out, silhouettes);
             }
         }
         DockNode::Column(children) => {
-            for slot in dock_axis_slots(children, bounds, false, theme.gap_standard) {
+            for slot in dock_axis_slots(children, bounds, false, 0.0) {
                 let mut child_path = path.to_vec();
                 child_path.push(slot.index);
                 collect_stack_bodies(slot.node, slot.rect, &child_path, theme, window_labels, atlas, state, action_count, out, silhouettes);

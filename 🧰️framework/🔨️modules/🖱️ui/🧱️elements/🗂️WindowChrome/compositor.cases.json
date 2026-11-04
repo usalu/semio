@@ -1,0 +1,12 @@
+{
+  "fractional": { "parentWidth": 584, "parentHeight": 370.234375, "childWidth": 70.34375, "childHeight": 22.390625 },
+  "markerOnly": { "size": 100, "normalSeam": "M 100 1 L 100 99", "hoverSeam": "M 0 1 L 0 99", "releaseOrders": [["window", "frame"], ["frame", "window"]] },
+  "overlay": { "width": "100px", "height": "100px", "max-width": "none", "max-height": "none", "min-width": "0", "min-height": "0", "flex-shrink": "0" },
+  "effects": [
+    { "attribute": "data-introduced", "value": "true", "state": "introduced" },
+    { "attribute": "data-celebrated", "value": "true", "state": "celebrated" },
+    { "attribute": "class", "value": "border-loading", "state": "loading" },
+    { "attribute": "class", "value": "border-waiting", "state": "waiting" }
+  ],
+  "clippedOwner": { "left": 100, "top": 0, "width": 100, "height": 100, "viewportRight": 100, "expectedSegments": 0 }
+}

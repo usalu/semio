@@ -1,0 +1,51 @@
+[
+  {
+    "name":"hover wins over all transient decorations",
+    "input":[
+      {"id":"normal","owner":"a","from":{"x":0,"y":0},"to":{"x":1,"y":0},"state":"normal"},
+      {"id":"focus","owner":"a","from":{"x":0,"y":0},"to":{"x":1,"y":0},"state":"focus"},
+      {"id":"active","owner":"a","from":{"x":0,"y":0},"to":{"x":1,"y":0},"state":"active"},
+      {"id":"waiting","owner":"a","from":{"x":0,"y":0},"to":{"x":1,"y":0},"state":"waiting"},
+      {"id":"loading","owner":"a","from":{"x":0,"y":0},"to":{"x":1,"y":0},"state":"loading"},
+      {"id":"introduced","owner":"a","from":{"x":0,"y":0},"to":{"x":1,"y":0},"state":"introduced"},
+      {"id":"celebrated","owner":"a","from":{"x":0,"y":0},"to":{"x":1,"y":0},"state":"celebrated"},
+      {"id":"hover","owner":"z","from":{"x":1,"y":0},"to":{"x":0,"y":0},"state":"hover"}
+    ],
+    "expected":[{"id":"hover","owner":"z","from":{"x":0,"y":0},"to":{"x":1,"y":0},"state":"hover","contributors":["active","celebrated","focus","hover","introduced","loading","normal","waiting"]}]
+  },
+  {
+    "name": "partial child hover splits active parent without removing other edges",
+    "input": [
+      {"id":"parent","owner":"window","from":{"x":0,"y":0},"to":{"x":10,"y":0},"state":"active"},
+      {"id":"child","owner":"control","from":{"x":7,"y":0},"to":{"x":3,"y":0},"state":"hover"},
+      {"id":"side","owner":"window","from":{"x":10,"y":0},"to":{"x":10,"y":5},"state":"active"}
+    ],
+    "expected": [
+      {"id":"parent","owner":"window","from":{"x":0,"y":0},"to":{"x":3,"y":0},"state":"active","contributors":["parent"]},
+      {"id":"child","owner":"control","from":{"x":3,"y":0},"to":{"x":7,"y":0},"state":"hover","contributors":["child","parent"]},
+      {"id":"parent","owner":"window","from":{"x":7,"y":0},"to":{"x":10,"y":0},"state":"active","contributors":["parent"]},
+      {"id":"side","owner":"window","from":{"x":10,"y":0},"to":{"x":10,"y":5},"state":"active","contributors":["side"]}
+    ]
+  },
+  {
+    "name":"equal state uses owner then id not input order",
+    "input":[
+      {"id":"b","owner":"z","from":{"x":2,"y":4},"to":{"x":2,"y":0},"state":"focus"},
+      {"id":"a","owner":"a","from":{"x":2,"y":0},"to":{"x":2,"y":4},"state":"focus"}
+    ],
+    "expected":[{"id":"a","owner":"a","from":{"x":2,"y":0},"to":{"x":2,"y":4},"state":"focus","contributors":["a","b"]}]
+  },
+  {
+    "name":"touching endpoints retain independent ownership and gaps",
+    "input":[
+      {"id":"a","owner":"a","from":{"x":-2,"y":1},"to":{"x":0,"y":1},"state":"normal"},
+      {"id":"b","owner":"b","from":{"x":0,"y":1},"to":{"x":2,"y":1},"state":"normal"},
+      {"id":"c","owner":"c","from":{"x":3,"y":1},"to":{"x":4,"y":1},"state":"normal"}
+    ],
+    "expected":[
+      {"id":"a","owner":"a","from":{"x":-2,"y":1},"to":{"x":0,"y":1},"state":"normal","contributors":["a"]},
+      {"id":"b","owner":"b","from":{"x":0,"y":1},"to":{"x":2,"y":1},"state":"normal","contributors":["b"]},
+      {"id":"c","owner":"c","from":{"x":3,"y":1},"to":{"x":4,"y":1},"state":"normal","contributors":["c"]}
+    ]
+  }
+]

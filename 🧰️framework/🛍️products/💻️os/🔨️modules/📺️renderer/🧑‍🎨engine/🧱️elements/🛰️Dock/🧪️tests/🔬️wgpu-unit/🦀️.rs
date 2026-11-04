@@ -18,6 +18,8 @@ include!("🧰️dock-fixtures-and-sample-app/🦀️.rs");
 
 include!("🪟️window-instances-geometry-and-silhouette/🦀️.rs");
 
+include!("shared-borders.rs");
+
 include!("🧲️drops-and-drop-zones/🦀️.rs");
 
 include!("🔁️layout-diffs-and-even-layouts/🦀️.rs");

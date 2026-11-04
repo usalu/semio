@@ -134,14 +134,14 @@ pub(super) fn collect_corner_tab_bars_for_stack(
 pub(super) fn collect_stack_corner_tab_bars(node: &DockNode, bounds: Rect, path: &[usize], theme: &Theme, atlas: &mut FontAtlas, window_labels: &HashMap<String, String>, action_count: usize, out: &mut Vec<(DockPath, WindowStackCorner, Rect, Vec<f32>)>) {
     match node {
         DockNode::Row(children) => {
-            for slot in dock_axis_slots(children, bounds, true, theme.gap_standard) {
+            for slot in dock_axis_slots(children, bounds, true, 0.0) {
                 let mut child_path = path.to_vec();
                 child_path.push(slot.index);
                 collect_stack_corner_tab_bars(slot.node, slot.rect, &child_path, theme, atlas, window_labels, action_count, out);
             }
         }
         DockNode::Column(children) => {
-            for slot in dock_axis_slots(children, bounds, false, theme.gap_standard) {
+            for slot in dock_axis_slots(children, bounds, false, 0.0) {
                 let mut child_path = path.to_vec();
                 child_path.push(slot.index);
                 collect_stack_corner_tab_bars(slot.node, slot.rect, &child_path, theme, atlas, window_labels, action_count, out);

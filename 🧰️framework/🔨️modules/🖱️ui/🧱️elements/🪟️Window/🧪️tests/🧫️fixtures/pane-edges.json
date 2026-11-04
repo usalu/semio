@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "anchors": [
+    { "anchor": "top-left", "edges": ["top", "left"] },
+    { "anchor": "top-middle", "edges": ["top"] },
+    { "anchor": "top-right", "edges": ["top", "right"] },
+    { "anchor": "right-middle", "edges": ["right"] },
+    { "anchor": "bottom-right", "edges": ["bottom", "right"] },
+    { "anchor": "bottom-middle", "edges": ["bottom"] },
+    { "anchor": "bottom-left", "edges": ["bottom", "left"] },
+    { "anchor": "left-middle", "edges": ["left"] }
+  ],
+  "directions": ["ltr", "rtl"],
+  "folds": [true, false],
+  "insetPx": 0,
+  "windowPanes": [
+    { "slot": "utility-bar-overlay", "edges": ["bottom", "left"] },
+    { "slot": "window-engagement-overlay", "edges": ["top", "left"] },
+    { "slot": "window-measures-overlay", "edges": ["top", "right"] },
+    { "slot": "window-search-overlay", "edges": ["top"] }
+  ]
+}

@@ -356,8 +356,8 @@ describe("Shell components", () => {
       const overlay = container.querySelector('[data-slot="window-engagement-overlay"]') as HTMLElement;
       const toggleBtn = container.querySelector('[id="framework.window.engagementWindow.engagement.toggle"]') as HTMLElement;
       expect(overlay).toBeTruthy();
-      expect(overlay.style.top).toBe("var(--spacing-single)");
-      expect(overlay.style.left).toBe("var(--spacing-single)");
+      expect(overlay.style.top).toBe("0px");
+      expect(overlay.style.left).toBe("0px");
       expect(overlay.querySelector('[data-slot="window-chrome-silhouette-border"]')).toBeTruthy();
       expect(overlay.getAttribute("data-folded")).toBe("true");
       expect(screen.queryByText("Idle")).toBeNull();

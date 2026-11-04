@@ -6,6 +6,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
+import { useSharedBorderFrameRef } from "../🗂️WindowChrome/shared-border.ts";
 import * as React from "react";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { interactiveTabActiveClass, interactiveHoverClass } from "../../🔨️modules/🖱️interaction-presentation/🟦️.ts";
@@ -151,6 +152,7 @@ function TabsList({ className, ref, children, ...props }: TabsListProps) {
       role="tablist"
       aria-orientation={context.orientation}
       data-slot="tabs-list"
+      data-shared-border-group=""
       data-orientation={context.orientation}
       className={cn("text-muted-foreground inline-flex h-large w-fit items-center justify-center p-single bg-transparent", className)}
     >
@@ -182,6 +184,7 @@ function moveTabFocus(event: React.KeyboardEvent<HTMLButtonElement>, context: Ta
 
 /** 🏷️ Renders one accessible tab trigger. */
 function TabsTrigger({ className, value, disabled = false, id, ref, onClick, onFocus, onKeyDown, ...props }: TabsTriggerProps) {
+  const borderRef = useSharedBorderFrameRef(ref);
   const context = useTabsContext();
   const selected = context.value === value;
   const triggerId = id ?? context.associationId("trigger", value);
@@ -190,7 +193,7 @@ function TabsTrigger({ className, value, disabled = false, id, ref, onClick, onF
   return (
     <button
       {...props}
-      ref={ref}
+      ref={borderRef}
       type="button"
       id={triggerId}
       role="tab"
@@ -199,11 +202,14 @@ function TabsTrigger({ className, value, disabled = false, id, ref, onClick, onF
       aria-controls={contentId}
       tabIndex={disabled ? -1 : context.focusValue === value ? 0 : -1}
       data-slot="tabs-trigger"
+      data-shared-border-frame={selected ? "" : undefined}
+      data-shared-border-edges={selected ? "top right bottom left" : undefined}
+      data-shared-border-state={selected ? "active" : undefined}
       data-tabs-value={value}
       data-state={selected ? "active" : "inactive"}
       data-disabled={disabled ? "" : undefined}
       className={cn(
-        "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring text-element inline-flex h-[calc(100%-var(--stroke-hairline))] flex-1 items-center justify-center gap-single border border-transparent p-single text-sm font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:ring-[length:var(--stroke-focus)] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring text-element relative inline-flex h-[calc(100%-var(--stroke-hairline))] flex-1 items-center justify-center gap-single border border-transparent p-single text-sm font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:ring-[length:var(--stroke-focus)] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         interactiveTabActiveClass,
         interactiveHoverClass,
         className,
