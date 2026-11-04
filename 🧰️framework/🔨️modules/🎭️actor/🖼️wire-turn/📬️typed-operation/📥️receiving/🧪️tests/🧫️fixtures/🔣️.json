@@ -8,6 +8,7 @@
     "maximumDepth": 64
   },
   "actorCapacity": 4096,
+  "minimumPresentationTurns": 3,
   "token": {
     "receiver": 1,
     "operation": 7,

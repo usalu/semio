@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "maximumTurns",
+    "expectedRefusals",
+    "refusalKind",
+    "retainedTerminal",
+    "coldReturnsRefusal",
+    "bodyTransfers",
+    "ownerReturns"
+  ],
+  "properties": {
+    "maximumTurns": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "expectedRefusals": {
+      "const": 1
+    },
+    "refusalKind": {
+      "const": "AllocationFailed"
+    },
+    "retainedTerminal": {
+      "const": true
+    },
+    "coldReturnsRefusal": {
+      "const": true
+    },
+    "bodyTransfers": {
+      "const": 1
+    },
+    "ownerReturns": {
+      "const": 1
+    }
+  }
+}

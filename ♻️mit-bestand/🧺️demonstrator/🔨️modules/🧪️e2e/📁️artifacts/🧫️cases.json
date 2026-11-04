@@ -2,7 +2,6 @@
   "version": 1,
   "sessionId": "01234567-89ab-4cde-8fab-0123456789ab",
   "sessionDirectory": "0123456789ab4cde8fab0123456789ab",
-  "project": "chromium",
   "retries": 2,
   "titles": [
     "pane roster",
@@ -10,6 +9,7 @@
     "overview chrome de",
     "language picker",
     "language switch",
+    "language switch live",
     "generator boot",
     "koordinator boot",
     "aggregator boot",
@@ -42,7 +42,55 @@
     "01234567-89ab-4cde-8fab-0123456789ab-extra"
   ],
   "workerFiles": [
-    ".playwright-artifacts-95/traces/00000000000000000000-00000000000000000000-retry2-recording191.network",
-    ".playwright-artifacts-95/traces/resources/0000000000000000000000000000000000000000.jpeg"
+    ".playwright-artifacts-191/traces/00000000000000000000-00000000000000000000-retry2-recording191.network",
+    ".playwright-artifacts-191/traces/resources/0000000000000000000000000000000000000000.jpeg"
+  ],
+  "projects": [
+    {
+      "name": "en",
+      "locale": "en-US",
+      "texts": {
+        "noSelection": "No selection",
+        "remove": "Remove",
+        "noRun": "No energy simulation run",
+        "play": "Play",
+        "enabled": "Enabled",
+        "caption": "^Case: dead$",
+        "finalized": "^Finalized ·",
+        "aborted": "^Aborted, nothing was changed ·",
+        "finalStep": "Final: .* kWh after [0-9]+ of [0-9]+ timesteps",
+        "acceptedResult": "The final result is accepted; the simulation never writes the document",
+        "noResult": "No result was accepted"
+      }
+    },
+    {
+      "name": "de",
+      "locale": "de-DE",
+      "texts": {
+        "noSelection": "Keine Auswahl",
+        "remove": "Entfernen",
+        "noRun": "Kein Energiesimulationslauf",
+        "play": "Abspielen",
+        "enabled": "Aktiviert",
+        "caption": "^Lastfall: dead$",
+        "finalized": "^Abgeschlossen ·",
+        "aborted": "^Abgebrochen, nichts wurde geändert ·",
+        "finalStep": "Endgültig: .* kWh nach [0-9]+ von [0-9]+ Zeitschritten",
+        "acceptedResult": "Das Endergebnis ist übernommen; die Simulation schreibt nie ins Dokument",
+        "noResult": "Kein Ergebnis wurde übernommen"
+      }
+    }
+  ],
+  "platformRoots": [
+    {
+      "platform": "macos-linux",
+      "ticketRootChars": 105,
+      "outputRootChars": 151
+    },
+    {
+      "platform": "windows",
+      "ticketRootChars": 107,
+      "outputRootChars": 153
+    }
   ]
 }

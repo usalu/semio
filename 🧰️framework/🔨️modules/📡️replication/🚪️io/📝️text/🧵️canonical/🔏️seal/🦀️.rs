@@ -83,7 +83,7 @@ impl<M:RetireOwned+ArtifactCanonicalJsonTree> ArtifactCanonicalEditSealCursor<M>
   Ok(canonical_edit_seal_header_byte(id,self.length,self.header))
  }
  pub fn advance(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-  if self.closing&&self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}
+  if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}
   if self.is_ready(){return Ok(RetainedCloneStep::Complete(Default::default()));}
   if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
   let demand=self.next_demand()?;if !admitted(demand,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}

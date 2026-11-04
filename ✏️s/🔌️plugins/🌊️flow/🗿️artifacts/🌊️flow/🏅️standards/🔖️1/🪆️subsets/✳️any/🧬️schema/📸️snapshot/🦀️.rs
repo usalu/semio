@@ -77,3 +77,16 @@ impl From<FlowSnapshot> for semio_framework_artifact_flow_flow::FlowHostSnapshot
 
 
 
+
+/// 🔎️ Keeps the actual composed child owner borrowed for an original evaluation or projection turn.
+pub struct FlowDocumentRead<'a>{source:&'a FlowSnapshot,scene:std::sync::Arc<crate::FlowWorkingScene>}
+impl FlowSnapshot{
+ pub fn read_source(&self)->Result<FlowDocumentRead<'_>,semio_framework_value::ValueError>{let scene=self.content.local_owner::<crate::FlowWorkingScene>().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"original Flow content scene is unresolved"))?;Ok(FlowDocumentRead{source:self,scene})}
+}
+impl semio_framework_artifact_flow_flow::FlowSnapshotSource for FlowDocumentRead<'_>{
+ fn schema(&self)->&str{&self.source.schema}
+ fn camera(&self)->&semio_framework_artifact_flow_flow::CameraJson{static CAMERA:semio_framework_artifact_flow_flow::CameraJson=semio_framework_artifact_flow_flow::CameraJson{x:0.0,y:0.0,zoom:1.0};&CAMERA}
+ fn widgets(&self)->&[semio_framework_artifact_flow_flow::Widget]{&self.scene.widgets}
+ fn synapses(&self)->&[semio_framework_artifact_flow_flow::SynapseSpec]{&self.scene.synapses}
+ fn layout(&self)->&flow::OrderedMap<semio_framework_artifact_flow_flow::WidgetLayout>{&self.scene.layout}
+}

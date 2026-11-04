@@ -11,7 +11,7 @@ fn world_relocate_extent_fits_within_cap_for_nakagin() {
     let command = Puzzle3dCommand::from_action("worldRelocate", Some(json!({ "objectId": "nonexistent", "position": [0.0, 0.0, 0.0] })), None).expect("worldRelocate command decodes");
     let work = Puzzle3dTransformWork::new("worldRelocate", "seed".into());
     let pages = NAKAGIN_EXAMPLE_SNAPSHOT.objects.len().div_ceil(semio_s_artifact_puzzle_3d_editor_transform::PUZZLE3D_RELOCATE_SCAN_PAGE);
-    assert_eq!(work.extent(&command, &snapshot, &interaction, None), Some(2 + pages), "a relocate reads its gesture, scans one page per step, then commits it");
+    assert_eq!(ArtifactCommandWork::<EditorApp<Puzzle3dPlayApp>>::extent(&work, &command, &snapshot, &interaction, None), Some(2 + pages), "a relocate reads its gesture, scans one page per step, then commits it");
     assert!(2 + pages <= semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_WORK_ITEMS);
 }
 
@@ -32,7 +32,7 @@ fn world_relocate_scan_pages_progress_and_cancels_with_zero_trace() {
     let mut work = Puzzle3dTransformWork::new("worldRelocate", "seed".into());
     let mut stages = Vec::new();
     for _ in 0..3 {
-        match semio_s_plugin_puzzle_retained::testing::step(&mut original, &mut work, &command, &snapshot, &config, &interaction, &hover, None).expect("bounded step") {
+        match semio_s_plugin_puzzle_retained::testing::step::<EditorApp<Puzzle3dPlayApp>, _>(&mut original, &mut work, &command, &snapshot, &config, &interaction, &hover, None).expect("bounded step") {
             PuzzleCommandWorkStep::Pending { .. } => continue,
             PuzzleCommandWorkStep::Progress { stage, en, de } => {
                 assert!(!en.is_empty() && !de.is_empty() && en != de, "every progress step is localized in both languages");
@@ -42,7 +42,7 @@ fn world_relocate_scan_pages_progress_and_cancels_with_zero_trace() {
         }
     }
     assert_eq!(stages, ["puzzle3d-transform-read", "puzzle3d-transform-scan", "puzzle3d-transform-scan"], "the scan reports one progress per page");
-    let turns = semio_s_plugin_puzzle_retained::testing::close(&mut original, &mut work);
+    let turns = semio_s_plugin_puzzle_retained::testing::close::<EditorApp<Puzzle3dPlayApp>, _>(&mut original, &mut work);
     assert!(turns < 8, "closing a scanning relocate retires in a bounded number of turns");
     original.finish();
 }
@@ -65,11 +65,11 @@ fn world_relocate_step_loop_stays_within_its_own_extent_for_nakagin() {
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
     let command = Puzzle3dCommand::from_action("worldRelocate", Some(json!({ "objectId": "25b0dba0-8f81-423a-94a1-b911a6031010", "position": [-8.84, -2.8499999999999996, 7.7] })), None).expect("worldRelocate command decodes");
     let mut work = Puzzle3dTransformWork::new("worldRelocate", "seed".into());
-    let extent = work.extent(&command, &snapshot, &interaction, None).expect("a relocate always fits the fixed bounded work envelope");
+    let extent = ArtifactCommandWork::<EditorApp<Puzzle3dPlayApp>>::extent(&work, &command, &snapshot, &interaction, None).expect("a relocate always fits the fixed bounded work envelope");
     let mut iterations = 0usize;
     let emit = loop {
         assert!(iterations <= extent, "worldRelocate step() ran past its own declared extent {extent}");
-        match semio_s_plugin_puzzle_retained::testing::step(&mut original, &mut work, &command, &snapshot, &config, &interaction, &hover, None).expect("bounded step") {
+        match semio_s_plugin_puzzle_retained::testing::step::<EditorApp<Puzzle3dPlayApp>, _>(&mut original, &mut work, &command, &snapshot, &config, &interaction, &hover, None).expect("bounded step") {
             PuzzleCommandWorkStep::Pending { .. } => continue,
             PuzzleCommandWorkStep::Progress { .. } => iterations += 1,
             PuzzleCommandWorkStep::Complete(emit) => break emit,
@@ -79,7 +79,7 @@ fn world_relocate_step_loop_stays_within_its_own_extent_for_nakagin() {
     assert!(matches!(emit.artifact_mutations.first(), Some(Puzzle3dMutation::DragSelection(_))), "the drop yields its drag first: {:?}", emit.artifact_mutations.first());
     assert!(emit.artifact_mutations.iter().skip(1).any(|mutation| matches!(mutation, Puzzle3dMutation::ConnectVortices(_))), "the relocated vortex sits within proximity_radius of a real neighbour, so the drop attracts it; observed {:?}", emit.artifact_mutations);
     assert!(emit.transaction.as_ref().is_some_and(|transaction| transaction.tool.ends_with("#worldRelocate")), "the drop is ONE tool transaction: {:?}", emit.transaction);
-    semio_s_plugin_puzzle_retained::testing::close(&mut original, &mut work);
+    semio_s_plugin_puzzle_retained::testing::close::<EditorApp<Puzzle3dPlayApp>, _>(&mut original, &mut work);
     original.finish();
 }
 
@@ -94,7 +94,7 @@ fn create_attraction_extent_fits_within_cap_for_nakagin() {
     let interaction = protocol::InteractionState::default();
     let command = Puzzle3dCommand::from_action("createAttraction", Some(json!({ "attracting": "nonexistent-a", "attracted": "nonexistent-b" })), None).expect("createAttraction command decodes");
     let work = Puzzle3dCreateAttractionWork::default();
-    let extent = work.extent(&command, &snapshot, &interaction, None).expect("nakagin's real vortex count must fit the fixed bounded work envelope");
+    let extent = ArtifactCommandWork::<EditorApp<Puzzle3dPlayApp>>::extent(&work, &command, &snapshot, &interaction, None).expect("nakagin's real vortex count must fit the fixed bounded work envelope");
     assert!(extent <= semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_WORK_ITEMS, "createAttraction extent {extent} must not exceed the fixed cap {}", semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_WORK_ITEMS);
 }
 
@@ -120,12 +120,12 @@ fn create_attraction_step_loop_stays_within_its_own_extent_for_nakagin() {
     let command =
         Puzzle3dCommand::from_action("createAttraction", Some(json!({ "attracting": "25b0dba0-8f81-423a-94a1-b911a6031010:link", "attracted": "5f0266bc-856b-4ef2-9eb0-16ef5e1fb952:sl0_d0" })), None).expect("createAttraction command decodes");
     let mut work = Puzzle3dCreateAttractionWork::default();
-    let extent = work.extent(&command, &snapshot, &interaction, None).expect("nakagin's real vortex count must fit the fixed bounded work envelope");
+    let extent = ArtifactCommandWork::<EditorApp<Puzzle3dPlayApp>>::extent(&work, &command, &snapshot, &interaction, None).expect("nakagin's real vortex count must fit the fixed bounded work envelope");
     let guard = extent.saturating_mul(4).saturating_add(1000);
     let mut iterations = 0usize;
     let emit = loop {
         assert!(iterations <= guard, "createAttraction step() did not reach Complete within a generous multiple of its own extent {extent}; runaway loop suspected");
-        match semio_s_plugin_puzzle_retained::testing::step(&mut original, &mut work, &command, &snapshot, &config, &interaction, &hover, None).expect("bounded step") {
+        match semio_s_plugin_puzzle_retained::testing::step::<EditorApp<Puzzle3dPlayApp>, _>(&mut original, &mut work, &command, &snapshot, &config, &interaction, &hover, None).expect("bounded step") {
             PuzzleCommandWorkStep::Pending { .. } => continue,
             PuzzleCommandWorkStep::Progress { .. } => iterations += 1,
             PuzzleCommandWorkStep::Complete(emit) => break emit,
@@ -140,7 +140,7 @@ fn create_attraction_step_loop_stays_within_its_own_extent_for_nakagin() {
         "a real, compatible, non-duplicate attracting/attracted pair must reach Publish and emit exactly one connect_vortices mutation, not one of the early-Complete short-circuits; observed {}",
         emit.artifact_mutations.len()
     );
-    semio_s_plugin_puzzle_retained::testing::close(&mut original, &mut work);
+    semio_s_plugin_puzzle_retained::testing::close::<EditorApp<Puzzle3dPlayApp>, _>(&mut original, &mut work);
     original.finish();
 }
 
@@ -152,13 +152,17 @@ fn create_attraction_step_loop_stays_within_its_own_extent_for_nakagin() {
 /// catalog kinds, not scene object instances.
 #[test]
 fn accept_suggestion_extent_fits_within_cap_for_nakagin() {
+    let mut original = semio_s_plugin_puzzle_retained::testing::OriginalFixture::new(
+        semio_framework_job::OperationId(1), semio_framework_job::Generation(1), semio_s_plugin_puzzle_retained::testing::fixture_stock(), || Some(0), u64::MAX, 1 << 24);
     use semio_framework_plugin::retained_command::ArtifactCommandWork;
     let snapshot = Puzzle3dPlaySnapshot::new(semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_snapshot_from_host_snapshot(&NAKAGIN_EXAMPLE_SNAPSHOT.clone()).expect("typed fixture admits"));
     let interaction = protocol::InteractionState::default();
     let command = Puzzle3dCommand::from_action("acceptSuggestion", None, None).expect("acceptSuggestion command decodes");
-    let work = original.construct(Puzzle3dAcceptSuggestionWork::original_birth_demands().unwrap(), |scope| Puzzle3dAcceptSuggestionWork::from_original_construction(scope));
-    let extent = work.extent(&command, &snapshot, &interaction, None).expect("nakagin's catalogs and real vortex count must fit the fixed bounded work envelope");
+    let mut work = original.construct(Puzzle3dAcceptSuggestionWork::original_birth_demands().unwrap(), |scope| Puzzle3dAcceptSuggestionWork::from_original_construction(scope));
+    let extent = ArtifactCommandWork::<EditorApp<Puzzle3dPlayApp>>::extent(&work, &command, &snapshot, &interaction, None).expect("nakagin's catalogs and real vortex count must fit the fixed bounded work envelope");
     assert!(extent <= semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_WORK_ITEMS, "acceptSuggestion extent {extent} must not exceed the fixed cap {}", semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_WORK_ITEMS);
+    semio_s_plugin_puzzle_retained::testing::close::<EditorApp<Puzzle3dPlayApp>, _>(&mut original, &mut work);
+    original.finish();
 }
 
 /// 🔁️ ticket 26/09/02/PUZZLE-3D-END-TO-END §Y2 (coordinator follow-up): drives the real `Target`
@@ -189,12 +193,12 @@ fn accept_suggestion_step_loop_stays_within_its_own_extent_for_nakagin() {
         })
         .expect("the instance owner");
     let mut work = work.bound(Puzzle3dInstanceBinding { app_instance_id: 1, parent_document_id: "test".to_string(), owner });
-    let extent = work.extent(&command, &snapshot, &interaction, None).expect("nakagin's catalogs and real vortex count must fit the fixed bounded work envelope");
+    let extent = ArtifactCommandWork::<EditorApp<Puzzle3dPlayApp>>::extent(&work, &command, &snapshot, &interaction, None).expect("nakagin's catalogs and real vortex count must fit the fixed bounded work envelope");
     let guard = extent.saturating_mul(4).saturating_add(1000);
     let mut iterations = 0usize;
     let emit = loop {
         assert!(iterations <= guard, "acceptSuggestion step() did not reach Complete within a generous multiple of its own extent {extent}; runaway loop suspected");
-        match semio_s_plugin_puzzle_retained::testing::step(&mut original, &mut work, &command, &snapshot, &config, &interaction, &hover, None).expect("bounded step") {
+        match semio_s_plugin_puzzle_retained::testing::step::<EditorApp<Puzzle3dPlayApp>, _>(&mut original, &mut work, &command, &snapshot, &config, &interaction, &hover, None).expect("bounded step") {
             PuzzleCommandWorkStep::Pending { .. } => continue,
             PuzzleCommandWorkStep::Progress { .. } => iterations += 1,
             PuzzleCommandWorkStep::Complete(emit) => break emit,
@@ -209,7 +213,7 @@ fn accept_suggestion_step_loop_stays_within_its_own_extent_for_nakagin() {
         "a real target vortex and a real catalog kind must reach PublishResult and emit exactly the created object plus its connecting attraction, not one of the early-Complete short-circuits; observed {}",
         emit.artifact_mutations.len()
     );
-    semio_s_plugin_puzzle_retained::testing::close(&mut original, &mut work);
+    semio_s_plugin_puzzle_retained::testing::close::<EditorApp<Puzzle3dPlayApp>, _>(&mut original, &mut work);
     original.finish();
 }
 
@@ -225,7 +229,7 @@ fn patch_inspector_vortex_extent_fits_within_cap_for_nakagin() {
     let interaction = protocol::InteractionState::default();
     let command = Puzzle3dCommand::from_action("patchInspector", Some(json!({ "entity": "vortex" })), None).expect("patchInspector command decodes");
     let work = Puzzle3dPatchInspectorWork::default();
-    let extent = work.extent(&command, &snapshot, &interaction, None).expect("nakagin's real vortex count must fit the fixed bounded work envelope");
+    let extent = ArtifactCommandWork::<EditorApp<Puzzle3dPlayApp>>::extent(&work, &command, &snapshot, &interaction, None).expect("nakagin's real vortex count must fit the fixed bounded work envelope");
     assert!(extent <= semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_WORK_ITEMS, "patchInspector vortex extent {extent} must not exceed the fixed cap {}", semio_s_plugin_puzzle_retained::PUZZLE_COMMAND_WORK_ITEMS);
 }
 
@@ -257,12 +261,12 @@ fn patch_inspector_vortex_step_loop_stays_within_its_own_extent_for_nakagin() {
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
     let command = Puzzle3dCommand::from_action("patchInspector", Some(json!({ "entity": "vortex", "field": "hidden", "value": true, "ids": ["25b0dba0-8f81-423a-94a1-b911a6031010:link"] })), None).expect("patchInspector command decodes");
     let mut work = original.construct(Puzzle3dPatchInspectorWork::original_birth_demands().unwrap(), |scope| Puzzle3dPatchInspectorWork::from_original_construction(scope));
-    let extent = work.extent(&command, &snapshot, &interaction, None).expect("nakagin's real vortex count must fit the fixed bounded work envelope");
+    let extent = ArtifactCommandWork::<EditorApp<Puzzle3dPlayApp>>::extent(&work, &command, &snapshot, &interaction, None).expect("nakagin's real vortex count must fit the fixed bounded work envelope");
     let guard = extent.saturating_mul(4).saturating_add(1000);
     let mut iterations = 0usize;
     let emit = loop {
         assert!(iterations <= guard, "patchInspector step() did not reach Complete within a generous multiple of its own extent {extent}; runaway loop suspected");
-        match semio_s_plugin_puzzle_retained::testing::step(&mut original, &mut work, &command, &snapshot, &config, &interaction, &hover, None).expect("bounded step") {
+        match semio_s_plugin_puzzle_retained::testing::step::<EditorApp<Puzzle3dPlayApp>, _>(&mut original, &mut work, &command, &snapshot, &config, &interaction, &hover, None).expect("bounded step") {
             PuzzleCommandWorkStep::Pending { .. } => continue,
             PuzzleCommandWorkStep::Progress { .. } => iterations += 1,
             PuzzleCommandWorkStep::Complete(emit) => break emit,
@@ -275,7 +279,7 @@ fn patch_inspector_vortex_step_loop_stays_within_its_own_extent_for_nakagin() {
         "patchInspector's Vortices stage unconditionally walks every object and every real vortex regardless of selection, so a real Nakagin run must take hundreds of steps, not a trivial early exit; observed only {iterations} iterations"
     );
     assert_eq!(emit.artifact_mutations.len(), 1, "exactly the one selected vortex must be patched out of the full unconditional scan; observed {} mutations", emit.artifact_mutations.len());
-    semio_s_plugin_puzzle_retained::testing::close(&mut original, &mut work);
+    semio_s_plugin_puzzle_retained::testing::close::<EditorApp<Puzzle3dPlayApp>, _>(&mut original, &mut work);
     original.finish();
 }
 
@@ -300,12 +304,12 @@ fn set_active_example_work_advances_through_multiple_bounded_steps_for_nakagin()
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
     let command = Puzzle3dCommand::from_action("setActiveExample", Some(json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).expect("setActiveExample command decodes");
     let mut work = original.construct(Puzzle3dSetActiveExampleWork::original_birth_demands().unwrap(), |scope| Puzzle3dSetActiveExampleWork::from_original_construction(scope));
-    let extent = work.extent(&command, &snapshot, &interaction, None).expect("nakagin example fits the fixed bounded work envelope");
+    let extent = ArtifactCommandWork::<EditorApp<Puzzle3dPlayApp>>::extent(&work, &command, &snapshot, &interaction, None).expect("nakagin example fits the fixed bounded work envelope");
     assert!(extent > 4, "nakagin example must require more than the handful of fixed transition steps alone");
     let mut progress_steps = 0usize;
     let emit = loop {
         assert!(progress_steps <= extent + 8, "setActiveExample work did not reach Complete within its own declared extent");
-        match semio_s_plugin_puzzle_retained::testing::step(&mut original, &mut work, &command, &snapshot, &config, &interaction, &hover, None).expect("bounded step") {
+        match semio_s_plugin_puzzle_retained::testing::step::<EditorApp<Puzzle3dPlayApp>, _>(&mut original, &mut work, &command, &snapshot, &config, &interaction, &hover, None).expect("bounded step") {
             PuzzleCommandWorkStep::Pending { .. } => continue,
             PuzzleCommandWorkStep::Progress { .. } => progress_steps += 1,
             PuzzleCommandWorkStep::Complete(emit) => break emit,
@@ -319,6 +323,6 @@ fn set_active_example_work_advances_through_multiple_bounded_steps_for_nakagin()
     };
     assert_eq!(emit.config_mutations.len(), 1, "example loading publishes one config row, not many");
     assert_eq!(published, PUZZLE3D_EXAMPLE_NAKAGIN, "the stamped id must be the example that was loaded");
-    semio_s_plugin_puzzle_retained::testing::close(&mut original, &mut work);
+    semio_s_plugin_puzzle_retained::testing::close::<EditorApp<Puzzle3dPlayApp>, _>(&mut original, &mut work);
     original.finish();
 }

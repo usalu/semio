@@ -139,14 +139,14 @@ fn eval_entry_is_unanswered(entry: Option<&semio_framework_pack_json::Value>) ->
     entry.get("out").and_then(semio_framework_pack_json::Value::as_object).is_none_or(|out| out.iter().next().is_none())
 }
 
-pub fn build_flow_status_json(host: &FlowHost, remaining: &[String]) -> String {
-    let eval = semio_framework_pack_json::parse(&host.last_eval_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|_| semio_framework_pack_json::Value::Object(semio_framework_pack_json::Object::new()));
-    let tree = host.build_tree_for_status();
-    let seeds = host.build_seeds_for_status();
-    let wave: BTreeSet<&str> = host.pending_extension_evals.iter().map(|pending| pending.neuron_id.as_str()).collect();
+pub fn build_flow_status_json(host:&FlowHost,remaining:&[String])->String{let wave:BTreeSet<&str>=host.pending_extension_evals.iter().map(|pending|pending.neuron_id.as_str()).collect();project_flow_status_json(&host.host_snapshot,remaining,&host.last_eval_json,&wave,|id|host.widget_blocked_ports(id))}
+
+/// 🚦️ Projects identical status records from borrowed original document and evaluation sources.
+pub fn project_flow_status_json(host_snapshot:&dyn FlowSnapshotSource,remaining:&[String],eval_json:&str,wave:&BTreeSet<&str>,mut blocked_ports:impl FnMut(&str)->Vec<String>)->String{
+    let eval = semio_framework_pack_json::parse(eval_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_else(|_| semio_framework_pack_json::Value::Object(semio_framework_pack_json::Object::new()));
     let active = remaining.first().map(String::as_str);
     let mut widgets = semio_framework_pack_json::Object::new();
-    for widget in &host.host_snapshot.widgets {
+    for widget in host_snapshot.widgets() {
         let id = widget_id_for(widget);
         if matches!(widget, Widget::InputSlider { .. } | Widget::InputNote { .. } | Widget::InputImage { .. } | Widget::OutputPreview { .. } | Widget::OutputAction { .. } | Widget::OutputExport { .. } | Widget::Cluster { .. }) {
             widgets.insert(id.to_string(), node_eval_status_json(&NodeEvalStatus::Ok));
@@ -158,7 +158,7 @@ pub fn build_flow_status_json(host: &FlowHost, remaining: &[String]) -> String {
                 continue;
             }
         }
-        let blocked = host.widget_blocked_ports(id);
+        let blocked = blocked_ports(id);
         if !blocked.is_empty() {
             widgets.insert(id.to_string(), node_eval_status_json(&NodeEvalStatus::Blocked { ports: blocked }));
             continue;
@@ -173,7 +173,12 @@ pub fn build_flow_status_json(host: &FlowHost, remaining: &[String]) -> String {
         }
         widgets.insert(id.to_string(), node_eval_status_json(&NodeEvalStatus::Ok));
     }
-    tree.retire_cold();
-    seeds.retire_cold();
     semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Object(widgets))
+}
+
+/// 👁️ Computes the same empty-session status projection without a mutable Host or session.
+pub fn initial_flow_status_json(snapshot:&dyn FlowSnapshotSource)->String{
+ let infos=HistoryFoldIndex::new();let cache=NeuralCache::new();let registry=semio_framework_os_flow_operators::registry::flow_operator_registry();
+ let remaining=FlowHost::project_pending_widget_ids(snapshot,&infos,None,None,None,registry.as_ref(),&cache);
+ let text=project_flow_status_json(snapshot,&remaining,"",&BTreeSet::new(),|id|FlowHost::project_widget_blocked_ports(snapshot,&infos,None,id));neural::ColdRetire::retire_cold(cache);text
 }

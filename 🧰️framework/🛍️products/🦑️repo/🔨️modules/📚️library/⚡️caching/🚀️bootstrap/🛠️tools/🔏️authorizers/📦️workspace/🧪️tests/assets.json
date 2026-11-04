@@ -1,0 +1,5 @@
+{
+  "manifest": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/package.json",
+  "specifier": "@semio-tech/assets/resolver/delivery",
+  "expected": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/🔍️resolver/🌐️delivery/🟦️.ts"
+}

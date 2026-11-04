@@ -1,0 +1,17 @@
+import{readFileSync}from"node:fs";
+import{Database}from"bun:sqlite";
+import{deepStrictEqual}from"node:assert";
+const root="✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/";
+const law=JSON.parse(readFileSync(root+"✏️editor/📌️panels/🗿️artifact/🧪️tests/🧫️fixtures/🔬️unit/🔣️.json","utf8"));
+const db=new Database(":memory:");
+db.run("CREATE TABLE widgets (ordinal INTEGER PRIMARY KEY, id TEXT UNIQUE NOT NULL, kind TEXT NOT NULL, label TEXT)");
+db.run("CREATE TABLE wires (ordinal INTEGER PRIMARY KEY, id TEXT UNIQUE NOT NULL)");
+const insertWidget=db.prepare("INSERT INTO widgets VALUES(?,?,?,?)");
+law.hostSnapshot.widgets.forEach((widget,index)=>insertWidget.run(index,widget.id,widget.kind,widget.label??null));
+const insertWire=db.prepare("INSERT INTO wires VALUES(?,?)");
+law.hostSnapshot.synapses.forEach((wire,index)=>insertWire.run(index,wire.id));
+const nodes=db.query("SELECT id, CASE kind WHEN 'inputSlider' THEN label WHEN 'inputNote' THEN 'Note' WHEN 'outputPreview' THEN 'Preview' END AS label, id || '@' || CASE kind WHEN 'inputSlider' THEN 'number' WHEN 'inputNote' THEN 'text' WHEN 'outputPreview' THEN '' END AS port FROM widgets ORDER BY ordinal").all().map(({id,label,port})=>({id,label,ports:[port]}));
+const wires=db.query("SELECT id FROM wires ORDER BY ordinal").all();
+deepStrictEqual({nodes,wires},law.expected);
+db.close();
+console.log("SQLite independently reproduced 3 node rows, 3 exact port ids and 2 wire rows from the native panel law fixture.");

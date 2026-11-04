@@ -44,7 +44,7 @@ The demonstrator needs neither Docker nor a Linux host.
 | `@semio-tech/mit-bestand-demonstrator:canonical-architecture`, `test-runtime-catalog` | the shell brand law at level `long`; the runtime catalog test | never | |
 | `@semio-tech/mit-bestand-demonstrator:prepare-e2e` | after `activate-prototype` and `workspace:deps-browsers`: opens an isolated service session | never | |
 | `@semio-tech/mit-bestand-demonstrator:serve-e2e` | after `prepare-e2e`: serves the activated prototype on a free OS port and announces its address through the session | never (continuous) | `0` (OS-selected) |
-| `@semio-tech/mit-bestand-demonstrator:test-e2e` | after `serve-e2e`: waits for the announced address and runs Playwright (`🧪️tests/🎭️acceptance/🟦️.ts`, one chromium project, one worker, two retries when `CI` is set) against it | never | |
+| `@semio-tech/mit-bestand-demonstrator:test-e2e` | after `serve-e2e`: waits for the announced address and runs Playwright (`🧪️tests/🎭️acceptance/🟦️.ts`, English and German Chromium projects, one worker, two retries when `CI` is set) against it | never | |
 
 The lane tasks are inferred from the playground registry: `prepare-<variant>-react-<profile>` is driver-owned and never cached (the native build driver decides freshness itself), `activate-<variant>-react-<profile>` is cached (`deterministic`) with the outputs `.cache/b/p/m/browser/<profile>/runtime/react/<variant>`. `prepare-prototype`, `prepare-release`, `activate-lanes-prototype` and `activate-prototype` of the demonstrator are cached; `prepare-*` and `activate-prototype` hash the sources of the project and of its workspace dependencies without tests (`activationSources`) together with the outputs of their dependencies. `build` is not cached: it stages into the immutable products store rather than into a declared output tree, and it bundles map tiles fetched from the network (`prefetchMapTiles`), which no declared input pins. Under Bazel a cached target is an action with its declared inputs and outputs and uses Bazel's action cache; a target whose manifest does not allow replay is executed every time.
 
@@ -61,7 +61,7 @@ repo --tool=bazel run @semio-tech/mit-bestand-demonstrator:serve           # the
 repo run @semio-tech/mit-bestand-demonstrator:build   # the static site
 ```
 
-`test-e2e` runs its own server on a free port; the dev server on `6029` does not have to run. Reports land in `dist/reports/e/<UUID32>`, or in `🗑️generated/e/<UUID32>` of the ticket named by `SEMIO_TICKET_DIR`. `UUID32` retains the complete service UUID without hyphens. Short test names and a finite artifact policy keep paths within 256 characters; successful pane and interaction checks save `p.png` inside their test output directory.
+`test-e2e` runs its own server on a free port; the dev server on `6029` does not have to run. Reports land in `dist/reports/<UUID32>`, or in `🗑️generated/<UUID32>` of the ticket named by `SEMIO_TICKET_DIR`. `UUID32` retains the complete service UUID without hyphens. Short test names and a finite artifact policy keep paths within 256 characters; successful pane and interaction checks save `p.png` inside their test output directory.
 
 ### Dashboard registry
 
@@ -72,7 +72,7 @@ The registry is data beside the manifest (`metadata.semio.dashboard` of `📋️
 | readiness | `dev` and `serve` report ready on port `6029` (`MIT_BESTAND_DEMONSTRATOR_PORT`) |
 | global axes | `build-tool` (Nx or Bazel), `cache` (use, skip local, skip all) and `build-mode`, offered on every verb that runs build tasks ([Command registry](../../🧰️framework/🛍️products/🦑️repo/README.md#-command-registry)) |
 
-Current verification is pending. The authored Playwright spec contains twenty cases, covering pane startup, editing/history, Energy automatic finalization and abort, overview and funding assets. A passing prototype browser run, release build publication and final live-service readiness are separate checks. The plain `build` target selects its fixed release mode; `serve` and `test-e2e` use the activated prototype. All verification runs use the declared `repo run` targets above.
+Current verification is pending. The authored Playwright spec contains twenty-five cases per language project (fifty executions), covering pane startup, editing/history, Energy automatic finalization and abort, overview and funding assets. A passing prototype browser run, release build publication and final live-service readiness are separate checks. The plain `build` target selects its fixed release mode; `serve` and `test-e2e` use the activated prototype. All verification runs use the declared `repo run` targets above.
 
 ## 🇩🇪️ Deutsch
 
@@ -108,7 +108,7 @@ Der Demonstrator braucht weder Docker noch einen Linux-Host.
 | `@semio-tech/mit-bestand-demonstrator:canonical-architecture`, `test-runtime-catalog` | das Shell-Brand-Gesetz auf Stufe `long`; der Test des Laufzeitkatalogs | nie | |
 | `@semio-tech/mit-bestand-demonstrator:prepare-e2e` | nach `activate-prototype` und `workspace:deps-browsers`: öffnet eine isolierte Dienst-Sitzung | nie | |
 | `@semio-tech/mit-bestand-demonstrator:serve-e2e` | nach `prepare-e2e`: bedient den aktivierten Prototyp auf einem freien Port des Betriebssystems und meldet seine Adresse über die Sitzung | nie (dauerhaft) | `0` (vom Betriebssystem gewählt) |
-| `@semio-tech/mit-bestand-demonstrator:test-e2e` | nach `serve-e2e`: wartet auf die gemeldete Adresse und führt Playwright dagegen aus (`🧪️tests/🎭️acceptance/🟦️.ts`, ein Chromium-Projekt, ein Worker, zwei Wiederholungen bei gesetztem `CI`) | nie | |
+| `@semio-tech/mit-bestand-demonstrator:test-e2e` | nach `serve-e2e`: wartet auf die gemeldete Adresse und führt Playwright dagegen aus (`🧪️tests/🎭️acceptance/🟦️.ts`, Chromium-Projekte für Englisch und Deutsch, ein Worker, zwei Wiederholungen bei gesetztem `CI`) | nie | |
 
 Die Lane-Tasks werden aus der Playground-Registry abgeleitet: `prepare-<Variante>-react-<Profil>` gehört dem Treiber und ist nie gecacht (der native Build-Treiber entscheidet selbst über Frische), `activate-<Variante>-react-<Profil>` ist gecacht (`deterministic`) mit den Ausgaben `.cache/b/p/m/browser/<Profil>/runtime/react/<Variante>`. Beim Demonstrator sind `prepare-prototype`, `prepare-release`, `activate-lanes-prototype` und `activate-prototype` gecacht; `prepare-*` und `activate-prototype` hashen die Quellen des Projekts und seiner Workspace-Abhängigkeiten ohne Tests (`activationSources`) zusammen mit den Ausgaben ihrer Abhängigkeiten. `build` ist nicht gecacht: Es legt in den unveränderlichen Produkt-Store ab, nicht in einen deklarierten Ausgabebaum, und bündelt Kartenkacheln, die aus dem Netz geladen werden (`prefetchMapTiles`) und die keine deklarierte Eingabe festschreibt. Unter Bazel ist ein gecachtes Target eine Aktion mit ihren deklarierten Ein- und Ausgaben und nutzt Bazels Aktions-Cache; ein Target, dessen Manifest keine Wiedergabe erlaubt, wird jedes Mal ausgeführt.
 
@@ -125,7 +125,7 @@ repo --tool=bazel run @semio-tech/mit-bestand-demonstrator:serve           # die
 repo run @semio-tech/mit-bestand-demonstrator:build   # die statische Seite
 ```
 
-`test-e2e` startet einen eigenen Server auf einem freien Port; der Dev-Server auf `6029` muss nicht laufen. Berichte liegen in `dist/reports/e/<UUID32>` oder in `🗑️generated/e/<UUID32>` des Tickets, das `SEMIO_TICKET_DIR` nennt. `UUID32` enthält die vollständige Sitzungs-UUID ohne Bindestriche. Kurze Testnamen und eine begrenzte Artefaktrichtlinie halten Pfade innerhalb von 256 Zeichen; erfolgreiche Fenster- und Interaktionsprüfungen speichern `p.png` im jeweiligen Testausgabeordner.
+`test-e2e` startet einen eigenen Server auf einem freien Port; der Dev-Server auf `6029` muss nicht laufen. Berichte liegen in `dist/reports/<UUID32>` oder in `🗑️generated/<UUID32>` des Tickets, das `SEMIO_TICKET_DIR` nennt. `UUID32` enthält die vollständige Sitzungs-UUID ohne Bindestriche. Kurze Testnamen und eine begrenzte Artefaktrichtlinie halten Pfade innerhalb von 256 Zeichen; erfolgreiche Fenster- und Interaktionsprüfungen speichern `p.png` im jeweiligen Testausgabeordner.
 
 ### Dashboard-Register
 
@@ -136,4 +136,4 @@ Das Register sind Daten neben dem Manifest (`metadata.semio.dashboard` in `📋�
 | Bereitschaft | `dev` und `serve` melden sich auf Port `6029` (`MIT_BESTAND_DEMONSTRATOR_PORT`) bereit |
 | globale Achsen | `build-tool` (Nx oder Bazel), `cache` (nutzen, lokal überspringen, alles überspringen) und `build-mode`, angeboten bei jedem Verb, das Build-Tasks ausführt (siehe [Befehlsregister](../../🧰️framework/🛍️products/🦑️repo/README.md#-deutsch)) |
 
-Die aktuelle Verifikation steht noch aus. Die Playwright-Spezifikation enthält zwanzig Fälle für Fensterstart, Bearbeitung/Verlauf, automatische Finalisierung und Abbruch bei Energie, Übersicht und Förderlogos. Ein erfolgreicher Prototyp-Browsertest, die Veröffentlichung des Release-Builds und die Bereitschaft des abschließenden Live-Dienstes sind getrennte Prüfungen. Das einfache Target `build` wählt seinen festgelegten Release-Modus; `serve` und `test-e2e` verwenden den aktivierten Prototyp. Alle Prüfläufe verwenden die oben genannten `repo run`-Targets.
+Die aktuelle Verifikation steht noch aus. Die Playwright-Spezifikation enthält fünfundzwanzig Fälle je Sprachprojekt (fünfzig Ausführungen) für Fensterstart, Bearbeitung/Verlauf, automatische Finalisierung und Abbruch bei Energie, Übersicht und Förderlogos. Ein erfolgreicher Prototyp-Browsertest, die Veröffentlichung des Release-Builds und die Bereitschaft des abschließenden Live-Dienstes sind getrennte Prüfungen. Das einfache Target `build` wählt seinen festgelegten Release-Modus; `serve` und `test-e2e` verwenden den aktivierten Prototyp. Alle Prüfläufe verwenden die oben genannten `repo run`-Targets.

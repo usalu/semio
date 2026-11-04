@@ -138,6 +138,7 @@ impl semio_framework_plugin::WindowConfigOwner for MapWindowConfigOwner {
     fn preparation_source_birth() -> semio_framework_value::retained_clone::RetainedCloneBirthDemand { semio_framework_plugin::bounded_window_config_preparation_source_birth::<Self>() }
     fn build_store_owners(grant: semio_framework_value::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::State, Self::Mutation>> { semio_framework_plugin::bounded_window_config_store_owners::<Self>(grant) }
     fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> { store::cold_mutation_apply_preparation_factory::<MapWindowConfig, MapWindowConfigMutation>() }
+    fn store_disposer_birth() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { semio_framework_plugin::bounded_window_config_store_disposer_birth::<Self>() }
     fn build_store_disposer() -> Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> { semio_framework_plugin::bounded_window_config_store_disposer::<Self>() }
 }
 
@@ -229,3 +230,16 @@ pub mod direct_mutation_tests;
 //#endregion 🧪️Tests
 
 
+
+#[cfg(test)]
+#[test]
+fn bounded_store_disposer_birth_matches_layout() {
+    type Owner = MapWindowConfigOwner;
+    let law: serde_json::Value = serde_json::from_str(include_str!("disposer-birth.json")).expect("neutral disposer birth law");
+    let demand = <Owner as semio_framework_plugin::WindowConfigOwner>::store_disposer_birth().expect("explicit bounded disposer birth");
+    let disposer = <Owner as semio_framework_plugin::WindowConfigOwner>::build_store_disposer();
+    assert_eq!(demand.capacity_bytes, std::alloc::Layout::for_value(disposer.as_ref()).size());
+    assert_eq!(demand.depth, law["depth"].as_u64().unwrap() as usize);
+    assert_eq!(demand.copy_bytes, law["copyBytes"].as_u64().unwrap() as usize);
+    assert_eq!(demand.release_bytes, law["releaseBytes"].as_u64().unwrap() as usize);
+}

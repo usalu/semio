@@ -1,0 +1,26 @@
+[
+  {
+    "operation": "connect"
+  },
+  {
+    "operation": "selfConnect"
+  },
+  {
+    "operation": "disconnect"
+  },
+  {
+    "operation": "unknownDisconnect"
+  },
+  {
+    "operation": "remove"
+  },
+  {
+    "operation": "add"
+  },
+  {
+    "operation": "insertInput"
+  },
+  {
+    "operation": "insertOutput"
+  }
+]

@@ -21,5 +21,5 @@ pub struct ConnectMediaPorts {
 
 pub fn handle(payload: &ConnectMediaPorts, doc: &ArtifactView<'_, Generation2dSnapshot>, _cfg: &ConfigView<'_, Generation2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation2dMutation, Generation2dConfigMutation>, Fault> {
     let fixture = &doc.snapshot.host_snapshot;
-    Ok(Emit::mutations(with_host(fixture, |host| host_connect_ports(host, &payload.source_node_id, &payload.source_port_id, &payload.target_node_id, &payload.target_port_id))?.unwrap_or_default()))
+    Ok(Emit::mutations(with_host(fixture, |host| host_connect_ports(host, &payload.source_node_id, &payload.source_port_id, &payload.target_node_id, &payload.target_port_id)).map_err(|error| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("flow.retained"), error.into_message()))?.map_err(Fault::from)?))
 }

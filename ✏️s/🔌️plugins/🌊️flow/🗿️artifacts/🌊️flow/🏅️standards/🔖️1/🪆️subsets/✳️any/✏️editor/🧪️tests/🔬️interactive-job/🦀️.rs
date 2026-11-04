@@ -349,10 +349,10 @@ fn booting_renders_and_evaluates_without_dropping_a_live_flow_owner() {
         let tree = project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(body.expect("flow body renders"))).expect("rendered flow body retires");
         assert!(!tree.is_empty());
     }
-    let armed = evaluate::evaluate_result(&snapshot, &config, &mut session, FLOW_PLAY_WINDOW_MAIN, FLOW_PLAY_WINDOW_MAIN);
+    let armed = evaluate::evaluate_result(&snapshot, &config, &mut session, FLOW_PLAY_WINDOW_MAIN, FLOW_PLAY_WINDOW_MAIN).unwrap();
     assert!(armed.effects.len() <= 1, "one probe arms at most this window's single flowEvalTick continuation");
-    let rearmed = evaluate::evaluate_result(&snapshot, &config, &mut session, FLOW_PLAY_WINDOW_MAIN, FLOW_PLAY_WINDOW_MAIN);
+    let rearmed = evaluate::evaluate_result(&snapshot, &config, &mut session, FLOW_PLAY_WINDOW_MAIN, FLOW_PLAY_WINDOW_MAIN).unwrap();
     assert!(rearmed.effects.is_empty(), "a second probe of the same unchanged snapshot must not arm a second tick");
-    let _ = flow_eval_tick::tick_result(&snapshot, &config, &mut session, FLOW_PLAY_WINDOW_MAIN, FLOW_PLAY_WINDOW_MAIN);
+    let _ = flow_eval_tick::tick_result(&snapshot, &config, &mut session, FLOW_PLAY_WINDOW_MAIN, FLOW_PLAY_WINDOW_MAIN).unwrap();
     session.retire_cold();
 }

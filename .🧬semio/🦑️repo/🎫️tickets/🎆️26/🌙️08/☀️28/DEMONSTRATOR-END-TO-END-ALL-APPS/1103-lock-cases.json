@@ -1,0 +1,14 @@
+[
+  {
+    "input": "version = 3\n\n[[package]]\nname = \"alpha\"\nversion = \"1.0.0\"\n\n[[package]]\nname = \"alpha\"\nversion = \"1.0.0\"\n\n",
+    "removed": 1
+  },
+  {
+    "input": "version = 3\n\n[[package]]\nname = \"alpha\"\nversion = \"1.0.0\"\n\n[[package]]\nname = \"alpha\"\nversion = \"2.0.0\"\n\n",
+    "removed": 0
+  },
+  {
+    "input": "[[package]]\nname = \"alpha\"\nversion = \"1.0.0\"\n\n[[package]]\nname = \"alpha\"\nversion = \"1.0.0\"\nchecksum = \"conflict\"\n\n",
+    "refuse": true
+  }
+]

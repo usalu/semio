@@ -68,12 +68,24 @@ it("uses the actual read-only automatic finalization policy in the browser workf
   const source = readFileSync(new URL("../🟦️.ts", import.meta.url), "utf8"), ast = ts.createSourceFile("acceptance.ts", source, ts.ScriptTarget.Latest, true);
   const statement = ast.statements.find(node => ts.isExpressionStatement(node) && ts.isCallExpression(node.expression) && node.expression.arguments[0] !== undefined && ts.isStringLiteral(node.expression.arguments[0]) && node.expression.arguments[0].text === "energie run-cancel");
   expect(statement).toBeDefined();
-  const properties: string[] = [], calls: string[] = [];
-  const walk = (node: ts.Node): void => { if (ts.isPropertyAccessExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === "scenario") properties.push(node.name.text); if (ts.isCallExpression(node) && ts.isIdentifier(node.expression)) calls.push(node.expression.text); ts.forEachChild(node, walk); };
+  const properties: string[] = [], calls: string[] = [], assertions: { target: string; matcher: string; argument: string }[] = [];
+  const walk = (node: ts.Node): void => {
+    if (ts.isPropertyAccessExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === "scenario") properties.push(node.name.text);
+    if (ts.isCallExpression(node)) {
+      if (ts.isIdentifier(node.expression)) calls.push(node.expression.text);
+      if (ts.isPropertyAccessExpression(node.expression) && ts.isCallExpression(node.expression.expression) && ts.isIdentifier(node.expression.expression.expression) && node.expression.expression.expression.text === "expect") assertions.push({ target: node.expression.expression.arguments[0]!.getText(ast), matcher: node.expression.name.text, argument: node.arguments[0]?.getText(ast) ?? "" });
+    }
+    ts.forEachChild(node, walk);
+  };
   walk(statement!);
-  expect(properties).toContain("finalized");
-  expect(properties).toContain("finalStep");
-  expect(properties).toContain("acceptedResult");
+  expect(assertions).toEqual(expect.arrayContaining([
+    { target: "completedStatus", matcher: "toHaveText", argument: "new RegExp(projectLanguage().texts.finalized)" },
+    { target: `page.locator(paneElementSelector(scenario.paneId, \`\${completedGroup}.steps\`))`, matcher: "toContainText", argument: "new RegExp(projectLanguage().texts.finalStep)" },
+    { target: "simulation", matcher: "toContainText", argument: "projectLanguage().texts.acceptedResult" },
+    { target: 'completed.getByRole("progressbar")', matcher: "toBeVisible", argument: "" },
+    { target: `page.locator(paneElementSelector(scenario.paneId, \`\${abortedGroup}.status\`))`, matcher: "toHaveText", argument: "new RegExp(projectLanguage().texts.aborted)" },
+    { target: "simulation", matcher: "toContainText", argument: "projectLanguage().texts.noResult" },
+  ]));
   expect(properties).not.toContain("complete");
   expect(statement!.getText(ast)).not.toContain("toolRunFinalize");
   expect(statement!.getText(ast)).toContain("toolRunAbort");

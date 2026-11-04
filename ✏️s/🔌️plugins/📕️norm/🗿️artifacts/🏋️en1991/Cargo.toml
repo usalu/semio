@@ -485,6 +485,27 @@ path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🎬️scene-members/
 [workspace.dependencies.semio-s-artifact-norm-en1991-inferences-rail-silo]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🚂rail-silo/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-s-artifact-norm-en1991-mut-dust-explosions]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💥dust-explosions/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1991-mut-rail-load-groups]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛤️rail-load-groups/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1991-mut-rail-derailments]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚆rail-derailments/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1991-mut-snow-guards]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛡️snow-guards/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1991-mut-local-fires]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥local-fires/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1991-mut-support-collisions]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚛support-collisions/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-norm-en1991-mut-fatigue-models]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁fatigue-models/📦️packages/🦀️rust"
+
 [workspace.lints.rust]
 unsafe_op_in_unsafe_fn = "warn"
 unused_lifetimes = "warn"

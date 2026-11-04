@@ -55,3 +55,38 @@ fn canonical_native_edit_seal_preserves_original_box_and_fields_after_framed_dig
   }}
  }
 }
+
+#[test]
+fn canonical_seal_terminal_polling_preserves_one_shot_original_transfer(){
+ let contract:serde_json::Value=serde_json::from_str(include_str!("terminal.json")).unwrap();
+ let hashes:serde_json::Value=serde_json::from_str(include_str!("../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+ let cases:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+ for(index,row)in cases["cases"].as_array().unwrap().iter().enumerate(){for cancel in [false,true]{
+  let edit=Box::new(semio_framework_pack_json::from_json_str::<Edit<bool>>(&serde_json::to_string(&row["edit"]).unwrap(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());
+  let pointer=edit.as_ref()as*const Edit<bool>;let id=edit.id.as_ptr();let mut source=Some(stage(edit));
+  let(mut cursor,_)=ArtifactCanonicalEditSealCursor::admit_source(&mut source,grant(ArtifactCanonicalEditSealCursor::<bool>::source_constructor_demand())).unwrap().unwrap();
+  if cancel{cursor.begin_close();}
+  let mut transferred=None;let mut transfers=0;
+  for turn in 0..contract["maximumTurns"].as_u64().unwrap(){
+   if cursor.terminal_is_empty(){break;}
+   if cursor.is_ready(){
+    assert!(!cancel);let admitted=grant(cursor.next_take_demand());
+    let(edit,digest,receipt)=cursor.take_edit(admitted).unwrap().unwrap();assert!(receipt.fits(admitted));
+    assert_eq!(edit.as_ref()as*const Edit<bool>,pointer);assert_eq!(edit.id.as_ptr(),id);
+    assert_eq!(hex(digest),hashes["rows"][index]["digest"].as_str().unwrap());transfers+=1;transferred=Some(edit);
+   }else{let admitted=grant(cursor.next_demand().unwrap());assert!(cursor.advance(admitted).unwrap().progress().fits(admitted));}
+   assert!(turn+1<contract["maximumTurns"].as_u64().unwrap()||cursor.terminal_is_empty());
+  }
+  assert!(cursor.terminal_is_empty());assert!(!cursor.is_ready());assert!(cursor.digest().is_none());
+  for _ in 0..contract["terminalPolls"].as_u64().unwrap(){
+   assert_eq!(cursor.next_demand().unwrap(),RetirementDemand::default());
+   for admitted in [grant(RetirementDemand::default()),RetainedCloneGrant::default()]{
+    let(result,heap)=observe(||cursor.advance(admitted));let step=result.expect("terminal seal polling must complete after transfer or cancellation");
+    assert!(matches!(step,RetainedCloneStep::Complete(_)));assert_eq!(serde_json::json!({"copied_items":step.progress().copied_items,"copied_bytes":step.progress().copied_bytes,"retained_capacity_bytes":step.progress().retained_capacity_bytes,"released_bytes":step.progress().released_bytes}),contract["terminalProgress"]);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+    assert!(cursor.take_edit(admitted).unwrap().is_none());
+   }
+  }
+  assert_eq!(transfers,if cancel{0}else{contract["expectedTransfers"].as_u64().unwrap()});
+  if let Some(edit)=transferred{let mut owner=ControlledRetirement::new(edit).unwrap_or_else(|(error,_)|panic!("returned original retirement: {error}"));for _ in 0..contract["maximumTurns"].as_u64().unwrap(){if owner.terminal_is_empty(){break;}let body=owner.next_copy_byte_demand().unwrap();let admitted=grant(RetirementDemand{copy_bytes:body,capacity_bytes:owner.next_capacity_byte_demand(body).unwrap(),release_bytes:owner.next_release_byte_demand().unwrap(),depth:owner.next_depth_demand().unwrap()});assert!(owner.step(admitted).unwrap().progress().fits(admitted));}assert!(owner.terminal_is_empty());}
+ }}
+}

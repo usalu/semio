@@ -1,0 +1,9 @@
+import {spawn} from "node:child_process";
+const child=spawn("repo",["mcp"],{cwd:process.cwd(),env:{...process.env,SEMIO_REPO_MCP_CLIENT:"client",SEMIO_TICKET_DIR:import.meta.dirname},stdio:["pipe","pipe","pipe"]});
+child.stdout.setEncoding("utf8");child.stderr.setEncoding("utf8");
+let buffer="",seq=0;const pending=new Map();
+child.stdout.on("data",chunk=>{buffer+=chunk;let i;while((i=buffer.indexOf("\n"))>=0){const line=buffer.slice(0,i);buffer=buffer.slice(i+1);try{const r=JSON.parse(line);if(r.method==="notifications/progress")process.stderr.write(JSON.stringify(r.params)+"\n");if(pending.has(r.id)){pending.get(r.id)(r);pending.delete(r.id)}}catch{}}});
+child.stderr.on("data",c=>process.stderr.write(c));
+const send=(method,params)=>new Promise(resolve=>{const id=++seq;pending.set(id,resolve);child.stdin.write(JSON.stringify({jsonrpc:"2.0",id,method,params})+"\n")});
+const timer=setTimeout(()=>{child.kill();process.exitCode=1},Number(process.env.SEMIO_MCP_TIMEOUT_MS||3600000));
+try{await send("initialize",{protocolVersion:"2024-11-05",capabilities:{},clientInfo:{name:"codex",version:"1"}});child.stdin.write(JSON.stringify({jsonrpc:"2.0",method:"notifications/initialized"})+"\n");const method=process.argv[2]||"resources/read";const params=JSON.parse(process.argv[3]||"{\"uri\":\"repo://goals\"}");if(method==="tools/call")params._meta={progressToken:"demonstrator-main"};const reply=await send(method,params);if(method==="tools/list")console.log(JSON.stringify(reply.result.tools.filter(t=>["run","test","ticket_reopen","ticket_close"].includes(t.name))));else {console.log(JSON.stringify(reply));const result=reply.result?.structuredContent;if(reply.error||reply.result?.isError||result?.ok===false)process.exitCode=1;}}finally{clearTimeout(timer);child.stdin.end();child.kill()}

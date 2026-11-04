@@ -56,6 +56,7 @@ mod flow_host;
 pub use flow_host::*;
 #[path = "../✏️host-authoring/🦀️.rs"]
 mod host_authoring;
+pub use host_authoring::{FlowAuthoringPlan,FlowAuthoringSerials};
 #[path = "../🌳️host-evaluation-history/🦀️.rs"]
 mod host_evaluation_history;
 

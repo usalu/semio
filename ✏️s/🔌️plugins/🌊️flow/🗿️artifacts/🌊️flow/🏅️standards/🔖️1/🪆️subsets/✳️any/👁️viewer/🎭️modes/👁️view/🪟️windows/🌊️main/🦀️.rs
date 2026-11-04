@@ -7,7 +7,7 @@
 
 use crate::schema::{FLOW_DEFAULT_GRID_FACTOR, FLOW_DEFAULT_PROXIMITY_DISTANCE};
 use crate::FlowSnapshot;
-use flow::{flow_backed_node_graph_extras, FlowEvalSession, FLOW_LOD_MODE_AUTOMATIC};
+use flow::{flow_backed_node_graph_extras, FLOW_LOD_MODE_AUTOMATIC};
 use semio_framework_os_infinite_directed_presentation::DagHostSnapshot;
 use semio_framework_plugin::scene_surface;
 use semio_framework_plugin::BuiltNode;
@@ -91,15 +91,12 @@ fn dag_host_snapshot_to_workflow(host_snapshot: &DagHostSnapshot) -> (Vec<NodeGr
 /// canvas state to read), no selection, no preview-off overlay.
 pub fn render(document: &FlowSnapshot) -> UiAssemblyResult<BuiltNode> {
     let live = document.to_host_snapshot();
-    let session = FlowEvalSession::new();
-    let host = crate::editor::flow::host::host_with_session(document.to_host_snapshot(), &session);
-    let (nodes, edges) = dag_host_snapshot_to_workflow(&host.dag.graph.host_snapshot);
+    let (nodes,edges)=dag_host_snapshot_to_workflow(&flow::FlowHost::project_dag_snapshot(&live,&flow::flow_neuron_kind_info_map()));
     let viewport = Viewport2d { x: 0.0, y: 0.0, zoom: 1.0 };
     let snapshot_json = Some(semio_framework_pack_json::to_json_string(document));
-    let flow_extras = flow_backed_node_graph_extras(&live, FLOW_LOD_MODE_AUTOMATIC, FLOW_DEFAULT_PROXIMITY_DISTANCE, true, false, FLOW_DEFAULT_GRID_FACTOR, Some(&session));
-    host.retire_cold()?;
+    let mut flow_extras = flow_backed_node_graph_extras(&live, FLOW_LOD_MODE_AUTOMATIC, FLOW_DEFAULT_PROXIMITY_DISTANCE, true, false, FLOW_DEFAULT_GRID_FACTOR, None);
+    flow_extras.status_json=Some(flow::initial_flow_status_json(&live));
     live.retire_cold();
-    session.retire_cold();
     let scene = NodeGraphScene {
         editable: Some(false),
         capabilities_json: flow_extras.capabilities_json,

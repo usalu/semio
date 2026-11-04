@@ -1,0 +1,73 @@
+{
+  "depth": 1,
+  "copyBytes": 0,
+  "releaseBytes": 0,
+  "owners": [
+    {
+      "source": "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌊️main/🎚️config/🦀️.rs",
+      "owner": "FlowMainWindowConfigOwner",
+      "concreteOwners": [
+        "FlowMainWindowConfigOwner"
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🦀️.rs",
+      "owner": "MapWindowConfigOwner",
+      "concreteOwners": [
+        "MapWindowConfigOwner"
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🎚️config/🦀️.rs",
+      "owner": "Fem3dResultsWindowConfigOwner",
+      "concreteOwners": [
+        "Fem3dResultsWindowConfigOwner"
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧱️model/🎚️config/🦀️.rs",
+      "owner": "Fem3dModelWindowConfigOwner",
+      "concreteOwners": [
+        "Fem3dModelWindowConfigOwner"
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🎚️config/🦀️.rs",
+      "owner": "$owner",
+      "concreteOwners": [
+        "CadShapeWindowConfigOwner",
+        "CadBuildingWindowConfigOwner",
+        "CadEnergyWindowConfigOwner",
+        "CadStructureClassicWindowConfigOwner"
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🔢️grid/🎚️config/🦀️.rs",
+      "owner": "GridWindowConfigOwner",
+      "concreteOwners": [
+        "GridWindowConfigOwner"
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️model/🎚️config/🦀️.rs",
+      "owner": "EnergyModelWindowConfigOwner",
+      "concreteOwners": [
+        "EnergyModelWindowConfigOwner"
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🧊️model/🎚️config/🦀️.rs",
+      "owner": "EnergyModelViewerWindowConfigOwner",
+      "concreteOwners": [
+        "EnergyModelViewerWindowConfigOwner"
+      ]
+    },
+    {
+      "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪟️window/🦀️.rs",
+      "owner": "Puzzle3dWindowConfigOwner",
+      "concreteOwners": [
+        "Puzzle3dWindowConfigOwner"
+      ]
+    }
+  ]
+}

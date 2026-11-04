@@ -20,18 +20,18 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// latch answers whether anything already owes a hop for them. BOTH are required: the probe used to be
 /// the only gate, and because `pending_effects` rebuilt a throwaway session per poll the gate was
 /// always open — every host refresh minted another hop for the same unchanged snapshot.
-pub fn evaluate_result(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &mut FlowEvalSession, window_id: &str, window_kind_id: &str) -> Emit<FlowMutation, NoConfigMutation> {
+pub fn evaluate_result(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &mut FlowEvalSession, window_id: &str, window_kind_id: &str) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
     let host = host_from_snapshot(snapshot, config, session);
     let pending = session.sync(&host);
     let servable = may_rearm(&host.host_snapshot);
-    host.retire_cold()?;
+    host.retire_cold().map_err(crate::editor::flow::host::value_fault)?;
     if pending {
         session.note_window_tick_outcome(window_id, true, crate::editor::flow::host::cold_grant()).expect("flow cold session grant");
     }
     if servable && session.arm_owed_window_tick(window_id, crate::editor::flow::host::cold_grant()).expect("flow cold session grant").0 {
-        Emit { effects: vec![eval_tick_effect(window_id, window_kind_id)], ..Default::default() }
+        Ok(Emit { effects: vec![eval_tick_effect(window_id, window_kind_id)], ..Default::default() })
     } else {
-        Emit::default()
+        Ok(Emit::default())
     }
 }
 //#endregion 🔖️Arm
@@ -50,7 +50,7 @@ pub fn evaluate_result(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, s
 pub struct Evaluate {}
 
 pub fn handle(_payload: &Evaluate, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, NoConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
-    Ok(evaluate_result(&crate::flow_composed_snapshot(doc.snapshot, &doc.children)?, &crate::editor::flow::modes::edit::windows::main::config::current(cfg), session, FLOW_PLAY_WINDOW_MAIN, FLOW_PLAY_WINDOW_MAIN))
+    evaluate_result(&crate::flow_composed_snapshot(doc.snapshot, &doc.children)?, &crate::editor::flow::modes::edit::windows::main::config::current(cfg), session, FLOW_PLAY_WINDOW_MAIN, FLOW_PLAY_WINDOW_MAIN)
 }
 
 //#region 🧪️Tests

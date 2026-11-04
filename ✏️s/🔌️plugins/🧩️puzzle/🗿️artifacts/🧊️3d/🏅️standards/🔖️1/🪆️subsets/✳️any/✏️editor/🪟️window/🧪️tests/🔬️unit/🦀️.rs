@@ -190,3 +190,15 @@ use super::*;
         let parsed = <Puzzle3dWindowConfig as pack::snapshot::ArtifactDsl>::parse_dsl(&printed).expect("window config text parses");
         assert_eq!(parsed, original, "one text round trip must preserve every persisted window option");
     }
+
+#[test]
+fn config_store_disposer_birth_quotes_the_actual_bounded_owner() {
+    type Owner = Puzzle3dWindowConfigOwner;
+    let law: serde_json::Value = serde_json::from_str(include_str!("disposer-birth.json")).expect("neutral disposer birth law");
+    let demand = <Owner as semio_framework_plugin::WindowConfigOwner>::store_disposer_birth().expect("declared Puzzle config disposer birth");
+    let disposer = <Owner as semio_framework_plugin::WindowConfigOwner>::build_store_disposer();
+    assert_eq!(demand.capacity_bytes, std::alloc::Layout::for_value(disposer.as_ref()).size());
+    assert_eq!(demand.depth, law["depth"].as_u64().unwrap() as usize);
+    assert_eq!(demand.copy_bytes, law["copyBytes"].as_u64().unwrap() as usize);
+    assert_eq!(demand.release_bytes, law["releaseBytes"].as_u64().unwrap() as usize);
+}

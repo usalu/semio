@@ -1,0 +1,26 @@
+[
+  {
+    "session": false,
+    "lodMode": "",
+    "lod": {
+      "automatic": true,
+      "forcedLabel": null,
+      "proximityDistance": 12.5,
+      "gridVisible": true,
+      "gridSnapEnabled": false,
+      "gridFactor": 2
+    }
+  },
+  {
+    "session": true,
+    "lodMode": "detail",
+    "lod": {
+      "automatic": false,
+      "forcedLabel": "detail",
+      "proximityDistance": 3,
+      "gridVisible": false,
+      "gridSnapEnabled": true,
+      "gridFactor": 5
+    }
+  }
+]

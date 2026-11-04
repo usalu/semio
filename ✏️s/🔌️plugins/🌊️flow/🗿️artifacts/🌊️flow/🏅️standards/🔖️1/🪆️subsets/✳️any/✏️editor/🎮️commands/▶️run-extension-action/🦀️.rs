@@ -43,7 +43,7 @@ pub fn extension_action_result(payload: &RunExtensionAction, snapshot: &FlowSnap
     }
     match *effect {
         "reorganize" => reorganize_edit(snapshot, config, session),
-        "evaluate" => Ok(evaluate_result(snapshot, config, session, FLOW_PLAY_WINDOW_MAIN, FLOW_PLAY_WINDOW_MAIN)),
+        "evaluate" => evaluate_result(snapshot, config, session, FLOW_PLAY_WINDOW_MAIN, FLOW_PLAY_WINDOW_MAIN),
         other => Err(refuse("flow.extension-effect-unknown", format!("runExtensionAction \"{}\" names the unknown effect \"{other}\"", payload.action_id))),
     }
 }

@@ -1,0 +1,9 @@
+{
+  "maximumTurns": 4096,
+  "expectedRefusals": 1,
+  "refusalKind": "AllocationFailed",
+  "retainedTerminal": true,
+  "coldReturnsRefusal": true,
+  "bodyTransfers": 1,
+  "ownerReturns": 1
+}

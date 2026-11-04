@@ -5,12 +5,13 @@ use semio_s_artifact_procedural_3d_mode_edit::windows::flow::GENERATION_3D_PLAY_
 use semio_framework_plugin::{TreeWindowRequest, TreeWindows, ViewModel};
 use semio_framework_ui_declaration::ui::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
 const DOCUMENT_ROWS_LAW: &str = include_str!("../🧫️fixtures/🔬️unit/🔣️.json");
-/// 🧾️ The law fixture's document tree, projected through the same retiring projection the flow
+/// 🧾️ The law fixture's document tree, projected through the same borrowed projection the flow
 /// window's outline law uses, so both trees are read as one renderer-neutral shape.
 fn law_document_projection() -> serde_json::Value {
     let law: serde_json::Value = serde_json::from_str(DOCUMENT_ROWS_LAW).expect("document rows law json");
     let fixture = semio_framework_os_flow::FlowHost::parse_host_snapshot_json(&law["hostSnapshot"].to_string()).expect("law fixture parses");
-    let (nodes, edges) = with_host(&fixture, |host| dag_host_snapshot_to_workflow(&host.dag.graph.host_snapshot)).unwrap();
+    let dag = FlowHost::project_dag_snapshot(&fixture, &semio_framework_os_flow::flow_neuron_kind_info_map());
+    let (nodes, edges) = dag_host_snapshot_to_workflow(&dag);
     let labels = semio_s_artifact_procedural_3d_terminology::generation3d_labels(&ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     let outline = graph_outline(&TreeWindows::unhosted(), &nodes, &edges, None, labels).expect("document tree builds");
     fixture.retire_cold();

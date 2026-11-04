@@ -80,18 +80,55 @@ impl FlowHost {
     /// drop (`ordered-map root must be explicitly retired before drop`), so a host is CLOSED, never
     /// dropped. Retained callers drive [`FlowHostRetirement::retire_step`] under their own grant
     /// instead; this drains the same ladder in one uninterrupted cold pass.
-    pub fn retire_cold(self)->Result<(),ValueError>{
+    pub fn retire_cold(self)->Result<(),FlowHostCloseRefusal>{
         let mut retirement=FlowHostRetirement::new(self);
-        let mut idle=0usize;while !retirement.terminal_is_empty(){let copy=retirement.next_close_copy_byte_demand()?.max(4096);let demand=retirement.close_demands(copy)?;let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};let step=retirement.close_step(grant)?;if step.progress()==RetainedCloneProgress::default(){idle+=1;if idle>64{return Err(ValueError::invariant("cold original host close stalled at exact demand"));}}else{idle=0;}}
-        Ok(())
+        let result=(||->Result<(),ValueError>{
+            let mut idle=0usize;while !retirement.terminal_is_empty(){let copy=retirement.next_close_copy_byte_demand()?.max(4096);let demand=retirement.close_demands(copy)?;let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};let step=retirement.close_step(grant)?;if step.progress()==RetainedCloneProgress::default(){idle+=1;if idle>64{return Err(ValueError::invariant("cold original host close stalled at exact demand"));}}else{idle=0;}}Ok(())
+        })();
+        match result{Ok(())=>Ok(()),Err(error)=>Err(FlowHostCloseRefusal{error,retirement})}
     }
+
+    /// 📤️ Returns the exact body output alongside custody of any refused original close.
+    pub fn with_cold<R>(mut self,body:impl FnOnce(&mut FlowHost)->R)->FlowHostScopeOutcome<R>{let output=body(&mut self);FlowHostScopeOutcome{output,close:self.retire_cold()}}
 
     /// 🏠️ Runs `body` against a host built from `fixture`, then retires that host — the ONE shape a
     /// caller that only needs a host for the length of an expression should use.
-    pub fn with_host_snapshot<R>(host_snapshot: &FlowHostSnapshot, body: impl FnOnce(&mut FlowHost) -> R) -> Result<R, ValueError> {
-        let mut host = Self::from_host_snapshot(host_snapshot.clone());
-        let result = body(&mut host);
-        host.retire_cold()?;
-        Ok(result)
+    pub fn with_host_snapshot<R>(host_snapshot: &FlowHostSnapshot, body: impl FnOnce(&mut FlowHost) -> R) -> FlowHostScopeOutcome<R> {
+        Self::from_host_snapshot(host_snapshot.clone()).with_cold(body)
     }
+}
+
+/// 🧳️ A refused cold close returns its exact original error and still-live physical owner.
+#[must_use="the refused original retirement must remain owned until terminal closure"]
+pub struct FlowHostCloseRefusal{pub error:ValueError,pub retirement:FlowHostRetirement}
+impl std::fmt::Debug for FlowHostCloseRefusal{fn fmt(&self,f:&mut std::fmt::Formatter<'_>)->std::fmt::Result{f.debug_struct("FlowHostCloseRefusal").field("error",&self.error).field("phase",&self.retirement.close_phase()).finish()}}
+impl FlowHostCloseRefusal{pub fn into_parts(self)->(ValueError,FlowHostRetirement){(self.error,self.retirement)}}
+
+/// 📦️ The body output never disappears when its original host close refuses.
+#[must_use="handle both the exact body output and the original close custody"]
+pub struct FlowHostScopeOutcome<R>{pub output:R,pub close:Result<(),FlowHostCloseRefusal>}
+
+/// 🎟️ One inline original host close source, funded and retained by its actual command job.
+#[derive(Default)]
+pub struct FlowHostCloseSlot{owner:Option<FlowHostRetirement>}
+impl FlowHostCloseSlot{
+ pub fn intake_demand()->RetirementDemand{RetirementDemand{copy_bytes:std::mem::size_of::<FlowHostRetirement>(),depth:1,..Default::default()}}
+ pub fn retain(&mut self,original:&mut Option<FlowHost>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
+  if self.owner.is_some(){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original host close slot is occupied"));}
+  if original.is_none(){return Ok(Default::default());}let demand=Self::intake_demand();
+  if !Self::admitted(demand,grant){return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"original host close intake requires its quoted currencies"));}
+  self.owner=Some(FlowHostRetirement::new(original.take().unwrap()));Ok(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})
+ }
+ fn admitted(d:RetirementDemand,g:RetainedCloneGrant)->bool{g.maximum_items>0&&g.maximum_copy_bytes>=d.copy_bytes&&g.maximum_capacity_bytes>=d.capacity_bytes&&g.maximum_release_bytes>=d.release_bytes&&g.maximum_depth>=d.depth}
+ pub fn next_demand(&self,copy:usize)->Result<RetirementDemand,ValueError>{
+  let Some(owner)=self.owner.as_ref()else{return Ok(Default::default())};
+  if owner.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:std::mem::size_of::<Option<FlowHostRetirement>>(),depth:1,..Default::default()});}
+  let mut demand=owner.close_demands(copy)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"original host close slot depth overflow"))?;Ok(demand)
+ }
+ pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+  if self.owner.is_none(){return Ok(RetainedCloneStep::Complete(Default::default()));}let demand=self.next_demand(grant.maximum_copy_bytes)?;if !Self::admitted(demand,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}
+  if self.owner.as_ref().unwrap().terminal_is_empty(){self.owner=None;return Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}
+  let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let owner=self.owner.as_mut().unwrap();let step=owner.close_step(child)?;let step=semio_framework_value::retained_clone::admit_retained_clone_close(child,step,owner.terminal_is_empty(),"original command host close")?;Ok(RetainedCloneStep::Progress(step.progress()))
+ }
+ pub fn terminal_is_empty(&self)->bool{self.owner.is_none()}
 }

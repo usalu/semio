@@ -105,3 +105,22 @@ fn deflate_controlled_retained_restart_preserves_canonical_independent_windows()
   let complete=cursor.is_complete();assert_eq!(actual,deflate(raw));assert_eq!(miniz_oxide::inflate::decompress_to_vec(&actual).unwrap(),*raw);if index!=0{assert_eq!(born,0);assert!(turns<300000);}if index+1<inputs.len(){cursor.restart().unwrap();assert_eq!(cursor.phase(),RetainedDeflatePhase::Input);}assert!(complete);
  }close(&mut cursor);
 }
+
+/// 🪙️ Fixed matching pages fit a bounded original opportunity before any input and during closure.
+#[test]
+fn deflate_retained_matching_pages_fit_original_opportunity(){
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let mut cursor=RetainedDeflateEncoder::default();let mut pending=None;let mut output=[0];let mut initialization=0;
+ while cursor.phase()==RetainedDeflatePhase::Initialize{let grant=exact(&cursor);cursor.advance(&mut pending,false,&mut output,grant).unwrap();initialization+=1;}
+ cursor.begin_close();let mut closure=0;while !cursor.terminal_is_empty(){let d=cursor.retirement_demands().unwrap();cursor.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}).unwrap();closure+=1;}
+ assert!(initialization<=fixture["maximumInitializationTurns"].as_u64().unwrap()as usize,"matching-page initialization spent {initialization} turns");assert!(closure<=fixture["maximumClosureTurns"].as_u64().unwrap()as usize,"matching-page closure spent {closure} turns");
+ for vector in fixture["vectors"].as_array().unwrap(){let raw:Vec<u8>=vector["raw"].as_array().unwrap().iter().map(|byte|byte.as_u64().unwrap()as u8).collect();let stored=encode(&raw,true);assert_eq!(miniz_oxide::inflate::decompress_to_vec_with_limit(&stored,raw.len().max(1)).unwrap(),raw);}
+}
+
+/// 🧱️ Reserved append depth and Copy collection retirement quote the real original work.
+#[test]
+fn deflate_retained_batch_depth_and_retirement_grants(){
+ let mut cursor=RetainedDeflateEncoder::default();let mut pending=None;let mut output=[0];while cursor.next_capacity_byte_demand().unwrap()!=0{let grant=exact(&cursor);cursor.advance(&mut pending,false,&mut output,grant).unwrap();}
+ let depth=cursor.next_depth_demand().unwrap();let mut owner=semio_framework_value_persistent::list::PagedList::<u64,32768>::empty();while !owner.has_reserved_slot(){owner.reserve_one_funded(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:usize::MAX,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:0,maximum_depth:4096}).unwrap();}let expected=owner.next_push_depth_demand().unwrap()+1;
+ let grant=exact(&cursor);let initialized=cursor.advance(&mut pending,false,&mut output,grant).unwrap().progress.copied_bytes;cursor.begin_close();let d=cursor.retirement_demands().unwrap();let short=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:initialized.saturating_sub(1),maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:d.depth};let(step,allocated,released)=super::tests::controlled::observe_backing(||cursor.close_step(short).unwrap());let refused=step.progress();let unchanged=cursor.retirement_demands().unwrap()==d;let quoted=d.copy_bytes;close(&mut cursor);
+ assert_eq!(depth,expected,"reserved append depth");assert_eq!(quoted,initialized,"Copy collection payload quote");assert_eq!(refused,RetainedCloneProgress::default());assert!(unchanged);assert_eq!((allocated,released),(0,0));
+}

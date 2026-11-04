@@ -11,6 +11,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { defineConfig, devices } from "@playwright/test";
+import languageCases from "../📁️artifacts/🧫️cases.json" with { type: "json" };
 
 import { playwrightTestTimeoutMs } from "@semio-tech/repo-lib/testing";
 // #endregion 🔌️Adapters
@@ -50,15 +51,14 @@ export default defineConfig({
     baseURL,
     trace: "on-first-retry",
   },
-  projects: [
-    {
-      name: "chromium",
+  projects: languageCases.projects.map((project) => ({
+      name: project.name,
       use: {
         ...devices["Desktop Chrome"],
+        locale: project.locale,
         launchOptions: {
           args: [...browserLaunchArgs()],
         },
       },
-    },
-  ],
+    })),
 });

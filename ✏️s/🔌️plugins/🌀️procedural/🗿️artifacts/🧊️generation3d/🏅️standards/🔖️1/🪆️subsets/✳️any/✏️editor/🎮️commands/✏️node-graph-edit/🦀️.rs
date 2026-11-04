@@ -67,7 +67,7 @@ fn apply_rows(doc: &ArtifactView<'_, Generation3dSnapshot>, rows: &[NodeGraphEdi
                 }
             }
             Ok::<_, Fault>(editor.finish())
-        })?
+        }).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("flow.retained"), error.into_message()))??
     } else {
         Vec::new()
     };

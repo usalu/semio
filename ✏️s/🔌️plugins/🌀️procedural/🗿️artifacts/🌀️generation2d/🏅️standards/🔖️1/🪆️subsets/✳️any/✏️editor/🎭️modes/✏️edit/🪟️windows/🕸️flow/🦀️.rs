@@ -6,9 +6,8 @@ use semio_s_artifact_procedural_2d_model::GENERATION2D_GRAPH_HANDLE_TARGET_PREFI
 use semio_s_artifact_procedural_2d_model::GENERATION2D_GRAPH_NODE_TARGET_PREFIX;
 use semio_s_artifact_procedural_2d_model::GENERATION2D_INTERACTION_DOMAIN;
 use semio_s_artifact_procedural_2d_preview_eval::dag_host_snapshot_to_workflow;
-use semio_s_artifact_procedural_2d_model::with_host;
 use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
-use semio_framework_os_flow::{flow_backed_node_graph_extras, FlowEvalSession};
+use semio_framework_os_flow::{flow_backed_node_graph_extras, FlowEvalSession, FlowHost};
 use semio_framework_os_kernel::Viewport2d;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_ui_locale::LocalizedLabel;
@@ -140,11 +139,9 @@ fn document_operator_records(dag: &semio_framework_os_infinite_directed_presenta
 /// the marks-free `render` path passes an empty slice.
 pub fn render(document: &Generation2dSnapshot, config: &config::Generation2dMainWindowConfig, session: &FlowEvalSession, selection: &[String]) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let host_snapshot = &document.host_snapshot;
-    let (nodes, edges, operators) = with_host(host_snapshot, |host| {
-        let (nodes, edges) = dag_host_snapshot_to_workflow(&host.dag.graph.host_snapshot);
-        let operators = document_operator_records(&host.dag.graph.host_snapshot, &nodes);
-        (nodes, edges, operators)
-    })?;
+    let dag = FlowHost::project_dag_snapshot(host_snapshot, &semio_framework_os_flow::flow_neuron_kind_info_map());
+    let (nodes, edges) = dag_host_snapshot_to_workflow(&dag);
+    let operators = document_operator_records(&dag, &nodes);
     let viewport = Viewport2d { x: config.viewport.x, y: config.viewport.y, zoom: config.viewport.zoom };
     let flow_extras = flow_backed_node_graph_extras(host_snapshot, "", 0.0, true, false, semio_framework_ui_styling::metrics::board::GRID_FACTOR_DEFAULT, Some(session));
     let _ = GENERATION2D_PLAY_APP_ID;

@@ -78,14 +78,14 @@ pub struct FlowEvalTick {
 /// unfinished work on a SERVABLE graph re-arms once, through the session's own latch, so a second
 /// arming source cannot duplicate it; a hop with unfinished work that no installed extension can
 /// serve abandons the window instead, because its next hop would park the identical request.
-pub fn tick_result(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &mut FlowEvalSession, window_id: &str, window_kind_id: &str) -> Emit<FlowMutation, NoConfigMutation> {
+pub fn tick_result(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &mut FlowEvalSession, window_id: &str, window_kind_id: &str) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
     session.begin_window_tick(window_id, crate::editor::flow::host::cold_grant()).expect("flow cold session grant");
     let mut host = host_from_snapshot(snapshot, config, session);
     let more = session.tick_cold(&mut host, None);
     let parked = host.take_pending_extension_evals();
     let servable = may_rearm(&host.host_snapshot);
     let mut dependencies: std::collections::BTreeMap<_, _> = parked.iter().filter(|pending|!session.has_evaluation_progress(pending.node_hash)).map(|pending| (pending.neuron_id.clone(), flow::flow_inference_dependency_json(&host.host_snapshot, &pending.neuron_id))).collect();
-    host.retire_cold()?;
+    host.retire_cold().map_err(crate::editor::flow::host::value_fault)?;
     let mut extension_invocations = Vec::new();
     for pending in parked {
         let resume=session.has_evaluation_progress(pending.node_hash);
@@ -109,14 +109,14 @@ pub fn tick_result(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, sessi
         }
         Vec::new()
     };
-    Emit { effects, extension_invocations, ..Default::default() }
+    Ok(Emit { effects, extension_invocations, ..Default::default() })
 }
 
 pub fn handle(payload: &FlowEvalTick, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, NoConfig>, session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
     if payload.window_id.is_empty() {
         return Err(Fault::from("flow-eval-tick-window-required"));
     }
-    Ok(tick_result(&crate::flow_composed_snapshot(doc.snapshot, &doc.children)?, &crate::editor::flow::modes::edit::windows::main::config::current(cfg), session, &payload.window_id, &payload.window_kind_id))
+    tick_result(&crate::flow_composed_snapshot(doc.snapshot, &doc.children)?, &crate::editor::flow::modes::edit::windows::main::config::current(cfg), session, &payload.window_id, &payload.window_kind_id)
 }
 
 //#region 🧪️Tests

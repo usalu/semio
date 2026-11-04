@@ -30,12 +30,12 @@ fn a_tick_chain_settles_within_a_bounded_number_of_turns() {
     let snapshot = FlowSnapshot::default();
     let config = FlowMainWindowConfig::default();
     let mut session = FlowEvalSession::new();
-    let mut armed = evaluate_result(&snapshot, &config, &mut session, FLOW_PLAY_WINDOW_MAIN, FLOW_PLAY_WINDOW_MAIN).effects.len();
+    let mut armed = evaluate_result(&snapshot, &config, &mut session, FLOW_PLAY_WINDOW_MAIN, FLOW_PLAY_WINDOW_MAIN).unwrap().effects.len();
     let mut turns = 0usize;
     while armed > 0 && turns < FLOW_EVAL_TICK_TURN_BOUND {
         assert_eq!(armed, 1, "a hop arms at most one successor");
         turns += 1;
-        armed = tick_result(&snapshot, &config, &mut session, FLOW_PLAY_WINDOW_MAIN, FLOW_PLAY_WINDOW_MAIN).effects.len();
+        armed = tick_result(&snapshot, &config, &mut session, FLOW_PLAY_WINDOW_MAIN, FLOW_PLAY_WINDOW_MAIN).unwrap().effects.len();
     }
     assert_eq!(armed, 0, "the chain still owed a hop after {FLOW_EVAL_TICK_TURN_BOUND} turns");
     session.retire_cold();
@@ -50,14 +50,14 @@ fn a_settled_window_owes_no_hop_on_an_unchanged_snapshot() {
     let snapshot = FlowSnapshot::default();
     let config = FlowMainWindowConfig::default();
     let mut session = FlowEvalSession::new();
-    let mut armed = evaluate_result(&snapshot, &config, &mut session, FLOW_PLAY_WINDOW_MAIN, FLOW_PLAY_WINDOW_MAIN).effects.len();
+    let mut armed = evaluate_result(&snapshot, &config, &mut session, FLOW_PLAY_WINDOW_MAIN, FLOW_PLAY_WINDOW_MAIN).unwrap().effects.len();
     let mut turns = 0usize;
     while armed > 0 && turns < FLOW_EVAL_TICK_TURN_BOUND {
         turns += 1;
-        armed = tick_result(&snapshot, &config, &mut session, FLOW_PLAY_WINDOW_MAIN, FLOW_PLAY_WINDOW_MAIN).effects.len();
+        armed = tick_result(&snapshot, &config, &mut session, FLOW_PLAY_WINDOW_MAIN, FLOW_PLAY_WINDOW_MAIN).unwrap().effects.len();
     }
     for poll in 0..16 {
-        assert!(evaluate_result(&snapshot, &config, &mut session, FLOW_PLAY_WINDOW_MAIN, FLOW_PLAY_WINDOW_MAIN).effects.is_empty(), "refresh poll {poll} minted a hop for a settled window");
+        assert!(evaluate_result(&snapshot, &config, &mut session, FLOW_PLAY_WINDOW_MAIN, FLOW_PLAY_WINDOW_MAIN).unwrap().effects.is_empty(), "refresh poll {poll} minted a hop for a settled window");
     }
     session.retire_cold();
 }

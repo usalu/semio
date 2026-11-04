@@ -12,6 +12,7 @@ import { expect, test as browserTest, type Locator, type Page } from "@playwrigh
 import { significantConsoleErrors } from "./🧬️console/🟦️.ts";
 import { isNewToolRunGroup } from "./🧬️simulation/🟦️.ts";
 import { assertDemonstratorE2eArtifactPath } from "../../🔨️modules/🧪️e2e/📁️artifacts/🟦️.ts";
+import languageCases from "../../🔨️modules/🧪️e2e/📁️artifacts/🧫️cases.json" with { type: "json" };
 import artifactPolicy from "../../🔨️modules/🧪️e2e/📁️artifacts/🔣️.json" with { type: "json" };
 // #endregion 🔌️Adapters
 
@@ -75,7 +76,12 @@ const catalogText = (key: string, language: Language): string => {
   if (cells === undefined) throw new Error(`unknown demonstrator text ${key}`);
   return cells[language];
 };
-test.use({ locale: LANGUAGE_CASES[0].browserLocale });
+/** 🗣️ Resolves the explicitly configured browser language and its exact acceptance wording. */
+function projectLanguage() {
+  const project = languageCases.projects.find((entry) => entry.name === test.info().project.name);
+  if (!project) throw new Error("Acceptance requires an explicit en or de project");
+  return project;
+}
 //#endregion 🌐️Languages
 
 /** 📸️ Retains a short PNG and attaches its bytes without an extra copied attachment path. */
@@ -135,6 +141,8 @@ async function waitForPaneShellOutcome(page: Page, paneId: string): Promise<Shel
     paneId,
     { timeout: SHELL_READY_TIMEOUT_MS },
   );
+  await expect(page.locator("html")).toHaveAttribute("lang", projectLanguage().name);
+  await expect(page.locator(`[data-shell-id="${paneId}"]`)).toHaveAttribute("lang", projectLanguage().name);
   return page.evaluate((id) => {
     const el = document.querySelector(`[data-shell-id="${id}"]`) as HTMLElement;
     if (el.dataset.shellReady !== undefined) return "ready";
@@ -191,13 +199,12 @@ type WindowSurfaceKind = "world3d" | "nodeGraph" | "table" | "tree" | "tiledMap"
  * `surface: "placeholder"` is for a window whose *declared* surface kind is a scene host but whose body
  * on a fresh document is deliberately a plain text node instead (aussuchen's Preview renders
  * `built_text_node(labels.no_selection)` until something is selected) — that window is graded against
- * `placeholderPattern`, and the scene it is supposed to grow is graded by its own interaction test. */
+ * localized no-selection text, and the scene it is supposed to grow is graded by its own interaction test. */
 interface ExpectedWindow {
   readonly kindId: string;
   readonly instanceIds?: readonly string[];
   readonly surface: WindowSurfaceKind;
   readonly expectContent: boolean;
-  readonly placeholderPattern?: RegExp;
   readonly note?: string;
 }
 
@@ -275,7 +282,6 @@ const PANE_CASES: readonly PaneCase[] = [
         kindId: "sourcing-preview",
         surface: "placeholder",
         expectContent: false,
-        placeholderPattern: /Keine Auswahl|No selection/,
         note: "Declared `SurfaceKind::World3d`, but on a fresh document nothing is selected and `👁️preview/🦀️.rs`'s `render` deliberately returns `built_text_node(labels.no_selection)` — a text body, so there is no `.semio-world-3d-host`/`.semio-world-3d-empty` to grade at all. The old `📓️app-aussuchen.md §5` gap (`preview::render(snapshot, &[], labels)` hardcoded at the interaction-less delegate) is CLOSED: `✏️editor/🦀️.rs:1091` now feeds it `interaction.selection(SOURCING_ROWS_DOMAIN)`, and the scene that produces is graded by the aussuchen selection test below.",
       },
       {
@@ -533,7 +539,7 @@ test("language switch", async ({ page }) => {
   const switcher = page.locator('[data-slot="demonstrator-locale-switcher"]');
   const first = brandPaneIds()[0]!;
   const tagline = page.locator(`[data-layered-card="${first}"] [data-slot="demonstrator-pane-card-tagline"]`);
-  for (const { language } of [LANGUAGE_CASES[1], LANGUAGE_CASES[0]]) {
+  for (const { language } of [LANGUAGE_CASES.find((entry) => entry.language !== projectLanguage().name)!, LANGUAGE_CASES.find((entry) => entry.language === projectLanguage().name)!]) {
     await switcher.locator(`button[data-locale="${language}"]`).click();
     await expect(switcher.locator(`button[data-locale="${language}"]`)).toHaveAttribute("aria-pressed", "true");
     await expect(page.locator("html")).toHaveAttribute("lang", language);
@@ -543,7 +549,7 @@ test("language switch", async ({ page }) => {
 });
 
 /** 🔤️ Switching the language leaves an opened pane running: the very shell element (marked once it is ready) survives both switches and its root follows the language. */
-test("language switch keeps panes", async ({ page }) => {
+test("language switch live", async ({ page }) => {
   test.setTimeout(TEST_TIMEOUT_MS);
   await page.goto("/", { waitUntil: "domcontentloaded" });
   await dismissIntroduction(page, page.locator('[id="ui.introduction.skip"]'));
@@ -555,7 +561,7 @@ test("language switch keeps panes", async ({ page }) => {
   await shell.evaluate((element) => element.setAttribute("data-remount-probe", "kept"));
   await page.locator("[data-layered-overview-button]").click();
   const switcher = page.locator('[data-slot="demonstrator-locale-switcher"]');
-  for (const { language } of [LANGUAGE_CASES[1], LANGUAGE_CASES[0]]) {
+  for (const { language } of [LANGUAGE_CASES.find((entry) => entry.language !== projectLanguage().name)!, LANGUAGE_CASES.find((entry) => entry.language === projectLanguage().name)!]) {
     await switcher.locator(`button[data-locale="${language}"]`).click();
     await expect(page.locator("html")).toHaveAttribute("lang", language);
     await expect(shell).toHaveAttribute("lang", language);
@@ -605,7 +611,7 @@ for (const paneCase of PANE_CASES) {
           expect(hasScene, `${label}: tree body never attached`).toBe(true);
           if (win.expectContent) expect(rows, `${label}: expected at least one role="treeitem" row`).toBeGreaterThan(0);
         } else if (win.surface === "placeholder") {
-          await expect(container, `${label}: expected its documented text placeholder`).toHaveText(win.placeholderPattern!, { timeout: SHELL_READY_TIMEOUT_MS });
+          await expect(container, `${label}: expected its documented text placeholder`).toHaveText(projectLanguage().texts.noSelection, { timeout: SHELL_READY_TIMEOUT_MS });
         } else {
           const { hasScene, painted, distinctColors } = await tiledMapHasVisibleContent(page, container, win.expectContent);
           expect(hasScene, `${label}: tiled-map surface never resolved past its empty placeholder`).toBe(true);
@@ -635,7 +641,7 @@ test('aussuchen preview', async ({ page }) => {
   await dismissIntroductionIfPresent(page, "aussuchen");
 
   const preview = page.locator(paneElementSelector("aussuchen", windowElementId("sourcing-preview")));
-  await expect(preview, "aussuchen preview starts on its documented no-selection placeholder").toHaveText(/Keine Auswahl|No selection/, { timeout: SHELL_READY_TIMEOUT_MS });
+  await expect(preview, "aussuchen preview starts on its documented no-selection placeholder").toHaveText(projectLanguage().texts.noSelection, { timeout: SHELL_READY_TIMEOUT_MS });
 
   const rows = page.locator(paneElementSelector("aussuchen", windowElementId("sourcing-pool"))).locator(".semio-table-host [data-row-id]");
   const stock = rows.filter({ hasText: curationCase.name });
@@ -709,7 +715,7 @@ test('aussuchen undo-redo', async ({ page }) => {
   for (const step of curationCase.steps) {
     if (step.action === "increment") await stock.locator('[data-stepper-control="increment"]').click();
     else if (step.action === "keyboardIncrement") await count.press("ArrowUp");
-    else if (step.action === "remove") await row.getByRole("button", { name: /^(Remove|Entfernen)$/ }).click();
+    else if (step.action === "remove") await row.getByRole("button", { name: projectLanguage().texts.remove, exact: true }).click();
     else {
       await stock.getByText(curationCase.name, { exact: true }).click();
       await page.keyboard.press(step.action === "undo" ? "ControlOrMeta+z" : "ControlOrMeta+Shift+z");
@@ -786,7 +792,7 @@ test('energie run-cancel', async ({ page }) => {
   expect(await waitForPaneShellOutcome(page, scenario.paneId)).toBe("ready");
   await dismissIntroductionIfPresent(page, scenario.paneId);
   const simulation = page.locator(paneElementSelector(scenario.paneId, windowElementId("energy.simulation")));
-  await expect(simulation).toContainText(/No energy simulation run|Kein Energiesimulationslauf/);
+  await expect(simulation).toContainText(projectLanguage().texts.noRun);
   await simulation.getByRole("tree").click();
   await openPaneTab(page, scenario.paneId, scenario.toolCategoryId, scenario.toolTabId);
   await simulation.getByRole("tree").click();
@@ -797,9 +803,9 @@ test('energie run-cancel', async ({ page }) => {
   const completedStatus = page.locator(paneElementSelector(scenario.paneId, `${completedGroup}.status`));
   await expect(completed.getByRole("progressbar")).toBeVisible();
   await expect(completedStatus).toHaveAttribute("aria-live", /^(polite|off|assertive)$/);
-  await expect(completedStatus).toHaveText(new RegExp(scenario.finalized), { timeout: 3 * SURFACE_CONTENT_TIMEOUT_MS });
-  await expect(page.locator(paneElementSelector(scenario.paneId, `${completedGroup}.steps`))).toContainText(new RegExp(scenario.finalStep));
-  await expect(simulation).toContainText(new RegExp(scenario.acceptedResult));
+  await expect(completedStatus).toHaveText(new RegExp(projectLanguage().texts.finalized), { timeout: 3 * SURFACE_CONTENT_TIMEOUT_MS });
+  await expect(page.locator(paneElementSelector(scenario.paneId, `${completedGroup}.steps`))).toContainText(new RegExp(projectLanguage().texts.finalStep));
+  await expect(simulation).toContainText(projectLanguage().texts.acceptedResult);
   await capturePaneArtifact(page, scenario.paneId);
 
   await page.locator(paneElementSelector(scenario.paneId, `${completedGroup}.toolRunStart`)).click();
@@ -813,8 +819,8 @@ test('energie run-cancel', async ({ page }) => {
   const abort = page.locator(paneElementSelector(scenario.paneId, `${abortedGroup}.toolRunAbort`));
   await expect(abort).toBeEnabled();
   await abort.click();
-  await expect(page.locator(paneElementSelector(scenario.paneId, `${abortedGroup}.status`))).toHaveText(new RegExp(scenario.aborted), { timeout: SURFACE_CONTENT_TIMEOUT_MS });
-  await expect(simulation).toContainText(new RegExp(scenario.noResult));
+  await expect(page.locator(paneElementSelector(scenario.paneId, `${abortedGroup}.status`))).toHaveText(new RegExp(projectLanguage().texts.aborted), { timeout: SURFACE_CONTENT_TIMEOUT_MS });
+  await expect(simulation).toContainText(projectLanguage().texts.noResult);
 });
 
 /** 🌐️ Captures both geometry lanes because a deformation can change mesh vertices or instance transforms. */
@@ -832,12 +838,12 @@ test('statik undo-redo', async ({ page }) => {
   expect(await waitForPaneShellOutcome(page, scenario.paneId)).toBe("ready");
   await dismissIntroductionIfPresent(page, scenario.paneId);
   const results = page.locator(paneElementSelector(scenario.paneId, windowElementId("fem3d-results")));
-  const caption = results.getByText(new RegExp(scenario.caption));
+  const caption = results.getByText(new RegExp(projectLanguage().texts.caption));
   await expect(caption, "initial automatic solve must settle without a pending/fault suffix").toBeVisible({ timeout: SURFACE_CONTENT_TIMEOUT_MS });
   await caption.click();
   await openPaneTab(page, scenario.paneId, scenario.panelCategoryId, scenario.panelTabId);
   const transport = page.locator(paneElementSelector(scenario.paneId, "fem3d-play-results.transport.play"));
-  await expect(transport, "deformation comparisons require paused playback").toHaveText(/^(Play|Abspielen)$/);
+  await expect(transport, "deformation comparisons require paused playback").toHaveText(projectLanguage().texts.play);
   const fullAmplitude = await worldProjectionSnapshot(results);
   const phase = page.locator(paneElementSelector(scenario.paneId, "fem3d-play-results.phase.control")).getByRole("slider");
   await phase.press("Home");
@@ -870,7 +876,7 @@ test('statik undo-redo', async ({ page }) => {
     if (projections.has(step.scale)) expect(projection, `${step.action} restores the solved projection`).toBe(projections.get(step.scale));
     else projections.set(step.scale, projection);
     await expect(phase).toHaveAttribute("aria-valuenow", String(scenario.phase));
-    await expect(transport).toHaveText(/^(Play|Abspielen)$/);
+    await expect(transport).toHaveText(projectLanguage().texts.play);
   }
   await capturePaneArtifact(page, scenario.paneId);
 });
@@ -1050,7 +1056,7 @@ test("bearbeiten undo-redo", async ({ page }) => {
   await expect(field("enabled")).toContainText("true");
   const initial = await documentWorldProjection(workpiece);
   await openDocumentTab(page, "bearbeiten", "artifact");
-  await row.getByRole("button", { name: /^(Enabled|Aktiviert)$/ }).click();
+  await row.getByRole("button", { name: projectLanguage().texts.enabled, exact: true }).click();
   await openDocumentTab(page, "bearbeiten", "inspection");
   await expect(field("enabled")).toContainText("false");
   await expect.poll(() => documentWorldProjection(workpiece), { timeout: SURFACE_CONTENT_TIMEOUT_MS }).not.toBe(initial);

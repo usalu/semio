@@ -138,15 +138,15 @@ pub fn sync_host_selection_domains(host: &mut FlowHost, nodes: &[String], edges:
 /// 🔍️ The camera that frames the given node selection (the "graph" domain's live selection, read by
 /// the caller via `InteractionView` — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM), or
 /// `None` when nothing is selected.
-pub fn focus_selection_camera(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession, selected_node_ids: &[String]) -> Option<CameraJson> {
+pub fn focus_selection_camera(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession, selected_node_ids: &[String]) -> Result<Option<CameraJson>, Fault> {
     if selected_node_ids.is_empty() {
-        return None;
+        return Ok(None);
     }
     with_host_from_snapshot(snapshot, config, session, |host| {
         host.set_viewport(1280, 800, 1.0);
         host.set_selection(selected_node_ids);
         host.focus_selection_camera(1.2)
-    }).ok()?
+    }).map_err(value_fault)
 }
 //#endregion 🔖️Selection
 

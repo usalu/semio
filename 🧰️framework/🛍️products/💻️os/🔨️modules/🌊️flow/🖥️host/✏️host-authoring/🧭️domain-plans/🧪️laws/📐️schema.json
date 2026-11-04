@@ -1,0 +1,27 @@
+{
+  "type": "array",
+  "minItems": 8,
+  "maxItems": 8,
+  "uniqueItems": true,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "operation"
+    ],
+    "properties": {
+      "operation": {
+        "enum": [
+          "connect",
+          "selfConnect",
+          "disconnect",
+          "unknownDisconnect",
+          "remove",
+          "add",
+          "insertInput",
+          "insertOutput"
+        ]
+      }
+    }
+  }
+}

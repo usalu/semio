@@ -25,3 +25,7 @@ mod gumball_editing;
 
 #[path = "🖱️reorganize-and-screen-pointer/🦀️.rs"]
 mod reorganize_and_screen_pointer;
+
+#[path = "🧭️domain-plans/🦀️.rs"]
+mod domain_plans;
+pub use domain_plans::*;

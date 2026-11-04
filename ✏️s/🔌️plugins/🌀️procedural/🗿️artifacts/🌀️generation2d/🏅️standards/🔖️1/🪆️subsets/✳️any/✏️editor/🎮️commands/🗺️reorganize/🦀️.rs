@@ -16,7 +16,7 @@ pub struct Reorganize {}
 
 pub fn handle(_payload: &Reorganize, doc: &ArtifactView<'_, Generation2dSnapshot>, _cfg: &ConfigView<'_, Generation2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation2dMutation, Generation2dConfigMutation>, Fault> {
     let fixture = &doc.snapshot.host_snapshot;
-    Ok(Emit::mutations(with_host(fixture, |host| host_reorganize(host, r#"{"orientation":"leftRight"}"#))?.unwrap_or_default()))
+    Ok(Emit::mutations(with_host(fixture, |host| host_reorganize(host, r#"{"orientation":"leftRight"}"#)).map_err(|error| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("flow.retained"), error.into_message()))?.map_err(Fault::from)?))
 }
 
 //#region 🧪️Tests

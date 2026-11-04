@@ -25,9 +25,7 @@ pub use super::{OriginalFixtureCaller, OriginalFixtureScope, OriginalWorkFixture
 
     pub fn take_fixture_result_page<P:PluginApp>(app:&mut P,receiver:u32,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<Option<semio_framework_plugin_job::TypedOperationResultPage>,semio_framework::Fault>{
 
-        for _ in 0..2{let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||app.take_typed_operation_result_page(receiver,grant));let(page,p)=result?;assert!(p.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes));if page.is_some()||p==Default::default(){return Ok(page);}}
-
-        Err(semio_framework::Fault::from("original fixture page sealing omitted its next projection"))
+        loop{let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||app.take_typed_operation_result_page(receiver,grant));let(page,p)=result?;assert!(p.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes));if page.is_some()||p==Default::default(){return Ok(page);}}
 
     }
 

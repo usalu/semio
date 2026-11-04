@@ -48,29 +48,35 @@ impl FlowHost {
                 SynapseSpec { id: edge.id.clone(), from, to, from_port, to_port }
             })
             .collect();
-        self.host_snapshot.camera = CameraJson { x: self.dag.graph.host_snapshot.camera.x, y: self.dag.graph.host_snapshot.camera.y, zoom: self.dag.graph.host_snapshot.camera.zoom };
+        self.host_snapshot.camera = CameraJson { x: self.dag.graph.host_snapshot.camera().x, y: self.dag.graph.host_snapshot.camera().y, zoom: self.dag.graph.host_snapshot.camera().zoom };
     }
 
-    pub(in super::super) fn build_dag_host_snapshot_v1(&self) -> DagHostSnapshot {
+    pub(in super::super) fn build_dag_host_snapshot_v1(&self)->DagHostSnapshot{Self::raw_dag_snapshot(&self.host_snapshot,&self.kind_infos)}
+
+    /// 🪞️ Projects the same graph and resolved ports without constructing an evaluation or history owner.
+    pub fn project_dag_snapshot(host_snapshot:&dyn FlowSnapshotSource,kind_infos:&HistoryFoldIndex<String,OperatorInfo>)->DagHostSnapshot{let mut graph=Self::raw_dag_snapshot(host_snapshot,kind_infos);for node in &mut graph.nodes{fit_node_size(node);}graph}
+
+    pub(in super::super) fn raw_dag_snapshot(host_snapshot:&dyn FlowSnapshotSource,kind_infos:&HistoryFoldIndex<String,OperatorInfo>)->DagHostSnapshot{
         let mut seen = BTreeSet::new();
         let nodes: Vec<DagNodeSpec> =
-            self.host_snapshot.widgets.iter().enumerate().filter(|(_, widget)| seen.insert(widget_id_for(widget).to_string())).map(|(i, w)| widget_to_dag_node(w, i, &self.host_snapshot.layout, &self.host_snapshot.synapses, &self.kind_infos, widget_node_size(w, &self.host_snapshot.synapses, &self.kind_infos))).collect();
-        let existing: Vec<(String, String)> = self.host_snapshot.synapses.iter().map(|s| (s.from.clone(), s.to.clone())).collect();
-        let edges: Vec<DagHostSnapshotEdge> = self
-            .host_snapshot
-            .synapses
+            host_snapshot.widgets().iter().enumerate().filter(|(_, widget)| seen.insert(widget_id_for(widget).to_string())).map(|(i, w)| widget_to_dag_node(w, i, host_snapshot.layout(), host_snapshot.synapses(), kind_infos, widget_node_size(w, host_snapshot.synapses(), kind_infos))).collect();
+        let existing: Vec<(String, String)> = host_snapshot.synapses().iter().map(|s| (s.from.clone(), s.to.clone())).collect();
+        let edges: Vec<DagHostSnapshotEdge> = host_snapshot.synapses()
             .iter()
             .filter_map(|syn| {
                 if would_create_cycle(&existing.iter().filter(|(a, b)| !(a == &syn.from && b == &syn.to)).cloned().collect::<Vec<_>>(), &syn.from, &syn.to) {
                     return None;
                 }
-                let from_port = resolve_synapse_port(&syn.from, &syn.from_port, PortSide::Output, &self.host_snapshot.widgets, &self.host_snapshot.synapses, &self.kind_infos).unwrap_or_else(|| syn.from_port.clone());
-                let to_port = resolve_synapse_port(&syn.to, &syn.to_port, PortSide::Input, &self.host_snapshot.widgets, &self.host_snapshot.synapses, &self.kind_infos).unwrap_or_else(|| syn.to_port.clone());
+                let from_port = resolve_synapse_port(&syn.from, &syn.from_port, PortSide::Output, host_snapshot.widgets(), host_snapshot.synapses(), kind_infos).unwrap_or_else(|| syn.from_port.clone());
+                let to_port = resolve_synapse_port(&syn.to, &syn.to_port, PortSide::Input, host_snapshot.widgets(), host_snapshot.synapses(), kind_infos).unwrap_or_else(|| syn.to_port.clone());
                 Some(DagHostSnapshotEdge { id: syn.id.clone(), source: format!("{}@{}", syn.from, from_port), target: format!("{}@{}", syn.to, to_port), route_style: EdgeRouteStyle::default(), properties: PropertyBag::new() })
             })
             .collect();
-        DagHostSnapshot { schema: "dag.hostDocument".into(), camera: semio_framework_os_infinite_directed_presentation::DagCamera { x: self.host_snapshot.camera.x, y: self.host_snapshot.camera.y, zoom: self.host_snapshot.camera.zoom }, nodes, edges }
+        DagHostSnapshot { schema: "dag.hostDocument".into(), camera: semio_framework_os_infinite_directed_presentation::DagCamera { x: host_snapshot.camera().x, y: host_snapshot.camera().y, zoom: host_snapshot.camera().zoom }, nodes, edges }
     }
+
+    /// 📝️ Borrows the canonical Flow graph to publish its exact compiled wire text.
+    pub fn project_compiled_wire_literal(host_snapshot:&dyn FlowSnapshotSource,kind_infos:&HistoryFoldIndex<String,OperatorInfo>)->String{dag_host_snapshot_to_wire_literal(&Self::raw_dag_snapshot(host_snapshot,kind_infos))}
 
     pub(in super::super) fn screen_to_world_point(&self, sx: f64, sy: f64) -> canvas::Point {
         use canvas::camera::{screen_to_world, Camera, Viewport};

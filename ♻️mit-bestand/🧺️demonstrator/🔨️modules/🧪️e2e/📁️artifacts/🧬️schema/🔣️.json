@@ -8,7 +8,6 @@
     "maxPathChars",
     "reservedSuffixChars",
     "maxTitleChars",
-    "namespace",
     "maxCases"
   ],
   "properties": {
@@ -19,13 +18,10 @@
       "const": 256
     },
     "reservedSuffixChars": {
-      "const": 102
+      "const": 103
     },
     "maxTitleChars": {
       "const": 24
-    },
-    "namespace": {
-      "const": "e"
     },
     "maxCases": {
       "const": 32
@@ -39,12 +35,13 @@
         "version",
         "sessionId",
         "sessionDirectory",
-        "project",
+        "projects",
         "retries",
         "titles",
         "directFiles",
         "invalidSessionIds",
-        "workerFiles"
+        "workerFiles",
+        "platformRoots"
       ],
       "properties": {
         "version": {
@@ -57,9 +54,6 @@
         "sessionDirectory": {
           "type": "string",
           "pattern": "^[0-9a-f]{32}$"
-        },
-        "project": {
-          "const": "chromium"
         },
         "retries": {
           "const": 2
@@ -98,8 +92,113 @@
           "uniqueItems": true,
           "items": {
             "type": "string",
-            "maxLength": 101
+            "maxLength": 102
           }
+        },
+        "projects": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "locale",
+              "texts"
+            ],
+            "properties": {
+              "name": {
+                "enum": [
+                  "en",
+                  "de"
+                ]
+              },
+              "locale": {
+                "enum": [
+                  "en-US",
+                  "de-DE"
+                ]
+              },
+              "texts": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "noSelection",
+                  "remove",
+                  "noRun",
+                  "play",
+                  "enabled",
+                  "caption",
+                  "finalized",
+                  "aborted",
+                  "finalStep",
+                  "acceptedResult",
+                  "noResult"
+                ],
+                "properties": {
+                  "noSelection": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "remove": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "noRun": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "play": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "enabled": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "caption": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "finalized": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "aborted": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "finalStep": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "acceptedResult": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "noResult": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "platformRoots": {
+          "const": [
+            {
+              "platform": "macos-linux",
+              "ticketRootChars": 105,
+              "outputRootChars": 151
+            },
+            {
+              "platform": "windows",
+              "ticketRootChars": 107,
+              "outputRootChars": 153
+            }
+          ]
         }
       }
     }

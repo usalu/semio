@@ -9,7 +9,7 @@ fn gumball_gestures_declare_no_bracket_verbs() {
     let contracts = <Puzzle3dRetainedCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS;
     for action in ["transformBegin", "transformEnd"] {
         assert!(!PUZZLE3D_RETAINED_TOOL_IDS.contains(&action), "{action} must not be a retained tool id");
-        assert!(action_declarations(&manifest, action).is_empty(), "{action} must not be declared");
+        assert!(dispatchable_actions(&manifest).into_iter().all(|declaration| declaration.id != action), "{action} must not be declared");
         assert!(!contracts.iter().any(|contract| contract.tool_id == action), "{action} must carry no publication contract");
         assert!(Puzzle3dCommand::from_action(action, None, None).is_none(), "{action} must not decode as a command");
     }

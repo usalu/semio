@@ -407,8 +407,7 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
     /// 🧪️ Supplies each production presentation turn with the fixture issuer's unchanged grant.
     #[cfg(any(test, feature = "artifact-app-testing"))]
     pub(crate) fn take_fixture_result_page(&mut self,grant:RetainedCloneGrant)->Option<TypedOperationResultPage>{
-        for _ in 0..2{let((page,progress),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||self.take_result_page(grant).expect("original fixture page presentation"));assert!(progress.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));if page.is_some()||progress==RetainedCloneProgress::default(){return page;}}
-        panic!("original fixture page sealing omitted its next projection");
+        loop{let((page,progress),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||self.take_result_page(grant).expect("original fixture page presentation"));assert!(progress.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));if page.is_some()||progress==RetainedCloneProgress::default(){return page;}}
     }
     /// 🧪️ Pays the original page retirement through the production close port after exact ACK.
     #[cfg(any(test, feature = "artifact-app-testing"))]

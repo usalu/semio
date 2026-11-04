@@ -189,3 +189,49 @@ fn output_export_widget_catalogue_descriptor_and_payload() {
     assert!(matches!(node.kind, DagNodeKind::Export { .. }));
     host.retire_cold();
 }
+
+/// 🧭️ The language-neutral scene contract survives optional session projection and explicit host retirement.
+#[test]
+fn node_graph_extras_preserve_the_scene_contract_with_and_without_a_session() {
+    let cases: serde_json::Value = serde_json::from_str(include_str!("extras.json")).unwrap();
+    for case in cases.as_array().unwrap() {
+        let fixture = FlowHostSnapshot::default();
+        let session = FlowEvalSession::new();
+        let lod = &case["lod"];
+        let has_session = case["session"].as_bool().unwrap();
+        let result = flow_backed_node_graph_extras(&fixture, case["lodMode"].as_str().unwrap(), lod["proximityDistance"].as_f64().unwrap(), lod["gridVisible"].as_bool().unwrap(), lod["gridSnapEnabled"].as_bool().unwrap(), lod["gridFactor"].as_f64().unwrap(), has_session.then_some(&session));
+        fixture.retire_cold();
+        session.retire_cold();
+        let extras = result.unwrap();
+        let actual: serde_json::Value = serde_json::from_str(extras.lod_json.as_deref().unwrap()).unwrap();
+        assert_eq!(actual.as_object().unwrap().len(), lod.as_object().unwrap().len());
+        for (key, expected) in lod.as_object().unwrap() {
+            match expected.as_f64() {
+                Some(number) => assert_eq!(actual[key].as_f64(), Some(number)),
+                None => assert_eq!(&actual[key], expected),
+            }
+        }
+        assert_eq!(extras.status_json.is_some(), has_session);
+        assert_eq!(extras.eval_json.is_some(), has_session);
+        if let Some(status) = extras.status_json {
+            assert!(serde_json::from_str::<serde_json::Value>(&status).unwrap().is_object());
+        }
+    }
+}
+
+#[test]
+fn borrowed_flow_dag_and_compiled_projection_equal_the_original_host(){
+ let mut host=host_with_test_fixture();host.set_neuron_kind_infos_json(&test_kind_infos_json());
+ host.replace_host_snapshot(<FlowHostSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(include_str!("../../../../📚️examples/🗣️.dsl.semio")).unwrap());
+ let dag=FlowHost::project_dag_snapshot(&host.host_snapshot,&host.kind_infos);
+ assert_eq!(semio_framework_pack_json::to_json_string(&dag),semio_framework_pack_json::to_json_string(&host.dag.graph.host_snapshot));
+ assert_eq!(FlowHost::project_compiled_wire_literal(&host.host_snapshot,&host.kind_infos),host.compiled_wire_literal());
+ host.retire_cold().unwrap();
+}
+
+#[test]
+fn borrowed_flow_source_view_identity_uses_original_fields_not_temporary_headers(){
+ let host=host_with_test_fixture();let source=&host.host_snapshot;let first=semio_framework_artifact_flow_flow::FlowSnapshotView{schema:&source.schema,camera:&source.camera,widgets:&source.widgets,synapses:&source.synapses,layout:&source.layout};let second=semio_framework_artifact_flow_flow::FlowSnapshotView{schema:&source.schema,camera:&source.camera,widgets:&source.widgets,synapses:&source.synapses,layout:&source.layout};
+ use semio_framework_artifact_flow_flow::FlowSnapshotSource;assert_eq!(first.source_identity(),second.source_identity());assert_eq!(first.source_identity(),source.source_identity());assert_ne!(&first as*const _ as usize,&second as*const _ as usize);
+ assert_eq!(semio_framework_pack_json::to_json_string(&first),semio_framework_pack_json::to_json_string(source));host.retire_cold().unwrap();
+}

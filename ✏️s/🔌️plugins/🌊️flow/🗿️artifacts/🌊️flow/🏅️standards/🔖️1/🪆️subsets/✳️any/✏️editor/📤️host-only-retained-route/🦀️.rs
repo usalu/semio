@@ -100,8 +100,8 @@ impl FlowHostEffectJob {
             let view = ArtifactView::with_children(payload.snapshot.as_ref(), &payload.history, (*payload.children).clone());
             let emit = payload.instance_owner.with_mut::<FlowInstanceOperationOwner, _>(|owner| {
                 owner.with_session(|session| match &payload.command {
-                    FlowCommand::Evaluate(_) => crate::flow_composed_snapshot(&payload.snapshot, &payload.children).map(|composed| evaluate::evaluate_result(&composed, &payload.config, session, FLOW_PLAY_WINDOW_MAIN, FLOW_PLAY_WINDOW_MAIN)),
-                    FlowCommand::FlowEvalTick(command) => crate::flow_composed_snapshot(&payload.snapshot, &payload.children).map(|composed| flow_eval_tick::tick_result(&composed, &payload.config, session, &command.window_id, &command.window_kind_id)),
+                    FlowCommand::Evaluate(_) => crate::flow_composed_snapshot(&payload.snapshot, &payload.children).and_then(|composed| evaluate::evaluate_result(&composed, &payload.config, session, FLOW_PLAY_WINDOW_MAIN, FLOW_PLAY_WINDOW_MAIN)),
+                    FlowCommand::FlowEvalTick(command) => crate::flow_composed_snapshot(&payload.snapshot, &payload.children).and_then(|composed| flow_eval_tick::tick_result(&composed, &payload.config, session, &command.window_id, &command.window_kind_id)),
                     FlowCommand::FlowEvalResolve(command) => flow_eval_resolve::handle(command, &view, &ConfigView { snapshot: &NoConfig {}, window: None }, session),
                     FlowCommand::ContextMenuAt(_) | FlowCommand::OpenSpotlight(_) | FlowCommand::ReplaceImage(_) => Ok(Emit::default()),
                     _ => Err(Fault::from("flow-host-effect-route-mismatch")),

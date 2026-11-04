@@ -8,9 +8,8 @@ use crate::windows::preview::GENERATION_3D_INTERACTION_DOMAIN;
 use crate::windows::preview::GENERATION_3D_INTERACTION_GRANULARITY;
 use semio_s_artifact_procedural_3d_model::GENERATION_3D_PLAY_APP_ID;
 use semio_s_artifact_procedural_3d_preview_eval::dag_host_snapshot_to_workflow;
-use semio_s_artifact_procedural_3d_model::with_host;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
-use semio_framework_os_flow::{flow_backed_node_graph_extras, FlowEvalSession};
+use semio_framework_os_flow::{flow_backed_node_graph_extras, FlowEvalSession, FlowHost};
 use semio_framework_os_kernel::Viewport2d;
 use semio_framework_plugin::plugin_app_close_prelude::{Trigger, UiAssemblyResult};
 use semio_framework_plugin::{Buildable, HasBase, HasChildren};
@@ -304,11 +303,9 @@ fn graph_find_items(nodes: &[NodeGraphNodeRecord], category: &str) -> Vec<NodeGr
 //#region 🔖️Render
 pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, session: &FlowEvalSession, marks: &PreviewInteractionMarks, labels: &Generation3dLabels) -> UiAssemblyResult<BuiltNode> {
     let host_snapshot = &document.host_snapshot;
-    let (nodes, edges, operators) = with_host(host_snapshot, |host| {
-        let (nodes, edges) = dag_host_snapshot_to_workflow(&host.dag.graph.host_snapshot);
-        let operators = document_operator_records(&host.dag.graph.host_snapshot, &nodes);
-        (nodes, edges, operators)
-    })?;
+    let dag = FlowHost::project_dag_snapshot(host_snapshot, &semio_framework_os_flow::flow_neuron_kind_info_map());
+    let (nodes, edges) = dag_host_snapshot_to_workflow(&dag);
+    let operators = document_operator_records(&dag, &nodes);
     let viewport = Viewport2d { x: host_snapshot.camera.x, y: host_snapshot.camera.y, zoom: host_snapshot.camera.zoom };
     let flow_extras = flow_backed_node_graph_extras(host_snapshot, &config.lod_mode, 0.0, true, false, semio_framework_ui_styling::metrics::board::GRID_FACTOR_DEFAULT, Some(session));
     let hover = marks.hovered_graph_target().map(|(node_id, port_id)| NodeGraphHover { node_id: Some(node_id), port_id });

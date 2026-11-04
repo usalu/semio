@@ -211,7 +211,8 @@ pub async fn settle_registered_typed_operation<P: PluginApp>(app: &mut P, receiv
         while let Some(mut page) = crate::artifact_app_laws::take_fixture_result_page(app,receiver,mounted_policy.preparation).expect("original fixture page presentation") {
             let lane = page.lane;
             let fault = (lane == TypedOperationResultLane::Fault).then(|| semio_framework_plugin_decl_app::tool_contract::decode_typed_operation_fault_page(page.bytes()));
-            if !app.acknowledge_typed_operation_result(page.token)? {
+            let token = crate::artifact_app_laws::close_fixture_result_page(&mut page, mounted_policy.close);
+            if !app.acknowledge_typed_operation_result(token)? {
                 return Err(semio_framework::Fault::from("registered fixture typed operation rejected its exact result ACK").into());
             }
             receipt.lanes.push(lane);

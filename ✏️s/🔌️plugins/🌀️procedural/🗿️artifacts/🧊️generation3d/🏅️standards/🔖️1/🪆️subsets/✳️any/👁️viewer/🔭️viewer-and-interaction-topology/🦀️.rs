@@ -6,7 +6,8 @@ use super::*;
 /// 🕸️ Every node's visible port ids (`{nodeId}@{portId}`) — read-only twin of the sibling surface's
 /// own projection, so a world pick in this viewer names the exact same declared target ids.
 fn generation3d_view_port_ids_by_node(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot) -> std::collections::BTreeMap<String, Vec<String>> {
-    let Ok((graph_nodes, _)) = semio_s_artifact_procedural_3d_model::with_host(host_snapshot, |host| semio_s_artifact_procedural_3d_preview_eval::dag_host_snapshot_to_workflow(&host.dag.graph.host_snapshot)) else { return std::collections::BTreeMap::new() };
+    let dag = semio_framework_os_flow::FlowHost::project_dag_snapshot(host_snapshot, &semio_framework_os_flow::flow_neuron_kind_info_map());
+    let (graph_nodes, _) = semio_s_artifact_procedural_3d_preview_eval::dag_host_snapshot_to_workflow(&dag);
     graph_nodes.into_iter().map(|node| (node.id, node.inputs.into_iter().chain(node.outputs).map(|port| port.id).collect())).collect()
 }
 //#endregion 🔖️InteractionTopology

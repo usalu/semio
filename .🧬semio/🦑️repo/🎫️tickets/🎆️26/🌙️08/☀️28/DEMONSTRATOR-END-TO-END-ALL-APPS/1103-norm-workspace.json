@@ -1,0 +1,187 @@
+{
+  "workspaces": [
+    {
+      "workspace": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990",
+      "registrations": []
+    },
+    {
+      "workspace": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599",
+      "registrations": []
+    },
+    {
+      "workspace": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997",
+      "registrations": []
+    },
+    {
+      "workspace": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798",
+      "registrations": []
+    },
+    {
+      "workspace": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991",
+      "registrations": [
+        {
+          "name": "semio-s-artifact-norm-en1991-mut-dust-explosions",
+          "path": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💥dust-explosions/📦️packages/🦀️rust"
+        },
+        {
+          "name": "semio-s-artifact-norm-en1991-mut-rail-load-groups",
+          "path": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛤️rail-load-groups/📦️packages/🦀️rust"
+        },
+        {
+          "name": "semio-s-artifact-norm-en1991-mut-rail-derailments",
+          "path": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚆rail-derailments/📦️packages/🦀️rust"
+        },
+        {
+          "name": "semio-s-artifact-norm-en1991-mut-snow-guards",
+          "path": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛡️snow-guards/📦️packages/🦀️rust"
+        },
+        {
+          "name": "semio-s-artifact-norm-en1991-mut-local-fires",
+          "path": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥local-fires/📦️packages/🦀️rust"
+        },
+        {
+          "name": "semio-s-artifact-norm-en1991-mut-support-collisions",
+          "path": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚛support-collisions/📦️packages/🦀️rust"
+        },
+        {
+          "name": "semio-s-artifact-norm-en1991-mut-fatigue-models",
+          "path": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁fatigue-models/📦️packages/🦀️rust"
+        }
+      ]
+    },
+    {
+      "workspace": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992",
+      "registrations": []
+    },
+    {
+      "workspace": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805",
+      "registrations": []
+    },
+    {
+      "workspace": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757",
+      "registrations": []
+    },
+    {
+      "workspace": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993",
+      "registrations": []
+    },
+    {
+      "workspace": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994",
+      "registrations": []
+    },
+    {
+      "workspace": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108",
+      "registrations": []
+    },
+    {
+      "workspace": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996",
+      "registrations": []
+    },
+    {
+      "workspace": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995",
+      "registrations": []
+    },
+    {
+      "workspace": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999",
+      "registrations": []
+    },
+    {
+      "workspace": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998",
+      "registrations": []
+    }
+  ],
+  "staleDependencies": [
+    {
+      "manifest": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪜buckling-lengths/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-s-artifact-norm-en1993-mut-buckling-lengths-more",
+      "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪜buckling-lengths/🦀️.rs",
+      "modules": [
+        "change_buckling_length_member_id",
+        "change_buckling_length_beam_stiffness_b",
+        "change_buckling_length_column_stiffness_b",
+        "change_buckling_length_beam_stiffness_a",
+        "change_buckling_length_column_stiffness_a",
+        "change_buckling_length_restraint_b",
+        "change_buckling_length_restraint_a",
+        "change_buckling_length_sway",
+        "change_buckling_length_plane",
+        "insert_buckling_length",
+        "remove_buckling_length"
+      ]
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪛fastened-joints/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-s-artifact-norm-en1993-mut-fastened-joints-more",
+      "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪛fastened-joints/🦀️.rs",
+      "modules": [
+        "change_fastened_joint_kind",
+        "change_fastened_joint_per_row",
+        "change_fastened_joint_count",
+        "insert_fastened_joint",
+        "remove_fastened_joint",
+        "change_fastened_joint_member_id",
+        "change_panel_steel_grade",
+        "change_panel_steel_subgrade",
+        "change_fastened_joint_shear_resistance",
+        "change_fastened_joint_tension_force",
+        "change_fastened_joint_shear_force",
+        "change_fastened_joint_sheet_width",
+        "change_fastened_joint_gauge",
+        "change_fastened_joint_pitch",
+        "change_fastened_joint_edge_distance",
+        "change_fastened_joint_end_distance",
+        "change_fastened_joint_base_strength",
+        "change_fastened_joint_head_strength",
+        "change_fastened_joint_base_thickness",
+        "change_fastened_joint_head_thickness",
+        "change_fastened_joint_washer_diameter",
+        "change_fastened_joint_diameter"
+      ]
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥫forming-gains/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-s-artifact-norm-en1993-mut-forming-gains-more",
+      "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥫forming-gains/🦀️.rs",
+      "modules": [
+        "change_forming_gain_forming",
+        "insert_forming_gain",
+        "remove_forming_gain",
+        "change_forming_gain_bends",
+        "change_forming_gain_member_id",
+        "change_forming_gain_gross_area",
+        "change_forming_gain_ultimate_strength",
+        "change_forming_gain_used_yield"
+      ]
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪material-ductility/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-s-artifact-norm-en1993-mut-material-ductility-more",
+      "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪material-ductility/🦀️.rs",
+      "modules": [
+        "change_material_ductility_material_id",
+        "change_material_ductility_ultimate_strain",
+        "change_material_ductility_elongation",
+        "insert_material_ductility",
+        "remove_material_ductility"
+      ]
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏳fatigue-stresses/📦️packages/🦀️rust/Cargo.toml",
+      "name": "semio-s-artifact-norm-en1993-mut-fatigue-stresses-more",
+      "source": "✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏳fatigue-stresses/🦀️.rs",
+      "modules": [
+        "change_fatigue_stress_relief",
+        "change_fatigue_stress_min_case_id",
+        "change_fatigue_stress_max_case_id",
+        "change_fatigue_stress_detail_id",
+        "change_fatigue_stress_cycles",
+        "change_fatigue_stress_thickness",
+        "change_fatigue_stress_concentration",
+        "change_fatigue_stress_fibre_y",
+        "change_fatigue_stress_fibre_z",
+        "insert_fatigue_stress",
+        "remove_fatigue_stress"
+      ]
+    }
+  ]
+}

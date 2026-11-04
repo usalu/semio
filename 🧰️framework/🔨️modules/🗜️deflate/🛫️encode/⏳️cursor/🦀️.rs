@@ -4,6 +4,9 @@ use semio_framework_value_persistent::{list::PagedList, list::PagedListError, li
 pub use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetirementDemand};
 
 const HISTORY: usize = WINDOW_SIZE + MAX_MATCH + 2;
+const INITIALIZE_COPY_BYTES:usize=4096;
+const RETIRE_COPY_ITEMS:usize=512;
+fn initialization_count<T,const N:usize>(owner:&PagedList<T,N>,index:usize)->usize{(owner.capacity()-index).min(N-index).min(INITIALIZE_COPY_BYTES/size_of::<T>())}
 #[derive(Clone,Copy)]
 struct HeadSlot{position:u32,generation:u32}
 
@@ -36,24 +39,24 @@ fn invalid(reason: &'static str) -> ValueError { ValueError::literal(ValueRefusa
 
 fn initialize_demands<T, const N: usize>(owner: &PagedList<T, N>, index: usize) -> Result<(usize, usize, usize), ValueError> {
     if index == owner.len() && !owner.has_reserved_slot() { Ok((owner.next_allocation_bytes().map_err(page_error)?, owner.next_reserve_copy_byte_demand().map_err(page_error)?, owner.next_reserve_depth_demand().map_err(page_error)? + 1)) }
-    else { Ok((0, size_of::<T>(), owner.next_pop_depth_demand().map_err(page_error)?.max(1) + 1)) }
+    else { Ok((0, initialization_count(owner,index)*size_of::<T>(), (if index==owner.len(){owner.next_push_depth_demand()}else{owner.next_get_depth_demand(index)}).map_err(page_error)?+1)) }
 }
 
-fn initialize_one<T: Copy, const N: usize>(owner: &mut PagedList<T, N>, index: usize, value: T, grant: RetainedCloneGrant) -> Result<(RetainedCloneProgress, bool), ValueError> {
+fn initialize_one<T: Copy, const N: usize>(owner: &mut PagedList<T, N>, index: usize, value: T, grant: RetainedCloneGrant) -> Result<(RetainedCloneProgress, usize), ValueError> {
     if index == owner.len() && !owner.has_reserved_slot() {
-        return owner.reserve_one_funded(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant }).map(|receipt| (receipt, false)).map_err(|error| page_error(error.refusal()).with_retained_progress(RetainedCloneProgress { retained_capacity_bytes: error.allocated_bytes, ..Default::default() }));
+        return owner.reserve_one_funded(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant }).map(|receipt| (receipt, 0)).map_err(|error| page_error(error.refusal()).with_retained_progress(RetainedCloneProgress { retained_capacity_bytes: error.allocated_bytes, ..Default::default() }));
     }
-    if index == owner.len() { owner.push_reserved(value).map_err(|_| invalid("Deflate initialized slot lacks admitted backing"))?; }
-    else { owner[index] = value; }
-    Ok((RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<T>(), ..Default::default() }, true))
+    let count=initialization_count(owner,index);
+    for slot in index..index+count{if slot==owner.len(){owner.push_reserved(value).map_err(|_|invalid("Deflate initialized slot lacks admitted backing"))?;}else{owner[slot]=value;}}
+    Ok((RetainedCloneProgress{copied_items:1,copied_bytes:count*size_of::<T>(),..Default::default()},count))
 }
 
 fn retirement<T, const N: usize>(owner: &PagedList<T, N>) -> Result<RetirementDemand, ValueError> {
-    Ok(RetirementDemand { release_bytes: if owner.is_empty() { owner.next_release_allocation_bytes().map_err(page_error)? } else { 0 }, depth: (if owner.is_empty() { owner.next_release_depth_demand() } else { owner.next_pop_depth_demand() }).map_err(page_error)? + 1, ..Default::default() })
+    Ok(RetirementDemand { copy_bytes:owner.len().min(RETIRE_COPY_ITEMS)*size_of::<T>(),release_bytes: if owner.is_empty() { owner.next_release_allocation_bytes().map_err(page_error)? } else { 0 }, depth: (if owner.is_empty() { owner.next_release_depth_demand() } else { owner.next_pop_depth_demand() }).map_err(page_error)? + 1, ..Default::default() })
 }
 
-fn retire<T, const N: usize>(owner: &mut PagedList<T, N>, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, ValueError> {
-    if owner.pop().is_some() { Ok(RetainedCloneProgress { copied_items: 1, ..Default::default() }) }
+fn retire<T:Copy, const N: usize>(owner: &mut PagedList<T, N>, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, ValueError> {
+    if !owner.is_empty(){let count=owner.len().min(RETIRE_COPY_ITEMS);for _ in 0..count{owner.pop();}Ok(RetainedCloneProgress{copied_items:1,copied_bytes:count*size_of::<T>(),..Default::default()})}
     else { let step = owner.release_empty_page(grant.maximum_release_bytes).map_err(page_error)?; Ok(RetainedCloneProgress { copied_items: usize::from(step.progressed), released_bytes: step.released_allocation_bytes, ..Default::default() }) }
 }
 
@@ -100,7 +103,7 @@ impl RetainedDeflateEncoder {
             RetainedDeflatePhase::Initialize => {
                 let (receipt, placed) = match self.initialize { 0 => initialize_one(&mut self.head, self.initialized,HeadSlot{position:u32::MAX,generation:0}, grant)?, 1 => initialize_one(&mut self.previous, self.initialized, u32::MAX, grant)?, 2 => initialize_one(&mut self.bytes, self.initialized, 0, grant)?, _ => return Err(invalid("Deflate initialization owner disappeared")) };
                 progress = receipt;
-                if placed { self.initialized += 1; let count = match self.initialize { 0 => HASH_SIZE, 1 => WINDOW_SIZE, _ => HISTORY }; if self.initialized == count { self.initialized = 0; self.initialize += 1; if self.initialize == 3 { self.phase = RetainedDeflatePhase::Input; } } }
+                if placed!=0 { self.initialized += placed; let count = match self.initialize { 0 => HASH_SIZE, 1 => WINDOW_SIZE, _ => HISTORY }; if self.initialized == count { self.initialized = 0; self.initialize += 1; if self.initialize == 3 { self.phase = RetainedDeflatePhase::Input; } } }
             }
             RetainedDeflatePhase::Input => {
                 if self.received - self.position >= MAX_MATCH + 2 || self.finished_input { self.best = 0; self.distance = 0; self.chain = 0; self.candidate = u32::MAX; self.phase = if self.position == self.received { RetainedDeflatePhase::Finish } else { RetainedDeflatePhase::Search }; }

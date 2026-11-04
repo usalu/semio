@@ -1,0 +1,11 @@
+{
+  "terminalPolls": 3,
+  "maximumTurns": 100000,
+  "expectedTransfers": 1,
+  "terminalProgress": {
+    "copied_items": 0,
+    "copied_bytes": 0,
+    "retained_capacity_bytes": 0,
+    "released_bytes": 0
+  }
+}

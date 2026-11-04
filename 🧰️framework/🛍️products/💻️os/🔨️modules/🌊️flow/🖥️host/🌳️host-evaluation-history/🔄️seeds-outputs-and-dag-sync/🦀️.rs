@@ -8,9 +8,12 @@ impl FlowHost {
         dag_host_snapshot_to_wire_literal(&self.build_dag_host_snapshot_v1())
     }
 
-    pub fn build_seeds(&self) -> HashMap<String, Dictionary> {
+    pub fn build_seeds(&self) -> HashMap<String, Dictionary> {Self::project_seeds(&self.host_snapshot)}
+
+    /// 🌱️ Borrows input widgets to construct exactly the evaluator seed rows.
+    pub fn project_seeds(host_snapshot:&dyn FlowSnapshotSource)->HashMap<String,Dictionary>{
         let mut seeds = HashMap::new();
-        for widget in &self.host_snapshot.widgets {
+        for widget in host_snapshot.widgets() {
             match widget {
                 Widget::InputSlider { id, value, .. } => {
                     seeds.insert(id.clone(), channel_output("number", Dictionary::with_schema("number").insert("value", NeuralValue::Atom(Atom::Decimal(*value)))));

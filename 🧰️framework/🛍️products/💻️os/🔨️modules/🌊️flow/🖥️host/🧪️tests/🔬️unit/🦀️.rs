@@ -28,3 +28,5 @@ include!("🧩️variadic-merge-widget-add-and-wheel-laws/🦀️.rs");
 include!("👻️ghost-selection-and-drag-laws/🦀️.rs");
 include!("🧲️port-insertion-cluster-and-collapse-laws/🦀️.rs");
 include!("🔁️extension-bridge-and-chain-census-laws/🦀️.rs");
+
+include!("🏁️cold-retirement/🦀️.rs");

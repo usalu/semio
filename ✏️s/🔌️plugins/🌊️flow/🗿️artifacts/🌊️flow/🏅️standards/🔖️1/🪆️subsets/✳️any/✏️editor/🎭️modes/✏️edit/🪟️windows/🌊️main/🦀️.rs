@@ -1,7 +1,7 @@
 //! 🌊️ Flow play app — the main node-graph window: the editable flow canvas.
 
 use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
-use crate::editor::flow::host::{with_host_from_snapshot, with_live_host_snapshot};
+use crate::editor::flow::host::{with_live_host_snapshot};
 use crate::editor::flow::editor_vocabulary::{FLOW_GRAPH_EDGE_TARGET_PREFIX, FLOW_GRAPH_HANDLE_TARGET_PREFIX, FLOW_GRAPH_NODE_TARGET_PREFIX, FLOW_INTERACTION_GRAPH, FLOW_PLAY_WINDOW_MAIN};
 use crate::editor::flow::modes::edit::windows::main::options;
 use crate::editor::flow::terminology::FlowPlayLabels;
@@ -91,11 +91,11 @@ pub fn dag_host_snapshot_to_workflow(host_snapshot: &DagHostSnapshot) -> (Vec<No
 
 //#region 🔖️Render
 pub fn render(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession, selection: &[String]) -> UiAssemblyResult<BuiltNode> {
-    let (nodes, edges) = with_host_from_snapshot(snapshot, config, session, |host| dag_host_snapshot_to_workflow(&host.dag.graph.host_snapshot))?;
+    let (nodes,edges)=with_live_host_snapshot(snapshot,|live|dag_host_snapshot_to_workflow(&flow::FlowHost::project_dag_snapshot(live,&flow::flow_neuron_kind_info_map())));
     let viewport = Viewport2d { x: config.camera.x, y: config.camera.y, zoom: config.camera.zoom };
     let (snapshot_json, flow_extras) = with_live_host_snapshot(snapshot, |live| {
         let extras = flow_backed_node_graph_extras(live, &config.lod_mode, config.proximity_distance, config.grid_visible, config.grid_snap_enabled, config.grid_factor, Some(session));
-        (extras.host_snapshot_json.is_none().then(|| semio_framework_pack_json::to_json_string(live)), extras)
+        (extras.host_snapshot_json.is_none().then(|| semio_framework_pack_json::to_json_string(live)),extras)
     });
     let preview_off_json = if config.preview_off_node_ids.is_empty() { None } else { serde_json::to_string(&config.preview_off_node_ids).ok() };
     let scene = NodeGraphScene {

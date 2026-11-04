@@ -367,7 +367,7 @@ impl ArtifactEditor for FlowPlayApp {
                     let live: Vec<&str> = windows.iter().map(|(id, _)| id.as_str()).collect();
                     let mut cursor = 0;
                     while !matches!(session.retain_window_tick_latches(&live, &mut cursor, cold_grant()).expect("flow cold session grant"), semio_framework_value::RetainedCloneStep::Complete(_)) {}
-                    windows.iter().flat_map(|(window_id, window_kind_id)| evaluate::evaluate_result(&composed, &config, session, window_id, window_kind_id).effects).collect::<Vec<Effect>>()
+                    windows.iter().flat_map(|(window_id, window_kind_id)| match evaluate::evaluate_result(&composed, &config, session, window_id, window_kind_id) { Ok(emit) => emit.effects, Err(fault) => vec![Effect::Notify { message: fault.message }] }).collect::<Vec<Effect>>()
                 })
             })
             .unwrap_or_default()

@@ -59,7 +59,7 @@ fn apply_rows(doc: &ArtifactView<'_, Generation2dSnapshot>, rows: &[NodeGraphEdi
     let mut refusal = None;
     let mut leaves = Vec::new();
     if structural {
-        with_host(host_snapshot, |host| {
+        let retired = with_host(host_snapshot, |host| {
             for row in rows {
                 let produced = match row {
                     NodeGraphEditRow::Connect { source_node_id, source_port_id, target_node_id, target_port_id } => host_connect_ports(host, source_node_id, source_port_id, target_node_id, target_port_id),
@@ -98,7 +98,11 @@ fn apply_rows(doc: &ArtifactView<'_, Generation2dSnapshot>, rows: &[NodeGraphEdi
                     }
                 }
             }
-        })?;
+        });
+        if let Err(error) = retired {
+            for leaf in leaves { leaf.retire_cold(); }
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("flow.retained"), error.into_message()));
+        }
     }
     if let Some(reason) = refusal {
         for leaf in leaves {

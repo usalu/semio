@@ -153,6 +153,7 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
             let composed = crate::flow_composed_snapshot(snapshot, &context.children)?;
             let camera = focus_selection_camera(&composed, &config, &session, &nodes);
             session.retire_cold();
+            let camera = camera?;
             if let Some(camera) = camera {
                 next.camera = camera;
             }

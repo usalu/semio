@@ -22,7 +22,7 @@ pub struct RemoveWidget {
 pub fn handle(payload: &RemoveWidget, doc: &ArtifactView<'_, Generation2dSnapshot>, _cfg: &ConfigView<'_, Generation2dConfig>, _session: &mut FlowEvalSession) -> Result<Emit<Generation2dMutation, Generation2dConfigMutation>, Fault> {
     let fixture = &doc.snapshot.host_snapshot;
     let target_id = &payload.widget_id;
-    let operations = with_host(fixture, |host| host_remove_widget(host, target_id))?.unwrap_or_default();
+    let operations = with_host(fixture, |host| host_remove_widget(host, target_id)).map_err(|error| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("flow.retained"), error.into_message()))?.map_err(Fault::from)?;
     if operations.is_empty() {
         return Ok(Emit::default());
     }

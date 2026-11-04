@@ -73,6 +73,7 @@ impl semio_framework_plugin::WindowConfigOwner for FlowMainWindowConfigOwner {
     fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> {
         semio_framework_plugin::bounded_window_config_preparation_factory::<Self>()
     }
+    fn store_disposer_birth() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { semio_framework_plugin::bounded_window_config_store_disposer_birth::<Self>() }
     fn build_store_disposer() -> Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> {
         semio_framework_plugin::bounded_window_config_store_disposer::<Self>()
     }

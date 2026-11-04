@@ -540,6 +540,7 @@ impl ArtifactEditor for Generation3dPlayApp {
     /// a Cluster's own tree item transitively covers every widget nested inside it). Synapses become
     /// "edge" targets, parented to nothing (edges are leaves, not containers).
     fn interaction_topology(doc: &ArtifactView<'_, Generation3dSnapshot>, _cfg: &ConfigView<'_, Generation3dConfig>) -> Result<InteractionTopology, semio_framework_value::ValueError> {
+ let ports_by_node = generation3d_port_ids_by_node(&doc.snapshot.host_snapshot);
  Ok((||{
         fn walk_neuron(neuron: &semio_framework_artifact_flow_flow::neural::Neuron, parent: String, ordered: &mut Vec<TopologyNode>) {
             ordered.push(TopologyNode { id: neuron.id.clone(), granularity: "node".into(), parent: Some(parent) });
@@ -551,7 +552,6 @@ impl ArtifactEditor for Generation3dPlayApp {
         }
         let host_snapshot = &doc.snapshot.host_snapshot;
         let mut ordered = Vec::new();
-        let ports_by_node = generation3d_port_ids_by_node(host_snapshot);
         for widget in &host_snapshot.widgets {
             let id = semio_s_artifact_procedural_3d_model::widget_id(widget).to_string();
             ordered.push(TopologyNode { id: id.clone(), granularity: "node".into(), parent: None });

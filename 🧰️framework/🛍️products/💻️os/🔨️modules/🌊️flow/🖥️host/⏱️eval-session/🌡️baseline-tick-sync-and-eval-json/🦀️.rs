@@ -169,6 +169,15 @@ impl FlowEvalSession {
         if self.status_json.is_empty(){"{}"}else{&self.status_json}
     }
 
+    /// 🪞️ Reproduces the detached status host read without constructing mutable host custody.
+    pub fn status_json_for_snapshot(&self,snapshot:&dyn FlowSnapshotSource)->String{
+        let infos=HistoryFoldIndex::new();let registry=self.operator_registry.clone().unwrap_or_else(semio_framework_os_flow_operators::registry::flow_operator_registry);
+        let generation=if self.operator_registry.is_some(){0}else{flow_extension_registry_generation()};let current=self.flow_extension_generation==generation;
+        let previous=self.previous_channels.as_deref().filter(|_|current);
+        let remaining=FlowHost::project_pending_widget_ids(snapshot,&infos,self.previous_snapshot.as_deref().filter(|_|current),previous,self.previous_channels.as_deref(),registry.as_ref(),self.neural_cache.as_ref().unwrap());
+        project_flow_status_json(snapshot,&remaining,"",&BTreeSet::new(),|id|FlowHost::project_widget_blocked_ports(snapshot,&infos,self.previous_channels.as_deref(),id))
+    }
+
     pub fn status_json_for_host(&self, host: &FlowHost) -> String {
         let remaining = host.pending_eval_widget_ids();
         build_flow_status_json(host, &remaining)

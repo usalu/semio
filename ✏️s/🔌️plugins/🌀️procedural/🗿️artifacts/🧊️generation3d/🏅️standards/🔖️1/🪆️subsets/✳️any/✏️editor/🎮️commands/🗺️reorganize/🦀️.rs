@@ -35,5 +35,5 @@ pub fn apply(snapshot: &Generation3dSnapshot, cx: &mut semio_framework_job::Step
         let mut editor = GraphEditor::new(host);
         editor.reorganize(&options, &mut control).map_err(Fault::from)?;
         Ok(Emit::mutations(editor.finish()))
-    })?
+    }).map_err(|error| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("flow.retained"), error.into_message()))?
 }

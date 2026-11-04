@@ -68,7 +68,7 @@ pub(super) fn duplicate_edge_id(source: &str, target: &str) -> String {
     format!("{source}-to-{target}")
 }
 
-fn evaluate_generation_preview(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, values: &crate::playbook::PlaybookValues) -> String {
+fn evaluate_generation_preview(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, values: &crate::playbook::PlaybookValues) -> Result<String, Fault> {
     let live = snapshot.to_host_snapshot();
     let snapshot_json = semio_framework_pack_json::to_json_string(&live);
     let values: semio_framework_pack_json::Object = values.iter().map(|(key, value)| (key.clone(), semio_framework_pack_json::from_dsl_value(value))).collect();
@@ -82,9 +82,9 @@ fn evaluate_generation_preview(snapshot: &FlowSnapshot, config: &FlowMainWindowC
     };
     let mut host = FlowHost::from_host_snapshot(patched_fixture).with_history_store_factory(::semio_framework_artifact_flow_flow::FLOW_HISTORY_STORE_FACTORY);
     seed_host_catalogue(&mut host, &config.catalogue_sections_json);
-    let preview = host.evaluate().unwrap_or_default();
-    host.retire_cold()?;
-    preview
+    let preview = host.evaluate();
+    host.retire_cold().map_err(crate::editor::flow::host::value_fault)?;
+    preview.map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("flow.evaluation"), error.to_string()))
 }
 
 pub(super) fn generation_window_transient(
@@ -122,7 +122,7 @@ pub(super) fn generation_window_transient(
     }
     if matches!(command, FlowCommand::AddGeneration(_) | FlowCommand::SelectGeneration(_) | FlowCommand::UpdateGenerationValues(_)) {
         match crate::playbook::selected_generation(&generation) {
-            Some(active) => generation.preview_text = Some(evaluate_generation_preview(snapshot, config, &active.values)),
+            Some(active) => generation.preview_text = Some(evaluate_generation_preview(snapshot, config, &active.values)?),
             None => generation.preview_text = None,
         }
     }

@@ -26,5 +26,3 @@ pub mod change_forming_gain_ultimate_strength;
 #[path = "../🧱️change-forming-gain-used-yield/🦀️.rs"]
 pub mod change_forming_gain_used_yield;
 //#endregion 🪢️Mounts
-
-pub use semio_s_artifact_norm_en1993_mut_member_warping_more::{change_frame_member_basis_member_id, change_frame_action_end_ratio, change_frame_action_start_ratio, change_frame_action_fz, change_frame_action_fx};

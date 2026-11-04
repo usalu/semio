@@ -88,50 +88,18 @@ tree.retire_cold();
         self.previous_snapshot.as_deref()
     }
 
-    pub fn widget_blocked_ports(&self, widget_id: &str) -> Vec<String> {
-        let Some(operator_info) = self.host_snapshot.widgets.iter().find(|widget| widget_id_for(widget) == widget_id).and_then(|widget| widget_operator_info(widget, &self.kind_infos)) else {
-            return Vec::new();
-        };
-        let missing = self.blocked_input_ports(widget_id, &operator_info);
-        ColdRetire::retire_cold(operator_info);
-        missing
-    }
+    pub fn widget_blocked_ports(&self,widget_id:&str)->Vec<String>{Self::project_widget_blocked_ports(&self.host_snapshot,&self.kind_infos,self.current_channels.as_deref().or(self.previous_channels.as_deref()),widget_id)}
 
-    /// 🚧️ The declared inputs of `operator_info` that are wired from a source with no published output yet.
-    fn blocked_input_ports(&self, widget_id: &str, operator_info: &OperatorInfo) -> Vec<String> {
-        if operator_info.variadic_input.is_some() {
-            return Vec::new();
-        }
-        let tree = self.build_tree();
-        let mut outputs = self.build_seeds();
-        for (widget_id, channels) in self.output_entries() {
-            if let Some(displaced) = outputs.insert(widget_id.clone(), channels.clone()) {
-                displaced.retire_cold();
-            }
-        }
-        let mut missing = Vec::new();
-        for channel in &operator_info.inputs {
-            if channel.name == "*" {
-                continue;
-            }
-            if channel.cardinality != neural::Cardinality::ExactlyOne {
-                continue;
-            }
-            if channel.default.is_some() {
-                continue;
-            }
-            let wired = tree.synapses.iter().any(|syn| syn.to == widget_id && syn.to_port == channel.name);
-            if !wired {
-                continue;
-            }
-            let source_ready = tree.synapses.iter().filter(|syn| syn.to == widget_id && syn.to_port == channel.name).all(|syn| outputs.contains_key(&syn.from));
-            if !source_ready {
-                missing.push(channel.name.clone());
-            }
-        }
-        tree.retire_cold();
-        outputs.retire_cold();
-        missing
+    /// 🚧️ Resolves blocked ports from the same borrowed graph, seeded inputs and published channels.
+    pub fn project_widget_blocked_ports(host_snapshot:&dyn FlowSnapshotSource,kind_infos:&HistoryFoldIndex<String,OperatorInfo>,channels:Option<&EvalChannels>,widget_id:&str)->Vec<String>{
+        let Some(info)=host_snapshot.widgets().iter().find(|widget|widget_id_for(widget)==widget_id).and_then(|widget|widget_operator_info(widget,kind_infos))else{return Vec::new()};
+        let mut missing=Vec::new();if info.variadic_input.is_none(){let tree=Self::project_tree(host_snapshot,kind_infos);
+            for channel in &info.inputs{if channel.name=="*"||channel.cardinality!=neural::Cardinality::ExactlyOne||channel.default.is_some(){continue;}
+                let wired=tree.synapses.iter().any(|syn|syn.to==widget_id&&syn.to_port==channel.name);
+                let ready=tree.synapses.iter().filter(|syn|syn.to==widget_id&&syn.to_port==channel.name).all(|syn|channels.is_some_and(|channels|channels.outputs.contains_key(&syn.from))||host_snapshot.widgets().iter().any(|widget|widget_id_for(widget)==syn.from&&matches!(widget,Widget::InputSlider{..}|Widget::InputNote{..}|Widget::InputImage{..})));
+                if wired&&!ready{missing.push(channel.name.clone());}
+            }tree.retire_cold();
+        }info.retire_cold();missing
     }
 
     /// 🧭️ Which widgets an edit from `previous` to this document leaves DIRTY, in declaration order —
@@ -167,36 +135,22 @@ tree.retire_cold();
         self.build_seeds()
     }
 
-    pub fn pending_eval_widget_ids(&self) -> Vec<String> {
-        let tree = self.build_tree();
-        let seeds = self.build_seeds();
-        let snapshot = TreeSnapshot::capture(&tree, &seeds);
-        let dirty = compute_dirty_set(self.current_baseline_snapshot(), &snapshot);
-                snapshot.retire_cold();
-if self.baseline_answers_everything(&dirty) {
-            tree.retire_cold();
-            seeds.retire_cold();
-            return Vec::new();
-        }
-        let registry = self.operator_registry();
-        let evaluator = Evaluator::new(registry.as_ref());
-        let previous = self.current_baseline_channels();
-        let mut probe_never_dispatches = |kind: &str, _: &Dictionary| -> Result<Dictionary, EvalError> { Err(EvalError::InvalidInput(format!("pending_eval_widget_ids probed a dispatch for {kind}"))) };
-        let pending = match evaluator.evaluate_channels_budgeted(&tree, &seeds, &self.kind_infos, &mut probe_never_dispatches, &self.neural_cache, &dirty, previous, EvalStepBudget::PROBE,&|_|true) {
-            Ok(BudgetedEval { remaining, channels, .. }) => {
-                channels.retire_cold();
-                remaining
-            }
-            Err(_) => Vec::new(),
-        };
-        tree.retire_cold();
-        seeds.retire_cold();
-        pending
+    pub fn pending_eval_widget_ids(&self)->Vec<String>{Self::project_pending_widget_ids(&self.host_snapshot,&self.kind_infos,self.current_baseline_snapshot(),self.current_baseline_channels(),self.current_channels.as_deref().or(self.previous_channels.as_deref()),self.operator_registry().as_ref(),&self.neural_cache)}
+
+    /// 👁️ Runs the same zero-dispatch probe against borrowed original evaluation authorities.
+    pub fn project_pending_widget_ids(host_snapshot:&dyn FlowSnapshotSource,kind_infos:&HistoryFoldIndex<String,OperatorInfo>,previous_snapshot:Option<&TreeSnapshot>,previous_channels:Option<&EvalChannels>,active_channels:Option<&EvalChannels>,registry:&neural::Registry,cache:&NeuralCache)->Vec<String>{
+        let tree=Self::project_tree(host_snapshot,kind_infos);let seeds=Self::project_seeds(host_snapshot);let snapshot=TreeSnapshot::capture(&tree,&seeds);let dirty=compute_dirty_set(previous_snapshot,&snapshot);snapshot.retire_cold();
+        if dirty.is_empty()&&previous_channels.is_some()&&active_channels.is_some_and(|channels|channels.outputs.iter().next().is_some()){tree.retire_cold();seeds.retire_cold();return Vec::new();}
+        let evaluator=Evaluator::new(registry);let mut probe=|kind:&str,_:&Dictionary|->Result<Dictionary,EvalError>{Err(EvalError::InvalidInput(format!("pending_eval_widget_ids probed a dispatch for {kind}")))};
+        let pending=match evaluator.evaluate_channels_budgeted(&tree,&seeds,kind_infos,&mut probe,cache,&dirty,previous_channels,EvalStepBudget::PROBE,&|_|true){Ok(BudgetedEval{remaining,channels,..})=>{channels.retire_cold();remaining},Err(_)=>Vec::new()};tree.retire_cold();seeds.retire_cold();pending
     }
 
     // #region 🌳️TreeBuilding
-    pub(in super::super) fn build_tree(&self) -> Tree {
-        let fixture = self.build_dag_host_snapshot_v1();
+    pub(in super::super) fn build_tree(&self) -> Tree {Self::project_tree(&self.host_snapshot,&self.kind_infos)}
+
+    /// 🌳️ Compiles the same semantic tree directly from an immutable Flow document.
+    pub fn project_tree(host_snapshot:&dyn FlowSnapshotSource,kind_infos:&HistoryFoldIndex<String,OperatorInfo>)->Tree{
+        let fixture = Self::raw_dag_snapshot(host_snapshot,kind_infos);
         let (nodes, edges) = dag_host_snapshot_execution_rows(&fixture);
         Self::tree_from_dag(&nodes, &edges)
     }

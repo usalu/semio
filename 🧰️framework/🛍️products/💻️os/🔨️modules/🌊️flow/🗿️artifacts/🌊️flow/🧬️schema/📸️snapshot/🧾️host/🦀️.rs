@@ -208,3 +208,30 @@ impl FlowHostSnapshot {
     }
 }
 //#endregion 🧊️HostSnapshotRetirement
+
+/// 🔎️ Borrows the genuine immutable Flow source without constructing or cloning an owned document.
+pub trait FlowSnapshotSource{
+ fn schema(&self)->&str;
+ fn camera(&self)->&CameraJson;
+ fn widgets(&self)->&[Widget];
+ fn synapses(&self)->&[SynapseSpec];
+ fn layout(&self)->&OrderedMap<WidgetLayout>;
+ fn source_identity(&self)->[usize;6]{[self.widgets().as_ptr()as usize,self.widgets().len(),self.synapses().as_ptr()as usize,self.synapses().len(),self.layout()as*const _ as usize,self.schema().as_ptr()as usize]}
+}
+impl FlowSnapshotSource for FlowHostSnapshot{
+ fn schema(&self)->&str{&self.schema}
+ fn camera(&self)->&CameraJson{&self.camera}
+ fn widgets(&self)->&[Widget]{&self.widgets}
+ fn synapses(&self)->&[SynapseSpec]{&self.synapses}
+ fn layout(&self)->&OrderedMap<WidgetLayout>{&self.layout}
+}
+/// 🪞️ A view borrows actual original fields; its identity never depends on this temporary header address.
+#[derive(ToValue)]
+pub struct FlowSnapshotView<'a>{pub schema:&'a str,pub camera:&'a CameraJson,pub widgets:&'a[Widget],pub synapses:&'a[SynapseSpec],pub layout:&'a OrderedMap<WidgetLayout>}
+impl FlowSnapshotSource for FlowSnapshotView<'_>{
+ fn schema(&self)->&str{self.schema}
+ fn camera(&self)->&CameraJson{self.camera}
+ fn widgets(&self)->&[Widget]{self.widgets}
+ fn synapses(&self)->&[SynapseSpec]{self.synapses}
+ fn layout(&self)->&OrderedMap<WidgetLayout>{self.layout}
+}

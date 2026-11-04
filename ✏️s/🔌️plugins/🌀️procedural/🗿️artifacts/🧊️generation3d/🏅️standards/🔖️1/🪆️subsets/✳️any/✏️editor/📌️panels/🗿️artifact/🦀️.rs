@@ -4,9 +4,8 @@ use semio_s_artifact_procedural_3d_editor_config::Generation3dConfig;
 use semio_s_artifact_procedural_3d_mode_edit::windows::flow::graph_outline;
 use semio_s_artifact_procedural_3d_terminology::Generation3dLabels;
 use semio_s_artifact_procedural_3d_preview_eval::dag_host_snapshot_to_workflow;
-use semio_s_artifact_procedural_3d_model::with_host;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
-use semio_framework_os_flow::{flow_backed_node_graph_extras, FlowEvalSession};
+use semio_framework_os_flow::{flow_backed_node_graph_extras, FlowEvalSession, FlowHost};
 use semio_framework_plugin::plugin_app_close_prelude::UiAssemblyResult;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::PanelGroup;
@@ -43,7 +42,8 @@ fn document_error(scope: &'static str) -> PluginAssemblyError {
 /// keyboard and screen-reader users traverse nodes, ports and wires (ticket 26/09/14).
 pub fn render(document: &Generation3dSnapshot, config: &Generation3dConfig, session: &FlowEvalSession, labels: &Generation3dLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let host_snapshot = &document.host_snapshot;
-    let (nodes, edges) = with_host(host_snapshot, |host| dag_host_snapshot_to_workflow(&host.dag.graph.host_snapshot))?;
+    let dag = FlowHost::project_dag_snapshot(host_snapshot, &semio_framework_os_flow::flow_neuron_kind_info_map());
+    let (nodes, edges) = dag_host_snapshot_to_workflow(&dag);
     let flow_extras = flow_backed_node_graph_extras(host_snapshot, &config.lod_mode, 0.0, true, false, semio_framework_ui_styling::metrics::board::GRID_FACTOR_DEFAULT, Some(session));
     graph_outline(windows, &nodes, &edges, flow_extras.status_json.as_ref(), labels).map_err(|_| document_error("outline"))
 }
